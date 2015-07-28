@@ -1,0 +1,36 @@
+select cal
+from Calendar cal
+where maxelement(cal.holidays) > current_date()
+
+select o
+from Order o
+where maxindex(o.items) > 100
+
+select o
+from Order o
+where minelement(o.items) > 10000
+
+select m
+from Cat as m, Cat as kit
+where kit in elements(m.kittens)
+
+// the above query can be re-written in jpql standard way:
+select m
+from Cat as m, Cat as kit
+where kit member of m.kittens
+
+select p
+from NameList l, Person p
+where p.name = some elements(l.names)
+
+select cat
+from Cat cat
+where exists elements(cat.kittens)
+
+select p
+from Player p
+where 3 > all elements(p.scores)
+
+select show
+from Show show
+where 'fizard' in indices(show.acts)

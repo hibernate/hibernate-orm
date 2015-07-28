@@ -165,35 +165,36 @@ jdocbook {
     }
 
     // book-specific config
-    devguide {
-        masterSourceDocumentName = 'Hibernate_Development_Guide.xml'
-    }
-
     manual {
         masterSourceDocumentName = 'Hibernate_Manual.xml'
     }
+    integration {
+        masterSourceDocumentName = 'Hibernate_Integrations.xml'
+    }
+    mapping {
+        masterSourceDocumentName = 'Hibernate_Mapping.xml'
+    }
 }
 
-// todo : make this part of gradle-jdocbook.
-// 		specifically the ability to supply ant-style resource for images (dir + include/exclude patterns)
-stageStyles_devguide.doLast {
-	logger.lifecycle( "Staging devguide-specific style resources")
-	copy {
-		into project.file( 'target/docbook/stage/devguide/images' )
-		from project.file( 'src/main/docbook/devguide/en-US' )
-		include '**/images/*.png'
-		include '**/images/*.svg'
-		includeEmptyDirs = false
-	}
-}
-
-[ 'devguide', 'manual'].each { bookName ->
+[ 'integration', 'manual', 'mapping'].each { bookName ->
     task "stageLocalStyles_$bookName"(type: Copy) {
         into project.file( "target/docbook/stage/$bookName" )
         from project.file( 'src/main/style' )
         includeEmptyDirs = false
     }
+
 	tasks[ "stageStyles_$bookName" ].dependsOn "stageLocalStyles_$bookName"
+
+    tasks[ "stageStyles_$bookName" ].doLast {
+        logger.lifecycle( "Staging devguide-specific style resources")
+        copy {
+            into project.file( "target/docbook/stage/$bookName/images" )
+            from project.file( "src/main/docbook/$bookName/en-US" )
+            include '**/images/*.png'
+            include '**/images/*.svg'
+            includeEmptyDirs = false
+        }
+    }
 }
 
 

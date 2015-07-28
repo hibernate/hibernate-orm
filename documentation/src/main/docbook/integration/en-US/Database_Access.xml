@@ -1,0 +1,916 @@
+<?xml version='1.0' encoding='utf-8' ?>
+
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xmlns:xi="http://www.w3.org/2001/XInclude">
+
+    <title>Database access</title>
+
+    <section>
+        <title>Connecting</title>
+        <para>
+            Hibernate connects to databases on behalf of your application. It can connect through a variety of mechanisms,
+            including:
+        </para>
+        <itemizedlist>
+            <listitem><para>Stand-alone built-in connection pool</para></listitem>
+            <listitem><para><classname>javax.sql.DataSource</classname></para></listitem>
+            <listitem><para>Connection pools, including support for two different third-party opensource JDBC connection pools:</para>
+                <itemizedlist>
+                    <listitem><para>c3p0</para></listitem>
+                    <listitem><para>proxool</para></listitem>
+                </itemizedlist>
+            </listitem>
+            <listitem>
+                <para>Application-supplied JDBC connections.  This is not a recommended approach and exists for legacy reasons</para>
+            </listitem>
+        </itemizedlist>
+
+        <note>
+            <para>The built-in connection pool is not intended for production environments.</para>
+        </note>
+
+        <para>
+            Hibernate obtains JDBC connections as needed though the
+            <interfacename>ConnectionProvider</interfacename> interface
+            which is a service contract.  Applications may also supply their own
+            <interfacename>ConnectionProvider</interfacename> implementation
+            to define a custom approach for supplying connections to Hibernate (from a different connection pool
+            implementation, for example).
+        </para>
+
+        <!-- todo : discuss servies -->
+
+        <section>
+            <title>Configuration</title>
+            <para>
+                You can configure database connections using a properties file, an XML deployment descriptor or
+                programmatically.
+              </para>
+                <example>
+                    <title><filename>hibernate.properties</filename> for a c3p0 connection pool</title>
+                    <programlisting><xi:include href="extras/hibernate.properties" parse="text" /></programlisting>
+                </example>
+                <example>
+                    <title><filename>hibernate.cfg.xml</filename> for a connection to the bundled HSQL database</title>
+                    <programlisting language="XML" role="XML"><xi:include href="extras/hibernate.cfg.xml" parse="text" /></programlisting>
+                </example>
+
+      <section>
+        <title>Programatic configuration</title>
+        <para>
+          An instance of object <classname>org.hibernate.cfg.Configuration</classname> represents an entire set of
+          mappings of an application's Java types to an SQL database. The
+          <classname>org.hibernate.cfg.Configuration</classname> builds an immutable
+          <classname>org.hibernate.SessionFactory</classname>, and compiles the mappings from various XML mapping
+          files. You can specify the mapping files directly, or Hibernate can find them for you.
+        </para>
+        <example>
+          <title>Specifying the mapping files directly</title>
+          <para>
+            You can obtain a <classname>org.hibernate.cfg.Configuration</classname> instance by instantiating it
+            directly and specifying XML mapping documents. If the mapping files are in the classpath, use method
+            <methodname>addResource()</methodname>.
+          </para>
+          <programlisting language="Java" role="JAVA"><xi:include href="extras/specify_mapping_files_directly.java" parse="text" /></programlisting>
+        </example>
+        <example>
+          <title>Letting Hibernate find the mapping files for you</title>
+          <para>
+            The <methodname>addClass()</methodname> method directs Hibernate to search the CLASSPATH for the mapping
+            files, eliminating hard-coded file names. In the following example, it searches for
+            <filename>org/hibernate/auction/Item.hbm.xml</filename> and
+            <filename>org/hibernate/auction/Bid.hbm.xml</filename>.
+          </para>
+          <programlisting language="Java" role="JAVA"><xi:include href="extras/letting_hibernate_find_mapping_files.java" parse="text" /></programlisting>
+        </example>
+        <example>
+          <title>Specifying configuration properties</title>
+          <programlisting language="Java" role="JAVA"><xi:include href="extras/specifying_configuration_properties_programmatically.java" parse="text" /></programlisting>
+        </example>
+        <itemizedlist>
+          <title>Other ways to configure Hibernate programmatically</title>
+          <listitem>
+            <para>
+              Pass an instance of <classname>java.util.Properties</classname> to
+              <classname>Configuration.setProperties()</classname>.
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              Set System properties using <command>java
+              -D<replaceable>property</replaceable>=<replaceable>value</replaceable></command>
+            </para>
+          </listitem>
+        </itemizedlist>
+      </section>
+    </section>
+    
+    <section>
+        <title>Obtaining a JDBC connection</title>
+        <para>
+            After you configure the <xref linkend="hibernate-jdbc-properties" />, you can use method
+            <methodname>openSession</methodname> of class <classname>org.hibernate.SessionFactory</classname> to open
+            sessions.  Sessions will obtain JDBC connections as needed based on the provided configuration.
+        </para>
+        <example>
+            <title>Specifying configuration properties</title>
+            <programlisting language="Java" role="JAVA"><xi:include href="extras/opening_a_session.java" parse="text" /></programlisting>
+        </example>
+        <itemizedlist id="hibernate-jdbc-properties">
+            <title>Most important Hibernate JDBC properties</title>
+            <listitem><para>hibernate.connection.driver_class</para></listitem>
+            <listitem><para>hibernate.connection.url</para></listitem>
+            <listitem><para>hibernate.connection.username</para></listitem>
+            <listitem><para>hibernate.connection.password</para></listitem>
+            <listitem><para>hibernate.connection.pool_size</para></listitem>
+        </itemizedlist>
+        <para>
+            All available Hibernate settings are defined as constants and discussed on the
+            <interfacename>org.hibernate.cfg.AvailableSettings</interfacename> interface.  See its source code or
+            JavaDoc for details.
+        </para>
+    </section>
+  </section>
+  
+  <section>
+    <title>Connection pooling</title>
+    <para>
+      Hibernate's internal connection pooling algorithm is rudimentary, and is provided for development and testing
+      purposes. Use a third-party pool for best performance and stability. To use a third-party pool, replace the
+      <property>hibernate.connection.pool_size property</property> with settings specific to your connection pool of
+      choice. This disables Hibernate's internal connection pool.
+    </para>
+    
+    <section>
+      <title>c3p0 connection pool</title>
+      <para>
+        C3P0 is an open source JDBC connection pool distributed along with Hibernate in the <filename>lib/</filename>
+        directory. Hibernate uses its <classname>org.hibernate.service.jdbc.connections.internal.C3P0ConnectionProvider</classname> for
+        connection pooling if you set the <property>hibernate.c3p0.*</property> properties.  properties.
+      </para>
+      <itemizedlist>
+        <title>Important configuration properties for the c3p0 connection pool</title>
+        <listitem><para>hibernate.c3p0.min_size</para></listitem>
+        <listitem><para>hibernate.c3p0.max_size</para></listitem>
+        <listitem><para>hibernate.c3p0.timeout</para></listitem>
+        <listitem><para>hibernate.c3p0.max_statements</para></listitem>
+      </itemizedlist>
+    </section>
+    
+    <section>
+      <title>Proxool connection pool</title>
+      <para>
+        Proxool is another open source JDBC connection pool distributed along with Hibernate in the
+        <filename>lib/</filename> directory. Hibernate uses its
+        <classname>org.hibernate.service.jdbc.connections.internal.ProxoolConnectionProvider</classname> for connection pooling if you set the
+        <property>hibernate.proxool.*</property> properties. Unlike c3p0, proxool requires some additional configuration
+        parameters, as described by the Proxool documentation available at <link xlink:href="http://proxool.sourceforge.net/configure.html" />.
+      </para>
+      <table>
+        <title>Important configuration properties for the Proxool connection pool</title>
+        <tgroup cols="2">
+          <colspec colwidth="120px" />
+          <colspec colwidth="320px" />
+          <thead>
+            <row>
+              <entry>Property</entry>
+              <entry>Description</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>hibernate.proxool.xml</entry>
+              <entry>Configure Proxool provider using an XML file (.xml is appended automatically)</entry>
+            </row>
+            <row>
+              <entry>hibernate.proxool.properties</entry>
+              <entry>Configure the Proxool provider using a properties file (.properties is appended
+              automatically)</entry>
+            </row>
+            <row>
+              <entry>hibernate.proxool.existing_pool</entry>
+              <entry>Whether to configure the Proxool provider from an existing pool</entry>
+            </row>
+            <row>
+              <entry>hibernate.proxool.pool_alias</entry>
+              <entry>Proxool pool alias to use. Required.</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+
+    
+    <section>
+      <title>Obtaining connections from an application server, using JNDI</title>
+      <para>
+        To use Hibernate inside an application server, configure Hibernate to obtain connections from an application
+        server <classname>javax.sql.Datasource</classname> registered in JNDI, by setting at least one of the following
+        properties:
+      </para>
+      <itemizedlist>
+        <title>Important Hibernate properties for JNDI datasources</title>
+        <listitem><para>hibernate.connection.datasource (required)</para></listitem>
+        <listitem><para>hibernate.jndi.url</para></listitem>
+        <listitem><para>hibernate.jndi.class</para></listitem>
+        <listitem><para>hibernate.connection.username</para></listitem>
+        <listitem><para>hibernate.connection.password</para></listitem>
+      </itemizedlist>
+      <para>
+        JDBC connections obtained from a JNDI datasource automatically participate in the container-managed transactions
+        of the application server.
+      </para>
+    </section>
+    
+    <section>
+      <title>Other connection-specific configuration</title>
+      <para>
+        You can pass arbitrary connection properties by prepending <literal>hibernate.connection</literal> to the
+        connection property name. For example, specify a charSet connection property as
+        <property>hibernate.connection.charSet</property>.
+      </para>
+      <para>
+        You can define your own plugin strategy for obtaining JDBC connections by implementing the interface
+        <interfacename>ConnectionProvider</interfacename> and specifying your custom
+        implementation with the <property>hibernate.connection.provider_class</property> property.
+      </para>
+    </section>
+    
+    <section>
+      <title>Optional configuration properties</title>
+      <para>
+        In addition to the properties mentioned in the previous sections, Hibernate includes many other optional
+        properties. See <xref linkend="appendix-Configuration_Properties" /> for a more complete list.
+      </para>
+    </section>
+  </section>
+  
+  <section id="configuring-dialects">
+    <title>Dialects</title>
+    <para>
+        Although SQL is relatively standardized, each database vendor uses a subset of supported syntax. This is referred
+        to as a <firstterm>dialect</firstterm>.  Hibernate handles variations across these dialects through its
+        <classname>org.hibernate.dialect.Dialect</classname> class and the various subclasses for each vendor dialect.
+    </para>
+
+    <table>
+      <title>Supported database dialects</title>
+      <tgroup cols="2">
+        <colspec colwidth="120px" />
+        <colspec colwidth="320px" />
+        <thead>
+          <row>
+            <entry>Database</entry>
+            <entry>Dialect</entry>
+          </row>
+        </thead>
+        <tbody>
+          	<row>
+				<entry>CUBRID 8.3 and later</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.CUBRIDDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>DB2</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.DB2Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>DB2 AS/400</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.DB2400Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>DB2 OS390</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.DB2390Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Firebird</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.FirebirdDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>FrontBase</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.FrontbaseDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>H2</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.H2Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>HyperSQL (HSQL)</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.HSQLDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Informix</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.InformixDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Ingres</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.IngresDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Ingres 9</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.Ingres9Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Ingres 10</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.Ingres10Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Interbase</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.InterbaseDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>InterSystems Cache 2007.1</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.Cache71Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>JDataStore</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.JDataStoreDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Mckoi SQL</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.MckoiDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Microsoft SQL Server 2000</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.SQLServerDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Microsoft SQL Server 2005</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.SQLServer2005Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Microsoft SQL Server 2008</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.SQLServer2008Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Microsoft SQL Server 2012</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.SQLServer2012Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Mimer SQL</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.MimerSQLDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>MySQL</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.MySQLDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>MySQL with InnoDB</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.MySQLInnoDBDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>MySQL with MyISAM</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.MySQLMyISAMDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>MySQL5</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.MySQL5Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>MySQL5 with InnoDB</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.MySQL5InnoDBDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Oracle 8i</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.Oracle8iDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Oracle 9i</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.Oracle9iDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Oracle 10g and later</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.Oracle10gDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Oracle TimesTen</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.TimesTenDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Pointbase</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.PointbaseDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>PostgreSQL 8.1</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.PostgreSQL81Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>PostgreSQL 8.2</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.PostgreSQL82Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>PostgreSQL 9 and later</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.PostgreSQL9Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Progress</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.ProgressDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>SAP DB</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.SAPDBDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>SAP HANA (column store)</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.HANAColumnStoreDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>SAP HANA (row store)</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.HANARowStoreDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Sybase</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.SybaseDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Sybase 11</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.Sybase11Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Sybase ASE 15.5</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.SybaseASE15Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Sybase ASE 15.7</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.SybaseASE157Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Sybase Anywhere</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.SybaseAnywhereDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Teradata</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.TeradataDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Unisys OS 2200 RDMS</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.RDMSOS2200Dialect</literal>
+				</entry>
+			</row>
+        </tbody>
+      </tgroup>
+    </table>
+
+      <section>
+          <title>Specifying the Dialect to use</title>
+          <para>
+              The developer may manually specify the Dialect to use by setting the
+              <property>hibernate.dialect</property> configuration property to the name of a specific
+              <classname>org.hibernate.dialect.Dialect</classname> class to use.
+          </para>
+      </section>
+
+      <section>
+          <title>Dialect resolution</title>
+          <para>
+              Assuming a <interfacename>ConnectionProvider</interfacename> has been
+              set up, Hibernate will attempt to automatically determine the Dialect to use based on the
+              <interfacename>java.sql.DatabaseMetaData</interfacename> reported by a
+              <interfacename>java.sql.Connection</interfacename> obtained from that
+              <interfacename>ConnectionProvider</interfacename>.
+          </para>
+          <para>
+                This functionality is provided by a series of
+                <interfacename>org.hibernate.engine.jdbc.dialect.spi.DialectResolver</interfacename> instances registered
+                with Hibernate internally.  Hibernate comes with a standard set of recognitions.  If your application
+                requires extra Dialect resolution capabilities, it would simply register a custom implementation
+                of <interfacename>org.hibernate.engine.jdbc.dialect.spi.DialectResolver</interfacename> as follows:
+          </para>
+          <!-- document an example using the service registry -->
+            <para>
+                Registered <interfacename>org.hibernate.engine.jdbc.dialect.spi.DialectResolver</interfacename> are
+                <emphasis>prepended</emphasis> to an internal list of resolvers, so they take precedence
+                before any already registered resolvers including the standard one.
+            </para>
+      </section>
+  </section>
+
+  <section>
+    <title>Automatic schema generation with SchemaExport</title>
+    <para>
+      SchemaExport is a Hibernate utility which generates DDL from your mapping files. The generated schema includes
+      referential integrity constraints, primary and foreign keys, for entity and collection tables. It also creates
+      tables and sequences for mapped identifier generators.
+    </para>
+    <note>
+      <para>
+        You must specify a SQL Dialect via the <property>hibernate.dialect</property> property when using this tool,
+        because DDL is highly vendor-specific. See <xref linkend="configuring-dialects" /> for information.
+      </para>
+    </note>
+    <para>
+      Before Hibernate can generate your schema, you must customize your mapping files.
+    </para>
+    
+    <section>
+      <title>Customizing the mapping files</title>
+      <para>
+        Hibernate provides several elements and attributes to customize your mapping files. They are listed in <xref
+        linkend="tab-customizing-schema" />, and a logical order of customization is presented in <xref
+        linkend="proc-customizing-schema" />.
+      </para>
+      <table id="tab-customizing-schema">
+        <title>Elements and attributes provided for customizing mapping files</title>
+        <tgroup cols="3">
+          <colspec colwidth="80px" />
+          <colspec colwidth="80px" />
+          <colspec colwidth="280px" />
+          <thead>
+            <row>
+              <entry>Name</entry>
+              <entry>Type of value</entry>
+              <entry>Description</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>length</entry>
+              <entry>number</entry>
+              <entry>Column length</entry>
+            </row>
+            <row>
+              <entry>precision</entry>
+              <entry>number</entry>
+              <entry>Decimal precision of column</entry>
+            </row>
+            <row>
+              <entry>scale</entry>
+              <entry>number</entry>
+              <entry>Decimal scale of column</entry>
+            </row>
+            <row>
+              <entry>not-null</entry>
+              <entry><para><literal>true</literal> or <literal>false</literal></para></entry>
+              <entry>Whether a column is allowed to hold null values</entry>
+            </row>
+            <row>
+              <entry>unique</entry>
+              <entry><para><literal>true</literal> or <literal>false</literal></para></entry>
+              <entry>Whether values in the column must be unique</entry>
+            </row>
+            <row>
+              <entry>index</entry>
+              <entry>string</entry>
+              <entry>The name of a multi-column index</entry>
+            </row>
+            <row>
+              <entry>unique-key</entry>
+              <entry>string</entry>
+              <entry>The name of a multi-column unique constraint</entry>
+            </row>
+            <row>
+              <entry>foreign-key</entry>
+              <entry>string</entry>
+              <entry>The name of the foreign key constraint generated for an association. This applies to
+              &lt;one-to-one&gt;, &lt;many-to-one&gt;, &lt;key&gt;, and &lt;many-to-many&gt; mapping
+              elements. <literal>inverse="true"</literal> sides are skipped by SchemaExport.</entry>
+            </row>
+            <row>
+              <entry>sql-type</entry>
+              <entry>string</entry>
+              <entry>Overrides the default column type. This applies to the &lt;column&gt; element only.</entry>
+            </row>
+            <row>
+              <entry>default</entry>
+              <entry>string</entry>
+              <entry>Default value for the column</entry>
+            </row>
+            <row>
+              <entry>check</entry>
+              <entry>string</entry>
+              <entry>An SQL check constraint on either a column or atable</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+      <procedure id="proc-customizing-schema">
+        <title>Customizing the schema</title>
+        <step>
+          <title>Set the length, precision, and scale of mapping elements.</title>
+          <para>
+            Many Hibernate mapping elements define optional attributes named <option>length</option>,
+            <option>precision</option>, and <option>scale</option>.
+          </para>
+          <programlisting language="XML" role="XML"><xi:include href="extras/length-precision-scale.xml" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
+        </step>
+        <step>
+          <title>Set the <option>not-null</option>, <option>UNIQUE</option>, <option>unique-key</option> attributes.</title>
+          <para>
+            The <option>not-null</option> and <option>UNIQUE</option> attributes generate constraints on table columns.
+          </para>
+          <para>
+            The unique-key attribute groups columns in a single, unique key constraint. The attribute overrides
+            the name of any generated unique key constraint.
+          </para>
+          <programlisting language="XML" role="XML"><xi:include href="extras/notnull-unique.xml" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
+        </step>
+        <step>
+          <title>Set the <option>index</option> and <option>foreign-key</option> attributes.</title>
+          <para>
+            The <option>index</option> attribute specifies the name of an index for Hibernate to create using the mapped
+            column or columns. You can group multiple columns into the same index by assigning them the same index name.
+          </para>
+          <para>
+            A foreign-key attribute overrides the name of any generated foreign key constraint.
+          </para>
+          <programlisting language="XML" role="XML"><xi:include href="extras/foreign-key.xml" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
+        </step>
+        <step>
+          <title>Set child <option>&lt;column&gt;</option> elements.</title>
+          <para>
+            Many mapping elements accept one or more child &lt;column&gt; elements. This is particularly useful for
+            mapping types involving multiple columns.
+          </para>
+          <programlisting language="XML" role="XML"><xi:include href="extras/child-column-elements.xml" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
+        </step>
+        <step>
+          <title>Set the <option>default</option> attribute.</title>
+          <para>
+            The <option>default</option> attribute represents a default value for a column. Assign the same value to the
+            mapped property before saving a new instance of the mapped class.
+          </para>
+          <programlisting language="XML" role="XML"><xi:include href="extras/default-attribute.xml" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
+        </step>
+        <step>
+          <title>Set the <option>sql-type</option> attribure.</title>
+          <para>
+            Use the <option>sql-type</option> attribute to override the default mapping of a Hibernate type to SQL
+            datatype.
+          </para>
+          <programlisting language="XML" role="XML"><xi:include href="extras/sql-type.xml"
+          xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
+        </step>
+        <step>
+          <title>Set the <option>check</option> attribute.</title>
+          <para>
+            use the <option>check</option> attribute to specify a <wordasword>check</wordasword> constraint.
+          </para>
+          <programlisting language="XML" role="XML"><xi:include href="extras/check.xml" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
+        </step>
+        <step>
+          <title>Add &lt;comment&gt; elements to your schema.</title>
+          <para>
+            Use the &lt;comment&gt; element to specify comments for the generated schema.
+          </para>
+          <programlisting language="XML" role="XML"><xi:include href="extras/comments.xml" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
+        </step>
+      </procedure>
+    </section>
+
+    <section>
+      <title>Running the SchemaExport tool</title>
+      <para>
+        The SchemaExport tool writes a DDL script to standard output, executes the DDL statements, or both.
+      </para>
+      <example>
+        <title>SchemaExport syntax</title>
+        <screen>
+          java -cp hibernate_classpaths org.hibernate.tool.hbm2ddl.SchemaExport <replaceable>options</replaceable> <replaceable>mapping_files</replaceable> 
+        </screen>
+      </example>
+      <table>
+        <title>SchemaExport Options</title>
+        <tgroup cols="2">
+          <colspec colwidth="120px" />
+          <colspec colwidth="320px" />
+          <thead>
+            <row>
+              <entry>Option</entry>
+              <entry>Description</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>--quiet</entry>
+              <entry>do not output the script to standard output</entry>
+            </row>
+            <row>
+              <entry>--drop</entry>
+              <entry>only drop the tables</entry>
+            </row>
+            <row>
+              <entry>--create</entry>
+              <entry>only create the tables</entry>
+            </row>
+            <row>
+              <entry>--text</entry>
+              <entry>do not export to the database</entry>
+            </row>
+            <row>
+              <entry><para>--output=<replaceable>my_schema.ddl</replaceable></para></entry>
+              <entry>output the ddl script to a file</entry>
+            </row>
+            <row>
+              <entry><para>--naming=<replaceable>eg.MyNamingStrategy</replaceable></para></entry>
+              <entry>select a NamingStrategy</entry>
+            </row>
+            <row>
+              <entry><para>--config=<replaceable>hibernate.cfg.xml</replaceable></para></entry>
+              <entry>read Hibernate configuration from an XML file</entry>
+            </row>
+            <row>
+              <entry><para>--properties=<replaceable>hibernate.properties</replaceable></para></entry>
+              <entry>read database properties from a file</entry>
+            </row>
+            <row>
+              <entry>--format</entry>
+              <entry>format the generated SQL nicely in the script</entry>
+            </row>
+            <row>
+              <entry><para>--delimiter=<replaceable>;</replaceable></para></entry>
+              <entry>set an end-of-line delimiter for the script</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+      <example>
+        <title>Embedding SchemaExport into your application</title>
+        <programlisting language="Java" role="JAVA"><xi:include href="extras/embedding_SchemaExport.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
+      </example>
+    </section>
+  </section>
+</chapter>

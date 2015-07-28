@@ -1,0 +1,356 @@
+<?xml version='1.0' encoding='utf-8' ?>
+
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xi="http://www.w3.org/2001/XInclude">
+
+    <info>
+        <title>Persistence Contexts</title>
+    </info>
+
+    <para>
+        Both the <interfacename>org.hibernate.Session</interfacename> API and
+        <interfacename>javax.persistence.EntityManager</interfacename> API represent a context for dealing with
+        persistent data.  This concept is called a <literal>persistence context</literal>.  Persistent data has a
+        state in relation to both a persistence context and the underlying database.
+    </para>
+
+    <itemizedlist>
+        <title>Entity states</title>
+        <listitem>
+            <para>
+                <literal>new</literal>, or <literal>transient</literal> - the entity has just been instantiated and is
+                not associated with a persistence context.  It has no persistent representation in the database and no
+                identifier value has been assigned.
+            </para>
+        </listitem>
+        <listitem>
+            <para>
+                <literal>managed</literal>, or <literal>persistent</literal> - the entity has an associated identifier
+                and is associated with a persistence context.
+            </para>
+        </listitem>
+        <listitem>
+            <para>
+                <literal>detached</literal> - the entity has an associated identifier, but is no longer associated with
+                a persistence context (usually because the persistence context was closed or the instance was evicted
+                from the context)
+            </para>
+        </listitem>
+        <listitem>
+            <para>
+                <literal>removed</literal> - the entity has an associated identifier and is associated with a persistence
+                context, however it is scheduled for removal from the database.
+            </para>
+        </listitem>
+    </itemizedlist>
+
+    <!-- todo : need a "see also" link to cascading chapter -->
+
+    <para>
+        In Hibernate native APIs, the persistence context is defined as the
+        <interfacename>org.hibernate.Session</interfacename>.  In JPA, the persistence context is defined by
+        <interfacename>javax.persistence.EntityManager</interfacename>.  Much of the
+        <interfacename>org.hibernate.Session</interfacename> and
+        <interfacename>javax.persistence.EntityManager</interfacename> methods deal with moving entities between these
+        states.
+    </para>
+
+    <section>
+        <title>Making entities persistent</title>
+
+        <para>
+            Once you've created a new entity instance (using the standard <literal>new</literal> operator) it is in
+            <literal>new</literal> state.   You can make it persistent by associating it to either a
+            <interfacename>org.hibernate.Session</interfacename> or
+            <interfacename>javax.persistence.EntityManager</interfacename>
+        </para>
+
+        <example>
+            <title>Example of making an entity persistent</title>
+            <programlisting role="JAVA"><xi:include href="extras/MakingPersistentWithSession.java" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/MakingPersistentWithEM.java" parse="text"/></programlisting>
+        </example>
+
+        <para>
+            <interfacename>org.hibernate.Session</interfacename> also has a method named <methodname>persist</methodname>
+            which follows the exact semantic defined in the JPA specification for the <methodname>persist</methodname>
+            method.  It is this method on <interfacename>org.hibernate.Session</interfacename> to which the
+            Hibernate <interfacename>javax.persistence.EntityManager</interfacename> implementation delegates.
+        </para>
+
+        <para>
+            If the <classname>DomesticCat</classname> entity type has a generated identifier, the value is associated
+            to the instance when the <methodname>save</methodname> or <methodname>persist</methodname> is called.  If the
+            identifier is not automatically generated, the application-assigned (usually natural) key value has to be
+            set on the instance before <methodname>save</methodname> or <methodname>persist</methodname> is called.
+        </para>
+    </section>
+
+    <section>
+        <title>Deleting entities</title>
+        <para>
+            Entities can also be deleted.
+        </para>
+        <example>
+            <title>Example of deleting an entity</title>
+            <programlisting role="JAVA"><xi:include href="extras/DeletingWithSession.java" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/DeletingWithEM.java" parse="text"/></programlisting>
+        </example>
+        <para>
+            It is important to note that Hibernate itself can handle deleting detached state.  JPA, however, disallows
+            it.  The implication here is that the entity instance passed to the
+            <interfacename>org.hibernate.Session</interfacename> <methodname>delete</methodname> method can be either
+            in managed or detached state, while the entity instance passed to <methodname>remove</methodname> on
+            <interfacename>javax.persistence.EntityManager</interfacename> must be in managed state.
+        </para>
+    </section>
+
+    <section>
+        <title>Obtain an entity reference without initializing its data</title>
+        <para>
+            Sometimes referred to as lazy loading, the ability to obtain a reference to an entity without having to
+            load its data is hugely important.  The most common case being the need to create an association between
+            an entity and another, existing entity.
+        </para>
+        <example>
+            <title>Example of obtaining an entity reference without initializing its data</title>
+            <programlisting role="JAVA"><xi:include href="extras/GetReferenceWithSession.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/GetReferenceWithEM.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+        </example>
+        <para>
+            The above works on the assumption that the entity is defined to allow lazy loading, generally through
+            use of runtime proxies.  For more information see <xref linkend="devguide-mappingEntities"/>.  In both
+            cases an exception will be thrown later if the given entity does not refer to actual database state if and
+            when the application attempts to use the returned proxy in any way that requires access to its data.
+        </para>
+    </section>
+
+    <section>
+        <title>Obtain an entity with its data initialized</title>
+
+        <para>
+            It is also quite common to want to obtain an entity along with with its data, for display for example.
+        </para>
+        <example>
+            <title>Example of obtaining an entity reference with its data initialized</title>
+            <programlisting role="JAVA"><xi:include href="extras/LoadWithSession.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/LoadWithEM.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+        </example>
+        <para>
+            In both cases null is returned if no matching database row was found.
+        </para>
+    </section>
+
+    <section>
+        <title>Obtain an entity by natural-id</title>
+
+        <para>
+            In addition to allowing to load by identifier, Hibernate allows applications to load by declared
+            natural identifier.
+        </para>
+        <example>
+            <title>Example of simple natural-id access</title>
+            <programlisting role="JAVA"><xi:include href="extras/SimpleNaturalIdLoading.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+        </example>
+        <example>
+            <title>Example of natural-id access</title>
+            <programlisting role="JAVA"><xi:include href="extras/NaturalIdLoading.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+        </example>
+        <para>
+            Just like we saw above, access entity data by natural id allows both the <methodname>load</methodname>
+            and <methodname>getReference</methodname> forms, with the same semantics.
+        </para>
+
+        <para>
+            Accessing persistent data by identifier and by natural-id is consistent in the Hibernate API.  Each defines
+            the same 2 data access methods:
+        </para>
+        <variablelist>
+            <varlistentry>
+                <term><methodname>getReference</methodname></term>
+                <listitem>
+                    <para>
+                        Should be used in cases where the identifier is assumed to exist, where non-existence would be
+                        an actual error.  Should never be used to test existence.  That is because this method will
+                        prefer to create and return a proxy if the data is not already associated with the Session
+                        rather than hit the database.  The quintessential use-case for using this method is to create
+                        foreign-key based associations.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><methodname>load</methodname></term>
+                <listitem>
+                    <para>
+                        Will return the persistent data associated with the given identifier value or null if that
+                        identifier does not exist.
+                    </para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+        <para>
+            In addition to those 2 methods, each also defines the method <methodname>with</methodname> accepting
+            a <interfacename>org.hibernate.LockOptions</interfacename> argument.  Locking is discussed in a separate
+            chapter.
+        </para>
+    </section>
+
+    <section>
+        <title>Refresh entity state</title>
+
+        <para>
+            You can reload an entity instance and it's collections at any time.
+        </para>
+
+        <example>
+            <title>Example of refreshing entity state</title>
+            <programlisting role="JAVA"><xi:include href="extras/RefreshWithSession.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/RefreshWithEM.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+        </example>
+
+        <para>
+            One case where this is useful is when it is known that the database state has changed since the data was
+            read.  Refreshing allows the current database state to be pulled into the entity instance and the
+            persistence context.
+        </para>
+
+        <para>
+            Another case where this might be useful is when database triggers are used to initialize some of the
+            properties of the entity.  Note that only the entity instance and its collections are refreshed unless you
+            specify <literal>REFRESH</literal> as a cascade style of any associations.  However, please note that
+            Hibernate has the capability to handle this automatically through its notion of generated properties.
+            See <xref linkend="devguide-mappingEntities"/> for information.
+        </para>
+    </section>
+
+    <section>
+        <title>Modifying managed/persistent state</title>
+
+        <para>
+            Entities in managed/persistent state may be manipulated by the application and any changes will be
+            automatically detected and persisted when the persistence context is flushed. There is no need to call a
+            particular method to make your modifications persistent.
+        </para>
+
+        <example>
+            <title>Example of modifying managed state</title>
+            <programlisting role="JAVA"><xi:include href="extras/ManagedUpdateWithSession.java" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/ManagedUpdateWithEM.java" parse="text"/></programlisting>
+        </example>
+    </section>
+
+    <section>
+        <title>Working with detached data</title>
+
+        <para>
+            Detachment is the process of working with data outside the scope of any persistence context.  Data becomes
+            detached in a number of ways.  Once the persistence context is closed, all data that was associated with it
+            becomes detached.  Clearing the persistence context has the same effect.  Evicting a particular entity
+            from the persistence context makes it detached.  And finally, serialization will make the deserialized form
+            be detached (the original instance is still managed).
+        </para>
+
+        <para>
+            Detached data can still be manipulated, however the persistence context will no longer automatically know
+            about these modification and the application will need to intervene to make the changes persistent.
+        </para>
+
+        <section>
+            <title>Reattaching detached data</title>
+            <para>
+                Reattachment is the process of taking an incoming entity instance that is in detached state
+                and re-associating it with the current persistence context.
+            </para>
+            <important>
+                <para>
+                    JPA does not provide for this model.  This is only available through Hibernate
+                    <interfacename>org.hibernate.Session</interfacename>.
+                </para>
+            </important>
+            <example>
+                <title>Example of reattaching a detached entity</title>
+                <programlisting role="JAVA"><xi:include href="extras/ReattachingWithSession1.java" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/ReattachingWithSession2.java" parse="text"/></programlisting>
+            </example>
+            <para>
+                The method name <methodname>update</methodname> is a bit misleading here.  It does not mean that an
+                <literal>SQL</literal> <literal>UPDATE</literal> is immediately performed.  It does, however, mean that
+                an <literal>SQL</literal> <literal>UPDATE</literal> will be performed when the persistence context is
+                flushed since Hibernate does not know its previous state against which to compare for changes.  Unless
+                the entity is mapped with <literal>select-before-update</literal>, in which case Hibernate will
+                pull the current state from the database and see if an update is needed.
+            </para>
+            <para>
+                Provided the entity is detached, <methodname>update</methodname> and <methodname>saveOrUpdate</methodname>
+                operate exactly the same.
+            </para>
+        </section>
+
+        <section>
+            <title>Merging detached data</title>
+            <para>
+                Merging is the process of taking an incoming entity instance that is in detached state and copying its
+                data over onto a new instance that is in managed state.
+            </para>
+            <example>
+                <title>Visualizing merge</title>
+                <programlisting role="JAVA"><xi:include href="extras/VisualizingMerge.java" parse="text"/></programlisting>
+            </example>
+            <para>
+                That is not exactly what happens, but its a good visualization.
+            </para>
+            <example>
+                <title>Example of merging a detached entity</title>
+                <programlisting role="JAVA"><xi:include href="extras/MergeWithSession.java" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/MergeWithEM.java" parse="text"/></programlisting>
+            </example>
+        </section>
+
+    </section>
+
+
+    <section>
+        <title>Checking persistent state</title>
+
+        <para>
+            An application can verify the state of entities and collections in relation to the persistence context.
+        </para>
+        <example>
+            <title>Examples of verifying managed state</title>
+            <programlisting role="JAVA"><xi:include href="extras/ContainsWithSession.java" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/ContainsWithEM.java" parse="text"/></programlisting>
+        </example>
+        <example>
+            <title>Examples of verifying laziness</title>
+            <programlisting role="JAVA"><xi:include href="extras/CheckingLazinessWithHibernate.java" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/CheckingLazinessWithJPA.java" parse="text"/></programlisting>
+        </example>
+        <para>
+            In JPA there is an alternative means to check laziness using the following
+            <interfacename>javax.persistence.PersistenceUtil</interfacename> pattern.  However, the
+            <interfacename>javax.persistence.PersistenceUnitUtil</interfacename> is recommended where ever possible
+        </para>
+        <example>
+            <title>Alternative JPA means to verify laziness</title>
+            <programlisting role="JAVA"><xi:include href="extras/CheckingLazinessWithJPA2.java" parse="text"/></programlisting>
+        </example>
+
+    </section>
+
+    <section>
+        <title>Accessing Hibernate APIs from JPA</title>
+        <para>
+            JPA defines an incredibly useful method to allow applications access to the APIs of the underlying provider.
+        </para>
+        <example>
+            <title>Usage of EntityManager.unwrap</title>
+            <programlisting role="JAVA"><xi:include href="extras/UnwrapWithEM.java" parse="text"/></programlisting>
+        </example>
+    </section>
+</chapter>

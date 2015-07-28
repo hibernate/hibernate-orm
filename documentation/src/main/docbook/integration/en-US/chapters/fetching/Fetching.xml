@@ -1,0 +1,234 @@
+<?xml version='1.0' encoding="UTF-8"?>
+
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<chapter xml:id="fetching"
+         xmlns="http://docbook.org/ns/docbook"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xl="http://www.w3.org/1999/xlink">
+
+    <title>Fetching</title>
+
+    <para>
+        Fetching, essentially, is the process of grabbing data from the database and making it available to the
+        application.  Tuning how an application does fetching is one of the biggest factors in determining how an
+        application will perform.  Fetching too much data, in terms of width (values/columns) and/or
+        depth (results/rows), adds unnecessary overhead in terms of both JDBC communication and ResultSet processing.
+        Fetching too little data causes additional fetches to be needed.  Tuning how an application
+        fetches data presents a great opportunity to influence the application's overall performance.
+    </para>
+
+    <section>
+        <title>The basics</title>
+
+        <para>
+            The concept of fetching breaks down into two different questions.  
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        When should the data be fetched?  Now?  Later?
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        How should the data be fetched?
+                    </para>
+                </listitem>
+            </itemizedlist>
+        </para>
+
+        <note>
+            <para>
+                "now" is generally termed <phrase>eager</phrase> or <phrase>immediate</phrase>.  "later" is
+                generally termed <phrase>lazy</phrase> or <phrase>delayed</phrase>.
+            </para>
+        </note>
+
+        <para>
+            There are a number of scopes for defining fetching:
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        <emphasis>static</emphasis> - Static definition of fetching strategies is done in the
+                        mappings.  The statically-defined fetch strategies is used in the absence of any dynamically
+                        defined strategies <footnote><para>Except in the case of HQL/JPQL; see xyz</para></footnote>.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <emphasis>dynamic</emphasis> (sometimes referred to as runtime) - Dynamic definition is
+                        really use-case centric.  There are 2 main ways to define dynamic fetching:
+                    </para>
+                    <itemizedlist>
+                        <listitem>
+                            <para>
+                                <emphasis>fetch profiles</emphasis> - defined in mappings, but can be
+                                enabled/disabled on the Session.
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                HQL/JPQL and both Hibernate and JPA Criteria queries have the ability to specify
+                                fetching, specific to said query.
+                            </para>
+                        </listitem>
+                    </itemizedlist>
+                </listitem>
+            </itemizedlist>
+        </para>
+
+        <variablelist>
+            <title>The strategies</title>
+            <varlistentry>
+                <term>SELECT</term>
+                <listitem>
+                    <para>
+                        Performs a separate SQL select to load the data.  This can either be EAGER (the second select
+                        is issued immediately) or LAZY (the second select is delayed until the data is needed).  This
+                        is the strategy generally termed <phrase>N+1</phrase>.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>JOIN</term>
+                <listitem>
+                    <para>
+                        Inherently an EAGER style of fetching.  The data to be fetched is obtained through the use of
+                        an SQL join.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>BATCH</term>
+                <listitem>
+                    <para>
+                        Performs a separate SQL select to load a number of related data items using an
+                        IN-restriction as part of the SQL WHERE-clause based on a batch size.  Again, this can either
+                        be EAGER (the second select is issued immediately) or LAZY (the second select is delayed until
+                        the data is needed).
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>SUBSELECT</term>
+                <listitem>
+                    <para>
+                        Performs a separate SQL select to load associated data based on the SQL restriction used to
+                        load the owner.  Again, this can either be EAGER (the second select is issued immediately)
+                        or LAZY (the second select is delayed until the data is needed).
+                    </para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+    </section>
+
+    <section>
+        <title>Applying fetch strategies</title>
+
+        <para>
+            Let's consider these topics as it relates to an simple domain model and a few use cases.
+        </para>
+
+        <example>
+            <title>Sample domain model</title>
+            <programlisting role="JAVA"><xi:include href="extras/Employee.java" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/Department.java" parse="text"/></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/Project.java" parse="text"/></programlisting>
+        </example>
+
+        <important>
+            <para>
+                The Hibernate recommendation is to statically mark all associations lazy and to use dynamic fetching
+                strategies for eagerness.  This is unfortunately at odds with the JPA specification which defines that
+                all one-to-one and many-to-one associations should be eagerly fetched by default.  Hibernate, as a JPA
+                provider honors that default.
+            </para>
+        </important>
+
+        <section>
+            <title>No fetching</title>
+            <subtitle>The login use-case</subtitle>
+            <para>
+                For the first use case, consider the application's login process for an Employee.  Lets assume that
+                login only requires access to the Employee information, not Project nor Department information.
+            </para>
+
+            <example>
+                <title>No fetching example</title>
+                <programlisting role="JAVA"><xi:include href="extras/Login.java" parse="text"/></programlisting>
+            </example>
+
+            <para>
+                In this example, the application gets the Employee data.  However, because all associations from
+                Employee are declared as LAZY (JPA defines the default for collections as LAZY) no other data is
+                fetched.
+            </para>
+
+            <para>
+                If the login process does not need access to the Employee information specifically, another
+                fetching optimization here would be to limit the width of the query results.
+            </para>
+
+            <example>
+                <title>No fetching (scalar) example</title>
+                <programlisting role="JAVA"><xi:include href="extras/LoginScalar.java" parse="text"/></programlisting>
+            </example>
+        </section>
+
+        <section>
+            <title>Dynamic fetching via queries</title>
+            <subtitle>The projects for an employee use-case</subtitle>
+
+            <para>
+                For the second use case, consider a screen displaying the Projects for an Employee.  Certainly access
+                to the Employee is needed, as is the collection of Projects for that Employee.  Information
+                about Departments, other Employees or other Projects is not needed.
+            </para>
+
+            <example>
+                <title>Dynamic query fetching example</title>
+                <programlisting role="JAVA"><xi:include href="extras/ProjectsForAnEmployeeHql.java" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/ProjectsForAnEmployeeCriteria.java" parse="text"/></programlisting>
+            </example>
+
+            <para>
+                In this example we have an Employee and their Projects loaded in a single query shown both as an HQL
+                query and a JPA Criteria query.  In both cases, this resolves to exactly one database query to get
+                all that information.
+            </para>
+        </section>
+
+        <section>
+            <title>Dynamic fetching via profiles</title>
+            <subtitle>The projects for an employee use-case using natural-id</subtitle>
+
+            <para>
+                Suppose we wanted to leverage loading by natural-id to obtain the Employee information in the
+                "projects for and employee" use-case.  Loading by natural-id uses the statically defined fetching
+                strategies, but does not expose a means to define load-specific fetching.  So we would leverage a
+                fetch profile.
+            </para>
+
+            <example>
+                <title>Fetch profile example</title>
+                <programlisting role="JAVA"><xi:include href="extras/FetchOverrides.java" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/ProjectsForAnEmployeeFetchProfile.java" parse="text"/></programlisting>
+            </example>
+
+            <para>
+                Here the Employee is obtained by natural-id lookup and the Employee's Project data is fetched eagerly.
+                If the Employee data is resolved from cache, the Project data is resolved on its own.  However,
+                if the Employee data is not resolved in cache, the Employee and Project data is resolved in one
+                SQL query via join as we saw above.
+            </para>
+        </section>
+    </section>
+
+    <!-- todo : document special fetching considerations such as batch fetching, subselect fetching and extra laziness -->
+
+
+</chapter>

@@ -1,0 +1,252 @@
+<?xml version='1.0' encoding='utf-8' ?>
+
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+        xml:id="batch">
+
+  <title>Batch Processing</title>
+  <para>
+    The following example shows an antipattern for batch inserts.
+  </para>
+  <example>
+    <title>Naive way to insert 100000 lines with Hibernate</title>
+    <programlisting language="Java" role="JAVA"><xi:include href="extras/batch_insert.java" parse="text" /></programlisting>
+    <para>
+      This fails with exception <systemitem>OutOfMemoryException</systemitem> after around 50000 rows on most
+      systems. The reason is that Hibernate caches all the newly inserted Customer instances in the session-level
+      cache. There are several ways to avoid this problem.
+    </para>
+  </example>
+  <para>
+    Before batch processing, enable JDBC batching. To enable JDBC batching, set the property
+    <property>hibernate.jdbc.batch_size</property> to an integer between 10 and 50.
+  </para>
+  <note>
+    <para>
+      Hibernate disables insert batching at the JDBC level transparently if you use an identity identifier generator.
+    </para>
+  </note>
+  <para>
+    If the above approach is not appropriate, you can disable the second-level cache, by setting
+    <property>hibernate.cache.use_second_level_cache</property> to <literal>false</literal>.
+  </para>
+  
+  <section>
+    <title>Batch inserts</title>
+    <para>
+      When you make new objects persistent, employ methods <methodname>flush()</methodname> and
+      <methodname>clear()</methodname> to the session regularly, to control the size of the first-level cache.
+    </para>
+    <example>
+      <title>Flushing and clearing the <classname>Session</classname></title>
+      <programlisting language="Java" role="JAVA"><xi:include href="extras/flush_and_clear_session.java" parse="text" /></programlisting>
+    </example>
+  </section>
+  
+  <section>
+    <title>Batch updates</title>
+    <para>
+      When you retriev and update data, <methodname>flush()</methodname> and <methodname>clear()</methodname> the
+      session regularly.  In addition, use method <methodname>scroll()</methodname> to take advantage of server-side
+      cursors for queries that return many rows of data.
+    </para>
+    <example>
+      <title>Using <methodname>scroll()</methodname></title>
+      <programlisting language="Java" role="JAVA"><xi:include href="extras/using_scroll.java" parse="text" /></programlisting>
+    </example>
+  </section>
+  
+  <section>
+    <title>StatelessSession</title>
+    <para>
+      <interfacename>StatelessSession</interfacename> is a command-oriented API provided by Hibernate. Use it to stream
+      data to and from the database in the form of detached objects. A <interfacename>StatelessSession</interfacename>
+      has no persistence context associated with it and does not provide many of the higher-level life cycle
+      semantics. Some of the things not provided by a <interfacename>StatelessSession</interfacename> include:
+    </para>
+    <itemizedlist>
+      <title>Features and behaviors not provided by <interfacename>StatelessSession</interfacename></title>
+      <listitem>
+        <para>
+          a first-level cache
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          interaction with any second-level or query cache
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          transactional write-behind or automatic dirty checking
+        </para>
+      </listitem>
+    </itemizedlist>
+    <itemizedlist>
+      <title>Limitations of <interfacename>StatelessSession</interfacename></title>
+      <listitem>
+        <para>
+          Operations performed using a stateless session never cascade to associated instances.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Collections are ignored by a stateless session.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Operations performed via a stateless session bypass Hibernate's event model and interceptors.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Due to the lack of a first-level cache, Stateless sessions are vulnerable to data aliasing effects.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          A stateless session is a lower-level abstraction that is much closer to the underlying JDBC.
+        </para>
+      </listitem>
+    </itemizedlist>
+    <example>
+      <title>Using a <interfacename>StatelessSession</interfacename></title>
+      <programlisting language="Java" role="JAVA"><xi:include href="extras/using_a_StatelessSession.java" parse="text" /></programlisting>
+      <para>
+        The <classname>Customer</classname> instances returned by the query are immediately detached. They are never
+        associated with any persistence context.
+      </para>
+    </example>
+    <para>
+      The <methodname>insert()</methodname>, <methodname>update()</methodname>, and <methodname>delete()</methodname>
+      operations defined by the <interfacename>StatelessSession</interfacename> interface operate directly on database
+      rows. They cause the corresponding SQL operations to be executed immediately.  They have different semantics from
+      the <methodname>save()</methodname>, <methodname>saveOrUpdate()</methodname>, and
+      <methodname>delete()</methodname> operations defined by the <interfacename>Session</interfacename> interface.
+    </para>
+  </section>
+  
+  <section>
+    <title>Hibernate Query Language for DML</title>
+    <para>
+      DML, or <firstterm>Data Markup Language</firstterm>, refers to SQL statements such as <literal>INSERT</literal>,
+      <literal>UPDATE</literal>, and <literal>DELETE</literal>. Hibernate provides methods for bulk SQL-style DML
+      statement execution, in the form of <firstterm>Hibernate Query Language (HQL)</firstterm>.
+    </para>
+    <section>
+      <title>HQL for UPDATE and DELETE</title>
+      <example>
+        <title>Psuedo-syntax for UPDATE and DELETE statements using HQL</title>
+        <screen>
+          ( UPDATE | DELETE ) FROM? EntityName (WHERE where_conditions)?
+        </screen>
+        <para>
+          The <literal>?</literal> suffix indications an optional parameter. The <literal>FROM</literal> and
+          <literal>WHERE</literal> clauses are each optional.
+        </para>
+      </example>
+      <para>
+        The <literal>FROM</literal> clause can only refer to a single entity, which can be aliased. If the entity name
+        is aliased, any property references must be qualified using that alias. If the entity name is not aliased, then
+        it is illegal for any property references to be qualified.
+      </para>
+      <para>
+        Joins, either implicit or explicit, are prohibited in a bulk HQL query. You can use sub-queries in the
+        <literal>WHERE</literal> clause, and the sub-queries themselves can contain joins.
+      </para>
+      <example>
+        <title>Executing an HQL UPDATE, using the <methodname>Query.executeUpdate()</methodname> method</title>
+        <programlisting language="Java" role="JAVA"><xi:include href="extras/executeUpdate.java" parse="text" /></programlisting>
+      </example>
+      <para>
+        In keeping with the EJB3 specification, HQL UPDATE statements, by default, do not effect the version or the
+        timestamp property values for the affected entities. You can use a versioned update to force Hibernate to reset
+        the version or timestamp property values, by adding the <literal>VERSIONED</literal> keyword after the
+        <literal>UPDATE</literal> keyword.
+      </para>
+      <example>
+        <title>Updating the version of timestamp</title>
+        <programlisting language="Java" role="JAVA"><xi:include href="extras/updating_version.java" parse="text" /></programlisting>
+      </example>
+      <note>
+        <para>
+          If you use the <literal>VERSIONED</literal> statement, you cannot use custom version types, which use class
+          <classname>org.hibernate.usertype.UserVersionType</classname>.
+        </para>
+      </note>
+      <example>
+        <title>A HQL <literal>DELETE</literal> statement</title>
+        <programlisting language="Java" role="JAVA"><xi:include href="extras/hql_delete.java" parse="text" /></programlisting>
+      </example>
+      <para>
+        Method <methodname>Query.executeUpdate()</methodname> returns an <type>int</type> value, which indicates the
+        number of entities effected by the operation. This may or may not correlate to the number of rows effected in
+        the database. An HQL bulk operation might result in multiple SQL statements being executed, such as for
+        joined-subclass. In the example of joined-subclass, a <literal>DELETE</literal> against one of the subclasses
+        may actually result in deletes in the tables underlying the join, or further down the inheritance hierarchy.
+      </para>
+    </section>
+    
+    <section>
+      <title>HQL syntax for INSERT</title>
+      <example>
+        <title>Pseudo-syntax for INSERT statements</title>
+        <screen>
+          INSERT INTO EntityName <replaceable>properties_list</replaceable> <replaceable>select_statement</replaceable>
+        </screen>
+      </example>
+      <para>
+        Only the <literal>INSERT INTO ... SELECT ...</literal> form is supported. You cannot specify explicit values to
+        insert.
+      </para>
+      <para>
+        The <replaceable>properties_list</replaceable> is analogous to the column specification in the <literal>SQL
+        INSERT</literal> statement. For entities involved in mapped inheritance, you can only use properties directly
+        defined on that given class-level in the <replaceable>properties_list</replaceable>. Superclass properties are
+        not allowed and subclass properties are irrelevant. In other words, <literal>INSERT</literal> statements are
+        inherently non-polymorphic.
+      </para>
+      <para>
+        The <replaceable>select_statement</replaceable> can be any valid HQL select query, but the return types must
+        match the types expected by the INSERT. Hibernate verifies the return types during query compilation, instead of
+        expecting the database to check it. Problems might result from Hibernate types which are equivalent, rather than
+        equal. One such example is a mismatch between a property defined as an <type>org.hibernate.type.DateType</type>
+        and a property defined as an <type>org.hibernate.type.TimestampType</type>, even though the database may not
+        make a distinction, or may be capable of handling the conversion.
+      </para>
+      <para>
+        If <replaceable>id</replaceable> property is not specified in the <replaceable>properties_list</replaceable>,
+        Hibernate generates a value automatically. Automatic generation is only available if you use ID generators which
+        operate on the database. Otherwise, Hibernate throws an exception during parsing. Available in-database
+        generators are <classname>org.hibernate.id.SequenceGenerator</classname> and its subclasses, and objects which
+        implement <interfacename>org.hibernate.id.PostInsertIdentifierGenerator</interfacename>. The most notable
+        exception is <classname>org.hibernate.id.TableHiLoGenerator</classname>, which does not expose a selectable way
+        to get its values.
+      </para>
+      <para>
+        For properties mapped as either version or timestamp, the insert statement gives you two options. You can either
+        specify the property in the properties_list, in which case its value is taken from the corresponding select
+        expressions, or omit it from the properties_list, in which case the seed value defined by the
+        org.hibernate.type.VersionType is used.
+      </para>
+      <example>
+        <title>HQL INSERT statement</title>
+        <programlisting language="Java" role="JAVA"><xi:include href="extras/hql-insert.java" parse="text" /></programlisting>
+      </example>
+    </section>
+    <section>
+      <title>More information on HQL</title>
+      <para>
+        This section is only a brief overview of HQL. For more information, see <xref linkend="chap-hql" />.
+      </para>
+    </section>
+  </section>
+</chapter>
+

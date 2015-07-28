@@ -1,0 +1,130 @@
+<?xml version='1.0' encoding='utf-8' ?>
+
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<chapter xml:id="categorization" xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude">
+    <title>Data categorizations</title>
+
+    <!-- todo : image with a simple Person/Contact mapping -->
+
+    <para>
+        Before diving into the actual topics of how to map different categories of things in your domain mode
+        it helps to understand what those categories are.  Hibernate and JPA both express these categorizations.
+    </para>
+
+    <para>
+        Hibernate understands both the Java and JDBC representations of application data.  The ability to read and write
+        the this data to/from the database is the function of a Hibernate <firstterm>type</firstterm>.  A type, in this usage,
+        is an implementation of the <interfacename>org.hibernate.type.Type</interfacename> interface.  This Hibernate
+        type also describes various aspects of behavior of the Java type such as how to check for equality, how to
+        clone values, etc.
+    </para>
+
+    <note>
+        <title>Usage of the word <wordasword>type</wordasword></title>
+        <para>
+            The Hibernate type is neither a Java type nor a SQL datatype.   It provides information about both of these
+            as well as understanding marshalling between.
+        </para>
+        <para>
+            When you encounter the term type in discussions of Hibernate, it may refer to the Java type, the JDBC type,
+            or the Hibernate type, depending on context.
+        </para>
+    </note>
+
+    <para>
+        To help understand these categorizations, lets look at a simple table and domain model that we wish to map.
+    </para>
+
+    <example>
+        <title>Simple table and domain model</title>
+        <programlisting role="SQL"><xi:include href="extras/Contact.sql" parse="text"/></programlisting>
+        <programlisting role="JAVA"><xi:include href="extras/Contact.java" parse="text"/></programlisting>
+    </example>
+
+    <para>
+        In the broadest sense, Hibernate categorizes types into two groups:
+        <itemizedlist>
+            <listitem>Value types (<xref linkend="categorization-value" />)</listitem>
+            <listitem>Entity types (<xref linkend="categorization-entity" />)</listitem>
+        </itemizedlist>
+    </para>
+
+    <section xml:id="categorization-value">
+        <title>Value types</title>
+
+        <para>
+            A value type is a piece of data that does not define its own lifecycle. It is,
+            in effect, owned by an entity, which defines its lifecycle.
+        </para>
+
+        <para>
+            Looked at another way, all the state of an entity is made up entirely of value types.  These
+            state fields or JavaBean-properties are termed <firstterm>persistent attributes</firstterm>.
+            The persistent attributes of the Contact class are value types.
+        </para>
+
+        <para>
+            Value types are further classified into three sub-categories;
+            <itemizedlist>
+                <listitem>
+                    Basic types - In mapping the Contact table, all attributes except for name would be basic
+                    types.  Basic types are discussed in detail in <xref linkend="basic"/>
+                </listitem>
+                <listitem>
+                    Composite (or Embeddable) types - the name attribute is an example of a composite type, which is
+                    discussed in details in <xref linkend="composite" />
+                </listitem>
+                <listitem>
+                    Collection types - the example has no collections.  Collection types are
+                    discussed in <ref linkend="collection" />
+                </listitem>
+            </itemizedlist>
+        </para>
+    </section>
+
+    <section xml:id="categorization-entity">
+        <title>Entity Types</title>
+
+        <para>
+            Entities are application-specific classes which correlate to rows in a table, using a unique identifier.
+            Because of the requirement for a unique identifier, entities exist independently and define their own
+            lifecycle.  The Contact class itself would be an example of an entity.
+        </para>
+
+        <para>
+            Mapping entities is discussed in detail in <xref linkend="entity"/>.
+        </para>
+    </section>
+
+    <section xml:id="categorization-significance">
+        <title>Significance of type categories</title>
+        <para>
+            Why do we spend so much time categorizing the various types of types?  What is the significance of the
+            distinction?
+        </para>
+        <para>
+            The main categorization was between entity types and value types.  To review we said that entities, by
+            nature of their unique identifier, exist independently of other objects whereas values do not.  An
+            application cannot "delete" the Contact website; instead, the website is removed when the Contact itself is
+            deleted (obviously you can <emphasis>update</emphasis> the website of that website to null to make it
+            "go away", but even there the access is done through the website).
+        </para>
+        <para>
+            Nor can you define an association <emphasis>to</emphasis> that Contact website.  You <emphasis>can</emphasis>
+            define an association to Contact <emphasis>based on</emphasis> its website (assuming website is unique),
+            but that is totally different.
+        </para>
+        <para>
+            equality
+        </para>
+        <para>
+            TBC...
+        </para>
+    </section>
+
+</chapter>

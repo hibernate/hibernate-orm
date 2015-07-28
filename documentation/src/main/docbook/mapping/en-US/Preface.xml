@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='utf-8' ?>
+
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+-->
+<preface xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink" >
+    <title>Preface</title>
+
+    <para>
+        The goal of this document is to discuss how to map an application's domain model to a relational
+        database.
+    </para>
+
+    <para>
+        Historically applications using Hibernate would have used its proprietary XML mapping file format for
+        this purpose.  With the coming of JPA, most of this information is now defined in a way that is portable
+        across ORM/JPA providers using annotations (and/or standardized XML format).  This document will focus on
+        JPA mapping where possible.  For Hibernate mapping features not supported by JPA we will prefer Hibernate
+        extension annotations, again where possible.
+    </para>
+
+</preface>

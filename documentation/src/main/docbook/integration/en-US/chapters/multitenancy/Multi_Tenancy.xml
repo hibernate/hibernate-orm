@@ -1,0 +1,313 @@
+<?xml version='1.0' encoding='utf-8' ?>
+
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xl="http://www.w3.org/1999/xlink"
+         xmlns:xi="http://www.w3.org/2001/XInclude">
+
+    <title>Multi-tenancy</title>
+
+    <section>
+        <title>What is multi-tenancy?</title>
+        <para>
+            The term multi-tenancy in general is applied to software development to indicate an architecture in which
+            a single running instance of an application simultaneously serves multiple clients (tenants).  This is
+            highly common in SaaS solutions.  Isolating information (data, customizations, etc) pertaining to the
+            various tenants is a particular challenge in these systems.  This includes the data owned by each tenant
+            stored in the database.  It is this last piece, sometimes called multi-tenant data, on which we will focus.
+        </para>
+    </section>
+
+    <section>
+        <title>Multi-tenant data approaches</title>
+        <para>
+            There are 3 main approaches to isolating information in these multi-tenant systems which goes hand-in-hand
+            with different database schema definitions and JDBC setups.
+        </para>
+
+        <note>
+            <para>
+                Each approach has pros and cons as well as specific techniques and considerations.  Such
+                topics are beyond the scope of this documentation.  Many resources exist which delve into these
+                other topics.  One example is <link xl:href="http://msdn.microsoft.com/en-us/library/aa479086.aspx"/>
+                which does a great job of covering these topics.
+            </para>
+        </note>
+
+        <section>
+            <title>Separate database</title>
+
+            <mediaobject>
+                <imageobject role="html">
+                    <imagedata fileref="chapters/multitenancy/images/multitenacy_database.png" format="PNG" align="center" />
+                </imageobject>
+                <imageobject role="fo">
+                    <imagedata fileref="chapters/multitenancy/images/multitenacy_database.svg" format="SVG" align="center" width="17cm" />
+                </imageobject>
+            </mediaobject>
+
+            <para>
+                Each tenant's data is kept in a physically separate database instance.  JDBC Connections would point
+                specifically to each database, so any pooling would be per-tenant.  A general application approach
+                here would be to define a JDBC Connection pool per-tenant and to select the pool to use based on the
+                <quote>tenant identifier</quote> associated with the currently logged in user.
+            </para>
+        </section>
+
+        <section>
+            <title>Separate schema</title>
+
+            <mediaobject>
+                <imageobject role="html">
+                    <imagedata fileref="chapters/multitenancy/images/multitenacy_schema.png" format="PNG" align="center" />
+                </imageobject>
+                <imageobject role="fo">
+                    <imagedata fileref="chapters/multitenancy/images/multitenacy_schema.svg" format="SVG" align="center" width="17cm" />
+                </imageobject>
+            </mediaobject>
+
+            <para>
+                Each tenant's data is kept in a distinct database schema on a single database instance.  There are 2
+                different ways to define JDBC Connections here:
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            Connections could point specifically to each schema, as we saw with the
+                            <literal>Separate database</literal> approach.  This is an option provided that
+                            the driver supports naming the default schema in the connection URL or if the
+                            pooling mechanism supports naming a schema to use for its Connections.  Using this
+                            approach, we would have a distinct JDBC Connection pool per-tenant where the pool to use
+                            would be selected based on the <quote>tenant identifier</quote> associated with the
+                            currently logged in user.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            Connections could point to the database itself (using some default schema) but
+                            the Connections would be altered using the SQL <literal>SET SCHEMA</literal> (or similar)
+                            command.  Using this approach, we would have a single JDBC Connection pool for use to
+                            service all tenants, but before using the Connection it would be altered to reference
+                            the schema named by the <quote>tenant identifier</quote> associated with the currently
+                            logged in user.
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+
+        <section>
+            <title>Partitioned (discriminator) data</title>
+
+            <mediaobject>
+                <imageobject role="html">
+                    <imagedata fileref="chapters/multitenancy/images/multitenacy_discriminator.png" format="PNG" align="center" />
+                </imageobject>
+                <imageobject role="fo">
+                    <imagedata fileref="chapters/multitenancy/images/multitenacy_discriminator.svg" format="SVG" align="center" width="17cm" />
+                </imageobject>
+            </mediaobject>
+
+            <para>
+                All data is kept in a single database schema.  The data for each tenant is partitioned by the use of
+                partition value or discriminator.  The complexity of this discriminator might range from a simple
+                column value to a complex SQL formula.  Again, this approach would use a single Connection pool
+                to service all tenants.  However, in this approach the application needs to alter each and every
+                SQL statement sent to the database to reference the <quote>tenant identifier</quote> discriminator.
+            </para>
+        </section>
+    </section>
+
+    <section>
+        <title>Multi-tenancy in Hibernate</title>
+        <para>
+            Using Hibernate with multi-tenant data comes down to both an API and then integration piece(s).  As
+            usual Hibernate strives to keep the API simple and isolated from any underlying integration complexities.
+            The API is really just defined by passing the tenant identifier as part of opening any session.
+        </para>
+        <example id="specifying-tenant-ex">
+            <title>Specifying tenant identifier from <interfacename>SessionFactory</interfacename></title>
+            <programlisting role="JAVA"><xi:include href="extras/tenant-identifier-from-SessionFactory.java" parse="text"/></programlisting>
+        </example>
+        <para>
+            Additionally, when specifying configuration, a <classname>org.hibernate.MultiTenancyStrategy</classname>
+            should be named using the <property>hibernate.multiTenancy</property> setting.  Hibernate will perform
+            validations based on the type of strategy you specify.  The strategy here correlates to the isolation
+            approach discussed above.
+        </para>
+        <variablelist>
+            <varlistentry>
+                <term>NONE</term>
+                <listitem>
+                    <para>
+                        (the default) No multi-tenancy is expected.  In fact, it is considered an error if a tenant
+                        identifier is specified when opening a session using this strategy.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>SCHEMA</term>
+                <listitem>
+                    <para>
+                        Correlates to the separate schema approach.  It is an error to attempt to open a session without
+                        a tenant identifier using this strategy.  Additionally, a
+                        <interfacename>MultiTenantConnectionProvider</interfacename>
+                        must be specified.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>DATABASE</term>
+                <listitem>
+                    <para>
+                        Correlates to the separate database approach.  It is an error to attempt to open a session without
+                        a tenant identifier using this strategy.  Additionally, a
+                        <interfacename>MultiTenantConnectionProvider</interfacename>
+                        must be specified.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>DISCRIMINATOR</term>
+                <listitem>
+                    <para>
+                        Correlates to the partitioned (discriminator) approach.  It is an error to attempt to open a
+                        session without a tenant identifier using this strategy.  This strategy is not yet implemented
+                        in Hibernate as of 4.0 and 4.1.  Its support is planned for 5.0.
+                    </para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+
+        <section>
+            <title><interfacename>MultiTenantConnectionProvider</interfacename></title>
+            <para>
+                When using either the DATABASE or SCHEMA approach, Hibernate needs to be able to obtain Connections
+                in a tenant specific manner.  That is the role of the
+                <interfacename>MultiTenantConnectionProvider</interfacename>
+                contract.  Application developers will need to provide an implementation of this
+                contract.  Most of its methods are extremely self-explanatory.  The only ones which might not be are
+                <methodname>getAnyConnection</methodname> and <methodname>releaseAnyConnection</methodname>.  It is
+                important to note also that these methods do not accept the tenant identifier.  Hibernate uses these
+                methods during startup to perform various configuration, mainly via the
+                <classname>java.sql.DatabaseMetaData</classname> object.
+            </para>
+            <para>
+                The <interfacename>MultiTenantConnectionProvider</interfacename> to use can be specified in a number of
+                ways:
+            </para>
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        Use the <property>hibernate.multi_tenant_connection_provider</property> setting.  It could
+                        name a <interfacename>MultiTenantConnectionProvider</interfacename> instance, a
+                        <interfacename>MultiTenantConnectionProvider</interfacename> implementation class reference or
+                        a <interfacename>MultiTenantConnectionProvider</interfacename> implementation class name.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        Passed directly to the <classname>org.hibernate.boot.registry.StandardServiceRegistryBuilder</classname>.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        If none of the above options match, but the settings do specify a
+                        <property>hibernate.connection.datasource</property> value, Hibernate will assume it should
+                        use the specific
+                        <classname>DataSourceBasedMultiTenantConnectionProviderImpl</classname>
+                        implementation which works on a number of pretty reasonable assumptions when running inside of
+                        an app server and using one <interfacename>javax.sql.DataSource</interfacename> per tenant.
+                        See its javadocs for more details.
+                    </para>
+                </listitem>
+            </itemizedlist>
+        </section>
+
+        <section>
+            <title><interfacename>CurrentTenantIdentifierResolver</interfacename></title>
+            <para>
+                <interfacename>org.hibernate.context.spi.CurrentTenantIdentifierResolver</interfacename> is a contract
+                for Hibernate to be able to resolve what the application considers the current tenant identifier.
+                The implementation to use is either passed directly to <classname>Configuration</classname> via its
+                <methodname>setCurrentTenantIdentifierResolver</methodname> method.  It can also be specified via
+                the <property>hibernate.tenant_identifier_resolver</property> setting.
+            </para>
+            <para>
+                There are 2 situations where <interfacename>CurrentTenantIdentifierResolver</interfacename> is used:
+            </para>
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        The first situation is when the application is using the
+                        <interfacename>org.hibernate.context.spi.CurrentSessionContext</interfacename> feature in
+                        conjunction with multi-tenancy.  In the case of the current-session feature,  Hibernate will
+                        need to open a session if it cannot find an existing one in scope.  However, when a session
+                        is opened in a multi-tenant environment the tenant identifier has to be specified.  This is
+                        where the <interfacename>CurrentTenantIdentifierResolver</interfacename> comes into play;
+                        Hibernate will consult the implementation you provide to determine the tenant identifier to use
+                        when opening the session.  In this case, it is required that a
+                        <interfacename>CurrentTenantIdentifierResolver</interfacename> be supplied.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        The other situation is when you do not want to have to explicitly specify the tenant
+                        identifier all the time as we saw in <xref linkend="specifying-tenant-ex"/>.  If a
+                        <interfacename>CurrentTenantIdentifierResolver</interfacename> has been specified, Hibernate
+                        will use it to determine the default tenant identifier to use when opening the session.
+                    </para>
+                </listitem>
+            </itemizedlist>
+            <para>
+                Additionally, if the <interfacename>CurrentTenantIdentifierResolver</interfacename> implementation
+                returns <literal>true</literal> for its <methodname>validateExistingCurrentSessions</methodname>
+                method, Hibernate will make sure any existing sessions that are found in scope have a matching
+                tenant identifier.  This capability is only pertinent when the
+                <interfacename>CurrentTenantIdentifierResolver</interfacename> is used in current-session settings.
+            </para>
+        </section>
+
+        <section>
+            <title>Caching</title>
+            <para>
+                Multi-tenancy support in Hibernate works seamlessly with the Hibernate second level cache.  The key
+                used to cache data encodes the tenant identifier.
+            </para>
+        </section>
+
+        <section>
+            <title>Odds and ends</title>
+            <para>
+                Currently schema export will not really work with multi-tenancy.  That may not change.
+            </para>
+            <para>
+                The JPA expert group is in the process of defining multi-tenancy support for the upcoming 2.1
+                version of the specification.
+            </para>
+        </section>
+    </section>
+
+    <section>
+        <title>Strategies for <interfacename>MultiTenantConnectionProvider</interfacename> implementors</title>
+        <example>
+            <title>Implementing MultiTenantConnectionProvider using different connection pools</title>
+            <programlisting role="JAVA"><xi:include href="extras/MultiTenantConnectionProviderImpl-multi-cp.java" parse="text"/></programlisting>
+        </example>
+        <para>
+            The approach above is valid for the DATABASE approach.  It is also valid for the SCHEMA approach
+            provided the underlying database allows naming the schema to which to connect in the connection URL.
+        </para>
+        <example>
+            <title>Implementing MultiTenantConnectionProvider using single connection pool</title>
+            <programlisting role="JAVA"><xi:include href="extras/MultiTenantConnectionProviderImpl-single-cp.java" parse="text"/></programlisting>
+        </example>
+        <para>
+            This approach is only relevant to the SCHEMA approach.
+        </para>
+    </section>
+</chapter>

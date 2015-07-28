@@ -1,0 +1,620 @@
+<?xml version='1.0' encoding='utf-8' ?>
+
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<chapter xml:id="basic" xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude">
+    <title>Basic Types</title>
+
+    <abstract>
+        This chapter will discuss actual basic type mappings as well as how to override those
+        mappings and provide extra mappings.
+    </abstract>
+
+    <para>
+        Basic value types usually map a single database value, or column, to a single, non-aggregated Java
+        type.  Hibernate provides a number of built-in basic types, which follow the natural mappings
+        recommended in the JDBC specifications.
+    </para>
+
+    <para>
+        Internally Hibernate uses a registry of basic types when it needs to resolve the specific
+        <interfacename>org.hibernate.type.Type</interfacename> to use in certain situations.
+    </para>
+
+    <section xml:id="basic-provided">
+        <title>Hibernate-provided BasicTypes</title>
+        <table>
+            <title>Standard BasicTypes</title>
+            <tgroup cols="4">
+                <thead>
+                    <row>
+                        <entry>Hibernate type (org.hibernate.type package)</entry>
+                        <entry>JDBC type</entry>
+                        <entry>Java type</entry>
+                        <entry>BasicTypeRegistry key(s)</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>StringType</entry>
+                        <entry>VARCHAR</entry>
+                        <entry>java.lang.String</entry>
+                        <entry>string, java.lang.String</entry>
+                    </row>
+                    <row>
+                        <entry>MaterializedClob</entry>
+                        <entry>CLOB</entry>
+                        <entry>java.lang.String</entry>
+                        <entry>materialized_clob</entry>
+                    </row>
+                    <row>
+                        <entry>TextType</entry>
+                        <entry>LONGVARCHAR</entry>
+                        <entry>java.lang.String</entry>
+                        <entry>text</entry>
+                    </row>
+                    <row>
+                        <entry>CharacterType</entry>
+                        <entry>CHAR</entry>
+                        <entry>char, java.lang.Character</entry>
+                        <entry>char, java.lang.Character</entry>
+                    </row>
+                    <row>
+                        <entry>BooleanType</entry>
+                        <entry>BIT</entry>
+                        <entry>boolean, java.lang.Boolean</entry>
+                        <entry>boolean, java.lang.Boolean</entry>
+                    </row>
+                    <row>
+                        <entry>NumericBooleanType</entry>
+                        <entry>INTEGER, 0 is false, 1 is true</entry>
+                        <entry>boolean, java.lang.Boolean</entry>
+                        <entry>numeric_boolean</entry>
+                    </row>
+                    <row>
+                        <entry>YesNoType</entry>
+                        <entry>CHAR, 'N'/'n' is false, 'Y'/'y' is true. The uppercase value is written to the database.</entry>
+                        <entry>boolean, java.lang.Boolean</entry>
+                        <entry>yes_no</entry>
+                    </row>
+                    <row>
+                        <entry>TrueFalseType</entry>
+                        <entry>CHAR, 'F'/'f' is false, 'T'/'t' is true. The uppercase value is written to the database.</entry>
+                        <entry>boolean, java.lang.Boolean</entry>
+                        <entry>true_false</entry>
+                    </row>
+                    <row>
+                        <entry>ByteType</entry>
+                        <entry>TINYINT</entry>
+                        <entry>byte, java.lang.Byte</entry>
+                        <entry>byte, java.lang.Byte</entry>
+                    </row>
+                    <row>
+                        <entry>ShortType</entry>
+                        <entry>SMALLINT</entry>
+                        <entry>short, java.lang.Short</entry>
+                        <entry>short, java.lang.Short</entry>
+                    </row>
+                    <row>
+                        <entry>IntegerTypes</entry>
+                        <entry>INTEGER</entry>
+                        <entry>int, java.lang.Integer</entry>
+                        <entry>int, java.lang.Integer</entry>
+                    </row>
+                    <row>
+                        <entry>LongType</entry>
+                        <entry>BIGINT</entry>
+                        <entry>long, java.lang.Long</entry>
+                        <entry>long, java.lang.Long</entry>
+                    </row>
+                    <row>
+                        <entry>FloatType</entry>
+                        <entry>FLOAT</entry>
+                        <entry>float, java.lang.Float</entry>
+                        <entry>float, java.lang.Float</entry>
+                    </row>
+                    <row>
+                        <entry>DoubleType</entry>
+                        <entry>DOUBLE</entry>
+                        <entry>double, java.lang.Double</entry>
+                        <entry>double, java.lang.Double</entry>
+                    </row>
+                    <row>
+                        <entry>BigIntegerType</entry>
+                        <entry>NUMERIC</entry>
+                        <entry>java.math.BigInteger</entry>
+                        <entry>big_integer, java.math.BigInteger</entry>
+                    </row>
+                    <row>
+                        <entry>BigDecimalType</entry>
+                        <entry>NUMERIC</entry>
+                        <entry>java.math.BigDecimal</entry>
+                        <entry>big_decimal, java.math.bigDecimal</entry>
+                    </row>
+                    <row>
+                        <entry>TimestampType</entry>
+                        <entry>TIMESTAMP</entry>
+                        <entry>java.sql.Timestamp</entry>
+                        <entry>timestamp, java.sql.Timestamp</entry>
+                    </row>
+                    <row>
+                        <entry>TimeType</entry>
+                        <entry>TIME</entry>
+                        <entry>java.sql.Time</entry>
+                        <entry>time, java.sql.Time</entry>
+                    </row>
+                    <row>
+                        <entry>DateType</entry>
+                        <entry>DATE</entry>
+                        <entry>java.sql.Date</entry>
+                        <entry>date, java.sql.Date</entry>
+                    </row>
+                    <row>
+                        <entry>CalendarType</entry>
+                        <entry>TIMESTAMP</entry>
+                        <entry>java.util.Calendar</entry>
+                        <entry>calendar, java.util.Calendar</entry>
+                    </row>
+                    <row>
+                        <entry>CalendarDateType</entry>
+                        <entry>DATE</entry>
+                        <entry>java.util.Calendar</entry>
+                        <entry>calendar_date</entry>
+                    </row>
+                    <row>
+                        <entry>CurrencyType</entry>
+                        <entry>java.util.Currency</entry>
+                        <entry>VARCHAR</entry>
+                        <entry>currency, java.util.Currency</entry>
+                    </row>
+                    <row>
+                        <entry>LocaleType</entry>
+                        <entry>VARCHAR</entry>
+                        <entry>java.util.Locale</entry>
+                        <entry>locale, java.utility.locale</entry>
+                    </row>
+                    <row>
+                        <entry>TimeZoneType</entry>
+                        <entry>VARCHAR, using the TimeZone ID</entry>
+                        <entry>java.util.TimeZone</entry>
+                        <entry>timezone, java.util.TimeZone</entry>
+                    </row>
+                    <row>
+                        <entry>UrlType</entry>
+                        <entry>VARCHAR</entry>
+                        <entry>java.net.URL</entry>
+                        <entry>url, java.net.URL</entry>
+                    </row>
+                    <row>
+                        <entry>ClassType</entry>
+                        <entry>VARCHAR (class FQN)</entry>
+                        <entry>java.lang.Class</entry>
+                        <entry>class, java.lang.Class</entry>
+                    </row>
+                    <row>
+                        <entry>BlobType</entry>
+                        <entry>BLOB</entry>
+                        <entry>java.sql.Blob</entry>
+                        <entry>blog, java.sql.Blob</entry>
+                    </row>
+                    <row>
+                        <entry>ClobType</entry>
+                        <entry>CLOB</entry>
+                        <entry>java.sql.Clob</entry>
+                        <entry>clob, java.sql.Clob</entry>
+                    </row>
+                    <row>
+                        <entry>BinaryType</entry>
+                        <entry>VARBINARY</entry>
+                        <entry>byte[]</entry>
+                        <entry>binary, byte[]</entry>
+                    </row>
+                    <row>
+                        <entry>MaterializedBlobType</entry>
+                        <entry>BLOB</entry>
+                        <entry>byte[]</entry>
+                        <entry>materized_blob</entry>
+                    </row>
+                    <row>
+                        <entry>ImageType</entry>
+                        <entry>LONGVARBINARY</entry>
+                        <entry>byte[]</entry>
+                        <entry>image</entry>
+                    </row>
+                    <row>
+                        <entry>WrapperBinaryType</entry>
+                        <entry>VARBINARY</entry>
+                        <entry>java.lang.Byte[]</entry>
+                        <entry>wrapper-binary, Byte[], java.lang.Byte[]</entry>
+                    </row>
+                    <row>
+                        <entry>CharArrayType</entry>
+                        <entry>VARCHAR</entry>
+                        <entry>char[]</entry>
+                        <entry>characters, char[]</entry>
+                    </row>
+                    <row>
+                        <entry>CharacterArrayType</entry>
+                        <entry>VARCHAR</entry>
+                        <entry>java.lang.Character[]</entry>
+                        <entry>wrapper-characters, Character[], java.lang.Character[]</entry>
+                    </row>
+                    <row>
+                        <entry>UUIDBinaryType</entry>
+                        <entry>BINARY</entry>
+                        <entry>java.util.UUID</entry>
+                        <entry>uuid-binary, java.util.UUID</entry>
+                    </row>
+                    <row>
+                        <entry>UUIDCharType</entry>
+                        <entry>CHAR, can also read VARCHAR</entry>
+                        <entry>java.util.UUID</entry>
+                        <entry>uuid-char</entry>
+                    </row>
+                    <row>
+                        <entry>PostgresUUIDType</entry>
+                        <entry>PostgreSQL UUID, through Types#OTHER, which complies to the PostgreSQL JDBC driver definition</entry>
+                        <entry>java.util.UUID</entry>
+                        <entry>pg-uuid</entry>
+                    </row>
+                    <row>
+                        <entry>SerializableType</entry>
+                        <entry>VARBINARY</entry>
+                        <entry>implementors of java.lang.Serializable</entry>
+                        <entry> Unlike the other value types, multiple instances of this type are registered. It is registered
+                            once under java.io.Serializable, and registered under the specific java.io.Serializable implementation
+                            class names.</entry>
+                    </row>
+                    <!-- todo : make these a different color somehow?  or somehow add a visual break row? -->
+                    <row>
+                        <entry>StringNVarcharType</entry>
+                        <entry>NVARCHAR</entry>
+                        <entry>java.lang.String</entry>
+                        <entry>nstring</entry>
+                    </row>
+                    <row>
+                        <entry>NTextType</entry>
+                        <entry>LONGNVARCHAR</entry>
+                        <entry>java.lang.String</entry>
+                        <entry>ntext</entry>
+                    </row>
+                    <row>
+                        <entry>NClobType</entry>
+                        <entry>NCLOB</entry>
+                        <entry>java.sql.NClob</entry>
+                        <entry>nclob, java.sql.NClob</entry>
+                    </row>
+                    <row>
+                        <entry>MaterializedNClobType</entry>
+                        <entry>NCLOB</entry>
+                        <entry>java.lang.String</entry>
+                        <entry>materialized_nclob</entry>
+                    </row>
+                    <row>
+                        <entry>PrimitiveCharacterArrayNClobType</entry>
+                        <entry>NCHAR</entry>
+                        <entry>char[]</entry>
+                        <entry>N/A</entry>
+                    </row>
+                    <row>
+                        <entry>CharacterNCharType</entry>
+                        <entry>NCHAR</entry>
+                        <entry>java.lang.Character</entry>
+                        <entry>ncharacter</entry>
+                    </row>
+                    <row>
+                        <entry>CharacterArrayNClobType</entry>
+                        <entry>NCLOB</entry>
+                        <entry>java.lang.Character[]</entry>
+                        <entry>N/A</entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+
+
+        <table>
+            <title>BasicTypes added by hibernate-java8</title>
+            <tgroup cols="4">
+                <thead>
+                    <row>
+                        <entry>Hibernate type (org.hibernate.type package)</entry>
+                        <entry>JDBC type</entry>
+                        <entry>Java type</entry>
+                        <entry>BasicTypeRegistry key(s)</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>DurationType</entry>
+                        <entry>BIGINT</entry>
+                        <entry>java.time.Duration</entry>
+                        <entry>Duration, java.time.Duration</entry>
+                    </row>
+                    <row>
+                        <entry>InstantType</entry>
+                        <entry>TIMESTAMP</entry>
+                        <entry>java.time.Instant</entry>
+                        <entry>Instant, java.time.Instant</entry>
+                    </row>
+                    <row>
+                        <entry>LocalDateTimeType</entry>
+                        <entry>TIMESTAMP</entry>
+                        <entry>java.time.LocalDateTime</entry>
+                        <entry>LocalDateTime, java.time.LocalDateTime</entry>
+                    </row>
+                    <row>
+                        <entry>LocalDateType</entry>
+                        <entry>DATE</entry>
+                        <entry>java.time.LocalDate</entry>
+                        <entry>LocalDate, java.time.LocalDate</entry>
+                    </row>
+                    <row>
+                        <entry>LocalTimeType</entry>
+                        <entry>TIME</entry>
+                        <entry>java.time.LocalTime</entry>
+                        <entry>LocalTime, java.time.LocalTime</entry>
+                    </row>
+                    <row>
+                        <entry>OffsetDateTimeType</entry>
+                        <entry>TIMESTAMP</entry>
+                        <entry>java.time.OffsetDateTime</entry>
+                        <entry>OffsetDateTime, java.time.OffsetDateTime</entry>
+                    </row>
+                    <row>
+                        <entry>OffsetTimeType</entry>
+                        <entry>TIME</entry>
+                        <entry>java.time.OffsetTime</entry>
+                        <entry>OffsetTime, java.time.OffsetTime</entry>
+                    </row>
+                    <row>
+                        <entry>OffsetTimeType</entry>
+                        <entry>TIMESTAMP</entry>
+                        <entry>java.time.ZonedDateTime</entry>
+                        <entry>ZonedDateTime, java.time.ZonedDateTime</entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+
+        <!-- todo : document added hibernate-spatial types -->
+
+        <para>
+            These mappings are managed by a service inside Hibernate called the
+            <classname>org.hibernate.type.BasicTypeRegistry</classname>, which essentially maintains a map of
+            <interface>org.hibernate.type.BasicType</interface> (a <interface>org.hibernate.type.Type</interface>
+            specialization) instances keyed by a name.  That is the purpose of the "BasicTypeRegistry key(s)" column
+            in the previous tables.  We will revisit this detail later.
+        </para>
+
+        <para>
+            Strictly speaking, a basic type is denoted with the <interfacename>javax.persistence.Basic</interfacename>
+            annotation.  Generally speaking the <literal>@Basic</literal> annotation can be ignored.
+        </para>
+
+        <example>
+            <title>With <literal>@Basic</literal></title>
+            <programlisting role="JAVA"><xi:include href="extras/ex1.java" parse="text"/></programlisting>
+            <title>Without <literal>@Basic</literal></title>
+            <programlisting role="JAVA"><xi:include href="extras/ex2.java" parse="text"/></programlisting>
+        </example>
+
+        <para>
+            Both of the above examples are ultimately the same.
+        </para>
+
+        <tip>
+            <para>
+                The JPA specification strictly limits the Java types that can be marked as
+                basic to the following:
+                <itemizedlist>
+                    <listitem>Java primitive types (boolean, int, etc)</listitem>
+                    <listitem>wrappers for the primitive types (java.lang.Boolean, java.lang.Integer, etc)</listitem>
+                    <listitem>java.lang.String</listitem>
+                    <listitem>java.math.BigInteger</listitem>
+                    <listitem>java.math.BigDecimal</listitem>
+                    <listitem>java.util.Date</listitem>
+                    <listitem>java.util.Calendar</listitem>
+                    <listitem>java.sql.Date</listitem>
+                    <listitem>java.sql.Time</listitem>
+                    <listitem>java.sql.Timestamp</listitem>
+                    <listitem>byte[]</listitem>
+                    <listitem>Byte[]</listitem>
+                    <listitem>char[]</listitem>
+                    <listitem>Character[]</listitem>
+                    <listitem>enums</listitem>
+                    <listitem>any other type that implements Serializable*</listitem>
+                </itemizedlist>
+                * JPA's "support" for Serializable types is to directly serialize their state to the database.
+            </para>
+            <para>
+                If provider portability is a concern, you should stick to just these basic types.  Note that JPA
+                2.1 did add the notion of an <interfacename>javax.persistence.AttributeConverter</interfacename>
+                to help alleviate some of these concerns; see <xref linked="basic-jpaconvert"/>
+            </para>
+        </tip>
+    </section>
+
+
+    <section xml:id="basic-registry">
+        <para>
+            We said before that a Hibernate type is not a Java type, nor a SQL type, but that it
+            understands both and performs the marshalling between them.  But looking at the
+            basic type mappings in the previous examples, how did Hibernate know to use
+            its <classname>org.hibernate.type.StringType</classname> for mapping for
+            <classname>java.lang.String</classname> attributes or its
+            <classname>org.hibernate.type.IntegerType</classname> for mapping
+            <classname>java.lang.Integer</classname> attributes?
+        </para>
+
+        <para>
+            The answer lies in a service inside Hibernate called the
+            <classname>org.hibernate.type.BasicTypeRegistry</classname>, which essentially maintains a map of
+            <interface>org.hibernate.type.BasicType</interface> (a <interface>org.hibernate.type.Type</interface>
+            specialization) instances keyed by a name.
+        </para>
+
+        <para>
+            We will see later (<xref linked="basic-explicit"/>) that we can explicitly tell Hibernate which
+            BasicType to use for a particular attribute.  But first let's explore how implicit resolution works
+            and how applications can adjust implicit resolution.
+        </para>
+
+        <note>
+            <para>
+                A thorough discussion of the BasicTypeRegistry and all the different ways to contribute types to it
+                is beyond the scope of this documentation.  Please see <citetitle>Integrations Guide</citetitle>
+                for complete details.
+            </para>
+        </note>
+
+        <para>
+            As an example, take a String attribute such as we saw before with Product#sku.  Since there was no
+            explicit type mapping, Hibernate looks to the BasicTypeRegistry to find the registered mapping
+            for <classname>java.lang.String</classname>.  This goes back to the "BasicTypeRegistry key(s)" column
+            we saw in the tables at the start of this chapter.
+        </para>
+
+        <para>
+            As a baseline within BasicTypeRegistry, Hibernate follows the recommended mappings of JDBC
+            for Java types.  JDBC recommends mapping Strings to VARCHAR, which is the exact mapping that
+            StringType handles.  So that is the baseline mapping within BasicTypeRegistry for Strings.
+        </para>
+
+        <para>
+            Applications can also extend (add new BasicType registrations) or override (replace an exiting BasicType
+            registration) using one of the <methodname>MetadataBuilder#applyBasicType</methodname> methods
+            or the <methodname>MetadataBuilder#applyTypes</methodname> method during bootstrap.  For more details, see
+            <xref linked="basic-custom"/>
+        </para>
+    </section>
+
+    <section xml:id="basic-explicit">
+        <title>Explicit BasicTypes</title>
+
+        <para>
+            Sometimes you want a particular attribute to be handled differently.  Occasionally Hibernate will
+            implicitly pick a BasicType that you do not want (and for some reason you do not want to adjust the
+            BasicTypeRegistry).
+        </para>
+
+        <para>
+            In these cases you must explicitly tell Hibernate the BasicType to use, via the
+            <interfacename>org.hibernate.annotations.Type</interfacename> annotation.
+        </para>
+
+        <example>
+            <title>Using @org.hibernate.annotations.Type</title>
+            <programlisting role="JAVA"><xi:include href="extras/explicitType.java" parse="text"/></programlisting>
+        </example>
+
+        <para>
+            This tells Hibernate to store the Strings as nationalized data.  This is just for illustration purposes;
+            for better ways to indicate nationalized character data see <xref linked="basic-nationalized"/>
+        </para>
+
+        <para>
+            Additionally the description is to be handled as a LOB.  Again, for better ways to indicate
+            LOBs see <xref linked="basic-lob"/>.
+        </para>
+
+        <para>
+            The <methodname>org.hibernate.annotations.Type#type</methodname> attribute can name any of the following:
+            <itemizedlist>
+                <listitem>FQN of any <interface>org.hibernate.type.Type</interface> implementation</listitem>
+                <listitem>Any key registered with BasicTypeRegistry</listitem>
+                <listitem>The name of any known "type definitions"</listitem>
+            </itemizedlist>
+        </para>
+    </section>
+
+    <section xml:id="basic-custom">
+        <title>Custom BasicTypes</title>
+
+        <para>
+            Hibernate makes it relatively easy for developers to create their own basic type mappings type.  For
+            example, you might want to persist properties of type <classname>java.lang.BigInteger</classname> to
+            <literal>VARCHAR</literal> columns, or support completely new types.
+        </para>
+
+        <para>
+            There are 2 approaches to developing a custom BasicType.  As a means of illustrating the different
+            approaches, lets consider a use case where we need to support a class called Fizzywig from a third party
+            library.  Lets assume that Fizzywig naturally stores as a VARCHAR.
+        </para>
+
+        <para>
+            The first approach is to directly implement the BasicType interface.
+        </para>
+
+        <example>
+            <title>Custom BasicType implementation</title>
+            <programlisting role="JAVA"><xi:include href="extras/FizzywigType1.java" parse="text" /></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/FizzywigType1_reg.java" parse="text" /></programlisting>
+        </example>
+
+        <para>
+            The second approach is to implement the UserType interface.
+        </para>
+
+        <example>
+            <title>Custom UserType implementation</title>
+            <programlisting role="JAVA"><xi:include href="extras/FizzywigType2.java" parse="text" /></programlisting>
+            <programlisting role="JAVA"><xi:include href="extras/FizzywigType2_reg.java" parse="text" /></programlisting>
+        </example>
+
+    </section>
+
+    <section xml:id="basic-enums">
+        <title>Mapping enums</title>
+        <para>
+            <!-- todo : write -->
+            blah blah blah
+        </para>
+    </section>
+
+    <section xml:id="basic-lobs">
+        <title>Mapping LOBs</title>
+        <para>
+            <!-- todo : write -->
+            blah blah blah
+        </para>
+    </section>
+
+    <section xml:id="basic-nationalized">
+        <title>Mapping Nationalized Character Data</title>
+        <para>
+            <!-- todo : write -->
+            blah blah blah
+        </para>
+    </section>
+
+    <section xml:id="basic-uuid">
+        <title>Mapping UUID Values</title>
+        <para>
+            <!-- todo : write -->
+            blah blah blah
+        </para>
+    </section>
+
+    <section xml:id="basic-datetime">
+        <title>Mapping Date/Time Values</title>
+        <para>
+            <!-- todo : write -->
+            blah blah blah
+        </para>
+    </section>
+
+    <section xml:id="basic-jpaconvert">
+        <title>JPA 2.1 AttributeConverters</title>
+        <para>
+            <!-- todo : write -->
+            blah blah blah
+        </para>
+    </section>
+
+</chapter>

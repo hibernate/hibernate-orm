@@ -1,0 +1,549 @@
+<?xml version='1.0' encoding="UTF-8"?>
+
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<appendix xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink">
+    <info>
+        <title>Legacy Hibernate Criteria Queries</title>
+    </info>
+
+    <note>
+        <para>
+            This appendix covers the legacy Hibernate <interfacename>org.hibernate.Criteria</interfacename> API, which
+            should be considered deprecated.  New development should focus on the JPA
+            <interfacename>javax.persistence.criteria.CriteriaQuery</interfacename> API.  Eventually,
+            Hibernate-specific criteria features will be ported as extensions to the JPA
+            <interfacename>javax.persistence.criteria.CriteriaQuery</interfacename>.  For details on the JPA APIs, see
+            <xref linkend="query-criteria"/>.
+        </para>
+        <para>
+            This information is copied as-is from the older Hibernate documentation.
+        </para>
+    </note>
+
+    <para>
+        Hibernate features an intuitive, extensible criteria query API.
+    </para>
+    
+    <section xml:id="querycriteria-creating">
+        <title>Creating a <literal>Criteria</literal> instance</title>
+
+        <para>
+            The interface <literal>org.hibernate.Criteria</literal> represents a query against
+            a particular persistent class. The <literal>Session</literal> is a factory for
+            <literal>Criteria</literal> instances.
+        </para>
+
+        <programlisting role="JAVA"><![CDATA[Criteria crit = sess.createCriteria(Cat.class);
+crit.setMaxResults(50);
+List cats = crit.list();]]></programlisting>
+
+    </section>
+     
+    <section xml:id="querycriteria-narrowing">
+        <title>Narrowing the result set</title>
+
+        <para>
+            An individual query criterion is an instance of the interface
+            <literal>org.hibernate.criterion.Criterion</literal>. The class
+            <literal>org.hibernate.criterion.Restrictions</literal> defines
+            factory methods for obtaining certain built-in
+            <literal>Criterion</literal> types.
+        </para>
+
+        <programlisting role="JAVA"><![CDATA[List cats = sess.createCriteria(Cat.class)
+    .add( Restrictions.like("name", "Fritz%") )
+    .add( Restrictions.between("weight", minWeight, maxWeight) )
+    .list();]]></programlisting>
+    
+        <para>
+            Restrictions can be grouped logically.
+        </para>
+
+        <programlisting role="JAVA"><![CDATA[List cats = sess.createCriteria(Cat.class)
+    .add( Restrictions.like("name", "Fritz%") )
+    .add( Restrictions.or(
+        Restrictions.eq( "age", new Integer(0) ),
+        Restrictions.isNull("age")
+    ) )
+    .list();]]></programlisting>
+    
+       <programlisting role="JAVA"><![CDATA[List cats = sess.createCriteria(Cat.class)
+    .add( Restrictions.in( "name", new String[] { "Fritz", "Izi", "Pk" } ) )
+    .add( Restrictions.disjunction()
+        .add( Restrictions.isNull("age") )
+        .add( Restrictions.eq("age", new Integer(0) ) )
+        .add( Restrictions.eq("age", new Integer(1) ) )
+        .add( Restrictions.eq("age", new Integer(2) ) )
+    ) )
+    .list();]]></programlisting>
+    
+        <para>
+            There are a range of built-in criterion types (<literal>Restrictions</literal>
+            subclasses). One of the most useful allows you to specify SQL directly.
+        </para>
+
+        <programlisting role="JAVA"><![CDATA[List cats = sess.createCriteria(Cat.class)
+    .add( Restrictions.sqlRestriction("lower({alias}.name) like lower(?)", "Fritz%", Hibernate.STRING) )
+    .list();]]></programlisting>
+    
+        <para>
+            The <literal>{alias}</literal> placeholder will be replaced by the row alias
+            of the queried entity.
+        </para>
+        
+        <para>
+            You can also obtain a criterion from a 
+            <literal>Property</literal> instance. You can create a <literal>Property</literal>
+            by calling <literal>Property.forName()</literal>:
+        </para>
+    
+        <programlisting role="JAVA"><![CDATA[
+Property age = Property.forName("age");
+List cats = sess.createCriteria(Cat.class)
+    .add( Restrictions.disjunction()
+        .add( age.isNull() )
+        .add( age.eq( new Integer(0) ) )
+        .add( age.eq( new Integer(1) ) )
+        .add( age.eq( new Integer(2) ) )
+    ) )
+    .add( Property.forName("name").in( new String[] { "Fritz", "Izi", "Pk" } ) )
+    .list();]]></programlisting>
+    
+   </section>
+     
+    <section xml:id="querycriteria-ordering">
+        <title>Ordering the results</title>
+
+        <para>
+            You can order the results using <literal>org.hibernate.criterion.Order</literal>.
+        </para>
+
+        <programlisting role="JAVA"><![CDATA[List cats = sess.createCriteria(Cat.class)
+    .add( Restrictions.like("name", "F%")
+    .addOrder( Order.asc("name").nulls(NullPrecedence.LAST) )
+    .addOrder( Order.desc("age") )
+    .setMaxResults(50)
+    .list();]]></programlisting>
+    
+        <programlisting role="JAVA"><![CDATA[List cats = sess.createCriteria(Cat.class)
+    .add( Property.forName("name").like("F%") )
+    .addOrder( Property.forName("name").asc() )
+    .addOrder( Property.forName("age").desc() )
+    .setMaxResults(50)
+    .list();]]></programlisting>
+    
+    </section>
+    
+    <section xml:id="querycriteria-associations">
+        <title>Associations</title>
+
+        <para>
+            By navigating
+            associations using <literal>createCriteria()</literal> you can specify constraints upon related entities:
+        </para>
+
+        <programlisting role="JAVA"><![CDATA[List cats = sess.createCriteria(Cat.class)
+    .add( Restrictions.like("name", "F%") )
+    .createCriteria("kittens")
+        .add( Restrictions.like("name", "F%") )
+    .list();]]></programlisting>
+
+        <para>
+            The second <literal>createCriteria()</literal> returns a new
+            instance of <literal>Criteria</literal> that refers to the elements of
+            the <literal>kittens</literal> collection.
+        </para>
+
+        <para>
+            There is also an alternate form that is useful in certain circumstances:
+        </para>
+
+        <programlisting role="JAVA"><![CDATA[List cats = sess.createCriteria(Cat.class)
+    .createAlias("kittens", "kt")
+    .createAlias("mate", "mt")
+    .add( Restrictions.eqProperty("kt.name", "mt.name") )
+    .list();]]></programlisting>
+
+        <para>
+            (<literal>createAlias()</literal> does not create a new instance of
+            <literal>Criteria</literal>.)
+        </para>
+
+        <para>
+            The kittens collections held by the <literal>Cat</literal> instances
+            returned by the previous two queries are <emphasis>not</emphasis> pre-filtered
+            by the criteria. If you want to retrieve just the kittens that match the
+            criteria, you must use a <literal>ResultTransformer</literal>.
+        </para>
+
+        <programlisting role="JAVA"><![CDATA[List cats = sess.createCriteria(Cat.class)
+    .createCriteria("kittens", "kt")
+        .add( Restrictions.eq("name", "F%") )
+    .setResultTransformer(Criteria.ALIAS_TO_ENTITY_MAP)
+    .list();
+Iterator iter = cats.iterator();
+while ( iter.hasNext() ) {
+    Map map = (Map) iter.next();
+    Cat cat = (Cat) map.get(Criteria.ROOT_ALIAS);
+    Cat kitten = (Cat) map.get("kt");
+}]]></programlisting>
+
+	<para>
+		Additionally you may manipulate the result set using a left outer join:
+	</para>
+	<programlisting><![CDATA[
+		List cats = session.createCriteria( Cat.class )
+                       .createAlias("mate", "mt", Criteria.LEFT_JOIN, Restrictions.like("mt.name", "good%") )
+                       .addOrder(Order.asc("mt.age"))
+                       .list();
+	
+	]]></programlisting>
+
+	<para>
+		This will return all of the <literal>Cat</literal>s with a mate whose name starts with "good"
+		ordered by their mate's age, and all cats who do not have a mate.  
+		 This is useful when there is a need to order or limit in the database
+		 prior to returning complex/large result sets, and removes many instances where
+		 multiple queries would have to be performed and the results unioned 
+		 by java in memory.  
+	</para>
+	<para>
+		Without this feature, first all of the cats without a mate would need to be loaded in one query. 
+	</para>
+	<para>
+		A second query would need to retreive the cats with mates who's name started with "good" sorted by the mates age.
+	</para>
+	<para>
+		Thirdly, in memory; the lists would need to be joined manually.
+	</para>
+    </section>
+    
+    <section xml:id="querycriteria-dynamicfetching">
+        <title>Dynamic association fetching</title>
+
+        <para>
+            You can specify association fetching semantics at runtime using
+            <literal>setFetchMode()</literal>.
+        </para>
+
+        <programlisting role="JAVA"><![CDATA[List cats = sess.createCriteria(Cat.class)
+    .add( Restrictions.like("name", "Fritz%") )
+    .setFetchMode("mate", FetchMode.EAGER)
+    .setFetchMode("kittens", FetchMode.EAGER)
+    .list();]]></programlisting>
+    
+        <para>
+            This query will fetch both <literal>mate</literal> and <literal>kittens</literal>
+            by outer join. See <xref linkend="performance-fetching"/> for more information.
+        </para>
+    
+    </section>
+
+    <section id="querycriteria-components" revision="2">
+        <title>Components</title>
+
+        <para>
+               To add a restriction against a property of an embedded component, the component property
+               name should be prepended to the property name when creating the <literal>Restriction</literal>.
+               The criteria object should be created on the owning entity, and cannot be created on the component 
+               itself.  For example, suppose the <literal>Cat</literal> has a component property <literal>fullName</literal>
+               with sub-properties <literal>firstName</literal> and <literal>lastName</literal>:
+	</para>
+
+	<programlisting><![CDATA[
+		List cats = session.createCriteria(Cat.class)
+			.add(Restrictions.eq("fullName.lastName", "Cattington"))
+			.list();]]>
+	</programlisting>
+	
+	<para>
+		Note: this does not apply when querying collections of components, for that see below 
+		<xref linkend="querycriteria-collections"/>
+	</para>
+
+    </section>
+
+    <section id="querycriteria-collections" revision="1">
+	<title>Collections</title>
+	<para>
+		When using criteria against collections, there are two distinct cases.  One is if
+		the collection contains entities (eg. <literal>&lt;one-to-many/&gt;</literal> 
+		or <literal>&lt;many-to-many/&gt;</literal>) or components 
+		(<literal>&lt;composite-element/&gt;</literal> ),
+		and the second is if the collection contains scalar values 
+		(<literal>&lt;element/&gt;</literal>).
+		In the first case, the syntax is as given above in the section 
+		<xref linkend="querycriteria-associations"/> where we restrict the <literal>kittens</literal>
+		collection. Essentially we create a <literal>Criteria</literal> object against the collection
+		property and restrict the entity or component properties using that instance.
+	</para>
+	<para>
+		For queryng a collection of basic values, we still create the <literal>Criteria</literal>
+		object against the collection, but to reference the value, we use the special property 
+		&quot;elements&quot;.  For an indexed collection, we can also reference the index property using
+		the special property &quot;indices&quot;.
+	</para>
+	<programlisting><![CDATA[
+		List cats = session.createCriteria(Cat.class)
+			.createCriteria("nickNames")
+				.add(Restrictions.eq("elements", "BadBoy"))
+			.list();]]>
+	</programlisting>
+    </section>
+
+    <section id="querycriteria-examples">
+        <title>Example queries</title>
+
+        <para>
+            The class <literal>org.hibernate.criterion.Example</literal> allows
+            you to construct a query criterion from a given instance.
+        </para>
+
+        <programlisting role="JAVA"><![CDATA[Cat cat = new Cat();
+cat.setSex('F');
+cat.setColor(Color.BLACK);
+List results = session.createCriteria(Cat.class)
+    .add( Example.create(cat) )
+    .list();]]></programlisting>
+    
+        <para>
+           Version properties, identifiers and associations are ignored. By default,
+           null valued properties are excluded.
+        </para>
+
+        <para>
+           You can adjust how the <literal>Example</literal> is applied.
+        </para>
+
+        <programlisting role="JAVA"><![CDATA[Example example = Example.create(cat)
+    .excludeZeroes()           //exclude zero valued properties
+    .excludeProperty("color")  //exclude the property named "color"
+    .ignoreCase()              //perform case insensitive string comparisons
+    .enableLike();             //use like for string comparisons
+List results = session.createCriteria(Cat.class)
+    .add(example)
+    .list();]]></programlisting>
+    
+        <para>
+            You can even use examples to place criteria upon associated objects.
+        </para>
+
+        <programlisting role="JAVA"><![CDATA[List results = session.createCriteria(Cat.class)
+    .add( Example.create(cat) )
+    .createCriteria("mate")
+        .add( Example.create( cat.getMate() ) )
+    .list();]]></programlisting>
+    
+    </section>
+    
+    <section id="querycriteria-projection">
+        <title>Projections, aggregation and grouping</title>
+        <para>
+            The class <literal>org.hibernate.criterion.Projections</literal> is a
+            factory for <literal>Projection</literal> instances. You can apply a
+            projection to a query by calling <literal>setProjection()</literal>.
+        </para>
+        
+        <programlisting role="JAVA"><![CDATA[List results = session.createCriteria(Cat.class)
+    .setProjection( Projections.rowCount() )
+    .add( Restrictions.eq("color", Color.BLACK) )
+    .list();]]></programlisting>
+    
+        <programlisting role="JAVA"><![CDATA[List results = session.createCriteria(Cat.class)
+    .setProjection( Projections.projectionList()
+        .add( Projections.rowCount() )
+        .add( Projections.avg("weight") )
+        .add( Projections.max("weight") )
+        .add( Projections.groupProperty("color") )
+    )
+    .list();]]></programlisting>
+    
+        <para>
+            There is no explicit "group by" necessary in a criteria query. Certain
+            projection types are defined to be <emphasis>grouping projections</emphasis>,
+            which also appear in the SQL <literal>group by</literal> clause.
+        </para>
+    
+        <para>
+            An alias can be assigned to a projection so that the projected value
+            can be referred to in restrictions or orderings. Here are two different ways to
+            do this:
+        </para>
+
+        <programlisting role="JAVA"><![CDATA[List results = session.createCriteria(Cat.class)
+    .setProjection( Projections.alias( Projections.groupProperty("color"), "colr" ) )
+    .addOrder( Order.asc("colr") )
+    .list();]]></programlisting>
+    
+        <programlisting role="JAVA"><![CDATA[List results = session.createCriteria(Cat.class)
+    .setProjection( Projections.groupProperty("color").as("colr") )
+    .addOrder( Order.asc("colr") )
+    .list();]]></programlisting>
+    
+        <para>
+            The <literal>alias()</literal> and <literal>as()</literal> methods simply wrap a
+            projection instance in another, aliased, instance of <literal>Projection</literal>.
+            As a shortcut, you can assign an alias when you add the projection to a 
+            projection list:
+        </para>
+
+       <programlisting role="JAVA"><![CDATA[List results = session.createCriteria(Cat.class)
+    .setProjection( Projections.projectionList()
+        .add( Projections.rowCount(), "catCountByColor" )
+        .add( Projections.avg("weight"), "avgWeight" )
+        .add( Projections.max("weight"), "maxWeight" )
+        .add( Projections.groupProperty("color"), "color" )
+    )
+    .addOrder( Order.desc("catCountByColor") )
+    .addOrder( Order.desc("avgWeight") )
+    .list();]]></programlisting>
+    
+        <programlisting role="JAVA"><![CDATA[List results = session.createCriteria(Domestic.class, "cat")
+    .createAlias("kittens", "kit")
+    .setProjection( Projections.projectionList()
+        .add( Projections.property("cat.name"), "catName" )
+        .add( Projections.property("kit.name"), "kitName" )
+    )
+    .addOrder( Order.asc("catName") )
+    .addOrder( Order.asc("kitName") )
+    .list();]]></programlisting>
+    
+        <para>
+            You can also use <literal>Property.forName()</literal> to express projections:
+        </para>
+    
+        <programlisting role="JAVA"><![CDATA[List results = session.createCriteria(Cat.class)
+    .setProjection( Property.forName("name") )
+    .add( Property.forName("color").eq(Color.BLACK) )
+    .list();]]></programlisting>
+    
+        <programlisting role="JAVA"><![CDATA[List results = session.createCriteria(Cat.class)
+    .setProjection( Projections.projectionList()
+        .add( Projections.rowCount().as("catCountByColor") )
+        .add( Property.forName("weight").avg().as("avgWeight") )
+        .add( Property.forName("weight").max().as("maxWeight") )
+        .add( Property.forName("color").group().as("color" )
+    )
+    .addOrder( Order.desc("catCountByColor") )
+    .addOrder( Order.desc("avgWeight") )
+    .list();]]></programlisting>
+    
+    </section>
+    
+    <section id="querycriteria-detachedqueries">
+        <title>Detached queries and subqueries</title>
+        <para>
+            The <literal>DetachedCriteria</literal> class allows you to create a query outside the scope 
+            of a session and then execute it using an arbitrary <literal>Session</literal>.
+        </para>
+        
+        <programlisting role="JAVA"><![CDATA[DetachedCriteria query = DetachedCriteria.forClass(Cat.class)
+    .add( Property.forName("sex").eq('F') );
+    
+Session session = ....;
+Transaction txn = session.beginTransaction();
+List results = query.getExecutableCriteria(session).setMaxResults(100).list();
+txn.commit();
+session.close();]]></programlisting>
+
+        <para>
+            A <literal>DetachedCriteria</literal> can also be used to express a subquery. Criterion
+            instances involving subqueries can be obtained via <literal>Subqueries</literal> or
+            <literal>Property</literal>.            
+        </para>
+        
+        <programlisting role="JAVA"><![CDATA[DetachedCriteria avgWeight = DetachedCriteria.forClass(Cat.class)
+    .setProjection( Property.forName("weight").avg() );
+session.createCriteria(Cat.class)
+    .add( Property.forName("weight").gt(avgWeight) )
+    .list();]]></programlisting>
+    
+        <programlisting role="JAVA"><![CDATA[DetachedCriteria weights = DetachedCriteria.forClass(Cat.class)
+    .setProjection( Property.forName("weight") );
+session.createCriteria(Cat.class)
+    .add( Subqueries.geAll("weight", weights) )
+    .list();]]></programlisting>
+    
+        <para>
+            Correlated subqueries are also possible:
+        </para>
+        
+        <programlisting role="JAVA"><![CDATA[DetachedCriteria avgWeightForSex = DetachedCriteria.forClass(Cat.class, "cat2")
+    .setProjection( Property.forName("weight").avg() )
+    .add( Property.forName("cat2.sex").eqProperty("cat.sex") );
+session.createCriteria(Cat.class, "cat")
+    .add( Property.forName("weight").gt(avgWeightForSex) )
+    .list();]]></programlisting>
+
+        <para>
+            Example of multi-column restriction based on a subquery:
+        </para>
+
+        <programlisting role="JAVA"><![CDATA[DetachedCriteria sizeQuery = DetachedCriteria.forClass( Man.class )
+    .setProjection( Projections.projectionList().add( Projections.property( "weight" ) )
+                                                .add( Projections.property( "height" ) ) )
+    .add( Restrictions.eq( "name", "John" ) );
+session.createCriteria( Woman.class )
+    .add( Subqueries.propertiesEq( new String[] { "weight", "height" }, sizeQuery ) )
+    .list();]]></programlisting>
+
+    </section>
+
+        <!--TODO: ResultSetTransformer + aliasing. AliasToBeanTransformer allow returning arbitrary 
+                  user objects - similar to setResultClass in JDO2. General use of ResultTransformer 
+                  could also be explained. -->
+               
+    <section id="query-criteria-naturalid">
+        <title>Queries by natural identifier</title>
+        
+        <para>
+            For most queries, including criteria queries, the query cache is not efficient
+            because query cache invalidation occurs too frequently. However, there is a special
+            kind of query where you can optimize the cache invalidation algorithm: lookups by a 
+            constant natural key. In some applications, this kind of query occurs frequently.
+            The criteria API provides special provision for this use case.
+        </para>
+        
+        <para>
+            First, map the natural key of your entity using 
+            <literal>&lt;natural-id&gt;</literal> and enable use of the second-level cache.
+        </para>
+
+        <programlisting role="XML"><![CDATA[<class name="User">
+    <cache usage="read-write"/>
+    <id name="id">
+        <generator class="increment"/>
+    </id>
+    <natural-id>
+        <property name="name"/>
+        <property name="org"/>
+    </natural-id>
+    <property name="password"/>
+</class>]]></programlisting>
+    
+        <para>
+            This functionality is not intended for use with entities with 
+            <emphasis>mutable</emphasis> natural keys.
+        </para>
+        
+        <para>
+            Once you have enabled the Hibernate query cache, 
+            the <literal>Restrictions.naturalId()</literal> allows you to make use of
+            the more efficient cache algorithm.
+        </para>
+       
+        <programlisting role="JAVA"><![CDATA[session.createCriteria(User.class)
+    .add( Restrictions.naturalId()
+        .set("name", "gavin")
+        .set("org", "hb") 
+    ).setCacheable(true)
+    .uniqueResult();]]></programlisting>
+            
+    </section>
+    
+</appendix>

@@ -54,7 +54,7 @@
       <!-- A config appropriate for query caching. Does not replicate queries. -->
       <local-cache name="local-query">
          <locking isolation="READ_COMMITTED" concurrency-level="1000" acquire-timeout="15000" striping="false"/>
-         <transaction mode="NON_XA" locking="OPTIMISTIC" auto-commit="false"/>
+         <transaction mode="NONE" />
          <eviction max-entries="10000" strategy="LRU"/>
          <expiration max-idle="100000" interval="5000"/>
       </local-cache>
@@ -62,7 +62,7 @@
       <!-- A query cache that replicates queries. Replication is asynchronous. -->
       <replicated-cache name="replicated-query" mode="ASYNC">
          <locking isolation="READ_COMMITTED" concurrency-level="1000" acquire-timeout="15000" striping="false"/>
-         <transaction mode="NON_XA" locking="OPTIMISTIC" auto-commit="false"/>
+         <transaction mode="NONE" />
          <eviction max-entries="10000" strategy="LRU"/>
          <expiration max-idle="100000" interval="5000"/>
       </replicated-cache>

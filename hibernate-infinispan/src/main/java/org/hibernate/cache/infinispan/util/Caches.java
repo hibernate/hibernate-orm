@@ -87,6 +87,16 @@ public class Caches {
 		}
 	}
 
+	public static void withinTx(TransactionManager tm, final Runnable runnable) throws Exception {
+		withinTx(tm, new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				runnable.run();
+				return null;
+			}
+		});
+	}
+
    /**
     * Transform a given cache into a local cache
     *

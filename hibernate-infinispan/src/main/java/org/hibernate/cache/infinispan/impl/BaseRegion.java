@@ -59,12 +59,13 @@ public abstract class BaseRegion implements Region {
     *
     * @param cache instance for the region
     * @param name of the region
+	 * @param transactionManager transaction manager may be needed even for non-transactional caches.
     * @param factory for this region
     */
-	public BaseRegion(AdvancedCache cache, String name, RegionFactory factory) {
+	public BaseRegion(AdvancedCache cache, String name, TransactionManager transactionManager, RegionFactory factory) {
 		this.cache = cache;
 		this.name = name;
-		this.tm = cache.getTransactionManager();
+		this.tm = transactionManager;
 		this.factory = factory;
 		this.localAndSkipLoadCache = cache.withFlags(
 				Flag.CACHE_MODE_LOCAL, Flag.ZERO_LOCK_ACQUISITION_TIMEOUT,

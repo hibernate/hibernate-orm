@@ -89,6 +89,7 @@ class TransactionalAccess implements NaturalIdRegionAccessStrategy {
 
 	@Override
 	public void unlockItem(Object key, SoftLock lock) throws CacheException {
+		delegate.unlockItem(key);
 	}
 
 	@Override
@@ -97,12 +98,12 @@ class TransactionalAccess implements NaturalIdRegionAccessStrategy {
 
 	@Override
 	public boolean afterInsert(Object key, Object value) throws CacheException {
-		return false;
+		return delegate.afterInsert(key, value, null);
 	}
 
 	@Override
 	public boolean afterUpdate(Object key, Object value, SoftLock lock) throws CacheException {
-		return false;
+		return delegate.afterUpdate(key, value, null, null, lock);
 	}
 
 	@Override

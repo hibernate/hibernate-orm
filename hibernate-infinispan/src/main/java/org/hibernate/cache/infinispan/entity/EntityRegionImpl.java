@@ -18,6 +18,8 @@ import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 
 import org.infinispan.AdvancedCache;
 
+import javax.transaction.TransactionManager;
+
 /**
  * Entity region implementation
  *
@@ -32,14 +34,15 @@ public class EntityRegionImpl extends BaseTransactionalDataRegion implements Ent
     *
     * @param cache instance to store entity instances
     * @param name of entity type
+	 * @param transactionManager
     * @param metadata for the entity type
     * @param factory for the region
 	* @param cacheKeysFactory factory for cache keys
     */
 	public EntityRegionImpl(
-			AdvancedCache cache, String name,
+			AdvancedCache cache, String name, TransactionManager transactionManager,
 			CacheDataDescription metadata, RegionFactory factory, CacheKeysFactory cacheKeysFactory) {
-		super( cache, name, metadata, factory, cacheKeysFactory);
+		super( cache, name, transactionManager, metadata, factory, cacheKeysFactory);
 	}
 
 	@Override
@@ -60,6 +63,6 @@ public class EntityRegionImpl extends BaseTransactionalDataRegion implements Ent
 	}
 
 	public PutFromLoadValidator getPutFromLoadValidator() {
-		return new PutFromLoadValidator( cache );
+		return new PutFromLoadValidator( cache, getTransactionManager() );
 	}
 }

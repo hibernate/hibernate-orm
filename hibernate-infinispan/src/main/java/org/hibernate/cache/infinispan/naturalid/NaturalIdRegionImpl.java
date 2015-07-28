@@ -17,6 +17,8 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.infinispan.AdvancedCache;
 
+import javax.transaction.TransactionManager;
+
 /**
  * Natural ID cache region
  *
@@ -31,14 +33,15 @@ public class NaturalIdRegionImpl extends BaseTransactionalDataRegion
     *
     * @param cache instance to store natural ids
     * @param name of natural id region
+	 * @param transactionManager
     * @param metadata for the natural id region
     * @param factory for the natural id region
 	* @param cacheKeysFactory factory for cache keys
     */
 	public NaturalIdRegionImpl(
-			AdvancedCache cache, String name,
+			AdvancedCache cache, String name, TransactionManager transactionManager,
 			CacheDataDescription metadata, RegionFactory factory, CacheKeysFactory cacheKeysFactory) {
-		super( cache, name, metadata, factory, cacheKeysFactory );
+		super( cache, name, transactionManager, metadata, factory, cacheKeysFactory );
 	}
 
 	@Override
@@ -54,7 +57,7 @@ public class NaturalIdRegionImpl extends BaseTransactionalDataRegion
 	}
 
 	public PutFromLoadValidator getPutFromLoadValidator() {
-		return new PutFromLoadValidator( cache );
+		return new PutFromLoadValidator( cache, getTransactionManager() );
 	}
 
 }

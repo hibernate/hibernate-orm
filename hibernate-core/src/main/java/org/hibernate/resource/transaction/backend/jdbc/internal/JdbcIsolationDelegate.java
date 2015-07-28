@@ -8,6 +8,7 @@ package org.hibernate.resource.transaction.backend.jdbc.internal;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.concurrent.Callable;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -100,6 +101,20 @@ public class JdbcIsolationDelegate implements IsolationDelegate {
 		}
 		catch (SQLException sqle) {
 			throw sqlExceptionHelper().convert( sqle, "unable to obtain isolated JDBC connection" );
+		}
+	}
+
+	@Override
+	public <T> T delegateCallable(Callable<T> callable, boolean transacted) throws HibernateException {
+		// No connection, nothing to be suspended
+		try {
+			return callable.call();
+		}
+		catch (HibernateException e) {
+			throw e;
+		}
+		catch (Exception e) {
+			throw new HibernateException(e);
 		}
 	}
 }

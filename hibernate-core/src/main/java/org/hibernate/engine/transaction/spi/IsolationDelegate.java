@@ -9,6 +9,8 @@ package org.hibernate.engine.transaction.spi;
 import org.hibernate.HibernateException;
 import org.hibernate.jdbc.WorkExecutorVisitable;
 
+import java.util.concurrent.Callable;
+
 /**
  * Contract for performing work in a manner that isolates it from any current transaction.
  *
@@ -26,4 +28,16 @@ public interface IsolationDelegate {
 	 * @throws HibernateException Indicates a problem performing the work.
 	 */
 	public <T> T delegateWork(WorkExecutorVisitable<T> work, boolean transacted) throws HibernateException;
+
+	/**
+	 * Invoke the given callable in isolation from current transaction.
+	 *
+	 * @param callable The callable to be invoked.
+	 * @param transacted Should the work itself be done in a (isolated) transaction?
+	 *
+	 * @return The work result
+	 *
+	 * @throws HibernateException Indicates a problem performing the work.
+	 */
+	public <T> T delegateCallable(Callable<T> callable, boolean transacted) throws HibernateException;
 }

@@ -12,6 +12,7 @@ import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.concurrent.Callable;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -52,7 +53,56 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 	}
 
 	@Override
-	public <T> T delegateWork(WorkExecutorVisitable<T> work, boolean transacted) throws HibernateException {
+	public <T> T delegateWork(final WorkExecutorVisitable<T> work, final boolean transacted) throws HibernateException {
+		return doInSuspendedTransaction(new HibernateCallable<T>() {
+			@Override
+			public T call() throws HibernateException {
+				HibernateCallable<T> workCallable = new HibernateCallable<T>() {
+					@Override
+					public T call() throws HibernateException {
+						return doTheWork(work);
+					}
+				};
+				if ( transacted ) {
+					return doInNewTransaction( workCallable, transactionManager );
+				}
+				else {
+					return workCallable.call();
+				}
+			}
+		});
+	}
+
+	@Override
+	public <T> T delegateCallable(final Callable<T> callable, final boolean transacted) throws HibernateException {
+		return doInSuspendedTransaction(new HibernateCallable<T>() {
+			@Override
+			public T call() throws HibernateException {
+				HibernateCallable<T> workCallable = new HibernateCallable<T>() {
+					@Override
+					public T call() throws HibernateException {
+						try {
+							return callable.call();
+						}
+						catch (HibernateException e) {
+							throw e;
+						}
+						catch (Exception e) {
+							throw new HibernateException(e);
+						}
+					}
+				};
+				if ( transacted ) {
+					return doInNewTransaction( workCallable, transactionManager );
+				}
+				else {
+					return workCallable.call();
+				}
+			}
+		});
+	}
+
+	private <T> T doInSuspendedTransaction(HibernateCallable<T> callable) {
 		try {
 			// First we suspend any current JTA transaction
 			Transaction surroundingTransaction = transactionManager.suspend();
@@ -60,13 +110,7 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 
 			boolean hadProblems = false;
 			try {
-				// then perform the requested work
-				if ( transacted ) {
-					return doTheWorkInNewTransaction( work, transactionManager );
-				}
-				else {
-					return doTheWorkInNoTransaction( work );
-				}
+				return callable.call();
 			}
 			catch (HibernateException e) {
 				hadProblems = true;
@@ -91,13 +135,13 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 		}
 	}
 
-	private <T> T doTheWorkInNewTransaction(WorkExecutorVisitable<T> work, TransactionManager transactionManager) {
+	private <T> T doInNewTransaction(HibernateCallable<T> callable, TransactionManager transactionManager) {
 		try {
 			// start the new isolated transaction
 			transactionManager.begin();
 
 			try {
-				T result = doTheWork( work );
+				T result = callable.call();
 				// if everything went ok, commit the isolated transaction
 				transactionManager.commit();
 				return result;
@@ -118,10 +162,6 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 		catch (NotSupportedException e) {
 			throw new HibernateException( "Unable to start isolated transaction", e );
 		}
-	}
-
-	private <T> T doTheWorkInNoTransaction(WorkExecutorVisitable<T> work) {
-		return doTheWork( work );
 	}
 
 	private <T> T doTheWork(WorkExecutorVisitable<T> work) {
@@ -151,5 +191,10 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 		catch (SQLException e) {
 			throw sqlExceptionHelper().convert( e, "unable to obtain isolated JDBC connection" );
 		}
+	}
+
+	// Callable that does not throw Exception; in Java <8 there's no Supplier
+	private interface HibernateCallable<T> {
+		T call() throws HibernateException;
 	}
 }

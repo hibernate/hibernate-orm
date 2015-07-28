@@ -401,14 +401,13 @@ public abstract class AbstractBasicJtaTestScenarios {
 		catch (TransactionException expected) {
 		}
 		finally {
-			assertEquals( TransactionStatus.MARKED_ROLLBACK, transactionCoordinator.getTransactionDriverControl().getStatus() );
-			transactionCoordinator.getTransactionDriverControl().rollback();
+			assertEquals( TransactionStatus.NOT_ACTIVE, transactionCoordinator.getTransactionDriverControl().getStatus() );
 		}
 	}
 
 	@Test
 	@SuppressWarnings("EmptyCatchBlock")
-	public void testSynchronizationFailureMarksTransactionForRollbackOnly() throws Exception {
+	public void testSynchronizationFailure() throws Exception {
 		JtaTransactionCoordinatorImpl transactionCoordinator = new JtaTransactionCoordinatorImpl(
 				transactionCoordinatorBuilder,
 				owner,
@@ -434,8 +433,7 @@ public abstract class AbstractBasicJtaTestScenarios {
 		catch (Exception expected) {
 		}
 		finally {
-			assertEquals( TransactionStatus.MARKED_ROLLBACK, transactionCoordinator.getTransactionDriverControl().getStatus() );
-			transactionCoordinator.getTransactionDriverControl().rollback();
+			assertEquals( TransactionStatus.NOT_ACTIVE, transactionCoordinator.getTransactionDriverControl().getStatus() );
 		}
 	}
 }

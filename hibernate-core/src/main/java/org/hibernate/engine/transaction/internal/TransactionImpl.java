@@ -21,6 +21,7 @@ import static org.hibernate.resource.transaction.TransactionCoordinator.Transact
 
 /**
  * @author Andrea Boriero
+ * @author Steve Ebersole
  */
 public class TransactionImpl implements Transaction {
 	private static final Logger LOG = CoreLogging.logger( TransactionImpl.class );
@@ -71,6 +72,13 @@ public class TransactionImpl implements Transaction {
 	@Override
 	public void rollback() {
 		TransactionStatus status = transactionDriverControl.getStatus();
+		if ( status == TransactionStatus.ROLLED_BACK || status == TransactionStatus.NOT_ACTIVE ) {
+			// Allow rollback() calls on completed transactions, just no-op.
+			LOG.debug( "rollback() called on an inactive transaction" );
+			invalidate();
+			return;
+		}
+
 		if ( !status.canRollback() ) {
 			throw new TransactionException( "Cannot rollback transaction in current status [" + status.name() + "]" );
 		}

@@ -88,14 +88,13 @@ public class BasicJdbcTransactionTests {
 		catch (TransactionException expected) {
 		}
 		finally {
-			assertEquals( TransactionStatus.MARKED_ROLLBACK, transactionCoordinator.getTransactionDriverControl().getStatus() );
-			transactionCoordinator.getTransactionDriverControl().rollback();
+			assertEquals( TransactionStatus.NOT_ACTIVE, transactionCoordinator.getTransactionDriverControl().getStatus() );
 		}
 	}
 
 	@Test
 	@SuppressWarnings("EmptyCatchBlock")
-	public void testSynchronizationFailureMarksTransactionForRollbackOnly() {
+	public void testSynchronizationFailure() {
 		final TransactionCoordinatorOwnerTestingImpl owner = new TransactionCoordinatorOwnerTestingImpl();
 		final JdbcResourceLocalTransactionCoordinatorBuilderImpl transactionCoordinatorBuilder =
 				new JdbcResourceLocalTransactionCoordinatorBuilderImpl();
@@ -122,8 +121,10 @@ public class BasicJdbcTransactionTests {
 		catch (Exception expected) {
 		}
 		finally {
-			assertEquals( TransactionStatus.MARKED_ROLLBACK, transactionCoordinator.getTransactionDriverControl().getStatus() );
-			transactionCoordinator.getTransactionDriverControl().rollback();
+			assertEquals(
+					TransactionStatus.NOT_ACTIVE,
+					transactionCoordinator.getTransactionDriverControl().getStatus()
+			);
 		}
 	}
 }

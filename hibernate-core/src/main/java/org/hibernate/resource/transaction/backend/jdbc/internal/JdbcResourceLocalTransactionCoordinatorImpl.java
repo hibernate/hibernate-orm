@@ -222,19 +222,35 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 
 		@Override
 		public void commit() {
-			if ( rollbackOnly ) {
-				throw new TransactionException( "Transaction was marked for rollback only; cannot commit" );
-			}
+			try {
+				if ( rollbackOnly ) {
+					throw new TransactionException( "Transaction was marked for rollback only; cannot commit" );
+				}
 
-			JdbcResourceLocalTransactionCoordinatorImpl.this.beforeCompletionCallback();
-			jdbcResourceTransaction.commit();
-			JdbcResourceLocalTransactionCoordinatorImpl.this.afterCompletionCallback( true );
+				JdbcResourceLocalTransactionCoordinatorImpl.this.beforeCompletionCallback();
+				jdbcResourceTransaction.commit();
+				JdbcResourceLocalTransactionCoordinatorImpl.this.afterCompletionCallback( true );
+			}
+			catch (RuntimeException e) {
+				try {
+					rollback();
+				}
+				catch (RuntimeException e2) {
+					log.debug( "Encountered failure rolling back failed commit", e2 );;
+				}
+				throw e;
+			}
 		}
 
 		@Override
 		public void rollback() {
-			jdbcResourceTransaction.rollback();
-			JdbcResourceLocalTransactionCoordinatorImpl.this.afterCompletionCallback( false );
+			if ( rollbackOnly || getStatus() == TransactionStatus.ACTIVE ) {
+				rollbackOnly = false;
+				jdbcResourceTransaction.rollback();
+				JdbcResourceLocalTransactionCoordinatorImpl.this.afterCompletionCallback( false );
+			}
+
+			// no-op otherwise.
 		}
 
 		@Override

@@ -112,17 +112,3 @@ task testJar(type: Jar, dependsOn: testClasses) {
 artifacts {
     tests testJar
 }
-
-task instrument(dependsOn: compileTestJava) << {
-    ant.taskdef(name: 'hibInstrument',
-            classname: 'org.hibernate.tool.instrument.javassist.InstrumentTask',
-            classpath: configurations.testCompile.asPath)
-    ant.hibInstrument(verbose: 'true'){
-        fileset(dir:"$buildDir/classes/test/org/hibernate/jpa/test/callbacks/"){
-            include(name: "EntityWithLazyProperty.class")
-        }
-    }
-    println("hibernate instrumentation")
-}
-
-test.dependsOn instrument

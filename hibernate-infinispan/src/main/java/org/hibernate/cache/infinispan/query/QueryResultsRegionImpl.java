@@ -7,15 +7,33 @@
 package org.hibernate.cache.infinispan.query;
 
 import javax.transaction.Transaction;
+import javax.transaction.TransactionManager;
+import javax.transaction.Status;
+import javax.transaction.Synchronization;
 
+import org.hibernate.HibernateException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.jdbc.WorkExecutor;
+import org.hibernate.jdbc.WorkExecutorVisitable;
+import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.infinispan.AdvancedCache;
+import org.infinispan.configuration.cache.TransactionConfiguration;
 import org.infinispan.context.Flag;
+import org.infinispan.transaction.TransactionMode;
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Region for caching query results.
@@ -25,10 +43,13 @@ import org.infinispan.context.Flag;
  * @since 3.5
  */
 public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implements QueryResultsRegion {
+	private static final Log log = LogFactory.getLog( QueryResultsRegionImpl.class );
 
 	private final AdvancedCache evictCache;
 	private final AdvancedCache putCache;
 	private final AdvancedCache getCache;
+	private final ConcurrentMap<SessionImplementor, Map> transactionContext = new ConcurrentHashMap<SessionImplementor, Map>();
+	private final boolean putCacheRequiresTransaction;
 
    /**
     * Query region constructor
@@ -50,15 +71,28 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
 				Caches.failSilentWriteCache( cache );
 
 		this.getCache = Caches.failSilentReadCache( cache );
+
+		TransactionConfiguration transactionConfiguration = putCache.getCacheConfiguration().transaction();
+		boolean transactional = transactionConfiguration.transactionMode() != TransactionMode.NON_TRANSACTIONAL;
+		this.putCacheRequiresTransaction = transactional && !transactionConfiguration.autoCommit();
+		// Since we execute the query update explicitly form transaction synchronization, the putCache does not need
+		// to be transactional anymore (it had to be in the past to prevent revealing uncommitted changes).
+		if (transactional) {
+			log.warn("Use non-transactional query caches for best performance!");
+		}
 	}
 
 	@Override
 	public void evict(Object key) throws CacheException {
+		for (Map map : transactionContext.values()) {
+			map.remove(key);
+		}
 		evictCache.remove( key );
 	}
 
 	@Override
 	public void evictAll() throws CacheException {
+		transactionContext.clear();
 		final Transaction tx = suspend();
 		try {
 			// Invalidate the local region and then go remote
@@ -89,18 +123,42 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
 		// to avoid holding locks that would prevent updates.
 		// Add a zero (or low) timeout option so we don't block
 		// waiting for tx's that did a put to commit
+		Object result;
 		if ( skipCacheStore ) {
-			return getCache.withFlags( Flag.SKIP_CACHE_STORE ).get( key );
+			result = getCache.withFlags( Flag.SKIP_CACHE_STORE ).get( key );
 		}
 		else {
-			return getCache.get( key );
+			result = getCache.get( key );
 		}
+		if (result == null) {
+			Map map = transactionContext.get(session);
+			if (map != null) {
+				result = map.get(key);
+			}
+		}
+		return result;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public void put(SessionImplementor session, Object key, Object value) throws CacheException {
 		if ( checkValid() ) {
+			// See HHH-7898: Even with FAIL_SILENTLY flag, failure to write in transaction
+			// fails the whole transaction. It is an Infinispan quirk that cannot be fixed
+			// ISPN-5356 tracks that. This is because if the transaction continued the
+			// value could be committed on backup owners, including the failed operation,
+			// and the result would not be consistent.
+			TransactionCoordinator tc = session.getTransactionCoordinator();
+			if (tc != null && tc.isJoined()) {
+				tc.getLocalSynchronizations().registerSynchronization(new PostTransactionQueryUpdate(tc, session, key, value));
+				// no need to synchronize as the transaction will be accessed by only one thread
+				Map map = transactionContext.get(session);
+				if (map == null) {
+					transactionContext.put(session, map = new HashMap());
+				}
+				map.put(key, value);
+				return;
+			}
 			// Here we don't want to suspend the tx. If we do:
 			// 1) We might be caching query results that reflect uncommitted
 			// changes. No tx == no WL on cache node, so other threads
@@ -120,4 +178,52 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
 		}
 	}
 
+	private class PostTransactionQueryUpdate implements Synchronization {
+		private final TransactionCoordinator tc;
+		private final SessionImplementor session;
+		private final Object key;
+		private final Object value;
+
+		public PostTransactionQueryUpdate(TransactionCoordinator tc, SessionImplementor session, Object key, Object value) {
+			this.tc = tc;
+			this.session = session;
+			this.key = key;
+			this.value = value;
+		}
+
+		@Override
+		public void beforeCompletion() {
+		}
+
+		@Override
+		public void afterCompletion(int status) {
+			transactionContext.remove(session);
+			switch (status) {
+				case Status.STATUS_COMMITTING:
+				case Status.STATUS_COMMITTED:
+					try {
+						// TODO: isolation without obtaining Connection
+						tc.createIsolationDelegate().delegateWork(new WorkExecutorVisitable<Void>() {
+							@Override
+							public Void accept(WorkExecutor<Void> executor, Connection connection) throws SQLException {
+								putCache.put(key, value);
+								return null;
+							}
+						}
+						, putCacheRequiresTransaction);
+					}
+					catch (HibernateException e) {
+						// silently fail any exceptions
+						if (log.isTraceEnabled()) {
+							log.trace("Exception during query cache update", e);
+						}
+					}
+					break;
+				default:
+					// it would be nicer to react only on ROLLING_BACK and ROLLED_BACK statuses
+					// but TransactionCoordinator gives us UNKNOWN on rollback
+					break;
+			}
+		}
+	}
 }

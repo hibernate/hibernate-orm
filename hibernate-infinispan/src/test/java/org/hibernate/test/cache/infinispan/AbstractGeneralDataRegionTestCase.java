@@ -6,22 +6,38 @@
  */
 package org.hibernate.test.cache.infinispan;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
 
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.infinispan.impl.BaseGeneralDataRegion;
 import org.hibernate.cache.spi.GeneralDataRegion;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.Region;
+import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
+import org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase;
+import org.hibernate.test.cache.infinispan.util.BatchModeJtaPlatform;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 import org.infinispan.AdvancedCache;
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
 import org.jboss.logging.Logger;
 import org.junit.Test;
+
+import javax.transaction.TransactionManager;
 
 import static org.hibernate.test.cache.infinispan.util.CacheTestUtil.assertEqualsEventually;
 import static org.junit.Assert.assertEquals;
@@ -40,6 +56,9 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 
 	protected static final String VALUE1 = "value1";
 	protected static final String VALUE2 = "value2";
+	protected static final String VALUE3 = "value3";
+
+	protected TransactionManager tm = BatchModeTransactionManager.getInstance();
 
 	protected StandardServiceRegistryBuilder createStandardServiceRegistryBuilder() {
 		return CacheTestUtil.buildBaselineStandardServiceRegistryBuilder(
@@ -65,79 +84,86 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 		evictOrRemoveTest();
 	}
 
-	private void evictOrRemoveTest() throws Exception {
-		final StandardServiceRegistryBuilder ssrb = createStandardServiceRegistryBuilder();
-		StandardServiceRegistry registry1 = ssrb.build();
-		StandardServiceRegistry registry2 = ssrb.build();
-		try {
-			InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
-					registry1,
-					getCacheTestSupport()
-			);
+	protected interface SFRConsumer {
+		void accept(List<SessionFactory> sessionFactories, List<GeneralDataRegion> regions) throws Exception;
+	}
 
-			final Properties properties = CacheTestUtil.toProperties( ssrb.getSettings() );
+	protected void withSessionFactoriesAndRegions(int num, SFRConsumer consumer) throws Exception {
+		StandardServiceRegistryBuilder ssrb = createStandardServiceRegistryBuilder()
+				.applySetting(AvailableSettings.CACHE_REGION_FACTORY, SingleNodeTestCase.TestInfinispanRegionFactory.class.getName())
+				.applySetting(AvailableSettings.JTA_PLATFORM, BatchModeJtaPlatform.class.getName())
+				.applySetting(AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, JtaTransactionCoordinatorBuilderImpl.class.getName());
+		Properties properties = CacheTestUtil.toProperties( ssrb.getSettings() );
+		List<StandardServiceRegistry> registries = new ArrayList<>();
+		List<SessionFactory> sessionFactories = new ArrayList<>();
+		List<GeneralDataRegion> regions = new ArrayList<>();
+		for (int i = 0; i < num; ++i) {
+			StandardServiceRegistry registry = ssrb.build();
+			registries.add(registry);
 
-			boolean invalidation = false;
+			SessionFactory sessionFactory = new MetadataSources(registry).buildMetadata().buildSessionFactory();
+			sessionFactories.add(sessionFactory);
 
-			// Sleep a bit to avoid concurrent FLUSH problem
-			avoidConcurrentFlush();
-
-			final GeneralDataRegion localRegion = (GeneralDataRegion) createRegion(
+			InfinispanRegionFactory regionFactory = (InfinispanRegionFactory) registry.getService(RegionFactory.class);
+			GeneralDataRegion region = (GeneralDataRegion) createRegion(
 					regionFactory,
 					getStandardRegionName( REGION_PREFIX ),
 					properties,
 					null
 			);
-
-			regionFactory = CacheTestUtil.startRegionFactory(
-					registry2,
-					getCacheTestSupport()
-			);
-
-			final GeneralDataRegion remoteRegion = (GeneralDataRegion) createRegion(
-					regionFactory,
-					getStandardRegionName( REGION_PREFIX ),
-					properties,
-					null
-			);
-			assertNull( "local is clean", localRegion.get(null, KEY ) );
-			assertNull( "remote is clean", remoteRegion.get(null, KEY ) );
-
-			regionPut( localRegion );
-
-			Callable<Object> getFromLocalRegion = new Callable<Object>() {
-				@Override
-				public Object call() throws Exception {
-					return localRegion.get(null, KEY);
-				}
-			};
-			Callable<Object> getFromRemoteRegion = new Callable<Object>() {
-				@Override
-				public Object call() throws Exception {
-					return remoteRegion.get(null, KEY);
-				}
-			};
-
-			assertEqualsEventually(VALUE1, getFromLocalRegion, 10, TimeUnit.SECONDS);
-			Object expected = invalidation ? null : VALUE1;
-			assertEqualsEventually(expected, getFromRemoteRegion, 10, TimeUnit.SECONDS);
-
-			regionEvict(localRegion);
-
-			assertEqualsEventually(null, getFromLocalRegion, 10, TimeUnit.SECONDS);
-			assertEqualsEventually(null, getFromRemoteRegion, 10, TimeUnit.SECONDS);
-		} finally {
-			StandardServiceRegistryBuilder.destroy( registry1 );
-			StandardServiceRegistryBuilder.destroy( registry2 );
+			regions.add(region);
 		}
+		try {
+			consumer.accept(sessionFactories, regions);
+		} finally {
+			for (SessionFactory sessionFactory : sessionFactories) {
+				sessionFactory.close();
+			}
+			for (StandardServiceRegistry registry : registries) {
+				StandardServiceRegistryBuilder.destroy( registry );
+			}
+		}
+	}
+
+	private void evictOrRemoveTest() throws Exception {
+		withSessionFactoriesAndRegions(2, ((sessionFactories, regions) -> {
+			GeneralDataRegion localRegion = regions.get(0);
+			GeneralDataRegion remoteRegion = regions.get(1);
+			SessionImplementor localSession = (SessionImplementor) sessionFactories.get(0).openSession();
+			SessionImplementor remoteSession = (SessionImplementor) sessionFactories.get(1).openSession();
+			try {
+				assertNull("local is clean", localRegion.get(localSession, KEY));
+				assertNull("remote is clean", remoteRegion.get(remoteSession, KEY));
+
+				Transaction tx = ((Session) localSession).getTransaction();
+				tx.begin();
+				try {
+					localRegion.put(localSession, KEY, VALUE1);
+					tx.commit();
+				} catch (Exception e) {
+					tx.rollback();
+					throw e;
+				}
+
+				Callable<Object> getFromLocalRegion = () -> localRegion.get(localSession, KEY);
+				Callable<Object> getFromRemoteRegion = () -> remoteRegion.get(remoteSession, KEY);
+
+				assertEqualsEventually(VALUE1, getFromLocalRegion, 10, TimeUnit.SECONDS);
+				assertEqualsEventually(VALUE1, getFromRemoteRegion, 10, TimeUnit.SECONDS);
+
+				regionEvict(localRegion);
+
+				assertEqualsEventually(null, getFromLocalRegion, 10, TimeUnit.SECONDS);
+				assertEqualsEventually(null, getFromRemoteRegion, 10, TimeUnit.SECONDS);
+			} finally {
+				( (Session) localSession).close();
+				( (Session) remoteSession).close();
+			}
+		}));
 	}
 
    protected void regionEvict(GeneralDataRegion region) throws Exception {
 	  region.evict(KEY);
-   }
-
-   protected void regionPut(GeneralDataRegion region) throws Exception {
-	  region.put(null, KEY, VALUE1);
    }
 
    protected abstract String getStandardRegionName(String regionPrefix);
@@ -153,95 +179,57 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 	}
 
 	private void evictOrRemoveAllTest(String configName) throws Exception {
-		final StandardServiceRegistryBuilder ssrb = createStandardServiceRegistryBuilder();
-		StandardServiceRegistry registry1 = ssrb.build();
-		StandardServiceRegistry registry2 = ssrb.build();
+		withSessionFactoriesAndRegions(2, (sessionFactories, regions) -> {
+			GeneralDataRegion localRegion = regions.get(0);
+			GeneralDataRegion remoteRegion = regions.get(1);
+			AdvancedCache localCache = ((BaseGeneralDataRegion) localRegion).getCache();
+			AdvancedCache remoteCache = ((BaseGeneralDataRegion) remoteRegion).getCache();
+			SessionImplementor localSession = (SessionImplementor) sessionFactories.get(0).openSession();
+			SessionImplementor remoteSession = (SessionImplementor) sessionFactories.get(1).openSession();
 
-		try {
-			final Properties properties = CacheTestUtil.toProperties( ssrb.getSettings() );
+			try {
+				Set keys = localCache.keySet();
+				assertEquals( "No valid children in " + keys, 0, getValidKeyCount( keys ) );
 
-			InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
-					registry1,
-					getCacheTestSupport()
-			);
-			AdvancedCache localCache = getInfinispanCache( regionFactory );
+				keys = remoteCache.keySet();
+				assertEquals( "No valid children in " + keys, 0, getValidKeyCount( keys ) );
 
-			// Sleep a bit to avoid concurrent FLUSH problem
-			avoidConcurrentFlush();
+				assertNull( "local is clean", localRegion.get(null, KEY ) );
+				assertNull( "remote is clean", remoteRegion.get(null, KEY ) );
 
-			GeneralDataRegion localRegion = (GeneralDataRegion) createRegion(
-					regionFactory,
-					getStandardRegionName( REGION_PREFIX ),
-					properties,
-					null
-			);
+				localRegion.put(localSession, KEY, VALUE1);
+				assertEquals( VALUE1, localRegion.get(null, KEY ) );
 
-			regionFactory = CacheTestUtil.startRegionFactory(
-					registry2,
-					getCacheTestSupport()
-			);
-			AdvancedCache remoteCache = getInfinispanCache( regionFactory );
+				// Allow async propagation
+				sleep( 250 );
 
-			// Sleep a bit to avoid concurrent FLUSH problem
-			avoidConcurrentFlush();
+				remoteRegion.put(remoteSession, KEY, VALUE1);
+				assertEquals( VALUE1, remoteRegion.get(null, KEY ) );
 
-			GeneralDataRegion remoteRegion = (GeneralDataRegion) createRegion(
-					regionFactory,
-					getStandardRegionName( REGION_PREFIX ),
-					properties,
-					null
-			);
+				// Allow async propagation
+				sleep( 250 );
 
-			Set keys = localCache.keySet();
-			assertEquals( "No valid children in " + keys, 0, getValidKeyCount( keys ) );
+				localRegion.evictAll();
 
-			keys = remoteCache.keySet();
-			assertEquals( "No valid children in " + keys, 0, getValidKeyCount( keys ) );
+				// allow async propagation
+				sleep( 250 );
+				// This should re-establish the region root node in the optimistic case
+				assertNull( localRegion.get(null, KEY ) );
+				assertEquals( "No valid children in " + keys, 0, getValidKeyCount( localCache.keySet() ) );
 
-			assertNull( "local is clean", localRegion.get(null, KEY ) );
-			assertNull( "remote is clean", remoteRegion.get(null, KEY ) );
+				// Re-establishing the region root on the local node doesn't
+				// propagate it to other nodes. Do a get on the remote node to re-establish
+				// This only adds a node in the case of optimistic locking
+				assertEquals( null, remoteRegion.get(null, KEY ) );
+				assertEquals( "No valid children in " + keys, 0, getValidKeyCount( remoteCache.keySet() ) );
 
-			regionPut(localRegion);
-			assertEquals( VALUE1, localRegion.get(null, KEY ) );
+				assertEquals( "local is clean", null, localRegion.get(null, KEY ) );
+				assertEquals( "remote is clean", null, remoteRegion.get(null, KEY ) );
+			} finally {
+				( (Session) localSession).close();
+				( (Session) remoteSession).close();
+			}
 
-			// Allow async propagation
-			sleep( 250 );
-
-			regionPut(remoteRegion);
-			assertEquals( VALUE1, remoteRegion.get(null, KEY ) );
-
-			// Allow async propagation
-			sleep( 250 );
-
-			localRegion.evictAll();
-
-			// allow async propagation
-			sleep( 250 );
-			// This should re-establish the region root node in the optimistic case
-			assertNull( localRegion.get(null, KEY ) );
-			assertEquals( "No valid children in " + keys, 0, getValidKeyCount( localCache.keySet() ) );
-
-			// Re-establishing the region root on the local node doesn't
-			// propagate it to other nodes. Do a get on the remote node to re-establish
-			// This only adds a node in the case of optimistic locking
-			assertEquals( null, remoteRegion.get(null, KEY ) );
-			assertEquals( "No valid children in " + keys, 0, getValidKeyCount( remoteCache.keySet() ) );
-
-			assertEquals( "local is clean", null, localRegion.get(null, KEY ) );
-			assertEquals( "remote is clean", null, remoteRegion.get(null, KEY ) );
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( registry1 );
-			StandardServiceRegistryBuilder.destroy( registry2 );
-		}
-	}
-
-	protected void rollback() {
-		try {
-			BatchModeTransactionManager.getInstance().rollback();
-		}
-		catch (Exception e) {
-			log.error( e.getMessage(), e );
-		}
+		});
 	}
 }

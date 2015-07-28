@@ -6,36 +6,44 @@
  */
 package org.hibernate.test.cache.infinispan.query;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cache.infinispan.util.Caches;
+import org.hibernate.cache.infinispan.query.QueryResultsRegionImpl;
 import org.hibernate.cache.internal.StandardQueryCache;
 import org.hibernate.cache.spi.CacheDataDescription;
-import org.hibernate.cache.spi.GeneralDataRegion;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.Region;
 
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.test.cache.infinispan.AbstractGeneralDataRegionTestCase;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 import junit.framework.AssertionFailedError;
 
+import org.hibernate.testing.TestForIssue;
 import org.infinispan.AdvancedCache;
 import org.infinispan.notifications.Listener;
+import org.infinispan.notifications.cachelistener.annotation.CacheEntryModified;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryVisited;
+import org.infinispan.notifications.cachelistener.event.CacheEntryModifiedEvent;
 import org.infinispan.notifications.cachelistener.event.CacheEntryVisitedEvent;
-import org.infinispan.transaction.tm.BatchModeTransactionManager;
 import org.infinispan.util.concurrent.IsolationLevel;
 
 import org.jboss.logging.Logger;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -62,82 +70,44 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
 	}
 
    @Override
-   protected void regionPut(final GeneralDataRegion region) throws Exception {
-      Caches.withinTx(BatchModeTransactionManager.getInstance(), new Callable<Void>() {
-         @Override
-         public Void call() throws Exception {
-            region.put(null, KEY, VALUE1);
-            return null;
-         }
-      });
-   }
-
-   @Override
-   protected void regionEvict(final GeneralDataRegion region) throws Exception {
-      Caches.withinTx(BatchModeTransactionManager.getInstance(), new Callable<Void>() {
-         @Override
-         public Void call() throws Exception {
-            region.evict(KEY);
-            return null;
-         }
-      });
-   }
-
-   @Override
 	protected AdvancedCache getInfinispanCache(InfinispanRegionFactory regionFactory) {
-		return regionFactory.getCacheManager().getCache( "local-query" ).getAdvancedCache();
+		return regionFactory.getCacheManager().getCache( getStandardRegionName( REGION_PREFIX ) ).getAdvancedCache();
 	}
 
 	@Override
 	protected StandardServiceRegistryBuilder createStandardServiceRegistryBuilder() {
-		return CacheTestUtil.buildCustomQueryCacheStandardServiceRegistryBuilder( "test", "replicated-query" );
+		return CacheTestUtil.buildCustomQueryCacheStandardServiceRegistryBuilder( REGION_PREFIX, "replicated-query" );
 	}
 
-	private void putDoesNotBlockGetTest() throws Exception {
-		StandardServiceRegistryBuilder ssrb = createStandardServiceRegistryBuilder();
-		StandardServiceRegistry registry = ssrb.build();
-		try {
-			final Properties properties = CacheTestUtil.toProperties( ssrb.getSettings() );
+	private interface RegionConsumer {
+		void accept(SessionFactory sessionFactory, QueryResultsRegion region) throws Exception;
+	}
 
-			InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
-					registry,
-					getCacheTestSupport()
-			);
+	private void withQueryRegion(RegionConsumer callable) throws Exception {
+		withSessionFactoriesAndRegions(1, (sessionFactories, regions) ->  callable.accept(sessionFactories.get(0), (QueryResultsRegion) regions.get(0)));
+	}
 
-			// Sleep a bit to avoid concurrent FLUSH problem
-			avoidConcurrentFlush();
+	@Test
+	public void testPutDoesNotBlockGet() throws Exception {
+		withQueryRegion((sessionFactory, region) -> {
+			withSession(sessionFactory, session -> region.put(session, KEY, VALUE1));
+			assertEquals(VALUE1, callWithSession(sessionFactory, session -> region.get(session, KEY)));
 
-			final QueryResultsRegion region = regionFactory.buildQueryResultsRegion(
-					getStandardRegionName( REGION_PREFIX ),
-					properties
-			);
-
-			region.put(null, KEY, VALUE1 );
-			assertEquals( VALUE1, region.get(null, KEY ) );
-
-			final CountDownLatch readerLatch = new CountDownLatch( 1 );
-			final CountDownLatch writerLatch = new CountDownLatch( 1 );
-			final CountDownLatch completionLatch = new CountDownLatch( 1 );
+			final CountDownLatch readerLatch = new CountDownLatch(1);
+			final CountDownLatch writerLatch = new CountDownLatch(1);
+			final CountDownLatch completionLatch = new CountDownLatch(1);
 			final ExceptionHolder holder = new ExceptionHolder();
 
 			Thread reader = new Thread() {
 				@Override
 				public void run() {
 					try {
-						BatchModeTransactionManager.getInstance().begin();
-						log.debug( "Transaction began, get value for key" );
-						assertTrue( VALUE2.equals( region.get(null, KEY ) ) == false );
-						BatchModeTransactionManager.getInstance().commit();
-					}
-					catch (AssertionFailedError e) {
-						holder.a1 = e;
-						rollback();
-					}
-					catch (Exception e) {
-						holder.e1 = e;
-						rollback();
-					}
-					finally {
+						assertNotEquals(VALUE2, callWithSession(sessionFactory, session-> region.get(session, KEY)));
+					} catch (AssertionFailedError e) {
+						holder.addAssertionFailure(e);
+					} catch (Exception e) {
+						holder.addException(e);
+					} finally {
 						readerLatch.countDown();
 					}
 				}
@@ -147,18 +117,74 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
 				@Override
 				public void run() {
 					try {
-						BatchModeTransactionManager.getInstance().begin();
-						log.debug( "Put value2" );
-						region.put(null, KEY, VALUE2 );
-						log.debug( "Put finished for value2, await writer latch" );
-						writerLatch.await();
-						log.debug( "Writer latch finished" );
-						BatchModeTransactionManager.getInstance().commit();
-						log.debug( "Transaction committed" );
+						withSession(sessionFactory, session -> {
+							region.put((SessionImplementor) session, KEY, VALUE2);
+							writerLatch.await();
+						});
+					} catch (Exception e) {
+						holder.addException(e);
+					} finally {
+						completionLatch.countDown();
+					}
+				}
+			};
+
+			reader.setDaemon(true);
+			writer.setDaemon(true);
+
+			writer.start();
+			assertFalse("Writer is blocking", completionLatch.await(100, TimeUnit.MILLISECONDS));
+
+			// Start the reader
+			reader.start();
+			assertTrue("Reader finished promptly", readerLatch.await(1000000000, TimeUnit.MILLISECONDS));
+
+			writerLatch.countDown();
+
+			assertTrue("Reader finished promptly", completionLatch.await(100, TimeUnit.MILLISECONDS));
+
+			assertEquals(VALUE2, region.get(null, KEY));
+		});
+	}
+
+	@Test
+	public void testGetDoesNotBlockPut() throws Exception {
+		withQueryRegion((sessionFactory, region) -> {
+			withSession(sessionFactory, session -> region.put( session, KEY, VALUE1 ));
+			assertEquals(VALUE1, callWithSession(sessionFactory, session -> region.get( session, KEY )));
+
+			final AdvancedCache cache = ((QueryResultsRegionImpl) region).getCache();
+			final CountDownLatch blockerLatch = new CountDownLatch( 1 );
+			final CountDownLatch writerLatch = new CountDownLatch( 1 );
+			final CountDownLatch completionLatch = new CountDownLatch( 1 );
+			final ExceptionHolder holder = new ExceptionHolder();
+
+			Thread reader = new Thread() {
+				@Override
+				public void run() {
+					GetBlocker blocker = new GetBlocker( blockerLatch, KEY );
+					try {
+						cache.addListener( blocker );
+						withSession(sessionFactory, session -> region.get(session, KEY ));
 					}
 					catch (Exception e) {
-						holder.e2 = e;
-						rollback();
+						holder.addException(e);
+					}
+					finally {
+						cache.removeListener( blocker );
+					}
+				}
+			};
+
+			Thread writer = new Thread() {
+				@Override
+				public void run() {
+					try {
+						writerLatch.await();
+						withSession(sessionFactory, session -> region.put( session, KEY, VALUE2 ));
+					}
+					catch (Exception e) {
+						holder.addException(e);
 					}
 					finally {
 						completionLatch.countDown();
@@ -169,119 +195,12 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
 			reader.setDaemon( true );
 			writer.setDaemon( true );
 
-			writer.start();
-			assertFalse( "Writer is blocking", completionLatch.await( 100, TimeUnit.MILLISECONDS ) );
-
-			// Start the reader
-			reader.start();
-			assertTrue( "Reader finished promptly", readerLatch.await( 1000000000, TimeUnit.MILLISECONDS ) );
-
-			writerLatch.countDown();
-			assertTrue( "Reader finished promptly", completionLatch.await( 100, TimeUnit.MILLISECONDS ) );
-
-			assertEquals( VALUE2, region.get(null, KEY ) );
-
-			if ( holder.a1 != null ) {
-				throw holder.a1;
-			}
-			else if ( holder.a2 != null ) {
-				throw holder.a2;
-			}
-
-			assertEquals( "writer saw no exceptions", null, holder.e1 );
-			assertEquals( "reader saw no exceptions", null, holder.e2 );
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( registry );
-		}
-	}
-
-	public void testGetDoesNotBlockPut() throws Exception {
-		getDoesNotBlockPutTest();
-	}
-
-	private void getDoesNotBlockPutTest() throws Exception {
-		StandardServiceRegistryBuilder ssrb = createStandardServiceRegistryBuilder();
-		StandardServiceRegistry registry = ssrb.build();
-		try {
-			final Properties properties = CacheTestUtil.toProperties( ssrb.getSettings() );
-			InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
-					registry,
-					getCacheTestSupport()
-			);
-
-			// Sleep a bit to avoid concurrent FLUSH problem
-			avoidConcurrentFlush();
-
-			final QueryResultsRegion region = regionFactory.buildQueryResultsRegion(
-					getStandardRegionName( REGION_PREFIX ),
-					properties
-			);
-
-			region.put(null, KEY, VALUE1 );
-			assertEquals( VALUE1, region.get(null, KEY ) );
-
-			// final Fqn rootFqn = getRegionFqn(getStandardRegionName(REGION_PREFIX), REGION_PREFIX);
-			final AdvancedCache jbc = getInfinispanCache(regionFactory);
-
-			final CountDownLatch blockerLatch = new CountDownLatch( 1 );
-			final CountDownLatch writerLatch = new CountDownLatch( 1 );
-			final CountDownLatch completionLatch = new CountDownLatch( 1 );
-			final ExceptionHolder holder = new ExceptionHolder();
-
-			Thread blocker = new Thread() {
-
-				@Override
-				public void run() {
-					// Fqn toBlock = new Fqn(rootFqn, KEY);
-					GetBlocker blocker = new GetBlocker( blockerLatch, KEY );
-					try {
-						jbc.addListener( blocker );
-
-						BatchModeTransactionManager.getInstance().begin();
-						region.get(null, KEY );
-						BatchModeTransactionManager.getInstance().commit();
-					}
-					catch (Exception e) {
-						holder.e1 = e;
-						rollback();
-					}
-					finally {
-						jbc.removeListener( blocker );
-					}
-				}
-			};
-
-			Thread writer = new Thread() {
-
-				@Override
-				public void run() {
-					try {
-						writerLatch.await();
-
-						BatchModeTransactionManager.getInstance().begin();
-						region.put(null, KEY, VALUE2 );
-						BatchModeTransactionManager.getInstance().commit();
-					}
-					catch (Exception e) {
-						holder.e2 = e;
-						rollback();
-					}
-					finally {
-						completionLatch.countDown();
-					}
-				}
-			};
-
-			blocker.setDaemon( true );
-			writer.setDaemon( true );
-
 			boolean unblocked = false;
 			try {
-				blocker.start();
+				reader.start();
 				writer.start();
 
-				assertFalse( "Blocker is blocking", completionLatch.await( 100, TimeUnit.MILLISECONDS ) );
+				assertFalse( "Reader is blocking", completionLatch.await( 100, TimeUnit.MILLISECONDS ) );
 				// Start the writer
 				writerLatch.countDown();
 				assertTrue( "Writer finished promptly", completionLatch.await( 100, TimeUnit.MILLISECONDS ) );
@@ -289,45 +208,117 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
 				blockerLatch.countDown();
 				unblocked = true;
 
-				if ( IsolationLevel.REPEATABLE_READ.equals( jbc.getCacheConfiguration().locking().isolationLevel() ) ) {
-					assertEquals( VALUE1, region.get(null, KEY ) );
+				if ( IsolationLevel.REPEATABLE_READ.equals( cache.getCacheConfiguration().locking().isolationLevel() ) ) {
+					assertEquals( VALUE1, callWithSession(sessionFactory, session -> region.get( session, KEY )) );
 				}
 				else {
-					assertEquals( VALUE2, region.get(null, KEY ) );
+					assertEquals( VALUE2, callWithSession(sessionFactory, session -> region.get( session, KEY )) );
 				}
 
-				if ( holder.a1 != null ) {
-					throw holder.a1;
-				}
-				else if ( holder.a2 != null ) {
-					throw holder.a2;
-				}
-
-				assertEquals( "blocker saw no exceptions", null, holder.e1 );
-				assertEquals( "writer saw no exceptions", null, holder.e2 );
+				holder.checkExceptions();
 			}
 			finally {
 				if ( !unblocked ) {
 					blockerLatch.countDown();
 				}
 			}
+		});
+	}
+
+	protected interface SessionConsumer {
+		void accept(SessionImplementor session) throws Exception;
+	}
+
+	protected interface SessionCallable<T> {
+		T call(SessionImplementor session) throws Exception;
+	}
+
+	protected <T> T callWithSession(SessionFactory sessionFactory, SessionCallable<T> callable) throws Exception {
+		Session session = sessionFactory.openSession();
+		Transaction tx = session.getTransaction();
+		tx.begin();
+		try {
+			T retval = callable.call((SessionImplementor) session);
+			tx.commit();
+			return retval;
+		} catch (Exception e) {
+			tx.rollback();
+			throw e;
+		} finally {
+			session.close();
 		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( registry );
-		}
+	}
+
+	protected void withSession(SessionFactory sessionFactory, SessionConsumer consumer) throws Exception {
+		callWithSession(sessionFactory, session -> { consumer.accept(session); return null;} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-7898")
+	public void testPutDuringPut() throws Exception {
+		withQueryRegion((sessionFactory, region) -> {
+			withSession(sessionFactory, session -> region.put(session, KEY, VALUE1));
+			assertEquals(VALUE1, callWithSession(sessionFactory, session -> region.get(session, KEY) ));
+
+			final AdvancedCache cache = ((QueryResultsRegionImpl) region).getCache();
+			CountDownLatch blockerLatch = new CountDownLatch(1);
+			CountDownLatch triggerLatch = new CountDownLatch(1);
+			ExceptionHolder holder = new ExceptionHolder();
+
+			Thread blocking = new Thread() {
+				@Override
+				public void run() {
+					PutBlocker blocker = null;
+					try {
+						blocker = new PutBlocker(blockerLatch, triggerLatch, KEY);
+						cache.addListener(blocker);
+						withSession(sessionFactory, session -> region.put(session, KEY, VALUE2));
+					} catch (Exception e) {
+						holder.addException(e);
+					} finally {
+						if (blocker != null) {
+							cache.removeListener(blocker);
+						}
+						if (triggerLatch.getCount() > 0) {
+							triggerLatch.countDown();
+						}
+					}
+				}
+			};
+
+			Thread blocked = new Thread() {
+				@Override
+				public void run() {
+					try {
+						triggerLatch.await();
+						// this should silently fail
+						withSession(sessionFactory, session -> region.put(session, KEY, VALUE3));
+					} catch (Exception e) {
+						holder.addException(e);
+					}
+				}
+			};
+
+			blocking.setName("blocking-thread");
+			blocking.start();
+			blocked.setName("blocked-thread");
+			blocked.start();
+			blocked.join();
+			blockerLatch.countDown();
+			blocking.join();
+
+			holder.checkExceptions();
+
+			assertEquals(VALUE2, callWithSession(sessionFactory, session -> region.get(session, KEY)));
+		});
 	}
 
 	@Listener
 	public class GetBlocker {
+		private final CountDownLatch latch;
+		private final Object key;
 
-		private CountDownLatch latch;
-		// private Fqn fqn;
-		private Object key;
-
-		GetBlocker(
-				CountDownLatch latch,
-				Object key
-		) {
+		GetBlocker(CountDownLatch latch,	Object key) {
 			this.latch = latch;
 			this.key = key;
 		}
@@ -345,10 +336,57 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
 		}
 	}
 
+	@Listener
+	public class PutBlocker {
+		private final CountDownLatch blockLatch, triggerLatch;
+		private final Object key;
+		private boolean enabled = true;
+
+		PutBlocker(CountDownLatch blockLatch, CountDownLatch triggerLatch, Object key) {
+			this.blockLatch = blockLatch;
+			this.triggerLatch = triggerLatch;
+			this.key = key;
+		}
+
+		@CacheEntryModified
+		public void nodeVisisted(CacheEntryModifiedEvent event) {
+			// we need isPre since lock is acquired in the commit phase
+			if ( !event.isPre() && event.getKey().equals( key ) ) {
+				try {
+					synchronized (this) {
+						if (enabled) {
+							triggerLatch.countDown();
+							enabled = false;
+							blockLatch.await();
+						}
+					}
+				}
+				catch (InterruptedException e) {
+					log.error( "Interrupted waiting for latch", e );
+				}
+			}
+		}
+	}
+
 	private class ExceptionHolder {
-		Exception e1;
-		Exception e2;
-		AssertionFailedError a1;
-		AssertionFailedError a2;
+		private final List<Exception> exceptions = Collections.synchronizedList(new ArrayList<>());
+		private final List<AssertionFailedError> assertionFailures = Collections.synchronizedList(new ArrayList<>());
+
+		public void addException(Exception e) {
+			exceptions.add(e);
+		}
+
+		public void addAssertionFailure(AssertionFailedError e) {
+			assertionFailures.add(e);
+		}
+
+		public void checkExceptions() throws Exception {
+			for (AssertionFailedError a : assertionFailures) {
+				throw a;
+			}
+			for (Exception e : exceptions) {
+				throw e;
+			}
+		}
 	}
 }

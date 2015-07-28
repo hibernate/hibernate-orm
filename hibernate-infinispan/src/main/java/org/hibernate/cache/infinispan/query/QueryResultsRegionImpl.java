@@ -58,8 +58,8 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
     * @param name of the query region
     * @param factory for the query region
     */
-	public QueryResultsRegionImpl(AdvancedCache cache, String name, RegionFactory factory) {
-		super( cache, name, null, factory, null );
+	public QueryResultsRegionImpl(AdvancedCache cache, String name, TransactionManager transactionManager, RegionFactory factory) {
+		super( cache, name, transactionManager, null, factory, null );
 		// If Infinispan is using INVALIDATION for query cache, we don't want to propagate changes.
 		// We use the Timestamps cache to manage invalidation
 		final boolean localOnly = Caches.isInvalidationCache( cache );

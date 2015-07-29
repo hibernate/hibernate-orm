@@ -45,7 +45,8 @@ dependencies {
 
     testRuntime( 'jaxen:jaxen:1.1' )
     testRuntime( libraries.javassist )
-    testRuntime( libraries.unified_el )
+    testRuntime( libraries.expression_language_api )  // EL required for Hibernate Validator
+    testRuntime( libraries.expression_language_impl ) // EL required for Hibernate Validator
 }
 
 mavenPom {

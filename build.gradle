@@ -100,7 +100,13 @@ subprojects { subProject ->
 	apply plugin: 'osgi'
 
 	apply plugin: 'findbugs'
+	findbugsMain.onlyIf { !project.hasProperty('skipFindbugs') }
+	findbugsTest.onlyIf { !project.hasProperty('skipFindbugs') }
+
 	apply plugin: 'checkstyle'
+	checkstyleMain.onlyIf { !project.hasProperty('skipCheckstyle') }
+	checkstyleTest.onlyIf { !project.hasProperty('skipCheckstyle') }
+
 	apply plugin: 'build-dashboard'
 	apply plugin: 'project-report'
 

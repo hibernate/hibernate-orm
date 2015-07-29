@@ -14,6 +14,7 @@ import org.infinispan.AdvancedCache;
 import org.infinispan.commons.util.CloseableIterator;
 import org.infinispan.context.Flag;
 import org.infinispan.remoting.rpc.RpcManager;
+import org.infinispan.remoting.rpc.RpcOptions;
 
 /**
  * Helper for dealing with Infinispan cache instances.
@@ -216,7 +217,8 @@ public class Caches {
 			final boolean isSync = isSynchronousCache( cache );
 
 			final EvictAllCommand cmd = factory.buildEvictAllCommand( cache.getName() );
-			rpcManager.broadcastRpcCommand( cmd, isSync );
+			final RpcOptions options = rpcManager.getDefaultRpcOptions( isSync );
+			rpcManager.invokeRemotely( null, cmd, options );
 		}
 	}
 

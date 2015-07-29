@@ -241,17 +241,17 @@
 
         <example>
             <title>Using Transaction API in JDBC</title>
-            <programlinsting role="JAVA"><xi:include href="extras/jdbc.java"/></programlinsting>
+            <programlinsting role="JAVA"><xi:include href="extras/jdbc.java" parse="text"/></programlinsting>
         </example>
 
         <example>
             <title>Using Transaction API in JTA (CMT)</title>
-            <programlinsting role="JAVA"><xi:include href="extras/cmt.java"/></programlinsting>
+            <programlinsting role="JAVA"><xi:include href="extras/cmt.java" parse="text"/></programlinsting>
         </example>
 
         <example>
             <title>Using Transaction API in JTA (BMT)</title>
-            <programlinsting role="JAVA"><xi:include href="extras/bmt.java"/></programlinsting>
+            <programlinsting role="JAVA"><xi:include href="extras/bmt.java" parse="text"/></programlinsting>
         </example>
 
         <para>

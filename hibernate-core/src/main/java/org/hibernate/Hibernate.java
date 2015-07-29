@@ -8,12 +8,15 @@ package org.hibernate;
 
 import java.util.Iterator;
 
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoader;
 import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
 import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.HibernateIterator;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
@@ -169,13 +172,19 @@ public final class Hibernate {
 			entity = proxy;
 		}
 
+		if ( entity instanceof PersistentAttributeInterceptable ) {
+			PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor();
+			if ( interceptor != null && interceptor instanceof LazyAttributeLoader ) {
+				return ( (LazyAttributeLoader) interceptor ).isAttributeLoaded( propertyName );
+			}
+		}
+
 		if ( FieldInterceptionHelper.isInstrumented( entity ) ) {
 			final FieldInterceptor interceptor = FieldInterceptionHelper.extractFieldInterceptor( entity );
 			return interceptor == null || interceptor.isInitialized( propertyName );
 		}
-		else {
-			return true;
-		}
+
+		return true;
 	}
 
 }

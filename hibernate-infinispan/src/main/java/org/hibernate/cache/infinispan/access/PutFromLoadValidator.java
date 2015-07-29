@@ -416,7 +416,7 @@ public class PutFromLoadValidator {
 				PendingPutMap entry = it.next();
 				if (entry.acquireLock(60, TimeUnit.SECONDS)) {
 					try {
-						entry.invalidate(now, expirationPeriod);
+						entry.invalidate(now);
 					}
 					finally {
 						entry.releaseLock();
@@ -548,7 +548,7 @@ public class PutFromLoadValidator {
 						continue;
 					}
 					long now = System.currentTimeMillis();
-					pending.invalidate(now, expirationPeriod);
+					pending.invalidate(now);
 					pending.addInvalidator(lockOwner, valueForPFER, now);
 				}
 				finally {
@@ -638,6 +638,8 @@ public class PutFromLoadValidator {
 	 * This class is NOT THREAD SAFE. All operations on it must be performed with the lock held.
 	 */
 	private class PendingPutMap extends Lock {
+		// Number of pending puts which trigger garbage collection
+		private static final int GC_THRESHOLD = 10;
 		private PendingPut singlePendingPut;
 		private Map<Object, PendingPut> fullMap;
 		private final java.util.concurrent.locks.Lock lock = new ReentrantLock();
@@ -705,6 +707,9 @@ public class PutFromLoadValidator {
 				}
 				else {
 					fullMap.put( pendingPut.owner, pendingPut );
+					if (fullMap.size() >= GC_THRESHOLD) {
+						gc();
+					}
 				}
 			}
 			else {
@@ -750,7 +755,7 @@ public class PutFromLoadValidator {
 			lock.unlock();
 		}
 
-		public void invalidate(long now, long expirationPeriod) {
+		public void invalidate(long now) {
 			if ( singlePendingPut != null ) {
 				if (singlePendingPut.invalidate(now, expirationPeriod)) {
 					singlePendingPut = null;
@@ -762,6 +767,27 @@ public class PutFromLoadValidator {
 					if (pp.invalidate(now, expirationPeriod)) {
 						it.remove();
 					}
+				}
+			}
+		}
+
+		/**
+		 * Running {@link #gc()} is important when the key is regularly queried but it is not
+		 * present in DB. In such case, the putFromLoad would not be called at all and we would
+		 * leak pending puts. Cache expiration should handle the case when the pending puts
+		 * are not accessed frequently; when these are accessed, we have to do the housekeeping
+		 * internally to prevent unlimited growth of the map.
+		 * The pending puts will get their timestamps when the map reaches {@link #GC_THRESHOLD}
+		 * entries; after expiration period these will be removed completely either through
+		 * invalidation or when we try to register next pending put.
+		 */
+		private void gc() {
+			assert fullMap != null;
+			long now = System.currentTimeMillis();
+			for ( Iterator<PendingPut> it = fullMap.values().iterator(); it.hasNext(); ) {
+				PendingPut pp = it.next();
+				if (pp.gc(now, expirationPeriod)) {
+					it.remove();
 				}
 			}
 		}
@@ -885,6 +911,10 @@ public class PutFromLoadValidator {
 
 		public boolean invalidate(long now, long expirationPeriod) {
 			completed = true;
+			return gc(now, expirationPeriod);
+		}
+
+		public boolean gc(long now, long expirationPeriod) {
 			if (registeredTimestamp == Long.MIN_VALUE) {
 				registeredTimestamp = now;
 			}

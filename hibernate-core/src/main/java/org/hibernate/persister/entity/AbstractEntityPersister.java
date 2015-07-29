@@ -153,7 +153,7 @@ public abstract class AbstractEntityPersister
 	private final int identifierColumnSpan;
 	private final String versionColumnName;
 	private final boolean hasFormulaProperties;
-	private final int batchSize;
+	protected final int batchSize;
 	private final boolean hasSubselectLoadableCollections;
 	protected final String rowIdName;
 
@@ -3916,7 +3916,7 @@ public abstract class AbstractEntityPersister
 				&& filterHelper.isAffectedBy( session.getLoadQueryInfluencers().getEnabledFilters() );
 	}
 
-	private UniqueEntityLoader getAppropriateLoader(LockOptions lockOptions, SessionImplementor session) {
+	protected UniqueEntityLoader getAppropriateLoader(LockOptions lockOptions, SessionImplementor session) {
 		if ( queryLoader != null ) {
 			// if the user specified a custom query loader we need to that
 			// regardless of any other consideration

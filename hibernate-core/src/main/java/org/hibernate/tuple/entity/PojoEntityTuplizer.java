@@ -309,6 +309,12 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	@Override
 	public boolean hasUninitializedLazyProperties(Object entity) {
 		if ( getEntityMetamodel().hasLazyProperties() ) {
+			if ( entity instanceof PersistentAttributeInterceptable ) {
+				PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor();
+				if ( interceptor != null && interceptor instanceof LazyAttributeLoader ) {
+					return ( (LazyAttributeLoader) interceptor ).isUninitialized();
+				}
+			}
 			FieldInterceptor callback = FieldInterceptionHelper.extractFieldInterceptor( entity );
 			return callback != null && !callback.isInitialized();
 		}

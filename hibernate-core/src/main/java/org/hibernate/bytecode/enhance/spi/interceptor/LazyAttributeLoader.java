@@ -22,7 +22,7 @@ import org.hibernate.engine.spi.SessionImplementor;
  */
 public class LazyAttributeLoader implements PersistentAttributeInterceptor {
 
-	private final transient SessionImplementor session;
+	private transient SessionImplementor session;
 	private final Set<String> lazyFields;
 	private final String entityName;
 
@@ -35,7 +35,7 @@ public class LazyAttributeLoader implements PersistentAttributeInterceptor {
 	}
 
 	protected final Object intercept(Object target, String fieldName, Object value) {
-		if ( lazyFields != null && lazyFields.contains( fieldName ) && !initializedFields.contains( fieldName ) ) {
+		if ( !isAttributeLoaded( fieldName ) ) {
 			if ( session == null ) {
 				throw new LazyInitializationException( "entity with lazy properties is not associated with a session" );
 			}
@@ -43,12 +43,8 @@ public class LazyAttributeLoader implements PersistentAttributeInterceptor {
 				throw new LazyInitializationException( "session is not connected" );
 			}
 
-			Object loadedValue = ( (LazyPropertyInitializer) session.getFactory()
-					.getEntityPersister( entityName ) ).initializeLazyProperty(
-					fieldName,
-					target,
-					session
-			);
+			Object loadedValue = ( (LazyPropertyInitializer) session.getFactory().getEntityPersister( entityName ) )
+					.initializeLazyProperty( fieldName, target, session	);
 
 			initializedFields.add( fieldName );
 			return loadedValue;
@@ -56,6 +52,25 @@ public class LazyAttributeLoader implements PersistentAttributeInterceptor {
 		else {
 			return value;
 		}
+	}
+
+	public final void setSession(SessionImplementor session) {
+		this.session = session;
+	}
+
+	public boolean isAttributeLoaded(String fieldName) {
+		return lazyFields == null || !lazyFields.contains( fieldName ) || initializedFields.contains( fieldName );
+	}
+
+	public boolean isUninitialized() {
+		if ( lazyFields != null ) {
+			for ( String fieldName : lazyFields ) {
+				if ( !initializedFields.contains( fieldName ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	@Override

@@ -8,6 +8,8 @@ package org.hibernate.test.cache.infinispan.access;
 
 import javax.transaction.TransactionManager;
 
+import java.lang.reflect.Method;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -23,6 +25,8 @@ import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
 import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
+import org.hibernate.testing.TestForIssue;
+import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.test.CacheManagerCallable;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
@@ -35,12 +39,8 @@ import org.junit.Test;
 
 import static org.infinispan.test.TestingUtil.withCacheManager;
 import static org.infinispan.test.TestingUtil.withTx;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
+import static org.junit.Assert.*;
 
 /**
  * Tests of {@link PutFromLoadValidator}.
@@ -507,5 +507,59 @@ public class PutFromLoadValidatorUnitTestCase {
          }
          return null;
       }
+   }
+
+   @Test
+   @TestForIssue(jiraKey = "HHH-9928")
+   public void testGetForNullReleasePuts() {
+      EmbeddedCacheManager cm = TestCacheManagerFactory.createCacheManager(false);
+      ConfigurationBuilder cb = new ConfigurationBuilder().read(InfinispanRegionFactory.PENDING_PUTS_CACHE_CONFIGURATION);
+      cb.expiration().maxIdle(500);
+      cm.defineConfiguration(InfinispanRegionFactory.PENDING_PUTS_CACHE_NAME, cb.build());
+      withCacheManager(new CacheManagerCallable(cm) {
+         @Override
+         public void call() {
+            PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm);
+            long lastInsert = Long.MAX_VALUE;
+            for (int i = 0; i < 100; ++i) {
+               lastInsert = System.currentTimeMillis();
+               try {
+                  withTx(tm, new Callable<Object>() {
+                     @Override
+                     public Object call() throws Exception {
+                        SessionImplementor session = mock (SessionImplementor.class);
+                        testee.registerPendingPut(session, KEY1, 0);
+                        return null;
+                     }
+                  });
+                  Thread.sleep(10);
+               } catch (Exception e) {
+                  throw new RuntimeException(e);
+               }
+            }
+            String ppName = cm.getCache().getName() + "-" + InfinispanRegionFactory.PENDING_PUTS_CACHE_NAME;
+            Map ppCache = cm.getCache(ppName, false);
+            assertNotNull(ppCache);
+            Object pendingPutMap = ppCache.get(KEY1);
+            long end = System.currentTimeMillis();
+            if (end - lastInsert > 500) {
+               log.warn("Test took too long");
+               return;
+            }
+            assertNotNull(pendingPutMap);
+            int size;
+            try {
+               Method sizeMethod = pendingPutMap.getClass().getMethod("size");
+               sizeMethod.setAccessible(true);
+               size = (Integer) sizeMethod.invoke(pendingPutMap);
+            } catch (Exception e) {
+               throw new RuntimeException(e);
+            }
+            // some of the pending puts need to be expired by now
+            assertTrue(size < 100);
+            // but some are still registered
+            assertTrue(size > 0);
+         }
+      });
    }
 }

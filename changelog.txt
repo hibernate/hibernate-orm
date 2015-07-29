@@ -4,6 +4,64 @@ Hibernate 5.0 Changelog
 Note: Please refer to JIRA to learn more about each issue.
 
 
+Changes in 5.0.0.CR3 (July 29, 2015)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/20350
+
+** Sub-task
+    * [HHH-9938] - Enhance field access
+
+** Bug
+    * [HHH-5255] - Merge detached entity failed when the instrumented lazy property is initialized
+    * [HHH-7573] - Lazy properties are not processed properly after a PreUpdate callback
+    * [HHH-7898] - Regression on org.hibernate.cache.infinispan.query.QueryResultsRegionImpl.put(Object, Object)
+    * [HHH-9244] - NPE in bindCollectionSecondPass
+    * [HHH-9637] - Join is reused when 2 explicit joins are used for the same ToOne association
+    * [HHH-9906] - The {{JdbcEnvironmentImpl(ServiceRegistryImplementor serviceRegistry, Dialect dialect)}} constructor form does not handle global/auto quoting properly.
+    * [HHH-9907] - Bytecode enhancer fails on windows
+    * [HHH-9910] - Schema migration (update) problems with catalog/schema restrictions
+    * [HHH-9913] - NPE in org.hibernate.cache.internal.CacheDataDescriptionImpl.decode()
+    * [HHH-9915] - Test IndexedCollectionTest.testEmbeddableWithEntityKey() fail on Oracle
+    * [HHH-9918] - org.hibernate.dialect.Oracle10gDialect does not support identity key generation
+    * [HHH-9923] - Avoid cast to MetadataBuildingOptionsImpl in AnnotationMetadataSourceProcessorImpl#prepare()
+    * [HHH-9927] - Explicit calls to EntityManager.joinTransaction() with no active JTA transaction should throw a TransactionRequiredException
+    * [HHH-9937] - Hibernate#isPropertyInitialized always returns true for new enhancer
+    * [HHH-9945] - Allow Transaction to rollback if marked-for-rollback-only
+    * [HHH-9946] - Do better job cleaning up "stray" transactions in base test
+    * [HHH-9947] - PhysicalNamingStrategy#toPhysicalTableName called rather than #toPhysicalColumnName for some columns
+    * [HHH-9948] - SequenceStyleGenerator uses potentially incorrect name for table/sequence in DML statements
+    * [HHH-9949] - Recognize legacy http://hibernate.sourceforge.net/hibernate-configuration DTD base identifier
+    * [HHH-9953] - Test o.h.test.legacy.ComponentNotNullTest.testCompositeElement fails on Oracle - ORA-00972: identifier is too long
+    * [HHH-9967] - Create index on Postgres with --defaultSchemaName
+    * [HHH-9968] - Test o.h.test.type.AttributeConverterTest.testBasicTimestampUsage fails on Oracle - ORA-00972: identifier is too long
+    * [HHH-9969] - MySQLDialect handling of numeric cast targets is incorrect
+    * [HHH-9971] - Methods of ForwardingSessionBuilder, ForwardingSessionBuilderImplementor and ForwardingSharedSessionBuilder should return themselves not the delegate
+    * [HHH-9972] - Tests in o.h.test.type.EntityGraphUsingFetchGraphTestUsage fail on Oracle - ORA-00972: identifier is too long
+    * [HHH-9976] - JdbcResourceLocalTransactionCoordinatorImpl does not rollback on failure during #beforeCompletionCallback
+    * [HHH-9985] - Enhaced entity changes not peristed after merge
+
+** Improvement
+    * [HHH-1872] - Hibernate should handle hbm.auto = update with views
+    * [HHH-9955] - EnumType mapped via hbm.xml not always resolved properly as far as named/ordinal
+    * [HHH-9966] - Improve schema tooling support for creating catalogs and schemas
+    * [HHH-9980] - Implement mark-for-rollback-only handling for JdbcResourceLocalTransactionCoordinatorImpl
+
+** New Feature
+    * [HHH-9977] - Consider options for passing Session to caching SPI calls
+
+** Task
+    * [HHH-9916] - Update quickstarts and tutorials for 5.0 + convert to asciidoc(tor)
+    * [HHH-9930] - Enable mariadb (mysql) database profile
+    * [HHH-9931] - Enable pgsql database profile
+    * [HHH-9956] - Enable derby database profile
+    * [HHH-9959] - Upgrade Hibernate Validator to 5.2.0.Final
+    * [HHH-9970] - Remove NoIdentityHQLScrollFetchTest and change HQLScrollFetchTest to work with "increment" ID generator
+    * [HHH-9974] - Rename org.hibernate.boot.model.relational.Schema to Namespace
+    * [HHH-9986] - Fix reference manual inconsistencies for 5.0
+
+
+
+
 Changes in 5.0.0.CR2 (July 8, 2015)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/20150

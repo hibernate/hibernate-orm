@@ -8,11 +8,15 @@ dependencies {
     compile project( ':hibernate-core' )
     compile( libraries.c3p0 )
 
+    testCompile project( ':hibernate-testing' )
+
     testCompile( libraries.validator ) {
         // for test runtime
         transitive = true
     }
-    testCompile project( ':hibernate-testing' )
+    // EL libraries are provided scope in Validator
+    testRuntime( libraries.expression_language_api )
+    testRuntime( libraries.expression_language_impl )
 }
 
 mavenPom {

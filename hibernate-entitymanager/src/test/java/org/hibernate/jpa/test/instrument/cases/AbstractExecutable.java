@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.SharedCacheMode;
 import javax.persistence.ValidationMode;
 import javax.persistence.spi.PersistenceUnitTransactionType;
@@ -22,7 +23,6 @@ import org.hibernate.bytecode.spi.InstrumentedClassLoader;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.jpa.AvailableSettings;
-import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
@@ -33,7 +33,7 @@ import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
  */
 public abstract class AbstractExecutable implements Executable {
 	private static final Dialect dialect = Dialect.getDialect();
-	private HibernateEntityManagerFactory entityManagerFactory;
+	private EntityManagerFactory entityManagerFactory;
 	private EntityManager em;
 
     @Override
@@ -51,7 +51,7 @@ public abstract class AbstractExecutable implements Executable {
 				buildPersistenceUnitDescriptor( getClass().getSimpleName() ),
 				buildSettings(),
 				classLoader
-		).build().unwrap( HibernateEntityManagerFactory.class );
+		).build();
 	}
 
     @Override
@@ -169,12 +169,7 @@ public abstract class AbstractExecutable implements Executable {
 			}
 
 			@Override
-			public ClassLoader getTempClassLoader() {
-				return null;
-			}
-
-			@Override
-			public void pushClassTransformer(Collection<String> entityClassNames) {
+			public void pushClassTransformer(List<String> entityClassNames) {
 			}
 		};
 	}

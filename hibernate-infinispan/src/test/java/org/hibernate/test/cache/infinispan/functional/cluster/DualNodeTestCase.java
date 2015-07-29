@@ -18,19 +18,25 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 
+import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
 
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
+import org.junit.ClassRule;
 
 /**
  * @author Galder Zamarreño
  * @since 3.5
  */
 public abstract class DualNodeTestCase extends BaseNonConfigCoreFunctionalTestCase {
+
 	private static final Log log = LogFactory.getLog( DualNodeTestCase.class );
+
+	@ClassRule
+	public static final InfinispanTestingSetup infinispanTestIdentifier = new InfinispanTestingSetup();
 
 	public static final String NODE_ID_PROP = "hibernate.test.cluster.node.id";
 	public static final String NODE_ID_FIELD = "nodeId";
@@ -74,6 +80,8 @@ public abstract class DualNodeTestCase extends BaseNonConfigCoreFunctionalTestCa
 
 	@Before
 	public void prepare() throws Exception {
+		// In some cases tests are multi-threaded, so they have to join the group
+		infinispanTestIdentifier.joinContext();
 		secondNodeEnvironment = new SecondNodeEnvironment();
 	}
 

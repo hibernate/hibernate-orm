@@ -32,11 +32,13 @@ import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoo
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.stat.Statistics;
 
+import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.jta.JtaAwareConnectionProviderImpl;
 import org.hibernate.test.cache.infinispan.functional.Item;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import org.infinispan.configuration.cache.ConfigurationBuilder;
@@ -69,6 +71,9 @@ public class JBossStandaloneJtaExampleTest {
    Context ctx;
    Main jndiServer;
    private ServiceRegistry serviceRegistry;
+
+   @ClassRule
+   public static final InfinispanTestingSetup infinispanTestIdentifier = new InfinispanTestingSetup();
 
    @Before
    public void setUp() throws Exception {

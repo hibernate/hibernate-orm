@@ -26,9 +26,11 @@ import org.hibernate.engine.transaction.jta.platform.internal.AbstractJtaPlatfor
 import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
 import org.hibernate.service.ServiceRegistry;
 
+import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase;
 import org.hibernate.testing.boot.ServiceRegistryTestingImpl;
+import org.junit.Rule;
 import org.junit.Test;
 
 import org.infinispan.AdvancedCache;
@@ -58,6 +60,9 @@ import static org.junit.Assert.fail;
 public class InfinispanRegionFactoryTestCase  {
    private static final CacheDataDescription MUTABLE_NON_VERSIONED = new CacheDataDescriptionImpl(true, false, null, null);
    private static final CacheDataDescription IMMUTABLE_NON_VERSIONED = new CacheDataDescriptionImpl(false, false, null, null);
+
+   @Rule
+   public InfinispanTestingSetup infinispanTestIdentifier = new InfinispanTestingSetup();
 
    @Test
    public void testConfigurationProcessing() {

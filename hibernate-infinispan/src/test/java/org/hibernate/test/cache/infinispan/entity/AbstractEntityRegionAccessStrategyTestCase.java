@@ -24,6 +24,7 @@ import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.test.cache.infinispan.AbstractNonFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.NodeEnvironment;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
+import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
 import org.hibernate.test.cache.infinispan.util.TestingKeyFactory;
 import org.infinispan.Cache;
 import org.infinispan.test.TestingUtil;
@@ -31,6 +32,7 @@ import org.infinispan.transaction.tm.BatchModeTransactionManager;
 import org.jboss.logging.Logger;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -46,6 +48,9 @@ import static org.junit.Assert.assertTrue;
 public abstract class AbstractEntityRegionAccessStrategyTestCase extends AbstractNonFunctionalTestCase {
 
    private static final Logger log = Logger.getLogger(AbstractEntityRegionAccessStrategyTestCase.class);
+
+   @Rule
+   public InfinispanTestingSetup infinispanTestIdentifier = new InfinispanTestingSetup();
 
    public static final String REGION_NAME = "test/com.foo.test";
    public static final String KEY_BASE = "KEY";

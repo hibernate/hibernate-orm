@@ -8,6 +8,7 @@ package org.hibernate.test.cache.infinispan;
 
 import java.util.Set;
 
+import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
 import org.infinispan.Cache;
 import org.jboss.logging.Logger;
 import org.junit.After;
@@ -15,6 +16,7 @@ import org.junit.Before;
 
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.test.cache.infinispan.util.CacheTestSupport;
+import org.junit.Rule;
 
 /**
  * Base class for all non-functional tests of Infinispan integration.
@@ -24,6 +26,9 @@ import org.hibernate.test.cache.infinispan.util.CacheTestSupport;
  */
 public abstract class AbstractNonFunctionalTestCase extends org.hibernate.testing.junit4.BaseUnitTestCase {
    private static final Logger log = Logger.getLogger(AbstractNonFunctionalTestCase.class);
+
+   @Rule
+   public InfinispanTestingSetup infinispanTestIdentifier = new InfinispanTestingSetup();
 
    public static final String REGION_PREFIX = "test";
 

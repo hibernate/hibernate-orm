@@ -127,10 +127,6 @@ public class EntityCollectionInvalidationTestCase extends DualNodeTestCase {
 			assertEquals( 0, getValidKeyCount( localCollectionCache.keySet() ) );
 			assertEquals( 0, getValidKeyCount( localCustomerCache.keySet() ) );
 		}
-		catch (Exception e) {
-			log.error( "Error", e );
-			throw e;
-		}
 		finally {
 			// cleanup the db
 			log.debug( "Cleaning up" );

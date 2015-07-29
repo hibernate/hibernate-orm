@@ -17,9 +17,11 @@ import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.test.cache.infinispan.AbstractNonFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.NodeEnvironment;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
+import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
 import org.hibernate.test.cache.infinispan.util.TestingKeyFactory;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNull;
@@ -31,6 +33,9 @@ import static org.junit.Assert.assertNull;
  * @since 3.5
  */
 public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase {
+
+	@Rule
+	public InfinispanTestingSetup infinispanTestIdentifier = new InfinispanTestingSetup();
 
 	public static final String REGION_NAME = "test/com.foo.test";
 	public static final Object KEY = TestingKeyFactory.generateCollectionCacheKey( "KEY" );

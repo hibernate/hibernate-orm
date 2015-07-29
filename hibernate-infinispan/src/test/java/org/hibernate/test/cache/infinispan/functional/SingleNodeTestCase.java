@@ -19,6 +19,7 @@ import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 
+import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.tm.JtaPlatformImpl;
 import org.junit.Before;
@@ -28,6 +29,7 @@ import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
+import org.junit.ClassRule;
 
 /**
  * @author Galder Zamarreño
@@ -36,6 +38,9 @@ import org.infinispan.util.logging.LogFactory;
 public abstract class SingleNodeTestCase extends BaseNonConfigCoreFunctionalTestCase {
 	private static final Log log = LogFactory.getLog( SingleNodeTestCase.class );
 	protected TransactionManager tm;
+
+	@ClassRule
+	public static final InfinispanTestingSetup infinispanTestIdentifier = new InfinispanTestingSetup();
 
 	@Before
 	public void prepare() {

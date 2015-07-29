@@ -24,11 +24,13 @@ import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 
+import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.functional.Contact;
 import org.hibernate.test.cache.infinispan.functional.Customer;
 import org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase;
 import org.hibernate.test.cache.infinispan.tm.JtaPlatformImpl;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -42,6 +44,10 @@ import static org.junit.Assert.assertNull;
  * @since 3.5
  */
 public class BulkOperationsTestCase extends BaseNonConfigCoreFunctionalTestCase {
+
+	@ClassRule
+	public static final InfinispanTestingSetup infinispanTestIdentifier = new InfinispanTestingSetup();
+
 	private TransactionManager tm;
 
 	@Override

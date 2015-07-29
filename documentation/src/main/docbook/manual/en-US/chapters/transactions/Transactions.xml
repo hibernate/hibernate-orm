@@ -8,7 +8,7 @@
   -->
 <chapter xml:id="transactions"
          xmlns="http://docbook.org/ns/docbook"
-        >
+        xmlns:xi="http://www.w3.org/2001/XInclude">
 
     <title>Transactions and concurrency control</title>
 
@@ -233,6 +233,39 @@
             <classname>org.hibernate.resource.transaction.spi.TransactionStatus</classname> enum.  This method
             checks with the underling transaction system if needed, so care should be taken to minimize its use;
             it can have a big performance impact in certain JTA set ups.
+        </para>
+
+        <para>
+            Lets take a look at using the Transaction API in the various environments.
+        </para>
+
+        <example>
+            <title>Using Transaction API in JDBC</title>
+            <programlinsting role="JAVA"><xi:include href="extras/jdbc.java"/></programlinsting>
+        </example>
+
+        <example>
+            <title>Using Transaction API in JTA (CMT)</title>
+            <programlinsting role="JAVA"><xi:include href="extras/cmt.java"/></programlinsting>
+        </example>
+
+        <example>
+            <title>Using Transaction API in JTA (BMT)</title>
+            <programlinsting role="JAVA"><xi:include href="extras/bmt.java"/></programlinsting>
+        </example>
+
+        <para>
+            In the CMT case we really could have omitted all of the Transaction calls.  But the point of
+            the examples was to show that the Transaction API really does insulate your code from the underlying
+            transaction mechanism.  In fact if you strip away the comments and the single configruation
+            setting supplied at bootstrap, the code is exactly the same in all 3 examples.  In other words,
+            we could develop that code and drop it, as-is, in any of the 3 transaction environments.
+        </para>
+
+        <para>
+            The Transaction API tries hard to make the experience consistent across all environments.  To that end,
+            it generally defers to the JTA specification when there are differences (for example automatically trying
+            rollback on a failed commit).
         </para>
     </section>
 

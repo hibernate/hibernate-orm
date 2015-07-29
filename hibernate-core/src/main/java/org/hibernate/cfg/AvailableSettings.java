@@ -176,7 +176,7 @@ public interface AvailableSettings {
 	 * Can be<ul>
 	 *     <li>TransactionCoordinatorBuilder instance</li>
 	 *     <li>TransactionCoordinatorBuilder implementation {@link Class} reference</li>
-	 *     <li>TransactionCoordinatorBuilder implementation class name (FQN)</li>
+	 *     <li>TransactionCoordinatorBuilder implementation class name (FQN) or short-name</li>
 	 * </ul>
 	 *
 	 * @since 5.0

@@ -1,8 +1,0 @@
-// return customers who have changed their last name
-select nullif( c.previousName.last, c.name.last )
-from Customer c
-
-// equivalent CASE expression
-select case when c.previousName.last = c.name.last then null
-            else c.previousName.last end
-from Customer c

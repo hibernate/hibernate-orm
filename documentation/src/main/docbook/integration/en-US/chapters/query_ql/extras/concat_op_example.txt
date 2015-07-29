@@ -1,3 +1,0 @@
-select 'Mr. ' || c.name.first || ' ' || c.name.last
-from Customer c
-where c.gender = Gender.MALE

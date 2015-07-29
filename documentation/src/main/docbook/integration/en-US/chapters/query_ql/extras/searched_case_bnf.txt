@@ -1,1 +1,0 @@
-CASE [ WHEN {test_conditional} THEN {match_result} ]* ELSE {miss_result} END

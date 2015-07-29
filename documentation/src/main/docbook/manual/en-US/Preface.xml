@@ -59,10 +59,6 @@
 
     <tip>
         <para>
-            This documentation is intended as a reference manual.  As such, it is very detailed and great when you
-            know what to look for.
-        </para>
-        <para>
             If you are just getting started with using Hibernate you may want to start with the
             <citetitle pubwork="article">Hibernate Getting Started Guide</citetitle> available from the
             <link xlink:href="http://hibernate.org/documentation">documentation page</link>.  It contains quick-start

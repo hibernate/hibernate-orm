@@ -1,4 +1,0 @@
-select new Family( mother, mate, offspr )
-from DomesticCat as mother
-    join mother.mate as mate
-    left join mother.kittens as offspr

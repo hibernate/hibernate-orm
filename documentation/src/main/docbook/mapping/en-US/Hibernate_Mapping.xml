@@ -12,7 +12,7 @@
 
 <book xmlns:xi="http://www.w3.org/2001/XInclude">
     <info>
-        <title>Hibernate Domain Model Mapping Manual</title>
+        <title>Hibernate Domain Model Mapping Guide</title>
         <subtitle>Hibernate - Relational Persistence for Idiomatic Java</subtitle>
         <releaseinfo>&version;</releaseinfo>
         <productname>Hibernate ORM</productname>

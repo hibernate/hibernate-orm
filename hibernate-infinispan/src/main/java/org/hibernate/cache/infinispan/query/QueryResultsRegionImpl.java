@@ -123,17 +123,17 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
 		// to avoid holding locks that would prevent updates.
 		// Add a zero (or low) timeout option so we don't block
 		// waiting for tx's that did a put to commit
-		Object result;
-		if ( skipCacheStore ) {
-			result = getCache.withFlags( Flag.SKIP_CACHE_STORE ).get( key );
-		}
-		else {
-			result = getCache.get( key );
+		Object result = null;
+		Map map = transactionContext.get(session);
+		if (map != null) {
+			result = map.get(key);
 		}
 		if (result == null) {
-			Map map = transactionContext.get(session);
-			if (map != null) {
-				result = map.get(key);
+			if ( skipCacheStore ) {
+				result = getCache.withFlags( Flag.SKIP_CACHE_STORE ).get( key );
+			}
+			else {
+				result = getCache.get( key );
 			}
 		}
 		return result;

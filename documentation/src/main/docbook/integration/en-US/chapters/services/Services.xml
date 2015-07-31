@@ -6,7 +6,8 @@
   ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
   ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
   -->
-<chapter xmlns="http://docbook.org/ns/docbook"
+<chapter xml:id="services"
+         xmlns="http://docbook.org/ns/docbook"
          xmlns:xi="http://www.w3.org/2001/XInclude">
 
     <title>Services and Registries</title>
@@ -20,7 +21,7 @@
         applications can leverage and customize Services and Registries.
     </para>
 
-    <section>
+    <section xml:id="services-service">
         <title>What is a Service?</title>
 
         <para>
@@ -58,7 +59,7 @@
             practice.  What's interesting is the ServiceRegistry and the pluggable swapping of the different implementors.
         </para>
 
-        <section>
+        <section xml:id="services-contracts">
             <title>Service contracts</title>
 
             <para>
@@ -190,7 +191,7 @@
     </section>
 
 
-    <section>
+    <section xml:id="services-binding">
         <title>ServiceBinding</title>
 
         <para>
@@ -203,8 +204,16 @@
         <para>
             There are 2 ways a Service becomes associated (bound) to a ServiceRegistry.
             <itemizedlist>
-                <listitem>the Service can be directly instantiated and then handed to the ServiceRegistry</listitem>
-                <listitem>a ServiceInitiator can be given to the ServiceRegistry (which the ServiceRegistry will use if and when the Service is needed)</listitem>
+                <listitem>
+                    <para>
+                        the Service can be directly instantiated and then handed to the ServiceRegistry
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        a ServiceInitiator can be given to the ServiceRegistry (which the ServiceRegistry will use if and when the Service is needed)
+                    </para>
+                </listitem>
             </itemizedlist>
             ServiceRegistry implementations register bindings through calls to the overloaded
             <methodname>org.hibernate.service.internal.AbstractServiceRegistryImpl#createServiceBinding</methodname>
@@ -217,7 +226,7 @@
     </section>
 
 
-    <section>
+    <section xml:id="services-registry-types">
         <title>Types of ServiceRegistries</title>
 
         <para>
@@ -225,7 +234,7 @@
             type is a specialization for the purpose of type-safety, but they add no new functionality.
         </para>
 
-        <section>
+        <section xml:id="services-registry-boot">
             <title>BootstrapServiceRegistry</title>
 
             <para>
@@ -268,9 +277,22 @@
                 <para>
                     The specific capabilities exposed on this service include:
                     <itemizedlist>
-                        <listitem>Locating Class references by name.  This includes application classes as well as "integration" classes.</listitem>
-                        <listitem>Locating resources (properties files, xml files, etc) as "classpath resources"</listitem>
-                        <listitem>Interacting with <classname>java.util.ServiceLoader</classname>, Java's own service provider discovery mechanism</listitem>
+                        <listitem>
+                            <para>
+                                Locating Class references by name.  This includes application classes as well as "integration" classes.
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                Locating resources (properties files, xml files, etc) as "classpath resources"
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                Interacting with <classname>java.util.ServiceLoader</classname>, Java's own service
+                                provider discovery mechanism
+                            </para>
+                        </listitem>
                     </itemizedlist>
                 </para>
             </section>
@@ -339,15 +361,27 @@
                     The short name mappings in this service can be managed, even by applications and integrators
                     which can be very powerful.  For more information on this aspect, see:
                     <itemizedlist>
-                        <listitem><methodname>BootstrapServiceRegistryBuilder#applyStrategySelector</methodname></listitem>
-                        <listitem><methodname>BootstrapServiceRegistryBuilder#applyStrategySelectors</methodname></listitem>
                         <listitem>
-                            <interfacename>org.hibernate.boot.registry.selector.StrategyRegistrationProvider</interfacename>
-                            via ServiceLoader discovery
+                            <para>
+                                <methodname>BootstrapServiceRegistryBuilder#applyStrategySelector</methodname>
+                            </para>
                         </listitem>
                         <listitem>
-                            <methodname>StrategySelector#registerStrategyImplementor`</methodname> /
-                            <methodname>StrategySelector#unRegisterStrategyImplementor</methodname>
+                            <para>
+                                <methodname>BootstrapServiceRegistryBuilder#applyStrategySelectors</methodname>
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                <interfacename>org.hibernate.boot.registry.selector.StrategyRegistrationProvider</interfacename>
+                                via ServiceLoader discovery
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                <methodname>StrategySelector#registerStrategyImplementor`</methodname> /
+                                <methodname>StrategySelector#unRegisterStrategyImplementor</methodname>
+                            </para>
                         </listitem>
                     </itemizedlist>
                 </para>
@@ -355,7 +389,7 @@
         </section>
 
 
-        <section>
+        <section xml:id="services-registry-standard">
             <title>StandardServiceRegistry</title>
 
             <para>
@@ -383,12 +417,16 @@
                     exclusive) roles:
                     <itemizedlist>
                         <listitem>
-                            <interfacename>org.hibernate.engine.jdbc.connections.spi.ConnectionProvider</interfacename> -
-                            provides Connections in normal environments
+                            <para>
+                                <interfacename>org.hibernate.engine.jdbc.connections.spi.ConnectionProvider</interfacename> -
+                                provides Connections in normal environments
+                            </para>
                         </listitem>
                         <listitem>
-                            <interfacename>org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider</interfacename> -
-                            provides (tenant-specific) Connections in multi-tenant environments
+                            <para>
+                                <interfacename>org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider</interfacename> -
+                                provides (tenant-specific) Connections in multi-tenant environments
+                            </para>
                         </listitem>
                     </itemizedlist>
                 </para>
@@ -453,7 +491,7 @@
         </section>
 
 
-        <section>
+        <section xml:id="services-registry-sf">
             <title>SessionFactoryServiceRegistry</title>
 
             <para>
@@ -488,8 +526,8 @@
                     <classname>org.hibernate.event.service.spi.DuplicationStrategy</classname> and its effect on
                     registration.  The basic idea is to tell Hibernate:
                     <itemizedlist>
-                        <listitem>what makes a listener a duplicate</listitem>
-                        <listitem>how to handle duplicate registrations (error, first wins, last wins)</listitem>
+                        <listitem><para>what makes a listener a duplicate</para></listitem>
+                        <listitem><para>how to handle duplicate registrations (error, first wins, last wins)</para></listitem>
                     </itemizedlist>
                 </para>
             </section>
@@ -520,4 +558,126 @@
         </section>
     </section>
 
+    <section xml:id="services-custom">
+        <title>Custom Services</title>
+        <para>
+            So far we have focused on the Hibernate provided services.  But applications and integrations
+            can provide their own services as well, either
+            <itemizedlist>
+                <listitem>
+                    <para>providing a new implementation of a standard service (overriding)</para>
+                </listitem>
+                <listitem>
+                    <para>providing a whole new service role (extending)</para>
+                </listitem>
+            </itemizedlist>
+        </para>
+
+        <section xml:id="services-overriding">
+            <title>Custom Service Implementations (overriding)</title>
+            <para>
+                We discussed swappability of service implementations above.  Lets look at an example in practice.
+                For the sake of illustration, lets say that we have developed a new ConnectionProvider integrating
+                with the wonderful new latest-and-greatest connection pooling library.  Let's look at the steps
+                necessary to make that happen.
+            </para>
+            <para>
+                The first step is to develop the actual integration by implementing the ConnectionProvider contract.
+            </para>
+            <example>
+                <title>Custom ConnectionProvider implementation</title>
+                <programlisting role="JAVA"><xi:include href="extras/override/LatestAndGreatestConnectionProviderImpl.java" parse="text" /></programlisting>
+            </example>
+            <para>
+                At this point we have a decision about how to integrate this new ConnectionProvider into Hibernate.
+                As you might guess, there are multiple ways.
+            </para>
+            <para>
+                As a first option, we might just require that the code bootstrapping the StandardServiceRegistry do
+                the integration.
+            </para>
+            <example>
+                <title>Overriding service implementation via StandardServiceRegistryBuilder</title>
+                <programlisting role="JAVA"><xi:include href="extras/override/ex1-direct.java" parse="text" /></programlisting>
+            </example>
+            <para>
+                A second option, if our LatestAndGreatestConnectionProviderImpl should always be used, would be to
+                provide a <interfacename>org.hibernate.service.spi.ServiceContributor</interfacename> implementation
+                as well to handle the integration on the users behalf.
+            </para>
+            <example>
+                <title>LatestAndGreatestConnectionProviderImplContributor</title>
+                <programlisting role="JAVA"><xi:include href="extras/override/ex2-contributor.java" parse="text" /></programlisting>
+            </example>
+            <para>
+                We still need to be able to tell Hibernate to perform this integration for us.  To do that we leverage
+                Java's ServiceLoader.  When building the StandardServiceRegistry, Hibernate will look for JDK
+                service providers of type <interfacename>org.hibernate.service.spi.ServiceContributor</interfacename>
+                and automatically integrate them.  We discussed this behavior above.  Here we'd define a classpath
+                resource named <filename>META-INF/services/org.hibernate.service.spi.ServiceContributor</filename>.
+                This file will have just a single line naming our impl.
+            </para>
+            <example>
+                <title>META-INF/services/org.hibernate.service.spi.ServiceContributor</title>
+                <programlisting><xi:include href="extras/override/ex2-meta-inf" parse="text" /></programlisting>
+            </example>
+            <para>
+                A third option, if we simply want to make our LatestAndGreatestConnectionProviderImpl available
+                as a configuration choice, we would again use a ServiceContributor but in a slightly
+                different way.
+            </para>
+            <example>
+                <title>LatestAndGreatestConnectionProviderImplContributor</title>
+                <programlisting role="JAVA"><xi:include href="extras/override/ex3-contributor.java" parse="text" /></programlisting>
+            </example>
+            <para>
+                That all allows the appication to pick our LatestAndGreatestConnectionProviderImpl by a short-name.
+            </para>
+            <example>
+                <title>Custom service short-name</title>
+                <programlisting role="JAVA"><xi:include href="extras/override/ex3-app.java" parse="text" /></programlisting>
+            </example>
+        </section>
+
+        <section xml:id="services-extending">
+            <title>Custom Service Roles (extending)</title>
+            <para>
+                We can also have the ServiceRegistry host custom services (completely new Service roles).  As an example,
+                let's say our application publishes Hibernate events to a JMS Topic and that we want to leverage the
+                Hibernate ServiceRegistry to host a Service representing our publishing of events.  So we will expand the
+                ServiceRegistry to host this completely new Service role for us and manage its lifecycle.
+            </para>
+
+            <example>
+                <title>The EventPublishingService service role</title>
+                <programlisting role="JAVA"><xi:include href="extras/extend/EventPublishingService.java" parse="text" /></programlisting>
+            </example>
+
+            <example>
+                <title>The EventPublishingService implementation</title>
+                <programlisting role="JAVA"><xi:include href="extras/extend/EventPublishingServiceImpl.java" parse="text" /></programlisting>
+            </example>
+
+            <example>
+                <title>An alternative EventPublishingService implementation</title>
+                <programlisting role="JAVA"><xi:include href="extras/extend/EventPublishingServiceImpl.java" parse="text" /></programlisting>
+            </example>
+
+            <para>
+                Because we have alternative implementations, it is a good idea to develop an initiator as well
+                that can choose between them at runtime.
+            </para>
+
+            <example>
+                <title>The EventPublishingServiceInitiator</title>
+                <programlisting role="JAVA"><xi:include href="extras/extend/EventPublishingServiceInitiator.java" parse="text" /></programlisting>
+            </example>
+
+            <para>
+                We could have the application register the EventPublishingServiceInitiator with the
+                StandardServiceRegistryBuilder, but it is much nicer to write a ServiceContributor to handle this
+                for the application.
+            </para>
+        </section>
+    </section>
 </chapter>

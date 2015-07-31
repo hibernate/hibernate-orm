@@ -100,8 +100,6 @@
         <section xml:id="transactions-physical-jtaplatform">
             <title>JTA configuration</title>
 
-            <!-- todo : pointer to JndiService -->
-
             <para>
                 Interaction with a JTA system is consolidated behind a single contract named
                 <interfacename>org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform</interfacename> which
@@ -110,6 +108,14 @@
                 the ability to register <interfacename>javax.transaction.Synchronization</interfacename> instances,
                 check transaction status, etc.
             </para>
+
+            <note>
+                <para>
+                    Generally JtaPlatform will need access to JNDI to resolve the JTA TransactionManager,
+                    UserTransaction, etc.  See <xref linkend="jndi"/> for details on configuring access
+                    to JNDI
+                </para>
+            </note>
 
             <para>
                 Hibernate tries to discover the JtaPlatform it should use through the use of another service named

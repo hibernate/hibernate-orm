@@ -78,11 +78,8 @@
                 Hibernate can integrate with a <interfacename>javax.sql.DataSource</interfacename> for obtaining
                 JDBC Connections.  Applications would tell Hibernate about the DataSource via the (required)
                 <literal>hibernate.connection.datasource</literal> setting which can either specify a JNDI name
-                or would reference the actual DataSource instance.
-
-                <!-- todo : pointer to JndiService
-                For cases where a JNDI namespace is specified, be
-                sure to read <xref linkend="bootstrap-jndi"/>.-->
+                or would reference the actual DataSource instance.  For cases where a JNDI name is given, be sure
+                to read <xref linkend="jndi"/>
             </para>
 
             <note>

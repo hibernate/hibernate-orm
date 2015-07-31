@@ -23,6 +23,7 @@ import org.hibernate.annotations.JoinFormula;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitPrimaryKeyJoinColumnNameSource;
@@ -495,7 +496,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		final ImplicitNamingStrategy implicitNamingStrategy = getBuildingContext().getBuildingOptions().getImplicitNamingStrategy();
 		final PhysicalNamingStrategy physicalNamingStrategy = getBuildingContext().getBuildingOptions().getPhysicalNamingStrategy();
 
-		String columnName;
+		Identifier columnIdentifier;
 		boolean mappedBySide = mappedByTableName != null || mappedByPropertyName != null;
 		boolean ownerSide = getPropertyName() != null;
 
@@ -505,8 +506,6 @@ public class Ejb3JoinColumn extends Ejb3Column {
 				: logicalReferencedColumn;
 
 		if ( mappedBySide ) {
-			final Identifier columnIdentifier;
-
 			// NOTE : While it is completely misleading here to allow for the combination
 			//		of a "JPA ElementCollection" to be mappedBy, the code that uses this
 			// 		class relies on this behavior for handling the inverse side of
@@ -579,7 +578,8 @@ public class Ejb3JoinColumn extends Ejb3Column {
 								return null;
 							}
 
-							final PersistentClass mappedByEntityBinding = getBuildingContext().getMetadataCollector().getEntityBinding( mappedByEntityName );
+							final PersistentClass mappedByEntityBinding = getBuildingContext().getMetadataCollector()
+									.getEntityBinding( mappedByEntityName );
 							final Property mappedByProperty = mappedByEntityBinding.getProperty( mappedByPropertyName );
 							final SimpleValue value = (SimpleValue) mappedByProperty.getValue();
 							final Iterator<Selectable> selectableValues = value.getColumnIterator();
@@ -626,10 +626,9 @@ public class Ejb3JoinColumn extends Ejb3Column {
 					}
 			);
 
-			columnName = columnIdentifier.render();
 			//one element was quoted so we quote
 			if ( isRefColumnQuoted || StringHelper.isQuoted( mappedByTableName ) ) {
-				columnName = StringHelper.quote( columnName );
+				columnIdentifier = Identifier.quote( columnIdentifier );
 			}
 		}
 		else if ( ownerSide ) {
@@ -647,7 +646,8 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			else {
 				implicitNamingNature = ImplicitJoinColumnNameSource.Nature.ENTITY_COLLECTION;
 			}
-			Identifier columnNameIdentifier = getBuildingContext().getBuildingOptions().getImplicitNamingStrategy().determineJoinColumnName(
+
+			columnIdentifier = getBuildingContext().getBuildingOptions().getImplicitNamingStrategy().determineJoinColumnName(
 					new ImplicitJoinColumnNameSource() {
 						private final EntityNaming entityNaming = new EntityNaming() {
 							@Override
@@ -705,11 +705,11 @@ public class Ejb3JoinColumn extends Ejb3Column {
 						}
 					}
 			);
+
 			//one element was quoted so we quote
 			if ( isRefColumnQuoted || StringHelper.isQuoted( logicalTableName ) ) {
-				Identifier.quote( columnNameIdentifier );
+				columnIdentifier = Identifier.quote( columnIdentifier );
 			}
-			columnName = columnNameIdentifier.render();
 		}
 		else {
 			final Identifier logicalTableName = database.toIdentifier(
@@ -717,7 +717,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			);
 
 			// is an intra-entity hierarchy table join so copy the name by default
-			Identifier columnIdentifier = implicitNamingStrategy.determinePrimaryKeyJoinColumnName(
+			columnIdentifier = implicitNamingStrategy.determinePrimaryKeyJoinColumnName(
 					new ImplicitPrimaryKeyJoinColumnNameSource() {
 						@Override
 						public MetadataBuildingContext getBuildingContext() {
@@ -739,11 +739,10 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			if ( !columnIdentifier.isQuoted() && ( isRefColumnQuoted || logicalTableName.isQuoted() ) ) {
 				columnIdentifier = Identifier.quote( columnIdentifier );
 			}
-
-			columnName = columnIdentifier.render();
 		}
 
-		return columnName;
+		return physicalNamingStrategy.toPhysicalColumnName( columnIdentifier, database.getJdbcEnvironment() )
+				.render( database.getJdbcEnvironment().getDialect() );
 	}
 
 	/**

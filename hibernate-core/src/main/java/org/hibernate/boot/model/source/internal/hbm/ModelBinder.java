@@ -2112,10 +2112,10 @@ public class ModelBinder {
 		// todo : probably need some reflection here if null
 		oneToOneBinding.setReferencedEntityName( oneToOneSource.getReferencedEntityName() );
 
-		if ( oneToOneSource.isEmbedXml() ) {
+		if ( oneToOneSource.isEmbedXml() == Boolean.TRUE ) {
 			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfEmbedXmlSupport();
 		}
-		oneToOneBinding.setEmbedded( oneToOneSource.isEmbedXml() );
+		oneToOneBinding.setEmbedded( oneToOneSource.isEmbedXml() != Boolean.FALSE );
 
 		if ( StringHelper.isNotEmpty( oneToOneSource.getExplicitForeignKeyName() ) ) {
 			oneToOneBinding.setForeignKeyName( oneToOneSource.getExplicitForeignKeyName() );
@@ -2231,10 +2231,10 @@ public class ModelBinder {
 						: FetchMode.JOIN
 		);
 
-		if ( manyToOneSource.isEmbedXml() ) {
+		if ( manyToOneSource.isEmbedXml() == Boolean.TRUE ) {
 			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfEmbedXmlSupport();
 		}
-		manyToOneBinding.setEmbedded( manyToOneSource.isEmbedXml() );
+		manyToOneBinding.setEmbedded( manyToOneSource.isEmbedXml() != Boolean.FALSE );
 
 		manyToOneBinding.setIgnoreNotFound( manyToOneSource.isIgnoreNotFound() );
 
@@ -3525,15 +3525,6 @@ public class ModelBinder {
 						.getEntityBinding( elementSource.getReferencedEntityName() );
 				elementBinding.setReferencedEntityName( referencedEntityBinding.getEntityName() );
 				elementBinding.setAssociatedClass( referencedEntityBinding );
-
-				String embed = elementSource.getXmlNodeName();
-				// sometimes embed is set to the default value when not specified in the mapping,
-				// so can't seem to determine if an attribute was explicitly set;
-				// log a warning if embed has a value different from the default.
-				if ( !StringHelper.isEmpty( embed ) &&  !"true".equals( embed ) ) {
-					DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfEmbedXmlSupport();
-				}
-				elementBinding.setEmbedded( embed == null || "true".equals( embed ) );
 
 				elementBinding.setIgnoreNotFound( elementSource.isIgnoreNotFound() );
 			}

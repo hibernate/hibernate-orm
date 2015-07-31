@@ -749,7 +749,7 @@
                 </xs:sequence>
                 <xs:attributeGroup ref="table-information-group"/>
                 <xs:attributeGroup ref="plural-basic-attribute-group"/>
-                <xs:attribute name="embed-xml" default="true" type="xs:boolean"/>
+                <xs:attribute name="embed-xml" type="xs:boolean"/>
                 <xs:attribute name="fetch" type="FetchStyleWithSubselectEnum"/>
                 <xs:attribute name="lazy" type="LazyWithExtraEnum"/>
                 <xs:attribute name="node" type="xs:string"/>
@@ -801,7 +801,7 @@
                 <!-- default: none -->
                 <xs:attribute name="collection-type" type="xs:string"/>
                 <xs:attribute name="element-class" type="xs:string"/>
-                <xs:attribute name="embed-xml" default="true" type="xs:boolean"/>
+                <xs:attribute name="embed-xml" type="xs:boolean"/>
                 <xs:attribute name="fetch" type="FetchStyleWithSubselectEnum"/>
                 <xs:attribute name="lazy" type="LazyWithExtraEnum"/>
                 <xs:attribute name="inverse" default="false" type="xs:boolean"/>
@@ -835,7 +835,7 @@
                 </xs:sequence>
                 <xs:attributeGroup ref="table-information-group"/>
                 <xs:attributeGroup ref="plural-basic-attribute-group"/>
-                <xs:attribute name="embed-xml" default="true" type="xs:boolean"/>
+                <xs:attribute name="embed-xml" type="xs:boolean"/>
                 <xs:attribute name="fetch" type="FetchStyleWithSubselectEnum"/>
                 <xs:attribute name="lazy" type="LazyWithExtraEnum"/>
                 <xs:attribute name="node" type="xs:string"/>
@@ -867,7 +867,7 @@
                 </xs:sequence>
                 <xs:attributeGroup ref="table-information-group"/>
                 <xs:attributeGroup ref="plural-basic-attribute-group"/>
-                <xs:attribute name="embed-xml" default="true" type="xs:boolean"/>
+                <xs:attribute name="embed-xml" type="xs:boolean"/>
                 <xs:attribute name="fetch" type="FetchStyleWithSubselectEnum"/>
                 <xs:attribute name="lazy" type="LazyWithExtraEnum"/>
                 <xs:attribute name="node" type="xs:string"/>
@@ -902,7 +902,7 @@
                 </xs:sequence>
                 <xs:attributeGroup ref="table-information-group"/>
                 <xs:attributeGroup ref="plural-basic-attribute-group"/>
-                <xs:attribute name="embed-xml" default="true" type="xs:boolean"/>
+                <xs:attribute name="embed-xml" type="xs:boolean"/>
                 <xs:attribute name="fetch" type="FetchStyleWithSubselectEnum"/>
                 <xs:attribute name="lazy" type="LazyWithExtraEnum"/>
                 <xs:attribute name="node" type="xs:string"/>
@@ -932,7 +932,7 @@
                 </xs:sequence>
                 <xs:attributeGroup ref="table-information-group"/>
                 <xs:attributeGroup ref="plural-basic-attribute-group"/>
-                <xs:attribute name="embed-xml" default="true" type="xs:boolean"/>
+                <xs:attribute name="embed-xml" type="xs:boolean"/>
                 <xs:attribute name="fetch" type="FetchStyleWithSubselectEnum"/>
                 <xs:attribute name="lazy" type="LazyWithExtraEnum"/>
                 <xs:attribute name="node" type="xs:string"/>
@@ -960,7 +960,7 @@
 
     <xs:complexType name="OneToManyCollectionElementType">
         <xs:attribute name="class" type="ClassNameType"/>
-        <xs:attribute name="embed-xml" default="true" type="xs:boolean"/>
+        <xs:attribute name="embed-xml" type="xs:boolean"/>
         <xs:attribute name="entity-name" type="xs:string"/>
         <xs:attribute name="node" type="xs:string"/>
         <xs:attribute name="not-found" default="exception" type="NotFoundEnum"/>
@@ -976,7 +976,7 @@
                 <xs:attribute name="cascade" type="xs:string"/>
                 <xs:attribute name="class" type="ClassNameType"/>
                 <xs:attribute name="constrained" default="false" type="xs:boolean"/>
-                <xs:attribute name="embed-xml" default="true" type="xs:boolean"/>
+                <xs:attribute name="embed-xml" type="xs:boolean"/>
                 <xs:attribute name="entity-name" type="xs:string"/>
                 <xs:attribute name="fetch" type="FetchStyleEnum"/>
                 <xs:attribute name="foreign-key" type="xs:string"/>
@@ -1002,7 +1002,7 @@
                 <xs:attribute name="cascade" type="xs:string"/>
                 <xs:attribute name="class" type="ClassNameType"/>
                 <xs:attribute name="column" type="xs:string"/>
-                <xs:attribute name="embed-xml" default="true" type="xs:boolean"/>
+                <xs:attribute name="embed-xml" type="xs:boolean"/>
                 <xs:attribute name="entity-name" type="xs:string"/>
                 <xs:attribute name="fetch" type="FetchStyleEnum"/>
                 <xs:attribute name="foreign-key" type="xs:string"/>
@@ -1036,7 +1036,7 @@
                 </xs:sequence>
                 <xs:attribute name="class" type="ClassNameType"/>
                 <xs:attribute name="column" type="xs:string"/>
-                <xs:attribute name="embed-xml" default="true" type="xs:boolean"/>
+                <xs:attribute name="embed-xml" type="xs:boolean"/>
                 <xs:attribute name="entity-name" type="xs:string"/>
                 <xs:attribute name="fetch" type="FetchStyleEnum"/>
                 <xs:attribute name="foreign-key" type="xs:string"/>
@@ -1639,7 +1639,7 @@
                 <xs:attribute name="check" type="xs:string"/>
                 <!-- default: none -->
                 <xs:attribute name="collection-type" type="xs:string"/>
-                <xs:attribute name="embed-xml" default="true" type="xs:boolean"/>
+                <xs:attribute name="embed-xml" type="xs:boolean"/>
                 <xs:attribute name="fetch" type="FetchStyleWithSubselectEnum"/>
                 <xs:attribute name="mutable" default="true" type="xs:boolean"/>
                 <xs:attribute name="name" use="required" type="xs:string"/>

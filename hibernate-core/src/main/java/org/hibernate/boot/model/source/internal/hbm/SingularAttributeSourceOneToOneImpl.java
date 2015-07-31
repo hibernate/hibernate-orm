@@ -222,7 +222,7 @@ class SingularAttributeSourceOneToOneImpl
 	}
 
 	@Override
-	public boolean isEmbedXml() {
+	public Boolean isEmbedXml() {
 		return oneToOneElement.isEmbedXml();
 	}
 }

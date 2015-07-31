@@ -175,7 +175,7 @@ class SingularAttributeSourceManyToOneImpl
 	}
 
 	@Override
-	public boolean isEmbedXml() {
+	public Boolean isEmbedXml() {
 		return manyToOneElement.isEmbedXml();
 	}
 

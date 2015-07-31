@@ -29,5 +29,5 @@ public interface SingularAttributeSourceToOne
 
 	public boolean isUnique();
 
-	public boolean isEmbedXml();
+	public Boolean isEmbedXml();
 }

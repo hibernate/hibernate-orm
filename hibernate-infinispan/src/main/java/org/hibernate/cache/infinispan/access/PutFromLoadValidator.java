@@ -24,6 +24,7 @@
 package org.hibernate.cache.infinispan.access;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,7 @@ import javax.transaction.TransactionManager;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.infinispan.AdvancedCache;
+import org.infinispan.Cache;
 import org.infinispan.manager.EmbeddedCacheManager;
 
 /**
@@ -132,6 +134,10 @@ public class PutFromLoadValidator {
       this(cache, NAKED_PUT_INVALIDATION_PERIOD);
    }
 
+   private static final int GC_THRESHOLD = 10;
+
+   private final long expirationTimeout;
+
    /**
     * Constructor variant for use by unit tests; allows control of various timeouts by the test.
     */
@@ -143,8 +149,10 @@ public class PutFromLoadValidator {
 
    public PutFromLoadValidator(EmbeddedCacheManager cacheManager,
          TransactionManager tm, long nakedPutInvalidationPeriod) {
-      this.pendingPuts = cacheManager
+      final Cache<Object, PendingPutMap> cache = cacheManager
             .getCache(InfinispanRegionFactory.PENDING_PUTS_CACHE_NAME);
+      this.pendingPuts = cache;
+      this.expirationTimeout = cache.getCacheConfiguration().expiration().maxIdle();
       this.transactionManager = tm;
       this.nakedPutInvalidationPeriod = nakedPutInvalidationPeriod;
    }
@@ -438,7 +446,7 @@ public class PutFromLoadValidator {
     * 
     * This class is NOT THREAD SAFE. All operations on it must be performed with the lock held.
     */
-   private static class PendingPutMap {
+   private class PendingPutMap {
       private PendingPut singlePendingPut;
       private Map<Object, PendingPut> fullMap;
       private final Lock lock = new ReentrantLock();
@@ -454,6 +462,17 @@ public class PutFromLoadValidator {
                singlePendingPut = pendingPut;
             } else {
                fullMap.put(pendingPut.owner, pendingPut);
+               if (fullMap.size() > GC_THRESHOLD) {
+                  long now = System.currentTimeMillis();
+                  for (Iterator<PendingPut> iterator = fullMap.values().iterator(); iterator.hasNext(); ) {
+                     PendingPut pp = iterator.next();
+                     if (pp.timestamp == Long.MIN_VALUE) {
+                        pp.timestamp = now;
+                     } else if (now - pp.timestamp >= expirationTimeout) {
+                        iterator.remove();
+                     }
+                  }
+               }
             }
          } else {
             // 2nd put; need a map
@@ -514,6 +533,7 @@ public class PutFromLoadValidator {
    private static class PendingPut {
       private final Object owner;
       private volatile boolean completed;
+      private long timestamp = Long.MIN_VALUE;
 
       private PendingPut(Object owner) {
          this.owner = owner;

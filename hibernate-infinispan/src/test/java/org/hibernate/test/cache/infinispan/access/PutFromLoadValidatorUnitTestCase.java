@@ -23,6 +23,8 @@
  */
 package org.hibernate.test.cache.infinispan.access;
 
+import java.lang.reflect.Method;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -34,8 +36,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.transaction.TransactionManager;
 
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.test.CacheManagerCallable;
+import org.infinispan.test.TestingUtil;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
@@ -47,11 +52,7 @@ import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
 
 import static org.infinispan.test.TestingUtil.withCacheManager;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  * Tests of {@link PutFromLoadValidator}.
@@ -428,7 +429,7 @@ public class PutFromLoadValidatorUnitTestCase {
 
             testee.invalidateRegion();
 
-            // Do the registration + isPutValid calls
+            // Do the registration  isPutValid calls
             executor.execute(r);
             executor.execute(r);
             executor.execute(r);
@@ -501,7 +502,7 @@ public class PutFromLoadValidatorUnitTestCase {
 
    private void invalidationBlocksForInProgressPutTest(final boolean keyOnly) throws Exception {
       withCacheManager(new CacheManagerCallable(
-            TestCacheManagerFactory.createLocalCacheManager(false)) {
+            TestCacheManagerFactory.createCacheManager(false)) {
          @Override
          public void call() {
             final PutFromLoadValidator testee = new PutFromLoadValidator(
@@ -578,5 +579,57 @@ public class PutFromLoadValidatorUnitTestCase {
          return super.getRemovalQueueLength();
       }
 
+   }
+
+   @Test
+   public void testGetForNullReleasePuts() {
+      EmbeddedCacheManager cm = TestCacheManagerFactory.createCacheManager(false);
+      ConfigurationBuilder cb = new ConfigurationBuilder().read(InfinispanRegionFactory.PENDING_PUTS_CACHE_CONFIGURATION);
+      cb.expiration().maxIdle(500);
+      cm.defineConfiguration(InfinispanRegionFactory.PENDING_PUTS_CACHE_NAME, cb.build());
+      withCacheManager(new CacheManagerCallable(cm) {
+         @Override
+         public void call() {
+            final PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache());
+            long lastInsert = Long.MAX_VALUE;
+            for (int i = 0; i < 100; i++) {
+               lastInsert = System.currentTimeMillis();
+               try {
+                  TestingUtil.withTx(tm, new Callable<Object>() {
+                     @Override
+                     public Object call() throws Exception {
+                        testee.registerPendingPut(KEY1);
+                        return null;
+                     }
+                  });
+                  Thread.sleep(10);
+               } catch (Exception e) {
+                  throw new RuntimeException(e);
+               }
+            }
+            String ppName = InfinispanRegionFactory.PENDING_PUTS_CACHE_NAME;
+            Map ppCache = cm.getCache(ppName, false);
+            assertNotNull(ppCache);
+            Object pendingPutMap = ppCache.get(KEY1);
+            long end = System.currentTimeMillis();
+            if (end - lastInsert > 500) {
+               log.warn("Test took too long");
+               return;
+            }
+            assertNotNull(pendingPutMap);
+            int size;
+            try {
+               Method sizeMethod = pendingPutMap.getClass().getMethod("size");
+               sizeMethod.setAccessible(true);
+               size = (Integer) sizeMethod.invoke(pendingPutMap);
+            } catch (Exception e) {
+               throw new RuntimeException(e);
+            }
+            // some of the pending puts need to be expired by now
+            assertTrue(size < 100);
+            // but some are still registered
+            assertTrue(size > 0);
+         }
+      });
    }
 }

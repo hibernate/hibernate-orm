@@ -9,6 +9,7 @@ package org.hibernate.boot.model.relational;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -33,7 +34,7 @@ public class Database {
 
 	private final Map<Namespace.Name,Namespace> namespaceMap = new TreeMap<Namespace.Name, Namespace>();
 
-	private List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjects;
+	private Map<String,AuxiliaryDatabaseObject> auxiliaryDatabaseObjects;
 	private List<InitCommand> initCommands;
 
 	public Database(MetadataBuildingOptions buildingOptions) {
@@ -148,15 +149,15 @@ public class Database {
 
 	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject) {
 		if ( auxiliaryDatabaseObjects == null ) {
-			auxiliaryDatabaseObjects = new ArrayList<AuxiliaryDatabaseObject>();
+			auxiliaryDatabaseObjects = new HashMap<String,AuxiliaryDatabaseObject>();
 		}
-		auxiliaryDatabaseObjects.add( auxiliaryDatabaseObject );
+		auxiliaryDatabaseObjects.put( auxiliaryDatabaseObject.getExportIdentifier(), auxiliaryDatabaseObject );
 	}
 
 	public Collection<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjects() {
 		return auxiliaryDatabaseObjects == null
 				? Collections.<AuxiliaryDatabaseObject>emptyList()
-				: auxiliaryDatabaseObjects;
+				: auxiliaryDatabaseObjects.values();
 	}
 
 	public Collection<InitCommand> getInitCommands() {

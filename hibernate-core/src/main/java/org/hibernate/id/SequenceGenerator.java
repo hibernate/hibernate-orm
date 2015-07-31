@@ -17,10 +17,10 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
-import org.hibernate.boot.model.relational.SimpleAuxiliaryDatabaseObject;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -173,7 +173,8 @@ public class SequenceGenerator
 		);
 
 		database.addAuxiliaryDatabaseObject(
-				new SimpleAuxiliaryDatabaseObject(
+				new NamedAuxiliaryDatabaseObject(
+						qualifiedSequenceName.getObjectName().render(),
 						namespace,
 						sqlCreateStrings( database.getDialect() ),
 						sqlDropStrings( database.getDialect() ),

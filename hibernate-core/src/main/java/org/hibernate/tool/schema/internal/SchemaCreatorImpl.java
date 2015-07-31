@@ -192,6 +192,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			}
 
 			if ( auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
+				checkExportIdentifier( auxiliaryDatabaseObject, exportIdentifiers );
 				applySqlStrings(
 						targets,
 						dialect.getAuxiliaryDatabaseObjectExporter().getSqlCreateStrings(

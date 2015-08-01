@@ -44,7 +44,11 @@
 
     <xi:include href="Preface.xml" />
 
-    <xi:include href="chapters/services/Services.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <xi:include href="chapters/services/Services.xml" />
+
+    <!--
+    <xi:include href="chapters/types/Custom_Types.xml" />
+    -->
 
 </book>
 

@@ -46,13 +46,20 @@
 
     <xi:include href="chapters/categoizations/Data_Categorizations.xml"  />
     <xi:include href="chapters/basic/Basic_Types.xml" />
-<!--
-    <xi:include href="chapters/component/Component.xml" />
+    <xi:include href="chapters/composition/Composition.xml" />
     <xi:include href="chapters/collection/Collection.xml" />
-    <xi:include href="chapters/entity/Entity.xml" />
-    <xi:include href="chapters/id/Identifiers.xml" />
-    <xi:include href="chapters/association/Associations.xml" />
--->
+
+    <!--
+        <xi:include href="chapters/entity/Entity.xml" />
+        <xi:include href="chapters/id/Identifiers.xml" />
+        <xi:include href="chapters/association/Associations.xml" />
+        <xi:include href="chapters/natural_id/Natural_Id.xml" />
+
+        <xi:include href="chapters/generation/Generated_attributes.xml" />
+        <xi:include href="chapters/access/Attribute_Access.xml" />
+        <xi:include href="chapters/overrides/Mapping_Overrides.xml" /> AttributeOverrides/AssociationOverrides
+        <xi:include href="chapters/naming/Naming_Strategies.xml" />
+    -->
 
     <!-- appendices? -->
     <!-- biblio? -->

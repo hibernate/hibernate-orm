@@ -90,7 +90,7 @@
         <para>
             Notice how all the previous examples explicitly mark the collection attribute as either
             ElementCollection, OneToMany or ManyToMany.  Collections not marked as such, or collections explicitly
-            maked with @Basic are treated as JPA basic value.  Meaning there value is stored into a single
+            maked with @Basic are treated as JPA basic values.  Meaning there value is stored into a single
             column in the containing table.
         </para>
         <para>
@@ -104,7 +104,8 @@
 
         <para>
             See the <citetitle>Hibernate Integrations Guide</citetitle> for more details on developing
-            custom value type mappings.
+            custom value type mappings.  Without the special type mapping above the "set of tags" would have
+            simply been marshalled using serialization.
         </para>
     </section>
 

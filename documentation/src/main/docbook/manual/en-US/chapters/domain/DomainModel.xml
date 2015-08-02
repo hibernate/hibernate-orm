@@ -34,8 +34,8 @@
     <para>
         This chapter will describe the characteristics of a persistable domain model.  However, it will not discuss
         defining the mapping for the domain model.  That is a massive topic in its own right and is the subject of an
-        entire dedicated manual.  See the <citetitle>Hibernate - Domain Model Mapping</citetitle> documentation
-        from the <link xlink:href="http://hibernate.org/documentation">documentation site</link>.
+        entire dedicated manual.  See the <citetitle>Hibernate Domain Model Mapping Guide</citetitle> from the
+        <link xlink:href="http://hibernate.org/documentation">documentation site</link>.
     </para>
 
     <section xml:id="domainmodel-pojo">

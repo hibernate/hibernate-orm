@@ -28,6 +28,7 @@ import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.type.BasicType;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
+
 import org.jboss.jandex.IndexView;
 
 /**
@@ -38,6 +39,7 @@ import org.jboss.jandex.IndexView;
  * @param <T> The type of a specific sub-class; Allows sub-classes to narrow down the return-type of the contract methods
  * to a specialization of {@link MetadataBuilderImplementor}
  */
+@SuppressWarnings("unused")
 public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends AbstractDelegatingMetadataBuilderImplementor<T>>  implements MetadataBuilderImplementor {
 
 	private final MetadataBuilderImplementor delegate;
@@ -166,13 +168,19 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Abs
 	}
 
 	@Override
-	public MetadataBuilder applyBasicType(UserType type, String[] keys) {
+	public MetadataBuilder applyBasicType(BasicType type, String... keys) {
 		delegate.applyBasicType( type, keys );
 		return getThis();
 	}
 
 	@Override
-	public MetadataBuilder applyBasicType(CompositeUserType type, String[] keys) {
+	public MetadataBuilder applyBasicType(UserType type, String... keys) {
+		delegate.applyBasicType( type, keys );
+		return getThis();
+	}
+
+	@Override
+	public MetadataBuilder applyBasicType(CompositeUserType type, String... keys) {
 		delegate.applyBasicType( type, keys );
 		return getThis();
 	}

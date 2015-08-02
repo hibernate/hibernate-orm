@@ -12,7 +12,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.persistence.AttributeConverter;
 import javax.persistence.SharedCacheMode;
 
@@ -50,6 +49,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.boot.spi.BasicTypeRegistration;
 import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware;
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuilderImplementor;
@@ -72,10 +72,9 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.CompositeCustomType;
-import org.hibernate.type.CustomType;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
+
 import org.jboss.jandex.IndexView;
 
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
@@ -252,19 +251,25 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	@Override
 	public MetadataBuilder applyBasicType(BasicType type) {
-		options.basicTypeRegistrations.add( type );
+		options.basicTypeRegistrations.add( new BasicTypeRegistration( type ) );
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyBasicType(UserType type, String[] keys) {
-		options.basicTypeRegistrations.add( new CustomType( type, keys ) );
+	public MetadataBuilder applyBasicType(BasicType type, String... keys) {
+		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyBasicType(CompositeUserType type, String[] keys) {
-		options.basicTypeRegistrations.add( new CompositeCustomType( type, keys ) );
+	public MetadataBuilder applyBasicType(UserType type, String... keys) {
+		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
+		return this;
+	}
+
+	@Override
+	public MetadataBuilder applyBasicType(CompositeUserType type, String... keys) {
+		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
 		return this;
 	}
 
@@ -276,17 +281,22 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	@Override
 	public void contributeType(BasicType type) {
-		options.basicTypeRegistrations.add( type );
+		options.basicTypeRegistrations.add( new BasicTypeRegistration( type ) );
+	}
+
+	@Override
+	public void contributeType(BasicType type, String... keys) {
+		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
 	}
 
 	@Override
 	public void contributeType(UserType type, String[] keys) {
-		options.basicTypeRegistrations.add( new CustomType( type, keys ) );
+		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
 	}
 
 	@Override
 	public void contributeType(CompositeUserType type, String[] keys) {
-		options.basicTypeRegistrations.add( new CompositeCustomType( type, keys ) );
+		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
 	}
 
 	@Override
@@ -523,7 +533,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private final StandardServiceRegistry serviceRegistry;
 		private final MappingDefaultsImpl mappingDefaults;
 
-		private ArrayList<BasicType> basicTypeRegistrations = new ArrayList<BasicType>();
+		private ArrayList<BasicTypeRegistration> basicTypeRegistrations = new ArrayList<BasicTypeRegistration>();
 
 		private IndexView jandexView;
 		private ClassLoader tempClassLoader;
@@ -747,7 +757,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		@Override
-		public List<BasicType> getBasicTypeRegistrations() {
+		public List<BasicTypeRegistration> getBasicTypeRegistrations() {
 			return basicTypeRegistrations;
 		}
 

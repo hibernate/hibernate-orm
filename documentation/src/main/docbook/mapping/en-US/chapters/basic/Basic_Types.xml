@@ -381,31 +381,42 @@
             </tgroup>
         </table>
 
+        <note>
+            <para>
+                To use these hibernate-java8 types just add the hibernate-java8 jar to your classpath; Hibernate
+                will take care of the rest.  See <xref linkend="basic-datetime"/>
+            </para>
+        </note>
+
         <!-- todo : document added hibernate-spatial types -->
 
         <para>
             These mappings are managed by a service inside Hibernate called the
             <classname>org.hibernate.type.BasicTypeRegistry</classname>, which essentially maintains a map of
-            <interface>org.hibernate.type.BasicType</interface> (a <interface>org.hibernate.type.Type</interface>
+            <interfacename>org.hibernate.type.BasicType</interfacename> (a <interfacename>org.hibernate.type.Type</interfacename>
             specialization) instances keyed by a name.  That is the purpose of the "BasicTypeRegistry key(s)" column
             in the previous tables.  We will revisit this detail later.
         </para>
+    </section>
+
+
+    <section xml:id="basic-annotation">
+        <title>The <literal>@Basic</literal> annotation</title>
 
         <para>
             Strictly speaking, a basic type is denoted with the <interfacename>javax.persistence.Basic</interfacename>
-            annotation.  Generally speaking the <literal>@Basic</literal> annotation can be ignored.
+            annotation.  Generally speaking the <literal>@Basic</literal> annotation can be ignored.  Both of the
+            following examples are ultimately the same.
         </para>
 
         <example>
             <title>With <literal>@Basic</literal></title>
             <programlisting role="JAVA"><xi:include href="extras/ex1.java" parse="text"/></programlisting>
+        </example>
+        <example>
             <title>Without <literal>@Basic</literal></title>
             <programlisting role="JAVA"><xi:include href="extras/ex2.java" parse="text"/></programlisting>
         </example>
-
-        <para>
-            Both of the above examples are ultimately the same.
-        </para>
 
         <tip>
             <para>
@@ -434,17 +445,71 @@
             <para>
                 If provider portability is a concern, you should stick to just these basic types.  Note that JPA
                 2.1 did add the notion of an <interfacename>javax.persistence.AttributeConverter</interfacename>
-                to help alleviate some of these concerns; see <xref linked="basic-jpaconvert"/>
+                to help alleviate some of these concerns; see <xref linkend="basic-jpaconvert"/>
             </para>
         </tip>
+
+        <para>
+            The <literal>@Basic</literal> annotation defines 2 attributes.
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        <literal>optional</literal> - boolean (defaults to true) - Defines whether this attribute
+                        allows nulls.  JPA defines this as "a hint", which essentially means that it affect is
+                        specifically required.  As long as the type is not primitive, Hibernate takes this to mean
+                        that the underlying column should be <literal>NULLABLE</literal>.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>fetch</literal> - FetchType (defaults to EAGER) - Defines whether this attribute
+                        should be fetched eagerly or lazily.  JPA says that EAGER is a requirement to the provider
+                        (Hibernate) that the value should be fetched when the owner is fetched but that
+                        LAZY is merely a hint that the value be fetched when the attribute is accessed.  Hibernate
+                        ignores this setting for basic types unless you are using bytecode enhancement.  See
+                        the <citetitle>Hibernate User Guide</citetitle> for additional information on
+                        fetching and on bytecode enhancement.
+                    </para>
+                </listitem>
+            </itemizedlist>
+        </para>
     </section>
 
+    <section>
+        <title>The <literal>@Column</literal> annotation</title>
+        <para>
+            JPA defines rules for implicitly determining the name of tables and columns.  For a detailed discussion
+            of implicit naming see <xref linkend="naming"/>.
+        </para>
+
+        <para>
+            For basic type attributes, the implicit naming rule is that the column name is the same as the attribute
+            name.  If that implicit naming rule does not meet your requirements, you can explicitly tell Hibernate
+            (and other providers) the column name to use.
+        </para>
+
+        <example>
+            <title>Explicit column naming</title>
+            <programlisting role="JAVA"><xi:include href="extras/ExplicitColumnNaming.java" parse="text" /></programlisting>
+        </example>
+
+        <para>
+            Here we use <literal>@Column</literal> to explicitly map the <literal>description</literal> attribute to the
+            <literal>NOTES</literal> column, as opposed to the implicit column name <literal>description</literal>.
+        </para>
+
+        <para>
+            The <literal>@Column</literal> annotation defines other mapping information as well.  See its javadocs
+            for details.
+        </para>
+    </section>
 
     <section xml:id="basic-registry">
+        <title>BasicTypeRegistry</title>
         <para>
             We said before that a Hibernate type is not a Java type, nor a SQL type, but that it
             understands both and performs the marshalling between them.  But looking at the
-            basic type mappings in the previous examples, how did Hibernate know to use
+            basic type mappings from the previous examples, how did Hibernate know to use
             its <classname>org.hibernate.type.StringType</classname> for mapping for
             <classname>java.lang.String</classname> attributes or its
             <classname>org.hibernate.type.IntegerType</classname> for mapping
@@ -454,12 +519,12 @@
         <para>
             The answer lies in a service inside Hibernate called the
             <classname>org.hibernate.type.BasicTypeRegistry</classname>, which essentially maintains a map of
-            <interface>org.hibernate.type.BasicType</interface> (a <interface>org.hibernate.type.Type</interface>
+            <interfacename>org.hibernate.type.BasicType</interfacename> (a <interfacename>org.hibernate.type.Type</interfacename>
             specialization) instances keyed by a name.
         </para>
 
         <para>
-            We will see later (<xref linked="basic-explicit"/>) that we can explicitly tell Hibernate which
+            We will see later (<xref linkend="basic-explicit"/>) that we can explicitly tell Hibernate which
             BasicType to use for a particular attribute.  But first let's explore how implicit resolution works
             and how applications can adjust implicit resolution.
         </para>
@@ -489,7 +554,7 @@
             Applications can also extend (add new BasicType registrations) or override (replace an exiting BasicType
             registration) using one of the <methodname>MetadataBuilder#applyBasicType</methodname> methods
             or the <methodname>MetadataBuilder#applyTypes</methodname> method during bootstrap.  For more details, see
-            <xref linked="basic-custom"/>
+            <xref linkend="basic-custom"/>
         </para>
     </section>
 
@@ -514,20 +579,20 @@
 
         <para>
             This tells Hibernate to store the Strings as nationalized data.  This is just for illustration purposes;
-            for better ways to indicate nationalized character data see <xref linked="basic-nationalized"/>
+            for better ways to indicate nationalized character data see <xref linkend="basic-nationalized"/>
         </para>
 
         <para>
             Additionally the description is to be handled as a LOB.  Again, for better ways to indicate
-            LOBs see <xref linked="basic-lob"/>.
+            LOBs see <xref linkend="basic-lob"/>.
         </para>
 
         <para>
             The <methodname>org.hibernate.annotations.Type#type</methodname> attribute can name any of the following:
             <itemizedlist>
-                <listitem>FQN of any <interface>org.hibernate.type.Type</interface> implementation</listitem>
-                <listitem>Any key registered with BasicTypeRegistry</listitem>
-                <listitem>The name of any known "type definitions"</listitem>
+                <listitem><para>FQN of any <interfacename>org.hibernate.type.Type</interfacename> implementation</para></listitem>
+                <listitem><para>Any key registered with BasicTypeRegistry</para></listitem>
+                <listitem><para>The name of any known "type definitions"</para></listitem>
             </itemizedlist>
         </para>
     </section>
@@ -567,44 +632,386 @@
             <programlisting role="JAVA"><xi:include href="extras/FizzywigType2_reg.java" parse="text" /></programlisting>
         </example>
 
+        <para>
+            For additional information on developing and registering custom types, see the
+            <citetitle>Hibernate Integration Guide</citetitle>.
+        </para>
     </section>
 
     <section xml:id="basic-enums">
         <title>Mapping enums</title>
+
         <para>
-            <!-- todo : write -->
-            blah blah blah
+            Hibernate supports the mapping of Java enums as basic value types in a number of different ways.
         </para>
+
+        <section>
+            <title>@Enumerated</title>
+            <para>
+                The original JPA-compliant way to map enums was via the <literal>@Enumerated</literal>
+                and <literal>@MapKeyEnumerated</literal> for map keys annotations which works on the principle that
+                the enum values are stored according to one of 2 strategies indicated by
+                <interfacename>javax.persistence.EnumType</interfacename>:
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            <literal>ORDINAL</literal> - stored according to the enum value's ordinal position within
+                            the enum class, as indicated by java.lang.Enum#ordinal
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            <literal>STRING</literal> - stored according to the enum value's name, as indicated by
+                            java.lang.Enum#name
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+
+            <example>
+                <title>@Enumerated(ORDINAL) example</title>
+                <programlisting role="JAVA"><xi:include href="extras/EnumeratedOrdinal.java" parse="text" /></programlisting>
+            </example>
+
+            <para>
+                In the ORDINAL example, the gender column is defined as an (nullable) INTEGER type and would hold:
+                <itemizedlist>
+                    <listitem>
+                        <para><literal>NULL</literal> - null</para>
+                    </listitem>
+                    <listitem>
+                        <para><literal>0</literal> - MALE</para>
+                    </listitem>
+                    <listitem>
+                        <para><literal>1</literal> - FEMALE</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+
+            <example>
+                <title>@Enumerated(STRING) example</title>
+                <programlisting role="JAVA"><xi:include href="extras/EnumeratedString.java" parse="text" /></programlisting>
+            </example>
+
+            <para>
+                In the STRING example, the gender column is defined as an (nullable) VARCHAR type and would hold:
+                <itemizedlist>
+                    <listitem>
+                        <para><literal>NULL</literal> - null</para>
+                    </listitem>
+                    <listitem>
+                        <para><literal>MALE</literal> - MALE</para>
+                    </listitem>
+                    <listitem>
+                        <para><literal>FEMALE</literal> - FEMALE</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+
+        <section>
+            <title>AttributeConverter</title>
+            <para>
+                You can also map enums in a JPA compliant way using a JPA 2.1 AttributeConverter.  Let's revisit the
+                Gender enum example, but instead we want to store the more standardized <literal>'M'</literal>
+                and <literal>'F'</literal> codes.
+            </para>
+
+            <example>
+                <title>Enum mapping with AttributeConverter example</title>
+                <programlisting role="JAVA"><xi:include href="extras/EnumAttributeConverter.java" parse="text" /></programlisting>
+            </example>
+
+            <para>
+                Here, the gender column is defined as a CHAR type and would hold:
+                <itemizedlist>
+                    <listitem>
+                        <para><literal>NULL</literal> - null</para>
+                    </listitem>
+                    <listitem>
+                        <para><literal>'M'</literal> - MALE</para>
+                    </listitem>
+                    <listitem>
+                        <para><literal>'F'</literal> - FEMALE</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+
+            <para>
+                For additional details on using AttributeConverters, see <xref linkend="basic-jpaconvert"/>.
+            </para>
+
+            <para>
+                Note that JPA explicitly disallows the use of an AttributeConverter with an attribute marked
+                as <literal>@Enumerated</literal>.  So if using the AttributeConverter approach, be sure to not mark the
+                attribute as <literal>@Enumerated</literal>.
+            </para>
+        </section>
+
+        <section>
+            <title>Custom type</title>
+
+            <para>
+                You can also map enums using a Hibernate custom type mapping.  Let's again revisit the Gender enum
+                example, this time using a custom Type to store the more standardized <literal>'M'</literal>
+                and <literal>'F'</literal> codes.
+            </para>
+
+            <example>
+                <title>Enum mapping with custom Type example</title>
+                <programlisting role="JAVA"><xi:include href="extras/EnumCustomType.java" parse="text" /></programlisting>
+            </example>
+
+            <para>
+                Again, the gender column is defined as a CHAR type and would hold:
+                <itemizedlist>
+                    <listitem>
+                        <para><literal>NULL</literal> - null</para>
+                    </listitem>
+                    <listitem>
+                        <para><literal>'M'</literal> - MALE</para>
+                    </listitem>
+                    <listitem>
+                        <para><literal>'F'</literal> - FEMALE</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+
+            <para>
+                For additional details on using custom types, see <xref linkend="basic-custom"/>.
+            </para>
+        </section>
     </section>
 
-    <section xml:id="basic-lobs">
+    <section xml:id="basic-lob">
         <title>Mapping LOBs</title>
+
         <para>
-            <!-- todo : write -->
-            blah blah blah
+            Mapping LOBs (database Large OBjects) come in 2 forms, those using the JDBC locator types and those
+            <firstterm>materializing</firstterm> the LOB data.
         </para>
+
+        <sidebar>
+            <title>Locator versus materialized</title>
+            <para>
+                JDBC LOB locators exist to allow efficient access to the LOB data.  They allow the JDBC driver to
+                stream parts of the LOB data as needed, potentially freeing up memory space.  However they can be
+                unnatural to deal with and have certain limitations.  For example, a LOB locator is only portably
+                valid during the duration of the transaction in which it was obtained.
+            </para>
+            <para>
+                The idea of materialized LOBs is to trade-off the potential efficiency (not all drivers handle LOB
+                data efficiently) for a more natural programming paradigm using familiar Java types such as
+                String or byte[], etc for these LOBs.
+            </para>
+            <para>
+                Materialized deals with the entire LOB contents in memory, whereas LOB locators (in theory) allow
+                streaming parts of the LOB contents into memory as needed.
+            </para>
+        </sidebar>
+
+        <para>
+            The JDBC LOB locator types include:
+            <itemizedlist>
+                <listitem>
+                    <para><interfacename>java.sql.Blob</interfacename></para>
+                    <para><interfacename>java.sql.Clob</interfacename></para>
+                    <para><interfacename>java.sql.NClob</interfacename></para>
+                </listitem>
+            </itemizedlist>
+        </para>
+
+        <para>
+            Mapping materialized forms of these LOB values would use more familiar Java types
+            such as String, char[], byte[], etc.  The trade off for "more familiar" is usually
+            performance.
+        </para>
+
+        <para>
+            For a first look lets assume we have a CLOB column that we would like to map (NCLOB character LOB data
+            will be covered in <xref linkend="basic-nationalized"/>).
+        </para>
+
+        <example>
+            <title>CLOB - SQL</title>
+            <programlisting role="SQL"><xi:include href="extras/Clob.sql" parse="text" /></programlisting>
+        </example>
+
+        <para>
+            Let's first map this using the JDBC locator.
+        </para>
+
+        <example>
+            <title>CLOB - locator mapping</title>
+            <programlisting role="SQL"><xi:include href="extras/ClobLocator.java" parse="text" /></programlisting>
+        </example>
+
+        <para>
+            We could also map a materialized form.
+        </para>
+
+        <example>
+            <title>CLOB - materialized mapping</title>
+            <programlisting role="SQL"><xi:include href="extras/ClobMaterialized.java" parse="text" /></programlisting>
+        </example>
+
+        <note>
+            <para>
+                How JDBC deals with LOB data varies from driver to driver.  Hibernate tries to handle all these variances
+                for you.  However some drivers do not allow Hibernate to always do that in an automatic fashion
+                (looking directly at you PostgreSQL JDBC drivers).  In such cases you may have to do some extra
+                to get LOBs working.  Such discussions are beyond the scope of this guide however.
+                <!-- todo : document known deviations? -->
+            </para>
+        </note>
+
+        <para>
+            We might even want the materialized data as a char array (for some crazy reason).
+        </para>
+
+        <example>
+            <title>CLOB - materialized char[] mapping</title>
+            <programlisting role="SQL"><xi:include href="extras/ClobMaterializedCharArray.java" parse="text" /></programlisting>
+        </example>
+
+        <para>
+            We'd map BLOB data in a similar fashion.
+        </para>
+
+        <example>
+            <title>BLOB - SQL</title>
+            <programlisting role="SQL"><xi:include href="extras/Blob.sql" parse="text" /></programlisting>
+        </example>
+
+        <para>
+            Let's first map this using the JDBC locator.
+        </para>
+
+        <example>
+            <title>BLOB - locator mapping</title>
+            <programlisting role="SQL"><xi:include href="extras/BlobLocator.java" parse="text" /></programlisting>
+        </example>
+
+        <para>
+            We could also map a materialized BLOB form.
+        </para>
+
+        <example>
+            <title>BLOB - materialized mapping</title>
+            <programlisting role="SQL"><xi:include href="extras/BlobMaterialized.java" parse="text" /></programlisting>
+        </example>
+
+        <!-- todo : alternatives : text, image -->
     </section>
 
     <section xml:id="basic-nationalized">
         <title>Mapping Nationalized Character Data</title>
+
         <para>
-            <!-- todo : write -->
-            blah blah blah
+            JDBC 4 added the ability to explicitly handle nationalized character data.  To this end
+            it added specific nationalized character data types.
+            <!-- todo : note that we saw these types above -->
+            <itemizedlist>
+                <listitem>
+                    <para><literal>NCHAR</literal></para>
+                    <para><literal>NVARCHAR</literal></para>
+                    <para><literal>LONGNVARCHAR</literal></para>
+                    <para><literal>NCLOB</literal></para>
+                </listitem>
+            </itemizedlist>
+        </para>
+
+        <para>
+            To map a specific attribute to a nationalized variant datatype, Hibernate defines the
+            <literal>@Nationalized</literal> annotation.
+        </para>
+
+        <example>
+            <title>NVARCHAR mapping</title>
+            <programlisting role="SQL"><xi:include href="extras/NVARCHAR.java" parse="text" /></programlisting>
+        </example>
+
+        <example>
+            <title>NCLOB (locator) mapping</title>
+            <programlisting role="SQL"><xi:include href="extras/NCLOB_locator.java" parse="text" /></programlisting>
+        </example>
+
+        <example>
+            <title>NCLOB (materialized) mapping</title>
+            <programlisting role="SQL"><xi:include href="extras/NCLOB_materialized.java" parse="text" /></programlisting>
+        </example>
+
+        <para>
+            If you application and database are entirely nationalized you may instead want to enable nationalized
+            character data as the default.  You can do this via the
+            <literal>hibernate.use_nationalized_character_data</literal> setting or by calling
+            <methodname>MetadataBuilder#enableGlobalNationalizedCharacterDataSupport</methodname> during bootstrap.
         </para>
     </section>
 
     <section xml:id="basic-uuid">
         <title>Mapping UUID Values</title>
+
         <para>
-            <!-- todo : write -->
-            blah blah blah
+            Hibernate also allows you to map UUID values, again in a number of ways.
         </para>
+
+        <note>
+            <para>
+                The default UUID mapping is as binary because it represents more efficient storage.  However
+                many applications prefer the readability of character storage.  To switch the default mapping,
+                simply call <literal>MetadataBuilder.applyBasicType( UUIDCharType.INSTANCE, UUID.class.getName() )</literal>
+            </para>
+        </note>
+
+        <section>
+            <title>UUID as binary</title>
+            <para>
+                As mentioned, the default mapping for UUID attributes.  Maps the UUID to a byte[]
+                using java.util.UUID#getMostSignificantBits and java.util.UUID#getLeastSignificantBits
+                and stores that as BINARY data.
+            </para>
+            <para>
+                Chosen as the default simply because it is generally more efficient from storage perspective.
+            </para>
+        </section>
+
+        <section>
+            <title>UUID as (var)char</title>
+            <para>
+                Maps the UUID to a String using java.util.UUID#toString and java.util.UUID#fromString
+                and stores that as CHAR or VARCHAR data.
+            </para>
+        </section>
+
+        <section>
+            <title>PostgeSQL-specific UUID</title>
+
+            <important>
+                <para>When using one of the PostgreSQL Dialects, this becomes the default UUID mapping</para>
+            </important>
+
+            <para>
+                Maps the UUID using PostgreSQL's specific UUID data type.  The PostgreSQL JDBC driver choses to
+                map its UUID type to the <literal>OTHER</literal> code.  Note that this can cause difficulty as the
+                driver chooses to map many different data types to OTHER.
+            </para>
+        </section>
+
+        <section>
+            <title>UUID as identifier</title>
+            <para>
+                Hibernate supports using UUID values as identifiers.  They can even be generated!  For
+                details see the discussion of generators in <xref linkend="identifiers"/>
+            </para>
+        </section>
     </section>
 
     <section xml:id="basic-datetime">
         <title>Mapping Date/Time Values</title>
         <para>
             <!-- todo : write -->
+            <!-- todo : highly recommend java8 types (or joda time) -->
             blah blah blah
         </para>
     </section>

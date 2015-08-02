@@ -110,6 +110,10 @@ public class BasicTypeRegistry implements Serializable {
 	}
 
 	public void register(BasicType type) {
+		register( type, type.getRegistrationKeys() );
+	}
+
+	public void register(BasicType type, String[] keys) {
 		if ( locked ) {
 			throw new HibernateException( "Can not alter TypeRegistry at this time" );
 		}
@@ -118,11 +122,12 @@ public class BasicTypeRegistry implements Serializable {
 			throw new HibernateException( "Type to register cannot be null" );
 		}
 
-		if ( type.getRegistrationKeys() == null || type.getRegistrationKeys().length == 0 ) {
+		if ( keys == null || keys.length == 0 ) {
 			LOG.typeDefinedNoRegistrationKeys( type );
+			return;
 		}
 
-		for ( String key : type.getRegistrationKeys() ) {
+		for ( String key : keys ) {
 			// be safe...
 			if ( key == null ) {
 				continue;

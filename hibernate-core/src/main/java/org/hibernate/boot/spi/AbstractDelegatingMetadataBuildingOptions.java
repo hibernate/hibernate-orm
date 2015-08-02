@@ -8,7 +8,6 @@ package org.hibernate.boot.spi;
 
 import java.util.List;
 import java.util.Map;
-
 import javax.persistence.SharedCacheMode;
 
 import org.hibernate.HibernateException;
@@ -27,7 +26,7 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.type.BasicType;
+
 import org.jboss.jandex.IndexView;
 
 /**
@@ -56,7 +55,7 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	}
 
 	@Override
-	public List<BasicType> getBasicTypeRegistrations() {
+	public List<BasicTypeRegistration> getBasicTypeRegistrations() {
 		return delegate.getBasicTypeRegistrations();
 	}
 

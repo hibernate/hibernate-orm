@@ -28,6 +28,7 @@ import org.hibernate.boot.model.source.internal.hbm.ModelBinder;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.AdditionalJaxbMappingProducer;
+import org.hibernate.boot.spi.BasicTypeRegistration;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataContributor;
@@ -36,6 +37,7 @@ import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.TypeFactory;
 import org.hibernate.type.TypeResolver;
@@ -331,6 +333,11 @@ public class MetadataBuildingProcess {
 			}
 
 			@Override
+			public void contributeType(BasicType type, String... keys) {
+				basicTypeRegistry.register( type, keys );
+			}
+
+			@Override
 			public void contributeType(UserType type, String[] keys) {
 				basicTypeRegistry.register( type, keys );
 			}
@@ -351,8 +358,11 @@ public class MetadataBuildingProcess {
 		}
 
 		// add explicit application registered types
-		for ( org.hibernate.type.BasicType basicType : options.getBasicTypeRegistrations() ) {
-			basicTypeRegistry.register( basicType );
+		for ( BasicTypeRegistration basicTypeRegistration : options.getBasicTypeRegistrations() ) {
+			basicTypeRegistry.register(
+					basicTypeRegistration.getBasicType(),
+					basicTypeRegistration.getRegistrationKeys()
+			);
 		}
 
 		return basicTypeRegistry;

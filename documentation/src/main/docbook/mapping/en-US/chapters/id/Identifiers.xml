@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<chapter xml:id="identifiers"
+         version="5.0"
+         xml:lang="en"
+         xmlns="http://docbook.org/ns/docbook"
+        >
+    <title>Identifiers</title>
+
+    <para>
+        Identifiers model the primary key of an entity.  They are used to uniquely identify each
+        specific entity.  Every entity must define an identifier.
+    </para>
+
+    <note>
+        <para>
+            Technically the identifier does not have to map to the column(s) physically defined as the entity
+            table's primary key.  They just need to map to column(s) that uniquely identify each row.  However
+            this documentation will continue to use the terms identifier and primary key interchangeably.
+        </para>
+    </note>
+
+    <para>
+        An identifier might be simple (single value) or composite (multiple values).
+    </para>
+
+    <!-- todo : be sure to discuss generators in simple, then reference from composite -->
+
+    <section>
+        <title>Simple identifiers</title>
+        <para></para>
+    </section>
+
+    <section>
+        <title>Composite identifiers</title>
+        <para></para>
+
+        <section>
+            <title>Composite identifiers - aggregated</title>
+            <para></para>
+        </section>
+
+        <section>
+            <title>Composite identifiers - non-aggregated</title>
+            <para></para>
+        </section>
+    </section>
+</chapter>

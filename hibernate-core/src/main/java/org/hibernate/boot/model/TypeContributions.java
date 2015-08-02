@@ -16,9 +16,11 @@ import org.hibernate.usertype.UserType;
  * @author Steve Ebersole
  */
 public interface TypeContributions {
-	public void contributeType(BasicType type);
+	void contributeType(BasicType type);
 
-	public void contributeType(UserType type, String... keys);
+	void contributeType(BasicType type, String... keys);
 
-	public void contributeType(CompositeUserType type, String... keys);
+	void contributeType(UserType type, String... keys);
+
+	void contributeType(CompositeUserType type, String... keys);
 }

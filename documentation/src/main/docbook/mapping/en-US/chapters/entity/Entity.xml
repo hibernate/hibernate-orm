@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<chapter xml:id="entity"
+         version="5.0"
+         xml:lang="en"
+         xmlns="http://docbook.org/ns/docbook"
+        >
+    <title>Entity</title>
+    <para>
+        * POJO, etc discussion from manual/en-US/chapters/domain/DomainModel.xml
+        * dynamic models (hbm.xml)
+            * Map mode
+            * proxy solutions (hibernate-core/src/test/java/org/hibernate/test/dynamicentity/tuplizer2)
+        * inheritance
+        * optimistic locking
+    </para>
+</chapter>

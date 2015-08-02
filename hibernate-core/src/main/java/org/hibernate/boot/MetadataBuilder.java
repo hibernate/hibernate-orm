@@ -309,6 +309,17 @@ public interface MetadataBuilder {
 	MetadataBuilder applyBasicType(BasicType type);
 
 	/**
+	 * Specify an additional or overridden basic type mapping supplying specific
+	 * registration keys.
+	 *
+	 * @param type The type addition or override.
+	 * @param keys The keys under which to register the basic type.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	MetadataBuilder applyBasicType(BasicType type, String... keys);
+
+	/**
 	 * Register an additional or overridden custom type mapping.
 	 *
 	 * @param type The custom type
@@ -316,7 +327,7 @@ public interface MetadataBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	MetadataBuilder applyBasicType(UserType type, String[] keys);
+	MetadataBuilder applyBasicType(UserType type, String... keys);
 
 	/**
 	 * Register an additional or overridden composite custom type mapping.
@@ -326,7 +337,7 @@ public interface MetadataBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	MetadataBuilder applyBasicType(CompositeUserType type, String[] keys);
+	MetadataBuilder applyBasicType(CompositeUserType type, String... keys);
 
 	/**
 	 * Apply an explicit TypeContributor (implicit application via ServiceLoader will still happen too)

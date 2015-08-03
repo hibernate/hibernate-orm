@@ -193,4 +193,8 @@
     JPA portability
     * HQL/JPQL differences
     * naming strategies
+    * basic types
+    * simple id types
+    * generated id types
+    * "embedded composite identifiers"
 </chapter>

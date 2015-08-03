@@ -47,6 +47,10 @@
     <xi:include href="chapters/services/Services.xml" />
 
     <!--
+    org.hibernate.boot.model.IdGeneratorStrategyInterpreter
+
+    custom Session/SessionFactory implementators
+
     <xi:include href="chapters/types/Custom_Types.xml" />
     -->
 

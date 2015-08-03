@@ -7,12 +7,15 @@
   ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
   -->
 <chapter xml:id="basic" xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude">
-    <title>Basic Types</title>
-
-    <abstract>
-        This chapter will discuss actual basic type mappings as well as how to override those
-        mappings and provide extra mappings.
-    </abstract>
+    <info>
+        <title>Basic Types</title>
+        <abstract>
+            <para>
+                This chapter will discuss actual basic type mappings as well as how to override those
+                mappings and provide extra mappings.
+            </para>
+        </abstract>
+    </info>
 
     <para>
         Basic value types usually map a single database value, or column, to a single, non-aggregated Java
@@ -1002,7 +1005,7 @@
             <title>UUID as identifier</title>
             <para>
                 Hibernate supports using UUID values as identifiers.  They can even be generated!  For
-                details see the discussion of generators in <xref linkend="identifiers"/>
+                details see the discussion of generators in <xref linkend="identifiers-generators"/>
             </para>
         </section>
     </section>

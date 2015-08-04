@@ -50,6 +50,7 @@
     <xi:include href="chapters/pc/PersistenceContext.xml" />
     <xi:include href="chapters/jdbc/Database_Access.xml" />
     <xi:include href="chapters/transactions/Transactions.xml" />
+    <xi:include href="chapters/jndi/JNDI.xml" />
     <xi:include href="chapters/locking/Locking.xml" />
     <xi:include href="chapters/fetching/Fetching.xml" />
     <xi:include href="chapters/batch/Batching.xml" />

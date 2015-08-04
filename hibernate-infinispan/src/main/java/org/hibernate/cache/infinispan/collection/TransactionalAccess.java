@@ -42,7 +42,7 @@ class TransactionalAccess implements CollectionRegionAccessStrategy {
 	}
 
 	public Object get(SessionImplementor session, Object key, long txTimestamp) throws CacheException {
-		return delegate.get( key, txTimestamp );
+		return delegate.get( session, key, txTimestamp );
 	}
 
 	public boolean putFromLoad(SessionImplementor session, Object key, Object value, long txTimestamp, Object version) throws CacheException {
@@ -75,7 +75,7 @@ class TransactionalAccess implements CollectionRegionAccessStrategy {
 	}
 
 	public void unlockItem(SessionImplementor session, Object key, SoftLock lock) throws CacheException {
-		delegate.unlockItem(key);
+		delegate.unlockItem( session, key);
 	}
 
 	public void unlockRegion(SoftLock lock) throws CacheException {

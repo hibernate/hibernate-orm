@@ -24,6 +24,7 @@ dependencies {
     testCompile( libraries.jnp_client )
     testCompile( libraries.jnp_server )
     testCompile( libraries.rhq )
+    testCompile( libraries.mockito )
     testCompile ('mysql:mysql-connector-java:5.1.17')
 }
 

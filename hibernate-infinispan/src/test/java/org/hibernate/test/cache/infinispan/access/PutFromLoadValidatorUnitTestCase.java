@@ -7,6 +7,7 @@
 package org.hibernate.test.cache.infinispan.access;
 
 import javax.transaction.TransactionManager;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -19,6 +20,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
 import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
 import org.infinispan.manager.EmbeddedCacheManager;
@@ -38,6 +40,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
 
 /**
  * Tests of {@link PutFromLoadValidator}.
@@ -215,14 +218,16 @@ public class PutFromLoadValidatorUnitTestCase {
                if (transactional) {
                   tm.begin();
                }
-               testee.registerPendingPut(KEY1, txTimestamp);
+               SessionImplementor session1 = mock(SessionImplementor.class);
+               SessionImplementor session2 = mock(SessionImplementor.class);
+               testee.registerPendingPut(session1, KEY1, txTimestamp);
                if (removeRegion) {
                   testee.beginInvalidatingRegion();
                } else {
-                  testee.beginInvalidatingKey(KEY1);
+                  testee.beginInvalidatingKey(session2, KEY1);
                }
 
-               PutFromLoadValidator.Lock lock = testee.acquirePutFromLoadLock(KEY1, txTimestamp);
+               PutFromLoadValidator.Lock lock = testee.acquirePutFromLoadLock(session1, KEY1, txTimestamp);
                try {
                   assertNull(lock);
                }
@@ -233,7 +238,7 @@ public class PutFromLoadValidatorUnitTestCase {
                   if (removeRegion) {
                      testee.endInvalidatingRegion();
                   } else {
-                     testee.endInvalidatingKey(KEY1);
+                     testee.endInvalidatingKey(session2, KEY1);
                   }
                }
             } catch (Exception e) {
@@ -271,10 +276,11 @@ public class PutFromLoadValidatorUnitTestCase {
                      if (transactional) {
                         tm.begin();
                      }
-                     testee.registerPendingPut(KEY1, txTimestamp);
+                     SessionImplementor session = mock (SessionImplementor.class);
+                     testee.registerPendingPut(session, KEY1, txTimestamp);
                      registeredLatch.countDown();
                      registeredLatch.await(5, TimeUnit.SECONDS);
-                     PutFromLoadValidator.Lock lock = testee.acquirePutFromLoadLock(KEY1, txTimestamp);
+                     PutFromLoadValidator.Lock lock = testee.acquirePutFromLoadLock(session, KEY1, txTimestamp);
                      if (lock != null) {
                         try {
                            log.trace("Put from load lock acquired for key = " + KEY1);
@@ -344,8 +350,9 @@ public class PutFromLoadValidatorUnitTestCase {
             Callable<Boolean> pferCallable = new Callable<Boolean>() {
                public Boolean call() throws Exception {
                   long txTimestamp = System.currentTimeMillis();
-                  testee.registerPendingPut(KEY1, txTimestamp);
-                  PutFromLoadValidator.Lock lock = testee.acquirePutFromLoadLock(KEY1, txTimestamp);
+                  SessionImplementor session = mock (SessionImplementor.class);
+                  testee.registerPendingPut(session, KEY1, txTimestamp);
+                  PutFromLoadValidator.Lock lock = testee.acquirePutFromLoadLock(session, KEY1, txTimestamp);
                   if (lock != null) {
                      try {
                         removeLatch.countDown();
@@ -365,7 +372,8 @@ public class PutFromLoadValidatorUnitTestCase {
                public Void call() throws Exception {
                   removeLatch.await();
                   if (keyOnly) {
-                     testee.beginInvalidatingKey(KEY1);
+                     SessionImplementor session = mock (SessionImplementor.class);
+                     testee.beginInvalidatingKey(session, KEY1);
                   } else {
                      testee.beginInvalidatingRegion();
                   }
@@ -432,9 +440,10 @@ public class PutFromLoadValidatorUnitTestCase {
             assertTrue(success);
             putFromLoadValidator.endInvalidatingRegion();;
          } else {
-            boolean success = putFromLoadValidator.beginInvalidatingKey(KEY1);
+            SessionImplementor session = mock (SessionImplementor.class);
+            boolean success = putFromLoadValidator.beginInvalidatingKey(session, KEY1);
             assertTrue(success);
-            success = putFromLoadValidator.endInvalidatingKey(KEY1);
+            success = putFromLoadValidator.endInvalidatingKey(session, KEY1);
             assertTrue(success);
          }
          // if we go for the timestamp-based approach, invalidation in the same millisecond
@@ -455,9 +464,10 @@ public class PutFromLoadValidatorUnitTestCase {
       public Void call() throws Exception {
          try {
             long txTimestamp = System.currentTimeMillis(); // this should be acquired before UserTransaction.begin()
-            putFromLoadValidator.registerPendingPut(KEY1, txTimestamp);
+            SessionImplementor session = mock (SessionImplementor.class);
+            putFromLoadValidator.registerPendingPut(session, KEY1, txTimestamp);
 
-            PutFromLoadValidator.Lock lock = putFromLoadValidator.acquirePutFromLoadLock(KEY1, txTimestamp);
+            PutFromLoadValidator.Lock lock = putFromLoadValidator.acquirePutFromLoadLock(session, KEY1, txTimestamp);
             try {
                assertNotNull(lock);
             } finally {
@@ -485,7 +495,8 @@ public class PutFromLoadValidatorUnitTestCase {
       public Void call() throws Exception {
          try {
             long txTimestamp = System.currentTimeMillis(); // this should be acquired before UserTransaction.begin()
-            PutFromLoadValidator.Lock lock = testee.acquirePutFromLoadLock(KEY1, txTimestamp);
+            SessionImplementor session = mock (SessionImplementor.class);
+            PutFromLoadValidator.Lock lock = testee.acquirePutFromLoadLock(session, KEY1, txTimestamp);
             try {
                if (expectSuccess) {
                   assertNotNull(lock);

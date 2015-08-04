@@ -20,6 +20,7 @@ import org.hibernate.cache.internal.CacheDataDescriptionImpl;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.test.cache.infinispan.AbstractNonFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.NodeEnvironment;
@@ -38,6 +39,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 /**
  * Base class for tests of EntityRegionAccessStrategy impls.
@@ -62,10 +64,12 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
    protected NodeEnvironment localEnvironment;
    protected EntityRegionImpl localEntityRegion;
    protected EntityRegionAccessStrategy localAccessStrategy;
+   protected SessionImplementor localSession;
 
    protected NodeEnvironment remoteEnvironment;
    protected EntityRegionImpl remoteEntityRegion;
    protected EntityRegionAccessStrategy remoteAccessStrategy;
+   protected SessionImplementor remoteSession;
 
    protected boolean invalidation;
    protected boolean synchronous;
@@ -85,6 +89,9 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 
       localEntityRegion = localEnvironment.getEntityRegion(REGION_NAME, getCacheDataDescription());
       localAccessStrategy = localEntityRegion.buildAccessStrategy(getAccessType());
+      localSession = mock(SessionImplementor.class);
+      remoteSession = mock(SessionImplementor.class);
+
 
       invalidation = Caches.isInvalidationCache(localEntityRegion.getCache());
       synchronous = Caches.isSynchronousCache(localEntityRegion.getCache());
@@ -211,17 +218,17 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
                long txTimestamp = System.currentTimeMillis();
                BatchModeTransactionManager.getInstance().begin();
 
-               assertNull("node1 starts clean", localAccessStrategy.get(null, KEY, txTimestamp));
+               assertNull("node1 starts clean", localAccessStrategy.get(localSession, KEY, txTimestamp));
 
                writeLatch1.await();
 
                if (useMinimalAPI) {
-                  localAccessStrategy.putFromLoad(null, KEY, VALUE1, txTimestamp, new Integer(1), true);
+                  localAccessStrategy.putFromLoad(localSession, KEY, VALUE1, txTimestamp, new Integer(1), true);
                } else {
-                  localAccessStrategy.putFromLoad(null, KEY, VALUE1, txTimestamp, new Integer(1));
+                  localAccessStrategy.putFromLoad(localSession, KEY, VALUE1, txTimestamp, new Integer(1));
                }
 
-               localAccessStrategy.update(null, KEY, VALUE2, new Integer(2), new Integer(1));
+               localAccessStrategy.update(localSession, KEY, VALUE2, new Integer(2), new Integer(1));
 
                BatchModeTransactionManager.getInstance().commit();
             } catch (Exception e) {
@@ -248,7 +255,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
                long txTimestamp = System.currentTimeMillis();
                BatchModeTransactionManager.getInstance().begin();
 
-               assertNull("node1 starts clean", remoteAccessStrategy.get(null, KEY, txTimestamp));
+               assertNull("node1 starts clean", remoteAccessStrategy.get(remoteSession, KEY, txTimestamp));
 
                // Let node1 write
                writeLatch1.countDown();
@@ -256,9 +263,9 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
                writeLatch2.await();
 
                if (useMinimalAPI) {
-                  remoteAccessStrategy.putFromLoad(null, KEY, VALUE1, txTimestamp, new Integer(1), true);
+                  remoteAccessStrategy.putFromLoad(remoteSession, KEY, VALUE1, txTimestamp, new Integer(1), true);
                } else {
-                  remoteAccessStrategy.putFromLoad(null, KEY, VALUE1, txTimestamp, new Integer(1));
+                  remoteAccessStrategy.putFromLoad(remoteSession, KEY, VALUE1, txTimestamp, new Integer(1));
                }
 
                BatchModeTransactionManager.getInstance().commit();
@@ -286,14 +293,14 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
       assertThreadsRanCleanly();
 
       long txTimestamp = System.currentTimeMillis();
-      assertEquals("Correct node1 value", VALUE2, localAccessStrategy.get(null, KEY, txTimestamp));
+      assertEquals("Correct node1 value", VALUE2, localAccessStrategy.get(localSession, KEY, txTimestamp));
 
       if (isUsingInvalidation()) {
          // invalidation command invalidates pending put
-         assertEquals("Expected node2 value", null, remoteAccessStrategy.get(null, KEY, txTimestamp));
+         assertEquals("Expected node2 value", null, remoteAccessStrategy.get(remoteSession, KEY, txTimestamp));
       } else {
          // The node1 update is replicated, preventing the node2 PFER
-         assertEquals("Correct node2 value", VALUE2, remoteAccessStrategy.get(null, KEY, txTimestamp));
+         assertEquals("Correct node2 value", VALUE2, remoteAccessStrategy.get(remoteSession, KEY, txTimestamp));
       }
    }
 
@@ -315,9 +322,9 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
                long txTimestamp = System.currentTimeMillis();
                BatchModeTransactionManager.getInstance().begin();
 
-               assertNull("Correct initial value", localAccessStrategy.get(null, KEY, txTimestamp));
+               assertNull("Correct initial value", localAccessStrategy.get(localSession, KEY, txTimestamp));
 
-               localAccessStrategy.insert(null, KEY, VALUE1, new Integer(1));
+               localAccessStrategy.insert(localSession, KEY, VALUE1, new Integer(1));
 
                readLatch.countDown();
                commitLatch.await();
@@ -351,7 +358,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 
                assertEquals(
                      "Correct initial value", expected, localAccessStrategy.get(
-                           null, KEY,
+                           localSession, KEY,
                      txTimestamp
                )
                );
@@ -381,9 +388,9 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
       assertThreadsRanCleanly();
 
       long txTimestamp = System.currentTimeMillis();
-      assertEquals("Correct node1 value", VALUE1, localAccessStrategy.get(null, KEY, txTimestamp));
+      assertEquals("Correct node1 value", VALUE1, localAccessStrategy.get(localSession, KEY, txTimestamp));
       Object expected = isUsingInvalidation() ? null : VALUE1;
-      assertEquals("Correct node2 value", expected, remoteAccessStrategy.get(null, KEY, txTimestamp));
+      assertEquals("Correct node2 value", expected, remoteAccessStrategy.get(remoteSession, KEY, txTimestamp));
    }
 
    @Test
@@ -392,8 +399,8 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
       final Object KEY = TestingKeyFactory.generateEntityCacheKey( KEY_BASE + testCount++ );
 
       // Set up initial state
-      localAccessStrategy.putFromLoad(null, KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
-      remoteAccessStrategy.putFromLoad(null, KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
+      localAccessStrategy.putFromLoad(localSession, KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
+      remoteAccessStrategy.putFromLoad(remoteSession, KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
 
       // Let the async put propagate
       sleep(250);
@@ -411,9 +418,9 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
                long txTimestamp = System.currentTimeMillis();
                BatchModeTransactionManager.getInstance().begin();
                log.debug("Transaction began, get initial value");
-               assertEquals("Correct initial value", VALUE1, localAccessStrategy.get(null, KEY, txTimestamp));
+               assertEquals("Correct initial value", VALUE1, localAccessStrategy.get(localSession, KEY, txTimestamp));
                log.debug("Now update value");
-               localAccessStrategy.update(null, KEY, VALUE2, new Integer(2), new Integer(1));
+               localAccessStrategy.update(localSession, KEY, VALUE2, new Integer(2), new Integer(1));
                log.debug("Notify the read latch");
                readLatch.countDown();
                readerUnlocked = true;
@@ -450,7 +457,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 
                // This won't block w/ mvc and will read the old value
                Object expected = VALUE1;
-               assertEquals("Correct value", expected, localAccessStrategy.get(null, KEY, txTimestamp));
+               assertEquals("Correct value", expected, localAccessStrategy.get(localSession, KEY, txTimestamp));
 
                BatchModeTransactionManager.getInstance().commit();
             } catch (Exception e) {
@@ -479,9 +486,9 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
       assertThreadsRanCleanly();
 
       long txTimestamp = System.currentTimeMillis();
-      assertEquals("Correct node1 value", VALUE2, localAccessStrategy.get(null, KEY, txTimestamp));
+      assertEquals("Correct node1 value", VALUE2, localAccessStrategy.get(localSession, KEY, txTimestamp));
       Object expected = isUsingInvalidation() ? null : VALUE2;
-      assertEquals("Correct node2 value", expected, remoteAccessStrategy.get(null, KEY, txTimestamp));
+      assertEquals("Correct node2 value", expected, remoteAccessStrategy.get(remoteSession, KEY, txTimestamp));
    }
 
    @Test
@@ -509,13 +516,13 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
       assertEquals(0, localEntityRegion.getCache().size());
       assertEquals(0, remoteEntityRegion.getCache().size());
 
-      assertNull("local is clean", localAccessStrategy.get(null, KEY, System.currentTimeMillis()));
-      assertNull("remote is clean", remoteAccessStrategy.get(null, KEY, System.currentTimeMillis()));
+      assertNull("local is clean", localAccessStrategy.get(localSession, KEY, System.currentTimeMillis()));
+      assertNull("remote is clean", remoteAccessStrategy.get(remoteSession, KEY, System.currentTimeMillis()));
 
-      localAccessStrategy.putFromLoad(null, KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
-      assertEquals(VALUE1, localAccessStrategy.get(null, KEY, System.currentTimeMillis()));
-      remoteAccessStrategy.putFromLoad(null, KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
-      assertEquals(VALUE1, remoteAccessStrategy.get(null, KEY, System.currentTimeMillis()));
+      localAccessStrategy.putFromLoad(localSession, KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
+      assertEquals(VALUE1, localAccessStrategy.get(localSession, KEY, System.currentTimeMillis()));
+      remoteAccessStrategy.putFromLoad(remoteSession, KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
+      assertEquals(VALUE1, remoteAccessStrategy.get(remoteSession, KEY, System.currentTimeMillis()));
 
       Caches.withinTx(localEntityRegion.getTransactionManager(), new Callable<Void>() {
          @Override
@@ -523,13 +530,13 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
             if (evict)
                localAccessStrategy.evict(KEY);
             else
-               localAccessStrategy.remove(null, KEY);
+               localAccessStrategy.remove(localSession, KEY);
             return null;
          }
       });
-      assertEquals(null, localAccessStrategy.get(null, KEY, System.currentTimeMillis()));
+      assertEquals(null, localAccessStrategy.get(localSession, KEY, System.currentTimeMillis()));
       assertEquals(0, localEntityRegion.getCache().size());
-      assertEquals(null, remoteAccessStrategy.get(null, KEY, System.currentTimeMillis()));
+      assertEquals(null, remoteAccessStrategy.get(remoteSession, KEY, System.currentTimeMillis()));
       assertEquals(0, remoteEntityRegion.getCache().size());
    }
 
@@ -537,17 +544,17 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
       final Object KEY = TestingKeyFactory.generateEntityCacheKey( KEY_BASE + testCount++ );
       assertEquals(0, localEntityRegion.getCache().size());
       assertEquals(0, remoteEntityRegion.getCache().size());
-      assertNull("local is clean", localAccessStrategy.get(null, KEY, System.currentTimeMillis()));
-      assertNull("remote is clean", remoteAccessStrategy.get(null, KEY, System.currentTimeMillis()));
+      assertNull("local is clean", localAccessStrategy.get(localSession, KEY, System.currentTimeMillis()));
+      assertNull("remote is clean", remoteAccessStrategy.get(remoteSession, KEY, System.currentTimeMillis()));
 
-      localAccessStrategy.putFromLoad(null, KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
-      assertEquals(VALUE1, localAccessStrategy.get(null, KEY, System.currentTimeMillis()));
+      localAccessStrategy.putFromLoad(localSession, KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
+      assertEquals(VALUE1, localAccessStrategy.get(localSession, KEY, System.currentTimeMillis()));
 
       // Wait for async propagation
       sleep(250);
 
-      remoteAccessStrategy.putFromLoad(null, KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
-      assertEquals(VALUE1, remoteAccessStrategy.get(null, KEY, System.currentTimeMillis()));
+      remoteAccessStrategy.putFromLoad(remoteSession, KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
+      assertEquals(VALUE1, remoteAccessStrategy.get(remoteSession, KEY, System.currentTimeMillis()));
 
       // Wait for async propagation
       sleep(250);
@@ -566,20 +573,20 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
       });
 
       // This should re-establish the region root node in the optimistic case
-      assertNull(localAccessStrategy.get(null, KEY, System.currentTimeMillis()));
+      assertNull(localAccessStrategy.get(localSession, KEY, System.currentTimeMillis()));
       assertEquals(0, localEntityRegion.getCache().size());
 
       // Re-establishing the region root on the local node doesn't
       // propagate it to other nodes. Do a get on the remote node to re-establish
-      assertNull(remoteAccessStrategy.get(null, KEY, System.currentTimeMillis()));
+      assertNull(remoteAccessStrategy.get(remoteSession, KEY, System.currentTimeMillis()));
       assertEquals(0, remoteEntityRegion.getCache().size());
 
       // Wait for async propagation of EndInvalidationCommand before executing naked put
       sleep(250);
 
       // Test whether the get above messes up the optimistic version
-      remoteAccessStrategy.putFromLoad(null, KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
-      assertEquals(VALUE1, remoteAccessStrategy.get(null, KEY, System.currentTimeMillis()));
+      remoteAccessStrategy.putFromLoad(remoteSession, KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
+      assertEquals(VALUE1, remoteAccessStrategy.get(remoteSession, KEY, System.currentTimeMillis()));
       assertEquals(1, remoteEntityRegion.getCache().size());
 
       // Wait for async propagation
@@ -587,11 +594,11 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 
       assertEquals(
             "local is correct", (isUsingInvalidation() ? null : VALUE1), localAccessStrategy
-            .get(null, KEY, System.currentTimeMillis())
+            .get(localSession, KEY, System.currentTimeMillis())
       );
       assertEquals(
             "remote is correct", VALUE1, remoteAccessStrategy.get(
-                  null, KEY, System
+                  remoteSession, KEY, System
             .currentTimeMillis()
       )
       );

@@ -256,7 +256,9 @@ public interface AvailableSettings {
 	/**
 	 * Setting which indicates whether or not the new {@link org.hibernate.id.IdentifierGenerator} are used
 	 * for AUTO, TABLE and SEQUENCE.
-	 * Default to false to keep backward compatibility.
+	 * <p/>
+	 * Default is {@code true}.  Existing applications may want to disable this (set it {@code false}) for
+	 * upgrade compatibility.
 	 *
 	 * @see MetadataBuilder#enableNewIdentifierGeneratorSupport
 	 */

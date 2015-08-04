@@ -65,7 +65,7 @@ public class DefaultIdentifierGeneratorFactory
 		register( "assigned", Assigned.class );
 		register( "identity", IdentityGenerator.class );
 		register( "select", SelectGenerator.class );
-		register( "sequence", SequenceGenerator.class );
+		register( "sequence", SequenceStyleGenerator.class );
 		register( "seqhilo", SequenceHiLoGenerator.class );
 		register( "increment", IncrementGenerator.class );
 		register( "foreign", ForeignGenerator.class );

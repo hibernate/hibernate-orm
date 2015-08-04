@@ -191,8 +191,8 @@
                 The discussions below assume that the application is using Hibernate's "new generator mappings" as
                 indicated by the <literal>hibernate.id.new_generator_mappings</literal> setting or
                 <methodname>MetadataBuilder.enableNewIdentifierGeneratorSupport</methodname> method during bootstrap.
-                For legacy reasons the default value for this setting is currently false, however we anticipate it
-                becoming true at some point.  The rest of the discussion here assumes this setting is enabled (true).
+                This is set to true by default, however if applications set this to false the resolutions discussed
+                here will be very different.  The rest of the discussion here assumes this setting is enabled (true).
             </para>
         </note>
 

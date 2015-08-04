@@ -22,6 +22,14 @@ public abstract class AbstractHHH3949TestTask extends AbstractEnhancerTestTask {
 		Session session = getFactory().openSession();
 		Transaction tx = session.beginTransaction();
 
+		// it is important that the data associations remain as follows:
+		//		* Johnny <-> Volkswagen Golf
+		//		* Ricky <-> Subaru Impreza
+		//		* Rosy -> none
+		//		* none <- Renault Truck
+		//
+		// see #shouldHaveVehicle and #shouldHaveDriver
+
 		Person person1 = new Person( "Johnny" );
 		Person person2 = new Person( "Ricky" );
 		Person person3 = new Person( "Rosy" );
@@ -44,6 +52,16 @@ public abstract class AbstractHHH3949TestTask extends AbstractEnhancerTestTask {
 
 		tx.commit();
 		session.close();
+	}
+
+	protected boolean shouldHaveVehicle(Person person) {
+		return "Johnny".equals( person.getName() )
+				|| "Ricky".equals( person.getName() );
+	}
+
+	protected boolean shouldHaveDriver(Vehicle vehicle) {
+		return "Volkswagen Golf".equals( vehicle.getName() )
+				|| "Subaru Impreza".equals( vehicle.getName() );
 	}
 
 	protected void cleanup() {

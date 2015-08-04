@@ -38,6 +38,8 @@ Working list of changes for 5.0
 * For EnumType mappings defined in hbm.xml where the user wants name-mapping (`javax.persistence.EnumType#STRING`) 
     the configuration must explicitly state that using either the `useNamed` (true) setting or by specifying the `type`
     setting set to the value 12 (VARCHAR JDBC type code).
+* Default value for `hibernate.id.new_generator_mappings` setting changed to true for 5.0.  See 
+    `org.hibernate.cfg.AvailableSettings#USE_NEW_ID_GENERATOR_MAPPINGS` javadocs. 
     
 
 TODOs

@@ -28,7 +28,7 @@ public class HHH3949TestTask1 extends AbstractHHH3949TestTask {
 		// 4) verify the results
 		for ( Person person : persons ) {
 			assertTrue( Hibernate.isInitialized( person ) );
-			if ( person.getId() < 3 ) {
+			if ( shouldHaveVehicle( person ) ) {
 				assertNotNull( person.getVehicle() );
 				assertTrue( Hibernate.isInitialized( person.getVehicle() ) );
 				assertNotNull( person.getVehicle().getDriver() );

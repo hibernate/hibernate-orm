@@ -686,7 +686,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			final boolean useNewIdentifierGenerators = configService.getSetting(
 					AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS,
 					StandardConverters.BOOLEAN,
-					false
+					true
 			);
 			if ( useNewIdentifierGenerators ) {
 				idGenerationTypeInterpreter.disableLegacyFallback();

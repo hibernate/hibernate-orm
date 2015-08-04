@@ -731,9 +731,6 @@ public abstract class Dialect implements ConversionContext {
 		if ( supportsIdentityColumns() ) {
 			return IdentityGenerator.class;
 		}
-		else if ( supportsSequences() ) {
-			return SequenceGenerator.class;
-		}
 		else {
 			return SequenceStyleGenerator.class;
 		}

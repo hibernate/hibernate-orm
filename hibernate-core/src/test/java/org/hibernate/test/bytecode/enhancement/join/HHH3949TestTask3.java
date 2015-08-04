@@ -16,7 +16,7 @@ public class HHH3949TestTask3 extends AbstractHHH3949TestTask {
 				.setFetchMode( "vehicle", FetchMode.JOIN )
 				.list();
 		for ( Person person : persons ) {
-			if ( person.getId() < 3 ) {
+			if ( shouldHaveVehicle( person ) ) {
 				Assert.assertNotNull( person.getVehicle() );
 				Assert.assertNotNull( person.getVehicle().getDriver() );
 			}

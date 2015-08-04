@@ -28,6 +28,7 @@ import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.id.SequenceGenerator;
+import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.procedure.internal.PostgresCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
@@ -313,7 +314,7 @@ public class PostgreSQL81Dialect extends Dialect {
 
 	@Override
 	public Class getNativeIdentifierGeneratorClass() {
-		return SequenceGenerator.class;
+		return SequenceStyleGenerator.class;
 	}
 
 	@Override

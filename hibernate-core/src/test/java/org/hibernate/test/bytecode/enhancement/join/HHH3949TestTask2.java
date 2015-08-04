@@ -24,7 +24,7 @@ public class HHH3949TestTask2 extends AbstractHHH3949TestTask {
 
 		// 4) verify the results
 		for ( Vehicle vehicle : vehicles ) {
-			if ( vehicle.getId() < 3 ) {
+			if ( shouldHaveDriver( vehicle ) ) {
 				Assert.assertNotNull( vehicle.getDriver() );
 				Assert.assertNotNull( vehicle.getDriver().getVehicle() );
 			}

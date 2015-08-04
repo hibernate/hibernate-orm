@@ -161,8 +161,8 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
             PutFromLoadValidator validator = new PutFromLoadValidator(remoteCollectionRegion.getCache(), cm,
                   remoteTm, 20000) {
                @Override
-               public boolean acquirePutFromLoadLock(Object key) {
-                  boolean acquired = super.acquirePutFromLoadLock( key );
+               public Lock acquirePutFromLoadLock(Object key) {
+                  Lock lock = super.acquirePutFromLoadLock( key );
                   try {
                      removeLatch.countDown();
                      pferLatch.await( 2, TimeUnit.SECONDS );
@@ -175,7 +175,7 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
                      log.error( "Error", e );
                      throw new RuntimeException( "Error", e );
                   }
-                  return acquired;
+                  return lock;
                }
             };
 

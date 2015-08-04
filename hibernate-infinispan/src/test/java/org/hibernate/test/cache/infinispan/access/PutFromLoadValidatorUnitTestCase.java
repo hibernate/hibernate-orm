@@ -20,8 +20,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
 import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
-import org.infinispan.AdvancedCache;
-import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.test.CacheManagerCallable;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.infinispan.util.logging.Log;
@@ -32,8 +30,9 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import static org.infinispan.test.TestingUtil.withCacheManager;
+import static org.infinispan.test.TestingUtil.withTx;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -87,28 +86,13 @@ public class PutFromLoadValidatorUnitTestCase {
             TestCacheManagerFactory.createCacheManager(false)) {
          @Override
          public void call() {
-            try {
-               PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm,
-                     transactional ? tm : null,
-                     PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
-               if (transactional) {
-                  tm.begin();
-               }
-               boolean lockable = testee.acquirePutFromLoadLock(KEY1);
-               try {
-                  assertTrue(lockable);
-               }
-               finally {
-                  if (lockable) {
-                     testee.releasePutFromLoadLock(KEY1);
-                  }
-               }
-            } catch (Exception e) {
-               throw new RuntimeException(e);
-            }
+            PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm,
+                  transactional ? tm : null, PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
+            exec(transactional, new NakedPut(testee, true));
          }
       });
    }
+
    @Test
    public void testRegisteredPut() throws Exception {
       registeredPutTest(false);
@@ -124,29 +108,12 @@ public class PutFromLoadValidatorUnitTestCase {
          @Override
          public void call() {
             PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm,
-                  transactional ? tm : null,
-                  PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
-            try {
-               if (transactional) {
-                  tm.begin();
-               }
-               testee.registerPendingPut(KEY1);
-
-               boolean lockable = testee.acquirePutFromLoadLock(KEY1);
-               try {
-                  assertTrue(lockable);
-               }
-               finally {
-                  if (lockable) {
-                     testee.releasePutFromLoadLock(KEY1);
-                  }
-               }
-            } catch (Exception e) {
-               throw new RuntimeException(e);
-            }
+                  transactional ? tm : null, PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
+            exec(transactional, new RegularPut(testee));
          }
       });
    }
+
    @Test
    public void testNakedPutAfterKeyRemoval() throws Exception {
       nakedPutAfterRemovalTest(false, false);
@@ -171,34 +138,15 @@ public class PutFromLoadValidatorUnitTestCase {
          @Override
          public void call() {
             PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm,
-                  transactional ? tm : null,
-                  PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
-            if (removeRegion) {
-               testee.invalidateRegion();
-            } else {
-               testee.invalidateKey(KEY1);
-            }
-            try {
-               if (transactional) {
-                  tm.begin();
-               }
-
-               boolean lockable = testee.acquirePutFromLoadLock(KEY1);
-               try {
-                  assertFalse(lockable);
-               }
-               finally {
-                  if (lockable) {
-                     testee.releasePutFromLoadLock(KEY1);
-                  }
-               }
-            } catch (Exception e) {
-               throw new RuntimeException(e);
-            }
+                  transactional ? tm : null, PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
+            Invalidation invalidation = new Invalidation(testee, removeRegion);
+            NakedPut nakedPut = new NakedPut(testee, false);
+            exec(transactional, invalidation, nakedPut);
          }
       });
 
    }
+
    @Test
    public void testRegisteredPutAfterKeyRemoval() throws Exception {
       registeredPutAfterRemovalTest(false, false);
@@ -223,31 +171,10 @@ public class PutFromLoadValidatorUnitTestCase {
          @Override
          public void call() {
             PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm,
-                  transactional ? tm : null,
-                  PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
-            if (removeRegion) {
-               testee.invalidateRegion();
-            } else {
-               testee.invalidateKey(KEY1);
-            }
-            try {
-               if (transactional) {
-                  tm.begin();
-               }
-               testee.registerPendingPut(KEY1);
-
-               boolean lockable = testee.acquirePutFromLoadLock(KEY1);
-               try {
-                  assertTrue(lockable);
-               }
-               finally {
-                  if (lockable) {
-                     testee.releasePutFromLoadLock(KEY1);
-                  }
-               }
-            } catch (Exception e) {
-               throw new RuntimeException(e);
-            }
+                  transactional ? tm : null, PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
+            Invalidation invalidation = new Invalidation(testee, removeRegion);
+            RegularPut regularPut = new RegularPut(testee);
+            exec(transactional, invalidation, regularPut);
          }
       });
 
@@ -277,8 +204,7 @@ public class PutFromLoadValidatorUnitTestCase {
          @Override
          public void call() {
             PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm,
-                  transactional ? tm : null,
-                  PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
+                  transactional ? tm : null, PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
             try {
                if (transactional) {
                   tm.begin();
@@ -287,17 +213,18 @@ public class PutFromLoadValidatorUnitTestCase {
                if (removeRegion) {
                   testee.invalidateRegion();
                } else {
-                  testee.invalidateKey(KEY1);
+                  testee.beginInvalidatingKey(KEY1);
                }
 
-               boolean lockable = testee.acquirePutFromLoadLock(KEY1);
+               PutFromLoadValidator.Lock lock = testee.acquirePutFromLoadLock(KEY1);
                try {
-                  assertFalse(lockable);
+                  assertNull(lock);
                }
                finally {
-                  if (lockable) {
-                     testee.releasePutFromLoadLock(KEY1);
+                  if (lock != null) {
+                     testee.releasePutFromLoadLock(KEY1, lock);
                   }
+                  testee.endInvalidatingKey(KEY1);
                }
             } catch (Exception e) {
                throw new RuntimeException(e);
@@ -305,6 +232,7 @@ public class PutFromLoadValidatorUnitTestCase {
          }
       });
    }
+
    @Test
    public void testDelayedNakedPutAfterKeyRemoval() throws Exception {
       delayedNakedPutAfterRemovalTest(false, false);
@@ -329,12 +257,13 @@ public class PutFromLoadValidatorUnitTestCase {
             TestCacheManagerFactory.createCacheManager(false)) {
          @Override
          public void call() {
-            PutFromLoadValidator testee = new TestValidator(cm.getCache().getAdvancedCache(), cm,
+            PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm,
                   transactional ? tm : null, 100);
             if (removeRegion) {
                testee.invalidateRegion();
             } else {
-               testee.invalidateKey(KEY1);
+               testee.beginInvalidatingKey(KEY1);
+               testee.endInvalidatingKey(KEY1);
             }
             try {
                if (transactional) {
@@ -342,12 +271,12 @@ public class PutFromLoadValidatorUnitTestCase {
                }
                Thread.sleep(110);
 
-               boolean lockable = testee.acquirePutFromLoadLock(KEY1);
+               PutFromLoadValidator.Lock lock = testee.acquirePutFromLoadLock(KEY1);
                try {
-                  assertTrue(lockable);
+                  assertNotNull(lock);
                } finally {
-                  if (lockable) {
-                     testee.releasePutFromLoadLock(KEY1);
+                  if (lock != null) {
+                     testee.releasePutFromLoadLock(KEY1, null);
                   }
                }
             } catch (Exception e) {
@@ -389,12 +318,13 @@ public class PutFromLoadValidatorUnitTestCase {
                      testee.registerPendingPut(KEY1);
                      registeredLatch.countDown();
                      registeredLatch.await(5, TimeUnit.SECONDS);
-                     if (testee.acquirePutFromLoadLock(KEY1)) {
+                     PutFromLoadValidator.Lock lock = testee.acquirePutFromLoadLock(KEY1);
+                     if (lock != null) {
                         try {
                            log.trace("Put from load lock acquired for key = " + KEY1);
                            success.incrementAndGet();
                         } finally {
-                           testee.releasePutFromLoadLock(KEY1);
+                           testee.releasePutFromLoadLock(KEY1, lock);
                         }
                      } else {
                         log.trace("Unable to acquired putFromLoad lock for key = " + KEY1);
@@ -453,7 +383,8 @@ public class PutFromLoadValidatorUnitTestCase {
             Callable<Boolean> pferCallable = new Callable<Boolean>() {
                public Boolean call() throws Exception {
                   testee.registerPendingPut(KEY1);
-                  if (testee.acquirePutFromLoadLock(KEY1)) {
+                  PutFromLoadValidator.Lock lock = testee.acquirePutFromLoadLock(KEY1);
+                  if (lock != null) {
                      try {
                         removeLatch.countDown();
                         pferLatch.await();
@@ -461,7 +392,7 @@ public class PutFromLoadValidatorUnitTestCase {
                         return Boolean.TRUE;
                      }
                      finally {
-                        testee.releasePutFromLoadLock(KEY1);
+                        testee.releasePutFromLoadLock(KEY1, lock);
                      }
                   }
                   return Boolean.FALSE;
@@ -472,7 +403,7 @@ public class PutFromLoadValidatorUnitTestCase {
                public Void call() throws Exception {
                   removeLatch.await();
                   if (keyOnly) {
-                     testee.invalidateKey(KEY1);
+                     testee.beginInvalidatingKey(KEY1);
                   } else {
                      testee.invalidateRegion();
                   }
@@ -505,18 +436,104 @@ public class PutFromLoadValidatorUnitTestCase {
       });
    }
 
-   private static class TestValidator extends PutFromLoadValidator {
+   protected void exec(boolean transactional, Callable<?>... callables) {
+      try {
+         if (transactional) {
+            for (Callable<?> c : callables) {
+               withTx(tm, c);
+            }
+         } else {
+            for (Callable<?> c : callables) {
+               c.call();
+            }
+         }
+      } catch (RuntimeException e) {
+         throw e;
+      } catch (Exception e) {
+         throw new RuntimeException(e);
+      }
+   }
 
-      protected TestValidator(AdvancedCache cache, EmbeddedCacheManager cm,
-            TransactionManager transactionManager,
-            long nakedPutInvalidationPeriod) {
-         super(cache, cm, transactionManager, nakedPutInvalidationPeriod);
+   private class Invalidation implements Callable<Void> {
+      private PutFromLoadValidator putFromLoadValidator;
+      private boolean removeRegion;
+
+      public Invalidation(PutFromLoadValidator putFromLoadValidator, boolean removeRegion) {
+         this.putFromLoadValidator = putFromLoadValidator;
+         this.removeRegion = removeRegion;
       }
 
       @Override
-      public int getRemovalQueueLength() {
-         return super.getRemovalQueueLength();
+      public Void call() throws Exception {
+         if (removeRegion) {
+            boolean success = putFromLoadValidator.invalidateRegion();
+            assertTrue(success);
+         } else {
+            boolean success = putFromLoadValidator.beginInvalidatingKey(KEY1);
+            assertTrue(success);
+            success = putFromLoadValidator.endInvalidatingKey(KEY1);
+            assertTrue(success);
+         }
+         return null;
+      }
+   }
+
+   private class RegularPut implements Callable<Void> {
+      private PutFromLoadValidator putFromLoadValidator;
+
+      public RegularPut(PutFromLoadValidator putFromLoadValidator) {
+         this.putFromLoadValidator = putFromLoadValidator;
       }
 
+      @Override
+      public Void call() throws Exception {
+         try {
+            putFromLoadValidator.registerPendingPut(KEY1);
+
+            PutFromLoadValidator.Lock lock = putFromLoadValidator.acquirePutFromLoadLock(KEY1);
+            try {
+               assertNotNull(lock);
+            } finally {
+               if (lock != null) {
+                  putFromLoadValidator.releasePutFromLoadLock(KEY1, lock);
+               }
+            }
+         } catch (Exception e) {
+            throw new RuntimeException(e);
+         }
+         return null;
+      }
+   }
+
+   private class NakedPut implements Callable<Void> {
+      private final PutFromLoadValidator testee;
+      private final boolean expectSuccess;
+
+      public NakedPut(PutFromLoadValidator testee, boolean expectSuccess) {
+         this.testee = testee;
+         this.expectSuccess = expectSuccess;
+      }
+
+      @Override
+      public Void call() throws Exception {
+         try {
+            PutFromLoadValidator.Lock lock = testee.acquirePutFromLoadLock(KEY1);
+            try {
+               if (expectSuccess) {
+                  assertNotNull(lock);
+               } else {
+                  assertNull(lock);
+               }
+            }
+            finally {
+               if (lock != null) {
+                  testee.releasePutFromLoadLock(KEY1, lock);
+               }
+            }
+         } catch (Exception e) {
+            throw new RuntimeException(e);
+         }
+         return null;
+      }
    }
 }

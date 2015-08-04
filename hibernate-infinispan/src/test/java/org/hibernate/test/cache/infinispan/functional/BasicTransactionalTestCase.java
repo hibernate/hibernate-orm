@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 
 import org.hibernate.Cache;
 import org.hibernate.Criteria;
@@ -19,12 +18,10 @@ import org.hibernate.Hibernate;
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
-
 import org.hibernate.testing.TestForIssue;
 import org.junit.After;
 import org.junit.Test;
@@ -954,7 +951,6 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 
       // TODO: Clear caches manually via cache manager (it's faster!!)
       this.cleanupCache();
-      Thread.sleep(PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD + TimeUnit.SECONDS.toMillis(1));
       stats.setStatisticsEnabled( true );
       stats.clear();
 

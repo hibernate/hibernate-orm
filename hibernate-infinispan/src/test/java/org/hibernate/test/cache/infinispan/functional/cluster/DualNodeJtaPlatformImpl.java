@@ -25,6 +25,9 @@ import org.hibernate.service.spi.Configurable;
 public class DualNodeJtaPlatformImpl implements JtaPlatform, Configurable {
 	private String nodeId;
 
+	public DualNodeJtaPlatformImpl() {
+	}
+
 	@Override
 	public void configure(Map configurationValues) {
       nodeId = (String) configurationValues.get( DualNodeTestCase.NODE_ID_PROP );

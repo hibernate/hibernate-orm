@@ -6,8 +6,11 @@
  */
 package org.hibernate.cache.infinispan.util;
 
+import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.infinispan.commands.ReplicableCommand;
 import org.infinispan.commands.module.ModuleCommandInitializer;
+
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Command initializer
@@ -17,7 +20,22 @@ import org.infinispan.commands.module.ModuleCommandInitializer;
  */
 public class CacheCommandInitializer implements ModuleCommandInitializer {
 
-   /**
+	private final ConcurrentHashMap<String, PutFromLoadValidator> putFromLoadValidators
+			= new ConcurrentHashMap<String, PutFromLoadValidator>();
+
+	public void addPutFromLoadValidator(String cacheName, PutFromLoadValidator putFromLoadValidator) {
+		// there could be two instances of PutFromLoadValidator bound to the same cache when
+		// there are two JndiInfinispanRegionFactories bound to the same cacheManager via JNDI.
+		// In that case, as putFromLoadValidator does not really own the pendingPuts cache,
+		// it's safe to have more instances.
+		putFromLoadValidators.put(cacheName, putFromLoadValidator);
+	}
+
+	public PutFromLoadValidator removePutFromLoadValidator(String cacheName) {
+		return putFromLoadValidators.remove(cacheName);
+	}
+
+	/**
     * Build an instance of {@link EvictAllCommand} for a given region.
     *
     * @param regionName name of region for {@link EvictAllCommand}
@@ -31,9 +49,17 @@ public class CacheCommandInitializer implements ModuleCommandInitializer {
 		return new EvictAllCommand( regionName );
 	}
 
-	@Override
-	public void initializeReplicableCommand(ReplicableCommand c, boolean isRemote) {
-		// No need to initialize...
+	public EndInvalidationCommand buildEndInvalidationCommand(String cacheName, Object[] keys, Object lockOwner) {
+		return new EndInvalidationCommand( cacheName, keys, lockOwner );
 	}
 
+	@Override
+	public void initializeReplicableCommand(ReplicableCommand c, boolean isRemote) {
+		switch (c.getCommandId()) {
+			case CacheCommandIds.END_INVALIDATION:
+				EndInvalidationCommand endInvalidationCommand = (EndInvalidationCommand) c;
+				endInvalidationCommand.setPutFromLoadValidator(putFromLoadValidators.get(endInvalidationCommand.getCacheName()));
+				break;
+		}
+	}
 }

@@ -58,6 +58,7 @@ public class CacheCommandFactory implements ExtendedModuleCommandFactory {
 	public Map<Byte, Class<? extends ReplicableCommand>> getModuleCommands() {
 		final Map<Byte, Class<? extends ReplicableCommand>> map = new HashMap<Byte, Class<? extends ReplicableCommand>>( 3 );
 		map.put( CacheCommandIds.EVICT_ALL, EvictAllCommand.class );
+		map.put( CacheCommandIds.END_INVALIDATION, EndInvalidationCommand.class );
 		return map;
 	}
 
@@ -67,6 +68,9 @@ public class CacheCommandFactory implements ExtendedModuleCommandFactory {
 		switch ( commandId ) {
 			case CacheCommandIds.EVICT_ALL:
 				c = new EvictAllCommand( cacheName, allRegions.get( cacheName ) );
+				break;
+			case CacheCommandIds.END_INVALIDATION:
+				c = new EndInvalidationCommand(cacheName);
 				break;
 			default:
 				throw new IllegalArgumentException( "Not registered to handle command id " + commandId );

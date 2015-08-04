@@ -214,6 +214,20 @@ public class InfinispanRegionFactory implements RegionFactory {
 	 */
 	public static final String PENDING_PUTS_CACHE_NAME = "pending-puts";
 
+	/**
+	 * A local, lightweight cache for pending puts, which is
+	 * non-transactional and has aggressive expiration settings.
+	 * Locking is still required since the putFromLoad validator
+	 * code uses conditional operations (i.e. putIfAbsent)
+	 */
+	public static final Configuration PENDING_PUTS_CACHE_CONFIGURATION = new ConfigurationBuilder()
+			.clustering().cacheMode(CacheMode.LOCAL)
+			.transaction().transactionMode(TransactionMode.NON_TRANSACTIONAL)
+			.expiration().maxIdle(TimeUnit.SECONDS.toMillis(60))
+			.storeAsBinary().enabled(false)
+			.locking().isolationLevel(IsolationLevel.READ_COMMITTED)
+			.jmxStatistics().disable().build();
+
 	private EmbeddedCacheManager manager;
 
 	private final Map<String, TypeOverrides> typeOverrides = new HashMap<String, TypeOverrides>();
@@ -345,7 +359,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 
 	@Override
 	public long nextTimestamp() {
-		return System.currentTimeMillis() / 100;
+		return System.currentTimeMillis();
 	}
 
 	public void setCacheManager(EmbeddedCacheManager manager) {
@@ -374,7 +388,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 				}
 			}
 			defineGenericDataTypeCacheConfigurations( properties );
-			definePendingPutsCache();
+			manager.defineConfiguration( PENDING_PUTS_CACHE_NAME, PENDING_PUTS_CACHE_CONFIGURATION );
 		}
 		catch (CacheException ce) {
 			throw ce;
@@ -382,22 +396,6 @@ public class InfinispanRegionFactory implements RegionFactory {
 		catch (Throwable t) {
 			throw new CacheException( "Unable to start region factory", t );
 		}
-	}
-
-	private void definePendingPutsCache() {
-		final ConfigurationBuilder builder = new ConfigurationBuilder();
-		// A local, lightweight cache for pending puts, which is
-		// non-transactional and has aggressive expiration settings.
-		// Locking is still required since the putFromLoad validator
-		// code uses conditional operations (i.e. putIfAbsent).
-		builder.clustering().cacheMode( CacheMode.LOCAL )
-				.transaction().transactionMode( TransactionMode.NON_TRANSACTIONAL )
-				.expiration().maxIdle( TimeUnit.SECONDS.toMillis( 60 ) )
-				.storeAsBinary().enabled( false )
-				.locking().isolationLevel( IsolationLevel.READ_COMMITTED )
-				.jmxStatistics().disable();
-
-		manager.defineConfiguration( PENDING_PUTS_CACHE_NAME, builder.build() );
 	}
 
 	protected org.infinispan.transaction.lookup.TransactionManagerLookup createTransactionManagerLookup(

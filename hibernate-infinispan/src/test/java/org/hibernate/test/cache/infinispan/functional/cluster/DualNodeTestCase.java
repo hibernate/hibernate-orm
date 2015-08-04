@@ -20,11 +20,10 @@ import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoo
 
 import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
 
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
+import org.junit.Before;
 import org.junit.ClassRule;
 
 /**
@@ -78,18 +77,20 @@ public abstract class DualNodeTestCase extends BaseNonConfigCoreFunctionalTestCa
 		DualNodeJtaTransactionManagerImpl.cleanupTransactionManagers();
 	}
 
-	@Before
-	public void prepare() throws Exception {
+	@Override
+	public void startUp() {
+		super.startUp();
 		// In some cases tests are multi-threaded, so they have to join the group
 		infinispanTestIdentifier.joinContext();
 		secondNodeEnvironment = new SecondNodeEnvironment();
 	}
 
-	@After
-	public void unPrepare() {
+	@Override
+	public void shutDown() {
 		if ( secondNodeEnvironment != null ) {
 			secondNodeEnvironment.shutDown();
 		}
+		super.shutDown();
 	}
 
 	protected SecondNodeEnvironment secondNodeEnvironment() {

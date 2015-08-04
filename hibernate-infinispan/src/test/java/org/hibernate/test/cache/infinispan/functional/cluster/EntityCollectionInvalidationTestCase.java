@@ -10,13 +10,24 @@ import javax.transaction.TransactionManager;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.Phaser;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.test.cache.infinispan.functional.Contact;
 import org.hibernate.test.cache.infinispan.functional.Customer;
+import org.hibernate.testing.TestForIssue;
+import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
-import org.infinispan.manager.CacheContainer;
+import org.infinispan.commands.read.GetKeyValueCommand;
+import org.infinispan.commons.util.Util;
+import org.infinispan.context.InvocationContext;
+import org.infinispan.interceptors.base.BaseCustomInterceptor;
+import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryVisited;
 import org.infinispan.notifications.cachelistener.event.CacheEntryVisitedEvent;
@@ -25,7 +36,9 @@ import org.infinispan.util.logging.LogFactory;
 import org.jboss.util.collection.ConcurrentSet;
 import org.junit.Test;
 
+import static org.infinispan.test.TestingUtil.withTx;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -42,96 +55,204 @@ public class EntityCollectionInvalidationTestCase extends DualNodeTestCase {
 
 	static int test = 0;
 
-	@Test
-	public void testAll() throws Exception {
-		log.info( "*** testAll()" );
+	private EmbeddedCacheManager localManager, remoteManager;
+	private Cache localCustomerCache, remoteCustomerCache;
+	private Cache localContactCache, remoteContactCache;
+	private Cache localCollectionCache, remoteCollectionCache;
+	private MyListener localListener, remoteListener;
+	private TransactionManager localTM, remoteTM;
+	private SessionFactory localFactory, remoteFactory;
 
+	@Override
+	public void startUp()  {
+		super.startUp();
 		// Bind a listener to the "local" cache
 		// Our region factory makes its CacheManager available to us
-		CacheContainer localManager = ClusterAwareRegionFactory.getCacheManager( DualNodeTestCase.LOCAL );
+		localManager = ClusterAwareRegionFactory.getCacheManager( DualNodeTestCase.LOCAL );
 		// Cache localCache = localManager.getCache("entity");
-		Cache localCustomerCache = localManager.getCache( Customer.class.getName() );
-		Cache localContactCache = localManager.getCache( Contact.class.getName() );
-		Cache localCollectionCache = localManager.getCache( Customer.class.getName() + ".contacts" );
-		MyListener localListener = new MyListener( "local" );
+		localCustomerCache = localManager.getCache( Customer.class.getName() );
+		localContactCache = localManager.getCache( Contact.class.getName() );
+		localCollectionCache = localManager.getCache( Customer.class.getName() + ".contacts" );
+		localListener = new MyListener( "local" );
 		localCustomerCache.addListener( localListener );
 		localContactCache.addListener( localListener );
 		localCollectionCache.addListener( localListener );
-		TransactionManager localTM = DualNodeJtaTransactionManagerImpl.getInstance( DualNodeTestCase.LOCAL );
 
 		// Bind a listener to the "remote" cache
-		CacheContainer remoteManager = ClusterAwareRegionFactory.getCacheManager( DualNodeTestCase.REMOTE );
-		Cache remoteCustomerCache = remoteManager.getCache( Customer.class.getName() );
-		Cache remoteContactCache = remoteManager.getCache( Contact.class.getName() );
-		Cache remoteCollectionCache = remoteManager.getCache( Customer.class.getName() + ".contacts" );
-		MyListener remoteListener = new MyListener( "remote" );
+		remoteManager = ClusterAwareRegionFactory.getCacheManager( DualNodeTestCase.REMOTE );
+		remoteCustomerCache = remoteManager.getCache( Customer.class.getName() );
+		remoteContactCache = remoteManager.getCache( Contact.class.getName() );
+		remoteCollectionCache = remoteManager.getCache( Customer.class.getName() + ".contacts" );
+		remoteListener = new MyListener( "remote" );
 		remoteCustomerCache.addListener( remoteListener );
 		remoteContactCache.addListener( remoteListener );
 		remoteCollectionCache.addListener( remoteListener );
-		TransactionManager remoteTM = DualNodeJtaTransactionManagerImpl.getInstance( DualNodeTestCase.REMOTE );
 
-		SessionFactory localFactory = sessionFactory();
-		SessionFactory remoteFactory = secondNodeEnvironment().getSessionFactory();
+		localFactory = sessionFactory();
+		remoteFactory = secondNodeEnvironment().getSessionFactory();
 
-		try {
-			assertTrue( remoteListener.isEmpty() );
-			assertTrue( localListener.isEmpty() );
+		localTM = DualNodeJtaTransactionManagerImpl.getInstance( DualNodeTestCase.LOCAL );
+		remoteTM = DualNodeJtaTransactionManagerImpl.getInstance( DualNodeTestCase.REMOTE );
+	}
 
-			log.debug( "Create node 0" );
-			IdContainer ids = createCustomer( localFactory, localTM );
+	@Override
+	public void shutDown() {
+		cleanupTransactionManagement();
+	}
 
-			assertTrue( remoteListener.isEmpty() );
-			assertTrue( localListener.isEmpty() );
+	@Override
+	protected void cleanupTest() throws Exception {
+      cleanup(localFactory, localTM);
+      localListener.clear();
+      remoteListener.clear();
+		// do not call super.cleanupTest becasue we would clean transaction managers
+	}
 
-			// Sleep a bit to let async commit propagate. Really just to
-			// help keep the logs organized for debugging any issues
-			sleep( SLEEP_TIME );
+	@Test
+	public void testAll() throws Exception {
+		assertEmptyCaches();
+		assertTrue( remoteListener.isEmpty() );
+		assertTrue( localListener.isEmpty() );
 
-			log.debug( "Find node 0" );
-			// This actually brings the collection into the cache
-			getCustomer( ids.customerId, localFactory, localTM );
+		log.debug( "Create node 0" );
+		IdContainer ids = createCustomer( localFactory, localTM );
 
-			sleep( SLEEP_TIME );
+		assertTrue( remoteListener.isEmpty() );
+		assertTrue( localListener.isEmpty() );
 
-			// Now the collection is in the cache so, the 2nd "get"
-			// should read everything from the cache
-			log.debug( "Find(2) node 0" );
-			localListener.clear();
-			getCustomer( ids.customerId, localFactory, localTM );
+		// Sleep a bit to let async commit propagate. Really just to
+		// help keep the logs organized for debugging any issues
+		sleep( SLEEP_TIME );
 
-			// Check the read came from the cache
-			log.debug( "Check cache 0" );
-			assertLoadedFromCache( localListener, ids.customerId, ids.contactIds );
+		log.debug( "Find node 0" );
+		// This actually brings the collection into the cache
+		getCustomer( ids.customerId, localFactory, localTM );
 
-			log.debug( "Find node 1" );
-			// This actually brings the collection into the cache since invalidation is in use
-			getCustomer( ids.customerId, remoteFactory, remoteTM );
+		sleep( SLEEP_TIME );
 
-			// Now the collection is in the cache so, the 2nd "get"
-			// should read everything from the cache
-			log.debug( "Find(2) node 1" );
-			remoteListener.clear();
-			getCustomer( ids.customerId, remoteFactory, remoteTM );
+		// Now the collection is in the cache so, the 2nd "get"
+		// should read everything from the cache
+		log.debug( "Find(2) node 0" );
+		localListener.clear();
+		getCustomer( ids.customerId, localFactory, localTM );
 
-			// Check the read came from the cache
-			log.debug( "Check cache 1" );
-			assertLoadedFromCache( remoteListener, ids.customerId, ids.contactIds );
+		// Check the read came from the cache
+		log.debug( "Check cache 0" );
+		assertLoadedFromCache( localListener, ids.customerId, ids.contactIds );
 
-			// Modify customer in remote
-			remoteListener.clear();
-			ids = modifyCustomer( ids.customerId, remoteFactory, remoteTM );
-			sleep( 250 );
-			assertLoadedFromCache( remoteListener, ids.customerId, ids.contactIds );
+		log.debug( "Find node 1" );
+		// This actually brings the collection into the cache since invalidation is in use
+		getCustomer( ids.customerId, remoteFactory, remoteTM );
 
-			// After modification, local cache should have been invalidated and hence should be empty
-			assertEquals( 0, localCollectionCache.size() );
-			assertEquals( 0, localCustomerCache.size() );
+		// Now the collection is in the cache so, the 2nd "get"
+		// should read everything from the cache
+		log.debug( "Find(2) node 1" );
+		remoteListener.clear();
+		getCustomer( ids.customerId, remoteFactory, remoteTM );
+
+		// Check the read came from the cache
+		log.debug( "Check cache 1" );
+		assertLoadedFromCache( remoteListener, ids.customerId, ids.contactIds );
+
+		// Modify customer in remote
+		remoteListener.clear();
+		ids = modifyCustomer( ids.customerId, remoteFactory, remoteTM );
+		sleep( 250 );
+		assertLoadedFromCache( remoteListener, ids.customerId, ids.contactIds );
+
+		// After modification, local cache should have been invalidated and hence should be empty
+		assertEquals( 0, localCollectionCache.size() );
+		assertEquals( 0, localCustomerCache.size() );
+	}
+
+	@TestForIssue(jiraKey = "HHH-9881")
+	@Test
+	public void testConcurrentLoadAndRemoval() throws Exception {
+		AtomicReference<Exception> getException = new AtomicReference<>();
+		AtomicReference<Exception> deleteException = new AtomicReference<>();
+
+		Phaser getPhaser = new Phaser(2);
+		HookInterceptor hookInterceptor = new HookInterceptor(getException);
+		AdvancedCache remotePPCache = remoteCustomerCache.getCacheManager().getCache(
+				remoteCustomerCache.getName() + "-" + InfinispanRegionFactory.PENDING_PUTS_CACHE_NAME).getAdvancedCache();
+		remotePPCache.getAdvancedCache().addInterceptor(hookInterceptor, 0);
+
+		IdContainer idContainer = new IdContainer();
+		withTx(localTM, () -> {
+			Session s = localFactory.getCurrentSession();
+			s.getTransaction().begin();
+			Customer customer = new Customer();
+			customer.setName( "JBoss" );
+			s.persist(customer);
+			s.getTransaction().commit();
+			s.close();
+			idContainer.customerId = customer.getId();
+			return null;
+		});
+		// start loading
+
+		Thread getThread = new Thread(() -> {
+			try {
+				withTx(remoteTM, () -> {
+					Session s = remoteFactory.getCurrentSession();
+					s.getTransaction().begin();
+					s.get(Customer.class, idContainer.customerId);
+					s.getTransaction().commit();
+					s.close();
+					return null;
+				});
+			} catch (Exception e) {
+				log.error("Failure to get customer", e);
+				getException.set(e);
+			}
+		}, "get-thread");
+		Thread deleteThread = new Thread(() -> {
+			try {
+				withTx(localTM, () -> {
+					Session s = localFactory.getCurrentSession();
+					s.getTransaction().begin();
+					Customer customer = s.get(Customer.class, idContainer.customerId);
+					s.delete(customer);
+					s.getTransaction().commit();
+					return null;
+				});
+			} catch (Exception e) {
+				log.error("Failure to delete customer", e);
+				deleteException.set(e);
+			}
+		}, "delete-thread");
+		// get thread should block on the beginning of PutFromLoadValidator#acquirePutFromLoadLock
+		hookInterceptor.block(getPhaser, getThread);
+		getThread.start();
+
+		arriveAndAwait(getPhaser);
+		deleteThread.start();
+		deleteThread.join();
+		hookInterceptor.unblock();
+		arriveAndAwait(getPhaser);
+		getThread.join();
+
+		if (getException.get() != null) {
+			throw new IllegalStateException("get-thread failed", getException.get());
 		}
-		finally {
-			// cleanup the db
-			log.debug( "Cleaning up" );
-			cleanup( localFactory, localTM );
+		if (deleteException.get() != null) {
+			throw new IllegalStateException("delete-thread failed", deleteException.get());
 		}
+
+		Customer localCustomer = getCustomer(idContainer.customerId, localFactory, localTM);
+		assertNull(localCustomer);
+		Customer remoteCustomer = getCustomer(idContainer.customerId, remoteFactory, remoteTM);
+		assertNull(remoteCustomer);
+		assertTrue(remoteCustomerCache.isEmpty());
+	}
+
+	protected void assertEmptyCaches() {
+		assertTrue( localCustomerCache.isEmpty() );
+		assertTrue( localContactCache.isEmpty() );
+		assertTrue( localCollectionCache.isEmpty() );
+		assertTrue( remoteCustomerCache.isEmpty() );
+		assertTrue( remoteContactCache.isEmpty() );
+		assertTrue( remoteCollectionCache.isEmpty() );
 	}
 
 	private IdContainer createCustomer(SessionFactory sessionFactory, TransactionManager tm)
@@ -211,10 +332,16 @@ public class EntityCollectionInvalidationTestCase extends DualNodeTestCase {
 	}
 
 	private Customer doGetCustomer(Integer id, Session session, TransactionManager tm) throws Exception {
-		Customer customer = (Customer) session.get( Customer.class, id );
+		Customer customer = session.get( Customer.class, id );
+		if (customer == null) {
+			return null;
+		}
 		// Access all the contacts
-		for ( Iterator it = customer.getContacts().iterator(); it.hasNext(); ) {
-			((Contact) it.next()).getName();
+		Set<Contact> contacts = customer.getContacts();
+		if (contacts != null) {
+			for (Iterator it = contacts.iterator(); it.hasNext(); ) {
+				((Contact) it.next()).getName();
+			}
 		}
 		return customer;
 	}
@@ -271,7 +398,10 @@ public class EntityCollectionInvalidationTestCase extends DualNodeTestCase {
 				c.setContacts( null );
 				session.delete( c );
 			}
-
+			// since we don't use orphan removal, some contacts may persist
+			for (Object contact : session.createCriteria(Contact.class).list()) {
+				session.delete(contact);
+			}
 			tm.commit();
 		}
 		catch (Exception e) {
@@ -311,6 +441,15 @@ public class EntityCollectionInvalidationTestCase extends DualNodeTestCase {
 				"Customer.contacts" + custId + " was in cache", listener.visited
 				.contains( "Customer.contacts#" + custId )
 		);
+	}
+
+	protected static void arriveAndAwait(Phaser phaser) throws TimeoutException, InterruptedException {
+		try {
+			phaser.awaitAdvanceInterruptibly(phaser.arrive(), 10, TimeUnit.SECONDS);
+		} catch (TimeoutException e) {
+			log.error("Failed to progress: " + Util.threadDump());
+			throw e;
+		}
 	}
 
 	@Listener
@@ -353,6 +492,47 @@ public class EntityCollectionInvalidationTestCase extends DualNodeTestCase {
 	private class IdContainer {
 		Integer customerId;
 		Set<Integer> contactIds;
+	}
+
+	private static class HookInterceptor extends BaseCustomInterceptor {
+		final AtomicReference<Exception> failure;
+		Phaser phaser;
+		Thread thread;
+
+		private HookInterceptor(AtomicReference<Exception> failure) {
+			this.failure = failure;
+		}
+
+		public synchronized void block(Phaser phaser, Thread thread) {
+			this.phaser = phaser;
+			this.thread = thread;
+		}
+
+		public synchronized void unblock() {
+			phaser = null;
+			thread = null;
+		}
+
+		@Override
+		public Object visitGetKeyValueCommand(InvocationContext ctx, GetKeyValueCommand command) throws Throwable {
+			try {
+				Phaser phaser;
+				Thread thread;
+				synchronized (this) {
+					phaser = this.phaser;
+					thread = this.thread;
+				}
+				if (phaser != null && Thread.currentThread() == thread) {
+					arriveAndAwait(phaser);
+					arriveAndAwait(phaser);
+				}
+			} catch (Exception e) {
+				failure.set(e);
+				throw e;
+			} finally {
+				return super.visitGetKeyValueCommand(ctx, command);
+			}
+		}
 	}
 
 }

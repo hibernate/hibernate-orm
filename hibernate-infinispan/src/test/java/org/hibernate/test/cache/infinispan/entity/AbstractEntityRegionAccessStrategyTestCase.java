@@ -289,8 +289,8 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
       assertEquals("Correct node1 value", VALUE2, localAccessStrategy.get(null, KEY, txTimestamp));
 
       if (isUsingInvalidation()) {
-         // no data version to prevent the PFER; we count on db locks preventing this
-         assertEquals("Expected node2 value", VALUE1, remoteAccessStrategy.get(null, KEY, txTimestamp));
+         // invalidation command invalidates pending put
+         assertEquals("Expected node2 value", null, remoteAccessStrategy.get(null, KEY, txTimestamp));
       } else {
          // The node1 update is replicated, preventing the node2 PFER
          assertEquals("Correct node2 value", VALUE2, remoteAccessStrategy.get(null, KEY, txTimestamp));
@@ -571,8 +571,11 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 
       // Re-establishing the region root on the local node doesn't
       // propagate it to other nodes. Do a get on the remote node to re-establish
-      assertEquals(null, remoteAccessStrategy.get(null, KEY, System.currentTimeMillis()));
+      assertNull(remoteAccessStrategy.get(null, KEY, System.currentTimeMillis()));
       assertEquals(0, remoteEntityRegion.getCache().size());
+
+      // Wait for async propagation of EndInvalidationCommand before executing naked put
+      sleep(250);
 
       // Test whether the get above messes up the optimistic version
       remoteAccessStrategy.putFromLoad(null, KEY, VALUE1, System.currentTimeMillis(), new Integer(1));

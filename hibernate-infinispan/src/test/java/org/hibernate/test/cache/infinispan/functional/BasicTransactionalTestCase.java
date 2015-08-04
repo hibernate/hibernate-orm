@@ -861,6 +861,7 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 
       // Clear the cache before the transaction begins
       BasicTransactionalTestCase.this.cleanupCache();
+		Thread.sleep(10);
 
       withTx(tm, new Callable<Void>() {
          @Override
@@ -951,6 +952,7 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 
       // TODO: Clear caches manually via cache manager (it's faster!!)
       this.cleanupCache();
+		Thread.sleep(10);
       stats.setStatisticsEnabled( true );
       stats.clear();
 
@@ -1028,6 +1030,7 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
             assertEquals(2, slcStats.getPutCount());
 
             cache.evictEntityRegions();
+				Thread.sleep(10);
 
             assertEquals(0, slcStats.getElementCountInMemory());
             assertFalse("2lc entity cache is expected to not contain Citizen id = " + citizens.get(0).getId(),
@@ -1051,6 +1054,46 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
          }
       });
    }
+
+	@Test
+	public void testMultipleEvictAll() throws Exception {
+		final List<Citizen> citizens = saveSomeCitizens();
+
+		withTx(tm, new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				Session s = openSession();
+				Transaction tx = s.beginTransaction();
+				Cache cache = s.getSessionFactory().getCache();
+
+				cache.evictEntityRegions();
+				cache.evictEntityRegions();
+
+				// cleanup
+				tx.commit();
+				s.close();
+				return null;
+			}
+		});
+		withTx(tm, new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				Session s = openSession();
+				Transaction tx = s.beginTransaction();
+				Cache cache = s.getSessionFactory().getCache();
+
+				cache.evictEntityRegions();
+
+				s.delete(s.load(Citizen.class, citizens.get(0).getId()));
+				s.delete(s.load(Citizen.class, citizens.get(1).getId()));
+
+				// cleanup
+				tx.commit();
+				s.close();
+				return null;
+			}
+		});
+	}
 
    private List<Citizen> saveSomeCitizens() throws Exception {
       final Citizen c1 = new Citizen();

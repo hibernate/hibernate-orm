@@ -164,9 +164,9 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 		}));
 	}
 
-   protected void regionEvict(GeneralDataRegion region) throws Exception {
+	protected void regionEvict(GeneralDataRegion region) throws Exception {
 	  region.evict(KEY);
-   }
+	}
 
    protected abstract String getStandardRegionName(String regionPrefix);
 

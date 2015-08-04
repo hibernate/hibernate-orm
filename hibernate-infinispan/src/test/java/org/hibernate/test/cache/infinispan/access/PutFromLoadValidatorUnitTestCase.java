@@ -17,9 +17,11 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
 import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
+import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.test.CacheManagerCallable;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.infinispan.util.logging.Log;
@@ -70,7 +72,14 @@ public class PutFromLoadValidatorUnitTestCase {
       finally {
          DualNodeJtaTransactionManagerImpl.cleanupTransactionManagers();
       }
-    }
+   }
+
+   private static EmbeddedCacheManager createCacheManager() {
+      EmbeddedCacheManager cacheManager = TestCacheManagerFactory.createCacheManager(false);
+      cacheManager.defineConfiguration(InfinispanRegionFactory.PENDING_PUTS_CACHE_NAME,
+            InfinispanRegionFactory.PENDING_PUTS_CACHE_CONFIGURATION);
+      return cacheManager;
+   }
 
    @Test
    public void testNakedPut() throws Exception {
@@ -82,12 +91,11 @@ public class PutFromLoadValidatorUnitTestCase {
    }
 
    private void nakedPutTest(final boolean transactional) throws Exception {
-      withCacheManager(new CacheManagerCallable(
-            TestCacheManagerFactory.createCacheManager(false)) {
+      withCacheManager(new CacheManagerCallable(createCacheManager()) {
          @Override
          public void call() {
             PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm,
-                  transactional ? tm : null, PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
+                  transactional ? tm : null);
             exec(transactional, new NakedPut(testee, true));
          }
       });
@@ -103,12 +111,11 @@ public class PutFromLoadValidatorUnitTestCase {
    }
 
    private void registeredPutTest(final boolean transactional) throws Exception {
-      withCacheManager(new CacheManagerCallable(
-            TestCacheManagerFactory.createCacheManager(false)) {
+      withCacheManager(new CacheManagerCallable(createCacheManager()) {
          @Override
          public void call() {
             PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm,
-                  transactional ? tm : null, PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
+                  transactional ? tm : null);
             exec(transactional, new RegularPut(testee));
          }
       });
@@ -133,14 +140,14 @@ public class PutFromLoadValidatorUnitTestCase {
 
    private void nakedPutAfterRemovalTest(final boolean transactional,
          final boolean removeRegion) throws Exception {
-      withCacheManager(new CacheManagerCallable(
-            TestCacheManagerFactory.createCacheManager(false)) {
+      withCacheManager(new CacheManagerCallable(createCacheManager()) {
          @Override
          public void call() {
             PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm,
-                  transactional ? tm : null, PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
+                  transactional ? tm : null);
             Invalidation invalidation = new Invalidation(testee, removeRegion);
-            NakedPut nakedPut = new NakedPut(testee, false);
+            // the naked put can succeed because it has txTimestamp after invalidation
+            NakedPut nakedPut = new NakedPut(testee, true);
             exec(transactional, invalidation, nakedPut);
          }
       });
@@ -166,12 +173,11 @@ public class PutFromLoadValidatorUnitTestCase {
 
    private void registeredPutAfterRemovalTest(final boolean transactional,
          final boolean removeRegion) throws Exception {
-      withCacheManager(new CacheManagerCallable(
-            TestCacheManagerFactory.createCacheManager(false)) {
+      withCacheManager(new CacheManagerCallable(createCacheManager()) {
          @Override
          public void call() {
             PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm,
-                  transactional ? tm : null, PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
+                  transactional ? tm : null);
             Invalidation invalidation = new Invalidation(testee, removeRegion);
             RegularPut regularPut = new RegularPut(testee);
             exec(transactional, invalidation, regularPut);
@@ -199,24 +205,24 @@ public class PutFromLoadValidatorUnitTestCase {
    private void registeredPutWithInterveningRemovalTest(
          final boolean transactional, final boolean removeRegion)
          throws Exception {
-      withCacheManager(new CacheManagerCallable(
-            TestCacheManagerFactory.createCacheManager(false)) {
+      withCacheManager(new CacheManagerCallable(createCacheManager()) {
          @Override
          public void call() {
             PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm,
-                  transactional ? tm : null, PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
+                  transactional ? tm : null);
             try {
+               long txTimestamp = System.currentTimeMillis();
                if (transactional) {
                   tm.begin();
                }
-               testee.registerPendingPut(KEY1);
+               testee.registerPendingPut(KEY1, txTimestamp);
                if (removeRegion) {
-                  testee.invalidateRegion();
+                  testee.beginInvalidatingRegion();
                } else {
                   testee.beginInvalidatingKey(KEY1);
                }
 
-               PutFromLoadValidator.Lock lock = testee.acquirePutFromLoadLock(KEY1);
+               PutFromLoadValidator.Lock lock = testee.acquirePutFromLoadLock(KEY1, txTimestamp);
                try {
                   assertNull(lock);
                }
@@ -224,59 +230,10 @@ public class PutFromLoadValidatorUnitTestCase {
                   if (lock != null) {
                      testee.releasePutFromLoadLock(KEY1, lock);
                   }
-                  testee.endInvalidatingKey(KEY1);
-               }
-            } catch (Exception e) {
-               throw new RuntimeException(e);
-            }
-         }
-      });
-   }
-
-   @Test
-   public void testDelayedNakedPutAfterKeyRemoval() throws Exception {
-      delayedNakedPutAfterRemovalTest(false, false);
-   }
-   @Test
-   public void testDelayedNakedPutAfterKeyRemovalTransactional() throws Exception {
-      delayedNakedPutAfterRemovalTest(true, false);
-   }
-    @Test
-   public void testDelayedNakedPutAfterRegionRemoval() throws Exception {
-      delayedNakedPutAfterRemovalTest(false, true);
-   }
-   @Test
-   public void testDelayedNakedPutAfterRegionRemovalTransactional() throws Exception {
-      delayedNakedPutAfterRemovalTest(true, true);
-   }
-
-   private void delayedNakedPutAfterRemovalTest(
-         final boolean transactional, final boolean removeRegion)
-         throws Exception {
-      withCacheManager(new CacheManagerCallable(
-            TestCacheManagerFactory.createCacheManager(false)) {
-         @Override
-         public void call() {
-            PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm,
-                  transactional ? tm : null, 100);
-            if (removeRegion) {
-               testee.invalidateRegion();
-            } else {
-               testee.beginInvalidatingKey(KEY1);
-               testee.endInvalidatingKey(KEY1);
-            }
-            try {
-               if (transactional) {
-                  tm.begin();
-               }
-               Thread.sleep(110);
-
-               PutFromLoadValidator.Lock lock = testee.acquirePutFromLoadLock(KEY1);
-               try {
-                  assertNotNull(lock);
-               } finally {
-                  if (lock != null) {
-                     testee.releasePutFromLoadLock(KEY1, null);
+                  if (removeRegion) {
+                     testee.endInvalidatingRegion();
+                  } else {
+                     testee.endInvalidatingKey(KEY1);
                   }
                }
             } catch (Exception e) {
@@ -297,13 +254,11 @@ public class PutFromLoadValidatorUnitTestCase {
    }
 
    private void multipleRegistrationtest(final boolean transactional) throws Exception {
-      withCacheManager(new CacheManagerCallable(
-            TestCacheManagerFactory.createCacheManager(false)) {
+      withCacheManager(new CacheManagerCallable(createCacheManager()) {
          @Override
          public void call() {
             final PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm,
-                  transactional ? tm : null,
-                  PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
+                  transactional ? tm : null);
 
             final CountDownLatch registeredLatch = new CountDownLatch(3);
             final CountDownLatch finishedLatch = new CountDownLatch(3);
@@ -312,13 +267,14 @@ public class PutFromLoadValidatorUnitTestCase {
             Runnable r = new Runnable() {
                public void run() {
                   try {
+                     long txTimestamp = System.currentTimeMillis();
                      if (transactional) {
                         tm.begin();
                      }
-                     testee.registerPendingPut(KEY1);
+                     testee.registerPendingPut(KEY1, txTimestamp);
                      registeredLatch.countDown();
                      registeredLatch.await(5, TimeUnit.SECONDS);
-                     PutFromLoadValidator.Lock lock = testee.acquirePutFromLoadLock(KEY1);
+                     PutFromLoadValidator.Lock lock = testee.acquirePutFromLoadLock(KEY1, txTimestamp);
                      if (lock != null) {
                         try {
                            log.trace("Put from load lock acquired for key = " + KEY1);
@@ -341,7 +297,13 @@ public class PutFromLoadValidatorUnitTestCase {
             // Start with a removal so the "isPutValid" calls will fail if
             // any of the concurrent activity isn't handled properly
 
-            testee.invalidateRegion();
+            testee.beginInvalidatingRegion();
+            testee.endInvalidatingRegion();
+            try {
+               Thread.sleep(10);
+            } catch (InterruptedException e) {
+               Thread.currentThread().interrupt();
+            }
 
             // Do the registration + isPutValid calls
             executor.execute(r);
@@ -370,20 +332,20 @@ public class PutFromLoadValidatorUnitTestCase {
    }
 
    private void invalidationBlocksForInProgressPutTest(final boolean keyOnly) throws Exception {
-      withCacheManager(new CacheManagerCallable(
-            TestCacheManagerFactory.createCacheManager(false)) {
+      withCacheManager(new CacheManagerCallable(createCacheManager()) {
          @Override
          public void call() {
             final PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(),
-                    cm, null, PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
+                    cm, null);
             final CountDownLatch removeLatch = new CountDownLatch(1);
             final CountDownLatch pferLatch = new CountDownLatch(1);
             final AtomicReference<Object> cache = new AtomicReference<Object>("INITIAL");
 
             Callable<Boolean> pferCallable = new Callable<Boolean>() {
                public Boolean call() throws Exception {
-                  testee.registerPendingPut(KEY1);
-                  PutFromLoadValidator.Lock lock = testee.acquirePutFromLoadLock(KEY1);
+                  long txTimestamp = System.currentTimeMillis();
+                  testee.registerPendingPut(KEY1, txTimestamp);
+                  PutFromLoadValidator.Lock lock = testee.acquirePutFromLoadLock(KEY1, txTimestamp);
                   if (lock != null) {
                      try {
                         removeLatch.countDown();
@@ -405,7 +367,7 @@ public class PutFromLoadValidatorUnitTestCase {
                   if (keyOnly) {
                      testee.beginInvalidatingKey(KEY1);
                   } else {
-                     testee.invalidateRegion();
+                     testee.beginInvalidatingRegion();
                   }
                   cache.set(null);
                   return null;
@@ -466,14 +428,18 @@ public class PutFromLoadValidatorUnitTestCase {
       @Override
       public Void call() throws Exception {
          if (removeRegion) {
-            boolean success = putFromLoadValidator.invalidateRegion();
+            boolean success = putFromLoadValidator.beginInvalidatingRegion();
             assertTrue(success);
+            putFromLoadValidator.endInvalidatingRegion();;
          } else {
             boolean success = putFromLoadValidator.beginInvalidatingKey(KEY1);
             assertTrue(success);
             success = putFromLoadValidator.endInvalidatingKey(KEY1);
             assertTrue(success);
          }
+         // if we go for the timestamp-based approach, invalidation in the same millisecond
+         // as the registerPendingPut/acquirePutFromLoad lock results in failure.
+         Thread.sleep(10);
          return null;
       }
    }
@@ -488,9 +454,10 @@ public class PutFromLoadValidatorUnitTestCase {
       @Override
       public Void call() throws Exception {
          try {
-            putFromLoadValidator.registerPendingPut(KEY1);
+            long txTimestamp = System.currentTimeMillis(); // this should be acquired before UserTransaction.begin()
+            putFromLoadValidator.registerPendingPut(KEY1, txTimestamp);
 
-            PutFromLoadValidator.Lock lock = putFromLoadValidator.acquirePutFromLoadLock(KEY1);
+            PutFromLoadValidator.Lock lock = putFromLoadValidator.acquirePutFromLoadLock(KEY1, txTimestamp);
             try {
                assertNotNull(lock);
             } finally {
@@ -517,7 +484,8 @@ public class PutFromLoadValidatorUnitTestCase {
       @Override
       public Void call() throws Exception {
          try {
-            PutFromLoadValidator.Lock lock = testee.acquirePutFromLoadLock(KEY1);
+            long txTimestamp = System.currentTimeMillis(); // this should be acquired before UserTransaction.begin()
+            PutFromLoadValidator.Lock lock = testee.acquirePutFromLoadLock(KEY1, txTimestamp);
             try {
                if (expectSuccess) {
                   assertNotNull(lock);

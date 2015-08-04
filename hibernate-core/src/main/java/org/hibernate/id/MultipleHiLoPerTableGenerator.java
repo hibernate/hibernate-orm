@@ -33,6 +33,7 @@ import org.hibernate.id.enhanced.AccessCallback;
 import org.hibernate.id.enhanced.LegacyHiLoAlgorithmOptimizer;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jdbc.WorkExecutorVisitable;
@@ -73,7 +74,10 @@ import org.hibernate.type.Type;
  *
  * @author Emmanuel Bernard
  * @author <a href="mailto:kr@hbt.de">Klaus Richarz</a>.
+ *
+ * @deprecated Use {@link org.hibernate.id.enhanced.TableGenerator} instead.
  */
+@Deprecated
 public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenerator, Configurable {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( MultipleHiLoPerTableGenerator.class );
 
@@ -106,6 +110,8 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 	private int keySize;
 
 	public synchronized Serializable generate(final SessionImplementor session, Object obj) {
+		DeprecationLogger.DEPRECATION_LOGGER.deprecatedTableGenerator( getClass().getName() );
+
 		final SqlStatementLogger statementLogger = session.getFactory().getServiceRegistry()
 				.getService( JdbcServices.class )
 				.getSqlStatementLogger();

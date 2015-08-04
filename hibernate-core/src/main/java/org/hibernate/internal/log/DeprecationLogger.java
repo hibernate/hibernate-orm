@@ -168,4 +168,13 @@ public interface DeprecationLogger {
 					"See Hibernate Domain Model Mapping Guide for details."
 	)
 	void deprecatedSequenceGenerator(String generatorImpl);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000015,
+			value = "Found use of deprecated [%s] table-based id generator; " +
+					"use org.hibernate.id.enhanced.TableGenerator instead.  " +
+					"See Hibernate Domain Model Mapping Guide for details."
+	)
+	void deprecatedTableGenerator(String generatorImpl);
 }

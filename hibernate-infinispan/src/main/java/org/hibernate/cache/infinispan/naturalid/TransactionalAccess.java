@@ -53,7 +53,7 @@ class TransactionalAccess implements NaturalIdRegionAccessStrategy {
 
 	@Override
 	public Object get(SessionImplementor session, Object key, long txTimestamp) throws CacheException {
-		return delegate.get( key, txTimestamp );
+		return delegate.get( session, key, txTimestamp );
 	}
 
 	@Override
@@ -89,7 +89,7 @@ class TransactionalAccess implements NaturalIdRegionAccessStrategy {
 
 	@Override
 	public void unlockItem(SessionImplementor session, Object key, SoftLock lock) throws CacheException {
-		delegate.unlockItem(key);
+		delegate.unlockItem( session, key );
 	}
 
 	@Override
@@ -98,12 +98,12 @@ class TransactionalAccess implements NaturalIdRegionAccessStrategy {
 
 	@Override
 	public boolean afterInsert(SessionImplementor session, Object key, Object value) throws CacheException {
-		return delegate.afterInsert(key, value, null);
+		return delegate.afterInsert( session, key, value, null );
 	}
 
 	@Override
 	public boolean afterUpdate(SessionImplementor session, Object key, Object value, SoftLock lock) throws CacheException {
-		return delegate.afterUpdate(key, value, null, null, lock);
+		return delegate.afterUpdate( session, key, value, null, null, lock );
 	}
 
 	@Override

@@ -6,7 +6,6 @@
  */
 package org.hibernate.cache.infinispan.access;
 
-import javax.transaction.RollbackException;
 import javax.transaction.Status;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
@@ -24,7 +23,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.util.CacheCommandInitializer;
 import org.hibernate.cache.spi.RegionFactory;
@@ -53,9 +51,9 @@ import org.infinispan.util.logging.LogFactory;
  * not find data is:
  * <p/>
  * <ol>
- * <li> Call {@link #registerPendingPut(Object, long)}</li>
+ * <li> Call {@link #registerPendingPut(SessionImplementor, Object, long)}</li>
  * <li> Read the database</li>
- * <li> Call {@link #acquirePutFromLoadLock(Object, long)}
+ * <li> Call {@link #acquirePutFromLoadLock(SessionImplementor, Object, long)}
  * <li> if above returns <code>null</code>, the thread should not cache the data;
  * only if above returns instance of <code>AcquiredLock</code>, put data in the cache and...</li>
  * <li> then call {@link #releasePutFromLoadLock(Object, Lock)}</li>
@@ -68,18 +66,18 @@ import org.infinispan.util.logging.LogFactory;
  * call
  * <p/>
  * <ul>
- * <li> {@link #beginInvalidatingKey(Object)} (for a single key invalidation)</li>
+ * <li> {@link #beginInvalidatingKey(SessionImplementor, Object)} (for a single key invalidation)</li>
  * <li>or {@link #beginInvalidatingRegion()} followed by {@link #endInvalidatingRegion()}
  *     (for a general invalidation all pending puts)</li>
  * </ul>
- * After transaction commit (when the DB is updated) {@link #endInvalidatingKey(Object)} should
+ * After transaction commit (when the DB is updated) {@link #endInvalidatingKey(SessionImplementor, Object)} should
  * be called in order to allow further attempts to cache entry.
  * </p>
  * <p/>
  * <p>
  * This class also supports the concept of "naked puts", which are calls to
- * {@link #acquirePutFromLoadLock(Object, long)} without a preceding {@link #registerPendingPut(Object, long)}.
- * Besides not acquiring lock in {@link #registerPendingPut(Object, long)} this can happen when collection
+ * {@link #acquirePutFromLoadLock(SessionImplementor, Object, long)} without a preceding {@link #registerPendingPut(SessionImplementor, Object, long)}.
+ * Besides not acquiring lock in {@link #registerPendingPut(SessionImplementor, Object, long)} this can happen when collection
  * elements are loaded after the collection has not been found in the cache, where the elements
  * don't have their own table but can be listed as 'select ... from Element where collection_id = ...'.
  * Naked puts are handled according to txTimestamp obtained by calling {@link RegionFactory#nextTimestamp()}
@@ -141,8 +139,8 @@ public class PutFromLoadValidator {
 
 	/**
 	 * Creates a new put from load validator instance.
-    *
-    * @param cache Cache instance on which to store pending put information.
+	 *
+	 * @param cache Cache instance on which to store pending put information.
 	 * @param transactionManager Transaction manager
 	 */
 	public PutFromLoadValidator(AdvancedCache cache, TransactionManager transactionManager) {
@@ -247,20 +245,15 @@ public class PutFromLoadValidator {
 	}
 
 	public void setCurrentSession(SessionImplementor session) {
-		// we register synchronizations directly on JTA transactions, let's make this noop with TM
-		if (transactionManager == null) {
-			currentSession.set(session);
-		}
+		currentSession.set(session);
 	}
 
 	public void resetCurrentSession() {
-		if (transactionManager == null) {
-			currentSession.remove();
-		}
+		currentSession.remove();
 	}
 
 	/**
-	 * Marker for lock acquired in {@link #acquirePutFromLoadLock(Object, long)}
+	 * Marker for lock acquired in {@link #acquirePutFromLoadLock(SessionImplementor, Object, long)}
 	 */
 	public static abstract class Lock {
 		private Lock() {}
@@ -274,13 +267,14 @@ public class PutFromLoadValidator {
 	 * should always be matched with a call to {@link #releasePutFromLoadLock(Object, Lock)}.
 	 * </p>
 	 *
+	 * @param session
 	 * @param key the key
 	 *
 	 * @param txTimestamp
 	 * @return <code>AcquiredLock</code> if the lock is acquired and the cache put
 	 *         can proceed; <code>null</code> if the data should not be cached
 	 */
-	public Lock acquirePutFromLoadLock(Object key, long txTimestamp) {
+	public Lock acquirePutFromLoadLock(SessionImplementor session, Object key, long txTimestamp) {
 		if (trace) {
 			log.tracef("acquirePutFromLoadLock(%s#%s, %d)", cache.getName(), key, txTimestamp);
 		}
@@ -305,7 +299,7 @@ public class PutFromLoadValidator {
 								}
 								continue;
 							}
-							final PendingPut toCancel = pending.remove(getLocalLockOwner());
+							final PendingPut toCancel = pending.remove(session);
 							if (toCancel != null) {
 								valid = !toCancel.completed;
 								toCancel.completed = true;
@@ -359,7 +353,7 @@ public class PutFromLoadValidator {
 						}
 					}
 
-					PendingPut pendingPut = new PendingPut(getLocalLockOwner());
+					PendingPut pendingPut = new PendingPut(session);
 					pending = new PendingPutMap(pendingPut);
 					PendingPutMap existing = pendingPuts.putIfAbsent(key, pending);
 					if (existing != null) {
@@ -388,7 +382,7 @@ public class PutFromLoadValidator {
 
 	/**
 	 * Releases the lock previously obtained by a call to
-	 * {@link #acquirePutFromLoadLock(Object, long)}.
+	 * {@link #acquirePutFromLoadLock(SessionImplementor, Object, long)}.
 	 *
 	 * @param key the key
 	 */
@@ -407,9 +401,9 @@ public class PutFromLoadValidator {
 	}
 
 	/**
-	 * Invalidates all {@link #registerPendingPut(Object, long) previously registered pending puts} ensuring a subsequent call to
-	 * {@link #acquirePutFromLoadLock(Object, long)} will return <code>false</code>. <p> This method will block until any
-	 * concurrent thread that has {@link #acquirePutFromLoadLock(Object, long) acquired the putFromLoad lock} for the any key has
+	 * Invalidates all {@link #registerPendingPut(SessionImplementor, Object, long) previously registered pending puts} ensuring a subsequent call to
+	 * {@link #acquirePutFromLoadLock(SessionImplementor, Object, long)} will return <code>false</code>. <p> This method will block until any
+	 * concurrent thread that has {@link #acquirePutFromLoadLock(SessionImplementor, Object, long) acquired the putFromLoad lock} for the any key has
 	 * released the lock. This allows the caller to be certain the putFromLoad will not execute after this method returns,
 	 * possibly caching stale data. </p>
 	 *
@@ -506,16 +500,17 @@ public class PutFromLoadValidator {
 
 	/**
 	 * Notifies this validator that it is expected that a database read followed by a subsequent {@link
-	 * #acquirePutFromLoadLock(Object, long)} call will occur. The intent is this method would be called following a cache miss
+	 * #acquirePutFromLoadLock(SessionImplementor, Object, long)} call will occur. The intent is this method would be called following a cache miss
 	 * wherein it is expected that a database read plus cache put will occur. Calling this method allows the validator to
 	 * treat the subsequent <code>acquirePutFromLoadLock</code> as if the database read occurred when this method was
 	 * invoked. This allows the validator to compare the timestamp of this call against the timestamp of subsequent removal
 	 * notifications.
 	 *
+	 * @param session
 	 * @param key key that will be used for subsequent cache put
 	 * @param txTimestamp
 	 */
-	public void registerPendingPut(Object key, long txTimestamp) {
+	public void registerPendingPut(SessionImplementor session, Object key, long txTimestamp) {
 		long invalidationTimestamp = this.regionInvalidationTimestamp;
 		if (txTimestamp <= invalidationTimestamp) {
 			boolean skip;
@@ -543,7 +538,7 @@ public class PutFromLoadValidator {
 			}
 		}
 
-		final PendingPut pendingPut = new PendingPut( getLocalLockOwner() );
+		final PendingPut pendingPut = new PendingPut( session );
 		final PendingPutMap pendingForKey = new PendingPutMap( pendingPut );
 
 		for (;;) {
@@ -586,21 +581,23 @@ public class PutFromLoadValidator {
 
 	/**
 	 * Calls {@link #beginInvalidatingKey(Object, Object)} with current transaction or thread.
+	 *
+	 * @param session
 	 * @param key
 	 * @return
 	 */
-	public boolean beginInvalidatingKey(Object key) {
-		return beginInvalidatingKey(key, getLocalLockOwner());
+	public boolean beginInvalidatingKey(SessionImplementor session, Object key) {
+		return beginInvalidatingKey(key, session);
 	}
 
 	/**
-	 * Invalidates any {@link #registerPendingPut(Object, long) previously registered pending puts}
-	 * and disables further registrations ensuring a subsequent call to {@link #acquirePutFromLoadLock(Object, long)}
+	 * Invalidates any {@link #registerPendingPut(SessionImplementor, Object, long) previously registered pending puts}
+	 * and disables further registrations ensuring a subsequent call to {@link #acquirePutFromLoadLock(SessionImplementor, Object, long)}
 	 * will return <code>false</code>. <p> This method will block until any concurrent thread that has
-	 * {@link #acquirePutFromLoadLock(Object, long) acquired the putFromLoad lock} for the given key
+	 * {@link #acquirePutFromLoadLock(SessionImplementor, Object, long) acquired the putFromLoad lock} for the given key
 	 * has released the lock. This allows the caller to be certain the putFromLoad will not execute after this method
 	 * returns, possibly caching stale data. </p>
-	 * After this transaction completes, {@link #endInvalidatingKey(Object)} needs to be called }
+	 * After this transaction completes, {@link #endInvalidatingKey(SessionImplementor, Object)} needs to be called }
 	 *
 	 * @param key key identifying data whose pending puts should be invalidated
 	 *
@@ -643,16 +640,18 @@ public class PutFromLoadValidator {
 
 	/**
 	 * Calls {@link #endInvalidatingKey(Object, Object)} with current transaction or thread.
+	 *
+	 * @param session
 	 * @param key
 	 * @return
 	 */
-	public boolean endInvalidatingKey(Object key) {
-		return endInvalidatingKey(key, getLocalLockOwner());
+	public boolean endInvalidatingKey(SessionImplementor session, Object key) {
+		return endInvalidatingKey(key, session);
 	}
 
 	/**
 	 * Called after the transaction completes, allowing caching of entries. It is possible that this method
-	 * is called without previous invocation of {@link #beginInvalidatingKey(Object)}, then it should be a no-op.
+	 * is called without previous invocation of {@link #beginInvalidatingKey(SessionImplementor, Object)}, then it should be a no-op.
 	 *
 	 * @param key
 	 * @param lockOwner owner of the invalidation - transaction or thread
@@ -690,31 +689,6 @@ public class PutFromLoadValidator {
 	}
 
 	public Object registerRemoteInvalidations(Object[] keys) {
-		Transaction tx = null;
-		try {
-			if ( transactionManager != null ) {
-				tx = transactionManager.getTransaction();
-			}
-		}
-		catch (SystemException se) {
-			throw new CacheException( "Could not obtain transaction", se );
-		}
-		if (tx != null) {
-			if (trace) {
-				log.tracef("Registering lock owner %s for %s: %s", tx, cache.getName(), Arrays.toString(keys));
-			}
-			try {
-				Synchronization sync = new Synchronization(nonTxPutFromLoadInterceptor, keys);
-				tx.registerSynchronization(sync);
-				return sync.uuid;
-			}
-			catch (SystemException se) {
-				throw new CacheException("Cannot register synchronization", se);
-			}
-			catch (RollbackException e) {
-				return null;
-			}
-		}
 		SessionImplementor session = currentSession.get();
 		TransactionCoordinator transactionCoordinator = session == null ? null : session.getTransactionCoordinator();
 		if (transactionCoordinator != null) {
@@ -730,20 +704,6 @@ public class PutFromLoadValidator {
 	}
 
 	// ---------------------------------------------------------------- Private
-
-	private Object getLocalLockOwner() {
-		Transaction tx = null;
-		try {
-			if ( transactionManager != null ) {
-				tx = transactionManager.getTransaction();
-			}
-		}
-		catch (SystemException se) {
-			throw new CacheException( "Could not obtain transaction", se );
-		}
-		return tx == null ? Thread.currentThread() : tx;
-
-	}
 
 	/**
 	 * Lazy-initialization map for PendingPut. Optimized for the expected usual case where only a
@@ -787,7 +747,7 @@ public class PutFromLoadValidator {
 							sb.append("[]");
 						}
 						else {
-							sb.append(invalidators);
+							sb.append(invalidators.values());
 						}
 					}
 					else {
@@ -968,7 +928,8 @@ public class PutFromLoadValidator {
 		}
 
 		public String toString() {
-			return (completed ? "C@" : "R@") + owner;
+			// we can't use SessionImpl.toString() concurrently
+			return (completed ? "C@" : "R@") + (owner instanceof SessionImplementor ? "Session#" + owner.hashCode() : owner.toString());
 		}
 
 		public boolean invalidate(long now, long expirationPeriod) {
@@ -995,7 +956,8 @@ public class PutFromLoadValidator {
 		@Override
 		public String toString() {
 			final StringBuilder sb = new StringBuilder("{");
-			sb.append("Owner=").append(owner);
+			// we can't use SessionImpl.toString() concurrently
+			sb.append("Owner=").append(owner instanceof SessionImplementor ? "Session#" + owner.hashCode() : owner.toString());
 			sb.append(", Timestamp=").append(registeredTimestamp);
 			sb.append('}');
 			return sb.toString();

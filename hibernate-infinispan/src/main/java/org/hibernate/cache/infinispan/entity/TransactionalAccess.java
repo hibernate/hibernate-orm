@@ -42,7 +42,7 @@ class TransactionalAccess implements EntityRegionAccessStrategy {
 	}
 
 	public Object get(SessionImplementor session, Object key, long txTimestamp) throws CacheException {
-		return delegate.get( key, txTimestamp );
+		return delegate.get( session, key, txTimestamp );
 	}
 
 	public EntityRegion getRegion() {
@@ -84,19 +84,19 @@ class TransactionalAccess implements EntityRegionAccessStrategy {
 	}
 
 	public void unlockItem(SessionImplementor session, Object key, SoftLock lock) throws CacheException {
-		delegate.unlockItem(key);
+		delegate.unlockItem( session, key );
 	}
 
 	public void unlockRegion(SoftLock lock) throws CacheException {
 	}
 
 	public boolean afterInsert(SessionImplementor session, Object key, Object value, Object version) throws CacheException {
-		return delegate.afterInsert(key, value, version);
+		return delegate.afterInsert( session, key, value, version );
 	}
 
 	public boolean afterUpdate(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
 			throws CacheException {
-		return delegate.afterUpdate(key, value, currentVersion, previousVersion, lock);
+		return delegate.afterUpdate( session, key, value, currentVersion, previousVersion, lock );
 	}
 
 	@Override

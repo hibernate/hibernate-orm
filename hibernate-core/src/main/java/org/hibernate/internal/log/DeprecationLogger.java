@@ -159,4 +159,13 @@ public interface DeprecationLogger {
 	void connectionProviderClassDeprecated(
 			String providerClassName,
 			String actualProviderClassName);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000014,
+			value = "Found use of deprecated [%s] sequence-based id generator; " +
+					"use org.hibernate.id.enhanced.SequenceStyleGenerator instead.  " +
+					"See Hibernate Domain Model Mapping Guide for details."
+	)
+	void deprecatedSequenceGenerator(String generatorImpl);
 }

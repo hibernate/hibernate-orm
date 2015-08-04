@@ -57,12 +57,16 @@ public class LegacySequenceExportTest extends BaseUnitTestCase {
 				.buildMetadata();
 		metadata.validate();
 
-		int auxCount = 0;
-		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : metadata.getDatabase().getAuxiliaryDatabaseObjects() ) {
-			auxCount++;
+		assertEquals( 0, metadata.getDatabase().getAuxiliaryDatabaseObjects().size() );
+
+		int count = 0;
+		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
+			for ( Sequence sequence : namespace.getSequences() ) {
+				count++;
+			}
 		}
 
-		assertEquals( 1, auxCount );
+		assertEquals( 1, count );
 	}
 
 	@Test
@@ -74,12 +78,16 @@ public class LegacySequenceExportTest extends BaseUnitTestCase {
 				.buildMetadata();
 		metadata.validate();
 
-		int auxCount = 0;
-		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : metadata.getDatabase().getAuxiliaryDatabaseObjects() ) {
-			auxCount++;
+		assertEquals( 0, metadata.getDatabase().getAuxiliaryDatabaseObjects().size() );
+
+		int count = 0;
+		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
+			for ( Sequence sequence : namespace.getSequences() ) {
+				count++;
+			}
 		}
 
-		assertEquals( 1, auxCount );
+		assertEquals( 1, count );
 	}
 
 	@Entity( name = "Entity1" )

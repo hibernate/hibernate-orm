@@ -84,6 +84,7 @@ class TransactionalAccess implements EntityRegionAccessStrategy {
 	}
 
 	public void unlockItem(SessionImplementor session, Object key, SoftLock lock) throws CacheException {
+		delegate.unlockItem(key);
 	}
 
 	public void unlockRegion(SoftLock lock) throws CacheException {

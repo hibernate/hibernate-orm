@@ -9,7 +9,6 @@ package org.hibernate.cache.infinispan.access;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.impl.BaseRegion;
 import org.hibernate.cache.infinispan.util.Caches;
-
 import org.infinispan.AdvancedCache;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
@@ -111,7 +110,8 @@ public class TransactionalAccessDelegate {
 			return false;
 		}
 
-		if ( !putValidator.acquirePutFromLoadLock( key ) ) {
+		PutFromLoadValidator.Lock lock = putValidator.acquirePutFromLoadLock(key);
+		if ( lock == null) {
 			if ( TRACE_ENABLED ) {
 				log.tracef( "Put from load lock not acquired for key %s", key );
 			}
@@ -131,7 +131,7 @@ public class TransactionalAccessDelegate {
 			}
 		}
 		finally {
-			putValidator.releasePutFromLoadLock( key );
+			putValidator.releasePutFromLoadLock( key, lock);
 		}
 
 		return true;
@@ -185,7 +185,7 @@ public class TransactionalAccessDelegate {
     * @throws CacheException if removing the cached item fails
     */
 	public void remove(Object key) throws CacheException {
-		if ( !putValidator.invalidateKey( key ) ) {
+		if ( !putValidator.beginInvalidatingKey(key)) {
 			throw new CacheException(
 					"Failed to invalidate pending putFromLoad calls for key " + key + " from region " + region.getName()
 			);
@@ -216,7 +216,7 @@ public class TransactionalAccessDelegate {
     * @throws CacheException if evicting the item fails
     */
 	public void evict(Object key) throws CacheException {
-		if ( !putValidator.invalidateKey( key ) ) {
+		if ( !putValidator.beginInvalidatingKey(key)) {
 			throw new CacheException(
 					"Failed to invalidate pending putFromLoad calls for key " + key + " from region " + region.getName()
 			);
@@ -240,4 +240,19 @@ public class TransactionalAccessDelegate {
 		Caches.broadcastEvictAll( cache );
 	}
 
+	/**
+	 * Called when we have finished the attempted update/delete (which may or
+	 * may not have been successful), after transaction completion.  This method
+	 * is used by "asynchronous" concurrency strategies.
+	 *
+	 * @param key The item key
+	 * @throws org.hibernate.cache.CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
+	 */
+	public void unlockItem(Object key) throws CacheException {
+		if ( !putValidator.endInvalidatingKey(key) ) {
+			// TODO: localization
+			log.warn("Failed to end invalidating pending putFromLoad calls for key " + key + " from region "
+					+ region.getName() + "; the key won't be cached in the future.");
+		}
+	}
 }

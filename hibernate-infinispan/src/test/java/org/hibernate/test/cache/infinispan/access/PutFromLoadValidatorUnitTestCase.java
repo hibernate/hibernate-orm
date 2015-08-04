@@ -97,8 +97,7 @@ public class PutFromLoadValidatorUnitTestCase {
       withCacheManager(new CacheManagerCallable(createCacheManager()) {
          @Override
          public void call() {
-            PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm,
-                  transactional ? tm : null);
+            PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm);
             exec(transactional, new NakedPut(testee, true));
          }
       });
@@ -117,8 +116,7 @@ public class PutFromLoadValidatorUnitTestCase {
       withCacheManager(new CacheManagerCallable(createCacheManager()) {
          @Override
          public void call() {
-            PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm,
-                  transactional ? tm : null);
+            PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm);
             exec(transactional, new RegularPut(testee));
          }
       });
@@ -146,8 +144,7 @@ public class PutFromLoadValidatorUnitTestCase {
       withCacheManager(new CacheManagerCallable(createCacheManager()) {
          @Override
          public void call() {
-            PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm,
-                  transactional ? tm : null);
+            PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache());
             Invalidation invalidation = new Invalidation(testee, removeRegion);
             // the naked put can succeed because it has txTimestamp after invalidation
             NakedPut nakedPut = new NakedPut(testee, true);
@@ -179,8 +176,7 @@ public class PutFromLoadValidatorUnitTestCase {
       withCacheManager(new CacheManagerCallable(createCacheManager()) {
          @Override
          public void call() {
-            PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm,
-                  transactional ? tm : null);
+            PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm);
             Invalidation invalidation = new Invalidation(testee, removeRegion);
             RegularPut regularPut = new RegularPut(testee);
             exec(transactional, invalidation, regularPut);
@@ -211,8 +207,7 @@ public class PutFromLoadValidatorUnitTestCase {
       withCacheManager(new CacheManagerCallable(createCacheManager()) {
          @Override
          public void call() {
-            PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm,
-                  transactional ? tm : null);
+            PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm);
             try {
                long txTimestamp = System.currentTimeMillis();
                if (transactional) {
@@ -262,8 +257,7 @@ public class PutFromLoadValidatorUnitTestCase {
       withCacheManager(new CacheManagerCallable(createCacheManager()) {
          @Override
          public void call() {
-            final PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm,
-                  transactional ? tm : null);
+            final PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm);
 
             final CountDownLatch registeredLatch = new CountDownLatch(3);
             final CountDownLatch finishedLatch = new CountDownLatch(3);
@@ -341,8 +335,7 @@ public class PutFromLoadValidatorUnitTestCase {
       withCacheManager(new CacheManagerCallable(createCacheManager()) {
          @Override
          public void call() {
-            final PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(),
-                    cm, null);
+            final PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm);
             final CountDownLatch removeLatch = new CountDownLatch(1);
             final CountDownLatch pferLatch = new CountDownLatch(1);
             final AtomicReference<Object> cache = new AtomicReference<Object>("INITIAL");

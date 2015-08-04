@@ -63,6 +63,6 @@ public class EntityRegionImpl extends BaseTransactionalDataRegion implements Ent
 	}
 
 	public PutFromLoadValidator getPutFromLoadValidator() {
-		return new PutFromLoadValidator( cache, getTransactionManager() );
+		return new PutFromLoadValidator( cache );
 	}
 }

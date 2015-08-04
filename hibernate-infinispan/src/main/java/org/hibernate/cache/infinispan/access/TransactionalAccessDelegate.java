@@ -124,21 +124,10 @@ public class TransactionalAccessDelegate {
 			return false;
 		}
 
-		putValidator.setCurrentSession(session);
 		try {
-			// Conditional put/putForExternalRead. If the region has been
-			// evicted in the current transaction, do a put instead of a
-			// putForExternalRead to make it stick, otherwise the current
-			// transaction won't see it.
-			if ( region.isRegionInvalidatedInCurrentTx() ) {
-				writeCache.put( key, value );
-			}
-			else {
-				writeCache.putForExternalRead( key, value );
-			}
+			writeCache.putForExternalRead( key, value );
 		}
 		finally {
-			putValidator.resetCurrentSession();
 			putValidator.releasePutFromLoadLock( key, lock);
 		}
 

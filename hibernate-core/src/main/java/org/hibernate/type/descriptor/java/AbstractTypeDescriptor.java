@@ -79,7 +79,7 @@ public abstract class AbstractTypeDescriptor<T> implements JavaTypeDescriptor<T>
 
 	@Override
 	public String extractLoggableRepresentation(T value) {
-		return (value == null) ? "null" : value.toString();
+		return (value == null) ? "null" : (value instanceof byte[] ? new String(value) : value.toString());
 	}
 
 	protected HibernateException unknownUnwrap(Class conversionType) {

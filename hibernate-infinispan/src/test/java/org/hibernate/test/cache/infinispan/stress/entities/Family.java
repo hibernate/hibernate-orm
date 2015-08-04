@@ -7,10 +7,12 @@
 
 package org.hibernate.test.cache.infinispan.stress.entities;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.persistence.Version;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -22,8 +24,9 @@ public final class Family {
    private int id;
    private String name;
    private String secondName;
-   @OneToMany
+   @OneToMany(cascade = CascadeType.ALL, mappedBy = "family", orphanRemoval = true)
    private Set<Person> members;
+   @Version
    private int version;
 
    public Family(String name) {
@@ -97,10 +100,9 @@ public final class Family {
 
       Family family = (Family) o;
 
+      // members must not be in the comparison since we would end up in infinite recursive call
       if (id != family.id) return false;
       if (version != family.version) return false;
-      if (members != null ? !members.equals(family.members) : family.members != null)
-         return false;
       if (name != null ? !name.equals(family.name) : family.name != null)
          return false;
       if (secondName != null ? !secondName.equals(family.secondName) : family.secondName != null)
@@ -113,7 +115,6 @@ public final class Family {
    public int hashCode() {
       int result = name != null ? name.hashCode() : 0;
       result = 31 * result + (secondName != null ? secondName.hashCode() : 0);
-      result = 31 * result + (members != null ? members.hashCode() : 0);
       result = 31 * result + id;
       result = 31 * result + version;
       return result;

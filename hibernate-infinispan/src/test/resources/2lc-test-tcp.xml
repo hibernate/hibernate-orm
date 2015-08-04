@@ -26,16 +26,14 @@
         thread_pool.max_threads="8"
         thread_pool.keep_alive_time="5000"
         thread_pool.queue_enabled="false"
-        thread_pool.queue_max_size="100"
-        thread_pool.rejection_policy="Run"
+        thread_pool.rejection_policy="Discard"
 
         oob_thread_pool.enabled="true"
         oob_thread_pool.min_threads="1"
-        oob_thread_pool.max_threads="8"
+        oob_thread_pool.max_threads="200"
         oob_thread_pool.keep_alive_time="5000"
         oob_thread_pool.queue_enabled="false"
-        oob_thread_pool.queue_max_size="100"
-        oob_thread_pool.rejection_policy="Run"/>
+        oob_thread_pool.rejection_policy="Discard"/>
 
    <org.infinispan.test.fwk.TEST_PING ergonomics="false" testName=""/>
 

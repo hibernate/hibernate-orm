@@ -78,7 +78,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 
 		final IdentifierHelperBuilder identifierHelperBuilder = IdentifierHelperBuilder.from( this );
 		identifierHelperBuilder.setGloballyQuoteIdentifiers( globalQuoting( cfgService ) );
-		identifierHelperBuilder.setAutoQuoteKeywords( autoQuoting( cfgService ) );
+		identifierHelperBuilder.setAutoQuoteKeywords( autoKeywordQuoting( cfgService ) );
 		identifierHelperBuilder.setNameQualifierSupport( nameQualifierSupport );
 
 		IdentifierHelper identifierHelper = null;
@@ -114,11 +114,11 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		);
 	}
 
-	private static boolean autoQuoting(ConfigurationService cfgService) {
+	private static boolean autoKeywordQuoting(ConfigurationService cfgService) {
 		return cfgService.getSetting(
 				AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED,
 				StandardConverters.BOOLEAN,
-				true
+				false
 		);
 	}
 
@@ -218,7 +218,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 
 		final IdentifierHelperBuilder identifierHelperBuilder = IdentifierHelperBuilder.from( this );
 		identifierHelperBuilder.setGloballyQuoteIdentifiers( globalQuoting( cfgService ) );
-		identifierHelperBuilder.setAutoQuoteKeywords( autoQuoting( cfgService ) );
+		identifierHelperBuilder.setAutoQuoteKeywords( autoKeywordQuoting( cfgService ) );
 		identifierHelperBuilder.setNameQualifierSupport( nameQualifierSupport );
 		IdentifierHelper identifierHelper = null;
 		try {

@@ -228,17 +228,7 @@ public abstract class BaseRegion implements Region {
 		if (log.isTraceEnabled()) {
 			log.trace( "Invalidate region: " + name );
 		}
-
-		Transaction tx = getCurrentTransaction();
-		if ( tx != null ) {
-			synchronized ( invalidationMutex ) {
-				invalidateTransaction = tx;
-				invalidateState.set( InvalidateState.INVALID );
-			}
-		}
-		else {
-			invalidateState.set( InvalidateState.INVALID );
-		}
+		invalidateState.set( InvalidateState.INVALID );
 	}
 
 	public TransactionManager getTransactionManager() {
@@ -253,11 +243,6 @@ public abstract class BaseRegion implements Region {
 
 	public AdvancedCache getCache() {
 		return cache;
-	}
-
-	public boolean isRegionInvalidatedInCurrentTx() {
-		Transaction tx = getCurrentTransaction();
-		return tx != null && tx.equals( invalidateTransaction );
 	}
 
 	private Transaction getCurrentTransaction() {

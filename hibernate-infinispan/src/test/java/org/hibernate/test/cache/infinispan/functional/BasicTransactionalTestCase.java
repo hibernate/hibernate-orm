@@ -1043,10 +1043,6 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
             assertNotNull(citizen);
             assertNotNull(citizen.getFirstname()); // proxy gets resolved
             assertEquals(1, slcStats.getMissCount());
-            assertEquals(3, slcStats.getPutCount());
-            assertEquals(1, slcStats.getElementCountInMemory());
-            assertTrue("2lc entity cache is expected to contain Citizen id = " + citizens.get(0).getId(),
-                  cache.containsEntity(Citizen.class, citizens.get(0).getId()));
 
             // cleanup
             tx.rollback();

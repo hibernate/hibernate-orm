@@ -167,7 +167,7 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
       withCacheManager(new CacheManagerCallable(createCacheManager()) {
          @Override
          public void call() {
-            PutFromLoadValidator validator = getPutFromLoadValidator(remoteCollectionRegion.getCache(), cm, remoteTm, removeLatch, pferLatch);
+            PutFromLoadValidator validator = getPutFromLoadValidator(remoteCollectionRegion.getCache(), cm, removeLatch, pferLatch);
 
             final TransactionalAccessDelegate delegate =
                   new TransactionalAccessDelegate(localCollectionRegion, validator);
@@ -221,11 +221,10 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 	}
 
 	protected PutFromLoadValidator getPutFromLoadValidator(AdvancedCache cache, EmbeddedCacheManager cm,
-																			 TransactionManager tm,
 																			 CountDownLatch removeLatch, CountDownLatch pferLatch) {
 		// remove the interceptor inserted by default PutFromLoadValidator, we're using different one
 		PutFromLoadValidator.removeFromCache(cache);
-		return new PutFromLoadValidator(cache, cm, tm) {
+		return new PutFromLoadValidator(cache, cm) {
 			@Override
 			public Lock acquirePutFromLoadLock(SessionImplementor session, Object key, long txTimestamp) {
 				Lock lock = super.acquirePutFromLoadLock(session, key, txTimestamp);

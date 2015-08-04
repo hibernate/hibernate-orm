@@ -93,11 +93,6 @@ public class PutFromLoadValidator {
 	private static final boolean trace = log.isTraceEnabled();
 
 	/**
-	 * Used to determine whether the owner of a pending put is a thread or a transaction
-	 */
-	private final TransactionManager transactionManager;
-
-	/**
 	 * Period after which ongoing invalidation is removed. Value is retrieved from cache configuration.
 	 */
 	private final long expirationPeriod;
@@ -130,21 +125,17 @@ public class PutFromLoadValidator {
 	private int regionInvalidations = 0;
 
 	/**
-	 * Transactions that invalidate the region. Entries are removed during next invalidation based on transaction status.
+	 * Allows propagation of current Session to callbacks invoked from interceptors
 	 */
-	private final ConcurrentHashSet<Transaction> regionInvalidators = new ConcurrentHashSet<Transaction>();
-
 	private final ThreadLocal<SessionImplementor> currentSession = new ThreadLocal<SessionImplementor>();
-
 
 	/**
 	 * Creates a new put from load validator instance.
 	 *
 	 * @param cache Cache instance on which to store pending put information.
-	 * @param transactionManager Transaction manager
 	 */
-	public PutFromLoadValidator(AdvancedCache cache, TransactionManager transactionManager) {
-		this( cache, cache.getCacheManager(), transactionManager);
+	public PutFromLoadValidator(AdvancedCache cache) {
+		this( cache, cache.getCacheManager());
 	}
 
 	/**
@@ -152,10 +143,9 @@ public class PutFromLoadValidator {
 	*
 	* @param cache Cache instance on which to store pending put information.
 	* @param cacheManager where to find a cache to store pending put information
-	* @param tm transaction manager
 	*/
 	public PutFromLoadValidator(AdvancedCache cache,
-			EmbeddedCacheManager cacheManager, TransactionManager tm) {
+			EmbeddedCacheManager cacheManager) {
 
 		Configuration cacheConfiguration = cache.getCacheConfiguration();
 		Configuration pendingPutsConfiguration = cacheManager.getCacheConfiguration(InfinispanRegionFactory.PENDING_PUTS_CACHE_NAME);
@@ -218,7 +208,6 @@ public class PutFromLoadValidator {
 
 		this.cache = cache;
 		this.pendingPuts = cacheManager.getCache(pendingPutsName);
-		this.transactionManager = tm;
 		this.nonTxPutFromLoadInterceptor = nonTxPutFromLoadInterceptor;
 	}
 
@@ -422,35 +411,6 @@ public class PutFromLoadValidator {
 			regionInvalidationTimestamp = Long.MAX_VALUE;
 			regionInvalidations++;
 		}
-		if (transactionManager != null) {
-			// cleanup old transactions
-			for (Iterator<Transaction> it = regionInvalidators.iterator(); it.hasNext(); ) {
-				Transaction tx = it.next();
-				try {
-					switch (tx.getStatus()) {
-						case Status.STATUS_COMMITTED:
-						case Status.STATUS_ROLLEDBACK:
-						case Status.STATUS_UNKNOWN:
-						case Status.STATUS_NO_TRANSACTION:
-							it.remove();
-					}
-				}
-				catch (SystemException e) {
-					log.error("Cannot retrieve transaction status", e);
-				}
-			}
-			// add this transaction
-			try {
-				Transaction tx = transactionManager.getTransaction();
-				if (tx != null) {
-					regionInvalidators.add(tx);
-				}
-			}
-			catch (SystemException e) {
-				log.error("TransactionManager failed to provide transaction", e);
-				return false;
-			}
-		}
 
 		try {
 			// Acquire the lock for each entry to ensure any ongoing
@@ -513,29 +473,10 @@ public class PutFromLoadValidator {
 	public void registerPendingPut(SessionImplementor session, Object key, long txTimestamp) {
 		long invalidationTimestamp = this.regionInvalidationTimestamp;
 		if (txTimestamp <= invalidationTimestamp) {
-			boolean skip;
-			if (invalidationTimestamp == Long.MAX_VALUE) {
-				// there is ongoing invalidation of pending puts
-				skip = true;
+			if (trace) {
+				log.tracef("registerPendingPut(%s#%s, %d) skipped due to region invalidation (%d)", cache.getName(), key, txTimestamp, invalidationTimestamp);
 			}
-			else {
-				Transaction tx = null;
-				if (transactionManager != null) {
-					try {
-						tx = transactionManager.getTransaction();
-					}
-					catch (SystemException e) {
-						log.error("TransactionManager failed to provide transaction", e);
-					}
-				}
-				skip = tx == null || !regionInvalidators.contains(tx);
-			}
-			if (skip) {
-				if (trace) {
-					log.tracef("registerPendingPut(%s#%s, %d) skipped due to region invalidation (%d)", cache.getName(), key, txTimestamp, invalidationTimestamp);
-				}
-				return;
-			}
+			return;
 		}
 
 		final PendingPut pendingPut = new PendingPut( session );

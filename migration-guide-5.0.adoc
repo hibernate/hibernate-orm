@@ -24,3 +24,5 @@ to `org.hibernate.boot.model.TypeContributor` and `org.hibernate.boot.model.Type
 ** entity version - currently uses #determineAttributeColumnName
 ** collection-id column name - currently hard-coded as "id"
 ** list-index column name - currently hard-coded as "idx"
+
+* hibernate.jdbc.batch_versioned_data default value is true, oracle dialect set this propety to false excoet for Oracle12cDialect

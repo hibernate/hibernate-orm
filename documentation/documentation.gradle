@@ -165,18 +165,18 @@ jdocbook {
     }
 
     // book-specific config
-    manual {
-        masterSourceDocumentName = 'Hibernate_Manual.xml'
+    userGuide {
+        masterSourceDocumentName = 'Hibernate_User_Guide.xml'
     }
-    integration {
-        masterSourceDocumentName = 'Hibernate_Integrations.xml'
+    integrationsGuide {
+        masterSourceDocumentName = 'Hibernate_Integrations_Guide.xml'
     }
-    mapping {
-        masterSourceDocumentName = 'Hibernate_Mapping.xml'
+    mappingGuide {
+        masterSourceDocumentName = 'Hibernate_Mapping_Guide.xml'
     }
 }
 
-[ 'integration', 'manual', 'mapping'].each { bookName ->
+[ 'integrationsGuide', 'userGuide', 'mappingGuide'].each { bookName ->
     task "stageLocalStyles_$bookName"(type: Copy) {
         into project.file( "target/docbook/stage/$bookName" )
         from project.file( 'src/main/style' )

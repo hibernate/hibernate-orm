@@ -6,13 +6,13 @@
   ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
   -->
 <!DOCTYPE book SYSTEM "http://docbook.org/xml/5.0/dtd/docbook.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "Hibernate_Mapping.ent">
+<!ENTITY % BOOK_ENTITIES SYSTEM "Hibernate_Integrations_Guide.ent">
 %BOOK_ENTITIES;
 ]>
 
 <book xmlns:xi="http://www.w3.org/2001/XInclude">
     <info>
-        <title>Hibernate Domain Model Mapping Guide</title>
+        <title>Hibernate Integrations Guide</title>
         <subtitle>Hibernate - Relational Persistence for Idiomatic Java</subtitle>
         <releaseinfo>&version;</releaseinfo>
         <productname>Hibernate ORM</productname>
@@ -44,34 +44,15 @@
 
     <xi:include href="Preface.xml" />
 
-    <xi:include href="chapters/categoizations/Data_Categorizations.xml"  />
-    <xi:include href="chapters/basic/Basic_Types.xml" />
-    <xi:include href="chapters/composition/Composition.xml" />
-    <xi:include href="chapters/collection/Collection.xml" />
-    <xi:include href="chapters/entity/Entity.xml" />
-    <xi:include href="chapters/id/Identifiers.xml" />
-    <xi:include href="chapters/natural_id/Natural_Id.xml" />
+    <xi:include href="chapters/services/Services.xml" />
 
     <!--
-        <xi:include href="chapters/association/Associations.xml" />
-        <xi:include href="chapters/secondary/Secondary_Tables.xml" />
+    org.hibernate.boot.model.IdGeneratorStrategyInterpreter
 
-        <xi:include href="chapters/constraints/Database_Constraints.xml" /> pk, fk, index, check, unique
-        <xi:include href="chapters/auxiliary/Auxiliary_DB_Objects.xml" />
+    custom Session/SessionFactory implementators
 
-        <xi:include href="chapters/access/Attribute_Access.xml" />
-        <xi:include href="chapters/overrides/Mapping_Overrides.xml" /> AttributeOverrides/AssociationOverrides
-
-        <xi:include href="chapters/generation/Generated_attributes.xml" />
-
-        columns, formulas, read/write-fragments
-
-        <xi:include href="chapters/naming/Naming_Strategies.xml" />
-        <xi:include href="chapters/quoting/SQL_Identifier_Quoting.xml" />
+    <xi:include href="chapters/types/Custom_Types.xml" />
     -->
-
-    <!-- appendices? -->
-    <!-- biblio? -->
 
 </book>
 

@@ -6,13 +6,13 @@
   ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
   -->
 <!DOCTYPE book SYSTEM "http://docbook.org/xml/5.0/dtd/docbook.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "Hibernate_Integrations.ent">
+<!ENTITY % BOOK_ENTITIES SYSTEM "Hibernate_User_Guide.ent">
 %BOOK_ENTITIES;
 ]>
 
 <book xmlns:xi="http://www.w3.org/2001/XInclude">
     <info>
-        <title>Hibernate Integrations Guide</title>
+        <title>Hibernate User Guide</title>
         <subtitle>Hibernate - Relational Persistence for Idiomatic Java</subtitle>
         <releaseinfo>&version;</releaseinfo>
         <productname>Hibernate ORM</productname>
@@ -44,15 +44,30 @@
 
     <xi:include href="Preface.xml" />
 
-    <xi:include href="chapters/services/Services.xml" />
+    <xi:include href="chapters/architecture/Architecture.xml"  />
+    <xi:include href="chapters/domain/DomainModel.xml" />
+    <xi:include href="chapters/bootstrap/Bootstrap.xml" />
+    <xi:include href="chapters/pc/PersistenceContext.xml" />
+    <xi:include href="chapters/jdbc/Database_Access.xml" />
+    <xi:include href="chapters/transactions/Transactions.xml" />
+    <xi:include href="chapters/jndi/JNDI.xml" />
+    <xi:include href="chapters/locking/Locking.xml" />
+    <xi:include href="chapters/fetching/Fetching.xml" />
+    <xi:include href="chapters/batch/Batching.xml" />
+    <xi:include href="chapters/caching/Caching.xml" />
+    <xi:include href="chapters/events/Events.xml" />
+<!--
+    <xi:include href="chapters/query_ql/HQL_JPQL.xml" />
+    <xi:include href="chapters/query_criteria/Criteria.xml" />
+    <xi:include href="chapters/query_native/Native_SQL.xml" />
+-->
+    <xi:include href="chapters/multitenancy/Multi_Tenancy.xml" />
+    <xi:include href="chapters/osgi/OSGi.xml" />
+    <xi:include href="chapters/envers/Envers.xml" />
+    <xi:include href="chapters/portability/Portability.xml" />
 
-    <!--
-    org.hibernate.boot.model.IdGeneratorStrategyInterpreter
-
-    custom Session/SessionFactory implementators
-
-    <xi:include href="chapters/types/Custom_Types.xml" />
-    -->
+    <xi:include href="appendices/Appendix_LegacyBootstrap.xml" />
+    <xi:include href="Bibliography.xml" />
 
 </book>
 

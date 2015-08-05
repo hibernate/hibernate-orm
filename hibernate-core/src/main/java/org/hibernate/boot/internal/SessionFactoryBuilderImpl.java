@@ -540,9 +540,9 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 
 			final Map configurationSettings = new HashMap();
 			//noinspection unchecked
-			configurationSettings.putAll( cfgService.getSettings() );
-			//noinspection unchecked
 			configurationSettings.putAll( jdbcServices.getJdbcEnvironment().getDialect().getDefaultProperties() );
+			//noinspection unchecked
+			configurationSettings.putAll( cfgService.getSettings() );
 			cfgService = new ConfigurationServiceImpl( configurationSettings );
 			( (ConfigurationServiceImpl) cfgService ).injectServices( (ServiceRegistryImplementor) serviceRegistry );
 
@@ -666,7 +666,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 				this.jdbcBatchSize = 0;
 			}
 
-			this.jdbcBatchVersionedData = ConfigurationHelper.getBoolean( BATCH_VERSIONED_DATA, configurationSettings, false );
+			this.jdbcBatchVersionedData = ConfigurationHelper.getBoolean( BATCH_VERSIONED_DATA, configurationSettings, true );
 			this.scrollableResultSetsEnabled = ConfigurationHelper.getBoolean(
 					USE_SCROLLABLE_RESULTSET,
 					configurationSettings,

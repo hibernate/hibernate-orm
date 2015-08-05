@@ -254,6 +254,7 @@ public class Oracle8iDialect extends Dialect {
 		// be returned (via its RETURNING clause).  No other driver seems to
 		// support this overloaded version.
 		getDefaultProperties().setProperty( Environment.USE_GET_GENERATED_KEYS, "false" );
+		getDefaultProperties().setProperty( Environment.BATCH_VERSIONED_DATA, "false" );
 	}
 
 	@Override

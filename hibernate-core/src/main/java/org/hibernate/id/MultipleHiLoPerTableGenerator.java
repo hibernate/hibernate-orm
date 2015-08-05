@@ -17,7 +17,7 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.naming.ObjectNameNormalizer;
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
@@ -94,7 +94,8 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 
 	private QualifiedName qualifiedTableName;
 	private String tableName;
-	private String pkColumnName;
+	private String segmentColumnName;
+	private String segmentName;
 	private String valueColumnName;
 	private String query;
 	private String insert;
@@ -254,60 +255,56 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 
 	@SuppressWarnings({"StatementWithEmptyBody", "deprecation"})
 	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+		returnClass = type.getReturnedClass();
+
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
-		final ObjectNameNormalizer normalizer = (ObjectNameNormalizer) params.get( IDENTIFIER_NORMALIZER );
 
-		qualifiedTableName = QualifiedNameParser.INSTANCE.parse(
-				ConfigurationHelper.getString( ID_TABLE, params, DEFAULT_TABLE ),
-				normalizer.normalizeIdentifierQuoting( params.getProperty( CATALOG ) ),
-				normalizer.normalizeIdentifierQuoting( params.getProperty( SCHEMA ) )
-		);
+		qualifiedTableName = determineGeneratorTableName( params, jdbcEnvironment );
 
-		tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				qualifiedTableName,
-				jdbcEnvironment.getDialect()
-		);
-		pkColumnName = normalizer.toDatabaseIdentifierText(
-				ConfigurationHelper.getString( PK_COLUMN_NAME, params, DEFAULT_PK_COLUMN )
-		);
-		valueColumnName = normalizer.toDatabaseIdentifierText(
-				ConfigurationHelper.getString( VALUE_COLUMN_NAME, params, DEFAULT_VALUE_COLUMN )
-		);
-
+		segmentColumnName = determineSegmentColumnName( params, jdbcEnvironment );
 		keySize = ConfigurationHelper.getInt( PK_LENGTH_NAME, params, DEFAULT_PK_LENGTH );
-		String keyValue = ConfigurationHelper.getString( PK_VALUE_NAME, params, params.getProperty( TABLE ) );
+		segmentName = ConfigurationHelper.getString( PK_VALUE_NAME, params, params.getProperty( TABLE ) );
 
-		query = "select " +
-				valueColumnName +
-				" from " +
-				jdbcEnvironment.getDialect().appendLockHint( LockMode.PESSIMISTIC_WRITE, tableName ) +
-				" where " + pkColumnName + " = '" + keyValue + "'" +
-				jdbcEnvironment.getDialect().getForUpdateString();
-
-		update = "update " +
-				tableName +
-				" set " +
-				valueColumnName +
-				" = ? where " +
-				valueColumnName +
-				" = ? and " +
-				pkColumnName +
-				" = '" +
-				keyValue
-				+ "'";
-
-		insert = "insert into " + tableName +
-				"(" + pkColumnName + ", " + valueColumnName + ") " +
-				"values('" + keyValue + "', ?)";
-
+		valueColumnName = determineValueColumnName( params, jdbcEnvironment );
 
 		//hilo config
 		maxLo = ConfigurationHelper.getInt( MAX_LO, params, Short.MAX_VALUE );
-		returnClass = type.getReturnedClass();
 
 		if ( maxLo >= 1 ) {
 			hiloOptimizer = new LegacyHiLoAlgorithmOptimizer( returnClass, maxLo );
 		}
+	}
+
+	protected QualifiedName determineGeneratorTableName(Properties params, JdbcEnvironment jdbcEnvironment) {
+		final String tableName = ConfigurationHelper.getString( ID_TABLE, params, DEFAULT_TABLE );
+
+		if ( tableName.contains( "." ) ) {
+			return QualifiedNameParser.INSTANCE.parse( tableName );
+		}
+		else {
+			// todo : need to incorporate implicit catalog and schema names
+			final Identifier catalog = jdbcEnvironment.getIdentifierHelper().toIdentifier(
+					ConfigurationHelper.getString( CATALOG, params )
+			);
+			final Identifier schema = jdbcEnvironment.getIdentifierHelper().toIdentifier(
+					ConfigurationHelper.getString( SCHEMA, params )
+			);
+			return new QualifiedNameParser.NameParts(
+					catalog,
+					schema,
+					jdbcEnvironment.getIdentifierHelper().toIdentifier( tableName )
+			);
+		}
+	}
+
+	protected String determineSegmentColumnName(Properties params, JdbcEnvironment jdbcEnvironment) {
+		final String name = ConfigurationHelper.getString( PK_COLUMN_NAME, params, DEFAULT_PK_COLUMN );
+		return jdbcEnvironment.getIdentifierHelper().toIdentifier( name ).render( jdbcEnvironment.getDialect() );
+	}
+
+	protected String determineValueColumnName(Properties params, JdbcEnvironment jdbcEnvironment) {
+		final String name = ConfigurationHelper.getString( VALUE_COLUMN_NAME, params, DEFAULT_VALUE_COLUMN );
+		return jdbcEnvironment.getIdentifierHelper().toIdentifier( name ).render( jdbcEnvironment.getDialect() );
 	}
 
 	@Override
@@ -317,33 +314,73 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 				qualifiedTableName.getSchemaName()
 		);
 
-		final Table table = namespace.createTable( qualifiedTableName.getObjectName(), false );
-		table.setPrimaryKey( new PrimaryKey() );
+		Table table = namespace.locateTable( qualifiedTableName.getObjectName() );
+		if ( table == null ) {
+			table = namespace.createTable( qualifiedTableName.getObjectName(), false );
 
-		final Column pkColumn = new ExportableColumn(
-				database,
-				table,
-				pkColumnName,
-				StringType.INSTANCE,
-				database.getDialect().getTypeName( Types.VARCHAR, keySize, 0, 0 )
-		);
-		table.addColumn( pkColumn );
-		table.getPrimaryKey().addColumn( pkColumn );
+			// todo : note sure the best solution here.  do we add the columns if missing?  other?
+			table.setPrimaryKey( new PrimaryKey() );
 
-		final Column valueColumn = new ExportableColumn(
-				database,
-				table,
-				valueColumnName,
-				LongType.INSTANCE
+			final Column pkColumn = new ExportableColumn(
+					database,
+					table,
+					segmentColumnName,
+					StringType.INSTANCE,
+					database.getDialect().getTypeName( Types.VARCHAR, keySize, 0, 0 )
+			);
+			pkColumn.setNullable( false );
+			table.addColumn( pkColumn );
+			table.getPrimaryKey().addColumn( pkColumn );
+
+			final Column valueColumn = new ExportableColumn(
+					database,
+					table,
+					valueColumnName,
+					LongType.INSTANCE
+			);
+			table.addColumn( valueColumn );
+		}
+
+		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
+
+		// allow physical naming strategies a chance to kick in
+		tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+				table.getQualifiedTableName(),
+				jdbcEnvironment.getDialect()
 		);
-		table.addColumn( valueColumn );
+
+		query = "select " +
+				valueColumnName +
+				" from " +
+				jdbcEnvironment.getDialect().appendLockHint( LockMode.PESSIMISTIC_WRITE, tableName ) +
+				" where " + segmentColumnName + " = '" + segmentName + "'" +
+				jdbcEnvironment.getDialect().getForUpdateString();
+
+		update = "update " +
+				tableName +
+				" set " +
+				valueColumnName +
+				" = ? where " +
+				valueColumnName +
+				" = ? and " +
+				segmentColumnName +
+				" = '" +
+				segmentName
+				+ "'";
+
+		insert = "insert into " + tableName +
+				"(" + segmentColumnName + ", " + valueColumnName + ") " +
+				"values('" + segmentName + "', ?)";
+
+
+
 	}
 
 	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
 		return new String[] {
 				dialect.getCreateTableString()
 						+ ' ' + tableName + " ( "
-						+ pkColumnName + ' ' + dialect.getTypeName( Types.VARCHAR, keySize, 0, 0 ) + ",  "
+						+ segmentColumnName + ' ' + dialect.getTypeName( Types.VARCHAR, keySize, 0, 0 ) + ",  "
 						+ valueColumnName + ' ' + dialect.getTypeName( Types.INTEGER )
 						+ " )" + dialect.getTableTypeString()
 		};

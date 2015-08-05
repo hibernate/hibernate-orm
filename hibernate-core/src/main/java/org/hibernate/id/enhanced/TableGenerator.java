@@ -349,7 +349,6 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 		identifierType = type;
 
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
-		final Dialect dialect = jdbcEnvironment.getDialect();
 
 		qualifiedTableName = determineGeneratorTableName( params, jdbcEnvironment );
 		segmentColumnName = determineSegmentColumnName( params, jdbcEnvironment );

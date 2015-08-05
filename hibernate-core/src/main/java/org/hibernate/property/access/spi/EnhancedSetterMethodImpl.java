@@ -45,8 +45,12 @@ public class EnhancedSetterMethodImpl implements Setter {
 			// for enhanced attribute, don't flag as dirty
 			if ( target instanceof SelfDirtinessTracker ) {
 				( (SelfDirtinessTracker) target ).$$_hibernate_suspendDirtyTracking( true );
-				setterMethod.invoke( target, value );
-				( (SelfDirtinessTracker) target ).$$_hibernate_suspendDirtyTracking( false );
+				try {
+					setterMethod.invoke( target, value );
+				}
+				finally {
+					( (SelfDirtinessTracker) target ).$$_hibernate_suspendDirtyTracking( false );
+				}
 			}
 			else {
 				setterMethod.invoke( target, value );

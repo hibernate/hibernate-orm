@@ -19,6 +19,7 @@ import java.util.Arrays;
 public final class SimpleFieldTracker implements DirtyTracker {
 
 	private String[] names;
+	private boolean suspended;
 
 	public SimpleFieldTracker() {
 		names = new String[0];
@@ -26,6 +27,9 @@ public final class SimpleFieldTracker implements DirtyTracker {
 
 	@Override
 	public void add(String name) {
+		if ( suspended ) {
+			return;
+		}
 		if ( !contains( name ) ) {
 			names = Arrays.copyOf( names, names.length + 1 );
 			names[names.length - 1] = name;
@@ -44,7 +48,9 @@ public final class SimpleFieldTracker implements DirtyTracker {
 
 	@Override
 	public void clear() {
-		names = new String[0];
+		if ( !isEmpty() ) {
+			names = new String[0];
+		}
 	}
 
 	@Override
@@ -55,6 +61,11 @@ public final class SimpleFieldTracker implements DirtyTracker {
 	@Override
 	public String[] get() {
 		return names;
+	}
+
+	@Override
+	public void suspend(boolean suspend) {
+		this.suspended = suspend;
 	}
 
 }

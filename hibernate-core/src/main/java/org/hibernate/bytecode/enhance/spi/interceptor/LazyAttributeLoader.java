@@ -7,12 +7,15 @@
 
 package org.hibernate.bytecode.enhance.spi.interceptor;
 
+import java.util.Collection;
 import java.util.Set;
 
 import org.hibernate.LazyInitializationException;
 import org.hibernate.bytecode.enhance.internal.tracker.SimpleFieldTracker;
+import org.hibernate.bytecode.enhance.spi.CollectionTracker;
 import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
+import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionImplementor;
 
 /**
@@ -51,11 +54,10 @@ public class LazyAttributeLoader implements PersistentAttributeInterceptor {
 			);
 
 			initializedFields.add( fieldName );
+			takeCollectionSizeSnapshot( target, fieldName, loadedValue );
 			return loadedValue;
 		}
-		else {
-			return value;
-		}
+		return value;
 	}
 
 	public final void setSession(SessionImplementor session) {
@@ -90,7 +92,17 @@ public class LazyAttributeLoader implements PersistentAttributeInterceptor {
 		return "LazyAttributeLoader(entityName=" + entityName + " ,lazyFields=" + lazyFields + ')';
 	}
 
-	/* --- */
+	//
+
+	private void takeCollectionSizeSnapshot(Object target, String fieldName, Object value) {
+		if ( value != null && value instanceof Collection && target instanceof SelfDirtinessTracker ) {
+			CollectionTracker tracker = ( (SelfDirtinessTracker) target ).$$_hibernate_getCollectionTracker();
+			if ( tracker == null ) {
+				( (SelfDirtinessTracker) target ).$$_hibernate_clearDirtyAttributes();
+			}
+			tracker.add( fieldName, ( (Collection) value ).size() );
+		}
+	}
 
 	@Override
 	public boolean readBoolean(Object obj, String name, boolean oldValue) {

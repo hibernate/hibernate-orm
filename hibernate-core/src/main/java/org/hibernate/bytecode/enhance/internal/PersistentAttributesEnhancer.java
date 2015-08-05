@@ -9,7 +9,9 @@ package org.hibernate.bytecode.enhance.internal;
 import java.util.IdentityHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import javax.persistence.Embedded;
+import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
@@ -26,9 +28,9 @@ import javassist.bytecode.CodeIterator;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.MethodInfo;
 import javassist.bytecode.Opcode;
-import javassist.bytecode.SignatureAttribute;
 import javassist.bytecode.stackmap.MapMaker;
 
+import org.hibernate.Hibernate;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
@@ -119,13 +121,14 @@ public class PersistentAttributesEnhancer extends Enhancer {
 
 		// read attempts only have to deal lazy-loading support, not dirty checking;
 		// so if the field is not enabled as lazy-loadable return a plain simple getter as the reader
-		if ( !enhancementContext.isLazyLoadable( persistentField ) ) {
+		if ( !enhancementContext.hasLazyLoadableAttributes( managedCtClass )
+				|| !enhancementContext.isLazyLoadable( persistentField ) ) {
 			return MethodWriter.addGetter( managedCtClass, fieldName, readerName );
 		}
 
 		try {
 			return MethodWriter.write(
-					managedCtClass, "public %s %s() {%n  %s%n  return this.%s;%n}",
+					managedCtClass, "public %s %s() {%n%s%n  return this.%s;%n}",
 					persistentField.getType().getName(),
 					readerName,
 					typeDescriptor.buildReadInterceptionBodyFragment( fieldName ),
@@ -160,13 +163,14 @@ public class PersistentAttributesEnhancer extends Enhancer {
 		try {
 			final CtMethod writer;
 
-			if ( !enhancementContext.isLazyLoadable( persistentField ) ) {
+			if ( !enhancementContext.hasLazyLoadableAttributes( managedCtClass )
+					|| !enhancementContext.isLazyLoadable( persistentField ) ) {
 				writer = MethodWriter.addSetter( managedCtClass, fieldName, writerName );
 			}
 			else {
 				writer = MethodWriter.write(
 						managedCtClass,
-						"public void %s(%s %s) {%n  %s%n}",
+						"public void %s(%s %s) {%n%s%n}",
 						writerName,
 						persistentField.getType().getName(),
 						fieldName,
@@ -174,25 +178,26 @@ public class PersistentAttributesEnhancer extends Enhancer {
 				);
 			}
 
-			if ( enhancementContext.isCompositeClass( managedCtClass ) ) {
-				writer.insertBefore(
-						String.format(
-								"if (%s != null) { %<s.callOwner(\".%s\"); }%n",
-								EnhancerConstants.TRACKER_COMPOSITE_FIELD_NAME,
-								fieldName
-						)
-				);
-			}
-			else if ( enhancementContext.doDirtyCheckingInline( managedCtClass ) ) {
-				writer.insertBefore(
-						typeDescriptor.buildInLineDirtyCheckingBodyFragment(
-								enhancementContext,
-								persistentField
-						)
-				);
-			}
+			if ( enhancementContext.doDirtyCheckingInline( managedCtClass ) ) {
+				if ( enhancementContext.isCompositeClass( managedCtClass ) ) {
+					writer.insertBefore(
+							String.format(
+									"  if (%1$s != null) { %1$s.callOwner(\"\"); }%n",
+									EnhancerConstants.TRACKER_COMPOSITE_FIELD_NAME
+							)
+					);
+				}
+				else {
+					writer.insertBefore(
+							typeDescriptor.buildInLineDirtyCheckingBodyFragment(
+									enhancementContext,
+									persistentField
+							)
+					);
+				}
 
-			handleCompositeField( managedCtClass, persistentField, writer );
+				handleCompositeField( managedCtClass, persistentField, writer );
+			}
 
 			if ( enhancementContext.doBiDirectionalAssociationManagement( persistentField ) ) {
 				handleBiDirectionalAssociation( managedCtClass, persistentField, writer );
@@ -219,21 +224,21 @@ public class PersistentAttributesEnhancer extends Enhancer {
 
 	private void handleBiDirectionalAssociation(CtClass managedCtClass, CtField persistentField, CtMethod fieldWriter)
 			throws NotFoundException, CannotCompileException {
-		if ( !isPossibleBiDirectionalAssociation( persistentField ) ) {
+		if ( !PersistentAttributesHelper.isPossibleBiDirectionalAssociation( persistentField ) ) {
 			return;
 		}
-		final CtClass targetEntity = getTargetEntityClass( persistentField );
+		final CtClass targetEntity = PersistentAttributesHelper.getTargetEntityClass( managedCtClass, persistentField );
 		if ( targetEntity == null ) {
-			log.debugf(
+			log.infof(
 					"Could not find type of bi-directional association for field [%s#%s]",
 					managedCtClass.getName(),
 					persistentField.getName()
 			);
 			return;
 		}
-		final String mappedBy = getMappedBy( persistentField, targetEntity );
-		if ( mappedBy.isEmpty() ) {
-			log.warnf(
+		final String mappedBy = PersistentAttributesHelper.getMappedBy( persistentField, targetEntity, enhancementContext );
+		if ( mappedBy == null || mappedBy.isEmpty() ) {
+			log.infof(
 					"Could not find bi-directional association for field [%s#%s]",
 					managedCtClass.getName(),
 					persistentField.getName()
@@ -244,32 +249,73 @@ public class PersistentAttributesEnhancer extends Enhancer {
 		// create a temporary getter and setter on the target entity to be able to compile our code
 		final String mappedByGetterName = EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + mappedBy;
 		final String mappedBySetterName = EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + mappedBy;
-		MethodWriter.addGetter( targetEntity, mappedBy, mappedByGetterName );
-		MethodWriter.addSetter( targetEntity, mappedBy, mappedBySetterName );
+		CtMethod getter;
+		CtMethod setter;
+		boolean tmpTargetMethods = false;
+		try {
+			getter = targetEntity.getDeclaredMethod( mappedByGetterName );
+			setter = targetEntity.getDeclaredMethod( mappedByGetterName );
+		}
+		catch (NotFoundException nfe){
+			getter = MethodWriter.addGetter( targetEntity, mappedBy, mappedByGetterName );
+			setter = MethodWriter.addSetter( targetEntity, mappedBy, mappedBySetterName );
+			tmpTargetMethods = true;
+		}
 
-		if ( persistentField.hasAnnotation( OneToOne.class ) ) {
+		// code fragments to check loaded state. We don't want to trigger lazy loading in association management code
+		String currentAssociationLoaded = String.format(
+				"%s.isPropertyInitialized(this.%s, \"%s\")",
+				Hibernate.class.getName(),
+				persistentField.getName(),
+				mappedBy
+		);
+		String targetElementLoaded = String.format(
+				"%s.isPropertyInitialized(target, \"%s\")",
+				Hibernate.class.getName(),
+				mappedBy
+		);
+		String newAssociationLoaded = String.format(
+				"%s.isPropertyInitialized($1, \"%s\")",
+				Hibernate.class.getName(),
+				mappedBy
+		);
+
+		if ( PersistentAttributesHelper.hasAnnotation( persistentField, OneToOne.class ) ) {
 			// only unset when $1 != null to avoid recursion
 			fieldWriter.insertBefore(
 					String.format(
-							"if ($0.%s != null && $1 != null) $0.%<s.%s(null);%n",
+							"  if (this.%1$s != null && %2$s && $1 != null) { this.%1$s.%3$s(null); }%n",
 							persistentField.getName(),
+							currentAssociationLoaded,
 							mappedBySetterName
 					)
 			);
 			fieldWriter.insertAfter(
 					String.format(
-							"if ($1 != null && $1.%s() != $0) $1.%s($0);%n",
+							"  if ($1 != null && %s && $1.%s() != this) { $1.%s(this); }%n",
+							newAssociationLoaded,
 							mappedByGetterName,
 							mappedBySetterName
 					)
 			);
 		}
-		if ( persistentField.hasAnnotation( OneToMany.class ) ) {
+		if ( PersistentAttributesHelper.hasAnnotation( persistentField, OneToMany.class ) ) {
+			boolean isMap = PersistentAttributesHelper.isAssignable( persistentField.getType(), Map.class.getName() );
+			String toArrayMethod = isMap ? "values().toArray()" : "toArray()" ;
+
 			// only remove elements not in the new collection or else we would loose those elements
 			// don't use iterator to avoid ConcurrentModException
 			fieldWriter.insertBefore(
 					String.format(
-							"if ($0.%s != null) { Object[] array = $0.%<s.toArray(); for (int i = 0; i < array.length; i++) { %s target = (%<s) array[i]; if ($1 == null || !$1.contains(target)) target.%s(null); } }%n",
+							"  if (this.%3$s != null && %1$s) {%n" +
+							"    Object[] array = this.%3$s.%2$s;%n" +
+							"    for (int i = 0; i < array.length; i++) {%n" +
+							"      %4$s target = (%4$s) array[i];%n" +
+							"      if ($1 == null || !$1.contains(target)) { target.%5$s(null); }%n" +
+							"    }%n" +
+							"  }%n",
+							currentAssociationLoaded,
+							toArrayMethod,
 							persistentField.getName(),
 							targetEntity.getName(),
 							mappedBySetterName
@@ -277,34 +323,63 @@ public class PersistentAttributesEnhancer extends Enhancer {
 			);
 			fieldWriter.insertAfter(
 					String.format(
-							"if ($1 != null) { Object[] array = $1.toArray(); for (int i = 0; i < array.length; i++) { %s target = (%<s) array[i]; if (target.%s() != $0) target.%s((%s)$0); } }%n",
+							"  if ($1 != null && %1$s) {%n" +
+							"    Object[] array = $1.%2$s;%n" +
+							"    for (int i = 0; i < array.length; i++) {%n" +
+							"      %4$s target = (%4$s) array[i];%n" +
+							"      if (%3$s && target.%5$s() != this) { target.%6$s(this); }%n" +
+							"    }%n" +
+							"  }%n",
+							newAssociationLoaded,
+							toArrayMethod,
+							targetElementLoaded,
 							targetEntity.getName(),
 							mappedByGetterName,
-							mappedBySetterName,
-							managedCtClass.getName()
+							mappedBySetterName
 					)
 			);
 		}
-		if ( persistentField.hasAnnotation( ManyToOne.class ) ) {
+		if ( PersistentAttributesHelper.hasAnnotation( persistentField, ManyToOne.class ) ) {
 			fieldWriter.insertBefore(
 					String.format(
-							"if ($0.%1$s != null && $0.%1$s.%2$s() != null) $0.%1$s.%2$s().remove($0);%n",
+							"  if (this.%2$s != null && %1$s && this.%2$s.%3$s() != null) { this.%2$s.%3$s().remove(this); }%n",
+							currentAssociationLoaded,
 							persistentField.getName(),
 							mappedByGetterName
 					)
 			);
-			// check .contains($0) to avoid double inserts (but preventing duplicates)
+			// check .contains(this) to avoid double inserts (but preventing duplicates)
 			fieldWriter.insertAfter(
 					String.format(
-							"if ($1 != null) { java.util.Collection c = $1.%s(); if (c != null && !c.contains($0)) c.add($0); }%n",
+							"  if ($1 != null && %s) {%n" +
+							"    java.util.Collection c = $1.%s();%n" +
+							"    if (c != null && !c.contains(this)) { c.add(this); }%n" +
+							"  }%n",
+							newAssociationLoaded,
 							mappedByGetterName
 					)
 			);
 		}
-		if ( persistentField.hasAnnotation( ManyToMany.class ) ) {
+		if ( PersistentAttributesHelper.hasAnnotation( persistentField, ManyToMany.class ) ) {
+			if ( PersistentAttributesHelper.isAssignable( persistentField.getType(), Map.class.getName() ) ||
+					PersistentAttributesHelper.isAssignable( targetEntity.getField( mappedBy ).getType() , Map.class.getName() ) ) {
+				log.infof(
+						"Bi-directional association for field [%s#%s] not managed: @ManyToMany in java.util.Map attribute not supported ",
+						managedCtClass.getName(),
+						persistentField.getName()
+				);
+				return;
+			}
 			fieldWriter.insertBefore(
 					String.format(
-							"if ($0.%s != null) { Object[] array = $0.%<s.toArray(); for (int i = 0; i < array.length; i++) { %s target = (%<s) array[i]; if ($1 == null || !$1.contains(target)) target.%s().remove($0); } }%n",
+							"  if (this.%2$s != null && %1$s) {%n" +
+							"    Object[] array = this.%2$s.toArray();%n" +
+							"    for (int i = 0; i < array.length; i++) {%n" +
+							"      %3$s target = (%3$s) array[i];%n" +
+							"      if ($1 == null || !$1.contains(target)) { target.%4$s().remove(this); }%n" +
+							"    }%n" +
+							"  }%n",
+							currentAssociationLoaded,
 							persistentField.getName(),
 							targetEntity.getName(),
 							mappedByGetterName
@@ -312,106 +387,36 @@ public class PersistentAttributesEnhancer extends Enhancer {
 			);
 			fieldWriter.insertAfter(
 					String.format(
-							"if ($1 != null) { Object[] array = $1.toArray(); for (int i = 0; i < array.length; i++) { %s target = (%<s) array[i]; java.util.Collection c = target.%s(); if ( c != $0 && c != null) c.add($0); } }%n",
+							"  if ($1 != null && %s) {%n" +
+							"    Object[] array = $1.toArray();%n" +
+							"    for (int i = 0; i < array.length; i++) {%n" +
+							"      %s target = (%<s) array[i];%n" +
+							"	   if (%s) {%n" +
+							"        java.util.Collection c = target.%s();%n" +
+							"        if (c != this && c != null) { c.add(this); }%n" +
+							"      }%n" +
+							"    }%n" +
+							"  }%n",
+							newAssociationLoaded,
 							targetEntity.getName(),
+							targetElementLoaded,
 							mappedByGetterName
 					)
 			);
 		}
 		// implementation note: association management @OneToMany and @ManyToMay works for add() operations but for remove() a snapshot of the collection is needed so we know what associations to break.
 		// another approach that could force that behavior would be to return Collections.unmodifiableCollection() ...
-	}
 
-	private boolean isPossibleBiDirectionalAssociation(CtField persistentField) {
-		return persistentField.hasAnnotation( OneToOne.class ) ||
-				persistentField.hasAnnotation( OneToMany.class ) ||
-				persistentField.hasAnnotation( ManyToOne.class ) ||
-				persistentField.hasAnnotation( ManyToMany.class );
-	}
-
-	private String getMappedBy(CtField persistentField, CtClass targetEntity) {
-		final String local = getMappedByFromAnnotation( persistentField );
-		return local.isEmpty() ? getMappedByFromTargetEntity( persistentField, targetEntity ) : local;
-	}
-
-	private String getMappedByFromAnnotation(CtField persistentField) {
-		try {
-			if ( persistentField.hasAnnotation( OneToOne.class ) ) {
-				return ( (OneToOne) persistentField.getAnnotation( OneToOne.class ) ).mappedBy();
-			}
-			if ( persistentField.hasAnnotation( OneToMany.class ) ) {
-				return ( (OneToMany) persistentField.getAnnotation( OneToMany.class ) ).mappedBy();
-			}
-			// For @ManyToOne associations, mappedBy must come from the @OneToMany side of the association
-			if ( persistentField.hasAnnotation( ManyToMany.class ) ) {
-				return ( (ManyToMany) persistentField.getAnnotation( ManyToMany.class ) ).mappedBy();
-			}
+		if ( tmpTargetMethods ) {
+			targetEntity.removeMethod( getter );
+			targetEntity.removeMethod( setter );
 		}
-		catch (ClassNotFoundException ignore) {
-		}
-		return "";
-	}
-
-	private String getMappedByFromTargetEntity(CtField persistentField, CtClass targetEntity) {
-		// get mappedBy value by searching in the fields of the target entity class
-		for ( CtField f : targetEntity.getDeclaredFields() ) {
-			if ( enhancementContext.isPersistentField( f ) && getMappedByFromAnnotation( f ).equals( persistentField.getName() ) ) {
-				log.debugf(
-						"mappedBy association for field [%s:%s] is [%s:%s]",
-						persistentField.getDeclaringClass().getName(),
-						persistentField.getName(),
-						targetEntity.getName(),
-						f.getName()
-				);
-				return f.getName();
-			}
-		}
-		return "";
-	}
-
-	private CtClass getTargetEntityClass(CtField persistentField) throws NotFoundException {
-		// get targetEntity defined in the annotation
-		try {
-			Class<?> targetClass = null;
-			if ( persistentField.hasAnnotation( OneToOne.class ) ) {
-				targetClass = ( (OneToOne) persistentField.getAnnotation( OneToOne.class ) ).targetEntity();
-			}
-			if ( persistentField.hasAnnotation( OneToMany.class ) ) {
-				targetClass = ( (OneToMany) persistentField.getAnnotation( OneToMany.class ) ).targetEntity();
-			}
-			if ( persistentField.hasAnnotation( ManyToOne.class ) ) {
-				targetClass = ( (ManyToOne) persistentField.getAnnotation( ManyToOne.class ) ).targetEntity();
-			}
-			if ( persistentField.hasAnnotation( ManyToMany.class ) ) {
-				targetClass = ( (ManyToMany) persistentField.getAnnotation( ManyToMany.class ) ).targetEntity();
-			}
-			if ( targetClass != null && targetClass != void.class ) {
-				return classPool.get( targetClass.getName() );
-			}
-		}
-		catch (ClassNotFoundException ignore) {
-		}
-
-		// infer targetEntity from generic type signature
-		if ( persistentField.hasAnnotation( OneToOne.class ) || persistentField.hasAnnotation( ManyToOne.class ) ) {
-			return persistentField.getType();
-		}
-		if ( persistentField.hasAnnotation( OneToMany.class ) || persistentField.hasAnnotation( ManyToMany.class ) ) {
-			try {
-				final SignatureAttribute.TypeArgument target = ( (SignatureAttribute.ClassType) SignatureAttribute.toFieldSignature(
-						persistentField.getGenericSignature()
-				) ).getTypeArguments()[0];
-				return persistentField.getDeclaringClass().getClassPool().get( target.toString() );
-			}
-			catch (BadBytecode ignore) {
-			}
-		}
-		return null;
 	}
 
 	private void handleCompositeField(CtClass managedCtClass, CtField persistentField, CtMethod fieldWriter)
 			throws NotFoundException, CannotCompileException {
-		if ( !persistentField.hasAnnotation( Embedded.class ) ) {
+		if ( !enhancementContext.isCompositeClass( persistentField.getType() ) ||
+				!PersistentAttributesHelper.hasAnnotation( persistentField, Embedded.class ) ) {
 			return;
 		}
 
@@ -421,9 +426,9 @@ public class PersistentAttributesEnhancer extends Enhancer {
 		if ( enhancementContext.isCompositeClass( managedCtClass ) ) {
 			// if a composite have a embedded field we need to implement the TRACKER_CHANGER_NAME method as well
 			MethodWriter.write(
-					managedCtClass, "" +
+					managedCtClass,
 							"public void %1$s(String name) {%n" +
-							"  if (%2$s != null) { %2$s.callOwner(\".\" + name) ; }%n}",
+							"  if (%2$s != null) { %2$s.callOwner(\".\" + name); }%n}",
 					EnhancerConstants.TRACKER_CHANGER_NAME,
 					EnhancerConstants.TRACKER_COMPOSITE_FIELD_NAME
 			);
@@ -432,7 +437,6 @@ public class PersistentAttributesEnhancer extends Enhancer {
 		// cleanup previous owner
 		fieldWriter.insertBefore(
 				String.format(
-						"" +
 								"if (%1$s != null) { ((%2$s) %1$s).%3$s(\"%1$s\"); }%n",
 						persistentField.getName(),
 						CompositeTracker.class.getName(),
@@ -443,7 +447,6 @@ public class PersistentAttributesEnhancer extends Enhancer {
 		// trigger track changes
 		fieldWriter.insertAfter(
 				String.format(
-						"" +
 								"((%2$s) %1$s).%4$s(\"%1$s\", (%3$s) this);%n" +
 								"%5$s(\"%1$s\");",
 						persistentField.getName(),
@@ -563,6 +566,7 @@ public class PersistentAttributesEnhancer extends Enhancer {
 					}
 					if ( targetCtClass == managedCtClass
 							|| !enhancementContext.isPersistentField( targetCtClass.getField( fieldName ) )
+							|| PersistentAttributesHelper.hasAnnotation( targetCtClass, fieldName, Id.class )
 							|| "this$0".equals( fieldName ) ) {
 						continue;
 					}

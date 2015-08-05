@@ -6,6 +6,8 @@
  */
 package org.hibernate.bytecode.enhance.internal;
 
+import javax.persistence.Transient;
+
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.CtField;
@@ -13,11 +15,10 @@ import javassist.Modifier;
 import javassist.bytecode.AnnotationsAttribute;
 import javassist.bytecode.FieldInfo;
 import javassist.bytecode.annotation.Annotation;
+
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-
-import javax.persistence.Transient;
 
 /**
  * @author <a href="mailto:lbarreiro@redhat.com">Luis Barreiro</a>
@@ -50,7 +51,7 @@ public class FieldWriter {
 
 	private static void addPrivateTransient(CtClass target, CtClass type, String name) {
 		addWithModifiers( target, type, name, Modifier.PRIVATE | Modifier.TRANSIENT, Transient.class );
-		log.debugf( "Wrote field into [%s]: @Transient private transient %s %s;%n", target.getName(), type.getName(), name );
+		log.debugf( "Wrote field into [%s]: @Transient private transient %s %s;", target.getName(), type.getName(), name );
 	}
 
 	private static void addWithModifiers(CtClass target, CtClass type, String  name, int modifiers, Class<?> ... annotations ) {

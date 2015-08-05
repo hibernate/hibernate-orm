@@ -8,21 +8,24 @@ package org.hibernate.bytecode.enhance.internal.tracker;
 
 import java.util.Arrays;
 
+import org.hibernate.bytecode.enhance.spi.CollectionTracker;
+
 /**
  * small low memory class to keep track of the number of elements in a collection
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public final class CollectionTracker {
+public final class SimpleCollectionTracker implements CollectionTracker {
 
 	private String[] names;
 	private int[] sizes;
 
-	public CollectionTracker() {
+	public SimpleCollectionTracker() {
 		names = new String[0];
 		sizes = new int[0];
 	}
 
+	@Override
 	public void add(String name, int size) {
 		for ( int i = 0; i < names.length; i++ ) {
 			if ( names[i].equals( name ) ) {
@@ -36,6 +39,7 @@ public final class CollectionTracker {
 		sizes[sizes.length - 1] = size;
 	}
 
+	@Override
 	public int getSize(String name) {
 		for ( int i = 0; i < names.length; i++ ) {
 			if ( name.equals( names[i] ) ) {

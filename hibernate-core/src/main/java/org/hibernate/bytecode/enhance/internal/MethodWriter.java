@@ -37,7 +37,7 @@ public class MethodWriter {
 	public static CtMethod write(CtClass target, String format, Object ... args) throws CannotCompileException {
 		final String body = String.format( format, args );
 		// System.out.printf( "writing method into [%s]:%n%s%n", target.getName(), body );
-		log.debugf( "writing method into [%s]:%n%s%n", target.getName(), body );
+		log.debugf( "writing method into [%s]:%n%s", target.getName(), body );
 		final CtMethod method = CtNewMethod.make( body, target );
 		target.addMethod( method );
 		return method;
@@ -47,7 +47,7 @@ public class MethodWriter {
 
 	public static CtMethod addGetter(CtClass target, String field, String name) {
 		try {
-			log.debugf( "Writing getter method [%s] into [%s] for field [%s]%n", name, target.getName(), field );
+			log.debugf( "Writing getter method [%s] into [%s] for field [%s]", name, target.getName(), field );
 			final CtMethod method = CtNewMethod.getter( name, target.getField( field ) );
 			target.addMethod( method );
 			return method;
@@ -64,7 +64,7 @@ public class MethodWriter {
 
 	public static CtMethod addSetter(CtClass target, String field, String name) {
 		try {
-			log.debugf( "Writing setter method [%s] into [%s] for field [%s]%n", name, target.getName(), field );
+			log.debugf( "Writing setter method [%s] into [%s] for field [%s]", name, target.getName(), field );
 			final CtMethod method = CtNewMethod.setter( name, target.getField( field ) );
 			target.addMethod( method );
 			return method;

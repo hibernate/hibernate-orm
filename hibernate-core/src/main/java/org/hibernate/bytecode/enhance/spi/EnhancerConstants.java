@@ -138,6 +138,16 @@ public final class EnhancerConstants {
 	public static final String TRACKER_CLEAR_NAME = "$$_hibernate_clearDirtyAttributes";
 
 	/**
+	 * Name of method to suspend dirty tracking
+	 */
+	public static final String TRACKER_SUSPEND_NAME = "$$_hibernate_suspendDirtyTracking";
+
+	/**
+	 * Name of method to check if collection fields are dirty
+	 */
+	public static final String TRACKER_COLLECTION_GET_NAME = "$$_hibernate_getCollectionTracker";
+
+	/**
 	 * Name of method to check if collection fields are dirty
 	 */
 	public static final String TRACKER_COLLECTION_CHANGED_NAME = "$$_hibernate_areCollectionFieldsDirty";

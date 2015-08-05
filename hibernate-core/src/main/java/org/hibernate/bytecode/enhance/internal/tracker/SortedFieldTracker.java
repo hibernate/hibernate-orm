@@ -16,6 +16,7 @@ package org.hibernate.bytecode.enhance.internal.tracker;
 public final class SortedFieldTracker implements DirtyTracker {
 
 	private String[] names;
+	private boolean suspended;
 
 	public SortedFieldTracker() {
 		names = new String[0];
@@ -23,6 +24,9 @@ public final class SortedFieldTracker implements DirtyTracker {
 
 	@Override
 	public void add(String name) {
+		if ( suspended ) {
+			return;
+		}
 		// we do a binary search: even if we don't find the name at least we get the position to insert into the array
 		int insert = 0;
 		for ( int low = 0, high = names.length - 1; low <= high; ) {
@@ -70,7 +74,9 @@ public final class SortedFieldTracker implements DirtyTracker {
 
 	@Override
 	public void clear() {
-		names = new String[0];
+		if ( !isEmpty() ) {
+			names = new String[0];
+		}
 	}
 
 	@Override
@@ -81,6 +87,11 @@ public final class SortedFieldTracker implements DirtyTracker {
 	@Override
 	public String[] get() {
 		return names;
+	}
+
+	@Override
+	public void suspend(boolean suspend) {
+		this.suspended = suspend;
 	}
 
 }

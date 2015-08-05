@@ -34,15 +34,13 @@ public abstract class AttributeTypeDescriptor {
 		final StringBuilder builder = new StringBuilder();
 		try {
 			// should ignore primary keys
-			for ( Object o : currentValue.getType().getAnnotations() ) {
-				if ( o instanceof Id) {
-					return "";
-				}
+			if (PersistentAttributesHelper.hasAnnotation( currentValue, Id.class ) ) {
+				return "";
 			}
 
 			// primitives || enums
 			if ( currentValue.getType().isPrimitive() || currentValue.getType().isEnum() ) {
-				builder.append( String.format( "if (%s != $1)", currentValue.getName() ) );
+				builder.append( String.format( "  if (%s != $1)", currentValue.getName() ) );
 			}
 			// simple data types
 			else if ( currentValue.getType().getName().startsWith( "java.lang" )
@@ -51,7 +49,7 @@ public abstract class AttributeTypeDescriptor {
 					|| currentValue.getType().getName().startsWith( "java.sql.Date" )
 					|| currentValue.getType().getName().startsWith( "java.util.Date" )
 					|| currentValue.getType().getName().startsWith( "java.util.Calendar" ) ) {
-				builder.append( String.format( "if (%s == null || !%<s.equals($1))", currentValue.getName() ) );
+				builder.append( String.format( "  if (%s == null || !%<s.equals($1))", currentValue.getName() ) );
 			}
 			// all other objects
 			else {
@@ -64,14 +62,11 @@ public abstract class AttributeTypeDescriptor {
 						}
 					}
 				}
-				builder.append( String.format( "if (%1$s == null || !%2$s.equals(%1$s, $1))",
+				builder.append( String.format( "  if (%1$s == null || !%2$s.equals(%1$s, $1))",
 												currentValue.getName(),
 												EqualsHelper.class.getName() ) );
 			}
 			builder.append( String.format( "  {  %s(\"%s\");  }", EnhancerConstants.TRACKER_CHANGER_NAME, currentValue.getName() ) );
-		}
-		catch (ClassNotFoundException e) {
-			e.printStackTrace();
 		}
 		catch (NotFoundException e) {
 			e.printStackTrace();
@@ -128,22 +123,18 @@ public abstract class AttributeTypeDescriptor {
 		}
 
 		public String buildReadInterceptionBodyFragment(String fieldName) {
-			return String.format( "" +
-							"if ( %3$s() != null ) {%n" +
-							"  this.%1$s = (%2$s) %3$s().readObject(this, \"%1$s\", this.%1$s);%n" +
-							"}",
+			return String.format(
+					"  if ( %3$s() != null ) { this.%1$s = (%2$s) %3$s().readObject(this, \"%1$s\", this.%1$s); }%n",
 					fieldName,
 					type,
 					EnhancerConstants.INTERCEPTOR_GETTER_NAME );
 		}
 
 		public String buildWriteInterceptionBodyFragment(String fieldName) {
-			return String.format( "" +
-							"%2$s localVar = $1;%n" +
-							"if ( %3$s() != null ) {%n" +
-							"  localVar = (%2$s) %3$s().writeObject(this, \"%1$s\", this.%1$s, $1);%n" +
-							"}%n" +
-							"this.%1$s = localVar;",
+			return String.format(
+					"  %2$s localVar = $1;%n" +
+					"  if ( %3$s() != null ) { localVar = (%2$s) %3$s().writeObject(this, \"%1$s\", this.%1$s, $1); }%n" +
+					"  this.%1$s = localVar;",
 					fieldName,
 					type,
 					EnhancerConstants.INTERCEPTOR_GETTER_NAME );
@@ -166,22 +157,18 @@ public abstract class AttributeTypeDescriptor {
 		}
 
 		public String buildReadInterceptionBodyFragment(String fieldName) {
-			return String.format( "" +
-							"if (%3$s() != null ) {%n" +
-							"  this.%1$s = %3$s().read%2$s(this, \"%1$s\", this.%1$s);%n" +
-							"}",
+			return String.format(
+					"  if (%3$s() != null ) { this.%1$s = %3$s().read%2$s(this, \"%1$s\", this.%1$s); }",
 					fieldName,
 					type,
 					EnhancerConstants.INTERCEPTOR_GETTER_NAME );
 		}
 
 		public String buildWriteInterceptionBodyFragment(String fieldName) {
-			return String.format( "" +
-							"%2$s localVar = $1;%n" +
-							"if ( %4$s() != null ) {%n" +
-							"  localVar = %4$s().write%3$s(this, \"%1$s\", this.%1$s, $1);%n" +
-							"}%n" +
-							"this.%1$s = localVar;",
+			return String.format(
+					"  %2$s localVar = $1;%n" +
+					"  if ( %4$s() != null ) { localVar = %4$s().write%3$s(this, \"%1$s\", this.%1$s, $1); }%n" +
+					"  this.%1$s = localVar;",
 					fieldName,
 					type.toLowerCase( Locale.ROOT ),
 					type,

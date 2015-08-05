@@ -22,8 +22,8 @@ import org.hibernate.property.access.spi.SetterFieldImpl;
  */
 public class PropertyAccessFieldImpl implements PropertyAccess {
 	private final PropertyAccessStrategyFieldImpl strategy;
-	private final GetterFieldImpl getter;
-	private final SetterFieldImpl setter;
+	private final Getter getter;
+	private final Setter setter;
 
 	public PropertyAccessFieldImpl(
 			PropertyAccessStrategyFieldImpl strategy,
@@ -50,4 +50,5 @@ public class PropertyAccessFieldImpl implements PropertyAccess {
 	public Setter getSetter() {
 		return setter;
 	}
+
 }

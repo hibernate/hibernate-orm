@@ -10,8 +10,6 @@ import java.io.Serializable;
 import java.util.Map;
 
 import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
-import org.hibernate.engine.spi.CompositeOwner;
-import org.hibernate.engine.spi.CompositeTracker;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.tuple.NonIdentifierAttribute;
@@ -149,7 +147,6 @@ public class TypeHelper {
 	public static Object[] replace(
 			final Object[] original,
 			final Object[] target,
-			final String[] names,
 			final Type[] types,
 			final SessionImplementor session,
 			final Object owner,
@@ -179,11 +176,6 @@ public class TypeHelper {
 			else {
 				copied[i] = types[i].replace( original[i], target[i], session, owner, copyCache );
 			}
-
-			// for bytecode enhanced entities, set the composite tracking structure
-			if ( copied[i] instanceof CompositeTracker && owner instanceof CompositeOwner ) {
-				( (CompositeTracker) copied[i] ).$$_hibernate_setOwner( names[i], (CompositeOwner) owner );
-			}
 		}
 		return copied;
 	}
@@ -204,7 +196,6 @@ public class TypeHelper {
 	public static Object[] replace(
 			final Object[] original,
 			final Object[] target,
-			final String[] names,
 			final Type[] types,
 			final SessionImplementor session,
 			final Object owner,
@@ -218,11 +209,6 @@ public class TypeHelper {
 			}
 			else {
 				copied[i] = types[i].replace( original[i], target[i], session, owner, copyCache, foreignKeyDirection );
-			}
-
-			// for bytecode enhanced entities, set the composite tracking structure
-			if ( copied[i] instanceof CompositeTracker && owner instanceof CompositeOwner ) {
-				( (CompositeTracker) copied[i] ).$$_hibernate_setOwner( names[i], (CompositeOwner) owner );
 			}
 		}
 		return copied;

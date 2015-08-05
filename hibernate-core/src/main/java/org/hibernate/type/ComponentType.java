@@ -524,10 +524,9 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		Object[] values = TypeHelper.replace(
 				getPropertyValues( original, entityMode ),
 				getPropertyValues( result, entityMode ),
-				propertyNames,
 				propertyTypes,
 				session,
-				result,
+				owner,
 				copyCache
 		);
 
@@ -557,10 +556,9 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		Object[] values = TypeHelper.replace(
 				getPropertyValues( original, entityMode ),
 				getPropertyValues( result, entityMode ),
-				propertyNames,
 				propertyTypes,
 				session,
-				result,
+				owner,
 				copyCache,
 				foreignKeyDirection
 		);

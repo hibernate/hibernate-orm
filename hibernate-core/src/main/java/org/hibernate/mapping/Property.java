@@ -330,6 +330,7 @@ public class Property implements Serializable, MetaAttributable {
 				: EntityMode.POJO;
 
 		return resolveServiceRegistry().getService( PropertyAccessStrategyResolver.class ).resolvePropertyAccessStrategy(
+				clazz,
 				accessName,
 				entityMode
 		);

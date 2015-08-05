@@ -315,6 +315,7 @@ public final class PropertyFactory {
 				mappingProperty.getPersistentClass().getServiceRegistry().getService( PropertyAccessStrategyResolver.class );
 
 		final PropertyAccessStrategy propertyAccessStrategy = propertyAccessStrategyResolver.resolvePropertyAccessStrategy(
+				mappingProperty.getClass(),
 				mappingProperty.getPropertyAccessorName(),
 				EntityMode.POJO
 		);

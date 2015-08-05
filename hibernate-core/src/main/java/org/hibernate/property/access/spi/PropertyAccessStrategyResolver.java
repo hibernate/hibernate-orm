@@ -20,10 +20,14 @@ public interface PropertyAccessStrategyResolver extends Service {
 	/**
 	 * Resolve the PropertyAccessStrategy to use
 	 *
+	 * @param containerClass The java class of the entity
 	 * @param explicitAccessStrategyName The access strategy name explicitly specified, if any.
 	 * @param entityMode The entity mode in effect for the property, used to interpret different default strategies.
 	 *
 	 * @return The resolved PropertyAccessStrategy
 	 */
-	PropertyAccessStrategy resolvePropertyAccessStrategy(String explicitAccessStrategyName, EntityMode entityMode);
+	PropertyAccessStrategy resolvePropertyAccessStrategy(
+			Class containerClass,
+			String explicitAccessStrategyName,
+			EntityMode entityMode);
 }

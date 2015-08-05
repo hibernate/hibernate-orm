@@ -469,7 +469,10 @@ public class SimpleValueBinder {
 
 			if ( typeDef != null ) {
 				type = typeDef.getTypeClass();
-				simpleValue.setTypeParameters( typeDef.getParameters() );
+				if ( simpleValue.getTypeParameters() == null ) {
+					simpleValue.setTypeParameters( new Properties() );
+				}
+				simpleValue.getTypeParameters().putAll( typeDef.getParameters() );
 			}
 			if ( typeParameters != null && typeParameters.size() != 0 ) {
 				//explicit type params takes precedence over type def params

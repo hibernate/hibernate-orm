@@ -9,21 +9,23 @@ package org.hibernate.engine.jdbc.connections.internal;
 import java.beans.BeanInfo;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
+import java.sql.Connection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
@@ -108,7 +110,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		if ( providerName != null ) {
 			connectionProvider = instantiateExplicitConnectionProvider( providerName, strategySelector );
 		}
-		else if ( configurationValues.get( Environment.DATASOURCE ) != null ) {
+		else if ( configurationValues.get( AvailableSettings.DATASOURCE ) != null ) {
 			connectionProvider = new DatasourceConnectionProviderImpl();
 		}
 
@@ -131,7 +133,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		}
 
 		if ( connectionProvider == null ) {
-			if ( configurationValues.get( Environment.URL ) != null ) {
+			if ( configurationValues.get( AvailableSettings.URL ) != null ) {
 				connectionProvider = new DriverManagerConnectionProviderImpl();
 			}
 		}
@@ -169,7 +171,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	}
 
 	private String getConfiguredConnectionProviderName( Map configurationValues ) {
-		String providerName = (String) configurationValues.get( Environment.CONNECTION_PROVIDER );
+		String providerName = (String) configurationValues.get( AvailableSettings.CONNECTION_PROVIDER );
 		if ( LEGACY_CONNECTION_PROVIDER_MAPPING.containsKey( providerName ) ) {
 			final String actualProviderName = LEGACY_CONNECTION_PROVIDER_MAPPING.get( providerName );
 			DeprecationLogger.DEPRECATION_LOGGER.connectionProviderClassDeprecated( providerName, actualProviderName );
@@ -274,15 +276,15 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			}
 			final String key = (String) entry.getKey();
 			final String value = (String) entry.getValue();
-			if ( key.startsWith( Environment.CONNECTION_PREFIX ) ) {
+			if ( key.startsWith( AvailableSettings.CONNECTION_PREFIX ) ) {
 				if ( SPECIAL_PROPERTIES.contains( key ) ) {
-					if ( Environment.USER.equals( key ) ) {
+					if ( AvailableSettings.USER.equals( key ) ) {
 						result.setProperty( "user", value );
 					}
 				}
 				else {
 					result.setProperty(
-							key.substring( Environment.CONNECTION_PREFIX.length() + 1 ),
+							key.substring( AvailableSettings.CONNECTION_PREFIX.length() + 1 ),
 							value
 					);
 				}
@@ -296,15 +298,45 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 
 	private static final Set<String> SPECIAL_PROPERTIES;
 
+	private static final Map<String,Integer> ISOLATION_VALUE_MAP;
+	private static final Map<Integer, String> ISOLATION_VALUE_CONSTANT_NAME_MAP;
+	private static final Map<Integer, String> ISOLATION_VALUE_NICE_NAME_MAP;
+
 	static {
 		SPECIAL_PROPERTIES = new HashSet<String>();
-		SPECIAL_PROPERTIES.add( Environment.DATASOURCE );
-		SPECIAL_PROPERTIES.add( Environment.URL );
-		SPECIAL_PROPERTIES.add( Environment.CONNECTION_PROVIDER );
-		SPECIAL_PROPERTIES.add( Environment.POOL_SIZE );
-		SPECIAL_PROPERTIES.add( Environment.ISOLATION );
-		SPECIAL_PROPERTIES.add( Environment.DRIVER );
-		SPECIAL_PROPERTIES.add( Environment.USER );
+		SPECIAL_PROPERTIES.add( AvailableSettings.DATASOURCE );
+		SPECIAL_PROPERTIES.add( AvailableSettings.URL );
+		SPECIAL_PROPERTIES.add( AvailableSettings.CONNECTION_PROVIDER );
+		SPECIAL_PROPERTIES.add( AvailableSettings.POOL_SIZE );
+		SPECIAL_PROPERTIES.add( AvailableSettings.ISOLATION );
+		SPECIAL_PROPERTIES.add( AvailableSettings.DRIVER );
+		SPECIAL_PROPERTIES.add( AvailableSettings.USER );
+
+		ISOLATION_VALUE_MAP = new ConcurrentHashMap<String, Integer>();
+		ISOLATION_VALUE_MAP.put( "TRANSACTION_NONE", Connection.TRANSACTION_NONE );
+		ISOLATION_VALUE_MAP.put( "NONE", Connection.TRANSACTION_NONE );
+		ISOLATION_VALUE_MAP.put( "TRANSACTION_READ_UNCOMMITTED", Connection.TRANSACTION_READ_UNCOMMITTED );
+		ISOLATION_VALUE_MAP.put( "READ_UNCOMMITTED", Connection.TRANSACTION_READ_UNCOMMITTED );
+		ISOLATION_VALUE_MAP.put( "TRANSACTION_READ_COMMITTED", Connection.TRANSACTION_READ_COMMITTED );
+		ISOLATION_VALUE_MAP.put( "READ_COMMITTED", Connection.TRANSACTION_READ_COMMITTED );
+		ISOLATION_VALUE_MAP.put( "TRANSACTION_REPEATABLE_READ", Connection.TRANSACTION_REPEATABLE_READ );
+		ISOLATION_VALUE_MAP.put( "REPEATABLE_READ", Connection.TRANSACTION_REPEATABLE_READ );
+		ISOLATION_VALUE_MAP.put( "TRANSACTION_SERIALIZABLE", Connection.TRANSACTION_SERIALIZABLE );
+		ISOLATION_VALUE_MAP.put( "SERIALIZABLE", Connection.TRANSACTION_SERIALIZABLE );
+
+		ISOLATION_VALUE_CONSTANT_NAME_MAP = new ConcurrentHashMap<Integer, String>();
+		ISOLATION_VALUE_CONSTANT_NAME_MAP.put( Connection.TRANSACTION_NONE, "TRANSACTION_NONE" );
+		ISOLATION_VALUE_CONSTANT_NAME_MAP.put( Connection.TRANSACTION_READ_UNCOMMITTED, "TRANSACTION_READ_UNCOMMITTED" );
+		ISOLATION_VALUE_CONSTANT_NAME_MAP.put( Connection.TRANSACTION_READ_COMMITTED, "TRANSACTION_READ_COMMITTED" );
+		ISOLATION_VALUE_CONSTANT_NAME_MAP.put( Connection.TRANSACTION_REPEATABLE_READ, "TRANSACTION_REPEATABLE_READ" );
+		ISOLATION_VALUE_CONSTANT_NAME_MAP.put( Connection.TRANSACTION_SERIALIZABLE, "TRANSACTION_SERIALIZABLE" );
+
+		ISOLATION_VALUE_NICE_NAME_MAP = new ConcurrentHashMap<Integer, String>();
+		ISOLATION_VALUE_NICE_NAME_MAP.put( Connection.TRANSACTION_NONE, "NONE" );
+		ISOLATION_VALUE_NICE_NAME_MAP.put( Connection.TRANSACTION_READ_UNCOMMITTED, "READ_UNCOMMITTED" );
+		ISOLATION_VALUE_NICE_NAME_MAP.put( Connection.TRANSACTION_READ_COMMITTED, "READ_COMMITTED" );
+		ISOLATION_VALUE_NICE_NAME_MAP.put( Connection.TRANSACTION_REPEATABLE_READ, "REPEATABLE_READ" );
+		ISOLATION_VALUE_NICE_NAME_MAP.put( Connection.TRANSACTION_SERIALIZABLE, "SERIALIZABLE" );
 	}
 
 	// Connection properties (map value) that automatically need set if the
@@ -315,6 +347,81 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	static {
 		CONDITIONAL_PROPERTIES = new HashMap<String, String>();
 		// Oracle requires that includeSynonyms=true in order for getColumns to work using a table synonym name.
-		CONDITIONAL_PROPERTIES.put( Environment.ENABLE_SYNONYMS, "includeSynonyms" );
+		CONDITIONAL_PROPERTIES.put( AvailableSettings.ENABLE_SYNONYMS, "includeSynonyms" );
+	}
+
+	public static Integer extractIsolation(Map settings) {
+		return interpretIsolation( settings.get( AvailableSettings.ISOLATION ) );
+	}
+
+	public static Integer interpretIsolation(Object setting) {
+		if ( setting == null ) {
+			return null;
+		}
+
+		if ( Number.class.isInstance( setting ) ) {
+			return ( (Number) setting ).intValue();
+		}
+
+		final String settingAsString = setting.toString();
+		if ( StringHelper.isEmpty( settingAsString ) ) {
+			return null;
+		}
+
+		if ( ISOLATION_VALUE_MAP.containsKey( settingAsString ) ) {
+			return ISOLATION_VALUE_MAP.get( settingAsString );
+		}
+
+		// it could be a String representation of the isolation numeric value...
+		try {
+			return Integer.valueOf( settingAsString );
+		}
+		catch (NumberFormatException ignore) {
+		}
+
+		throw new HibernateException( "Could not interpret transaction isolation setting [" + setting + "]" );
+	}
+
+	/**
+	 * Gets the {@link Connection} constant name corresponding to the given isolation.
+	 *
+	 * @param isolation The transaction isolation numeric value.
+	 *
+	 * @return The corresponding Connection constant name.
+	 *
+	 * @throws HibernateException If the given isolation does not map to JDBC standard isolation
+	 *
+	 * @see #toIsolationNiceName
+	 */
+	public static String toIsolationConnectionConstantName(Integer isolation) {
+		final String name = ISOLATION_VALUE_CONSTANT_NAME_MAP.get( isolation );
+		if ( name == null ) {
+			throw new HibernateException(
+					"Could not convert isolation value [" + isolation + "] to java.sql.Connection constant name"
+			);
+		}
+		return name;
+	}
+
+	/**
+	 * Get the name of a JDBC transaction isolation level
+	 *
+	 * @param isolation The transaction isolation numeric value.
+	 *
+	 * @return a nice human-readable name
+	 *
+	 * @see #toIsolationConnectionConstantName
+	 */
+	public static String toIsolationNiceName(Integer isolation) {
+		String name = null;
+
+		if ( isolation != null ) {
+			name = ISOLATION_VALUE_NICE_NAME_MAP.get( isolation );
+		}
+
+		if ( name == null ) {
+			name = "<unknown>";
+		}
+		return name;
 	}
 }

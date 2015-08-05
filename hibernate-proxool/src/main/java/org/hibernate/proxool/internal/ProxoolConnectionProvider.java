@@ -18,6 +18,7 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -188,10 +189,8 @@ public class ProxoolConnectionProvider
 		}
 
 		// Remember Isolation level
-		isolation = ConfigurationHelper.getInteger( Environment.ISOLATION, props );
-		if ( isolation != null ) {
-			LOG.jdbcIsolationLevel( Environment.isolationLevelToString( isolation.intValue() ) );
-		}
+		isolation = ConnectionProviderInitiator.extractIsolation( props );
+		LOG.jdbcIsolationLevel( ConnectionProviderInitiator.toIsolationNiceName( isolation ) );
 
 		autocommit = ConfigurationHelper.getBoolean( Environment.AUTOCOMMIT, props );
 		LOG.autoCommmitMode( autocommit );

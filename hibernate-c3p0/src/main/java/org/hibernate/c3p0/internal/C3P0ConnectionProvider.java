@@ -197,15 +197,8 @@ public class C3P0ConnectionProvider
 			throw new HibernateException( LOG.unableToInstantiateC3p0ConnectionPool(), e );
 		}
 
-		final String i = (String) props.get( Environment.ISOLATION );
-		if ( StringHelper.isEmpty( i ) ) {
-			isolation = null;
-		}
-		else {
-			isolation = Integer.valueOf( i );
-			LOG.jdbcIsolationLevel( Environment.isolationLevelToString( isolation ) );
-		}
-
+		isolation = ConnectionProviderInitiator.extractIsolation( props );
+		LOG.jdbcIsolationLevel( ConnectionProviderInitiator.toIsolationNiceName( isolation ) );
 	}
 
 	@Override

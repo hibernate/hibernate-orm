@@ -39,7 +39,9 @@ Working list of changes for 5.0
     the configuration must explicitly state that using either the `useNamed` (true) setting or by specifying the `type`
     setting set to the value 12 (VARCHAR JDBC type code).
 * Default value for `hibernate.id.new_generator_mappings` setting changed to true for 5.0.  See 
-    `org.hibernate.cfg.AvailableSettings#USE_NEW_ID_GENERATOR_MAPPINGS` javadocs. 
+    `org.hibernate.cfg.AvailableSettings#USE_NEW_ID_GENERATOR_MAPPINGS` javadocs.
+* The default ImplicitNamingStrategy (`hibernate.implicit_naming_strategy`) has changed to the JPA-compliant one.  See 
+    `org.hibernate.cfg.AvailableSettings.IMPLICIT_NAMING_STRATEGY` javadocs for details.
     
 
 TODOs
@@ -67,7 +69,7 @@ Blog items
     * integrated with hibernate-envers
     * collection values, map keys
 * scanning support for non-JPA usage
-* naming strategy
+* naming strategy split.  default is now to be jpa-compliant
 * OSGi improvements, Karaf feature file published
 
 

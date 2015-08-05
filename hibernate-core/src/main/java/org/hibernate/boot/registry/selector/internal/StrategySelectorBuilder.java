@@ -9,6 +9,11 @@ package org.hibernate.boot.registry.selector.internal;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyHbmImpl;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.SimpleStrategyRegistrationImpl;
 import org.hibernate.boot.registry.selector.StrategyRegistration;
@@ -151,6 +156,7 @@ public class StrategySelectorBuilder {
 		addTransactionCoordinatorBuilders( strategySelector );
 		addMultiTableBulkIdStrategies( strategySelector );
 		addEntityCopyObserverStrategies( strategySelector );
+		addImplicitNamingStrategies( strategySelector );
 
 		// apply auto-discovered registrations
 		for ( StrategyRegistrationProvider provider : classLoaderService.loadJavaServices( StrategyRegistrationProvider.class ) ) {
@@ -383,6 +389,34 @@ public class StrategySelectorBuilder {
 				EntityCopyObserver.class,
 				EntityCopyAllowedLoggedObserver.SHORT_NAME,
 				EntityCopyAllowedLoggedObserver.class
+		);
+	}
+
+	private void addImplicitNamingStrategies(StrategySelectorImpl strategySelector) {
+		strategySelector.registerStrategyImplementor(
+				ImplicitNamingStrategy.class,
+				"default",
+				ImplicitNamingStrategyJpaCompliantImpl.class
+		);
+		strategySelector.registerStrategyImplementor(
+				ImplicitNamingStrategy.class,
+				"jpa",
+				ImplicitNamingStrategyJpaCompliantImpl.class
+		);
+		strategySelector.registerStrategyImplementor(
+				ImplicitNamingStrategy.class,
+				"legacy-jpa",
+				ImplicitNamingStrategyLegacyJpaImpl.class
+		);
+		strategySelector.registerStrategyImplementor(
+				ImplicitNamingStrategy.class,
+				"legacy-hbm",
+				ImplicitNamingStrategyLegacyHbmImpl.class
+		);
+		strategySelector.registerStrategyImplementor(
+				ImplicitNamingStrategy.class,
+				"component-path",
+				ImplicitNamingStrategyComponentPathImpl.class
 		);
 	}
 }

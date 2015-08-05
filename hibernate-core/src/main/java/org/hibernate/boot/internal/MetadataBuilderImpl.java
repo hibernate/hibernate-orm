@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import javax.persistence.AttributeConverter;
 import javax.persistence.SharedCacheMode;
 
@@ -39,6 +40,7 @@ import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
@@ -672,7 +674,16 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			implicitNamingStrategy = strategySelector.resolveDefaultableStrategy(
 					ImplicitNamingStrategy.class,
 					configService.getSettings().get( AvailableSettings.IMPLICIT_NAMING_STRATEGY ),
-					ImplicitNamingStrategyLegacyJpaImpl.INSTANCE
+					new Callable<ImplicitNamingStrategy>() {
+						@Override
+						public ImplicitNamingStrategy call() throws Exception {
+							return strategySelector.resolveDefaultableStrategy(
+									ImplicitNamingStrategy.class,
+									"default",
+									ImplicitNamingStrategyJpaCompliantImpl.INSTANCE
+							);
+						}
+					}
 			);
 
 			physicalNamingStrategy = strategySelector.resolveDefaultableStrategy(

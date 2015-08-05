@@ -29,18 +29,18 @@ import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 @TestForIssue( jiraKey = "HHH-9467" )
 public class StandaloneSchemaToolsNamingTest extends BaseUnitTestCase {
 	@Test
-	public void testDefaultNamingStrategy() throws Exception {
+	public void testDefaultImplicitNamingStrategy() throws Exception {
 		checkNamingStrategies(
 				new String[] {
 						"--text",
 						"--config=org/hibernate/test/schematoolsnaming/hibernate.cfg.xml"
 				},
-				ImplicitNamingStrategyLegacyJpaImpl.class
+				ImplicitNamingStrategyJpaCompliantImpl.class
 		);
 	}
 
 	@Test
-	public void testDeprecatedNamingStrategy() throws Exception {
+	public void testDeprecatedNamingSetting() throws Exception {
 		// output should be the same as above test, --naming should simply produce a logged warning
 		checkNamingStrategies(
 				new String[] {
@@ -48,19 +48,31 @@ public class StandaloneSchemaToolsNamingTest extends BaseUnitTestCase {
 						"--config=org/hibernate/test/schematoolsnaming/hibernate.cfg.xml",
 						"--naming=DoesNotExist",
 				},
+				ImplicitNamingStrategyJpaCompliantImpl.class
+		);
+	}
+
+	@Test
+	public void testImplicitNamingStrategySettingFullName() throws Exception {
+		checkNamingStrategies(
+				new String[] {
+						"--text",
+						"--config=org/hibernate/test/schematoolsnaming/hibernate.cfg.xml",
+						"--implicit-naming=" + ImplicitNamingStrategyLegacyJpaImpl.class.getName(),
+				},
 				ImplicitNamingStrategyLegacyJpaImpl.class
 		);
 	}
 
 	@Test
-	public void testJpaCompliantNamingStrategy() throws Exception {
+	public void testImplicitNamingStrategySettingShortName() throws Exception {
 		checkNamingStrategies(
 				new String[] {
 						"--text",
 						"--config=org/hibernate/test/schematoolsnaming/hibernate.cfg.xml",
-						"--implicit-naming=" + ImplicitNamingStrategyJpaCompliantImpl.class.getName(),
+						"--implicit-naming=legacy-jpa",
 				},
-				ImplicitNamingStrategyJpaCompliantImpl.class
+				ImplicitNamingStrategyLegacyJpaImpl.class
 		);
 	}
 

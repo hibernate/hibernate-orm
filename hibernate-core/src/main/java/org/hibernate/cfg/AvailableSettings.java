@@ -358,7 +358,17 @@ public interface AvailableSettings {
 	String SCANNER_DISCOVERY = "hibernate.archive.autodetection";
 
 	/**
-	 * Used to specify the {@link org.hibernate.boot.model.naming.ImplicitNamingStrategy} class to use.
+	 * Used to specify the {@link org.hibernate.boot.model.naming.ImplicitNamingStrategy} class to use.  The following
+	 * short-names are defined for this setting:<ul>
+	 *     <li>"default" -> {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl}</li>
+	 *     <li>"jpa" -> {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl}</li>
+	 *     <li>"legacy-jpa" -> {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl}</li>
+	 *     <li>"legacy-hbm" -> {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyHbmImpl}</li>
+	 *     <li>"component-path" -> {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl}</li>
+	 * </ul>
+	 *
+	 * The default is defined by the ImplicitNamingStrategy registered under the "default" key.  If that happens to
+	 * be empty, the fallback is to use {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl}.
 	 *
 	 * @see MetadataBuilder#applyImplicitNamingStrategy
 	 *

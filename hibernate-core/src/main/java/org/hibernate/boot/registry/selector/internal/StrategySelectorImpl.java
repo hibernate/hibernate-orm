@@ -8,6 +8,7 @@ package org.hibernate.boot.registry.selector.internal;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -116,14 +117,37 @@ public class StrategySelectorImpl implements StrategySelector {
 
 	@Override
 	public <T> T resolveStrategy(Class<T> strategy, Object strategyReference) {
-		return resolveDefaultableStrategy( strategy, strategyReference, null );
+		return resolveDefaultableStrategy( strategy, strategyReference, (T) null );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> T resolveDefaultableStrategy(Class<T> strategy, Object strategyReference, T defaultValue) {
+	public <T> T resolveDefaultableStrategy(Class<T> strategy, Object strategyReference, final T defaultValue) {
+		return resolveDefaultableStrategy(
+				strategy,
+				strategyReference,
+				new Callable<T>() {
+					@Override
+					public T call() {
+						return defaultValue;
+					}
+				}
+		);
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> T resolveDefaultableStrategy(
+			Class<T> strategy,
+			Object strategyReference,
+			Callable<T> defaultResolver) {
 		if ( strategyReference == null ) {
-			return defaultValue;
+			try {
+				return defaultResolver.call();
+			}
+			catch (Exception e) {
+				throw new StrategySelectionException( "Default-resolver threw exception", e );
+			}
 		}
 
 		if ( strategy.isInstance( strategyReference ) ) {

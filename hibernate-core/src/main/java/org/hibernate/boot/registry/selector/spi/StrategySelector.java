@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.registry.selector.spi;
 
+import java.util.concurrent.Callable;
+
 import org.hibernate.service.Service;
 
 /**
@@ -40,7 +42,7 @@ public interface StrategySelector extends Service {
 	 * @param <T> The type of the strategy.  Used to make sure that the strategy and implementation are type
 	 * compatible.
 	 */
-	public <T> void registerStrategyImplementor(Class<T> strategy, String name, Class<? extends T> implementation);
+	<T> void registerStrategyImplementor(Class<T> strategy, String name, Class<? extends T> implementation);
 
 	/**
 	 * Un-registers a named implementor of a particular strategy contract.  Un-registers all named registrations
@@ -51,7 +53,7 @@ public interface StrategySelector extends Service {
 	 * @param <T> The type of the strategy.  Used to make sure that the strategy and implementation are type
 	 * compatible.
 	 */
-	public <T> void unRegisterStrategyImplementor(Class<T> strategy, Class<? extends T> implementation);
+	<T> void unRegisterStrategyImplementor(Class<T> strategy, Class<? extends T> implementation);
 
 	/**
 	 * Locate the named strategy implementation.
@@ -63,7 +65,7 @@ public interface StrategySelector extends Service {
 	 *
 	 * @return The named strategy implementation class.
 	 */
-	public <T> Class<? extends T> selectStrategyImplementor(Class<T> strategy, String name);
+	<T> Class<? extends T> selectStrategyImplementor(Class<T> strategy, String name);
 
 	/**
 	 * Resolve strategy instances. See discussion on {@link #resolveDefaultableStrategy}.
@@ -76,7 +78,7 @@ public interface StrategySelector extends Service {
 	 *
 	 * @return The strategy instance
 	 */
-	public <T> T resolveStrategy(Class<T> strategy, Object strategyReference);
+	<T> T resolveStrategy(Class<T> strategy, Object strategyReference);
 
 	/**
 	 * Resolve strategy instances. The incoming reference might be:<ul>
@@ -104,5 +106,33 @@ public interface StrategySelector extends Service {
 	 *
 	 * @return The strategy instance
 	 */
-	public <T> T resolveDefaultableStrategy(Class<T> strategy, Object strategyReference, T defaultValue);
+	<T> T resolveDefaultableStrategy(Class<T> strategy, Object strategyReference, T defaultValue);
+
+	/**
+	 * Resolve strategy instances. The incoming reference might be:<ul>
+	 *     <li>
+	 *         {@code null} - in which case defaultValue is returned.
+	 *     </li>
+	 *     <li>
+	 *         An actual instance of the strategy type - it is returned, as is
+	 *     </li>
+	 *     <li>
+	 *         A reference to the implementation {@link Class} - an instance is created by calling
+	 *         {@link Class#newInstance()} (aka, the class's no-arg ctor).
+	 *     </li>
+	 *     <li>
+	 *         The name of the implementation class - First the implementation's {@link Class} reference
+	 *         is resolved, and then an instance is created by calling {@link Class#newInstance()}
+	 *     </li>
+	 * </ul>
+	 *
+	 * @param strategy The type (interface) of the strategy to be resolved.
+	 * @param strategyReference The reference to the strategy for which we need to resolve an instance.
+	 * @param defaultResolver A strategy for resolving the default value strategyReference resolves to null.
+	 * @param <T> The type of the strategy.  Used to make sure that the strategy and implementation are type
+	 * compatible.
+	 *
+	 * @return The strategy instance
+	 */
+	<T> T resolveDefaultableStrategy(Class<T> strategy, Object strategyReference, Callable<T> defaultResolver);
 }

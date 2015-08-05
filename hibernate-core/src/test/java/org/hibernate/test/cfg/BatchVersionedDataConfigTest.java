@@ -26,6 +26,7 @@ package org.hibernate.test.cfg;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.dialect.Oracle12cDialect;
 import org.hibernate.dialect.Oracle8iDialect;
@@ -33,6 +34,8 @@ import org.hibernate.dialect.Oracle9Dialect;
 import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.dialect.OracleDialect;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -44,78 +47,73 @@ import static org.junit.Assert.assertThat;
  * @author Andrea Boriero
  */
 public class BatchVersionedDataConfigTest extends BaseUnitTestCase {
-	public static final String CFG_XML = "org/hibernate/test/cfg/cache/hibernate.cfg.xml";
+
+	private SessionFactory sessionFactory;
+	private Configuration cfg;
+
+	@Before
+	public void setUp() {
+		cfg = new Configuration();
+	}
+
+	@After
+	public void tearDown() {
+		if ( sessionFactory != null ) {
+			sessionFactory.close();
+		}
+	}
 
 	@Test
-	public void testBatchVersionedData() {
-		Configuration cfg = new Configuration().configure( CFG_XML );
-		SessionFactory sessionFactory = cfg.buildSessionFactory();
+	public void testBatchVersionedDataForDialectNotSettingBatchVersionedDataProperty() {
+		cfg.setProperty( AvailableSettings.DIALECT, H2Dialect.class.getName() );
+		sessionFactory = cfg.buildSessionFactory();
 		assertThat( sessionFactory.getSessionFactoryOptions().isJdbcBatchVersionedData(), is( true ) );
 	}
 
 	@Test
 	public void testBatchVersionedDataForOracle10gDialect() {
-		Configuration cfg = new Configuration().configure( CFG_XML )
-				.setProperty(
-						AvailableSettings.DIALECT,
-						Oracle10gDialect.class.getName()
-				);
-		SessionFactory sessionFactory = cfg.buildSessionFactory();
+		cfg.setProperty( AvailableSettings.DIALECT, Oracle10gDialect.class.getName() );
+		sessionFactory = cfg.buildSessionFactory();
+
 		assertThat( sessionFactory.getSessionFactoryOptions().isJdbcBatchVersionedData(), is( false ) );
 	}
 
 	@Test
 	public void testBatchVersionedDataForOracle8iDialect() {
-		Configuration cfg = new Configuration().configure( CFG_XML )
-				.setProperty(
-						AvailableSettings.DIALECT,
-						Oracle8iDialect.class.getName()
-				);
-		SessionFactory sessionFactory = cfg.buildSessionFactory();
+		cfg.setProperty( AvailableSettings.DIALECT, Oracle8iDialect.class.getName() );
+		sessionFactory = cfg.buildSessionFactory();
+
 		assertThat( sessionFactory.getSessionFactoryOptions().isJdbcBatchVersionedData(), is( false ) );
 	}
 
 	@Test
 	public void testBatchVersionedDataForOracle9iDialect() {
-		Configuration cfg = new Configuration().configure( CFG_XML )
-				.setProperty(
-						AvailableSettings.DIALECT,
-						Oracle9iDialect.class.getName()
-				);
-		SessionFactory sessionFactory = cfg.buildSessionFactory();
+		cfg.setProperty( AvailableSettings.DIALECT, Oracle9iDialect.class.getName() );
+		sessionFactory = cfg.buildSessionFactory();
+
 		assertThat( sessionFactory.getSessionFactoryOptions().isJdbcBatchVersionedData(), is( false ) );
 	}
 
 	@Test
 	public void testBatchVersionedDataForOracle9Dialect() {
-		Configuration cfg = new Configuration().configure( CFG_XML )
-				.setProperty(
-						AvailableSettings.DIALECT,
-						Oracle9Dialect.class.getName()
-				);
-		SessionFactory sessionFactory = cfg.buildSessionFactory();
+		cfg.setProperty( AvailableSettings.DIALECT, Oracle9Dialect.class.getName() );
+		sessionFactory = cfg.buildSessionFactory();
 		assertThat( sessionFactory.getSessionFactoryOptions().isJdbcBatchVersionedData(), is( false ) );
 	}
 
 	@Test
 	public void testBatchVersionedDataForOracleDialect() {
-		Configuration cfg = new Configuration().configure( CFG_XML )
-				.setProperty(
-						AvailableSettings.DIALECT,
-						OracleDialect.class.getName()
-				);
-		SessionFactory sessionFactory = cfg.buildSessionFactory();
+		cfg.setProperty( AvailableSettings.DIALECT, OracleDialect.class.getName() );
+		sessionFactory = cfg.buildSessionFactory();
+
 		assertThat( sessionFactory.getSessionFactoryOptions().isJdbcBatchVersionedData(), is( false ) );
 	}
 
 	@Test
 	public void testBatchVersionedDataForOracle12cDialect() {
-		Configuration cfg = new Configuration().configure( CFG_XML )
-				.setProperty(
-						AvailableSettings.DIALECT,
-						Oracle12cDialect.class.getName()
-				);
-		SessionFactory sessionFactory = cfg.buildSessionFactory();
+		cfg.setProperty( AvailableSettings.DIALECT, Oracle12cDialect.class.getName() );
+		sessionFactory = cfg.buildSessionFactory();
+
 		assertThat( sessionFactory.getSessionFactoryOptions().isJdbcBatchVersionedData(), is( true ) );
 	}
 }

@@ -667,4 +667,9 @@ public class Oracle8iDialect extends Dialect {
 		// Oracle supports returning cursors
 		return StandardCallableStatementSupport.REF_CURSOR_INSTANCE;
 	}
+
+	@Override
+	public boolean canCreateSchema() {
+		return false;
+	}
 }

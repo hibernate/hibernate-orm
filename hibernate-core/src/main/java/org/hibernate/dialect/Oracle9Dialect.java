@@ -396,4 +396,9 @@ public class Oracle9Dialect extends Dialect {
 	public String getNotExpression(String expression) {
 		return "not (" + expression + ")";
 	}
+
+	@Override
+	public boolean canCreateSchema() {
+		return false;
+	}
 }

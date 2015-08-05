@@ -43,6 +43,9 @@ public class DirtyTrackerTest {
         tracker.add("another.bar");
         assertTrue(tracker.get().length == 4);
 
+        tracker.suspend(true);
+        tracker.add("one more");
+        assertTrue(tracker.get().length == 4);
     }
 
     @Test
@@ -69,6 +72,10 @@ public class DirtyTrackerTest {
 
         // we the algorithm for this implementation relies on the fact that the array is kept sorted, so let's check it really is
         assertTrue(isSorted(tracker.get()));
+
+        tracker.suspend(true);
+        tracker.add("one more");
+        assertTrue(tracker.get().length == 4);
     }
 
     private boolean isSorted(String[] arr) {

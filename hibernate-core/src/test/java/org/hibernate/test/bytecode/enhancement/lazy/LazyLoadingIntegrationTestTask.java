@@ -75,7 +75,7 @@ public class LazyLoadingIntegrationTestTask extends AbstractEnhancerTestTask {
 		loadedChildren.remove( loadedChild );
 		loadedParent.setChildren( loadedChildren );
 
-		EnhancerTestUtils.checkDirtyTracking( loadedParent );
+		EnhancerTestUtils.checkDirtyTracking( loadedParent, "children" );
 		Assert.assertNull( loadedChild.parent );
 
 		s.getTransaction().commit();

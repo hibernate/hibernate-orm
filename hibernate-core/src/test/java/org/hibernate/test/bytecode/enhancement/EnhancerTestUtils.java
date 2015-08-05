@@ -9,13 +9,10 @@ package org.hibernate.test.bytecode.enhancement;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 
 import javassist.ClassPool;
@@ -150,9 +147,12 @@ public abstract class EnhancerTestUtils extends BaseUnitTestCase {
 
 					final byte[] enhanced = new Enhancer( enhancementContext ).enhance( name, original );
 
-					Path debugOutput = Paths.get( workingDir + File.separator +  name.replace( '.', '/' ) + ".class" );
-					Files.createDirectories( debugOutput.getParent() );
-					Files.write( debugOutput, enhanced, StandardOpenOption.CREATE );
+					File f = new File( workingDir + File.separator + name.replace( ".", File.separator ) + ".class" );
+					f.getParentFile().mkdirs();
+					f.createNewFile();
+					FileOutputStream out = new FileOutputStream( f );
+					out.write( enhanced );
+					out.close();
 
 					return defineClass( name, enhanced, 0, enhanced.length );
 				}

@@ -23,6 +23,9 @@ import org.hibernate.test.bytecode.enhancement.join.HHH3949TestTask4;
 import org.hibernate.test.bytecode.enhancement.lazy.LazyBasicFieldNotInitializedTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.LazyLoadingIntegrationTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.LazyLoadingTestTask;
+import org.hibernate.test.bytecode.enhancement.lazy.basic.LazyBasicFieldAccessTestTask;
+import org.hibernate.test.bytecode.enhancement.lazy.basic.LazyBasicPropertyAccessTestTask;
+import org.hibernate.test.bytecode.enhancement.merge.CompositeMergeTestTask;
 import org.junit.Test;
 
 /**
@@ -51,7 +54,16 @@ public class EnhancerTest extends BaseUnitTestCase {
 	public void testLazy() {
 		EnhancerTestUtils.runEnhancerTestTask( LazyLoadingTestTask.class );
 		EnhancerTestUtils.runEnhancerTestTask( LazyLoadingIntegrationTestTask.class );
+
+		EnhancerTestUtils.runEnhancerTestTask( LazyBasicPropertyAccessTestTask.class );
+		EnhancerTestUtils.runEnhancerTestTask( LazyBasicFieldAccessTestTask.class );
 	}
+
+	@Test
+	public void testMerge() {
+		EnhancerTestUtils.runEnhancerTestTask( CompositeMergeTestTask.class );
+	}
+
 
 	@Test
 	public void testFieldAccess() {

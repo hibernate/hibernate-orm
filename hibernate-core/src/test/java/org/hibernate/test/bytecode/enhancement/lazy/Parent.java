@@ -22,13 +22,12 @@ import javax.persistence.OneToMany;
 @Entity
 public class Parent {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
 	Long id;
 
-	@OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	List<Child> children;
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	public Long getId() {
 		return id;
 	}
@@ -37,6 +36,7 @@ public class Parent {
 		this.id = id;
 	}
 
+	@OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	public List<Child> getChildren() {
 		return children;
 	}

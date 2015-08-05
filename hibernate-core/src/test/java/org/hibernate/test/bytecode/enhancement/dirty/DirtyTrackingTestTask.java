@@ -30,19 +30,19 @@ public class DirtyTrackingTestTask extends AbstractEnhancerTestTask {
 		SimpleEntity entity = new SimpleEntity();
 
 		// Basic single field
-		entity.getId();
+		entity.getSomeNumber();
 		EnhancerTestUtils.checkDirtyTracking( entity );
-		entity.setId( 1l );
-		EnhancerTestUtils.checkDirtyTracking( entity, "id" );
+		entity.setSomeNumber( 1l );
+		EnhancerTestUtils.checkDirtyTracking( entity, "someNumber" );
 		EnhancerTestUtils.clearDirtyTracking( entity );
-		entity.setId( entity.getId() );
+		entity.setSomeNumber( entity.getSomeNumber() );
 		EnhancerTestUtils.checkDirtyTracking( entity );
 
-		// Basic multi-field
+		// Basic multi-field (Id properties are not flagged as dirty)
 		entity.setId( 2l );
 		entity.setActive( !entity.isActive() );
 		entity.setSomeNumber( 193L );
-		EnhancerTestUtils.checkDirtyTracking( entity, "id", "active", "someNumber" );
+		EnhancerTestUtils.checkDirtyTracking( entity, "active", "someNumber" );
 		EnhancerTestUtils.clearDirtyTracking( entity );
 
 		// Setting the same value should not make it dirty
@@ -70,7 +70,7 @@ public class DirtyTrackingTestTask extends AbstractEnhancerTestTask {
 		Address address = new Address();
 		entity.setAddress( address );
 		address.setCity( "Arendal" );
-		EnhancerTestUtils.checkDirtyTracking( entity, "address", "address.city" );
+		EnhancerTestUtils.checkDirtyTracking( entity, "address" );
 		EnhancerTestUtils.clearDirtyTracking( entity );
 
 		// make sure that new composite instances are cleared
@@ -82,7 +82,7 @@ public class DirtyTrackingTestTask extends AbstractEnhancerTestTask {
 		Country country = new Country();
 		address2.setCountry( country );
 		country.setName( "Norway" );
-		EnhancerTestUtils.checkDirtyTracking( entity, "address", "address.country", "address.country.name" );
+		EnhancerTestUtils.checkDirtyTracking( entity, "address", "address.country" );
 
 	}
 

@@ -102,6 +102,8 @@ public abstract class DecompileUtils {
 						assertTrue( methodNames.contains( EnhancerConstants.TRACKER_GET_NAME ) );
 						assertTrue( methodNames.contains( EnhancerConstants.TRACKER_CLEAR_NAME ) );
 						assertTrue( methodNames.contains( EnhancerConstants.TRACKER_HAS_CHANGED_NAME ) );
+						assertTrue( methodNames.contains( EnhancerConstants.TRACKER_SUSPEND_NAME ) );
+						assertTrue( methodNames.contains( EnhancerConstants.TRACKER_COLLECTION_GET_NAME ) );
 					}
 					if ( interfaceNames.contains( CompositeTracker.class.getName() ) ) {
 						assertTrue( fieldNames.contains( EnhancerConstants.TRACKER_COMPOSITE_FIELD_NAME ) );

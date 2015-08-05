@@ -3,6 +3,7 @@ package org.hibernate.test.annotations.indexcoll;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
 
 
 @Embeddable
@@ -21,13 +22,15 @@ public class ExchangeRateKey
         this.currency2 = currency2;
     }
 
-    @Column(nullable = false)
+    @Column(nullable = false,name=("`date`"))
     protected long date;
     
     @javax.persistence.ManyToOne(fetch = FetchType.LAZY )
+    @JoinColumn(nullable = false)
     protected Currency currency1;
     
     @javax.persistence.ManyToOne(fetch = FetchType.LAZY )
+    @JoinColumn(nullable = false)
     protected Currency currency2;
     
 

@@ -143,6 +143,7 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.PrimitiveArray;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
@@ -280,6 +281,20 @@ public class ModelBinder {
 				hierarchySource.getRoot(),
 				rootEntityDescriptor
 		);
+
+		if (database.getDialect().isNonNullPrimaryKeyRequired()) {
+			Table tbl = rootEntityDescriptor.getTable();
+
+			final Iterator itrC = tbl.getColumnIterator();
+			while (itrC.hasNext()) {
+				final Column col = (Column) itrC.next();
+
+				PrimaryKey pk = tbl.getPrimaryKey();
+				if (pk.containsColumn(col)) {
+					col.setNullable(false);
+				}
+			}
+		}
 
 		if ( hierarchySource.getNaturalIdCaching() != null ) {
 			if ( hierarchySource.getNaturalIdCaching().getRequested() == TruthValue.TRUE ) {

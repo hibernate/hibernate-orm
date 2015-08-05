@@ -219,5 +219,22 @@ public class Teradata14Dialect extends TeradataDialect {
 	public boolean supportsLockTimeouts() {
 		return false;
 	}
+
+	public boolean isNonNullPrimaryKeyRequired() {
+		return true;
+	}
+
+	public Boolean performTemporaryTableDDLInIsolation() {
+		return Boolean.TRUE;
+	}
+
+	@Override
+	public String getCreateTableString() {
+		return super.getCreateTableString();
+	}
+
+	public boolean isColumnNameRequiredAfterIndex() {
+		return true;
+	}
 }
 

@@ -40,7 +40,7 @@
 				</joined-subclass>
 			</joined-subclass>
 			<joined-subclass name="Human">
-				<key column="mammal"/>
+				<key column="mammal" not-null="true"/>
 				<component name="name">
 					<property name="first" column="name_first"/>
 					<property name="initial" column="name_initial"/>
@@ -59,11 +59,11 @@
 				<property name="bigIntegerValue"/>
 
 				<bag name="friends">
-					<key column="human1"/>
+					<key column="human1" not-null="true"/>
 					<many-to-many column="human2" class="Human"/>
 				</bag>
 				<map name="family">
-					<key column="human1"/>
+					<key column="human1" not-null="true"/>
 					<map-key column="relationship" type="string"/>
 					<many-to-many column="human2" class="Human"/>
 				</map>
@@ -76,7 +76,7 @@
 					<element column="nick_name" type="string" not-null="true"/>
 				</set>
 				<map name="addresses" table="addresses">
-					<key column="human"/>
+					<key column="human" not-null="true"/>
 					<map-key type="string" column="`type`"/>
 					<composite-element class="Address">
 						<property name="street"/>
@@ -99,7 +99,7 @@
 		<property name="userName"/>
 		<one-to-one name="human" constrained="true"/>
 		<list name="permissions">
-			<key column="userId"/>
+			<key column="userId" not-null="true"/>
 			<list-index column="permissionId"/>
 			<element type="string" column="permissionName"/>
 		</list>
@@ -113,7 +113,7 @@
 		<property name="name" type="string"/>
         <property name="classification" type="org.hibernate.test.hql.ClassificationType"/>
         <map name="directors">
-			<key column="directorZoo_id"/>
+			<key column="directorZoo_id" not-null="true"/>
 			<index type="string" column="`title`"/>
 			<many-to-many class="Human"/>
 		</map>
@@ -123,7 +123,7 @@
 			<one-to-many class="Mammal"/>
 		</map>
 		<map name="animals" inverse="true">
-			<key column="zoo_id"/>
+			<key column="zoo_id" not-null="true"/>
 			<index type="string" column="serialNumber"/>
 			<one-to-many class="Animal"/>
 		</map>

@@ -407,6 +407,10 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@SkipForDialect(
+			value = TeradataDialect.class,
+			comment = "otherHolder needed to be declared non-null for constraint to be defined and pgm sets it to null in processing"
+	)
 	public void testQuery() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -618,9 +622,16 @@ public class FooBarTest extends LegacyTestCase {
 		baz.getManyToAny().add(foo);
 		s.save(bar);
 		s.save(baz);
-		list = s.createQuery(
-				" from Bar bar where bar.baz.count=667 and bar.baz.count!=123 and not bar.baz.name='1-E-1'"
-		).list();
+		if( !( getDialect() instanceof TeradataDialect)) {
+			list = s.createQuery(
+					" from Bar bar where bar.baz.count=667 and bar.baz.count!=123 and not bar.baz.name='1-E-1'"
+			).list();
+		}
+		else  {
+			list = s.createQuery(
+					" from Bar bar where bar.baz.count=667 and bar.baz.count<>123 and not bar.baz.name='1-E-1'"
+			).list();
+		}
 		assertTrue( "query many-to-one", list.size()==1 );
 		list = s.createQuery( " from Bar i where i.baz.name='Bazza'" ).list();
 		assertTrue( "query many-to-one", list.size()==1 );
@@ -989,6 +1000,10 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@SkipForDialect(
+			value = TeradataDialect.class,
+			comment = "otherHolder needed to be declared non-null for constraint to be defined and pgm sets it to null in processing"
+	)
 	public void testPropertyRef() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -2761,6 +2776,10 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@SkipForDialect(
+			value = TeradataDialect.class,
+			comment = "otherHolder needed to be declared non-null for constraint to be defined and pgm sets it to null in processing"
+	)
 	@SuppressWarnings( {"unchecked"})
 	public void testUpdateCollections() throws Exception {
 		Session s = openSession();

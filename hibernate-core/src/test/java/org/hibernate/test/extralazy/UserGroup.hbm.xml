@@ -13,7 +13,7 @@
 		<id name="name"/>
 		<map name="users" cascade="persist" 
 				table="group_user" lazy="extra">
-			<key column="groupName"/>
+			<key column="groupName" not-null="true"/>
 			<map-key formula="lower(personName)" type="string"/>
 			<many-to-many column="personName" class="User"/>
 		</map>

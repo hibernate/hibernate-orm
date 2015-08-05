@@ -34,6 +34,7 @@ import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.schema.spi.Exporter;
 
@@ -114,7 +115,15 @@ public class StandardTableExporter implements Exporter<Table> {
 				}
 
 				if ( col.isNullable() ) {
-					buf.append( dialect.getNullColumnString() );
+					if (dialect.isNonNullPrimaryKeyRequired()) {
+							PrimaryKey pk = table.getPrimaryKey();
+							if (pk != null && pk.containsColumn(col)) {
+								buf.append( " not null" );
+								col.setNullable(false);
+							}
+						}
+					else
+						buf.append( dialect.getNullColumnString() );
 				}
 				else {
 					buf.append( " not null" );

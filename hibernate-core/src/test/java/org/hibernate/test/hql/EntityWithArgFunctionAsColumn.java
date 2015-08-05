@@ -25,11 +25,15 @@
 package org.hibernate.test.hql;
 
 
+import javax.persistence.*;
+
 /**
  *
  * @author Gail Badner
  */
+@Entity
 public class EntityWithArgFunctionAsColumn {
+	@Id @GeneratedValue
 	private long id;
 	private int lower;
 	private String upper;

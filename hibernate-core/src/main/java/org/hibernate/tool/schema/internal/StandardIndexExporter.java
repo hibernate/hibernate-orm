@@ -66,26 +66,35 @@ public class StandardIndexExporter implements Exporter<Index> {
 		else {
 			indexNameForCreation = index.getName();
 		}
-		final StringBuilder buf = new StringBuilder()
-				.append( "create index " )
-				.append( indexNameForCreation )
-				.append( " on " )
-				.append( tableName )
-				.append( " (" );
 
-		boolean first = true;
+
+		StringBuilder colBuf = new StringBuilder("");
 		Iterator<Column> columnItr = index.getColumnIterator();
+		boolean first = true;
 		while ( columnItr.hasNext() ) {
 			final Column column = columnItr.next();
 			if ( first ) {
 				first = false;
+				colBuf.append("(");
 			}
 			else {
-				buf.append( ", " );
+				colBuf.append( ", " );
 			}
-			buf.append( ( column.getQuotedName( dialect ) ) );
+			colBuf.append( ( column.getQuotedName( dialect ) ) );
 		}
-		buf.append( ")" );
+		colBuf.append(")");
+
+		final StringBuilder buf = new StringBuilder()
+				.append("create index ")
+				.append( indexNameForCreation )
+				.append(jdbcEnvironment.getDialect().isColumnNameRequiredAfterIndex() ? colBuf : "")
+				.append(" on ")
+				.append( tableName );
+
+
+		if (!jdbcEnvironment.getDialect().isColumnNameRequiredAfterIndex()) {
+			buf.append(colBuf);
+		}
 		return new String[] { buf.toString() };
 	}
 

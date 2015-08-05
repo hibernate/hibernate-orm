@@ -97,7 +97,11 @@ public class NewGeneratorMappingsTest extends BaseCoreFunctionalTestCase {
 		IdentifierGenerator generator = persister.getIdentifierGenerator();
 		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
 		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
-		assertEquals( "my_catalog.my_schema."+CompleteSequenceEntity.SEQ_NAME, seqGenerator.getDatabaseStructure().getName() );
+		String catalog = sessionFactory().getJdbcServices().getExtractedMetaDataSupport().getConnectionCatalogName();
+		if (catalog == null || catalog.length() == 0)
+				assertEquals("my_schema." + CompleteSequenceEntity.SEQ_NAME, seqGenerator.getDatabaseStructure().getName() );
+		else
+				assertEquals("my_catalog.my_schema." + CompleteSequenceEntity.SEQ_NAME, seqGenerator.getDatabaseStructure().getName() );
 		assertEquals( 1000, seqGenerator.getDatabaseStructure().getInitialValue() );
 		assertEquals( 52, seqGenerator.getDatabaseStructure().getIncrementSize() );
 		assertFalse( NoopOptimizer.class.isInstance( seqGenerator.getOptimizer() ) );

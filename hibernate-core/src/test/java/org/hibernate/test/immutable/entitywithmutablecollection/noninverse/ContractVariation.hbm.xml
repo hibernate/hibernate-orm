@@ -23,11 +23,11 @@
         </id>
         <property name="description" not-null="true"/>
         <set name="contracts" table="plan_contract" inverse="false" mutable="true" cascade="all" fetch="join">
-            <key column="col_plan"/>
+            <key column="col_plan" not-null="true"/>
             <many-to-many column="contract" class="Contract"/>
         </set>
         <set name="infos" inverse="false"  mutable="true" cascade="all-delete-orphan">
-            <key column="col_plan"/>
+            <key column="col_plan" not-null="true"/>
             <one-to-many class="Info"/>
         </set>
     </class>
@@ -62,7 +62,7 @@
             <one-to-many class="Contract"/>
         </set>
         <set name="plans" table="plan_contract" inverse="true" mutable="true" cascade="none">
-            <key column="contract"/>
+            <key column="contract" not-null="true"/>
             <many-to-many column="col_plan" class="Plan"/>
         </set>
         <set name="parties" inverse="false"  mutable="true" cascade="all" fetch="join">

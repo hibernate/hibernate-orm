@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.test.immutable.entitywithmutablecollection;
+import javax.persistence.Column;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -54,7 +55,7 @@ public class Plan implements Serializable {
 	public void setVersion(long version) {
 		this.version = version;
 	}
-
+	@Column(nullable = false)
 	public long getId() {
 		return id;
 	}

@@ -17,23 +17,23 @@
 	<class name="User" table="`Users`">
 		<id name="userName"/>
 		<list name="permissions" lazy="extra">
-			<key column="userName"/>
+			<key column="userName" not-null="true"/>
 			<list-index column="displayOrder" base="1"/>
 			<composite-element class="Permission">
-				<property name="type" column="permissionType"/>
+				<property name="type" column="permissionType" not-null="true"/>
 			</composite-element>
 		</list>
 		<list name="emailAddresses" fetch="join">
-			<key column="userName"/>
+			<key column="userName" not-null="true"/>
 			<list-index column="displayOrder" base="1"/>
 			<composite-element class="Email">
-				<property name="address"/>
+				<property name="address" not-null="true"/>
 			</composite-element>
 		</list>
 		<map name="sessionData" 
 				order-by="lower(`attributeName`) asc" 
 				lazy="extra">
-			<key column="userName"/>
+			<key column="userName" not-null="true"/>
 			<map-key column="`attributeName`" 
 					type="string"/>
 			<element column="`attributeValue`" 
@@ -43,9 +43,9 @@
 		<set name="sessionAttributeNames" 
 				lazy="extra" 
 				inverse="true">
-			<key column="userName"/>
+			<key column="userName" not-null="true"/>
 			<element column="`attributeName`" 
-					type="string"/>
+					type="string" not-null="true"/>
 		</set>
 	</class>
 	

@@ -33,7 +33,7 @@
         <id column="ID" name="id" type="long">
             <generator class="increment"/>
         </id>
-        <property name="name" type="string"/>
+        <property name="name" type="string" not-null="true"/>
         <property name="sex" column="SEX_CODE" type="char"/>
         <filter name="sex"/>
     </class>

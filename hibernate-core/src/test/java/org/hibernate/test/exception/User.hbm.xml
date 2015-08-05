@@ -8,7 +8,7 @@
 		</id>
 		<property name="username" type="string" column="user_name" not-null="true" />
 		<set name="memberships" inverse="false" table="T_MEMBERSHIP" cascade="none">
-			<key column="user_id"/>
+			<key column="user_id" not-null="true"/>
 			<many-to-many class="Group" column="group_id"/>
 		</set>
 	</class>

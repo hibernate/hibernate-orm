@@ -187,7 +187,9 @@ public class SimpleSelect {
 		if (orderBy!=null) buf.append(orderBy);
 		
 		if (lockOptions!=null) {
-			buf.append( dialect.getForUpdateString(lockOptions) );
+			String xsql = buf.toString();
+			String asql = (dialect.applyLocksToSql(xsql, lockOptions, (java.util.Map) null));
+			return asql;
 		}
 
 		return dialect.transformSelectString( buf.toString() );

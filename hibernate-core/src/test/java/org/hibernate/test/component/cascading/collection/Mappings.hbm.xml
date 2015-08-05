@@ -24,7 +24,7 @@
 
         <component name="localizedStrings" class="LocalizedStrings">
             <map name="strings" access="field" cascade="persist,merge" lazy="false">
-                <key column="VAL_ID" />
+                <key column="VAL_ID" not-null="true" />
                 <map-key type="locale" column="LOC" />
                 <element type="string" column="STR_VAL" />
             </map>

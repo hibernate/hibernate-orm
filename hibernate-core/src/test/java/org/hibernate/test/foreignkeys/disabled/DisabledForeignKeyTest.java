@@ -32,6 +32,8 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Table.ForeignKeyKey;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 
@@ -85,6 +87,7 @@ public class DisabledForeignKeyTest extends BaseUnitTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9704" )
+	@RequiresDialectFeature(DialectChecks.SupportsSequences.class)
 	public void expandedTests() {
 		StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder();
 		StandardServiceRegistry standardRegistry = registryBuilder.build();

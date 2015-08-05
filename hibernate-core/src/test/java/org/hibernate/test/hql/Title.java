@@ -38,7 +38,7 @@ public class Title implements Serializable {
 
     @Id
     @GeneratedValue
-    @Column(name="id_title")
+    @Column(name="id_title", nullable=false)
     private Integer id;
     
     private String description;

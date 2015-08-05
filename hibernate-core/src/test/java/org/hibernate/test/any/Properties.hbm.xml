@@ -18,7 +18,7 @@
             <column name="S_S_PROP_ID"/>
         </any>
         <map name="generalProperties" table="T_GEN_PROPS" lazy="true" cascade="all">
-            <key column="PROP_SET_ID"/>
+            <key column="PROP_SET_ID" not-null="true"/>
             <map-key type="string" column="GEN_PROP_NAME"/>
             <many-to-any id-type="long" meta-type="string">
                 <meta-value value="I" class="IntegerPropertyValue"/>
@@ -48,7 +48,7 @@
             <generator class="increment"/>
         </id>
         <map name="subProperties" table="T_COMPLEX_SUB_PROPS" lazy="true">
-            <key column="PROP_ID" />
+            <key column="PROP_ID" not-null="true"/>
             <map-key type="string" column="SUB_PROP_NAME" />
             <element type="string" column="SUB_PROP_VAL" />
         </map>

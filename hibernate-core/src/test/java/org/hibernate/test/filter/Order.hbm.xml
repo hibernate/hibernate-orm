@@ -18,7 +18,7 @@
 	    <many-to-one name="salesperson" class="Salesperson" column="SALES_PERSON_ID"/>
 
 	    <list cascade="all-delete-orphan" inverse="true" name="lineItems">
-		    <key column="ORDER_ID"/>
+		    <key column="ORDER_ID" not-null="true"/>
 		    <index column="SEQ"/>
 		    <one-to-many class="LineItem"/>
 	    </list>

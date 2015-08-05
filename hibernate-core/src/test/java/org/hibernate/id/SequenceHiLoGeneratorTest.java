@@ -41,6 +41,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.jdbc.Work;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -99,6 +101,7 @@ public class SequenceHiLoGeneratorTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@RequiresDialectFeature(DialectChecks.SupportsSequences.class)
 	public void testHiLoAlgorithm() {
 		SessionImpl session = (SessionImpl) sessionFactory.openSession();
 		session.beginTransaction();

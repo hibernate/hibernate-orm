@@ -1612,6 +1612,9 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 
 			zoo = new Zoo();
 			zoo.setName( "Zoo" );
+			if ( getDialect().isNonNullPrimaryKeyRequired())
+				zoo.setId(new Long(1));
+
 			Address add = new Address();
 			add.setCity("MEL");
 			add.setCountry("AU");
@@ -1621,6 +1624,8 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 
 			pettingZoo = new PettingZoo();
 			pettingZoo.setName( "Petting Zoo" );
+			if ( getDialect().isNonNullPrimaryKeyRequired())
+				zoo.setId(new Long(2));
 			Address addr = new Address();
 			addr.setCity("Sydney");
 			addr.setCountry("AU");

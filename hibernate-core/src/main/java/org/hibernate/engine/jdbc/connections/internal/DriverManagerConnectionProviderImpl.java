@@ -242,6 +242,14 @@ public class DriverManagerConnectionProviderImpl
 			return;
 		}
 
+		if ((conn.getClass().getName().indexOf("teradata")) != -1) {
+				try {
+					conn.rollback();
+				} catch (SQLException e) {
+					log.unableToClosePooledConnection(e);
+				}
+		}
+
 		this.connections.offer( conn );
 	}
 

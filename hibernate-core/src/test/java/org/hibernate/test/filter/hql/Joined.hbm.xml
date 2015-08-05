@@ -33,18 +33,18 @@
         <id column="ID" name="id" type="long">
             <generator class="increment"/>
         </id>
-        <property name="name" type="string"/>
-        <property name="sex" column="SEX_CODE" type="char"/>
+        <property name="name" type="string" not-null="true"/>
+        <property name="sex" column="SEX_CODE" type="char" not-null="true"/>
         <joined-subclass name="User" table="FILTER_HQL_JOINED_USER">
-            <key column="USER_ID"/>
-            <property name="username" type="string"/>
+            <key column="USER_ID" not-null="true"/>
+            <property name="username" type="string" not-null="true"/>
             <joined-subclass name="Employee" table="FILTER_HQL_JOINED_EMP">
-                <key column="EMP_ID"/>
-                <property name="hireDate" type="date"/>
+                <key column="EMP_ID" not-null="true"/>
+                <property name="hireDate" type="date" not-null="true" />
             </joined-subclass>
             <joined-subclass name="Customer" table="FILTER_HQL_JOINED_CUST">
-                <key column="CUST_ID"/>
-                <property name="company" type="string"/>
+                <key column="CUST_ID" not-null="true"/>
+                <property name="company" type="string" not-null="true" />
             </joined-subclass>
         </joined-subclass>
         <filter name="sex"/>

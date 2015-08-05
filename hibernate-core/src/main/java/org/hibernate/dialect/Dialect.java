@@ -2813,4 +2813,19 @@ public abstract class Dialect implements ConversionContext {
 	public NameQualifierSupport getNameQualifierSupport() {
 		return null;
 	}
+	/**
+	 * Does this dialect require that Primary Key be non-null
+	 *
+	 * @return boolean
+	 */
+	public boolean isNonNullPrimaryKeyRequired() { return false; }
+
+	/**
+	 * Does this dialect require that "Create Index" specify the column names after the index name ??
+	 *
+	 * @return boolean
+	 */
+	public boolean isColumnNameRequiredAfterIndex() {
+		return false;
+	}	
 }

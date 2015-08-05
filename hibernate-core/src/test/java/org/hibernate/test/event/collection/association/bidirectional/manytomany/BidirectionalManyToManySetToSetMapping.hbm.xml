@@ -15,7 +15,7 @@
         </id>
         <set name="children" table="PARENT_CHILD"
              inverse="false" cascade="all">
-            <key column="parent_id"/>
+            <key column="parent_id" not-null="true"/>
             <many-to-many column="child_id" class="ChildWithBidirectionalManyToMany"/>
         </set>
     </class>

@@ -51,6 +51,8 @@ import org.hibernate.testing.env.TestingDatabaseInfo;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.test.common.BasicTestingJdbcServiceImpl;
 import org.hibernate.test.common.MetadataBuildingContextTestingImpl;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -129,6 +131,7 @@ public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@RequiresDialectFeature(DialectChecks.SupportsSequences.class)
 	public void testHiLoAlgorithm() {
 		session = (SessionImpl) sessionFactory.openSession();
 		((Session)session).beginTransaction();

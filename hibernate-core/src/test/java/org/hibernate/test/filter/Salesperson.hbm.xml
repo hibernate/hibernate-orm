@@ -10,7 +10,7 @@
     		<generator class="native"/>
     	</id>
 
-	    <property name="name" column="NAME" type="string"/>
+	    <property name="name" column="NAME" type="string" not-null="true"/>
     	<property name="region" column="REG" type="string"/>
 
 	    <many-to-one name="department" cascade="none" class="Department" column="DEPT_ID"/>
@@ -18,7 +18,7 @@
 	    <property name="hireDate" column="`hire dt`" type="java.util.Date"/>
 
 	    <set name="orders" cascade="none" inverse="true" fetch="join">
-		    <key column="SALES_PERSON_ID"/>
+		    <key column="SALES_PERSON_ID" not-null="true"/>
 		    <one-to-many class="Order"/>
 		    <filter name="region" condition="REG = :region"/>
 	        <filter name="fulfilledOrders"><![CDATA[`close dt` < :asOfDate]]></filter>

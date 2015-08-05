@@ -10,12 +10,12 @@
             <generator class="native"/>
         </id>
 
-        <property name="name" type="string"/>
+        <property name="name" type="string" not-null="true"/>
         <property name="effectiveStartDate" column="eff_start_dt" type="java.util.Date"/>
         <property name="effectiveEndDate" column="eff_end_dt" type="java.util.Date"/>
 
         <set cascade="none" inverse="true" name="products" table="PROD_CAT">
-            <key column="CAT_ID"/>
+            <key column="CAT_ID" not-null="true"/>
             <many-to-many column="PROD_ID" class="Product"/>
         </set>
 

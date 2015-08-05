@@ -12,7 +12,7 @@
       <one-to-many class="OrderLine" />
     </set>
     <set name="orderContacts" cascade="all-delete-orphan" access="field" fetch="select">
-        <key column="order_id" />
+        <key column="order_id" not-null="true"/>
         <many-to-many class="OrderContact" />
     </set>
   </class>

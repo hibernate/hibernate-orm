@@ -25,6 +25,8 @@ package org.hibernate.test.annotations.lob.locator;
 
 import java.sql.SQLException;
 
+import org.hibernate.dialect.TeradataDialect;
+import org.hibernate.testing.SkipForDialect;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -52,6 +54,11 @@ public class LobLocatorTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-8193")
 	@RequiresDialectFeature(DialectChecks.UsesInputStreamToInsertBlob.class)
+	@SkipForDialect(
+			value = TeradataDialect.class,
+			jiraKey = "HHH-6637",
+			comment = "locators must be used in same session"
+	)
 	public void testStreamResetBeforeParameterBinding() throws SQLException {
 		final Session session = openSession();
 

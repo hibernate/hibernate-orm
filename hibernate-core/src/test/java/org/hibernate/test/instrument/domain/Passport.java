@@ -32,6 +32,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
+import javax.persistence.Column;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyToOne;
@@ -44,6 +45,7 @@ import org.hibernate.annotations.LazyToOneOption;
 public class Passport {
 	private Integer id;
 	private Person person;
+	@Column(name="`number`")
 	private String number;
 	private String issuingCountry;
 	private Date issueDate;
@@ -89,6 +91,7 @@ public class Passport {
 		this.person = person;
 	}
 
+	@Column(name="`number`")
 	public String getNumber() {
 		return number;
 	}

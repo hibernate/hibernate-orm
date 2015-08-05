@@ -5,12 +5,14 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.Column;
 
 /**
  * @author Emmanuel Bernard
  */
 @Entity
 public class Building {
+	@Column(unique = true)
 	@Id @GeneratedValue private Long id;
 
 	@ManyToOne @JoinColumn(name="company_id", referencedColumnName = "name")

@@ -1,5 +1,6 @@
 //$Id: Human.java 9873 2006-05-04 13:42:48Z max.andersen@jboss.com $
 package org.hibernate.test.hql;
+import javax.persistence.Column;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
@@ -82,6 +83,7 @@ public class Human extends Mammal {
 		this.nickNames = nickNames;
 	}
 
+	@Column(nullable = false)
 	public Map getAddresses() {
 		return addresses;
 	}
@@ -114,6 +116,7 @@ public class Human extends Mammal {
 		this.floatValue = floatValue;
 	}
 
+	@Column(nullable = false)
 	public int getIntValue() {
 		return intValue;
 	}

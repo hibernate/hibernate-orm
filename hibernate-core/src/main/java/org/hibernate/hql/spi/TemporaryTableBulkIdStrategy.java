@@ -171,8 +171,7 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 
 	protected boolean shouldTransactIsolatedTemporaryTableDDL(SessionImplementor session) {
 		// is there ever a time when it makes sense to do this?
-//		return session.getFactory().getSettings().isDataDefinitionInTransactionSupported();
-		return false;
+		return session.getFactory().getSettings().isDataDefinitionInTransactionSupported();
 	}
 
 	private static class TemporaryTableCreationWork extends AbstractWork {

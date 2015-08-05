@@ -32,7 +32,7 @@
         -->
 
         <set name="hs" inverse="true" table="HB_G_H" cascade="all">
-            <key column="g_fk"/>
+            <key column="g_fk" not-null="true"/>
             <many-to-many class="H" column="h_fk"/>
         </set>
 

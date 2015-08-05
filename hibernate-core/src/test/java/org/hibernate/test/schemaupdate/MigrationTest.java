@@ -33,6 +33,8 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.Target;
@@ -64,6 +66,7 @@ public class MigrationTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@RequiresDialectFeature(DialectChecks.SupportsSequences.class)
 	public void testSimpleColumnAddition() {
 		String resource1 = "org/hibernate/test/schemaupdate/1_Version.hbm.xml";
 		String resource2 = "org/hibernate/test/schemaupdate/2_Version.hbm.xml";
@@ -140,6 +143,7 @@ public class MigrationTest extends BaseUnitTestCase {
 
 
 	@Test
+	@RequiresDialectFeature(DialectChecks.SupportsSequences.class)
 	@TestForIssue( jiraKey = "HHH-9713" )
 	public void testIndexCreationViaSchemaUpdate() {
 		MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
@@ -168,6 +172,7 @@ public class MigrationTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@RequiresDialectFeature(DialectChecks.SupportsSequences.class)
 	@TestForIssue( jiraKey = "HHH-9550" )
 	public void testSameTableNameDifferentExplicitSchemas() {
 		MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )

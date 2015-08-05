@@ -43,7 +43,7 @@
 		<property name="double" column="double_"/>
 
 		<primitive-array name="bytes" table="foobytes">
-			<key column="id"/>
+			<key column="id" not-null="true"/>
 			<index column="i"/>
 			<element column="byte_" type="byte"/>
 		</primitive-array>

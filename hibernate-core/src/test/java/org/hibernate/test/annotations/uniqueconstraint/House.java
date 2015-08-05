@@ -26,7 +26,7 @@ public class House extends Building {
     public void setId(Long id) {
         this.id = id;
     }
-
+    @Column(nullable = false)
     public Integer getCost() {
         return cost;
     }

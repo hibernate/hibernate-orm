@@ -10,10 +10,10 @@
     		<generator class="native"/>
     	</id>
 
-	    <many-to-one name="order" class="Order" column="ORDER_ID" cascade="none"/>
-	    <property name="sequence" column="SEQ" type="int"/>
+	    <many-to-one name="order" class="Order" column="ORDER_ID" cascade="none" not-null="true"/>
+	    <property name="sequence" column="SEQ" type="int" not-null="true"/>
 	    <many-to-one name="product" class="Product" column="PRODUCT_ID" cascade="none"/>
-	    <property name="quantity" column="AMT" type="long"/>
+	    <property name="quantity" column="AMT" type="long" not-null="true"/>
 	</class>
 
 </hibernate-mapping>

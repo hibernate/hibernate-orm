@@ -10,10 +10,10 @@
     		<generator class="native"/>
     	</id>
 
-    	<property name="name" column="REG" type="string"/>
+    	<property name="name" column="REG" type="string" not-null="true"/>
 
 	    <set name="salespersons" cascade="save-update" inverse="true">
-		    <key column="DEPT_ID"/>
+		    <key column="DEPT_ID" not-null="true"/>
 		    <one-to-many class="Salesperson"/>
 		    <filter name="seniorSalespersons"><![CDATA[`hire dt` < :asOfDate]]></filter>
 	    </set>

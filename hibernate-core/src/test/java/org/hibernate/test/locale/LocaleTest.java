@@ -27,6 +27,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.hql.spi.QueryTranslatorFactory;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
 
 import org.hibernate.testing.TestForIssue;
@@ -64,6 +66,7 @@ public class LocaleTest extends BaseNonConfigCoreFunctionalTestCase {
 	
 	@Test
 	@TestForIssue(jiraKey = "HHH-8765")
+	@RequiresDialectFeature(DialectChecks.SupportsSequences.class)
 	public void testMetadataWithLocale() {
 		SchemaValidator sv = new SchemaValidator( metadata() );
 		try {

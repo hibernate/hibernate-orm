@@ -16,7 +16,7 @@ import javax.persistence.InheritanceType;
 class Inspector implements Serializable {
 	@Id
 	@GeneratedValue
-	@Column(name = "id")
+	@Column(name = "id", nullable = false)
 	private Long _id;
 
 	private String name;

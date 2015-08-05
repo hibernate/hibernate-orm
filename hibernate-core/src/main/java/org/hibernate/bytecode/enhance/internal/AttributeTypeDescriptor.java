@@ -50,7 +50,8 @@ public abstract class AttributeTypeDescriptor {
 					|| currentValue.getType().getName().startsWith( "java.sql.Time" )
 					|| currentValue.getType().getName().startsWith( "java.sql.Date" )
 					|| currentValue.getType().getName().startsWith( "java.util.Date" )
-					|| currentValue.getType().getName().startsWith( "java.util.Calendar" ) ) {
+					|| currentValue.getType().getName().startsWith( "java.util.Calendar" )
+					|| currentValue.getType().getName().startsWith( "java.time" ) ) {
 				builder.append( String.format( "if (%s == null || !%<s.equals($1))", currentValue.getName() ) );
 			}
 			// all other objects

@@ -159,7 +159,7 @@ public class HibernatePlugin implements Plugin<Project> {
 
 		return new URLClassLoader(
 				urls.toArray( new URL[urls.size()] ),
-				ClassLoader.getSystemClassLoader().getParent()
+				Enhancer.class.getClassLoader()
 		);
 	}
 

@@ -4,6 +4,41 @@ Hibernate 5.0 Changelog
 Note: Please refer to JIRA to learn more about each issue.
 
 
+Changes in 5.0.0.CR4 (August 5, 2015)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/20752
+
+** Bug
+    * [HHH-8615] - Shared type parameters results in inconsistent internal model (especially with DynamicParameterizedType)
+    * [HHH-9503] - Consistently accept numeric value or Connection constant field name for configuring transaction isolation
+    * [HHH-9534] - Exception with custom EnumType and Map relation
+    * [HHH-9850] - Primary key generated for nullable column in sequence table
+    * [HHH-9865] - incorrect column information generated using schemaExport
+    * [HHH-9917] - 'value' is not a reserved word on Derby
+    * [HHH-9936] - Same Sequence is created and dropped multiple times
+    * [HHH-9961] - Ejb3JoinColumn does not use PhysicalNamingStrategy
+    * [HHH-9999] - Infinispan 7.x deprecated RpcManager.broadcastRpcCommand(EvictAllCommand,boolean) which is not present in Infinispan 8.0
+    * [HHH-10005] - Query in context needs precedence over query in cache
+    * [HHH-10015] - Oracle Dialect override canCreateSchema method to return false
+    * [HHH-10017] - Bytecode enhancer - consistent handling of persistent attributes (field / property access)
+
+** Improvement
+    * [HHH-9869] - SizeExpression toString is misleading
+    * [HHH-9882] - many to one declarations in hbm without embed-xml="false" generate warning
+    * [HHH-9987] - HikariCPConnectionProvider TLC
+    * [HHH-9990] - Enable batched updates for versioned data when using Oracle12cDialect
+    * [HHH-10013] - Adjust default for hibernate.id.new_generator_mappings to true
+    * [HHH-10014] - Adjust default for hibernate.auto_quote_keyword to false
+    * [HHH-10018] - Change default ImplicitNamingStrategy to use the JPA compliant one + ImplicitNamingStrategy short-naming
+
+** Task
+    * [HHH-9998] - Continue documentation TLC
+    * [HHH-10001] - Make the testsuite compatible with Infinispan 8
+    * [HHH-10006] - Document configuration of JndiService
+    * [HHH-10007] - Audit Services chapter in Integrations Guide
+
+
+
 Changes in 5.0.0.CR3 (July 29, 2015)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/20350

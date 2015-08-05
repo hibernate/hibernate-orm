@@ -112,6 +112,11 @@
                 are recognized.
             </para>
 
+            <para>
+                Transaction isolation of the Connections is managed by the ConnectionProvider itself.  See
+                <xref linkend="database-connectionprovider-isolation"/>.
+            </para>
+
             <variablelist>
                 <title>Additional settings</title>
                 <varlistentry>
@@ -230,6 +235,11 @@
                 connection pooling.
             </para>
 
+            <para>
+                Transaction isolation of the Connections is managed by the ConnectionProvider itself.  See
+                <xref linkend="database-connectionprovider-isolation"/>.
+            </para>
+
             <section xml:id="database-connectionprovider-proxool-existing">
                 <title>Using existing Proxool pools</title>
 
@@ -260,7 +270,6 @@
                     See <link xlink:href="http://proxool.sourceforge.net/configure.html"/>.
                     <literal>hibernate.proxool.pool_alias</literal> must be set to indicate which pool to use.
                 </para>
-
             </section>
         </section>
 
@@ -315,7 +324,11 @@
                 <varlistentry>
                     <term><literal>hibernate.connection.isolation</literal></term>
                     <listitem>
-                        <para>Mapped to Hikari's <literal>transactionIsolation</literal> setting</para>
+                        <para>
+                            Mapped to Hikari's <literal>transactionIsolation</literal> setting.  See
+                            <xref linkend="database-connectionprovider-isolation"/>.  Note that
+                            Hikari only supports JDBC standard isolation levels (apparently).
+                        </para>
                     </listitem>
                 </varlistentry>
                 <varlistentry>
@@ -350,6 +363,42 @@
             </para>
         </section>
 
+        <section xml:id="database-connectionprovider-isolation">
+            <title>ConnectionProvider support for transaction isolation setting</title>
+            <para>
+                All of the provided ConnectionProvider implementations, other than DataSourceConnectionProvider,
+                support consistent setting of transaction isolation for all Connections obtained from the underlying
+                pool.  The value for <literal>hibernate.connection.isolation</literal> can be specified in
+                one of 3 formats:
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            the integer value accepted at the JDBC level
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            the name of the <interfacename>java.sql.Connection</interfacename> constant field
+                            representing the isolation you would like to use.  For example,
+                            <literal>TRANSACTION_REPEATABLE_READ</literal> for
+                            <methodname>java.sql.Connection#TRANSACTION_REPEATABLE_READ</methodname>.  Not that this is
+                            only supported for JDBC standard isolations, not for isolation levels specific to
+                            a particular JDBC driver.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            a short-name version of the <interfacename>java.sql.Connection</interfacename> constant field
+                            without the <literal>TRANSACTION_</literal> prefix.  For example,
+                            <literal>REPEATABLE_READ</literal> for
+                            <methodname>java.sql.Connection#TRANSACTION_REPEATABLE_READ</methodname>.  Again, this is
+                            only supported for JDBC standard isolations, not for isolation levels specific to
+                            a particular JDBC driver.
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
     </section>
 
 

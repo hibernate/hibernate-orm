@@ -23,7 +23,8 @@ class HibernateExtension {
 	/**
 	 * The source sets that hold persistent model.  Default is project.sourceSets.main
 	 */
-	def SourceSet[]  sourceSets
+	def SourceSet[] sourceSets
+
 	/**
 	 * Configuration for bytecode enhancement.  Private; see instead {@link #enhance(groovy.lang.Closure)}
 	 */
@@ -43,7 +44,7 @@ class HibernateExtension {
 		if ( sourceSets == null ) {
 			sourceSets = []
 		}
-		sourceSets += sourceSets
+		sourceSets += sourceSet
 	}
 
 	void enhance(Closure closure) {

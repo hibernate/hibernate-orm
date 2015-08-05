@@ -4,20 +4,23 @@ Status of the documentation overhaul (5.0 version)
 Overall the plan is to define 3 DocBook-based guides.  The intention is for this document to serve
 as an outline of the work and a status of what still needs done.
 
+NOTE : entries marked with <strike>strike-through</strike> indicate that the content is believed to be done; review 
+would still be appreciated.
+
 
 User Guide
 ==========
 
 Covers reference topics targeting users.
 
-* Prefix (done)
-* Architecture (done)
-* DomainModel (done)
-* Bootstrap (done)
-* PersistenceContext (done)
-* Database_Access (done)
-* Transactions (done)
-* JNDI (done)
+* <strike>Prefix</strike>
+* <strike>Architecture</strike>
+* <strike>DomainModel</strike>
+* <strike>Bootstrap</strike>
+* <strike>PersistenceContext</strike>
+* <strike>Database_Access</strike>
+* <strike>Transactions</strike>
+* <strike>JNDI</strike>
 * Locking (needs some work)
 * Fetching (needs some work)
 * Batching (needs lot of work - not started - open questions)
@@ -28,7 +31,7 @@ Covers reference topics targeting users.
 * Native_Queries (needs lots of work)
 * Multi_Tenancy (needs some work)
 * OSGi (right place for this?)
-* Envers
+* Envers (right place for this?)
 * Portability (needs some work)
 
 
@@ -39,15 +42,15 @@ Covers mapping domain model to database.  Note that a lot of the "not started" c
 matter of pulling that content in and better organizing it.
    
 
-* Prefix (done)
-* Data_Categorizations (done)
-* Basic_Types (done)
-* Composition (done)
-* Collection (needs some work)
+* <strike>Prefix</strike>
+* <strike>Data_Categorizations</strike>
+* <strike>Basic_Types</strike>
+* <strike>Composition</strike>
+* <strike>Collection (needs some work)
 * Entity (needs some work)
 * Secondary_Tables (not started)
 * Identifiers (mostly done - needs "derived id" stuff documented)
-* Natural_Id (not started)
+* <strike>Natural_Id</strike>
 * Associations (not started)
 * Attribute_Access (not started)
 * Mapping_Overrides - AttributeOverrides/AssociationOverrides (not started)

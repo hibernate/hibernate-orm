@@ -7,7 +7,6 @@
 package org.hibernate.cache.infinispan.timestamp;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.transaction.Transaction;
 
@@ -17,6 +16,8 @@ import org.hibernate.cache.spi.RegionFactory;
 
 import org.hibernate.engine.spi.SessionImplementor;
 import org.infinispan.AdvancedCache;
+import org.infinispan.commons.util.CloseableIterable;
+import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.context.Flag;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryModified;
@@ -121,9 +122,14 @@ public class ClusteredTimestampsRegionImpl extends TimestampsRegionImpl {
 	 * Brings all data from the distributed cache into our local cache.
 	 */
 	private void populateLocalCache() {
-		final Set children = cache.keySet();
-		for ( Object key : children ) {
-			get( null, key );
+		CloseableIterable<CacheEntry<Object, Void>> iterable = Caches.keys(cache);
+		try {
+			for (CacheEntry<Object, Void> entry : iterable) {
+				get(null, entry.getKey());
+			}
+		}
+		finally {
+			iterable.close();
 		}
 	}
 

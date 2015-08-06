@@ -7,11 +7,14 @@ import org.hibernate.Session;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
+import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.engine.jdbc.connections.spi.AbstractMultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.test.cache.infinispan.tm.XaConnectionProvider;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
+import org.infinispan.AdvancedCache;
+import org.infinispan.commons.util.CloseableIterable;
 import org.infinispan.commons.util.CloseableIteratorSet;
 import org.infinispan.context.Flag;
 import org.junit.Test;
@@ -110,9 +113,10 @@ public class MultiTenancyTestCase extends SingleNodeTestCase {
 //            });
 //        }
         EntityRegionImpl region = (EntityRegionImpl) sessionFactory().getSecondLevelCacheRegion(Item.class.getName());
-        CloseableIteratorSet keySet = region.getCache().withFlags(Flag.CACHE_MODE_LOCAL).keySet();
-        assertEquals(1, keySet.size());
-        assertEquals("OldCacheKeyImplementation", keySet.iterator().next().getClass().getSimpleName());
+        AdvancedCache localCache = region.getCache().withFlags(Flag.CACHE_MODE_LOCAL);
+        CloseableIterable keys = Caches.keys(localCache);
+        assertEquals(1, localCache.size());
+        assertEquals("OldCacheKeyImplementation", keys.iterator().next().getClass().getSimpleName());
     }
 
 }

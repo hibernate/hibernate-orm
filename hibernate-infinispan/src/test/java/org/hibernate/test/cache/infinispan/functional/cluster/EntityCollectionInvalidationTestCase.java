@@ -124,8 +124,8 @@ public class EntityCollectionInvalidationTestCase extends DualNodeTestCase {
 			assertLoadedFromCache( remoteListener, ids.customerId, ids.contactIds );
 
 			// After modification, local cache should have been invalidated and hence should be empty
-			assertEquals( 0, getValidKeyCount( localCollectionCache.keySet() ) );
-			assertEquals( 0, getValidKeyCount( localCustomerCache.keySet() ) );
+			assertEquals( 0, localCollectionCache.size() );
+			assertEquals( 0, localCustomerCache.size() );
 		}
 		finally {
 			// cleanup the db
@@ -311,10 +311,6 @@ public class EntityCollectionInvalidationTestCase extends DualNodeTestCase {
 				"Customer.contacts" + custId + " was in cache", listener.visited
 				.contains( "Customer.contacts#" + custId )
 		);
-	}
-
-	protected int getValidKeyCount(Set keys) {
-      return keys.size();
 	}
 
 	@Listener

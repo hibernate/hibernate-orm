@@ -14,6 +14,7 @@ import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.test.cache.infinispan.functional.Citizen;
 import org.hibernate.test.cache.infinispan.functional.NaturalIdOnManyToOne;
@@ -124,7 +125,7 @@ public class NaturalIdInvalidationTestCase extends DualNodeTestCase {
          deleteCitizenWithCriteria(remoteTM, remoteFactory);
          sleep(250);
 
-         Set localKeys = localNaturalIdCache.keySet();
+         Set localKeys = Caches.keys(localNaturalIdCache.getAdvancedCache()).toSet();
          assertEquals(1, localKeys.size());
          // Only key left is the one for the citizen *not* in France
          localKeys.toString().contains("000");

@@ -23,13 +23,31 @@
 
     <para>
         Identifiers model the primary key of an entity.  They are used to uniquely identify each specific entity.
-        JPA defines the behavior of changing the value of the identifier attribute to be undefined; Hibernate simply
-        does not support that.
     </para>
 
     <para>
-        Every entity must define an identifier.  For entity inheritance hierarchies, the identifier must be
-        defined just on the entity that is the root of the hierarchy.
+        Hibernate and JPA both make the following assumptions about the corresponding database column(s):
+        <itemizedlist>
+            <listitem>
+                <para>
+                    <literal>UNIQUE</literal> - The values must uniquely identify each row.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <literal>NOT NULL</literal> - The values cannot be null.  For composite ids, no part can be null.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <literal>IMMUTABLE</literal> - The values, once inserted, can never be changed.  This is more
+                    a general guide, than a hard-fast rule as opinions vary.  JPA defines the behavior of changing the
+                    value of the identifier attribute to be undefined; Hibernate simply does not support that.  In cases
+                    where the values for the PK you have chosen will be updated, Hibernate recommends mapping the
+                    mutable value as a natural id, and use a surrogate id for the PK.  See <xref linkend="naturalid"/>.
+                </para>
+            </listitem>
+        </itemizedlist>
     </para>
 
     <note>
@@ -41,10 +59,13 @@
     </note>
 
     <para>
-        An identifier might be simple (single value) or composite (multiple values).
+        Every entity must define an identifier.  For entity inheritance hierarchies, the identifier must be
+        defined just on the entity that is the root of the hierarchy.
     </para>
 
-    <!-- todo : be sure to discuss generators in simple, then reference from composite -->
+    <para>
+        An identifier might be simple (single value) or composite (multiple values).
+    </para>
 
     <section xml:id="identifiers-simple">
         <title>Simple identifiers</title>
@@ -108,23 +129,8 @@
         <title>Composite identifiers</title>
 
         <para>
-            Composite identifiers correspond to one or more persistent attributes.  A primary key class must be
-            defined to represent a composite primary key. Composite primary keys typically arise when mapping from
-            legacy databases when the database key is comprised of several columns. The EmbeddedId
-            or IdClass annotation is used to denote a composite primary key. See Sections 11.1.17 and
-            11.1.22.
-        </para>
-
-        <note>
-            <para>
-                The restriction that a composite identifier has to be represented by a "primary key class" is
-                a JPA restriction.  Hibernate does allow composite identifiers to be defined without a
-                "primary key class", but use of that modeling technique is deprecated and not discussed here.
-            </para>
-        </note>
-
-        <para>
-            Here are the rules governing composite identifiers, as defined by the JPA specification.
+            Composite identifiers correspond to one or more persistent attributes.  Here are the rules governing
+            composite identifiers, as defined by the JPA specification.
             <itemizedlist>
                 <listitem>
                     <para>
@@ -154,26 +160,107 @@
             </itemizedlist>
         </para>
 
+        <note>
+            <para>
+                The restriction that a composite identifier has to be represented by a "primary key class" is
+                a JPA restriction.  Hibernate does allow composite identifiers to be defined without a
+                "primary key class", but use of that modeling technique is deprecated and not discussed here.
+            </para>
+        </note>
+
+        <para>
+            The attributes making up the composition can be either basic, composite, ManyToOne.  Note especially
+            that collections and one-to-ones are never appropriate.
+            <!-- todo : discuss why a real one-to-one is never appropriate? -->
+        </para>
+
         <section xml:id="identifiers-composite-aggregated">
             <title>Composite identifiers - aggregated (EmbeddedId)</title>
+
             <para>
-                <!-- todo : write -->
-                blah blah blah
+                Modelling a composite identifier using an EmbeddedId simply means defining an
+                Embeddable to be a composition for the the one or more attributes making up the
+                identifier and then exposing an attribute of that Embeddable type on the entity.
             </para>
+
+            <example>
+                <title>Basic EmbeddedId</title>
+                <programlisting role="JAVA"><xi:include href="extras/EmbeddedId1.java" parse="text" /></programlisting>
+            </example>
+
+            <para>
+                As mentioned before, EmbeddedIds can even contain ManyToOne attributes.
+            </para>
+
+            <example>
+                <title>EmbeddedId with ManyToOne</title>
+                <programlisting role="JAVA"><xi:include href="extras/EmbeddedId2.java" parse="text" /></programlisting>
+            </example>
+
+            <note>
+                <para>
+                    Hibernate supports directly modeling the ManyToOne in the PK class, whether EmbeddedId or IdClass.
+                    However that is not portably supported by the JPA specification.  In JPA terms one would
+                    use "derived identifiers"; for details, see <xref linkend="identifiers-derived"/>.
+                </para>
+            </note>
         </section>
 
         <section xml:id="identifiers-composite-nonaggregated">
             <title>Composite identifiers - non-aggregated (IdClass)</title>
+
             <para>
-                <!-- todo : write -->
-                blah blah blah
+                Modelling a composite identifier using an IdClass differs from using an EmbeddedId in that the entity
+                defines each individual attribute making up the composition.  The IdClass simply acts as a "shadow".
             </para>
+
+            <example>
+                <title>Basic IdClass</title>
+                <programlisting role="JAVA"><xi:include href="extras/IdClass1.java" parse="text" /></programlisting>
+            </example>
+
+            <para>
+                Non-aggregated composite identifiers can also contain ManyToOne attributes as we saw with aggregated
+                ones (still non-portably)
+            </para>
+
+            <example>
+                <title>IdClass with ManyToOne</title>
+                <programlisting role="JAVA"><xi:include href="extras/IdClass2.java" parse="text" /></programlisting>
+            </example>
+
+            <para>
+                With non-aggregated composite identifiers, Hibernate also supports "partial" generation of the
+                composite values.
+            </para>
+
+            <example>
+                <title>IdClass with partial generation</title>
+                <programlisting role="JAVA"><xi:include href="extras/IdClass3.java" parse="text" /></programlisting>
+            </example>
+
+            <note>
+                <para>
+                    This feature exists because of a highly questionable interpretation of the JPA specification
+                    made by the SpecJ committee.  Hibernate does not feel that JPA defines support for this, but
+                    added the feature simply to be usable in SpecJ benchmarks.  Use of this feature may or may not
+                    be portable from a JPA perspective.
+                </para>
+            </note>
         </section>
 
     </section>
 
     <section xml:id="identifiers-generators">
         <title>Generated identifier values</title>
+
+        <!-- todo : discuss select generator -->
+
+        <note>
+            <para>
+                For discussion of generated values for non-identifier attributes, see <xref linkend="generated"/>
+            </para>
+        </note>
 
         <para>
             Hibernate supports identifier value generation across a number of different types.  Remember
@@ -431,9 +518,75 @@
             </para>
         </section>
 
-        <para>
-            For discussion of generated values for non-identifier attributes, see <xref linkend="generated"/>
-        </para>
+        <section xml:id="identifiers-generators-optimizer">
+            <title>Optimizers</title>
+
+            <para>
+                Most of the Hibernate generators that separately obtain identifier values from database structures
+                support the use of pluggable optimizers.  Optimizers help manage the number of times Hibernate
+                has to talk to the database in order to generate identifier values.  For example, with no optimizer
+                applied to a sequence-generator, everytime the application asked Hibernate to generate an identifier
+                it would need to grab the next sequence value from the database.  But if we can minimize the
+                number of times we need to communicate with the database here, the application will be able to perform
+                better.  Which is in fact the role of these optimizers.
+            </para>
+
+            <variablelist>
+                <varlistentry>
+                    <term>none</term>
+                    <listitem>
+                        <para>
+                            No optimization is performed.  We communicate with the database each and every time
+                            an identifier value is needed from the generator.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>pooled-lo</term>
+                    <listitem>
+                        <para>
+                            The pooled-lo optimizer works on the principle that the increment-value is encoded into
+                            the database table/sequence structure.  In sequence-terms this means that the sequence
+                            is defined with a greater-that-1 increment size.  For example, consider a brand new sequence
+                            defined as <literal>create sequence my_sequence start with 1 increment by 20</literal>.
+                            This sequence essentially defines a "pool" of 20 usable id values each and every time
+                            we ask it for its next-value.  The pooled-lo optimizer interprets the next-value as the
+                            low end of that pool.  So when we first ask it for next-value, we'd get 1.  We then assume
+                            that the valid pool would be the values from 1-20 inclusive.  The next call to
+                            the sequence would result in 21, which would define 21-40 as the valid range.  And so on.
+                            The "lo" part of the name indicates that the value from the database table/sequence is
+                            interpreted as the pool lo(w) end.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>pooled</term>
+                    <listitem>
+                        <para>
+                            Just like pooled-lo, except that here the value from the table/sequence is interpreted
+                            as the high end of the value pool.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>hilo</term>
+                    <term>legacy-hilo</term>
+                    <listitem>
+                        <para>
+                            Define a custom algorithm for generating pools of values based on a single value from
+                            a table or sequence.  These optimizers are not recommended for use.  They are maintained
+                            (and mentioned) here simply for use by legacy applications that used these strategies
+                            previously.
+                        </para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+
+            <para>
+                Applications can also implement and use their own optimizer strategies, as defined by the
+                <interfacename>org.hibernate.id.enhanced.Optimizer</interfacename> contract.
+            </para>
+        </section>
     </section>
 
     <section xml:id="identifiers-derived">

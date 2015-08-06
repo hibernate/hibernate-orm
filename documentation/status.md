@@ -21,8 +21,9 @@ Covers reference topics targeting users.
 * <strike>Database_Access</strike>
 * <strike>Transactions</strike>
 * <strike>JNDI</strike>
-* Locking (needs some work)
 * Fetching (needs some work)
+* Cascading (needs lots of work)
+* Locking (needs some work)
 * Batching (needs lot of work - not started - open questions)
 * Caching (needs some work)
 * Events (need some work)

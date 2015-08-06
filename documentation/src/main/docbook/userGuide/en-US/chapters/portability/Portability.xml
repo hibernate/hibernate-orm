@@ -196,5 +196,6 @@
     * basic types
     * simple id types
     * generated id types
+    * composite ids and many-to-one
     * "embedded composite identifiers"
 </chapter>

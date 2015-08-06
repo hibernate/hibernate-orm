@@ -67,7 +67,7 @@ class TxPutFromLoadInterceptor extends BaseRpcInterceptor {
 			// here (even without lock!) and let possible update happen in commit phase.
 			for (WriteCommand wc : command.getModifications()) {
 				if (wc instanceof InvalidateCommand) {
-					// InvalidateCommand does not correctly implement getAffectedKeys()
+					// ISPN-5605 InvalidateCommand does not correctly implement getAffectedKeys()
 					for (Object key : ((InvalidateCommand) wc).getKeys()) {
 						dataContainer.remove(key);
 					}
@@ -82,14 +82,14 @@ class TxPutFromLoadInterceptor extends BaseRpcInterceptor {
 		else {
 			for (WriteCommand wc : command.getModifications()) {
 				if (wc instanceof InvalidateCommand) {
-					// InvalidateCommand does not correctly implement getAffectedKeys()
+					// ISPN-5605 InvalidateCommand does not correctly implement getAffectedKeys()
 					for (Object key : ((InvalidateCommand) wc).getKeys()) {
-						putFromLoadValidator.beginInvalidatingKey(key, ctx.getLockOwner());
+						putFromLoadValidator.beginInvalidatingKey(ctx.getLockOwner(), key);
 					}
 				}
 				else {
 					for (Object key : wc.getAffectedKeys()) {
-						putFromLoadValidator.beginInvalidatingKey(key, ctx.getLockOwner());
+						putFromLoadValidator.beginInvalidatingKey(ctx.getLockOwner(), key);
 					}
 				}
 			}

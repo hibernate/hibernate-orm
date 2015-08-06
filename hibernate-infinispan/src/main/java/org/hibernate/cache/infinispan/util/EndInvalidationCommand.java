@@ -39,7 +39,7 @@ public class EndInvalidationCommand extends BaseRpcCommand {
 	@Override
 	public Object perform(InvocationContext ctx) throws Throwable {
 		for (Object key : keys) {
-			putFromLoadValidator.endInvalidatingKey(key, lockOwner);
+			putFromLoadValidator.endInvalidatingKey(lockOwner, key);
 		}
 		return null;
 	}

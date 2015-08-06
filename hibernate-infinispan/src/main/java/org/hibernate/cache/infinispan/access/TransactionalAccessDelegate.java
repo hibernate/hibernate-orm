@@ -26,13 +26,22 @@ import org.infinispan.util.logging.LogFactory;
  * @author Galder Zamarreño
  * @since 3.5
  */
-public class TransactionalAccessDelegate {
-	private static final Log log = LogFactory.getLog( TransactionalAccessDelegate.class );
-	private static final boolean TRACE_ENABLED = log.isTraceEnabled();
-	private final AdvancedCache cache;
-	private final BaseRegion region;
-	private final PutFromLoadValidator putValidator;
-	private final AdvancedCache<Object, Object> writeCache;
+public abstract class TransactionalAccessDelegate {
+	protected static final Log log = LogFactory.getLog( TransactionalAccessDelegate.class );
+	protected static final boolean TRACE_ENABLED = log.isTraceEnabled();
+	protected final AdvancedCache cache;
+	protected final BaseRegion region;
+	protected final PutFromLoadValidator putValidator;
+	protected final AdvancedCache<Object, Object> writeCache;
+
+	public static TransactionalAccessDelegate create(BaseRegion region, PutFromLoadValidator validator) {
+		if (region.getCache().getCacheConfiguration().transaction().transactionMode().isTransactional()) {
+			return new TxTransactionalAccessDelegate(region, validator);
+		}
+		else {
+			return new NonTxTransactionalAccessDelegate(region, validator);
+		}
+	}
 
    /**
     * Create a new transactional access delegate instance.
@@ -41,7 +50,7 @@ public class TransactionalAccessDelegate {
     * @param validator put from load validator
     */
 	@SuppressWarnings("unchecked")
-	public TransactionalAccessDelegate(BaseRegion region, PutFromLoadValidator validator) {
+	protected TransactionalAccessDelegate(BaseRegion region, PutFromLoadValidator validator) {
 		this.region = region;
 		this.cache = region.getCache();
 		this.putValidator = validator;
@@ -134,79 +143,35 @@ public class TransactionalAccessDelegate {
 		return true;
 	}
 
-   /**
-    * Called after an item has been inserted (before the transaction completes),
-    * instead of calling evict().
-    *
+	/**
+	 * Called after an item has been inserted (before the transaction completes),
+	 * instead of calling evict().
+	 *
 	 * @param session Current session
 	 * @param key The item key
-    * @param value The item
-    * @param version The item's version value
-    * @return Were the contents of the cache actual changed by this operation?
-    * @throws CacheException if the insert fails
-    */
-	@SuppressWarnings("UnusedParameters")
-	public boolean insert(SessionImplementor session, Object key, Object value, Object version) throws CacheException {
-		if ( !region.checkValid() ) {
-			return false;
-		}
+	 * @param value The item
+	 * @param version The item's version value
+	 * @return Were the contents of the cache actual changed by this operation?
+	 * @throws CacheException if the insert fails
+	 */
+	public abstract boolean insert(SessionImplementor session, Object key, Object value, Object version) throws CacheException;
 
-		// We need to be invalidating even for regular writes; if we were not and the write was followed by eviction
-		// (or any other invalidation), naked put that was started after the eviction ended but before this insert
-		// ended could insert the stale entry into the cache (since the entry was removed by eviction).
-		if ( !putValidator.beginInvalidatingKey(session, key)) {
-			throw new CacheException(
-					"Failed to invalidate pending putFromLoad calls for key " + key + " from region " + region.getName()
-			);
-		}
-		putValidator.setCurrentSession(session);
-		try {
-			writeCache.put(key, value);
-		}
-		finally {
-			putValidator.resetCurrentSession();
-		}
-		return true;
-	}
-
-   /**
-    * Called after an item has been updated (before the transaction completes),
-    * instead of calling evict().
-    *
+	/**
+	 * Called after an item has been updated (before the transaction completes),
+	 * instead of calling evict().
+	 *
 	 * @param session Current session
 	 * @param key The item key
-    * @param value The item
-    * @param currentVersion The item's current version value
-    * @param previousVersion The item's previous version value
-    * @return Whether the contents of the cache actual changed by this operation
-    * @throws CacheException if the update fails
-    */
-	@SuppressWarnings("UnusedParameters")
-	public boolean update(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion)
-			throws CacheException {
-		// We update whether or not the region is valid. Other nodes
-		// may have already restored the region so they need to
-		// be informed of the change.
+	 * @param value The item
+	 * @param currentVersion The item's current version value
+	 * @param previousVersion The item's previous version value
+	 * @return Whether the contents of the cache actual changed by this operation
+	 * @throws CacheException if the update fails
+	 */
+	public abstract boolean update(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion)
+			throws CacheException;
 
-		// We need to be invalidating even for regular writes; if we were not and the write was followed by eviction
-		// (or any other invalidation), naked put that was started after the eviction ended but before this update
-		// ended could insert the stale entry into the cache (since the entry was removed by eviction).
-		if ( !putValidator.beginInvalidatingKey(session, key)) {
-			throw new CacheException(
-					"Failed to invalidate pending putFromLoad calls for key " + key + " from region " + region.getName()
-			);
-		}
-		putValidator.setCurrentSession(session);
-		try {
-			writeCache.put(key, value);
-		}
-		finally {
-			putValidator.resetCurrentSession();
-		}
-		return true;
-	}
-
-   /**
+	/**
     * Called after an item has become stale (before the transaction completes).
     *
 	 * @param session Current session

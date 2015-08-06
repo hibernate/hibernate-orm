@@ -78,19 +78,19 @@ public class NonTxInvalidationInterceptor extends BaseRpcInterceptor implements 
 	@Override
 	public Object visitPutKeyValueCommand(InvocationContext ctx, PutKeyValueCommand command) throws Throwable {
 		if (!isPutForExternalRead(command)) {
-			return handleInvalidate(ctx, command, command.getKey());
+			return handleInvalidate(ctx, command, new Object[] { command.getKey() });
 		}
 		return invokeNextInterceptor(ctx, command);
 	}
 
 	@Override
 	public Object visitReplaceCommand(InvocationContext ctx, ReplaceCommand command) throws Throwable {
-		return handleInvalidate(ctx, command, command.getKey());
+		return handleInvalidate(ctx, command, new Object[] { command.getKey() });
 	}
 
 	@Override
 	public Object visitRemoveCommand(InvocationContext ctx, RemoveCommand command) throws Throwable {
-		return handleInvalidate(ctx, command, command.getKey());
+		return handleInvalidate(ctx, command, new Object[] { command.getKey() });
 	}
 
 	@Override
@@ -107,39 +107,39 @@ public class NonTxInvalidationInterceptor extends BaseRpcInterceptor implements 
 
 	@Override
 	public Object visitPutMapCommand(InvocationContext ctx, PutMapCommand command) throws Throwable {
-		Object[] keys = command.getMap() == null ? null : command.getMap().keySet().toArray();
-		return handleInvalidate(ctx, command, keys);
+		if (!isPutForExternalRead(command)) {
+			return handleInvalidate(ctx, command, command.getMap().keySet().toArray());
+		}
+		return invokeNextInterceptor(ctx, command);
 	}
 
-	private Object handleInvalidate(InvocationContext ctx, WriteCommand command, Object... keys) throws Throwable {
+	private Object handleInvalidate(InvocationContext ctx, WriteCommand command, Object[] keys) throws Throwable {
 		Object retval = invokeNextInterceptor(ctx, command);
-		if (command.isSuccessful() && !ctx.isInTxScope()) {
-			if (keys != null && keys.length != 0) {
-				if (!isLocalModeForced(command)) {
-					invalidateAcrossCluster(isSynchronous(command), keys, ctx);
-				}
-			}
+		if (command.isSuccessful() && keys != null && keys.length != 0) {
+			invalidateAcrossCluster(command, keys);
 		}
 		return retval;
 	}
 
-	private void invalidateAcrossCluster(boolean synchronous, Object[] keys, InvocationContext ctx) throws Throwable {
+	private void invalidateAcrossCluster(FlagAffectedCommand command, Object[] keys) throws Throwable {
 		// increment invalidations counter if statistics maintained
 		incrementInvalidations();
 		InvalidateCommand invalidateCommand;
 		Object lockOwner = putFromLoadValidator.registerRemoteInvalidations(keys);
-		if (lockOwner == null) {
-			invalidateCommand = commandsFactory.buildInvalidateCommand(InfinispanCollections.<Flag>emptySet(), keys);
-		}
-		else {
-			invalidateCommand = commandInitializer.buildBeginInvalidationCommand(
-					InfinispanCollections.<Flag>emptySet(), keys, lockOwner);
-		}
-		if (log.isDebugEnabled()) {
-			log.debug("Cache [" + rpcManager.getAddress() + "] replicating " + invalidateCommand);
-		}
+		if (!isLocalModeForced(command)) {
+			if (lockOwner == null) {
+				invalidateCommand = commandsFactory.buildInvalidateCommand(InfinispanCollections.<Flag>emptySet(), keys);
+			}
+			else {
+				invalidateCommand = commandInitializer.buildBeginInvalidationCommand(
+						InfinispanCollections.<Flag>emptySet(), keys, lockOwner);
+			}
+			if (log.isDebugEnabled()) {
+				log.debug("Cache [" + rpcManager.getAddress() + "] replicating " + invalidateCommand);
+			}
 
-		rpcManager.invokeRemotely(null, invalidateCommand, rpcManager.getDefaultRpcOptions(synchronous));
+			rpcManager.invokeRemotely(null, invalidateCommand, rpcManager.getDefaultRpcOptions(isSynchronous(command)));
+		}
 	}
 
 	private void incrementInvalidations() {

@@ -5,6 +5,31 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.3.11.Final (2015.08.05)
+------------------------------------------------------------------------------------------------------------------------
+
+** Bug
+    [HHH-2851] - ParameterTranslationsImpl fails to correctly determine parameter type
+    [HHH-5255] - Merge detached entity failed when the instrumented lazy property is initialized
+    [HHH-7573] - Lazy properties are not processed properly after a PreUpdate callback
+    [HHH-8615] - Shared type parameters results in inconsistent internal model (especially with DynamicParameterizedType)
+    [HHH-8854] - Could not extract ParameterizedType representation of AttributeConverter definition
+    [HHH-9287] - Pooled optimizer identifiers clash with INSERT rows calling sequence directly
+    [HHH-9629] - l2 cache key constructed wrong for entity with inheritance when fetching lazy property
+    [HHH-9637] - Join is reused when 2 explicit joins are used for the same ToOne association
+    [HHH-9757] - Incorrect image path generated in HTML rendering
+    [HHH-9772] - annotation @ListIndexBase has no runtime retention, so it is not available through AnnotationBinder configuration
+    [HHH-9777] - Dereferenced collections are not processed properly
+    [HHH-9805] - Column name specified in @JoinColumn is not quoted with option hibernate.globally_quoted_identifiers=true
+
+** Improvement
+    [HHH-8804] - Ability to use parametrized type as AttributeConverter type parameter
+    [HHH-9518] - Exception and logging messages for collection multi-session access needs to be improved
+    [HHH-9869] - SizeExpression toString is misleading
+
+** Task
+    [HHH-9802] - Allow running hibernate-infispan unit tests using Infinispan 7.2.1.Final as a run-time dependency
+
 Changes in version 4.3.10.Final (2015.05.14)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -418,9 +418,9 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 
 		final Object KEY = TestingKeyFactory.generateCollectionCacheKey( KEY_BASE + testCount++ );
 
-		assertEquals( 0, getValidKeyCount( localCollectionRegion.getCache().keySet() ) );
+		assertEquals( 0, localCollectionRegion.getCache().size() );
 
-		assertEquals( 0, getValidKeyCount( remoteCollectionRegion.getCache().keySet() ) );
+		assertEquals( 0, remoteCollectionRegion.getCache().size() );
 
 		assertNull( "local is clean", localAccessStrategy.get(null, KEY, System.currentTimeMillis() ) );
 		assertNull( "remote is clean", remoteAccessStrategy.get(null, KEY, System.currentTimeMillis() ) );
@@ -447,19 +447,19 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 		// This should re-establish the region root node
 		assertNull( localAccessStrategy.get(null, KEY, System.currentTimeMillis() ) );
 
-		assertEquals( 0, getValidKeyCount( localCollectionRegion.getCache().keySet() ) );
+		assertEquals( 0, localCollectionRegion.getCache().size() );
 
 		// Re-establishing the region root on the local node doesn't
 		// propagate it to other nodes. Do a get on the remote node to re-establish
 		assertEquals( null, remoteAccessStrategy.get(null, KEY, System.currentTimeMillis() ) );
 
-		assertEquals( 0, getValidKeyCount( remoteCollectionRegion.getCache().keySet() ) );
+		assertEquals( 0, remoteCollectionRegion.getCache().size() );
 
 		// Test whether the get above messes up the optimistic version
 		remoteAccessStrategy.putFromLoad(null, KEY, VALUE1, System.currentTimeMillis(), new Integer( 1 ) );
 		assertEquals( VALUE1, remoteAccessStrategy.get(null, KEY, System.currentTimeMillis() ) );
 
-		assertEquals( 1, getValidKeyCount( remoteCollectionRegion.getCache().keySet() ) );
+		assertEquals( 1, remoteCollectionRegion.getCache().size() );
 
 		// Wait for async propagation of the putFromLoad
 		sleep( 250 );

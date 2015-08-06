@@ -506,8 +506,8 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 
    private void evictOrRemoveTest(final boolean evict) throws Exception {
       final Object KEY = TestingKeyFactory.generateEntityCacheKey( KEY_BASE + testCount++ );
-      assertEquals(0, getValidKeyCount(localEntityRegion.getCache().keySet()));
-      assertEquals(0, getValidKeyCount(remoteEntityRegion.getCache().keySet()));
+      assertEquals(0, localEntityRegion.getCache().size());
+      assertEquals(0, remoteEntityRegion.getCache().size());
 
       assertNull("local is clean", localAccessStrategy.get(null, KEY, System.currentTimeMillis()));
       assertNull("remote is clean", remoteAccessStrategy.get(null, KEY, System.currentTimeMillis()));
@@ -528,15 +528,15 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
          }
       });
       assertEquals(null, localAccessStrategy.get(null, KEY, System.currentTimeMillis()));
-      assertEquals(0, getValidKeyCount(localEntityRegion.getCache().keySet()));
+      assertEquals(0, localEntityRegion.getCache().size());
       assertEquals(null, remoteAccessStrategy.get(null, KEY, System.currentTimeMillis()));
-      assertEquals(0, getValidKeyCount(remoteEntityRegion.getCache().keySet()));
+      assertEquals(0, remoteEntityRegion.getCache().size());
    }
 
    private void evictOrRemoveAllTest(final boolean evict) throws Exception {
       final Object KEY = TestingKeyFactory.generateEntityCacheKey( KEY_BASE + testCount++ );
-      assertEquals(0, getValidKeyCount(localEntityRegion.getCache().keySet()));
-      assertEquals(0, getValidKeyCount(remoteEntityRegion.getCache().keySet()));
+      assertEquals(0, localEntityRegion.getCache().size());
+      assertEquals(0, remoteEntityRegion.getCache().size());
       assertNull("local is clean", localAccessStrategy.get(null, KEY, System.currentTimeMillis()));
       assertNull("remote is clean", remoteAccessStrategy.get(null, KEY, System.currentTimeMillis()));
 
@@ -567,17 +567,17 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 
       // This should re-establish the region root node in the optimistic case
       assertNull(localAccessStrategy.get(null, KEY, System.currentTimeMillis()));
-      assertEquals(0, getValidKeyCount(localEntityRegion.getCache().keySet()));
+      assertEquals(0, localEntityRegion.getCache().size());
 
       // Re-establishing the region root on the local node doesn't
       // propagate it to other nodes. Do a get on the remote node to re-establish
       assertEquals(null, remoteAccessStrategy.get(null, KEY, System.currentTimeMillis()));
-      assertEquals(0, getValidKeyCount(remoteEntityRegion.getCache().keySet()));
+      assertEquals(0, remoteEntityRegion.getCache().size());
 
       // Test whether the get above messes up the optimistic version
       remoteAccessStrategy.putFromLoad(null, KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
       assertEquals(VALUE1, remoteAccessStrategy.get(null, KEY, System.currentTimeMillis()));
-      assertEquals(1, getValidKeyCount(remoteEntityRegion.getCache().keySet()));
+      assertEquals(1, remoteEntityRegion.getCache().size());
 
       // Wait for async propagation
       sleep(250);

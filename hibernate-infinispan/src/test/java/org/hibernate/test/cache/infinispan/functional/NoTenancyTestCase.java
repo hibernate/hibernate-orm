@@ -4,6 +4,9 @@ import java.util.concurrent.Callable;
 
 import org.hibernate.Session;
 import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
+import org.hibernate.cache.infinispan.util.Caches;
+import org.infinispan.AdvancedCache;
+import org.infinispan.commons.util.CloseableIterable;
 import org.infinispan.commons.util.CloseableIteratorSet;
 import org.infinispan.context.Flag;
 import org.junit.Test;
@@ -48,9 +51,10 @@ public class NoTenancyTestCase extends SingleNodeTestCase {
 
         }
         EntityRegionImpl region = (EntityRegionImpl) sessionFactory().getSecondLevelCacheRegion(Item.class.getName());
-        CloseableIteratorSet keySet = region.getCache().withFlags(Flag.CACHE_MODE_LOCAL).keySet();
-        assertEquals(1, keySet.size());
-        assertEquals(sessionFactory().getClassMetadata(Item.class).getIdentifierType().getReturnedClass(), keySet.iterator().next().getClass());
+        AdvancedCache localCache = region.getCache().withFlags(Flag.CACHE_MODE_LOCAL);
+        CloseableIterable keys = Caches.keys(localCache);
+        assertEquals(1, localCache.size());
+        assertEquals(sessionFactory().getClassMetadata(Item.class).getIdentifierType().getReturnedClass(), keys.iterator().next().getClass());
     }
 
 }

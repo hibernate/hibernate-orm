@@ -22,6 +22,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.impl.BaseGeneralDataRegion;
+import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.spi.GeneralDataRegion;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.Region;
@@ -33,6 +34,7 @@ import org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase;
 import org.hibernate.test.cache.infinispan.util.BatchModeJtaPlatform;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 import org.infinispan.AdvancedCache;
+import org.infinispan.commons.util.CloseableIterable;
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
 import org.jboss.logging.Logger;
 import org.junit.Test;
@@ -188,11 +190,11 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 			SessionImplementor remoteSession = (SessionImplementor) sessionFactories.get(1).openSession();
 
 			try {
-				Set keys = localCache.keySet();
-				assertEquals( "No valid children in " + keys, 0, getValidKeyCount( keys ) );
+				Set localKeys = Caches.keys(localCache).toSet();
+				assertEquals( "No valid children in " + localKeys, 0, localKeys.size() );
 
-				keys = remoteCache.keySet();
-				assertEquals( "No valid children in " + keys, 0, getValidKeyCount( keys ) );
+				Set remoteKeys = Caches.keys(remoteCache).toSet();
+				assertEquals( "No valid children in " + remoteKeys, 0, remoteKeys.size() );
 
 				assertNull( "local is clean", localRegion.get(null, KEY ) );
 				assertNull( "remote is clean", remoteRegion.get(null, KEY ) );
@@ -215,13 +217,15 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 				sleep( 250 );
 				// This should re-establish the region root node in the optimistic case
 				assertNull( localRegion.get(null, KEY ) );
-				assertEquals( "No valid children in " + keys, 0, getValidKeyCount( localCache.keySet() ) );
+				localKeys = Caches.keys(localCache).toSet();
+				assertEquals( "No valid children in " + localKeys, 0, localKeys.size() );
 
 				// Re-establishing the region root on the local node doesn't
 				// propagate it to other nodes. Do a get on the remote node to re-establish
 				// This only adds a node in the case of optimistic locking
 				assertEquals( null, remoteRegion.get(null, KEY ) );
-				assertEquals( "No valid children in " + keys, 0, getValidKeyCount( remoteCache.keySet() ) );
+				remoteKeys = Caches.keys(remoteCache).toSet();
+				assertEquals( "No valid children in " + remoteKeys, 0, remoteKeys.size() );
 
 				assertEquals( "local is clean", null, localRegion.get(null, KEY ) );
 				assertEquals( "remote is clean", null, remoteRegion.get(null, KEY ) );

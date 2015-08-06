@@ -170,7 +170,7 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
             PutFromLoadValidator validator = getPutFromLoadValidator(remoteCollectionRegion.getCache(), cm, removeLatch, pferLatch);
 
             final TransactionalAccessDelegate delegate =
-                  new TransactionalAccessDelegate(localCollectionRegion, validator);
+                  TransactionalAccessDelegate.create(localCollectionRegion, validator);
             final TransactionManager localTm = localCollectionRegion.getTransactionManager();
 
             Callable<Void> pferCallable = new Callable<Void>() {

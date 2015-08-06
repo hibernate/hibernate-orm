@@ -23,7 +23,7 @@ class TransactionalAccess implements NaturalIdRegionAccessStrategy {
 
 	TransactionalAccess(NaturalIdRegionImpl region) {
 		this.region = region;
-		this.delegate = new TransactionalAccessDelegate( region, region.getPutFromLoadValidator() );
+		this.delegate = TransactionalAccessDelegate.create( region, region.getPutFromLoadValidator() );
 	}
 
 	@Override

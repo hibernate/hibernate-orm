@@ -45,7 +45,7 @@ public class NonTxPutFromLoadInterceptor extends BaseCustomInterceptor {
 	public Object visitInvalidateCommand(InvocationContext ctx, InvalidateCommand command) throws Throwable {
 		if (!ctx.isOriginLocal() && command instanceof BeginInvalidationCommand) {
 			for (Object key : command.getKeys()) {
-				putFromLoadValidator.beginInvalidatingKey(key, ((BeginInvalidationCommand) command).getLockOwner());
+				putFromLoadValidator.beginInvalidatingKey(((BeginInvalidationCommand) command).getLockOwner(), key);
 			}
 		}
 		return invokeNextInterceptor(ctx, command);

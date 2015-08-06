@@ -7,6 +7,7 @@
 package org.hibernate.test.cache.infinispan.entity;
 
 import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.test.cache.infinispan.util.TestingKeyFactory;
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
 import org.junit.Test;
@@ -64,7 +65,9 @@ public abstract class AbstractReadOnlyAccessTestCase extends AbstractEntityRegio
    @Override
    public void testUpdate() throws Exception {
       final Object KEY = TestingKeyFactory.generateEntityCacheKey( KEY_BASE + testCount++ );
+      SoftLock softLock = localAccessStrategy.lockItem(localSession, KEY, null);
       localAccessStrategy.update(localSession, KEY, VALUE2, 2, 1);
+      localAccessStrategy.unlockItem(localSession, KEY, softLock);
    }
 
 }

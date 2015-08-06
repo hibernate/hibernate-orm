@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 import junit.framework.AssertionFailedError;
 import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.test.cache.infinispan.util.TestingKeyFactory;
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
 import org.jboss.logging.Logger;
@@ -54,7 +55,9 @@ public abstract class AbstractTransactionalAccessTestCase extends AbstractEntity
 
                     assertEquals("Correct initial value", VALUE1, localAccessStrategy.get(localSession, KEY, txTimestamp));
 
+                    SoftLock softLock = localAccessStrategy.lockItem(localSession, KEY, null);
                     localAccessStrategy.update(localSession, KEY, VALUE2, new Integer(2), new Integer(1));
+                    localAccessStrategy.unlockItem(localSession, KEY, softLock);
 
                     pferLatch.countDown();
                     commitLatch.await();

@@ -6,11 +6,6 @@
  */
 package org.hibernate.cache.infinispan.access;
 
-import javax.transaction.Status;
-import javax.transaction.SystemException;
-import javax.transaction.Transaction;
-import javax.transaction.TransactionManager;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,7 +30,6 @@ import org.infinispan.interceptors.EntryWrappingInterceptor;
 import org.infinispan.interceptors.InvalidationInterceptor;
 import org.infinispan.interceptors.base.CommandInterceptor;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.util.concurrent.ConcurrentHashSet;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
@@ -66,11 +60,11 @@ import org.infinispan.util.logging.LogFactory;
  * call
  * <p/>
  * <ul>
- * <li> {@link #beginInvalidatingKey(SessionImplementor, Object)} (for a single key invalidation)</li>
+ * <li> {@link #beginInvalidatingKey(Object, Object)} (for a single key invalidation)</li>
  * <li>or {@link #beginInvalidatingRegion()} followed by {@link #endInvalidatingRegion()}
  *     (for a general invalidation all pending puts)</li>
  * </ul>
- * After transaction commit (when the DB is updated) {@link #endInvalidatingKey(SessionImplementor, Object)} should
+ * After transaction commit (when the DB is updated) {@link #endInvalidatingKey(Object, Object)} should
  * be called in order to allow further attempts to cache entry.
  * </p>
  * <p/>
@@ -521,31 +515,24 @@ public class PutFromLoadValidator {
 	}
 
 	/**
-	 * Calls {@link #beginInvalidatingKey(Object, Object)} with current transaction or thread.
-	 *
-	 * @param session
-	 * @param key
-	 * @return
-	 */
-	public boolean beginInvalidatingKey(SessionImplementor session, Object key) {
-		return beginInvalidatingKey(key, session);
-	}
-
-	/**
 	 * Invalidates any {@link #registerPendingPut(SessionImplementor, Object, long) previously registered pending puts}
 	 * and disables further registrations ensuring a subsequent call to {@link #acquirePutFromLoadLock(SessionImplementor, Object, long)}
 	 * will return <code>false</code>. <p> This method will block until any concurrent thread that has
 	 * {@link #acquirePutFromLoadLock(SessionImplementor, Object, long) acquired the putFromLoad lock} for the given key
 	 * has released the lock. This allows the caller to be certain the putFromLoad will not execute after this method
 	 * returns, possibly caching stale data. </p>
-	 * After this transaction completes, {@link #endInvalidatingKey(SessionImplementor, Object)} needs to be called }
+	 * After this transaction completes, {@link #endInvalidatingKey(Object, Object)} needs to be called }
 	 *
 	 * @param key key identifying data whose pending puts should be invalidated
 	 *
 	 * @return <code>true</code> if the invalidation was successful; <code>false</code> if a problem occured (which the
 	 *         caller should treat as an exception condition)
 	 */
-	public boolean beginInvalidatingKey(Object key, Object lockOwner) {
+	public boolean beginInvalidatingKey(Object lockOwner, Object key) {
+		return beginInvalidatingWithPFER(lockOwner, key, null);
+	}
+
+	public boolean beginInvalidatingWithPFER(Object lockOwner, Object key, Object valueForPFER) {
 		for (;;) {
 			PendingPutMap pending = new PendingPutMap(null);
 			PendingPutMap prev = pendingPuts.putIfAbsent(key, pending);
@@ -562,54 +549,47 @@ public class PutFromLoadValidator {
 					}
 					long now = System.currentTimeMillis();
 					pending.invalidate(now, expirationPeriod);
-					pending.addInvalidator(lockOwner, now, expirationPeriod);
+					pending.addInvalidator(lockOwner, valueForPFER, now);
 				}
 				finally {
 					pending.releaseLock();
 				}
 				if (trace) {
-					log.tracef("beginInvalidatingKey(%s#%s, %s) ends with %s", cache.getName(), key, lockOwner, pending);
+					log.tracef("beginInvalidatingKey(%s#%s, %s) ends with %s", cache.getName(), key, lockOwnerToString(lockOwner), pending);
 				}
 				return true;
 			}
 			else {
-				log.tracef("beginInvalidatingKey(%s#%s, %s) failed to acquire lock", cache.getName(), key);
+				log.tracef("beginInvalidatingKey(%s#%s, %s) failed to acquire lock", cache.getName(), key, lockOwnerToString(lockOwner));
 				return false;
 			}
 		}
 	}
 
-	/**
-	 * Calls {@link #endInvalidatingKey(Object, Object)} with current transaction or thread.
-	 *
-	 * @param session
-	 * @param key
-	 * @return
-	 */
-	public boolean endInvalidatingKey(SessionImplementor session, Object key) {
-		return endInvalidatingKey(key, session);
+	public boolean endInvalidatingKey(Object lockOwner, Object key) {
+		return endInvalidatingKey(lockOwner, key, false);
 	}
 
 	/**
 	 * Called after the transaction completes, allowing caching of entries. It is possible that this method
-	 * is called without previous invocation of {@link #beginInvalidatingKey(SessionImplementor, Object)}, then it should be a no-op.
+	 * is called without previous invocation of {@link #beginInvalidatingKey(Object, Object)}, then it should be a no-op.
 	 *
-	 * @param key
 	 * @param lockOwner owner of the invalidation - transaction or thread
+	 * @param key
 	 * @return
 	 */
-	public boolean endInvalidatingKey(Object key, Object lockOwner) {
+	public boolean endInvalidatingKey(Object lockOwner, Object key, boolean doPFER) {
 		PendingPutMap pending = pendingPuts.get(key);
 		if (pending == null) {
 			if (trace) {
-				log.tracef("endInvalidatingKey(%s#%s, %s) could not find pending puts", cache.getName(), key, lockOwner);
+				log.tracef("endInvalidatingKey(%s#%s, %s) could not find pending puts", cache.getName(), key, lockOwnerToString(lockOwner));
 			}
 			return true;
 		}
 		if (pending.acquireLock(60, TimeUnit.SECONDS)) {
 			try {
 				long now = System.currentTimeMillis();
-				pending.removeInvalidator(lockOwner, now);
+				pending.removeInvalidator(lockOwner, key, now, doPFER);
 				// we can't remove the pending put yet because we wait for naked puts
 				// pendingPuts should be configured with maxIdle time so won't have memory leak
 				return true;
@@ -617,13 +597,13 @@ public class PutFromLoadValidator {
 			finally {
 				pending.releaseLock();
 				if (trace) {
-					log.tracef("endInvalidatingKey(%s#%s, %s) ends with %s", cache.getName(), key, lockOwner, pending);
+					log.tracef("endInvalidatingKey(%s#%s, %s) ends with %s", cache.getName(), key, lockOwnerToString(lockOwner), pending);
 				}
 			}
 		}
 		else {
 			if (trace) {
-				log.tracef("endInvalidatingKey(%s#%s, %s) failed to acquire lock", cache.getName(), key, lockOwner);
+				log.tracef("endInvalidatingKey(%s#%s, %s) failed to acquire lock", cache.getName(), key, lockOwnerToString(lockOwner));
 			}
 			return false;
 		}
@@ -634,7 +614,7 @@ public class PutFromLoadValidator {
 		TransactionCoordinator transactionCoordinator = session == null ? null : session.getTransactionCoordinator();
 		if (transactionCoordinator != null) {
 			if (trace) {
-				log.tracef("Registering lock owner %s for %s: %s", session, cache.getName(), Arrays.toString(keys));
+				log.tracef("Registering lock owner %s for %s: %s", lockOwnerToString(session), cache.getName(), Arrays.toString(keys));
 			}
 			Synchronization sync = new Synchronization(nonTxPutFromLoadInterceptor, keys);
 			transactionCoordinator.getLocalSynchronizations().registerSynchronization(sync);
@@ -646,13 +626,18 @@ public class PutFromLoadValidator {
 
 	// ---------------------------------------------------------------- Private
 
+	// we can't use SessionImpl.toString() concurrently
+	private static String lockOwnerToString(Object lockOwner) {
+		return lockOwner instanceof SessionImplementor ? "Session#" + lockOwner.hashCode() : lockOwner.toString();
+	}
+
 	/**
 	 * Lazy-initialization map for PendingPut. Optimized for the expected usual case where only a
 	 * single put is pending for a given key.
 	 * <p/>
 	 * This class is NOT THREAD SAFE. All operations on it must be performed with the lock held.
 	 */
-	private static class PendingPutMap extends Lock {
+	private class PendingPutMap extends Lock {
 		private PendingPut singlePendingPut;
 		private Map<Object, PendingPut> fullMap;
 		private final java.util.concurrent.locks.Lock lock = new ReentrantLock();
@@ -781,32 +766,44 @@ public class PutFromLoadValidator {
 			}
 		}
 
-		public void addInvalidator(Object owner, long now, long invalidatorTimeout) {
+		public void addInvalidator(Object owner, Object valueForPFER, long now) {
 			assert owner != null;
 			if (invalidators == null) {
 				if (singleInvalidator == null) {
-					singleInvalidator = new Invalidator(owner, now);
+					singleInvalidator = new Invalidator(owner, now, valueForPFER);
+					put(new PendingPut(owner));
 				}
 				else {
-					if (singleInvalidator.registeredTimestamp + invalidatorTimeout < now) {
-						// remove leaked invalidator
-						singleInvalidator = new Invalidator(owner, now);
+					if (singleInvalidator.registeredTimestamp + expirationPeriod < now) {
+						// override leaked invalidator
+						singleInvalidator = new Invalidator(owner, now, valueForPFER);
+						put(new PendingPut(owner));
 					}
 					invalidators = new HashMap<Object, Invalidator>();
 					invalidators.put(singleInvalidator.owner, singleInvalidator);
-					invalidators.put(owner, new Invalidator(owner, now));
+					// with multiple invalidations the PFER must not be executed
+					invalidators.put(owner, new Invalidator(owner, now, null));
 					singleInvalidator = null;
 				}
 			}
 			else {
-				long allowedRegistration = now - invalidatorTimeout;
+				long allowedRegistration = now - expirationPeriod;
 				// remove leaked invalidators
 				for (Iterator<Invalidator> it = invalidators.values().iterator(); it.hasNext(); ) {
 					if (it.next().registeredTimestamp < allowedRegistration) {
 						it.remove();
 					}
 				}
-				invalidators.put(owner, new Invalidator(owner, now));
+				// With multiple invalidations in parallel we don't know the order in which
+				// the writes were applied into DB and therefore we can't update the cache
+				// with the most recent value.
+				if (invalidators.isEmpty()) {
+					put(new PendingPut(owner));
+				}
+				else {
+					valueForPFER = null;
+				}
+				invalidators.put(owner, new Invalidator(owner, now, valueForPFER));
 			}
 		}
 
@@ -833,16 +830,29 @@ public class PutFromLoadValidator {
 			}
 		}
 
-		public void removeInvalidator(Object owner, long now) {
+		public void removeInvalidator(Object owner, Object key, long now, boolean doPFER) {
 			if (invalidators == null) {
 				if (singleInvalidator != null && singleInvalidator.owner.equals(owner)) {
+					pferValueIfNeeded(owner, key, singleInvalidator.valueForPFER, doPFER);
 					singleInvalidator = null;
 				}
 			}
 			else {
-				invalidators.remove(owner);
+				Invalidator invalidator = invalidators.remove(owner);
+				if (invalidator != null) {
+					pferValueIfNeeded(owner, key, invalidator.valueForPFER, doPFER);
+				}
 			}
 			lastInvalidationEnd = Math.max(lastInvalidationEnd, now);
+		}
+
+		private void pferValueIfNeeded(Object owner, Object key, Object valueForPFER, boolean doPFER) {
+			if (valueForPFER != null) {
+				PendingPut pendingPut = remove(owner);
+				if (doPFER && pendingPut != null && !pendingPut.completed) {
+					cache.putForExternalRead(key, valueForPFER);
+				}
+			}
 		}
 
 		public boolean canRemove() {
@@ -870,7 +880,7 @@ public class PutFromLoadValidator {
 
 		public String toString() {
 			// we can't use SessionImpl.toString() concurrently
-			return (completed ? "C@" : "R@") + (owner instanceof SessionImplementor ? "Session#" + owner.hashCode() : owner.toString());
+			return (completed ? "C@" : "R@") + lockOwnerToString(owner);
 		}
 
 		public boolean invalidate(long now, long expirationPeriod) {
@@ -888,17 +898,18 @@ public class PutFromLoadValidator {
 	private static class Invalidator {
 		private final Object owner;
 		private final long registeredTimestamp;
+		private final Object valueForPFER;
 
-		private Invalidator(Object owner, long registeredTimestamp) {
+		private Invalidator(Object owner, long registeredTimestamp, Object valueForPFER) {
 			this.owner = owner;
 			this.registeredTimestamp = registeredTimestamp;
+			this.valueForPFER = valueForPFER;
 		}
 
 		@Override
 		public String toString() {
 			final StringBuilder sb = new StringBuilder("{");
-			// we can't use SessionImpl.toString() concurrently
-			sb.append("Owner=").append(owner instanceof SessionImplementor ? "Session#" + owner.hashCode() : owner.toString());
+			sb.append("Owner=").append(lockOwnerToString(owner));
 			sb.append(", Timestamp=").append(registeredTimestamp);
 			sb.append('}');
 			return sb.toString();

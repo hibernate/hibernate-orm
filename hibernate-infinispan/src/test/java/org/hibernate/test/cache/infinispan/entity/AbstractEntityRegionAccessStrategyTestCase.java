@@ -20,10 +20,12 @@ import org.hibernate.cache.internal.CacheDataDescriptionImpl;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.test.cache.infinispan.AbstractNonFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.NodeEnvironment;
+import org.hibernate.test.cache.infinispan.util.BatchModeTransactionCoordinator;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
 import org.hibernate.test.cache.infinispan.util.TestingKeyFactory;
@@ -40,6 +42,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Base class for tests of EntityRegionAccessStrategy impls.
@@ -90,8 +93,9 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
       localEntityRegion = localEnvironment.getEntityRegion(REGION_NAME, getCacheDataDescription());
       localAccessStrategy = localEntityRegion.buildAccessStrategy(getAccessType());
       localSession = mock(SessionImplementor.class);
+      when(localSession.getTransactionCoordinator()).thenReturn(new BatchModeTransactionCoordinator());
       remoteSession = mock(SessionImplementor.class);
-
+      when(localSession.getTransactionCoordinator()).thenReturn(new BatchModeTransactionCoordinator());
 
       invalidation = Caches.isInvalidationCache(localEntityRegion.getCache());
       synchronous = Caches.isSynchronousCache(localEntityRegion.getCache());
@@ -228,7 +232,9 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
                   localAccessStrategy.putFromLoad(localSession, KEY, VALUE1, txTimestamp, new Integer(1));
                }
 
+               SoftLock softLock = localAccessStrategy.lockItem(localSession, KEY, null);
                localAccessStrategy.update(localSession, KEY, VALUE2, new Integer(2), new Integer(1));
+               localAccessStrategy.unlockItem(localSession, KEY, softLock);
 
                BatchModeTransactionManager.getInstance().commit();
             } catch (Exception e) {
@@ -288,7 +294,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
       node1.start();
       node2.start();
 
-      assertTrue("Threads completed", completionLatch.await(2, TimeUnit.SECONDS));
+      assertTrue("Threads completed", completionLatch.await(2000, TimeUnit.SECONDS));
 
       assertThreadsRanCleanly();
 
@@ -325,6 +331,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
                assertNull("Correct initial value", localAccessStrategy.get(localSession, KEY, txTimestamp));
 
                localAccessStrategy.insert(localSession, KEY, VALUE1, new Integer(1));
+               localAccessStrategy.afterInsert(localSession, KEY, VALUE1, null);
 
                readLatch.countDown();
                commitLatch.await();
@@ -420,7 +427,9 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
                log.debug("Transaction began, get initial value");
                assertEquals("Correct initial value", VALUE1, localAccessStrategy.get(localSession, KEY, txTimestamp));
                log.debug("Now update value");
+               SoftLock softLock = localAccessStrategy.lockItem(localSession, KEY, null);
                localAccessStrategy.update(localSession, KEY, VALUE2, new Integer(2), new Integer(1));
+               localAccessStrategy.unlockItem(localSession, KEY, softLock);
                log.debug("Notify the read latch");
                readLatch.countDown();
                readerUnlocked = true;
@@ -527,10 +536,14 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
       Caches.withinTx(localEntityRegion.getTransactionManager(), new Callable<Void>() {
          @Override
          public Void call() throws Exception {
-            if (evict)
+            if (evict) {
                localAccessStrategy.evict(KEY);
-            else
+            }
+            else {
+               SoftLock softLock = localAccessStrategy.lockItem(localSession, KEY, null);
                localAccessStrategy.remove(localSession, KEY);
+               localAccessStrategy.unlockItem(localSession, KEY, softLock);
+            }
             return null;
          }
       });
@@ -566,7 +579,9 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
                log.debug("Call evict all locally");
                localAccessStrategy.evictAll();
             } else {
+               SoftLock softLock = localAccessStrategy.lockRegion();
                localAccessStrategy.removeAll();
+               localAccessStrategy.unlockRegion(softLock);
             }
             return null;
          }

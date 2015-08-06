@@ -11,6 +11,10 @@
          xmlns:xi="http://www.w3.org/2001/XInclude">
     <title>Fetching</title>
 
+    <!-- todo : document special fetching considerations such as batch fetching, subselect fetching and extra laziness -->
+    <!-- todo : document "dynamic fetching via JPA entity graphs" -->
+    <!-- todo : list out the default fetching strategies by association type (JPA); recommend all lazy; allow users to override the to-one default (add jira) -->
+
     <para>
         Fetching, essentially, is the process of grabbing data from the database and making it available to the
         application.  Tuning how an application does fetching is one of the biggest factors in determining how an
@@ -75,6 +79,11 @@
                             </para>
                         </listitem>
                     </itemizedlist>
+                </listitem>
+                <listitem>
+                    <para>
+                        Starting in Hibernate 4.2 (JPA 2.1) you can also use JPA EntityGraphs.
+                    </para>
                 </listitem>
             </itemizedlist>
         </para>
@@ -143,7 +152,7 @@
                 The Hibernate recommendation is to statically mark all associations lazy and to use dynamic fetching
                 strategies for eagerness.  This is unfortunately at odds with the JPA specification which defines that
                 all one-to-one and many-to-one associations should be eagerly fetched by default.  Hibernate, as a JPA
-                provider honors that default.
+                provider, honors that default.
             </para>
         </important>
 
@@ -195,8 +204,8 @@
 
             <para>
                 In this example we have an Employee and their Projects loaded in a single query shown both as an HQL
-                query and a JPA Criteria query.  In both cases, this resolves to exactly one database query to get
-                all that information.
+                query and a JPA Criteria query.  In both cases, this resolves to exactly one database query to get all
+                that information.
             </para>
         </section>
 
@@ -225,8 +234,5 @@
             </para>
         </section>
     </section>
-
-    <!-- todo : document special fetching considerations such as batch fetching, subselect fetching and extra laziness -->
-    <!-- todo : document "dynamic fetching via JPA entity graphs" -->
 
 </chapter>

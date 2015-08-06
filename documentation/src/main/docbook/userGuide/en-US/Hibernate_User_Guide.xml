@@ -58,15 +58,18 @@
     <xi:include href="chapters/events/Events.xml" />
 <!--
     <xi:include href="chapters/query_ql/HQL_JPQL.xml" />
-    <xi:include href="chapters/query_criteria/Criteria.xml" />
-    <xi:include href="chapters/query_native/Native_SQL.xml" />
 -->
+    <xi:include href="chapters/query-criteria/Criteria.xml" />
+    <xi:include href="chapters/query-native/Native.xml" />
+
     <xi:include href="chapters/multitenancy/Multi_Tenancy.xml" />
     <xi:include href="chapters/osgi/OSGi.xml" />
     <xi:include href="chapters/envers/Envers.xml" />
     <xi:include href="chapters/portability/Portability.xml" />
 
-    <xi:include href="appendices/Appendix_LegacyBootstrap.xml" />
+    <xi:include href="appendices/Legacy_Bootstrap.xml" />
+    <xi:include href="appendices/Legacy_Criteria.xml" />
+
     <xi:include href="Bibliography.xml" />
 
 </book>

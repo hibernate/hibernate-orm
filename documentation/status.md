@@ -21,15 +21,16 @@ Covers reference topics targeting users.
 * <strike>Database_Access</strike>
 * <strike>Transactions</strike>
 * <strike>JNDI</strike>
-* Fetching (needs some work)
+* Fetching (needs some work) - document batch fetching, subselect fetching, extra laziness and EntityGraphs
+* Flushing (to be written)
 * Cascading (needs lots of work)
 * Locking (needs some work)
 * Batching (needs lot of work - not started - open questions)
 * Caching (needs some work)
 * Events (need some work)
-* HQL_JPQL (needs lots of work)
-* Criteria (needs lots of work)
-* Native_Queries (needs lots of work)
+* Query - HQL/JPQL (needs lots of work)
+* <strike>Query - Criteria</strike>
+* <strike>Query - Native (copy from old)</strike>
 * Multi_Tenancy (needs some work)
 * OSGi (right place for this?)
 * Envers (right place for this?)

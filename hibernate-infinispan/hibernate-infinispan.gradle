@@ -8,18 +8,9 @@ configurations {
     all*.exclude group: 'org.jboss.logging', module: 'jboss-logging-spi'
 }
 
-if ( useInfinispan8ForTesting() ) {
-    configurations.testRuntime.resolutionStrategy.force 'org.infinispan:infinispan-core:8.0.0.Beta2'
-}
-
-private boolean useInfinispan8ForTesting() {
-    if ( project.hasProperty( 'useInfinispan8ForTesting' ) ) {
-        if ( useInfinispan8ForTesting.equals( 'true' ) ) {
-            println 'Overrriding Infinispan version to test vs Infinispan 8.0.0.Beta2'
-            return true;
-        }
-    }
-    return false;
+if ( project.hasProperty( 'overrideInfinispanVersionForTesting' ) ) {
+    println 'Overrriding Infinispan version to test vs Infinispan version: ' + overrideInfinispanVersionForTesting
+    configurations.testRuntime.resolutionStrategy.force 'org.infinispan:infinispan-core:' + overrideInfinispanVersionForTesting
 }
 
 dependencies {

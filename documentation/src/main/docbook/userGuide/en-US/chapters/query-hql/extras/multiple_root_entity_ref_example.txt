@@ -1,0 +1,5 @@
+// build a product between customers and active mailing campaigns so we can spam!
+select distinct cust, camp
+from Customer cust, Campaign camp
+where camp.type = 'mail'
+  and current_timestamp() between camp.activeRange.start and camp.activeRange.end

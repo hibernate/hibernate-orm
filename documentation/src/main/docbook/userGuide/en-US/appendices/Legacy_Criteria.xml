@@ -18,7 +18,7 @@
             <interfacename>javax.persistence.criteria.CriteriaQuery</interfacename> API.  Eventually,
             Hibernate-specific criteria features will be ported as extensions to the JPA
             <interfacename>javax.persistence.criteria.CriteriaQuery</interfacename>.  For details on the JPA APIs, see
-            <xref linkend="query-criteria"/>.
+            <xref linkend="criteria"/>.
         </para>
         <para>
             This information is copied as-is from the older Hibernate documentation.

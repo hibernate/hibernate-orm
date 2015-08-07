@@ -56,9 +56,7 @@
     <xi:include href="chapters/batch/Batching.xml" />
     <xi:include href="chapters/caching/Caching.xml" />
     <xi:include href="chapters/events/Events.xml" />
-<!--
-    <xi:include href="chapters/query_ql/HQL_JPQL.xml" />
--->
+    <xi:include href="chapters/query-hql/HQL.xml" />
     <xi:include href="chapters/query-criteria/Criteria.xml" />
     <xi:include href="chapters/query-native/Native.xml" />
 

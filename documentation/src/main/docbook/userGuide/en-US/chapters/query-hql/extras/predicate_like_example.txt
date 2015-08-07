@@ -1,0 +1,13 @@
+select p
+from Person p
+where p.name like '%Schmidt'
+
+select p
+from Person p
+where p.name not like 'Jingleheimmer%'
+
+// find any with name starting with "sp_"
+select sp
+from StoredProcedureMetadata sp
+where sp.name like 'sp|_%' escape '|'
+

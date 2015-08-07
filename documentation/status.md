@@ -28,7 +28,7 @@ Covers reference topics targeting users.
 * Batching (needs lot of work - not started - open questions)
 * Caching (needs some work)
 * Events (need some work)
-* Query - HQL/JPQL (still need to document APIs)
+* <strike>Query - HQL/JPQL</strike>
 * <strike>Query - Criteria</strike>
 * <strike>Query - Native (copy from old)</strike>
 * Multi_Tenancy (needs some work)
@@ -78,5 +78,5 @@ Overall
 * I really like the idea of each chapter having a title+abstract.  See userGuide/chapters/HQL.xml 
 	for an example.
 * I really like the idea of each chapter having a "Related Topics" (?)sidebar(?).  See 
-	userGuide/chapters/HQL.xml for an example.  I am not sure `sidebar` is the best element for
+	userGuide/chapters/HQL.xml for an example.  I am not sure `<sidebar/>` is the best element for
 	this concept, but I could not find a better one on cursory glance.

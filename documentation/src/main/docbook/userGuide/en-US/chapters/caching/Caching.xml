@@ -19,8 +19,10 @@
             caching data outside the context of a particular Session.  This section defines
             the settings which control that behavior.
         </para>
+
         <section xml:id="caching-config-provider">
             <title>RegionFactory</title>
+
             <para>
                 <interfacename>org.hibernate.cache.spi.RegionFactory</interfacename> defines the integration
                 between Hibernate and a pluggable caching provider.  <literal>hibernate.cache.region.factory_class</literal>
@@ -91,8 +93,10 @@
                 Hibernate side of the integration that control various caching behavior:
                 <itemizedlist>
                     <listitem>
-                        <literal>hibernate.cache.use_second_level_cache</literal> - Enable or disable
-                        second level caching overall.  Default is true.
+                        <para>
+                            <literal>hibernate.cache.use_second_level_cache</literal> - Enable or disable
+                            second level caching overall.  Default is true.
+                        </para>
                     </listitem>
                     <listitem>
                         <literal>hibernate.cache.use_query_cache</literal> - Enable or disable second level

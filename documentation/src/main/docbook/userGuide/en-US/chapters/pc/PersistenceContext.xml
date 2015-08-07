@@ -6,7 +6,8 @@
   ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
   ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
   -->
-<chapter xmlns="http://docbook.org/ns/docbook"
+<chapter xml:id="pc"
+         xmlns="http://docbook.org/ns/docbook"
          xmlns:xi="http://www.w3.org/2001/XInclude">
     <info>
         <title>Persistence Contexts</title>
@@ -221,7 +222,8 @@
             properties of the entity.  Note that only the entity instance and its collections are refreshed unless you
             specify <literal>REFRESH</literal> as a cascade style of any associations.  However, please note that
             Hibernate has the capability to handle this automatically through its notion of generated properties.
-            See <xref linkend="devguide-mappingEntities"/> for information.
+            See the discussion of non-identifier generated attributes in the
+            <citetitle>Hibernate User Guide</citetitle>
         </para>
     </section>
 

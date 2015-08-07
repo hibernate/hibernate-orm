@@ -21,7 +21,7 @@ Covers reference topics targeting users.
 * <strike>Database_Access</strike>
 * <strike>Transactions</strike>
 * <strike>JNDI</strike>
-* Fetching (needs some work) - document batch fetching, subselect fetching, extra laziness and EntityGraphs
+* Fetching - still need to document batch fetching, subselect fetching, extra laziness and EntityGraphs
 * Flushing (to be written)
 * Cascading (needs lots of work)
 * Locking (needs some work)
@@ -70,3 +70,13 @@ Integrations Guide
 * IdGeneratorStrategyInterpreter (not started)
 * custom Session/SessionFactory implementors (not started)
 * ???
+
+
+Overall
+=======
+
+* I really like the idea of each chapter having a title+abstract.  See userGuide/chapters/HQL.xml 
+	for an example.
+* I really like the idea of each chapter having a "Related Topics" (?)sidebar(?).  See 
+	userGuide/chapters/HQL.xml for an example.  I am not sure `sidebar` is the best element for
+	this concept, but I could not find a better one on cursory glance.

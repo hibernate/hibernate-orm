@@ -440,6 +440,14 @@
                 contexts (conversations).  Because of the runtime imposition/inconsistency Hibernate suggest other
                 forms of identifier value generation be used.
             </para>
+
+            <para>
+                There is yet another important runtime impact of choosing IDENTITY generation: Hibernate will not
+                be able to JDBC batching for inserts of the entities that use IDENTITY generation.  The importance
+                of this depends on the application's specific use cases.  If the application is not usually
+                creating many new instances of a given type of entity that uses IDENTITY generation, then
+                this is not an important impact since batching would not have been helpful anyway.
+            </para>
         </section>
 
         <section xml:id="identifiers-generators-table">

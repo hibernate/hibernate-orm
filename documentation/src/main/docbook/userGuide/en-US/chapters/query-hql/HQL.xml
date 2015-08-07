@@ -10,7 +10,27 @@
          xmlns="http://docbook.org/ns/docbook"
          xmlns:xi="http://www.w3.org/2001/XInclude">
 
-    <title>HQL and JPQL</title>
+    <info>
+        <title>HQL and JPQL</title>
+        <abstract>
+            <para>Discuss syntax and execution of both HQL and JPQL</para>
+        </abstract>
+    </info>
+
+    <sidebar>
+        <title>Related topics</title>
+        <itemizedlist>
+            <listitem>
+                <para><xref linkend="flushing" /></para>
+            </listitem>
+            <listitem>
+                <para><xref linkend="fetching" /></para>
+            </listitem>
+            <listitem>
+                <para><xref linkend="pc" /></para>
+            </listitem>
+        </itemizedlist>
+    </sidebar>
 
     <para>
         The Hibernate Query Language (HQL) and Java Persistence Query Language (JPQL) are both object model
@@ -1447,5 +1467,298 @@
 
     <section xml:id="hql-api">
         <title>Query API</title>
+
+        <section>
+            <title>Hibernate Query API</title>
+
+            <para>
+                In Hibernate the HQL/JPQL query is represented as <interfacename>org.hibernate.Query</interfacename> which
+                is obtained from the Session.  If the HQL/JPQL is a named query, <methodname>Session#getNamedQuery</methodname>
+                would be used; otherwise <methodname>Session#createQuery</methodname> would be used.
+            </para>
+
+            <example>
+                <title>Obtaining a Query reference - Hibernate</title>
+                <programlisting role="JAVA"><xi:include href="extras/api/hibernate/GetNamedQuery.java" parse="text" /></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/api/hibernate/CreateQuery.java" parse="text" /></programlisting>
+            </example>
+
+            <para>
+                The Query interface can then be used to control the execution of the query.  For example, we
+                may want to specify an execution timeout or control caching.
+            </para>
+
+            <example>
+                <title>Basic Query usage - Hibernate</title>
+                <programlisting role="JAVA"><xi:include href="extras/api/hibernate/BasicQueryUsage.java" parse="text" /></programlisting>
+            </example>
+
+            <para>
+                For complete details, see the Query javadocs.
+            </para>
+
+            <important>
+                <para>
+                    Query hints here are database query hints.  They are added directly to the generated SQL
+                    according to <methodname>Dialect#getQueryHintString</methodname>.  The JPA notion of query
+                    hints, on the other hand, refer to hints that target the provider (Hibernate).  So even though
+                    they are called the same, be aware they have a very different purpose.  Also be aware that
+                    Hibernate query hints generally make the application non-portable across databases unless the code
+                    adding them first checks the Dialect.
+                </para>
+            </important>
+
+            <para>
+                Flushing is covered in detail in <xref linkend="flushing"/>.  Locking is covered in detail in
+                <xref linkend="locking"/>.  The concept of read-only state is covered in <xref linkend="pc"/>.
+            </para>
+
+            <para>
+                Hibernate also allows an application to hook into the process of building the query results via the
+                <interfacename>org.hibernate.transform.ResultTransformer</interfacename> contract.  See its javadocs
+                as well as the Hibernate-provided implementations for additional details.
+            </para>
+
+            <para>
+                The last thing that needs to happen before we can execute the query is to bind the values for any
+                parameters defined in the query.  Query defines many overloaded methods for this purpose.  The most
+                generic form takes the value as well as the Hibernate Type.
+            </para>
+
+            <example>
+                <title>Parameter binding - Hibernate</title>
+                <programlisting role="JAVA"><xi:include href="extras/api/hibernate/SetParameter.java"/></programlisting>
+            </example>
+
+            <para>
+                Hibernate generally understands the expected type of the parameter given its context in the query.
+                In the previous example, since we are using the parameter in a LIKE comparison against a String-typed
+                attribute Hibernate would automatically infer the type; so the above could be simplified.
+            </para>
+
+            <example>
+                <title>Parameter binding (inferred type) - Hibernate</title>
+                <programlisting role="JAVA"><xi:include href="extras/api/hibernate/SetParameterInferredType.java"/></programlisting>
+            </example>
+
+            <para>
+                There are also short hand forms for binding common types such as strings, booleans, integers, etc.
+            </para>
+
+            <example>
+                <title>Parameter binding (short forms) - Hibernate</title>
+                <programlisting role="JAVA"><xi:include href="extras/api/hibernate/SetParameterShortForms.java"/></programlisting>
+            </example>
+
+            <para>
+                In terms of execution, Hibernate offers 4 different methods.  The 2 most commonly used are
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            <methodname>Query#list</methodname> - executes the select query and returns back the list
+                            of results.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            <methodname>Query#uniqueResult</methodname> - executes the select query and returns the
+                            single result.  If there were more than one result an exception is thrown.
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+
+            <example>
+                <title>list() and uniqueResult()</title>
+                <programlisting role="JAVA"><xi:include href="extras/api/hibernate/List.java" parse="text" /></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/api/hibernate/UniqueResult.java" parse="text" /></programlisting>
+            </example>
+
+            <note>
+                <para>
+                    If the unique result is used often and the attributes upon which it is based are unique, you may
+                    want to consider mapping a natural-id and using the natural-id loading API.  See the
+                    <citetitle>Hibernate Domain Mapping Guide</citetitle> for more information on natural-ids.
+                </para>
+            </note>
+
+            <para>
+                Hibernate offers 2 additional, specialized methods for performing the query and handling results.
+                <methodname>Query#scroll</methodname> works in tandem with the JDBC notion of a scrollable
+                ResultSet.  The <methodname>scroll</methodname> method is overloaded.  Then main form accepts a single
+                argument of type <interfacename>org.hibernate.ScrollMode</interfacename> which indicates the type of
+                scrolling to be used.  See the javadocs for ScrollMode for the details on each.  The second form accepts
+                no argument and will use the ScrollMode indicated by
+                <methodname>Dialect#defaultScrollMode</methodname>.  <methodname>Query#scroll</methodname> returns
+                a <interfacename>org.hibernate.ScrollableResults</interfacename> which wraps the underlying JDBC
+                (scrollable) ResultSet and provides access to the results.  Since this form holds the JDBC ResultSet
+                open, the application should indicate when it is done with the ScrollableResults by calling
+                its <methodname>close</methodname> method (as inherited from <interfacename>java.io.Closeable</interfacename>,
+                so that ScrollableResults will work with try-with-resources blocks!).  If left unclosed by the
+                application, Hibernate will automatically close the ScrollableResults when the current transaction
+                completes.
+            </para>
+
+            <note>
+                <para>
+                    If you plan to use <methodname>Query#scroll</methodname> with collection fetches it is important
+                    that your query explicitly order the results so that the JDBC results contain the the related
+                    rows sequentially.
+                </para>
+            </note>
+
+            <para>
+                The last is <methodname>Query#iterate</methodname>, which is intended for loading entities which the
+                the application feels certain will be in the second-level cache.  The idea behind iterate is that just
+                the matching identifiers will be obtained in the SQL query.  From these the identifiers are resolved
+                by second-level cache lookup.  If these second-level cache lookups fail, additional queries will
+                need to be issued against the database.  This operation can perform significantly better for loading
+                large numbers of entities that for certain already exist in the second-level cache.  In cases where
+                many of the entities do not exist in the second-level cache, this operation will almost definitely
+                perform worse.  The Iterator returned from <methodname>Query#iterate</methodname> is actually a
+                specially typed Iterator: <interfacename>org.hibernate.engine.HibernateIterator</interfacename>.  It
+                is specialized to expose a <methodname>close</methodname> method (again,
+                inherited from <interfacename>java.io.Closeable</interfacename>).  When you are done with this Iterator
+                you should close it, either by casting to HibernateIterator or Closeable, or by calling
+                <methodname>org.hibernate.Hibernate#close</methodname>
+            </para>
+        </section>
+
+        <section>
+            <title>JPA Query API</title>
+
+            <para>
+                In JPA the query is represented by <interfacename>javax.persistence.Query</interfacename> or
+                <interfacename>javax.persistence.TypedQuery</interfacename> as obtained from the EntityManager.  For named
+                queries <methodname>EntityManager#createNamedQuery</methodname> is used; otherwise
+                <methodname>EntityManager#createQuery</methodname> is used.
+            </para>
+
+            <example>
+                <title>Obtaining a Query reference - JPA</title>
+                <programlisting role="JAVA"><xi:include href="extras/api/jpa/CreateNamedQuery.java" parse="text" /></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/api/jpa/CreateQuery.java" parse="text" /></programlisting>
+            </example>
+
+            <note>
+                <para>
+                    This will all sound very familiar.  Not only was the JPQL syntax heavily inspired by HQL, but many
+                    of the JPA APIs were heavily inspired by Hibernate.  The 2 Query contracts are very similar.
+                </para>
+            </note>
+
+            <para>
+                The Query interface can then be used to control the execution of the query.  For example, we
+                may want to specify an execution timeout or control caching.
+            </para>
+
+            <example>
+                <title>Basic Query usage - JPA</title>
+                <programlisting role="JAVA"><xi:include href="extras/api/jpa/BasicQueryUsage.java" parse="text" /></programlisting>
+            </example>
+
+            <para>
+                For complete details, see the Query javadocs.  Many of the settings controlling the execution of the
+                query are defined as hints.  JPA defines some standard hints (like timeout in the example), but most
+                are provider specific.  Relying on provider specific hints limits your applications portability to some
+                degree.
+            </para>
+
+            <itemizedlist>
+                <title>JPA standardized Query hints</title>
+                <listitem>
+                    <para>
+                        <literal>javax.persistence.query.timeout</literal> - Defines the query timeout, in milliseconds.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>javax.persistence.fetchgraph</literal> - Defines a "fetchgraph" EntityGraph.
+                        Attributes explicitly specified as AttributeNodes are treated as FetchType.EAGER (via join fetch
+                        or subsequent select).  For details, see the EntityGraph discussions in <xref linkend="fetching" />.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>javax.persistence.loadgraph</literal> - Defines a "loadgraph" EntityGraph.  Attributes
+                        explicitly specified as AttributeNodes are treated as  FetchType.EAGER (via join fetch or
+                        subsequent select).  Attributes that are not specified are treated as FetchType.LAZY or
+                        FetchType.EAGER depending on the attribute's definition in metadata.  For details, see the
+                        EntityGraph discussions in <xref linkend="fetching" />.
+                    </para>
+                </listitem>
+            </itemizedlist>
+
+            <itemizedlist>
+                <title>Hibernate specific JPA Query hints</title>
+                <listitem>
+                    <para>
+                        <literal>org.hibernate.cacheMode</literal> - Defines the CacheMode to use.  See
+                        <methodname>org.hibernate.Query#setCacheMode</methodname>.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>org.hibernate.cacheable</literal> - Defines whether the query is cacheable.
+                        true/false.  See <methodname>org.hibernate.Query#setCacheable</methodname>.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>org.hibernate.cacheRegion</literal> For queries that are cacheable, defines a specific
+                        cache region to use.  See <methodname>org.hibernate.Query#setCacheRegion</methodname>.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>org.hibernate.comment</literal> - Defines the comment to apply to the generated SQL.
+                        See <methodname>org.hibernate.Query#setComment</methodname>.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>org.hibernate.fetchSize</literal> - Defines the JDBC fetch-size to use.  See
+                        <methodname>org.hibernate.Query#setFetchSize</methodname>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>org.hibernate.flushMode</literal> - Defines the Hibernate-specific FlushMode to use.
+                        See <methodname>org.hibernate.Query#setFlushMode</methodname>.  If possible, prefer using
+                        <methodname>javax.persistence.Query#setFlushMode</methodname> instead.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>org.hibernate.readOnly</literal> - Defines that entities and collections loaded by
+                        this query should be marked as read-only.  See <methodname>org.hibernate.Query#setReadOnly</methodname>
+                    </para>
+                </listitem>
+            </itemizedlist>
+
+            <para>
+                Just as seen in the Hibernate API, the final thing that needs to happen before the query can be
+                executed is to bind the values for any defined parameters.  JPA defines a simplified set of parameter
+                binding methods.  Essentially it supports setting the parameter value (by name/position) and
+                a specialized form for Calendar/Date types additionally accepting a TemporalType.
+            </para>
+
+            <example>
+                <title>Parameter binding - JPA</title>
+                <programlisting role="JAVA"><xi:include href="extras/api/jpa/SetParameter.java"/></programlisting>
+            </example>
+
+            <para>
+                Additionally, JPA allows access to read some information about parameters as well.
+            </para>
+
+            <para>
+                As far as execution, JPA supports the two main methods discussed above for the Hibernate API.  It calls
+                these methods <methodname>Query#getResultList</methodname> and <methodname>Query#getSingleResult</methodname>.
+                They behave exactly as described for <methodname>org.hibernate.Query#list</methodname> and
+                <methodname>org.hibernate.Query#uniqueResult</methodname>.
+            </para>
+        </section>
     </section>
+
 </chapter>

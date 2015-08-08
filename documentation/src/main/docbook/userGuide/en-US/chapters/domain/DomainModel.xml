@@ -104,7 +104,7 @@
             </note>
 
             <para>
-                You should also avoid declaring persistemt attribute getters and setters as final for the reasons
+                You should also avoid declaring persistent attribute getters and setters as final for the reasons
                 already mentioned.
             </para>
         </section>
@@ -113,7 +113,7 @@
             <title>Declare getters and setters for persistent attributes</title>
 
             <para>
-                Although not required, it is recommended to follow POJO/JavaBean conventions by defining getters and
+                Although not required, it is recommended to follow JavaBean conventions by defining getters and
                 setters for you entities persistent attributes.  Hibernate can also directly access the entity's
                 fields.
             </para>

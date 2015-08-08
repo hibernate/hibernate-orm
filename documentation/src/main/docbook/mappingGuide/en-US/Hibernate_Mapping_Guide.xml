@@ -45,15 +45,18 @@
     <xi:include href="Preface.xml" />
 
     <xi:include href="chapters/categoizations/Data_Categorizations.xml"  />
+    <xi:include href="chapters/entity/Entity.xml" />
     <xi:include href="chapters/basic/Basic_Types.xml" />
     <xi:include href="chapters/composition/Composition.xml" />
     <xi:include href="chapters/collection/Collection.xml" />
-    <xi:include href="chapters/entity/Entity.xml" />
+    <!--
+        <xi:include href="chapters/association/Associations.xml" />
+    -->
+
     <xi:include href="chapters/id/Identifiers.xml" />
     <xi:include href="chapters/natural_id/Natural_Id.xml" />
 
     <!--
-        <xi:include href="chapters/association/Associations.xml" />
         <xi:include href="chapters/secondary/Secondary_Tables.xml" />
 
         <xi:include href="chapters/constraints/Database_Constraints.xml" /> pk, fk, index, check, unique
@@ -68,6 +71,8 @@
 
         <xi:include href="chapters/naming/Naming_Strategies.xml" />
         <xi:include href="chapters/quoting/SQL_Identifier_Quoting.xml" />
+
+        XML mappings
     -->
 
     <!-- appendices? -->

@@ -6,6 +6,16 @@
  */
 package org.hibernate.jpa.test.convert;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import javax.persistence.AttributeConverter;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
@@ -14,28 +24,23 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.MapKeyEnumerated;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.persistence.UniqueConstraint;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
-
-import org.junit.Test;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
@@ -60,6 +65,8 @@ public class CollectionElementConversionTest extends BaseUnitTestCase {
 			em.getTransaction().begin();
 			Customer customer = new Customer( 1 );
 			customer.colors.add( ColorType.BLUE );
+			customer.saturations.put(ColorType.BLUE, Saturation.HIGH);
+			customer.dates.put(ColorType.BLUE, new Date(0));
 			em.persist( customer );
 			em.getTransaction().commit();
 			em.close();
@@ -67,6 +74,8 @@ public class CollectionElementConversionTest extends BaseUnitTestCase {
 			em = emf.createEntityManager();
 			em.getTransaction().begin();
 			assertEquals( 1, em.find( Customer.class, 1 ).colors.size() );
+			assertEquals( 1, em.find( Customer.class, 1 ).saturations.size() );
+			assertEquals( 1, em.find( Customer.class, 1 ).dates.size() );
 			em.getTransaction().commit();
 			em.close();
 
@@ -97,6 +106,14 @@ public class CollectionElementConversionTest extends BaseUnitTestCase {
 		@Column(name = "color", nullable = false)
 		private Set<ColorType> colors = new HashSet<ColorType>();
 
+		@ElementCollection
+		@Enumerated(EnumType.STRING)
+		private Map<ColorType, Saturation> saturations = new HashMap<ColorType, Saturation>();
+		
+		@ElementCollection
+		@Temporal(TemporalType.DATE)
+		private Map<ColorType, Date> dates = new HashMap<ColorType, Date>();
+
 		public Customer() {
 		}
 
@@ -105,6 +122,11 @@ public class CollectionElementConversionTest extends BaseUnitTestCase {
 		}
 	}
 
+	public enum Saturation {
+		LOW,
+		MEDIUM,
+		HIGH;
+	};
 
 	// an enum-like class (converters are technically not allowed to apply to enums)
 	public static class ColorType {

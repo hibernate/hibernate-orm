@@ -111,15 +111,13 @@ public class StandardQueryCache implements QueryCache {
 		if ( isNaturalKeyLookup && result.isEmpty() ) {
 			return false;
 		}
-		final long ts = cacheRegion.nextTimestamp();
-
 		if ( DEBUGGING ) {
-			LOG.debugf( "Caching query results in region: %s; timestamp=%s", cacheRegion.getName(), ts );
+			LOG.debugf( "Caching query results in region: %s; timestamp=%s", cacheRegion.getName(), session.getTimestamp() );
 		}
 
 		final List cacheable = new ArrayList( result.size() + 1 );
 		logCachedResultDetails( key, null, returnTypes, cacheable );
-		cacheable.add( ts );
+		cacheable.add( session.getTimestamp() );
 
 		final boolean isSingleResult = returnTypes.length == 1;
 		for ( Object aResult : result ) {

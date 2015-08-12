@@ -31,6 +31,7 @@ public class SelectClause extends SelectExpressionList {
 	private boolean scalarSelect;
 
 	private List fromElementsForLoad = new ArrayList();
+	private List alreadyRenderedIdentifiers = new ArrayList();
 	//private Type[] sqlResultTypes;
 	private Type[] queryReturnTypes;
 	private String[][] columnNames;
@@ -224,6 +225,7 @@ public class SelectClause extends SelectExpressionList {
 							//sqlResultTypeList.add( type );
 							// Generate the select expression.
 							String text = fromElement.renderIdentifierSelect( size, k );
+							alreadyRenderedIdentifiers.add(text);
 							SelectExpressionImpl generatedExpr = (SelectExpressionImpl) appender.append(
 									SqlTokenTypes.SELECT_EXPR,
 									text,
@@ -450,7 +452,10 @@ public class SelectClause extends SelectExpressionList {
 				expr.setText( text );
 			}
 			else {
-				appender.append( SqlTokenTypes.SQL_TOKEN, text, false );
+				if (! alreadyRenderedIdentifiers.contains(text)) {
+					appender.append( SqlTokenTypes.SQL_TOKEN, text, false );
+					alreadyRenderedIdentifiers.add(text);
+				}
 			}
 		}
 	}

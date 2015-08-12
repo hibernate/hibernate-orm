@@ -6,22 +6,29 @@
  */
 package org.hibernate.test.pagination;
 
+import static java.lang.String.format;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.hibernate.Criteria;
+import org.hibernate.Filter;
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.criterion.Order;
-
+import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Gavin King
@@ -99,6 +106,65 @@ public class PaginationTest extends BaseNonConfigCoreFunctionalTestCase {
 		session.getTransaction().commit();
 		session.close();
 		cleanupTestData();
+	}
+
+	/**
+	 * HHH-951: test that setting maxResults does not cause "ORA-00918: column ambiguously defined" on certain queries
+	 * 
+	 * @author Piotr Findeisen <piotr.findeisen@gmail.com>
+	 */
+	@Test
+	@TestForIssue(jiraKey = "HHH-951")
+	@RequiresDialectFeature(
+			value = DialectChecks.SupportLimitCheck.class,
+			comment = "Dialect does not support limit"
+	)
+	public void testLimitWithExpreesionAndFetchJoin() {
+
+		try ( Session session = openSession() ) {
+			session.beginTransaction();
+
+			// Given
+			String hql = "SELECT b, 1 FROM DataMetaPoint b inner join fetch b.dataPoint dp";
+			Query query = session.createQuery( hql );
+
+			// When
+			query = query.setMaxResults( 3 );
+
+			/*
+			 * Then 1: list() should not fail -- this is "empirical" verification of the fix (however this will verify
+			 * anything only when tests run against Oracle database).
+			 */
+			query.list();
+
+			HQLQueryPlan queryPlan = new HQLQueryPlan( hql, false, Collections.<String, Filter> emptyMap(), sessionFactory() );
+			String sqlQuery = queryPlan.getTranslators()[0]
+					.collectSqlStrings().get( 0 );
+
+			session.getTransaction().commit();
+
+			/*
+			 * Then 2: verify generated SQL indeed does not contain duplicate definition of an alias. If it had, the
+			 * following pattern would match. Note that duplicate alias definitions are forbidden by Oracle in inner
+			 * queries (at least up to Oracle 11g). Checking structure of generated SQL allows this test to work when
+			 * run on other databases too. Or when future Oracle version used for tests fixes the problem but we want to
+			 * maintain compatibility with earlier versions.
+			 */
+			Matcher matcher = Pattern.compile( ""
+					// search for "column1 as alias" ...
+					+ "[^\\w.](?<column1>\\S+)\\s+as\\s+(?<alias>\\w+)\\b"
+					// ... followed (on the same level of nesting in SQL, so without any braces) ...
+					+ "[^()]*"
+					// ... by "column2 as alias" (where alias is the same as previously and column2 can be anything
+					+ "[^\\w.](?<column2>\\S+)\\s+as\\s+\\k<alias>\\b",
+					Pattern.DOTALL | Pattern.CASE_INSENSITIVE )
+					.matcher( sqlQuery );
+			if ( matcher.find() ) {
+				fail( format( "Column %s/%s mapped to alias %s twice in generated SQL: %s",
+						matcher.group( "column1" ), matcher.group( "column2" ),
+						matcher.group( "alias" ), sqlQuery ) );
+			}
+		}
 	}
 
 	@Test

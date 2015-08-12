@@ -122,10 +122,10 @@ public class ClusteredTimestampsRegionImpl extends TimestampsRegionImpl {
 	 * Brings all data from the distributed cache into our local cache.
 	 */
 	private void populateLocalCache() {
-		CloseableIterable<CacheEntry<Object, Void>> iterable = Caches.keys(cache);
+		CloseableIterable<Object> iterable = Caches.keys(cache);
 		try {
-			for (CacheEntry<Object, Void> entry : iterable) {
-				get(null, entry.getKey());
+			for (Object key : iterable) {
+				get(null, key);
 			}
 		}
 		finally {

@@ -13,6 +13,7 @@ import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.test.cache.infinispan.AbstractNonFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.NodeEnvironment;
@@ -25,6 +26,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.mock;
 
 /**
  * TransactionalExtraAPITestCase.
@@ -41,6 +43,7 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
 	public static final Object KEY = TestingKeyFactory.generateCollectionCacheKey( "KEY" );
 	public static final CacheDataDescription CACHE_DATA_DESCRIPTION
 			= new CacheDataDescriptionImpl(false, false, ComparableComparator.INSTANCE, null);
+	private static final SessionImplementor SESSION = mock(SessionImplementor.class);
 
 	private NodeEnvironment environment;
 	private static CollectionRegionAccessStrategy accessStrategy;
@@ -85,7 +88,7 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
 
 	@Test
 	public void testLockItem() {
-		assertNull( getCollectionAccessStrategy().lockItem(null, KEY, new Integer( 1 ) ) );
+		assertNull( getCollectionAccessStrategy().lockItem(SESSION, KEY, new Integer( 1 ) ) );
 	}
 
 	@Test
@@ -95,12 +98,12 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
 
 	@Test
 	public void testUnlockItem() {
-		getCollectionAccessStrategy().unlockItem(null, KEY, new MockSoftLock() );
+		getCollectionAccessStrategy().unlockItem(SESSION, KEY, new MockSoftLock() );
 	}
 
 	@Test
 	public void testUnlockRegion() {
-		getCollectionAccessStrategy().unlockItem(null, KEY, new MockSoftLock() );
+		getCollectionAccessStrategy().unlockItem(SESSION, KEY, new MockSoftLock() );
 	}
 
 	public static class MockSoftLock implements SoftLock {

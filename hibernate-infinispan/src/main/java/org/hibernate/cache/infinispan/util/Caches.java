@@ -291,6 +291,10 @@ public class Caches {
 	}
 
 	public static CollectableCloseableIterable keys(AdvancedCache cache) {
+		if (cache.getCacheConfiguration().transaction().transactionMode().isTransactional()) {
+			// Dummy read to enlist the LocalTransaction as workaround for ISPN-5676
+			cache.containsKey(false);
+		}
 		// HHH-10023: we can't use keySet()
 		final CloseableIterable<CacheEntry<Object, Void>> entryIterable = cache
 				.filterEntries( AcceptAllKeyValueFilter.getInstance() )

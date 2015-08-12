@@ -12,6 +12,7 @@ import org.hibernate.cache.internal.CacheDataDescriptionImpl;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.test.cache.infinispan.AbstractNonFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.NodeEnvironment;
@@ -25,6 +26,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.mock;
 
 /**
  * Tests for the "extra API" in EntityRegionAccessStrategy;.
@@ -47,6 +49,7 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
 	public static final String VALUE2 = "VALUE2";
 	protected static final CacheDataDescriptionImpl CACHE_DATA_DESCRIPTION
 			= new CacheDataDescriptionImpl(true, false, ComparableComparator.INSTANCE, null);
+	private static final SessionImplementor SESSION = mock(SessionImplementor.class);
 
 	private NodeEnvironment environment;
 	private EntityRegionAccessStrategy accessStrategy;
@@ -95,7 +98,7 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
 	@Test
 	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testLockItem() {
-		assertNull( getEntityAccessStrategy().lockItem(null, KEY, Integer.valueOf( 1 ) ) );
+		assertNull( getEntityAccessStrategy().lockItem(SESSION, KEY, Integer.valueOf( 1 ) ) );
 	}
 
 	@Test
@@ -105,12 +108,12 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
 
 	@Test
 	public void testUnlockItem() {
-		getEntityAccessStrategy().unlockItem(null, KEY, new MockSoftLock() );
+		getEntityAccessStrategy().unlockItem(SESSION, KEY, new MockSoftLock() );
 	}
 
 	@Test
 	public void testUnlockRegion() {
-		getEntityAccessStrategy().unlockItem(null, KEY, new MockSoftLock() );
+		getEntityAccessStrategy().unlockItem(SESSION, KEY, new MockSoftLock() );
 	}
 
 	@Test
@@ -118,7 +121,7 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
 	public void testAfterInsert() {
 		assertFalse(
 				"afterInsert always returns false",
-				getEntityAccessStrategy().afterInsert(null,
+				getEntityAccessStrategy().afterInsert(SESSION,
 						KEY,
 						VALUE1,
 						Integer.valueOf( 1 )
@@ -131,7 +134,7 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
 	public void testAfterUpdate() {
 		assertFalse(
 				"afterInsert always returns false",
-				getEntityAccessStrategy().afterUpdate(null,
+				getEntityAccessStrategy().afterUpdate(SESSION,
 						KEY,
 						VALUE2,
 						Integer.valueOf( 1 ),

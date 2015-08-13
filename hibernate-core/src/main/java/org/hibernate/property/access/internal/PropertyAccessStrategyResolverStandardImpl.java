@@ -6,12 +6,10 @@
  */
 package org.hibernate.property.access.internal;
 
-import java.lang.reflect.Method;
-
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
-import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
+import org.hibernate.engine.spi.Managed;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
@@ -36,7 +34,7 @@ public class PropertyAccessStrategyResolverStandardImpl implements PropertyAcces
 			String explicitAccessStrategyName,
 			EntityMode entityMode) {
 
-		if ( hasBytecodeEnhancedAttributes( containerClass ) ) {
+		if ( Managed.class.isAssignableFrom( containerClass ) ) {
 			return PropertyAccessStrategyEnhancedImpl.INSTANCE;
 		}
 
@@ -73,16 +71,6 @@ public class PropertyAccessStrategyResolverStandardImpl implements PropertyAcces
 			strategySelectorService = serviceRegistry.getService( StrategySelector.class );
 		}
 		return strategySelectorService;
-	}
-
-	private boolean hasBytecodeEnhancedAttributes(Class<?> containerClass) {
-		for ( Method m : containerClass.getDeclaredMethods() ) {
-			if ( m.getName().startsWith( EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX ) ||
-					m.getName().startsWith( EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX ) ) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 }

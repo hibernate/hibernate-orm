@@ -85,7 +85,7 @@ public class Enhancer {
 	 *
 	 * @throws EnhancementException Indicates a problem performing the enhancement
 	 */
-	public byte[] enhance(String className, byte[] originalBytes) throws EnhancementException {
+	public synchronized byte[] enhance(String className, byte[] originalBytes) throws EnhancementException {
 		try {
 			final CtClass managedCtClass = classPool.makeClassIfNew( new ByteArrayInputStream( originalBytes ) );
 			enhance( managedCtClass );

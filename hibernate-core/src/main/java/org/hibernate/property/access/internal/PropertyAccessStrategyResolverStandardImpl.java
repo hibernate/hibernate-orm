@@ -34,7 +34,10 @@ public class PropertyAccessStrategyResolverStandardImpl implements PropertyAcces
 			String explicitAccessStrategyName,
 			EntityMode entityMode) {
 
-		if ( Managed.class.isAssignableFrom( containerClass ) ) {
+		if ( ( BuiltInPropertyAccessStrategies.BASIC.getExternalName().equals( explicitAccessStrategyName ) ||
+				BuiltInPropertyAccessStrategies.FIELD.getExternalName().equals( explicitAccessStrategyName ) ||
+				BuiltInPropertyAccessStrategies.MIXED.getExternalName().equals( explicitAccessStrategyName ) ) &&
+				Managed.class.isAssignableFrom( containerClass ) ) {
 			return PropertyAccessStrategyEnhancedImpl.INSTANCE;
 		}
 

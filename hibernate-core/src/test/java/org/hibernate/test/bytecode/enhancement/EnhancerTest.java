@@ -26,6 +26,7 @@ import org.hibernate.test.bytecode.enhancement.lazy.LazyLoadingTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.basic.LazyBasicFieldAccessTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.basic.LazyBasicPropertyAccessTestTask;
 import org.hibernate.test.bytecode.enhancement.merge.CompositeMergeTestTask;
+import org.hibernate.test.bytecode.enhancement.pk.EmbeddedPKTestTask;
 import org.junit.Test;
 
 /**
@@ -64,6 +65,10 @@ public class EnhancerTest extends BaseUnitTestCase {
 		EnhancerTestUtils.runEnhancerTestTask( CompositeMergeTestTask.class );
 	}
 
+	@Test
+	public void testEmbeddedPK() {
+		EnhancerTestUtils.runEnhancerTestTask( EmbeddedPKTestTask.class );
+	}
 
 	@Test
 	public void testFieldAccess() {

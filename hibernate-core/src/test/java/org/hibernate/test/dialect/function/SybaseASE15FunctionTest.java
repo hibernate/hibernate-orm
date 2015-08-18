@@ -32,6 +32,7 @@ import java.util.Calendar;
 import java.util.Date;
 
 import org.hibernate.Query;
+import org.hibernate.Session;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
@@ -54,44 +55,77 @@ public class SybaseASE15FunctionTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected void prepareTest() throws Exception {
+		final Session s = openSession();
+		s.getTransaction().begin();
 		Product product = new Product();
 		product.setPrice(new BigDecimal(0.5));
-		product.setDate(calendar.getTime());
-		openSession().save(product);
+		product.setDate( calendar.getTime() );
+		s.save( product );
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Override
+	protected void cleanupTest() throws Exception {
+		final Session s = openSession();
+		s.getTransaction().begin();
+		s.createQuery( "delete from Product" ).executeUpdate();
+		s.getTransaction().commit();
+		s.close();
 	}
 
 	@Test
 	public void testCharLengthFunction() {
-		Query query = session.createQuery("select char_length('123456') from Product");
+		final Session s = openSession();
+		s.getTransaction().begin();
+		Query query = session.createQuery( "select char_length('123456') from Product" );
 		assertEquals(6, ((Number) query.uniqueResult()).intValue());
+		s.getTransaction().commit();
+		s.close();
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-7070")
 	public void testDateaddFunction() {
-		Query query = session.createQuery("select dateadd(dd, 1, p.date) from Product p");
+		final Session s = openSession();
+		s.getTransaction().begin();
+		Query query = session.createQuery( "select dateadd(dd, 1, p.date) from Product p" );
 		assertTrue(calendar.getTime().before((Date) query.uniqueResult()));
+		s.getTransaction().commit();
+		s.close();
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-7070")
 	public void testDatepartFunction() {
-		Query query = session.createQuery("select datepart(month, p.date) from Product p");
+		final Session s = openSession();
+		s.getTransaction().begin();
+		Query query = session.createQuery( "select datepart(month, p.date) from Product p" );
 		assertEquals(calendar.get(MONTH) + 1, ((Number) query.uniqueResult()).intValue());
+		s.getTransaction().commit();
+		s.close();
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-7070")
 	public void testDatediffFunction() {
-		Query query = session.createQuery("SELECT DATEDIFF( DAY, '1999/07/19 00:00', '1999/07/23 23:59' ) from Product");
+		final Session s = openSession();
+		s.getTransaction().begin();
+		Query query = session.createQuery( "SELECT DATEDIFF( DAY, '1999/07/19 00:00', '1999/07/23 23:59' ) from Product" );
 		assertEquals(4, ((Number) query.uniqueResult()).intValue());
+		s.getTransaction().commit();
+		s.close();
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-7070")
 	public void testAtn2Function() {
+		final Session s = openSession();
+		s.getTransaction().begin();
 		Query query = session.createQuery("select atn2(p.price, .48) from Product p");
-		assertEquals(0.805803, ((Number) query.uniqueResult()).doubleValue(), 0.000001);
+		assertEquals(0.805803, ((Number) query.uniqueResult()).doubleValue(), 0.000001 );
+		s.getTransaction().commit();
+		s.close();
 	}
 
 }

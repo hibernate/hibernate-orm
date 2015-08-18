@@ -20,9 +20,11 @@ public class HHH3949TestTask1 extends AbstractHHH3949TestTask {
 	private void performQueryAndVerifyResults(String query) {
 		// 1) open session
 		Session session = getFactory().openSession();
+		session.getTransaction().begin();
 		// 2) perform the query
 		List<Person> persons = (List<Person>) session.createQuery( query ).list();
 		// 3) close the session : this ensures that no more queries and/or data loading happen
+		session.getTransaction().commit();
 		session.close();
 
 		// 4) verify the results

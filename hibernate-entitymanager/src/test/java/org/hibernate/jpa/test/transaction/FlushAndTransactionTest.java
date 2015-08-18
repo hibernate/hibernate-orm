@@ -282,7 +282,9 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 		book.name = "Recovered keys";
 		em.merge( book );
 		em.getTransaction().rollback();
+		em.getTransaction().begin();
 		assertEquals( "Stolen keys", em.find( Book.class, book.id ).name );
+		em.getTransaction().commit();
 		em.close();
 	}
 

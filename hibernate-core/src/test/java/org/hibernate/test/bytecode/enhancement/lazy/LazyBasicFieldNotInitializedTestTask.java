@@ -11,6 +11,7 @@ import javax.persistence.Basic;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
@@ -64,6 +65,7 @@ public class LazyBasicFieldNotInitializedTestTask extends AbstractEnhancerTestTa
 	}
 
 	@javax.persistence.Entity
+	@Table(name = "lazy_field_not_init")
 	public static class Entity {
 		@Id
 		@GeneratedValue

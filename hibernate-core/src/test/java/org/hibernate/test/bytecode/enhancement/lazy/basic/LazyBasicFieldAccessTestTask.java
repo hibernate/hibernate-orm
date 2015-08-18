@@ -11,6 +11,7 @@ import javax.persistence.Basic;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
@@ -19,6 +20,7 @@ import org.hibernate.cfg.Environment;
 
 import org.hibernate.test.bytecode.enhancement.AbstractEnhancerTestTask;
 import org.hibernate.test.bytecode.enhancement.EnhancerTestUtils;
+
 import org.junit.Assert;
 
 /**
@@ -113,6 +115,7 @@ public class LazyBasicFieldAccessTestTask extends AbstractEnhancerTestTask {
 	}
 
 	@javax.persistence.Entity
+	@Table(name = "lazy_field_access")
 	public static class Entity {
 		private Long id;
 

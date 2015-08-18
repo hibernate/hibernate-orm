@@ -9,6 +9,8 @@ package org.hibernate.test.bytecode.enhancement.merge;
 import java.util.Arrays;
 import java.util.List;
 import javax.persistence.Basic;
+import javax.persistence.CollectionTable;
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
@@ -16,6 +18,8 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.Table;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
@@ -23,6 +27,7 @@ import org.hibernate.cfg.Environment;
 
 import org.hibernate.test.bytecode.enhancement.AbstractEnhancerTestTask;
 import org.hibernate.test.bytecode.enhancement.EnhancerTestUtils;
+
 import org.junit.Assert;
 
 /**
@@ -33,7 +38,7 @@ public class CompositeMergeTestTask extends AbstractEnhancerTestTask {
 	private long entityId;
 
 	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {	ParentEntity.class, Address.class, Country.class };
+		return new Class<?>[] {ParentEntity.class, Address.class, Country.class};
 	}
 
 	public void prepare() {
@@ -110,6 +115,7 @@ public class CompositeMergeTestTask extends AbstractEnhancerTestTask {
 	}
 
 	@Entity
+	@Table(name = "parent_entity")
 	private static class ParentEntity {
 
 		@Id
@@ -127,6 +133,7 @@ public class CompositeMergeTestTask extends AbstractEnhancerTestTask {
 	}
 
 	@Embeddable
+	@Table(name = "address")
 	private static class Address {
 
 		private String street;
@@ -137,11 +144,13 @@ public class CompositeMergeTestTask extends AbstractEnhancerTestTask {
 	}
 
 	@Embeddable
+	@Table(name = "country")
 	private static class Country {
 
 		private String name;
 
 		@ElementCollection
+		@CollectionTable(name = "languages", joinColumns = @JoinColumn(name = "id", referencedColumnName = "id"))
 		List<String> languages;
 
 	}

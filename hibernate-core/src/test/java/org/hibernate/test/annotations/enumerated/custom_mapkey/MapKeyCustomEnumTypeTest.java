@@ -187,7 +187,7 @@ public class MapKeyCustomEnumTypeTest extends BaseNonConfigCoreFunctionalTestCas
 				"from EntityMapEnum ee where key(ee.explicitOverridingImplicitMap)='NUMBER_2'",
 				"from EntityMapEnum ee where key(ee.explicitOverridingImplicitMap)=:param",
 				LastNumber.NUMBER_2,
-				"select 1 from EntityMapEnum_explicitOverridingImplicitMap where EntityMapEnum_id=:idEntityMapEnum and explicitOverridingImplicitMap_KEY='NUMBER_2'"
+				"select 1 from overridingMap where EntityMapEnum_id=:idEntityMapEnum and overridingMap_key='NUMBER_2'"
 		);
 		assertFalse( found.explicitOverridingImplicitMap.isEmpty() );
 		delete( id );

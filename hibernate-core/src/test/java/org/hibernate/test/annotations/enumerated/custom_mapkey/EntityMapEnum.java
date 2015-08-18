@@ -6,11 +6,16 @@
  */
 package org.hibernate.test.annotations.enumerated.custom_mapkey;
 
+import javax.persistence.CollectionTable;
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
+import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.MapKeyColumn;
 import javax.persistence.MapKeyEnumerated;
 import java.util.HashMap;
 import java.util.Map;
@@ -47,5 +52,7 @@ public class EntityMapEnum {
 	Map<LastNumber, String> lastNumberMap = new HashMap<LastNumber, String>();
 	@MapKeyEnumerated(EnumType.STRING)
 	@ElementCollection
+	@CollectionTable(name = "overridingMap")
+	@MapKeyColumn(name = "overridingMap_key")
 	Map<LastNumber, String> explicitOverridingImplicitMap = new HashMap<LastNumber, String>();
 }

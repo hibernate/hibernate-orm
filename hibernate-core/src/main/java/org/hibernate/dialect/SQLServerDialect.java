@@ -209,5 +209,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	public int getInExpressionCountLimit() {
 		return PARAM_LIST_SIZE_LIMIT;
 	}
+	
 }
 

@@ -23,7 +23,6 @@
  */
 package org.hibernate.dialect;
 
-
 /**
  * Microsoft SQL Server 2012 Dialect
  *

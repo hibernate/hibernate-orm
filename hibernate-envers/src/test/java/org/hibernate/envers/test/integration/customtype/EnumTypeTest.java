@@ -43,9 +43,11 @@ public class EnumTypeTest extends BaseEnversJPAFunctionalTestCase {
 	@Test
 	public void testEnumRepresentation() {
 		EntityManager entityManager = getEntityManager();
+		entityManager.getTransaction().begin();
 		List<Object[]> values = entityManager.createNativeQuery(
 				"SELECT enum1, enum2 FROM EnumTypeEntity_AUD ORDER BY rev ASC"
 		).getResultList();
+		entityManager.getTransaction().commit();
 		entityManager.close();
 
 		Assert.assertNotNull( values );

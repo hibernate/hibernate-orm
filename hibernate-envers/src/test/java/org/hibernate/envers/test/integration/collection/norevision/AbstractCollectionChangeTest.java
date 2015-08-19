@@ -63,6 +63,8 @@ public abstract class AbstractCollectionChangeTest extends BaseEnversFunctionalT
 		session.getTransaction().commit();
 
 		personId = p.getId();
+
+		session.close();
 	}
 
 	@Test

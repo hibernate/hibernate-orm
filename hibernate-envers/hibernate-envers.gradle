@@ -58,3 +58,9 @@ jar {
             'org.apache.tools.ant;resolution:=optional'
     }
 }
+
+tasks."matrix_mariadb" {
+    beforeTest { descriptor ->
+        println "Starting test: " + descriptor
+    }
+}

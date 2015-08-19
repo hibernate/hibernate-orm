@@ -65,6 +65,8 @@ public class AuditedCollectionProxyTest extends BaseEnversJPAFunctionalTestCase 
 	public void testProxyIdentifier() {
 		EntityManager em = getEntityManager();
 
+		em.getTransaction().begin();
+
 		ListRefEdEntity listReferencedEntity1 = em.getReference(
 				ListRefEdEntity.class, id_ListRefEdEntity1
 		);
@@ -76,12 +78,10 @@ public class AuditedCollectionProxyTest extends BaseEnversJPAFunctionalTestCase 
 				Integer.valueOf( 3 ), "refing3", listReferencedEntity1
 		);
 
-		em.getTransaction().begin();
 		em.persist( refingEntity3 );
-		em.getTransaction().commit();
 
 		listReferencedEntity1.getReffering().size();
-
+		em.getTransaction().commit();
 	}
 
 }

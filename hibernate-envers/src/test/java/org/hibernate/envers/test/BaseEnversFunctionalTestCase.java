@@ -14,6 +14,7 @@ import org.hibernate.Session;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.configuration.EnversSettings;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.runner.RunWith;
@@ -52,6 +53,11 @@ public abstract class BaseEnversFunctionalTestCase extends BaseNonConfigCoreFunc
 	}
 
 	protected AuditReader getAuditReader() {
+		Session session = getSession();
+		if(session.getTransaction().getStatus() != TransactionStatus.ACTIVE ){
+			session.getTransaction().begin();
+		}
+
 		return AuditReaderFactory.get( getSession() );
 	}
 

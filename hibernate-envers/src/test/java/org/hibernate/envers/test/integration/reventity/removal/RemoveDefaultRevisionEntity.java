@@ -8,9 +8,13 @@ package org.hibernate.envers.test.integration.reventity.removal;
 
 import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
+@RequiresDialectFeature(DialectChecks.SupportsCascadeDeleteCheck.class)
 public class RemoveDefaultRevisionEntity extends AbstractRevisionEntityRemovalTest {
 	@Override
 	protected Class<?> getRevisionEntityClass() {

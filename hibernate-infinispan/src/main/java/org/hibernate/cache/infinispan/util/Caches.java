@@ -319,6 +319,11 @@ public class Caches {
 					public Object next() {
 						return entryIterator.next().getKey();
 					}
+
+					@Override
+					public void remove() {
+						throw new UnsupportedOperationException( "remove() not supported" );
+					}
 				};
 			}
 

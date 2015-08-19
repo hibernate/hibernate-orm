@@ -36,9 +36,12 @@ import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.EJB3NamingStrategy;
-import org.hibernate.cfg.ImprovedNamingStrategy;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyHbmImpl;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
@@ -50,7 +53,6 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
@@ -59,18 +61,47 @@ import static org.junit.Assert.assertTrue;
 public class CollectionJoinTableNamingTest extends BaseUnitTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-9908" )
-	public void testCollectionJoinTableNamingLegacyStrategy() {
-		Configuration cfg = new Configuration();
-		cfg.setNamingStrategy( ImprovedNamingStrategy.INSTANCE );
+	public void testCollectionJoinTableNamingBase() {
+		// really the same as the JPA compliant tests; here we just pick up the default ImplicitNamingStrategy
+		final MetadataSources metadataSources = new MetadataSources();
+		metadataSources.addAnnotatedClass( Input.class );
+		metadataSources.addAnnotatedClass( Ptx.class );
 
-		cfg.addAnnotatedClass( Input.class );
-		cfg.addAnnotatedClass( Ptx.class );
-		cfg.buildMappings();
+		final Metadata metadata = metadataSources.getMetadataBuilder()
+				.build();
 
-		Collection inputs1Mapping = cfg.getCollectionMapping( Ptx.class.getName() + ".inputs1" );
+		assertSameTableUsed( metadata );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9908" )
+	public void testCollectionJoinTableNamingLegacyJpaStrategy() {
+		final MetadataSources metadataSources = new MetadataSources();
+		metadataSources.addAnnotatedClass( Input.class );
+		metadataSources.addAnnotatedClass( Ptx.class );
+
+		final Metadata metadata = metadataSources.getMetadataBuilder()
+				.applyImplicitNamingStrategy( ImplicitNamingStrategyLegacyJpaImpl.INSTANCE )
+				.build();
+
+		assertSameTableUsed( metadata );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9908" )
+	public void testCollectionJoinTableNamingLegacyHbmStrategy() {
+		final MetadataSources metadataSources = new MetadataSources();
+		metadataSources.addAnnotatedClass( Input.class );
+		metadataSources.addAnnotatedClass( Ptx.class );
+
+		final Metadata metadata = metadataSources.getMetadataBuilder()
+				.applyImplicitNamingStrategy( ImplicitNamingStrategyLegacyHbmImpl.INSTANCE )
+				.build();
+
+		Collection inputs1Mapping = metadata.getCollectionBinding( Ptx.class.getName() + ".inputs1" );
 		assertEquals( "ptx_inputs1", inputs1Mapping.getCollectionTable().getName() );
 
-		Collection inputs2Mapping = cfg.getCollectionMapping( Ptx.class.getName() + ".inputs2" );
+		Collection inputs2Mapping = metadata.getCollectionBinding( Ptx.class.getName() + ".inputs2" );
 		assertEquals( "ptx_inputs2", inputs2Mapping.getCollectionTable().getName() );
 	}
 
@@ -79,22 +110,28 @@ public class CollectionJoinTableNamingTest extends BaseUnitTestCase {
 	public void testCollectionJoinTableNamingJpaCompliantStrategy() {
 		// Even in 4.3, with JPA compliant naming, Hibernate creates an unusable table...
 
-		Configuration cfg = new Configuration();
-		cfg.setNamingStrategy( EJB3NamingStrategy.INSTANCE );
+		final MetadataSources metadataSources = new MetadataSources();
+		metadataSources.addAnnotatedClass( Input.class );
+		metadataSources.addAnnotatedClass( Ptx.class );
 
-		cfg.addAnnotatedClass( Input.class );
-		cfg.addAnnotatedClass( Ptx.class );
-		cfg.buildMappings();
+		final Metadata metadata = metadataSources.getMetadataBuilder()
+				.applyImplicitNamingStrategy( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE )
+				.build();
 
-		Collection inputs1Mapping = cfg.getCollectionMapping( Ptx.class.getName() + ".inputs1" );
+		assertSameTableUsed( metadata );
+	}
+
+	private void assertSameTableUsed(Metadata metadata) {
+		Collection inputs1Mapping = metadata.getCollectionBinding( Ptx.class.getName() + ".inputs1" );
 		assertEquals( "ptx_input", inputs1Mapping.getCollectionTable().getName() );
 
-		Collection inputs2Mapping = cfg.getCollectionMapping( Ptx.class.getName() + ".inputs2" );
+		Collection inputs2Mapping = metadata.getCollectionBinding( Ptx.class.getName() + ".inputs2" );
 		assertEquals( "ptx_input", inputs2Mapping.getCollectionTable().getName() );
 
 		assertSame( inputs1Mapping.getCollectionTable(), inputs2Mapping.getCollectionTable() );
 
-		new SchemaExport( cfg ).create( true, false );
+		// NOTE : here so that tester can more easily see the produced table. It is only dumped to stdout
+		new SchemaExport( (MetadataImplementor) metadata ).create( true, false );
 
 		for ( int i = 0; i < inputs1Mapping.getCollectionTable().getColumnSpan(); i++ ) {
 			final Column column = inputs1Mapping.getCollectionTable().getColumn( i );

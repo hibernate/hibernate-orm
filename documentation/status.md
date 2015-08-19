@@ -46,13 +46,13 @@ matter of pulling that content in and better organizing it.
 
 * <strike>Prefix</strike>
 * <strike>Data_Categorizations</strike>
+* Entity (needs some work)
 * <strike>Basic_Types</strike>
 * <strike>Composition</strike>
 * <strike>Collection (needs some work)
-* Entity (needs some work)
-* Secondary_Tables (not started)
 * Identifiers (mostly done - needs "derived id" stuff documented)
 * <strike>Natural_Id</strike>
+* Secondary_Tables (not started) - logically a joined in-line view
 * Associations (not started)
 * Attribute_Access (not started)
 * Mapping_Overrides - AttributeOverrides/AssociationOverrides (not started)
@@ -79,4 +79,5 @@ Overall
 	for an example.
 * I really like the idea of each chapter having a "Related Topics" (?)sidebar(?).  See 
 	userGuide/chapters/HQL.xml for an example.  I am not sure `<sidebar/>` is the best element for
-	this concept, but I could not find a better one on cursory glance.
+	this concept, but I could not find a better one on cursory glance.  I noticed `literallayout` used in
+	a few DocBook examples for something similar.

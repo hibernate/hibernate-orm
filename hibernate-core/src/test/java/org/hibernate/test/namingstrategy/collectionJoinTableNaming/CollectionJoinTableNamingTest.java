@@ -39,6 +39,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.EJB3NamingStrategy;
 import org.hibernate.cfg.ImprovedNamingStrategy;
+import org.hibernate.cfg.naming.ImprovedNamingStrategyDelegator;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
@@ -76,6 +77,33 @@ public class CollectionJoinTableNamingTest extends BaseUnitTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9908" )
+	public void testCollectionJoinTableNamingImprovedDelegatorStrategy() {
+		Configuration cfg = new Configuration();
+		cfg.setNamingStrategyDelegator( ImprovedNamingStrategyDelegator.DEFAULT_INSTANCE );
+
+		cfg.addAnnotatedClass( Input.class );
+		cfg.addAnnotatedClass( Ptx.class );
+		cfg.buildMappings();
+
+		assertSameTableUsed( cfg );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9908" )
+	public void testCollectionJoinTableNamingBase() {
+		// really the same test as #testCollectionJoinTableNamingJpaCompliantStrategy,
+		// here we just pick up the (same) NamingStrategy by default
+		Configuration cfg = new Configuration();
+
+		cfg.addAnnotatedClass( Input.class );
+		cfg.addAnnotatedClass( Ptx.class );
+		cfg.buildMappings();
+
+		assertSameTableUsed( cfg );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9908" )
 	public void testCollectionJoinTableNamingJpaCompliantStrategy() {
 		// Even in 4.3, with JPA compliant naming, Hibernate creates an unusable table...
 
@@ -86,6 +114,10 @@ public class CollectionJoinTableNamingTest extends BaseUnitTestCase {
 		cfg.addAnnotatedClass( Ptx.class );
 		cfg.buildMappings();
 
+		assertSameTableUsed( cfg );
+	}
+
+	protected void assertSameTableUsed(Configuration cfg) {
 		Collection inputs1Mapping = cfg.getCollectionMapping( Ptx.class.getName() + ".inputs1" );
 		assertEquals( "ptx_input", inputs1Mapping.getCollectionTable().getName() );
 
@@ -94,6 +126,7 @@ public class CollectionJoinTableNamingTest extends BaseUnitTestCase {
 
 		assertSame( inputs1Mapping.getCollectionTable(), inputs2Mapping.getCollectionTable() );
 
+		// NOTE : here so that tester can more easily see the produced table. It is only dumped to stdout
 		new SchemaExport( cfg ).create( true, false );
 
 		for ( int i = 0; i < inputs1Mapping.getCollectionTable().getColumnSpan(); i++ ) {

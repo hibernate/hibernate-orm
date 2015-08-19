@@ -1527,7 +1527,7 @@
 
             <example>
                 <title>Parameter binding - Hibernate</title>
-                <programlisting role="JAVA"><xi:include href="extras/api/hibernate/SetParameter.java"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/api/hibernate/SetParameter.java" parse="text" /></programlisting>
             </example>
 
             <para>
@@ -1538,7 +1538,7 @@
 
             <example>
                 <title>Parameter binding (inferred type) - Hibernate</title>
-                <programlisting role="JAVA"><xi:include href="extras/api/hibernate/SetParameterInferredType.java"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/api/hibernate/SetParameterInferredType.java" parse="text" /></programlisting>
             </example>
 
             <para>
@@ -1547,7 +1547,7 @@
 
             <example>
                 <title>Parameter binding (short forms) - Hibernate</title>
-                <programlisting role="JAVA"><xi:include href="extras/api/hibernate/SetParameterShortForms.java"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/api/hibernate/SetParameterShortForms.java" parse="text" /></programlisting>
             </example>
 
             <para>
@@ -1745,7 +1745,7 @@
 
             <example>
                 <title>Parameter binding - JPA</title>
-                <programlisting role="JAVA"><xi:include href="extras/api/jpa/SetParameter.java"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/api/jpa/SetParameter.java" parse="text" /></programlisting>
             </example>
 
             <para>

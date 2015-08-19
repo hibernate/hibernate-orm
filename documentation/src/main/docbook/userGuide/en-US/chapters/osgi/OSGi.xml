@@ -55,7 +55,6 @@
 
     <section>
         <title>hibernate-osgi</title>
-
         <para>
             Rather than embed OSGi capabilities into hibernate-core, hibernate-entitymanager, and sub-modules,
             hibernate-osgi was created.  It's purposefully separated, isolating all OSGi dependencies.  It provides an
@@ -64,25 +63,83 @@
         </para>
     </section>
 
+    <section>
+      <title>features.xml</title>
+      <para>
+        Apache Karaf environments tend to make heavy use of its "features" concept, where a feature is a set of order-specific
+        bundles focused on a concise capability.  These features are typically defined in a <literal>features.xml</literal> file.
+        Hibernate produces and releases its own <literal>features.xml</literal> that defines features for each of the three runtime configurations.
+        This is included in the binary distribution, as well as deployed to the JBoss Nexus repository
+        (using the <literal>org.hibernate</literal> groupId and <literal>hibernate-osgi</literal> with the <literal>karaf</literal> classifier).
+      </para>
+
+      <para>
+        Note that our features are versioned using the same ORM artifact versions they wrap.  Also note that the features are
+        heavily tested against Karaf 3.0.3 as a part of our PaxExam-based integration tests.  However, they'll likely work
+        on other versions as well.
+      </para>
+
+      <para>
+        Also note that hibernate-osgi, theoretically, supports a variety of OSGi containers, such as Equinox.  In that case,
+        please use features.xml as a reference for necessary bundles to activate and their correct ordering.
+      </para>
+    </section>
+
+    <section>
+      <title>QuickStarts/Demos</title>
+      <para>
+        All three configurations have a QuickStart/Demo available in the
+        <link xl:href="https://github.com/hibernate/hibernate-demos">hibernate-demos</link> project:
+      </para>
+    </section>
+
     <section xml:id="osgi-managed-jpa">
         <title>Container-Managed JPA</title>
         
         <para>
             The Enterprise OSGi specification includes container-managed JPA.  The container is responsible for
-            discovering persistence units and creating the <literal>EntityManagerFactory</literal> (one EMF per PU).
+            discovering persistence units in bundles and automatically creating the <literal>EntityManagerFactory</literal> (one EMF per PU).
             It uses the JPA provider (hibernate-osgi) that has registered itself with the OSGi
             <literal>PersistenceProvider</literal> service.
         </para>
-        
-        <para>
-        	Quickstart tutorial project, demonstrating a container-managed JPA client bundle:
-        	<link xl:href="https://github.com/hibernate/hibernate-orm/tree/master/documentation/src/main/docbook/quickstart/tutorials/osgi/managed-jpa">managed-jpa</link>
-        </para>
+
+        <section>
+          <title>persistence.xml</title>
+          <para>
+            Similar to any other JPA setup, your bundle must include a <literal>persistence.xml</literal> file.
+            This is typically located in <literal>META-INF</literal>.
+          </para>
+        </section>
+
+        <section>
+          <title>DataSource</title>
+          <para>
+            Typical Enterprise OSGi JPA usage includes a DataSource installed in the container.  Your
+            bundle's <literal>persistence.xml</literal> calls out the DataSource through JNDI.  For example, you could
+            install the following H2 DS.  You can deploy the DS manually (Karaf has a <literal>deploy</literal> dir), or
+            through a "blueprint bundle" (<literal>blueprint:file:/[PATH]/datasource-h2.xml</literal>).
+          </para>
+
+          <example>
+            <title>datasource-h2.xml</title>
+            <programlisting role="XML"><xi:include href="extras/datasource-h2.xml" parse="text"/></programlisting>
+          </example>
+
+          <para>
+            That DS is then used by your <literal>persistence.xml</literal> persistence-unit.  The following works
+            in Karaf, but the names may need tweaked in alternative containers.
+          </para>
+
+          <example>
+            <title>META-INF/persistence.xml</title>
+            <programlisting role="XML">&lt;jta-data-source&gt;osgi:service/javax.sql.DataSource/(osgi.jndi.service.name=jdbc/h2ds)&lt;/jta-data-source&gt;</programlisting>
+          </example>
+        </section>
         
         <section>
-        	<title>Client bundle imports</title>
+        	<title>Bundle Package Imports</title>
         	<para>
-        		Your client bundle's manifest will need to import, at a minimum,
+        		Your bundle's manifest will need to import, at a minimum,
         		<itemizedlist>
 		            <listitem>
 		                <literal>javax.persistence</literal>
@@ -100,48 +157,27 @@
         
         <section>
         	<title>JPA 2.1</title>
-
-				<para>
-					No Enterprise OSGi JPA container currently supports JPA 2.1 (the spec is not yet released). For
-					testing, the managed-jpa example makes use of
-					<link xl:href="https://github.com/brmeyer/aries/tree/jpa21">Brett's fork of Aries</link>. To work
-					with Hibernate 4.3, clone the fork and build Aries JPA.
-				</para>
-        </section>
-        
-        <section>
-        	<title>DataSource</title>
-        	<para>
-        		Typical Enterprise OSGi JPA usage includes a DataSource installed in the container.  The client
-        		bundle's <literal>persistence.xml</literal> uses the DataSource through JNDI.  For an example,
-        		see the QuickStart's DataSource:
-        		<link xl:href="https://github.com/hibernate/hibernate-orm/blob/master/documentation/src/main/docbook/quickstart/tutorials/osgi/datasource-h2.xml">datasource-h2.xml</link>
-        		The DataSource is then called out in
-        		<link xl:href="https://github.com/hibernate/hibernate-orm/blob/master/documentation/src/main/docbook/quickstart/tutorials/osgi/managed-jpa/src/main/resources/META-INF/persistence.xml">
-        		persistence.xml's</link> <literal>jta-data-source</literal>.
-        	</para>
-        </section>
-        
-        <section>
-        	<title>Bundle Ordering</title>
-        	<para>
-        		Hibernate currently requires fairly specific bundle activation ordering.  See the managed-jpa
-        		QuickStart's
-        		<link xl:href="https://github.com/hibernate/hibernate-orm/blob/master/documentation/src/main/docbook/quickstart/tutorials/osgi/managed-jpa/features.xml">features.xml</link>
-        		for the best supported sequence.
-        	</para>
+          <para>
+            No Enterprise OSGi JPA container currently supports JPA 2.1 (the spec is not yet released). For
+            testing, the managed-jpa example makes use of
+            <link xl:href="https://github.com/brmeyer/aries/tree/jpa21">Brett's fork of Aries</link>. To work
+            with Hibernate 4.3/5.0, clone the fork and build Aries JPA.
+          </para>
         </section>
         
         <section>
         	<title>Obtaining an EntityManger</title>
         	<para>
         		The easiest, and most supported, method of obtaining an <literal>EntityManager</literal> utilizes OSGi's
-        		<literal>blueprint.xml</literal>.  The container takes the name of your persistence unit, then injects
-        		an <literal>EntityManager</literal> instance into your given bean attribute.  See the
-        		<literal>dpService</literal> bean in the managed-jpa QuickStart's
-        		<link xl:href="https://github.com/hibernate/hibernate-orm/blob/master/documentation/src/main/docbook/quickstart/tutorials/osgi/managed-jpa/src/main/resources/OSGI-INF/blueprint/blueprint.xml">blueprint.xml</link>
-        		for an example.
+        		<literal>OSGI-INF/blueprint/blueprint.xml</literal> in your bundle.  The container takes the name of your
+            persistence unit, then automatically injects
+        		an <literal>EntityManager</literal> instance into your given bean attribute.
         	</para>
+
+          <example>
+            <title>OSGI-INF/blueprint/blueprint.xml</title>
+            <programlisting role="XML"><xi:include href="extras/blueprint.xml" parse="text"/></programlisting>
+          </example>
         </section>
     </section>
 
@@ -152,16 +188,19 @@
             Hibernate also supports the use of JPA through hibernate-entitymanager, unmanaged by the OSGi
             container.  The client bundle is responsible for managing the EntityManagerFactory and EntityManagers.
         </para>
-        
-        <para>
-        	Quickstart tutorial project, demonstrating an unmanaged JPA client bundle:
-        	<link xl:href="https://github.com/hibernate/hibernate-orm/tree/master/documentation/src/main/docbook/quickstart/tutorials/osgi/unmanaged-jpa">unmanaged-jpa</link>
-        </para>
+
+        <section>
+          <title>persistence.xml</title>
+          <para>
+            Similar to any other JPA setup, your bundle must include a <literal>persistence.xml</literal> file.
+            This is typically located in <literal>META-INF</literal>.
+          </para>
+        </section>
         
         <section>
-        	<title>Client bundle imports</title>
+        	<title>Bundle Package Imports</title>
         	<para>
-        		Your client bundle's manifest will need to import, at a minimum,
+        		Your bundle's manifest will need to import, at a minimum,
         		<itemizedlist>
 		            <listitem>
 		                <literal>javax.persistence</literal>
@@ -188,29 +227,18 @@
         </section>
         
         <section>
-        	<title>Bundle Ordering</title>
-        	<para>
-        		Hibernate currently requires fairly specific bundle activation ordering.  See the unmanaged-jpa
-        		QuickStart's
-        		<link xl:href="https://github.com/hibernate/hibernate-orm/blob/master/documentation/src/main/docbook/quickstart/tutorials/osgi/unmanaged-jpa/features.xml">features.xml</link>
-        		for the best supported sequence.
-        	</para>
-        </section>
-        
-        <section>
         	<title>Obtaining an EntityMangerFactory</title>
         	<para>
-        		hibernate-osgi registers an OSGi service, using the JPA <literal>PersistenceProvider</literal> interface
+        		<literal>hibernate-osgi</literal> registers an OSGi service, using the JPA <literal>PersistenceProvider</literal> interface
         		name, that bootstraps and creates an <literal>EntityManagerFactory</literal> specific for OSGi
         		environments.  It is VITAL that your EMF be obtained through the service, rather than creating it
         		manually.  The service handles the OSGi ClassLoader, discovered extension points, scanning, etc.  Manually
         		creating an <literal>EntityManagerFactory</literal> is guaranteed to NOT work during runtime!
         	</para>
-        	<para>
-        		For an example on how to discover and use the service, see the unmanaged-jpa
-        		QuickStart's
-        		<link xl:href="https://github.com/hibernate/hibernate-orm/blob/master/documentation/src/main/docbook/quickstart/tutorials/osgi/unmanaged-jpa/src/main/java/org/hibernate/osgitest/HibernateUtil.java">HibernateUtil.java</link>.
-        	</para>
+        	<example>
+            <title>Discover/Use EntityManagerFactory</title>
+            <programlisting role="Java"><xi:include href="extras/UnmanagedJPAHibernateUtil.java" parse="text"/></programlisting>
+          </example>
         </section>
     </section>
 
@@ -222,15 +250,10 @@
             SessionFactory and Sessions.
         </para>
         
-        <para>
-        	Quickstart tutorial project, demonstrating an unmanaged native client bundle:
-        	<link xl:href="https://github.com/hibernate/hibernate-orm/tree/master/documentation/src/main/docbook/quickstart/tutorials/osgi/unmanaged-native">unmanaged-native</link>
-        </para>
-        
         <section>
-        	<title>Client bundle imports</title>
+        	<title>Bundle Package Imports</title>
         	<para>
-        		Your client bundle's manifest will need to import, at a minimum,
+        		Your bundle's manifest will need to import, at a minimum,
         		<itemizedlist>
 		            <listitem>
 		                <literal>javax.persistence</literal>
@@ -262,29 +285,18 @@
         </section>
         
         <section>
-        	<title>Bundle Ordering</title>
-        	<para>
-        		Hibernate currently requires fairly specific bundle activation ordering.  See the unmanaged-native
-        		QuickStart's
-        		<link xl:href="https://github.com/hibernate/hibernate-orm/blob/master/documentation/src/main/docbook/quickstart/tutorials/osgi/unmanaged-native/features.xml">features.xml</link>
-        		for the best supported sequence.
-        	</para>
-        </section>
-        
-        <section>
         	<title>Obtaining an SessionFactory</title>
         	<para>
-        		hibernate-osgi registers an OSGi service, using the <literal>SessionFactory</literal> interface
+            <literal>hibernate-osgi</literal> registers an OSGi service, using the <literal>SessionFactory</literal> interface
         		name, that bootstraps and creates an <literal>SessionFactory</literal> specific for OSGi
         		environments.  It is VITAL that your SF be obtained through the service, rather than creating it
         		manually.  The service handles the OSGi ClassLoader, discovered extension points, scanning, etc.  Manually
         		creating an <literal>SessionFactory</literal> is guaranteed to NOT work during runtime!
         	</para>
-        	<para>
-        		For an example on how to discover and use the service, see the unmanaged-native
-        		QuickStart's
-        		<link xl:href="https://github.com/hibernate/hibernate-orm/blob/master/documentation/src/main/docbook/quickstart/tutorials/osgi/unmanaged-native/src/main/java/org/hibernate/osgitest/HibernateUtil.java">HibernateUtil.java</link>.
-        	</para>
+          <example>
+            <title>Discover/Use EntityManagerFactory</title>
+            <programlisting role="Java"><xi:include href="extras/NativeHibernateUtil.java" parse="text"/></programlisting>
+          </example>
         </section>
     </section>
     
@@ -292,10 +304,9 @@
     	<title>Optional Modules</title>
     	
     	<para>
-    		The <link xl:href="https://github.com/hibernate/hibernate-orm/blob/master/documentation/src/main/docbook/quickstart/tutorials/osgi/unmanaged-native">unmanaged-native</link>
-    		QuickStart project demonstrates the use of optional Hibernate modules.  Each module adds additional
-    		dependency bundles that must first be activated
-    		(see <link xl:href="https://github.com/hibernate/hibernate-orm/blob/master/documentation/src/main/docbook/quickstart/tutorials/osgi/unmanaged-native/features.xml">features.xml</link>).
+    		The <link xl:href="https://github.com/hibernate/hibernate-demos/tree/master/hibernate-orm/osgi/unmanaged-native">unmanaged-native</link>
+    		demo project displays the use of optional Hibernate modules.  Each module adds additional
+    		dependency bundles that must first be activated, either manually or through an additional feature.
     		As of ORM 4.2, Envers is fully supported.  Support for C3P0, Proxool, EhCache, and Infinispan were added in
     		4.3, however none of their 3rd party libraries currently work in OSGi (lots of ClassLoader problems, etc.).
     		We're tracking the issues in JIRA.
@@ -307,9 +318,9 @@
     	
     	<para>
     		Multiple contracts exist to allow applications to integrate with and extend Hibernate capabilities.  Most
-    		apps utilize JDK services to provide their implementations.  hibernate-osgi supports the same
+    		apps utilize JDK services to provide their implementations.  <literal>hibernate-osgi</literal> supports the same
     		extensions through OSGi services.  Implement and register them in any of the three configurations.
-    		hibernate-osgi will discover and integrate them during EMF/SF bootstrapping.  Supported extension points
+        <literal>hibernate-osgi</literal> will discover and integrate them during EMF/SF bootstrapping.  Supported extension points
     		are as follows.  The specified interface should be used during service registration.
     		
     		<itemizedlist>
@@ -337,15 +348,15 @@
     	</para>
     	
     	<example>
-            <title>Example extension point registrations in blueprint.xml</title>
-            <programlisting role="XML"><xi:include href="extras/extension_point_blueprint.xml" parse="text"/></programlisting>
-        </example>
-        
-        <para>
-        	Extension points can also be registered programmatically with
-        	<literal>BundleContext#registerService</literal>, typically within your
-        	<literal>BundleActivator#start</literal>.
-        </para>
+          <title>Example extension point registrations in blueprint.xml</title>
+          <programlisting role="XML"><xi:include href="extras/extension_point_blueprint.xml" parse="text"/></programlisting>
+      </example>
+
+      <para>
+        Extension points can also be registered programmatically with
+        <literal>BundleContext#registerService</literal>, typically within your
+        <literal>BundleActivator#start</literal>.
+      </para>
     </section>
     
     <section>
@@ -402,8 +413,8 @@
             </listitem>
             <listitem>
                 <para>
-                	As previously mentioned, bundle activation is currently order specific.  See the QuickStart
-                	tutorials' <literal>features.xml</literal> for example sequences.
+                	As previously mentioned, bundle activation is currently order specific.  See our
+                  <literal>features.xml</literal> for example sequences.
                 </para>
             </listitem>
             <listitem>

@@ -14,5 +14,3 @@ include::tutorial_annotations.adoc[]
 include::tutorial_jpa.adoc[]
 
 include::tutorial_envers.adoc[]
-
-include::tutorial_osgi.adoc[]

@@ -4,6 +4,42 @@ Hibernate 5.0 Changelog
 Note: Please refer to JIRA to learn more about each issue.
 
 
+Changes in 5.0.0.Final (August 20, 2015)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/20851
+
+** Bug
+    * [HHH-951] - setMaxResults causes "ORA-00918: column ambiguously defined" exception
+    * [HHH-7070] - Sybase15+ dialect -> dateadd, datediff, SQLFunctionTemplate lack templates
+    * [HHH-9868] - Infinispan 2LC can store stale data
+    * [HHH-9881] - Pending put needs to be invalidated on update on remote node
+    * [HHH-9908] - Regression in naming collection join tables
+    * [HHH-9928] - Pending put leaks when the entity is not found in DB
+    * [HHH-9982] - @NotNull annotation ignored when persisting or merging entities
+    * [HHH-10016] - Gradle plugin does not enhance any classes
+    * [HHH-10031] - Multiple bytecode enhancement attempts if hibernate.enable_lazy_load_no_trans set multiple times
+    * [HHH-10036] - Some tests are failing on Oracle, ORA-00972: identifier is too long
+    * [HHH-10040] - Fix problem with incomplete Iterator impl
+
+** New Feature
+    * [HHH-9898] - Test for correct behaviour of 2LC
+
+** Task
+    * [HHH-9919] - Update hibernate-osgi tutorials based on published Karaf features file
+    * [HHH-9994] - Finish mariadb (mysql) database profile
+    * [HHH-10022] - Continue documentation TLC (part 2)
+    * [HHH-10041] - features.xml generation: collapse 3 mains into one hibernate-orm
+    * [HHH-10042] - Add task to upload dist bundles to BinTray
+    * [HHH-10043] - Migration Guide
+
+** Improvement
+    * [HHH-9707] - Nulls first behavior on SQLServer database
+    * [HHH-10021] - Allow easy testing of hibernate-infinispan against Infinispan 7 or 8
+    * [HHH-10023] - Make hibernate-infinispan compiled with Infinispan 7.x but runnable with Infinispan 8.x
+    * [HHH-10039] - Ensure the Karaf features.xml is included in the distro zip/tgz
+
+
+
 Changes in 5.0.0.CR4 (August 5, 2015)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/20752

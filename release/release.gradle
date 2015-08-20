@@ -157,6 +157,9 @@ distributions {
                                 - parent.project( 'hibernate-entitymanager' ).configurations.runtime
                                 - parent.project( 'hibernate-entitymanager' ).configurations.archives.allArtifacts.files
                 )
+                from(
+                        parent.project( 'hibernate-osgi' ).extensions.karafFeatures.featuresXmlFile
+                )
             }
 
             // todo : this closure is problematic as it does not write into the hibernate-release-$project.version directory

@@ -68,9 +68,10 @@
       <para>
         Apache Karaf environments tend to make heavy use of its "features" concept, where a feature is a set of order-specific
         bundles focused on a concise capability.  These features are typically defined in a <literal>features.xml</literal> file.
-        Hibernate produces and releases its own <literal>features.xml</literal> that defines features for each of the three runtime configurations.
+        Hibernate produces and releases its own <literal>features.xml</literal> that defines a core <literal>hibernate-orm</literal>,
+        as well as additional features for optional functionality (caching, Envers, etc.).
         This is included in the binary distribution, as well as deployed to the JBoss Nexus repository
-        (using the <literal>org.hibernate</literal> groupId and <literal>hibernate-osgi</literal> with the <literal>karaf</literal> classifier).
+        (using the <literal>org.hibernate</literal> groupId and <literal>hibernate-osgi</literal> with the <literal>karaf.xml</literal> classifier).
       </para>
 
       <para>
@@ -80,8 +81,10 @@
       </para>
 
       <para>
-        Also note that hibernate-osgi, theoretically, supports a variety of OSGi containers, such as Equinox.  In that case,
-        please use features.xml as a reference for necessary bundles to activate and their correct ordering.
+        hibernate-osgi, theoretically, supports a variety of OSGi containers, such as Equinox.  In that case,
+        please use features.xml as a reference for necessary bundles to activate and their correct ordering.  However,
+        note that Karaf starts a number of bundles automatically, several of which would need to be installed manually
+        on alternatives.
       </para>
     </section>
 
@@ -102,6 +105,24 @@
             It uses the JPA provider (hibernate-osgi) that has registered itself with the OSGi
             <literal>PersistenceProvider</literal> service.
         </para>
+
+        <section>
+          <title>Enterprise OSGi JPA Container</title>
+          <para>
+            In order to utilize container-managed JPA, an Enterprise OSGi JPA container must be active in the runtime.
+            In Karaf, this means Aries JPA, which is included out-of-the-box (simply activate the <literal>jpa</literal>
+            and <literal>jta</literal> features).  Originally, we intended to include those dependencies within our own
+            <literal>features.xml</literal>.  However, after guidance from the Karaf and Aries teams, it was pulled out.
+            This allows Hibernate OSGi to be portable and not be directly tied to Aries versions, instead having
+            the user choose which to use.
+          </para>
+          <para>
+            That being said, the QuickStart/Demo projects include a sample
+            <link xl:href="https://github.com/hibernate/hibernate-demos/tree/master/hibernate-orm/osgi/managed-jpa/features.xml">features.xml</link>
+            showing which features need activated in Karaf in order to support this environment.  As mentioned, use this
+            purely as a reference!
+          </para>
+        </section>
 
         <section>
           <title>persistence.xml</title>
@@ -153,16 +174,6 @@
 		            </listitem>
 		        </itemizedlist>
         	</para>
-        </section>
-        
-        <section>
-        	<title>JPA 2.1</title>
-          <para>
-            No Enterprise OSGi JPA container currently supports JPA 2.1 (the spec is not yet released). For
-            testing, the managed-jpa example makes use of
-            <link xl:href="https://github.com/brmeyer/aries/tree/jpa21">Brett's fork of Aries</link>. To work
-            with Hibernate 4.3/5.0, clone the fork and build Aries JPA.
-          </para>
         </section>
         
         <section>
@@ -415,14 +426,6 @@
                 <para>
                 	As previously mentioned, bundle activation is currently order specific.  See our
                   <literal>features.xml</literal> for example sequences.
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                	No Enterprise OSGi JPA container currently supports JPA 2.1 (the spec is not yet released).  For
-                	testing, the managed-jpa example makes use of
-                	<link xl:href="https://github.com/brmeyer/aries/tree/jpa21">Brett's fork of Aries</link>.  To work
-                	with Hibernate 4.3, clone the fork and build Aries JPA.
                 </para>
             </listitem>
         </itemizedlist>

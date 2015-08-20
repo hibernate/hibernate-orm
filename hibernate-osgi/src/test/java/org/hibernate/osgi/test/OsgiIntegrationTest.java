@@ -111,7 +111,7 @@ public class OsgiIntegrationTest {
 				configureConsole().ignoreLocalConsole().ignoreRemoteShell(),
 				when( debug ).useOptions( keepRuntimeFolder() ),
 				logLevel( LogLevelOption.LogLevel.INFO ),
-				features( featureXmlUrl( paxExamEnvironment ), "hibernate-native", "hibernate-jpa" ),
+				features( featureXmlUrl( paxExamEnvironment ), "hibernate-orm" ),
 				features( testingFeatureXmlUrl(), "hibernate-osgi-testing" )
 		);
 	}
@@ -191,8 +191,7 @@ public class OsgiIntegrationTest {
 
 	@Test
 	public void testFeatureInstallation() throws Exception {
-		assertTrue( featuresService.isInstalled( featuresService.getFeature( "hibernate-jpa" ) ) );
-		assertTrue( featuresService.isInstalled( featuresService.getFeature( "hibernate-native" ) ) );
+		assertTrue( featuresService.isInstalled( featuresService.getFeature( "hibernate-orm" ) ) );
 	}
 
 	@Test

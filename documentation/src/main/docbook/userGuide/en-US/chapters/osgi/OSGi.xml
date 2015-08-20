@@ -422,12 +422,6 @@
                 	<literal>wrap:...</literal> operator.
                 </para>
             </listitem>
-            <listitem>
-                <para>
-                	As previously mentioned, bundle activation is currently order specific.  See our
-                  <literal>features.xml</literal> for example sequences.
-                </para>
-            </listitem>
         </itemizedlist>
     </section>
 

@@ -4,6 +4,10 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
+plugins {
+    id "com.jfrog.bintray" version "1.3.1"
+}
+
 apply plugin: 'base'
 apply plugin: 'idea'
 apply plugin: 'distribution'
@@ -223,7 +227,7 @@ task buildBundles(type: Task, dependsOn: [distZip,distTar]) {
     description = "Builds all release bundles"
 }
 
-task uploadBundles(type: Exec, dependsOn: buildBundles) {
+task uploadBundlesSourceForge(type: Exec, dependsOn: buildBundles) {
     description = "Uploads release bundles to SourceForge"
 
     final String url = "frs.sourceforge.net:/home/frs/project/hibernate/hibernate-orm/${version}";
@@ -244,6 +248,60 @@ task uploadBundles(type: Exec, dependsOn: buildBundles) {
     doLast {
         logger.lifecycle( 'Done uploading release bundles' )
     }
+}
+
+String binTrayUser = null
+String binTrayApiKey = null
+
+if ( project.hasProperty( "BINTRAY_USER" ) ) {
+    binTrayUser = project.property( "BINTRAY_USER" ) as String;
+}
+if ( binTrayUser == null ) {
+    binTrayUser = System.getProperty( "BINTRAY_USER" );
+}
+if ( binTrayUser == null ) {
+    binTrayUser = System.getenv( "BINTRAY_USER" );
+}
+if ( binTrayUser == null ) {
+    binTrayUser = 'UNDEFINED'
+}
+
+if ( project.hasProperty( "BINTRAY_APIKEY" ) ) {
+    binTrayApiKey = project.property( "BINTRAY_APIKEY" ) as String;
+}
+if ( binTrayApiKey == null ) {
+    binTrayApiKey = System.getProperty( "BINTRAY_APIKEY" );
+}
+if ( binTrayApiKey == null ) {
+    binTrayApiKey = System.getenv( "BINTRAY_APIKEY" );
+}
+if ( binTrayApiKey == null ) {
+    binTrayApiKey = 'UNDEFINED'
+}
+
+
+bintray {
+    user = binTrayUser
+    key = binTrayApiKey
+
+    publish = true
+
+    filesSpec {
+        from "$buildDir/distributions"
+        into '/'
+    }
+
+    pkg {
+        userOrg = 'hibernate'
+        repo = 'bundles'
+        name = 'hibernate-orm'
+    }
+}
+
+bintrayUpload.dependsOn buildBundles
+
+task uploadBundles(dependsOn: [bintrayUpload, uploadBundlesSourceForge]) {
+    description = 'Performs all release bundle uploads'
 }
 
 

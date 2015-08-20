@@ -111,7 +111,7 @@
           <para>
             In order to utilize container-managed JPA, an Enterprise OSGi JPA container must be active in the runtime.
             In Karaf, this means Aries JPA, which is included out-of-the-box (simply activate the <literal>jpa</literal>
-            and <literal>jta</literal> features).  Originally, we intended to include those dependencies within our own
+            and <literal>transaction</literal> features).  Originally, we intended to include those dependencies within our own
             <literal>features.xml</literal>.  However, after guidance from the Karaf and Aries teams, it was pulled out.
             This allows Hibernate OSGi to be portable and not be directly tied to Aries versions, instead having
             the user choose which to use.

@@ -2476,6 +2476,7 @@ public final class AnnotationBinder {
 		XProperty property = inferredData.getProperty();
 		setupComponentTuplizer( property, comp );
 		PropertyBinder binder = new PropertyBinder();
+		binder.setDeclaringClass(inferredData.getDeclaringClass());
 		binder.setName( inferredData.getPropertyName() );
 		binder.setValue( comp );
 		binder.setProperty( inferredData.getProperty() );

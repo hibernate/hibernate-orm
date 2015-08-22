@@ -196,6 +196,11 @@ public class SchemaDropperImpl implements SchemaDropper {
 			Set<Identifier> exportedCatalogs = new HashSet<Identifier>();
 
 			for ( Namespace namespace : database.getNamespaces() ) {
+
+				if ( !filter.includeNamespace( namespace ) ) {
+					continue;
+				}
+				
 				if ( tryToDropSchemas && namespace.getPhysicalName().getSchema() != null ) {
 					applySqlStrings(
 							targets, dialect.getDropSchemaCommand(
@@ -216,6 +221,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 						);
 						exportedCatalogs.add( catalogLogicalName );
 					}
+				}
 			}
 		}
 

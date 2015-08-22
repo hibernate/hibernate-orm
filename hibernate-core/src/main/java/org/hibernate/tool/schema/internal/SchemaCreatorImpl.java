@@ -196,6 +196,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 									namespace.getPhysicalName().getSchema().render( dialect )
 							)
 					);
+				}
 			}
 		}
 
@@ -224,10 +225,6 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				continue;
 			}
 
-			if ( !filter.includeSchema( schema ) ) {
-				continue;
-			}
-			
 			// sequences
 			for ( Sequence sequence : namespace.getSequences() ) {
 				if ( !filter.includeSequence( sequence ) ) {

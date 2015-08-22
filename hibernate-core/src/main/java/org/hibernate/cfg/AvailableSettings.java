@@ -755,8 +755,26 @@ public interface AvailableSettings {
 	 */
 	String HBM2DLL_CREATE_NAMESPACES = "hibernate.hbm2dll.create_namespaces";
 
+	/**
+	 * Used to specify the {@link org.hibernate.tool.schema.spi.SchemaFilter} to use for creating the database schema.
+	 * 
+	 * @since 5.1
+	 */
+	String SCHEMA_CREATE_FILTER = "hibernate.schema.create.filter";
 
+	/**
+	 * Used to specify the {@link org.hibernate.tool.schema.spi.SchemaFilter} to use for dropping the database schema.
+	 * 
+	 * @since 5.1
+	 */
+	String SCHEMA_DROP_FILTER = "hibernate.schema.drop.filter";
 
+	/**
+	 * Used to specify the {@link org.hibernate.tool.schema.spi.SchemaFilter} to use for migrating the database schema.
+	 * 
+	 * @since 5.1
+	 */
+	String SCHEMA_MIGRATE_FILTER = "hibernate.schema.migrate.filter";
 
 	/**
 	 * The EntityMode in which set the Session opened from the SessionFactory.

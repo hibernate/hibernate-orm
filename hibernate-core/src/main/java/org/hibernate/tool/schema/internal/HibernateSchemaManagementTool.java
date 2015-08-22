@@ -8,6 +8,8 @@ package org.hibernate.tool.schema.internal;
 
 import java.util.Map;
 
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.ServiceRegistry;
@@ -15,6 +17,7 @@ import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.schema.spi.SchemaCreator;
 import org.hibernate.tool.schema.spi.SchemaDropper;
+import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.SchemaMigrator;
 import org.hibernate.tool.schema.spi.SchemaValidator;
@@ -29,23 +32,28 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 	
 	@Override
 	public SchemaCreator getSchemaCreator(Map options) {
-		return new SchemaCreatorImpl();
+		return new SchemaCreatorImpl( getSchemaFilter( options, AvailableSettings.SCHEMA_CREATE_FILTER ) );
 	}
 
 	@Override
 	public SchemaDropper getSchemaDropper(Map options) {
-		return new SchemaDropperImpl();
+		return new SchemaDropperImpl( getSchemaFilter( options, AvailableSettings.SCHEMA_DROP_FILTER ) );
 	}
 
 	@Override
 	public SchemaMigrator getSchemaMigrator(Map options) {
-		return new SchemaMigratorImpl();
+		return new SchemaMigratorImpl( getSchemaFilter( options, AvailableSettings.SCHEMA_MIGRATE_FILTER ) );
 	}
 
 	@Override
 	public SchemaValidator getSchemaValidator(Map options) {
 		final Dialect dialect = serviceRegistry.getService( JdbcServices.class ).getDialect();
 		return new SchemaValidatorImpl(dialect);
+	}
+	
+	private SchemaFilter getSchemaFilter(Map options, String key) {
+		return serviceRegistry.getService( StrategySelector.class )
+				.resolveDefaultableStrategy( SchemaFilter.class, options.get( key ), DefaultSchemaFilter.INSTANCE );
 	}
 
 	@Override

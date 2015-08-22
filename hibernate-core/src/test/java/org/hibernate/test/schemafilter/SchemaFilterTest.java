@@ -134,9 +134,9 @@ public class SchemaFilterTest extends BaseUnitTestCase {
 	private static class TestSchemaFilter implements SchemaFilter {
 		
 		@Override
-		public boolean includeSchema( Schema schema ) {
+		public boolean includeNamespace( Namespace namespace ) {
 			// exclude schema "the_schema_2"
-			Identifier identifier = schema.getName().getSchema();
+			Identifier identifier = namespace.getName().getSchema();
 			if ( identifier != null ) {
 				return !"the_schema_2".equals( identifier.getText() );
 			}

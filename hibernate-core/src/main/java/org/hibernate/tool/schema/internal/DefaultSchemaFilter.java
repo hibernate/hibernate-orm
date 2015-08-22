@@ -9,7 +9,7 @@ public class DefaultSchemaFilter implements SchemaFilter {
 	public static final DefaultSchemaFilter INSTANCE = new DefaultSchemaFilter();
 
 	@Override
-	public boolean includeSchema( Schema schema ) {
+	public boolean includeNamespace( Namespace namespace ) {
 		return true;
 	}
 

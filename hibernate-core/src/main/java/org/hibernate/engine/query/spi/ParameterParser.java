@@ -102,7 +102,11 @@ public class ParameterParser {
 				recognizer.other( sqlString.charAt( ++indx ) );
 			}
 			else {
-				if ( c == ':' ) {
+				if ( c == ':' && indx < stringLength - 1 && sqlString.charAt( indx + 1 ) == ':') {
+					// colon character has been escaped
+					recognizer.other( c );
+					indx++;
+				} else if ( c == ':' ) {
 					// named parameter
 					final int right = StringHelper.firstIndexOfChar( sqlString, ParserHelper.HQL_SEPARATORS_BITSET, indx + 1 );
 					final int chopLocation = right < 0 ? sqlString.length() : right;

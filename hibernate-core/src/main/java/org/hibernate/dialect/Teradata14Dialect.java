@@ -200,5 +200,10 @@ public class Teradata14Dialect extends TeradataDialect {
 	public boolean supportsLockTimeouts() {
 		return false;
 	}
+
+	@Override
+	public boolean forcePrimaryKeyColumnsNonNullable() {
+		return true;
+	}
 }
 

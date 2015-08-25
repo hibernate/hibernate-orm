@@ -6,7 +6,10 @@
  */
 package org.hibernate.osgi;
 
+import org.hibernate.SessionFactory;
+import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 
@@ -36,7 +39,14 @@ public class OsgiPersistenceProviderService implements ServiceFactory {
 	@Override
 	public Object getService(Bundle requestingBundle, ServiceRegistration registration) {
 		final OsgiClassLoader osgiClassLoader = new OsgiClassLoader();
+
+        // First, add the client bundle that's requesting the OSGi services.
 		osgiClassLoader.addBundle( requestingBundle );
+
+        // Then, automatically add hibernate-core and hibernate-entitymanager.  These are needed to load resources
+        // contained in those jars, such as em's persistence.xml schemas.
+        osgiClassLoader.addBundle( FrameworkUtil.getBundle( SessionFactory.class ) );
+        osgiClassLoader.addBundle( FrameworkUtil.getBundle( HibernateEntityManagerFactory.class ) );
 
 		// Some "boot time" code does still rely on TCCL.  "run time" code should all be using
 		// ClassLoaderService now.

@@ -1,12 +1,20 @@
 package org.hibernate.test.cache.infinispan.util;
 
+import org.hibernate.HibernateException;
+import org.hibernate.Transaction;
 import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
 import org.hibernate.resource.transaction.SynchronizationRegistry;
 import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
+import org.hibernate.resource.transaction.backend.jta.internal.StatusTranslator;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
+import org.infinispan.transaction.tm.DummyTransaction;
 
+import javax.transaction.HeuristicMixedException;
+import javax.transaction.HeuristicRollbackException;
+import javax.transaction.NotSupportedException;
 import javax.transaction.RollbackException;
 import javax.transaction.Status;
 import javax.transaction.Synchronization;
@@ -19,76 +27,165 @@ import javax.transaction.SystemException;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class BatchModeTransactionCoordinator implements TransactionCoordinator {
-   @Override
-   public void explicitJoin() {
-   }
+	private BatchModeTransactionManager tm = BatchModeTransactionManager.getInstance();;
+	private TransactionDriver transactionDriver = new TransactionDriver() {
+		@Override
+		public void begin() {
+			try {
+				tm.begin();
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
 
-   @Override
-   public boolean isJoined() {
-      return true;
-   }
+		@Override
+		public void commit() {
+			try {
+				tm.commit();
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
 
-   @Override
-   public void pulse() {
-   }
+		@Override
+		public void rollback() {
+			try {
+				tm.rollback();
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
 
-   @Override
-   public TransactionDriver getTransactionDriverControl() {
-      throw new UnsupportedOperationException();
-   }
+		@Override
+		public TransactionStatus getStatus() {
+			try {
+				DummyTransaction transaction = tm.getTransaction();
+				return transaction == null ? TransactionStatus.NOT_ACTIVE : StatusTranslator.translate(transaction.getStatus());
+			} catch (SystemException e) {
+				throw new RuntimeException(e);
+			}
+		}
 
-   @Override
-   public SynchronizationRegistry getLocalSynchronizations() {
-      return new SynchronizationRegistry() {
-         @Override
-         public void registerSynchronization(Synchronization synchronization) {
-            try {
-               BatchModeTransactionManager.getInstance().getTransaction().registerSynchronization(synchronization);
-            } catch (RollbackException e) {
-               throw new RuntimeException(e);
-            } catch (SystemException e) {
-               throw new RuntimeException(e);
-            }
-         }
-      };
-   }
+		@Override
+		public void markRollbackOnly() {
+			throw new UnsupportedOperationException();
+		}
+	};;
 
-   @Override
-   public boolean isActive() {
-      try {
-         return BatchModeTransactionManager.getInstance().getStatus() == Status.STATUS_ACTIVE;
-      } catch (SystemException e) {
-         return false;
-      }
-   }
+	@Override
+	public void explicitJoin() {
+	}
 
-   @Override
-   public IsolationDelegate createIsolationDelegate() {
-      throw new UnsupportedOperationException();
-   }
+	@Override
+	public boolean isJoined() {
+		return true;
+	}
 
-   @Override
-   public void addObserver(TransactionObserver observer) {
-      throw new UnsupportedOperationException();
-   }
+	@Override
+	public void pulse() {
+	}
 
-   @Override
-   public void removeObserver(TransactionObserver observer) {
-      throw new UnsupportedOperationException();
-   }
+	@Override
+	public TransactionDriver getTransactionDriverControl() {
+		return transactionDriver;
+	}
 
-   @Override
-   public TransactionCoordinatorBuilder getTransactionCoordinatorBuilder() {
-      throw new UnsupportedOperationException();
-   }
+	@Override
+	public SynchronizationRegistry getLocalSynchronizations() {
+		return new SynchronizationRegistry() {
+			@Override
+			public void registerSynchronization(Synchronization synchronization) {
+				try {
+					BatchModeTransactionManager.getInstance().getTransaction().registerSynchronization(synchronization);
+				} catch (RollbackException e) {
+					throw new RuntimeException(e);
+				} catch (SystemException e) {
+					throw new RuntimeException(e);
+				}
+			}
+		};
+	}
 
-   @Override
-   public void setTimeOut(int seconds) {
-      throw new UnsupportedOperationException();
-   }
+	@Override
+	public boolean isActive() {
+		try {
+			return BatchModeTransactionManager.getInstance().getStatus() == Status.STATUS_ACTIVE;
+		} catch (SystemException e) {
+			return false;
+		}
+	}
 
-   @Override
-   public int getTimeOut() {
-      throw new UnsupportedOperationException();
-   }
+	@Override
+	public IsolationDelegate createIsolationDelegate() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void addObserver(TransactionObserver observer) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void removeObserver(TransactionObserver observer) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public TransactionCoordinatorBuilder getTransactionCoordinatorBuilder() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void setTimeOut(int seconds) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public int getTimeOut() {
+		throw new UnsupportedOperationException();
+	}
+
+	public Transaction newTransaction() {
+		return new BatchModeTransaction();
+	}
+
+	public class BatchModeTransaction implements Transaction {
+		@Override
+		public void begin() {
+		}
+
+		@Override
+		public void commit() {
+			transactionDriver.commit();
+		}
+
+		@Override
+		public void rollback() {
+			transactionDriver.rollback();
+		}
+
+		@Override
+		public TransactionStatus getStatus() {
+			return transactionDriver.getStatus();
+		}
+
+		@Override
+		public void registerSynchronization(Synchronization synchronization) throws HibernateException {
+			getLocalSynchronizations().registerSynchronization(synchronization);
+		}
+
+		@Override
+		public void setTimeout(int seconds) {
+		}
+
+		@Override
+		public int getTimeout() {
+			return 0;
+		}
+
+		@Override
+		public void markRollbackOnly() {
+			transactionDriver.markRollbackOnly();
+		}
+	}
 }

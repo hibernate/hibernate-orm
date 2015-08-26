@@ -124,7 +124,7 @@ public class Caches {
     * @return a cache that ignores return values
     */
 	public static AdvancedCache ignoreReturnValuesCache(AdvancedCache cache) {
-		return cache.withFlags( Flag.SKIP_CACHE_LOAD, Flag.SKIP_REMOTE_LOOKUP );
+		return cache.withFlags( Flag.SKIP_CACHE_LOAD, Flag.SKIP_REMOTE_LOOKUP, Flag.IGNORE_RETURN_VALUES );
 	}
 
    /**
@@ -139,7 +139,7 @@ public class Caches {
 	public static AdvancedCache ignoreReturnValuesCache(
 			AdvancedCache cache, Flag extraFlag) {
 		return cache.withFlags(
-				Flag.SKIP_CACHE_LOAD, Flag.SKIP_REMOTE_LOOKUP, extraFlag
+				Flag.SKIP_CACHE_LOAD, Flag.SKIP_REMOTE_LOOKUP, Flag.IGNORE_RETURN_VALUES, extraFlag
 		);
 	}
 
@@ -269,6 +269,11 @@ public class Caches {
 		return cache.getCacheConfiguration()
 				.clustering().cacheMode().isClustered();
 	}
+
+	public static boolean isTransactionalCache(AdvancedCache cache) {
+		return cache.getCacheConfiguration().transaction().transactionMode().isTransactional();
+	}
+
 
 	public static void removeAll(AdvancedCache cache) {
 		CloseableIterator it = keys(cache).iterator();

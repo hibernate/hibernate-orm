@@ -28,15 +28,6 @@ public abstract class InvalidationCacheAccessDelegate implements AccessDelegate 
 	protected final PutFromLoadValidator putValidator;
 	protected final AdvancedCache<Object, Object> writeCache;
 
-	public static InvalidationCacheAccessDelegate create(BaseRegion region, PutFromLoadValidator validator) {
-		if (region.getCache().getCacheConfiguration().transaction().transactionMode().isTransactional()) {
-			return new TxInvalidationCacheAccessDelegate(region, validator);
-		}
-		else {
-			return new NonTxInvalidationCacheAccessDelegate(region, validator);
-		}
-	}
-
    /**
     * Create a new transactional access delegate instance.
     *

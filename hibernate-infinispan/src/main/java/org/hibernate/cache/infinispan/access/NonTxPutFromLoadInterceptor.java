@@ -20,7 +20,7 @@ import org.infinispan.remoting.rpc.RpcManager;
  * Non-transactional counterpart of {@link TxPutFromLoadInterceptor}.
  * Invokes {@link PutFromLoadValidator#beginInvalidatingKey(Object, Object)} for each invalidation from
  * remote node ({@link BeginInvalidationCommand} and sends {@link EndInvalidationCommand} after the transaction
- * is complete, with help of {@link Synchronization};
+ * is complete, with help of {@link InvalidationSynchronization};
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */

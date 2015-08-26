@@ -6,8 +6,6 @@
  */
 package org.hibernate.test.cache.infinispan.collection;
 
-import javax.transaction.TransactionManager;
-
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -17,10 +15,11 @@ import java.util.concurrent.TimeUnit;
 
 import junit.framework.AssertionFailedError;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.infinispan.access.AccessDelegate;
+import org.hibernate.cache.infinispan.access.NonTxInvalidationCacheAccessDelegate;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
-import org.hibernate.cache.infinispan.access.InvalidationCacheAccessDelegate;
+import org.hibernate.cache.infinispan.access.TxInvalidationCacheAccessDelegate;
 import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
-import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.test.cache.infinispan.AbstractRegionAccessStrategyTest;
@@ -37,7 +36,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
 
 /**
  * Base class for tests of CollectionRegionAccessStrategy impls.
@@ -74,16 +72,22 @@ public abstract class AbstractCollectionRegionAccessStrategyTest extends
 
 	@Test
 	public void testPutFromLoadRemoveDoesNotProduceStaleData() throws Exception {
+		if (cacheMode.isInvalidation()) {
+			doPutFromLoadRemoveDoesNotProduceStaleDataInvalidation();
+		}
+	}
+
+	public void doPutFromLoadRemoveDoesNotProduceStaleDataInvalidation() {
 		final CountDownLatch pferLatch = new CountDownLatch( 1 );
 		final CountDownLatch removeLatch = new CountDownLatch( 1 );
-		final TransactionManager remoteTm = remoteRegion.getTransactionManager();
 		withCacheManager(new CacheManagerCallable(createCacheManager()) {
 			@Override
 			public void call() {
 				PutFromLoadValidator validator = getPutFromLoadValidator(remoteRegion.getCache(), cm, removeLatch, pferLatch);
 
-				final InvalidationCacheAccessDelegate delegate =
-						InvalidationCacheAccessDelegate.create(localRegion, validator);
+				final AccessDelegate delegate = localRegion.getCache().getCacheConfiguration().transaction().transactionMode().isTransactional() ?
+						new TxInvalidationCacheAccessDelegate(localRegion, validator) :
+						new NonTxInvalidationCacheAccessDelegate(localRegion, validator);
 
 				Callable<Void> pferCallable = new Callable<Void>() {
 					public Void call() throws Exception {
@@ -142,7 +146,9 @@ public abstract class AbstractCollectionRegionAccessStrategyTest extends
 				Lock lock = super.acquirePutFromLoadLock(session, key, txTimestamp);
 				try {
 					removeLatch.countDown();
-					pferLatch.await( 2, TimeUnit.SECONDS );
+					// the remove should be blocked because the putFromLoad has been acquired
+					// and the remove can continue only after we've inserted the entry
+					assertFalse(pferLatch.await( 2, TimeUnit.SECONDS ) );
 				}
 				catch (InterruptedException e) {
 					log.debug( "Interrupted" );

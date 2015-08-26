@@ -40,7 +40,7 @@ public class SessionRefreshTest extends DualNodeTest {
 
 	@Override
 	public List<Object[]> getParameters() {
-		return Arrays.asList(TRANSACTIONAL, READ_WRITE);
+		return getParameters(true, true, false);
 	}
 
 	@Override

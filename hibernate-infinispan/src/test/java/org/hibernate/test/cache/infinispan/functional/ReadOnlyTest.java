@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.hibernate.PessimisticLockException;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
@@ -23,12 +24,12 @@ import org.hibernate.test.cache.infinispan.functional.entities.Item;
 import org.hibernate.testing.TestForIssue;
 import org.infinispan.AdvancedCache;
 import org.infinispan.commands.read.GetKeyValueCommand;
+import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.interceptors.base.BaseCustomInterceptor;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 import org.junit.Test;
-import org.junit.runners.Parameterized;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -47,7 +48,7 @@ public class ReadOnlyTest extends SingleNodeTest {
 
 	@Override
 	public List<Object[]> getParameters() {
-		return Collections.singletonList(READ_ONLY);
+		return getParameters(false, false, true);
 	}
 
 	@Test
@@ -110,35 +111,44 @@ public class ReadOnlyTest extends SingleNodeTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-9868")
 	public void testConcurrentRemoveAndPutFromLoad() throws Exception {
+		if (cacheMode.isDistributed() || cacheMode.isReplicated()) {
+			// this test is tailored for invalidation-based access strategies
+			return;
+		}
+
+		Region region = sessionFactory().getSecondLevelCacheRegion(Item.class.getName());
+		AdvancedCache entityCache = ((EntityRegionImpl) region).getCache();
+
 		final Item item = new Item( "chris", "Chris's Item" );
 		withTxSession(s -> {
 			s.persist(item);
 		});
-		Region region = sessionFactory().getSecondLevelCacheRegion(Item.class.getName());
 
 		Phaser deletePhaser = new Phaser(2);
 		Phaser getPhaser = new Phaser(2);
 		HookInterceptor hook = new HookInterceptor();
 
-		AdvancedCache entityCache = ((EntityRegionImpl) region).getCache();
 		AdvancedCache pendingPutsCache = entityCache.getCacheManager().getCache(
 				entityCache.getName() + "-" + InfinispanRegionFactory.PENDING_PUTS_CACHE_NAME).getAdvancedCache();
 		pendingPutsCache.addInterceptor(hook, 0);
+		AtomicBoolean getThreadBlockedInDB = new AtomicBoolean(false);
 
 		Thread deleteThread = new Thread(() -> {
 			try {
 				withTxSession(s -> {
 					Item loadedItem = s.get(Item.class, item.getId());
 					assertNotNull(loadedItem);
-					arriveAndAwait(deletePhaser);
-					arriveAndAwait(deletePhaser);
+					arriveAndAwait(deletePhaser, 2000);
+					arriveAndAwait(deletePhaser, 2000);
 					log.trace("Item loaded");
 					s.delete(loadedItem);
 					s.flush();
 					log.trace("Item deleted");
 					// start get-thread here
-					arriveAndAwait(deletePhaser);
-					arriveAndAwait(deletePhaser);
+					arriveAndAwait(deletePhaser, 2000);
+					// we need longer timeout since in non-MVCC DBs the get thread
+					// can be blocked
+					arriveAndAwait(deletePhaser, 4000);
 				});
 			} catch (Exception e) {
 				throw new RuntimeException(e);
@@ -150,15 +160,19 @@ public class ReadOnlyTest extends SingleNodeTest {
 					// DB load should happen before the record is deleted,
 					// putFromLoad should happen after deleteThread ends
 					Item loadedItem = s.get(Item.class, item.getId());
-					assertNotNull(loadedItem);
+					if (getThreadBlockedInDB.get()) {
+						assertNull(loadedItem);
+					} else {
+						assertNotNull(loadedItem);
+					}
 				});
 			} catch (PessimisticLockException e) {
 				// If we end up here, database locks guard us against situation tested
 				// in this case and HHH-9868 cannot happen.
 				// (delete-thread has ITEMS table write-locked and we try to acquire read-lock)
 				try {
-					arriveAndAwait(getPhaser);
-					arriveAndAwait(getPhaser);
+					arriveAndAwait(getPhaser, 2000);
+					arriveAndAwait(getPhaser, 2000);
 				} catch (Exception e1) {
 					throw new RuntimeException(e1);
 				}
@@ -169,24 +183,28 @@ public class ReadOnlyTest extends SingleNodeTest {
 
 		deleteThread.start();
 		// deleteThread loads the entity
-		arriveAndAwait(deletePhaser);
+		arriveAndAwait(deletePhaser, 2000);
 		withTx(() -> {
 			sessionFactory().getCache().evictEntity(Item.class, item.getId());
 			assertFalse(sessionFactory().getCache().containsEntity(Item.class, item.getId()));
 			return null;
 		});
-		arriveAndAwait(deletePhaser);
+		arriveAndAwait(deletePhaser, 2000);
 		// delete thread invalidates PFER
-		arriveAndAwait(deletePhaser);
+		arriveAndAwait(deletePhaser, 2000);
 		// get thread gets the entity from DB
 		hook.block(getPhaser, getThread);
 		getThread.start();
-		arriveAndAwait(getPhaser);
-		arriveAndAwait(deletePhaser);
+		try {
+			arriveAndAwait(getPhaser, 2000);
+		} catch (TimeoutException e) {
+			getThreadBlockedInDB.set(true);
+		}
+		arriveAndAwait(deletePhaser, 2000);
 		// delete thread finishes the remove from DB and cache
 		deleteThread.join();
 		hook.unblock();
-		arriveAndAwait(getPhaser);
+		arriveAndAwait(getPhaser, 2000);
 		// get thread puts the entry into cache
 		getThread.join();
 
@@ -196,8 +214,8 @@ public class ReadOnlyTest extends SingleNodeTest {
 		});
 	}
 
-	protected static void arriveAndAwait(Phaser phaser) throws TimeoutException, InterruptedException {
-		phaser.awaitAdvanceInterruptibly(phaser.arrive(), 1000, TimeUnit.SECONDS);
+	protected static void arriveAndAwait(Phaser phaser, int timeout) throws TimeoutException, InterruptedException {
+		phaser.awaitAdvanceInterruptibly(phaser.arrive(), timeout, TimeUnit.MILLISECONDS);
 	}
 
 	private static class HookInterceptor extends BaseCustomInterceptor {
@@ -223,8 +241,8 @@ public class ReadOnlyTest extends SingleNodeTest {
 				thread = this.thread;
 			}
 			if (phaser != null && Thread.currentThread() == thread) {
-				arriveAndAwait(phaser);
-				arriveAndAwait(phaser);
+				arriveAndAwait(phaser, 2000);
+				arriveAndAwait(phaser, 2000);
 			}
 			return super.visitGetKeyValueCommand(ctx, command);
 		}

@@ -138,7 +138,7 @@ public class QueryRegionImplTest extends AbstractGeneralDataRegionTest {
 
 			// Start the reader
 			reader.start();
-			assertTrue("Reader finished promptly", readerLatch.await(1000000000, TimeUnit.MILLISECONDS));
+			assertTrue("Reader finished promptly", readerLatch.await(100, TimeUnit.MILLISECONDS));
 
 			writerLatch.countDown();
 

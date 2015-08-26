@@ -67,21 +67,8 @@ public class ClusteredTimestampsRegionImpl extends TimestampsRegionImpl {
 	public Object get(SessionImplementor session, Object key) throws CacheException {
 		Object value = localCache.get( key );
 
-		// If the region is not valid, skip cache store to avoid going remote to retrieve the query.
-		// The aim of this is to maintain same logic/semantics as when state transfer was configured.
-		// TODO: Once https://issues.jboss.org/browse/ISPN-835 has been resolved, revert to state transfer and remove workaround
-		boolean skipCacheStore = false;
-		if ( !isValid() ) {
-			skipCacheStore = true;
-		}
-
 		if ( value == null && checkValid() ) {
-			if ( skipCacheStore ) {
-				value = cache.withFlags( Flag.SKIP_CACHE_STORE ).get( key );
-			}
-			else {
-				value = cache.get( key );
-			}
+			value = cache.get( key );
 
 			if ( value != null ) {
 				localCache.put( key, value );

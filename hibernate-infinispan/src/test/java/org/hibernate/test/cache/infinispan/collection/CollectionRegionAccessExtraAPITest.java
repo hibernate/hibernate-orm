@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.cache.infinispan.collection;
 
-import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.test.cache.infinispan.AbstractExtraAPITest;
@@ -32,8 +31,8 @@ public abstract class CollectionRegionAccessExtraAPITest extends AbstractExtraAP
 		}
 
 		@Override
-		protected Class<? extends RegionFactory> getRegionFactoryClass() {
-			return TestInfinispanRegionFactory.Transactional.class;
+		protected boolean useTransactionalCache() {
+			return true;
 		}
 	}
 

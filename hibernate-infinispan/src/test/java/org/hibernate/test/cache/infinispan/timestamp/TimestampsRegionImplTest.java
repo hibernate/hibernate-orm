@@ -47,7 +47,7 @@ import org.infinispan.notifications.cachelistener.event.Event;
  */
 public class TimestampsRegionImplTest extends AbstractGeneralDataRegionTest {
 
-	@Override
+	 @Override
 	protected String getStandardRegionName(String regionPrefix) {
 		return regionPrefix + "/" + UpdateTimestampsCache.class.getName();
 	}
@@ -110,7 +110,8 @@ public class TimestampsRegionImplTest extends AbstractGeneralDataRegionTest {
 
 	public static class MockInfinispanRegionFactory extends TestInfinispanRegionFactory {
 
-		public MockInfinispanRegionFactory() {
+		public MockInfinispanRegionFactory(Properties properties) {
+			super(properties);
 		}
 
 		@Override
@@ -149,5 +150,4 @@ public class TimestampsRegionImplTest extends AbstractGeneralDataRegionTest {
 			}
 		}
 	}
-
 }

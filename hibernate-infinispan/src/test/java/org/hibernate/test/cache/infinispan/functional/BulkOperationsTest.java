@@ -12,21 +12,13 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.FlushMode;
-import org.hibernate.Session;
-import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
-import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 
-import org.hibernate.test.cache.infinispan.tm.JtaPlatformImpl;
-import org.hibernate.test.cache.infinispan.tm.XaConnectionProvider;
 import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
 import org.hibernate.test.cache.infinispan.functional.entities.Contact;
 import org.hibernate.test.cache.infinispan.functional.entities.Customer;
-import org.hibernate.test.cache.infinispan.util.TestInfinispanRegionFactory;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.junit.runners.Parameterized;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -41,7 +33,7 @@ import static org.junit.Assert.assertNull;
 public class BulkOperationsTest extends SingleNodeTest {
 	@Override
 	public List<Object[]> getParameters() {
-		return Arrays.asList(TRANSACTIONAL, READ_WRITE);
+		return getParameters(true, true, false);
 	}
 
 	@ClassRule

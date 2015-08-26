@@ -47,13 +47,12 @@ public class CollectionRegionImpl extends BaseTransactionalDataRegion implements
 	@Override
 	public CollectionRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {
 		checkAccessType( accessType );
-		getValidator();
-		AccessDelegate delegate = InvalidationCacheAccessDelegate.create(this, getValidator());
+		AccessDelegate accessDelegate = createAccessDelegate();
 		switch ( accessType ) {
 			case READ_ONLY:
 			case READ_WRITE:
 			case TRANSACTIONAL:
-				return new CollectionAccess( this, delegate );
+				return new CollectionAccess( this, accessDelegate );
 			default:
 				throw new CacheException( "Unsupported access type [" + accessType.getExternalName() + "]" );
 		}

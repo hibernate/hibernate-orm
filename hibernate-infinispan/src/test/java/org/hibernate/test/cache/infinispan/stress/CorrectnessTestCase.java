@@ -43,22 +43,24 @@ import org.hibernate.test.cache.infinispan.stress.entities.Person;
 import org.hibernate.test.cache.infinispan.util.TestInfinispanRegionFactory;
 import org.hibernate.testing.jta.JtaAwareConnectionProviderImpl;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
+import org.hibernate.testing.junit4.CustomParameterized;
 import org.infinispan.commands.VisitableCommand;
 import org.infinispan.commands.tx.CommitCommand;
 import org.infinispan.commands.tx.RollbackCommand;
 import org.infinispan.commons.util.ByRef;
+import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.cache.InterceptorConfiguration;
-import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.interceptors.base.BaseCustomInterceptor;
 import org.infinispan.remoting.RemoteException;
-import org.infinispan.transaction.TransactionMode;
 import org.infinispan.util.logging.LogFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import javax.transaction.RollbackException;
 import javax.transaction.Status;
@@ -85,6 +87,7 @@ import java.util.stream.Collectors;
  *
  * @author Radim Vansa
  */
+@RunWith(CustomParameterized.class)
 public abstract class CorrectnessTestCase {
    static final org.infinispan.util.logging.Log log = LogFactory.getLog(CorrectnessTestCase.class);
    static final long EXECUTION_TIME = TimeUnit.MINUTES.toMillis(10);
@@ -95,6 +98,12 @@ public abstract class CorrectnessTestCase {
    static final int NUM_ACCESS_AFTER_REMOVAL = NUM_THREADS * 2;
    static final int MAX_MEMBERS = 10;
    private final static Comparator<Log<?>> WALL_CLOCK_TIME_COMPARATOR = (o1, o2) -> Long.compare(o1.wallClockTime, o2.wallClockTime);
+
+   @Parameterized.Parameter(0)
+   public String name;
+
+   @Parameterized.Parameter(1)
+   public CacheMode cacheMode;
 
    static ThreadLocal<Integer> threadNode = new ThreadLocal<>();
 
@@ -121,20 +130,41 @@ public abstract class CorrectnessTestCase {
       return getClass().getName().replaceAll("\\W", "_");
    }
 
-   public abstract static class Jta extends CorrectnessTestCase {
+   @Ignore
+   public static class Jta extends CorrectnessTestCase {
       private final TransactionManager transactionManager  = TestingJtaPlatformImpl.transactionManager();
+
+      @Parameterized.Parameter(2)
+      public boolean transactional;
+
+      @Parameterized.Parameter(3)
+      public boolean readOnly;
+
+      @Parameterized.Parameters(name = "{0}")
+      public List<Object[]> getParameters() {
+         return Arrays.<Object[]>asList(
+               new Object[] { "transactional, invalidation", CacheMode.INVALIDATION_SYNC, true, false },
+               new Object[] { "read-only, invalidation", CacheMode.INVALIDATION_SYNC, false, true }, // maybe not needed
+               new Object[] { "read-write, invalidation", CacheMode.INVALIDATION_SYNC, false, false },
+               new Object[] { "read-write, replicated", CacheMode.REPL_SYNC, false, false },
+               new Object[] { "read-write, distributed", CacheMode.DIST_SYNC, false, false }
+         );
+      }
 
       @Override
       protected void applySettings(StandardServiceRegistryBuilder ssrb) {
          ssrb
                .applySetting( Environment.JTA_PLATFORM, TestingJtaPlatformImpl.class.getName() )
                .applySetting( Environment.CONNECTION_PROVIDER, JtaAwareConnectionProviderImpl.class.getName() )
-               .applySetting( Environment.TRANSACTION_COORDINATOR_STRATEGY, JtaTransactionCoordinatorBuilderImpl.class.getName() );
+               .applySetting( Environment.TRANSACTION_COORDINATOR_STRATEGY, JtaTransactionCoordinatorBuilderImpl.class.getName() )
+               .applySetting(TestInfinispanRegionFactory.TRANSACTIONAL, transactional);
+         if (readOnly) {
+            ssrb.applySetting(Environment.DEFAULT_CACHE_CONCURRENCY_STRATEGY, CacheConcurrencyStrategy.READ_ONLY.toAccessType().getExternalName());
+         }
       }
 
       @Override
       protected void withTx(Runnable runnable, boolean rolledBack) throws Exception {
-         int node = threadNode.get();
          TransactionManager tm = transactionManager;
          tm.begin();
          try {
@@ -155,45 +185,35 @@ public abstract class CorrectnessTestCase {
             }
          }
       }
-   }
 
-   @Ignore // as long-running test, we'll execute it only by hand
-   public static class JtaTransactional extends Jta {
-   }
-
-   @Ignore // as long-running test, we'll execute it only by hand
-   public static class JtaReadOnly extends Jta {
       @Override
       protected Operation getOperation() {
-         ThreadLocalRandom random = ThreadLocalRandom.current();
-         Operation operation;
-         int r = random.nextInt(30);
-         if (r == 0) operation = new InvalidateCache();
-         else if (r < 5) operation = new QueryFamilies();
-         else if (r < 10) operation = new RemoveFamily(r < 12);
-         else operation = new ReadFamily(r < 20);
-         return operation;
-      }
-
-      @Override
-      protected void applySettings(StandardServiceRegistryBuilder ssrb) {
-         super.applySettings(ssrb);
-         ssrb.applySetting(Environment.DEFAULT_CACHE_CONCURRENCY_STRATEGY, CacheConcurrencyStrategy.READ_ONLY.toAccessType().getExternalName());
-         ssrb.applySetting(Environment.CACHE_REGION_FACTORY, ForceNonTxInfinispanRegionFactory.class.getName());
+         if (readOnly) {
+            ThreadLocalRandom random = ThreadLocalRandom.current();
+            Operation operation;
+            int r = random.nextInt(30);
+            if (r == 0) operation = new InvalidateCache();
+            else if (r < 5) operation = new QueryFamilies();
+            else if (r < 10) operation = new RemoveFamily(r < 12);
+            else operation = new ReadFamily(r < 20);
+            return operation;
+         } else {
+            return super.getOperation();
+         }
       }
    }
 
-   @Ignore // as long-running test, we'll execute it only by hand
-   public static class JtaNonTransactional extends Jta {
-      @Override
-      protected void applySettings(StandardServiceRegistryBuilder ssrb) {
-         super.applySettings(ssrb);
-         ssrb.applySetting(Environment.CACHE_REGION_FACTORY, ForceNonTxInfinispanRegionFactory.class.getName());
-      }
-   }
-
-   @Ignore // as long-running test, we'll execute it only by hand
+   @Ignore
    public static class NonJta extends CorrectnessTestCase {
+      @Parameterized.Parameters(name = "{0}")
+      public List<Object[]> getParameters() {
+         return Arrays.<Object[]>asList(
+               new Object[] { "read-write, invalidation", CacheMode.INVALIDATION_SYNC },
+               new Object[] { "read-write, replicated", CacheMode.REPL_SYNC },
+               new Object[] { "read-write, distributed", CacheMode.DIST_SYNC }
+         );
+      }
+
       @Override
       protected void withTx(Runnable runnable, boolean rolledBack) throws Exception {
          // no transaction on JTA TM
@@ -205,7 +225,7 @@ public abstract class CorrectnessTestCase {
          super.applySettings(ssrb);
          ssrb.applySetting(Environment.JTA_PLATFORM, NoJtaPlatform.class.getName());
          ssrb.applySetting(Environment.TRANSACTION_COORDINATOR_STRATEGY, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class.getName());
-         ssrb.applySetting(Environment.CACHE_REGION_FACTORY, ForceNonTxInfinispanRegionFactory.class.getName());
+         ssrb.applySetting(TestInfinispanRegionFactory.TRANSACTIONAL, false);
       }
    }
 
@@ -222,6 +242,7 @@ public abstract class CorrectnessTestCase {
               .applySetting( Environment.DIALECT, H2Dialect.class.getName() )
               .applySetting( Environment.HBM2DDL_AUTO, "create-drop" )
               .applySetting( Environment.CACHE_REGION_FACTORY, FailingInfinispanRegionFactory.class.getName())
+              .applySetting( TestInfinispanRegionFactory.CACHE_MODE, cacheMode )
               .applySetting( Environment.GENERATE_STATISTICS, "false" );
       applySettings(ssrb);
 
@@ -291,30 +312,21 @@ public abstract class CorrectnessTestCase {
    }
 
    public static class FailingInfinispanRegionFactory extends TestInfinispanRegionFactory {
-      @Override
-      protected void amendConfiguration(ConfigurationBuilderHolder holder) {
-         for (Map.Entry<String, ConfigurationBuilder> entry : holder.getNamedConfigurationBuilders().entrySet()) {
-            // failure to write into timestamps would cause failure even though both DB and cache has been updated
-            if (!entry.getKey().equals("timestamps") && !entry.getKey().endsWith(InfinispanRegionFactory.PENDING_PUTS_CACHE_NAME)) {
-               entry.getValue().customInterceptors().addInterceptor()
-                     .interceptorClass(FailureInducingInterceptor.class)
-                     .position(InterceptorConfiguration.Position.FIRST);
-               log.trace("Injecting FailureInducingInterceptor into " + entry.getKey());
-            }
-            else {
-               log.trace("Not injecting into " + entry.getKey());
-            }
-         }
+      public FailingInfinispanRegionFactory(Properties properties) {
+         super(properties);
       }
-   }
 
-   public static class ForceNonTxInfinispanRegionFactory extends FailingInfinispanRegionFactory {
       @Override
-      protected void amendConfiguration(ConfigurationBuilderHolder holder) {
-         super.amendConfiguration(holder);
-         holder.getDefaultConfigurationBuilder().transaction().transactionMode(TransactionMode.NON_TRANSACTIONAL);
-         for (ConfigurationBuilder cb : holder.getNamedConfigurationBuilders().values()) {
-            cb.transaction().transactionMode(TransactionMode.NON_TRANSACTIONAL);
+      protected void amendCacheConfiguration(String cacheName, ConfigurationBuilder configurationBuilder) {
+         super.amendCacheConfiguration(cacheName, configurationBuilder);
+         // failure to write into timestamps would cause failure even though both DB and cache has been updated
+         if (!cacheName.equals("timestamps") && !cacheName.endsWith(InfinispanRegionFactory.PENDING_PUTS_CACHE_NAME)) {
+            configurationBuilder.customInterceptors().addInterceptor()
+                  .interceptorClass(FailureInducingInterceptor.class)
+                  .position(InterceptorConfiguration.Position.FIRST);
+            log.trace("Injecting FailureInducingInterceptor into " + cacheName);
+         } else {
+            log.trace("Not injecting into " + cacheName);
          }
       }
    }
@@ -974,12 +986,34 @@ public abstract class CorrectnessTestCase {
       if (strategy == null) {
          return null;
       }
-      Field delegateField = strategy.getClass().getDeclaredField("delegate");
-      delegateField.setAccessible(true);
+      Field delegateField = getField(strategy.getClass(), "delegate");
       Object delegate = delegateField.get(strategy);
-      Field validatorField = InvalidationCacheAccessDelegate.class.getDeclaredField("putValidator");
-      validatorField.setAccessible(true);
-      return (PutFromLoadValidator) validatorField.get(delegate);
+      if (delegate == null) {
+         return null;
+      }
+      if (InvalidationCacheAccessDelegate.class.isInstance(delegate)) {
+         Field validatorField = InvalidationCacheAccessDelegate.class.getDeclaredField("putValidator");
+         validatorField.setAccessible(true);
+         return (PutFromLoadValidator) validatorField.get(delegate);
+      } else {
+         return null;
+      }
+   }
+
+   private Field getField(Class<?> clazz, String fieldName) {
+      Field f = null;
+      while (clazz != null && clazz != Object.class) {
+         try {
+            f = clazz.getDeclaredField(fieldName);
+            break;
+         } catch (NoSuchFieldException e) {
+            clazz = clazz.getSuperclass();
+         }
+      }
+      if (f != null) {
+         f.setAccessible(true);
+      }
+      return f;
    }
 
    protected SessionFactory sessionFactory(int node) {

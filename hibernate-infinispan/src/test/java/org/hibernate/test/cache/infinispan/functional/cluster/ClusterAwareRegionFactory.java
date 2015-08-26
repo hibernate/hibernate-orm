@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.cache.infinispan.functional.cluster;
 
+import java.lang.reflect.Constructor;
 import java.util.Hashtable;
 import java.util.Properties;
 
@@ -22,6 +23,7 @@ import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.access.AccessType;
 
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
@@ -33,7 +35,6 @@ import org.infinispan.util.logging.LogFactory;
  * @since 3.5
  */
 public class ClusterAwareRegionFactory implements RegionFactory {
-
 	private static final Log log = LogFactory.getLog(ClusterAwareRegionFactory.class);
 	private static final Hashtable<String, EmbeddedCacheManager> cacheManagers = new Hashtable<String, EmbeddedCacheManager>();
 
@@ -42,11 +43,9 @@ public class ClusterAwareRegionFactory implements RegionFactory {
 	private boolean locallyAdded;
 
 	public ClusterAwareRegionFactory(Properties props) {
-		try {
-			delegate = (InfinispanRegionFactory) ReflectHelper.classForName(props.getProperty(DualNodeTest.REGION_FACTORY_DELEGATE)).newInstance();
-		} catch (Exception e) {
-			throw new IllegalStateException(e);
-		}
+		Class<? extends InfinispanRegionFactory> regionFactoryClass =
+				(Class<InfinispanRegionFactory>) props.get(DualNodeTest.REGION_FACTORY_DELEGATE);
+		delegate = CacheTestUtil.createRegionFactory(regionFactoryClass, props);
 	}
 
 	public static EmbeddedCacheManager getCacheManager(String name) {
@@ -97,7 +96,6 @@ public class ClusterAwareRegionFactory implements RegionFactory {
 		return delegate.buildEntityRegion(regionName, properties, metadata);
 	}
 
-	@Override
 	public NaturalIdRegion buildNaturalIdRegion(String regionName, Properties properties, CacheDataDescription metadata)
 			throws CacheException {
 		return delegate.buildNaturalIdRegion( regionName, properties, metadata );

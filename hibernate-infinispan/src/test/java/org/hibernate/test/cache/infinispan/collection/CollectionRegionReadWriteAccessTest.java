@@ -10,18 +10,15 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public abstract class CollectionRegionReadWriteAccessTest extends AbstractCollectionRegionAccessStrategyTest {
+public class CollectionRegionReadWriteAccessTest extends AbstractCollectionRegionAccessStrategyTest {
 	@Override
 	protected AccessType getAccessType() {
 		return AccessType.READ_WRITE;
 	}
 
-	public static class Invalidation extends CollectionRegionReadWriteAccessTest {
-		@Override
-		public void testCacheConfiguration() {
-			assertFalse(isTransactional());
-			assertTrue(isUsingInvalidation());
-			assertTrue(isSynchronous());
-		}
+	@Override
+	public void testCacheConfiguration() {
+		assertFalse(isTransactional());
+		assertTrue(isSynchronous());
 	}
 }

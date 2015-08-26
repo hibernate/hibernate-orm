@@ -20,7 +20,7 @@ import static org.junit.Assert.assertNotNull;
 public class NoTenancyTest extends SingleNodeTest {
 	 @Override
 	 public List<Object[]> getParameters() {
-		  return Collections.singletonList(READ_ONLY);
+		  return Collections.singletonList(READ_ONLY_INVALIDATION);
 	 }
 
 	 @Test
@@ -42,5 +42,4 @@ public class NoTenancyTest extends SingleNodeTest {
 		  assertEquals(1, localCache.size());
 		  assertEquals(sessionFactory().getClassMetadata(Item.class).getIdentifierType().getReturnedClass(), keys.iterator().next().getClass());
 	 }
-
 }

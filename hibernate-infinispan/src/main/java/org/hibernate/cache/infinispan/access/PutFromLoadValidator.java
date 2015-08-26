@@ -617,7 +617,7 @@ public class PutFromLoadValidator {
 			if (trace) {
 				log.tracef("Registering lock owner %s for %s: %s", lockOwnerToString(session), cache.getName(), Arrays.toString(keys));
 			}
-			Synchronization sync = new Synchronization(nonTxPutFromLoadInterceptor, keys);
+			InvalidationSynchronization sync = new InvalidationSynchronization(nonTxPutFromLoadInterceptor, keys);
 			transactionCoordinator.getLocalSynchronizations().registerSynchronization(sync);
 			return sync.uuid;
 		}

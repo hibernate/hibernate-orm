@@ -21,7 +21,7 @@ import static org.junit.Assert.assertTrue;
 public class EqualityTest extends SingleNodeTest {
 	 @Override
 	 public List<Object[]> getParameters() {
-		  return Arrays.asList(TRANSACTIONAL, READ_WRITE, READ_ONLY);
+		  return getParameters(true, true, true);
 	 }
 
 	 @Override

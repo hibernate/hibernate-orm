@@ -38,25 +38,18 @@ public abstract class BaseRegion implements Region {
 
 	private static final Log log = LogFactory.getLog( BaseRegion.class );
 
-	private enum InvalidateState {
-		INVALID, CLEARING, VALID
-	}
-
-	private final String name;
-	private final AdvancedCache localAndSkipLoadCache;
-	private final TransactionManager tm;
-
-	private final Object invalidationMutex = new Object();
-	private final AtomicReference<InvalidateState> invalidateState =
-			new AtomicReference<InvalidateState>( InvalidateState.VALID );
-
+	protected final String name;
+	protected final AdvancedCache cache;
+	protected final AdvancedCache localAndSkipLoadCache;
+	protected final TransactionManager tm;
 	private final RegionFactory factory;
 
-	protected final AdvancedCache cache;
+	protected volatile long lastRegionInvalidation = Long.MIN_VALUE;
+	protected int invalidations = 0;
 
 	private PutFromLoadValidator validator;
 
-   /**
+	/**
     * Base region constructor.
     *
     * @param cache instance for the region
@@ -146,32 +139,7 @@ public abstract class BaseRegion implements Region {
     * @return true if the region is valid, false otherwise
     */
 	public boolean checkValid() {
-		boolean valid = isValid();
-		if ( !valid ) {
-			synchronized (invalidationMutex) {
-				if ( invalidateState.compareAndSet( InvalidateState.INVALID, InvalidateState.CLEARING ) ) {
-					try {
-						runInvalidation( getCurrentTransaction() != null );
-						log.tracef( "Transition state from CLEARING to VALID" );
-						invalidateState.compareAndSet(
-								InvalidateState.CLEARING, InvalidateState.VALID
-						);
-					}
-					catch ( Exception e ) {
-						if ( log.isTraceEnabled() ) {
-							log.trace( "Could not invalidate region: ", e );
-						}
-					}
-				}
-			}
-			valid = isValid();
-		}
-
-		return valid;
-	}
-
-	protected boolean isValid() {
-		return invalidateState.get() == InvalidateState.VALID;
+		return lastRegionInvalidation != Long.MAX_VALUE;
 	}
 
 	/**
@@ -213,10 +181,31 @@ public abstract class BaseRegion implements Region {
 	 * Invalidates the region.
 	 */
 	public void invalidateRegion() {
+		// this is called only from EvictAllCommand, we don't have any ongoing transaction
+		beginInvalidation();
+		endInvalidation();
+	}
+
+	public void beginInvalidation() {
 		if (log.isTraceEnabled()) {
-			log.trace( "Invalidate region: " + name );
+			log.trace( "Begin invalidating region: " + name );
 		}
-		invalidateState.set(InvalidateState.INVALID);
+		synchronized (this) {
+			lastRegionInvalidation = Long.MAX_VALUE;
+			++invalidations;
+		}
+		runInvalidation(getCurrentTransaction() != null);
+	}
+
+	public void endInvalidation() {
+		synchronized (this) {
+			if (--invalidations == 0) {
+				lastRegionInvalidation = nextTimestamp();
+			}
+		}
+		if (log.isTraceEnabled()) {
+			log.trace( "End invalidating region: " + name );
+		}
 	}
 
 	public TransactionManager getTransactionManager() {
@@ -233,7 +222,7 @@ public abstract class BaseRegion implements Region {
 		return cache;
 	}
 
-	private Transaction getCurrentTransaction() {
+	protected Transaction getCurrentTransaction() {
 		try {
 			// Transaction manager could be null
 			return tm != null ? tm.getTransaction() : null;

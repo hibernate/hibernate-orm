@@ -2,16 +2,18 @@ package org.hibernate.test.cache.infinispan.util;
 
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.infinispan.commons.executors.CachedThreadPoolExecutorFactory;
+import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.global.TransportConfigurationBuilder;
 import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
 import org.infinispan.test.fwk.TestResourceTracker;
 import org.infinispan.transaction.TransactionMode;
+import org.infinispan.util.TimeService;
 
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -20,12 +22,30 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class TestInfinispanRegionFactory extends InfinispanRegionFactory {
-	private static AtomicInteger counter = new AtomicInteger();
+	protected static final String PREFIX = TestInfinispanRegionFactory.class.getName() + ".";
+	public static final String TRANSACTIONAL = PREFIX + "transactional";
+	public static final String CACHE_MODE = PREFIX + "cacheMode";
+	public static final String TIME_SERVICE = PREFIX + "timeService";
+
+	private final boolean transactional;
+	private final CacheMode cacheMode;
+	private final TimeService timeService;
+
+	public TestInfinispanRegionFactory(Properties properties) {
+		transactional = (boolean) properties.getOrDefault(TRANSACTIONAL, false);
+		cacheMode = (CacheMode) properties.getOrDefault(CACHE_MODE, null);
+		timeService = (TimeService) properties.getOrDefault(TIME_SERVICE, null);
+	}
 
 	@Override
 	protected EmbeddedCacheManager createCacheManager(ConfigurationBuilderHolder holder) {
 		amendConfiguration(holder);
-		return new DefaultCacheManager(holder, true);
+		DefaultCacheManager cacheManager = new DefaultCacheManager(holder, true);
+		if (timeService != null) {
+			cacheManager.getGlobalComponentRegistry().registerComponent(timeService, TimeService.class);
+			cacheManager.getGlobalComponentRegistry().rewire();
+		}
+		return cacheManager;
 	}
 
 	protected void amendConfiguration(ConfigurationBuilderHolder holder) {
@@ -41,26 +61,27 @@ public class TestInfinispanRegionFactory extends InfinispanRegionFactory {
 		}
 	}
 
-	private String buildNodeName() {
-		StringBuilder sb = new StringBuilder("Node");
-		int id = counter.getAndIncrement();
-		int alphabet = 'Z' - 'A';
-		do {
-			sb.append((char) (id % alphabet + 'A'));
-			id /= alphabet;
-		} while (id > alphabet);
-		return sb.toString();
-	}
-
 	protected void amendCacheConfiguration(String cacheName, ConfigurationBuilder configurationBuilder) {
-	}
-
-	public static class Transactional extends TestInfinispanRegionFactory {
-		@Override
-		protected void amendCacheConfiguration(String cacheName, ConfigurationBuilder configurationBuilder) {
+		if (transactional) {
 			if (!cacheName.endsWith("query") && !cacheName.equals(DEF_TIMESTAMPS_RESOURCE)) {
 				configurationBuilder.transaction().transactionMode(TransactionMode.TRANSACTIONAL).useSynchronization(true);
 			}
+		} else {
+			configurationBuilder.transaction().transactionMode(TransactionMode.NON_TRANSACTIONAL);
+		}
+		if (cacheMode != null) {
+			if (configurationBuilder.clustering().cacheMode().isInvalidation()) {
+				configurationBuilder.clustering().cacheMode(cacheMode);
+			}
+		}
+	}
+
+	@Override
+	public long nextTimestamp() {
+		if (timeService == null) {
+			return super.nextTimestamp();
+		} else {
+			return timeService.wallClockTime();
 		}
 	}
 }

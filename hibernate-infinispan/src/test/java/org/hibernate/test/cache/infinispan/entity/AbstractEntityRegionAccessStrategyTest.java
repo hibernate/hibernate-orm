@@ -52,7 +52,8 @@ public abstract class AbstractEntityRegionAccessStrategyTest extends
 	}
 
 	@Test
-	public abstract void testCacheConfiguration();
+	public void testCacheConfiguration() {
+	}
 
 	@Test
 	public void testGetRegion() {
@@ -396,5 +397,4 @@ public abstract class AbstractEntityRegionAccessStrategyTest extends
 		long txTimestamp = System.currentTimeMillis();
 		assertEquals("Correct node1 value", VALUE2, localAccessStrategy.get(null, KEY, txTimestamp));
 	}
-
 }

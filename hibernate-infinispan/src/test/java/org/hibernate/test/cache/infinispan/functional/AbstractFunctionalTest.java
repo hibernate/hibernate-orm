@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.cache.infinispan.functional;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -30,8 +30,7 @@ import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.tm.JtaPlatformImpl;
 
 import org.hibernate.testing.junit4.CustomParameterized;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
+import org.infinispan.configuration.cache.CacheMode;
 import org.junit.ClassRule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -42,12 +41,16 @@ import org.junit.runners.Parameterized;
  */
 @RunWith(CustomParameterized.class)
 public abstract class AbstractFunctionalTest extends BaseNonConfigCoreFunctionalTestCase {
-	private static final Log log = LogFactory.getLog( AbstractFunctionalTest.class );
+	protected static final Object[] TRANSACTIONAL = new Object[]{"transactional", JtaPlatformImpl.class, JtaTransactionCoordinatorBuilderImpl.class, XaConnectionProvider.class, AccessType.TRANSACTIONAL, true, CacheMode.INVALIDATION_SYNC };
+	protected static final Object[] READ_WRITE_INVALIDATION = new Object[]{"read-write", null, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class, null, AccessType.READ_WRITE, false, CacheMode.INVALIDATION_SYNC };
+	protected static final Object[] READ_ONLY_INVALIDATION = new Object[]{"read-only", null, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class, null, AccessType.READ_ONLY, false, CacheMode.INVALIDATION_SYNC };
+	protected static final Object[] READ_WRITE_REPLICATED = new Object[]{"read-write", null, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class, null, AccessType.READ_WRITE, false, CacheMode.REPL_SYNC };
+	protected static final Object[] READ_ONLY_REPLICATED = new Object[]{"read-only", null, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class, null, AccessType.READ_ONLY, false, CacheMode.REPL_SYNC };
+	protected static final Object[] READ_WRITE_DISTRIBUTED = new Object[]{"read-write", null, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class, null, AccessType.READ_WRITE, false, CacheMode.DIST_SYNC };
+	protected static final Object[] READ_ONLY_DISTRIBUTED = new Object[]{"read-only", null, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class, null, AccessType.READ_ONLY, false, CacheMode.DIST_SYNC };
 
-	protected static final Object[] TRANSACTIONAL = new Object[]{"transactional", JtaPlatformImpl.class, JtaTransactionCoordinatorBuilderImpl.class, XaConnectionProvider.class, AccessType.TRANSACTIONAL, TestInfinispanRegionFactory.Transactional.class};
-	protected static final Object[] READ_WRITE = new Object[]{"read-write", null, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class, null, AccessType.READ_WRITE, TestInfinispanRegionFactory.class};
-	protected static final Object[] READ_ONLY = new Object[]{"read-only", null, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class, null, AccessType.READ_ONLY, TestInfinispanRegionFactory.class};
-
+	// We need to use @ClassRule here since in @BeforeClassOnce startUp we're preparing the session factory,
+	// constructing CacheManager along - and there we check that the test has the name already set
 	@ClassRule
 	public static final InfinispanTestingSetup infinispanTestIdentifier = new InfinispanTestingSetup();
 
@@ -67,12 +70,34 @@ public abstract class AbstractFunctionalTest extends BaseNonConfigCoreFunctional
 	public AccessType accessType;
 
 	@Parameterized.Parameter(value = 5)
-	public Class<? extends RegionFactory> regionFactoryClass;
+	public boolean useTransactionalCache;
+
+	@Parameterized.Parameter(value = 6)
+	public CacheMode cacheMode;
 
 	protected boolean useJta;
 
-	@Parameterized.Parameters(name = "{0}")
+	@CustomParameterized.Order(0)
+	@Parameterized.Parameters(name = "{0}, {6}")
 	public abstract List<Object[]> getParameters();
+
+	public List<Object[]> getParameters(boolean tx, boolean rw, boolean ro) {
+		ArrayList<Object[]> parameters = new ArrayList<>();
+		if (tx) {
+			parameters.add(TRANSACTIONAL);
+		}
+		if (rw) {
+			parameters.add(READ_WRITE_INVALIDATION);
+			parameters.add(READ_WRITE_REPLICATED);
+			parameters.add(READ_WRITE_DISTRIBUTED);
+		}
+		if (ro) {
+			parameters.add(READ_ONLY_INVALIDATION);
+			parameters.add(READ_ONLY_REPLICATED);
+			parameters.add(READ_ONLY_DISTRIBUTED);
+		}
+		return parameters;
+	}
 
 	@BeforeClassOnce
 	public void setUseJta() {
@@ -93,6 +118,10 @@ public abstract class AbstractFunctionalTest extends BaseNonConfigCoreFunctional
 		return accessType.getExternalName();
 	}
 
+	protected Class<? extends RegionFactory> getRegionFactoryClass() {
+		return TestInfinispanRegionFactory.class;
+	}
+
 	protected boolean getUseQueryCache() {
 		return true;
 	}
@@ -105,7 +134,9 @@ public abstract class AbstractFunctionalTest extends BaseNonConfigCoreFunctional
 		settings.put( Environment.USE_SECOND_LEVEL_CACHE, "true" );
 		settings.put( Environment.GENERATE_STATISTICS, "true" );
 		settings.put( Environment.USE_QUERY_CACHE, String.valueOf( getUseQueryCache() ) );
-		settings.put( Environment.CACHE_REGION_FACTORY, regionFactoryClass.getName() );
+		settings.put( Environment.CACHE_REGION_FACTORY, getRegionFactoryClass().getName() );
+		settings.put( TestInfinispanRegionFactory.TRANSACTIONAL, useTransactionalCache );
+		settings.put( TestInfinispanRegionFactory.CACHE_MODE, cacheMode);
 
 		if ( jtaPlatformClass != null ) {
 			settings.put( AvailableSettings.JTA_PLATFORM, jtaPlatformClass.getName() );

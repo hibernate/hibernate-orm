@@ -569,7 +569,7 @@ public class InfinispanRegionFactoryTestCase  {
 	}
 
 	private InfinispanRegionFactory createRegionFactory(final EmbeddedCacheManager manager, Properties p) {
-		final InfinispanRegionFactory factory = new TestInfinispanRegionFactory() {
+		final InfinispanRegionFactory factory = new TestInfinispanRegionFactory(new Properties()) {
 
 			@Override
 			protected org.infinispan.transaction.lookup.TransactionManagerLookup createTransactionManagerLookup(SessionFactoryOptions settings, Properties properties) {

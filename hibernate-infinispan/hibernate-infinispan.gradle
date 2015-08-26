@@ -59,6 +59,13 @@ test {
    systemProperties['hibernate.cache.infinispan.jgroups_cfg'] = '2lc-test-tcp.xml'
    // systemProperties['log4j.configuration'] = 'file:/log4j/log4j-infinispan.xml'
    enabled = true
+   // Without this I have trouble running specific test using --tests switch
+   doFirst {
+      filter.includePatterns.each {
+         include "${it.replaceAll('\\.', "\\${File.separator}")}.class"
+      }
+      filter.setIncludePatterns('*')
+   }
 }
 
 task packageTests(type: Jar) {

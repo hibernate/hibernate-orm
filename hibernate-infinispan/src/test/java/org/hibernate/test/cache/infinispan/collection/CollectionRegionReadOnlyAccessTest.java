@@ -16,24 +16,15 @@ import static org.junit.Assert.assertTrue;
  * 
  * @author <a href="brian.stansberry@jboss.com">Brian Stansberry</a>
  */
-public abstract class CollectionRegionReadOnlyAccessTest extends AbstractCollectionRegionAccessStrategyTest {
+public class CollectionRegionReadOnlyAccessTest extends AbstractCollectionRegionAccessStrategyTest {
 	 @Override
 	 protected AccessType getAccessType() {
 		  return AccessType.READ_ONLY;
 	 }
 
-	/**
-	 * Tests READ_ONLY access when invalidation is used.
-	 *
-	 * @author Galder Zamarreño
-	 * @since 3.5
-	 */
-	public static class Invalidation extends CollectionRegionReadOnlyAccessTest {
-		@Override
-		public void testCacheConfiguration() {
-			assertFalse(isTransactional());
-			assertTrue( "Using Invalidation", isUsingInvalidation() );
-			assertTrue( isSynchronous() );
-		}
-	}
+	 @Override
+	 public void testCacheConfiguration() {
+		  assertFalse(isTransactional());
+		  assertTrue( isSynchronous() );
+	 }
 }

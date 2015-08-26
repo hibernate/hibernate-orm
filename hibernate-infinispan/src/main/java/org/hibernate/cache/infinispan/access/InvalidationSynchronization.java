@@ -13,12 +13,12 @@ import java.util.UUID;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class Synchronization implements javax.transaction.Synchronization {
+public class InvalidationSynchronization implements javax.transaction.Synchronization {
 	public final UUID uuid = UUID.randomUUID();
 	private final NonTxPutFromLoadInterceptor nonTxPutFromLoadInterceptor;
 	private final Object[] keys;
 
-	public Synchronization(NonTxPutFromLoadInterceptor nonTxPutFromLoadInterceptor, Object[] keys) {
+	public InvalidationSynchronization(NonTxPutFromLoadInterceptor nonTxPutFromLoadInterceptor, Object[] keys) {
 		this.nonTxPutFromLoadInterceptor = nonTxPutFromLoadInterceptor;
 		this.keys = keys;
 	}

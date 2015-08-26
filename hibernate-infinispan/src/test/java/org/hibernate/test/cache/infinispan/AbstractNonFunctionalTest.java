@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.cache.infinispan;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -23,6 +24,7 @@ import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
 import org.hibernate.test.cache.infinispan.util.TestInfinispanRegionFactory;
 import org.hibernate.testing.junit4.CustomParameterized;
 import org.infinispan.Cache;
+import org.infinispan.configuration.cache.CacheMode;
 import org.jboss.logging.Logger;
 import org.junit.After;
 import org.junit.Before;
@@ -48,18 +50,34 @@ public abstract class AbstractNonFunctionalTest extends org.hibernate.testing.ju
 	@Rule
 	public InfinispanTestingSetup infinispanTestIdentifier = new InfinispanTestingSetup();
 
+	@CustomParameterized.Order(0)
 	@Parameterized.Parameters(name = "{0}")
-	public static List<Object[]> getJtaParameters() {
+	public List<Object[]> getJtaParameters() {
 		return Arrays.asList(
 				new Object[] { "JTA", BatchModeJtaPlatform.class },
 				new Object[] { "non-JTA", null });
 	}
 
-	@Parameterized.Parameter(value = 0)
+	@CustomParameterized.Order(1)
+	@Parameterized.Parameters(name = "{2}")
+	public List<Object[]> getCacheModeParameters() {
+		ArrayList<Object[]> modes = new ArrayList<>();
+		modes.add(new Object[] { CacheMode.INVALIDATION_SYNC });
+		if (!useTransactionalCache()) {
+			modes.add(new Object[]{CacheMode.REPL_SYNC});
+			modes.add(new Object[]{CacheMode.DIST_SYNC});
+		}
+		return modes;
+	}
+
+	@Parameterized.Parameter(0)
 	public String mode;
 
-	@Parameterized.Parameter(value = 1)
+	@Parameterized.Parameter(1)
 	public Class<? extends JtaPlatform> jtaPlatform;
+
+	@Parameterized.Parameter(2)
+	public CacheMode cacheMode;
 
 	public static final String REGION_PREFIX = "test";
 
@@ -160,10 +178,16 @@ public abstract class AbstractNonFunctionalTest extends org.hibernate.testing.ju
 	protected StandardServiceRegistryBuilder createStandardServiceRegistryBuilder() {
 		final StandardServiceRegistryBuilder ssrb = CacheTestUtil.buildBaselineStandardServiceRegistryBuilder(
 				REGION_PREFIX, getRegionFactoryClass(), true, false, jtaPlatform);
+		ssrb.applySetting(TestInfinispanRegionFactory.TRANSACTIONAL, useTransactionalCache());
+		ssrb.applySetting(TestInfinispanRegionFactory.CACHE_MODE, cacheMode);
 		return ssrb;
 	}
 
 	protected Class<? extends RegionFactory> getRegionFactoryClass() {
 		return TestInfinispanRegionFactory.class;
+	}
+
+	protected boolean useTransactionalCache() {
+		return false;
 	}
 }

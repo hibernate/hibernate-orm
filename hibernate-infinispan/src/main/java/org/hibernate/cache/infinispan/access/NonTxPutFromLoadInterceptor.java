@@ -45,16 +45,16 @@ public class NonTxPutFromLoadInterceptor extends BaseCustomInterceptor {
 	public Object visitInvalidateCommand(InvocationContext ctx, InvalidateCommand command) throws Throwable {
 		if (!ctx.isOriginLocal() && command instanceof BeginInvalidationCommand) {
 			for (Object key : command.getKeys()) {
-				putFromLoadValidator.beginInvalidatingKey(((BeginInvalidationCommand) command).getLockOwner(), key);
+				putFromLoadValidator.beginInvalidatingKey(((BeginInvalidationCommand) command).getSessionTransactionId(), key);
 			}
 		}
 		return invokeNextInterceptor(ctx, command);
 	}
 
-	public void broadcastEndInvalidationCommand(Object[] keys, Object lockOwner) {
-		assert lockOwner != null;
+	public void broadcastEndInvalidationCommand(Object[] keys, Object sessionTransactionId) {
+		assert sessionTransactionId != null;
 		EndInvalidationCommand endInvalidationCommand = commandInitializer.buildEndInvalidationCommand(
-				cacheName, keys, lockOwner);
+				cacheName, keys, sessionTransactionId);
 		rpcManager.invokeRemotely(null, endInvalidationCommand, rpcManager.getDefaultRpcOptions(false, DeliverOrder.NONE));
 	}
 }

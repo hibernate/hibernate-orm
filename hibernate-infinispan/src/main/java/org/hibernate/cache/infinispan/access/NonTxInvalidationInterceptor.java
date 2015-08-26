@@ -125,14 +125,14 @@ public class NonTxInvalidationInterceptor extends BaseRpcInterceptor implements 
 		// increment invalidations counter if statistics maintained
 		incrementInvalidations();
 		InvalidateCommand invalidateCommand;
-		Object lockOwner = putFromLoadValidator.registerRemoteInvalidations(keys);
+		Object sessionTransactionId = putFromLoadValidator.registerRemoteInvalidations(keys);
 		if (!isLocalModeForced(command)) {
-			if (lockOwner == null) {
+			if (sessionTransactionId == null) {
 				invalidateCommand = commandsFactory.buildInvalidateCommand(InfinispanCollections.<Flag>emptySet(), keys);
 			}
 			else {
 				invalidateCommand = commandInitializer.buildBeginInvalidationCommand(
-						InfinispanCollections.<Flag>emptySet(), keys, lockOwner);
+						InfinispanCollections.<Flag>emptySet(), keys, sessionTransactionId);
 			}
 			if (log.isDebugEnabled()) {
 				log.debug("Cache [" + rpcManager.getAddress() + "] replicating " + invalidateCommand);

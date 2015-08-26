@@ -202,7 +202,8 @@ public class CacheImpl implements CacheImplementor {
 	public boolean containsQuery(String regionName) {
 		if ( sessionFactory.getSessionFactoryOptions().isQueryCacheEnabled() ) {
 			return queryCaches.containsKey(regionName);
-		} else {
+		}
+		else {
 			return false;
 		}
 	}

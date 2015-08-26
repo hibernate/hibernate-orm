@@ -30,9 +30,9 @@ public class DualNodeJtaPlatformImpl implements JtaPlatform, Configurable {
 
 	@Override
 	public void configure(Map configurationValues) {
-      nodeId = (String) configurationValues.get( DualNodeTestCase.NODE_ID_PROP );
-      if ( nodeId == null ) {
-		  throw new HibernateException(DualNodeTestCase.NODE_ID_PROP + " not configured");
+		nodeId = (String) configurationValues.get( DualNodeTest.NODE_ID_PROP );
+		if ( nodeId == null ) {
+		  throw new HibernateException(DualNodeTest.NODE_ID_PROP + " not configured");
 	  }
 	}
 

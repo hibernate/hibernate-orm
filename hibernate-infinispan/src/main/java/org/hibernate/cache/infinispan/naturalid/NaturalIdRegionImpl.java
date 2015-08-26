@@ -7,7 +7,9 @@
 package org.hibernate.cache.infinispan.naturalid;
 
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.infinispan.access.AccessDelegate;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
+import org.hibernate.cache.infinispan.access.InvalidationCacheAccessDelegate;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CacheKeysFactory;
@@ -46,18 +48,19 @@ public class NaturalIdRegionImpl extends BaseTransactionalDataRegion
 
 	@Override
 	public NaturalIdRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {
+		checkAccessType( accessType );
+		if (!getCacheDataDescription().isMutable()) {
+			accessType = AccessType.READ_ONLY;
+		}
+		AccessDelegate delegate = InvalidationCacheAccessDelegate.create( this, getValidator());
 		switch ( accessType ) {
 			case READ_ONLY:
-				return new ReadOnlyAccess( this );
+				return new ReadOnlyAccess( this, delegate );
+			case READ_WRITE:
 			case TRANSACTIONAL:
-				return new TransactionalAccess( this );
+				return new ReadWriteAccess( this, delegate );
 			default:
 				throw new CacheException( "Unsupported access type [" + accessType.getExternalName() + "]" );
 		}
 	}
-
-	public PutFromLoadValidator getPutFromLoadValidator() {
-		return new PutFromLoadValidator( cache );
-	}
-
 }

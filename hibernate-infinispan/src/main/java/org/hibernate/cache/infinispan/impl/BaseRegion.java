@@ -14,10 +14,12 @@ import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.RegionFactory;
 
+import org.hibernate.cache.spi.access.AccessType;
 import org.infinispan.AdvancedCache;
 import org.infinispan.context.Flag;
 import org.infinispan.util.logging.Log;
@@ -35,7 +37,6 @@ import org.infinispan.util.logging.LogFactory;
 public abstract class BaseRegion implements Region {
 
 	private static final Log log = LogFactory.getLog( BaseRegion.class );
-	private Transaction currentTransaction;
 
 	private enum InvalidateState {
 		INVALID, CLEARING, VALID
@@ -48,11 +49,12 @@ public abstract class BaseRegion implements Region {
 	private final Object invalidationMutex = new Object();
 	private final AtomicReference<InvalidateState> invalidateState =
 			new AtomicReference<InvalidateState>( InvalidateState.VALID );
-	private volatile Transaction invalidateTransaction;
 
 	private final RegionFactory factory;
 
 	protected final AdvancedCache cache;
+
+	private PutFromLoadValidator validator;
 
    /**
     * Base region constructor.
@@ -110,7 +112,7 @@ public abstract class BaseRegion implements Region {
 	@Override
 	public int getTimeout() {
 		// 60 seconds
-		return 600;
+		return 60000;
 	}
 
 	@Override
@@ -149,21 +151,7 @@ public abstract class BaseRegion implements Region {
 			synchronized (invalidationMutex) {
 				if ( invalidateState.compareAndSet( InvalidateState.INVALID, InvalidateState.CLEARING ) ) {
 					try {
-						// If we're running inside a transaction, we need to remove elements one-by-one
-						// to clean the context as well (cache.clear() does not do that).
-						// When we don't have transaction, we can do a clear operation (since we don't
-						// case about context) and can't do the one-by-one remove: remove() on tx cache
-						// requires transactional context.
-						Transaction tx = getCurrentTransaction();
-						if ( tx != null ) {
-							log.tracef( "Transaction, clearing one element at the time" );
-							Caches.removeAll( localAndSkipLoadCache );
-						}
-						else {
-							log.tracef( "Non-transactional, clear in one go" );
-							localAndSkipLoadCache.clear();
-						}
-
+						runInvalidation( getCurrentTransaction() != null );
 						log.tracef( "Transition state from CLEARING to VALID" );
 						invalidateState.compareAndSet(
 								InvalidateState.CLEARING, InvalidateState.VALID
@@ -228,7 +216,7 @@ public abstract class BaseRegion implements Region {
 		if (log.isTraceEnabled()) {
 			log.trace( "Invalidate region: " + name );
 		}
-		invalidateState.set( InvalidateState.INVALID );
+		invalidateState.set(InvalidateState.INVALID);
 	}
 
 	public TransactionManager getTransactionManager() {
@@ -255,4 +243,35 @@ public abstract class BaseRegion implements Region {
 		}
 	}
 
+	protected void checkAccessType(AccessType accessType) {
+		if (accessType == AccessType.TRANSACTIONAL && !cache.getCacheConfiguration().transaction().transactionMode().isTransactional()) {
+			log.warn("Requesting TRANSACTIONAL cache concurrency strategy but the cache is not configured as transactional.");
+		}
+		else if (accessType == AccessType.READ_WRITE && cache.getCacheConfiguration().transaction().transactionMode().isTransactional()) {
+			log.warn("Requesting READ_WRITE cache concurrency strategy but the cache was configured as transactional.");
+		}
+	}
+
+	protected synchronized PutFromLoadValidator getValidator() {
+		if (validator == null) {
+			validator = new PutFromLoadValidator(cache);
+		}
+		return validator;
+	}
+
+	protected void runInvalidation(boolean inTransaction) {
+		// If we're running inside a transaction, we need to remove elements one-by-one
+		// to clean the context as well (cache.clear() does not do that).
+		// When we don't have transaction, we can do a clear operation (since we don't
+		// case about context) and can't do the one-by-one remove: remove() on tx cache
+		// requires transactional context.
+		if ( inTransaction ) {
+			log.tracef( "Transaction, clearing one element at the time" );
+			Caches.removeAll( localAndSkipLoadCache );
+		}
+		else {
+			log.tracef( "Non-transactional, clear in one go" );
+			localAndSkipLoadCache.clear();
+		}
+	}
 }

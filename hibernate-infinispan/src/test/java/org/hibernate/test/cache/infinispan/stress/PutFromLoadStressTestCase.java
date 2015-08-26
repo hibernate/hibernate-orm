@@ -29,7 +29,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 
-import org.hibernate.test.cache.infinispan.functional.Age;
+import org.hibernate.test.cache.infinispan.functional.entities.Age;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;

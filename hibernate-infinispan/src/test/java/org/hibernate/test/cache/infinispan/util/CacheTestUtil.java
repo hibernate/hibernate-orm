@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.cache.infinispan.util;
 
+import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -85,18 +86,41 @@ public class CacheTestUtil {
 		return ssrb;
 	}
 
+	public static InfinispanRegionFactory createRegionFactory(Class<? extends InfinispanRegionFactory> clazz, Properties properties) {
+		try {
+			try {
+				Constructor<? extends InfinispanRegionFactory> constructor = clazz.getConstructor(Properties.class);
+				return constructor.newInstance(properties);
+			}
+			catch (NoSuchMethodException e) {
+				return clazz.newInstance();
+			}
+		}
+		catch (RuntimeException e) {
+			throw e;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	public static InfinispanRegionFactory startRegionFactory(ServiceRegistry serviceRegistry) {
 		try {
 			final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
+			final Properties properties = toProperties( cfgService.getSettings() );
 
 			String factoryType = cfgService.getSetting( AvailableSettings.CACHE_REGION_FACTORY, StandardConverters.STRING );
 			Class clazz = Thread.currentThread().getContextClassLoader().loadClass( factoryType );
 			InfinispanRegionFactory regionFactory;
 			if (clazz == InfinispanRegionFactory.class) {
-				regionFactory = new TestInfinispanRegionFactory();
+				regionFactory = new TestInfinispanRegionFactory(properties);
 			}
 			else {
-				regionFactory = (InfinispanRegionFactory) clazz.newInstance();
+				if (InfinispanRegionFactory.class.isAssignableFrom(clazz)) {
+					regionFactory = createRegionFactory(clazz, properties);
+				} else {
+					throw new IllegalArgumentException(clazz + " is not InfinispanRegionFactory");
+				}
 			}
 
 			final SessionFactoryOptionsImpl sessionFactoryOptions = new SessionFactoryOptionsImpl(
@@ -104,7 +128,6 @@ public class CacheTestUtil {
 								 (StandardServiceRegistry) serviceRegistry
 					  )
 			);
-			final Properties properties = toProperties( cfgService.getSettings() );
 
 			regionFactory.start( sessionFactoryOptions, properties );
 

@@ -7,7 +7,7 @@
 package org.hibernate.cache.infinispan.entity;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.infinispan.access.InvalidationCacheAccessDelegate;
+import org.hibernate.cache.infinispan.access.AccessDelegate;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CacheKeysFactory;
@@ -50,7 +50,7 @@ public class EntityRegionImpl extends BaseTransactionalDataRegion implements Ent
 		if ( !getCacheDataDescription().isMutable() ) {
 			accessType = AccessType.READ_ONLY;
 		}
-		InvalidationCacheAccessDelegate accessDelegate = InvalidationCacheAccessDelegate.create(this, getValidator());
+		AccessDelegate accessDelegate = createAccessDelegate();
 		switch ( accessType ) {
 			case READ_ONLY:
 				return new ReadOnlyAccess( this, accessDelegate);

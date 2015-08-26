@@ -20,11 +20,10 @@ import javax.naming.StringRefAddr;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.JndiInfinispanRegionFactory;
-import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.test.cache.infinispan.functional.entities.Item;
@@ -41,7 +40,6 @@ import org.jboss.util.naming.NonSerializableFactory;
 
 import org.jnp.server.Main;
 import org.jnp.server.SingletonNamingServer;
-import org.junit.runners.Parameterized;
 
 import static org.junit.Assert.assertEquals;
 
@@ -59,7 +57,12 @@ public class JndiRegionFactoryTest extends SingleNodeTest {
 
 	@Override
 	public List<Object[]> getParameters() {
-		return Collections.singletonList(new Object[]{"read-write", null, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class, null, AccessType.READ_WRITE, JndiInfinispanRegionFactory.class});
+		return Collections.singletonList(READ_WRITE_INVALIDATION);
+	}
+
+	@Override
+	protected Class<? extends RegionFactory> getRegionFactoryClass() {
+		return JndiInfinispanRegionFactory.class;
 	}
 
 	@Override

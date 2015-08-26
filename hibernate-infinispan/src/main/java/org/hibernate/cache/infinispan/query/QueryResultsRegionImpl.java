@@ -8,18 +8,14 @@ package org.hibernate.cache.infinispan.query;
 
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
-import javax.transaction.Status;
-import javax.transaction.Synchronization;
 
-import org.hibernate.HibernateException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.infinispan.util.Caches;
+import org.hibernate.cache.infinispan.util.InvocationAfterCompletion;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.jdbc.WorkExecutor;
-import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.infinispan.AdvancedCache;
 import org.infinispan.configuration.cache.TransactionConfiguration;
@@ -28,8 +24,6 @@ import org.infinispan.transaction.TransactionMode;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -106,14 +100,6 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
 
 	@Override
 	public Object get(SessionImplementor session, Object key) throws CacheException {
-		// If the region is not valid, skip cache store to avoid going remote to retrieve the query.
-		// The aim of this is to maintain same logic/semantics as when state transfer was configured.
-		// TODO: Once https://issues.jboss.org/browse/ISPN-835 has been resolved, revert to state transfer and remove workaround
-		boolean skipCacheStore = false;
-		if ( !isValid() ) {
-			skipCacheStore = true;
-		}
-
 		if ( !checkValid() ) {
 			return null;
 		}
@@ -129,12 +115,7 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
 			result = map.get(key);
 		}
 		if (result == null) {
-			if ( skipCacheStore ) {
-				result = getCache.withFlags( Flag.SKIP_CACHE_STORE ).get( key );
-			}
-			else {
-				result = getCache.get( key );
-			}
+			result = getCache.get( key );
 		}
 		return result;
 	}
@@ -178,51 +159,28 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
 		}
 	}
 
-	private class PostTransactionQueryUpdate implements Synchronization {
-		private final TransactionCoordinator tc;
+	private class PostTransactionQueryUpdate extends InvocationAfterCompletion {
 		private final SessionImplementor session;
 		private final Object key;
 		private final Object value;
 
 		public PostTransactionQueryUpdate(TransactionCoordinator tc, SessionImplementor session, Object key, Object value) {
-			this.tc = tc;
+			super(tc, putCache, putCacheRequiresTransaction);
 			this.session = session;
 			this.key = key;
 			this.value = value;
 		}
 
 		@Override
-		public void beforeCompletion() {
+		public void afterCompletion(int status) {
+			transactionContext.remove(session);
+			super.afterCompletion(status);
 		}
 
 		@Override
-		public void afterCompletion(int status) {
-			transactionContext.remove(session);
-			switch (status) {
-				case Status.STATUS_COMMITTING:
-				case Status.STATUS_COMMITTED:
-					try {
-						// TODO: isolation without obtaining Connection
-						tc.createIsolationDelegate().delegateWork(new WorkExecutorVisitable<Void>() {
-							@Override
-							public Void accept(WorkExecutor<Void> executor, Connection connection) throws SQLException {
-								putCache.put(key, value);
-								return null;
-							}
-						}
-						, putCacheRequiresTransaction);
-					}
-					catch (HibernateException e) {
-						// silently fail any exceptions
-						if (log.isTraceEnabled()) {
-							log.trace("Exception during query cache update", e);
-						}
-					}
-					break;
-				default:
-					// it would be nicer to react only on ROLLING_BACK and ROLLED_BACK statuses
-					// but TransactionCoordinator gives us UNKNOWN on rollback
-					break;
+		protected void invoke(boolean success, AdvancedCache cache) {
+			if (success) {
+				cache.put(key, value);
 			}
 		}
 	}

@@ -45,7 +45,7 @@ public class NaturalIdInvalidationTest extends DualNodeTest {
 
 	@Override
 	public List<Object[]> getParameters() {
-		return Arrays.asList(TRANSACTIONAL, READ_WRITE, READ_ONLY);
+		return getParameters(true, true, true);
 	}
 
 	@Override

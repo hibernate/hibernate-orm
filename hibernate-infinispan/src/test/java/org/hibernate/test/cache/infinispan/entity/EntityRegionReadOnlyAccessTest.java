@@ -24,7 +24,7 @@ import static org.junit.Assert.assertTrue;
  * @author Galder Zamarreño
  * @since 3.5
  */
-public abstract class EntityRegionReadOnlyAccessTest extends AbstractEntityRegionAccessStrategyTest {
+public class EntityRegionReadOnlyAccessTest extends AbstractEntityRegionAccessStrategyTest {
 
 	@Override
 	protected AccessType getAccessType() {
@@ -65,13 +65,5 @@ public abstract class EntityRegionReadOnlyAccessTest extends AbstractEntityRegio
 	@Ignore
 	@Override
 	public void testContestedPutFromLoad() throws Exception {
-	}
-
-	public static class Invalidation extends EntityRegionReadOnlyAccessTest {
-		@Test
-		@Override
-		public void testCacheConfiguration() {
-			assertTrue("Using Invalidation", isUsingInvalidation());
-		}
 	}
 }

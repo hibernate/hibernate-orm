@@ -11,13 +11,19 @@ import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.RegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.internal.util.compare.ComparableComparator;
+import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
+import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransactionAccess;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.test.cache.infinispan.util.BatchModeJtaPlatform;
 import org.hibernate.test.cache.infinispan.util.BatchModeTransactionCoordinator;
 import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
@@ -35,6 +41,8 @@ import javax.transaction.RollbackException;
 import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 
@@ -122,8 +130,26 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 				return tx;
 			});
 		} else if (jtaPlatform == null) {
+			Connection connection = mock(Connection.class);
+			JdbcConnectionAccess jdbcConnectionAccess = mock(JdbcConnectionAccess.class);
+			try {
+				when(jdbcConnectionAccess.obtainConnection()).thenReturn(connection);
+			} catch (SQLException e) {
+				// never thrown from mock
+			}
+			JdbcSessionOwner jdbcSessionOwner = mock(JdbcSessionOwner.class);
+			when(jdbcSessionOwner.getJdbcConnectionAccess()).thenReturn(jdbcConnectionAccess);
+			SqlExceptionHelper sqlExceptionHelper = mock(SqlExceptionHelper.class);
+			JdbcServices jdbcServices = mock(JdbcServices.class);
+			when(jdbcServices.getSqlExceptionHelper()).thenReturn(sqlExceptionHelper);
+			ServiceRegistry serviceRegistry = mock(ServiceRegistry.class);
+			when(serviceRegistry.getService(JdbcServices.class)).thenReturn(jdbcServices);
+			JdbcSessionContext jdbcSessionContext = mock(JdbcSessionContext.class);
+			when(jdbcSessionContext.getServiceRegistry()).thenReturn(serviceRegistry);
+			when(jdbcSessionOwner.getJdbcSessionContext()).thenReturn(jdbcSessionContext);
 			NonJtaTransactionCoordinator txOwner = mock(NonJtaTransactionCoordinator.class);
 			when(txOwner.getResourceLocalTransaction()).thenReturn(new JdbcResourceTransactionMock());
+			when(txOwner.getJdbcSessionOwner()).thenReturn(jdbcSessionOwner);
 			TransactionCoordinator txCoord = JdbcResourceLocalTransactionCoordinatorBuilderImpl.INSTANCE
 							.buildTransactionCoordinator(txOwner, null);
 			when(session.getTransactionCoordinator()).thenReturn(txCoord);

@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.test.cache.infinispan.functional.entities.Contact;
 import org.hibernate.test.cache.infinispan.functional.entities.Customer;
 import org.hibernate.testing.TestForIssue;
@@ -62,7 +63,7 @@ public class EntityCollectionInvalidationTest extends DualNodeTest {
 
 	@Override
 	public List<Object[]> getParameters() {
-		return Arrays.asList(TRANSACTIONAL, READ_WRITE);
+		return getParameters(true, true, false);
 	}
 
 	@Override
@@ -159,14 +160,23 @@ public class EntityCollectionInvalidationTest extends DualNodeTest {
 		sleep( 250 );
 		assertLoadedFromCache( remoteListener, ids.customerId, ids.contactIds );
 
-		// After modification, local cache should have been invalidated and hence should be empty
 		assertEquals( 0, localCollectionCache.size() );
-		assertEquals( 0, localCustomerCache.size() );
+		if (localCustomerCache.getCacheConfiguration().clustering().cacheMode().isInvalidation()) {
+			// After modification, local cache should have been invalidated and hence should be empty
+			assertEquals(0, localCustomerCache.size());
+		} else {
+			// Replicated cache is updated, not invalidated
+			assertEquals(1, localCustomerCache.size());
+		}
 	}
 
 	@TestForIssue(jiraKey = "HHH-9881")
 	@Test
 	public void testConcurrentLoadAndRemoval() throws Exception {
+		if (!remoteCustomerCache.getCacheConfiguration().clustering().cacheMode().isInvalidation()) {
+			// This test is tailored for invalidation-based strategies, using pending puts cache
+			return;
+		}
 		AtomicReference<Exception> getException = new AtomicReference<>();
 		AtomicReference<Exception> deleteException = new AtomicReference<>();
 

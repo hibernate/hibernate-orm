@@ -22,7 +22,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
-import org.hibernate.cache.infinispan.access.TransactionalAccessDelegate;
+import org.hibernate.cache.infinispan.access.InvalidationCacheAccessDelegate;
 import org.hibernate.cache.spi.access.RegionAccessStrategy;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Restrictions;
@@ -40,6 +40,7 @@ import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.test.cache.infinispan.stress.entities.Address;
 import org.hibernate.test.cache.infinispan.stress.entities.Family;
 import org.hibernate.test.cache.infinispan.stress.entities.Person;
+import org.hibernate.test.cache.infinispan.util.TestInfinispanRegionFactory;
 import org.hibernate.testing.jta.JtaAwareConnectionProviderImpl;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.infinispan.commands.VisitableCommand;
@@ -51,8 +52,6 @@ import org.infinispan.configuration.cache.InterceptorConfiguration;
 import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.interceptors.base.BaseCustomInterceptor;
-import org.infinispan.manager.DefaultCacheManager;
-import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.remoting.RemoteException;
 import org.infinispan.transaction.TransactionMode;
 import org.infinispan.util.logging.LogFactory;
@@ -222,7 +221,7 @@ public abstract class CorrectnessTestCase {
               .applySetting( Environment.URL, "jdbc:h2:mem:" + getDbName() + ";TRACE_LEVEL_FILE=4")
               .applySetting( Environment.DIALECT, H2Dialect.class.getName() )
               .applySetting( Environment.HBM2DDL_AUTO, "create-drop" )
-              .applySetting( Environment.CACHE_REGION_FACTORY, TestInfinispanRegionFactory.class.getName())
+              .applySetting( Environment.CACHE_REGION_FACTORY, FailingInfinispanRegionFactory.class.getName())
               .applySetting( Environment.GENERATE_STATISTICS, "false" );
       applySettings(ssrb);
 
@@ -291,23 +290,9 @@ public abstract class CorrectnessTestCase {
       }
    }
 
-   public static class TestInfinispanRegionFactory extends InfinispanRegionFactory {
-      private static AtomicInteger counter = new AtomicInteger();
-
-      public TestInfinispanRegionFactory() {
-         super(); // For reflection-based instantiation
-      }
-
+   public static class FailingInfinispanRegionFactory extends TestInfinispanRegionFactory {
       @Override
-      protected EmbeddedCacheManager createCacheManager(ConfigurationBuilderHolder holder) {
-         amendConfiguration(holder);
-         return new DefaultCacheManager(holder, true);
-      }
-
       protected void amendConfiguration(ConfigurationBuilderHolder holder) {
-         holder.getGlobalConfigurationBuilder().globalJmxStatistics().allowDuplicateDomains(true);
-         holder.getGlobalConfigurationBuilder().transport().nodeName("Node" + (char)('A' + counter.getAndIncrement()));
-
          for (Map.Entry<String, ConfigurationBuilder> entry : holder.getNamedConfigurationBuilders().entrySet()) {
             // failure to write into timestamps would cause failure even though both DB and cache has been updated
             if (!entry.getKey().equals("timestamps") && !entry.getKey().endsWith(InfinispanRegionFactory.PENDING_PUTS_CACHE_NAME)) {
@@ -323,11 +308,7 @@ public abstract class CorrectnessTestCase {
       }
    }
 
-   public static class ForceNonTxInfinispanRegionFactory extends TestInfinispanRegionFactory {
-      public ForceNonTxInfinispanRegionFactory() {
-         super(); // For reflection-based instantiation
-      }
-
+   public static class ForceNonTxInfinispanRegionFactory extends FailingInfinispanRegionFactory {
       @Override
       protected void amendConfiguration(ConfigurationBuilderHolder holder) {
          super.amendConfiguration(holder);
@@ -996,7 +977,7 @@ public abstract class CorrectnessTestCase {
       Field delegateField = strategy.getClass().getDeclaredField("delegate");
       delegateField.setAccessible(true);
       Object delegate = delegateField.get(strategy);
-      Field validatorField = TransactionalAccessDelegate.class.getDeclaredField("putValidator");
+      Field validatorField = InvalidationCacheAccessDelegate.class.getDeclaredField("putValidator");
       validatorField.setAccessible(true);
       return (PutFromLoadValidator) validatorField.get(delegate);
    }

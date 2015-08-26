@@ -20,40 +20,23 @@
 
       <!-- Default configuration is appropriate for entity/collection caching. -->
       <invalidation-cache name="entity" mode="SYNC" remote-timeout="20000">
-         <locking isolation="READ_COMMITTED" concurrency-level="1000" acquire-timeout="15000" striping="false"/>
-         <transaction mode="NON_XA" locking="OPTIMISTIC" auto-commit="false"/>
+         <locking concurrency-level="1000" acquire-timeout="15000"/>
+         <transaction mode="NONE" />
          <eviction max-entries="10000" strategy="LRU"/>
          <expiration max-idle="100000" interval="5000"/>
       </invalidation-cache>
 
       <!-- Default configuration for immutable entities -->
       <invalidation-cache name="immutable-entity" mode="SYNC" remote-timeout="20000">
-         <locking isolation="READ_COMMITTED" concurrency-level="1000" acquire-timeout="15000" striping="false"/>
+         <locking concurrency-level="1000" acquire-timeout="15000"/>
          <transaction mode="NONE"/>
          <eviction max-entries="10000" strategy="LRU"/>
          <expiration max-idle="100000" interval="5000"/>
       </invalidation-cache>
 
-      <!-- Default configuration is appropriate for entity/collection caching. -->
-      <invalidation-cache name="entity-repeatable" mode="SYNC" remote-timeout="20000">
-         <locking isolation="REPEATABLE_READ" concurrency-level="1000" acquire-timeout="15000" striping="false"/>
-         <transaction mode="NON_XA" locking="OPTIMISTIC" auto-commit="false"/>
-         <eviction max-entries="10000" strategy="LRU"/>
-         <expiration max-idle="100000" interval="5000"/>
-      </invalidation-cache>
-
-      <!-- An alternative configuration for entity/collection caching that uses replication instead of invalidation -->
-      <replicated-cache name="replicated-entity" mode="SYNC" remote-timeout="20000">
-         <locking isolation="READ_COMMITTED" concurrency-level="1000" acquire-timeout="15000" striping="false"/>
-         <transaction mode="NON_XA" locking="OPTIMISTIC" auto-commit="false"/>
-         <eviction max-entries="10000" strategy="LRU"/>
-         <expiration max-idle="100000" interval="5000"/>
-         <state-transfer enabled="false"/>
-      </replicated-cache>
-
       <!-- A config appropriate for query caching. Does not replicate queries. -->
       <local-cache name="local-query">
-         <locking isolation="READ_COMMITTED" concurrency-level="1000" acquire-timeout="15000" striping="false"/>
+         <locking concurrency-level="1000" acquire-timeout="15000"/>
          <transaction mode="NONE" />
          <eviction max-entries="10000" strategy="LRU"/>
          <expiration max-idle="100000" interval="5000"/>
@@ -61,7 +44,7 @@
 
       <!-- A query cache that replicates queries. Replication is asynchronous. -->
       <replicated-cache name="replicated-query" mode="ASYNC">
-         <locking isolation="READ_COMMITTED" concurrency-level="1000" acquire-timeout="15000" striping="false"/>
+         <locking concurrency-level="1000" acquire-timeout="15000"/>
          <transaction mode="NONE" />
          <eviction max-entries="10000" strategy="LRU"/>
          <expiration max-idle="100000" interval="5000"/>
@@ -71,7 +54,7 @@
            is required if query caching is used, even if the query cache
            itself is configured with CacheMode=LOCAL. -->
       <replicated-cache name="timestamps" mode="ASYNC">
-         <locking isolation="READ_COMMITTED" concurrency-level="1000" acquire-timeout="15000" striping="false"/>
+         <locking concurrency-level="1000" acquire-timeout="15000"/>
          <!-- Explicitly non transactional -->
          <transaction mode="NONE"/>
          <!--  Don't ever evict modification timestamps -->

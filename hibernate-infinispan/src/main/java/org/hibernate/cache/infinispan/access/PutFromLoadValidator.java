@@ -24,6 +24,7 @@ import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.infinispan.AdvancedCache;
+import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.interceptors.EntryWrappingInterceptor;
@@ -34,8 +35,8 @@ import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
 /**
- * Encapsulates logic to allow a {@link TransactionalAccessDelegate} to determine
- * whether a {@link TransactionalAccessDelegate#putFromLoad(org.hibernate.engine.spi.SessionImplementor, Object, Object, long, Object, boolean)}
+ * Encapsulates logic to allow a {@link InvalidationCacheAccessDelegate} to determine
+ * whether a {@link InvalidationCacheAccessDelegate#putFromLoad(org.hibernate.engine.spi.SessionImplementor, Object, Object, long, Object, boolean)}
  * call should be allowed to update the cache. A <code>putFromLoad</code> has
  * the potential to store stale data, since the data may have been removed from the
  * database and the cache between the time when the data was read from the database
@@ -134,13 +135,10 @@ public class PutFromLoadValidator {
 
 	/**
 	 * Creates a new put from load validator instance.
-	*
-	* @param cache Cache instance on which to store pending put information.
-	* @param cacheManager where to find a cache to store pending put information
-	*/
-	public PutFromLoadValidator(AdvancedCache cache,
-			EmbeddedCacheManager cacheManager) {
-
+	 * @param cache Cache instance on which to store pending put information.
+	 * @param cacheManager where to find a cache to store pending put information
+	 */
+	public PutFromLoadValidator(AdvancedCache cache, EmbeddedCacheManager cacheManager) {
 		Configuration cacheConfiguration = cache.getCacheConfiguration();
 		Configuration pendingPutsConfiguration = cacheManager.getCacheConfiguration(InfinispanRegionFactory.PENDING_PUTS_CACHE_NAME);
 		ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
@@ -155,11 +153,14 @@ public class PutFromLoadValidator {
 		else {
 			throw new IllegalArgumentException("Pending puts cache needs to have maxIdle expiration set!");
 		}
-
+		CacheMode cacheMode = cache.getCacheConfiguration().clustering().cacheMode();
 		// Since we need to intercept both invalidations of entries that are in the cache and those
 		// that are not, we need to use custom interceptor, not listeners (which fire only for present entries).
 		NonTxPutFromLoadInterceptor nonTxPutFromLoadInterceptor = null;
-		if (cacheConfiguration.clustering().cacheMode().isClustered()) {
+		if (cacheMode.isClustered()) {
+			if (!cacheMode.isInvalidation()) {
+				throw new IllegalArgumentException("PutFromLoadValidator in clustered caches requires invalidation mode.");
+			}
 			List<CommandInterceptor> interceptorChain = cache.getInterceptorChain();
 			log.debug("Interceptor chain was: " + interceptorChain);
 			int position = 0;

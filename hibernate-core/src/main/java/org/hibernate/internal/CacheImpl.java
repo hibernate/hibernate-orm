@@ -6,12 +6,6 @@
  */
 package org.hibernate.internal;
 
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-
 import org.hibernate.HibernateException;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.QueryCache;
@@ -26,6 +20,12 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
+
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>
@@ -200,7 +200,11 @@ public class CacheImpl implements CacheImplementor {
 
 	@Override
 	public boolean containsQuery(String regionName) {
-		return queryCaches.containsKey( regionName );
+		if ( sessionFactory.getSessionFactoryOptions().isQueryCacheEnabled() ) {
+			return queryCaches.containsKey(regionName);
+		} else {
+			return false;
+		}
 	}
 
 	@Override

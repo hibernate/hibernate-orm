@@ -65,7 +65,7 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 
 	private Boolean isAllTestsIgnored;
 
-	private boolean isAllTestsIgnored() {
+	protected boolean isAllTestsIgnored() {
 		if ( isAllTestsIgnored == null ) {
 			if ( computeTestMethods().isEmpty() ) {
 				isAllTestsIgnored = true;
@@ -132,7 +132,7 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		);
 	}
 
-	private Object testInstance;
+	protected Object testInstance;
 
 	protected Object getTestInstance() throws Exception {
 		if ( testInstance == null ) {

@@ -20,7 +20,7 @@ import java.util.Arrays;
  */
 public class EndInvalidationCommand extends BaseRpcCommand {
 	private Object[] keys;
-	private Object lockOwner;
+	private Object sessionTransactionId;
 	private PutFromLoadValidator putFromLoadValidator;
 
 	public EndInvalidationCommand(String cacheName) {
@@ -30,16 +30,16 @@ public class EndInvalidationCommand extends BaseRpcCommand {
 	/**
 	 * @param cacheName name of the cache to evict
 	 */
-	public EndInvalidationCommand(String cacheName, Object[] keys, Object lockOwner) {
+	public EndInvalidationCommand(String cacheName, Object[] keys, Object sessionTransactionId) {
 		super(cacheName);
 		this.keys = keys;
-		this.lockOwner = lockOwner;
+		this.sessionTransactionId = sessionTransactionId;
 	}
 
 	@Override
 	public Object perform(InvocationContext ctx) throws Throwable {
 		for (Object key : keys) {
-			putFromLoadValidator.endInvalidatingKey(lockOwner, key);
+			putFromLoadValidator.endInvalidatingKey(sessionTransactionId, key);
 		}
 		return null;
 	}
@@ -51,13 +51,13 @@ public class EndInvalidationCommand extends BaseRpcCommand {
 
 	@Override
 	public Object[] getParameters() {
-		return new Object[] { keys, lockOwner };
+		return new Object[] { keys, sessionTransactionId};
 	}
 
 	@Override
 	public void setParameters(int commandId, Object[] parameters) {
 		keys = (Object[]) parameters[0];
-		lockOwner = parameters[1];
+		sessionTransactionId = parameters[1];
 	}
 
 	@Override
@@ -75,11 +75,40 @@ public class EndInvalidationCommand extends BaseRpcCommand {
 	}
 
 	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (!(o instanceof EndInvalidationCommand)) {
+			return false;
+		}
+
+		EndInvalidationCommand that = (EndInvalidationCommand) o;
+
+		if (cacheName == null ? cacheName != null : !cacheName.equals(that.cacheName)) {
+			return false;
+		}
+		if (!Arrays.equals(keys, that.keys)) {
+			return false;
+		}
+		return !(sessionTransactionId != null ? !sessionTransactionId.equals(that.sessionTransactionId) : that.sessionTransactionId != null);
+
+	}
+
+	@Override
+	public int hashCode() {
+		int result = cacheName != null ? cacheName.hashCode() : 0;
+		result = 31 * result + (keys != null ? Arrays.hashCode(keys) : 0);
+		result = 31 * result + (sessionTransactionId != null ? sessionTransactionId.hashCode() : 0);
+		return result;
+	}
+
+	@Override
 	public String toString() {
 		final StringBuilder sb = new StringBuilder("EndInvalidationCommand{");
 		sb.append("cacheName=").append(cacheName);
 		sb.append(", keys=").append(Arrays.toString(keys));
-		sb.append(", lockOwner=").append(lockOwner);
+		sb.append(", sessionTransactionId=").append(sessionTransactionId);
 		sb.append('}');
 		return sb.toString();
 	}

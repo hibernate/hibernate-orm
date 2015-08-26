@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,9 +27,9 @@ import org.hibernate.cfg.AttributeConverterDefinition;
  */
 public class ManagedResourcesImpl implements ManagedResources {
 	private Map<Class, AttributeConverterDefinition> attributeConverterDefinitionMap = new HashMap<Class,AttributeConverterDefinition>();
-	private Set<Class> annotatedClassReferences = new HashSet<Class>();
-	private Set<String> annotatedClassNames = new HashSet<String>();
-	private Set<String> annotatedPackageNames = new HashSet<String>();
+	private Set<Class> annotatedClassReferences = new LinkedHashSet<Class>();
+	private Set<String> annotatedClassNames = new LinkedHashSet<String>();
+	private Set<String> annotatedPackageNames = new LinkedHashSet<String>();
 	private List<Binding> mappingFileBindings = new ArrayList<Binding>();
 
 	public static ManagedResourcesImpl baseline(MetadataSources sources, MetadataBuildingOptions metadataBuildingOptions) {

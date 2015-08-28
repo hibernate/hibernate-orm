@@ -61,7 +61,7 @@
         <para>
             If you are just getting started with using Hibernate you may want to start with the
             <citetitle pubwork="article">Hibernate Getting Started Guide</citetitle> available from the
-            <link xlink:href="http://hibernate.org/documentation">documentation page</link>.  It contains quick-start
+            <link xlink:href="http://hibernate.org/orm/documentation">documentation page</link>.  It contains quick-start
             style tutorials as well as lots of introductory information.  There is also a series of topical guides
             providing deep dives into various topics.
         </para>

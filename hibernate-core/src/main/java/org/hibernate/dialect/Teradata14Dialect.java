@@ -8,17 +8,25 @@ package org.hibernate.dialect;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.relational.QualifiedNameImpl;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
+import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Index;
 import org.hibernate.sql.ForUpdateFragment;
+import org.hibernate.tool.schema.internal.StandardIndexExporter;
+import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.StandardBasicTypes;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -28,6 +36,8 @@ public class Teradata14Dialect extends TeradataDialect {
 	/**
 	 * Constructor
 	 */
+	StandardIndexExporter TeraIndexExporter = null;
+
 	public Teradata14Dialect() {
 		super();
 		//registerColumnType data types
@@ -41,6 +51,8 @@ public class Teradata14Dialect extends TeradataDialect {
 
 		registerFunction( "current_time", new SQLFunctionTemplate( StandardBasicTypes.TIME, "current_time" ) );
 		registerFunction( "current_date", new SQLFunctionTemplate( StandardBasicTypes.DATE, "current_date" ) );
+
+		TeraIndexExporter =  new TeradataIndexExporter( this );
 	}
 
 	@Override
@@ -200,5 +212,68 @@ public class Teradata14Dialect extends TeradataDialect {
 	public boolean supportsLockTimeouts() {
 		return false;
 	}
+
+	@Override
+	public Exporter<Index> getIndexExporter() {
+		return TeraIndexExporter;
+	}
+
+
+	private class TeradataIndexExporter extends StandardIndexExporter implements Exporter<Index> {
+
+		public TeradataIndexExporter(Dialect dialect) {
+			super(dialect);
+		}
+
+		@Override
+		public String[] getSqlCreateStrings(Index index, Metadata metadata) {
+			final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
+			final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+					index.getTable().getQualifiedTableName(),
+					jdbcEnvironment.getDialect()
+			);
+
+			final String indexNameForCreation;
+			if ( getDialect().qualifyIndexName() ) {
+				indexNameForCreation = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+						new QualifiedNameImpl(
+								index.getTable().getQualifiedTableName().getCatalogName(),
+								index.getTable().getQualifiedTableName().getSchemaName(),
+								jdbcEnvironment.getIdentifierHelper().toIdentifier( index.getName() )
+						),
+						jdbcEnvironment.getDialect()
+				);
+			}
+			else {
+				indexNameForCreation = index.getName();
+			}
+
+			StringBuilder colBuf = new StringBuilder("");
+			boolean first = true;
+			Iterator<Column> columnItr = index.getColumnIterator();
+			while ( columnItr.hasNext() ) {
+				final Column column = columnItr.next();
+				if ( first ) {
+					first = false;
+				}
+				else {
+					colBuf.append( ", " );
+				}
+				colBuf.append( ( column.getQuotedName( jdbcEnvironment.getDialect() )) );
+			}
+			colBuf.append( ")" );
+
+			final StringBuilder buf = new StringBuilder()
+					.append( "create index " )
+					.append( indexNameForCreation )
+					.append(  "(" + colBuf  )
+					.append( " on " )
+					.append( tableName );
+
+			return new String[] { buf.toString() };
+		}
+	}
+
+
 }
 

@@ -2803,4 +2803,13 @@ public abstract class Dialect implements ConversionContext {
 	public NameQualifierSupport getNameQualifierSupport() {
 		return null;
 	}
+
+	/**
+	 * Does this dialect require that primary key columns be non nullable?
+	 *
+	 * @return boolean
+	 */
+	public boolean forcePrimaryKeyColumnsNonNullable() {
+			return false;
+	}
 }

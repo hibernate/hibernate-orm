@@ -6,12 +6,10 @@
  */
 package org.hibernate.jpa.test.instrument.cases;
 
+import java.util.Arrays;
 import javax.persistence.EntityManager;
 
-import org.junit.Test;
-
 import org.hibernate.Hibernate;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jpa.test.instrument.domain.EntityWithLazyProperty;
 
 import static org.junit.Assert.assertFalse;
@@ -97,7 +95,7 @@ public class TestLazyPropertyOnPreUpdateExecutable extends AbstractExecutable {
 		em.getTransaction().begin();
 		entity = em.find(EntityWithLazyProperty.class, entity.getId());
 		assertFalse( Hibernate.isPropertyInitialized( entity, "lazyData") );
-		assertTrue( ArrayHelper.isEquals( expected, entity.getLazyData() ) );
+		assertTrue( Arrays.equals( expected, entity.getLazyData() ) );
 		assertTrue( Hibernate.isPropertyInitialized( entity, "lazyData" ) );
 		em.getTransaction().commit();
 		em.close();

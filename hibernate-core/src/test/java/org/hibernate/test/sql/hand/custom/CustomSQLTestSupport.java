@@ -7,21 +7,21 @@
 package org.hibernate.test.sql.hand.custom;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
-
-import org.junit.Test;
 
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.internal.util.collections.ArrayHelper;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.sql.hand.Employment;
 import org.hibernate.test.sql.hand.ImageHolder;
 import org.hibernate.test.sql.hand.Organization;
 import org.hibernate.test.sql.hand.Person;
 import org.hibernate.test.sql.hand.TextHolder;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -145,7 +145,7 @@ public abstract class CustomSQLTestSupport extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		t = s.beginTransaction();
 		holder = ( ImageHolder ) s.get(  ImageHolder.class, holder.getId() );
-		assertTrue( ArrayHelper.isEquals( photo, holder.getPhoto() ) );
+		assertTrue( Arrays.equals( photo, holder.getPhoto() ) );
 		photo = buildLongByteArray( 15000, false );
 		holder.setPhoto( photo );
 		s.save( holder );
@@ -155,7 +155,7 @@ public abstract class CustomSQLTestSupport extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		t = s.beginTransaction();
 		holder = ( ImageHolder ) s.get(  ImageHolder.class, holder.getId() );
-		assertTrue( ArrayHelper.isEquals( photo, holder.getPhoto() ) );
+		assertTrue( Arrays.equals( photo, holder.getPhoto() ) );
 		s.delete( holder );
 		t.commit();
 		s.close();

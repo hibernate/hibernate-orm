@@ -9,6 +9,7 @@ package org.hibernate.test.sql.hand.query;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -29,7 +30,6 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.transform.BasicTransformerAdapter;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;
 import org.hibernate.transform.Transformers;
@@ -867,7 +867,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 		t = s.beginTransaction();
 		byte[] photoRead = ( byte[] ) s.createSQLQuery( getPhotosSQL() )
 				.uniqueResult();
-		assertTrue( ArrayHelper.isEquals( photo, photoRead ) );
+		assertTrue( Arrays.equals( photo, photoRead ) );
 		s.delete( holder );
 		t.commit();
 		s.close();

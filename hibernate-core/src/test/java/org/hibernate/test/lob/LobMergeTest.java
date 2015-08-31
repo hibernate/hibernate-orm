@@ -6,14 +6,15 @@
  */
 package org.hibernate.test.lob;
 
-import org.junit.Test;
+import java.util.Arrays;
 
 import org.hibernate.Session;
-import org.hibernate.internal.util.collections.ArrayHelper;
+
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -58,7 +59,7 @@ public class LobMergeTest extends BaseCoreFunctionalTestCase {
 		assertEquals( "blob sizes did not match after merge", LOB_SIZE, entity.getBlobLocator().length() );
 		assertTrue(
 				"blob contents did not match after merge",
-				ArrayHelper.isEquals( updated, BlobLocatorTest.extractData( entity.getBlobLocator() ) )
+				Arrays.equals( updated, BlobLocatorTest.extractData( entity.getBlobLocator() ) )
 		);
 		s.delete( entity );
 		s.getTransaction().commit();

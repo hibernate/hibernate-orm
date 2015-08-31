@@ -8,12 +8,9 @@ package org.hibernate.type;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
 import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.type.descriptor.java.LocalTimeJavaDescriptor;
 import org.hibernate.type.descriptor.sql.TimeTypeDescriptor;
 
@@ -24,7 +21,7 @@ import org.hibernate.type.descriptor.sql.TimeTypeDescriptor;
  */
 public class LocalTimeType
 		extends AbstractSingleColumnStandardBasicType<LocalTime>
-		implements VersionType<LocalTime>, LiteralType<LocalTime> {
+		implements LiteralType<LocalTime> {
 	/**
 	 * Singleton access
 	 */
@@ -49,21 +46,5 @@ public class LocalTimeType
 	@Override
 	public String objectToSQLString(LocalTime value, Dialect dialect) throws Exception {
 		return "{t '" + FORMATTER.format( value ) + "'}";
-	}
-
-	@Override
-	public LocalTime seed(SessionImplementor session) {
-		return LocalTime.now();
-	}
-
-	@Override
-	public LocalTime next(LocalTime current, SessionImplementor session) {
-		return LocalTime.now();
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public Comparator<LocalTime> getComparator() {
-		return ComparableComparator.INSTANCE;
 	}
 }

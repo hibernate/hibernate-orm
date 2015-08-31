@@ -598,7 +598,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	@SuppressWarnings("unchecked")
-	private List<AttributeConverterDefinition> populate(
+	protected List<AttributeConverterDefinition> populate(
 			MetadataSources metadataSources,
 			MergedSettings mergedSettings,
 			StandardServiceRegistry ssr) {
@@ -680,7 +680,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		return attributeConverterDefinitions;
 	}
 
-	private void populate(
+	protected void populate(
 			MetadataBuilder metamodelBuilder,
 			MergedSettings mergedSettings,
 			StandardServiceRegistry ssr,
@@ -816,7 +816,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		);
 	}
 
-	private void populate(SessionFactoryBuilder sfBuilder, StandardServiceRegistry ssr) {
+	protected void populate(SessionFactoryBuilder sfBuilder, StandardServiceRegistry ssr) {
 		final StrategySelector strategySelector = ssr.getService( StrategySelector.class );
 
 		// Locate and apply the requested SessionFactory-level interceptor (if one)

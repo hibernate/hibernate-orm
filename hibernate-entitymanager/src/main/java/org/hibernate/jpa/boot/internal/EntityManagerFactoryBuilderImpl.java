@@ -816,7 +816,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		);
 	}
 
-	private void populate(SessionFactoryBuilder sfBuilder, StandardServiceRegistry ssr) {
+	protected void populate(SessionFactoryBuilder sfBuilder, StandardServiceRegistry ssr) {
 		final StrategySelector strategySelector = ssr.getService( StrategySelector.class );
 
 		// Locate and apply the requested SessionFactory-level interceptor (if one)

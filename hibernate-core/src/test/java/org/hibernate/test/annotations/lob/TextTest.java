@@ -6,18 +6,19 @@
  */
 package org.hibernate.test.annotations.lob;
 
-import junit.framework.AssertionFailedError;
-import org.junit.Assert;
-import org.junit.Test;
+import java.util.Arrays;
 
 import org.hibernate.Session;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.Sybase11Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.internal.util.collections.ArrayHelper;
+
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Assert;
+import org.junit.Test;
+import junit.framework.AssertionFailedError;
 
 import static org.junit.Assert.assertNull;
 
@@ -110,7 +111,7 @@ public class TextTest extends BaseCoreFunctionalTestCase {
 	}
 
 	public static void assertEquals(char[] val1, char[] val2) {
-		if (!ArrayHelper.isEquals( val1, val2 )) {
+		if ( !Arrays.equals( val1, val2 ) ) {
 			throw new AssertionFailedError("byte arrays did not match");
 		}
 	}

@@ -703,21 +703,6 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	}
 
 	@Override
-	public boolean isXMLElement() {
-		return true;
-	}
-
-	@Override
-	public Object fromXMLNode(Node xml, Mapping factory) throws HibernateException {
-		return xml;
-	}
-
-	@Override
-	public void setToXMLNode(Node node, Object value, SessionFactoryImplementor factory) throws HibernateException {
-		replaceNode( node, (Element) value );
-	}
-
-	@Override
 	public boolean[] toColumnNullness(Object value, Mapping mapping) {
 		boolean[] result = new boolean[getColumnSpan( mapping )];
 		if ( value == null ) {

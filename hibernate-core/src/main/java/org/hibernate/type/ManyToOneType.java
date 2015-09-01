@@ -70,22 +70,6 @@ public class ManyToOneType extends EntityType {
 		this( scope, referencedEntityName, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy, ignoreNotFound, isLogicalOneToOne );
 	}
 
-	/**
-	 * @deprecated Use {@link #ManyToOneType(TypeFactory.TypeScope, String, boolean, String, boolean, boolean, boolean, boolean ) } instead.
-	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
-	 */
-	@Deprecated
-	public ManyToOneType(
-			TypeFactory.TypeScope scope,
-			String referencedEntityName,
-			String uniqueKeyPropertyName,
-			boolean lazy,
-			boolean unwrapProxy,
-			boolean ignoreNotFound,
-			boolean isLogicalOneToOne) {
-		this( scope, referencedEntityName, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy, ignoreNotFound, isLogicalOneToOne );
-	}
-
 	public ManyToOneType(
 			TypeFactory.TypeScope scope,
 			String referencedEntityName,
@@ -230,10 +214,6 @@ public class ManyToOneType extends EntityType {
 			SessionImplementor session,
 			Object owner) throws HibernateException {
 
-		if ( isNotEmbedded( session ) ) {
-			return getIdentifierType( session ).disassemble( value, session, owner );
-		}
-		
 		if ( value == null ) {
 			return null;
 		}
@@ -265,10 +245,6 @@ public class ManyToOneType extends EntityType {
 		
 		Serializable id = assembleId( oid, session );
 
-		if ( isNotEmbedded( session ) ) {
-			return id;
-		}
-		
 		if ( id == null ) {
 			return null;
 		}

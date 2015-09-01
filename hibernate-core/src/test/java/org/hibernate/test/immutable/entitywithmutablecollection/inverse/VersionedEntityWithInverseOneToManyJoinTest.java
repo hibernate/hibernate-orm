@@ -26,10 +26,12 @@ public class VersionedEntityWithInverseOneToManyJoinTest extends AbstractEntityW
 		return new String[] { "immutable/entitywithmutablecollection/inverse/ContractVariationVersionedOneToManyJoin.hbm.xml" };
 	}
 
+	// return false to avoid HHH-4992
 	protected boolean checkUpdateCountsAfterAddingExistingElement() {
 		return false;
 	}
 
+	// return false to avoid HHH-4992
 	protected boolean checkUpdateCountsAfterRemovingElementWithoutDelete() {
 		return false;
 	}

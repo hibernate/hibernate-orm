@@ -538,7 +538,10 @@ public interface Type extends Serializable {
 	 * @return the value to be merged
 	 *
 	 * @throws HibernateException An error from Hibernate
+	 *
+	 * @deprecated Use {@link #replace(Object, Object, SessionImplementor, Object, Map)} instead.
 	 */
+	@Deprecated
 	public Object replace(
 			Object original, 
 			Object target, 

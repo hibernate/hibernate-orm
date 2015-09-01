@@ -230,14 +230,15 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		// copy created before we actually copy
 		//cascadeOnMerge(event, persister, entity, copyCache, Cascades.CASCADE_BEFORE_MERGE);
 		super.cascadeBeforeSave( source, persister, entity, copyCache );
-		copyValues( persister, entity, copy, source, copyCache, ForeignKeyDirection.FROM_PARENT );
+
+		// copy all values into copy so that all state is present when
+		// Interceptor#onSave or JPA PrePersist/PostPersist callbacks are called.
+		copyValues( persister, entity, copy, source, copyCache );
 
 		saveTransientEntity( copy, entityName, event.getRequestedId(), source, copyCache );
 
 		// cascade first, so that all unsaved objects get their
-		// copy created before we actually copy
 		super.cascadeAfterSave( source, persister, entity, copyCache );
-		copyValues( persister, entity, copy, source, copyCache, ForeignKeyDirection.TO_PARENT );
 
 		event.setResult( copy );
 	}
@@ -392,6 +393,15 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		return entry != null && entry.isExistsInDatabase();
 	}
 
+	/**
+	 * Copy values from {@code entity} into {@code target}.
+	 *
+	 * @param persister - the persister for entity;
+	 * @param entity - the entity from which to obtain property values for copying into target;
+	 * @param target - the target entity;
+	 * @param source - the source;
+	 * @param copyCache - cache of entity-to-copy mappings;
+	 */
 	protected void copyValues(
 			final EntityPersister persister,
 			final Object entity,
@@ -410,6 +420,19 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		persister.setPropertyValues( target, copiedValues );
 	}
 
+	/**
+	 * Copy values from {@code entity} into {@code target}.
+	 *
+	 * @param persister - the persister for entity;
+	 * @param entity - the entity from which to obtain property values for copying into target;
+	 * @param target - the target entity;
+	 * @param source - the source;
+	 * @param copyCache - cache of entity-to-copy mappings;
+	 * @param foreignKeyDirection - the foreign key direction.
+	 *
+	 * @deprecated Use {@link #copyValues(EntityPersister, Object, Object, SessionImplementor, Map)} instead}
+	 */
+	@Deprecated
 	protected void copyValues(
 			final EntityPersister persister,
 			final Object entity,

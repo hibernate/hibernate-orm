@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.jaxb.internal;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
 import javax.xml.stream.XMLEventFactory;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLStreamException;
@@ -21,6 +23,7 @@ import org.hibernate.boot.jaxb.internal.stax.JpaOrmXmlEventReader;
 import org.hibernate.boot.jaxb.internal.stax.LocalSchema;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.internal.util.config.ConfigurationException;
 
 import org.jboss.logging.Logger;
 
@@ -35,6 +38,7 @@ public class MappingBinder extends AbstractBinder {
 	private static final Logger log = Logger.getLogger( MappingBinder.class );
 
 	private final XMLEventFactory xmlEventFactory = XMLEventFactory.newInstance();
+	private JAXBContext hbmJaxbContext;
 
 	public MappingBinder(ClassLoaderService classLoaderService) {
 		super( classLoaderService );
@@ -54,7 +58,7 @@ public class MappingBinder extends AbstractBinder {
 			log.debugf( "Performing JAXB binding of hbm.xml document : %s", origin.toString() );
 
 			XMLEventReader hbmReader = new HbmEventReader( staxEventReader, xmlEventFactory );
-			JaxbHbmHibernateMapping hbmBindings = jaxb( hbmReader, LocalSchema.HBM.getSchema(), JaxbHbmHibernateMapping.class, origin );
+			JaxbHbmHibernateMapping hbmBindings = jaxb( hbmReader, LocalSchema.HBM.getSchema(), hbmJaxbContext(), origin );
 			return new Binding<JaxbHbmHibernateMapping>( hbmBindings, origin );
 		}
 		else {
@@ -69,6 +73,18 @@ public class MappingBinder extends AbstractBinder {
 				throw new UnsupportedOrmXsdVersionException( e.getRequestedVersion(), origin );
 			}
 		}
+	}
+
+	private JAXBContext hbmJaxbContext() {
+		if ( hbmJaxbContext == null ) {
+			try {
+				hbmJaxbContext = JAXBContext.newInstance( JaxbHbmHibernateMapping.class );
+			}
+			catch ( JAXBException e ) {
+				throw new ConfigurationException( "Unable to build hbm.xml JAXBContext", e );
+			}
+		}
+		return hbmJaxbContext;
 	}
 
 	private Document toDom4jDocument(XMLEventReader jpaOrmXmlEventReader, Origin origin) {

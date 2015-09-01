@@ -94,7 +94,6 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 			else {
 				Property property = new Property();
 				property.setName( referencedProperty.getName() );
-				property.setNodeName( referencedProperty.getNodeName() );
 				//FIXME set optional?
 				//property.setOptional( property.isOptional() );
 				property.setPersistentClass( component.getOwner() );

@@ -45,7 +45,6 @@ public class Component extends SimpleValue implements MetaAttributable {
 	private PersistentClass owner;
 	private boolean dynamic;
 	private Map metaAttributes;
-	private String nodeName;
 	private boolean isKey;
 	private String roleName;
 
@@ -227,14 +226,6 @@ public class Component extends SimpleValue implements MetaAttributable {
 			i+=chunk.length;
 		}
 		return result;
-	}
-	
-	public String getNodeName() {
-		return nodeName;
-	}
-	
-	public void setNodeName(String nodeName) {
-		this.nodeName = nodeName;
 	}
 	
 	public boolean isKey() {

@@ -54,8 +54,6 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	private String manyToManyWhere;
 	private String manyToManyOrderBy;
 	private String referencedPropertyName;
-	private String nodeName;
-	private String elementNodeName;
 	private String mappedByProperty;
 	private boolean sorted;
 	private Comparator comparator;
@@ -319,16 +317,6 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		}
 
 		checkColumnDuplication();
-
-		if ( elementNodeName != null && elementNodeName.startsWith( "@" ) ) {
-			throw new MappingException( "element node must not be an attribute: " + elementNodeName );
-		}
-		if ( elementNodeName != null && elementNodeName.equals( "." ) ) {
-			throw new MappingException( "element node must not be the parent: " + elementNodeName );
-		}
-		if ( nodeName != null && nodeName.indexOf( '@' ) > -1 ) {
-			throw new MappingException( "collection node must not be an attribute: " + elementNodeName );
-		}
 	}
 
 	private void checkColumnDuplication(java.util.Set distinctColumns, Iterator columns)
@@ -643,22 +631,6 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 
 	public boolean[] getColumnUpdateability() {
 		return ArrayHelper.EMPTY_BOOLEAN_ARRAY;
-	}
-
-	public String getNodeName() {
-		return nodeName;
-	}
-
-	public void setNodeName(String nodeName) {
-		this.nodeName = nodeName;
-	}
-
-	public String getElementNodeName() {
-		return elementNodeName;
-	}
-
-	public void setElementNodeName(String elementNodeName) {
-		this.elementNodeName = elementNodeName;
 	}
 
 	public boolean isSubselectLoadable() {

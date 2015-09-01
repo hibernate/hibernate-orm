@@ -78,7 +78,6 @@ public final class PropertyFactory {
 		else {
 			return new IdentifierProperty(
 					property.getName(),
-					property.getNodeName(),
 					type,
 					mappedEntity.hasEmbeddedIdentifier(),
 					unsavedValue,

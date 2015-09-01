@@ -40,7 +40,6 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 	 */
 	public IdentifierProperty(
 			String name,
-			String node,
 			Type type,
 			boolean embedded,
 			IdentifierValue unsavedValue,

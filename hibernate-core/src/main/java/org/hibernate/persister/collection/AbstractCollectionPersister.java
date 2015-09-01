@@ -133,9 +133,6 @@ public abstract class AbstractCollectionPersister
 
 	private final int baseIndex;
 
-	private final String nodeName;
-	private final String elementNodeName;
-	private final String indexNodeName;
 	private String mappedByProperty;
 
 	protected final boolean indexContainsFormula;
@@ -251,7 +248,6 @@ public abstract class AbstractCollectionPersister
 		entityName = collectionBinding.getOwnerEntityName();
 		ownerPersister = factory.getEntityPersister( entityName );
 		queryLoaderName = collectionBinding.getLoaderName();
-		nodeName = collectionBinding.getNodeName();
 		isMutable = collectionBinding.isMutable();
 		mappedByProperty = collectionBinding.getMappedByProperty();
 
@@ -314,20 +310,15 @@ public abstract class AbstractCollectionPersister
 
 		// ELEMENT
 
-		String elemNode = collectionBinding.getElementNodeName();
 		if ( elementType.isEntityType() ) {
 			String entityName = ( (EntityType) elementType ).getAssociatedEntityName();
 			elementPersister = factory.getEntityPersister( entityName );
-			if ( elemNode == null ) {
-				elemNode = creationContext.getMetadata().getEntityBinding( entityName ).getNodeName();
-			}
 			// NativeSQL: collect element column and auto-aliases
 
 		}
 		else {
 			elementPersister = null;
 		}
-		elementNodeName = elemNode;
 
 		int elementSpan = collectionBinding.getElement().getColumnSpan();
 		elementColumnAliases = new String[elementSpan];
@@ -410,9 +401,6 @@ public abstract class AbstractCollectionPersister
 			indexContainsFormula = hasFormula;
 			baseIndex = indexedCollection.isList() ?
 					( (List) indexedCollection ).getBaseIndex() : 0;
-
-			indexNodeName = indexedCollection.getIndexNodeName();
-
 		}
 		else {
 			indexContainsFormula = false;
@@ -423,7 +411,6 @@ public abstract class AbstractCollectionPersister
 			indexColumnNames = null;
 			indexColumnAliases = null;
 			baseIndex = 0;
-			indexNodeName = null;
 		}
 
 		hasIdentifier = collectionBinding.isIdentified();
@@ -1832,21 +1819,6 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public boolean isVersioned() {
 		return isVersioned && getOwnerEntityPersister().isVersioned();
-	}
-
-	@Override
-	public String getNodeName() {
-		return nodeName;
-	}
-
-	@Override
-	public String getElementNodeName() {
-		return elementNodeName;
-	}
-
-	@Override
-	public String getIndexNodeName() {
-		return indexNodeName;
 	}
 
 	// TODO: deprecate???

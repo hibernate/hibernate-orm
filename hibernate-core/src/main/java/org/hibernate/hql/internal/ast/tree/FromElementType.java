@@ -20,6 +20,7 @@ import org.hibernate.hql.internal.NameGenerator;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.collection.CollectionPropertyMapping;
@@ -385,6 +386,7 @@ class FromElementType {
 			// this is hacky, but really this is difficult to handle given the current codebase.
 			if ( persister != propertyMapping ) {
 				// we want the subquery...
+				DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfCollectionPropertiesInHql( path, fromElement.getClassAlias() );
 				return getCollectionPropertyReference( path ).toColumns( tableAlias );
 			}
 		}

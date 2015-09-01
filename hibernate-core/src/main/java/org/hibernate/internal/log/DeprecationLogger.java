@@ -177,4 +177,12 @@ public interface DeprecationLogger {
 					"See Hibernate Domain Model Mapping Guide for details."
 	)
 	void deprecatedTableGenerator(String generatorImpl);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000016,
+			value = "Found use of deprecated 'collection property' syntax in HQL/JPQL query [%2$s.%1$s]; " +
+					"use collection function syntax instead [%1$s(%2$s)]."
+	)
+	void logDeprecationOfCollectionPropertiesInHql(String collectionPropertyName, String alias);
 }

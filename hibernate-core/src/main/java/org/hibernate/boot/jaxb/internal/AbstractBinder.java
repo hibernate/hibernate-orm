@@ -155,11 +155,10 @@ public abstract class AbstractBinder implements Binder {
 	}
 
 	@SuppressWarnings("unchecked")
-	protected <T> T jaxb(XMLEventReader reader, Schema xsd, Class<T> modelClass, Origin origin) {
+	protected <T> T jaxb(XMLEventReader reader, Schema xsd, JAXBContext jaxbContext, Origin origin) {
 		final ContextProvidingValidationEventHandler handler = new ContextProvidingValidationEventHandler();
 
 		try {
-			final JAXBContext jaxbContext = JAXBContext.newInstance( modelClass );
 			final Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
 			if ( isValidationEnabled() ) {
 				unmarshaller.setSchema( xsd );
@@ -181,4 +180,6 @@ public abstract class AbstractBinder implements Binder {
 			);
 		}
 	}
+
+
 }

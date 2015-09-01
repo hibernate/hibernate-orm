@@ -378,14 +378,15 @@ class FromElementType {
 			// (most likely minElement, maxElement as well) cases.
 			//	todo : if ^^ is the case we should thrown an exception here rather than waiting for the sql error
 			//		if the dialect supports select-clause subqueries we could go ahead and generate the subquery also
-			Map enabledFilters = fromElement.getWalker().getEnabledFilters();
-			String subquery = CollectionSubqueryFactory.createCollectionSubquery(
-					joinSequence.copy().setUseThetaStyle( true ),
-					enabledFilters,
-					propertyMapping.toColumns( tableAlias, path )
-			);
-			LOG.debugf( "toColumns(%s,%s) : subquery = %s", tableAlias, path, subquery );
-			return new String[] {"(" + subquery + ")"};
+
+			// we also need to account for cases where the property name is a CollectionProperty, but
+			// is also a property on the element-entity.  This is handled inside `#getPropertyMapping`
+			// already; here just check for propertyMapping being the same as the entity persister.  Yes
+			// this is hacky, but really this is difficult to handle given the current codebase.
+			if ( persister != propertyMapping ) {
+				// we want the subquery...
+				return getCollectionPropertyReference( path ).toColumns( tableAlias );
+			}
 		}
 
 		if ( forceAlias ) {
@@ -485,6 +486,18 @@ class FromElementType {
 		// If the property is a special collection property name, return a CollectionPropertyMapping.
 		if ( CollectionProperties.isCollectionProperty( propertyName ) ) {
 			if ( collectionPropertyMapping == null ) {
+				// lets additionally make sure that the property name is not also the name
+				// of a property on the element, assuming that the element is an entity.
+				// todo : also consider composites?
+				if ( persister != null ) {
+					try {
+						if ( persister.getPropertyType( propertyName ) != null ) {
+							return (PropertyMapping) persister;
+						}
+					}
+					catch (QueryException ignore) {
+					}
+				}
 				collectionPropertyMapping = new CollectionPropertyMapping( queryableCollection );
 			}
 			return collectionPropertyMapping;
@@ -522,6 +535,52 @@ class FromElementType {
 
 	public void setIndexCollectionSelectorParamSpec(ParameterSpecification indexCollectionSelectorParamSpec) {
 		this.indexCollectionSelectorParamSpec = indexCollectionSelectorParamSpec;
+	}
+
+	public CollectionPropertyReference getCollectionPropertyReference(final String propertyName) {
+		if ( queryableCollection == null ) {
+			throw new QueryException( "Not a collection reference" );
+		}
+
+		final PropertyMapping collectionPropertyMapping;
+
+		if ( queryableCollection.isManyToMany()
+				&& queryableCollection.hasIndex()
+				&& SPECIAL_MANY2MANY_TREATMENT_FUNCTION_NAMES.contains( propertyName ) ) {
+			collectionPropertyMapping = new SpecialManyToManyCollectionPropertyMapping();
+		}
+		else if ( CollectionProperties.isCollectionProperty( propertyName ) ) {
+			if ( this.collectionPropertyMapping == null ) {
+				this.collectionPropertyMapping = new CollectionPropertyMapping( queryableCollection );
+			}
+			collectionPropertyMapping = this.collectionPropertyMapping;
+		}
+		else {
+			collectionPropertyMapping = queryableCollection;
+		}
+
+		return new CollectionPropertyReference() {
+			@Override
+			public Type getType() {
+				return collectionPropertyMapping.toType( propertyName );
+			}
+
+			@Override
+			public String[] toColumns(final String tableAlias) {
+				if ( propertyName.equalsIgnoreCase( "index" ) ) {
+					return collectionPropertyMapping.toColumns( tableAlias, propertyName );
+				}
+
+				Map enabledFilters = fromElement.getWalker().getEnabledFilters();
+				String subquery = CollectionSubqueryFactory.createCollectionSubquery(
+						joinSequence.copy().setUseThetaStyle( true ),
+						enabledFilters,
+						collectionPropertyMapping.toColumns( tableAlias, propertyName )
+				);
+				LOG.debugf( "toColumns(%s,%s) : subquery = %s", tableAlias, propertyName, subquery );
+				return new String[] {"(" + subquery + ")"};
+			}
+		};
 	}
 
 	private class SpecialManyToManyCollectionPropertyMapping implements PropertyMapping {

@@ -51,7 +51,6 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	private String proxyInterfaceName;
 	private transient Class proxyInterface;
 
-	private String nodeName;
 	private String jpaEntityName;
 
 	private String discriminatorValue;
@@ -815,14 +814,6 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 	public abstract Object accept(PersistentClassVisitor mv);
 
-	public String getNodeName() {
-		return nodeName;
-	}
-
-	public void setNodeName(String nodeName) {
-		this.nodeName = nodeName;
-	}
-
 	public String getJpaEntityName() {
 		return jpaEntityName;
 	}
@@ -833,10 +824,6 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 	public boolean hasPojoRepresentation() {
 		return getClassName() != null;
-	}
-
-	public boolean hasDom4jRepresentation() {
-		return getNodeName() != null;
 	}
 
 	public boolean hasSubselectLoadableCollections() {

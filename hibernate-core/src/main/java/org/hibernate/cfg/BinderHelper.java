@@ -88,7 +88,6 @@ public class BinderHelper {
 		clone.setInsertable( property.isInsertable() );
 		clone.setLazy( property.isLazy() );
 		clone.setName( property.getName() );
-		clone.setNodeName( property.getNodeName() );
 		clone.setNaturalIdentifier( property.isNaturalIdentifier() );
 		clone.setOptimisticLocked( property.isOptimisticLocked() );
 		clone.setOptional( property.isOptional() );
@@ -266,7 +265,6 @@ public class BinderHelper {
 						new Component( context.getMetadataCollector(), (PersistentClass) columnOwner ) :
 						new Component( context.getMetadataCollector(), (Join) columnOwner );
 				embeddedComp.setEmbedded( true );
-				embeddedComp.setNodeName( syntheticPropertyName );
 				embeddedComp.setComponentClassName( embeddedComp.getOwner().getClassName() );
 				for (Property property : properties) {
 					Property clone = BinderHelper.shallowCopy( property );
@@ -278,7 +276,6 @@ public class BinderHelper {
                                 }
                                     synthProp = new SyntheticProperty();
 				synthProp.setName( syntheticPropertyName );
-				synthProp.setNodeName( syntheticPropertyName );
 				synthProp.setPersistentClass( ownerEntity );
 				synthProp.setUpdateable( false );
 				synthProp.setInsertable( false );

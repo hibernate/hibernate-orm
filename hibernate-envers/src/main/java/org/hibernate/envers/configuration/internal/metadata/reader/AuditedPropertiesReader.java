@@ -13,6 +13,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.persistence.JoinColumn;
 import javax.persistence.MapKey;
 import javax.persistence.OneToMany;
@@ -37,6 +38,7 @@ import org.hibernate.envers.configuration.internal.metadata.MetadataTools;
 import org.hibernate.envers.internal.tools.MappingTools;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.StringTools;
+import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
@@ -244,10 +246,8 @@ public class AuditedPropertiesReader {
 		while ( propertyIter.hasNext() ) {
 			final Property property = propertyIter.next();
 			addPersistentProperty( property );
-			if ( "embedded".equals( property.getPropertyAccessorName() )
-					&& property.getName().equals( property.getNodeName() ) ) {
-				// If property name equals node name and embedded accessor type is used, processing component
-				// has been defined with <properties> tag. See HHH-6636 JIRA issue.
+			// See HHH-6636
+			if ( "embedded".equals( property.getPropertyAccessorName() ) && !PropertyPath.IDENTIFIER_MAPPER_PROPERTY.equals( property.getName() ) ) {
 				createPropertiesGroupMapping( property );
 			}
 		}
@@ -268,7 +268,7 @@ public class AuditedPropertiesReader {
 		final Iterator<Property> componentProperties = component.getPropertyIterator();
 		while ( componentProperties.hasNext() ) {
 			final Property componentProperty = componentProperties.next();
-			propertiesGroupMapping.put( componentProperty.getName(), component.getNodeName() );
+			propertiesGroupMapping.put( componentProperty.getName(), property.getName() );
 		}
 	}
 

@@ -2115,7 +2115,6 @@ public class ModelBinder {
 		if ( oneToOneSource.isEmbedXml() == Boolean.TRUE ) {
 			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfEmbedXmlSupport();
 		}
-		oneToOneBinding.setEmbedded( oneToOneSource.isEmbedXml() != Boolean.FALSE );
 
 		if ( StringHelper.isNotEmpty( oneToOneSource.getExplicitForeignKeyName() ) ) {
 			oneToOneBinding.setForeignKeyName( oneToOneSource.getExplicitForeignKeyName() );
@@ -2234,7 +2233,6 @@ public class ModelBinder {
 		if ( manyToOneSource.isEmbedXml() == Boolean.TRUE ) {
 			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfEmbedXmlSupport();
 		}
-		manyToOneBinding.setEmbedded( manyToOneSource.isEmbedXml() != Boolean.FALSE );
 
 		manyToOneBinding.setIgnoreNotFound( manyToOneSource.isIgnoreNotFound() );
 

@@ -352,8 +352,6 @@ public class MapBinder extends CollectionBinder {
 			Iterator properties = component.getPropertyIterator();
 			Component indexComponent = new Component( getBuildingContext().getMetadataCollector(), collection );
 			indexComponent.setComponentClassName( component.getComponentClassName() );
-			//TODO I don't know if this is appropriate
-			indexComponent.setNodeName( "index" );
 			while ( properties.hasNext() ) {
 				Property current = (Property) properties.next();
 				Property newProperty = new Property();
@@ -363,7 +361,6 @@ public class MapBinder extends CollectionBinder {
 				newProperty.setUpdateable( false );
 				newProperty.setMetaAttributes( current.getMetaAttributes() );
 				newProperty.setName( current.getName() );
-				newProperty.setNodeName( current.getNodeName() );
 				newProperty.setNaturalIdentifier( false );
 				//newProperty.setOptimisticLocked( false );
 				newProperty.setOptional( false );

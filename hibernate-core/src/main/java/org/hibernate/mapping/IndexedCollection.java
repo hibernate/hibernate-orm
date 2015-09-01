@@ -22,7 +22,6 @@ public abstract class IndexedCollection extends Collection {
 	public static final String DEFAULT_INDEX_COLUMN_NAME = "idx";
 
 	private Value index;
-	private String indexNodeName;
 
 	public IndexedCollection(MetadataImplementor metadata, PersistentClass owner) {
 		super( metadata, owner );
@@ -84,22 +83,9 @@ public abstract class IndexedCollection extends Collection {
 				getIndex().getType().getName()
 			);
 		}
-		if ( indexNodeName!=null && !indexNodeName.startsWith("@") ) {
-			throw new MappingException("index node must be an attribute: " + indexNodeName );
-		}
 	}
 	
 	public boolean isList() {
 		return false;
 	}
-
-	public String getIndexNodeName() {
-		return indexNodeName;
-	}
-
-	public void setIndexNodeName(String indexNodeName) {
-		this.indexNodeName = indexNodeName;
-	}
-	
-
 }

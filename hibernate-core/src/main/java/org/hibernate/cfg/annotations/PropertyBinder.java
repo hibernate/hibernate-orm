@@ -260,7 +260,6 @@ public class PropertyBinder {
 		LOG.debugf( "Building property %s", name );
 		Property prop = new Property();
 		prop.setName( name );
-		prop.setNodeName( name );
 		prop.setValue( value );
 		prop.setLazy( lazy );
 		prop.setCascade( cascade );

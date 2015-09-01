@@ -1036,7 +1036,6 @@ public final class AnnotationBinder {
 
 			Property property = new Property();
 			property.setName( PropertyPath.IDENTIFIER_MAPPER_PROPERTY );
-			property.setNodeName( "id" );
 			property.setUpdateable( false );
 			property.setInsertable( false );
 			property.setValue( mapper );
@@ -2672,7 +2671,6 @@ public final class AnnotationBinder {
 		else {
 			comp.setComponentClassName( inferredData.getClassOrElementName() );
 		}
-		comp.setNodeName( inferredData.getPropertyName() );
 		return comp;
 	}
 

@@ -535,11 +535,11 @@ public class Table implements RelationalModel, Serializable, Exportable {
 
 			if ( identityColumn && col.getQuotedName( dialect ).equals( pkname ) ) {
 				// to support dialects that have their own identity data type
-				if ( dialect.hasDataTypeInIdentityColumn() ) {
+				if ( dialect.getIdentityColumnSupport().hasDataTypeInIdentityColumn() ) {
 					buf.append( col.getSqlType( dialect, p ) );
 				}
 				buf.append( ' ' )
-						.append( dialect.getIdentityColumnString( col.getSqlTypeCode( p ) ) );
+						.append( dialect.getIdentityColumnSupport().getIdentityColumnString( col.getSqlTypeCode( p ) ) );
 			}
 			else {
 

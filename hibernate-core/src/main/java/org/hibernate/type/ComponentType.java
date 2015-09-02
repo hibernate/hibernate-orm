@@ -31,9 +31,6 @@ import org.hibernate.tuple.StandardProperty;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.tuple.component.ComponentTuplizer;
 
-import org.dom4j.Element;
-import org.dom4j.Node;
-
 /**
  * Handles "component" mappings
  *
@@ -723,6 +720,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		return false;
 	}
 
+	@Override
 	public int getPropertyIndex(String name) {
 		String[] names = getPropertyNames();
 		for ( int i = 0, max = names.length; i < max; i++ ) {
@@ -817,6 +815,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		return resolve( values, session, null );
 	}
 
+	@Override
 	public boolean hasNotNullProperty() {
 		return hasNotNullProperty;
 	}

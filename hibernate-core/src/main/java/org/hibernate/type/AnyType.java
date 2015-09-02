@@ -20,6 +20,7 @@ import org.hibernate.EntityNameResolver;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.PropertyNotFoundException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.jdbc.Size;
@@ -35,8 +36,6 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.HibernateProxyHelper;
 import org.hibernate.proxy.LazyInitializer;
 
-import org.dom4j.Node;
-
 /**
  * Handles "any" mappings
  * 
@@ -49,9 +48,6 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 
 	/**
 	 * Intended for use only from legacy {@link ObjectType} type definition
-	 *
-	 * @param discriminatorType
-	 * @param identifierType
 	 */
 	protected AnyType(Type discriminatorType, Type identifierType) {
 		this( null, discriminatorType, identifierType );
@@ -376,6 +372,18 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	}
 
 	@Override
+	public int getPropertyIndex(String name) {
+		if ( PROPERTY_NAMES[0].equals( name ) ) {
+			return 0;
+		}
+		else if ( PROPERTY_NAMES[1].equals( name ) ) {
+			return 1;
+		}
+
+		throw new PropertyNotFoundException( "Unable to locate property named " + name + " on AnyType" );
+	}
+
+	@Override
 	public Object getPropertyValue(Object component, int i, SessionImplementor session) throws HibernateException {
 		return i==0
 				? session.bestGuessEntityName( component )
@@ -413,6 +421,12 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	@Override
 	public boolean[] getPropertyNullability() {
 		return NULLABILITY;
+	}
+
+	@Override
+	public boolean hasNotNullProperty() {
+		// both are non-nullable
+		return true;
 	}
 
 	@Override

@@ -26,14 +26,14 @@ public interface CompositeType extends Type {
 	 *
 	 * @return The component property types.
 	 */
-	public Type[] getSubtypes();
+	Type[] getSubtypes();
 
 	/**
 	 * Get the names of the component properties
 	 *
 	 * @return The component property names
 	 */
-	public String[] getPropertyNames();
+	String[] getPropertyNames();
 
 	/**
 	 * Retrieve the indicators regarding which component properties are nullable.
@@ -42,7 +42,7 @@ public interface CompositeType extends Type {
 	 *
 	 * @return nullability of component properties
 	 */
-	public boolean[] getPropertyNullability();
+	boolean[] getPropertyNullability();
 
 	/**
 	 * Extract the values of the component properties from the given component instance
@@ -54,7 +54,7 @@ public interface CompositeType extends Type {
 	 *
 	 * @throws HibernateException Indicates a problem access the property values.
 	 */
-	public Object[] getPropertyValues(Object component, SessionImplementor session) throws HibernateException;
+	Object[] getPropertyValues(Object component, SessionImplementor session) throws HibernateException;
 
 	/**
 	 * Extract the values of the component properties from the given component instance without access to the
@@ -69,7 +69,7 @@ public interface CompositeType extends Type {
 	 *
 	 * @throws HibernateException Indicates a problem access the property values.
 	 */
-	public Object[] getPropertyValues(Object component, EntityMode entityMode) throws HibernateException;
+	Object[] getPropertyValues(Object component, EntityMode entityMode) throws HibernateException;
 
 	/**
 	 * Extract a particular component property value indicated by index.
@@ -82,7 +82,7 @@ public interface CompositeType extends Type {
 	 *
 	 * @throws HibernateException Indicates a problem access the property value.
 	 */
-	public Object getPropertyValue(Object component, int index, SessionImplementor session) throws HibernateException;
+	Object getPropertyValue(Object component, int index, SessionImplementor session) throws HibernateException;
 
 	/**
 	 * Inject property values onto the given component instance
@@ -95,7 +95,7 @@ public interface CompositeType extends Type {
 	 *
 	 * @throws HibernateException Indicates an issue performing the injection
 	 */
-	public void setPropertyValues(Object component, Object[] values, EntityMode entityMode) throws HibernateException;
+	void setPropertyValues(Object component, Object[] values, EntityMode entityMode) throws HibernateException;
 
 	/**
 	 * Retrieve the cascade style of the indicated component property.
@@ -104,7 +104,7 @@ public interface CompositeType extends Type {
 	 *
 	 * @return The cascade style.
 	 */
-	public CascadeStyle getCascadeStyle(int index);
+	CascadeStyle getCascadeStyle(int index);
 
 	/**
 	 * Retrieve the fetch mode of the indicated component property.
@@ -113,7 +113,7 @@ public interface CompositeType extends Type {
 	 *
 	 * @return The fetch mode
 	 */
-	public FetchMode getFetchMode(int index);
+	FetchMode getFetchMode(int index);
 
 	/**
 	 * Is the given method a member of this component's class?
@@ -122,7 +122,7 @@ public interface CompositeType extends Type {
 	 *
 	 * @return True if the method is a member; false otherwise.
 	 */
-	public boolean isMethodOf(Method method);
+	boolean isMethodOf(Method method);
 
 	/**
 	 * Is this component embedded?  "embedded" indicates that the component is "virtual", that its properties are
@@ -130,5 +130,22 @@ public interface CompositeType extends Type {
 	 *
 	 * @return True if this component is embedded; false otherwise.
 	 */
-	public boolean isEmbedded();
+	boolean isEmbedded();
+
+	/**
+	 * Convenience method to quickly check {@link #getPropertyNullability} for any non-nullable sub-properties.
+	 *
+	 * @return {@code true} if any of the properties are not-nullable as indicated by {@link #getPropertyNullability},
+	 * {@code false} otherwise.
+	 */
+	boolean hasNotNullProperty();
+
+	/**
+	 * Convenience method for locating the property index for a given property name.
+	 *
+	 * @param propertyName The (sub-)property name to find.
+	 *
+	 * @return The (sub-)property index, relative to all the array-valued method returns defined on this contract.
+	 */
+	int getPropertyIndex(String propertyName);
 }

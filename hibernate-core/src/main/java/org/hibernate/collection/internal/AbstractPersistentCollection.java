@@ -40,6 +40,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.ComponentType;
+import org.hibernate.type.CompositeType;
 import org.hibernate.type.IntegerType;
 import org.hibernate.type.LongType;
 import org.hibernate.type.PostgresUUIDType;
@@ -686,8 +687,8 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		// the param would have to be bound twice.  Until we eventually add "parameter bind points" concepts to the
 		// AST in ORM 5+, handling this type of condition is either extremely difficult or impossible.  Forcing
 		// recreation isn't ideal, but not really any other option in ORM 4.
-		if (persister.getElementType() instanceof ComponentType) {
-			ComponentType componentType = (ComponentType) persister.getElementType();
+		if ( persister.getElementType() instanceof CompositeType ) {
+			CompositeType componentType = (CompositeType) persister.getElementType();
 			return !componentType.hasNotNullProperty();
 		}
 		return false;

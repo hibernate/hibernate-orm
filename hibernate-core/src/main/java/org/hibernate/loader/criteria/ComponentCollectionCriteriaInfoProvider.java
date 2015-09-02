@@ -12,7 +12,7 @@ import java.util.Map;
 
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.PropertyMapping;
-import org.hibernate.type.ComponentType;
+import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
 /**
@@ -29,7 +29,7 @@ class ComponentCollectionCriteriaInfoProvider implements CriteriaInfoProvider {
 			throw new IllegalArgumentException( "persister for role " + persister.getRole() + " is not a collection-of-component" );
 		}
 
-		ComponentType componentType = (ComponentType) persister.getElementType();
+		CompositeType componentType = (CompositeType) persister.getElementType();
 		String[] names = componentType.getPropertyNames();
 		Type[] types = componentType.getSubtypes();
 

@@ -50,14 +50,16 @@ public abstract class AbstractClassTransformerImpl implements ClassTransformer {
 			Class classBeingRedefined,
 			ProtectionDomain protectionDomain,
 			byte[] classfileBuffer) {
-		// to be safe...
-		className = className.replace( '/', '.' );
-		if ( classFilter.shouldInstrumentClass( className ) ) {
-			return doTransform( loader, className, classBeingRedefined, protectionDomain, classfileBuffer );
+		// Java 8's resolution of lambda expressions can result in synthetic classes with no name.
+		// If that is the case, skip transformation.
+		if ( className != null ) {
+			// to be safe...
+			className = className.replace( '/', '.' );
+			if ( classFilter.shouldInstrumentClass( className ) ) {
+				return doTransform( loader, className, classBeingRedefined, protectionDomain, classfileBuffer );
+			}
 		}
-		else {
-			return classfileBuffer;
-		}
+		return classfileBuffer;
 	}
 
 	/**

@@ -57,20 +57,20 @@ public class SearchedCaseExpression<R>
 	public SearchedCaseExpression(
 			CriteriaBuilderImpl criteriaBuilder,
 			Class<R> javaType) {
-		super( criteriaBuilder, javaType);
+		super( criteriaBuilder, javaType );
 		this.javaType = javaType;
 	}
 
 	public Case<R> when(Expression<Boolean> condition, R result) {
-		return when( condition, buildLiteral(result) );
+		return when( condition, buildLiteral( result ) );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings({"unchecked"})
 	private LiteralExpression<R> buildLiteral(R result) {
 		final Class<R> type = result != null
 				? (Class<R>) result.getClass()
 				: getJavaType();
-		return new LiteralExpression<R>( criteriaBuilder(), type, result );
+		return new CaseLiteralExpression<R>( criteriaBuilder(), type, result );
 	}
 
 	public Case<R> when(Expression<Boolean> condition, Expression<? extends R> result) {
@@ -80,7 +80,7 @@ public class SearchedCaseExpression<R>
 		return this;
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings({"unchecked"})
 	private void adjustJavaType(Expression<? extends R> exp) {
 		if ( javaType == null ) {
 			javaType = (Class<R>) exp.getJavaType();
@@ -88,7 +88,7 @@ public class SearchedCaseExpression<R>
 	}
 
 	public Expression<R> otherwise(R result) {
-		return otherwise( buildLiteral(result) );
+		return otherwise( buildLiteral( result ) );
 	}
 
 	public Expression<R> otherwise(Expression<? extends R> result) {

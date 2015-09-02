@@ -17,18 +17,16 @@ import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.PropertyNotFoundException;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.LoggableUserType;
-
-import org.dom4j.Element;
-import org.dom4j.Node;
 
 /**
  * Adapts {@link CompositeUserType} to the {@link Type} interface
@@ -71,6 +69,19 @@ public class CompositeCustomType extends AbstractType implements CompositeType, 
 
 	public String[] getPropertyNames() {
 		return userType.getPropertyNames();
+	}
+
+	@Override
+	public int getPropertyIndex(String name) {
+		String[] names = getPropertyNames();
+		for ( int i = 0, max = names.length; i < max; i++ ) {
+			if ( names[i].equals( name ) ) {
+				return i;
+			}
+		}
+		throw new PropertyNotFoundException(
+				"Unable to locate property named " + name + " on " + getReturnedClass().getName()
+		);
 	}
 
 	public Object[] getPropertyValues(Object component, SessionImplementor session) throws HibernateException {
@@ -276,6 +287,12 @@ public class CompositeCustomType extends AbstractType implements CompositeType, 
 	}
 
 	public boolean isEmbedded() {
+		return false;
+	}
+
+	@Override
+	public boolean hasNotNullProperty() {
+		// We just don't know.  So assume nullable
 		return false;
 	}
 }

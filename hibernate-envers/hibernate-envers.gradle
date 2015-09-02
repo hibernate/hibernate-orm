@@ -12,6 +12,7 @@ dependencies {
 
     provided( [group: 'org.hibernate', name: 'hibernate-tools', version: '3.2.0.ga'] )
     provided( libraries.ant )
+    provided( project( ':hibernate-jpamodelgen' ) )
 
     testCompile( project(':hibernate-testing') )
     testCompile( project(path: ':hibernate-entitymanager', configuration: 'tests') )
@@ -22,7 +23,6 @@ dependencies {
 mavenPom {
     name = 'ENtity VERSioning support'
     description = 'ENtity VERSioning support'
-
 }
 
 def osgiDescription() {

@@ -50,6 +50,8 @@ import org.jboss.logging.Logger;
 public class EnversServiceImpl implements EnversService, Configurable, Stoppable {
 	private static final Logger log = Logger.getLogger( EnversServiceImpl.class );
 
+	private static final String LEGACY_AUTO_REGISTER = "hibernate.listeners.envers.autoRegister";
+
 	private boolean integrationEnabled;
 	private boolean initialized;
 
@@ -77,9 +79,15 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 
 	@Override
 	public void configure(Map configurationValues) {
-		final boolean legacySetting = ConfigurationHelper.getBoolean( LEGACY_AUTO_REGISTER, configurationValues, true );
-		this.integrationEnabled = ConfigurationHelper.getBoolean( INTEGRATION_ENABLED, configurationValues, legacySetting );
-
+		if ( configurationValues.containsKey( LEGACY_AUTO_REGISTER ) ) {
+			log.debugf(
+					"Encountered deprecated Envers setting [%s]; use [%s] or [%s] instead",
+					LEGACY_AUTO_REGISTER,
+					INTEGRATION_ENABLED,
+					EnversIntegrator.AUTO_REGISTER
+			);
+		}
+		this.integrationEnabled = ConfigurationHelper.getBoolean( INTEGRATION_ENABLED, configurationValues, true );
 		log.infof( "Envers integration enabled? : %s", integrationEnabled );
 	}
 

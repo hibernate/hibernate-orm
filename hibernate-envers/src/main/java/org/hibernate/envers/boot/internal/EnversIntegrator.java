@@ -8,6 +8,8 @@ package org.hibernate.envers.boot.internal;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.envers.event.spi.EnversListenerDuplicationStrategy;
 import org.hibernate.envers.event.spi.EnversPostCollectionRecreateEventListenerImpl;
@@ -21,29 +23,60 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
+import org.jboss.logging.Logger;
+
 /**
  * Hooks up Envers event listeners.
  *
  * @author Steve Ebersole
  */
 public class EnversIntegrator implements Integrator {
-	public static final String AUTO_REGISTER = EnversService.LEGACY_AUTO_REGISTER;
+	private static final Logger log = Logger.getLogger( EnversIntegrator.class );
+
+	public static final String AUTO_REGISTER = "hibernate.envers.autoRegisterListeners";
 
 	public void integrate(
 			Metadata metadata,
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryServiceRegistry serviceRegistry) {
 		final EnversService enversService = serviceRegistry.getService( EnversService.class );
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Opt-out of registration if EnversService is disabled
 		if ( !enversService.isEnabled() ) {
+			log.debug( "Skipping Envers listener registrations : EnversService disabled" );
 			return;
 		}
 
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Opt-out of registration if asked to not register
+		final boolean autoRegister = serviceRegistry.getService( ConfigurationService.class ).getSetting(
+				AUTO_REGISTER,
+				StandardConverters.BOOLEAN,
+				true
+		);
+		if ( !autoRegister ) {
+			log.debug( "Skipping Envers listener registrations : Listener auto-registration disabled" );
+			return;
+		}
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Verify that the EnversService is fully initialized and ready to go.
 		if ( !enversService.isInitialized() ) {
 			throw new HibernateException(
 					"Expecting EnversService to have been initialized prior to call to EnversIntegrator#integrate"
 			);
 		}
 
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Opt-out of registration if no audited entities found
+		if ( !enversService.getEntitiesConfigurations().hasAuditedEntities() ) {
+			log.debug( "Skipping Envers listener registrations : No audited entities found" );
+			return;
+		}
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Do the registrations
 		final EventListenerRegistry listenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
 		listenerRegistry.addDuplicationStrategy( EnversListenerDuplicationStrategy.INSTANCE );
 

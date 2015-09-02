@@ -8,6 +8,7 @@ package org.hibernate.bytecode.enhance.internal;
 
 import java.util.Collection;
 import java.util.Locale;
+import javax.persistence.EmbeddedId;
 import javax.persistence.Id;
 
 import javassist.CtClass;
@@ -34,24 +35,15 @@ public abstract class AttributeTypeDescriptor {
 		final StringBuilder builder = new StringBuilder();
 		try {
 			// should ignore primary keys
-			if (PersistentAttributesHelper.hasAnnotation( currentValue, Id.class ) ) {
+			if ( PersistentAttributesHelper.hasAnnotation( currentValue, Id.class )
+					|| PersistentAttributesHelper.hasAnnotation( currentValue, EmbeddedId.class ) ) {
 				return "";
 			}
 
-			// primitives || enums
 			if ( currentValue.getType().isPrimitive() || currentValue.getType().isEnum() ) {
+				// primitives || enums
 				builder.append( String.format( "  if (%s != $1)", currentValue.getName() ) );
 			}
-			// simple data types
-			else if ( currentValue.getType().getName().startsWith( "java.lang" )
-					|| currentValue.getType().getName().startsWith( "java.math.Big" )
-					|| currentValue.getType().getName().startsWith( "java.sql.Time" )
-					|| currentValue.getType().getName().startsWith( "java.sql.Date" )
-					|| currentValue.getType().getName().startsWith( "java.util.Date" )
-					|| currentValue.getType().getName().startsWith( "java.util.Calendar" ) ) {
-				builder.append( String.format( "  if (%s == null || !%<s.equals($1))", currentValue.getName() ) );
-			}
-			// all other objects
 			else {
 				// if the field is a collection we return since we handle that in a separate method
 				for ( CtClass ctClass : currentValue.getType().getInterfaces() ) {
@@ -62,9 +54,13 @@ public abstract class AttributeTypeDescriptor {
 						}
 					}
 				}
-				builder.append( String.format( "  if (%1$s == null || !%2$s.equals(%1$s, $1))",
-												currentValue.getName(),
-												EqualsHelper.class.getName() ) );
+				builder.append(
+						String.format(
+								"  if ( !%s.areEqual( %s, $1 ) )",
+								EqualsHelper.class.getName(),
+								currentValue.getName()
+						)
+				);
 			}
 			builder.append( String.format( "  {  %s(\"%s\");  }", EnhancerConstants.TRACKER_CHANGER_NAME, currentValue.getName() ) );
 		}

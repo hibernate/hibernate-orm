@@ -86,11 +86,11 @@ public class StandardTableExporter implements Exporter<Table> {
 
 			if ( isPrimaryKeyIdentity && colName.equals( pkColName ) ) {
 				// to support dialects that have their own identity data type
-				if ( dialect.hasDataTypeInIdentityColumn() ) {
+				if ( dialect.getIdentityColumnSupport().hasDataTypeInIdentityColumn() ) {
 					buf.append( col.getSqlType( dialect, metadata ) );
 				}
 				buf.append( ' ' )
-						.append( dialect.getIdentityColumnString( col.getSqlTypeCode( metadata ) ) );
+						.append( dialect.getIdentityColumnSupport().getIdentityColumnString( col.getSqlTypeCode( metadata ) ) );
 			}
 			else {
 				buf.append( col.getSqlType( dialect, metadata )  );

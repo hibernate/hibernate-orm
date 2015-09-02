@@ -35,7 +35,7 @@ abstract public class DialectChecks {
 
 	public static class SupportsIdentityColumns implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsIdentityColumns();
+			return dialect.getIdentityColumnSupport().supportsIdentityColumns();
 		}
 	}
 

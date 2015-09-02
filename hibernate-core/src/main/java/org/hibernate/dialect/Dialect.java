@@ -40,6 +40,8 @@ import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardAnsiSqlAggregationFunctions;
 import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.identity.IdentityColumnSupportImpl;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
 import org.hibernate.dialect.lock.OptimisticLockingStrategy;
@@ -728,7 +730,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @return The native generator class.
 	 */
 	public Class getNativeIdentifierGeneratorClass() {
-		if ( supportsIdentityColumns() ) {
+		if ( getIdentityColumnSupport().supportsIdentityColumns() ) {
 			return IdentityGenerator.class;
 		}
 		else {
@@ -740,10 +742,24 @@ public abstract class Dialect implements ConversionContext {
 	// IDENTITY support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
+	 * Get the appropriate {@link IdentityColumnSupport}
+	 *
+	 * @return the IdentityColumnSupport
+	 */
+	public IdentityColumnSupport getIdentityColumnSupport(){
+		return new IdentityColumnSupportImpl( this );
+	}
+
+	/**
 	 * Does this dialect support identity column key generation?
 	 *
 	 * @return True if IDENTITY columns are supported; false otherwise.
+	 *
+	 * @deprecated {@link #getIdentityColumnSupport()} should be overridden instead;
+	 * if {@code getIdentityColumnSupport().supportsIdentityColumns()} does not delegate
+	 * to this method, then this method is ignored.
 	 */
+	@Deprecated
 	public boolean supportsIdentityColumns() {
 		return false;
 	}
@@ -754,7 +770,12 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * @return True if the dialect supports selecting the just
 	 * generated IDENTITY in the insert statement.
+	 *
+	 * @deprecated {@link #getIdentityColumnSupport()} should be overridden instead;
+	 * if {@code getIdentityColumnSupport().supportsInsertSelectIdentity()} does not delegate
+	 * to this method, then this method is ignored.
 	 */
+	@Deprecated
 	public boolean supportsInsertSelectIdentity() {
 		return false;
 	}
@@ -764,7 +785,12 @@ public abstract class Dialect implements ConversionContext {
 	 * completely separate identity data type
 	 *
 	 * @return boolean
+	 *
+	 * @deprecated {@link #getIdentityColumnSupport()} should be overridden instead;
+	 * if {@code getIdentityColumnSupport().hasDataTypeInIdentityColumn()} does not delegate
+	 * to this method, then this method is ignored.
 	 */
+	@Deprecated
 	public boolean hasDataTypeInIdentityColumn() {
 		return true;
 	}
@@ -779,7 +805,12 @@ public abstract class Dialect implements ConversionContext {
 	 * @param insertString The insert command
 	 * @return The insert command with any necessary identity select
 	 * clause attached.
+	 *
+	 * @deprecated {@link #getIdentityColumnSupport()} should be overridden instead;
+	 * if {@code getIdentityColumnSupport().appendIdentitySelectToInsert(String)} does not delegate
+	 * to this method, then this method is ignored.
 	 */
+	@Deprecated
 	public String appendIdentitySelectToInsert(String insertString) {
 		return insertString;
 	}
@@ -793,7 +824,12 @@ public abstract class Dialect implements ConversionContext {
 	 * @param type The {@link java.sql.Types} type code.
 	 * @return The appropriate select command
 	 * @throws MappingException If IDENTITY generation is not supported.
+	 *
+	 * @deprecated {@link #getIdentityColumnSupport()} should be overridden instead;
+	 * if {@code getIdentityColumnSupport().getIdentitySelectString(String,String,int)} does not delegate
+	 * to this method, then this method is ignored.
 	 */
+	@Deprecated
 	public String getIdentitySelectString(String table, String column, int type) throws MappingException {
 		return getIdentitySelectString();
 	}
@@ -819,7 +855,12 @@ public abstract class Dialect implements ConversionContext {
 	 * @param type The {@link java.sql.Types} type code.
 	 * @return The appropriate DDL fragment.
 	 * @throws MappingException If IDENTITY generation is not supported.
+	 *
+	 * @deprecated {@link #getIdentityColumnSupport()} should be overridden instead;
+	 * if {@code getIdentityColumnSupport().getIdentityColumnString(int)} does not delegate
+	 * to this method, then this method is ignored.
 	 */
+	@Deprecated
 	public String getIdentityColumnString(int type) throws MappingException {
 		return getIdentityColumnString();
 	}
@@ -842,7 +883,12 @@ public abstract class Dialect implements ConversionContext {
 	 * Need if the dialect does not support inserts that specify no column values.
 	 *
 	 * @return The appropriate keyword.
+	 *
+	 * @deprecated {@link #getIdentityColumnSupport()} should be overridden instead;
+	 * if {@code getIdentityColumnSupport().getIdentityInsertString()} does not delegate
+	 * to this method, then this method is ignored.
 	 */
+	@Deprecated
 	public String getIdentityInsertString() {
 		return null;
 	}

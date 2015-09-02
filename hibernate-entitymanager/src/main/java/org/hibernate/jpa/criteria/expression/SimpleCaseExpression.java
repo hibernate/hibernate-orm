@@ -16,6 +16,7 @@ import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
 import org.hibernate.jpa.criteria.ParameterRegistry;
 import org.hibernate.jpa.criteria.Renderable;
 import org.hibernate.jpa.criteria.compile.RenderingContext;
+import org.hibernate.jpa.criteria.expression.function.CastFunction;
 
 /**
  * Models what ANSI SQL terms a simple case statement.  This is a <tt>CASE</tt> expression in the form<pre>
@@ -82,9 +83,10 @@ public class SimpleCaseExpression<C,R>
 	}
 
 	public SimpleCase<C, R> when(C condition, Expression<? extends R> result) {
+		// wrapping the result in a cast to determine the parameter node type during the antlr hql parsing phase
 		WhenClause whenClause = new WhenClause(
 				new LiteralExpression<C>( criteriaBuilder(), condition ),
-				result
+				new CastFunction( criteriaBuilder(), result.getJavaType(), (ExpressionImpl) result )
 		);
 		whenClauses.add( whenClause );
 		adjustJavaType( result );
@@ -103,7 +105,8 @@ public class SimpleCaseExpression<C,R>
 	}
 
 	public Expression<R> otherwise(Expression<? extends R> result) {
-		this.otherwiseResult = result;
+		// wrapping the result in a cast to determine the parameter node type during the antlr hql parsing phase
+		this.otherwiseResult = new CastFunction( criteriaBuilder(), result.getJavaType(), (ExpressionImpl) result );
 		adjustJavaType( result );
 		return this;
 	}

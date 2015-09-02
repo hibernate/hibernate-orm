@@ -16,6 +16,7 @@ import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
 import org.hibernate.jpa.criteria.ParameterRegistry;
 import org.hibernate.jpa.criteria.Renderable;
 import org.hibernate.jpa.criteria.compile.RenderingContext;
+import org.hibernate.jpa.criteria.expression.function.CastFunction;
 
 /**
  * Models what ANSI SQL terms a <tt>searched case expression</tt>.  This is a <tt>CASE</tt> expression
@@ -57,15 +58,15 @@ public class SearchedCaseExpression<R>
 	public SearchedCaseExpression(
 			CriteriaBuilderImpl criteriaBuilder,
 			Class<R> javaType) {
-		super( criteriaBuilder, javaType);
+		super( criteriaBuilder, javaType );
 		this.javaType = javaType;
 	}
 
 	public Case<R> when(Expression<Boolean> condition, R result) {
-		return when( condition, buildLiteral(result) );
+		return when( condition, buildLiteral( result ) );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings({"unchecked"})
 	private LiteralExpression<R> buildLiteral(R result) {
 		final Class<R> type = result != null
 				? (Class<R>) result.getClass()
@@ -74,13 +75,17 @@ public class SearchedCaseExpression<R>
 	}
 
 	public Case<R> when(Expression<Boolean> condition, Expression<? extends R> result) {
-		WhenClause whenClause = new WhenClause( condition, result );
+		// wrapping the result in a cast to determine the parameter node type during the antlr hql parsing phase
+		WhenClause whenClause = new WhenClause(
+				condition,
+				new CastFunction( criteriaBuilder(), result.getJavaType(), (ExpressionImpl) result )
+		);
 		whenClauses.add( whenClause );
 		adjustJavaType( result );
 		return this;
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings({"unchecked"})
 	private void adjustJavaType(Expression<? extends R> exp) {
 		if ( javaType == null ) {
 			javaType = (Class<R>) exp.getJavaType();
@@ -88,11 +93,12 @@ public class SearchedCaseExpression<R>
 	}
 
 	public Expression<R> otherwise(R result) {
-		return otherwise( buildLiteral(result) );
+		return otherwise( buildLiteral( result ) );
 	}
 
 	public Expression<R> otherwise(Expression<? extends R> result) {
-		this.otherwiseResult = result;
+		// wrapping the result in a cast to determine the parameter node type during the antlr hql parsing phase
+		this.otherwiseResult = new CastFunction( criteriaBuilder(), result.getJavaType(), (ExpressionImpl) result );
 		adjustJavaType( result );
 		return this;
 	}

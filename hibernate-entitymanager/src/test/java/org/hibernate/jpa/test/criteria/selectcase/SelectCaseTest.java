@@ -29,10 +29,14 @@ import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import java.util.List;
 
+import org.hibernate.jpa.criteria.expression.ConcatExpression;
+import org.hibernate.jpa.criteria.expression.ExpressionImpl;
+import org.hibernate.jpa.criteria.expression.function.AbsFunction;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;

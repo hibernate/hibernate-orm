@@ -6,6 +6,9 @@
  */
 package org.hibernate.dialect.identity;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.id.PostInsertIdentityPersister;
+
 /**
  * @author Andrea Boriero
  */
@@ -23,5 +26,11 @@ public class Oracle12cIdentityColumnSupport extends IdentityColumnSupportImpl {
 	@Override
 	public String getIdentityColumnString(int type) {
 		return "generated as identity";
+	}
+
+	@Override
+	public GetGeneratedKeysDelegate buildGetGeneratedKeysDelegate(
+			PostInsertIdentityPersister persister, Dialect dialect) {
+		return new Oracle12cGetGeneratedKeysDelegate( persister, dialect );
 	}
 }

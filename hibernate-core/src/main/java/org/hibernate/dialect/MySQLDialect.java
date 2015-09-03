@@ -17,6 +17,8 @@ import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
@@ -211,22 +213,6 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public boolean qualifyIndexName() {
 		return false;
-	}
-
-	@Override
-	public boolean supportsIdentityColumns() {
-		return true;
-	}
-
-	@Override
-	public String getIdentitySelectString() {
-		return "select last_insert_id()";
-	}
-
-	@Override
-	public String getIdentityColumnString() {
-		//starts with 1, implicitly
-		return "not null auto_increment";
 	}
 
 	@Override
@@ -530,5 +516,10 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public String getNotExpression(String expression) {
 		return "not (" + expression + ")";
+	}
+
+	@Override
+	public IdentityColumnSupport getIdentityColumnSupport() {
+		return new MySQLIdentityColumnSupport();
 	}
 }

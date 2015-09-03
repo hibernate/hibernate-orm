@@ -22,6 +22,8 @@ import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.identity.AbstractTransactSQLIdentityColumnSupport;
+import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.AfterUseAction;
@@ -132,32 +134,6 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 	@Override
 	public String getForUpdateString() {
 		return "";
-	}
-
-	@Override
-	public boolean supportsIdentityColumns() {
-		return true;
-	}
-
-	@Override
-	public String getIdentitySelectString() {
-		return "select @@identity";
-	}
-
-	@Override
-	public String getIdentityColumnString() {
-		//starts with 1, implicitly
-		return "identity not null";
-	}
-
-	@Override
-	public boolean supportsInsertSelectIdentity() {
-		return true;
-	}
-
-	@Override
-	public String appendIdentitySelectToInsert(String insertSQL) {
-		return insertSQL + "\nselect @@identity";
 	}
 
 	@Override
@@ -293,4 +269,10 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 	public boolean supportsTuplesInSubqueries() {
 		return false;
 	}
+
+	@Override
+	public IdentityColumnSupport getIdentityColumnSupport() {
+		return new AbstractTransactSQLIdentityColumnSupport();
+	}
+
 }

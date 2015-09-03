@@ -38,9 +38,9 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 			Dialect dialect,
 			boolean isGetGeneratedKeysEnabled) throws HibernateException {
 		if ( isGetGeneratedKeysEnabled ) {
-			return new GetGeneratedKeysDelegate( persister, dialect );
+			return dialect.getIdentityColumnSupport().buildGetGeneratedKeysDelegate( persister, dialect );
 		}
-		else if ( dialect.supportsInsertSelectIdentity() ) {
+		else if ( dialect.getIdentityColumnSupport().supportsInsertSelectIdentity() ) {
 			return new InsertSelectDelegate( persister, dialect );
 		}
 		else {
@@ -48,56 +48,7 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 		}
 	}
 
-	/**
-	 * Delegate for dealing with IDENTITY columns using JDBC3 getGeneratedKeys
-	 */
-	public static class GetGeneratedKeysDelegate
-			extends AbstractReturningDelegate
-			implements InsertGeneratedIdentifierDelegate {
-		private final PostInsertIdentityPersister persister;
-		private final Dialect dialect;
 
-		public GetGeneratedKeysDelegate(PostInsertIdentityPersister persister, Dialect dialect) {
-			super( persister );
-			this.persister = persister;
-			this.dialect = dialect;
-		}
-
-		@Override
-		public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert() {
-			IdentifierGeneratingInsert insert = new IdentifierGeneratingInsert( dialect );
-			insert.addIdentityColumn( persister.getRootTableKeyColumnNames()[0] );
-			return insert;
-		}
-
-		@Override
-		protected PreparedStatement prepare(String insertSQL, SessionImplementor session) throws SQLException {
-			return session
-					.getJdbcCoordinator()
-					.getStatementPreparer()
-					.prepareStatement( insertSQL, PreparedStatement.RETURN_GENERATED_KEYS );
-		}
-
-		@Override
-		public Serializable executeAndExtract(PreparedStatement insert, SessionImplementor session)
-				throws SQLException {
-			session.getJdbcCoordinator().getResultSetReturn().executeUpdate( insert );
-			ResultSet rs = null;
-			try {
-				rs = insert.getGeneratedKeys();
-				return IdentifierGeneratorHelper.getGeneratedIdentity(
-						rs,
-						persister.getRootTableKeyColumnNames()[0],
-						persister.getIdentifierType()
-				);
-			}
-			finally {
-				if ( rs != null ) {
-					session.getJdbcCoordinator().getResourceRegistry().release( rs, insert );
-				}
-			}
-		}
-	}
 
 	/**
 	 * Delegate for dealing with IDENTITY columns where the dialect supports returning

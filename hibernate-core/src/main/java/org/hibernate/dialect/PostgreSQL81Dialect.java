@@ -15,6 +15,8 @@ import org.hibernate.dialect.function.PositionSubstringFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.identity.PostgreSQL81IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
@@ -27,7 +29,6 @@ import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
-import org.hibernate.id.SequenceGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.procedure.internal.PostgresCallableStatementSupport;
@@ -263,38 +264,16 @@ public class PostgreSQL81Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsIdentityColumns() {
-		return true;
-	}
-
-	@Override
 	public String getForUpdateString(String aliases) {
 		return getForUpdateString() + " of " + aliases;
 	}
-	
+
 	@Override
 	public String getForUpdateString(String aliases, LockOptions lockOptions) {
 		/*
 		 * Parent's implementation for (aliases, lockOptions) ignores aliases.
 		 */
 		return getForUpdateString(aliases);
-	}
-
-	@Override
-	public String getIdentitySelectString(String table, String column, int type) {
-		return "select currval('" + table + '_' + column + "_seq')";
-	}
-
-	@Override
-	public String getIdentityColumnString(int type) {
-		return type==Types.BIGINT ?
-			"bigserial not null" :
-			"serial not null";
-	}
-
-	@Override
-	public boolean hasDataTypeInIdentityColumn() {
-		return false;
 	}
 
 	@Override
@@ -561,5 +540,10 @@ public class PostgreSQL81Dialect extends Dialect {
 	@Override
 	public boolean qualifyIndexName() {
 		return false;
+	}
+
+	@Override
+	public IdentityColumnSupport getIdentityColumnSupport() {
+		return new PostgreSQL81IdentityColumnSupport();
 	}
 }

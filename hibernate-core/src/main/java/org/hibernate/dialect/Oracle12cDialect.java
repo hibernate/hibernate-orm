@@ -28,23 +28,7 @@ public class Oracle12cDialect extends Oracle10gDialect {
 	}
 
 	@Override
-	public boolean supportsIdentityColumns() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsInsertSelectIdentity() {
-		return true;
-	}
-
-	@Override
-	public String getIdentityColumnString() {
-		return "generated as identity";
-	}
-
-	@Override
 	public LimitHandler getLimitHandler() {
 		return SQL2008StandardLimitHandler.INSTANCE;
 	}
-
 }

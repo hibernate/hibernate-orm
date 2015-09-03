@@ -2434,7 +2434,7 @@ public abstract class AbstractEntityPersister
 
 		// append the SQL to return the generated identifier
 		if ( j == 0 && identityInsert && useInsertSelectIdentity() ) { //TODO: suck into Insert
-			result = getFactory().getDialect().appendIdentitySelectToInsert( result );
+			result = getFactory().getDialect().getIdentityColumnSupport().appendIdentitySelectToInsert( result );
 		}
 
 		return result;
@@ -2686,7 +2686,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected boolean useInsertSelectIdentity() {
-		return !useGetGeneratedKeys() && getFactory().getDialect().supportsInsertSelectIdentity();
+		return !useGetGeneratedKeys() && getFactory().getDialect().getIdentityColumnSupport().supportsInsertSelectIdentity();
 	}
 
 	protected boolean useGetGeneratedKeys() {
@@ -2732,11 +2732,12 @@ public abstract class AbstractEntityPersister
 
 	public String getIdentitySelectString() {
 		//TODO: cache this in an instvar
-		return getFactory().getDialect().getIdentitySelectString(
-				getTableName( 0 ),
-				getKeyColumns( 0 )[0],
-				getIdentifierType().sqlTypes( getFactory() )[0]
-		);
+		return getFactory().getDialect().getIdentityColumnSupport()
+				.getIdentitySelectString(
+						getTableName( 0 ),
+						getKeyColumns( 0 )[0],
+						getIdentifierType().sqlTypes( getFactory() )[0]
+				);
 	}
 
 	public String getSelectByUniqueKeyString(String propertyName) {

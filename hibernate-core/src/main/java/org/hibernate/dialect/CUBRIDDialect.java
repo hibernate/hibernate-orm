@@ -12,6 +12,8 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.identity.CUBRIDIdentityColumnSupport;
+import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.CUBRIDLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.type.StandardBasicTypes;
@@ -231,16 +233,6 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsIdentityColumns() {
-		return true;
-	}
-
-	@Override
-	public String getIdentityInsertString() {
-		return "NULL";
-	}
-
-	@Override
 	public boolean supportsColumnCheck() {
 		return false;
 	}
@@ -248,17 +240,6 @@ public class CUBRIDDialect extends Dialect {
 	@Override
 	public boolean supportsPooledSequences() {
 		return true;
-	}
-
-	@Override
-	public String getIdentitySelectString() {
-		return "select last_insert_id()";
-	}
-
-	@Override
-	protected String getIdentityColumnString() {
-		//starts with 1, implicitly
-		return "not null auto_increment";
 	}
 
 	@Override
@@ -360,4 +341,10 @@ public class CUBRIDDialect extends Dialect {
 	public LimitHandler getLimitHandler() {
 		return CUBRIDLimitHandler.INSTANCE;
 	}
+
+	@Override
+	public IdentityColumnSupport getIdentityColumnSupport() {
+		return new CUBRIDIdentityColumnSupport();
+	}
+
 }

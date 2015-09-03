@@ -75,7 +75,7 @@ public class Insert {
 	}
 
 	public Insert addIdentityColumn(String columnName) {
-		String value = dialect.getIdentityInsertString();
+		String value = dialect.getIdentityColumnSupport().getIdentityInsertString();
 		if ( value != null ) {
 			addColumn( columnName, value );
 		}

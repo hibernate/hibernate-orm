@@ -6,8 +6,9 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.MappingException;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.identity.InformixIdentityColumnSupport;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.unique.InformixUniqueDelegate;
@@ -78,31 +79,6 @@ public class InformixDialect extends Dialect {
 	@Override
 	public String getAddColumnString() {
 		return "add";
-	}
-
-	@Override
-	public boolean supportsIdentityColumns() {
-		return true;
-	}
-
-	@Override
-	public String getIdentitySelectString(String table, String column, int type)
-			throws MappingException {
-		return type == Types.BIGINT
-				? "select dbinfo('serial8') from informix.systables where tabid=1"
-				: "select dbinfo('sqlca.sqlerrd1') from informix.systables where tabid=1";
-	}
-
-	@Override
-	public String getIdentityColumnString(int type) throws MappingException {
-		return type == Types.BIGINT ?
-				"serial8 not null" :
-				"serial not null";
-	}
-
-	@Override
-	public boolean hasDataTypeInIdentityColumn() {
-		return false;
 	}
 
 	/**
@@ -295,5 +271,10 @@ public class InformixDialect extends Dialect {
 	@Override
 	public UniqueDelegate getUniqueDelegate() {
 		return uniqueDelegate;
+	}
+
+	@Override
+	public IdentityColumnSupport getIdentityColumnSupport() {
+		return new InformixIdentityColumnSupport();
 	}
 }

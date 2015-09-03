@@ -7,6 +7,9 @@
 package org.hibernate.dialect;
 
 
+import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.identity.SybaseAnywhereIdentityColumnSupport;
+
 /**
  * SQL Dialect for Sybase Anywhere
  * extending Sybase (Enterprise) Dialect
@@ -38,8 +41,7 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 	}
 
 	@Override
-	public boolean supportsInsertSelectIdentity() {
-		return false;
+	public IdentityColumnSupport getIdentityColumnSupport() {
+		return new SybaseAnywhereIdentityColumnSupport();
 	}
-	
 }

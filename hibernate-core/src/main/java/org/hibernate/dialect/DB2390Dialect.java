@@ -6,6 +6,8 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.identity.DB2390IdentityColumnSupport;
+import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
@@ -51,11 +53,6 @@ public class DB2390Dialect extends DB2Dialect {
 	}
 
 	@Override
-	public String getIdentitySelectString() {
-		return "select identity_val_local() from sysibm.sysdummy1";
-	}
-
-	@Override
 	public boolean supportsLimit() {
 		return true;
 	}
@@ -90,6 +87,11 @@ public class DB2390Dialect extends DB2Dialect {
 	@Override
 	public LimitHandler getLimitHandler() {
 		return LIMIT_HANDLER;
+	}
+
+	@Override
+	public IdentityColumnSupport getIdentityColumnSupport() {
+		return new DB2390IdentityColumnSupport();
 	}
 
 }

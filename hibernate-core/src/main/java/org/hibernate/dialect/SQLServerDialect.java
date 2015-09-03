@@ -14,6 +14,8 @@ import org.hibernate.LockOptions;
 import org.hibernate.dialect.function.AnsiTrimEmulationFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.identity.SQLServerIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.type.StandardBasicTypes;
@@ -77,16 +79,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				.append( querySelect )
 				.insert( getAfterSelectInsertPoint( querySelect ), " top " + limit )
 				.toString();
-	}
-
-	/**
-	 * Use <tt>insert table(...) values(...) select SCOPE_IDENTITY()</tt>
-	 * <p/>
-	 * {@inheritDoc}
-	 */
-	@Override
-	public String appendIdentitySelectToInsert(String insertSQL) {
-		return insertSQL + " select scope_identity()";
 	}
 
 	@Override
@@ -203,6 +195,10 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	public int getInExpressionCountLimit() {
 		return PARAM_LIST_SIZE_LIMIT;
 	}
-	
+
+	@Override
+	public IdentityColumnSupport getIdentityColumnSupport() {
+		return new SQLServerIdentityColumnSupport();
+	}
 }
 

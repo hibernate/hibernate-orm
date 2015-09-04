@@ -179,7 +179,7 @@ public class SimpleSelect {
 		}
 
 		if ( lockOptions != null ) {
-			buf.append( dialect.getForUpdateString( lockOptions ) );
+			buf = new StringBuilder(dialect.applyLocksToSql( buf.toString(), lockOptions, null ) );
 		}
 
 		return dialect.transformSelectString( buf.toString() );

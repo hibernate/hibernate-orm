@@ -804,7 +804,10 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * @return The appropriate select command
 	 * @throws MappingException If IDENTITY generation is not supported.
+	 *
+	 * @deprecated use {@link Dialect#getIdentitySelectString(String, String, int)} instead
 	 */
+	@Deprecated
 	protected String getIdentitySelectString() throws MappingException {
 		throw new MappingException( getClass().getName() + " does not support identity key generation" );
 	}
@@ -826,7 +829,10 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * @return The appropriate DDL fragment.
 	 * @throws MappingException If IDENTITY generation is not supported.
+	 *
+	 * @deprecated use {@link Dialect#getIdentityColumnString(int)} instead
 	 */
+	@Deprecated
 	protected String getIdentityColumnString() throws MappingException {
 		throw new MappingException( getClass().getName() + " does not support identity key generation" );
 	}

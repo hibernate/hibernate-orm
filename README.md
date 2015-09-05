@@ -28,7 +28,7 @@ Gradle.
 Contributors should read the [Contributing Guide](CONTRIBUTING.md)
 
 See the guides for setting up [IntelliJ](https://developer.jboss.org/wiki/ContributingToHibernateUsingIntelliJ) or
-[Eclipse]() as your development environment.  [Building Hibernate ORM](https://community.jboss.org/wiki/BuildingHibernateORM4x) 
+[Eclipse](https://developer.jboss.org/wiki/ContributingToHibernateUsingEclipse) as your development environment.  [Building Hibernate ORM](https://community.jboss.org/wiki/BuildingHibernateORM4x) 
 is somewhat outdated, but still has
 
 

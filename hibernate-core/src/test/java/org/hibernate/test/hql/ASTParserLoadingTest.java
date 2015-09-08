@@ -1386,10 +1386,12 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	public void testSimpleSelectWithLimitAndOffset() throws Exception {
 		// just checking correctness of param binding code...
 		Session session = openSession();
+		Transaction t = session.beginTransaction();
 		session.createQuery( "from Animal" )
 				.setFirstResult( 2 )
 				.setMaxResults( 1 )
 				.list();
+		t.commit();
 		session.close();
 	}
 
@@ -1567,6 +1569,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		// which in-and-of-itself is not necessarily bad.  But somewhere later
 		// the choices made there caused joins to be dropped.
 		Session s = openSession();
+		Transaction t = s.beginTransaction();
 		String qryString =
 				"select a.id, a.description" +
 				" from Animal a" +
@@ -1599,6 +1602,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 				"      where h = f1" +
 				")";
 		s.createQuery( qryString ).list();
+		t.commit();
 		s.close();
 	}
 
@@ -2894,9 +2898,11 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	public void testFromOnly() throws Exception {
 		createTestBaseData();
 		Session session = openSession();
+		Transaction t = session.beginTransaction();
 		List results = session.createQuery( "from Animal" ).list();
 		assertEquals( "Incorrect result size", 2, results.size() );
 		assertTrue( "Incorrect result return type", results.get( 0 ) instanceof Animal );
+		t.commit();
 		session.close();
 		destroyTestBaseData();
 	}
@@ -2905,9 +2911,11 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	public void testSimpleSelect() throws Exception {
 		createTestBaseData();
 		Session session = openSession();
+		Transaction t = session.beginTransaction();
 		List results = session.createQuery( "select a from Animal as a" ).list();
 		assertEquals( "Incorrect result size", 2, results.size() );
 		assertTrue( "Incorrect result return type", results.get( 0 ) instanceof Animal );
+		t.commit();
 		session.close();
 		destroyTestBaseData();
 	}
@@ -2916,8 +2924,10 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	public void testEntityPropertySelect() throws Exception {
 		createTestBaseData();
 		Session session = openSession();
+		Transaction t = session.beginTransaction();
 		List results = session.createQuery( "select a.mother from Animal as a" ).list();
 		assertTrue( "Incorrect result return type", results.get( 0 ) instanceof Animal );
+		t.commit();
 		session.close();
 		destroyTestBaseData();
 	}
@@ -2927,6 +2937,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		createTestBaseData();
 
 		Session session = openSession();
+		Transaction t = session.beginTransaction();
 		List results = session.createQuery( "from Animal an where an.bodyWeight > 10" ).list();
 		assertEquals( "Incorrect result size", 1, results.size() );
 
@@ -2945,6 +2956,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		results = session.createQuery( "from Animal an where (an.bodyWeight > 10 and an.bodyWeight < 100) or an.bodyWeight is null" ).list();
 		assertEquals( "Incorrect result size", 1, results.size() );
 
+		t.commit();
 		session.close();
 
 		destroyTestBaseData();
@@ -2955,6 +2967,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		createTestBaseData();
 
 		Session session = openSession();
+		Transaction t = session.beginTransaction();
 
 		List results = session.createQuery( "from Animal an join fetch an.mother" ).list();
 		assertEquals( "Incorrect result size", 1, results.size() );
@@ -2968,6 +2981,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		mother = ( ( Animal ) results.get( 0 ) ).getMother();
 		assertTrue( "fetch uninitialized", mother != null && Hibernate.isInitialized( mother ) );
 
+		t.commit();
 		session.close();
 
 		destroyTestBaseData();
@@ -2978,6 +2992,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		createTestBaseData();
 
 		Session session = openSession();
+		Transaction t = session.beginTransaction();
 		List results = session.createQuery( "from Animal an join fetch an.offspring" ).list();
 		assertEquals( "Incorrect result size", 1, results.size() );
 		assertTrue( "Incorrect result return type", results.get( 0 ) instanceof Animal );
@@ -2990,6 +3005,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		os = ( ( Animal ) results.get( 0 ) ).getOffspring();
 		assertTrue( "fetch uninitialized", os != null && Hibernate.isInitialized( os ) && os.size() == 1 );
 
+		t.commit();
 		session.close();
 
 		destroyTestBaseData();
@@ -3010,6 +3026,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		session.save( mammal );
 		session.save( zoo );
 		txn.commit();
+		session.close();
 
 		session = openSession();
 		txn = session.beginTransaction();
@@ -3042,6 +3059,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		session.save( mammal );
 		session.save( zoo );
 		txn.commit();
+		session.close();
 
 		session = openSession();
 		txn = session.beginTransaction();
@@ -3074,6 +3092,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		session.save( mammal );
 		session.save( zoo );
 		txn.commit();
+		session.close();
 
 		session = openSession();
 		txn = session.beginTransaction();
@@ -3095,11 +3114,15 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	public void testProjectionQueries() throws Exception {
 		createTestBaseData();
 		Session session = openSession();
+		Transaction t = session.beginTransaction();
+
 		List results = session.createQuery( "select an.mother.id, max(an.bodyWeight) from Animal an group by an.mother.id" ).list();
 		// mysql returns nulls in this group by
 		assertEquals( "Incorrect result size", 2, results.size() );
 		assertTrue( "Incorrect return type", results.get( 0 ) instanceof Object[] );
-		assertEquals( "Incorrect return dimensions", 2, ( ( Object[] ) results.get( 0 ) ).length );
+		assertEquals( "Incorrect return dimensions", 2, ((Object[]) results.get( 0 )).length );
+
+		t.commit();
 		session.close();
 		destroyTestBaseData();
 	}
@@ -3132,6 +3155,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		createTestBaseData();
 
 		Session session = openSession();
+		Transaction t = session.beginTransaction();
 
 		List results = session.createQuery( "select new Animal(an.description, an.bodyWeight) from Animal an" ).list();
 		assertEquals( "Incorrect result size", 2, results.size() );
@@ -3210,6 +3234,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		assertEquals( "incorrect result size", 2, results.size() );
 		assertClassAssignability( Animal.class, results.get( 0 ).getClass() );
 
+		t.commit();
 		session.close();
 
 		destroyTestBaseData();
@@ -3431,7 +3456,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testIllegalMixedTransformerQueries() {
 		Session session = openSession();
-
+		Transaction t = session.beginTransaction();
 		try {
 			getSelectNewQuery( session ).setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP).list();
 			fail("'select new' together with a resulttransformer should result in error!");
@@ -3452,7 +3477,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		} catch(HibernateException he) {
 			assertTrue(he.getMessage().indexOf("ResultTransformer")==0);
 		}
-
+		t.commit();
 		session.close();
 	}
 
@@ -3467,28 +3492,33 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		String query = "select an.description as description, an.bodyWeight as bodyWeight from Animal an order by bodyWeight desc";
 
 		Session session = openSession();
+		Transaction t = session.beginTransaction();
 
 		List results = session.createQuery( query )
 		.setResultTransformer(Transformers.aliasToBean(Animal.class)).list();
+
 		assertEquals( "Incorrect result size", results.size(), 2 );
 		assertTrue( "Incorrect return type", results.get(0) instanceof Animal );
 		Animal firstAnimal = (Animal) results.get(0);
 		Animal secondAnimal = (Animal) results.get(1);
 		assertEquals("Mammal #1", firstAnimal.getDescription());
-		assertEquals("Mammal #2", secondAnimal.getDescription());
-		assertFalse(session.contains(firstAnimal));
+		assertEquals( "Mammal #2", secondAnimal.getDescription() );
+		assertFalse( session.contains( firstAnimal ) );
+		t.commit();
 		session.close();
 
 		session = openSession();
-
+		t = session.beginTransaction();
 		Iterator iter = session.createQuery( query )
 	     .setResultTransformer(Transformers.aliasToBean(Animal.class)).iterate();
 		assertTrue( "Incorrect result size", iter.hasNext() );
 		assertTrue( "Incorrect return type", iter.next() instanceof Animal );
 
+		t.commit();
 		session.close();
 
 		session = openSession();
+		t = session.beginTransaction();
 
 		ScrollableResults sr = session.createQuery( query )
 			     .setResultTransformer(Transformers.aliasToBean(Animal.class)).scroll();
@@ -3498,20 +3528,23 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		assertFalse( session.contains( sr.get( 0 ) ) );
 		sr.close();
 
+		t.commit();
 		session.close();
 
 		session = openSession();
+		t = session.beginTransaction();
 
 		results = session.createQuery( "select a from Animal a, Animal b order by a.id" )
 				.setResultTransformer( DistinctRootEntityResultTransformer.INSTANCE )
 				.list();
 		assertEquals( "Incorrect result size", 2, results.size());
-		assertTrue( "Incorrect return type", results.get(0) instanceof Animal );
+		assertTrue( "Incorrect return type", results.get( 0 ) instanceof Animal );
 		firstAnimal = (Animal) results.get(0);
 		secondAnimal = (Animal) results.get(1);
 		assertEquals( "Mammal #1", firstAnimal.getDescription() );
 		assertEquals( "Mammal #2", secondAnimal.getDescription() );
 
+		t.commit();
 		session.close();
 
 		destroyTestBaseData();
@@ -3524,6 +3557,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		String query = "select an as an from Animal an order by bodyWeight desc";
 
 		Session session = openSession();
+		Transaction t = session.beginTransaction();
 
 		List results = session.createQuery( query )
 		.setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP).list();
@@ -3536,11 +3570,13 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		Animal secondAnimal = (Animal) map.get("an");
 		assertEquals( "Mammal #1", firstAnimal.getDescription() );
 		assertEquals("Mammal #2", secondAnimal.getDescription());
-		assertTrue(session.contains(firstAnimal));
+		assertTrue( session.contains( firstAnimal));
 		assertSame( firstAnimal, session.get( Animal.class, firstAnimal.getId() ) );
+		t.commit();
 		session.close();
 
 		session = openSession();
+		t = session.beginTransaction();
 
 		Iterator iter = session.createQuery( query )
 	     .setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP).iterate();
@@ -3550,9 +3586,11 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		assertEquals( "Mammal #1", firstAnimal.getDescription() );
 		assertTrue( "Incorrect result size", iter.hasNext() );
 
+		t.commit();
 		session.close();
 
 		session = openSession();
+		t = session.beginTransaction();
 
 		ScrollableResults sr = session.createQuery( query )
 				.setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP).scroll();
@@ -3562,6 +3600,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		assertFalse( session.contains( sr.get( 0 ) ) );
 		sr.close();
 
+		t.commit();
 		session.close();
 
 		destroyTestBaseData();
@@ -3570,6 +3609,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testEJBQLFunctions() throws Exception {
 		Session session = openSession();
+		Transaction t = session.beginTransaction();
 
 		String hql = "from Animal a where a.description = concat('1', concat('2','3'), '4'||'5')||'0'";
 		session.createQuery(hql).list();
@@ -3672,6 +3712,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		hql = "from Animal a where a.description like 'x%ax%' escape 'x'";
 		session.createQuery(hql).list();
 
+		t.commit();
 		session.close();
 	}
 

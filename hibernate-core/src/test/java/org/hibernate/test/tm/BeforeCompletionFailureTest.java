@@ -127,7 +127,7 @@ public class BeforeCompletionFailureTest extends BaseNonConfigCoreFunctionalTest
 	public static class SimpleEntity {
 		@Id
 		public Integer id;
-		@Column(unique = true)
+		@Column(unique = true, name = "entity_key")
 		public String key;
 		public String name;
 

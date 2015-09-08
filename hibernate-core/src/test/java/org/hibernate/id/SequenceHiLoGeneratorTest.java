@@ -6,13 +6,10 @@
  */
 package org.hibernate.id;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Properties;
 
 import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -22,33 +19,35 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.SessionImpl;
-import org.hibernate.jdbc.Work;
 import org.hibernate.type.StandardBasicTypes;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
 
 /**
  * I went back to 3.3 source and grabbed the code/logic as it existed back then and crafted this
  * unit test so that we can make sure the value keep being generated in the expected manner
- * 
+ *
  * @author Steve Ebersole
  */
-@SuppressWarnings({ "deprecation" })
-@RequiresDialectFeature( DialectChecks.SupportsSequences.class )
+@SuppressWarnings({"deprecation"})
+@RequiresDialectFeature(DialectChecks.SupportsSequences.class)
 public class SequenceHiLoGeneratorTest extends BaseUnitTestCase {
 	private static final String TEST_SEQUENCE = "test_sequence";
 
 	private StandardServiceRegistry serviceRegistry;
 	private SessionFactoryImplementor sessionFactory;
 	private SequenceHiLoGenerator generator;
+	private SessionImplementor sessionImpl;
+	private SequenceValueExtractor sequenceValueExtractor;
 
 	@Before
 	public void setUp() throws Exception {
@@ -62,7 +61,10 @@ public class SequenceHiLoGeneratorTest extends BaseUnitTestCase {
 		Properties properties = new Properties();
 		properties.setProperty( SequenceGenerator.SEQUENCE, TEST_SEQUENCE );
 		properties.setProperty( SequenceHiLoGenerator.MAX_LO, "3" );
-		properties.put( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER, buildingContext.getObjectNameNormalizer() );
+		properties.put(
+				PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER,
+				buildingContext.getObjectNameNormalizer()
+		);
 
 		generator = new SequenceHiLoGenerator();
 		generator.configure( StandardBasicTypes.LONG, properties, serviceRegistry );
@@ -71,6 +73,7 @@ public class SequenceHiLoGeneratorTest extends BaseUnitTestCase {
 		generator.registerExportables( metadata.getDatabase() );
 
 		sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
+		sequenceValueExtractor = new SequenceValueExtractor( sessionFactory.getDialect(), TEST_SEQUENCE );
 	}
 
 	@After
@@ -85,61 +88,50 @@ public class SequenceHiLoGeneratorTest extends BaseUnitTestCase {
 
 	@Test
 	public void testHiLoAlgorithm() {
-		SessionImpl session = (SessionImpl) sessionFactory.openSession();
-		session.beginTransaction();
+		sessionImpl = (SessionImpl) sessionFactory.openSession();
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// initially sequence should be uninitialized
-		assertEquals( 0L, extractSequenceValue( session ) );
+		assertEquals( 0L, extractSequenceValue( sessionImpl ) );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// historically the hilo generators skipped the initial block of values;
 		// so the first generated id value is maxlo + 1, here be 4
-		Long generatedValue = (Long) generator.generate( session, null );
-		assertEquals( 4L, generatedValue.longValue() );
+		assertEquals( 4L, generateValue() );
 		// which should also perform the first read on the sequence which should set it to its "start with" value (1)
-		assertEquals( 1L, extractSequenceValue( session ) );
+		assertEquals( 1L, extractSequenceValue( sessionImpl ) );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		generatedValue = (Long) generator.generate( session, null );
-		assertEquals( 5L, generatedValue.longValue() );
-		assertEquals( 1L, extractSequenceValue( session ) );
+		assertEquals( 5L, generateValue() );
+		assertEquals( 1L, extractSequenceValue( sessionImpl ) );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		generatedValue = (Long) generator.generate( session, null );
-		assertEquals( 6L, generatedValue.longValue() );
-		assertEquals( 1L, extractSequenceValue( session ) );
+		assertEquals( 6L, generateValue() );
+		assertEquals( 1L, extractSequenceValue( sessionImpl ) );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		generatedValue = (Long) generator.generate( session, null );
-		assertEquals( 7L, generatedValue.longValue() );
+		assertEquals( 7L, generateValue() );
 		// unlike the newer strategies, the db value will not get update here. It gets updated on the next invocation
 		// after a clock over
-		assertEquals( 1L, extractSequenceValue( session ) );
+		assertEquals( 1L, extractSequenceValue( sessionImpl ) );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		generatedValue = (Long) generator.generate( session, null );
-		assertEquals( 8L, generatedValue.longValue() );
+		assertEquals( 8L, generateValue() );
 		// this should force an increment in the sequence value
-		assertEquals( 2L, extractSequenceValue( session ) );
+		assertEquals( 2L, extractSequenceValue( sessionImpl ) );
 
-		session.getTransaction().commit();
-		session.close();
+		((Session) sessionImpl).close();
 	}
 
-	private long extractSequenceValue(final SessionImplementor session) {
-		class WorkImpl implements Work {
-			private long value;
+	private long extractSequenceValue(SessionImplementor sessionImpl) {
+		return sequenceValueExtractor.extractSequenceValue( sessionImpl );
+	}
 
-			public void execute(Connection connection) throws SQLException {
-				PreparedStatement query = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( "select currval('" + TEST_SEQUENCE + "');" );
-				ResultSet resultSet = session.getJdbcCoordinator().getResultSetReturn().extract( query );
-				resultSet.next();
-				value = resultSet.getLong( 1 );
-			}
-		}
-		WorkImpl work = new WorkImpl();
-		( (Session) session ).doWork( work );
-		return work.value;
+	private long generateValue() {
+		Long generatedValue;
+		Transaction transaction = ((Session) sessionImpl).beginTransaction();
+		generatedValue = (Long) generator.generate( sessionImpl, null );
+		transaction.commit();
+		return generatedValue.longValue();
 	}
 }

@@ -27,6 +27,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
+import javax.persistence.Table;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
@@ -121,6 +122,7 @@ public class SelectCaseTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@javax.persistence.Entity
+	@Table(name = "entity")
 	public static class Entity {
 
 		@Id

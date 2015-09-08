@@ -14,10 +14,12 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.jpa.test.metamodel.Product;
 import org.hibernate.jpa.test.metamodel.Product_;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
 import org.junit.Test;
@@ -26,6 +28,7 @@ public class CastTest extends AbstractMetamodelSpecificTest {
 	private static final int QUANTITY = 2;
 
 	@Test
+	@SkipForDialect(value = DerbyDialect.class,comment = "Derby does not support cast from INTEGER to VARCHAR")
 	@TestForIssue( jiraKey = "HHH-5755" )
 	public void testCastToString() {
 		EntityManager em = getOrCreateEntityManager();

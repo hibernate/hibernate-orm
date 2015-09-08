@@ -15,6 +15,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
@@ -128,6 +129,7 @@ public class SortTest extends BaseCoreFunctionalTestCase {
 	}
 	
 	@Entity
+	@Table(name = "Owner")
 	private static class Owner {
 
 		@Id
@@ -140,6 +142,7 @@ public class SortTest extends BaseCoreFunctionalTestCase {
 	}
 	
 	@Entity
+	@Table(name = "Cat")
 	private static class Cat implements Comparable<Cat> {
 
 		@Id

@@ -31,7 +31,7 @@ public class BasicGetLoadAccessTest extends BaseNonConfigCoreFunctionalTestCase 
 	}
 
 	@Entity( name = "User" )
-	@Table( name = "user" )
+	@Table( name = "my_user" )
 	public static class User {
 		private Integer id;
 		private String name;

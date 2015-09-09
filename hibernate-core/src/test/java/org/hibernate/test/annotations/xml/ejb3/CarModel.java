@@ -12,7 +12,7 @@ import java.util.Date;
  * @author Emmanuel Bernard
  */
 public class CarModel extends Model {
-	@Column(name="`year`")
+	@Column(name="model_year")
 	private Date year;
 
 	public Date getYear() {

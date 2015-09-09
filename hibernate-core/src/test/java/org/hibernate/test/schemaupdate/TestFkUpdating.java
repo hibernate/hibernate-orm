@@ -11,6 +11,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
+import javax.persistence.Table;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.boot.MetadataSources;
@@ -67,6 +68,7 @@ public class TestFkUpdating {
 
 
 	@Entity( name = "User" )
+	@Table( name = "my_user")
 	public static class User {
 		private Integer id;
 		private Set<Role> roles;

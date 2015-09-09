@@ -160,7 +160,7 @@ public class ElementCollectionTests extends BaseNonConfigCoreFunctionalTestCase 
 		})
 		@ElementCollection(fetch = FetchType.LAZY)
 		@CollectionTable(name = "entity_map", joinColumns = @JoinColumn(name = "entity_id", nullable = false))
-		@MapKeyColumn(name = "key", nullable = false)
+		@MapKeyColumn(name = "map_key", nullable = false)
 		@Column(name = "value", nullable = false)
 		public Map<ValueType, ValueType> map = new HashMap<ValueType, ValueType>();
 

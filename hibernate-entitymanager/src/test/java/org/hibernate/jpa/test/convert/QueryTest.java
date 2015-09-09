@@ -7,6 +7,7 @@
 package org.hibernate.jpa.test.convert;
 
 import javax.persistence.AttributeConverter;
+import javax.persistence.Column;
 import javax.persistence.Converter;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
@@ -86,8 +87,10 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Embeddable
 	public static class Name {
+		@Column(name = "first_name")
 		public String first;
 		public String middle;
+		@Column(name = "last_name")
 		public String last;
 
 		public Name() {

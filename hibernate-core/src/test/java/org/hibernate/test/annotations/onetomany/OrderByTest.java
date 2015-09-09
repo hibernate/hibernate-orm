@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
 import org.hibernate.NullPrecedence;
 import org.hibernate.Session;
 import org.hibernate.dialect.H2Dialect;
@@ -406,8 +407,12 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 2, forum.getPosts().size() );
 		assertEquals( "post1", forum.getPosts().get( 0 ).getName() );
 		assertEquals( "post2", forum.getPosts().get( 1 ).getName() );
+		Hibernate.initialize( forum.getPosts() );
+		assertEquals( 2, forum.getPosts().size() );
 		assertEquals( 1, forum.getUsers().size() );
 		assertEquals( "john", forum.getUsers().get( 0 ).getName() );
+		Hibernate.initialize( forum.getUsers() );
+		assertEquals( 1, forum.getUsers().size() );
 	}
   
 	@Test

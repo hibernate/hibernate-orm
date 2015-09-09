@@ -546,28 +546,16 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 		}
 	}
 
-	final class SimpleAdd implements DelayedOperation {
-		private Object value;
+	final class SimpleAdd extends AbstractValueDelayedOperation {
 
-		public SimpleAdd(Object value) {
-			this.value = value;
+		public SimpleAdd(Object addedValue) {
+			super( addedValue, null );
 		}
 
 		@Override
 		@SuppressWarnings("unchecked")
 		public void operate() {
-			bag.add( value );
-		}
-
-		@Override
-		public Object getAddedInstance() {
-			return value;
-		}
-
-		@Override
-		public Object getOrphan() {
-			return null;
+			bag.add( getAddedInstance() );
 		}
 	}
-
 }

@@ -570,59 +570,49 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 		}
 	}
 
-	final class Put implements DelayedOperation {
+	abstract class AbstractMapValueDelayedOperation extends AbstractValueDelayedOperation {
 		private Object index;
-		private Object value;
-		private Object old;
-		
-		public Put(Object index, Object value, Object old) {
+
+		protected AbstractMapValueDelayedOperation(Object index, Object addedValue, Object orphan) {
+			super( addedValue, orphan );
 			this.index = index;
-			this.value = value;
-			this.old = old;
 		}
 
-		@Override
-		@SuppressWarnings("unchecked")
-		public void operate() {
-			map.put( index, value );
+		protected final Object getIndex() {
+			return index;
 		}
 
-		@Override
-		@SuppressWarnings("unchecked")
-		public Object getAddedInstance() {
-			return value;
-		}
-
-		@Override
-		@SuppressWarnings("unchecked")
-		public Object getOrphan() {
-			return old;
+		public final void replace(CollectionPersister persister, Map copyCache) {
+			super.replace( persister, copyCache );
+			if (  index != null  ) {
+				index = getReplacement( persister.getIndexType(), index, copyCache );
+			}
 		}
 	}
 
-	final class Remove implements DelayedOperation {
-		private Object index;
-		private Object old;
-		
-		public Remove(Object index, Object old) {
-			this.index = index;
-			this.old = old;
+	final class Put extends AbstractMapValueDelayedOperation {
+
+		public Put(Object index, Object addedValue, Object orphan) {
+			super( index, addedValue, orphan );
 		}
 
 		@Override
 		@SuppressWarnings("unchecked")
 		public void operate() {
-			map.remove( index );
+			map.put( getIndex(), getAddedInstance() );
+		}
+	}
+
+	final class Remove extends AbstractMapValueDelayedOperation {
+
+		public Remove(Object index, Object orphan) {
+			super( index, null, orphan );
 		}
 
 		@Override
-		public Object getAddedInstance() {
-			return null;
-		}
-
-		@Override
-		public Object getOrphan() {
-			return old;
+		@SuppressWarnings("unchecked")
+		public void operate() {
+			map.remove( getIndex() );
 		}
 	}
 }

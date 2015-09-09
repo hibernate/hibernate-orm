@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FlushMode;
@@ -469,6 +470,20 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		operationQueue.add( operation );
 		//needed so that we remove this collection from the second-level cache
 		dirty = true;
+	}
+
+	/**
+	 * Replace entity instances with copy in {@code copyCache}/.
+	 *
+	 * @param copyCache - mapping from entity in the process of being
+	 *                    merged to managed copy.
+	 */
+	public final void replaceQueuedOperationValues(CollectionPersister persister, Map copyCache) {
+		for ( DelayedOperation operation : operationQueue ) {
+			if ( ValueDelayedOperation.class.isInstance( operation ) ) {
+				( (ValueDelayedOperation) operation ).replace( persister, copyCache );
+			}
+		}
 	}
 
 	/**
@@ -1113,6 +1128,43 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		public Object getAddedInstance();
 
 		public Object getOrphan();
+	}
+
+	protected interface ValueDelayedOperation extends DelayedOperation {
+		void replace(CollectionPersister collectionPersister, Map copyCache);
+	}
+
+	protected abstract class AbstractValueDelayedOperation implements ValueDelayedOperation {
+		private Object addedValue;
+		private Object orphan;
+
+		protected AbstractValueDelayedOperation(Object addedValue, Object orphan) {
+			this.addedValue = addedValue;
+			this.orphan = orphan;
+		}
+
+		public void replace(CollectionPersister persister, Map copyCache) {
+			if ( addedValue != null ) {
+				addedValue = getReplacement( persister.getElementType(), addedValue, copyCache );
+			}
+			if ( orphan != null ) {
+				orphan = getReplacement( persister.getElementType(), orphan, copyCache );
+			}
+		}
+
+		protected final Object getReplacement(Type type, Object current, Map copyCache) {
+			return type.replace( current, null, session, owner, copyCache );
+		}
+
+		@Override
+		public final Object getAddedInstance() {
+			return addedValue;
+		}
+
+		@Override
+		public final Object getOrphan() {
+			return orphan;
+		}
 	}
 
 	/**

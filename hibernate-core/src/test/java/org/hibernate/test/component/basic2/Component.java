@@ -33,6 +33,7 @@ public class Component {
         Set<Stuff> stuffs = new HashSet<Stuff>();
 
         @Entity
+        @Table(name = "stuff")
         public static class Stuff {
             @Id
             private Long id;

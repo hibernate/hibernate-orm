@@ -26,6 +26,8 @@ import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.interceptors.CallInterceptor;
 import org.infinispan.interceptors.base.CommandInterceptor;
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
 
 import javax.transaction.TransactionManager;
 
@@ -41,6 +43,7 @@ import java.util.Map;
  */
 public abstract class BaseTransactionalDataRegion
 		extends BaseRegion implements TransactionalDataRegion {
+	private static final Log log = LogFactory.getLog( BaseTransactionalDataRegion.class );
 	private final CacheDataDescription metadata;
 	private final CacheKeysFactory cacheKeysFactory;
 
@@ -75,8 +78,12 @@ public abstract class BaseTransactionalDataRegion
 				&& !configuration.transaction().autoCommit();
 
 		if (useTombstones) {
+			if (configuration.eviction().maxEntries() >= 0) {
+				log.warn("Setting eviction on cache using tombstones can introduce inconsistencies!");
+			}
+
 			cache.removeInterceptor(CallInterceptor.class);
-			TombstoneCallInterceptor tombstoneCallInterceptor = new TombstoneCallInterceptor();
+			TombstoneCallInterceptor tombstoneCallInterceptor = new TombstoneCallInterceptor(tombstoneExpiration);
 			cache.getComponentRegistry().registerComponent(tombstoneCallInterceptor, TombstoneCallInterceptor.class);
 			List<CommandInterceptor> interceptorChain = cache.getInterceptorChain();
 			cache.addInterceptor(tombstoneCallInterceptor, interceptorChain.size());

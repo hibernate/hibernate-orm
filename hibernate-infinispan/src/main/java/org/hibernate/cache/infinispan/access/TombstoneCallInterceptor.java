@@ -19,12 +19,15 @@ import org.infinispan.context.Flag;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.interceptors.CallInterceptor;
+import org.infinispan.metadata.EmbeddedMetadata;
+import org.infinispan.metadata.Metadata;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Note that this does not implement all commands, only those appropriate for {@link TombstoneAccessDelegate}
@@ -39,6 +42,11 @@ public class TombstoneCallInterceptor extends CallInterceptor {
 	private static final UUID ZERO = new UUID(0, 0);
 
 	private AdvancedCache cache;
+	private final Metadata expiringMetadata;
+
+	public TombstoneCallInterceptor(long tombstoneExpiration) {
+		expiringMetadata = new EmbeddedMetadata.Builder().lifespan(tombstoneExpiration, TimeUnit.MILLISECONDS).build();
+	}
 
 	@Inject
 	public void injectDependencies(AdvancedCache cache) {
@@ -59,14 +67,14 @@ public class TombstoneCallInterceptor extends CallInterceptor {
 			return handleTombstone(e, (Tombstone) value);
 		}
 		else if (value instanceof FutureUpdate) {
-			return handleFutureUpdate(e, (FutureUpdate) value);
+			return handleFutureUpdate(e, (FutureUpdate) value, command);
 		}
 		else {
 			return super.visitPutKeyValueCommand(ctx, command);
 		}
 	}
 
-	private Object handleFutureUpdate(MVCCEntry e, FutureUpdate futureUpdate) {
+	private Object handleFutureUpdate(MVCCEntry e, FutureUpdate futureUpdate, PutKeyValueCommand command) {
 		Object storedValue = e.getValue();
 		if (storedValue instanceof FutureUpdate) {
 			FutureUpdate storedFutureUpdate = (FutureUpdate) storedValue;
@@ -83,6 +91,10 @@ public class TombstoneCallInterceptor extends CallInterceptor {
 			else {
 				// two conflicting updates
 				setValue(e, new FutureUpdate(ZERO, null));
+				e.setMetadata(expiringMetadata);
+				// Infinispan always commits the entry with data with the metadata provided to the command,
+				// However, in non-conflicting case we want to keep the value not expired
+				command.setMetadata(expiringMetadata);
 			}
 		}
 		else if (storedValue instanceof Tombstone){

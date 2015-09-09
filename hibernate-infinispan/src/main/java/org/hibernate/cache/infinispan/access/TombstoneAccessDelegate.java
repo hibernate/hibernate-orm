@@ -118,7 +118,7 @@ public class TombstoneAccessDelegate implements AccessDelegate {
 	protected void write(SessionImplementor session, Object key, Object value) {
 		TransactionCoordinator tc = session.getTransactionCoordinator();
 		FutureUpdateSynchronization sync = new FutureUpdateSynchronization(tc, writeCache, requiresTransaction, key, value);
-		// ReservedEntry is handled in TombstoneCallInterceptor
+		// FutureUpdate is handled in TombstoneCallInterceptor
 		writeCache.put(key, new FutureUpdate(sync.getUuid(), null), region.getTombstoneExpiration(), TimeUnit.MILLISECONDS);
 		tc.getLocalSynchronizations().registerSynchronization(sync);
 	}
@@ -127,9 +127,9 @@ public class TombstoneAccessDelegate implements AccessDelegate {
 	public void remove(SessionImplementor session, Object key) throws CacheException {
 		TransactionCoordinator transactionCoordinator = session.getTransactionCoordinator();
 		TombstoneSynchronization sync = new TombstoneSynchronization(transactionCoordinator, asyncWriteCache, requiresTransaction, region, key);
-		transactionCoordinator.getLocalSynchronizations().registerSynchronization(sync);
 		Tombstone tombstone = new Tombstone(sync.getUuid(), session.getTimestamp() + region.getTombstoneExpiration(), false);
 		writeCache.put(key, tombstone, region.getTombstoneExpiration(), TimeUnit.MILLISECONDS);
+		transactionCoordinator.getLocalSynchronizations().registerSynchronization(sync);
 	}
 
 	@Override

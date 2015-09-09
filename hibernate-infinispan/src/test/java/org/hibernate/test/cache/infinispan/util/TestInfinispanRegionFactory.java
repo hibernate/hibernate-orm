@@ -10,6 +10,7 @@ import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.test.fwk.TestResourceTracker;
 import org.infinispan.transaction.TransactionMode;
+import org.infinispan.util.TimeService;
 
 import java.util.Map;
 import java.util.Properties;
@@ -24,19 +25,27 @@ public class TestInfinispanRegionFactory extends InfinispanRegionFactory {
 	protected static final String PREFIX = TestInfinispanRegionFactory.class.getName() + ".";
 	public static final String TRANSACTIONAL = PREFIX + "transactional";
 	public static final String CACHE_MODE = PREFIX + "cacheMode";
+	public static final String TIME_SERVICE = PREFIX + "timeService";
 
 	private final boolean transactional;
 	private final CacheMode cacheMode;
+	private final TimeService timeService;
 
 	public TestInfinispanRegionFactory(Properties properties) {
 		transactional = (boolean) properties.getOrDefault(TRANSACTIONAL, false);
 		cacheMode = (CacheMode) properties.getOrDefault(CACHE_MODE, null);
+		timeService = (TimeService) properties.getOrDefault(TIME_SERVICE, null);
 	}
 
 	@Override
 	protected EmbeddedCacheManager createCacheManager(ConfigurationBuilderHolder holder) {
 		amendConfiguration(holder);
-		return new DefaultCacheManager(holder, true);
+		DefaultCacheManager cacheManager = new DefaultCacheManager(holder, true);
+		if (timeService != null) {
+			cacheManager.getGlobalComponentRegistry().registerComponent(timeService, TimeService.class);
+			cacheManager.getGlobalComponentRegistry().rewire();
+		}
+		return cacheManager;
 	}
 
 	protected void amendConfiguration(ConfigurationBuilderHolder holder) {
@@ -64,6 +73,15 @@ public class TestInfinispanRegionFactory extends InfinispanRegionFactory {
 			if (configurationBuilder.clustering().cacheMode().isInvalidation()) {
 				configurationBuilder.clustering().cacheMode(cacheMode);
 			}
+		}
+	}
+
+	@Override
+	public long nextTimestamp() {
+		if (timeService == null) {
+			return super.nextTimestamp();
+		} else {
+			return timeService.wallClockTime();
 		}
 	}
 }

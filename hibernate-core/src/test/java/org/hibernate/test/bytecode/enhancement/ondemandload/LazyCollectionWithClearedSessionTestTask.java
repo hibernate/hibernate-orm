@@ -57,31 +57,46 @@ public class LazyCollectionWithClearedSessionTestTask extends AbstractEnhancerTe
 		// first load the store, making sure collection is not initialized
 		Store store =  s.get( Store.class, 1 );
 		assertNotNull( store );
-		assertFalse( Hibernate.isInitialized( store.getInventories() ) );
-
+		assertFalse( Hibernate.isPropertyInitialized( store, "inventories" ) );
 		assertEquals( 1, getFactory().getStatistics().getSessionOpenCount() );
 		assertEquals( 0, getFactory().getStatistics().getSessionCloseCount() );
 
 		// then clear session and try to initialize collection
 		s.clear();
+		assertNotNull( store );
+		assertFalse( Hibernate.isPropertyInitialized( store, "inventories" ) );
 		store.getInventories().size();
-		assertTrue( Hibernate.isInitialized( store.getInventories() ) );
-
+		assertTrue( Hibernate.isPropertyInitialized( store, "inventories" ) );
+		// the extra Session is the temp Session needed to perform the init
 		assertEquals( 2, getFactory().getStatistics().getSessionOpenCount() );
 		assertEquals( 1, getFactory().getStatistics().getSessionCloseCount() );
 
+		// clear Session again.  The collection should still be recognized as initialized from above
+		s.clear();
+		assertNotNull( store );
+		assertTrue( Hibernate.isPropertyInitialized( store, "inventories" ) );
+		assertEquals( 2, getFactory().getStatistics().getSessionOpenCount() );
+		assertEquals( 1, getFactory().getStatistics().getSessionCloseCount() );
+
+		// lets clear the Session again and this time reload the Store
 		s.clear();
 		store = s.get( Store.class, 1 );
+		s.clear();
 		assertNotNull( store );
-		assertFalse( Hibernate.isInitialized( store.getInventories() ) );
-
+		// collection should be back to uninitialized since we have a new entity instance
+		assertFalse( Hibernate.isPropertyInitialized( store, "inventories" ) );
 		assertEquals( 2, getFactory().getStatistics().getSessionOpenCount() );
 		assertEquals( 1, getFactory().getStatistics().getSessionCloseCount() );
+		store.getInventories().size();
+		assertTrue( Hibernate.isPropertyInitialized( store, "inventories" ) );
+		// the extra Session is the temp Session needed to perform the init
+		assertEquals( 3, getFactory().getStatistics().getSessionOpenCount() );
+		assertEquals( 2, getFactory().getStatistics().getSessionCloseCount() );
 
+		// clear Session again.  The collection should still be recognized as initialized from above
 		s.clear();
-		store.getInventories().iterator();
-		assertTrue( Hibernate.isInitialized( store.getInventories() ) );
-
+		assertNotNull( store );
+		assertTrue( Hibernate.isPropertyInitialized( store, "inventories" ) );
 		assertEquals( 3, getFactory().getStatistics().getSessionOpenCount() );
 		assertEquals( 2, getFactory().getStatistics().getSessionCloseCount() );
 

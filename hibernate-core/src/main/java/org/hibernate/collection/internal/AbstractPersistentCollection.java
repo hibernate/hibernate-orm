@@ -598,7 +598,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 
 	protected void prepareForPossibleLoadingOutsideTransaction() {
 		if ( session != null ) {
-			allowLoadOutsideTransaction = session.getFactory().getSettings().isInitializeLazyStateOutsideTransactionsEnabled();
+			allowLoadOutsideTransaction = session.getFactory().getSessionFactoryOptions().isInitializeLazyStateOutsideTransactionsEnabled();
 
 			if ( allowLoadOutsideTransaction && sessionFactoryUuid == null ) {
 				try {

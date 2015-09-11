@@ -127,6 +127,16 @@ public class DerbyDialect extends DB2Dialect {
 	}
 
 	@Override
+	public String getQuerySequencesString() {
+		if ( supportsSequences() ) {
+			return "select SEQUENCENAME from SYS.SYSSEQUENCES";
+		}
+		else {
+			throw new MappingException( "Derby does not support sequence prior to release 10.6.1.0" );
+		}
+	}
+
+	@Override
 	public String getSequenceNextValString(String sequenceName) {
 		if ( supportsSequences() ) {
 			return "values next value for " + sequenceName;
@@ -233,7 +243,7 @@ public class DerbyDialect extends DB2Dialect {
 	}
 
 	private boolean hasWithClause(String normalizedSelect){
-		return normalizedSelect.startsWith( "with ", normalizedSelect.length()-7 );
+		return normalizedSelect.startsWith( "with ", normalizedSelect.length() - 7 );
 	}
 
 	private int getWithIndex(String querySelect) {
@@ -242,11 +252,6 @@ public class DerbyDialect extends DB2Dialect {
 			i = querySelect.lastIndexOf( "WITH " );
 		}
 		return i;
-	}
-
-	@Override
-	public String getQuerySequencesString() {
-		return null ;
 	}
 
 

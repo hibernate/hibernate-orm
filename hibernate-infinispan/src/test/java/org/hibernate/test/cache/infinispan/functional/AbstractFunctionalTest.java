@@ -11,12 +11,19 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.Session;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
+import org.hibernate.mapping.Column;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.mapping.RootClass;
+import org.hibernate.mapping.SimpleValue;
 import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
@@ -41,13 +48,15 @@ import org.junit.runners.Parameterized;
  */
 @RunWith(CustomParameterized.class)
 public abstract class AbstractFunctionalTest extends BaseNonConfigCoreFunctionalTestCase {
-	protected static final Object[] TRANSACTIONAL = new Object[]{"transactional", JtaPlatformImpl.class, JtaTransactionCoordinatorBuilderImpl.class, XaConnectionProvider.class, AccessType.TRANSACTIONAL, true, CacheMode.INVALIDATION_SYNC };
-	protected static final Object[] READ_WRITE_INVALIDATION = new Object[]{"read-write", null, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class, null, AccessType.READ_WRITE, false, CacheMode.INVALIDATION_SYNC };
-	protected static final Object[] READ_ONLY_INVALIDATION = new Object[]{"read-only", null, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class, null, AccessType.READ_ONLY, false, CacheMode.INVALIDATION_SYNC };
-	protected static final Object[] READ_WRITE_REPLICATED = new Object[]{"read-write", null, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class, null, AccessType.READ_WRITE, false, CacheMode.REPL_SYNC };
-	protected static final Object[] READ_ONLY_REPLICATED = new Object[]{"read-only", null, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class, null, AccessType.READ_ONLY, false, CacheMode.REPL_SYNC };
-	protected static final Object[] READ_WRITE_DISTRIBUTED = new Object[]{"read-write", null, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class, null, AccessType.READ_WRITE, false, CacheMode.DIST_SYNC };
-	protected static final Object[] READ_ONLY_DISTRIBUTED = new Object[]{"read-only", null, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class, null, AccessType.READ_ONLY, false, CacheMode.DIST_SYNC };
+	protected static final Object[] TRANSACTIONAL = new Object[]{"transactional", JtaPlatformImpl.class, JtaTransactionCoordinatorBuilderImpl.class, XaConnectionProvider.class, AccessType.TRANSACTIONAL, true, CacheMode.INVALIDATION_SYNC, false };
+	protected static final Object[] READ_WRITE_INVALIDATION = new Object[]{"read-write", null, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class, null, AccessType.READ_WRITE, false, CacheMode.INVALIDATION_SYNC, false };
+	protected static final Object[] READ_ONLY_INVALIDATION = new Object[]{"read-only", null, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class, null, AccessType.READ_ONLY, false, CacheMode.INVALIDATION_SYNC, false };
+	protected static final Object[] READ_WRITE_REPLICATED = new Object[]{"read-write", null, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class, null, AccessType.READ_WRITE, false, CacheMode.REPL_SYNC, false };
+	protected static final Object[] READ_ONLY_REPLICATED = new Object[]{"read-only", null, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class, null, AccessType.READ_ONLY, false, CacheMode.REPL_SYNC, false };
+	protected static final Object[] READ_WRITE_DISTRIBUTED = new Object[]{"read-write", null, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class, null, AccessType.READ_WRITE, false, CacheMode.DIST_SYNC, false };
+	protected static final Object[] READ_ONLY_DISTRIBUTED = new Object[]{"read-only", null, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class, null, AccessType.READ_ONLY, false, CacheMode.DIST_SYNC, false };
+	protected static final Object[] NONSTRICT_REPLICATED = new Object[]{"nonstrict", null, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class, null, AccessType.NONSTRICT_READ_WRITE, false, CacheMode.REPL_SYNC, true };
+	protected static final Object[] NONSTRICT_DISTRIBUTED = new Object[]{"nonstrict", null, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class, null, AccessType.NONSTRICT_READ_WRITE, false, CacheMode.DIST_SYNC, true };
 
 	// We need to use @ClassRule here since in @BeforeClassOnce startUp we're preparing the session factory,
 	// constructing CacheManager along - and there we check that the test has the name already set
@@ -75,13 +84,16 @@ public abstract class AbstractFunctionalTest extends BaseNonConfigCoreFunctional
 	@Parameterized.Parameter(value = 6)
 	public CacheMode cacheMode;
 
+	@Parameterized.Parameter(value = 7)
+	public boolean addVersions;
+
 	protected boolean useJta;
 
 	@CustomParameterized.Order(0)
 	@Parameterized.Parameters(name = "{0}, {6}")
 	public abstract List<Object[]> getParameters();
 
-	public List<Object[]> getParameters(boolean tx, boolean rw, boolean ro) {
+	public List<Object[]> getParameters(boolean tx, boolean rw, boolean ro, boolean nonstrict) {
 		ArrayList<Object[]> parameters = new ArrayList<>();
 		if (tx) {
 			parameters.add(TRANSACTIONAL);
@@ -95,6 +107,10 @@ public abstract class AbstractFunctionalTest extends BaseNonConfigCoreFunctional
 			parameters.add(READ_ONLY_INVALIDATION);
 			parameters.add(READ_ONLY_REPLICATED);
 			parameters.add(READ_ONLY_DISTRIBUTED);
+		}
+		if (nonstrict) {
+			parameters.add(NONSTRICT_REPLICATED);
+			parameters.add(NONSTRICT_DISTRIBUTED);
 		}
 		return parameters;
 	}
@@ -111,6 +127,36 @@ public abstract class AbstractFunctionalTest extends BaseNonConfigCoreFunctional
 				"cache/infinispan/functional/entities/Customer.hbm.xml",
 				"cache/infinispan/functional/entities/Contact.hbm.xml"
 		};
+	}
+
+	@Override
+	protected void afterMetadataBuilt(Metadata metadata) {
+		if (addVersions) {
+			for (PersistentClass clazz : metadata.getEntityBindings()) {
+				if (clazz.getVersion() != null) {
+					continue;
+				}
+				try {
+					clazz.getMappedClass().getMethod("getVersion");
+					clazz.getMappedClass().getMethod("setVersion", long.class);
+				} catch (NoSuchMethodException e) {
+					continue;
+				}
+				RootClass rootClazz = clazz.getRootClass();
+				Property versionProperty = new Property();
+				versionProperty.setName("version");
+				SimpleValue value = new SimpleValue((MetadataImplementor) metadata, rootClazz.getTable());
+				value.setTypeName("long");
+				Column column = new Column();
+				column.setValue(value);
+				column.setName("version");
+				value.addColumn(column);
+				rootClazz.getTable().addColumn(column);
+				versionProperty.setValue(value);
+				rootClazz.setVersion(versionProperty);
+				rootClazz.addProperty(versionProperty);
+			}
+		}
 	}
 
 	@Override

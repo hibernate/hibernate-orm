@@ -2,6 +2,8 @@ package org.hibernate.test.cache.infinispan.functional.entities;
 
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.Transient;
+
 import java.io.Serializable;
 
 /**
@@ -15,6 +17,9 @@ public class Person implements Serializable {
     Name name;
 
     int age;
+
+    @Transient
+    long version;
 
     public Person() {}
 
@@ -37,5 +42,13 @@ public class Person implements Serializable {
 
     public void setAge(int age) {
         this.age = age;
+    }
+
+    public long getVersion() {
+        return version;
+    }
+
+    public void setVersion(long version) {
+        this.version = version;
     }
 }

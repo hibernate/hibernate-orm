@@ -14,45 +14,55 @@ import java.util.Set;
  * @author Gavin King
  */
 public class Item {
-    private Long id;
-    private String name;
-    private String description;
-    private Item owner;
-    private Set<Item> items = new HashSet<Item>(  );
+	private Long id;
+	// mapping for version is added programmatically
+	private long version;
+	private String name;
+	private String description;
+	private Item owner;
+	private Set<Item> items = new HashSet<Item>(  );
 	private Item bagOwner;
 	private List<Item> bagOfItems = new ArrayList<Item>(  );
 	private Set<OtherItem> otherItems = new HashSet<OtherItem>(  );
 
-    public Item() {}
-    
-    public Item( String name, String description ) {
+	public Item() {}
+
+	public Item( String name, String description ) {
 		this.name = name;
 		this.description = description;
 	}
 
 	public String getDescription() {
-        return description;
-    }
+		  return description;
+	 }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+	public void setDescription(String description) {
+		  this.description = description;
+	 }
 
-    public Long getId() {
-        return id;
-    }
+	public Long getId() {
+		  return id;
+	 }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+	public void setId(Long id) {
+		  this.id = id;
+	 }
 
-    public String getName() {
-        return name;
-    }
+	public long getVersion() {
+		return version;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public void setVersion(long version) {
+		this.version = version;
+	}
+
+	public String getName() {
+		  return name;
+	 }
+
+	public void setName(String name) {
+		  this.name = name;
+	 }
 
 	public Item getOwner() {
 		return owner;

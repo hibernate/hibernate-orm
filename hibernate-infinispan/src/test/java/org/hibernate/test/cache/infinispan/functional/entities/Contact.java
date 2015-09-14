@@ -18,6 +18,8 @@ public class Contact implements Serializable {
 	String name;
 	String tlf;
 	Customer customer;
+	// mapping added programmatically
+	long version;
 
 	public Integer getId() {
 		return id;
@@ -49,6 +51,14 @@ public class Contact implements Serializable {
 
 	public void setCustomer(Customer customer) {
 		this.customer = customer;
+	}
+
+	public long getVersion() {
+		return version;
+	}
+
+	public void setVersion(long version) {
+		this.version = version;
 	}
 
 	@Override

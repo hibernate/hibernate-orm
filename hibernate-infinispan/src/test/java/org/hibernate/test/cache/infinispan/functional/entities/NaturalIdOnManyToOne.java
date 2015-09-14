@@ -13,6 +13,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.Transient;
 
 @Entity
 @NaturalIdCache
@@ -23,14 +24,16 @@ import javax.persistence.ManyToOne;
  * @author Hardy Ferentschik
  */
 public class NaturalIdOnManyToOne {
+	@Id
+	@GeneratedValue
+	int id;
 
-    @Id
-    @GeneratedValue
-    int id;
+	@Transient
+	long version;
 
-    @NaturalId
-    @ManyToOne
-    Citizen citizen;
+	@NaturalId
+	@ManyToOne
+	Citizen citizen;
 
 	public int getId() {
 		return id;
@@ -38,6 +41,14 @@ public class NaturalIdOnManyToOne {
 
 	public void setId(int id) {
 		this.id = id;
+	}
+
+	public long getVersion() {
+		return version;
+	}
+
+	public void setVersion(long version) {
+		this.version = version;
 	}
 
 	public Citizen getCitizen() {

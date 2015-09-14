@@ -8,7 +8,6 @@ package org.hibernate.cache.infinispan.collection;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.access.AccessDelegate;
-import org.hibernate.cache.infinispan.access.InvalidationCacheAccessDelegate;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CacheKeysFactory;
@@ -47,14 +46,7 @@ public class CollectionRegionImpl extends BaseTransactionalDataRegion implements
 	@Override
 	public CollectionRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {
 		checkAccessType( accessType );
-		AccessDelegate accessDelegate = createAccessDelegate();
-		switch ( accessType ) {
-			case READ_ONLY:
-			case READ_WRITE:
-			case TRANSACTIONAL:
-				return new CollectionAccess( this, accessDelegate );
-			default:
-				throw new CacheException( "Unsupported access type [" + accessType.getExternalName() + "]" );
-		}
+		AccessDelegate accessDelegate = createAccessDelegate(accessType);
+		return new CollectionAccess( this, accessDelegate );
 	}
 }

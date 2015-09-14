@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 import junit.framework.AssertionFailedError;
 import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -18,7 +19,6 @@ import org.hibernate.test.cache.infinispan.AbstractRegionAccessStrategyTest;
 import org.hibernate.test.cache.infinispan.NodeEnvironment;
 import org.hibernate.test.cache.infinispan.util.TestSynchronization;
 import org.hibernate.test.cache.infinispan.util.TestingKeyFactory;
-import org.infinispan.transaction.tm.BatchModeTransactionManager;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -32,7 +32,7 @@ import static org.mockito.Mockito.mock;
  * @author Galder Zamarreño
  * @since 3.5
  */
-public abstract class AbstractEntityRegionAccessStrategyTest extends
+public class EntityRegionAccessStrategyTest extends
 		AbstractRegionAccessStrategyTest<EntityRegionImpl, EntityRegionAccessStrategy> {
 	protected static int testCount;
 
@@ -48,16 +48,30 @@ public abstract class AbstractEntityRegionAccessStrategyTest extends
 
 	@Override
 	protected EntityRegionAccessStrategy getAccessStrategy(EntityRegionImpl region) {
-		return region.buildAccessStrategy(getAccessType());
-	}
-
-	@Test
-	public void testCacheConfiguration() {
+		return region.buildAccessStrategy( accessType );
 	}
 
 	@Test
 	public void testGetRegion() {
 		assertEquals("Correct region", localRegion, localAccessStrategy.getRegion());
+	}
+
+	@Test
+	public void testPutFromLoad() throws Exception {
+		if (accessType == AccessType.READ_ONLY) {
+			putFromLoadTestReadOnly(false);
+		} else {
+			putFromLoadTest(false);
+		}
+	}
+
+	@Test
+	public void testPutFromLoadMinimal() throws Exception {
+		if (accessType == AccessType.READ_ONLY) {
+			putFromLoadTestReadOnly(true);
+		} else {
+			putFromLoadTest(true);
+		}
 	}
 
 	/**
@@ -83,20 +97,19 @@ public abstract class AbstractEntityRegionAccessStrategyTest extends
 			@Override
 			public void run() {
 				try {
-					long txTimestamp = System.currentTimeMillis();
 					SessionImplementor session = mockedSession();
 					withTx(localEnvironment, session, () -> {
-						assertNull(localAccessStrategy.get(session, KEY, txTimestamp));
+						assertNull(localAccessStrategy.get(session, KEY, session.getTimestamp()));
 
 						writeLatch1.await();
 
 						if (useMinimalAPI) {
-							localAccessStrategy.putFromLoad(session, KEY, VALUE1, txTimestamp, null, true);
+							localAccessStrategy.putFromLoad(session, KEY, VALUE1, session.getTimestamp(), 1, true);
 						} else {
-							localAccessStrategy.putFromLoad(session, KEY, VALUE1, txTimestamp, null);
+							localAccessStrategy.putFromLoad(session, KEY, VALUE1, session.getTimestamp(), 1);
 						}
 
-						doUpdate(localAccessStrategy, session, KEY, VALUE2);
+						doUpdate(localAccessStrategy, session, KEY, VALUE2, 2);
 						return null;
 					});
 				} catch (Exception e) {
@@ -124,9 +137,10 @@ public abstract class AbstractEntityRegionAccessStrategyTest extends
 
 		assertThreadsRanCleanly();
 
-		long txTimestamp = System.currentTimeMillis();
-		assertEquals( VALUE2, localAccessStrategy.get(mockedSession(), KEY, txTimestamp));
-		Object remoteValue = remoteAccessStrategy.get(mockedSession(), KEY, txTimestamp);
+		SessionImplementor s1 = mockedSession();
+		assertEquals( VALUE2, localAccessStrategy.get(s1, KEY, s1.getTimestamp()));
+		SessionImplementor s2 = mockedSession();
+		Object remoteValue = remoteAccessStrategy.get(s2, KEY, s2.getTimestamp());
 		if (isUsingInvalidation()) {
 			// invalidation command invalidates pending put
 			assertNull(remoteValue);
@@ -151,12 +165,11 @@ public abstract class AbstractEntityRegionAccessStrategyTest extends
 			@Override
 			public void run() {
 				try {
-					long txTimestamp = System.currentTimeMillis();
 					SessionImplementor session = mockedSession();
 					withTx(localEnvironment, session, () -> {
-						assertNull("Correct initial value", localAccessStrategy.get(session, KEY, txTimestamp));
+						assertNull("Correct initial value", localAccessStrategy.get(session, KEY, session.getTimestamp()));
 
-						doInsert(localAccessStrategy, session, KEY, VALUE1);
+						doInsert(localAccessStrategy, session, KEY, VALUE1, 1);
 
 						readLatch.countDown();
 						commitLatch.await();
@@ -178,12 +191,11 @@ public abstract class AbstractEntityRegionAccessStrategyTest extends
 			@Override
 			public void run() {
 				try {
-					long txTimestamp = System.currentTimeMillis();
 					SessionImplementor session = mockedSession();
 					withTx(localEnvironment, session, () -> {
 						readLatch.await();
 
-						assertNull("Correct initial value", localAccessStrategy.get(session, KEY, txTimestamp));
+						assertNull("Correct initial value", localAccessStrategy.get(session, KEY, session.getTimestamp()));
 						return null;
 					});
 				} catch (Exception e) {
@@ -207,26 +219,53 @@ public abstract class AbstractEntityRegionAccessStrategyTest extends
 
 		assertThreadsRanCleanly();
 
-		long txTimestamp = System.currentTimeMillis();
-		assertEquals("Correct node1 value", VALUE1, localAccessStrategy.get(mockedSession(), KEY, txTimestamp));
+		SessionImplementor s1 = mockedSession();
+		assertEquals("Correct node1 value", VALUE1, localAccessStrategy.get(s1, KEY, s1.getTimestamp()));
 		Object expected = isUsingInvalidation() ? null : VALUE1;
-		assertEquals("Correct node2 value", expected, remoteAccessStrategy.get(mockedSession(), KEY, txTimestamp));
+		SessionImplementor s2 = mockedSession();
+		assertEquals("Correct node2 value", expected, remoteAccessStrategy.get(s2, KEY, s2.getTimestamp()));
 	}
 
-	protected void doInsert(EntityRegionAccessStrategy strategy, SessionImplementor session, Object key, String value) {
+	protected void doInsert(EntityRegionAccessStrategy strategy, SessionImplementor session, Object key, String value, Object version) {
 		strategy.insert(session, key, value, null);
 		session.getTransactionCoordinator().getLocalSynchronizations().registerSynchronization(
-				new TestSynchronization.AfterInsert(strategy, session, key, value));
+				new TestSynchronization.AfterInsert(strategy, session, key, value, version));
+	}
+
+	protected void putFromLoadTestReadOnly(boolean minimal) throws Exception {
+		final Object KEY = TestingKeyFactory.generateEntityCacheKey( KEY_BASE + testCount++ );
+
+		Object expected = isUsingInvalidation() ? null : VALUE1;
+
+		SessionImplementor session = mockedSession();
+		withTx(localEnvironment, session, () -> {
+			assertNull(localAccessStrategy.get(session, KEY, session.getTimestamp()));
+			if (minimal)
+				localAccessStrategy.putFromLoad(session, KEY, VALUE1, session.getTimestamp(), 1, true);
+			else
+				localAccessStrategy.putFromLoad(session, KEY, VALUE1, session.getTimestamp(), 1);
+			return null;
+		});
+
+		SessionImplementor s2 = mockedSession();
+		assertEquals(VALUE1, localAccessStrategy.get(s2, KEY, s2.getTimestamp()));
+		SessionImplementor s3 = mockedSession();
+		assertEquals(expected, remoteAccessStrategy.get(s3, KEY, s3.getTimestamp()));
 	}
 
 	@Test
 	public void testUpdate() throws Exception {
+		if (accessType == AccessType.READ_ONLY) {
+			return;
+		}
 
 		final Object KEY = generateNextKey();
 
 		// Set up initial state
-		localAccessStrategy.putFromLoad(mockedSession(), KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
-		remoteAccessStrategy.putFromLoad(mockedSession(), KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
+		SessionImplementor s1 = mockedSession();
+		localAccessStrategy.putFromLoad(s1, KEY, VALUE1, s1.getTimestamp(), 1);
+		SessionImplementor s2 = mockedSession();
+		remoteAccessStrategy.putFromLoad(s2, KEY, VALUE1, s2.getTimestamp(), 1);
 
 		// Let the async put propagate
 		sleep(250);
@@ -236,16 +275,15 @@ public abstract class AbstractEntityRegionAccessStrategyTest extends
 		final CountDownLatch completionLatch = new CountDownLatch(2);
 
 		Thread updater = new Thread("testUpdate-updater") {
-
 			@Override
 			public void run() {
 				try {
-					long txTimestamp = System.currentTimeMillis();
-					withTx(localEnvironment, mockedSession(), () -> {
+					SessionImplementor session = mockedSession();
+					withTx(localEnvironment, session, () -> {
 						log.debug("Transaction began, get initial value");
-						assertEquals("Correct initial value", VALUE1, localAccessStrategy.get(mockedSession(), KEY, txTimestamp));
+						assertEquals("Correct initial value", VALUE1, localAccessStrategy.get(session, KEY, session.getTimestamp()));
 						log.debug("Now update value");
-						doUpdate(AbstractEntityRegionAccessStrategyTest.this.localAccessStrategy, mockedSession(), KEY, VALUE2);
+						doUpdate(localAccessStrategy, session, KEY, VALUE2, 2);
 						log.debug("Notify the read latch");
 						readLatch.countDown();
 						log.debug("Await commit");
@@ -268,20 +306,20 @@ public abstract class AbstractEntityRegionAccessStrategyTest extends
 		};
 
 		Thread reader = new Thread("testUpdate-reader") {
-
 			@Override
 			public void run() {
 				try {
-					long txTimestamp = System.currentTimeMillis();
 					SessionImplementor session = mockedSession();
 					withTx(localEnvironment, session, () -> {
 						log.debug("Transaction began, await read latch");
 						readLatch.await();
 						log.debug("Read latch acquired, verify local access strategy");
 
-						// This won't block w/ mvc and will read the old value
-						Object expected = VALUE1;
-						assertEquals("Correct value", expected, localAccessStrategy.get(session, KEY, txTimestamp));
+						// This won't block w/ mvc and will read the old value (if transactional as the transaction
+						// is not being committed yet, or if non-strict as we do the actual update only after transaction)
+						// or null if non-transactional
+						Object expected = isTransactional() || accessType == AccessType.NONSTRICT_READ_WRITE ? VALUE1 : null;
+						assertEquals("Correct value", expected, localAccessStrategy.get(session, KEY, session.getTimestamp()));
 						return null;
 					});
 				} catch (Exception e) {
@@ -307,25 +345,30 @@ public abstract class AbstractEntityRegionAccessStrategyTest extends
 
 		assertThreadsRanCleanly();
 
-		long txTimestamp = System.currentTimeMillis();
-		assertEquals("Correct node1 value", VALUE2, localAccessStrategy.get(mockedSession(), KEY, txTimestamp));
+		SessionImplementor s3 = mockedSession();
+		assertEquals("Correct node1 value", VALUE2, localAccessStrategy.get(s3, KEY, s3.getTimestamp()));
 		Object expected = isUsingInvalidation() ? null : VALUE2;
-		assertEquals("Correct node2 value", expected, remoteAccessStrategy.get(mockedSession(), KEY, txTimestamp));
+		SessionImplementor s4 = mockedSession();
+		assertEquals("Correct node2 value", expected, remoteAccessStrategy.get(s4, KEY, s4.getTimestamp()));
 	}
 
-	protected void doUpdate(EntityRegionAccessStrategy strategy, SessionImplementor session, Object key, Object value) throws javax.transaction.RollbackException, javax.transaction.SystemException {
+	protected void doUpdate(EntityRegionAccessStrategy strategy, SessionImplementor session, Object key, Object value, Object version) throws javax.transaction.RollbackException, javax.transaction.SystemException {
 		SoftLock softLock = strategy.lockItem(session, key, null);
 		strategy.update(session, key, value, null, null);
 		session.getTransactionCoordinator().getLocalSynchronizations().registerSynchronization(
-				new TestSynchronization.AfterUpdate(strategy, session, key, value, softLock));
+				new TestSynchronization.AfterUpdate(strategy, session, key, value, version, softLock));
 	}
 
 	@Test
 	public void testContestedPutFromLoad() throws Exception {
+		if (accessType == AccessType.READ_ONLY) {
+			return;
+		}
 
 		final Object KEY = TestingKeyFactory.generateEntityCacheKey(KEY_BASE + testCount++);
 
-		localAccessStrategy.putFromLoad(mockedSession(), KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
+		SessionImplementor s1 = mockedSession();
+		localAccessStrategy.putFromLoad(s1, KEY, VALUE1, s1.getTimestamp(), 1);
 
 		final CountDownLatch pferLatch = new CountDownLatch(1);
 		final CountDownLatch pferCompletionLatch = new CountDownLatch(1);
@@ -333,17 +376,14 @@ public abstract class AbstractEntityRegionAccessStrategyTest extends
 		final CountDownLatch completionLatch = new CountDownLatch(1);
 
 		Thread blocker = new Thread("Blocker") {
-
 			@Override
 			public void run() {
-
 				try {
 					SessionImplementor session = mockedSession();
-					long txTimestamp = System.currentTimeMillis();
 					withTx(localEnvironment, session, () -> {
-						assertEquals("Correct initial value", VALUE1, localAccessStrategy.get(session, KEY, txTimestamp));
+						assertEquals("Correct initial value", VALUE1, localAccessStrategy.get(session, KEY, session.getTimestamp()));
 
-						doUpdate(localAccessStrategy, session, KEY, VALUE2);
+						doUpdate(localAccessStrategy, session, KEY, VALUE2, 2);
 
 						pferLatch.countDown();
 						commitLatch.await();
@@ -361,15 +401,12 @@ public abstract class AbstractEntityRegionAccessStrategyTest extends
 		};
 
 		Thread putter = new Thread("Putter") {
-
 			@Override
 			public void run() {
-
 				try {
-					long txTimestamp = System.currentTimeMillis();
 					SessionImplementor session = mockedSession();
 					withTx(localEnvironment, session, () -> {
-						localAccessStrategy.putFromLoad(session, KEY, VALUE1, txTimestamp, new Integer(1));
+						localAccessStrategy.putFromLoad(session, KEY, VALUE1, session.getTimestamp(), 1);
 						return null;
 					});
 				} catch (Exception e) {
@@ -394,7 +431,7 @@ public abstract class AbstractEntityRegionAccessStrategyTest extends
 
 		assertThreadsRanCleanly();
 
-		long txTimestamp = System.currentTimeMillis();
-		assertEquals("Correct node1 value", VALUE2, localAccessStrategy.get(null, KEY, txTimestamp));
+		SessionImplementor session = mockedSession();
+		assertEquals("Correct node1 value", VALUE2, localAccessStrategy.get(session, KEY, session.getTimestamp()));
 	}
 }

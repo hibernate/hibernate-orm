@@ -9,12 +9,9 @@ package org.hibernate.test.cache.infinispan.entity;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.test.cache.infinispan.AbstractExtraAPITest;
-import org.hibernate.test.cache.infinispan.util.TestInfinispanRegionFactory;
 import org.junit.Test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.mockito.Mockito.mock;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Tests for the "extra API" in EntityRegionAccessStrategy;.
@@ -32,56 +29,23 @@ public class EntityRegionExtraAPITest extends AbstractExtraAPITest<EntityRegionA
 
 	@Override
 	protected EntityRegionAccessStrategy getAccessStrategy() {
-		return environment.getEntityRegion( REGION_NAME, CACHE_DATA_DESCRIPTION).buildAccessStrategy( getAccessType() );
-	}
-
-	protected AccessType getAccessType() {
-		return AccessType.TRANSACTIONAL;
+		return environment.getEntityRegion( REGION_NAME, CACHE_DATA_DESCRIPTION).buildAccessStrategy( accessType );
 	}
 
 	@Test
 	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testAfterInsert() {
-		assertFalse("afterInsert always returns false",	accessStrategy.afterInsert(SESSION,	KEY, VALUE1, Integer.valueOf( 1 )));
+		boolean retval = accessStrategy.afterInsert(SESSION,	KEY, VALUE1, Integer.valueOf( 1 ));
+		assertEquals(accessType == AccessType.NONSTRICT_READ_WRITE, retval);
 	}
 
 	@Test
 	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testAfterUpdate() {
-		assertFalse("afterInsert always returns false",	accessStrategy.afterUpdate(
-						SESSION,	KEY, VALUE2, Integer.valueOf( 1 ), Integer.valueOf( 2 ),	new MockSoftLock()));
-	}
-
-	public static class Transactional extends EntityRegionExtraAPITest {
-		@Override
-		protected AccessType getAccessType() {
-			return AccessType.TRANSACTIONAL;
+		if (accessType == AccessType.READ_ONLY) {
+			return;
 		}
-
-		@Override
-		protected boolean useTransactionalCache() {
-			return true;
-		}
-	}
-
-	public static class ReadWrite extends EntityRegionExtraAPITest {
-		@Override
-		protected AccessType getAccessType() {
-			return AccessType.READ_WRITE;
-		}
-	}
-
-
-	public static class ReadOnly extends EntityRegionExtraAPITest {
-		@Override
-		protected AccessType getAccessType() {
-			return AccessType.READ_ONLY;
-		}
-
-		@Test(expected = UnsupportedOperationException.class)
-		@Override
-		public void testAfterUpdate() {
-			accessStrategy.afterUpdate(null, KEY, VALUE2, 1, 2, new MockSoftLock());
-		}
+		boolean retval = accessStrategy.afterUpdate(SESSION,	KEY, VALUE2, Integer.valueOf( 1 ), Integer.valueOf( 2 ),	new MockSoftLock());
+		assertEquals(accessType == AccessType.NONSTRICT_READ_WRITE, retval);
 	}
 }

@@ -28,17 +28,14 @@ import static org.junit.Assert.fail;
  * @since 3.5
  */
 public class EntityRegionImplTest extends AbstractEntityCollectionRegionTest {
+	protected static final String CACHE_NAME = "test";
 
 	@Override
 	protected void supportedAccessTypeTest(RegionFactory regionFactory, Properties properties) {
-		EntityRegion region = regionFactory.buildEntityRegion("test", properties, MUTABLE_NON_VERSIONED);
-		assertNotNull(region.buildAccessStrategy(AccessType.READ_ONLY));
-		assertNotNull(region.buildAccessStrategy(AccessType.READ_WRITE));
-		assertNotNull(region.buildAccessStrategy(AccessType.TRANSACTIONAL));
-		try {
-			region.buildAccessStrategy(AccessType.NONSTRICT_READ_WRITE);
-			fail("Incorrectly got NONSTRICT_READ_WRITE");
-		} catch (CacheException good) {
+		for (AccessType accessType : AccessType.values()) {
+			EntityRegion region = regionFactory.buildEntityRegion("test", properties, MUTABLE_NON_VERSIONED);
+			assertNotNull(region.buildAccessStrategy(accessType));
+			((InfinispanRegionFactory) regionFactory).getCacheManager().removeCache(CACHE_NAME);
 		}
 	}
 

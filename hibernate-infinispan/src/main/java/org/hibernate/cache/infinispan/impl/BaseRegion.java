@@ -47,8 +47,6 @@ public abstract class BaseRegion implements Region {
 	protected volatile long lastRegionInvalidation = Long.MIN_VALUE;
 	protected int invalidations = 0;
 
-	private PutFromLoadValidator validator;
-
 	/**
     * Base region constructor.
     *
@@ -239,13 +237,6 @@ public abstract class BaseRegion implements Region {
 		else if (accessType == AccessType.READ_WRITE && cache.getCacheConfiguration().transaction().transactionMode().isTransactional()) {
 			log.warn("Requesting READ_WRITE cache concurrency strategy but the cache was configured as transactional.");
 		}
-	}
-
-	protected synchronized PutFromLoadValidator getValidator() {
-		if (validator == null) {
-			validator = new PutFromLoadValidator(cache);
-		}
-		return validator;
 	}
 
 	protected void runInvalidation(boolean inTransaction) {

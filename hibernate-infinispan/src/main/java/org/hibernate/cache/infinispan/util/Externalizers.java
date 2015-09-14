@@ -26,6 +26,8 @@ public class Externalizers {
 	public final static int TOMBSTONE_UPDATE = 1203;
 	public final static int FUTURE_UPDATE = 1204;
 	public final static int VALUE_EXTRACTOR = 1205;
+	public final static int VERSIONED_ENTRY = 1206;
+	public final static int EXCLUDE_EMPTY_EXTRACT_VALUE = 1207;
 
 	public final static AdvancedExternalizer[] ALL_EXTERNALIZERS = new AdvancedExternalizer[] {
 			new UUIDExternalizer(),
@@ -33,7 +35,9 @@ public class Externalizers {
 			new Tombstone.ExcludeTombstonesFilterExternalizer(),
 			new TombstoneUpdate.Externalizer(),
 			new FutureUpdate.Externalizer(),
-			new FutureUpdate.ValueExtractorExternalizer()
+			new FutureUpdate.ValueExtractorExternalizer(),
+			new VersionedEntry.Externalizer(),
+			new VersionedEntry.ExcludeEmptyExtractValueExternalizer()
 	};
 
 	public static class UUIDExternalizer implements AdvancedExternalizer<UUID> {

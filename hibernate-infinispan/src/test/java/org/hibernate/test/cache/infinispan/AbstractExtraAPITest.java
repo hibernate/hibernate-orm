@@ -46,8 +46,6 @@ public abstract class AbstractExtraAPITest<S extends RegionAccessStrategy> exten
 
 	protected abstract S getAccessStrategy();
 
-	protected abstract AccessType getAccessType();
-
 	@After
 	public final void releaseLocalAccessStrategy() throws Exception {
 		if ( environment != null ) {

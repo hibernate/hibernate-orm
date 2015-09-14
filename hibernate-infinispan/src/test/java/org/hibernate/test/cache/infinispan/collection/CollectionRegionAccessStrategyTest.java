@@ -43,7 +43,7 @@ import static org.junit.Assert.assertTrue;
  * @author Galder Zamarreño
  * @since 3.5
  */
-public abstract class AbstractCollectionRegionAccessStrategyTest extends
+public class CollectionRegionAccessStrategyTest extends
 		AbstractRegionAccessStrategyTest<CollectionRegionImpl, CollectionRegionAccessStrategy> {
 	protected static int testCount;
 
@@ -59,11 +59,8 @@ public abstract class AbstractCollectionRegionAccessStrategyTest extends
 
 	@Override
 	protected CollectionRegionAccessStrategy getAccessStrategy(CollectionRegionImpl region) {
-		return region.buildAccessStrategy( getAccessType() );
+		return region.buildAccessStrategy( accessType );
 	}
-
-	@Test
-	public abstract void testCacheConfiguration();
 
 	@Test
 	public void testGetRegion() {
@@ -92,7 +89,7 @@ public abstract class AbstractCollectionRegionAccessStrategyTest extends
 				Callable<Void> pferCallable = new Callable<Void>() {
 					public Void call() throws Exception {
 						SessionImplementor session = mockedSession();
-						delegate.putFromLoad(session, "k1", "v1", 0, null );
+						delegate.putFromLoad(session, "k1", "v1", session.getTimestamp(), null );
 						return null;
 					}
 				};
@@ -163,7 +160,16 @@ public abstract class AbstractCollectionRegionAccessStrategyTest extends
 		};
 	}
 
-	@Override
+	@Test
+	public void testPutFromLoad() throws Exception {
+		putFromLoadTest(false);
+	}
+
+	@Test
+	public void testPutFromLoadMinimal() throws Exception {
+		putFromLoadTest(true);
+	}
+
 	protected void putFromLoadTest(final boolean useMinimalAPI) throws Exception {
 
 		final Object KEY = generateNextKey();
@@ -176,17 +182,16 @@ public abstract class AbstractCollectionRegionAccessStrategyTest extends
 			@Override
 			public void run() {
 				try {
-					long txTimestamp = System.currentTimeMillis();
 					SessionImplementor session = mockedSession();
 					withTx(localEnvironment, session, () -> {
-						assertNull(localAccessStrategy.get(session, KEY, txTimestamp));
+						assertNull(localAccessStrategy.get(session, KEY, session.getTimestamp()));
 
 						writeLatch1.await();
 
 						if (useMinimalAPI) {
-							localAccessStrategy.putFromLoad(session, KEY, VALUE2, txTimestamp, new Integer(2), true);
+							localAccessStrategy.putFromLoad(session, KEY, VALUE2, session.getTimestamp(), 2, true);
 						} else {
-							localAccessStrategy.putFromLoad(session, KEY, VALUE2, txTimestamp, new Integer(2));
+							localAccessStrategy.putFromLoad(session, KEY, VALUE2, session.getTimestamp(), 2);
 						}
 						return null;
 					});
@@ -220,8 +225,10 @@ public abstract class AbstractCollectionRegionAccessStrategyTest extends
 
 		long txTimestamp = System.currentTimeMillis();
 
-		assertEquals( VALUE2, localAccessStrategy.get(mockedSession(), KEY, txTimestamp ) );
-		Object remoteValue = remoteAccessStrategy.get(mockedSession(), KEY, txTimestamp);
+		SessionImplementor s1 = mockedSession();
+		assertEquals( VALUE2, localAccessStrategy.get(s1, KEY, s1.getTimestamp() ) );
+		SessionImplementor s2 = mockedSession();
+		Object remoteValue = remoteAccessStrategy.get(s2, KEY, s2.getTimestamp());
 		if (isUsingInvalidation()) {
 			assertEquals( VALUE1, remoteValue);
 		}

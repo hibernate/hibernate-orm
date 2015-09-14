@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.cache.infinispan.functional.cluster;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -19,7 +18,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.test.cache.infinispan.functional.entities.Contact;
 import org.hibernate.test.cache.infinispan.functional.entities.Customer;
 import org.hibernate.testing.TestForIssue;
@@ -63,7 +61,7 @@ public class EntityCollectionInvalidationTest extends DualNodeTest {
 
 	@Override
 	public List<Object[]> getParameters() {
-		return getParameters(true, true, false);
+		return getParameters(true, true, false, true);
 	}
 
 	@Override

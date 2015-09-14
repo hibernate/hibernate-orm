@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.cache.infinispan.functional.cluster;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -45,7 +44,7 @@ public class NaturalIdInvalidationTest extends DualNodeTest {
 
 	@Override
 	public List<Object[]> getParameters() {
-		return getParameters(true, true, true);
+		return getParameters(true, true, true, true);
 	}
 
 	@Override

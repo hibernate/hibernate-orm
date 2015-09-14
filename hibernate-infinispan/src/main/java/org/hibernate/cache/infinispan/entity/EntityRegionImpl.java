@@ -47,18 +47,12 @@ public class EntityRegionImpl extends BaseTransactionalDataRegion implements Ent
 	@Override
 	public EntityRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {
 		checkAccessType(accessType);
-		if ( !getCacheDataDescription().isMutable() ) {
-			accessType = AccessType.READ_ONLY;
+		AccessDelegate accessDelegate = createAccessDelegate(accessType);
+		if ( accessType == AccessType.READ_ONLY || !getCacheDataDescription().isMutable() ) {
+			return new ReadOnlyAccess( this, accessDelegate );
 		}
-		AccessDelegate accessDelegate = createAccessDelegate();
-		switch ( accessType ) {
-			case READ_ONLY:
-				return new ReadOnlyAccess( this, accessDelegate);
-			case READ_WRITE:
-			case TRANSACTIONAL:
-				return new ReadWriteAccess( this, accessDelegate);
-			default:
-				throw new CacheException( "Unsupported access type [" + accessType.getExternalName() + "]" );
+		else {
+			return new ReadWriteAccess( this, accessDelegate );
 		}
 	}
 }

@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.cache.infinispan.functional;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -33,7 +32,7 @@ import static org.junit.Assert.assertNull;
 public class BulkOperationsTest extends SingleNodeTest {
 	@Override
 	public List<Object[]> getParameters() {
-		return getParameters(true, true, false);
+		return getParameters(true, true, false, true);
 	}
 
 	@ClassRule

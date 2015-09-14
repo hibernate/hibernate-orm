@@ -15,7 +15,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
 import org.hibernate.Transaction;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -23,6 +22,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.cache.infinispan.access.InvalidationCacheAccessDelegate;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.RegionAccessStrategy;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Restrictions;
@@ -105,6 +105,9 @@ public abstract class CorrectnessTestCase {
    @Parameterized.Parameter(1)
    public CacheMode cacheMode;
 
+   @Parameterized.Parameter(2)
+   public AccessType accessType;
+
    static ThreadLocal<Integer> threadNode = new ThreadLocal<>();
 
    final AtomicInteger timestampGenerator = new AtomicInteger();
@@ -134,33 +137,24 @@ public abstract class CorrectnessTestCase {
    public static class Jta extends CorrectnessTestCase {
       private final TransactionManager transactionManager  = TestingJtaPlatformImpl.transactionManager();
 
-      @Parameterized.Parameter(2)
-      public boolean transactional;
-
-      @Parameterized.Parameter(3)
-      public boolean readOnly;
-
       @Parameterized.Parameters(name = "{0}")
       public List<Object[]> getParameters() {
          return Arrays.<Object[]>asList(
-               new Object[] { "transactional, invalidation", CacheMode.INVALIDATION_SYNC, true, false },
-               new Object[] { "read-only, invalidation", CacheMode.INVALIDATION_SYNC, false, true }, // maybe not needed
-               new Object[] { "read-write, invalidation", CacheMode.INVALIDATION_SYNC, false, false },
-               new Object[] { "read-write, replicated", CacheMode.REPL_SYNC, false, false },
-               new Object[] { "read-write, distributed", CacheMode.DIST_SYNC, false, false }
+               new Object[] { "transactional, invalidation", CacheMode.INVALIDATION_SYNC, AccessType.TRANSACTIONAL },
+               new Object[] { "read-only, invalidation", CacheMode.INVALIDATION_SYNC, AccessType.READ_ONLY }, // maybe not needed
+               new Object[] { "read-write, invalidation", CacheMode.INVALIDATION_SYNC, AccessType.READ_WRITE },
+               new Object[] { "read-write, replicated", CacheMode.REPL_SYNC, AccessType.READ_WRITE },
+               new Object[] { "read-write, distributed", CacheMode.DIST_SYNC, AccessType.READ_WRITE },
+               new Object[] { "non-strict, replicated", CacheMode.REPL_SYNC, AccessType.NONSTRICT_READ_WRITE }
          );
       }
 
       @Override
       protected void applySettings(StandardServiceRegistryBuilder ssrb) {
-         ssrb
-               .applySetting( Environment.JTA_PLATFORM, TestingJtaPlatformImpl.class.getName() )
-               .applySetting( Environment.CONNECTION_PROVIDER, JtaAwareConnectionProviderImpl.class.getName() )
-               .applySetting( Environment.TRANSACTION_COORDINATOR_STRATEGY, JtaTransactionCoordinatorBuilderImpl.class.getName() )
-               .applySetting(TestInfinispanRegionFactory.TRANSACTIONAL, transactional);
-         if (readOnly) {
-            ssrb.applySetting(Environment.DEFAULT_CACHE_CONCURRENCY_STRATEGY, CacheConcurrencyStrategy.READ_ONLY.toAccessType().getExternalName());
-         }
+         super.applySettings(ssrb);
+         ssrb.applySetting( Environment.JTA_PLATFORM, TestingJtaPlatformImpl.class.getName() );
+         ssrb.applySetting( Environment.CONNECTION_PROVIDER, JtaAwareConnectionProviderImpl.class.getName() );
+         ssrb.applySetting( Environment.TRANSACTION_COORDINATOR_STRATEGY, JtaTransactionCoordinatorBuilderImpl.class.getName() );
       }
 
       @Override
@@ -188,7 +182,7 @@ public abstract class CorrectnessTestCase {
 
       @Override
       protected Operation getOperation() {
-         if (readOnly) {
+         if (accessType == AccessType.READ_ONLY) {
             ThreadLocalRandom random = ThreadLocalRandom.current();
             Operation operation;
             int r = random.nextInt(30);
@@ -208,9 +202,10 @@ public abstract class CorrectnessTestCase {
       @Parameterized.Parameters(name = "{0}")
       public List<Object[]> getParameters() {
          return Arrays.<Object[]>asList(
-               new Object[] { "read-write, invalidation", CacheMode.INVALIDATION_SYNC },
-               new Object[] { "read-write, replicated", CacheMode.REPL_SYNC },
-               new Object[] { "read-write, distributed", CacheMode.DIST_SYNC }
+               new Object[] { "read-write, invalidation", CacheMode.INVALIDATION_SYNC, AccessType.READ_WRITE },
+               new Object[] { "read-write, replicated", CacheMode.REPL_SYNC, AccessType.READ_WRITE },
+               new Object[] { "read-write, distributed", CacheMode.DIST_SYNC, AccessType.READ_WRITE },
+               new Object[] { "non-strict, replicated", CacheMode.REPL_SYNC, AccessType.READ_WRITE }
          );
       }
 
@@ -225,7 +220,6 @@ public abstract class CorrectnessTestCase {
          super.applySettings(ssrb);
          ssrb.applySetting(Environment.JTA_PLATFORM, NoJtaPlatform.class.getName());
          ssrb.applySetting(Environment.TRANSACTION_COORDINATOR_STRATEGY, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class.getName());
-         ssrb.applySetting(TestInfinispanRegionFactory.TRANSACTIONAL, false);
       }
    }
 
@@ -255,6 +249,8 @@ public abstract class CorrectnessTestCase {
    }
 
    protected void applySettings(StandardServiceRegistryBuilder ssrb) {
+      ssrb.applySetting( Environment.DEFAULT_CACHE_CONCURRENCY_STRATEGY, accessType.getExternalName());
+      ssrb.applySetting(TestInfinispanRegionFactory.TRANSACTIONAL, accessType == AccessType.TRANSACTIONAL);
    }
 
    @After

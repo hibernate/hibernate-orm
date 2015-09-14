@@ -111,7 +111,8 @@ public class TombstoneCallInterceptor extends CallInterceptor {
 			}
 			else {
 				// this is the pre-update
-				setValue(e, new FutureUpdate(futureUpdate.getUuid(), storedValue));
+				// change in logic: we don't keep the old value around anymore (for read-write strategy)
+				setValue(e, new FutureUpdate(futureUpdate.getUuid(), null));
 			}
 		}
 		return null;
@@ -178,11 +179,11 @@ public class TombstoneCallInterceptor extends CallInterceptor {
 		Map<Object, CacheEntry> contextEntries = ctx.getLookedUpEntries();
 		AdvancedCache decoratedCache = cache.getAdvancedCache().withFlags(flags != null ? flags.toArray(new Flag[flags.size()]) : null);
 		// In non-transactional caches we don't care about context
-		CloseableIterable<CacheEntry<Object, Void>> iterable = decoratedCache
+		CloseableIterable<CacheEntry<Object, Object>> iterable = decoratedCache
 				.filterEntries(Tombstone.EXCLUDE_TOMBSTONES)
 				.converter(FutureUpdate.VALUE_EXTRACTOR);
 		try {
-			for (CacheEntry<Object, Void> entry : iterable) {
+			for (CacheEntry<Object, Object> entry : iterable) {
 				if (entry.getValue() != null && size++ == Integer.MAX_VALUE) {
 					return Integer.MAX_VALUE;
 				}

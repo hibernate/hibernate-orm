@@ -24,6 +24,7 @@ import org.infinispan.AdvancedCache;
 import org.infinispan.commons.util.CloseableIterator;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Configuration;
+import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.interceptors.CallInterceptor;
 import org.infinispan.interceptors.base.CommandInterceptor;
 import org.infinispan.util.logging.Log;
@@ -142,11 +143,12 @@ public abstract class BaseTransactionalDataRegion
 		// We can never use cache.clear() since tombstones must be kept.
 		try {
 			AdvancedCache localCache = Caches.localCache(cache);
-			CloseableIterator it = Caches.keys(localCache, Tombstone.EXCLUDE_TOMBSTONES).iterator();
+			CloseableIterator<CacheEntry> it = Caches.entrySet(localCache, Tombstone.EXCLUDE_TOMBSTONES).iterator();
 			try {
 				while (it.hasNext()) {
 					// Cannot use it.next(); it.remove() due to ISPN-5653
-					localCache.remove(it.next());
+					CacheEntry entry = it.next();
+					localCache.remove(entry.getKey(), entry.getValue());
 				}
 			}
 			finally {

@@ -5,7 +5,6 @@ import org.hibernate.test.cache.infinispan.functional.entities.Name;
 import org.hibernate.test.cache.infinispan.functional.entities.Person;
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -21,7 +20,7 @@ import static org.junit.Assert.assertTrue;
 public class EqualityTest extends SingleNodeTest {
 	 @Override
 	 public List<Object[]> getParameters() {
-		  return getParameters(true, true, true);
+		  return getParameters(true, true, true, true);
 	 }
 
 	 @Override

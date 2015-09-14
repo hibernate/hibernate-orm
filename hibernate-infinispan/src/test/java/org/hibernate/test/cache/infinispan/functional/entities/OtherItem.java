@@ -14,6 +14,8 @@ import java.util.List;
  */
 public class OtherItem {
 	private Long id;
+	// mapping added programmatically
+	private long version;
 	private String name;
 	private Item favoriteItem;
 	private List<Item> bagOfItems = new ArrayList<Item>();
@@ -27,6 +29,14 @@ public class OtherItem {
 
 	public void setId(Long id) {
 		this.id = id;
+	}
+
+	public long getVersion() {
+		return version;
+	}
+
+	public void setVersion(long version) {
+		this.version = version;
 	}
 
 	public String getName() {

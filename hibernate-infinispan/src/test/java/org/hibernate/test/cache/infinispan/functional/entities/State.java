@@ -10,6 +10,7 @@ package org.hibernate.test.cache.infinispan.functional.entities;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Transient;
 
 /**
  * @author Emmanuel Bernard
@@ -19,6 +20,8 @@ public class State {
 	@Id
 	@GeneratedValue
 	private Integer id;
+	@Transient
+	private long version;
 	private String name;
 
 	public Integer getId() {
@@ -27,6 +30,14 @@ public class State {
 
 	public void setId(Integer id) {
 		this.id = id;
+	}
+
+	public long getVersion() {
+		return version;
+	}
+
+	public void setVersion(long version) {
+		this.version = version;
 	}
 
 	public String getName() {

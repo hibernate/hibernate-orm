@@ -12,6 +12,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.Transient;
 
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NaturalIdCache;
@@ -25,6 +26,8 @@ public class Citizen {
 	@Id
 	@GeneratedValue
 	private Integer id;
+	@Transient
+	private long version;
 	private String firstname;
 	private String lastname;
 	@NaturalId
@@ -40,6 +43,14 @@ public class Citizen {
 
 	public void setId(Integer id) {
 		this.id = id;
+	}
+
+	public long getVersion() {
+		return version;
+	}
+
+	public void setVersion(long version) {
+		this.version = version;
 	}
 
 	public String getFirstname() {

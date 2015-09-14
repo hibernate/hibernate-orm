@@ -15,6 +15,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.util.Caches;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
@@ -59,13 +60,29 @@ public abstract class AbstractNonFunctionalTest extends org.hibernate.testing.ju
 	}
 
 	@CustomParameterized.Order(1)
-	@Parameterized.Parameters(name = "{2}")
+	@Parameterized.Parameters(name = "{2},{3}")
 	public List<Object[]> getCacheModeParameters() {
 		ArrayList<Object[]> modes = new ArrayList<>();
-		modes.add(new Object[] { CacheMode.INVALIDATION_SYNC });
-		if (!useTransactionalCache()) {
-			modes.add(new Object[]{CacheMode.REPL_SYNC});
-			modes.add(new Object[]{CacheMode.DIST_SYNC});
+		for (AccessType accessType : new AccessType[] {
+				AccessType.TRANSACTIONAL,
+				AccessType.READ_ONLY,
+				AccessType.READ_WRITE
+		}) {
+			modes.add(new Object[]{CacheMode.INVALIDATION_SYNC, accessType});
+		}
+		for (AccessType accessType : new AccessType[] {
+				AccessType.READ_ONLY,
+				AccessType.READ_WRITE,
+				AccessType.NONSTRICT_READ_WRITE
+		}) {
+			modes.add(new Object[]{CacheMode.REPL_SYNC, accessType});
+			modes.add(new Object[]{CacheMode.DIST_SYNC, accessType});
+			if (canUseLocalMode()) {
+				modes.add(new Object[]{CacheMode.LOCAL, accessType});
+			}
+		}
+		if (canUseLocalMode()) {
+			modes.add(new Object[]{CacheMode.LOCAL, AccessType.TRANSACTIONAL});
 		}
 		return modes;
 	}
@@ -78,6 +95,10 @@ public abstract class AbstractNonFunctionalTest extends org.hibernate.testing.ju
 
 	@Parameterized.Parameter(2)
 	public CacheMode cacheMode;
+
+	@Parameterized.Parameter(3)
+	public AccessType accessType;
+
 
 	public static final String REGION_PREFIX = "test";
 
@@ -112,6 +133,10 @@ public abstract class AbstractNonFunctionalTest extends org.hibernate.testing.ju
 			System.clearProperty(JGROUPS_CFG_FILE);
 		else
 			System.setProperty(JGROUPS_CFG_FILE, jgroupsCfgFile);
+	}
+
+	protected boolean canUseLocalMode() {
+		return true;
 	}
 
 	protected <T> T withTx(NodeEnvironment environment, SessionImplementor session, Callable<T> callable) throws Exception {
@@ -178,16 +203,12 @@ public abstract class AbstractNonFunctionalTest extends org.hibernate.testing.ju
 	protected StandardServiceRegistryBuilder createStandardServiceRegistryBuilder() {
 		final StandardServiceRegistryBuilder ssrb = CacheTestUtil.buildBaselineStandardServiceRegistryBuilder(
 				REGION_PREFIX, getRegionFactoryClass(), true, false, jtaPlatform);
-		ssrb.applySetting(TestInfinispanRegionFactory.TRANSACTIONAL, useTransactionalCache());
+		ssrb.applySetting(TestInfinispanRegionFactory.TRANSACTIONAL, accessType == AccessType.TRANSACTIONAL);
 		ssrb.applySetting(TestInfinispanRegionFactory.CACHE_MODE, cacheMode);
 		return ssrb;
 	}
 
 	protected Class<? extends RegionFactory> getRegionFactoryClass() {
 		return TestInfinispanRegionFactory.class;
-	}
-
-	protected boolean useTransactionalCache() {
-		return false;
 	}
 }

@@ -18,6 +18,7 @@ public class Account implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private Integer id;
+	private long version;
 	private AccountHolder accountHolder;
 	private Integer balance;
 	private String branch;
@@ -28,6 +29,14 @@ public class Account implements Serializable {
 
 	public void setId(Integer id) {
 		this.id = id;
+	}
+
+	public long getVersion() {
+		return version;
+	}
+
+	public void setVersion(long version) {
+		this.version = version;
 	}
 
 	public AccountHolder getAccountHolder() {

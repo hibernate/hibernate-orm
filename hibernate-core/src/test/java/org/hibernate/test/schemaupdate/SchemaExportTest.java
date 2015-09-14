@@ -124,7 +124,7 @@ public abstract class SchemaExportTest extends BaseUnitTestCase {
 			assertEquals( 0, schemaExport.getExceptions().size() );
 		}
 		else {
-			assertEquals( 2, schemaExport.getExceptions().size() );
+			assertEquals( 1, schemaExport.getExceptions().size() );
 		}
         // call create again; it should drop tables before re-creating
         schemaExport.create( true, true );

@@ -49,6 +49,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	private final FetchMode[] joinedFetch;
 	private final boolean isKey;
 	private boolean hasNotNullProperty;
+	private final boolean createEmptyCompositesEnabled;
 
 	protected final EntityMode entityMode;
 	protected final ComponentTuplizer componentTuplizer;
@@ -80,6 +81,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 
 		this.entityMode = metamodel.getEntityMode();
 		this.componentTuplizer = metamodel.getComponentTuplizer();
+		this.createEmptyCompositesEnabled = metamodel.isCreateEmptyCompositesEnabled();
 	}
 
 	public boolean isKey() {
@@ -158,9 +160,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		if ( x == y ) {
 			return true;
 		}
-		if ( x == null || y == null ) {
-			return false;
-		}
+		// null value and empty component are considered equivalent
 		Object[] xvalues = getPropertyValues( x, entityMode );
 		Object[] yvalues = getPropertyValues( y, entityMode );
 		for ( int i = 0; i < propertySpan; i++ ) {
@@ -176,9 +176,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		if ( x == y ) {
 			return true;
 		}
-		if ( x == null || y == null ) {
-			return false;
-		}
+		// null value and empty component are considered equivalent
 		for ( int i = 0; i < propertySpan; i++ ) {
 			if ( !propertyTypes[i].isEqual( getPropertyValue( x, i ), getPropertyValue( y, i ) ) ) {
 				return false;
@@ -193,9 +191,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		if ( x == y ) {
 			return true;
 		}
-		if ( x == null || y == null ) {
-			return false;
-		}
+		// null value and empty component are considered equivalent
 		for ( int i = 0; i < propertySpan; i++ ) {
 			if ( !propertyTypes[i].isEqual( getPropertyValue( x, i ), getPropertyValue( y, i ), factory ) ) {
 				return false;
@@ -253,9 +249,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		if ( x == y ) {
 			return false;
 		}
-		if ( x == null || y == null ) {
-			return true;
-		}
+		// null value and empty component are considered equivalent
 		for ( int i = 0; i < propertySpan; i++ ) {
 			if ( propertyTypes[i].isDirty( getPropertyValue( x, i ), getPropertyValue( y, i ), session ) ) {
 				return true;
@@ -269,9 +263,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		if ( x == y ) {
 			return false;
 		}
-		if ( x == null || y == null ) {
-			return true;
-		}
+		// null value and empty component are considered equivalent
 		int loc = 0;
 		for ( int i = 0; i < propertySpan; i++ ) {
 			int len = propertyTypes[i].getColumnSpan( session.getFactory() );
@@ -408,6 +400,9 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 
 	public Object getPropertyValue(Object component, int i)
 			throws HibernateException {
+		if (component == null) {
+			component = new Object[propertySpan];
+		}
 		if ( component instanceof Object[] ) {
 			// A few calls to hashCode pass the property values already in an
 			// Object[] (ex: QueryKey hash codes for cached queries).
@@ -429,6 +424,9 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	@Override
 	public Object[] getPropertyValues(Object component, EntityMode entityMode)
 			throws HibernateException {
+		if (component == null) {
+			component = new Object[propertySpan];
+		}
 		if ( component instanceof Object[] ) {
 			// A few calls to hashCode pass the property values already in an 
 			// Object[] (ex: QueryKey hash codes for cached queries).
@@ -689,6 +687,9 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 			setPropertyValues( result, resolvedValues, entityMode );
 			return result;
 		}
+		else if ( isCreateEmptyCompositesEnabled() ) {
+			return instantiate( owner, session );
+		}
 		else {
 			return null;
 		}
@@ -826,5 +827,9 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	@Override
 	public boolean hasNotNullProperty() {
 		return hasNotNullProperty;
+	}
+
+	private boolean isCreateEmptyCompositesEnabled() {
+		return createEmptyCompositesEnabled;
 	}
 }

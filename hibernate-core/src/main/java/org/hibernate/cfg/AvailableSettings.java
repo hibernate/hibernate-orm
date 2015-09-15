@@ -1009,4 +1009,13 @@ public interface AvailableSettings {
 	 * Values are {@code true} (pass the NULLs) or {@code false} (do not pass the NULLs).
 	 */
 	String PROCEDURE_NULL_PARAM_PASSING = "hibernate.proc.param_null_passing";
+
+	/*
+	 * Enable instantiation of composite/embedded objects when all of its attribute values are {@code null}.
+	 * The default (and historical) behavior is that a {@code null} reference will be used to represent the 
+	 * composite when all of its attributes are {@code null}
+	 *
+	 * @since 5.1
+	 */
+	String CREATE_EMPTY_COMPOSITES_ENABLED = "hibernate.create_empty_composites.enabled";
 }

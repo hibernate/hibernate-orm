@@ -212,7 +212,7 @@
         <property name="severity" value="warning" />
     </module>
 
-    <module name="NewlineAtEndOfFile" />
+<!--     <module name="NewlineAtEndOfFile" /> -->
 
     <!--
         Used to collect "todo" comments into a single location

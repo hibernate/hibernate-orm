@@ -269,7 +269,7 @@ public class TombstoneTest extends SingleNodeTest {
       awaitOrThrow(postEvictLatch);
 
       Map contents = Caches.entrySet(entityCache).toMap();
-      assertEquals(0, contents.size());
+      assertEquals(Collections.EMPTY_MAP, contents);
       assertNull(contents.get(itemId));
 
       preFlushLatch.countDown();
@@ -295,6 +295,7 @@ public class TombstoneTest extends SingleNodeTest {
       return EXECUTOR.submit(() -> withTxSessionApply(s -> {
          try {
             Item item = s.load(Item.class, id);
+            item.getName(); // force load & putFromLoad before the barrier
             loadBarrier.await(WAIT_TIMEOUT, TimeUnit.SECONDS);
             s.delete(item);
             if (preFlushLatch != null) {
@@ -323,6 +324,7 @@ public class TombstoneTest extends SingleNodeTest {
       return EXECUTOR.submit(() -> withTxSessionApply(s -> {
          try {
             Item item = s.load(Item.class, id);
+            item.getName(); // force load & putFromLoad before the barrier
             loadBarrier.await(WAIT_TIMEOUT, TimeUnit.SECONDS);
             item.setDescription("Updated item");
             s.update(item);

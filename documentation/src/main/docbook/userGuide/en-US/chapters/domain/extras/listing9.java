@@ -20,23 +20,20 @@ public class Person {
 
 	@Override
 	public int hashCode() {
-		assert ssn != null;
-		return ssn.hashCode();
+		return java.util.Objects.hash(ssn);
 	}
 
 	@Override
-	public boolean equals() {
-		if ( this == o ) {
-			return true;
-		}
-		if ( !( o instanceof Person ) ) {
-			return false;
-		}
+	public boolean equals(Object rhs) {
+	/**
+	 * A proxy class does not compare well. So we first have to get the real
+	 * class
+	 */
+	if (rhs == null || Hibernate.getClass(this) != Hibernate.getClass(rhs))
+		return false;
+	Person that = (Person) rhs;
 
-		final Person other = (Person) o;
-		assert ssn != null;
-		assert other.ssn != null;
-
-		return ssn.equals( other.ssn );
-	}
+	if (!java.util.Objects.equals(ssn, that.ssn))
+		return false;
+	return true;
 }

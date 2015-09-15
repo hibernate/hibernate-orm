@@ -19,6 +19,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.IngresDialect;
@@ -2608,8 +2609,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		an.setBodyWeight(123.45f);
 		session.persist( an );
 		String str = (String) session.createQuery("select str(an.bodyWeight) from Animal an where str(an.bodyWeight) like '%1%'").uniqueResult();
-		if ( getDialect() instanceof DB2Dialect || getDialect() instanceof TeradataDialect) {
-			assertTrue( str.startsWith("1.234") );
+		if ( (getDialect() instanceof DB2Dialect || getDialect() instanceof TeradataDialect) && !(getDialect() instanceof DerbyDialect) ) {
+			assertTrue( str.startsWith( "1.234" ) );
 		}
 		else //noinspection deprecation
 			if ( getDialect() instanceof SybaseDialect || getDialect() instanceof Sybase11Dialect || getDialect() instanceof SybaseASE15Dialect || getDialect() instanceof SybaseAnywhereDialect || getDialect() instanceof SQLServerDialect ) {

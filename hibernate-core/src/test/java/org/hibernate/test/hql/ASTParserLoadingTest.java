@@ -755,7 +755,12 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 						"from Human where cast(? as string) is null" :
 						"from Human where ? is null"
 				;
-		s.createQuery( query ).setParameter( 0, null ).list();
+		if ( getDialect() instanceof DerbyDialect ) {
+			s.createQuery( query ).setParameter( 0, "null" ).list();
+		}
+		else {
+			s.createQuery( query ).setParameter( 0, null ).list();
+		}
 
 		s.getTransaction().commit();
 		s.close();

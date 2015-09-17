@@ -11,7 +11,6 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Locale;
-import java.util.Set;
 
 import org.hibernate.MappingException;
 import org.hibernate.dialect.function.AnsiTrimFunction;
@@ -19,12 +18,12 @@ import org.hibernate.dialect.function.DerbyConcatFunction;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
-import org.hibernate.engine.jdbc.env.spi.AnsiSqlKeywords;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.mapping.Column;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DerbyCaseFragment;
 
@@ -554,5 +553,15 @@ public class DerbyDialect extends DB2Dialect {
 		registerKeyword( "XMLPARSE" );
 		registerKeyword( "XMLSERIALIZE" );
 		registerKeyword( "YEAR" );
+	}
+
+	@Override
+	public String getCastTypeName(int code) {
+		switch ( code ) {
+			case Types.VARBINARY:
+				return "varchar("+ Column.DEFAULT_LENGTH +")";
+			default:
+				return super.getCastTypeName( code );
+		}
 	}
 }

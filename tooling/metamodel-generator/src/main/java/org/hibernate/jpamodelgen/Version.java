@@ -19,5 +19,3 @@ public final class Version {
 		return "[WORKING]";
 	}
 }
-
-

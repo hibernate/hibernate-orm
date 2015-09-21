@@ -72,5 +72,3 @@ class AbstractConstraintSource implements ConstraintSource {
 		return result;
 	}
 }
-
-

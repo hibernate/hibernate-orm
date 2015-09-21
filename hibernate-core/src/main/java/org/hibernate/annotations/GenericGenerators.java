@@ -26,4 +26,3 @@ public @interface GenericGenerators {
 	 */
 	GenericGenerator[] value();
 }
-

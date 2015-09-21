@@ -136,7 +136,4 @@ public class GeoDbWkb {
 		}
 		return ByteBuffer.from( baos.toByteArray() );
 	}
-
-
 }
-

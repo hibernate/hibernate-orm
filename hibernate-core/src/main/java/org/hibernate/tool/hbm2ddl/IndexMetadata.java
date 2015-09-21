@@ -40,9 +40,3 @@ public class IndexMetadata {
 		return "IndexMatadata(" + name + ')';
 	}
 }
-
-
-
-
-
-

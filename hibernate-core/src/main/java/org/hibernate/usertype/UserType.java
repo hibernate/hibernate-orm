@@ -160,11 +160,4 @@ public interface UserType {
 	 * @return the value to be merged
 	 */
 	public Object replace(Object original, Object target, Object owner) throws HibernateException;
-
 }
-
-
-
-
-
-

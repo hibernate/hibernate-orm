@@ -201,4 +201,3 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		return new SQLServerIdentityColumnSupport();
 	}
 }
-

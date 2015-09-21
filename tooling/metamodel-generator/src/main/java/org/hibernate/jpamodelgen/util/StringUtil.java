@@ -99,5 +99,3 @@ public final class StringUtil {
 				Character.isUpperCase( string.charAt( 1 ) );
 	}
 }
-
-

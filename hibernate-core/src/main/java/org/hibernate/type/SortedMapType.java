@@ -43,11 +43,4 @@ public class SortedMapType extends MapType {
 	public PersistentCollection wrap(SessionImplementor session, Object collection) {
 		return new PersistentSortedMap( session, (java.util.SortedMap) collection );
 	}
-
 }
-
-
-
-
-
-

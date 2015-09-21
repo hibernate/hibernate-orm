@@ -39,9 +39,3 @@ public final class Timestamper {
 	private Timestamper() {
 	}
 }
-
-
-
-
-
-

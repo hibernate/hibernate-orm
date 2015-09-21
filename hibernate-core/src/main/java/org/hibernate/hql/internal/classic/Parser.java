@@ -21,10 +21,3 @@ public interface Parser {
 
 	public void end(QueryTranslatorImpl q) throws QueryException;
 }
-
-
-
-
-
-
-

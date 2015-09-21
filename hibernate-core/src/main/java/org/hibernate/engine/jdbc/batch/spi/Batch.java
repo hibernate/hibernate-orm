@@ -57,4 +57,3 @@ public interface Batch {
 	 */
 	public void release();
 }
-

@@ -133,6 +133,4 @@ public class MySQL56SpatialDialect extends MySQL5Dialect implements SpatialDiale
 	public boolean supports(SpatialFunction function) {
 		return dialectDelegate.supports( function );
 	}
-
 }
-

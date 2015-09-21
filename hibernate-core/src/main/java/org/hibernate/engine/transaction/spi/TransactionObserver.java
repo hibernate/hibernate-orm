@@ -32,4 +32,3 @@ public interface TransactionObserver {
 	 */
 	public void afterCompletion(boolean successful, boolean delayed);
 }
-

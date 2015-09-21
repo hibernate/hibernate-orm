@@ -271,4 +271,3 @@ public class Teradata14Dialect extends TeradataDialect {
 		return new Teradata14IdentityColumnSupport();
 	}
 }
-

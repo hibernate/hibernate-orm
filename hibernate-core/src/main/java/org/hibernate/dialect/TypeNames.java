@@ -134,9 +134,3 @@ public class TypeNames {
 		defaults.put( typeCode, value );
 	}
 }
-
-
-
-
-
-

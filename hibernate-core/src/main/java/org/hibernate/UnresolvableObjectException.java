@@ -66,10 +66,3 @@ public class UnresolvableObjectException extends HibernateException {
 	}
 
 }
-
-
-
-
-
-
-

@@ -851,10 +851,3 @@ public interface Query extends BasicQueryContract {
 	public Query setResultTransformer(ResultTransformer transformer);
 
 }
-
-
-
-
-
-
-

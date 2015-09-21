@@ -24,4 +24,3 @@ public interface QualifiedName {
 
 	String render();
 }
-

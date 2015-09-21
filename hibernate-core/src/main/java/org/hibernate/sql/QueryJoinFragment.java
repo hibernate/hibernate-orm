@@ -125,9 +125,3 @@ public class QueryJoinFragment extends JoinFragment {
 		afterWhere.setLength( 0 );
 	}
 }
-
-
-
-
-
-

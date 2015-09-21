@@ -45,9 +45,3 @@ public class HibernateException extends RuntimeException {
 		super( message, cause );
 	}
 }
-
-
-
-
-
-

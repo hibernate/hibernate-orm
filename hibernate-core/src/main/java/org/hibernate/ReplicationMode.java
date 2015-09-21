@@ -67,9 +67,3 @@ public enum ReplicationMode {
 	public abstract boolean shouldOverwriteCurrentVersion(Object entity, Object currentVersion, Object newVersion, VersionType versionType);
 
 }
-
-
-
-
-
-

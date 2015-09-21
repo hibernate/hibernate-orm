@@ -318,5 +318,3 @@ class BasicAttributeVisitor extends SimpleTypeVisitor6<Boolean, Element> {
 		return Boolean.FALSE;
 	}
 }
-
-

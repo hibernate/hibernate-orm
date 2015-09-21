@@ -305,4 +305,3 @@ public class IngresDialect extends Dialect {
 		return false;
 	}
 }
-

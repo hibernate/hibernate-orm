@@ -465,5 +465,3 @@ public class JpaDescriptorParser {
 		return null;
 	}
 }
-
-

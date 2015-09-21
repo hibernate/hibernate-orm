@@ -82,4 +82,3 @@ public class BatchBuilderImpl implements BatchBuilder, Configurable {
 		return this;
 	}
 }
-

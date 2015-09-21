@@ -46,9 +46,3 @@ public interface CollectionMetadata {
 	 */
 	public boolean isLazy();
 }
-
-
-
-
-
-

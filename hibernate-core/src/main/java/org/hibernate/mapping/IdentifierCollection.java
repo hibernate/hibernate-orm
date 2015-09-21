@@ -62,12 +62,4 @@ public abstract class IdentifierCollection extends Collection {
 			);
 		}
 	}
-
 }
-
-
-
-
-
-
-

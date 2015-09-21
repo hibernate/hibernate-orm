@@ -33,11 +33,4 @@ public final class HibernateProxyHelper {
 	private HibernateProxyHelper() {
 		//cant instantiate
 	}
-
 }
-
-
-
-
-
-

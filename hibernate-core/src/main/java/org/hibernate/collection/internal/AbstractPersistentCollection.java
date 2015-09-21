@@ -1237,4 +1237,3 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	}
 
 }
-

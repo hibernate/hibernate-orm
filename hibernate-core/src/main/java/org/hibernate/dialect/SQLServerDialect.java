@@ -205,4 +205,3 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 	
 }
-

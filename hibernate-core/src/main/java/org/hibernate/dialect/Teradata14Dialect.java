@@ -276,4 +276,3 @@ public class Teradata14Dialect extends TeradataDialect {
 
 
 }
-

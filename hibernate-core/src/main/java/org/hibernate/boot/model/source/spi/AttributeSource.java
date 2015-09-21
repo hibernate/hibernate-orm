@@ -70,4 +70,3 @@ public interface AttributeSource extends ToolingHintContextContainer {
 	 */
 	public boolean isIncludedInOptimisticLocking();
 }
-

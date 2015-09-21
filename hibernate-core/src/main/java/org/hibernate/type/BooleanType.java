@@ -57,8 +57,3 @@ public class BooleanType
 		return dialect.toBooleanValueString( value );
 	}
 }
-
-
-
-
-

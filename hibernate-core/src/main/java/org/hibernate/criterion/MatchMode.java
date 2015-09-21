@@ -64,8 +64,3 @@ public enum MatchMode {
 	public abstract String toMatchString(String pattern);
 
 }
-
-
-
-
-

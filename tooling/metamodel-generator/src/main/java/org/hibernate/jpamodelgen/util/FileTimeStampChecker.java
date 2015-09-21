@@ -57,5 +57,3 @@ public class FileTimeStampChecker implements Serializable {
 		return sb.toString();
 	}
 }
-
-

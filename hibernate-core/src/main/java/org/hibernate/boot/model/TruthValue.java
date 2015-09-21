@@ -36,4 +36,3 @@ public enum TruthValue {
 		return value != null ? value.toBoolean( defaultValue ) : defaultValue;
 	}
 }
-

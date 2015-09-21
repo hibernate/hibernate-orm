@@ -110,5 +110,3 @@ public class Sybase11JoinFragment extends JoinFragment {
 		addCondition( on );
 	}
 }
-
-

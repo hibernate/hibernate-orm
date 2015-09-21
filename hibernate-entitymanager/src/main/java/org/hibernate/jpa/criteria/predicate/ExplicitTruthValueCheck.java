@@ -57,4 +57,3 @@ public class ExplicitTruthValueCheck
 				+ ( getTruthValue() == TruthValue.TRUE ? "true" : "false" );
 	}
 }
-

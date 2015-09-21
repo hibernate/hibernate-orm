@@ -16,5 +16,3 @@ public class XmlParsingException extends Exception {
 		super( message, root );
 	}
 }
-
-

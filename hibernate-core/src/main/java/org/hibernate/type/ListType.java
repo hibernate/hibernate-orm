@@ -47,6 +47,4 @@ public class ListType extends CollectionType {
 		}
 		return null;
 	}
-	
 }
-

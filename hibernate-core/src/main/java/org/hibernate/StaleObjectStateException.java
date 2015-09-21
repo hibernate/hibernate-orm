@@ -45,10 +45,3 @@ public class StaleObjectStateException extends StaleStateException {
 	}
 
 }
-
-
-
-
-
-
-

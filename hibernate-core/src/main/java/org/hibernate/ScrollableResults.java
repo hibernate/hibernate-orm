@@ -356,9 +356,3 @@ public interface ScrollableResults extends java.io.Closeable {
 	 */
 	public TimeZone getTimeZone(int col);
 }
-
-
-
-
-
-

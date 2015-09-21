@@ -176,6 +176,3 @@ public class XmlParserHelper {
 		return schema;
 	}
 }
-
-
-

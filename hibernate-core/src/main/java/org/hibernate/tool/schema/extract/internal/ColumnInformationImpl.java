@@ -82,11 +82,4 @@ public class ColumnInformationImpl implements ColumnInformation {
 	public String toString() {
 		return "ColumnInformation(" + columnIdentifier + ')';
 	}
-
 }
-
-
-
-
-
-

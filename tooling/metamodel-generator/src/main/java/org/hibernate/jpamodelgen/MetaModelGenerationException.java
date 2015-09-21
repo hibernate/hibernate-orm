@@ -20,5 +20,3 @@ public class MetaModelGenerationException extends RuntimeException {
 		super( message );
 	}
 }
-
-

@@ -426,4 +426,3 @@ public final class TypeUtils {
 		}
 	}
 }
-

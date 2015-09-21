@@ -171,6 +171,4 @@ public class OneToOneType extends EntityType {
 		//TODO: this is kinda inconsistent with CollectionType
 		return false; 
 	}
-	
 }
-

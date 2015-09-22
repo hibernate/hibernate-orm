@@ -1884,7 +1884,7 @@ public class ModelBinder {
 				attribute
 		);
 
-		if ( StringHelper.isNotEmpty( embeddedSource.getName() ) ) {
+		if ( StringHelper.isNotEmpty( embeddedSource.getXmlNodeName() ) ) {
 			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfDomEntityModeSupport();
 		}
 
@@ -2437,7 +2437,7 @@ public class ModelBinder {
 			Property property) {
 		property.setName( propertySource.getName() );
 
-		if ( StringHelper.isNotEmpty( propertySource.getName() ) ) {
+		if ( StringHelper.isNotEmpty( propertySource.getXmlNodeName() ) ) {
 			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfDomEntityModeSupport();
 		}
 

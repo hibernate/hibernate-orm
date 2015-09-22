@@ -13,6 +13,8 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
+
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunction;
@@ -25,6 +27,8 @@ import org.hibernate.sql.ordering.antlr.OrderByFragmentTranslator;
 import org.hibernate.sql.ordering.antlr.OrderByTranslation;
 import org.hibernate.sql.ordering.antlr.SqlValueReference;
 import org.hibernate.sql.ordering.antlr.TranslationContext;
+import org.hibernate.type.BooleanType;
+import org.hibernate.type.Type;
 
 /**
  * Parses SQL fragments specified in mapping documents
@@ -304,6 +308,9 @@ public final class Template {
 				}
 				else if ( inFromClause && ",".equals(lcToken) ) {
 					beforeTable = true;
+				}
+				if ( isBoolean( token ) ) {
+					token = dialect.toBooleanValueString( Boolean.parseBoolean( token ) );
 				}
 				result.append(token);
 			}
@@ -712,7 +719,7 @@ public final class Template {
 	}
 
 	private static boolean isNamedParameter(String token) {
-		return token.startsWith(":");
+		return token.startsWith( ":" );
 	}
 
 	private static boolean isFunctionOrKeyword(String lcToken, String nextToken, Dialect dialect, SQLFunctionRegistry functionRegistry) {
@@ -740,10 +747,16 @@ public final class Template {
 	}
 
 	private static boolean isIdentifier(String token) {
-		return token.charAt(0)=='`' || ( //allow any identifier quoted with backtick
-			Character.isLetter( token.charAt(0) ) && //only recognizes identifiers beginning with a letter
-			token.indexOf('.') < 0
+		if ( isBoolean( token ) ) {
+			return false;
+		}
+		return token.charAt( 0 ) == '`' || ( //allow any identifier quoted with backtick
+				Character.isLetter( token.charAt( 0 ) ) && //only recognizes identifiers beginning with a letter
+						token.indexOf( '.' ) < 0
 		);
 	}
 
+	private static boolean isBoolean(String token) {
+		return "true".equals( token ) || "false".equals( token );
+	}
 }

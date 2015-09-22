@@ -183,6 +183,11 @@ public class DerbyDialect extends DB2Dialect {
 		return limitHandler;
 	}
 
+	@Override
+	public boolean supportsTuplesInSubqueries() {
+		return false;
+	}
+
 	/**
 	 * {@inheritDoc}
 	 * <p/>

@@ -13,9 +13,12 @@ import java.util.Map;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.envers.RevisionType;
+import org.hibernate.envers.internal.entities.RevisionTypeType;
 import org.hibernate.envers.internal.tools.MutableInteger;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.envers.tools.Pair;
+import org.hibernate.type.CustomType;
 
 /**
  * A class for incrementally building a HQL query.
@@ -222,9 +225,18 @@ public class QueryBuilder {
 
 		final Query query = session.createQuery( querySb.toString() );
 		for ( Map.Entry<String, Object> paramValue : queryParamValues.entrySet() ) {
-			query.setParameter( paramValue.getKey(), paramValue.getValue() );
+			if ( paramValue.getValue() instanceof RevisionType ) {
+				// this is needed when the ClassicQueryTranslatorFactory is used
+				query.setParameter(
+						paramValue.getKey(),
+						paramValue.getValue(),
+						new CustomType( new RevisionTypeType() )
+				);
+			}
+			else {
+				query.setParameter( paramValue.getKey(), paramValue.getValue() );
+			}
 		}
-
 		return query;
 	}
 }

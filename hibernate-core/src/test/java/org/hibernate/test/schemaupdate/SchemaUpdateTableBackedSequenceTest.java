@@ -81,6 +81,7 @@ public class SchemaUpdateTableBackedSequenceTest extends BaseUnitTestCase {
 				if ( action.startsWith( "insert into test_seq" ) ) {
 					found = true;
 				}
+
 			}
 		}
 
@@ -102,5 +103,11 @@ public class SchemaUpdateTableBackedSequenceTest extends BaseUnitTestCase {
 		);
 
 		assertTrue( target.found );
+		
+		ssr.getService( SchemaManagementTool.class ).getSchemaDropper( null ).doDrop(
+				metadata,
+				false,
+				Arrays.asList( target, new TargetDatabaseImpl( ssr.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess() ) )
+		);
 	}
 }

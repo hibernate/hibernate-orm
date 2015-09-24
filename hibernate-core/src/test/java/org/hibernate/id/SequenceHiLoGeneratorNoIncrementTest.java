@@ -17,8 +17,10 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.exception.GenericJDBCException;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.type.StandardBasicTypes;
@@ -102,8 +104,17 @@ public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// initially sequence should be uninitialized
-		assertEquals( 0L, extractSequenceValue( (sessionImpl) ) );
-
+		if ( sessionFactory.getDialect() instanceof PostgreSQL81Dialect ) {
+			try {
+				assertEquals( 0L, extractSequenceValue() );
+			}
+			catch (GenericJDBCException ge) {
+				// PostgreSQL throws an exception if currval is called before nextval for this sequence in this session
+			}
+		}
+		else {
+			assertEquals( 0L, extractSequenceValue() );
+		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// historically the hilo generators skipped the initial block of values;
@@ -111,28 +122,28 @@ public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 		assertEquals( 1L, generateValue() );
 
 		// which should also perform the first read on the sequence which should set it to its "start with" value (1)
-		assertEquals( 1L, extractSequenceValue( (sessionImpl) ) );
+		assertEquals( 1L, extractSequenceValue() );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		assertEquals( 2L, generateValue() );
-		assertEquals( 2L, extractSequenceValue( (sessionImpl) ) );
+		assertEquals( 2L, extractSequenceValue() );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		assertEquals( 3L, generateValue() );
-		assertEquals( 3L, extractSequenceValue( (sessionImpl) ) );
+		assertEquals( 3L, extractSequenceValue() );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		assertEquals( 4L, generateValue() );
-		assertEquals( 4L, extractSequenceValue( (sessionImpl) ) );
+		assertEquals( 4L, extractSequenceValue() );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		assertEquals( 5L, generateValue() );
-		assertEquals( 5L, extractSequenceValue( (sessionImpl) ) );
+		assertEquals( 5L, extractSequenceValue() );
 
 		((Session) sessionImpl).close();
 	}
 
-	private long extractSequenceValue(SessionImplementor sessionImpl) {
+	private long extractSequenceValue() {
 		return sequenceValueExtractor.extractSequenceValue( sessionImpl );
 	}
 

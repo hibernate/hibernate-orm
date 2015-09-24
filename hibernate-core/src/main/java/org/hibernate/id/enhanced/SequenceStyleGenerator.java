@@ -443,7 +443,8 @@ public class SequenceStyleGenerator
 		// it does, as long as
 		// 		1) there is no (non-noop) optimizer in use
 		//		2) the underlying structure is a sequence
-		return NoopOptimizer.class.isInstance( getOptimizer() )
+		Optimizer optimizer2 = getOptimizer();
+		return (NoopOptimizer.class.isInstance( optimizer2 )||PooledOptimizer.class.isInstance( optimizer2 ))
 				&& getDatabaseStructure().isPhysicalSequence();
 	}
 

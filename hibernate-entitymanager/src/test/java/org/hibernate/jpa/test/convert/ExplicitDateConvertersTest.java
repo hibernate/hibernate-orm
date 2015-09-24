@@ -31,7 +31,7 @@ import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
@@ -93,6 +93,8 @@ public class ExplicitDateConvertersTest {
 		final AttributeConverterTypeAdapter type = assertTyping( AttributeConverterTypeAdapter.class, theDatePropertyType );
 		assertTyping( LongToDateConverter.class, type.getAttributeConverter() );
 
+		int previousCallCount = 0;
+
 		try {
 			EntityManager em = emf.createEntityManager();
 			em.getTransaction().begin();
@@ -100,7 +102,8 @@ public class ExplicitDateConvertersTest {
 			em.getTransaction().commit();
 			em.close();
 
-			assertEquals( 1, callsToConverter );
+			assertTrue( previousCallCount < callsToConverter );
+			previousCallCount = callsToConverter;
 
 			em = emf.createEntityManager();
 			em.getTransaction().begin();
@@ -108,7 +111,7 @@ public class ExplicitDateConvertersTest {
 			em.getTransaction().commit();
 			em.close();
 
-			assertEquals( 2, callsToConverter );
+			assertTrue( previousCallCount < callsToConverter );
 
 			em = emf.createEntityManager();
 			em.getTransaction().begin();

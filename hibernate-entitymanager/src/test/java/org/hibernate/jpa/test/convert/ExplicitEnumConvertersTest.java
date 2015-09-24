@@ -8,7 +8,6 @@ package org.hibernate.jpa.test.convert;
 
 import java.net.MalformedURLException;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +30,7 @@ import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
@@ -101,6 +100,8 @@ public class ExplicitEnumConvertersTest {
 		final AttributeConverterTypeAdapter type = assertTyping( AttributeConverterTypeAdapter.class, theDatePropertyType );
 		assertTyping( MediaTypeConverter.class, type.getAttributeConverter() );
 
+		int previousCallCount = 0;
+
 		try {
 			EntityManager em = emf.createEntityManager();
 			em.getTransaction().begin();
@@ -108,7 +109,8 @@ public class ExplicitEnumConvertersTest {
 			em.getTransaction().commit();
 			em.close();
 
-			assertEquals( 1, callsToConverter );
+			assertTrue( previousCallCount < callsToConverter );
+			previousCallCount = callsToConverter;
 
 			em = emf.createEntityManager();
 			em.getTransaction().begin();
@@ -116,7 +118,7 @@ public class ExplicitEnumConvertersTest {
 			em.getTransaction().commit();
 			em.close();
 
-			assertEquals( 2, callsToConverter );
+			assertTrue( previousCallCount < callsToConverter );
 
 			em = emf.createEntityManager();
 			em.getTransaction().begin();

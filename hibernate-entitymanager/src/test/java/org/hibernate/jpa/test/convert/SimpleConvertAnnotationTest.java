@@ -6,6 +6,12 @@
  */
 package org.hibernate.jpa.test.convert;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Convert;
 import javax.persistence.Converter;
@@ -13,13 +19,6 @@ import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Id;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -29,12 +28,11 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
@@ -68,7 +66,7 @@ public class SimpleConvertAnnotationTest extends BaseUnitTestCase {
 			em.getTransaction().commit();
 			em.close();
 
-			assertEquals( 1, callsToConverter );
+			assertTrue( 0 < callsToConverter );
 
 			em = emf.createEntityManager();
 			em.getTransaction().begin();

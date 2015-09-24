@@ -156,11 +156,12 @@ public class LoadedConfig {
 
 	@SuppressWarnings("unchecked")
 	private void addConfigurationValue(String propertyName, String value) {
-		if ( !propertyName.startsWith( "hibernate." ) ) {
-			propertyName = "hibernate." + propertyName;
-		}
+		value = trim( value );
+		configurationValues.put( propertyName, value );
 
-		configurationValues.put( propertyName, trim( value ) );
+		if ( !propertyName.startsWith( "hibernate." ) ) {
+			configurationValues.put( "hibernate." + propertyName, value );
+		}
 	}
 
 	private void addMappingReference(MappingReference mappingReference) {

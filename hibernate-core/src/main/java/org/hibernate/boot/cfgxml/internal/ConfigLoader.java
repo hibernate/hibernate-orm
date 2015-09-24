@@ -52,12 +52,23 @@ public class ConfigLoader {
 		if ( stream == null ) {
 			throw new ConfigurationException( "Could not locate cfg.xml resource [" + cfgXmlResourceName + "]" );
 		}
-		final JaxbCfgHibernateConfiguration jaxbCfg = jaxbProcessorHolder.getValue().unmarshal(
-				stream,
-				new Origin( SourceType.RESOURCE, cfgXmlResourceName )
-		);
 
-		return LoadedConfig.consume( jaxbCfg );
+		try {
+			final JaxbCfgHibernateConfiguration jaxbCfg = jaxbProcessorHolder.getValue().unmarshal(
+					stream,
+					new Origin( SourceType.RESOURCE, cfgXmlResourceName )
+			);
+
+			return LoadedConfig.consume( jaxbCfg );
+		}
+		finally {
+			try {
+				stream.close();
+			}
+			catch (IOException e) {
+				log.debug( "Unable to close cfg.xml resource stream", e );
+			}
+		}
 	}
 
 	public LoadedConfig loadConfigXmlFile(File cfgXmlFile) {

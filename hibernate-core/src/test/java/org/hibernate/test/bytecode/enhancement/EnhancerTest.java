@@ -70,7 +70,7 @@ public class EnhancerTest extends BaseUnitTestCase {
 		EnhancerTestUtils.runEnhancerTestTask( LazyCollectionLoadingTestTask.class );
 	}
 
-	@Test
+	@Test(timeout = 10000)
 	@TestForIssue( jiraKey = "HHH-10055" )
 	@FailureExpected( jiraKey = "HHH-10055" )
 	public void testOnDemand() {

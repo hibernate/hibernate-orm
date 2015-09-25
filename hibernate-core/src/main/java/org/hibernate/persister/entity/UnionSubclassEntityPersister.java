@@ -19,10 +19,12 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cfg.Settings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -74,8 +76,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
 
-		final SessionFactoryImplementor factory = creationContext.getSessionFactory();
-
 		if ( getIdentifierGenerator() instanceof IdentityGenerator ) {
 			throw new MappingException(
 					"Cannot use identity column key generation with <union-subclass> mapping for: " +
@@ -83,18 +83,13 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			);
 		}
 
+		final SessionFactoryImplementor factory = creationContext.getSessionFactory();
+		final Database database = creationContext.getMetadata().getDatabase();
+		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
+
 		// TABLE
 
-		tableName = persistentClass.getTable().getQualifiedName(
-				factory.getDialect(),
-				factory.getSettings().getDefaultCatalogName(),
-				factory.getSettings().getDefaultSchemaName()
-		);
-		/*rootTableName = persistentClass.getRootTable().getQualifiedName( 
-				factory.getDialect(), 
-				factory.getDefaultCatalog(), 
-				factory.getDefaultSchema() 
-		);*/
+		tableName = determineTableName( persistentClass.getTable(), jdbcEnvironment );
 
 		//Custom SQL
 
@@ -173,14 +168,8 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		HashSet subclassTables = new HashSet();
 		iter = persistentClass.getSubclassTableClosureIterator();
 		while ( iter.hasNext() ) {
-			Table table = (Table) iter.next();
-			subclassTables.add(
-					table.getQualifiedName(
-							factory.getDialect(),
-							factory.getSettings().getDefaultCatalogName(),
-							factory.getSettings().getDefaultSchemaName()
-					)
-			);
+			final Table table = (Table) iter.next();
+			subclassTables.add( determineTableName( table, jdbcEnvironment ) );
 		}
 		subclassSpaces = ArrayHelper.toStringArray( subclassTables );
 
@@ -198,11 +187,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			while ( iter.hasNext() ) {
 				Table tab = (Table) iter.next();
 				if ( !tab.isAbstractUnionTable() ) {
-					String tableName = tab.getQualifiedName(
-							factory.getDialect(),
-							factory.getSettings().getDefaultCatalogName(),
-							factory.getSettings().getDefaultSchemaName()
-					);
+					final String tableName = determineTableName( tab, jdbcEnvironment );
 					tableNames.add( tableName );
 					String[] key = new String[idColumnSpan];
 					Iterator citer = tab.getPrimaryKey().getColumnIterator();

@@ -54,6 +54,7 @@ import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadingActions;
@@ -92,6 +93,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
+import org.hibernate.mapping.Table;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
@@ -5110,6 +5112,17 @@ public abstract class AbstractEntityPersister
 
 	public int determineTableNumberForColumn(String columnName) {
 		return 0;
+	}
+
+	protected String determineTableName(Table table, JdbcEnvironment jdbcEnvironment) {
+		if ( table.getSubselect() != null ) {
+			return "( " + table.getSubselect() + " )";
+		}
+
+		return jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+				table.getQualifiedTableName(),
+				jdbcEnvironment.getDialect()
+		);
 	}
 
 	@Override

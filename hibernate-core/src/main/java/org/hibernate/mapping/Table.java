@@ -23,6 +23,7 @@ import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.tool.hbm2ddl.ColumnMetadata;
@@ -106,6 +107,11 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		this.isAbstract = isAbstract;
 	}
 
+	/**
+	 * @deprecated Should use {@link QualifiedObjectNameFormatter#format} on QualifiedObjectNameFormatter
+	 * obtained from {@link org.hibernate.engine.jdbc.env.spi.JdbcEnvironment}
+	 */
+	@Deprecated
 	public String getQualifiedName(Dialect dialect, String defaultCatalog, String defaultSchema) {
 		if ( subselect != null ) {
 			return "( " + subselect + " )";
@@ -120,6 +126,11 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		return qualify( usedCatalog, usedSchema, quotedName );
 	}
 
+	/**
+	 * @deprecated Should use {@link QualifiedObjectNameFormatter#format} on QualifiedObjectNameFormatter
+	 * obtained from {@link org.hibernate.engine.jdbc.env.spi.JdbcEnvironment}
+	 */
+	@Deprecated
 	public static String qualify(String catalog, String schema, String table) {
 		StringBuilder qualifiedName = new StringBuilder();
 		if ( catalog != null ) {

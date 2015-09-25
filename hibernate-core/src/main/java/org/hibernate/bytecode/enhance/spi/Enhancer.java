@@ -93,8 +93,14 @@ public class Enhancer {
 		}
 	}
 
-	private ClassPool buildClassPool(EnhancementContext enhancementContext) {
-		final ClassPool classPool = new ClassPool( false );
+	private ClassPool buildClassPool(final EnhancementContext enhancementContext) {
+		final ClassPool classPool = new ClassPool( false ) {
+			@Override
+			public ClassLoader getClassLoader() {
+				return enhancementContext.getLoadingClassLoader();
+			}
+		};
+
 		final ClassLoader loadingClassLoader = enhancementContext.getLoadingClassLoader();
 		if ( loadingClassLoader != null ) {
 			classPool.appendClassPath( new LoaderClassPath( loadingClassLoader ) );

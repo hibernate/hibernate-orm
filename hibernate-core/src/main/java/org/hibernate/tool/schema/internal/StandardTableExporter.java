@@ -7,11 +7,13 @@
 package org.hibernate.tool.schema.internal;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.dialect.Dialect;
@@ -143,12 +145,20 @@ public class StandardTableExporter implements Exporter<Table> {
 
 		applyComments( table, sqlStrings );
 
+		applyInitCommands( table, sqlStrings );
+
 		return sqlStrings.toArray( new String[ sqlStrings.size() ] );
 	}
 
 	protected void applyComments(Table table, List<String> sqlStrings) {
 		if ( table.getComment() != null ) {
 			sqlStrings.add( dialect.getTableComment( table.getComment() ) );
+		}
+	}
+
+	protected void applyInitCommands(Table table, List<String> sqlStrings) {
+		for ( InitCommand initCommand : table.getInitCommands() ) {
+			Collections.addAll( sqlStrings, initCommand.getInitCommands() );
 		}
 	}
 

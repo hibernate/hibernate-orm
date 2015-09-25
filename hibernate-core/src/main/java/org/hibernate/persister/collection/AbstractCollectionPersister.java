@@ -22,6 +22,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.TransientObjectException;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
@@ -31,6 +32,7 @@ import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
@@ -230,9 +232,12 @@ public abstract class AbstractCollectionPersister
 			CollectionRegionAccessStrategy cacheAccessStrategy,
 			PersisterCreationContext creationContext) throws MappingException, CacheException {
 
+		final Database database = creationContext.getMetadata().getDatabase();
+		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
+
 		this.factory = creationContext.getSessionFactory();
 		this.cacheAccessStrategy = cacheAccessStrategy;
-		if ( factory.getSettings().isStructuredCacheEntriesEnabled() ) {
+		if ( factory.getSessionFactoryOptions().isStructuredCacheEntriesEnabled() ) {
 			cacheEntryStructure = collectionBinding.isMap()
 					? StructuredMapCacheEntry.INSTANCE
 					: StructuredCollectionCacheEntry.INSTANCE;
@@ -260,11 +265,7 @@ public abstract class AbstractCollectionPersister
 		isArray = collectionBinding.isArray();
 		subselectLoadable = collectionBinding.isSubselectLoadable();
 
-		qualifiedTableName = table.getQualifiedName(
-				dialect,
-				factory.getSettings().getDefaultCatalogName(),
-				factory.getSettings().getDefaultSchemaName()
-				);
+		qualifiedTableName = determineTableName( table, jdbcEnvironment );
 
 		int spacesSize = 1 + collectionBinding.getSynchronizedTables().size();
 		spaces = new String[spacesSize];
@@ -284,7 +285,7 @@ public abstract class AbstractCollectionPersister
 
 		int batch = collectionBinding.getBatchSize();
 		if ( batch == -1 ) {
-			batch = factory.getSettings().getDefaultBatchFetchSize();
+			batch = factory.getSessionFactoryOptions().getDefaultBatchFetchSize();
 		}
 		batchSize = batch;
 
@@ -583,6 +584,17 @@ public abstract class AbstractCollectionPersister
 		}
 
 		initCollectionPropertyMap();
+	}
+
+	protected String determineTableName(Table table, JdbcEnvironment jdbcEnvironment) {
+		if ( table.getSubselect() != null ) {
+			return "( " + table.getSubselect() + " )";
+		}
+
+		return jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+				table.getQualifiedTableName(),
+				jdbcEnvironment.getDialect()
+		);
 	}
 
 	private class ColumnMapperImpl implements ColumnMapper {

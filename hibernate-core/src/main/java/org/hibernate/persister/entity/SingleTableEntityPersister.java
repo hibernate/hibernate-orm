@@ -17,8 +17,10 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.DynamicFilterAliasGenerator;
@@ -123,6 +125,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 		final SessionFactoryImplementor factory = creationContext.getSessionFactory();
 
+		final Database database = creationContext.getMetadata().getDatabase();
+		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
+
 		// CLASS + TABLE
 
 		joinSpan = persistentClass.getJoinClosureSpan() + 1;
@@ -131,11 +136,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		isNullableTable = new boolean[joinSpan];
 		keyColumnNames = new String[joinSpan][];
 		final Table table = persistentClass.getRootTable();
-		qualifiedTableNames[0] = table.getQualifiedName(
-				factory.getDialect(),
-				factory.getSettings().getDefaultCatalogName(),
-				factory.getSettings().getDefaultSchemaName()
-		);
+		qualifiedTableNames[0] = determineTableName( table, jdbcEnvironment );
+
 		isInverseTable[0] = false;
 		isNullableTable[0] = false;
 		keyColumnNames[0] = getIdentifierColumnNames();
@@ -174,11 +176,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		int j = 1;
 		while ( joinIter.hasNext() ) {
 			Join join = (Join) joinIter.next();
-			qualifiedTableNames[j] = join.getTable().getQualifiedName(
-					factory.getDialect(),
-					factory.getSettings().getDefaultCatalogName(),
-					factory.getSettings().getDefaultSchemaName()
-			);
+			qualifiedTableNames[j] = determineTableName( join.getTable(), jdbcEnvironment );
 			isInverseTable[j] = join.isInverse();
 			isNullableTable[j] = join.isOptional();
 			cascadeDeleteEnabled[j] = join.getKey().isCascadeDeleteEnabled() &&

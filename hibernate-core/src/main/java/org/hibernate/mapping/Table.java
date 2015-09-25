@@ -19,6 +19,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Exportable;
+import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.dialect.Dialect;
@@ -59,6 +60,8 @@ public class Table implements RelationalModel, Serializable, Exportable {
 	private boolean isAbstract;
 	private boolean hasDenormalizedTables;
 	private String comment;
+
+	private List<InitCommand> initCommands;
 
 	public Table() {
 	}
@@ -857,4 +860,19 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		}
 	}
 
+	public void addInitCommand(InitCommand command) {
+		if ( initCommands == null ) {
+			initCommands = new ArrayList<InitCommand>();
+		}
+		initCommands.add( command );
+	}
+
+	public List<InitCommand> getInitCommands() {
+		if ( initCommands == null ) {
+			return Collections.emptyList();
+		}
+		else {
+			return Collections.unmodifiableList( initCommands );
+		}
+	}
 }

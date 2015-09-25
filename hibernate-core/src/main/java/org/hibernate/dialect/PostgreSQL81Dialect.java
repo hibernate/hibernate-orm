@@ -7,6 +7,7 @@
 package org.hibernate.dialect;
 
 import org.hibernate.JDBCException;
+import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.cfg.Environment;
@@ -42,6 +43,8 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * An SQL dialect for Postgres
@@ -273,7 +276,19 @@ public class PostgreSQL81Dialect extends Dialect {
 		/*
 		 * Parent's implementation for (aliases, lockOptions) ignores aliases.
 		 */
-		return getForUpdateString(aliases);
+		if ( "".equals( aliases ) ) {
+			LockMode lockMode = lockOptions.getLockMode();
+			final Iterator<Map.Entry<String, LockMode>> itr = lockOptions.getAliasLockIterator();
+			while ( itr.hasNext() ) {
+				// seek the highest lock mode
+				final Map.Entry<String, LockMode> entry = itr.next();
+				final LockMode lm = entry.getValue();
+				if ( lm.greaterThan( lockMode ) ) {
+					aliases = entry.getKey();
+				}
+			}
+		}
+		return getForUpdateString( aliases );
 	}
 
 	@Override

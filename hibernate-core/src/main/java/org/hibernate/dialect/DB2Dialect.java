@@ -13,6 +13,7 @@ import java.sql.Types;
 import java.util.Locale;
 
 import org.hibernate.JDBCException;
+import org.hibernate.MappingException;
 import org.hibernate.NullPrecedence;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.AvgWithArgumentCastFunction;
@@ -248,6 +249,11 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public String getSequenceNextValString(String sequenceName) {
 		return "values nextval for " + sequenceName;
+	}
+
+	@Override
+	public String getSelectSequenceNextValString(String sequenceName) throws MappingException {
+		return "next value for " + sequenceName;
 	}
 
 	@Override

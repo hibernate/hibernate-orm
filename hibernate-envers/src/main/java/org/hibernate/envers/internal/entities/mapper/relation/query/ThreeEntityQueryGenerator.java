@@ -115,11 +115,11 @@ public final class ThreeEntityQueryGenerator extends AbstractRelationQueryGenera
 		final String eeOriginalIdPropertyPath = MIDDLE_ENTITY_ALIAS + "." + originalIdPropertyName;
 		// SELECT new list(ee) FROM middleEntity ee
 		final QueryBuilder qb = new QueryBuilder( versionsMiddleEntityName, MIDDLE_ENTITY_ALIAS );
-		qb.addFrom( referencedIdData.getAuditEntityName(), REFERENCED_ENTITY_ALIAS );
-		qb.addFrom( indexIdData.getAuditEntityName(), INDEX_ENTITY_ALIAS );
+		qb.addFrom( referencedIdData.getAuditEntityName(), REFERENCED_ENTITY_ALIAS, false );
+		qb.addFrom( indexIdData.getAuditEntityName(), INDEX_ENTITY_ALIAS, false );
 		qb.addProjection(
 				"new list", MIDDLE_ENTITY_ALIAS + ", " + REFERENCED_ENTITY_ALIAS + ", " + INDEX_ENTITY_ALIAS,
-				false, false
+				null, false
 		);
 		// WHERE
 		final Parameters rootParameters = qb.getRootParameters();

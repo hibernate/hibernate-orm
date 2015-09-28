@@ -19,6 +19,8 @@ import org.hibernate.envers.query.internal.property.EntityPropertyName;
 import org.hibernate.envers.query.internal.property.RevisionNumberPropertyName;
 import org.hibernate.envers.query.internal.property.RevisionPropertyPropertyName;
 import org.hibernate.envers.query.internal.property.RevisionTypePropertyName;
+import org.hibernate.envers.query.projection.AuditProjection;
+import org.hibernate.envers.query.projection.internal.EntityAuditProjection;
 
 /**
  * TODO: ilike
@@ -113,5 +115,14 @@ public class AuditEntity {
 	 */
 	public static AuditDisjunction disjunction() {
 		return new AuditDisjunction();
+	}
+
+	/**
+	 * Adds a projection to the current entity itself. Useful for
+	 * selecting entities which are reached through associations within the query.
+	 * @param distinct whether to distinct select the entity
+	 */
+	public static AuditProjection selectEntity(boolean distinct) {
+		return new EntityAuditProjection( distinct );
 	}
 }

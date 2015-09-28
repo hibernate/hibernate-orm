@@ -14,7 +14,10 @@ import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
 import org.hibernate.envers.exception.AuditException;
+import org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
+import org.hibernate.envers.query.AuditAssociationQuery;
+import org.hibernate.envers.query.AuditQuery;
 import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.proxy.HibernateProxy;
 
@@ -86,16 +89,23 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 
 		// all specified conditions, transformed
 		for ( AuditCriterion criterion : criterions ) {
-			criterion.addToQuery( enversService, versionsReader, entityName, qb, qb.getRootParameters() );
+			criterion.addToQuery(
+					enversService,
+					versionsReader,
+					entityName,
+					QueryConstants.REFERENCED_ENTITY_ALIAS,
+					qb,
+					qb.getRootParameters()
+			);
 		}
 
-		if ( !hasProjection && !hasOrder ) {
+		if ( !hasProjection() && !hasOrder ) {
 			String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
-			qb.addOrder( revisionPropertyPath, true );
+			qb.addOrder( QueryConstants.REFERENCED_ENTITY_ALIAS, revisionPropertyPath, true );
 		}
 
 		if ( !selectEntitiesOnly ) {
-			qb.addFrom( enversService.getAuditEntitiesConfiguration().getRevisionInfoEntityName(), "r" );
+			qb.addFrom( enversService.getAuditEntitiesConfiguration().getRevisionInfoEntityName(), "r", true );
 			qb.getRootParameters().addWhere(
 					enversService.getAuditEntitiesConfiguration().getRevisionNumberPath(),
 					true,
@@ -106,7 +116,7 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 		}
 
 		List<Object> queryResult = buildAndExecuteQuery();
-		if ( hasProjection ) {
+		if ( hasProjection() ) {
 			return queryResult;
 		}
 		else {
@@ -146,4 +156,10 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 			return entities;
 		}
 	}
+
+	@Override
+	public AuditAssociationQuery<? extends AuditQuery> createCriteria(String associationName) {
+		throw new UnsupportedOperationException( "Not yet implemented for revisions of entity queries" );
+	}
+
 }

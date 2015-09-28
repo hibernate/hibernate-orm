@@ -10,6 +10,7 @@ import java.util.Collection;
 
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.tools.Triple;
 import org.hibernate.envers.query.criteria.internal.BetweenAuditExpression;
 import org.hibernate.envers.query.criteria.internal.IlikeAuditExpression;
@@ -275,4 +276,10 @@ public class AuditProperty<T> implements AuditProjection {
 	public AuditOrder desc() {
 		return new PropertyAuditOrder( propertyNameGetter, false );
 	}
+	
+	@Override
+	public Object convertQueryResult(EnversService enversService, EntityInstantiator entityInstantiator, String entityName, Number revision, Object value) {
+		return value;
+	}
+	
 }

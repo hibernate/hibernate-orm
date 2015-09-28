@@ -347,4 +347,5 @@ public class DerbyDialect extends DB2Dialect {
 
 		return builder.build();
 	}
+
 }

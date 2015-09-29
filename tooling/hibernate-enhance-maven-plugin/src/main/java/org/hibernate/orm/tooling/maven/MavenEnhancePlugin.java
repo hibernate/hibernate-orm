@@ -17,7 +17,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -25,6 +24,7 @@ import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtField;
 
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -32,6 +32,8 @@ import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.project.MavenProject;
 
 import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
@@ -43,7 +45,7 @@ import org.hibernate.bytecode.enhance.spi.Enhancer;
  * @author Jeremy Whiting
  * @author Luis Barreiro
  */
-@Mojo(name = "enhance", defaultPhase = LifecyclePhase.COMPILE)
+@Mojo(name = "enhance", defaultPhase = LifecyclePhase.COMPILE, requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 @Execute(goal = "enhance", phase = LifecyclePhase.COMPILE)
 public class MavenEnhancePlugin extends AbstractMojo {
 
@@ -85,7 +87,7 @@ public class MavenEnhancePlugin extends AbstractMojo {
 		File root = new File( this.dir );
 		walkDir( root );
 
-		final ClassLoader classLoader = toClassLoader( Arrays.asList( root ) );
+		final ClassLoader classLoader = toClassLoader( Collections.singletonList( root ) );
 
 		EnhancementContext enhancementContext = new DefaultEnhancementContext() {
 			@Override
@@ -147,7 +149,7 @@ public class MavenEnhancePlugin extends AbstractMojo {
 		for ( File file : runtimeClasspath ) {
 			try {
 				urls.add( file.toURI().toURL() );
-				getLog().debug( "Adding root " + file.getAbsolutePath() + " to classpath " );
+				getLog().debug( "Adding classpath entry for classes root " + file.getAbsolutePath() );
 			}
 			catch (MalformedURLException e) {
 				String msg = "Unable to resolve classpath entry to URL: " + file.getAbsolutePath();
@@ -155,6 +157,27 @@ public class MavenEnhancePlugin extends AbstractMojo {
 					throw new MojoExecutionException( msg, e );
 				}
 				getLog().warn( msg );
+			}
+		}
+
+		// HHH-10145 Add dependencies to classpath as well - all but the ones used for testing purposes
+		MavenProject project = ( (MavenProject) getPluginContext().get( "project" ) );
+		if ( project != null ) {
+			for ( Artifact a : project.getDependencyArtifacts() ) {
+				if ( !Artifact.SCOPE_TEST.equals( a.getScope() ) ) {
+					try {
+						urls.add( a.getFile().toURI().toURL() );
+						getLog().debug( "Adding classpath entry for dependency " + a.getId() );
+					}
+					catch (MalformedURLException e) {
+						String msg = "Unable to resolve URL for dependency " + a.getId() + " at " + a.getFile()
+								.getAbsolutePath();
+						if ( failOnError ) {
+							throw new MojoExecutionException( msg, e );
+						}
+						getLog().warn( msg );
+					}
+				}
 			}
 		}
 

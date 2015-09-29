@@ -76,14 +76,13 @@ public class HibernatePlugin implements Plugin<Project> {
 			project.getLogger().debug( "Applying Hibernate enhancement action to SourceSet.{}", sourceSet.getName() );
 
 			final Task compileTask = project.getTasks().findByName( sourceSet.getCompileJavaTaskName() );
-
-			final ClassLoader classLoader = toClassLoader( sourceSet.getRuntimeClasspath() );
-
 			compileTask.doLast(
 					new Action<Task>() {
 						@Override
 						public void execute(Task task) {
 							project.getLogger().debug( "Starting Hibernate enhancement on SourceSet.{}", sourceSet.getName() );
+
+							final ClassLoader classLoader = toClassLoader( sourceSet.getRuntimeClasspath() );
 
 							EnhancementContext enhancementContext = new DefaultEnhancementContext() {
 								@Override
@@ -120,7 +119,6 @@ public class HibernatePlugin implements Plugin<Project> {
 							final Enhancer enhancer = new Enhancer( enhancementContext );
 							final ClassPool classPool = new ClassPool( false );
 
-
 							final FileTree fileTree = project.fileTree( sourceSet.getOutput().getClassesDir() );
 							for ( File file : fileTree ) {
 								if ( !file.getName().endsWith( ".class" ) ) {
@@ -151,16 +149,13 @@ public class HibernatePlugin implements Plugin<Project> {
 		for ( File file : runtimeClasspath ) {
 			try {
 				urls.add( file.toURI().toURL() );
+				logger.debug( "Adding classpath entry for " + file.getAbsolutePath() );
 			}
 			catch (MalformedURLException e) {
 				throw new GradleException( "Unable to resolve classpath entry to URL : " + file.getAbsolutePath(), e );
 			}
 		}
-
-		return new URLClassLoader(
-				urls.toArray( new URL[urls.size()] ),
-				Enhancer.class.getClassLoader()
-		);
+		return new URLClassLoader( urls.toArray( new URL[urls.size()] ), Enhancer.class.getClassLoader() );
 	}
 
 	private CtClass toCtClass(File file, ClassPool classPool) {

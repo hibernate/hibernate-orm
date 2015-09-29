@@ -22,12 +22,16 @@ processResources {
 }
 
 dependencies {
+    compile( libraries.maven_core ) { transitive = false }
+    compile( libraries.maven_artifact ) { transitive = false }
     compile( libraries.maven_plugin ) { transitive = false }
     compile( libraries.maven_plugin_tools ) { transitive = false }
     compile( project(':hibernate-core') ) { transitive = false }
     compile( libraries.jpa ) { transitive = false }
     compile( libraries.javassist ) { transitive = false }
     compile 'org.codehaus.plexus:plexus-utils:3.0.1'
+    runtime( libraries.maven_core )
+    runtime( libraries.maven_artifact )
     runtime( libraries.maven_plugin )
     runtime( libraries.maven_plugin_tools )
     runtime( project(':hibernate-core') )

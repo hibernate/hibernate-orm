@@ -14,8 +14,10 @@ import org.hibernate.hql.internal.ast.util.ASTUtil;
 import org.hibernate.hql.internal.ast.util.ColumnHelper;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinType;
@@ -198,7 +200,12 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		if ( isResolved() ) {
 			return;
 		}
+
 		Type propertyType = prepareLhs(); // Prepare the left hand side and get the data type.
+
+		if ( parent == null && AbstractEntityPersister.ENTITY_CLASS.equals( propertyName ) ) {
+			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfClassEntityTypeSelector( getLhs().getPath() );
+		}
 
 		// If there is no data type for this node, and we're at the end of the path (top most dot node), then
 		// this might be a Java constant.

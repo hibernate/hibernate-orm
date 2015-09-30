@@ -27,13 +27,63 @@ public class JavaTypeDescriptorRegistry {
 
 	private ConcurrentHashMap<Class,JavaTypeDescriptor> descriptorsByClass = new ConcurrentHashMap<Class, JavaTypeDescriptor>();
 
+	public JavaTypeDescriptorRegistry() {
+		addDescriptorInternal( ByteTypeDescriptor.INSTANCE );
+		addDescriptorInternal( BooleanTypeDescriptor.INSTANCE );
+		addDescriptorInternal( CharacterTypeDescriptor.INSTANCE );
+		addDescriptorInternal( ShortTypeDescriptor.INSTANCE );
+		addDescriptorInternal( IntegerTypeDescriptor.INSTANCE );
+		addDescriptorInternal( LongTypeDescriptor.INSTANCE );
+		addDescriptorInternal( FloatTypeDescriptor.INSTANCE );
+		addDescriptorInternal( DoubleTypeDescriptor.INSTANCE );
+		addDescriptorInternal( BigDecimalTypeDescriptor.INSTANCE );
+		addDescriptorInternal( BigIntegerTypeDescriptor.INSTANCE );
+
+		addDescriptorInternal( StringTypeDescriptor.INSTANCE );
+
+		addDescriptorInternal( BlobTypeDescriptor.INSTANCE );
+		addDescriptorInternal( ClobTypeDescriptor.INSTANCE );
+		addDescriptorInternal( NClobTypeDescriptor.INSTANCE );
+
+		addDescriptorInternal( ByteArrayTypeDescriptor.INSTANCE );
+		addDescriptorInternal( CharacterArrayTypeDescriptor.INSTANCE );
+		addDescriptorInternal( PrimitiveByteArrayTypeDescriptor.INSTANCE );
+		addDescriptorInternal( PrimitiveCharacterArrayTypeDescriptor.INSTANCE );
+
+		addDescriptorInternal( CalendarTypeDescriptor.INSTANCE );
+		addDescriptorInternal( DateTypeDescriptor.INSTANCE );
+		descriptorsByClass.put( java.sql.Date.class, JdbcDateTypeDescriptor.INSTANCE );
+		descriptorsByClass.put( java.sql.Time.class, JdbcTimeTypeDescriptor.INSTANCE );
+		descriptorsByClass.put( java.sql.Timestamp.class, JdbcTimestampTypeDescriptor.INSTANCE );
+		addDescriptorInternal( TimeZoneTypeDescriptor.INSTANCE );
+
+		addDescriptorInternal( ClassTypeDescriptor.INSTANCE );
+
+		addDescriptorInternal( CurrencyTypeDescriptor.INSTANCE );
+		addDescriptorInternal( LocaleTypeDescriptor.INSTANCE );
+		addDescriptorInternal( UrlTypeDescriptor.INSTANCE );
+		addDescriptorInternal( UUIDTypeDescriptor.INSTANCE );
+	}
+
+	private JavaTypeDescriptor addDescriptorInternal(JavaTypeDescriptor descriptor) {
+		return descriptorsByClass.put( descriptor.getJavaTypeClass(), descriptor );
+	}
+
 	/**
 	 * Adds the given descriptor to this registry
 	 *
 	 * @param descriptor The descriptor to add.
 	 */
 	public void addDescriptor(JavaTypeDescriptor descriptor) {
-		descriptorsByClass.put( descriptor.getJavaTypeClass(), descriptor );
+		JavaTypeDescriptor old = addDescriptorInternal( descriptor );
+		if ( old != null ) {
+			log.debugf(
+					"JavaTypeDescriptorRegistry entry replaced : %s -> %s (was %s)",
+					descriptor.getJavaTypeClass(),
+					descriptor,
+					old
+			);
+		}
 	}
 
 	@SuppressWarnings("unchecked")

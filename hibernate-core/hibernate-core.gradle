@@ -36,6 +36,7 @@ dependencies {
     testCompile( libraries.jandex )
     testCompile( libraries.classmate )
     testCompile( libraries.mockito )
+    testCompile( 'joda-time:joda-time:2.3' )
 
     testCompile( libraries.validator ) {
         // for test runtime

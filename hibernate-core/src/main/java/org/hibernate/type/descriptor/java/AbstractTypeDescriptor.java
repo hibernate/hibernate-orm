@@ -48,8 +48,6 @@ public abstract class AbstractTypeDescriptor<T> implements JavaTypeDescriptor<T>
 		this.comparator = Comparable.class.isAssignableFrom( type )
 				? (Comparator<T>) ComparableComparator.INSTANCE
 				: null;
-
-		JavaTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
 	}
 
 	@Override

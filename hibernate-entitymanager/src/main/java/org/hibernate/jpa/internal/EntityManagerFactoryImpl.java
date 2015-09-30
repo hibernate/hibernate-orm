@@ -123,6 +123,14 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		HashMap<String,Object> props = new HashMap<String, Object>();
 		addAll( props, sessionFactory.getProperties() );
 		addAll( props, configurationValues );
+		if ( !props.containsKey( AvailableSettings.VALIDATION_FACTORY ) ) {
+			if ( sessionFactory.getSessionFactoryOptions().getValidatorFactoryReference() != null ) {
+				props.put(
+						AvailableSettings.VALIDATION_FACTORY,
+						sessionFactory.getSessionFactoryOptions().getValidatorFactoryReference()
+				);
+			}
+		}
 		maskOutSensitiveInformation( props );
 		this.properties = Collections.unmodifiableMap( props );
 		String entityManagerFactoryName = (String)this.properties.get( AvailableSettings.ENTITY_MANAGER_FACTORY_NAME);

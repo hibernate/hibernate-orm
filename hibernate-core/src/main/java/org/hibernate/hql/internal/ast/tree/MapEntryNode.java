@@ -95,13 +95,11 @@ public class MapEntryNode extends AbstractMapComponentNode implements Aggregated
 		AliasGenerator aliasGenerator = new LocalAliasGenerator( 0 );
 		appendSelectExpressions( collectionPersister.getIndexColumnNames(), selections, aliasGenerator );
 		Type keyType = collectionPersister.getIndexType();
-		if ( keyType.isAssociationType() ) {
-			EntityType entityType = (EntityType) keyType;
-			Queryable keyEntityPersister = (Queryable) sfi().getEntityPersister(
-					entityType.getAssociatedEntityName( sfi() )
-			);
+		if ( keyType.isEntityType() ) {
+			MapKeyEntityFromElement mapKeyEntityFromElement = findOrAddMapKeyEntityFromElement( collectionPersister );
+			Queryable keyEntityPersister = mapKeyEntityFromElement.getQueryable();
 			SelectFragment fragment = keyEntityPersister.propertySelectFragmentFragment(
-					collectionTableAlias(),
+					mapKeyEntityFromElement.getTableAlias(),
 					null,
 					false
 			);

@@ -186,4 +186,11 @@ public interface DeprecationLogger extends BasicLogger {
 					"use collection function syntax instead [%1$s(%2$s)]."
 	)
 	void logDeprecationOfCollectionPropertiesInHql(String collectionPropertyName, String alias);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000017,
+			value = "Found use of deprecated entity-type selector syntax in HQL/JPQL query ['%1$s.class']; use TYPE operator instead : type(%1$s)"
+	)
+	void logDeprecationOfClassEntityTypeSelector(String path);
 }

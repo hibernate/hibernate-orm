@@ -15,6 +15,8 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class MapKeyNode extends AbstractMapComponentNode {
+	private MapKeyEntityFromElement mapKeyEntityFromElement;
+
 	@Override
 	protected String expressionDescription() {
 		return "key(*)";
@@ -22,7 +24,12 @@ public class MapKeyNode extends AbstractMapComponentNode {
 
 	@Override
 	protected String[] resolveColumns(QueryableCollection collectionPersister) {
-		final FromElement fromElement = getFromElement();
+		this.mapKeyEntityFromElement = findOrAddMapKeyEntityFromElement( collectionPersister );
+		if ( mapKeyEntityFromElement != null ) {
+			setFromElement( mapKeyEntityFromElement );
+		}
+
+		final FromElement fromElement = getMapFromElement();
 		return fromElement.toColumns(
 				fromElement.getCollectionTableAlias(),
 				"index", // the JPA KEY "qualifier" is the same concept as the HQL INDEX function/property
@@ -33,5 +40,9 @@ public class MapKeyNode extends AbstractMapComponentNode {
 	@Override
 	protected Type resolveType(QueryableCollection collectionPersister) {
 		return collectionPersister.getIndexType();
+	}
+
+	public MapKeyEntityFromElement getMapKeyEntityFromElement() {
+		return mapKeyEntityFromElement;
 	}
 }

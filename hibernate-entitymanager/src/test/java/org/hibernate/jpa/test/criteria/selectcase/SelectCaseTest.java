@@ -35,6 +35,8 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import java.util.List;
 
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.jpa.criteria.expression.ConcatExpression;
 import org.hibernate.jpa.criteria.expression.ExpressionImpl;
 import org.hibernate.jpa.criteria.expression.function.AbsFunction;
@@ -42,6 +44,8 @@ import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
 
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.RequiresDialects;
 import org.hibernate.testing.TestForIssue;
 
 @TestForIssue( jiraKey = "HHH-9731" )
@@ -53,6 +57,7 @@ public class SelectCaseTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@RequiresDialect(value = H2Dialect.class, jiraKey = "HHH-10143")
 	public void selectCaseWithValuesShouldWork() {
 		EntityManager entityManager = getOrCreateEntityManager();
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -88,6 +93,7 @@ public class SelectCaseTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@RequiresDialect(value = H2Dialect.class, jiraKey = "HHH-10143")
 	public void simpleSelectCaseWithValuesShouldWork() {
 		EntityManager entityManager = getOrCreateEntityManager();
 

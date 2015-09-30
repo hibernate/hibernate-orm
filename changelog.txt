@@ -4,9 +4,58 @@ Hibernate 5.0 Changelog
 Note: Please refer to JIRA to learn more about each issue.
 
 
+Changes in 5.0.2.Final (September 30, 2015)
+------------------------------------------------------------------------------------------------------------------------
+http://hibernate.atlassian.net/projects/HHH/versions/21250
+
+** Bug
+    * [HHH-9731] - Potential bug in SearchedCaseExpression type handling
+    * [HHH-10055] - Lazy loading of collections in enhanced entity not working
+    * [HHH-10110] - DerbyTenSevenDialect fails to update schema because of sequence error
+    * [HHH-10111] - AttributeConverter based attributes are not marked for update when their state is modified
+    * [HHH-10115] - HHH90000003: Use of DOM4J entity-mode is considered deprecated
+    * [HHH-10119] - Config setting names loaded from cfg.xml stored in augmented (prefixed with "hibernate.") form but not original form
+    * [HHH-10120] - InputStream not closed in ConfigLoader.loadConfigXmlResource(String)
+    * [HHH-10125] - KEY() function in HQL causes inaccurate SQL when map key is an entity
+    * [HHH-10126] - Table-backed sequences are not populated on creation using SchemaUpdate
+    * [HHH-10131] - CacheableFileXmlSource.doBind returns null instead of created binding when .hbm.xml.bin have not been created yet
+    * [HHH-10132] - ENTRY() function in HQL causes invalid SQL when map key is an entity
+    * [HHH-10133] - CatalogSeparator of dialect metadata not used in runtime, just in schema tool
+    * [HHH-10135] - DB2Dialect should override getSelectSequenceNextValString
+    * [HHH-10139] - <one-to-one> and  <many-to-one> mapping with <formula>1</formula> related to a boolean field causes java.sql.SQLSyntaxErrorException:
+    * [HHH-10140] - Apache Derby does not support tuples in subqueries
+    * [HHH-10141] - ClassicQueryTranslatorFactory unable to determine the correct RevisionType type
+    * [HHH-10142] - Derby dialect missing SQL keyword
+    * [HHH-10149] - PostgreSQL81Dialect.#getForUpdateString(String aliases,LockOptions lockOptions) returning a wrong value for update String when aliases is an empty String
+    * [HHH-10150] - PostgreSQL -MultiTableBulkIdStrategy fails with multiple delete of parent entity in the same transaction
+
+** New Feature
+    * [HHH-10045] - Force all columns in primary key to be non-null
+
+** Task
+    * [HHH-9995] - Finish pgsql database profile
+    * [HHH-9996] - Finish Derby database profile
+    * [HHH-10154] - Change built-in JavaTypeDescriptor impls to not auto-register themselves with JavaTypeDescriptorRegistry
+
+** Improvement
+    * [HHH-9685] - Envers should do nothing when JTA transaction is already marked as rollback-only
+    * [HHH-10066] - Drop and recreate AuxiliaryDatabaseObjects as part of schema update
+    * [HHH-10083] - Support replicated and distributed caches
+    * [HHH-10086] - Deprecate Dialect#getIdentityColumnString() and Dialect#getIdentitySelectString()
+    * [HHH-10121] - Have EMF#getProperties expose ValidatorFactory injected via 2-phase load
+    * [HHH-10129] - Evaluate AttributeConverter tests in hibernate-entitymanager for move to hibernate-core
+
+** Patch
+    * [HHH-10108] - checkstyle test <module name="NewlineAtEndOfFile" /> causes build time problem
+
+** Deprecation
+    * [HHH-10122] - Deprecate ".class" property-style entity-type-expression format
+
+
+
 Changes in 5.0.1.Final (September 3, 2015)
 ------------------------------------------------------------------------------------------------------------------------
-https://hibernate.atlassian.net/projects/HHH/versions/21051
+http://hibernate.atlassian.net/projects/HHH/versions/21051
 
 ** Bug
     * [HHH-9962] - Second level query cache returns stale data if query and update statements are executed concurrently
@@ -49,7 +98,7 @@ https://hibernate.atlassian.net/projects/HHH/versions/21051
 
 Changes in 5.0.0.Final (August 20, 2015)
 ------------------------------------------------------------------------------------------------------------------------
-https://hibernate.atlassian.net/projects/HHH/versions/20851
+http://hibernate.atlassian.net/projects/HHH/versions/20851
 
 ** Bug
     * [HHH-951] - setMaxResults causes "ORA-00918: column ambiguously defined" exception
@@ -85,7 +134,7 @@ https://hibernate.atlassian.net/projects/HHH/versions/20851
 
 Changes in 5.0.0.CR4 (August 5, 2015)
 ------------------------------------------------------------------------------------------------------------------------
-https://hibernate.atlassian.net/projects/HHH/versions/20752
+http://hibernate.atlassian.net/projects/HHH/versions/20752
 
 ** Bug
     * [HHH-8615] - Shared type parameters results in inconsistent internal model (especially with DynamicParameterizedType)
@@ -120,7 +169,7 @@ https://hibernate.atlassian.net/projects/HHH/versions/20752
 
 Changes in 5.0.0.CR3 (July 29, 2015)
 ------------------------------------------------------------------------------------------------------------------------
-https://hibernate.atlassian.net/projects/HHH/versions/20350
+http://hibernate.atlassian.net/projects/HHH/versions/20350
 
 ** Sub-task
     * [HHH-9938] - Enhance field access
@@ -178,7 +227,7 @@ https://hibernate.atlassian.net/projects/HHH/versions/20350
 
 Changes in 5.0.0.CR2 (July 8, 2015)
 ------------------------------------------------------------------------------------------------------------------------
-https://hibernate.atlassian.net/projects/HHH/versions/20150
+http://hibernate.atlassian.net/projects/HHH/versions/20150
 
 ** Sub-task
     * [HHH-8558] - Lazy loading (basic attributes)
@@ -235,7 +284,7 @@ https://hibernate.atlassian.net/projects/HHH/versions/20150
 
 Changes in 5.0.0.CR1 (May 27, 2015)
 ------------------------------------------------------------------------------------------------------------------------
-https://hibernate.atlassian.net/projects/HHH/versions/19851
+http://hibernate.atlassian.net/projects/HHH/versions/19851
 
 ** Sub-task
     * [HHH-8489] - Bi-directional association management via bytecode enhancement
@@ -293,7 +342,7 @@ https://hibernate.atlassian.net/projects/HHH/versions/19851
 
 Changes in 5.0.0.Beta2 (April 29, 2015)
 ------------------------------------------------------------------------------------------------------------------------
-https://hibernate.atlassian.net/projects/HHH/versions/19550
+http://hibernate.atlassian.net/projects/HHH/versions/19550
 
 ** Bug
     * [HHH-9250] - BigIntegerSequenceGeneratorTest.testBasics fails on MS SQL Server 2012
@@ -330,7 +379,7 @@ https://hibernate.atlassian.net/projects/HHH/versions/19550
 
 Changes in 5.0.0.Beta1 (March 31, 2015)
 ------------------------------------------------------------------------------------------------------------------------
-https://hibernate.atlassian.net/projects/HHH/versions/18450
+http://hibernate.atlassian.net/projects/HHH/versions/18450
 
 ** Sub-task
     * [HHH-7998] - Add TypeContributions interface

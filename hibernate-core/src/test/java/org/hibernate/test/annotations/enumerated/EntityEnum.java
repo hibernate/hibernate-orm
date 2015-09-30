@@ -19,38 +19,21 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 
-import org.hibernate.annotations.Formula;
-import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
-import org.hibernate.annotations.TypeDefs;
+import org.hibernate.annotations.*;
+
+import org.hibernate.test.annotations.enumerated.custom_types.LastNumberType;
+import org.hibernate.test.annotations.enumerated.enums.Common;
+import org.hibernate.test.annotations.enumerated.enums.FirstLetter;
+import org.hibernate.test.annotations.enumerated.enums.LastNumber;
+import org.hibernate.test.annotations.enumerated.enums.Trimmed;
 
 /**
  * @author Janario Oliveira
  * @author Brett Meyer
  */
 @Entity
-@TypeDefs({ @TypeDef(typeClass = LastNumberType.class, defaultForType = EntityEnum.LastNumber.class) })
+@TypeDefs({ @TypeDef(typeClass = LastNumberType.class, defaultForType = LastNumber.class) })
 public class EntityEnum {
-
-	enum Common {
-
-		A1, A2, B1, B2
-	}
-
-	enum FirstLetter {
-
-		A_LETTER, B_LETTER, C_LETTER
-	}
-
-	enum LastNumber {
-
-		NUMBER_1, NUMBER_2, NUMBER_3
-	}
-
-	enum Trimmed {
-
-		A, B, C
-	}
 
 	@Id
 	@GeneratedValue
@@ -58,7 +41,7 @@ public class EntityEnum {
 	private Common ordinal;
 	@Enumerated(EnumType.STRING)
 	private Common string;
-	@Type(type = "org.hibernate.test.annotations.enumerated.FirstLetterType")
+	@Type(type = "org.hibernate.test.annotations.enumerated.custom_types.FirstLetterType")
 	private FirstLetter firstLetter;
 	private LastNumber lastNumber;
 	@Enumerated(EnumType.STRING)

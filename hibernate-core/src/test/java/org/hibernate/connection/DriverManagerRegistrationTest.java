@@ -15,8 +15,6 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.util.Properties;
 import java.util.logging.Logger;
 
-import org.hibernate.internal.util.ClassLoaderHelper;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.AfterClass;
@@ -75,11 +73,11 @@ public class DriverManagerRegistrationTest extends BaseUnitTestCase {
 	}
 
 	private static ClassLoader determineClassLoader() {
-		ClassLoader cl = ClassLoaderHelper.getContextClassLoader();
-		if ( cl == null ) {
-			cl = DriverManagerRegistrationTest.class.getClassLoader();
+		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+		if ( classLoader == null ) {
+			classLoader = DriverManagerRegistrationTest.class.getClassLoader();
 		}
-		return cl;
+		return classLoader;
 	}
 
 	@AfterClass

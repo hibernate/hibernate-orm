@@ -14,16 +14,22 @@ import org.hibernate.boot.archive.spi.InputStreamAccess;
  */
 public class ClassDescriptorImpl implements ClassDescriptor {
 	private final String name;
+	private final Categorization categorization;
 	private final InputStreamAccess streamAccess;
 
-	public ClassDescriptorImpl(String name, InputStreamAccess streamAccess) {
+	public ClassDescriptorImpl(String name, Categorization categorization, InputStreamAccess streamAccess) {
 		this.name = name;
+		this.categorization = categorization;
 		this.streamAccess = streamAccess;
 	}
 
 	@Override
 	public String getName() {
 		return name;
+	}
+
+	public Categorization getCategorization() {
+		return categorization;
 	}
 
 	@Override

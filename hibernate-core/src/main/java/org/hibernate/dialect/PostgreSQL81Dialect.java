@@ -6,11 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.CallableStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-
 import org.hibernate.JDBCException;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
@@ -33,6 +28,7 @@ import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.id.SequenceGenerator;
+import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.procedure.internal.PostgresCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
@@ -40,6 +36,11 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+
+import java.sql.CallableStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
 
 /**
  * An SQL dialect for Postgres
@@ -313,7 +314,7 @@ public class PostgreSQL81Dialect extends Dialect {
 
 	@Override
 	public Class getNativeIdentifierGeneratorClass() {
-		return SequenceGenerator.class;
+		return SequenceStyleGenerator.class;
 	}
 
 	@Override
@@ -406,26 +407,22 @@ public class PostgreSQL81Dialect extends Dialect {
 	 * Orginally contributed by Denny Bartelt.
 	 */
 	private static final ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {
-		public String extractConstraintName(SQLException sqle) {
-			try {
-				final int sqlState = Integer.valueOf( JdbcExceptionHelper.extractSqlState( sqle ) );
-				switch (sqlState) {
-					// CHECK VIOLATION
-					case 23514: return extractUsingTemplate( "violates check constraint \"","\"", sqle.getMessage() );
-					// UNIQUE VIOLATION
-					case 23505: return extractUsingTemplate( "violates unique constraint \"","\"", sqle.getMessage() );
-					// FOREIGN KEY VIOLATION
-					case 23503: return extractUsingTemplate( "violates foreign key constraint \"","\"", sqle.getMessage() );
-					// NOT NULL VIOLATION
-					case 23502: return extractUsingTemplate( "null value in column \"","\" violates not-null constraint", sqle.getMessage() );
-					// TODO: RESTRICT VIOLATION
-					case 23001: return null;
-					// ALL OTHER
-					default: return null;
-				}
-			}
-			catch (NumberFormatException nfe) {
-				return null;
+		@Override
+		protected String doExtractConstraintName(SQLException sqle) throws NumberFormatException {
+			final int sqlState = Integer.valueOf( JdbcExceptionHelper.extractSqlState( sqle ) );
+			switch (sqlState) {
+				// CHECK VIOLATION
+				case 23514: return extractUsingTemplate( "violates check constraint \"","\"", sqle.getMessage() );
+				// UNIQUE VIOLATION
+				case 23505: return extractUsingTemplate( "violates unique constraint \"","\"", sqle.getMessage() );
+				// FOREIGN KEY VIOLATION
+				case 23503: return extractUsingTemplate( "violates foreign key constraint \"","\"", sqle.getMessage() );
+				// NOT NULL VIOLATION
+				case 23502: return extractUsingTemplate( "null value in column \"","\" violates not-null constraint", sqle.getMessage() );
+				// TODO: RESTRICT VIOLATION
+				case 23001: return null;
+				// ALL OTHER
+				default: return null;
 			}
 		}
 	};
@@ -559,5 +556,10 @@ public class PostgreSQL81Dialect extends Dialect {
 	@Override
 	public ResultSet getResultSet(CallableStatement statement, String name) throws SQLException {
 		throw new UnsupportedOperationException( "PostgreSQL only supports accessing REF_CURSOR parameters by name" );
+	}
+
+	@Override
+	public boolean qualifyIndexName() {
+		return false;
 	}
 }

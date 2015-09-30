@@ -486,6 +486,9 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				if ( ( (SelfDirtinessTracker) entity ).$$_hibernate_hasDirtyAttributes() ) {
 					dirtyProperties = persister.resolveAttributeIndexes( ( (SelfDirtinessTracker) entity ).$$_hibernate_getDirtyAttributes() );
 				}
+				else {
+					dirtyProperties = new int[0];
+				}
 			}
 			else {
 				// see if the custom dirtiness strategy can tell us...

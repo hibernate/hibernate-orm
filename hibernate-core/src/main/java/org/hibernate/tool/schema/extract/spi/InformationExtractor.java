@@ -23,20 +23,24 @@ import org.hibernate.tool.schema.extract.internal.TableInformationImpl;
  */
 public interface InformationExtractor {
 
-	boolean schemaExists(Identifier catalog, Identifier schema);
+	/**
+	 * Does the given catalog exist yet?
+	 *
+	 * @param catalog The name of the catalog to look for.
+	 *
+	 * @return {@code true} if the catalog does exist; {@code false} otherwise
+	 */
+	boolean catalogExists(Identifier catalog);
 
 	/**
-	 * Return information about all matching tables, depending on whether to apply filter for
-	 * catalog/schema.
+	 * The the given schema exist yet?
 	 *
-	 * @param catalog Can be {@code null}, indicating that any catalog may be considered a match.  A
-	 * non-{@code null} value indicates that search should be limited to the passed catalog.
-	 * @param schema Can  be {@code null}, indicating that any schema may be considered a match.  A
-	 * non-{@code null} value indicates that search should be limited to the passed schema .
+	 * @param catalog The name of the catalog to look in.
+	 * @param schema The name of the schema to look for.
 	 *
-	 * @return The matching table information
+	 * @return {@code true} if the schema does exist; {@code false} otherwise
 	 */
-	public Collection<TableInformation> getTables(Identifier catalog, Identifier schema);
+	boolean schemaExists(Identifier catalog, Identifier schema);
 
 	/**
 	 * Look for a matching table.
@@ -52,14 +56,15 @@ public interface InformationExtractor {
 	public TableInformation getTable(Identifier catalog, Identifier schema, Identifier tableName);
 
 	/**
-	 * Return information about columns for the given table.  Typically called from the TableInformation itself
+	 * Return information about column for the given table.  Typically called from the TableInformation itself
 	 * as part of on-demand initialization of its state.
 	 *
-	 * @param tableInformation The table for which to locate columns
+	 * @param tableInformation table info for the matching table
+	 * @param columnIdentifier The column identifier for which to locate column
 	 *
 	 * @return The extracted column information
 	 */
-	public Iterable<ColumnInformation> getColumns(TableInformation tableInformation);
+	public ColumnInformation getColumn(TableInformation tableInformation, Identifier columnIdentifier);
 
 	/**
 	 * Extract information about the given table's primary key.

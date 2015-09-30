@@ -6,6 +6,10 @@
  */
 package org.hibernate.engine.internal;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
+
 import org.hibernate.EntityMode;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.EntityEntry;
@@ -14,15 +18,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.persister.entity.EntityPersister;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.Serializable;
-
 /**
- * We need an entry to tell us all about the current state of an mutable object with respect to its persistent state
- *
- * Implementation Warning: Hibernate needs to instantiate a high amount of instances of this class,
- * therefore we need to take care of its impact on memory consumption.
+ * An EntityEntry implementation for mutable entities.
  *
  * @author Gavin King
  * @author Emmanuel Bernard <emmanuel@hibernate.org>

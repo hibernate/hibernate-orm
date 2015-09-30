@@ -74,6 +74,16 @@ public interface EnhancementContext {
 	public boolean doDirtyCheckingInline(CtClass classDescriptor);
 
 	/**
+	 * Should we enhance field access to entities from this class?
+	 *
+	 * @param classDescriptor The descriptor of the class to check.
+	 *
+	 * @return {@code true} indicates that any direct access to fields of entities should be routed to the enhanced
+	 *         getter / setter  method.
+	 */
+	public boolean doFieldAccessEnhancement(CtClass classDescriptor);
+
+	/**
 	 * Does the given class define any lazy loadable attributes?
 	 *
 	 * @param classDescriptor The class to check

@@ -10,6 +10,8 @@ package org.hibernate.jpa.test.instrument;
 
 import java.util.Collection;
 
+import javax.persistence.Entity;
+
 import org.hibernate.jpa.internal.instrument.InterceptFieldClassFileTransformer;
 
 
@@ -19,6 +21,7 @@ import org.hibernate.jpa.internal.instrument.InterceptFieldClassFileTransformer;
  * @author Emmanuel Bernard
  * @author Dustin Schultz
  */
+@Entity
 public class Simple {
 	private String name;
 	

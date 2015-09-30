@@ -101,34 +101,4 @@ public interface IdentifierHelper {
 	 * @return The String representation of the given object name
 	 */
 	String toMetaDataObjectName(Identifier identifier);
-
-	/**
-	 * Parse an Identifier representation from the String representation of a catalog name
-	 * as obtained from {@link java.sql.DatabaseMetaData} calls.
-	 *
-	 * @param catalogName The String representation of a catalog name
-	 *
-	 * @return The parsed Identifier representation of the given catalog name
-	 */
-	Identifier fromMetaDataCatalogName(String catalogName);
-
-	/**
-	 * Parse an Identifier representation from the String representation of a schema name
-	 * as obtained from {@link java.sql.DatabaseMetaData} calls.
-	 *
-	 * @param schemaName The String representation of a schema name
-	 *
-	 * @return The parsed Identifier representation of the given schema name
-	 */
-	Identifier fromMetaDataSchemaName(String schemaName);
-
-	/**
-	 * Parse an Identifier representation from the String representation of an object name
-	 * as obtained from {@link java.sql.DatabaseMetaData} calls.
-	 *
-	 * @param name The String representation of an object name
-	 *
-	 * @return The parsed Identifier representation of the given object name
-	 */
-	Identifier fromMetaDataObjectName(String name);
 }

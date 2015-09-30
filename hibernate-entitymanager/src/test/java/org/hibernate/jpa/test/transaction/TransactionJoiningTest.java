@@ -6,11 +6,13 @@
  */
 package org.hibernate.jpa.test.transaction;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceException;
-import javax.transaction.Status;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceException;
+import javax.persistence.SynchronizationType;
+import javax.persistence.TransactionRequiredException;
+import javax.transaction.Status;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -20,18 +22,18 @@ import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 
-import org.junit.Test;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.junit4.ExtraAssertions;
+import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
- * Largely a copy of {@link org.hibernate.test.jpa.txn.TransactionJoiningTest}
+ * Largely a copy of {@link org.hibernate.test.jpa.txn.JtaTransactionJoiningTest}
  *
  * @author Steve Ebersole
  */
@@ -47,8 +49,25 @@ public class TransactionJoiningTest extends BaseEntityManagerFunctionalTestCase 
 	public void testExplicitJoining() throws Exception {
 		assertFalse( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
 
-		EntityManager entityManager = entityManagerFactory().createEntityManager();
+		EntityManager entityManager = entityManagerFactory().createEntityManager( SynchronizationType.UNSYNCHRONIZED );
 		TransactionJoinHandlingChecker.validateExplicitJoiningHandling( entityManager );
+	}
+
+	@Test
+	@SuppressWarnings("EmptyCatchBlock")
+	public void testExplicitJoiningTransactionRequiredException() throws Exception {
+		// explicitly calling EntityManager#joinTransaction outside of an active transaction should cause
+		// a TransactionRequiredException to be thrown
+
+		EntityManager entityManager = entityManagerFactory().createEntityManager();
+		assertFalse("setup problem", JtaStatusHelper.isActive(TestingJtaPlatformImpl.INSTANCE.getTransactionManager()));
+
+		try {
+			entityManager.joinTransaction();
+			fail( "Expected joinTransaction() to fail since there is no active JTA transaction" );
+		}
+		catch (TransactionRequiredException expected) {
+		}
 	}
 
 	@Test

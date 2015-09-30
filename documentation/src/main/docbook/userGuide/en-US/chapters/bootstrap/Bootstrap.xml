@@ -1,0 +1,271 @@
+<?xml version='1.0' encoding='utf-8' ?>
+
+<chapter xml:id="bootstrap" xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude">
+    <title>Bootstrap</title>
+
+    <para>
+        The term <firstterm>bootstrapping</firstterm> refers to initializing and starting a software
+        component.  In Hibernate we are specifically talking about the process of building a fully functional
+        SessionFactory instance or EntityManagerFactory instance for JPA.  The process is very different for
+        each.
+    </para>
+
+    <note>
+        <para>
+            This chapter will not focus on all the possibilities of bootstrapping.  Those will be covered
+            in each specific more-relevant chapters later on.  Instead we focus here on the API calls needed
+            to perform the bootstrapping.
+        </para>
+    </note>
+
+    <!-- todo : point to "integrator guide" in regards to its effect on both forms of bootstrapping -->
+
+    <section xml:id="bootstrap-native">
+        <title>Native Bootstrapping</title>
+
+        <para>
+            This section discusses the process of bootstrapping a Hibernate SessionFactory.  Specifically it discusses
+            the bootstrapping APIs as redesigned in 5.0.  For a discussion of the legacy bootstrapping API, see
+            <xref linkend="appendix-legacy-bootstrap"/>
+        </para>
+
+        <section xml:id="bootstrap-native-registry">
+            <title>Building the ServiceRegistry</title>
+            <para>
+                The first step in native bootstrapping is the building of a ServiceRegistry holding the
+                services Hibernate will need at bootstrap and run time.
+            </para>
+
+            <!-- todo : point to the discussion about service registries, whether that remains as a topical guide or as a chapter in the "integrations guide" -->
+
+            <para>
+                Actually we are concerned with building 2 different ServiceRegistries.  First is the
+                <interfacename>org.hibernate.boot.registry.BootstrapServiceRegistry</interfacename>. The
+                BootstrapServiceRegistry is intended to hold services that Hibernate needs at both bootstrap and
+                run time.  This boils down to 3 services:
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            <interfacename>org.hibernate.boot.registry.classloading.spi.ClassLoaderService</interfacename> -
+                            which controls how Hibernate interacts with ClassLoaders
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            <interfacename>org.hibernate.integrator.spi.IntegratorService</interfacename> -
+                            which controls the management ands discovery of
+                            <interfacename>org.hibernate.integrator.spi.Integrator</interfacename> instances.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            <interfacename>org.hibernate.boot.registry.selector.spi.StrategySelector</interfacename> -
+                            which control how Hibernate resolves implementations of various strategy contracts.  This
+                            is a very powerful service, but a full discussion of it is beyond the scope of this guide.
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+
+            <para>
+                If you are ok with the default behavior of Hibernate in regards to these BootstrapServiceRegistry
+                services (which is quite often the case, especially in SE environments), then building the
+                BootstrapServiceRegistry can be skipped.
+            </para>
+
+            <para>
+                If you wish to alter how the BootstrapServiceRegistry is built, that is controlled through the
+                <interfacename>org.hibernate.boot.registry.BootstrapServiceRegistryBuilder</interfacename>:
+            </para>
+
+            <example>
+                <title>Controlling BootstrapServiceRegistry building</title>
+                <programlisting role="JAVA"><xi:include href="extras/native1.java" parse="text"/></programlisting>
+            </example>
+
+            <para>
+                The services of the BootstrapServiceRegistry cannot be extended (added to) nor overridden (replaced).
+            </para>
+
+            <para>
+                The second ServiceRegistry is the <interfacename>org.hibernate.boot.registry.StandardServiceRegistry</interfacename>.
+                You will almost always need to configure the StandardServiceRegistry, which is done through
+                <classname>org.hibernate.boot.registry.StandardServiceRegistryBuilder</classname>:
+            </para>
+
+            <example>
+                <title>Building a BootstrapServiceRegistryBuilder</title>
+                <programlisting role="JAVA"><xi:include href="extras/native2.java" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/native3.java" parse="text"/></programlisting>
+            </example>
+
+            <para>
+                A StandardServiceRegistry is also highly configurable via the StandardServiceRegistryBuilder API.
+                See the StandardServiceRegistryBuilder javadocs for full details.  Some specific methods of interest:
+            </para>
+
+            <example>
+                <title>Controlling StandardServiceRegistry building</title>
+                <programlisting role="JAVA"><xi:include href="extras/native4.java" parse="text"/></programlisting>
+            </example>
+        </section>
+
+        <section xml:id="bootstrap-native-metadata">
+            <title>Building the Metadata</title>
+            <para>
+                The second step in native bootstrapping is the building of a <interfacename>org.hibernate.boot.Metadata</interfacename>
+                object containing the parsed representations of an application's domain model and its mapping to
+                a database.  The first thing we obviously need to build a parsed representation is the source
+                information to be parsed (annotated classes, `hbm.xml` files, `orm.xml` files).  This is
+                the purpose of <classname>org.hibernate.boot.MetadataSources</classname>:
+            </para>
+
+            <example>
+                <title>Configuring a MetadataSources</title>
+                <programlisting role="JAVA"><xi:include href="extras/native5.java" parse="text"/></programlisting>
+            </example>
+
+            <para>
+                MetadataSources has many other methods as well; explore its API and javadocs for more information.
+                Also, all methods on MetadataSources allow for chaining should you prefer that style:
+            </para>
+
+            <example>
+                <title>Configuring a MetadataSources with method chaining</title>
+                <programlisting role="JAVA"><xi:include href="extras/native6.java" parse="text"/></programlisting>
+            </example>
+
+            <para>
+                Once we have the sources of mapping information defined, we need to build the Metadata object.  If
+                you are ok with the default behavior in building the Metadata then you can simply call
+                MetadataSources#buildMetadata.
+            </para>
+
+            <note>
+                <para>
+                    Notice that a ServiceRegistry can be passed at a number of points in this bootstrapping process.
+                    The suggested approach is to build a StandardServiceRegistry yourself and pass that along to the
+                    MetadataSources constructor.  From there, MetadataBuilder, Metadata, SessionFactoryBuilder and
+                    SessionFactory will all pick up that same StandardServiceRegistry.
+                </para>
+            </note>
+
+            <para>
+                However, if you wish to adjust the process of building Metadata from MetadataSources you will need
+                to use the MetadataBuilder as obtained via MetadataSources#getMetadataBuilder.  MetadataBuilder
+                allows a lot of control over the Metadata building process.  See its javadocs for full details.
+            </para>
+
+            <example>
+                <title>Building Metadata via MetadataBuilder</title>
+                <programlisting role="JAVA"><xi:include href="extras/native7.java" parse="text"/></programlisting>
+            </example>
+        </section>
+
+        <section xml:id="bootstrap-native-sessionfactory">
+            <title>Building the SessionFactory</title>
+            <para>
+                The final step in native bootstrapping is to build the SessionFactory itself.  Much like
+                discussed above, if you are ok with the default behavior of building a SessionFactory from a Metadata
+                reference, you can simply call Metadata#buildSessionFactory.
+            </para>
+
+            <para>
+                However, if you would like to adjust that building process you will need to use
+                SessionFactoryBuilder as obtained via Metadata#getSessionFactoryBuilder.   Again, see its
+                javadocs for full details.
+            </para>
+
+            <example>
+                <title>Building SessionFactory via SessionFactoryBuilder</title>
+                <programlisting role="JAVA"><xi:include href="extras/native8.java" parse="text"/></programlisting>
+            </example>
+
+            <para>
+                The bootstrapping API is quite flexible, but in most cases it makes the most sense to think of
+                it as a 3 step process:
+                <orderedlist>
+                    <listitem>
+                        Build the StandardServiceRegistry
+                    </listitem>
+                    <listitem>
+                        Build the Metadata
+                    </listitem>
+                    <listitem>
+                        Use those 2 things to build the SessionFactory
+                    </listitem>
+                </orderedlist>
+            </para>
+
+            <example>
+                <title>Native Bootstrapping - Putting it all together</title>
+                <programlisting role="JAVA"><xi:include href="extras/native9.java" parse="text"/></programlisting>
+            </example>
+        </section>
+    </section>
+
+    <section xml:id="bootstrap-jpa">
+        <title>JPA Bootstrapping</title>
+
+        <para>
+            Bootstrapping Hibernate as a JPA provider can be done in a JPA-spec compliant manner or using a proprietary
+            bootstrapping approach.  The standardized approach has some limitations in certain environments, but aside
+            from those limitations, it is *highly* recommended that you use JPA-standardized bootstrapping.
+        </para>
+
+        <!-- todo : pointer to integration guide -->
+
+        <section xml:id="bootstrap-jpa-compliant">
+            <title>JPA-compliant bootstrapping</title>
+
+            <para>
+                In JPA we are ultimately interested in bootstrapping an javax.persistence.EntityManagerFactory instance.
+                The JPA specification defines 2 primary standardized bootstrap approaches depending on how the
+                application intends to access the javax.persistence.EntityManager instances from an
+                EntityManagerFactory. It uses the terms "EE" and "SE" for these 2 approaches, but those terms are very
+                misleading in this context.  What the JPA spec calls EE bootstrapping is cases where a container
+                (EE, OSGi, etc) will manage and inject the persistence context on behalf of the application.
+                What it calls SE bootstrapping is everything else.  We will use the terms
+                container-bootstrapping and application-bootstrapping in this guide.
+            </para>
+
+            <sidebar>
+                <para>
+                    If you would like additional details on accessing and using EntityManager instances, sections 7.6
+                    and 7.7 of the JPA 2.1 specification cover container-managed and application-managed EntityManagers,
+                    respectively.
+                </para>
+            </sidebar>
+
+            <para>
+                For compliant container-bootstrapping, the container will build an EntityManagerFactory for each
+                persistent-unit defined in the deployment's META-INF/persistence.xml and make that available to the
+                application for injection via the javax.persistence.PersistenceUnit annotation or via JNDI lookup.
+            </para>
+
+            <example>
+                <title>Injecting a EntityManagerFactory</title>
+                <programlisting role="JAVA"><xi:include href="extras/jpa1.java" parse="text"/></programlisting>
+            </example>
+
+            <para>
+                For compliant application-bootstrapping, rather than the container building the
+                EntityManagerFactory for the application, the application builds the EntityManagerFactory itself
+                using the javax.persistence.Persistence bootstrap class.  The application creates an entity manager
+                factory by calling the createEntityManagerFactory method:
+            </para>
+
+            <example>
+                <title>Application bootstrapped EntityManagerFactory</title>
+                <programlisting role="JAVA"><xi:include href="extras/jpa2.java" parse="text"/></programlisting>
+            </example>
+        </section>
+        <section xml:id="bootstrap-jpa-hibernate">
+            <title>Proprietary 2-phase bootstrapping</title>
+            <para>
+                <!-- todo : document this -->
+                todo
+            </para>
+        </section>
+    </section>
+</chapter>

@@ -28,6 +28,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 
 	private final NameQualifierSupport nameQualifierSupport;
 	private final boolean globallyQuoteIdentifiers;
+	private final boolean autoQuoteKeywords;
 	private final Set<String> reservedWords = new TreeSet<String>( String.CASE_INSENSITIVE_ORDER );
 	private final IdentifierCaseStrategy unquotedCaseStrategy;
 	private final IdentifierCaseStrategy quotedCaseStrategy;
@@ -36,12 +37,14 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 			JdbcEnvironment jdbcEnvironment,
 			NameQualifierSupport nameQualifierSupport,
 			boolean globallyQuoteIdentifiers,
+			boolean autoQuoteKeywords,
 			Set<String> reservedWords,
 			IdentifierCaseStrategy unquotedCaseStrategy,
 			IdentifierCaseStrategy quotedCaseStrategy) {
 		this.jdbcEnvironment = jdbcEnvironment;
 		this.nameQualifierSupport = nameQualifierSupport;
 		this.globallyQuoteIdentifiers = globallyQuoteIdentifiers;
+		this.autoQuoteKeywords = autoQuoteKeywords;
 		if ( reservedWords != null ) {
 			this.reservedWords.addAll( reservedWords );
 		}
@@ -66,7 +69,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 			return Identifier.toIdentifier( identifier.getText(), true );
 		}
 
-		if ( isReservedWord( identifier.getText() ) ) {
+		if ( autoQuoteKeywords && isReservedWord( identifier.getText() ) ) {
 			log.tracef( "Forcing identifier [%s] to quoted as recognized reserveed word", identifier );
 			return Identifier.toIdentifier( identifier.getText(), true );
 		}
@@ -184,80 +187,5 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 			throw new IllegalArgumentException( "null was passed as an object name" );
 		}
 		return toMetaDataText( identifier );
-	}
-
-	@Override
-	public Identifier fromMetaDataCatalogName(String catalogName) {
-		if ( catalogName == null || !nameQualifierSupport.supportsCatalogs() ) {
-			return null;
-		}
-
-//		if ( jdbcEnvironment.getCurrentCatalog() == null
-//				|| catalogName.equals( jdbcEnvironment.getCurrentCatalog().getText() ) ) {
-//			return null;
-//		}
-
-		return toIdentifierFromMetaData( catalogName );
-	}
-
-	public Identifier toIdentifierFromMetaData(String text) {
-		log.tracef( "Interpreting return value [%s] from DatabaseMetaData as identifier", text );
-
-		if ( globallyQuoteIdentifiers ) {
-			log.trace( "Forcing DatabaseMetaData return value as quoted due to global quoting" );
-			return Identifier.toIdentifier( text, true );
-		}
-
-		if ( isReservedWord( text ) ) {
-			// unequivocally it needs to be quoted...
-			log.trace( "Forcing DatabaseMetaData return value as quoted as it was recognized as a reserved word" );
-			return Identifier.toIdentifier( text, true );
-		}
-
-		// lovely decipher of whether the incoming value represents a quoted identifier...
-		final boolean isUpperCase = text.toUpperCase( Locale.ROOT ).equals( text );
-		final boolean isLowerCase = text.toLowerCase( Locale.ROOT ).equals( text );
-		final boolean isMixedCase = ! isLowerCase && ! isUpperCase;
-
-		if ( quotedCaseStrategy == IdentifierCaseStrategy.MIXED && isMixedCase ) {
-			log.trace( "Interpreting return value as quoted due to case strategy" );
-			return Identifier.toIdentifier( text, true );
-		}
-
-		if ( quotedCaseStrategy == IdentifierCaseStrategy.LOWER && isLowerCase ) {
-			log.trace( "Interpreting return value as quoted due to case strategy" );
-			return Identifier.toIdentifier( text, true );
-		}
-
-		if ( quotedCaseStrategy == IdentifierCaseStrategy.UPPER && isUpperCase ) {
-			log.trace( "Interpreting return value as quoted due to case strategy" );
-			return Identifier.toIdentifier( text, true );
-		}
-
-		log.trace( "Interpreting return value as unquoted due to case strategy" );
-		return Identifier.toIdentifier( text );
-	}
-
-	@Override
-	public Identifier fromMetaDataSchemaName(String schemaName) {
-		if ( schemaName == null || !nameQualifierSupport.supportsSchemas() ) {
-			return null;
-		}
-
-//		if ( jdbcEnvironment.getCurrentSchema() == null
-//				|| schemaName.equals( jdbcEnvironment.getCurrentSchema().getText() ) ) {
-//			return null;
-//		}
-
-		return toIdentifierFromMetaData( schemaName );
-	}
-
-	@Override
-	public Identifier fromMetaDataObjectName(String objectName) {
-		if ( objectName == null ) {
-			return null;
-		}
-
-		return toIdentifierFromMetaData( objectName );
 	}
 }

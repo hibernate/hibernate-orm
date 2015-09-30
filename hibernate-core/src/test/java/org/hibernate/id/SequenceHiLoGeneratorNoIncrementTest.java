@@ -16,6 +16,7 @@ import java.util.Properties;
 import org.hibernate.Session;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.relational.SimpleAuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -26,14 +27,17 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.jdbc.Work;
 import org.hibernate.type.StandardBasicTypes;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.env.TestingDatabaseInfo;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.test.common.BasicTestingJdbcServiceImpl;
-import org.hibernate.test.common.MetadataBuildingContextTestingImpl;
+import org.hibernate.testing.boot.BasicTestingJdbcServiceImpl;
+import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,12 +51,13 @@ import static org.junit.Assert.assertEquals;
  * @author Steve Ebersole
  */
 @SuppressWarnings({ "deprecation" })
+@RequiresDialectFeature( DialectChecks.SupportsSequences.class )
 public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 	private static final String TEST_SEQUENCE = "test_sequence";
 
 	private StandardServiceRegistry serviceRegistry;
 	private SessionFactoryImplementor sessionFactory;
-	private SequenceHiLoGenerator generator;
+	private SequenceStyleGenerator generator;
     private SessionImplementor session;
 
 	@Before
@@ -67,12 +72,13 @@ public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 				.build();
 
-		generator = new SequenceHiLoGenerator();
+		generator = new SequenceStyleGenerator();
 
 		// Build the properties used to configure the id generator
 		Properties properties = new Properties();
-		properties.setProperty( SequenceGenerator.SEQUENCE, TEST_SEQUENCE );
-		properties.setProperty( SequenceHiLoGenerator.MAX_LO, "0" ); // JPA allocationSize of 1
+		properties.setProperty( SequenceStyleGenerator.SEQUENCE_PARAM, TEST_SEQUENCE );
+		properties.setProperty( SequenceStyleGenerator.OPT_PARAM, "legacy-hilo" );
+		properties.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "0" ); // JPA allocationSize of 1
 		properties.put(
 				PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER,
 				new ObjectNameNormalizer() {
@@ -82,18 +88,10 @@ public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 					}
 				}
 		);
-		generator.configure( StandardBasicTypes.LONG, properties, jdbcServices.getJdbcEnvironment() );
+		generator.configure( StandardBasicTypes.LONG, properties, serviceRegistry );
 
 		final Metadata metadata = new MetadataSources( serviceRegistry ).buildMetadata();
-		metadata.getDatabase().addAuxiliaryDatabaseObject(
-				new SimpleAuxiliaryDatabaseObject(
-						Collections.<String>emptySet(),
-						null,
-						null,
-						generator.sqlCreateStrings( TestingDatabaseInfo.DIALECT ),
-						generator.sqlDropStrings( TestingDatabaseInfo.DIALECT )
-				)
-		);
+		generator.registerExportables( metadata.getDatabase() );
 
 		sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
 	}

@@ -196,12 +196,16 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.save(m);
 		t.commit();
 		s.close();
+
 		s = openSession();
 		t = s.beginTransaction();
 		Iterator i = s.createQuery( "from Master" ).iterate();
 		m = (Master) i.next();
 		assertTrue( m.getOtherMaster()==m );
-		if (getDialect() instanceof HSQLDialect) { m.setOtherMaster(null); s.flush(); }
+		if ( getDialect() instanceof HSQLDialect || getDialect() instanceof MySQLDialect ) {
+			m.setOtherMaster(null);
+			s.flush();
+		}
 		s.delete(m);
 		t.commit();
 		s.close();
@@ -243,8 +247,11 @@ public class MasterDetailTest extends LegacyTestCase {
 		m2 = (Master) s.createCriteria(Master.class)
 			.add( Example.create(m).excludeNone().excludeProperty("bigDecimal") )
 			.uniqueResult();
-		assertTrue( null==m2 );
-		if (getDialect() instanceof HSQLDialect) { m1.setOtherMaster(null); s.flush(); }
+		assertTrue( null == m2 );
+		if (getDialect() instanceof HSQLDialect || getDialect() instanceof MySQLDialect) {
+			m1.setOtherMaster(null);
+			s.flush();
+		}
 		s.delete(m1);
 		t.commit();
 		s.close();

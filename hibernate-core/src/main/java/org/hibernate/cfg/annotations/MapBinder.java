@@ -271,19 +271,12 @@ public class MapBinder extends CollectionBinder {
 					//do not call setType as it extract the type from @Type
 					//the algorithm generally does not apply for map key anyway
 					elementBinder.setKey(true);
-					MapKeyType mapKeyTypeAnnotation = property.getAnnotation( MapKeyType.class );
-					if ( mapKeyTypeAnnotation != null
-							&& !BinderHelper.isEmptyAnnotationValue( mapKeyTypeAnnotation.value() .type() ) ) {
-						elementBinder.setExplicitType( mapKeyTypeAnnotation.value() );
-					}
-					else {
-						elementBinder.setType(
-								property,
-								keyXClass,
-								this.collection.getOwnerEntityName(),
-								holder.keyElementAttributeConverterDefinition( keyXClass )
-						);
-					}
+					elementBinder.setType(
+							property,
+							keyXClass,
+							this.collection.getOwnerEntityName(),
+							holder.keyElementAttributeConverterDefinition( keyXClass )
+					);
 					elementBinder.setPersistentClassName( propertyHolder.getEntityName() );
 					elementBinder.setAccessType( accessType );
 					mapValue.setIndex( elementBinder.make() );
@@ -359,8 +352,6 @@ public class MapBinder extends CollectionBinder {
 			Iterator properties = component.getPropertyIterator();
 			Component indexComponent = new Component( getBuildingContext().getMetadataCollector(), collection );
 			indexComponent.setComponentClassName( component.getComponentClassName() );
-			//TODO I don't know if this is appropriate
-			indexComponent.setNodeName( "index" );
 			while ( properties.hasNext() ) {
 				Property current = (Property) properties.next();
 				Property newProperty = new Property();
@@ -370,7 +361,6 @@ public class MapBinder extends CollectionBinder {
 				newProperty.setUpdateable( false );
 				newProperty.setMetaAttributes( current.getMetaAttributes() );
 				newProperty.setName( current.getName() );
-				newProperty.setNodeName( current.getNodeName() );
 				newProperty.setNaturalIdentifier( false );
 				//newProperty.setOptimisticLocked( false );
 				newProperty.setOptional( false );

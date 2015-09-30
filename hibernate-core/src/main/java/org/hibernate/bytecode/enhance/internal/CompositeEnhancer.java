@@ -28,6 +28,9 @@ public class CompositeEnhancer extends Enhancer {
 	}
 
 	public void enhance(CtClass managedCtClass) {
+		// add the ManagedComposite interface
+		managedCtClass.addInterface( managedCompositeCtClass );
+
 		addInterceptorHandling( managedCtClass );
 
 		if ( enhancementContext.doDirtyCheckingInline( managedCtClass ) ) {

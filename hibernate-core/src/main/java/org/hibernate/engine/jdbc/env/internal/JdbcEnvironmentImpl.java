@@ -20,7 +20,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
-import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -35,7 +34,6 @@ import org.hibernate.exception.internal.SQLStateConversionDelegate;
 import org.hibernate.exception.internal.StandardSQLExceptionConverter;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -55,6 +53,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	private final LobCreatorBuilderImpl lobCreatorBuilder;
 
 	private final LinkedHashSet<TypeInfo> typeInfoSet = new LinkedHashSet<TypeInfo>();
+	private final NameQualifierSupport nameQualifierSupport;
 
 	/**
 	 * Constructor form used when the JDBC {@link java.sql.DatabaseMetaData} is not available.
@@ -72,12 +71,14 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 			// assume both catalogs and schemas are supported
 			nameQualifierSupport = NameQualifierSupport.BOTH;
 		}
+		this.nameQualifierSupport = nameQualifierSupport;
 
 		this.sqlExceptionHelper = buildSqlExceptionHelper( dialect );
 		this.extractedMetaDataSupport = new ExtractedDatabaseMetaDataImpl.Builder( this ).build();
 
 		final IdentifierHelperBuilder identifierHelperBuilder = IdentifierHelperBuilder.from( this );
 		identifierHelperBuilder.setGloballyQuoteIdentifiers( globalQuoting( cfgService ) );
+		identifierHelperBuilder.setAutoQuoteKeywords( autoKeywordQuoting( cfgService ) );
 		identifierHelperBuilder.setNameQualifierSupport( nameQualifierSupport );
 
 		IdentifierHelper identifierHelper = null;
@@ -113,6 +114,14 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		);
 	}
 
+	private static boolean autoKeywordQuoting(ConfigurationService cfgService) {
+		return cfgService.getSetting(
+				AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED,
+				StandardConverters.BOOLEAN,
+				false
+		);
+	}
+
 	/**
 	 * Constructor form used from testing
 	 *
@@ -131,6 +140,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		if ( nameQualifierSupport == null ) {
 			nameQualifierSupport = determineNameQualifierSupport( databaseMetaData );
 		}
+		this.nameQualifierSupport = nameQualifierSupport;
 
 		final IdentifierHelperBuilder identifierHelperBuilder = IdentifierHelperBuilder.from( this );
 		identifierHelperBuilder.setNameQualifierSupport( nameQualifierSupport );
@@ -204,9 +214,11 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		if ( nameQualifierSupport == null ) {
 			nameQualifierSupport = determineNameQualifierSupport( databaseMetaData );
 		}
+		this.nameQualifierSupport = nameQualifierSupport;
 
 		final IdentifierHelperBuilder identifierHelperBuilder = IdentifierHelperBuilder.from( this );
 		identifierHelperBuilder.setGloballyQuoteIdentifiers( globalQuoting( cfgService ) );
+		identifierHelperBuilder.setAutoQuoteKeywords( autoKeywordQuoting( cfgService ) );
 		identifierHelperBuilder.setNameQualifierSupport( nameQualifierSupport );
 		IdentifierHelper identifierHelper = null;
 		try {
@@ -313,6 +325,11 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	@Override
 	public IdentifierHelper getIdentifierHelper() {
 		return identifierHelper;
+	}
+
+	@Override
+	public NameQualifierSupport getNameQualifierSupport() {
+		return nameQualifierSupport;
 	}
 
 	@Override

@@ -10,10 +10,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
-import org.hibernate.boot.model.relational.Schema;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -35,12 +36,14 @@ public class SequenceStructure implements DatabaseStructure {
 			SequenceStructure.class.getName()
 	);
 
-	private QualifiedName qualifiedSequenceName;
-	private final String sequenceName;
+	private final QualifiedName logicalQualifiedSequenceName;
 	private final int initialValue;
 	private final int incrementSize;
 	private final Class numberType;
-	private final String sql;
+
+
+	private String sequenceName;
+	private String sql;
 	private boolean applyIncrementSizeToSourceValues;
 	private int accessCounter;
 
@@ -50,15 +53,11 @@ public class SequenceStructure implements DatabaseStructure {
 			int initialValue,
 			int incrementSize,
 			Class numberType) {
-		this.qualifiedSequenceName = qualifiedSequenceName;
-		this.sequenceName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				qualifiedSequenceName,
-				jdbcEnvironment.getDialect()
-		);
+		this.logicalQualifiedSequenceName = qualifiedSequenceName;
+
 		this.initialValue = initialValue;
 		this.incrementSize = incrementSize;
 		this.numberType = numberType;
-		sql = jdbcEnvironment.getDialect().getSequenceNextValString( sequenceName );
 	}
 
 	@Override
@@ -83,6 +82,10 @@ public class SequenceStructure implements DatabaseStructure {
 
 	@Override
 	public AccessCallback buildCallback(final SessionImplementor session) {
+		if ( sql == null ) {
+			throw new AssertionFailure( "SequenceStyleGenerator's SequenceStructure was not properly initialized" );
+		}
+
 		return new AccessCallback() {
 			@Override
 			public IntegralDataTypeHolder getNextValue() {
@@ -139,17 +142,28 @@ public class SequenceStructure implements DatabaseStructure {
 	@Override
 	public void registerExportables(Database database) {
 		final int sourceIncrementSize = applyIncrementSizeToSourceValues ? incrementSize : 1;
-		final Schema schema = database.locateSchema(
-				qualifiedSequenceName.getCatalogName(),
-				qualifiedSequenceName.getSchemaName()
+
+
+		final Namespace namespace = database.locateNamespace(
+				logicalQualifiedSequenceName.getCatalogName(),
+				logicalQualifiedSequenceName.getSchemaName()
 		);
-		Sequence sequence = schema.locateSequence( qualifiedSequenceName.getObjectName() );
+		Sequence sequence = namespace.locateSequence( logicalQualifiedSequenceName.getObjectName() );
 		if ( sequence != null ) {
 			sequence.validate( initialValue, sourceIncrementSize );
 		}
 		else {
-			schema.createSequence( qualifiedSequenceName.getObjectName(), initialValue, sourceIncrementSize );
+			sequence = namespace.createSequence( logicalQualifiedSequenceName.getObjectName(), initialValue, sourceIncrementSize );
 		}
+
+		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
+		final Dialect dialect = jdbcEnvironment.getDialect();
+
+		this.sequenceName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+				sequence.getName(),
+				dialect
+		);
+		this.sql = jdbcEnvironment.getDialect().getSequenceNextValString( sequenceName );
 	}
 
 	@Override

@@ -15,6 +15,7 @@ ext {
     bytemanVersion = '2.1.2'
     infinispanVersion = '7.2.1.Final'
     jnpVersion = '5.0.6.CR1'
+    elVersion = '2.2.4'
 
     libraries = [
             // Ant
@@ -25,7 +26,7 @@ ext {
 
             // Annotations
             commons_annotations: 'org.hibernate.common:hibernate-commons-annotations:5.0.0.Final',
-            jandex:         'org.jboss:jandex:1.1.0.Final',
+            jandex:         'org.jboss:jandex:1.2.2.Final',
             classmate:      'com.fasterxml:classmate:0.8.0',
 
             // Woodstox
@@ -69,11 +70,9 @@ ext {
             //Maven plugin framework
             maven_plugin: 'org.apache.maven:maven-plugin-api:3.0.5',
             maven_plugin_tools: 'org.apache.maven.plugin-tools:maven-plugin-annotations:3.2',
-            maven_plugin_tools: 'org.apache.maven.plugin-tools:maven-plugin-annotations:3.2',
 
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~ testing
 
-            // logging for testing
             log4j:          "log4j:log4j:1.2.17",
             junit:           "junit:junit:${junitVersion}",
             byteman:         "org.jboss.byteman:byteman:${bytemanVersion}",
@@ -81,12 +80,16 @@ ext {
             byteman_bmunit:  "org.jboss.byteman:byteman-bmunit:${bytemanVersion}",
             shrinkwrap_api:  'org.jboss.shrinkwrap:shrinkwrap-api:1.0.0-beta-6',
             shrinkwrap:      'org.jboss.shrinkwrap:shrinkwrap-impl-base:1.0.0-beta-6',
-            validator:       'org.hibernate:hibernate-validator:5.0.1.Final',
             h2:              "com.h2database:h2:${h2Version}",
             derby:           "org.apache.derby:derby:10.9.1.0",
             jboss_jta:       "org.jboss.jbossts:jbossjta:4.16.4.Final",
             xapool:          "com.experlog:xapool:1.5.0",
             mockito:         'org.mockito:mockito-core:1.9.0',
+
+            validator:       'org.hibernate:hibernate-validator:5.2.0.CR1',
+            // EL required by Hibernate Validator at test runtime
+            expression_language_api:  "javax.el:javax.el-api:${elVersion}",
+            expression_language_impl: "org.glassfish.web:javax.el:${elVersion}",
 
             // required by Hibernate Validator at test runtime
             unified_el:      "org.glassfish:javax.el:3.0-b07",

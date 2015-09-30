@@ -19,8 +19,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Exportable;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
-import org.hibernate.boot.model.relational.Schema;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
@@ -68,11 +68,11 @@ public class Table implements RelationalModel, Serializable, Exportable {
 	}
 
 	public Table(
-			Schema schema,
+			Namespace namespace,
 			Identifier physicalTableName,
 			boolean isAbstract) {
-		this.catalog = schema.getPhysicalName().getCatalog();
-		this.schema = schema.getPhysicalName().getSchema();
+		this.catalog = namespace.getPhysicalName().getCatalog();
+		this.schema = namespace.getPhysicalName().getSchema();
 		this.name = physicalTableName;
 		this.isAbstract = isAbstract;
 	}
@@ -88,17 +88,17 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		this.isAbstract = isAbstract;
 	}
 
-	public Table(Schema schema, Identifier physicalTableName, String subselect, boolean isAbstract) {
-		this.catalog = schema.getPhysicalName().getCatalog();
-		this.schema = schema.getPhysicalName().getSchema();
+	public Table(Namespace namespace, Identifier physicalTableName, String subselect, boolean isAbstract) {
+		this.catalog = namespace.getPhysicalName().getCatalog();
+		this.schema = namespace.getPhysicalName().getSchema();
 		this.name = physicalTableName;
 		this.subselect = subselect;
 		this.isAbstract = isAbstract;
 	}
 
-	public Table(Schema schema, String subselect, boolean isAbstract) {
-		this.catalog = schema.getPhysicalName().getCatalog();
-		this.schema = schema.getPhysicalName().getSchema();
+	public Table(Namespace namespace, String subselect, boolean isAbstract) {
+		this.catalog = namespace.getPhysicalName().getCatalog();
+		this.schema = namespace.getPhysicalName().getSchema();
 		this.subselect = subselect;
 		this.isAbstract = isAbstract;
 	}

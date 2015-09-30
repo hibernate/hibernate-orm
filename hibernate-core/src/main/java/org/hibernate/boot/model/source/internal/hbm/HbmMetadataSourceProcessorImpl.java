@@ -7,17 +7,17 @@
 package org.hibernate.boot.model.source.internal.hbm;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.spi.Binding;
+import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 
 import org.jboss.logging.Logger;
-
 
 /**
  * MetadataSourceProcessor implementation for processing {@code hbm.xml} mapping documents.
@@ -28,24 +28,21 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 	private static final Logger log = Logger.getLogger( HbmMetadataSourceProcessorImpl.class );
 
 	private final MetadataBuildingContext rootBuildingContext;
-	private List<MappingDocument> mappingDocuments;
+	private Collection<MappingDocument> mappingDocuments;
 
 	private final ModelBinder modelBinder;
 
 	private List<EntityHierarchySourceImpl> entityHierarchies;
 
 	public HbmMetadataSourceProcessorImpl(
-			MetadataSources metadataSources,
+			ManagedResources managedResources,
 			MetadataBuildingContext rootBuildingContext) {
-		this(
-				metadataSources.getXmlBindings(),
-				rootBuildingContext
-		);
+		this( managedResources.getXmlMappingBindings(), rootBuildingContext );
 	}
 
 	@SuppressWarnings("unchecked")
 	public HbmMetadataSourceProcessorImpl(
-			List<Binding> xmlBindings,
+			Collection<Binding> xmlBindings,
 			MetadataBuildingContext rootBuildingContext) {
 		this.rootBuildingContext = rootBuildingContext;
 		final EntityHierarchyBuilder hierarchyBuilder = new EntityHierarchyBuilder();

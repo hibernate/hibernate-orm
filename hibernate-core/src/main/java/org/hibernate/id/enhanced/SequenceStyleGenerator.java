@@ -24,6 +24,7 @@ import org.hibernate.id.Configurable;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -213,13 +214,14 @@ public class SequenceStyleGenerator
 	// Configurable implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void configure(Type type, Properties params, JdbcEnvironment jdbcEnv) throws MappingException {
-		final Dialect dialect = jdbcEnv.getDialect();
+	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
+		final Dialect dialect = jdbcEnvironment.getDialect();
 
 		this.identifierType = type;
 		boolean forceTableUse = ConfigurationHelper.getBoolean( FORCE_TBL_PARAM, params, false );
 
-		final QualifiedName sequenceName = determineSequenceName( params, dialect, jdbcEnv );
+		final QualifiedName sequenceName = determineSequenceName( params, dialect, jdbcEnvironment );
 
 		final int initialValue = determineInitialValue( params );
 		int incrementSize = determineIncrementSize( params );
@@ -237,7 +239,7 @@ public class SequenceStyleGenerator
 		this.databaseStructure = buildDatabaseStructure(
 				type,
 				params,
-				jdbcEnv,
+				jdbcEnvironment,
 				forceTableUse,
 				sequenceName,
 				initialValue,
@@ -260,7 +262,7 @@ public class SequenceStyleGenerator
 	 *
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
 	 * @param dialect The dialect in effect
-	 * @param jdbcEnv
+	 * @param jdbcEnv The JdbcEnvironment
 	 * @return The sequence name
 	 */
 	@SuppressWarnings("UnusedParameters")

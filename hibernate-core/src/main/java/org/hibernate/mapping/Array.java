@@ -7,8 +7,9 @@
 package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.PrimitiveType;
 
@@ -33,10 +34,13 @@ public class Array extends List {
 		}
 		else {
 			try {
-				return ReflectHelper.classForName( elementClassName );
+				return getMetadata().getMetadataBuildingOptions()
+						.getServiceRegistry()
+						.getService( ClassLoaderService.class )
+						.classForName( elementClassName );
 			}
-			catch (ClassNotFoundException cnfe) {
-				throw new MappingException( cnfe );
+			catch (ClassLoadingException e) {
+				throw new MappingException( e );
 			}
 		}
 	}

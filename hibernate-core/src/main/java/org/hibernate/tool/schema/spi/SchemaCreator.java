@@ -21,21 +21,21 @@ public interface SchemaCreator {
 	 * Perform the creation to the specified targets
 	 *
 	 * @param metadata The "compiled" mapping metadata.
-	 * @param createSchemas Should the schema(s) actually be created as well ({@code CREATE SCHEMA})?
+	 * @param createNamespaces Should the schema(s)/catalog(s) actually be created as well ({@code CREATE SCHEMA})?
 	 * @param targets The targets for creation
 	 *
 	 * @throws SchemaManagementException Indicates a problem processing the creation
 	 */
 	public void doCreation(
 			Metadata metadata,
-			boolean createSchemas,
+			boolean createNamespaces,
 			Target... targets) throws SchemaManagementException;
 
 	/**
 	 * Perform the creation to the specified targets
 	 *
 	 * @param metadata The "compiled" mapping metadata.
-	 * @param createSchemas Should the schema(s) actually be created as well ({@code CREATE SCHEMA})?
+	 * @param createNamespaces Should the schema(s)/catalog(s) actually be created as well ({@code CREATE SCHEMA})?
 	 * @param dialect Allow explicitly passing the Dialect to use.
 	 * @param targets The targets for creation
 	 *
@@ -43,7 +43,7 @@ public interface SchemaCreator {
 	 */
 	public void doCreation(
 			Metadata metadata,
-			boolean createSchemas,
+			boolean createNamespaces,
 			Dialect dialect,
 			Target... targets) throws SchemaManagementException;
 
@@ -51,21 +51,21 @@ public interface SchemaCreator {
 	 * Perform the creation to the specified targets
 	 *
 	 * @param metadata The "compiled" mapping metadata.
-	 * @param createSchemas Should the schema(s) actually be created as well ({@code CREATE SCHEMA})?
+	 * @param createNamespaces Should the schema(s) actually be created as well ({@code CREATE SCHEMA})?
 	 * @param targets The targets for creation
 	 *
 	 * @throws SchemaManagementException Indicates a problem processing the creation
 	 */
 	public void doCreation(
 			Metadata metadata,
-			boolean createSchemas,
+			boolean createNamespaces,
 			List<Target> targets) throws SchemaManagementException;
 
 	/**
 	 * Perform the creation to the specified targets
 	 *
 	 * @param metadata The "compiled" mapping metadata.
-	 * @param createSchemas Should the schema(s) actually be created as well ({@code CREATE SCHEMA})?
+	 * @param createNamespaces Should the schema(s)/catalog(s) actually be created as well ({@code CREATE SCHEMA})?
 	 * @param dialect Allow explicitly passing the Dialect to use.
 	 * @param targets The targets for creation
 	 *
@@ -73,7 +73,7 @@ public interface SchemaCreator {
 	 */
 	public void doCreation(
 			Metadata metadata,
-			boolean createSchemas,
+			boolean createNamespaces,
 			Dialect dialect,
 			List<Target> targets) throws SchemaManagementException;
 }

@@ -13,9 +13,10 @@ import java.util.Locale;
 import java.util.Set;
 
 import org.hibernate.QueryException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.internal.QuerySplitter;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
@@ -75,10 +76,12 @@ public class SelectParser implements Parser {
 		if ( afterNew ) {
 			afterNew = false;
 			try {
-				holderClass = ReflectHelper.classForName( QuerySplitter.getImportedClass( token, q.getFactory() ) );
+				holderClass = q.getFactory().getServiceRegistry()
+						.getService( ClassLoaderService.class )
+						.classForName( QuerySplitter.getImportedClass( token, q.getFactory() ) );
 			}
-			catch ( ClassNotFoundException cnfe ) {
-				throw new QueryException( cnfe );
+			catch ( ClassLoadingException e ) {
+				throw new QueryException( e );
 			}
 			if ( holderClass == null ) {
 				throw new QueryException( "class not found: " + token );

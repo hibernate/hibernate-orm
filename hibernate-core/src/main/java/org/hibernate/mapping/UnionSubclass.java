@@ -8,6 +8,7 @@ package org.hibernate.mapping;
 import java.util.Iterator;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.Mapping;
 
 /**
@@ -15,12 +16,11 @@ import org.hibernate.engine.spi.Mapping;
  * @author Gavin King
  */
 public class UnionSubclass extends Subclass implements TableOwner {
-
 	private Table table;
 	private KeyValue key;
 
-	public UnionSubclass(PersistentClass superclass) {
-		super(superclass);
+	public UnionSubclass(PersistentClass superclass, MetadataBuildingContext metadataBuildingContext) {
+		super( superclass, metadataBuildingContext );
 	}
 
 	public Table getTable() {

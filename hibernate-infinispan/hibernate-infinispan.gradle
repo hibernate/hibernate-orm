@@ -8,6 +8,11 @@ configurations {
     all*.exclude group: 'org.jboss.logging', module: 'jboss-logging-spi'
 }
 
+if ( project.hasProperty( 'overrideInfinispanVersionForTesting' ) ) {
+    println 'Overrriding Infinispan version to test vs Infinispan version: ' + overrideInfinispanVersionForTesting
+    configurations.testRuntime.resolutionStrategy.force 'org.infinispan:infinispan-core:' + overrideInfinispanVersionForTesting
+}
+
 dependencies {
     compile project( ':hibernate-core' )
     compile( libraries.infinispan )
@@ -19,6 +24,7 @@ dependencies {
     testCompile( libraries.jnp_client )
     testCompile( libraries.jnp_server )
     testCompile( libraries.rhq )
+    testCompile( libraries.mockito )
     testCompile ('mysql:mysql-connector-java:5.1.17')
 }
 
@@ -29,6 +35,18 @@ mavenPom {
 
 def osgiDescription() {
 	return mavenPom.description
+}
+
+classes.doLast {
+    javaexec {
+        classpath = project.sourceSets.main.runtimeClasspath
+        main = "org.infinispan.factories.components.ComponentMetadataPersister"
+	args = [
+            project.sourceSets.main.output.classesDir,
+            project.sourceSets.main.output.resourcesDir.toPath().resolve("hibernate-infinispan-component-metadata.dat").toString()
+        ].toList()
+	standardOutput = { def f = File.createTempFile('metadata-log', null ); f.deleteOnExit(); f.newOutputStream() }() 
+    }
 }
 
 test {

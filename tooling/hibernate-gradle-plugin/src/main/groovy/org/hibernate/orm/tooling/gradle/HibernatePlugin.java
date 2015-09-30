@@ -18,9 +18,6 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtField;
@@ -113,6 +110,11 @@ public class HibernatePlugin implements Plugin<Project> {
 								public boolean isLazyLoadable(CtField field) {
 									return hibernateExtension.enhance.getEnableLazyInitialization();
 								}
+
+								@Override
+								public boolean doFieldAccessEnhancement(CtClass classDescriptor) {
+									return  hibernateExtension.enhance.getEnableFieldAccessEnhancement();
+								}
 							};
 
 							final Enhancer enhancer = new Enhancer( enhancementContext );
@@ -127,14 +129,16 @@ public class HibernatePlugin implements Plugin<Project> {
 
 								final CtClass ctClass = toCtClass( file, classPool );
 
-								if ( !ctClass.hasAnnotation( Entity.class )
-										&& !ctClass.hasAnnotation( Embedded.class ) ) {
-									logger.debug( "Skipping class file [" + file.getAbsolutePath() + "], not an entity nor embedded" );
+								if ( !enhancementContext.isEntityClass( ctClass )
+										&& !enhancementContext.isCompositeClass( ctClass ) ) {
+									logger.info( "Skipping class [" + file.getAbsolutePath() + "], not an entity nor embeddable" );
 									continue;
 								}
 
 								final byte[] enhancedBytecode = doEnhancement( ctClass, enhancer );
 								writeOutEnhancedClass( enhancedBytecode, ctClass, file );
+
+								logger.info( "Successfully enhanced class [" + ctClass.getName() + "]" );
 							}
 						}
 					}
@@ -155,7 +159,7 @@ public class HibernatePlugin implements Plugin<Project> {
 
 		return new URLClassLoader(
 				urls.toArray( new URL[urls.size()] ),
-				ClassLoader.getSystemClassLoader().getParent()
+				Enhancer.class.getClassLoader()
 		);
 	}
 

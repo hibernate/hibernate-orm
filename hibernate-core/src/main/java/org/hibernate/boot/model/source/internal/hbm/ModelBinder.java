@@ -38,7 +38,7 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.model.relational.Schema;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.source.internal.ConstraintSecondPass;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
 import org.hibernate.boot.model.source.spi.AnyMappingSource;
@@ -152,6 +152,8 @@ public class ModelBinder {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( ModelBinder.class );
 	private static final boolean debugEnabled = log.isDebugEnabled();
 
+	private final MetadataBuildingContext metadataBuildingContext;
+
 	private final Database database;
 	private final ObjectNameNormalizer objectNameNormalizer;
 	private final ImplicitNamingStrategy implicitNamingStrategy;
@@ -162,6 +164,8 @@ public class ModelBinder {
 	}
 
 	public ModelBinder(final MetadataBuildingContext context) {
+		this.metadataBuildingContext = context;
+
 		this.database = context.getMetadataCollector().getDatabase();
 		this.objectNameNormalizer = new ObjectNameNormalizer() {
 			@Override
@@ -177,7 +181,7 @@ public class ModelBinder {
 	}
 
 	public void bindEntityHierarchy(EntityHierarchySourceImpl hierarchySource) {
-		final RootClass rootEntityDescriptor = new RootClass();
+		final RootClass rootEntityDescriptor = new RootClass( metadataBuildingContext );
 		bindRootEntity( hierarchySource, rootEntityDescriptor );
 		hierarchySource.getRoot()
 				.getLocalMetadataBuildingContext()
@@ -430,7 +434,6 @@ public class ModelBinder {
 
 		if ( StringHelper.isNotEmpty( entitySource.getXmlNodeName() ) ) {
 			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfDomEntityModeSupport();
-			entityDescriptor.setNodeName( entitySource.getXmlNodeName() );
 		}
 
 		entityDescriptor.setDynamicInsert( entitySource.isDynamicInsert() );
@@ -503,7 +506,7 @@ public class ModelBinder {
 			AbstractEntitySourceImpl entitySource,
 			PersistentClass superEntityDescriptor) {
 		for ( IdentifiableTypeSource subType : entitySource.getSubTypes() ) {
-			final SingleTableSubclass subEntityDescriptor = new SingleTableSubclass( superEntityDescriptor );
+			final SingleTableSubclass subEntityDescriptor = new SingleTableSubclass( superEntityDescriptor, metadataBuildingContext );
 			bindDiscriminatorSubclassEntity( (SubclassEntitySourceImpl) subType, subEntityDescriptor );
 			superEntityDescriptor.addSubclass( subEntityDescriptor );
 			entitySource.getLocalMetadataBuildingContext().getMetadataCollector().addEntityBinding( subEntityDescriptor );
@@ -561,7 +564,7 @@ public class ModelBinder {
 			AbstractEntitySourceImpl entitySource,
 			PersistentClass superEntityDescriptor) {
 		for ( IdentifiableTypeSource subType : entitySource.getSubTypes() ) {
-			final JoinedSubclass subEntityDescriptor = new JoinedSubclass( superEntityDescriptor );
+			final JoinedSubclass subEntityDescriptor = new JoinedSubclass( superEntityDescriptor, metadataBuildingContext );
 			bindJoinedSubclassEntity( (JoinedSubclassEntitySourceImpl) subType, subEntityDescriptor );
 			superEntityDescriptor.addSubclass( subEntityDescriptor );
 			entitySource.getLocalMetadataBuildingContext().getMetadataCollector().addEntityBinding( subEntityDescriptor );
@@ -637,7 +640,7 @@ public class ModelBinder {
 			EntitySource entitySource,
 			PersistentClass superEntityDescriptor) {
 		for ( IdentifiableTypeSource subType : entitySource.getSubTypes() ) {
-			final UnionSubclass subEntityDescriptor = new UnionSubclass( superEntityDescriptor );
+			final UnionSubclass subEntityDescriptor = new UnionSubclass( superEntityDescriptor, metadataBuildingContext );
 			bindUnionSubclassEntity( (SubclassEntitySourceImpl) subType, subEntityDescriptor );
 			superEntityDescriptor.addSubclass( subEntityDescriptor );
 			entitySource.getLocalMetadataBuildingContext().getMetadataCollector().addEntityBinding( subEntityDescriptor );
@@ -782,16 +785,16 @@ public class ModelBinder {
 			// YUCK!  but cannot think of a clean way to do this given the string-config based scheme
 			params.put( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER, objectNameNormalizer);
 
-			if ( database.getDefaultSchema().getPhysicalName().getSchema() != null ) {
+			if ( database.getDefaultNamespace().getPhysicalName().getSchema() != null ) {
 				params.setProperty(
 						PersistentIdentifierGenerator.SCHEMA,
-						database.getDefaultSchema().getPhysicalName().getSchema().render( database.getDialect() )
+						database.getDefaultNamespace().getPhysicalName().getSchema().render( database.getDialect() )
 				);
 			}
-			if ( database.getDefaultSchema().getPhysicalName().getCatalog() != null ) {
+			if ( database.getDefaultNamespace().getPhysicalName().getCatalog() != null ) {
 				params.setProperty(
 						PersistentIdentifierGenerator.CATALOG,
-						database.getDefaultSchema().getPhysicalName().getCatalog().render( database.getDialect() )
+						database.getDefaultNamespace().getPhysicalName().getCatalog().render( database.getDialect() )
 				);
 			}
 
@@ -914,7 +917,6 @@ public class ModelBinder {
 			rootEntityDescriptor.setIdentifierMapper(mapper);
 			Property property = new Property();
 			property.setName( PropertyPath.IDENTIFIER_MAPPER_PROPERTY );
-			property.setNodeName( "id" );
 			property.setUpdateable( false );
 			property.setInsertable( false );
 			property.setValue( mapper );
@@ -1752,7 +1754,7 @@ public class ModelBinder {
 
 		final Identifier catalogName = determineCatalogName( secondaryTableSource.getTableSource() );
 		final Identifier schemaName = determineSchemaName( secondaryTableSource.getTableSource() );
-		final Schema schema = database.locateSchema( catalogName, schemaName );
+		final Namespace namespace = database.locateNamespace( catalogName, schemaName );
 
 		Table secondaryTable;
 		final Identifier logicalTableName;
@@ -1760,9 +1762,9 @@ public class ModelBinder {
 		if ( TableSource.class.isInstance( secondaryTableSource.getTableSource() ) ) {
 			final TableSource tableSource = (TableSource) secondaryTableSource.getTableSource();
 			logicalTableName = database.toIdentifier( tableSource.getExplicitTableName() );
-			secondaryTable = schema.locateTable( logicalTableName );
+			secondaryTable = namespace.locateTable( logicalTableName );
 			if ( secondaryTable == null ) {
-				secondaryTable = schema.createTable( logicalTableName, false );
+				secondaryTable = namespace.createTable( logicalTableName, false );
 			}
 			else {
 				secondaryTable.setAbstract( false );
@@ -1773,7 +1775,7 @@ public class ModelBinder {
 		else {
 			final InLineViewSource inLineViewSource = (InLineViewSource) secondaryTableSource.getTableSource();
 			secondaryTable = new Table(
-					schema,
+					namespace,
 					inLineViewSource.getSelectStatement(),
 					false
 			);
@@ -1882,9 +1884,9 @@ public class ModelBinder {
 				attribute
 		);
 
-		final String xmlNodeName = determineXmlNodeName( embeddedSource, componentBinding.getOwner().getNodeName() );
-		componentBinding.setNodeName( xmlNodeName );
-		attribute.setNodeName( xmlNodeName );
+		if ( StringHelper.isNotEmpty( embeddedSource.getName() ) ) {
+			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfDomEntityModeSupport();
+		}
 
 		return attribute;
 	}
@@ -2108,10 +2110,9 @@ public class ModelBinder {
 		// todo : probably need some reflection here if null
 		oneToOneBinding.setReferencedEntityName( oneToOneSource.getReferencedEntityName() );
 
-		if ( oneToOneSource.isEmbedXml() ) {
+		if ( oneToOneSource.isEmbedXml() == Boolean.TRUE ) {
 			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfEmbedXmlSupport();
 		}
-		oneToOneBinding.setEmbedded( oneToOneSource.isEmbedXml() );
 
 		if ( StringHelper.isNotEmpty( oneToOneSource.getExplicitForeignKeyName() ) ) {
 			oneToOneBinding.setForeignKeyName( oneToOneSource.getExplicitForeignKeyName() );
@@ -2227,10 +2228,9 @@ public class ModelBinder {
 						: FetchMode.JOIN
 		);
 
-		if ( manyToOneSource.isEmbedXml() ) {
+		if ( manyToOneSource.isEmbedXml() == Boolean.TRUE ) {
 			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfEmbedXmlSupport();
 		}
-		manyToOneBinding.setEmbedded( manyToOneSource.isEmbedXml() );
 
 		manyToOneBinding.setIgnoreNotFound( manyToOneSource.isIgnoreNotFound() );
 
@@ -2436,7 +2436,10 @@ public class ModelBinder {
 			AttributeSource propertySource,
 			Property property) {
 		property.setName( propertySource.getName() );
-		property.setNodeName( determineXmlNodeName( propertySource, null ) );
+
+		if ( StringHelper.isNotEmpty( propertySource.getName() ) ) {
+			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfDomEntityModeSupport();
+		}
 
 		property.setPropertyAccessorName(
 				StringHelper.isNotEmpty( propertySource.getPropertyAccessorName() )
@@ -2534,21 +2537,6 @@ public class ModelBinder {
 			message.append( "]" );
 			log.debug( message.toString() );
 		}
-	}
-
-	private String determineXmlNodeName(AttributeSource propertySource, String fallbackXmlNodeName) {
-		String nodeName = propertySource.getXmlNodeName();
-		if ( StringHelper.isNotEmpty( nodeName ) ) {
-			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfDomEntityModeSupport();
-		}
-		else {
-			nodeName = propertySource.getName();
-		}
-		if ( nodeName == null ) {
-			nodeName = fallbackXmlNodeName;
-		}
-
-		return nodeName;
 	}
 
 	private void bindComponent(
@@ -2660,13 +2648,6 @@ public class ModelBinder {
 		if ( StringHelper.isNotEmpty( nodeName ) ) {
 			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfDomEntityModeSupport();
 		}
-		else {
-			nodeName = propertyName;
-		}
-		if ( nodeName == null ) {
-			nodeName = componentBinding.getOwner().getNodeName();
-		}
-		componentBinding.setNodeName( nodeName );
 
 		// todo : anything else to pass along?
 		bindAllCompositeAttributes(
@@ -2868,7 +2849,7 @@ public class ModelBinder {
 			Table denormalizedSuperTable,
 			final EntitySource entitySource,
 			PersistentClass entityDescriptor) {
-		final Schema schema = database.locateSchema(
+		final Namespace namespace = database.locateNamespace(
 				determineCatalogName( tableSpecSource ),
 				determineSchemaName( tableSpecSource )
 		);
@@ -2902,10 +2883,10 @@ public class ModelBinder {
 			}
 
 			if ( denormalizedSuperTable == null ) {
-				table = schema.createTable( logicalTableName, isAbstract );
+				table = namespace.createTable( logicalTableName, isAbstract );
 			}
 			else {
-				table = schema.createDenormalizedTable(
+				table = namespace.createDenormalizedTable(
 						logicalTableName,
 						isAbstract,
 						denormalizedSuperTable
@@ -2917,10 +2898,10 @@ public class ModelBinder {
 			subselect = inLineViewSource.getSelectStatement();
 			logicalTableName = database.toIdentifier( inLineViewSource.getLogicalName() );
 			if ( denormalizedSuperTable == null ) {
-				table = new Table( schema, subselect, isAbstract );
+				table = new Table( namespace, subselect, isAbstract );
 			}
 			else {
-				table = new DenormalizedTable( schema, subselect, isAbstract, denormalizedSuperTable );
+				table = new DenormalizedTable( namespace, subselect, isAbstract, denormalizedSuperTable );
 			}
 			table.setName( logicalTableName.render() );
 		}
@@ -2971,7 +2952,7 @@ public class ModelBinder {
 			return database.toIdentifier( tableSpecSource.getExplicitCatalogName() );
 		}
 		else {
-			return database.getDefaultSchema().getName().getCatalog();
+			return database.getDefaultNamespace().getName().getCatalog();
 		}
 	}
 
@@ -2980,7 +2961,7 @@ public class ModelBinder {
 			return database.toIdentifier( tableSpecSource.getExplicitSchemaName() );
 		}
 		else {
-			return database.getDefaultSchema().getName().getSchema();
+			return database.getDefaultNamespace().getName().getSchema();
 		}
 	}
 
@@ -3216,7 +3197,7 @@ public class ModelBinder {
 				final TableSpecificationSource tableSpecSource = pluralAttributeSource.getCollectionTableSpecificationSource();
 				final Identifier logicalCatalogName = determineCatalogName( tableSpecSource );
 				final Identifier logicalSchemaName = determineSchemaName( tableSpecSource );
-				final Schema schema = database.locateSchema( logicalCatalogName, logicalSchemaName );
+				final Namespace namespace = database.locateNamespace( logicalCatalogName, logicalSchemaName );
 
 				final Table collectionTable;
 
@@ -3262,11 +3243,11 @@ public class ModelBinder {
 								.determineCollectionTableName( implicitNamingSource );
 					}
 
-					collectionTable = schema.createTable( logicalName, false );
+					collectionTable = namespace.createTable( logicalName, false );
 				}
 				else {
 					collectionTable = new Table(
-							schema,
+							namespace,
 							( (InLineViewSource) tableSpecSource ).getSelectStatement(),
 							false
 					);
@@ -3521,15 +3502,6 @@ public class ModelBinder {
 						.getEntityBinding( elementSource.getReferencedEntityName() );
 				elementBinding.setReferencedEntityName( referencedEntityBinding.getEntityName() );
 				elementBinding.setAssociatedClass( referencedEntityBinding );
-
-				String embed = elementSource.getXmlNodeName();
-				// sometimes embed is set to the default value when not specified in the mapping,
-				// so can't seem to determine if an attribute was explicitly set;
-				// log a warning if embed has a value different from the default.
-				if ( !StringHelper.isEmpty( embed ) &&  !"true".equals( embed ) ) {
-					DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfEmbedXmlSupport();
-				}
-				elementBinding.setEmbedded( embed == null || "true".equals( embed ) );
 
 				elementBinding.setIgnoreNotFound( elementSource.isIgnoreNotFound() );
 			}
@@ -3993,7 +3965,6 @@ public class ModelBinder {
 
 		collectionBinding.setIndex( indexBinding );
 		collectionBinding.setBaseIndex( indexSource.getBase() );
-		collectionBinding.setIndexNodeName( indexSource.getXmlNodeName() );
 	}
 
 	private void bindMapKey(
@@ -4034,7 +4005,6 @@ public class ModelBinder {
 			);
 
 			collectionBinding.setIndex( value );
-			collectionBinding.setIndexNodeName( mapKeySource.getXmlNodeName() );
 		}
 		else if ( pluralAttributeSource.getIndexSource() instanceof PluralAttributeMapKeySourceEmbedded ) {
 			final PluralAttributeMapKeySourceEmbedded mapKeySource =

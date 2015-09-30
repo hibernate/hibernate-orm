@@ -28,7 +28,7 @@
 		  </component>
 		</component>
 		
-		<list name="components" lazy="true">
+		<list name="components" lazy="true" table="CompNotNullMaster_Comps">
 			<key column = "container_id"/>
 			<index column = "list_index"/>
 			<composite-element class="org.hibernate.test.legacy.ComponentNotNullMaster$ContainerInnerClass">
@@ -39,9 +39,8 @@
 				<many-to-one name="many" cascade="save-update"/>
 			</composite-element>
 		</list>
-		
-				
-		<list name="componentsImplicit" lazy="true">
+
+		<list name="componentsImplicit" lazy="true" table="CompNotNullMaster_CompsImpl">
 			<key column = "container_id"/>
 			<index column = "list_index3"/>
 			<composite-element class="org.hibernate.test.legacy.ComponentNotNullMaster$ContainerInnerClass">

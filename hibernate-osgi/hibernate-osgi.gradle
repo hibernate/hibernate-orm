@@ -20,9 +20,6 @@ configurations {
 		description = 'Configuration used to isolate the dependency on the Karaf distro'
 		transitive = false
 	}
-	aries {
-		description = 'Runtime dependencies for Aries for the hibernate-jpa-aries Karaf feature'
-	}
 	hibernateEntityManager {
 		description = 'Used in Karaf feature generation to define the Hibernate JPA dependencies'
 		transitive = false
@@ -66,9 +63,6 @@ dependencies {
 	}
 
 	karafDistro "org.apache.karaf:apache-karaf:${karafVersion}@tar.gz"
-
-	aries 'org.apache.aries.transaction:org.apache.aries.transaction.blueprint:1.0.0'
-	aries 'org.apache.aries.transaction:org.apache.aries.transaction.manager:1.0.1'
 }
 
 mavenPom {
@@ -116,9 +110,9 @@ task generateVersionFile {
 
 karafFeatures {
 	features {
-		hibernateBase {
-			name = 'hibernate-base'
-			description = 'Isolates all Hibernate core dependencies into a single feature'
+		hibernateOrm {
+			name = 'hibernate-orm'
+			description = 'Combines all Hibernate core dependencies and required modules into a single feature'
 			projects = [
 					rootProject.childProjects.'hibernate-core',
 					rootProject.childProjects.'hibernate-entitymanager',
@@ -159,31 +153,12 @@ karafFeatures {
 				remap group: 'org.apache.servicemix.bundles', module: 'org.apache.servicemix.bundles.dom4j', version: '1.6.1_5'
 			}
 		}
-		hibernateNative {
-			name = 'hibernate-native'
-			description = 'Defines support for using Hibernate native APIs (SessionFactory, Session) in user applications/bundles'
-			dependencyFeatureNames = ['hibernate-base']
-			projects = []
-		}
-		hibernateJpa {
-			name = 'hibernate-jpa'
-			description = 'Defines support for using Hibernate JPA implementation in user applications/bundles in an unmanaged manner'
-			dependencyFeatureNames = ['hibernate-base']
-			projects = []
-		}
-		hibernateJpaAries {
-			name = 'hibernate-jpa-aries'
-			description = 'Defines support for using Hibernate JPA implementation in user applications/bundles in an managed manner using Aries for OSGi JPA support'
-			bundleDependencies = [project.configurations.aries]
-			dependencyFeatureNames = ['hibernate-base']
-			projects = []
-		}
 		// NOTE : would like to include spatial as well, but we need to wait for
 		//		it to not define dependency on postgresql driver
 		hibernateEnvers {
 			name = 'hibernate-envers'
-			description = 'Feature for easily adding Envers support to hibernate-native, hibernate-jpa or hibernate-jpa-aries'
-			dependencyFeatureNames = ['hibernate-base']
+			description = 'Feature for easily adding Envers support to hibernate-orm'
+			dependencyFeatureNames = ['hibernate-orm']
 			projects = [rootProject.childProjects.'hibernate-envers']
 			bundle {
 				match group: 'org.hibernate', module: 'hibernate-core'
@@ -212,8 +187,8 @@ karafFeatures {
 		}
 		hibernateInfinispan {
 			name = 'hibernate-infinispan'
-			description = 'Feature for easily adding Infinispan-based caching support to hibernate-native, hibernate-jpa or hibernate-jpa-aries'
-			dependencyFeatureNames = ['hibernate-base']
+			description = 'Feature for easily adding Infinispan-based caching support to hibernate-orm'
+			dependencyFeatureNames = ['hibernate-orm']
 			projects = [rootProject.childProjects.'hibernate-infinispan']
 			bundle {
 				match group: 'org.hibernate', module: 'hibernate-core'
@@ -242,8 +217,8 @@ karafFeatures {
 		}
 		hibernateEhcache {
 			name = 'hibernate-ehcache'
-			description = 'Feature for easily adding Ehcache-based caching support to hibernate-native, hibernate-jpa or hibernate-jpa-aries'
-			dependencyFeatureNames = ['hibernate-base']
+			description = 'Feature for easily adding Ehcache-based caching support to hibernate-orm'
+			dependencyFeatureNames = ['hibernate-orm']
 			projects = [rootProject.childProjects.'hibernate-ehcache']
 			bundle {
 				match group: 'org.hibernate', module: 'hibernate-core'
@@ -360,6 +335,7 @@ publishing {
 		mavenJava( MavenPublication ) {
 			artifact( project.extensions.karafFeatures.featuresXmlFile ) {
 				classifier 'karaf'
+				builtBy generateKarafFeatures
 			}
 		}
 	}

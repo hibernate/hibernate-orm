@@ -9,9 +9,13 @@ package org.hibernate.cache.ehcache.internal.strategy;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheCollectionRegion;
+import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.persister.collection.CollectionPersister;
 
 /**
  * Ehcache specific non-strict read/write collection region access strategy
@@ -39,12 +43,12 @@ public class NonStrictReadWriteEhcacheCollectionRegionAccessStrategy
 	}
 
 	@Override
-	public Object get(Object key, long txTimestamp) throws CacheException {
+	public Object get(SessionImplementor session, Object key, long txTimestamp) throws CacheException {
 		return region().get( key );
 	}
 
 	@Override
-	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
+	public boolean putFromLoad(SessionImplementor session, Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
 			throws CacheException {
 		if ( minimalPutOverride && region().contains( key ) ) {
 			return false;
@@ -61,7 +65,7 @@ public class NonStrictReadWriteEhcacheCollectionRegionAccessStrategy
 	 * Since this is a non-strict read/write strategy item locking is not used.
 	 */
 	@Override
-	public SoftLock lockItem(Object key, Object version) throws CacheException {
+	public SoftLock lockItem(SessionImplementor session, Object key, Object version) throws CacheException {
 		return null;
 	}
 
@@ -71,12 +75,22 @@ public class NonStrictReadWriteEhcacheCollectionRegionAccessStrategy
 	 * Since this is a non-strict read/write strategy item locking is not used.
 	 */
 	@Override
-	public void unlockItem(Object key, SoftLock lock) throws CacheException {
+	public void unlockItem(SessionImplementor session, Object key, SoftLock lock) throws CacheException {
 		region().remove( key );
 	}
 
 	@Override
-	public void remove(Object key) throws CacheException {
+	public void remove(SessionImplementor session, Object key) throws CacheException {
 		region().remove( key );
+	}
+
+	@Override
+	public Object generateCacheKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+		return DefaultCacheKeysFactory.createCollectionKey( id, persister, factory, tenantIdentifier );
+	}
+
+	@Override
+	public Object getCacheKeyId(Object cacheKey) {
+		return DefaultCacheKeysFactory.getCollectionId( cacheKey );
 	}
 }

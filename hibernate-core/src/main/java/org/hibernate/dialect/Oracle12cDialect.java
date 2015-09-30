@@ -18,6 +18,7 @@ import org.hibernate.dialect.pagination.SQL2008StandardLimitHandler;
 public class Oracle12cDialect extends Oracle10gDialect {
 	public Oracle12cDialect() {
 		super();
+		getDefaultProperties().setProperty( Environment.BATCH_VERSIONED_DATA, "true" );
 	}
 
 	@Override

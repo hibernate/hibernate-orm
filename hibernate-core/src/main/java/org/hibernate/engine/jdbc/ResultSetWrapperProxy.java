@@ -9,15 +9,15 @@ package org.hibernate.engine.jdbc;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ClassLoaderHelper;
+import org.hibernate.service.ServiceRegistry;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
  * A proxy for a ResultSet delegate, responsible for locally caching the columnName-to-columnIndex resolution that
@@ -27,11 +27,8 @@ import org.jboss.logging.Logger;
  * @author Gail Badner
  */
 public class ResultSetWrapperProxy implements InvocationHandler {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			ResultSetWrapperProxy.class.getName()
-	);
-	private static final Class[] PROXY_INTERFACES = new Class[] { ResultSet.class };
+	private static final CoreMessageLogger LOG = messageLogger( ResultSetWrapperProxy.class );
+
 	private static final SqlExceptionHelper SQL_EXCEPTION_HELPER = new SqlExceptionHelper();
 
 	private final ResultSet rs;
@@ -47,28 +44,18 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 	 *
 	 * @param resultSet The resultSet to wrap.
 	 * @param columnNameCache The cache storing data for converting column names to column indexes.
+	 * @param serviceRegistry Access to any needed services
+	 *
 	 * @return The generated proxy.
 	 */
-	public static ResultSet generateProxy(ResultSet resultSet, ColumnNameCache columnNameCache) {
-		return (ResultSet) Proxy.newProxyInstance(
-				getProxyClassLoader(),
-				PROXY_INTERFACES,
-				new ResultSetWrapperProxy( resultSet, columnNameCache )
+	public static ResultSet generateProxy(
+			ResultSet resultSet,
+			ColumnNameCache columnNameCache,
+			ServiceRegistry serviceRegistry) {
+		return serviceRegistry.getService( ClassLoaderService.class ).generateProxy(
+				new ResultSetWrapperProxy( resultSet, columnNameCache ),
+				ResultSet.class
 		);
-	}
-
-	/**
-	 * Determines the appropriate class loader to which the generated proxy
-	 * should be scoped.
-	 *
-	 * @return The class loader appropriate for proxy construction.
-	 */
-	public static ClassLoader getProxyClassLoader() {
-		ClassLoader cl = ClassLoaderHelper.getContextClassLoader();
-		if ( cl == null ) {
-			cl = ResultSet.class.getClassLoader();
-		}
-		return cl;
 	}
 
 	@Override

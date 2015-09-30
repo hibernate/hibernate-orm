@@ -6,18 +6,21 @@
  */
 package org.hibernate.internal.util;
 
+import java.beans.Introspector;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Locale;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
-import org.hibernate.property.BasicPropertyAccessor;
-import org.hibernate.property.DirectPropertyAccessor;
-import org.hibernate.property.Getter;
-import org.hibernate.property.PropertyAccessor;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.property.access.internal.PropertyAccessStrategyMixedImpl;
+import org.hibernate.property.access.spi.Getter;
 import org.hibernate.type.PrimitiveType;
 import org.hibernate.type.Type;
 
@@ -29,11 +32,6 @@ import org.hibernate.type.Type;
  */
 @SuppressWarnings("unchecked")
 public final class ReflectHelper {
-
-	//TODO: this dependency is kinda Bad
-	private static final PropertyAccessor BASIC_PROPERTY_ACCESSOR = new BasicPropertyAccessor();
-	private static final PropertyAccessor DIRECT_PROPERTY_ACCESSOR = new DirectPropertyAccessor();
-
 	public static final Class[] NO_PARAM_SIGNATURE = new Class[0];
 	public static final Object[] NO_PARAMS = new Object[0];
 
@@ -143,7 +141,7 @@ public final class ReflectHelper {
 	 */
 	public static Class classForName(String name, Class caller) throws ClassNotFoundException {
 		try {
-			ClassLoader classLoader = ClassLoaderHelper.getContextClassLoader();
+			ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 			if ( classLoader != null ) {
 				return classLoader.loadClass( name );
 			}
@@ -161,11 +159,16 @@ public final class ReflectHelper {
 	 *
 	 * @param name The class name
 	 * @return The class reference.
+	 *
 	 * @throws ClassNotFoundException From {@link Class#forName(String)}.
+	 *
+	 * @deprecated Depending on context, either {@link org.hibernate.boot.registry.classloading.spi.ClassLoaderService}
+	 * or {@link org.hibernate.boot.spi.ClassLoaderAccess} should be preferred
 	 */
+	@Deprecated
 	public static Class classForName(String name) throws ClassNotFoundException {
 		try {
-			ClassLoader classLoader = ClassLoaderHelper.getContextClassLoader();
+			ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 			if ( classLoader != null ) {
 				return classLoader.loadClass(name);
 			}
@@ -173,18 +176,6 @@ public final class ReflectHelper {
 		catch ( Throwable ignore ) {
 		}
 		return Class.forName( name );
-	}
-
-	/**
-	 * Is this member publicly accessible.
-	 * <p/>
-	 * Short-hand for {@link #isPublic(Class, Member)} passing the member + {@link Member#getDeclaringClass()}
-	 *
-	 * @param member The member to check
-	 * @return True if the member is publicly accessible.
-	 */
-	public static boolean isPublic(Member member) {
-		return isPublic( member.getDeclaringClass(), member );
 	}
 
 	/**
@@ -203,16 +194,22 @@ public final class ReflectHelper {
 	 *
 	 * @param className The name of the class owning the property.
 	 * @param name The name of the property.
+	 * @param classLoaderService ClassLoader services
+	 *
 	 * @return The type of the property.
+	 *
 	 * @throws MappingException Indicates we were unable to locate the property.
 	 */
-	public static Class reflectedPropertyClass(String className, String name) throws MappingException {
+	public static Class reflectedPropertyClass(
+			String className,
+			String name,
+			ClassLoaderService classLoaderService) throws MappingException {
 		try {
-			Class clazz = ReflectHelper.classForName( className );
+			Class clazz = classLoaderService.classForName( className );
 			return getter( clazz, name ).getReturnType();
 		}
-		catch ( ClassNotFoundException cnfe ) {
-			throw new MappingException( "class " + className + " not found while looking for property: " + name, cnfe );
+		catch ( ClassLoadingException e ) {
+			throw new MappingException( "class " + className + " not found while looking for property: " + name, e );
 		}
 	}
 
@@ -229,36 +226,13 @@ public final class ReflectHelper {
 	}
 
 	private static Getter getter(Class clazz, String name) throws MappingException {
-		try {
-			return BASIC_PROPERTY_ACCESSOR.getGetter( clazz, name );
-		}
-		catch ( PropertyNotFoundException pnfe ) {
-			return DIRECT_PROPERTY_ACCESSOR.getGetter( clazz, name );
-		}
+		return PropertyAccessStrategyMixedImpl.INSTANCE.buildPropertyAccess( clazz, name ).getGetter();
 	}
 
-	/**
-	 * Directly retrieve the {@link Getter} reference via the {@link BasicPropertyAccessor}.
-	 *
-	 * @param theClass The class owning the property
-	 * @param name The name of the property
-	 * @return The getter.
-	 * @throws MappingException Indicates we were unable to locate the property.
-	 */
-	public static Getter getGetter(Class theClass, String name) throws MappingException {
-		return BASIC_PROPERTY_ACCESSOR.getGetter( theClass, name );
-	}
-
-	/**
-	 * Resolve a constant to its actual value.
-	 *
-	 * @param name The name
-	 * @return The value
-	 */
-	public static Object getConstantValue(String name) {
+	public static Object getConstantValue(String name, ClassLoaderService classLoaderService) {
 		Class clazz;
 		try {
-			clazz = classForName( StringHelper.qualifier( name ) );
+			clazz = classLoaderService.classForName( StringHelper.qualifier( name ) );
 		}
 		catch ( Throwable t ) {
 			return null;
@@ -327,15 +301,14 @@ public final class ReflectHelper {
 	 */
 	public static Constructor getConstructor(Class clazz, Type[] types) throws PropertyNotFoundException {
 		final Constructor[] candidates = clazz.getConstructors();
-		for ( int i = 0; i < candidates.length; i++ ) {
-			final Constructor constructor = candidates[i];
+		for ( final Constructor constructor : candidates ) {
 			final Class[] params = constructor.getParameterTypes();
 			if ( params.length == types.length ) {
 				boolean found = true;
 				for ( int j = 0; j < params.length; j++ ) {
 					final boolean ok = params[j].isAssignableFrom( types[j].getReturnedClass() ) || (
 							types[j] instanceof PrimitiveType &&
-									params[j] == ( ( PrimitiveType ) types[j] ).getPrimitiveClass()
+									params[j] == ( (PrimitiveType) types[j] ).getPrimitiveClass()
 					);
 					if ( !ok ) {
 						found = false;
@@ -360,4 +333,175 @@ public final class ReflectHelper {
 		}
 	}
 
+	public static Field findField(Class containerClass, String propertyName) {
+		if ( containerClass == null ) {
+			throw new IllegalArgumentException( "Class on which to find field [" + propertyName + "] cannot be null" );
+		}
+		else if ( containerClass == Object.class ) {
+			throw new IllegalArgumentException( "Illegal attempt to locate field [" + propertyName + "] on Object.class" );
+		}
+
+		Field field = locateField( containerClass, propertyName );
+
+		if ( field == null ) {
+			throw new PropertyNotFoundException(
+					String.format(
+							Locale.ROOT,
+							"Could not locate field name [%s] on class [%s]",
+							propertyName,
+							containerClass.getName()
+					)
+			);
+		}
+
+		field.setAccessible( true );
+		return field;
+	}
+
+	private static Field locateField(Class clazz, String propertyName) {
+		if ( clazz == null || Object.class.equals( clazz ) ) {
+			return null;
+		}
+
+		try {
+			return clazz.getDeclaredField( propertyName );
+		}
+		catch ( NoSuchFieldException nsfe ) {
+			return locateField( clazz.getSuperclass(), propertyName );
+		}
+	}
+
+	public static Method findGetterMethod(Class containerClass, String propertyName) {
+		Class checkClass = containerClass;
+		Method getter = null;
+
+		// check containerClass, and then its super types (if any)
+		while ( getter == null && checkClass != null ) {
+			if ( checkClass.equals( Object.class ) ) {
+				break;
+			}
+
+			getter = getGetterOrNull( checkClass, propertyName );
+			checkClass = checkClass.getSuperclass();
+		}
+
+		// if no getter found yet, check all implemented interfaces
+		if ( getter == null ) {
+			for ( Class theInterface : containerClass.getInterfaces() ) {
+				getter = getGetterOrNull( theInterface, propertyName );
+				if ( getter != null ) {
+					break;
+				}
+			}
+		}
+
+		if ( getter == null ) {
+			throw new PropertyNotFoundException(
+					String.format(
+							Locale.ROOT,
+							"Could not locate getter method for property [%s#%s]",
+							containerClass.getName(),
+							propertyName
+					)
+			);
+		}
+
+		getter.setAccessible( true );
+		return getter;
+	}
+
+	private static Method getGetterOrNull(Class containerClass, String propertyName) {
+		for ( Method method : containerClass.getDeclaredMethods() ) {
+			// if the method has parameters, skip it
+			if ( method.getParameterTypes().length != 0 ) {
+				continue;
+			}
+
+			// if the method is a "bridge", skip it
+			if ( method.isBridge() ) {
+				continue;
+			}
+
+			final String methodName = method.getName();
+
+			// try "get"
+			if ( methodName.startsWith( "get" ) ) {
+				String testStdMethod = Introspector.decapitalize( methodName.substring( 3 ) );
+				String testOldMethod = methodName.substring( 3 );
+				if ( testStdMethod.equals( propertyName ) || testOldMethod.equals( propertyName ) ) {
+					return method;
+				}
+			}
+
+			// if not "get", then try "is"
+			if ( methodName.startsWith( "is" ) ) {
+				String testStdMethod = Introspector.decapitalize( methodName.substring( 2 ) );
+				String testOldMethod = methodName.substring( 2 );
+				if ( testStdMethod.equals( propertyName ) || testOldMethod.equals( propertyName ) ) {
+					return method;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	public static Method findSetterMethod(Class containerClass, String propertyName, Class propertyType) {
+		Class checkClass = containerClass;
+		Method setter = null;
+
+		// check containerClass, and then its super types (if any)
+		while ( setter == null && checkClass != null ) {
+			if ( checkClass.equals( Object.class ) ) {
+				break;
+			}
+
+			setter = setterOrNull( checkClass, propertyName, propertyType );
+			checkClass = checkClass.getSuperclass();
+		}
+
+		// if no setter found yet, check all implemented interfaces
+		if ( setter == null ) {
+			for ( Class theInterface : containerClass.getInterfaces() ) {
+				setter = setterOrNull( theInterface, propertyName, propertyType );
+				if ( setter != null ) {
+					break;
+				}
+			}
+		}
+
+		if ( setter == null ) {
+			throw new PropertyNotFoundException(
+					String.format(
+							Locale.ROOT,
+							"Could not locate setter method for property [%s#%s]",
+							containerClass.getName(),
+							propertyName
+					)
+			);
+		}
+
+		setter.setAccessible( true );
+		return setter;
+	}
+
+	private static Method setterOrNull(Class theClass, String propertyName, Class propertyType) {
+		Method potentialSetter = null;
+
+		for ( Method method : theClass.getDeclaredMethods() ) {
+			final String methodName = method.getName();
+			if ( method.getParameterTypes().length == 1 && methodName.startsWith( "set" ) ) {
+				final String testOldMethod = methodName.substring( 3 );
+				final String testStdMethod = Introspector.decapitalize( testOldMethod );
+				if ( testStdMethod.equals( propertyName ) || testOldMethod.equals( propertyName ) ) {
+					potentialSetter = method;
+					if ( propertyType == null || method.getParameterTypes()[0].equals( propertyType ) ) {
+						break;
+					}
+				}
+			}
+		}
+
+		return potentialSetter;
+	}
 }

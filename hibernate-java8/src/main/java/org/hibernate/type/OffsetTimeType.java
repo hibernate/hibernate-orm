@@ -8,12 +8,9 @@ package org.hibernate.type;
 
 import java.time.OffsetTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
 import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.type.descriptor.java.OffsetTimeJavaDescriptor;
 import org.hibernate.type.descriptor.sql.TimeTypeDescriptor;
 
@@ -22,7 +19,7 @@ import org.hibernate.type.descriptor.sql.TimeTypeDescriptor;
  */
 public class OffsetTimeType
 		extends AbstractSingleColumnStandardBasicType<OffsetTime>
-		implements VersionType<OffsetTime>, LiteralType<OffsetTime> {
+		implements LiteralType<OffsetTime> {
 
 	/**
 	 * Singleton access
@@ -38,22 +35,6 @@ public class OffsetTimeType
 	@Override
 	public String objectToSQLString(OffsetTime value, Dialect dialect) throws Exception {
 		return "{t '" + FORMATTER.format( value ) + "'}";
-	}
-
-	@Override
-	public OffsetTime seed(SessionImplementor session) {
-		return OffsetTime.now();
-	}
-
-	@Override
-	public OffsetTime next(OffsetTime current, SessionImplementor session) {
-		return OffsetTime.now();
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public Comparator<OffsetTime> getComparator() {
-		return ComparableComparator.INSTANCE;
 	}
 
 	@Override

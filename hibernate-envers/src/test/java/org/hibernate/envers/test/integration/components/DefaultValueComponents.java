@@ -448,7 +448,6 @@ public class DefaultValueComponents extends BaseEnversJPAFunctionalTestCase {
 			String expectedComp2Str1Rev1, String expectedComp2Str1Rev2) {
 		// Verify that the entity was correctly persisted
 		EntityManager em = getEntityManager();
-		em.getTransaction().begin();
 		Long entCount = (Long) em.createQuery(
 				"select count(s) from DefaultValueComponentTestEntity s where s.id = "
 						+ expectedId.toString()
@@ -483,6 +482,5 @@ public class DefaultValueComponents extends BaseEnversJPAFunctionalTestCase {
 		else {
 			assert expectedComp2Str1Rev2.equals( comp2Str1Rev2 );
 		}
-		em.getTransaction().commit();
 	}
 }

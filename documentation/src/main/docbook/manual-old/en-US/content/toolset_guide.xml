@@ -1,0 +1,615 @@
+<?xml version='1.0' encoding="UTF-8"?>
+
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<chapter xml:id="toolsetguide" revision="2" xmlns="http://docbook.org/ns/docbook">
+    <title>Toolset Guide</title>
+
+    <para>
+        Roundtrip engineering with Hibernate is possible using a set of Eclipse plugins,
+        commandline tools, and Ant tasks.
+    </para>
+
+    <para>
+        <emphasis>Hibernate Tools</emphasis> currently include plugins for the Eclipse
+        IDE as well as Ant tasks for reverse engineering of existing databases:
+    </para>
+
+    <itemizedlist>
+        <listitem><para>
+            <emphasis>Mapping Editor:</emphasis> an editor for Hibernate XML mapping files that
+            supports auto-completion and syntax highlighting. It also supports semantic
+            auto-completion for class names and property/field names, making it more versatile than a normal XML editor.
+        </para></listitem>
+        <listitem><para>
+            <emphasis>Console:</emphasis> the console is a new view in Eclipse. In addition to
+            a tree overview of your console configurations, you are also provided with an interactive view
+            of your persistent classes and their relationships. The console allows you to
+            execute HQL queries against your database and browse the result directly in
+            Eclipse.
+        </para></listitem>
+        <listitem><para>
+            <emphasis>Development Wizards:</emphasis> several wizards are provided with the
+            Hibernate Eclipse tools. You can use a wizard to quickly generate Hibernate configuration
+            (cfg.xml) files, or to reverse engineer an existing database schema
+            into POJO source files and Hibernate mapping files. The reverse engineering wizard
+            supports customizable templates.
+        </para></listitem>
+        <listitem><para>
+<!--            <emphasis>Ant Tasks:</emphasis> -->
+        </para></listitem>
+
+    </itemizedlist>
+
+    <para>
+        Please refer to the <emphasis>Hibernate Tools</emphasis> package documentation
+        for more information.
+    </para>
+
+    <para>
+        However, the Hibernate main package comes bundled with an integrated tool : <emphasis>SchemaExport</emphasis> aka
+        <literal>hbm2ddl</literal>.It can even
+        be used from "inside" Hibernate.
+    </para>
+
+    <section xml:id="toolsetguide-s1" revision="2">
+        <title>Automatic schema generation</title>
+
+        <para>
+            DDL can be generated from your mapping files by a Hibernate utility. The generated
+            schema includes referential integrity constraints, primary and foreign keys, for
+            entity and collection tables. Tables and sequences are also created for mapped
+            identifier generators.
+        </para>
+        
+        <para>
+            You <emphasis>must</emphasis> specify a SQL <literal>Dialect</literal> via the 
+            <literal>hibernate.dialect</literal> property when using this tool, as DDL
+            is highly vendor-specific.
+        </para>
+
+        <para>
+            First, you must customize your mapping files to improve the generated schema. The next section covers schema customization.  
+        </para>
+
+        <section xml:id="toolsetguide-s1-2" revision="3">
+            <title>Customizing the schema</title>
+
+            <para>
+                Many Hibernate mapping elements define optional attributes named <literal>length</literal>,
+                <literal>precision</literal> and <literal>scale</literal>. You can set the length, precision 
+                and scale of a column with this attribute. 
+                
+            </para>
+
+            <programlisting role="XML"><![CDATA[<property name="zip" length="5"/>]]></programlisting>
+            <programlisting role="XML"><![CDATA[<property name="balance" precision="12" scale="2"/>]]></programlisting>
+
+            <para>
+                Some tags also accept a <literal>not-null</literal> attribute for generating a 
+                <literal>NOT NULL</literal> constraint on table columns, and a <literal>unique</literal> 
+                attribute for generating <literal>UNIQUE</literal> constraint on table columns.
+            </para>
+
+            <programlisting role="XML"><![CDATA[<many-to-one name="bar" column="barId" not-null="true"/>]]></programlisting>
+
+            <programlisting role="XML"><![CDATA[<element column="serialNumber" type="long" not-null="true" unique="true"/>]]></programlisting>
+
+            <para>
+                A <literal>unique-key</literal> attribute can be used to group columns in
+                a single, unique key constraint.  The attribute overrides
+            	the name of any generated unique key constraint.
+            </para>
+            
+            <programlisting role="XML"><![CDATA[<many-to-one name="org" column="orgId" unique-key="OrgEmployeeId"/>
+<property name="employeeId" unique-key="OrgEmployee"/>]]></programlisting>
+
+            <para>
+                An <literal>index</literal> attribute specifies the name of an index that
+                will be created using the mapped column or columns. Multiple columns can be 
+                grouped into the same index by simply specifying the same index name. 
+            </para>
+
+            <programlisting role="XML"><![CDATA[<property name="lastName" index="CustName"/>
+<property name="firstName" index="CustName"/>]]></programlisting>
+
+            <para>
+                A <literal>foreign-key</literal> attribute can be used to override the name 
+                of any generated foreign key constraint.
+            </para>
+            
+            <programlisting role="XML"><![CDATA[<many-to-one name="bar" column="barId" foreign-key="FKFooBar"/>]]></programlisting>
+
+            <para>
+                Many mapping elements also accept a child <literal>&lt;column&gt;</literal> element. 
+                This is particularly useful for mapping multi-column types:
+            </para>
+
+            <programlisting role="XML"><![CDATA[<property name="name" type="my.customtypes.Name"/>
+    <column name="last" not-null="true" index="bar_idx" length="30"/>
+    <column name="first" not-null="true" index="bar_idx" length="20"/>
+    <column name="initial"/>
+</property>]]></programlisting>
+
+            <para>
+                The <literal>default</literal> attribute allows you to specify a default value for
+                a column.You should assign the same value to the mapped property before
+                saving a new instance of the mapped class.
+            </para>
+
+            <programlisting role="XML"><![CDATA[<property name="credits" type="integer" insert="false">
+    <column name="credits" default="10"/>
+</property>]]></programlisting>
+
+            <programlisting role="XML"><![CDATA[<version name="version" type="integer" insert="false">
+    <column name="version" default="0"/>
+</property>]]></programlisting>
+
+            <para>
+                The <literal>sql-type</literal> attribute allows the user to override the default 
+                mapping of a Hibernate type to SQL datatype.
+            </para>
+            
+            <programlisting role="XML"><![CDATA[<property name="balance" type="float">
+    <column name="balance" sql-type="decimal(13,3)"/>
+</property>]]></programlisting>
+            
+            <para>
+                The <literal>check</literal> attribute allows you to specify a check constraint.
+            </para>
+            
+            <programlisting role="XML"><![CDATA[<property name="foo" type="integer">
+    <column name="foo" check="foo > 10"/>
+</property>]]></programlisting>
+
+            <programlisting role="XML"><![CDATA[<class name="Foo" table="foos" check="bar < 100.0">
+    ...
+    <property name="bar" type="float"/>
+</class>]]></programlisting>
+            
+
+	<para>The following table summarizes these optional attributes.</para>
+
+            <table frame="topbot" xml:id="schemattributes-summary" revision="2">
+                <title>Summary</title>
+                <tgroup cols="3">
+                    <colspec colwidth="1*"/>
+                    <colspec colwidth="1*"/>
+                    <colspec colwidth="2.5*"/>
+                    <thead>
+                        <row>
+                            <entry>Attribute</entry>
+                            <entry>Values</entry>
+                            <entry>Interpretation</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry><literal>length</literal></entry>
+                            <entry>number</entry>
+                            <entry>column length</entry>
+                        </row>
+                        <row>
+                            <entry><literal>precision</literal></entry>
+                            <entry>number</entry>
+                            <entry>column decimal precision</entry>
+                        </row>
+                        <row>
+                            <entry><literal>scale</literal></entry>
+                            <entry>number</entry>
+                            <entry>column decimal scale</entry>
+                        </row>
+                        <row>
+                            <entry><literal>not-null</literal></entry>
+                            <entry><literal>true|false</literal></entry>
+                            <entry>specifies that the column should be non-nullable</entry>
+                        </row>
+                        <row>
+                            <entry><literal>unique</literal></entry>
+                            <entry><literal>true|false</literal></entry>
+                            <entry>specifies that the column should have a unique constraint</entry>
+                        </row>
+                        <row>
+                            <entry><literal>index</literal></entry>
+                            <entry><literal>index_name</literal></entry>
+                            <entry>specifies the name of a (multi-column) index</entry>
+                        </row>
+                        <row>
+                            <entry><literal>unique-key</literal></entry>
+                            <entry><literal>unique_key_name</literal></entry>
+                            <entry>specifies the name of a multi-column unique constraint</entry>
+                        </row>
+                        <row>
+                            <entry><literal>foreign-key</literal></entry>
+                            <entry><literal>foreign_key_name</literal></entry>
+                            <entry>
+                                specifies the name of the foreign key constraint generated
+                                for an association, for a <literal>&lt;one-to-one&gt;</literal>, 
+                                <literal>&lt;many-to-one&gt;</literal>, <literal>&lt;key&gt;</literal>, 
+                                or <literal>&lt;many-to-many&gt;</literal> mapping element. Note that
+                                <literal>inverse="true"</literal> sides will not be considered
+                                by <literal>SchemaExport</literal>.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry><literal>sql-type</literal></entry>
+                            <entry><literal>SQL column type</literal></entry>
+                            <entry>
+                                overrides the default column type (attribute of 
+                                <literal>&lt;column&gt;</literal> element only)
+                            </entry>
+                       </row>
+                       <row>
+                            <entry><literal>default</literal></entry>
+                            <entry>SQL expression</entry>
+                            <entry>
+                                specify a default value for the column
+                            </entry>
+                       </row>
+                       <row>
+                            <entry><literal>check</literal></entry>
+                            <entry>SQL expression</entry>
+                            <entry>
+                                create an SQL check constraint on either column or table
+                            </entry>
+                       </row>
+                   </tbody>
+                </tgroup>
+            </table>
+            
+            <para>
+                The <literal>&lt;comment&gt;</literal> element allows you to specify comments
+                for the generated schema.
+            </para>
+            
+            <programlisting role="XML"><![CDATA[<class name="Customer" table="CurCust">
+    <comment>Current customers only</comment>
+    ...
+</class>]]></programlisting>
+
+            <programlisting role="XML"><![CDATA[<property name="balance">
+    <column name="bal">
+        <comment>Balance in USD</comment>
+    </column>
+</property>]]></programlisting>
+            
+            <para>
+                This results in a <literal>comment on table</literal> or 
+                <literal>comment on column</literal> statement in the generated
+                DDL where supported.
+            </para>
+
+        </section>
+
+        <section xml:id="toolsetguide-s1-3" revision="2">
+            <title>Running the tool</title>
+
+            <para>
+                The <literal>SchemaExport</literal> tool writes a DDL script to standard out and/or
+                executes the DDL statements.
+            </para>
+		
+	<para>The following table displays the <literal>SchemaExport</literal> command line options</para>
+        
+    	<para>
+                <literal>java -cp </literal><emphasis>hibernate_classpaths</emphasis>
+                <literal>org.hibernate.tool.hbm2ddl.SchemaExport</literal> <emphasis>options mapping_files</emphasis>
+            </para>
+
+            <table frame="topbot">
+                <title><literal>SchemaExport</literal> Command Line Options</title>
+                <tgroup cols="2">
+                    <colspec colwidth="1.5*"/>
+                    <colspec colwidth="2*"/>
+                    <thead>
+                        <row>
+                            <entry>Option</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry><literal>--quiet</literal></entry>
+                            <entry>do not output the script to stdout</entry>
+                        </row>
+                        <row>
+                            <entry><literal>--drop</literal></entry>
+                            <entry>only drop the tables</entry>
+                        </row>
+                        <row>
+                            <entry><literal>--create</literal></entry>
+                            <entry>only create the tables</entry>
+                        </row>
+                        <row>
+                            <entry><literal>--text</literal></entry>
+                            <entry>do not export to the database</entry>
+                        </row>
+                        <row>
+                            <entry><literal>--output=my_schema.ddl</literal></entry>
+                            <entry>output the ddl script to a file</entry>
+                        </row>
+                        <row>
+                            <entry><literal>--naming=eg.MyNamingStrategy</literal></entry>
+                            <entry>select a <literal>NamingStrategy</literal></entry>
+                        </row>
+                         <row>
+                            <entry><literal>--config=hibernate.cfg.xml</literal></entry>
+                            <entry>read Hibernate configuration from an XML file</entry>
+                        </row>
+                        <row>
+                            <entry><literal>--properties=hibernate.properties</literal></entry>
+                            <entry>read database properties from a file</entry>
+                        </row>
+                        <row>
+                            <entry><literal>--format</literal></entry>
+                            <entry>format the generated SQL nicely in the script</entry>
+                        </row>
+                        <row>
+                            <entry><literal>--delimiter=;</literal></entry>
+                            <entry>set an end of line delimiter for the script</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+
+            <para>
+                You can even embed <literal>SchemaExport</literal> in your application:
+            </para>
+
+            <programlisting role="JAVA"><![CDATA[Configuration cfg = ....;
+new SchemaExport(cfg).create(false, true);]]></programlisting>
+
+        </section>
+
+        <section xml:id="toolsetguide-s1-4">
+            <title>Properties</title>
+
+            <para>
+                Database properties can be specified:
+            </para>
+
+            <itemizedlist spacing="compact">
+                <listitem>
+                    <para>as system properties with <literal>-D</literal><emphasis>&lt;property&gt;</emphasis></para>
+                </listitem>
+                <listitem>
+                    <para>in <literal>hibernate.properties</literal></para>
+                </listitem>
+                <listitem>
+                    <para>in a named properties file with <literal>--properties</literal></para>
+                </listitem>
+            </itemizedlist>
+
+            <para>
+                The needed properties are:
+            </para>
+
+            <table frame="topbot">
+                <title>SchemaExport Connection Properties</title>
+                <tgroup cols="2">
+                    <colspec colwidth="1.5*"/>
+                    <colspec colwidth="2*"/>
+                    <thead>
+                        <row>
+                            <entry>Property Name</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                    <row>
+                        <entry><literal>hibernate.connection.driver_class</literal></entry>
+                        <entry>jdbc driver class</entry>
+                    </row>
+                    <row>
+                        <entry><literal>hibernate.connection.url</literal></entry>
+                        <entry>jdbc url</entry>
+                    </row>
+                    <row>
+                        <entry><literal>hibernate.connection.username</literal></entry>
+                        <entry>database user</entry>
+                    </row>
+                    <row>
+                        <entry><literal>hibernate.connection.password</literal></entry>
+                        <entry>user password</entry>
+                    </row>
+                    <row>
+                        <entry><literal>hibernate.dialect</literal></entry>
+                        <entry>dialect</entry>
+                    </row>
+                    </tbody>
+                </tgroup>
+            </table>
+
+        </section>
+
+        <section xml:id="toolsetguide-s1-5">
+            <title>Using Ant</title>
+
+            <para>
+                You can call <literal>SchemaExport</literal> from your Ant build script:
+            </para>
+
+            <programlisting role="XML"><![CDATA[<target name="schemaexport">
+    <taskdef name="schemaexport"
+        classname="org.hibernate.tool.hbm2ddl.SchemaExportTask"
+        classpathref="class.path"/>
+    
+    <schemaexport
+        properties="hibernate.properties"
+        quiet="no"
+        text="no"
+        drop="no"
+        delimiter=";"
+        output="schema-export.sql">
+        <fileset dir="src">
+            <include name="**/*.hbm.xml"/>
+        </fileset>
+    </schemaexport>
+</target>]]></programlisting>
+
+        </section>
+
+        <section xml:id="toolsetguide-s1-6" revision="2">
+            <title>Incremental schema updates</title>
+
+            <para>
+                The <literal>SchemaUpdate</literal> tool will update an existing schema with "incremental" changes.
+                The <literal>SchemaUpdate</literal> depends upon the JDBC metadata API and, as such, will
+                not work with all JDBC drivers.
+            </para>
+
+            <para>
+                <literal>java -cp </literal><emphasis>hibernate_classpaths</emphasis>
+                <literal>org.hibernate.tool.hbm2ddl.SchemaUpdate</literal> <emphasis>options mapping_files</emphasis>
+            </para>
+
+            <table frame="topbot">
+                <title><literal>SchemaUpdate</literal> Command Line Options</title>
+                <tgroup cols="2">
+                    <colspec colwidth="1.5*"/>
+                    <colspec colwidth="2*"/>
+                    <thead>
+                        <row>
+                            <entry>Option</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry><literal>--quiet</literal></entry>
+                            <entry>do not output the script to stdout</entry>
+                        </row>
+                        <row>
+                            <entry><literal>--text</literal></entry>
+                            <entry>do not export the script to the database</entry>
+                        </row>
+                        <row>
+                            <entry><literal>--naming=eg.MyNamingStrategy</literal></entry>
+                            <entry>select a <literal>NamingStrategy</literal></entry>
+                        </row>
+                        <row>
+                            <entry><literal>--properties=hibernate.properties</literal></entry>
+                            <entry>read database properties from a file</entry>
+                        </row>
+                        <row>
+                            <entry><literal>--config=hibernate.cfg.xml</literal></entry>
+                            <entry>specify a <literal>.cfg.xml</literal> file</entry>
+                        </row>
+                     </tbody>
+                </tgroup>
+            </table>
+
+            <para>
+                You can embed <literal>SchemaUpdate</literal> in your application:
+            </para>
+
+            <programlisting role="JAVA"><![CDATA[Configuration cfg = ....;
+new SchemaUpdate(cfg).execute(false);]]></programlisting>
+
+        </section>
+
+        <section xml:id="toolsetguide-s1-7">
+            <title>Using Ant for incremental schema updates</title>
+
+            <para>
+                You can call <literal>SchemaUpdate</literal> from the Ant script:
+            </para>
+
+            <programlisting role="XML"><![CDATA[<target name="schemaupdate">
+    <taskdef name="schemaupdate"
+        classname="org.hibernate.tool.hbm2ddl.SchemaUpdateTask"
+        classpathref="class.path"/>
+    
+    <schemaupdate
+        properties="hibernate.properties"
+        quiet="no">
+        <fileset dir="src">
+            <include name="**/*.hbm.xml"/>
+        </fileset>
+    </schemaupdate>
+</target>]]></programlisting>
+
+        </section>
+
+        <section xml:id="toolsetguide-s1-8" revision="1">
+            <title>Schema validation</title>
+
+            <para>
+                The <literal>SchemaValidator</literal> tool will validate that the existing database schema "matches"
+                your mapping documents. The <literal>SchemaValidator</literal> depends heavily upon the JDBC 
+                metadata API and, as such, will not work with all JDBC drivers. This tool is extremely useful for testing.
+            </para>
+
+            <para>
+                <literal>java -cp </literal><emphasis>hibernate_classpaths</emphasis>
+                <literal>org.hibernate.tool.hbm2ddl.SchemaValidator</literal> <emphasis>options mapping_files</emphasis>
+            </para>
+			<para>The following table displays the <literal>SchemaValidator</literal> command line options:
+			</para>
+            <table frame="topbot">
+                <title><literal>SchemaValidator</literal> Command Line Options</title>
+                <tgroup cols="2">
+                    <colspec colwidth="1.5*"/>
+                    <colspec colwidth="2*"/>
+                    <thead>
+                        <row>
+                            <entry>Option</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry><literal>--naming=eg.MyNamingStrategy</literal></entry>
+                            <entry>select a <literal>NamingStrategy</literal></entry>
+                        </row>
+                        <row>
+                            <entry><literal>--properties=hibernate.properties</literal></entry>
+                            <entry>read database properties from a file</entry>
+                        </row>
+                        <row>
+                            <entry><literal>--config=hibernate.cfg.xml</literal></entry>
+                            <entry>specify a <literal>.cfg.xml</literal> file</entry>
+                        </row>
+                     </tbody>
+                </tgroup>
+            </table>
+
+            <para>
+                You can embed <literal>SchemaValidator</literal> in your application:
+            </para>
+
+            <programlisting role="JAVA"><![CDATA[Configuration cfg = ....;
+new SchemaValidator(cfg).validate();]]></programlisting>
+
+        </section>
+
+        <section xml:id="toolsetguide-s1-9">
+            <title>Using Ant for schema validation</title>
+
+            <para>
+                You can call <literal>SchemaValidator</literal> from the Ant script:
+            </para>
+
+            <programlisting role="XML"><![CDATA[<target name="schemavalidate">
+    <taskdef name="schemavalidator"
+        classname="org.hibernate.tool.hbm2ddl.SchemaValidatorTask"
+        classpathref="class.path"/>
+    
+    <schemavalidator
+        properties="hibernate.properties">
+        <fileset dir="src">
+            <include name="**/*.hbm.xml"/>
+        </fileset>
+    </schemavalidator>
+</target>]]></programlisting>
+
+        </section>
+
+    </section>
+
+</chapter>
+

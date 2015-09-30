@@ -10,9 +10,13 @@ import java.util.Map;
 
 import org.hibernate.envers.enhanced.SequenceIdTrackingModifiedEntitiesRevisionEntity;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
+@RequiresDialectFeature(DialectChecks.SupportsCascadeDeleteCheck.class)
 public class RemoveTrackingRevisionEntity extends AbstractRevisionEntityRemovalTest {
 	@Override
 	public void addConfigOptions(Map configuration) {

@@ -6,8 +6,9 @@
  */
 package org.hibernate.test.bytecode.enhancement.tracker;
 
-import org.hibernate.bytecode.enhance.internal.tracker.SimpleDirtyTracker;
-import org.hibernate.bytecode.enhance.internal.tracker.SortedDirtyTracker;
+import org.hibernate.bytecode.enhance.internal.tracker.DirtyTracker;
+import org.hibernate.bytecode.enhance.internal.tracker.SimpleFieldTracker;
+import org.hibernate.bytecode.enhance.internal.tracker.SortedFieldTracker;
 
 import org.junit.Test;
 
@@ -22,7 +23,7 @@ public class DirtyTrackerTest {
 
     @Test
     public void testSimpleTracker() {
-        SimpleDirtyTracker tracker = new SimpleDirtyTracker();
+        DirtyTracker tracker = new SimpleFieldTracker();
         assertTrue(tracker.isEmpty());
         assertTrue(tracker.get().length == 0);
 
@@ -42,11 +43,14 @@ public class DirtyTrackerTest {
         tracker.add("another.bar");
         assertTrue(tracker.get().length == 4);
 
+        tracker.suspend(true);
+        tracker.add("one more");
+        assertTrue(tracker.get().length == 4);
     }
 
     @Test
     public void testSortedTracker() {
-        SortedDirtyTracker tracker = new SortedDirtyTracker();
+        DirtyTracker tracker = new SortedFieldTracker();
         assertTrue(tracker.isEmpty());
         assertTrue(tracker.get().length == 0);
 
@@ -68,6 +72,10 @@ public class DirtyTrackerTest {
 
         // we the algorithm for this implementation relies on the fact that the array is kept sorted, so let's check it really is
         assertTrue(isSorted(tracker.get()));
+
+        tracker.suspend(true);
+        tracker.add("one more");
+        assertTrue(tracker.get().length == 4);
     }
 
     private boolean isSorted(String[] arr) {

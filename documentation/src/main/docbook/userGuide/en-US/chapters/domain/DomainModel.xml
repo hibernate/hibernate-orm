@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<chapter xml:id="domainmodel" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xi="http://www.w3.org/2001/XInclude">
+    <title>Domain Model</title>
+
+    <para>
+        The term <link xlink:href="https://en.wikipedia.org/wiki/Domain_model">domain model</link>
+        comes from the realm of data modeling.  It is the model that ultimately
+        describes the <link xlink:href="https://en.wikipedia.org/wiki/Problem_domain">problem domain</link>
+        you are working in.  Sometimes you will also hear the term "persistent classes".
+    </para>
+
+    <para>
+        Ultimately the application's domain model is the central character in an ORM.  They make up the classes
+        you wish to map.  Hibernate works best if these classes follow the Plain Old Java Object (POJO) / JavaBean
+        programming model.  However, none of these rules are hard requirements. Indeed, Hibernate assumes very little
+        about the nature of your persistent objects. You can express a domain model in other ways (using trees of
+        <interfacename>java.util.Map</interfacename> instances, for example).
+    </para>
+
+    <note>
+        <para>
+            Even though Hibernate does not consider all of these rules as hard requirements, JPA does specify
+            some of them.  Therefore, if you are concerned about JPA provider portability it is best to
+            stick to the strict POJO model.  We will point out these concerns where applicable.
+        </para>
+    </note>
+
+    <para>
+        This chapter will describe the characteristics of a persistable domain model.  However, it will not discuss
+        defining the mapping for the domain model.  That is a massive topic in its own right and is the subject of an
+        entire dedicated manual.  See the <citetitle>Hibernate Domain Model Mapping Guide</citetitle> from the
+        <link xlink:href="http://hibernate.org/orm/documentation">documentation site</link>.
+    </para>
+
+    <section xml:id="domainmodel-pojo">
+        <title>POJO Domain Models</title>
+
+        <para>
+            This section explores domain models defined as POJOs.
+        </para>
+
+        <section xml:id="domainmodel-pojo-constructor">
+            <title>Implement a no-argument constructor</title>
+
+            <para>
+                The POJO should have a no-argument constructor.  Both Hibernate and JPA require this.
+            </para>
+
+            <para>
+                JPA requires that this constructor be defined as public or protected.  Hibernate for the most part does
+                note care about the visibility as long as the system's SecurityManager allows overriding the visibility.
+                That said, the constructor should be defined with at least package visibility if you wish to leverage
+                runtime proxy generation.
+            </para>
+        </section>
+
+
+        <section xml:id="domainmodel-pojo-identifier" revision="2">
+            <title>Provide identifier attribute(s)</title>
+
+            <note>
+                <para>
+                    Historically this was considered optional.  However, not defining identifier attribute(s) on the
+                    entity should be considered a deprecated feature that will be removed in an upcoming release.
+                </para>
+            </note>
+
+            <para>
+                The identifier attribute does not necessarily need to be mapped to the column(s) that physically
+                define the primary key.  However, it should map to column(s) that can uniquely identify each row.
+            </para>
+
+            <para>
+                We recommend that you declare consistently-named identifier attributes on persistent classes and
+                that you use a nullable (i.e., non-primitive) type.
+            </para>
+        </section>
+
+
+        <section xml:id="domainmodel-pojo-final">
+            <title>Prefer non-final classes</title>
+
+            <para>
+                A central feature of Hibernate is the ability to lazy load an entity's data via runtime proxies.  This
+                feature depends upon the entity class being non-final or else implementing an interface that declares
+                all the attribute getters/setters.  You can still persist final classes that do not implement such
+                an interface with Hibernate; you just will not be able to use proxies for lazy association fetching
+                which will ultimately limit your options for performance tuning.
+            </para>
+
+            <note>
+                <para>
+                    Starting in 5.0 Hibernate offers a more robust version of bytecode enhancement as another means
+                    for handling lazy loading.  Hibernate had some bytecode re-writing capabilities prior to 5.0 but
+                    they were very rudimentary.
+                    <!-- todo : xref to discussion of bytecode enhancement -->
+                </para>
+            </note>
+
+            <para>
+                You should also avoid declaring persistent attribute getters and setters as final for the reasons
+                already mentioned.
+            </para>
+        </section>
+
+        <section xml:id="domainmodel-pojo-accessors">
+            <title>Declare getters and setters for persistent attributes</title>
+
+            <para>
+                Although not required, it is recommended to follow JavaBean conventions by defining getters and
+                setters for you entities persistent attributes.  Hibernate can also directly access the entity's
+                fields.
+            </para>
+
+            <para>
+                Attributes (whether fields or getters/setters) need not be declared public.  Hibernate can deal with
+                attributes declared with public, protected, package or private visibility.
+            </para>
+        </section>
+
+
+        <section xml:id="domainmodel-pojo-equalshashcode">
+            <title>Implementing <literal>equals()</literal> and <literal>hashCode()</literal></title>
+
+            <note>
+                <para>
+                    Much of the discussion in this section deals with the relation of an entity to
+                    a Hibernate Session; whether the entity is managed or transient or detached.  These
+                    topics are explained in <xref linkend="pc-states"/> if you are unfamiliar with them.
+                </para>
+            </note>
+
+            <para>
+                Whether to implement <methodname>equals()</methodname> and <methodname>hashCode()</methodname>
+                methods in your domain model, let alone how to implement them, is a surprisingly tricky discussion
+                when it comes to ORM.
+            </para>
+
+            <para>
+                There is really just one absolute case: a class that acts as an identifier must implement
+                equals/hashCode based on the id value(s).  Generally this is pertinent for user classes used as
+                composite identifiers.  Beyond this one absolute case and the few others we will discuss below, you
+                may want to consider not implementing equals/hashCode.
+            </para>
+
+            <para>
+                So what's all the fuss?  Normally, most Java objects provide a built-in equals() and hashCode() based
+                on the object's identity,  so each new object will be different from all others.  This is generally what
+                you want in ordinary Java programming.  Conceptually however this starts to break down when you start
+                to think about the possibility multiple instances of a class representing the same data which is in
+                fact the case when we start dealing with data from a database.  Every time we load a specific
+                <classname>Person</classname> from the database we would naturally get a unique instance.
+                Hibernate, however, works hard to make sure that does not happen within a given Session.  In fact
+                Hibernate guarantees equivalence of persistent identity (database row) and Java identity inside a
+                particular session scope.  So if we ask a Hibernate Session to load that specific Person multiple
+                times we will actually get back the same <emphasis>instance</emphasis>:
+            </para>
+
+            <example>
+                <title>Scope of identity</title>
+                <programlisting role="JAVA"><xi:include href="extras/listing1.java" parse="text"/></programlisting>
+            </example>
+
+            <para>
+                Consider another example using a persistent <interfacename>java.util.Set</interfacename>:
+            </para>
+
+            <example>
+                <title>Set usage with Session-scoped identity</title>
+                <programlisting role="JAVA"><xi:include href="extras/listing3.java" parse="text"/></programlisting>
+            </example>
+
+            <para>
+                However, the semantic changes when we mix instances loaded from different Sessions:
+            </para>
+
+            <example>
+                <title>Mixed Sessions</title>
+                <programlisting role="JAVA"><xi:include href="extras/listing2.java" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/listing4.java" parse="text"/></programlisting>
+            </example>
+
+            <para>
+                Specifically the outcome in this last example will depend on whether the Person class implemented
+                equals/hashCode, and if so how.
+            </para>
+
+            <para>
+                Consider yet another case:
+            </para>
+
+            <example>
+                <title>Sets with transient entities</title>
+                <programlisting role="JAVA"><xi:include href="extras/listing5.java" parse="text"/></programlisting>
+            </example>
+
+            <para>
+                In cases where you will be dealing with entities outside of a Session (whether
+                they be transient or detached), especially in cases where you will be using
+                them in Java collections, you should consider implementing equals/hashCode.
+            </para>
+
+            <para>
+                A common initial approach is to use the entity's identifier attribute as the basis for
+                equals/hashCode calculations:
+            </para>
+
+            <example>
+                <title>Naive equals/hashCode implementation</title>
+                <programlisting role="JAVA"><xi:include href="extras/listing6.java" parse="text"/></programlisting>
+            </example>
+
+            <para>
+                It turns out that this still breaks when adding transient instance of Person to a set
+                as we saw in the last example:
+            </para>
+
+            <example>
+                <title>Still trouble</title>
+                <programlisting role="JAVA"><xi:include href="extras/listing7.java" parse="text"/></programlisting>
+            </example>
+
+            <para>
+                The issue here is a conflict between (1) the use of generated identifier and
+                (2) the contract of Set and (3) the equals/hashCode implementations.  Set says that the
+                equals/hashCode value for an object should not change while it is part of the Set.
+                But that is exactly what happened here because the equals/hasCode are based on the (generated) id,
+                which was not set until the <literal>session.getTransaction().commit()</literal> call.
+            </para>
+
+            <para>
+                Note that this is just a concern when using generated identifiers.  If you are using assigned
+                identifiers this will not be a problem, assuming the identifier value is assigned prior to
+                adding to the Set.
+            </para>
+
+            <para>
+                Another option is to force the identifier to be generated and set prior to adding to the Set:
+            </para>
+
+            <example>
+                <title>Forcing identifier generation</title>
+                <programlisting role="JAVA"><xi:include href="extras/listing8.java" parse="text"/></programlisting>
+            </example>
+
+            <para>
+                But this is often not feasible.
+            </para>
+
+            <para>
+                The final approach is to use a "better" equals/hashCode implementation, making use of a natural-id
+                or business-key.
+            </para>
+
+            <example>
+                <title>Better equals/hashCode with natural-id</title>
+                <programlisting role="JAVA"><xi:include href="extras/listing9.java" parse="text"/></programlisting>
+            </example>
+
+            <!-- todo : add pointer to or discuss natural-ids -->
+
+            <para>
+                As you can see the question of equals/hashCode is not trivial.  Nor is there a one-size-fits-all
+                solution.
+            </para>
+        </section>
+
+    </section>
+
+    <section xml:id="domainmodel-dynamic" revision="1">
+        <title>Dynamic models</title>
+
+        <para>
+            Persistent entities do not necessarily have to be represented as
+            POJO/JavaBean classes.  Hibernate also supports dynamic models (using <literal>Map</literal>s of
+            <literal>Map</literal>s at runtime). With this approach, you do not write persistent classes,
+            only mapping files.
+        </para>
+
+        <note>
+            <para>
+                The mapping of dynamic models is beyond the scope of this document.  We will discuss
+                using such models with Hibernate, but for mapping see the
+                <citetitle>Hibernate Domain Model Mapping</citetitle> documentation.
+            </para>
+        </note>
+
+        <para>
+            A given entity has just one <firstterm>entity mode</firstterm> within a given SessionFactory.  This
+            is a change from previous versions which allowed to define multiple entity modes for an entity and
+            to select which to load.  Entity modes can now also be mixed within a domain model; a dynamic entity
+            might reference a POJO entity, and vice versa.
+        </para>
+
+        <example>
+            <title>Working with Dynamic Domain Models</title>
+            <programlisting role="JAVA"><xi:include href="extras/listing10.java" parse="text"/></programlisting>
+        </example>
+
+        <para>
+            The main advantage of dynamic models is quick turnaround time for prototyping without the need for
+            entity class implementation.  The main down-fall is that you lose compile-time type checking and will
+            likely deal with many exceptions at runtime.  However, as a result of the Hibernate mapping, the
+            database schema can easily be normalized and sound, allowing to add a proper domain model implementation
+            on top later on.
+        </para>
+
+        <para>
+            It is also interesting to note that dynamic models are great for certain integration use cases as well.
+            Envers, for example, makes extensive use of dynamic models to represent the historical data.
+        </para>
+    </section>
+
+</chapter>

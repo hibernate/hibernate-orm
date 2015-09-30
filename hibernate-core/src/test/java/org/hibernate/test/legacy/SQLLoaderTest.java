@@ -18,6 +18,8 @@ import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -41,6 +43,13 @@ import static org.junit.Assert.assertTrue;
 public class SQLLoaderTest extends LegacyTestCase {
 	static int nextInt = 1;
 	static long nextLong = 1;
+
+	@Override
+	public void configure(Configuration cfg) {
+		super.configure( cfg );
+
+		cfg.setProperty( AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, "true" );
+	}
 
 	@Override
 	public String[] getMappings() {

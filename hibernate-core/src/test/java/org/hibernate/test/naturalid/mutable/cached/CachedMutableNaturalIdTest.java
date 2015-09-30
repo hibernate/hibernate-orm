@@ -49,7 +49,7 @@ public abstract class CachedMutableNaturalIdTest extends BaseCoreFunctionalTestC
 
 		session = openSession();
 		session.beginTransaction();
-		it = (Another) session.bySimpleNaturalId( Another.class ).load( "it" );
+		it = session.bySimpleNaturalId( Another.class ).load( "it" );
 		assertNotNull( it );
 		// change it's name
 		it.setName( "it2" );
@@ -58,9 +58,9 @@ public abstract class CachedMutableNaturalIdTest extends BaseCoreFunctionalTestC
 
 		session = openSession();
 		session.beginTransaction();
-		it = (Another) session.bySimpleNaturalId( Another.class ).load( "it" );
+		it = session.bySimpleNaturalId( Another.class ).load( "it" );
 		assertNull( it );
-		it = (Another) session.bySimpleNaturalId( Another.class ).load( "it2" );
+		it = session.bySimpleNaturalId( Another.class ).load( "it2" );
 		assertNotNull( it );
 		session.delete( it );
 		session.getTransaction().commit();
@@ -78,7 +78,7 @@ public abstract class CachedMutableNaturalIdTest extends BaseCoreFunctionalTestC
 
 		session = openSession();
 		session.beginTransaction();
-		it = (Another) session.bySimpleNaturalId( Another.class ).load( "it" );
+		it = session.bySimpleNaturalId( Another.class ).load( "it" );
 		assertNotNull( it );
 		session.getTransaction().commit();
 		session.close();
@@ -93,9 +93,9 @@ public abstract class CachedMutableNaturalIdTest extends BaseCoreFunctionalTestC
 
 		session = openSession();
 		session.beginTransaction();
-		it = (Another) session.bySimpleNaturalId( Another.class ).load( "it" );
+		it = session.bySimpleNaturalId( Another.class ).load( "it" );
 		assertNull( it );
-		it = (Another) session.bySimpleNaturalId( Another.class ).load( "it2" );
+		it = session.bySimpleNaturalId( Another.class ).load( "it2" );
 		assertNotNull( it );
 		session.delete( it );
 		session.getTransaction().commit();
@@ -118,7 +118,7 @@ public abstract class CachedMutableNaturalIdTest extends BaseCoreFunctionalTestC
 		session = openSession();
 		for (int i=0; i < 10; i++) {
 			session.beginTransaction();
-			it = (Another) session.byId(Another.class).load(id);
+			it = session.byId(Another.class).load(id);
 			if (i == 9) {
 				it.setName("name" + i);
 			}
@@ -128,15 +128,16 @@ public abstract class CachedMutableNaturalIdTest extends BaseCoreFunctionalTestC
 		
 		session = openSession();
 		session.beginTransaction();
-		it = (Another) session.bySimpleNaturalId(Another.class).load("it");
+		it = session.bySimpleNaturalId(Another.class).load("it");
 		assertNull(it);
-		assertEquals(0, session.getSessionFactory().getStatistics().getNaturalIdCacheHitCount());
-		it = (Another) session.byId(Another.class).load(id);
+		assertEquals( 0, session.getSessionFactory().getStatistics().getNaturalIdCacheHitCount() );
+		it = session.byId(Another.class).load(id);
 		session.delete(it);
 		session.getTransaction().commit();
+		session.close();
 		
 		// finally there should be only 2 NaturalIdCache puts : 1. insertion, 2. when updating natural-id from 'it' to 'name9'
-		assertEquals(2, session.getSessionFactory().getStatistics().getNaturalIdCachePutCount());
+		assertEquals( 2, session.getSessionFactory().getStatistics().getNaturalIdCachePutCount() );
 	}
 	
 	@Test
@@ -153,7 +154,7 @@ public abstract class CachedMutableNaturalIdTest extends BaseCoreFunctionalTestC
 
 			session = openSession();
 			session.beginTransaction();
-			it = (AllCached) session.byId( AllCached.class ).load( id );
+			it = session.byId( AllCached.class ).load( id );
 
 			it.setName( "it2" );
 			it = (AllCached) session.bySimpleNaturalId( AllCached.class ).load( "it" );
@@ -177,19 +178,22 @@ public abstract class CachedMutableNaturalIdTest extends BaseCoreFunctionalTestC
 		b.assA = a;
 		a.assB.add( b );
 		session.getTransaction().commit();
-		session.clear();
+		session.close();
 
+
+		session = openSession();
 		session.beginTransaction();
-		session.buildLockRequest(LockOptions.NONE).lock(b); // HHH-7513 failure during reattachment
-		session.delete(b.assA);
-		session.delete(b);
-		
-		session.getTransaction().commit();
-		session.clear();
-		
+		session.buildLockRequest(LockOptions.NONE).lock( b ); // HHH-7513 failure during reattachment
+		session.delete( b.assA );
+		session.delete( b );
+		session.flush();
+
 		// true if the re-attachment worked
 		assertEquals( session.createQuery( "FROM A" ).list().size(), 0 );
 		assertEquals( session.createQuery( "FROM B" ).list().size(), 0 );
+
+		session.getTransaction().commit();
+		session.close();
 	}
 
 }

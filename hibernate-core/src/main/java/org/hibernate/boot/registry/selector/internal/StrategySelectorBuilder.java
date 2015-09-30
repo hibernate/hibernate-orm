@@ -9,6 +9,11 @@ package org.hibernate.boot.registry.selector.internal;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyHbmImpl;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.SimpleStrategyRegistrationImpl;
 import org.hibernate.boot.registry.selector.StrategyRegistration;
@@ -36,6 +41,7 @@ import org.hibernate.dialect.InterbaseDialect;
 import org.hibernate.dialect.JDataStoreDialect;
 import org.hibernate.dialect.MckoiDialect;
 import org.hibernate.dialect.MimerSQLDialect;
+import org.hibernate.dialect.MySQL57InnoDBDialect;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.MySQL5InnoDBDialect;
 import org.hibernate.dialect.Oracle10gDialect;
@@ -76,13 +82,13 @@ import org.hibernate.event.internal.EntityCopyAllowedLoggedObserver;
 import org.hibernate.event.internal.EntityCopyAllowedObserver;
 import org.hibernate.event.internal.EntityCopyNotAllowedObserver;
 import org.hibernate.event.spi.EntityCopyObserver;
+import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.persistent.PersistentTableBulkIdStrategy;
 import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
-import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
+import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 
 import org.jboss.logging.Logger;
 
@@ -150,6 +156,7 @@ public class StrategySelectorBuilder {
 		addTransactionCoordinatorBuilders( strategySelector );
 		addMultiTableBulkIdStrategies( strategySelector );
 		addEntityCopyObserverStrategies( strategySelector );
+		addImplicitNamingStrategies( strategySelector );
 
 		// apply auto-discovered registrations
 		for ( StrategyRegistrationProvider provider : classLoaderService.loadJavaServices( StrategyRegistrationProvider.class ) ) {
@@ -200,8 +207,7 @@ public class StrategySelectorBuilder {
 		addDialect( strategySelector, MimerSQLDialect.class );
 		addDialect( strategySelector, MySQL5Dialect.class );
 		addDialect( strategySelector, MySQL5InnoDBDialect.class );
-		addDialect( strategySelector, MySQL5Dialect.class );
-		addDialect( strategySelector, MySQL5InnoDBDialect.class );
+		addDialect( strategySelector, MySQL57InnoDBDialect.class );
 		addDialect( strategySelector, Oracle8iDialect.class );
 		addDialect( strategySelector, Oracle9iDialect.class );
 		addDialect( strategySelector, Oracle10gDialect.class );
@@ -383,6 +389,34 @@ public class StrategySelectorBuilder {
 				EntityCopyObserver.class,
 				EntityCopyAllowedLoggedObserver.SHORT_NAME,
 				EntityCopyAllowedLoggedObserver.class
+		);
+	}
+
+	private void addImplicitNamingStrategies(StrategySelectorImpl strategySelector) {
+		strategySelector.registerStrategyImplementor(
+				ImplicitNamingStrategy.class,
+				"default",
+				ImplicitNamingStrategyJpaCompliantImpl.class
+		);
+		strategySelector.registerStrategyImplementor(
+				ImplicitNamingStrategy.class,
+				"jpa",
+				ImplicitNamingStrategyJpaCompliantImpl.class
+		);
+		strategySelector.registerStrategyImplementor(
+				ImplicitNamingStrategy.class,
+				"legacy-jpa",
+				ImplicitNamingStrategyLegacyJpaImpl.class
+		);
+		strategySelector.registerStrategyImplementor(
+				ImplicitNamingStrategy.class,
+				"legacy-hbm",
+				ImplicitNamingStrategyLegacyHbmImpl.class
+		);
+		strategySelector.registerStrategyImplementor(
+				ImplicitNamingStrategy.class,
+				"component-path",
+				ImplicitNamingStrategyComponentPathImpl.class
 		);
 	}
 }

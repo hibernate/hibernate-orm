@@ -19,10 +19,11 @@ import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.internal.log.DeprecationLogger;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 
 import org.apache.tools.ant.BuildException;
@@ -171,11 +172,13 @@ public class SchemaUpdateTask extends MatchingTask {
 			final StandardServiceRegistryBuilder ssrBuilder = new StandardServiceRegistryBuilder();
 			configure( ssrBuilder );
 
-			final MetadataSources metadataSources = new MetadataSources( ssrBuilder.build() );
+			final StandardServiceRegistry ssr = ssrBuilder.build();
+
+			final MetadataSources metadataSources = new MetadataSources( ssr );
 			configure( metadataSources );
 
 			final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder();
-			configure( metadataBuilder );
+			configure( metadataBuilder, ssr );
 
 			final MetadataImplementor metadata = (MetadataImplementor) metadataBuilder.build();
 
@@ -247,11 +250,13 @@ public class SchemaUpdateTask extends MatchingTask {
 	}
 
 	@SuppressWarnings("deprecation")
-	private void configure(MetadataBuilder metadataBuilder) {
+	private void configure(MetadataBuilder metadataBuilder, StandardServiceRegistry serviceRegistry) {
+		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+
 		if ( implicitNamingStrategy != null ) {
 			try {
 				metadataBuilder.applyImplicitNamingStrategy(
-						(ImplicitNamingStrategy) ReflectHelper.classForName( implicitNamingStrategy ).newInstance()
+						(ImplicitNamingStrategy) classLoaderService.classForName( implicitNamingStrategy ).newInstance()
 				);
 			}
 			catch (Exception e) {
@@ -265,7 +270,7 @@ public class SchemaUpdateTask extends MatchingTask {
 		if ( physicalNamingStrategy != null ) {
 			try {
 				metadataBuilder.applyPhysicalNamingStrategy(
-						(PhysicalNamingStrategy) ReflectHelper.classForName( physicalNamingStrategy ).newInstance()
+						(PhysicalNamingStrategy) classLoaderService.classForName( physicalNamingStrategy ).newInstance()
 				);
 			}
 			catch (Exception e) {

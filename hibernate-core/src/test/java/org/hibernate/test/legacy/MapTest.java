@@ -39,24 +39,24 @@ public class MapTest extends LegacyTestCase {
 		s.beginTransaction();
 		Map map = new HashMap();
 		map.put("$type$", "TestMap");
-		map.put("name", "foo");
-		map.put("address", "bar");
+		map.put( "name", "foo" );
+		map.put( "address", "bar" );
 		Map cmp = new HashMap();
-		cmp.put( "a", new Integer(1) );
-		cmp.put( "b", new Float(1.0) );
-		map.put("cmp", cmp);
-		s.save(map);
+		cmp.put( "a", new Integer( 1 ) );
+		cmp.put( "b", new Float( 1.0 ) );
+		map.put( "cmp", cmp );
+		s.save( map );
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
 		s.beginTransaction();
 		map = (Map) s.get( "TestMap", (Serializable) map.get("id") );
-		assertTrue( map!=null && "foo".equals( map.get("name") ) );
-		assertTrue( map.get("$type$").equals("TestMap") );
+		assertTrue( map != null && "foo".equals( map.get( "name" ) ) );
+		assertTrue( map.get( "$type$" ).equals( "TestMap" ) );
 
 		int size = s.createCriteria("TestMap").add( Example.create(map) ).list().size();
-		assertTrue(size==1);
+		assertTrue( size == 1 );
 		s.getTransaction().commit();
 		s.close();
 
@@ -67,12 +67,12 @@ public class MapTest extends LegacyTestCase {
 		assertTrue( "foo".equals( map.get("name") ) );
 		assertTrue( "bar".equals( map.get("address") ) );
 		cmp = (Map) map.get("cmp");
-		assertTrue( new Integer(1).equals( cmp.get("a") ) && new Float(1.0).equals( cmp.get("b") ) );
-		assertTrue( null==map.get("parent") );
-		map.put("name", "foobar");
-		map.put("parent", map);
+		assertTrue( new Integer( 1 ).equals( cmp.get( "a" ) ) && new Float( 1.0 ).equals( cmp.get( "b" ) ) );
+		assertTrue( null == map.get( "parent" ) );
+		map.put( "name", "foobar" );
+		map.put( "parent", map );
 		List bag = (List) map.get("children");
-		bag.add(map);
+		bag.add( map );
 		s.getTransaction().commit();
 		s.close();
 
@@ -92,8 +92,12 @@ public class MapTest extends LegacyTestCase {
 				.add( Restrictions.eq("name", "foobar") )
 			.list()
 			.size();
-		assertTrue(size==1);
+		assertTrue( size == 1 );
 
+		// for MySQL :(
+		map.put( "parent", null );
+		map.put( "children", null );
+		s.flush();
 		s.delete(map);
 		s.getTransaction().commit();
 		s.close();

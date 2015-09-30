@@ -17,6 +17,9 @@ import javax.persistence.Id;
 
 import org.hibernate.Session;
 import org.hibernate.internal.SessionImpl;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -26,6 +29,7 @@ import org.junit.Test;
  *
  * @author Gunnar Morling
  */
+@RequiresDialectFeature( value = DialectChecks.SupportsIdentityColumns.class, jiraKey = "HHH-9918")
 public class ExtraStateTest extends BaseCoreFunctionalTestCase {
 
 	/**

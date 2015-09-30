@@ -42,6 +42,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.type.BlobType;
 import org.hibernate.type.ClobType;
 import org.hibernate.type.NClobType;
@@ -439,6 +440,8 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	@After
 	public final void afterTest() throws Exception {
+		completeStrayTransaction();
+
 		if ( isCleanupTestDataRequired() ) {
 			cleanupTestData();
 		}
@@ -447,7 +450,30 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 		cleanupSession();
 
 		assertAllDataRemoved();
+	}
 
+	private void completeStrayTransaction() {
+		if ( session == null ) {
+			// nothing to do
+			return;
+		}
+
+		if ( ( (SessionImplementor) session ).isClosed() ) {
+			// nothing to do
+			return;
+		}
+
+		if ( !session.isConnected() ) {
+			// nothing to do
+			return;
+		}
+
+		final TransactionCoordinator.TransactionDriver tdc =
+				( (SessionImplementor) session ).getTransactionCoordinator().getTransactionDriverControl();
+
+		if ( tdc.getStatus().canRollback() ) {
+			session.getTransaction().rollback();
+		}
 	}
 
 	protected boolean isCleanupTestDataRequired() {
@@ -465,9 +491,6 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	private void cleanupSession() {
 		if ( session != null && ! ( (SessionImplementor) session ).isClosed() ) {
-			if ( session.isConnected() ) {
-				session.doWork( new RollbackWork() );
-			}
 			session.close();
 		}
 		session = null;

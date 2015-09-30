@@ -5,10 +5,10 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.proxy.pojo.javassist;
+
 import java.io.Serializable;
 import java.lang.reflect.Method;
 
-import org.hibernate.HibernateException;
 import org.hibernate.proxy.AbstractSerializableProxy;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.CompositeType;
@@ -17,64 +17,104 @@ import org.hibernate.type.CompositeType;
  * Serializable placeholder for Javassist proxies
  */
 public final class SerializableProxy extends AbstractSerializableProxy {
+	private final Class persistentClass;
+	private final Class[] interfaces;
 
-	private Class persistentClass;
-	private Class[] interfaces;
-	private Class getIdentifierMethodClass;
-	private Class setIdentifierMethodClass;
-	private String getIdentifierMethodName;
-	private String setIdentifierMethodName;
-	private Class[] setIdentifierMethodParams;
-	private CompositeType componentIdType;
+	private final String identifierGetterMethodName;
+	private final Class identifierGetterMethodClass;
 
-	public SerializableProxy() {
-	}
+	private final String identifierSetterMethodName;
+	private final Class identifierSetterMethodClass;
+	private final Class[] identifierSetterMethodParams;
+
+	private final CompositeType componentIdType;
 
 	public SerializableProxy(
-			final String entityName,
-			final Class persistentClass,
-			final Class[] interfaces,
-			final Serializable id,
-			final Boolean readOnly,
-			final Method getIdentifierMethod,
-			final Method setIdentifierMethod,
+			String entityName,
+			Class persistentClass,
+			Class[] interfaces,
+			Serializable id,
+			Boolean readOnly,
+			Method getIdentifierMethod,
+			Method setIdentifierMethod,
 			CompositeType componentIdType) {
 		super( entityName, id, readOnly );
 		this.persistentClass = persistentClass;
 		this.interfaces = interfaces;
-		if (getIdentifierMethod!=null) {
-			getIdentifierMethodClass = getIdentifierMethod.getDeclaringClass();
-			getIdentifierMethodName = getIdentifierMethod.getName();
+		if ( getIdentifierMethod != null ) {
+			identifierGetterMethodName = getIdentifierMethod.getName();
+			identifierGetterMethodClass = getIdentifierMethod.getDeclaringClass();
 		}
-		if (setIdentifierMethod!=null) {
-			setIdentifierMethodClass = setIdentifierMethod.getDeclaringClass();
-			setIdentifierMethodName = setIdentifierMethod.getName();
-			setIdentifierMethodParams = setIdentifierMethod.getParameterTypes();
+		else {
+			identifierGetterMethodName = null;
+			identifierGetterMethodClass = null;
 		}
+
+		if ( setIdentifierMethod != null ) {
+			identifierSetterMethodName = setIdentifierMethod.getName();
+			identifierSetterMethodClass = setIdentifierMethod.getDeclaringClass();
+			identifierSetterMethodParams = setIdentifierMethod.getParameterTypes();
+		}
+		else {
+			identifierSetterMethodName = null;
+			identifierSetterMethodClass = null;
+			identifierSetterMethodParams = null;
+		}
+
 		this.componentIdType = componentIdType;
 	}
 
+	@Override
+	protected String getEntityName() {
+		return super.getEntityName();
+	}
+
+	@Override
+	protected Serializable getId() {
+		return super.getId();
+	}
+
+	protected Class getPersistentClass() {
+		return persistentClass;
+	}
+
+	protected Class[] getInterfaces() {
+		return interfaces;
+	}
+
+	protected String getIdentifierGetterMethodName() {
+		return identifierGetterMethodName;
+	}
+
+	protected Class getIdentifierGetterMethodClass() {
+		return identifierGetterMethodClass;
+	}
+
+	protected String getIdentifierSetterMethodName() {
+		return identifierSetterMethodName;
+	}
+
+	protected Class getIdentifierSetterMethodClass() {
+		return identifierSetterMethodClass;
+	}
+
+	protected Class[] getIdentifierSetterMethodParams() {
+		return identifierSetterMethodParams;
+	}
+
+	protected CompositeType getComponentIdType() {
+		return componentIdType;
+	}
+
+	/**
+	 * Deserialization hook.  This method is called by JDK deserialization.  We use this hook
+	 * to replace the serial form with a live form.
+	 *
+	 * @return The live form.
+	 */
 	private Object readResolve() {
-		try {
-			HibernateProxy proxy = JavassistLazyInitializer.getProxy(
-				getEntityName(),
-				persistentClass,
-				interfaces,
-				getIdentifierMethodName==null
-						? null
-						: getIdentifierMethodClass.getDeclaredMethod( getIdentifierMethodName, (Class[]) null ),
-				setIdentifierMethodName==null
-						? null 
-						: setIdentifierMethodClass.getDeclaredMethod(setIdentifierMethodName, setIdentifierMethodParams),
-				componentIdType,
-				getId(),
-				null
-			);
-			setReadOnlyBeforeAttachedToSession( ( JavassistLazyInitializer ) proxy.getHibernateLazyInitializer() );
-			return proxy;
-		}
-		catch (NoSuchMethodException nsme) {
-			throw new HibernateException("could not create proxy for entity: " + getEntityName(), nsme);
-		}
+		HibernateProxy proxy = JavassistProxyFactory.deserializeProxy( this );
+		setReadOnlyBeforeAttachedToSession( ( JavassistLazyInitializer ) proxy.getHibernateLazyInitializer() );
+		return proxy;
 	}
 }

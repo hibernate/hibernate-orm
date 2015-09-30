@@ -37,6 +37,10 @@ public class ClassLoaderAccessImpl implements ClassLoaderAccess {
 		this( tempClassLoader, serviceRegistry.getService( ClassLoaderService.class ) );
 	}
 
+	public ClassLoaderAccessImpl(ClassLoaderService classLoaderService) {
+		this( null, classLoaderService );
+	}
+
 	@Override
 	@SuppressWarnings("unchecked")
 	public Class<?> classForName(String name) {

@@ -16,6 +16,7 @@ import java.util.StringTokenizer;
 
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.internal.JoinSequence;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.internal.util.ReflectHelper;
@@ -418,7 +419,7 @@ public class WhereParser implements Parser {
 				Object constant;
 				if (
 						token.indexOf( '.' ) > -1 &&
-						( constant = ReflectHelper.getConstantValue( token ) ) != null
+						( constant = ReflectHelper.getConstantValue( token, q.getFactory().getServiceRegistry().getService( ClassLoaderService.class ) ) ) != null
 				) {
 					Type type;
 					try {

@@ -116,6 +116,19 @@ public abstract class AbstractTransformingClassLoaderInstrumentTestCase extends 
 	}
 
 	@Test
+	@FailureExpected( jiraKey = "HHH-9984")
+	@TestForIssue( jiraKey = "HHH-9984")
+	public void testLazyBasicFieldAccess() {
+		executeExecutable( "org.hibernate.test.instrument.cases.TestLazyBasicFieldAccessExecutable" );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-5255")
+	public void testLazyBasicPropertyAccess() {
+		executeExecutable( "org.hibernate.test.instrument.cases.TestLazyBasicPropertyAccessExecutable" );
+	}
+
+	@Test
 	public void testSharedPKOneToOne() {
 		executeExecutable( "org.hibernate.test.instrument.cases.TestSharedPKOneToOneExecutable" );
 	}

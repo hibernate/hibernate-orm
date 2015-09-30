@@ -16,6 +16,8 @@ import java.util.StringTokenizer;
 
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.Mapping;
@@ -25,6 +27,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.EmptyIterator;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.SingletonIterator;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Alias;
 
 /**
@@ -33,11 +36,12 @@ import org.hibernate.sql.Alias;
  * @author Gavin King
  */
 public abstract class PersistentClass implements AttributeContainer, Serializable, Filterable, MetaAttributable {
-
 	private static final Alias PK_ALIAS = new Alias( 15, "PK" );
 
 	public static final String NULL_DISCRIMINATOR_MAPPING = "null";
 	public static final String NOT_NULL_DISCRIMINATOR_MAPPING = "not null";
+
+	private final MetadataBuildingContext metadataBuildingContext;
 
 	private String entityName;
 
@@ -47,7 +51,6 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	private String proxyInterfaceName;
 	private transient Class proxyInterface;
 
-	private String nodeName;
 	private String jpaEntityName;
 
 	private String discriminatorValue;
@@ -88,6 +91,14 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	private Component declaredIdentifierMapper;
 	private OptimisticLockStyle optimisticLockStyle;
 
+	public PersistentClass(MetadataBuildingContext metadataBuildingContext) {
+		this.metadataBuildingContext = metadataBuildingContext;
+	}
+
+	public ServiceRegistry getServiceRegistry() {
+		return metadataBuildingContext.getBuildingOptions().getServiceRegistry();
+	}
+
 	public String getClassName() {
 		return className;
 	}
@@ -110,14 +121,15 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		if ( className == null ) {
 			return null;
 		}
+
 		try {
 			if ( mappedClass == null ) {
-				mappedClass = ReflectHelper.classForName( className );
+				mappedClass = metadataBuildingContext.getClassLoaderAccess().classForName( className );
 			}
 			return mappedClass;
 		}
-		catch (ClassNotFoundException cnfe) {
-			throw new MappingException( "entity class not found: " + className, cnfe );
+		catch (ClassLoadingException e) {
+			throw new MappingException( "entity class not found: " + className, e );
 		}
 	}
 
@@ -127,12 +139,12 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		}
 		try {
 			if ( proxyInterface == null ) {
-				proxyInterface = ReflectHelper.classForName( proxyInterfaceName );
+				proxyInterface = metadataBuildingContext.getClassLoaderAccess().classForName( proxyInterfaceName );
 			}
 			return proxyInterface;
 		}
-		catch (ClassNotFoundException cnfe) {
-			throw new MappingException( "proxy class not found: " + proxyInterfaceName, cnfe );
+		catch (ClassLoadingException e) {
+			throw new MappingException( "proxy class not found: " + proxyInterfaceName, e );
 		}
 	}
 
@@ -802,14 +814,6 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 	public abstract Object accept(PersistentClassVisitor mv);
 
-	public String getNodeName() {
-		return nodeName;
-	}
-
-	public void setNodeName(String nodeName) {
-		this.nodeName = nodeName;
-	}
-
 	public String getJpaEntityName() {
 		return jpaEntityName;
 	}
@@ -820,10 +824,6 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 	public boolean hasPojoRepresentation() {
 		return getClassName() != null;
-	}
-
-	public boolean hasDom4jRepresentation() {
-		return getNodeName() != null;
 	}
 
 	public boolean hasSubselectLoadableCollections() {

@@ -23,7 +23,7 @@ import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.model.relational.Schema;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -293,8 +293,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	@Override
 	public java.util.Collection<Table> collectTableMappings() {
 		ArrayList<Table> tables = new ArrayList<Table>();
-		for ( Schema schema : database.getSchemas() ) {
-			tables.addAll( schema.getTables() );
+		for ( Namespace namespace : database.getNamespaces() ) {
+			tables.addAll( namespace.getTables() );
 		}
 		return tables;
 	}

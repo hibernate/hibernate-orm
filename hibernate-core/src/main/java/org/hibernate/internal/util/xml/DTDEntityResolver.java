@@ -9,6 +9,7 @@ package org.hibernate.internal.util.xml;
 import java.io.InputStream;
 import java.io.Serializable;
 
+import org.hibernate.boot.jaxb.internal.stax.*;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ConfigHelper;
 
@@ -37,7 +38,11 @@ import org.xml.sax.InputSource;
  * @author Gavin King
  * @author Steve Ebersole
  * @author Hardy Ferentschik
+ *
+ * @deprecated Hibernate now uses StAX for XML processing and the role of this class is served
+ * now by {@link org.hibernate.boot.jaxb.internal.stax.LocalXmlResourceResolver}
  */
+@Deprecated
 public class DTDEntityResolver implements EntityResolver, Serializable {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, DTDEntityResolver.class.getName() );

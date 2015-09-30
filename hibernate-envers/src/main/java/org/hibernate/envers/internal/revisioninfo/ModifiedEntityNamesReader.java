@@ -10,7 +10,8 @@ import java.util.Set;
 
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.tools.ReflectionTools;
-import org.hibernate.property.Getter;
+import org.hibernate.property.access.spi.Getter;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * Returns modified entity names from a persisted revision info entity.
@@ -20,8 +21,11 @@ import org.hibernate.property.Getter;
 public class ModifiedEntityNamesReader {
 	private final Getter modifiedEntityNamesGetter;
 
-	public ModifiedEntityNamesReader(Class<?> revisionInfoClass, PropertyData modifiedEntityNamesData) {
-		modifiedEntityNamesGetter = ReflectionTools.getGetter( revisionInfoClass, modifiedEntityNamesData );
+	public ModifiedEntityNamesReader(
+			Class<?> revisionInfoClass,
+			PropertyData modifiedEntityNamesData,
+			ServiceRegistry serviceRegistry) {
+		modifiedEntityNamesGetter = ReflectionTools.getGetter( revisionInfoClass, modifiedEntityNamesData, serviceRegistry );
 	}
 
 	@SuppressWarnings({"unchecked"})

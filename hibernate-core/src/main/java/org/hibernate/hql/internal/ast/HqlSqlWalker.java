@@ -78,6 +78,7 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.ComponentType;
+import org.hibernate.type.CompositeType;
 import org.hibernate.type.DbTimestampType;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
@@ -389,7 +390,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 					null,
 					false
 			);
-			fromElement = factory.createComponentJoin( (ComponentType) dot.getDataType() );
+			fromElement = factory.createComponentJoin( (CompositeType) dot.getDataType() );
 		}
 		else {
 			fromElement = dot.getImpliedJoin();

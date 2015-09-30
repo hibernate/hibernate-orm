@@ -20,11 +20,11 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.naming.ObjectNameNormalizer;
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
-import org.hibernate.boot.model.relational.Schema;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -45,6 +45,7 @@ import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
@@ -344,25 +345,20 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	}
 
 	@Override
-	public void configure(Type type, Properties params, JdbcEnvironment jdbcEnv) throws MappingException {
+	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
 		identifierType = type;
 
-		final Dialect dialect = jdbcEnv.getDialect();
+		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 
-		qualifiedTableName = determineGeneratorTableName( params, dialect );
-		renderedTableName = jdbcEnv.getQualifiedObjectNameFormatter().format( qualifiedTableName, dialect );
-		segmentColumnName = determineSegmentColumnName( params, dialect );
-		valueColumnName = determineValueColumnName( params, dialect );
+		qualifiedTableName = determineGeneratorTableName( params, jdbcEnvironment );
+		segmentColumnName = determineSegmentColumnName( params, jdbcEnvironment );
+		valueColumnName = determineValueColumnName( params, jdbcEnvironment );
 
 		segmentValue = determineSegmentValue( params );
 
 		segmentValueLength = determineSegmentColumnSize( params );
 		initialValue = determineInitialValue( params );
 		incrementSize = determineIncrementSize( params );
-
-		this.selectQuery = buildSelectQuery( dialect );
-		this.updateQuery = buildUpdateQuery();
-		this.insertQuery = buildInsertQuery();
 
 		// if the increment size is greater than one, we prefer pooled optimization; but we
 		// need to see if the user prefers POOL or POOL_LO...
@@ -388,18 +384,30 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	 *
 	 * @see #getTableName()
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
-	 * @param dialect The dialect in effect
+	 * @param jdbcEnvironment The JDBC environment
 	 * @return The table name to use.
 	 */
 	@SuppressWarnings("UnusedParameters")
-	protected QualifiedName determineGeneratorTableName(Properties params, Dialect dialect) {
-		final ObjectNameNormalizer normalizer = (ObjectNameNormalizer) params.get( IDENTIFIER_NORMALIZER );
+	protected QualifiedName determineGeneratorTableName(Properties params, JdbcEnvironment jdbcEnvironment) {
+		final String tableName = ConfigurationHelper.getString( TABLE_PARAM, params, DEF_TABLE );
 
-		return QualifiedNameParser.INSTANCE.parse(
-				ConfigurationHelper.getString( TABLE_PARAM, params, DEF_TABLE ),
-				normalizer.normalizeIdentifierQuoting( params.getProperty( CATALOG ) ),
-				normalizer.normalizeIdentifierQuoting( params.getProperty( SCHEMA ) )
-		);
+		if ( tableName.contains( "." ) ) {
+			return QualifiedNameParser.INSTANCE.parse( tableName );
+		}
+		else {
+			// todo : need to incorporate implicit catalog and schema names
+			final Identifier catalog = jdbcEnvironment.getIdentifierHelper().toIdentifier(
+					ConfigurationHelper.getString( CATALOG, params )
+			);
+			final Identifier schema = jdbcEnvironment.getIdentifierHelper().toIdentifier(
+					ConfigurationHelper.getString( SCHEMA, params )
+			);
+			return new QualifiedNameParser.NameParts(
+					catalog,
+					schema,
+					jdbcEnvironment.getIdentifierHelper().toIdentifier( tableName )
+			);
+		}
 	}
 
 	/**
@@ -410,14 +418,13 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	 *
 	 * @see #getSegmentColumnName()
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
-	 * @param dialect The dialect in effect
+	 * @param jdbcEnvironment The JDBC environment
 	 * @return The name of the segment column
 	 */
 	@SuppressWarnings("UnusedParameters")
-	protected String determineSegmentColumnName(Properties params, Dialect dialect) {
-		final ObjectNameNormalizer normalizer = (ObjectNameNormalizer) params.get( IDENTIFIER_NORMALIZER );
+	protected String determineSegmentColumnName(Properties params, JdbcEnvironment jdbcEnvironment) {
 		final String name = ConfigurationHelper.getString( SEGMENT_COLUMN_PARAM, params, DEF_SEGMENT_COLUMN );
-		return normalizer.toDatabaseIdentifierText( name );
+		return jdbcEnvironment.getIdentifierHelper().toIdentifier( name ).render( jdbcEnvironment.getDialect() );
 	}
 
 	/**
@@ -427,14 +434,13 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	 *
 	 * @see #getValueColumnName()
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
-	 * @param dialect The dialect in effect
+	 * @param jdbcEnvironment The JDBC environment
 	 * @return The name of the value column
 	 */
 	@SuppressWarnings("UnusedParameters")
-	protected String determineValueColumnName(Properties params, Dialect dialect) {
-		final ObjectNameNormalizer normalizer = (ObjectNameNormalizer) params.get( IDENTIFIER_NORMALIZER );
+	protected String determineValueColumnName(Properties params, JdbcEnvironment jdbcEnvironment) {
 		final String name = ConfigurationHelper.getString( VALUE_COLUMN_PARAM, params, DEF_VALUE_COLUMN );
-		return normalizer.toDatabaseIdentifierText( name );
+		return jdbcEnvironment.getIdentifierHelper().toIdentifier( name ).render( jdbcEnvironment.getDialect() );
 	}
 
 	/**
@@ -661,33 +667,49 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	public void registerExportables(Database database) {
 		final Dialect dialect = database.getJdbcEnvironment().getDialect();
 
-		final Schema schema = database.locateSchema(
+		final Namespace namespace = database.locateNamespace(
 				qualifiedTableName.getCatalogName(),
 				qualifiedTableName.getSchemaName()
 		);
-		final Table table = schema.createTable( qualifiedTableName.getObjectName(), false );
 
-		final Column segmentColumn = new ExportableColumn(
-				database,
-				table,
-				segmentColumnName,
-				StringType.INSTANCE,
-				dialect.getTypeName( Types.VARCHAR, segmentValueLength, 0, 0 )
+		Table table = namespace.locateTable( qualifiedTableName.getObjectName() );
+		if ( table == null ) {
+			table = namespace.createTable( qualifiedTableName.getObjectName(), false );
+
+			// todo : note sure the best solution here.  do we add the columns if missing?  other?
+			final Column segmentColumn = new ExportableColumn(
+					database,
+					table,
+					segmentColumnName,
+					StringType.INSTANCE,
+					dialect.getTypeName( Types.VARCHAR, segmentValueLength, 0, 0 )
+			);
+			segmentColumn.setNullable( false );
+			table.addColumn( segmentColumn );
+
+			// lol
+			table.setPrimaryKey( new PrimaryKey() );
+			table.getPrimaryKey().setTable( table );
+			table.getPrimaryKey().addColumn( segmentColumn );
+
+			final Column valueColumn = new ExportableColumn(
+					database,
+					table,
+					valueColumnName,
+					LongType.INSTANCE
+			);
+			table.addColumn( valueColumn );
+		}
+
+		// allow physical naming strategies a chance to kick in
+		this.renderedTableName = database.getJdbcEnvironment().getQualifiedObjectNameFormatter().format(
+				table.getQualifiedTableName(),
+				dialect
 		);
-		segmentColumn.setNullable( false );
-		table.addColumn( segmentColumn );
 
-		// lol
-		table.setPrimaryKey( new PrimaryKey() );
-		table.getPrimaryKey().setTable( table );
-		table.getPrimaryKey().addColumn( segmentColumn );
+		this.selectQuery = buildSelectQuery( dialect );
+		this.updateQuery = buildUpdateQuery();
+		this.insertQuery = buildInsertQuery();
 
-		final Column valueColumn = new ExportableColumn(
-				database,
-				table,
-				valueColumnName,
-				LongType.INSTANCE
-		);
-		table.addColumn( valueColumn );
 	}
 }

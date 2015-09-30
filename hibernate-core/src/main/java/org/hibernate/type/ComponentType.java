@@ -31,9 +31,6 @@ import org.hibernate.tuple.StandardProperty;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.tuple.component.ComponentTuplizer;
 
-import org.dom4j.Element;
-import org.dom4j.Node;
-
 /**
  * Handles "component" mappings
  *
@@ -703,21 +700,6 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	}
 
 	@Override
-	public boolean isXMLElement() {
-		return true;
-	}
-
-	@Override
-	public Object fromXMLNode(Node xml, Mapping factory) throws HibernateException {
-		return xml;
-	}
-
-	@Override
-	public void setToXMLNode(Node node, Object value, SessionFactoryImplementor factory) throws HibernateException {
-		replaceNode( node, (Element) value );
-	}
-
-	@Override
 	public boolean[] toColumnNullness(Object value, Mapping mapping) {
 		boolean[] result = new boolean[getColumnSpan( mapping )];
 		if ( value == null ) {
@@ -738,6 +720,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		return false;
 	}
 
+	@Override
 	public int getPropertyIndex(String name) {
 		String[] names = getPropertyNames();
 		for ( int i = 0, max = names.length; i < max; i++ ) {
@@ -832,6 +815,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		return resolve( values, session, null );
 	}
 
+	@Override
 	public boolean hasNotNullProperty() {
 		return hasNotNullProperty;
 	}

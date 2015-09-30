@@ -10,21 +10,22 @@ import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collections;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
-import org.hibernate.boot.model.relational.Schema;
-import org.hibernate.boot.model.relational.SimpleAuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -56,12 +57,15 @@ public class SequenceGenerator
 	/**
 	 * The parameters parameter, appended to the create sequence DDL.
 	 * For example (Oracle): <tt>INCREMENT BY 1 START WITH 1 MAXVALUE 100 NOCACHE</tt>.
+	 *
+	 * @deprecated No longer supported.  To specify initial-value or increment use the
+	 * org.hibernate.id.enhanced.SequenceStyleGenerator generator instead.
 	 */
+	@Deprecated
 	public static final String PARAMETERS = "parameters";
 
-	private QualifiedName qualifiedSequenceName;
+	private QualifiedName logicalQualifiedSequenceName;
 	private String sequenceName;
-	private String parameters;
 	private Type identifierType;
 	private String sql;
 
@@ -79,20 +83,25 @@ public class SequenceGenerator
 
 	@Override
 	@SuppressWarnings("StatementWithEmptyBody")
-	public void configure(Type type, Properties params, JdbcEnvironment jdbcEnv) throws MappingException {
-		identifierType = type;
-		parameters = params.getProperty( PARAMETERS );
+	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+		DeprecationLogger.DEPRECATION_LOGGER.deprecatedSequenceGenerator( getClass().getName() );
 
-		final Dialect dialect = jdbcEnv.getDialect();
-		final ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );
-		qualifiedSequenceName = QualifiedNameParser.INSTANCE.parse(
+		identifierType = type;
+
+		final ObjectNameNormalizer normalizer = (ObjectNameNormalizer) params.get( IDENTIFIER_NORMALIZER );
+		logicalQualifiedSequenceName = QualifiedNameParser.INSTANCE.parse(
 				ConfigurationHelper.getString( SEQUENCE, params, "hibernate_sequence" ),
 				normalizer.normalizeIdentifierQuoting( params.getProperty( CATALOG ) ),
 				normalizer.normalizeIdentifierQuoting( params.getProperty( SCHEMA ) )
 		);
-		sequenceName = jdbcEnv.getQualifiedObjectNameFormatter().format( qualifiedSequenceName, dialect );
 
-		sql = dialect.getSequenceNextValString( sequenceName );
+		if ( params.containsKey( PARAMETERS ) ) {
+			LOG.warn(
+					"Use of 'parameters' config setting is no longer supported; " +
+							"to specify initial-value or increment use the " +
+							"org.hibernate.id.enhanced.SequenceStyleGenerator generator instead."
+			);
+		}
 	}
 
 	@Override
@@ -138,16 +147,12 @@ public class SequenceGenerator
 	@Override
 	@SuppressWarnings( {"deprecation"})
 	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
-		String[] ddl = dialect.getCreateSequenceStrings( sequenceName );
-		if ( parameters != null ) {
-			ddl[ddl.length - 1] += ' ' + parameters;
-		}
-		return ddl;
+		return dialect.getCreateSequenceStrings( sequenceName, 1, 1 );
 	}
 
 	@Override
 	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
-		return dialect.getDropSequenceStrings(sequenceName);
+		return dialect.getDropSequenceStrings( sequenceName );
 	}
 
 	@Override
@@ -162,21 +167,29 @@ public class SequenceGenerator
 
 	@Override
 	public void registerExportables(Database database) {
-		// we cannot register a proper Sequence object here because of the free-form
-		//'parameters' as opposed to specific initialValue/increment values
-
-		final Schema schema = database.locateSchema(
-				qualifiedSequenceName.getCatalogName(),
-				qualifiedSequenceName.getSchemaName()
+		final Namespace namespace = database.locateNamespace(
+				logicalQualifiedSequenceName.getCatalogName(),
+				logicalQualifiedSequenceName.getSchemaName()
 		);
+		Sequence sequence = namespace.locateSequence( logicalQualifiedSequenceName.getObjectName() );
+		if ( sequence != null ) {
+			sequence.validate( 1, 1 );
+		}
+		else {
+			sequence = namespace.createSequence(
+					logicalQualifiedSequenceName.getObjectName(),
+					1,
+					1
+			);
+		}
 
-		database.addAuxiliaryDatabaseObject(
-				new SimpleAuxiliaryDatabaseObject(
-						schema,
-						sqlCreateStrings( database.getDialect() ),
-						sqlDropStrings( database.getDialect() ),
-						Collections.<String>emptySet()
-				)
+		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
+		final Dialect dialect = jdbcEnvironment.getDialect();
+
+		this.sequenceName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+				sequence.getName(),
+				dialect
 		);
+		this.sql = jdbcEnvironment.getDialect().getSequenceNextValString( sequenceName );
 	}
 }

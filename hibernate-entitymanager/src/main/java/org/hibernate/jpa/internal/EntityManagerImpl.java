@@ -19,7 +19,8 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
-import org.hibernate.annotations.common.util.ReflectHelper;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.ejb.AbstractEntityManagerImpl;
 import org.hibernate.engine.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -66,11 +67,11 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl implements Sess
 				sessionInterceptorClass = (Class) localSessionInterceptor;
 			}
 			else if (localSessionInterceptor instanceof String) {
+				final ClassLoaderService cls = entityManagerFactory.getSessionFactory().getServiceRegistry().getService( ClassLoaderService.class );
 				try {
-					sessionInterceptorClass =
-							ReflectHelper.classForName( (String) localSessionInterceptor, EntityManagerImpl.class );
+					sessionInterceptorClass = cls.classForName( (String) localSessionInterceptor );
 				}
-				catch (ClassNotFoundException e) {
+				catch (ClassLoadingException e) {
 					throw new PersistenceException("Unable to instanciate interceptor: " + localSessionInterceptor, e);
 				}
 			}
@@ -128,7 +129,7 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl implements Sess
 					throw new PersistenceException("Session interceptor does not implement Interceptor: " + sessionInterceptorClass, e);
 				}
 			}
-			sessionBuilder.autoJoinTransactions( getTransactionType() != PersistenceUnitTransactionType.JTA );
+			sessionBuilder.autoJoinTransactions( getSynchronizationType() == SynchronizationType.SYNCHRONIZED );
 			session = sessionBuilder.openSession();
 		}
 		return session;
@@ -250,7 +251,7 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl implements Sess
 			}
 
 			if ( !successful && EntityManagerImpl.this.getTransactionType() == PersistenceUnitTransactionType.JTA ) {
-				((Session) session).clear();
+				session.clear();
 			}
 		}
 	}

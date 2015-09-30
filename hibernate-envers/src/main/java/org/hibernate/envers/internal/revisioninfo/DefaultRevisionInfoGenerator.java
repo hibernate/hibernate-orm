@@ -19,7 +19,8 @@ import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.synchronization.SessionCacheCleaner;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.property.Setter;
+import org.hibernate.property.access.spi.Setter;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -34,15 +35,17 @@ public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
 	private final SessionCacheCleaner sessionCacheCleaner;
 
 	public DefaultRevisionInfoGenerator(
-			String revisionInfoEntityName, Class<?> revisionInfoClass,
+			String revisionInfoEntityName,
+			Class<?> revisionInfoClass,
 			Class<? extends RevisionListener> listenerClass,
 			PropertyData revisionInfoTimestampData,
-			boolean timestampAsDate) {
+			boolean timestampAsDate,
+			ServiceRegistry serviceRegistry) {
 		this.revisionInfoEntityName = revisionInfoEntityName;
 		this.revisionInfoClass = revisionInfoClass;
 		this.timestampAsDate = timestampAsDate;
 
-		revisionTimestampSetter = ReflectionTools.getSetter( revisionInfoClass, revisionInfoTimestampData );
+		revisionTimestampSetter = ReflectionTools.getSetter( revisionInfoClass, revisionInfoTimestampData, serviceRegistry );
 
 		if ( !listenerClass.equals( RevisionListener.class ) ) {
 			// This is not the default value.

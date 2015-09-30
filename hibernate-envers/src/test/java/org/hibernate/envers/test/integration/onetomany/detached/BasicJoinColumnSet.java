@@ -106,8 +106,12 @@ public class BasicJoinColumnSet extends BaseEnversJPAFunctionalTestCase {
 
 	@Test
 	public void testHistoryOfColl1() {
-		StrTestEntity str1 = getEntityManager().find( StrTestEntity.class, str1_id );
-		StrTestEntity str2 = getEntityManager().find( StrTestEntity.class, str2_id );
+		EntityManager entityManager = getEntityManager();
+		entityManager.getTransaction().begin();
+		StrTestEntity str1 = entityManager.find( StrTestEntity.class, str1_id );
+		StrTestEntity str2 = entityManager.find( StrTestEntity.class, str2_id );
+
+		entityManager.getTransaction().commit();
 
 		SetJoinColumnRefCollEntity rev1 = getAuditReader().find( SetJoinColumnRefCollEntity.class, coll1_id, 1 );
 		SetJoinColumnRefCollEntity rev2 = getAuditReader().find( SetJoinColumnRefCollEntity.class, coll1_id, 2 );

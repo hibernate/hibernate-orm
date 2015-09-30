@@ -13,13 +13,12 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
 import org.hibernate.boot.archive.scan.internal.StandardScanOptions;
+import org.hibernate.boot.archive.scan.internal.StandardScanParameters;
 import org.hibernate.boot.archive.scan.internal.StandardScanner;
 import org.hibernate.boot.archive.scan.spi.ClassDescriptor;
-import org.hibernate.boot.archive.scan.spi.JandexInitializer;
 import org.hibernate.boot.archive.scan.spi.MappingFileDescriptor;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
-import org.hibernate.boot.archive.scan.spi.ScanParameters;
 import org.hibernate.boot.archive.scan.spi.ScanResult;
 import org.hibernate.boot.archive.scan.spi.Scanner;
 import org.hibernate.cfg.AvailableSettings;
@@ -53,14 +52,7 @@ public class ScannerTest extends PackagingTestCase {
 		ScanResult scanResult = scanner.scan(
 				env,
 				options,
-				new ScanParameters() {
-//					private final JandexInitManager jandexInitManager = new JandexInitManager();
-					@Override
-					public JandexInitializer getJandexInitializer() {
-//						return jandexInitManager;
-						return null;
-					}
-				}
+				StandardScanParameters.INSTANCE
 		);
 
 		assertEquals( 3, scanResult.getLocatedClasses().size() );

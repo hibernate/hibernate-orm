@@ -30,9 +30,13 @@ public interface ExtractionContext {
 	Identifier getDefaultCatalog();
 	Identifier getDefaultSchema();
 
-	public static interface DatabaseObjectAccess {
-		public TableInformation locateTableInformation(QualifiedTableName tableName);
-		public SequenceInformation locateSequenceInformation(QualifiedSequenceName sequenceName);
+	/**
+	 * In conjunction with {@link #getDatabaseObjectAccess()} provides access to
+	 * information about known database objects to the extractor.
+	 */
+	interface DatabaseObjectAccess {
+		TableInformation locateTableInformation(QualifiedTableName tableName);
+		SequenceInformation locateSequenceInformation(QualifiedSequenceName sequenceName);
 	}
 
 	DatabaseObjectAccess getDatabaseObjectAccess();

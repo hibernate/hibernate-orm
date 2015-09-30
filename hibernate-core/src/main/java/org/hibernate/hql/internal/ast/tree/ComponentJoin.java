@@ -11,7 +11,7 @@ import org.hibernate.hql.internal.NameGenerator;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.PropertyMapping;
-import org.hibernate.type.ComponentType;
+import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
 /**
@@ -21,7 +21,7 @@ import org.hibernate.type.Type;
  */
 public class ComponentJoin extends FromElement {
 	private final String componentPath;
-	private final ComponentType componentType;
+	private final CompositeType componentType;
 
 	private final String componentProperty;
 	private final String[] columns;
@@ -32,7 +32,7 @@ public class ComponentJoin extends FromElement {
 			FromElement origin,
 			String alias,
 			String componentPath,
-			ComponentType componentType) {
+			CompositeType componentType) {
 		super( fromClause, origin, alias );
 		this.componentPath = componentPath;
 		this.componentType = componentType;
@@ -60,7 +60,7 @@ public class ComponentJoin extends FromElement {
 		return componentProperty;
 	}
 
-	public ComponentType getComponentType() {
+	public CompositeType getComponentType() {
 		return componentType;
 	}
 

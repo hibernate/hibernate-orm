@@ -103,7 +103,7 @@ import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.procedure.UnknownSqlResultSetMappingException;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.resource.transaction.TransactionCoordinator;
+import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
 import org.hibernate.transform.BasicTransformerAdapter;
 import org.hibernate.type.Type;
 
@@ -165,12 +165,13 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		return transactionType;
 	}
 
+	public SynchronizationType getSynchronizationType() {
+		return synchronizationType;
+	}
+
 	protected void postInit() {
-		//register in Sync if needed
-		if ( transactionType == PersistenceUnitTransactionType.JTA
-				&& synchronizationType == SynchronizationType.SYNCHRONIZED ) {
-			joinTransaction( false );
-		}
+		// NOTE : pulse() already handles auto-join-ability correctly
+		( (SessionImplementor) internalGetSession() ).getTransactionCoordinator().pulse();
 
 		setDefaultProperties();
 		applyProperties();
@@ -742,7 +743,9 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			return createNamedJpqlQuery( jpqlDefinition, resultType );
 		}
 
-		final NamedSQLQueryDefinition nativeQueryDefinition = sfi.getNamedQueryRepository().getNamedSQLQueryDefinition(	name );
+		final NamedSQLQueryDefinition nativeQueryDefinition = sfi.getNamedQueryRepository().getNamedSQLQueryDefinition(
+				name
+		);
 		if ( nativeQueryDefinition != null ) {
 			return createNamedSqlQuery( nativeQueryDefinition, resultType );
 		}
@@ -1488,7 +1491,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	@Override
 	public void markForRollbackOnly() {
-		LOG.debugf("Mark transaction for rollback");
+		LOG.debugf( "Mark transaction for rollback" );
 		if ( tx.isActive() ) {
 			tx.setRollbackOnly();
 		}
@@ -1536,8 +1539,10 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 
 		try {
-			final TransactionCoordinator transactionCoordinator = ((SessionImplementor) internalGetSession()).getTransactionCoordinator();
-			transactionCoordinator.explicitJoin();
+			( (SessionImplementor) internalGetSession() ).getTransactionCoordinator().explicitJoin();
+		}
+		catch (TransactionRequiredForJoinException e) {
+			throw new TransactionRequiredException( e.getMessage() );
 		}
 		catch (HibernateException he) {
 			throw convert( he );

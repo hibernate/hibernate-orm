@@ -17,6 +17,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.spi.BasicProxyFactory;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.proxy.pojo.javassist.JavassistProxyFactory;
 
@@ -32,7 +33,8 @@ public class ProxyFactoryFactoryImpl implements ProxyFactoryFactory {
 	 *
 	 * @return a new Javassist-based proxy factory.
 	 */
-	public ProxyFactory buildProxyFactory() {
+	@Override
+	public ProxyFactory buildProxyFactory(SessionFactoryImplementor sessionFactory) {
 		return new JavassistProxyFactory();
 	}
 
@@ -44,6 +46,7 @@ public class ProxyFactoryFactoryImpl implements ProxyFactoryFactory {
 	 *
 	 * @return The constructed BasicProxyFactoryImpl
 	 */
+	@Override
 	public BasicProxyFactory buildBasicProxyFactory(Class superClass, Class[] interfaces) {
 		return new BasicProxyFactoryImpl( superClass, interfaces );
 	}

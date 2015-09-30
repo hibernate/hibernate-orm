@@ -8,8 +8,6 @@ package org.hibernate.jpa.test.transaction;
 
 import javax.persistence.EntityManager;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
@@ -50,8 +48,8 @@ public class TransactionJoinHandlingChecker {
 		session.getFlushMode();
 		assertTrue( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
 		assertTrue( transactionCoordinator.isActive() );
-		assertFalse( transactionCoordinator.isSynchronizationRegistered() );
 		assertFalse( transactionCoordinator.isJoined() );
+		assertFalse( transactionCoordinator.isSynchronizationRegistered() );
 
 		entityManager.joinTransaction();
 		assertTrue( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );

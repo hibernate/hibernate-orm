@@ -13,11 +13,12 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.InitCommand;
-import org.hibernate.boot.model.relational.Schema;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -38,13 +39,13 @@ import org.hibernate.tool.schema.spi.Target;
 public class SchemaCreatorImpl implements SchemaCreator {
 
 	@Override
-	public void doCreation(Metadata metadata, boolean createSchemas, List<Target> targets) throws SchemaManagementException {
-		doCreation( metadata, createSchemas, targets.toArray( new Target[ targets.size() ] ) );
+	public void doCreation(Metadata metadata, boolean createNamespaces, List<Target> targets) throws SchemaManagementException {
+		doCreation( metadata, createNamespaces, targets.toArray( new Target[ targets.size() ] ) );
 	}
 
 	@Override
-	public void doCreation(Metadata metadata, boolean createSchemas, Dialect dialect, List<Target> targets) throws SchemaManagementException {
-		doCreation( metadata, createSchemas, dialect, targets.toArray( new Target[ targets.size() ] ) );
+	public void doCreation(Metadata metadata, boolean createNamespaces, Dialect dialect, List<Target> targets) throws SchemaManagementException {
+		doCreation( metadata, createNamespaces, dialect, targets.toArray( new Target[ targets.size() ] ) );
 	}
 
 	/**
@@ -54,11 +55,11 @@ public class SchemaCreatorImpl implements SchemaCreator {
 	 *
 	 * @return The generation commands
 	 */
-	public List<String> generateCreationCommands(Metadata metadata, boolean createSchemas) {
+	public List<String> generateCreationCommands(Metadata metadata, boolean createNamespaces) {
 		final ArrayList<String> commands = new ArrayList<String>();
 		doCreation(
 				metadata,
-				createSchemas,
+				createNamespaces,
 				new Target() {
 					@Override
 					public boolean acceptsImportScriptActions() {
@@ -86,16 +87,16 @@ public class SchemaCreatorImpl implements SchemaCreator {
 	 * For temporary use from JPA schema generation
 	 *
 	 * @param metadata The metadata for which to generate the creation commands.
-	 * @param createSchemas Should the schema(s) actually be created as well ({@code CREATE SCHEMA})?
+	 * @param createNamespaces Should the schema(s)/catalog(s) actually be created as well ({@code CREATE SCHEMA})?
 	 * @param dialect Allow explicitly passing the Dialect to use.
 	 *
 	 * @return The generation commands
 	 */
-	public List<String> generateCreationCommands(Metadata metadata, boolean createSchemas, Dialect dialect) {
+	public List<String> generateCreationCommands(Metadata metadata, boolean createNamespaces, Dialect dialect) {
 		final ArrayList<String> commands = new ArrayList<String>();
 		doCreation(
 				metadata,
-				createSchemas,
+				createNamespaces,
 				dialect,
 				new Target() {
 
@@ -122,19 +123,30 @@ public class SchemaCreatorImpl implements SchemaCreator {
 	}
 
 	@Override
-	public void doCreation(Metadata metadata, boolean createSchemas, Target... targets)
+	public void doCreation(Metadata metadata, boolean createNamespaces, Target... targets)
 			throws SchemaManagementException {
 		doCreation(
 				metadata,
-				createSchemas,
+				createNamespaces,
 				metadata.getDatabase().getJdbcEnvironment().getDialect(),
 				targets
 		);
 	}
 
 	@Override
-	public void doCreation(Metadata metadata, boolean createSchemas, Dialect dialect, Target... targets)
+	public void doCreation(Metadata metadata, boolean createNamespaces, Dialect dialect, Target... targets)
 			throws SchemaManagementException {
+		boolean tryToCreateCatalogs = false;
+		boolean tryToCreateSchemas = false;
+		if ( createNamespaces ) {
+			if ( dialect.canCreateSchema() ) {
+				tryToCreateSchemas = true;
+			}
+			if ( dialect.canCreateCatalog() ) {
+				tryToCreateCatalogs = true;
+			}
+		}
+
 		final Database database = metadata.getDatabase();
 		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
 
@@ -144,13 +156,32 @@ public class SchemaCreatorImpl implements SchemaCreator {
 
 		final Set<String> exportIdentifiers = new HashSet<String>( 50 );
 
-		// first, create each schema
-		for ( Schema schema : database.getSchemas() ) {
-			if ( createSchemas ) {
-				if ( schema.getName().getSchema() == null ) {
-					continue;
+		// first, create each catalog/schema
+		if ( tryToCreateCatalogs || tryToCreateSchemas ) {
+			Set<Identifier> exportedCatalogs = new HashSet<Identifier>();
+			for ( Namespace namespace : database.getNamespaces() ) {
+
+				if ( tryToCreateCatalogs ) {
+					final Identifier catalogLogicalName = namespace.getName().getCatalog();
+					final Identifier catalogPhysicalName = namespace.getPhysicalName().getCatalog();
+
+					if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName ) ) {
+						applySqlStrings(
+								targets,
+								dialect.getCreateCatalogCommand( catalogPhysicalName.render( dialect ) )
+						);
+						exportedCatalogs.add( catalogLogicalName );
+					}
 				}
-				applySqlStrings( targets, dialect.getCreateSchemaCommand( schema.getName().getSchema().render( dialect ) ) );
+
+				if ( tryToCreateSchemas && namespace.getPhysicalName().getSchema() != null ) {
+					applySqlStrings(
+							targets,
+							dialect.getCreateSchemaCommand(
+									namespace.getPhysicalName().getSchema().render( dialect )
+							)
+					);
+				}
 			}
 		}
 
@@ -161,6 +192,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			}
 
 			if ( auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
+				checkExportIdentifier( auxiliaryDatabaseObject, exportIdentifiers );
 				applySqlStrings(
 						targets,
 						dialect.getAuxiliaryDatabaseObjectExporter().getSqlCreateStrings(
@@ -172,10 +204,10 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		}
 
 		// then, create all schema objects (tables, sequences, constraints, etc) in each schema
-		for ( Schema schema : database.getSchemas() ) {
+		for ( Namespace namespace : database.getNamespaces() ) {
 
 			// sequences
-			for ( Sequence sequence : schema.getSequences() ) {
+			for ( Sequence sequence : namespace.getSequences() ) {
 				checkExportIdentifier( sequence, exportIdentifiers );
 				applySqlStrings(
 						targets,
@@ -188,7 +220,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			}
 
 			// tables
-			for ( Table table : schema.getTables() ) {
+			for ( Table table : namespace.getTables() ) {
 				if( !table.isPhysicalTable() ){
 					continue;
 				}
@@ -201,7 +233,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			}
 
 
-			for ( Table table : schema.getTables() ) {
+			for ( Table table : namespace.getTables() ) {
 
 				// NOTE : Foreign keys must be created *after* unique keys for numerous DBs.  See HHH-8390
 

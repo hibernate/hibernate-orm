@@ -1,0 +1,55 @@
+[[obtaining]]
+== Obtaining Hibernate
+
+=== The Hibernate Modules/Artifacts
+
+Hibernate's functionality is split into a number of modules/artifacts meant to isolate dependencies (modularity).
+
+hibernate-core:: The main (core) Hibernate module.  Defines its ORM features and APIs as well as the various integration SPIs.
+hibernate-entitymanager:: Defines Hibernate's support for link:$$http://jcp.org/en/jsr/detail?id=317$$[JPA]
+hibernate-java8:: Support for using Java8 specific data-types such as any of the JSR 310 Date/Time types in domain model.
+hibernate-envers:: Hibernate's historical entity versioning feature
+hibernate-spatial:: Hibernate's Spatial/GIS data-type support
+hibernate-osgi:: Hibernate support for running in OSGi containers.
+hibernate-c3p0:: Integrates the link:$$http://www.mchange.com/projects/c3p0/$$[C3P0] connection pooling library into Hibernate
+hibernate-hikaricp:: Integrates the link:$$http://brettwooldridge.github.io/HikariCP/$$[HikariCP] connection pooling library into Hibernate
+hibernate-proxool:: Integrates the link:$$http://proxool.sourceforge.net/$$[Proxool] connection pooling library into Hibernate
+hibernate-ehcache:: Integrates the link:$$http://ehcache.org/$$[Ehcache] caching library into Hibernate as a second-level cache provider.
+hibernate-infinispan:: Integrates the link:$$http://infinispan.org/$$[Infinispan] caching library into Hibernate as a second-level cache provider.
+
+
+=== Release Bundle Downloads
+
+The Hibernate team provides release bundles hosted on the SourceForge File Release System, in both
+`TGZ` and `ZIP` formats.  Each release bundle contains `JAR` files, documentation, source code, and other goodness.
+
+You can download releases of Hibernate, in your chosen format, from the list at
+https://sourceforge.net/projects/hibernate/files/hibernate-orm/.  The release bundle is structured as follows:
+
+* The `lib/required/` directory contains the `hibernate-core` jar and all of its dependencies.  All of these jars are
+required to be available on your classpath no matter which features of Hibernate are being used.
+* The `/lib/jpa/` directory contains the `hibernate-entitymanager` jar as well as all of its dependencies (beyond
+those in `lib/required/`)
+* The `lib/java8/` directory contains the `hibernate-java8` jar and all of its dependencies (beyond those in `lib/required/`)
+* The `lib/envers` directory contains the `hibernate-envers` jar and all of its dependencies (beyond those in
+`lib/required/` and `lib/jpa/`).
+* The `lib/spatial/` directory contains the `hibernate-spatial` jar and all of its dependencies (beyond those in `lib/required/`)
+* The `lib/osgi/` directory contains the `hibernate-osgi` jar and all of its dependencies (beyond those in `lib/required/` and `lib/jpa/`)
+* The `lib/optional/` directory contains the jars needed for the various connection pooling and second-level cache integrations
+provided by Hibernate, along with their dependencies.
+
+
+=== Maven Repository Artifacts
+
+The authoritative repository for Hibernate artifacts is the JBoss Maven repository.  The Hibernate artifacts are
+synced to Maven Central as part of an automated job (some small delay may occur).
+
+The team responsible for the JBoss Maven repository maintains a number of Wiki pages that contain important information:
+
+* http://community.jboss.org/docs/DOC-14900 - General information about the repository.
+* http://community.jboss.org/docs/DOC-15170 - Information about setting up the JBoss repositories in order to do
+development work on JBoss projects themselves.
+* http://community.jboss.org/docs/DOC-15169 - Information about setting up access to the repository to use JBoss
+projects as part of your own software.
+
+The Hibernate ORM artifacts are published under the `org.hibernate` groupId.

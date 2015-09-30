@@ -6,135 +6,101 @@
  */
 package org.hibernate.test.bytecode.enhancement;
 
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
-import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.ManagedEntity;
-
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.test.bytecode.enhancement.entity.Address;
-import org.hibernate.test.bytecode.enhancement.entity.Country;
-import org.hibernate.test.bytecode.enhancement.entity.SimpleEntity;
-import org.hibernate.test.bytecode.enhancement.entity.SubEntity;
+import org.hibernate.test.bytecode.enhancement.association.ManyToManyAssociationTestTask;
+import org.hibernate.test.bytecode.enhancement.association.OneToManyAssociationTestTask;
+import org.hibernate.test.bytecode.enhancement.association.OneToOneAssociationTestTask;
+import org.hibernate.test.bytecode.enhancement.basic.BasicEnhancementTestTask;
+import org.hibernate.test.bytecode.enhancement.dirty.DirtyTrackingTestTask;
+import org.hibernate.test.bytecode.enhancement.field.FieldAccessBidirectionalTestTasK;
+import org.hibernate.test.bytecode.enhancement.field.FieldAccessEnhancementTestTask;
+import org.hibernate.test.bytecode.enhancement.join.HHH3949TestTask1;
+import org.hibernate.test.bytecode.enhancement.join.HHH3949TestTask2;
+import org.hibernate.test.bytecode.enhancement.join.HHH3949TestTask3;
+import org.hibernate.test.bytecode.enhancement.join.HHH3949TestTask4;
+import org.hibernate.test.bytecode.enhancement.lazy.LazyBasicFieldNotInitializedTestTask;
+import org.hibernate.test.bytecode.enhancement.lazy.LazyLoadingIntegrationTestTask;
+import org.hibernate.test.bytecode.enhancement.lazy.LazyLoadingTestTask;
+import org.hibernate.test.bytecode.enhancement.lazy.basic.LazyBasicFieldAccessTestTask;
+import org.hibernate.test.bytecode.enhancement.lazy.basic.LazyBasicPropertyAccessTestTask;
+import org.hibernate.test.bytecode.enhancement.merge.CompositeMergeTestTask;
+import org.hibernate.test.bytecode.enhancement.pk.EmbeddedPKTestTask;
 import org.junit.Test;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-
 /**
- * @author Steve Ebersole
+ * @author Luis Barreiro
  */
 public class EnhancerTest extends BaseUnitTestCase {
 
-    @Test
-    public void testEnhancement() throws Exception {
-        testFor(SimpleEntity.class);
-        testFor(SubEntity.class);
-    }
+	@Test
+	public void testBasic() {
+		EnhancerTestUtils.runEnhancerTestTask( BasicEnhancementTestTask.class );
+	}
 
-    private void testFor(Class<?> entityClassToEnhance) throws Exception {
-        ClassLoader cl = new ClassLoader() {};
-        Class<?> entityClass = EnhancerTestUtils.enhanceAndDecompile(entityClassToEnhance, cl);
-        Object entityInstance = entityClass.newInstance();
+	@Test
+	public void testDirty() {
+		EnhancerTestUtils.runEnhancerTestTask( DirtyTrackingTestTask.class );
+	}
 
-        assertTyping(ManagedEntity.class, entityInstance);
+	@Test
+	public void testAssociation() {
+		EnhancerTestUtils.runEnhancerTestTask( OneToOneAssociationTestTask.class );
+		EnhancerTestUtils.runEnhancerTestTask( OneToManyAssociationTestTask.class );
+		EnhancerTestUtils.runEnhancerTestTask( ManyToManyAssociationTestTask.class );
+	}
 
-        // call the new methods
-        Method setter = entityClass.getMethod(EnhancerConstants.ENTITY_ENTRY_SETTER_NAME, EntityEntry.class);
-        Method getter = entityClass.getMethod(EnhancerConstants.ENTITY_ENTRY_GETTER_NAME);
+	@Test
+	public void testLazy() {
+		EnhancerTestUtils.runEnhancerTestTask( LazyLoadingTestTask.class );
+		EnhancerTestUtils.runEnhancerTestTask( LazyLoadingIntegrationTestTask.class );
 
-        assertNull(getter.invoke(entityInstance));
-        setter.invoke(entityInstance, EnhancerTestUtils.makeEntityEntry());
-        assertNotNull(getter.invoke(entityInstance));
-        setter.invoke(entityInstance, new Object[] { null } );
-        assertNull(getter.invoke(entityInstance));
+		EnhancerTestUtils.runEnhancerTestTask( LazyBasicPropertyAccessTestTask.class );
+		EnhancerTestUtils.runEnhancerTestTask( LazyBasicFieldAccessTestTask.class );
+	}
 
-        Method entityInstanceGetter = entityClass.getMethod(EnhancerConstants.ENTITY_INSTANCE_GETTER_NAME);
-        assertSame(entityInstance, entityInstanceGetter.invoke(entityInstance));
+	@Test
+	public void testMerge() {
+		EnhancerTestUtils.runEnhancerTestTask( CompositeMergeTestTask.class );
+	}
 
-        Method previousGetter = entityClass.getMethod(EnhancerConstants.PREVIOUS_GETTER_NAME);
-        Method previousSetter = entityClass.getMethod(EnhancerConstants.PREVIOUS_SETTER_NAME, ManagedEntity.class);
-        previousSetter.invoke(entityInstance, entityInstance);
-        assertSame(entityInstance, previousGetter.invoke(entityInstance));
+	@Test
+	public void testEmbeddedPK() {
+		EnhancerTestUtils.runEnhancerTestTask( EmbeddedPKTestTask.class );
+	}
 
-        Method nextGetter = entityClass.getMethod(EnhancerConstants.PREVIOUS_GETTER_NAME);
-        Method nextSetter = entityClass.getMethod(EnhancerConstants.PREVIOUS_SETTER_NAME, ManagedEntity.class);
-        nextSetter.invoke( entityInstance, entityInstance );
-        assertSame( entityInstance, nextGetter.invoke( entityInstance ) );
+	@Test
+	public void testFieldAccess() {
+		EnhancerTestUtils.runEnhancerTestTask( FieldAccessEnhancementTestTask.class );
+		EnhancerTestUtils.runEnhancerTestTask( FieldAccessBidirectionalTestTasK.class );
+	}
 
-        entityClass.getMethod("getId").invoke(entityInstance);
-        entityClass.getMethod("setId", Long.class).invoke(entityInstance, entityClass.getMethod("getId").invoke(entityInstance));
-        entityClass.getMethod("setId", Long.class).invoke(entityInstance, 1L);
-        EnhancerTestUtils.checkDirtyTracking(entityInstance, "id");
+	@Test
+	@TestForIssue( jiraKey = "HHH-3949" )
+	@FailureExpected( jiraKey = "HHH-3949" )
+	public void testJoinFetchLazyToOneAttributeHql() {
+		EnhancerTestUtils.runEnhancerTestTask( HHH3949TestTask1.class );
+	}
 
-        entityClass.getMethod("isActive").invoke(entityInstance);
-        entityClass.getMethod("setActive", boolean.class).invoke(entityInstance, entityClass.getMethod("isActive").invoke(entityInstance));
-        entityClass.getMethod("setActive", boolean.class).invoke(entityInstance, true);
+	@Test
+	@TestForIssue( jiraKey = "HHH-3949" )
+	@FailureExpected( jiraKey = "HHH-3949" )
+	public void testJoinFetchLazyToOneAttributeHql2() {
+		EnhancerTestUtils.runEnhancerTestTask( HHH3949TestTask2.class );
+	}
 
-        entityClass.getMethod("getSomeNumber").invoke(entityInstance);
-        entityClass.getMethod("setSomeNumber", long.class).invoke(entityInstance, entityClass.getMethod("getSomeNumber").invoke(entityInstance));
-        entityClass.getMethod("setSomeNumber", long.class).invoke(entityInstance, 1L);
+	@Test
+	@TestForIssue( jiraKey = "HHH-3949" )
+	@FailureExpected( jiraKey = "HHH-3949" )
+	public void testHHH3949() {
+		EnhancerTestUtils.runEnhancerTestTask( HHH3949TestTask3.class );
+		EnhancerTestUtils.runEnhancerTestTask( HHH3949TestTask4.class );
+	}
 
-        EnhancerTestUtils.checkDirtyTracking(entityInstance, "id", "active", "someNumber");
-        EnhancerTestUtils.clearDirtyTracking(entityInstance);
-
-        // setting the same value should not make it dirty
-        entityClass.getMethod("setSomeNumber", long.class).invoke(entityInstance, 1L);
-        EnhancerTestUtils.checkDirtyTracking(entityInstance);
-
-        if(entityClassToEnhance.getName().endsWith(SimpleEntity.class.getSimpleName())) {
-            cl = new ClassLoader() {};
-
-            Class<?> addressClass = EnhancerTestUtils.enhanceAndDecompile(Address.class, cl);
-            Class<?> countryClass = EnhancerTestUtils.enhanceAndDecompile(Country.class, cl);
-
-            entityClass = EnhancerTestUtils.enhanceAndDecompile(entityClassToEnhance, cl);
-            entityInstance = entityClass.newInstance();
-
-            List<String> strings = new ArrayList<String>();
-            strings.add("FooBar");
-            entityClass.getMethod("setSomeStrings", List.class).invoke(entityInstance, strings);
-            EnhancerTestUtils.checkDirtyTracking(entityInstance, "someStrings");
-            EnhancerTestUtils.clearDirtyTracking(entityInstance);
-
-            strings.add("JADA!");
-            EnhancerTestUtils.checkDirtyTracking(entityInstance, "someStrings");
-            EnhancerTestUtils.clearDirtyTracking(entityInstance);
-
-            // this should not set the entity to dirty
-            Set<Integer> intSet = new HashSet<Integer>();
-            intSet.add(42);
-            entityClass.getMethod("setSomeInts", Set.class).invoke(entityInstance, intSet);
-            EnhancerTestUtils.checkDirtyTracking(entityInstance);
-
-            // testing composite object
-            Object address = addressClass.newInstance();
-            Object country = countryClass.newInstance();
-
-            entityClass.getMethod("setAddress", addressClass).invoke(entityInstance, address);
-            addressClass.getMethod("setCity", String.class).invoke(address, "Arendal");
-            EnhancerTestUtils.checkDirtyTracking(entityInstance, "address", "address.city");
-
-            entityClass.getMethod(EnhancerConstants.TRACKER_CLEAR_NAME).invoke(entityInstance);
-
-            // make sure that new composite instances are cleared
-            Object address2 = addressClass.newInstance();
-
-            entityClass.getMethod("setAddress", addressClass).invoke(entityInstance, address2);
-            addressClass.getMethod("setStreet1", String.class).invoke(address, "Heggedalveien");
-            EnhancerTestUtils.checkDirtyTracking(entityInstance, "address");
-
-            addressClass.getMethod("setCountry", countryClass).invoke(address2, country);
-            countryClass.getMethod("setName", String.class).invoke(country, "Norway");
-            EnhancerTestUtils.checkDirtyTracking(entityInstance, "address", "address.country", "address.country.name");
-        }
-    }
-
+	@Test
+	@TestForIssue( jiraKey = "HHH-9937")
+	public void testLazyBasicFieldNotInitialized() {
+		EnhancerTestUtils.runEnhancerTestTask( LazyBasicFieldNotInitializedTestTask.class );
+	}
 }

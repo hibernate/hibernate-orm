@@ -57,6 +57,7 @@ public class EmbeddableWithDeclaredDataTest extends BaseEnversJPAFunctionalTestC
 
 		// Reload and Compare Revision
 		EntityManager em = getEntityManager();
+		em.getTransaction().begin();
 		EntityWithEmbeddableWithDeclaredData entityLoaded = em.find( EntityWithEmbeddableWithDeclaredData.class, id );
 
 		AuditReader reader = AuditReaderFactory.get( em );
@@ -65,7 +66,7 @@ public class EmbeddableWithDeclaredDataTest extends BaseEnversJPAFunctionalTestC
 		Assert.assertEquals( 1, revs.size() );
 
 		EntityWithEmbeddableWithDeclaredData entityRev1 = reader.find( EntityWithEmbeddableWithDeclaredData.class, id, revs.get( 0 ) );
-
+		em.getTransaction().commit();
 		Assert.assertEquals( entityLoaded.getName(), entityRev1.getName() );
 
 		// only value.codeArt should be audited because it is the only audited field in EmbeddableWithDeclaredData;

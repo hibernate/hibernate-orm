@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.internal.ForeignKeys;
@@ -27,10 +26,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.tuple.ElementWrapper;
-
-import org.dom4j.Element;
-import org.dom4j.Node;
 
 /**
  * Base for types which map associations to persistent entities.
@@ -42,7 +37,6 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	private final TypeFactory.TypeScope scope;
 	private final String associatedEntityName;
 	protected final String uniqueKeyPropertyName;
-	protected final boolean isEmbeddedInXML;
 	private final boolean eager;
 	private final boolean unwrapProxy;
 	private final boolean referenceToPrimaryKey;
@@ -63,33 +57,6 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	private transient volatile EntityPersister associatedEntityPersister;
 
 	private transient Class returnedClass;
-
-	/**
-	 * Constructs the requested entity type mapping.
-	 *
-	 * @param scope The type scope
-	 * @param entityName The name of the associated entity.
-	 * @param uniqueKeyPropertyName The property-ref name, or null if we
-	 * reference the PK of the associated entity.
-	 * @param eager Is eager fetching enabled.
-	 * @param isEmbeddedInXML Should values of this mapping be embedded in XML modes?
-	 * @param unwrapProxy Is unwrapping of proxies allowed for this association; unwrapping
-	 * says to return the "implementation target" of lazy prooxies; typically only possible
-	 * with lazy="no-proxy".
-	 *
-	 * @deprecated Use {@link #EntityType(org.hibernate.type.TypeFactory.TypeScope, String, boolean, String, boolean, boolean)} instead.
-	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
-	 */
-	@Deprecated
-	protected EntityType(
-			TypeFactory.TypeScope scope,
-			String entityName,
-			String uniqueKeyPropertyName,
-			boolean eager,
-			boolean isEmbeddedInXML,
-			boolean unwrapProxy) {
-		this( scope, entityName, uniqueKeyPropertyName == null, uniqueKeyPropertyName, eager, unwrapProxy );
-	}
 
 	/**
 	 * Constructs the requested entity type mapping.
@@ -138,7 +105,6 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		this.scope = scope;
 		this.associatedEntityName = entityName;
 		this.uniqueKeyPropertyName = uniqueKeyPropertyName;
-		this.isEmbeddedInXML = true;
 		this.eager = eager;
 		this.unwrapProxy = unwrapProxy;
 		this.referenceToPrimaryKey = referenceToPrimaryKey;
@@ -430,37 +396,6 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	}
 
 	@Override
-	public boolean isEmbeddedInXML() {
-		return isEmbeddedInXML;
-	}
-
-	@Override
-	public boolean isXMLElement() {
-		return isEmbeddedInXML;
-	}
-
-	@Override
-	public Object fromXMLNode(Node xml, Mapping factory) throws HibernateException {
-		if ( !isEmbeddedInXML ) {
-			return getIdentifierType( factory ).fromXMLNode( xml, factory );
-		}
-		else {
-			return xml;
-		}
-	}
-
-	@Override
-	public void setToXMLNode(Node node, Object value, SessionFactoryImplementor factory) throws HibernateException {
-		if ( !isEmbeddedInXML ) {
-			getIdentifierType( factory ).setToXMLNode( node, value, factory );
-		}
-		else {
-			Element elt = (Element) value;
-			replaceNode( node, new ElementWrapper( elt ) );
-		}
-	}
-
-	@Override
 	public String getOnCondition(String alias, SessionFactoryImplementor factory, Map enabledFilters) {
 		return getOnCondition( alias, factory, enabledFilters, null );
 	}
@@ -484,10 +419,6 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 */
 	@Override
 	public Object resolve(Object value, SessionImplementor session, Object owner) throws HibernateException {
-		if ( isNotEmbedded( session ) ) {
-			return value;
-		}
-
 		if ( value != null && !isNull( owner, session ) ) {
 			if ( isReferenceToPrimaryKey() ) {
 				return resolveIdentifier( (Serializable) value, session );
@@ -520,10 +451,6 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	}
 
 	protected final Object getIdentifier(Object value, SessionImplementor session) throws HibernateException {
-		if ( isNotEmbedded( session ) ) {
-			return value;
-		}
-
 		if ( isReferenceToPrimaryKey() || uniqueKeyPropertyName == null ) {
 			return ForeignKeys.getEntityIdentifierIfNotUnsaved(
 					getAssociatedEntityName(),
@@ -550,16 +477,6 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	}
 
 	/**
-	 * @deprecated To be removed in 5.  Removed as part of removing the notion of DOM entity-mode.
-	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
-	 */
-	@Deprecated
-	protected boolean isNotEmbedded(SessionImplementor session) {
-//		return !isEmbeddedInXML;
-		return false;
-	}
-
-	/**
 	 * Generate a loggable representation of an instance of the value mapped by this type.
 	 *
 	 * @param value The instance to be logged.
@@ -579,15 +496,8 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		StringBuilder result = new StringBuilder().append( associatedEntityName );
 
 		if ( persister.hasIdentifierProperty() ) {
-			final EntityMode entityMode = persister.getEntityMode();
 			final Serializable id;
-			if ( entityMode == null ) {
-				if ( isEmbeddedInXML ) {
-					throw new ClassCastException( value.getClass().getName() );
-				}
-				id = (Serializable) value;
-			}
-			else if ( value instanceof HibernateProxy ) {
+			if ( value instanceof HibernateProxy ) {
 				HibernateProxy proxy = (HibernateProxy) value;
 				id = proxy.getHibernateLazyInitializer().getIdentifier();
 			}

@@ -1436,6 +1436,10 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	public Transaction beginTransaction() throws HibernateException {
 		errorIfClosed();
 		Transaction result = getTransaction();
+		// begin on already started transaction is noop, therefore, don't update the timestamp
+		if (result.getStatus() != TransactionStatus.ACTIVE) {
+			timestamp = factory.getSettings().getRegionFactory().nextTimestamp();
+		}
 		result.begin();
 		return result;
 	}

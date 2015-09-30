@@ -63,7 +63,7 @@ public class ABCTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	public void testHigherLevelIndexDefinition() throws Throwable {
-		Table table = metadata().getDatabase().getDefaultSchema().locateTable( Identifier.toIdentifier( "TA" ) );
+		Table table = metadata().getDatabase().getDefaultNamespace().locateTable( Identifier.toIdentifier( "TA" ) );
 		Iterator<Index> indexItr = table.getIndexIterator();
 		boolean found = false;
 		while ( indexItr.hasNext() ) {

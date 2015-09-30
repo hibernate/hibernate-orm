@@ -273,15 +273,6 @@ public abstract class AbstractStandardBasicType<T>
 		return javaTypeDescriptor.extractLoggableRepresentation( (T) value );
 	}
 
-	@SuppressWarnings({ "unchecked" })
-	public final void setToXMLNode(Node node, Object value, SessionFactoryImplementor factory) {
-		node.setText( toString( (T) value ) );
-	}
-
-	public final Object fromXMLNode(Node xml, Mapping factory) {
-		return fromString( xml.getText() );
-	}
-
 	public final boolean isMutable() {
 		return getMutabilityPlan().isMutable();
 	}

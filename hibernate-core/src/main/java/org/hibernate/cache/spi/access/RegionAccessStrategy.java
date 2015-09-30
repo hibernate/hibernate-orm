@@ -6,7 +6,9 @@
  */
 package org.hibernate.cache.spi.access;
 
+
 import org.hibernate.cache.CacheException;
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
  * Base access strategy for all regions.
@@ -14,20 +16,23 @@ import org.hibernate.cache.CacheException;
  * @author Gail Badner
  */
 public interface RegionAccessStrategy {
+
 	/**
 	 * Attempt to retrieve an object from the cache. Mainly used in attempting
 	 * to resolve entities/collections from the second level cache.
 	 *
+	 * @param session Current session.
 	 * @param key The key of the item to be retrieved.
 	 * @param txTimestamp a timestamp prior to the transaction start time
 	 * @return the cached object or <tt>null</tt>
 	 * @throws org.hibernate.cache.CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
-	Object get(Object key, long txTimestamp) throws CacheException;
+	Object get(SessionImplementor session, Object key, long txTimestamp) throws CacheException;
 
 	/**
 	 * Attempt to cache an object, after loading from the database.
 	 *
+	 * @param session Current session.
 	 * @param key The item key
 	 * @param value The item
 	 * @param txTimestamp a timestamp prior to the transaction start time
@@ -36,6 +41,7 @@ public interface RegionAccessStrategy {
 	 * @throws org.hibernate.cache.CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
 	boolean putFromLoad(
+			SessionImplementor session,
 			Object key,
 			Object value,
 			long txTimestamp,
@@ -45,6 +51,7 @@ public interface RegionAccessStrategy {
 	 * Attempt to cache an object, after loading from the database, explicitly
 	 * specifying the minimalPut behavior.
 	 *
+	 * @param session Current session.
 	 * @param key The item key
 	 * @param value The item
 	 * @param txTimestamp a timestamp prior to the transaction start time
@@ -54,6 +61,7 @@ public interface RegionAccessStrategy {
 	 * @throws org.hibernate.cache.CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
 	boolean putFromLoad(
+			SessionImplementor session,
 			Object key,
 			Object value,
 			long txTimestamp,
@@ -68,12 +76,13 @@ public interface RegionAccessStrategy {
 	 * lock. Concurrency strategies which do not support client-visible
 	 * locks may silently return null.
 	 *
+	 * @param session Current session.
 	 * @param key The key of the item to lock
 	 * @param version The item's current version value
 	 * @return A representation of our lock on the item; or null.
 	 * @throws org.hibernate.cache.CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
-	SoftLock lockItem(Object key, Object version) throws CacheException;
+	SoftLock lockItem(SessionImplementor session, Object key, Object version) throws CacheException;
 
 	/**
 	 * Lock the entire region
@@ -88,11 +97,12 @@ public interface RegionAccessStrategy {
 	 * may not have been successful), after transaction completion.  This method
 	 * is used by "asynchronous" concurrency strategies.
 	 *
+	 * @param session Current session.
 	 * @param key The item key
 	 * @param lock The lock previously obtained from {@link #lockItem}
 	 * @throws org.hibernate.cache.CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
-	void unlockItem(Object key, SoftLock lock) throws CacheException;
+	void unlockItem(SessionImplementor session, Object key, SoftLock lock) throws CacheException;
 
 	/**
 	 * Called after we have finished the attempted invalidation of the entire
@@ -107,10 +117,11 @@ public interface RegionAccessStrategy {
 	 * Called after an item has become stale (before the transaction completes).
 	 * This method is used by "synchronous" concurrency strategies.
 	 *
+	 * @param session
 	 * @param key The key of the item to remove
 	 * @throws org.hibernate.cache.CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
-	void remove(Object key) throws CacheException;
+	void remove(SessionImplementor session, Object key) throws CacheException;
 
 	/**
 	 * Called to evict data from the entire region

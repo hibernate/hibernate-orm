@@ -11,6 +11,7 @@ import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.spi.GeneralDataRegion;
 import org.hibernate.cache.spi.RegionFactory;
 
+import org.hibernate.engine.spi.SessionImplementor;
 import org.infinispan.AdvancedCache;
 
 /**
@@ -33,7 +34,7 @@ public abstract class BaseGeneralDataRegion extends BaseRegion implements Genera
 	public BaseGeneralDataRegion(
 			AdvancedCache cache, String name,
 			RegionFactory factory) {
-		super( cache, name, factory );
+		super( cache, name, null, factory );
 		this.putCache = Caches.ignoreReturnValuesCache( cache );
 	}
 
@@ -49,13 +50,13 @@ public abstract class BaseGeneralDataRegion extends BaseRegion implements Genera
 	}
 
 	@Override
-	public Object get(Object key) throws CacheException {
+	public Object get(SessionImplementor session, Object key) throws CacheException {
 		return cache.get( key );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void put(Object key, Object value) throws CacheException {
+	public void put(SessionImplementor session, Object key, Object value) throws CacheException {
 		putCache.put( key, value );
 	}
 

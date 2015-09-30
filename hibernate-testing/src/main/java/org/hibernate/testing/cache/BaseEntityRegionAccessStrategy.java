@@ -7,20 +7,24 @@
 package org.hibernate.testing.cache;
 
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * @author Strong Liu
  */
 class BaseEntityRegionAccessStrategy extends BaseRegionAccessStrategy implements EntityRegionAccessStrategy {
+
 	private final EntityRegionImpl region;
 
 	BaseEntityRegionAccessStrategy(EntityRegionImpl region) {
 		this.region = region;
 	}
-
 
 	@Override
 	public EntityRegion getRegion() {
@@ -28,23 +32,23 @@ class BaseEntityRegionAccessStrategy extends BaseRegionAccessStrategy implements
 	}
 
 	@Override
-	public boolean insert(Object key, Object value, Object version) throws CacheException {
-		return putFromLoad( key, value, 0, version );
+	public boolean insert(SessionImplementor session, Object key, Object value, Object version) throws CacheException {
+		return putFromLoad( session, key, value, 0, version );
 	}
 
 	@Override
-	public boolean afterInsert(Object key, Object value, Object version) throws CacheException {
+	public boolean afterInsert(SessionImplementor session, Object key, Object value, Object version) throws CacheException {
 		return true;
 	}
 
 	@Override
-	public boolean update(Object key, Object value, Object currentVersion, Object previousVersion)
+	public boolean update(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion)
 			throws CacheException {
 		return false;
 	}
 
 	@Override
-	public boolean afterUpdate(Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
+	public boolean afterUpdate(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
 			throws CacheException {
 		return false;
 	}
@@ -57,5 +61,15 @@ class BaseEntityRegionAccessStrategy extends BaseRegionAccessStrategy implements
 	@Override
 	protected boolean isDefaultMinimalPutOverride() {
 		return region.getSettings().isMinimalPutsEnabled();
+	}
+
+	@Override
+	public Object generateCacheKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+		return DefaultCacheKeysFactory.createEntityKey( id, persister, factory, tenantIdentifier );
+	}
+
+	@Override
+	public Object getCacheKeyId(Object cacheKey) {
+		return DefaultCacheKeysFactory.getEntityId(cacheKey);
 	}
 }

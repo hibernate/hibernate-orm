@@ -9,17 +9,18 @@ package org.hibernate.id.enhanced;
 import java.util.Properties;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.internal.MetadataBuilderImpl;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.type.StandardBasicTypes;
 
+import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.test.common.MetadataBuildingContextTestingImpl;
 import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
@@ -44,7 +45,11 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 		try {
 			Properties props = buildGeneratorPropertiesBase( serviceRegistry );
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry.getService( JdbcEnvironment.class ) );
+			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+
+			generator.registerExportables(
+					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
+			);
 
 			assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
 			assertClassAssignability( NoopOptimizer.class, generator.getOptimizer().getClass() );
@@ -76,7 +81,11 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 		try {
 			Properties props = buildGeneratorPropertiesBase( serviceRegistry );
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry.getService( JdbcEnvironment.class ) );
+			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+
+			generator.registerExportables(
+					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
+			);
 
 			assertClassAssignability( TableStructure.class, generator.getDatabaseStructure().getClass() );
 			assertClassAssignability( NoopOptimizer.class, generator.getOptimizer().getClass() );
@@ -104,7 +113,12 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "10" );
 
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry.getService( JdbcEnvironment.class ) );
+			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+
+			generator.registerExportables(
+					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
+			);
+
 			assertClassAssignability( TableStructure.class, generator.getDatabaseStructure().getClass() );
 			assertClassAssignability( PooledOptimizer.class, generator.getOptimizer().getClass() );
 			assertEquals( SequenceStyleGenerator.DEF_SEQUENCE_NAME, generator.getDatabaseStructure().getName() );
@@ -123,7 +137,11 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "10" );
 
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry.getService( JdbcEnvironment.class ) );
+			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.registerExportables(
+					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
+			);
+
 			assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
 			assertClassAssignability( PooledOptimizer.class, generator.getOptimizer().getClass() );
 			assertEquals( SequenceStyleGenerator.DEF_SEQUENCE_NAME, generator.getDatabaseStructure().getName() );
@@ -149,7 +167,11 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "10" );
 
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry.getService( JdbcEnvironment.class ) );
+			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.registerExportables(
+					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
+			);
+
 			assertClassAssignability( TableStructure.class, generator.getDatabaseStructure().getClass() );
 			assertClassAssignability( PooledOptimizer.class, generator.getOptimizer().getClass() );
 			assertEquals( SequenceStyleGenerator.DEF_SEQUENCE_NAME, generator.getDatabaseStructure().getName() );
@@ -173,7 +195,11 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 			props.setProperty( SequenceStyleGenerator.FORCE_TBL_PARAM, "true" );
 
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry.getService( JdbcEnvironment.class ) );
+			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.registerExportables(
+					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
+			);
+
 			assertClassAssignability( TableStructure.class, generator.getDatabaseStructure().getClass() );
 			assertClassAssignability( NoopOptimizer.class, generator.getOptimizer().getClass() );
 			assertEquals( SequenceStyleGenerator.DEF_SEQUENCE_NAME, generator.getDatabaseStructure().getName() );
@@ -198,7 +224,11 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 			props.setProperty( SequenceStyleGenerator.OPT_PARAM, StandardOptimizerDescriptor.NONE.getExternalName() );
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry.getService( JdbcEnvironment.class ) );
+			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.registerExportables(
+					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
+			);
+
 			assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
 			assertClassAssignability( NoopOptimizer.class, generator.getOptimizer().getClass() );
 			assertEquals( 1, generator.getOptimizer().getIncrementSize() );
@@ -209,7 +239,10 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 			props.setProperty( SequenceStyleGenerator.OPT_PARAM, StandardOptimizerDescriptor.HILO.getExternalName() );
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 			generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry.getService( JdbcEnvironment.class ) );
+			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.registerExportables(
+					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
+			);
 			assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
 			assertClassAssignability( HiLoOptimizer.class, generator.getOptimizer().getClass() );
 			assertEquals( 20, generator.getOptimizer().getIncrementSize() );
@@ -220,7 +253,10 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 			props.setProperty( SequenceStyleGenerator.OPT_PARAM, StandardOptimizerDescriptor.POOLED.getExternalName() );
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 			generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry.getService( JdbcEnvironment.class ) );
+			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.registerExportables(
+					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
+			);
 			// because the dialect reports to not support pooled seqyences, the expectation is that we will
 			// use a table for the backing structure...
 			assertClassAssignability( TableStructure.class, generator.getDatabaseStructure().getClass() );
@@ -243,13 +279,19 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 			Properties props = buildGeneratorPropertiesBase( serviceRegistry );
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry.getService( JdbcEnvironment.class ) );
+			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.registerExportables(
+					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
+			);
 			assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
 			assertClassAssignability( PooledOptimizer.class, generator.getOptimizer().getClass() );
 
 			props.setProperty( Environment.PREFER_POOLED_VALUES_LO, "true" );
 			generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry.getService( JdbcEnvironment.class ) );
+			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.registerExportables(
+					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
+			);
 			assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
 			assertClassAssignability( PooledLoOptimizer.class, generator.getOptimizer().getClass() );
 		}

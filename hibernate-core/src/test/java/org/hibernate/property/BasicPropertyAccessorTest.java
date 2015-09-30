@@ -6,9 +6,11 @@
  */
 package org.hibernate.property;
 
-import org.junit.Test;
+import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
+import org.hibernate.property.access.spi.PropertyAccess;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
@@ -68,22 +70,18 @@ public class BasicPropertyAccessorTest extends BaseUnitTestCase {
 
 	@Test
 	public void testBridgeMethodDisregarded() {
-		BasicPropertyAccessor accessor = new BasicPropertyAccessor();
+		PropertyAccessStrategyBasicImpl accessStrategy = PropertyAccessStrategyBasicImpl.INSTANCE;
 
 		{
-			BasicPropertyAccessor.BasicGetter getter = (BasicPropertyAccessor.BasicGetter) accessor.getGetter( Duper.class, "it" );
-			assertEquals( String.class, getter.getReturnType() );
-
-			BasicPropertyAccessor.BasicSetter setter = (BasicPropertyAccessor.BasicSetter) accessor.getSetter( Duper.class, "it" );
-			assertEquals( Object.class, setter.getMethod().getParameterTypes()[0] );
+			final PropertyAccess access = accessStrategy.buildPropertyAccess( Duper.class, "it" );
+			assertEquals( String.class, access.getGetter().getReturnType() );
+			assertEquals( Object.class, access.getSetter().getMethod().getParameterTypes()[0] );
 		}
 
 		{
-			BasicPropertyAccessor.BasicGetter getter = (BasicPropertyAccessor.BasicGetter) accessor.getGetter( Duper2.class, "it" );
-			assertEquals( String.class, getter.getReturnType() );
-
-			BasicPropertyAccessor.BasicSetter setter = (BasicPropertyAccessor.BasicSetter) accessor.getSetter( Duper2.class, "it" );
-			assertEquals( String.class, setter.getMethod().getParameterTypes()[0] );
+			final PropertyAccess access = accessStrategy.buildPropertyAccess( Duper2.class, "it" );
+			assertEquals( String.class, access.getGetter().getReturnType() );
+			assertEquals( String.class, access.getSetter().getMethod().getParameterTypes()[0] );
 		}
 	}
 }

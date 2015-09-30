@@ -31,7 +31,6 @@ import org.hibernate.NonUniqueObjectException;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
-import org.hibernate.cache.spi.NaturalIdCacheKey;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -45,6 +44,7 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
+import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -58,7 +58,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.tuple.ElementWrapper;
 import org.hibernate.type.CollectionType;
 
 import org.jboss.logging.Logger;
@@ -473,20 +472,28 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			final boolean disableVersionIncrement,
 			boolean lazyPropertiesAreUnfetched) {
 
-		final EntityEntryFactory entityEntryFactory = persister.getEntityEntryFactory();
-		final EntityEntry e = entityEntryFactory.createEntityEntry(
-				status,
-				loadedState,
-				rowId,
-				id,
-				version,
-				lockMode,
-				existsInDatabase,
-				persister,
-				disableVersionIncrement,
-				lazyPropertiesAreUnfetched,
-				this
-		);
+		final EntityEntry e;
+
+		if( (entity instanceof ManagedEntity) &&  ((ManagedEntity) entity).$$_hibernate_getEntityEntry() != null && status == Status.READ_ONLY) {
+			e = ((ManagedEntity) entity).$$_hibernate_getEntityEntry();
+			e.setStatus( status  );
+		}
+		else {
+			final EntityEntryFactory entityEntryFactory = persister.getEntityEntryFactory();
+			e = entityEntryFactory.createEntityEntry(
+					status,
+					loadedState,
+					rowId,
+					id,
+					version,
+					lockMode,
+					existsInDatabase,
+					persister,
+					disableVersionIncrement,
+					lazyPropertiesAreUnfetched,
+					this
+			);
+		}
 
 		entityEntryContext.addEntityEntry( entity, e );
 //		entityEntries.put(entity, e);
@@ -507,10 +514,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public boolean reassociateIfUninitializedProxy(Object value) throws MappingException {
-		if ( value instanceof ElementWrapper ) {
-			value = ( (ElementWrapper) value ).getElement();
-		}
-
 		if ( !Hibernate.isInitialized( value ) ) {
 			final HibernateProxy proxy = (HibernateProxy) value;
 			final LazyInitializer li = proxy.getHibernateLazyInitializer();
@@ -524,10 +527,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public void reassociateProxy(Object value, Serializable id) throws MappingException {
-		if ( value instanceof ElementWrapper ) {
-			value = ( (ElementWrapper) value ).getElement();
-		}
-
 		if ( value instanceof HibernateProxy ) {
 			LOG.debugf( "Setting proxy identifier: %s", id );
 			final HibernateProxy proxy = (HibernateProxy) value;
@@ -555,10 +554,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public Object unproxy(Object maybeProxy) throws HibernateException {
-		if ( maybeProxy instanceof ElementWrapper ) {
-			maybeProxy = ( (ElementWrapper) maybeProxy ).getElement();
-		}
-
 		if ( maybeProxy instanceof HibernateProxy ) {
 			final HibernateProxy proxy = (HibernateProxy) maybeProxy;
 			final LazyInitializer li = proxy.getHibernateLazyInitializer();
@@ -577,10 +572,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public Object unproxyAndReassociate(Object maybeProxy) throws HibernateException {
-		if ( maybeProxy instanceof ElementWrapper ) {
-			maybeProxy = ( (ElementWrapper) maybeProxy ).getElement();
-		}
-
 		if ( maybeProxy instanceof HibernateProxy ) {
 			final HibernateProxy proxy = (HibernateProxy) maybeProxy;
 			final LazyInitializer li = proxy.getHibernateLazyInitializer();
@@ -1738,7 +1729,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				Object[] previousNaturalIdValues,
 				CachedNaturalIdValueSource source) {
 			final NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy = persister.getNaturalIdCacheAccessStrategy();
-			final NaturalIdCacheKey naturalIdCacheKey = new NaturalIdCacheKey( naturalIdValues, persister, session );
+			final Object naturalIdCacheKey = naturalIdCacheAccessStrategy.generateCacheKey( naturalIdValues, persister, session );
 
 			final SessionFactoryImplementor factory = session.getFactory();
 
@@ -1749,6 +1740,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 						return;
 					}
 					final boolean put = naturalIdCacheAccessStrategy.putFromLoad(
+							session,
 							naturalIdCacheKey,
 							id,
 							session.getTimestamp(),
@@ -1765,7 +1757,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 					break;
 				}
 				case INSERT: {
-					final boolean put = naturalIdCacheAccessStrategy.insert( naturalIdCacheKey, id );
+					final boolean put = naturalIdCacheAccessStrategy.insert( session, naturalIdCacheKey, id );
 					if ( put && factory.getStatistics().isStatisticsEnabled() ) {
 						factory.getStatisticsImplementor()
 								.naturalIdCachePut( naturalIdCacheAccessStrategy.getRegion().getName() );
@@ -1776,7 +1768,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 								@Override
 								public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
 									if (success) {
-										final boolean put = naturalIdCacheAccessStrategy.afterInsert( naturalIdCacheKey, id );
+										final boolean put = naturalIdCacheAccessStrategy.afterInsert( session, naturalIdCacheKey, id );
 
 										if ( put && factory.getStatistics().isStatisticsEnabled() ) {
 											factory.getStatisticsImplementor()
@@ -1793,16 +1785,16 @@ public class StatefulPersistenceContext implements PersistenceContext {
 					break;
 				}
 				case UPDATE: {
-					final NaturalIdCacheKey previousCacheKey = new NaturalIdCacheKey( previousNaturalIdValues, persister, session );
+					final Object previousCacheKey = naturalIdCacheAccessStrategy.generateCacheKey( previousNaturalIdValues, persister, session );
 					if ( naturalIdCacheKey.equals( previousCacheKey ) ) {
 						// prevent identical re-caching, solves HHH-7309
 						return;
 					}
-					final SoftLock removalLock = naturalIdCacheAccessStrategy.lockItem( previousCacheKey, null );
-					naturalIdCacheAccessStrategy.remove( previousCacheKey );
+					final SoftLock removalLock = naturalIdCacheAccessStrategy.lockItem( session, previousCacheKey, null );
+					naturalIdCacheAccessStrategy.remove( session, previousCacheKey);
 
-					final SoftLock lock = naturalIdCacheAccessStrategy.lockItem( naturalIdCacheKey, null );
-					final boolean put = naturalIdCacheAccessStrategy.update( naturalIdCacheKey, id );
+					final SoftLock lock = naturalIdCacheAccessStrategy.lockItem( session, naturalIdCacheKey, null );
+					final boolean put = naturalIdCacheAccessStrategy.update( session, naturalIdCacheKey, id );
 					if ( put && factory.getStatistics().isStatisticsEnabled() ) {
 						factory.getStatisticsImplementor()
 								.naturalIdCachePut( naturalIdCacheAccessStrategy.getRegion().getName() );
@@ -1812,9 +1804,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 							new AfterTransactionCompletionProcess() {
 								@Override
 								public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
-									naturalIdCacheAccessStrategy.unlockItem( previousCacheKey, removalLock );
+									naturalIdCacheAccessStrategy.unlockItem( session, previousCacheKey, removalLock );
 									if (success) {
 										final boolean put = naturalIdCacheAccessStrategy.afterUpdate(
+												session,
 												naturalIdCacheKey,
 												id,
 												lock
@@ -1826,7 +1819,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 										}
 									}
 									else {
-										naturalIdCacheAccessStrategy.unlockItem( naturalIdCacheKey, lock );
+										naturalIdCacheAccessStrategy.unlockItem( session, naturalIdCacheKey, lock );
 									}
 								}
 							}
@@ -1877,7 +1870,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 			persister = locateProperPersister( persister );
 			final NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy = persister.getNaturalIdCacheAccessStrategy();
-			final NaturalIdCacheKey naturalIdCacheKey = new NaturalIdCacheKey( naturalIdValues, persister, session );
+			final Object naturalIdCacheKey = naturalIdCacheAccessStrategy.generateCacheKey( naturalIdValues, persister, session );
 			naturalIdCacheAccessStrategy.evict( naturalIdCacheKey );
 
 //			if ( sessionCachedNaturalIdValues != null

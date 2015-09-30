@@ -11,8 +11,8 @@ import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
 /**
@@ -23,7 +23,6 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-
 public class Assigned implements IdentifierGenerator, Configurable {
 	
 	private String entityName;
@@ -41,7 +40,7 @@ public class Assigned implements IdentifierGenerator, Configurable {
 	}
 
 	@Override
-	public void configure(Type type, Properties params, JdbcEnvironment jdbcEnv) throws MappingException {
+	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
 		entityName = params.getProperty( ENTITY_NAME );
 		if ( entityName == null ) {
 			throw new MappingException("no entity name");

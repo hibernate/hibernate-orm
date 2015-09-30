@@ -17,12 +17,16 @@ import javassist.CtField;
 import javassist.Modifier;
 import javassist.NotFoundException;
 
-import org.hibernate.bytecode.enhance.internal.tracker.CollectionTracker;
-import org.hibernate.bytecode.enhance.internal.tracker.SimpleDirtyTracker;
+import org.hibernate.bytecode.enhance.internal.tracker.DirtyTracker;
+import org.hibernate.bytecode.enhance.internal.tracker.SimpleCollectionTracker;
+import org.hibernate.bytecode.enhance.internal.tracker.SimpleFieldTracker;
+import org.hibernate.bytecode.enhance.spi.CollectionTracker;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoader;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 
 /**
@@ -36,8 +40,9 @@ public class EntityEnhancer extends Enhancer {
 		super( context );
 	}
 
-	// for very small sizes SimpleDirtyTracker implementation ends up being faster
-	private static final String TRACKER_IMPL = SimpleDirtyTracker.class.getName();
+	// assuming the number of fields is not very high, SimpleFieldTracker implementation it's the fastest
+	private static final String DIRTY_TRACKER_IMPL = SimpleFieldTracker.class.getName();
+	private static final String COLLECTION_TRACKER_IMPL = SimpleCollectionTracker.class.getName();
 
 	public void enhance(CtClass managedCtClass) {
 		// add the ManagedEntity interface
@@ -107,7 +112,11 @@ public class EntityEnhancer extends Enhancer {
 		try {
 			managedCtClass.addInterface( classPool.get( SelfDirtinessTracker.class.getName() ) );
 
-			FieldWriter.addField( managedCtClass, classPool.get( TRACKER_IMPL ), EnhancerConstants.TRACKER_FIELD_NAME );
+			FieldWriter.addField(
+					managedCtClass,
+					classPool.get( DirtyTracker.class.getName() ),
+					EnhancerConstants.TRACKER_FIELD_NAME
+			);
 			FieldWriter.addField(
 					managedCtClass,
 					classPool.get( CollectionTracker.class.getName() ),
@@ -124,14 +133,14 @@ public class EntityEnhancer extends Enhancer {
 	private void createDirtyTrackerMethods(CtClass managedCtClass) {
 		try {
 			MethodWriter.write(
-					managedCtClass, "" +
+					managedCtClass,
 							"public void %1$s(String name) {%n" +
 							"  if (%2$s == null) { %2$s = new %3$s(); }%n" +
 							"  %2$s.add(name);%n" +
 							"}",
 					EnhancerConstants.TRACKER_CHANGER_NAME,
 					EnhancerConstants.TRACKER_FIELD_NAME,
-					TRACKER_IMPL
+					DIRTY_TRACKER_IMPL
 			);
 
 			createCollectionDirtyCheckMethod( managedCtClass );
@@ -139,7 +148,7 @@ public class EntityEnhancer extends Enhancer {
 			createClearDirtyCollectionMethod( managedCtClass );
 
 			MethodWriter.write(
-					managedCtClass, "" +
+					managedCtClass,
 							"public String[] %1$s() {%n" +
 							"  if(%3$s == null) {%n" +
 							"    return (%2$s == null) ? new String[0] : %2$s.get();%n" +
@@ -153,12 +162,11 @@ public class EntityEnhancer extends Enhancer {
 					EnhancerConstants.TRACKER_FIELD_NAME,
 					EnhancerConstants.TRACKER_COLLECTION_NAME,
 					EnhancerConstants.TRACKER_COLLECTION_CHANGED_FIELD_NAME,
-					TRACKER_IMPL
+					DIRTY_TRACKER_IMPL
 			);
 
 			MethodWriter.write(
 					managedCtClass,
-					"" +
 							"public boolean %1$s() {%n" +
 							"  return (%2$s != null && !%2$s.isEmpty()) || %3$s();%n" +
 							"}",
@@ -169,7 +177,6 @@ public class EntityEnhancer extends Enhancer {
 
 			MethodWriter.write(
 					managedCtClass,
-					"" +
 							"public void %1$s() {%n" +
 							"  if (%2$s != null) { %2$s.clear(); }%n" +
 							"  %3$s();%n" +
@@ -177,6 +184,24 @@ public class EntityEnhancer extends Enhancer {
 					EnhancerConstants.TRACKER_CLEAR_NAME,
 					EnhancerConstants.TRACKER_FIELD_NAME,
 					EnhancerConstants.TRACKER_COLLECTION_CLEAR_NAME
+			);
+
+			MethodWriter.write(
+					managedCtClass,
+							"public void %1$s(boolean f) {%n" +
+							"  if (%2$s == null) %2$s = new %3$s();%n  %2$s.suspend(f);%n" +
+							"}",
+					EnhancerConstants.TRACKER_SUSPEND_NAME,
+					EnhancerConstants.TRACKER_FIELD_NAME  ,
+					DIRTY_TRACKER_IMPL
+			);
+
+			MethodWriter.write(
+					managedCtClass,
+							"public %s %s() { return %s; }",
+					CollectionTracker.class.getName(),
+					EnhancerConstants.TRACKER_COLLECTION_GET_NAME,
+					EnhancerConstants.TRACKER_COLLECTION_NAME
 			);
 		}
 		catch (CannotCompileException cce) {
@@ -194,7 +219,7 @@ public class EntityEnhancer extends Enhancer {
 				}
 				if ( enhancementContext.isPersistentField( ctField ) ) {
 					for ( CtClass ctClass : ctField.getType().getInterfaces() ) {
-						if ( ctClass.getName().equals( Collection.class.getName() ) ) {
+						if ( PersistentAttributesHelper.isAssignable( ctClass, Collection.class.getName() ) ) {
 							collectionList.add( ctField );
 							break;
 						}
@@ -213,11 +238,8 @@ public class EntityEnhancer extends Enhancer {
 
 			body.append(
 					String.format(
-							"" +
 									"private boolean %1$s() {%n" +
-									"  if (%2$s == null) {%n" +
-									"    return false;%n" +
-									"  }%n",
+									"  if (%2$s == null) { return false; }%n%n",
 							EnhancerConstants.TRACKER_COLLECTION_CHANGED_NAME,
 							EnhancerConstants.TRACKER_COLLECTION_NAME
 					)
@@ -227,10 +249,9 @@ public class EntityEnhancer extends Enhancer {
 				if ( !enhancementContext.isMappedCollection( ctField ) ) {
 					body.append(
 							String.format(
-									"" +
 											"  // collection field [%1$s]%n" +
 											"  if (%1$s == null && %2$s.getSize(\"%1$s\") != -1) { return true; }%n" +
-											"  if (%1$s != null && %2$s.getSize(\"%1$s\") != %1$s.size()) { return true; }%n",
+											"  if (%1$s != null && %2$s.getSize(\"%1$s\") != %1$s.size()) { return true; }%n%n",
 									ctField.getName(),
 									EnhancerConstants.TRACKER_COLLECTION_NAME
 							)
@@ -252,12 +273,11 @@ public class EntityEnhancer extends Enhancer {
 
 			body.append(
 					String.format(
-							"" +
 									"private void %1$s(%3$s tracker) {%n" +
-									"  if (%2$s == null) { return; }%n",
+									"  if (%2$s == null) { return; }%n%n",
 							EnhancerConstants.TRACKER_COLLECTION_CHANGED_FIELD_NAME,
 							EnhancerConstants.TRACKER_COLLECTION_NAME,
-							TRACKER_IMPL
+							DirtyTracker.class.getName()
 					)
 			);
 
@@ -265,10 +285,9 @@ public class EntityEnhancer extends Enhancer {
 				if ( !enhancementContext.isMappedCollection( ctField ) ) {
 					body.append(
 							String.format(
-									"" +
 											"  // Collection field [%1$s]%n" +
 											"  if (%1$s == null && %2$s.getSize(\"%1$s\") != -1) { tracker.add(\"%1$s\"); }%n" +
-											"  if (%1$s != null && %2$s.getSize(\"%1$s\") != %1$s.size()) { tracker.add(\"%1$s\"); }%n",
+											"  if (%1$s != null && %2$s.getSize(\"%1$s\") != %1$s.size()) { tracker.add(\"%1$s\"); }%n%n",
 									ctField.getName(),
 									EnhancerConstants.TRACKER_COLLECTION_NAME
 							)
@@ -290,23 +309,35 @@ public class EntityEnhancer extends Enhancer {
 
 			body.append(
 					String.format(
-							"" +
-									"private void %1$s() {%n" +
-									"  if (%2$s == null) { %2$s = new %3$s(); }%n",
+							"private void %1$s() {%n" +
+									"  if (%2$s == null) { %2$s = new %3$s(); }%n" +
+									"  %4$s lazyInterceptor = null;%n",
 							EnhancerConstants.TRACKER_COLLECTION_CLEAR_NAME,
 							EnhancerConstants.TRACKER_COLLECTION_NAME,
-							CollectionTracker.class.getName()
+							COLLECTION_TRACKER_IMPL,
+							LazyAttributeLoader.class.getName()
 					)
 			);
+
+			if ( PersistentAttributesHelper.isAssignable( managedCtClass, PersistentAttributeInterceptable.class.getName() ) ) {
+				body.append(
+						String.format(
+										"  if(%1$s != null && %1$s instanceof %2$s) lazyInterceptor = (%2$s) %1$s;%n%n",
+								EnhancerConstants.INTERCEPTOR_FIELD_NAME,
+								LazyAttributeLoader.class.getName()
+						)
+				);
+			}
 
 			for ( CtField ctField : collectCollectionFields( managedCtClass ) ) {
 				if ( !enhancementContext.isMappedCollection( ctField ) ) {
 					body.append(
 							String.format(
-									"" +
-											"  // Collection field [%1$s]%n" +
-											"  if (%1$s == null) { %2$s.add(\"%1$s\", -1); }%n" +
-											"  else { %2$s.add(\"%1$s\", %1$s.size()); }%n",
+										"  // collection field [%1$s]%n" +
+										"  if (lazyInterceptor == null || lazyInterceptor.isAttributeLoaded(\"%1$s\")) {%n" +
+										"    if (%1$s == null) { %2$s.add(\"%1$s\", -1); }%n" +
+										"    else { %2$s.add(\"%1$s\", %1$s.size()); }%n" +
+										"  }%n%n",
 									ctField.getName(),
 									EnhancerConstants.TRACKER_COLLECTION_NAME
 							)

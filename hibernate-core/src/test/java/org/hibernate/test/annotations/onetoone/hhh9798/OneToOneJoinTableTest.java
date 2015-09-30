@@ -14,6 +14,8 @@ import org.junit.Test;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+import static org.junit.Assert.fail;
+
 @TestForIssue(jiraKey = "HHH-9798")
 public class OneToOneJoinTableTest extends BaseCoreFunctionalTestCase {
 
@@ -34,12 +36,26 @@ public class OneToOneJoinTableTest extends BaseCoreFunctionalTestCase {
 			session.save( shipment2 );
 
 			tx.commit();
+
+			fail();
 		}
 		finally {
 			if ( session != null ) {
+				session.getTransaction().rollback();
 				session.close();
 			}
+
+			cleanUpData();
 		}
+	}
+
+	private void cleanUpData() {
+		Session session = openSession();
+		session.beginTransaction();
+		session.createQuery( "delete Shipment" ).executeUpdate();
+		session.createQuery( "delete Item" ).executeUpdate();
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Override

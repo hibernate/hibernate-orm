@@ -203,10 +203,12 @@ public class NamedNativeQueryTest extends BaseCoreFunctionalTestCase {
 		session.close();
 
 		session = openSession();
+		session.beginTransaction();
 		DestinationEntity get = (DestinationEntity) session.get( DestinationEntity.class, destinationEntity.id );
 
 		assertEquals( anotherFrom, get.from );
 		assertEquals( inverseFullName, get.fullNameFrom );
+		session.getTransaction().commit();
 		session.close();
 	}
 

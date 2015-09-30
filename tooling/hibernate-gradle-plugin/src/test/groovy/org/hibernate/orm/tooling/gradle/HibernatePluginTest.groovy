@@ -5,15 +5,12 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.orm.tooling.gradle
-
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 
 import org.junit.Test
 
 import static org.junit.Assert.assertNotNull
-import static org.junit.Assert.assertTrue
-
 /**
  * Test what we can.  ProjectBuilder is better than nothing, but still quited limited in what
  * you can test (e.g. you cannot test task execution).
@@ -35,7 +32,10 @@ class HibernatePluginTest {
 		project.plugins.apply 'org.hibernate.orm'
 
 		project.extensions.findByType( HibernateExtension.class ).enhance {
+			enableLazyInitialization = true
+			enableDirtyTracking = true
 			enableAssociationManagement = false
+			enableFieldAccessEnhancement = false
 		}
 	}
 }

@@ -34,7 +34,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.entity.Queryable;
-import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
@@ -247,7 +246,7 @@ public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 					( (Session) context.getSession() ).buildLockRequest( LockOptions.NONE ).lock( subValue );
 				}
 				else if ( subType.isComponentType() ) {
-					addKeyManyToOnesToSession( context, (ComponentType) subType, subValue  );
+					addKeyManyToOnesToSession( context, (CompositeType) subType, subValue  );
 				}
 			}
 		}

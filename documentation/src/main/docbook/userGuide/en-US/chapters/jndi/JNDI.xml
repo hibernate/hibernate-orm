@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<chapter xml:id="jndi"
+         xml:lang="en"
+         xmlns="http://docbook.org/ns/docbook">
+    <title>JNDI</title>
+
+    <para>
+        Hibernate does optionally interact with JNDI on the applications behalf.  Generally
+        it does this when the application:
+        <itemizedlist>
+            <listitem>
+                <para>has asked the SessionFactory be bound to JNDI</para>
+            </listitem>
+            <listitem>
+                <para>has specified a DataSource to use by JNDI name</para>
+            </listitem>
+            <listitem>
+                <para>is using JTA transactions and the JtaPlatform needs to do JNDI lookups for TM, UT, etc</para>
+            </listitem>
+        </itemizedlist>
+    </para>
+
+    <para>
+        All of these JNDI calls route through a single service whose role is
+        <interfacename>org.hibernate.engine.jndi.spi.JndiService</interfacename>.  The standard JndiService
+        accepts a number of configuration settings
+        <itemizedlist>
+            <listitem>
+                <para>
+                    <literal>hibernate.jndi.class</literal> - names the
+                    <interfacename>javax.naming.InitialContext</interfacename> implementation class to use.  See
+                    <constant>javax.naming.Context#INITIAL_CONTEXT_FACTORY</constant>
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <literal>hibernate.jndi.url</literal> - names the JNDI InitialContext connection url.  See
+                    <constant>javax.naming.Context.PROVIDER_URL</constant>
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    Any other settings prefixed with <literal>hibernate.jndi.</literal> will be collected
+                    and passed along to the JNDI provider.
+                </para>
+            </listitem>
+        </itemizedlist>
+    </para>
+
+    <note>
+        <para>
+            The standard JndiService assumes that all JNDI calls are relative to the same InitialContext.  If your
+            application uses multiple naming servers for whatever reason, you will need a custom JndiService
+            implementation to handle those details.
+        </para>
+    </note>
+</chapter>

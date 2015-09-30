@@ -34,6 +34,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jdbc.Work;
+import org.hibernate.resource.transaction.TransactionCoordinator;
 
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
@@ -322,6 +323,8 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	@After
 	public final void afterTest() throws Exception {
+		completeStrayTransaction();
+
 		if ( isCleanupTestDataRequired() ) {
 			cleanupTestData();
 		}
@@ -331,6 +334,30 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 		assertAllDataRemoved();
 
+	}
+
+	private void completeStrayTransaction() {
+		if ( session == null ) {
+			// nothing to do
+			return;
+		}
+
+		if ( ( (SessionImplementor) session ).isClosed() ) {
+			// nothing to do
+			return;
+		}
+
+		if ( !session.isConnected() ) {
+			// nothing to do
+			return;
+		}
+
+		final TransactionCoordinator.TransactionDriver tdc =
+				( (SessionImplementor) session ).getTransactionCoordinator().getTransactionDriverControl();
+
+		if ( tdc.getStatus().canRollback() ) {
+			session.getTransaction().rollback();
+		}
 	}
 
 	protected void cleanupCache() {
@@ -354,15 +381,12 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	private void cleanupSession() {
 		if ( session != null && ! ( (SessionImplementor) session ).isClosed() ) {
-			if ( session.isConnected() ) {
-				session.doWork( new RollbackWork() );
-			}
 			session.close();
 		}
 		session = null;
 	}
 
-	public class RollbackWork implements Work {
+	public static class RollbackWork implements Work {
 		public void execute(Connection connection) throws SQLException {
 			connection.rollback();
 		}

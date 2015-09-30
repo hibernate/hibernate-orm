@@ -25,7 +25,7 @@ public class DB2400Dialect extends DB2Dialect {
 			if (LimitHelper.hasFirstRow( selection )) {
 				throw new UnsupportedOperationException( "query result offset is not supported" );
 			}
-			return sql + " fetch first ? rows only";
+			return sql + " fetch first " + getMaxOrLimit( selection ) + " rows only";
 		}
 
 		@Override

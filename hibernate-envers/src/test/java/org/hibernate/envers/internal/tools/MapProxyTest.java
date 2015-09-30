@@ -9,14 +9,30 @@ package org.hibernate.envers.internal.tools;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
-import org.hibernate.property.Getter;
-import org.hibernate.property.Setter;
+import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.Setter;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import junit.framework.Assert;
 
 public class MapProxyTest {
+
+    private StandardServiceRegistry serviceRegistry;
+
+	@Before
+	public void prepare() {
+		serviceRegistry = new StandardServiceRegistryBuilder().build();
+	}
+
+	@After
+	public void release() {
+		StandardServiceRegistryBuilder.destroy( serviceRegistry );
+	}
 
     @Test
     public void shouldGenerateClassWithAppropriateGetter() throws Exception {
@@ -31,7 +47,7 @@ public class MapProxyTest {
         Object testClassInstance = testClass.getConstructor(Map.class).newInstance(map);
 
         //then
-        Getter getter = ReflectionTools.getGetter(testClass, "age", "property");
+        Getter getter = ReflectionTools.getGetter( testClass, "age", "property", serviceRegistry );
         int age = (Integer) getter.get(testClassInstance);
         Assert.assertEquals(ageExpected, age);
     }
@@ -48,7 +64,7 @@ public class MapProxyTest {
         Object testClassInstance = testClass.getConstructor(Map.class).newInstance(map);
 
         //then
-        Setter setter = ReflectionTools.getSetter(testClass, "age", "property");
+        Setter setter = ReflectionTools.getSetter(testClass, "age", "property", serviceRegistry);
         int ageExpected = 14;
         setter.set(testClassInstance, ageExpected, null);
         Object age = map.get("age");
@@ -68,7 +84,7 @@ public class MapProxyTest {
         Object testClassInstance = testClass.getConstructor(Map.class).newInstance(map);
 
         //then
-        Getter getter = ReflectionTools.getGetter(testClass, "checkbox", "property");
+        Getter getter = ReflectionTools.getGetter(testClass, "checkbox", "property", serviceRegistry);
         Assert.assertTrue((Boolean) getter.get(testClassInstance));
     }
 }

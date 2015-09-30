@@ -409,7 +409,7 @@ etc. to an entity). -->
 	<!ATTLIST many-to-one lazy (false|proxy|no-proxy) #IMPLIED>
 	<!ATTLIST many-to-one not-found (exception|ignore) "exception">
 	<!ATTLIST many-to-one node CDATA #IMPLIED>
-	<!ATTLIST many-to-one embed-xml (true|false) "true">
+	<!ATTLIST many-to-one embed-xml (true|false) #IMPLIED>
 	
 <!-- Declares a one-to-one association between two entities (Or from a component, 
 component element, etc. to an entity). -->
@@ -428,7 +428,7 @@ component element, etc. to an entity). -->
 	<!ATTLIST one-to-one property-ref CDATA #IMPLIED>
 	<!ATTLIST one-to-one lazy (false|proxy|no-proxy) #IMPLIED>
 	<!ATTLIST one-to-one node CDATA #IMPLIED>
-	<!ATTLIST one-to-one embed-xml (true|false) "true">
+	<!ATTLIST one-to-one embed-xml (true|false) #IMPLIED>
 	
 <!-- A property embedded in a composite identifier or map index (always not-null). -->
 
@@ -565,7 +565,7 @@ relationship from the collection table to the enclosing class. -->
 	<!ATTLIST map collection-type CDATA #IMPLIED>	
 	<!ATTLIST map optimistic-lock (true|false) "true">		<!-- only supported for properties of a class (not component) -->
 	<!ATTLIST map node CDATA #IMPLIED>
-	<!ATTLIST map embed-xml (true|false) "true">
+	<!ATTLIST map embed-xml (true|false) #IMPLIED>
 	
 <!ELEMENT set (
 	meta*,
@@ -599,7 +599,7 @@ relationship from the collection table to the enclosing class. -->
 	<!ATTLIST set check CDATA #IMPLIED>																<!-- default: none -->
 	<!ATTLIST set optimistic-lock (true|false) "true">		<!-- only supported for properties of a class (not component) -->
 	<!ATTLIST set node CDATA #IMPLIED>
-	<!ATTLIST set embed-xml (true|false) "true">
+	<!ATTLIST set embed-xml (true|false) #IMPLIED>
 
 <!ELEMENT bag (
 	meta*,
@@ -632,7 +632,7 @@ relationship from the collection table to the enclosing class. -->
 	<!ATTLIST bag check CDATA #IMPLIED>																<!-- default: none -->
 	<!ATTLIST bag optimistic-lock (true|false) "true">		<!-- only supported for properties of a class (not component) -->
 	<!ATTLIST bag node CDATA #IMPLIED>
-	<!ATTLIST bag embed-xml (true|false) "true">
+	<!ATTLIST bag embed-xml (true|false) #IMPLIED>
 
 <!ELEMENT idbag (
 	meta*,
@@ -665,7 +665,7 @@ relationship from the collection table to the enclosing class. -->
 	<!ATTLIST idbag check CDATA #IMPLIED>															<!-- default: none -->
 	<!ATTLIST idbag optimistic-lock (true|false) "true">	<!-- only supported for properties of a class (not component) -->
 	<!ATTLIST idbag node CDATA #IMPLIED>
-	<!ATTLIST idbag embed-xml (true|false) "true">
+	<!ATTLIST idbag embed-xml (true|false) #IMPLIED>
 
 <!ELEMENT list (
 	meta*,
@@ -698,7 +698,7 @@ relationship from the collection table to the enclosing class. -->
 	<!ATTLIST list check CDATA #IMPLIED>															<!-- default: none -->
 	<!ATTLIST list optimistic-lock (true|false) "true">		<!-- only supported for properties of a class (not component) -->
 	<!ATTLIST list node CDATA #IMPLIED>
-	<!ATTLIST list embed-xml (true|false) "true">
+	<!ATTLIST list embed-xml (true|false) #IMPLIED>
 
 <!ELEMENT array (
 	meta*,
@@ -730,7 +730,7 @@ relationship from the collection table to the enclosing class. -->
 	<!ATTLIST array check CDATA #IMPLIED>															<!-- default: none -->
 	<!ATTLIST array optimistic-lock (true|false) "true">	<!-- only supported for properties of a class (not component) -->
 	<!ATTLIST array node CDATA #IMPLIED>
-	<!ATTLIST array embed-xml (true|false) "true">
+	<!ATTLIST array embed-xml (true|false) #IMPLIED>
 
 <!ELEMENT primitive-array (
 	meta*, 
@@ -759,7 +759,7 @@ relationship from the collection table to the enclosing class. -->
 	<!ATTLIST primitive-array check CDATA #IMPLIED>									<!-- default: none -->
 	<!ATTLIST primitive-array optimistic-lock (true|false) "true">		<!-- only supported for properties of a class (not component) -->
 	<!ATTLIST primitive-array node CDATA #IMPLIED>
-	<!ATTLIST primitive-array embed-xml (true|false) "true">
+	<!ATTLIST primitive-array embed-xml (true|false) #IMPLIED>
 
 <!-- Declares the element type of a collection of basic type -->
 
@@ -781,7 +781,7 @@ element type of a collection and specifies a one-to-many relational model -->
 	<!ATTLIST one-to-many class CDATA #IMPLIED>
 	<!ATTLIST one-to-many not-found (exception|ignore) "exception">
 	<!ATTLIST one-to-many node CDATA #IMPLIED>
-	<!ATTLIST one-to-many embed-xml (true|false) "true">
+	<!ATTLIST one-to-many embed-xml (true|false) #IMPLIED>
 	<!ATTLIST one-to-many entity-name CDATA #IMPLIED>
 	<!-- No column declaration attributes required in this case. The primary
 	key column of the associated class is already mapped elsewhere.-->
@@ -792,7 +792,7 @@ element type of a collection and specifies a many-to-many relational model -->
 <!ELEMENT many-to-many (meta*,(column|formula)*,filter*)>
 	<!ATTLIST many-to-many class CDATA #IMPLIED>
 	<!ATTLIST many-to-many node CDATA #IMPLIED>
-	<!ATTLIST many-to-many embed-xml (true|false) "true">
+	<!ATTLIST many-to-many embed-xml (true|false) #IMPLIED>
 	<!ATTLIST many-to-many entity-name CDATA #IMPLIED>
 	<!ATTLIST many-to-many column CDATA #IMPLIED>
 	<!ATTLIST many-to-many formula CDATA #IMPLIED>

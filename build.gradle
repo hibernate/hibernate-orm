@@ -20,7 +20,7 @@ buildscript {
 	}
 	dependencies {
 		classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.1'
-		classpath 'org.hibernate.build.gradle:hibernate-matrix-testing:1.0.0-SNAPSHOT'
+		classpath 'org.hibernate.build.gradle:hibernate-matrix-testing:2.0.0-SNAPSHOT'
 		classpath 'org.hibernate.build.gradle:version-injection-plugin:1.0.0'
 		classpath 'org.hibernate.build.gradle:gradle-xjc-plugin:1.0.2.Final'
 		classpath 'com.github.lburgazzoli:lb-karaf-features-gen:1.0.0-SNAPSHOT'
@@ -45,7 +45,7 @@ allprojects {
 
 ext {
     expectedGradleVersion = '2.4'
-    hibernateTargetVersion = '5.0.1-SNAPSHOT'
+    hibernateTargetVersion = '5.0.1.Final'
 
     osgiExportVersion = hibernateTargetVersion.replaceAll( '-SNAPSHOT', '.SNAPSHOT' )
 }
@@ -121,9 +121,10 @@ subprojects { subProject ->
 
 	// appropriately inject the common dependencies into each sub-project
 	dependencies {
-		compile( libraries.logging )
+		compile libraries.logging
 
-		jbossLoggingTool( libraries.logging_annotations )
+		provided libraries.logging_annotations
+
 		jbossLoggingTool( libraries.logging_processor )
 
 		testCompile( libraries.junit )

@@ -28,7 +28,7 @@ import org.hibernate.SessionException;
 import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
 import org.hibernate.UnresolvableObjectException;
-import org.hibernate.cache.spi.CacheKey;
+import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.SessionEventListenerManagerImpl;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
@@ -270,8 +270,9 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 //		}
 
 		if ( persister.hasCache() ) {
-			final CacheKey ck = generateCacheKey( id, persister.getIdentifierType(), persister.getRootEntityName() );
-			persister.getCacheAccessStrategy().evict( ck );
+			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+			final Object ck = cache.generateCacheKey( id, persister, getFactory(), getTenantIdentifier() );
+			cache.evict( ck );
 		}
 		String previousFetchProfile = this.getLoadQueryInfluencers().getInternalFetchProfile();
 		Object result = null;
@@ -527,6 +528,10 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 	public Transaction beginTransaction() throws HibernateException {
 		errorIfClosed();
 		Transaction result = getTransaction();
+		// begin on already started transaction is noop, therefore, don't update the timestamp
+		if (result.getStatus() != TransactionStatus.ACTIVE) {
+			timestamp = factory.getSettings().getRegionFactory().nextTimestamp();
+		}
 		result.begin();
 		return result;
 	}

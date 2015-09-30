@@ -17,10 +17,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
+
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtField;
@@ -55,6 +55,9 @@ public class MavenEnhancePlugin extends AbstractMojo {
 	@Parameter(property = "dir", defaultValue = "${project.build.outputDirectory}")
 	private String dir = null;
 
+	@Parameter(property = "failOnError", defaultValue = "true")
+	private boolean failOnError = true;
+
 	@Parameter(property = "enableLazyInitialization", defaultValue = "true")
 	private boolean enableLazyInitialization = true;
 
@@ -64,8 +67,11 @@ public class MavenEnhancePlugin extends AbstractMojo {
 	@Parameter(property = "enableAssociationManagement", defaultValue = "true")
 	private boolean enableAssociationManagement = true;
 
+	@Parameter(property = "enableFieldAccessEnhancement", defaultValue = "false")
+	private boolean enableFieldAccessEnhancement = false;
+
 	private boolean shouldApply() {
-		return enableLazyInitialization || enableDirtyTracking || enableAssociationManagement;
+		return enableLazyInitialization || enableDirtyTracking || enableAssociationManagement || enableFieldAccessEnhancement;
 	}
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
@@ -79,7 +85,7 @@ public class MavenEnhancePlugin extends AbstractMojo {
 		File root = new File( this.dir );
 		walkDir( root );
 
-		final ClassLoader classLoader = toClassLoader( sourceSet );
+		final ClassLoader classLoader = toClassLoader( Arrays.asList( root ) );
 
 		EnhancementContext enhancementContext = new DefaultEnhancementContext() {
 			@Override
@@ -104,7 +110,12 @@ public class MavenEnhancePlugin extends AbstractMojo {
 
 			@Override
 			public boolean isLazyLoadable(CtField field) {
-				return true;
+				return enableLazyInitialization;
+			}
+
+			@Override
+			public boolean doFieldAccessEnhancement(CtClass classDescriptor) {
+				return enableFieldAccessEnhancement;
 			}
 		};
 
@@ -113,14 +124,21 @@ public class MavenEnhancePlugin extends AbstractMojo {
 
 		for ( File file : sourceSet ) {
 			final CtClass ctClass = toCtClass( file, classPool );
-
-			if ( !ctClass.hasAnnotation( Entity.class ) && !ctClass.hasAnnotation( Embedded.class ) ) {
-				getLog().debug( "Skipping class file [" + file.getAbsolutePath() + "], not an entity nor embedded" );
+			if ( ctClass == null ) {
 				continue;
+			}
+
+			if ( !enableLazyInitialization ) {
+				if ( !enhancementContext.isEntityClass( ctClass ) && !enhancementContext.isCompositeClass( ctClass ) ) {
+					getLog().info( "Skipping class file [" + file.getAbsolutePath() + "], not an entity nor embeddable" );
+					continue;
+				}
 			}
 
 			final byte[] enhancedBytecode = doEnhancement( ctClass, enhancer );
 			writeOutEnhancedClass( enhancedBytecode, ctClass, file );
+
+			getLog().info( "Successfully enhanced class [" + ctClass.getName() + "]" );
 		}
 	}
 
@@ -129,9 +147,14 @@ public class MavenEnhancePlugin extends AbstractMojo {
 		for ( File file : runtimeClasspath ) {
 			try {
 				urls.add( file.toURI().toURL() );
+				getLog().debug( "Adding root " + file.getAbsolutePath() + " to classpath " );
 			}
 			catch (MalformedURLException e) {
-				throw new MojoExecutionException( "Unable to resolve classpath entry to URL : " + file.getAbsolutePath(), e );
+				String msg = "Unable to resolve classpath entry to URL: " + file.getAbsolutePath();
+				if ( failOnError ) {
+					throw new MojoExecutionException( msg, e );
+				}
+				getLog().warn( msg );
 			}
 		}
 
@@ -146,7 +169,12 @@ public class MavenEnhancePlugin extends AbstractMojo {
 				return classPool.makeClass( is );
 			}
 			catch (IOException e) {
-				throw new MojoExecutionException( "Javassist unable to load class in preparation for enhancing : " + file.getAbsolutePath(), e );
+				String msg = "Javassist unable to load class in preparation for enhancing: " + file.getAbsolutePath();
+				if ( failOnError ) {
+					throw new MojoExecutionException( msg, e );
+				}
+				getLog().warn( msg );
+				return null;
 			}
 			finally {
 				try {
@@ -159,7 +187,12 @@ public class MavenEnhancePlugin extends AbstractMojo {
 		}
 		catch (FileNotFoundException e) {
 			// should never happen, but...
-			throw new MojoExecutionException( "Unable to locate class file for InputStream: " + file.getAbsolutePath(), e );
+			String msg = "Unable to locate class file for InputStream: " + file.getAbsolutePath();
+			if ( failOnError ) {
+				throw new MojoExecutionException( msg, e );
+			}
+			getLog().warn( msg );
+			return null;
 		}
 	}
 
@@ -168,7 +201,12 @@ public class MavenEnhancePlugin extends AbstractMojo {
 			return enhancer.enhance( ctClass.getName(), ctClass.toBytecode() );
 		}
 		catch (Exception e) {
-			throw new MojoExecutionException( "Unable to enhance class : " + ctClass.getName(), e );
+			String msg = "Unable to enhance class: " + ctClass.getName();
+			if ( failOnError ) {
+				throw new MojoExecutionException( msg, e );
+			}
+			getLog().warn( msg );
+			return null;
 		}
 	}
 
@@ -203,6 +241,9 @@ public class MavenEnhancePlugin extends AbstractMojo {
 	}
 
 	private void writeOutEnhancedClass(byte[] enhancedBytecode, CtClass ctClass, File file) throws MojoExecutionException{
+		if ( enhancedBytecode == null ) {
+			return;
+		}
 		try {
 			if ( file.delete() ) {
 				if ( !file.createNewFile() ) {
@@ -224,7 +265,11 @@ public class MavenEnhancePlugin extends AbstractMojo {
 				outputStream.flush();
 			}
 			catch (IOException e) {
-				throw new MojoExecutionException( "Error writing to enhanced class [" + ctClass.getName() + "] to file [" + file.getAbsolutePath() + "]", e );
+				String msg = String.format( "Error writing to enhanced class [%s] to file [%s]", ctClass.getName(), file.getAbsolutePath() );
+				if ( failOnError ) {
+					throw new MojoExecutionException( msg, e );
+				}
+				getLog().warn( msg );
 			}
 			finally {
 				try {
@@ -236,7 +281,11 @@ public class MavenEnhancePlugin extends AbstractMojo {
 			}
 		}
 		catch (FileNotFoundException e) {
-			throw new MojoExecutionException( "Error opening class file for writing : " + file.getAbsolutePath(), e );
+			String msg = "Error opening class file for writing: " + file.getAbsolutePath();
+			if ( failOnError ) {
+				throw new MojoExecutionException( msg, e );
+			}
+			getLog().warn( msg );
 		}
 	}
 }

@@ -15,7 +15,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Exportable;
-import org.hibernate.boot.model.relational.Schema;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
@@ -49,14 +49,14 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 	public void doMigration(
 			Metadata metadata,
 			DatabaseInformation existingDatabase,
-			boolean createSchemas,
+			boolean createNamespaces,
 			List<Target> targets) throws SchemaManagementException {
 
 		for ( Target target : targets ) {
 			target.prepare();
 		}
 
-		doMigrationToTargets( metadata, existingDatabase, createSchemas, targets );
+		doMigrationToTargets( metadata, existingDatabase, createNamespaces, targets );
 
 		for ( Target target : targets ) {
 			target.release();
@@ -67,33 +67,69 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 	protected void doMigrationToTargets(
 			Metadata metadata,
 			DatabaseInformation existingDatabase,
-			boolean createSchemas,
+			boolean createNamespaces,
 			List<Target> targets) {
 		final Set<String> exportIdentifiers = new HashSet<String>( 50 );
-		
-		final Database database = metadata.getDatabase();
 
-		for ( Schema schema : database.getSchemas() ) {
-			if ( createSchemas ) {
-				if ( schema.getName().getSchema() != null ) {
-					if ( !existingDatabase.schemaExists( schema.getName() ) ) {
-						applySqlString(
-								database.getJdbcEnvironment().getDialect().getCreateSchemaCommand(
-										schema.getName().getSchema().render( database.getJdbcEnvironment().getDialect() )
+		final Database database = metadata.getDatabase();
+		boolean tryToCreateCatalogs = false;
+		boolean tryToCreateSchemas = false;
+
+		if ( createNamespaces ) {
+			if ( database.getJdbcEnvironment().getDialect().canCreateSchema() ) {
+				tryToCreateSchemas = true;
+			}
+			if ( database.getJdbcEnvironment().getDialect().canCreateCatalog() ) {
+				tryToCreateCatalogs = true;
+			}
+		}
+
+		Set<Identifier> exportedCatalogs = new HashSet<Identifier>();
+		for ( Namespace namespace : database.getNamespaces() ) {
+			if ( tryToCreateCatalogs || tryToCreateSchemas ) {
+				if ( tryToCreateCatalogs ) {
+					final Identifier catalogLogicalName = namespace.getName().getCatalog();
+					final Identifier catalogPhysicalName = namespace.getPhysicalName().getCatalog();
+
+					if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName ) && !existingDatabase
+							.catalogExists( catalogLogicalName ) ) {
+						applySqlStrings(
+								database.getJdbcEnvironment().getDialect().getCreateCatalogCommand(
+										catalogPhysicalName.render(
+												database.getJdbcEnvironment().getDialect()
+										)
 								),
 								targets,
 								false
 						);
+						exportedCatalogs.add( catalogLogicalName );
 					}
+				}
+
+				if ( tryToCreateSchemas
+						&& namespace.getPhysicalName().getSchema() != null
+						&& !existingDatabase.schemaExists( namespace.getName() ) ) {
+					applySqlStrings(
+							database.getJdbcEnvironment().getDialect().getCreateSchemaCommand(
+									namespace.getPhysicalName()
+											.getSchema()
+											.render( database.getJdbcEnvironment().getDialect() )
+							),
+							targets,
+							false
+					);
 				}
 			}
 
-			for ( Table table : schema.getTables() ) {
+			for ( Table table : namespace.getTables() ) {
 				if ( !table.isPhysicalTable() ) {
 					continue;
 				}
 				checkExportIdentifier( table, exportIdentifiers );
 				final TableInformation tableInformation = existingDatabase.getTableInformation( table.getQualifiedTableName() );
+				if ( tableInformation != null && !tableInformation.isPhysicalTable() ) {
+					continue;
+				}
 				if ( tableInformation == null ) {
 					createTable( table, metadata, targets );
 				}
@@ -102,7 +138,7 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 				}
 			}
 
-			for ( Table table : schema.getTables() ) {
+			for ( Table table : namespace.getTables() ) {
 				if ( !table.isPhysicalTable() ) {
 					continue;
 				}
@@ -112,13 +148,16 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 					// big problem...
 					throw new SchemaManagementException( "BIG PROBLEM" );
 				}
+				if ( !tableInformation.isPhysicalTable() ) {
+					continue;
+				}
 
 				applyIndexes( table, tableInformation, metadata, targets );
 				applyUniqueKeys( table, tableInformation, metadata, targets );
 				applyForeignKeys( table, tableInformation, metadata, targets );
 			}
 
-			for ( Sequence sequence : schema.getSequences() ) {
+			for ( Sequence sequence : namespace.getSequences() ) {
 				checkExportIdentifier( sequence, exportIdentifiers );
 				final SequenceInformation sequenceInformation = existingDatabase.getSequenceInformation( sequence.getName() );
 				if ( sequenceInformation != null ) {
@@ -240,7 +279,7 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 	}
 
 	private UniqueConstraintSchemaUpdateStrategy determineUniqueConstraintSchemaUpdateStrategy(Metadata metadata) {
-		final ConfigurationService cfgService = ( (MetadataImplementor) metadata ).getMetadataBuildingOptions()
+		final ConfigurationService cfgService = ((MetadataImplementor) metadata).getMetadataBuildingOptions()
 				.getServiceRegistry()
 				.getService( ConfigurationService.class );
 
@@ -352,12 +391,12 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 	}
 
 	private String getDefaultCatalogName(Database database) {
-		final Identifier identifier = database.getDefaultSchema().getPhysicalName().getCatalog();
+		final Identifier identifier = database.getDefaultNamespace().getPhysicalName().getCatalog();
 		return identifier == null ? null : identifier.render( database.getJdbcEnvironment().getDialect() );
 	}
 
 	private String getDefaultSchemaName(Database database) {
-		final Identifier identifier = database.getDefaultSchema().getPhysicalName().getSchema();
+		final Identifier identifier = database.getDefaultNamespace().getPhysicalName().getSchema();
 		return identifier == null ? null : identifier.render( database.getJdbcEnvironment().getDialect() );
 	}
 }

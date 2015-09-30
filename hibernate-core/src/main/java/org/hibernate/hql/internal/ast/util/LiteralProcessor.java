@@ -13,6 +13,7 @@ import java.text.DecimalFormat;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
@@ -107,7 +108,7 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 			setSQLValue( node, text, discrim );
 		}
 		else {
-			Object value = ReflectHelper.getConstantValue( text );
+			Object value = ReflectHelper.getConstantValue( text, walker.getSessionFactoryHelper().getFactory().getServiceRegistry().getService( ClassLoaderService.class ) );
 			if ( value == null ) {
 				throw new InvalidPathException( "Invalid path: '" + text + "'" );
 			}

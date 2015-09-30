@@ -6,13 +6,21 @@
  */
 package org.hibernate.bytecode.enhance.spi;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.LoaderClassPath;
+
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.internal.CompositeEnhancer;
 import org.hibernate.bytecode.enhance.internal.EntityEnhancer;
 import org.hibernate.bytecode.enhance.internal.FieldWriter;
+import org.hibernate.bytecode.enhance.internal.PersistentAttributesEnhancer;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedComposite;
 import org.hibernate.engine.spi.ManagedEntity;
@@ -20,13 +28,6 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-
-import javax.tools.JavaFileObject;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.IOException;
 
 /**
  * Class responsible for performing enhancement.
@@ -41,6 +42,7 @@ public class Enhancer {
 
 	protected final ClassPool classPool;
 	protected final CtClass managedEntityCtClass;
+	protected final CtClass managedCompositeCtClass;
 	protected final CtClass attributeInterceptorCtClass;
 	protected final CtClass attributeInterceptableCtClass;
 	protected final CtClass entityEntryCtClass;
@@ -56,16 +58,11 @@ public class Enhancer {
 			this.enhancementContext = enhancementContext;
 			this.classPool = buildClassPool( enhancementContext );
 
-			// add ManagedEntity contract
+			// pre-load some of the interfaces that are used
 			this.managedEntityCtClass = loadCtClassFromClass( classPool, ManagedEntity.class );
-
-			// add PersistentAttributeInterceptable contract
+			this.managedCompositeCtClass = loadCtClassFromClass( classPool, ManagedComposite.class );
 			this.attributeInterceptableCtClass = loadCtClassFromClass( classPool, PersistentAttributeInterceptable.class );
-
-			// add PersistentAttributeInterceptor contract
 			this.attributeInterceptorCtClass = loadCtClassFromClass( classPool, PersistentAttributeInterceptor.class );
-
-			// add PersistentAttributeInterceptor contract
 			this.entityEntryCtClass = loadCtClassFromClass( classPool, EntityEntry.class );
 		}
 		catch (IOException e) {
@@ -84,7 +81,7 @@ public class Enhancer {
 	 *
 	 * @throws EnhancementException Indicates a problem performing the enhancement
 	 */
-	public byte[] enhance(String className, byte[] originalBytes) throws EnhancementException {
+	public synchronized byte[] enhance(String className, byte[] originalBytes) throws EnhancementException {
 		try {
 			final CtClass managedCtClass = classPool.makeClassIfNew( new ByteArrayInputStream( originalBytes ) );
 			enhance( managedCtClass );
@@ -106,17 +103,25 @@ public class Enhancer {
 	}
 
 	private CtClass loadCtClassFromClass(ClassPool cp, Class<?> aClass) throws IOException {
-		return cp.makeClass( aClass.getClassLoader().getResourceAsStream( getFilenameForClass( aClass ) ) );
-	}
-
-	private String getFilenameForClass(Class<?> aClass) {
-		return aClass.getName().replace( '.', File.separatorChar ) + JavaFileObject.Kind.CLASS.extension;
+		String resourceName = aClass.getName().replace( '.', '/' ) + ".class";
+		InputStream resourceAsStream = aClass.getClassLoader().getResourceAsStream( resourceName );
+		try {
+			return cp.makeClass( resourceAsStream );
+		}
+		finally {
+			try {
+				resourceAsStream.close();
+			}
+			catch (IOException ioe) {
+				log.debugf( "An error occurs closing InputStream for class [%s]", aClass.getName() );
+			}
+		}
 	}
 
 	private void enhance(CtClass managedCtClass) {
 		// can't effectively enhance interfaces
 		if ( managedCtClass.isInterface() ) {
-			log.debugf( "Skipping enhancement of [%s]: it's an interface", managedCtClass );
+			log.debugf( "Skipping enhancement of [%s]: it's an interface!", managedCtClass.getName() );
 			return;
 		}
 		// skip already enhanced classes
@@ -135,8 +140,12 @@ public class Enhancer {
 			log.debugf( "Enhancing [%s] as Composite", managedCtClass.getName() );
 			new CompositeEnhancer( enhancementContext ).enhance( managedCtClass );
 		}
+		else if ( enhancementContext.doFieldAccessEnhancement( managedCtClass ) ) {
+			log.debugf( "Enhancing field access in [%s]", managedCtClass.getName() );
+			new PersistentAttributesEnhancer( enhancementContext ).enhanceFieldAccess( managedCtClass );
+		}
 		else {
-			log.debug( "Skipping enhancement: not entity or composite" );
+			log.debugf( "Skipping enhancement of [%s]: not entity or composite", managedCtClass.getName() );
 		}
 	}
 
@@ -161,10 +170,8 @@ public class Enhancer {
 	}
 
 	protected void addInterceptorHandling(CtClass managedCtClass) {
-		// interceptor handling is only needed if either:
-		//		a) in-line dirty checking has *not* been requested
-		//		b) class has lazy-loadable attributes
-		if ( enhancementContext.doDirtyCheckingInline( managedCtClass ) && !enhancementContext.hasLazyLoadableAttributes( managedCtClass ) ) {
+		// interceptor handling is only needed if class has lazy-loadable attributes
+		if ( !enhancementContext.hasLazyLoadableAttributes( managedCtClass ) ) {
 			return;
 		}
 		log.debugf( "Weaving in PersistentAttributeInterceptable implementation on [%s]", managedCtClass.getName() );

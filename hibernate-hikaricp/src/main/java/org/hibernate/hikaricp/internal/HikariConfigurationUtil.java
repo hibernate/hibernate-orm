@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 
 import com.zaxxer.hikari.HikariConfig;
 
@@ -22,7 +23,6 @@ import com.zaxxer.hikari.HikariConfig;
  * @author Brett Meyer
  */
 public class HikariConfigurationUtil {
-
 	public static final String CONFIG_PREFIX = "hibernate.hikari.";
 
 	/**
@@ -34,15 +34,19 @@ public class HikariConfigurationUtil {
 	@SuppressWarnings("rawtypes")
 	public static HikariConfig loadConfiguration(Map props) {
 		Properties hikariProps = new Properties();
-		copyProperty( AvailableSettings.ISOLATION, props, "transactionIsolation", hikariProps );
 		copyProperty( AvailableSettings.AUTOCOMMIT, props, "autoCommit", hikariProps );
 
-		copyProperty(AvailableSettings.DRIVER, props, "driverClassName", hikariProps);
-		copyProperty(AvailableSettings.URL, props, "jdbcUrl", hikariProps);
+		copyProperty( AvailableSettings.DRIVER, props, "driverClassName", hikariProps );
+		copyProperty( AvailableSettings.URL, props, "jdbcUrl", hikariProps );
 		copyProperty( AvailableSettings.USER, props, "username", hikariProps );
 		copyProperty( AvailableSettings.PASS, props, "password", hikariProps );
 
+		copyIsolationSetting( props, hikariProps );
+
 		for ( Object keyo : props.keySet() ) {
+			if ( !(keyo instanceof String) ) {
+				continue;
+			}
 			String key = (String) keyo;
 			if ( key.startsWith( CONFIG_PREFIX ) ) {
 				hikariProps.setProperty( key.substring( CONFIG_PREFIX.length() ), (String) props.get( key ) );
@@ -58,4 +62,15 @@ public class HikariConfigurationUtil {
 			dst.setProperty( dstKey, (String) src.get( srcKey ) );
 		}
 	}
+
+	private static void copyIsolationSetting(Map props, Properties hikariProps) {
+		final Integer isolation = ConnectionProviderInitiator.extractIsolation( props );
+		if ( isolation != null ) {
+			hikariProps.put(
+					"transactionIsolation",
+					ConnectionProviderInitiator.toIsolationConnectionConstantName( isolation )
+			);
+		}
+	}
+
 }

@@ -227,8 +227,8 @@ public class CompositeIdentifierSingularAttributeSourceManyToOneImpl
 	}
 
 	@Override
-	public boolean isEmbedXml() {
-		return false;
+	public Boolean isEmbedXml() {
+		return null;
 	}
 
 	@Override

@@ -36,6 +36,7 @@ public class NamingStrategyConfigurationTest extends BaseUnitTestCase {
 					adapter,
 					Collections.singletonMap( AvailableSettings.PHYSICAL_NAMING_STRATEGY, MyNamingStrategy.class.getName() )
 			);
+			builder.build();
 			assertEquals(
 					MyNamingStrategy.class.getName(),
 					builder.getConfigurationValues().get( AvailableSettings.PHYSICAL_NAMING_STRATEGY )

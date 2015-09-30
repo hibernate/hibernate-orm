@@ -15,11 +15,11 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.insert.AbstractSelectingDelegate;
 import org.hibernate.id.insert.IdentifierGeneratingInsert;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
 /**
@@ -35,7 +35,7 @@ public class SelectGenerator extends AbstractPostInsertGenerator implements Conf
 	private String uniqueKeyPropertyName;
 
 	@Override
-	public void configure(Type type, Properties params, JdbcEnvironment jdbcEnvironment) throws MappingException {
+	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
 		uniqueKeyPropertyName = params.getProperty( "key" );
 	}
 

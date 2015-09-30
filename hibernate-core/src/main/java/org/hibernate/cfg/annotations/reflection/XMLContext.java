@@ -15,10 +15,11 @@ import javax.persistence.AccessType;
 import javax.persistence.AttributeConverter;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 
 import org.dom4j.Document;
@@ -33,12 +34,18 @@ import org.dom4j.Element;
 public class XMLContext implements Serializable {
     private static final CoreMessageLogger LOG = CoreLogging.messageLogger( XMLContext.class );
 
+	private final ClassLoaderAccess classLoaderAccess;
+
 	private Default globalDefaults;
 	private Map<String, Element> classOverriding = new HashMap<String, Element>();
 	private Map<String, Default> defaultsOverriding = new HashMap<String, Default>();
 	private List<Element> defaultElements = new ArrayList<Element>();
 	private List<String> defaultEntityListeners = new ArrayList<String>();
 	private boolean hasContext = false;
+
+	public XMLContext(ClassLoaderAccess classLoaderAccess) {
+		this.classLoaderAccess = classLoaderAccess;
+	}
 
 	/**
 	 * @param doc The xml document to add
@@ -182,14 +189,14 @@ public class XMLContext implements Serializable {
 			final boolean autoApply = autoApplyAttribute != null && Boolean.parseBoolean( autoApplyAttribute );
 
 			try {
-				final Class<? extends AttributeConverter> attributeConverterClass = ReflectHelper.classForName(
+				final Class<? extends AttributeConverter> attributeConverterClass = classLoaderAccess.classForName(
 						className
 				);
 				attributeConverterDefinitions.add(
 						new AttributeConverterDefinition( attributeConverterClass.newInstance(), autoApply )
 				);
 			}
-			catch (ClassNotFoundException e) {
+			catch (ClassLoadingException e) {
 				throw new AnnotationException( "Unable to locate specified AttributeConverter implementation class : " + className, e );
 			}
 			catch (Exception e) {

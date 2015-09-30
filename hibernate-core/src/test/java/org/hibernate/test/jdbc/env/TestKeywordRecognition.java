@@ -9,7 +9,7 @@ package org.hibernate.test.jdbc.env;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.engine.jdbc.env.spi.AnsiSqlKeywords;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
 import org.hibernate.testing.TestForIssue;
@@ -28,7 +28,9 @@ public class TestKeywordRecognition extends BaseUnitTestCase {
 
 	@Before
 	public void prepareServiveRegistry() {
-		serviceRegistry = new StandardServiceRegistryBuilder().build();
+		serviceRegistry = new StandardServiceRegistryBuilder()
+				.applySetting( AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, "true" )
+				.build();
 	}
 
 	@After

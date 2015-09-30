@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<chapter xml:id="flushing"
+         version="5.0"
+         xml:lang="en"
+         xmlns="http://docbook.org/ns/docbook"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xlink="http://www.w3.org/1999/xlink">
+    <info>
+        <title>Flushing</title>
+        <abstract>
+            <para>
+                Discuss flushing of the persistence context.
+            </para>
+        </abstract>
+    </info>
+
+    <sidebar>
+        <title>Related Topics</title>
+        <para>
+            <itemizedlist>
+                <listitem>
+                    <para><xref linkend="pc" /></para>
+                </listitem>
+                <listitem>
+                    <para><xref linkend="hql" /></para>
+                </listitem>
+                <listitem>
+                    <para><xref linkend="criteria" /></para>
+                </listitem>
+                <listitem>
+                    <para><xref linkend="querynative" /></para>
+                </listitem>
+            </itemizedlist>
+        </para>
+    </sidebar>
+
+    <para>
+        <!-- todo : write -->
+        Flushing is the process of synchronizing the state of the persistence context to the database.  TBC...
+    </para>
+</chapter>

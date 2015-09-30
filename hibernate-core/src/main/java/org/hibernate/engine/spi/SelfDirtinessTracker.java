@@ -6,6 +6,8 @@
  */
 package org.hibernate.engine.spi;
 
+import org.hibernate.bytecode.enhance.spi.CollectionTracker;
+
 /**
  * Contract for an entity to report that it tracks the dirtiness of its own state,
  * as opposed to needing Hibernate to perform state-diff dirty calculations.
@@ -33,7 +35,22 @@ public interface SelfDirtinessTracker {
 	String[] $$_hibernate_getDirtyAttributes();
 
 	/**
+	 * Adds persistent attribute to the set of values that have changed
+	 */
+	void $$_hibernate_trackChange(String attributes);
+
+	/**
 	 * Clear the stored dirty attributes
 	 */
 	void $$_hibernate_clearDirtyAttributes();
+
+	/**
+	 * Temporarily enable / disable dirty tracking
+	 */
+	void $$_hibernate_suspendDirtyTracking(boolean suspend);
+
+	/**
+	 * Get access to the CollectionTracker
+	 */
+	CollectionTracker $$_hibernate_getCollectionTracker();
 }

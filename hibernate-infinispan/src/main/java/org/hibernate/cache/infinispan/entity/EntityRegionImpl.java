@@ -7,15 +7,18 @@
 package org.hibernate.cache.infinispan.entity;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
+import org.hibernate.cache.infinispan.access.InvalidationCacheAccessDelegate;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.spi.CacheDataDescription;
+import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 
 import org.infinispan.AdvancedCache;
+
+import javax.transaction.TransactionManager;
 
 /**
  * Entity region implementation
@@ -25,40 +28,37 @@ import org.infinispan.AdvancedCache;
  * @since 3.5
  */
 public class EntityRegionImpl extends BaseTransactionalDataRegion implements EntityRegion {
-
-   /**
-    * Construct a entity region
-    *
-    * @param cache instance to store entity instances
-    * @param name of entity type
-    * @param metadata for the entity type
-    * @param factory for the region
-    */
+	/**
+	 * Construct a entity region
+	 *
+	 * @param cache instance to store entity instances
+	 * @param name of entity type
+	 * @param transactionManager
+	 * @param metadata for the entity type
+	 * @param factory for the region
+	 * @param cacheKeysFactory factory for cache keys
+	 */
 	public EntityRegionImpl(
-			AdvancedCache cache, String name,
-			CacheDataDescription metadata, RegionFactory factory) {
-		super( cache, name, metadata, factory );
+			AdvancedCache cache, String name, TransactionManager transactionManager,
+			CacheDataDescription metadata, RegionFactory factory, CacheKeysFactory cacheKeysFactory) {
+		super( cache, name, transactionManager, metadata, factory, cacheKeysFactory);
 	}
 
 	@Override
 	public EntityRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {
+		checkAccessType(accessType);
+		if ( !getCacheDataDescription().isMutable() ) {
+			accessType = AccessType.READ_ONLY;
+		}
+		InvalidationCacheAccessDelegate accessDelegate = InvalidationCacheAccessDelegate.create(this, getValidator());
 		switch ( accessType ) {
 			case READ_ONLY:
-				return new ReadOnlyAccess( this );
+				return new ReadOnlyAccess( this, accessDelegate);
+			case READ_WRITE:
 			case TRANSACTIONAL:
-				if ( getCacheDataDescription().isMutable() ) {
-					return new TransactionalAccess( this );
-				}
-				else {
-					return new ReadOnlyAccess( this );
-				}
+				return new ReadWriteAccess( this, accessDelegate);
 			default:
 				throw new CacheException( "Unsupported access type [" + accessType.getExternalName() + "]" );
 		}
 	}
-
-	public PutFromLoadValidator getPutFromLoadValidator() {
-		return new PutFromLoadValidator( cache );
-	}
-
 }

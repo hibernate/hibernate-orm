@@ -41,10 +41,11 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.hql.internal.classic.ParserHelper;
 import org.hibernate.internal.util.MarkerObject;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.property.Getter;
+import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
+import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxyHelper;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.SerializableType;
@@ -917,8 +918,12 @@ public abstract class AbstractQueryImpl implements Query {
 		String[] params = getNamedParameters();
 		for ( String namedParam : params ) {
 			try {
-				Getter getter = ReflectHelper.getGetter( clazz, namedParam );
-				Class retType = getter.getReturnType();
+				final PropertyAccess propertyAccess = BuiltInPropertyAccessStrategies.BASIC.getStrategy().buildPropertyAccess(
+						clazz,
+						namedParam
+				);
+				final Getter getter = propertyAccess.getGetter();
+				final Class retType = getter.getReturnType();
 				final Object object = getter.get( bean );
 				if ( Collection.class.isAssignableFrom( retType ) ) {
 					setParameterList( namedParam, (Collection) object );

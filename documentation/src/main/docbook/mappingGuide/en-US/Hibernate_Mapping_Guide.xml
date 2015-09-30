@@ -1,0 +1,82 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE book SYSTEM "http://docbook.org/xml/5.0/dtd/docbook.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "Hibernate_Mapping_Guide.ent">
+%BOOK_ENTITIES;
+]>
+
+<book xmlns:xi="http://www.w3.org/2001/XInclude">
+    <info>
+        <title>Hibernate Domain Model Mapping Guide</title>
+        <subtitle>Hibernate - Relational Persistence for Idiomatic Java</subtitle>
+        <releaseinfo>&version;</releaseinfo>
+        <productname>Hibernate ORM</productname>
+        <productnumber>&version;</productnumber>
+        <pubdate>&today;</pubdate>
+        <mediaobject>
+            <imageobject role="fo">
+                <imagedata fileref="images/hibernate_logo_a.png" align="center" />
+            </imageobject>
+            <imageobject role="html">
+                <imagedata fileref="images/hibernate_logo_a.png" depth="3cm" />
+            </imageobject>
+        </mediaobject>
+        <copyright>
+            <year>&copyrightYear;</year>
+            <holder>&copyrightHolder;</holder>
+        </copyright>
+
+        <authorgroup xmlns:xl="http://www.w3.org/1999/xlink">
+            <author>
+                <orgname><link xl:href="http://hibernate.org">The Hibernate Team</link></orgname>
+            </author>
+            <othercredit>
+                <orgname><link xl:href="http://design.jboss.org/">The JBoss Visual Design Team</link></orgname>
+            </othercredit>
+        </authorgroup>
+    </info>
+
+
+    <xi:include href="Preface.xml" />
+
+    <xi:include href="chapters/categoizations/Data_Categorizations.xml"  />
+    <xi:include href="chapters/entity/Entity.xml" />
+    <xi:include href="chapters/basic/Basic_Types.xml" />
+    <xi:include href="chapters/composition/Composition.xml" />
+    <xi:include href="chapters/collection/Collection.xml" />
+    <!--
+        <xi:include href="chapters/association/Associations.xml" />
+    -->
+
+    <xi:include href="chapters/id/Identifiers.xml" />
+    <xi:include href="chapters/natural_id/Natural_Id.xml" />
+
+    <!--
+        <xi:include href="chapters/secondary/Secondary_Tables.xml" />
+
+        <xi:include href="chapters/constraints/Database_Constraints.xml" /> pk, fk, index, check, unique
+        <xi:include href="chapters/auxiliary/Auxiliary_DB_Objects.xml" />
+
+        <xi:include href="chapters/access/Attribute_Access.xml" />
+        <xi:include href="chapters/overrides/Mapping_Overrides.xml" /> AttributeOverrides/AssociationOverrides
+
+        <xi:include href="chapters/generation/Generated_attributes.xml" />
+
+        columns, formulas, read/write-fragments
+
+        <xi:include href="chapters/naming/Naming_Strategies.xml" />
+        <xi:include href="chapters/quoting/SQL_Identifier_Quoting.xml" />
+
+        XML mappings
+    -->
+
+    <!-- appendices? -->
+    <!-- biblio? -->
+
+</book>
+

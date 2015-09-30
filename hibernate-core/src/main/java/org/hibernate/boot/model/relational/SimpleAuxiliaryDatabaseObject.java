@@ -32,12 +32,12 @@ public class SimpleAuxiliaryDatabaseObject extends AbstractAuxiliaryDatabaseObje
 	private final String[] dropStrings;
 
 	public SimpleAuxiliaryDatabaseObject(
-			Schema schema,
+			Namespace namespace,
 			String createString,
 			String dropString,
 			Set<String> dialectScopes) {
 		this(
-				schema,
+				namespace,
 				new String[] { createString },
 				new String[] { dropString },
 				dialectScopes
@@ -45,14 +45,14 @@ public class SimpleAuxiliaryDatabaseObject extends AbstractAuxiliaryDatabaseObje
 	}
 
 	public SimpleAuxiliaryDatabaseObject(
-			Schema schema,
+			Namespace namespace,
 			String[] createStrings,
 			String[] dropStrings,
 			Set<String> dialectScopes) {
 		this(
 				dialectScopes,
-				extractName( schema.getPhysicalName().getCatalog() ),
-				extractName( schema.getPhysicalName().getSchema() ),
+				extractName( namespace.getPhysicalName().getCatalog() ),
+				extractName( namespace.getPhysicalName().getSchema() ),
 				createStrings,
 				dropStrings
 		);

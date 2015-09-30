@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<chapter xml:id="collections"
+         version="5.0"
+         xml:lang="en"
+         xmlns="http://docbook.org/ns/docbook"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+        >
+    <title>Collections</title>
+
+    <section xml:id="collections-synopsis">
+        <title>Collections as a value type</title>
+        <para>
+            discussions of what it means for them to be value types  - lifecycle, opt-locking
+        </para>
+        <para>
+            Collections have the usual behavior of value types.  They are automatically persisted when referenced by
+            a persistent object and are automatically deleted when unreferenced.  If a collection is passed from one
+            persistent object to another, its elements might be moved from one table to another.  Two entities cannot
+            share a reference to the same collection instance.
+        </para>
+        <para>
+            Collection attributes do not support null value semantics; Hibernate does not distinguish between a null
+            collection reference and an empty collection.
+        </para>
+        <para>
+            It is important that collections be defined using the appropriate Java Collections Framework interface
+            rather than a specific implementation.  From a theoretical perspective, this just follows good design
+            principles.  From a practical perspective, Hibernate (really all persistence providers) will use
+            their own collection implementations which conform to the Java Collections Framework interfaces.
+        </para>
+    </section>
+
+    <section xml:id="collections-value">
+        <title>Collections of value types</title>
+        <para>
+            collection of values - elements can be of any value type except for collections (in fact even compositions as the element cannot contain collections)
+            * basics
+            * compositions
+        </para>
+    </section>
+
+    <section xml:id="collections-entity">
+        <title>Collections of entities</title>
+        <para>
+            * one-to-many
+            * many-to-many
+        </para>
+    </section>
+
+    <section xml:id="collections-list">
+        <title>List - index</title>
+        <para>
+            <!-- todo : discuss mapping list index -->
+            todo : discuss mapping list index
+        </para>
+    </section>
+
+    <section xml:id="collections-map">
+        <title>Map - key</title>
+        <para>
+            <!-- todo : discuss mapping map key -->
+            todo : discuss mapping map key
+        </para>
+    </section>
+
+    <section xml:id="collections-bag">
+        <title>Bags</title>
+        <para>
+            <!-- todo : discuss mapping bags -->
+            todo : discuss mapping bags and idbags
+        </para>
+    </section>
+
+    <section xml:id="collections-array">
+        <title>Arrays</title>
+        <para>
+            <!-- todo : discuss mapping arrays -->
+            todo : discuss mapping arrays
+        </para>
+    </section>
+
+    <section xml:id="collections-as-basic">
+        <title>Collections as basic value type</title>
+        <para>
+            Notice how all the previous examples explicitly mark the collection attribute as either
+            ElementCollection, OneToMany or ManyToMany.  Collections not marked as such, or collections explicitly
+            maked with @Basic are treated as JPA basic values.  Meaning there value is stored into a single
+            column in the containing table.
+        </para>
+        <para>
+            This is sometimes beneficial.  Consider a use-case such as a VARCHAR column that represents a
+            delimited list or set of Strings.
+        </para>
+        <example>
+            <title>Delimited set of tags</title>
+            <programlisting role="JAVA"><xi:include href="extras/DelimitedStringTagsExample.java" parse="text" /></programlisting>
+        </example>
+
+        <para>
+            See the <citetitle>Hibernate Integrations Guide</citetitle> for more details on developing
+            custom value type mappings.  Without the special type mapping above the "set of tags" would have
+            simply been marshalled using serialization.
+        </para>
+    </section>
+
+</chapter>

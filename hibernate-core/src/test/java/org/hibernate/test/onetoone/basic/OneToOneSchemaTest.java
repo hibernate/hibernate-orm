@@ -32,7 +32,7 @@ public class OneToOneSchemaTest extends BaseUnitTestCase {
 					.addAnnotatedClass( Child.class )
 					.buildMetadata();
 
-			Table childTable = metadata.getDatabase().getDefaultSchema().locateTable( Identifier.toIdentifier( "CHILD" ) );
+			Table childTable = metadata.getDatabase().getDefaultNamespace().locateTable( Identifier.toIdentifier( "CHILD" ) );
 			assertFalse( "UniqueKey was generated when it should not", childTable.getUniqueKeyIterator().hasNext() );
 		}
 		finally {

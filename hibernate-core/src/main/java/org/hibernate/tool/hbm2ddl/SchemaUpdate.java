@@ -32,7 +32,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tool.schema.extract.internal.legacy.DatabaseInformationImpl;
+import org.hibernate.tool.schema.extract.internal.DatabaseInformationImpl;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.internal.TargetDatabaseImpl;
 import org.hibernate.tool.schema.internal.TargetFileImpl;
@@ -115,8 +115,8 @@ public class SchemaUpdate {
 					serviceRegistry,
 					serviceRegistry.getService( JdbcEnvironment.class ),
 					jdbcConnectionAccess,
-					metadata.getDatabase().getDefaultSchema().getPhysicalName().getCatalog(),
-					metadata.getDatabase().getDefaultSchema().getPhysicalName().getSchema()
+					metadata.getDatabase().getDefaultNamespace().getPhysicalName().getCatalog(),
+					metadata.getDatabase().getDefaultNamespace().getPhysicalName().getSchema()
 			);
 		}
 		catch (SQLException e) {

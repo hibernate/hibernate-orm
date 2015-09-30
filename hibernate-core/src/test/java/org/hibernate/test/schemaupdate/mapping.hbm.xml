@@ -13,7 +13,7 @@
 
 	<class name="Version">
 		<id name="id">
-			<generator class="sequence"/>
+			<generator class="increment"/>
 		</id>
 		<property name="description"/>	
 	</class>

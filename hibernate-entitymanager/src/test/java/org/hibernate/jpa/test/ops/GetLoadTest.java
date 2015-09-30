@@ -15,12 +15,14 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Gavin King
@@ -104,6 +106,24 @@ public class GetLoadTest extends BaseEntityManagerFunctionalTestCase {
 				.getStatistics()
 				.getEntityFetchCount();
 		assertEquals( count, fetches );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9856" )
+	public void testNonEntity() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		try {
+			em.getReference( String.class, 1 );
+			fail( "Expecting a failure" );
+		}
+		catch (IllegalArgumentException ignore) {
+			// expected
+		}
+		finally {
+			em.getTransaction().rollback();
+			em.close();
+		}
 	}
 
 	@Override

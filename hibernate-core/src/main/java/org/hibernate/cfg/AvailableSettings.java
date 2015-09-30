@@ -6,45 +6,73 @@
  */
 package org.hibernate.cfg;
 
+import org.hibernate.boot.MetadataBuilder;
+
 /**
  * @author Steve Ebersole
  */
 public interface AvailableSettings {
-	/**
-	 * Setting used to name the Hibernate {@link org.hibernate.SessionFactory}.
-	 *
-	 * Naming the SessionFactory allows for it to be properly serialized across JVMs as
-	 * long as the same name is used on each JVM.
-	 *
-	 * If {@link #SESSION_FACTORY_NAME_IS_JNDI} is set to {@code true}, this is also the
-	 * name under which the SessionFactory is bound into JNDI on startup and from which
-	 * it can be obtained from JNDI.
-	 *
-	 * @see #SESSION_FACTORY_NAME_IS_JNDI
-	 * @see org.hibernate.internal.SessionFactoryRegistry
-	 */
-	 String SESSION_FACTORY_NAME = "hibernate.session_factory_name";
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// BootstrapServiceRegistry level settings
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * Does the value defined by {@link #SESSION_FACTORY_NAME} represent a JNDI namespace into which
-	 * the {@link org.hibernate.SessionFactory} should be bound and made accessible?
+	 * Used to define a {@link java.util.Collection} of the {@link ClassLoader} instances Hibernate should use for
+	 * class-loading and resource-lookups.
 	 *
-	 * Defaults to {@code true} for backwards compatibility.
-	 *
-	 * Set this to {@code false} if naming a SessionFactory is needed for serialization purposes, but
-	 * no writable JNDI context exists in the runtime environment or if the user simply does not want
-	 * JNDI to be used.
-	 *
-	 * @see #SESSION_FACTORY_NAME
+	 * @since 5.0
 	 */
-	String SESSION_FACTORY_NAME_IS_JNDI = "hibernate.session_factory_name_is_jndi";
+	String CLASSLOADERS = "hibernate.classLoaders";
+
+	/**
+	 * Names the {@link ClassLoader} used to load user application classes.
+	 * @since 4.0
+	 *
+	 * @deprecated Use {@link #CLASSLOADERS} instead
+	 */
+	@Deprecated
+	String APP_CLASSLOADER = "hibernate.classLoader.application";
+
+	/**
+	 * Names the {@link ClassLoader} Hibernate should use to perform resource loading.
+	 * @since 4.0
+	 * @deprecated Use {@link #CLASSLOADERS} instead
+	 */
+	@Deprecated
+	String RESOURCES_CLASSLOADER = "hibernate.classLoader.resources";
+
+	/**
+	 * Names the {@link ClassLoader} responsible for loading Hibernate classes.  By default this is
+	 * the {@link ClassLoader} that loaded this class.
+	 * @since 4.0
+	 * @deprecated Use {@link #CLASSLOADERS} instead
+	 */
+	@Deprecated
+	String HIBERNATE_CLASSLOADER = "hibernate.classLoader.hibernate";
+
+	/**
+	 * Names the {@link ClassLoader} used when Hibernate is unable to locates classes on the
+	 * {@link #APP_CLASSLOADER} or {@link #HIBERNATE_CLASSLOADER}.
+	 * @since 4.0
+	 * @deprecated Use {@link #CLASSLOADERS} instead
+	 */
+	@Deprecated
+	String ENVIRONMENT_CLASSLOADER = "hibernate.classLoader.environment";
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// StandardServiceRegistry level settings
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
 	 * Names the {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider} to use for obtaining
-	 * JDBC connections.  Can either reference an instance of
-	 * {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider} or a {@link Class} or {@link String}
-	 * reference to the {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider} implementation
-	 * class.
+	 * JDBC connections.  Can reference:<ul>
+	 *     <li>an instance of ConnectionProvider</li>
+	 *     <li>a {@code Class<? extends ConnectionProvider>} reference</li>
+	 *     <li>a {@code Class<? extends ConnectionProvider>} FQN</li>
+	 * </ul>
+	 * <p/>
+	 * The term {@code "class"} appears in the setting name due to legacy reasons; however it can accept instances.
 	 */
 	String CONNECTION_PROVIDER ="hibernate.connection.provider_class";
 
@@ -88,8 +116,11 @@ public interface AvailableSettings {
 	String POOL_SIZE ="hibernate.connection.pool_size";
 
 	/**
-	 * Names a {@link javax.sql.DataSource}.  Can either reference a {@link javax.sql.DataSource} instance or
-	 * a {@literal JNDI} name under which to locate the {@link javax.sql.DataSource}.
+	 * Names a {@link javax.sql.DataSource}.  Can reference:<ul>
+	 *     <li>a {@link javax.sql.DataSource} instance</li>
+	 *     <li>a {@literal JNDI} name under which to locate the {@link javax.sql.DataSource}</li>
+	 * </ul>
+	 * For JNDI names, ses also {@link #JNDI_CLASS}, {@link #JNDI_URL}, {@link #JNDI_PREFIX}, etc.
 	 */
 	String DATASOURCE ="hibernate.connection.datasource";
 
@@ -130,139 +161,13 @@ public interface AvailableSettings {
 	 */
 	String DIALECT_RESOLVERS = "hibernate.dialect_resolvers";
 
-
 	/**
-	 * A default database schema (owner) name to use for unqualified tablenames
+	 * Used to specify the {@link org.hibernate.tool.schema.spi.SchemaManagementTool} to use for performing
+	 * schema management.  The default is to use {@link org.hibernate.tool.schema.internal.HibernateSchemaManagementTool}
+	 *
+	 * @since 5.0
 	 */
-	String DEFAULT_SCHEMA = "hibernate.default_schema";
-	/**
-	 * A default database catalog name to use for unqualified tablenames
-	 */
-	String DEFAULT_CATALOG = "hibernate.default_catalog";
-
-	/**
-	 * Enable logging of generated SQL to the console
-	 */
-	String SHOW_SQL ="hibernate.show_sql";
-	/**
-	 * Enable formatting of SQL logged to the console
-	 */
-	String FORMAT_SQL ="hibernate.format_sql";
-	/**
-	 * Add comments to the generated SQL
-	 */
-	String USE_SQL_COMMENTS ="hibernate.use_sql_comments";
-	/**
-	 * Maximum depth of outer join fetching
-	 */
-	String MAX_FETCH_DEPTH = "hibernate.max_fetch_depth";
-	/**
-	 * The default batch size for batch fetching
-	 */
-	String DEFAULT_BATCH_FETCH_SIZE = "hibernate.default_batch_fetch_size";
-	/**
-	 * Use <tt>java.io</tt> streams to read / write binary data from / to JDBC
-	 */
-	String USE_STREAMS_FOR_BINARY = "hibernate.jdbc.use_streams_for_binary";
-	/**
-	 * Use JDBC scrollable <tt>ResultSet</tt>s. This property is only necessary when there is
-	 * no <tt>ConnectionProvider</tt>, ie. the user is supplying JDBC connections.
-	 */
-	String USE_SCROLLABLE_RESULTSET = "hibernate.jdbc.use_scrollable_resultset";
-	/**
-	 * Tells the JDBC driver to attempt to retrieve row Id with the JDBC 3.0 PreparedStatement.getGeneratedKeys()
-	 * method. In general, performance will be better if this property is set to true and the underlying
-	 * JDBC driver supports getGeneratedKeys().
-	 */
-	String USE_GET_GENERATED_KEYS = "hibernate.jdbc.use_get_generated_keys";
-	/**
-	 * Gives the JDBC driver a hint as to the number of rows that should be fetched from the database
-	 * when more rows are needed. If <tt>0</tt>, JDBC driver default settings will be used.
-	 */
-	String STATEMENT_FETCH_SIZE = "hibernate.jdbc.fetch_size";
-	/**
-	 * Maximum JDBC batch size. A nonzero value enables batch updates.
-	 */
-	String STATEMENT_BATCH_SIZE = "hibernate.jdbc.batch_size";
-	/**
-	 * Select a custom batcher.
-	 */
-	String BATCH_STRATEGY = "hibernate.jdbc.factory_class";
-	/**
-	 * Should versioned data be included in batching?
-	 */
-	String BATCH_VERSIONED_DATA = "hibernate.jdbc.batch_versioned_data";
-	/**
-	 * An XSLT resource used to generate "custom" XML
-	 */
-	String OUTPUT_STYLESHEET ="hibernate.xml.output_stylesheet";
-
-	/**
-	 * Maximum size of C3P0 connection pool
-	 */
-	String C3P0_MAX_SIZE = "hibernate.c3p0.max_size";
-	/**
-	 * Minimum size of C3P0 connection pool
-	 */
-	String C3P0_MIN_SIZE = "hibernate.c3p0.min_size";
-
-	/**
-	 * Maximum idle time for C3P0 connection pool
-	 */
-	String C3P0_TIMEOUT = "hibernate.c3p0.timeout";
-	/**
-	 * Maximum size of C3P0 statement cache
-	 */
-	String C3P0_MAX_STATEMENTS = "hibernate.c3p0.max_statements";
-	/**
-	 * Number of connections acquired when pool is exhausted
-	 */
-	String C3P0_ACQUIRE_INCREMENT = "hibernate.c3p0.acquire_increment";
-	/**
-	 * Idle time before a C3P0 pooled connection is validated
-	 */
-	String C3P0_IDLE_TEST_PERIOD = "hibernate.c3p0.idle_test_period";
-
-	/**
-	 * Proxool/Hibernate property prefix
-	 * @deprecated Use {@link #PROXOOL_CONFIG_PREFIX} instead
-	 */
-	String PROXOOL_PREFIX = "hibernate.proxool";
-	/**
-	 * Proxool property to configure the Proxool Provider using an XML (<tt>/path/to/file.xml</tt>)
-	 */
-	String PROXOOL_XML = "hibernate.proxool.xml";
-	/**
-	 * Proxool property to configure the Proxool Provider  using a properties file (<tt>/path/to/proxool.properties</tt>)
-	 */
-	String PROXOOL_PROPERTIES = "hibernate.proxool.properties";
-	/**
-	 * Proxool property to configure the Proxool Provider from an already existing pool (<tt>true</tt> / <tt>false</tt>)
-	 */
-	String PROXOOL_EXISTING_POOL = "hibernate.proxool.existing_pool";
-	/**
-	 * Proxool property with the Proxool pool alias to use
-	 * (Required for <tt>PROXOOL_EXISTING_POOL</tt>, <tt>PROXOOL_PROPERTIES</tt>, or
-	 * <tt>PROXOOL_XML</tt>)
-	 */
-	String PROXOOL_POOL_ALIAS = "hibernate.proxool.pool_alias";
-
-	/**
-	 * Enable automatic session close at end of transaction
-	 */
-	String AUTO_CLOSE_SESSION = "hibernate.transaction.auto_close_session";
-	/**
-	 * Enable automatic flush during the JTA <tt>beforeCompletion()</tt> callback
-	 */
-	String FLUSH_BEFORE_COMPLETION = "hibernate.transaction.flush_before_completion";
-	/**
-	 * Specifies how Hibernate should release JDBC connections.
-	 */
-	String RELEASE_CONNECTIONS = "hibernate.connection.release_mode";
-	/**
-	 * Context scoping impl for {@link org.hibernate.SessionFactory#getCurrentSession()} processing.
-	 */
-	String CURRENT_SESSION_CONTEXT_CLASS = "hibernate.current_session_context_class";
+	String SCHEMA_MANAGEMENT_TOOL = "hibernate.schema_management_tool";
 
 	/**
 	 * Names the implementation of {@link org.hibernate.resource.transaction.TransactionCoordinatorBuilder} to use for
@@ -271,7 +176,7 @@ public interface AvailableSettings {
 	 * Can be<ul>
 	 *     <li>TransactionCoordinatorBuilder instance</li>
 	 *     <li>TransactionCoordinatorBuilder implementation {@link Class} reference</li>
-	 *     <li>TransactionCoordinatorBuilder implementation class name (FQN)</li>
+	 *     <li>TransactionCoordinatorBuilder implementation class name (FQN) or short-name</li>
 	 * </ul>
 	 *
 	 * @since 5.0
@@ -288,7 +193,8 @@ public interface AvailableSettings {
 	String JTA_PLATFORM = "hibernate.transaction.jta.platform";
 
 	/**
-	 * Used to specify if using {@link javax.transaction.UserTransaction}  class to use for JTA transaction management.
+	 * Should we prefer using the {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform#retrieveUserTransaction}
+	 * over using {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform#retrieveTransactionManager}?
 	 *
 	 * Default is <code>false</code>
 	 *
@@ -303,51 +209,318 @@ public interface AvailableSettings {
 	String JTA_PLATFORM_RESOLVER = "hibernate.transaction.jta.platform_resolver";
 
 	/**
-	 * The {@link org.hibernate.cache.spi.RegionFactory} implementation class
+	 * A configuration value key used to indicate that it is safe to cache
+	 * {@link javax.transaction.TransactionManager} references.
+	 *
+	 * @since 4.0
 	 */
-	String CACHE_REGION_FACTORY = "hibernate.cache.region.factory_class";
+	String JTA_CACHE_TM = "hibernate.jta.cacheTransactionManager";
 
 	/**
-	 * The <tt>CacheProvider</tt> implementation class
+	 * A configuration value key used to indicate that it is safe to cache
+	 * {@link javax.transaction.UserTransaction} references.
+	 *
+	 * @since 4.0
 	 */
-	String CACHE_PROVIDER_CONFIG = "hibernate.cache.provider_configuration_file_resource_path";
+	String JTA_CACHE_UT = "hibernate.jta.cacheUserTransaction";
+
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// MetadataBuilder level settings
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 	/**
-	 * The <tt>CacheProvider</tt> JNDI namespace, if pre-bound to JNDI.
+	 * A default database catalog name to use for unqualified tablenames
+	 *
+	 * @see MetadataBuilder#applyImplicitCatalogName
 	 */
-	String CACHE_NAMESPACE = "hibernate.cache.jndi";
+	String DEFAULT_CATALOG = "hibernate.default_catalog";
+
 	/**
-	 * Enable the query cache (disabled by default)
+	 * A default database schema (owner) name to use for unqualified tablenames
+	 *
+	 * @see MetadataBuilder#applyImplicitSchemaName
 	 */
-	String USE_QUERY_CACHE = "hibernate.cache.use_query_cache";
+	String DEFAULT_SCHEMA = "hibernate.default_schema";
+
 	/**
-	 * The <tt>QueryCacheFactory</tt> implementation class.
+	 * Setting used to give the name of the default {@link org.hibernate.annotations.CacheConcurrencyStrategy}
+	 * to use when either {@link javax.persistence.Cacheable @Cacheable} or
+	 * {@link org.hibernate.annotations.Cache @Cache} is used.  {@link org.hibernate.annotations.Cache @Cache(strategy="..")} is used to override.
+	 *
+	 * @see MetadataBuilder#applyAccessType(org.hibernate.cache.spi.access.AccessType)
 	 */
-	String QUERY_CACHE_FACTORY = "hibernate.cache.query_cache_factory";
+	String DEFAULT_CACHE_CONCURRENCY_STRATEGY = "hibernate.cache.default_cache_concurrency_strategy";
+
 	/**
-	 * Enable the second-level cache (enabled by default)
+	 * Setting which indicates whether or not the new {@link org.hibernate.id.IdentifierGenerator} are used
+	 * for AUTO, TABLE and SEQUENCE.
+	 * <p/>
+	 * Default is {@code true}.  Existing applications may want to disable this (set it {@code false}) for
+	 * upgrade compatibility.
+	 *
+	 * @see MetadataBuilder#enableNewIdentifierGeneratorSupport
 	 */
-	String USE_SECOND_LEVEL_CACHE = "hibernate.cache.use_second_level_cache";
+	String USE_NEW_ID_GENERATOR_MAPPINGS = "hibernate.id.new_generator_mappings";
+
 	/**
-	 * Optimize the cache for minimal puts instead of minimal gets
+	 * @see org.hibernate.boot.MetadataBuilder#enableImplicitForcingOfDiscriminatorsInSelect(boolean)
 	 */
-	String USE_MINIMAL_PUTS = "hibernate.cache.use_minimal_puts";
+	String FORCE_DISCRIMINATOR_IN_SELECTS_BY_DEFAULT = "hibernate.discriminator.force_in_select";
+
 	/**
-	 * The <tt>CacheProvider</tt> region name prefix
+	 * The legacy behavior of Hibernate is to not use discriminators for joined inheritance (Hibernate does not need
+	 * the discriminator...).  However, some JPA providers do need the discriminator for handling joined inheritance.
+	 * In the interest of portability this capability has been added to Hibernate too.
+	 * <p/>
+	 * However, we want to make sure that legacy applications continue to work as well.  Which puts us in a bind in
+	 * terms of how to handle "implicit" discriminator mappings.  The solution is to assume that the absence of
+	 * discriminator metadata means to follow the legacy behavior *unless* this setting is enabled.  With this setting
+	 * enabled, Hibernate will interpret the absence of discriminator metadata as an indication to use the JPA
+	 * defined defaults for these absent annotations.
+	 * <p/>
+	 * See Hibernate Jira issue HHH-6911 for additional background info.
+	 *
+	 * @see MetadataBuilder#enableImplicitDiscriminatorsForJoinedSubclassSupport
+	 * @see #IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS
 	 */
-	String CACHE_REGION_PREFIX = "hibernate.cache.region_prefix";
+	String IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS = "hibernate.discriminator.implicit_for_joined";
+
 	/**
-	 * Enable use of structured second-level cache entries
+	 * The legacy behavior of Hibernate is to not use discriminators for joined inheritance (Hibernate does not need
+	 * the discriminator...).  However, some JPA providers do need the discriminator for handling joined inheritance.
+	 * In the interest of portability this capability has been added to Hibernate too.
+	 * <p/>
+	 * Existing applications rely (implicitly or explicitly) on Hibernate ignoring any DiscriminatorColumn declarations
+	 * on joined inheritance hierarchies.  This setting allows these applications to maintain the legacy behavior
+	 * of DiscriminatorColumn annotations being ignored when paired with joined inheritance.
+	 * <p/>
+	 * See Hibernate Jira issue HHH-6911 for additional background info.
+	 *
+	 * @see MetadataBuilder#enableExplicitDiscriminatorsForJoinedSubclassSupport
+	 * @see #IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS
 	 */
-	String USE_STRUCTURED_CACHE = "hibernate.cache.use_structured_entries";
+	String IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS = "hibernate.discriminator.ignore_explicit_for_joined";
+
 	/**
-	 * Enables the automatic eviction of a bi-directional association's collection cache when an element in the
-	 * ManyToOne collection is added/updated/removed without properly managing the change on the OneToMany side.
+	 * Enable nationalized character support on all string / clob based attribute ( string, char, clob, text etc ).
+	 *
+	 * Default is {@code false}.
+	 *
+	 * @see MetadataBuilder#enableGlobalNationalizedCharacterDataSupport(boolean)
 	 */
-	String AUTO_EVICT_COLLECTION_CACHE = "hibernate.cache.auto_evict_collection_cache";
+	String USE_NATIONALIZED_CHARACTER_DATA = "hibernate.use_nationalized_character_data";
 	/**
-	 * Enable statistics collection
+	 * The deprecated name.  Use {@link #SCANNER} or {@link #SCANNER_ARCHIVE_INTERPRETER} instead.
 	 */
-	String GENERATE_STATISTICS = "hibernate.generate_statistics";
+	String SCANNER_DEPRECATED = "hibernate.ejb.resource_scanner";
+
+	/**
+	 * Pass an implementation of {@link org.hibernate.boot.archive.scan.spi.Scanner}.
+	 * Accepts either:<ul>
+	 *     <li>an actual instance</li>
+	 *     <li>a reference to a Class that implements Scanner</li>
+	 *     <li>a fully qualified name (String) of a Class that implements Scanner</li>
+	 * </ul>
+	 *
+	 * @see org.hibernate.boot.MetadataBuilder#applyScanner
+	 */
+	String SCANNER = "hibernate.archive.scanner";
+
+	/**
+	 * Pass {@link org.hibernate.boot.archive.spi.ArchiveDescriptorFactory} to use
+	 * in the scanning process.  Accepts either:<ul>
+	 *     <li>an ArchiveDescriptorFactory instance</li>
+	 *     <li>a reference to a Class that implements ArchiveDescriptorFactory</li>
+	 *     <li>a fully qualified name (String) of a Class that implements ArchiveDescriptorFactory</li>
+	 * </ul>
+	 * <p/>
+	 * See information on {@link org.hibernate.boot.archive.scan.spi.Scanner}
+	 * about expected constructor forms.
+	 *
+	 * @see #SCANNER
+	 * @see org.hibernate.boot.archive.scan.spi.Scanner
+	 * @see org.hibernate.boot.archive.scan.spi.AbstractScannerImpl
+	 * @see MetadataBuilder#applyArchiveDescriptorFactory
+	 */
+	String SCANNER_ARCHIVE_INTERPRETER = "hibernate.archive.interpreter";
+
+	/**
+	 * Identifies a comma-separate list of values indicating the types of
+	 * things we should auto-detect during scanning.  Allowable values include:<ul>
+	 *     <li>"class" - discover classes - .class files are discovered as managed classes</li>
+	 *     <li>"hbm" - discover hbm mapping files - hbm.xml files are discovered as mapping files</li>
+	 * </ul>
+	 *
+	 * @see org.hibernate.boot.MetadataBuilder#applyScanOptions
+	 */
+	String SCANNER_DISCOVERY = "hibernate.archive.autodetection";
+
+	/**
+	 * Used to specify the {@link org.hibernate.boot.model.naming.ImplicitNamingStrategy} class to use.  The following
+	 * short-names are defined for this setting:<ul>
+	 *     <li>"default" -> {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl}</li>
+	 *     <li>"jpa" -> {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl}</li>
+	 *     <li>"legacy-jpa" -> {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl}</li>
+	 *     <li>"legacy-hbm" -> {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyHbmImpl}</li>
+	 *     <li>"component-path" -> {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl}</li>
+	 * </ul>
+	 *
+	 * The default is defined by the ImplicitNamingStrategy registered under the "default" key.  If that happens to
+	 * be empty, the fallback is to use {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl}.
+	 *
+	 * @see MetadataBuilder#applyImplicitNamingStrategy
+	 *
+	 * @since 5.0
+	 */
+	String IMPLICIT_NAMING_STRATEGY = "hibernate.implicit_naming_strategy";
+
+	/**
+	 * Used to specify the {@link org.hibernate.boot.model.naming.PhysicalNamingStrategy} class to use.
+	 *
+	 * @see MetadataBuilder#applyPhysicalNamingStrategy
+	 *
+	 * @since 5.0
+	 */
+	String PHYSICAL_NAMING_STRATEGY = "hibernate.physical_naming_strategy";
+
+	/**
+	 * Used to specify the order in which metadata sources should be processed.  Value
+	 * is a delimited-list whose elements are defined by {@link org.hibernate.cfg.MetadataSourceType}.
+	 * <p/>
+	 * Default is {@code "hbm,class"} which indicates to process {@code hbm.xml} files followed by
+	 * annotations (combined with {@code orm.xml} mappings).
+	 *
+	 * @see MetadataBuilder#applySourceProcessOrdering(org.hibernate.cfg.MetadataSourceType...)
+	 */
+	String ARTIFACT_PROCESSING_ORDER = "hibernate.mapping.precedence";
+
+	/**
+	 * Specifies whether to automatically quote any names that are deemed keywords.  Auto-quoting
+	 * is enabled by default.  Set to false to disable.
+	 *
+	 * @since 5.0
+	 */
+	String KEYWORD_AUTO_QUOTING_ENABLED = "hibernate.auto_quote_keyword";
+
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// SessionFactoryBuilder level settings
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * Setting used to name the Hibernate {@link org.hibernate.SessionFactory}.
+	 *
+	 * Naming the SessionFactory allows for it to be properly serialized across JVMs as
+	 * long as the same name is used on each JVM.
+	 *
+	 * If {@link #SESSION_FACTORY_NAME_IS_JNDI} is set to {@code true}, this is also the
+	 * name under which the SessionFactory is bound into JNDI on startup and from which
+	 * it can be obtained from JNDI.
+	 *
+	 * @see #SESSION_FACTORY_NAME_IS_JNDI
+	 * @see org.hibernate.internal.SessionFactoryRegistry
+	 */
+	 String SESSION_FACTORY_NAME = "hibernate.session_factory_name";
+
+	/**
+	 * Does the value defined by {@link #SESSION_FACTORY_NAME} represent a JNDI namespace into which
+	 * the {@link org.hibernate.SessionFactory} should be bound and made accessible?
+	 *
+	 * Defaults to {@code true} for backwards compatibility.
+	 *
+	 * Set this to {@code false} if naming a SessionFactory is needed for serialization purposes, but
+	 * no writable JNDI context exists in the runtime environment or if the user simply does not want
+	 * JNDI to be used.
+	 *
+	 * @see #SESSION_FACTORY_NAME
+	 */
+	String SESSION_FACTORY_NAME_IS_JNDI = "hibernate.session_factory_name_is_jndi";
+
+	/**
+	 * Enable logging of generated SQL to the console
+	 */
+	String SHOW_SQL ="hibernate.show_sql";
+
+	/**
+	 * Enable formatting of SQL logged to the console
+	 */
+	String FORMAT_SQL ="hibernate.format_sql";
+
+	/**
+	 * Add comments to the generated SQL
+	 */
+	String USE_SQL_COMMENTS ="hibernate.use_sql_comments";
+
+	/**
+	 * Maximum depth of outer join fetching
+	 */
+	String MAX_FETCH_DEPTH = "hibernate.max_fetch_depth";
+
+	/**
+	 * The default batch size for batch fetching
+	 */
+	String DEFAULT_BATCH_FETCH_SIZE = "hibernate.default_batch_fetch_size";
+
+	/**
+	 * Use <tt>java.io</tt> streams to read / write binary data from / to JDBC
+	 */
+	String USE_STREAMS_FOR_BINARY = "hibernate.jdbc.use_streams_for_binary";
+
+	/**
+	 * Use JDBC scrollable <tt>ResultSet</tt>s. This property is only necessary when there is
+	 * no <tt>ConnectionProvider</tt>, ie. the user is supplying JDBC connections.
+	 */
+	String USE_SCROLLABLE_RESULTSET = "hibernate.jdbc.use_scrollable_resultset";
+
+	/**
+	 * Tells the JDBC driver to attempt to retrieve row Id with the JDBC 3.0 PreparedStatement.getGeneratedKeys()
+	 * method. In general, performance will be better if this property is set to true and the underlying
+	 * JDBC driver supports getGeneratedKeys().
+	 */
+	String USE_GET_GENERATED_KEYS = "hibernate.jdbc.use_get_generated_keys";
+
+	/**
+	 * Gives the JDBC driver a hint as to the number of rows that should be fetched from the database
+	 * when more rows are needed. If <tt>0</tt>, JDBC driver default settings will be used.
+	 */
+	String STATEMENT_FETCH_SIZE = "hibernate.jdbc.fetch_size";
+
+	/**
+	 * Maximum JDBC batch size. A nonzero value enables batch updates.
+	 */
+	String STATEMENT_BATCH_SIZE = "hibernate.jdbc.batch_size";
+	/**
+	 * Select a custom batcher.
+	 */
+	String BATCH_STRATEGY = "hibernate.jdbc.factory_class";
+
+	/**
+	 * Should versioned data be included in batching?
+	 */
+	String BATCH_VERSIONED_DATA = "hibernate.jdbc.batch_versioned_data";
+
+	/**
+	 * Enable automatic session close at end of transaction
+	 */
+	String AUTO_CLOSE_SESSION = "hibernate.transaction.auto_close_session";
+
+	/**
+	 * Enable automatic flush during the JTA <tt>beforeCompletion()</tt> callback
+	 */
+	String FLUSH_BEFORE_COMPLETION = "hibernate.transaction.flush_before_completion";
+
+	/**
+	 * Specifies how Hibernate should release JDBC connections.
+	 */
+	String RELEASE_CONNECTIONS = "hibernate.connection.release_mode";
+
+	/**
+	 * Context scoping impl for {@link org.hibernate.SessionFactory#getCurrentSession()} processing.
+	 */
+	String CURRENT_SESSION_CONTEXT_CLASS = "hibernate.current_session_context_class";
 
 	String USE_IDENTIFIER_ROLLBACK = "hibernate.use_identifier_rollback";
 
@@ -381,27 +554,6 @@ public interface AvailableSettings {
 	String HBM2DDL_AUTO = "hibernate.hbm2ddl.auto";
 
 	/**
-	 * Comma-separated names of the optional files containing SQL DML statements executed
-	 * during the SessionFactory creation.
-	 * File order matters, the statements of a give file are executed before the statements of the
-	 * following files.
-	 *
-	 * These statements are only executed if the schema is created ie if <tt>hibernate.hbm2ddl.auto</tt>
-	 * is set to <tt>create</tt> or <tt>create-drop</tt>.
-	 *
-	 * The default value is <tt>/import.sql</tt>
-	 */
-	String HBM2DDL_IMPORT_FILES = "hibernate.hbm2ddl.import_files";
-
-	/**
-	 * {@link String} reference to {@link org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor} implementation class.
-	 * Referenced implementation is required to provide non-argument constructor.
-	 *
-	 * The default value is <tt>org.hibernate.tool.hbm2ddl.SingleLineSqlCommandExtractor</tt>.
-	 */
-	String HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR = "hibernate.hbm2ddl.import_files_sql_extractor";
-
-	/**
 	 * The {@link org.hibernate.exception.spi.SQLExceptionConverter} to use for converting SQLExceptions
 	 * to Hibernate's JDBCException hierarchy.  The default is to use the configured
 	 * {@link org.hibernate.dialect.Dialect}'s preferred SQLExceptionConverter.
@@ -429,6 +581,182 @@ public interface AvailableSettings {
 	 * {@code first}, {@code last}.
 	 */
 	String DEFAULT_NULL_ORDERING = "hibernate.order_by.default_null_ordering";
+
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// c3p0 connection pooling specific settings
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * A setting prefix used to indicate settings that target the hibernate-c3p0 integration
+	 */
+	String C3P0_CONFIG_PREFIX = "hibernate.c3p0";
+
+	/**
+	 * Maximum size of C3P0 connection pool
+	 */
+	String C3P0_MAX_SIZE = "hibernate.c3p0.max_size";
+
+	/**
+	 * Minimum size of C3P0 connection pool
+	 */
+	String C3P0_MIN_SIZE = "hibernate.c3p0.min_size";
+
+	/**
+	 * Maximum idle time for C3P0 connection pool
+	 */
+	String C3P0_TIMEOUT = "hibernate.c3p0.timeout";
+
+	/**
+	 * Maximum size of C3P0 statement cache
+	 */
+	String C3P0_MAX_STATEMENTS = "hibernate.c3p0.max_statements";
+
+	/**
+	 * Number of connections acquired when pool is exhausted
+	 */
+	String C3P0_ACQUIRE_INCREMENT = "hibernate.c3p0.acquire_increment";
+
+	/**
+	 * Idle time before a C3P0 pooled connection is validated
+	 */
+	String C3P0_IDLE_TEST_PERIOD = "hibernate.c3p0.idle_test_period";
+
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// proxool connection pooling specific settings
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * A setting prefix used to indicate settings that target the hibernate-proxool integration
+	 */
+	String PROXOOL_CONFIG_PREFIX = "hibernate.proxool";
+
+	/**
+	 * Proxool/Hibernate property prefix
+	 * @deprecated Use {@link #PROXOOL_CONFIG_PREFIX} instead
+	 */
+	String PROXOOL_PREFIX = PROXOOL_CONFIG_PREFIX;
+
+	/**
+	 * Proxool property to configure the Proxool Provider using an XML (<tt>/path/to/file.xml</tt>)
+	 */
+	String PROXOOL_XML = "hibernate.proxool.xml";
+
+	/**
+	 * Proxool property to configure the Proxool Provider  using a properties file (<tt>/path/to/proxool.properties</tt>)
+	 */
+	String PROXOOL_PROPERTIES = "hibernate.proxool.properties";
+
+	/**
+	 * Proxool property to configure the Proxool Provider from an already existing pool (<tt>true</tt> / <tt>false</tt>)
+	 */
+	String PROXOOL_EXISTING_POOL = "hibernate.proxool.existing_pool";
+
+	/**
+	 * Proxool property with the Proxool pool alias to use
+	 * (Required for <tt>PROXOOL_EXISTING_POOL</tt>, <tt>PROXOOL_PROPERTIES</tt>, or
+	 * <tt>PROXOOL_XML</tt>)
+	 */
+	String PROXOOL_POOL_ALIAS = "hibernate.proxool.pool_alias";
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Second-level cache settings
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * The {@link org.hibernate.cache.spi.RegionFactory} implementation class
+	 */
+	String CACHE_REGION_FACTORY = "hibernate.cache.region.factory_class";
+
+	/**
+	 * The <tt>CacheProvider</tt> implementation class
+	 */
+	String CACHE_PROVIDER_CONFIG = "hibernate.cache.provider_configuration_file_resource_path";
+	/**
+	 * Enable the second-level cache (enabled by default)
+	 */
+	String USE_SECOND_LEVEL_CACHE = "hibernate.cache.use_second_level_cache";
+
+	/**
+	 * Enable the query cache (disabled by default)
+	 */
+	String USE_QUERY_CACHE = "hibernate.cache.use_query_cache";
+
+	/**
+	 * The {@link org.hibernate.cache.spi.QueryCacheFactory} implementation class.
+	 */
+	String QUERY_CACHE_FACTORY = "hibernate.cache.query_cache_factory";
+
+	/**
+	 * The <tt>CacheProvider</tt> region name prefix
+	 */
+	String CACHE_REGION_PREFIX = "hibernate.cache.region_prefix";
+
+	/**
+	 * Optimize the cache for minimal puts instead of minimal gets
+	 */
+	String USE_MINIMAL_PUTS = "hibernate.cache.use_minimal_puts";
+
+	/**
+	 * Enable use of structured second-level cache entries
+	 */
+	String USE_STRUCTURED_CACHE = "hibernate.cache.use_structured_entries";
+
+	/**
+	 * Enables the automatic eviction of a bi-directional association's collection cache when an element in the
+	 * ManyToOne collection is added/updated/removed without properly managing the change on the OneToMany side.
+	 */
+	String AUTO_EVICT_COLLECTION_CACHE = "hibernate.cache.auto_evict_collection_cache";
+
+	/**
+	 * Enable direct storage of entity references into the second level cache when applicable (immutable data, etc).
+	 * Default is to not store direct references.
+	 */
+	String USE_DIRECT_REFERENCE_CACHE_ENTRIES = "hibernate.cache.use_reference_entries";
+
+
+
+
+
+
+	// Still to categorize
+
+
+	/**
+	 * Comma-separated names of the optional files containing SQL DML statements executed
+	 * during the SessionFactory creation.
+	 * File order matters, the statements of a give file are executed before the statements of the
+	 * following files.
+	 *
+	 * These statements are only executed if the schema is created ie if <tt>hibernate.hbm2ddl.auto</tt>
+	 * is set to <tt>create</tt> or <tt>create-drop</tt>.
+	 *
+	 * The default value is <tt>/import.sql</tt>
+	 */
+	String HBM2DDL_IMPORT_FILES = "hibernate.hbm2ddl.import_files";
+
+	/**
+	 * {@link String} reference to {@link org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor} implementation class.
+	 * Referenced implementation is required to provide non-argument constructor.
+	 *
+	 * The default value is <tt>org.hibernate.tool.hbm2ddl.SingleLineSqlCommandExtractor</tt>.
+	 */
+	String HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR = "hibernate.hbm2ddl.import_files_sql_extractor";
+
+	/**
+	 * Specifies whether to automatically create also the database schema/catalog.
+	 * The default is false.
+	 *
+	 * @since 5.0
+	 */
+	String HBM2DLL_CREATE_NAMESPACES = "hibernate.hbm2dll.create_namespaces";
+
+
+
 
 	/**
 	 * The EntityMode in which set the Session opened from the SessionFactory.
@@ -496,53 +824,7 @@ public interface AvailableSettings {
 	 */
 	String NON_CONTEXTUAL_LOB_CREATION = "hibernate.jdbc.lob.non_contextual_creation";
 
-	/**
-	 * Used to define a {@link java.util.Collection} of the {@link ClassLoader} instances Hibernate should use for
-	 * class-loading and resource-lookups.
-	 *
-	 * @since 5.0
-	 */
-	String CLASSLOADERS = "hibernate.classLoaders";
 
-	/**
-	 * Names the {@link ClassLoader} used to load user application classes.
-	 * @since 4.0
-	 *
-	 * @deprecated Use {@link #CLASSLOADERS} instead
-	 */
-	@Deprecated
-	String APP_CLASSLOADER = "hibernate.classLoader.application";
-
-	/**
-	 * Names the {@link ClassLoader} Hibernate should use to perform resource loading.
-	 * @since 4.0
-	 * @deprecated Use {@link #CLASSLOADERS} instead
-	 */
-	@Deprecated
-	String RESOURCES_CLASSLOADER = "hibernate.classLoader.resources";
-
-	/**
-	 * Names the {@link ClassLoader} responsible for loading Hibernate classes.  By default this is
-	 * the {@link ClassLoader} that loaded this class.
-	 * @since 4.0
-	 * @deprecated Use {@link #CLASSLOADERS} instead
-	 */
-	@Deprecated
-	String HIBERNATE_CLASSLOADER = "hibernate.classLoader.hibernate";
-
-	/**
-	 * Names the {@link ClassLoader} used when Hibernate is unable to locates classes on the
-	 * {@link #APP_CLASSLOADER} or {@link #HIBERNATE_CLASSLOADER}.
-	 * @since 4.0
-	 * @deprecated Use {@link #CLASSLOADERS} instead
-	 */
-	@Deprecated
-	String ENVIRONMENT_CLASSLOADER = "hibernate.classLoader.environment";
-
-
-	String C3P0_CONFIG_PREFIX = "hibernate.c3p0";
-
-	String PROXOOL_CONFIG_PREFIX = "hibernate.proxool";
 
 
 	String JMX_ENABLED = "hibernate.jmx.enabled";
@@ -551,34 +833,6 @@ public interface AvailableSettings {
 	String JMX_DOMAIN_NAME = "hibernate.jmx.defaultDomain";
 	String JMX_SF_NAME = "hibernate.jmx.sessionFactoryName";
 	String JMX_DEFAULT_OBJ_NAME_DOMAIN = "org.hibernate.core";
-
-	/**
-	 * A configuration value key used to indicate that it is safe to cache
-	 * {@link javax.transaction.TransactionManager} references.
-	 * @since 4.0
-	 */
-	String JTA_CACHE_TM = "hibernate.jta.cacheTransactionManager";
-
-	/**
-	 * A configuration value key used to indicate that it is safe to cache
-	 * {@link javax.transaction.UserTransaction} references.
-	 * @since 4.0
-	 */
-	String JTA_CACHE_UT = "hibernate.jta.cacheUserTransaction";
-
-	/**
-	 * Setting used to give the name of the default {@link org.hibernate.annotations.CacheConcurrencyStrategy}
-	 * to use when either {@link javax.persistence.Cacheable @Cacheable} or
-	 * {@link org.hibernate.annotations.Cache @Cache} is used.  {@link org.hibernate.annotations.Cache @Cache(strategy="..")} is used to override.
-	 */
-	String DEFAULT_CACHE_CONCURRENCY_STRATEGY = "hibernate.cache.default_cache_concurrency_strategy";
-
-	/**
-	 * Setting which indicates whether or not the new {@link org.hibernate.id.IdentifierGenerator} are used
-	 * for AUTO, TABLE and SEQUENCE.
-	 * Default to false to keep backward compatibility.
-	 */
-	String USE_NEW_ID_GENERATOR_MAPPINGS = "hibernate.id.new_generator_mappings";
 
 	/**
 	 * Setting to identify a {@link org.hibernate.CustomEntityDirtinessStrategy} to use.  May point to
@@ -616,40 +870,6 @@ public interface AvailableSettings {
 	 */
 	String MULTI_TENANT_IDENTIFIER_RESOLVER = "hibernate.tenant_identifier_resolver";
 
-	String FORCE_DISCRIMINATOR_IN_SELECTS_BY_DEFAULT = "hibernate.discriminator.force_in_select";
-
-	/**
-	 * The legacy behavior of Hibernate is to not use discriminators for joined inheritance (Hibernate does not need
-	 * the discriminator...).  However, some JPA providers do need the discriminator for handling joined inheritance.
-	 * In the interest of portability this capability has been added to Hibernate too.
-	 * <p/>
-	 * However, we want to make sure that legacy applications continue to work as well.  Which puts us in a bind in
-	 * terms of how to handle "implicit" discriminator mappings.  The solution is to assume that the absence of
-	 * discriminator metadata means to follow the legacy behavior *unless* this setting is enabled.  With this setting
-	 * enabled, Hibernate will interpret the absence of discriminator metadata as an indication to use the JPA
-	 * defined defaults for these absent annotations.
-	 * <p/>
-	 * See Hibernate Jira issue HHH-6911 for additional background info.
-	 *
-	 * @see #IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS
-	 */
-	String IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS = "hibernate.discriminator.implicit_for_joined";
-
-	/**
-	 * The legacy behavior of Hibernate is to not use discriminators for joined inheritance (Hibernate does not need
-	 * the discriminator...).  However, some JPA providers do need the discriminator for handling joined inheritance.
-	 * In the interest of portability this capability has been added to Hibernate too.
-	 * <p/>
-	 * Existing applications rely (implicitly or explicitly) on Hibernate ignoring any DiscriminatorColumn declarations
-	 * on joined inheritance hierarchies.  This setting allows these applications to maintain the legacy behavior
-	 * of DiscriminatorColumn annotations being ignored when paired with joined inheritance.
-	 * <p/>
-	 * See Hibernate Jira issue HHH-6911 for additional background info.
-	 *
-	 * @see #IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS
-	 */
-	String IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS = "hibernate.discriminator.ignore_explicit_for_joined";
-
 	/**
 	 * Names a {@link org.hibernate.Interceptor} implementation to be applied to the {@link org.hibernate.SessionFactory}
 	 * Can reference<ul>
@@ -682,21 +902,10 @@ public interface AvailableSettings {
 	 * Names the {@link org.hibernate.loader.BatchFetchStyle} to use.  Can specify either the
 	 * {@link org.hibernate.loader.BatchFetchStyle} name (insensitively), or a
 	 * {@link org.hibernate.loader.BatchFetchStyle} instance.
+	 * 
+	 * {@code LEGACY} is the default value.
 	 */
 	String BATCH_FETCH_STYLE = "hibernate.batch_fetch_style";
-
-	/**
-	 * Enable direct storage of entity references into the second level cache when applicable (immutable data, etc).
-	 * Default is to not store direct references.
-	 */
-	String USE_DIRECT_REFERENCE_CACHE_ENTRIES = "hibernate.cache.use_reference_entries";
-
-	/**
-	 * Enable nationalized character support on all string / clob based attribute ( string, char, clob, text etc ).
-	 *
-	 * Default is <clode>false</clode>.
-	 */
-	String USE_NATIONALIZED_CHARACTER_DATA = "hibernate.use_nationalized_character_data";
 	
 	/**
 	 * A transaction can be rolled back by another thread ("tracking by thread")
@@ -739,6 +948,11 @@ public interface AvailableSettings {
 	String UNIQUE_CONSTRAINT_SCHEMA_UPDATE_STRATEGY = "hibernate.schema_update.unique_constraint_strategy";
 
 	/**
+	 * Enable statistics collection
+	 */
+	String GENERATE_STATISTICS = "hibernate.generate_statistics";
+
+	/**
 	 * A setting to control whether to {@link org.hibernate.engine.internal.StatisticalLoggingSessionEventListener} is
 	 * enabled on all Sessions (unless explicitly disabled for a given Session).  The default value of this
 	 * setting is determined by the value for {@link #GENERATE_STATISTICS}, meaning that if collection of statistics
@@ -746,78 +960,16 @@ public interface AvailableSettings {
 	 */
 	String LOG_SESSION_METRICS = "hibernate.session.events.log";
 
+	/**
+	 * Defines a default {@link org.hibernate.SessionEventListener} to be applied to opened Sessions.
+	 */
 	String AUTO_SESSION_EVENTS_LISTENER = "hibernate.session.events.auto";
 
 
-	/**
-	 * The deprecated name.  Use {@link #SCANNER} or {@link #SCANNER_ARCHIVE_INTERPRETER} instead.
-	 */
-	String SCANNER_DEPRECATED = "hibernate.ejb.resource_scanner";
 
-	/**
-	 * Pass an implementation of {@link org.hibernate.boot.archive.scan.spi.Scanner}.
-	 * Accepts either:<ul>
-	 *     <li>an actual instance</li>
-	 *     <li>a reference to a Class that implements Scanner</li>
-	 *     <li>a fully qualified name (String) of a Class that implements Scanner</li>
-	 * </ul>
-	 */
-	String SCANNER = "hibernate.archive.scanner";
 
-	/**
-	 * Pass {@link org.hibernate.boot.archive.spi.ArchiveDescriptorFactory} to use
-	 * in the scanning process.  Accepts either:<ul>
-	 *     <li>an ArchiveDescriptorFactory instance</li>
-	 *     <li>a reference to a Class that implements ArchiveDescriptorFactory</li>
-	 *     <li>a fully qualified name (String) of a Class that implements ArchiveDescriptorFactory</li>
-	 * </ul>
-	 * <p/>
-	 * See information on {@link org.hibernate.boot.archive.scan.spi.Scanner}
-	 * about expected constructor forms.
-	 *
-	 * @see #SCANNER
-	 * @see org.hibernate.boot.archive.scan.spi.Scanner
-	 * @see org.hibernate.boot.archive.scan.spi.AbstractScannerImpl
-	 */
-	String SCANNER_ARCHIVE_INTERPRETER = "hibernate.archive.interpreter";
 
-	/**
-	 * Identifies a comma-separate list of values indicating the types of
-	 * things we should auto-detect during scanning.  Allowable values include:<ul>
-	 *     <li>"class" - discover classes - .class files are discovered as managed classes</li>
-	 *     <li>"hbm" - discover hbm mapping files - hbm.xml files are discovered as mapping files</li>
-	 * </ul>
-	 */
-	String SCANNER_DISCOVERY = "hibernate.archive.autodetection";
 
-	/**
-	 * Used to specify the {@link org.hibernate.tool.schema.spi.SchemaManagementTool} to use for performing
-	 * schema management.  The default is to use {@link org.hibernate.tool.schema.internal.HibernateSchemaManagementTool}
-	 *
-	 * @since 5.0
-	 */
-	String SCHEMA_MANAGEMENT_TOOL = "hibernate.schema_management_tool";
 
-	/**
-	 * Used to specify the {@link org.hibernate.boot.model.naming.ImplicitNamingStrategy} class to use.
-	 *
-	 * @since 5.0
-	 */
-	String IMPLICIT_NAMING_STRATEGY = "hibernate.implicit_naming_strategy";
 
-	/**
-	 * Used to specify the {@link org.hibernate.boot.model.naming.PhysicalNamingStrategy} class to use.
-	 *
-	 * @since 5.0
-	 */
-	String PHYSICAL_NAMING_STRATEGY = "hibernate.physical_naming_strategy";
-
-	/**
-	 * Used to specify the order in which metadata sources should be processed.  Value
-	 * is a delimited-list whose elements are defined by {@link org.hibernate.cfg.MetadataSourceType}.
-	 * <p/>
-	 * Default is {@code "hbm,class"} which indicates to process {@code hbm.xml} files followed by
-	 * annotations (combined with {@code orm.xml} mappings).
-	 */
-	String ARTIFACT_PROCESSING_ORDER = "hibernate.mapping.precedence";
 }

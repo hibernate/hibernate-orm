@@ -1,0 +1,5 @@
+select c.id, sum( o.total )
+from Order o
+    inner join o.customer c
+group by c.id
+having sum( o.total ) > 10000.00

@@ -15,7 +15,7 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
-import org.hibernate.boot.model.relational.Schema;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.UniqueKey;
@@ -69,8 +69,8 @@ public class ConstraintTest extends BaseNonConfigCoreFunctionalTestCase {
 	@TestForIssue( jiraKey = "HHH-1904" )
 	public void testConstraintNameLength() {
 		int foundCount = 0;
-		for ( Schema schema : metadata().getDatabase().getSchemas() ) {
-			for ( org.hibernate.mapping.Table table : schema.getTables() ) {
+		for ( Namespace namespace : metadata().getDatabase().getNamespaces() ) {
+			for ( org.hibernate.mapping.Table table : namespace.getTables() ) {
 				Iterator fkItr = table.getForeignKeyIterator();
 				while (fkItr.hasNext()) {
 					ForeignKey fk = (ForeignKey) fkItr.next();

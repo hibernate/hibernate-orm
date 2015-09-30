@@ -6,11 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.sql.SQLException;
-
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -21,13 +16,19 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
+import java.sql.BatchUpdateException;
+import java.sql.SQLException;
+
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Testing of patched support for PostgreSQL Lock error detection. HHH-7251
  *
  * @author Bryan Varner
  */
-@TestForIssue( jiraKey = "HHH-7251" )
 public class PostgreSQL81DialectTestCase extends BaseUnitTestCase {
 	
 	@Test
@@ -66,5 +67,15 @@ public class PostgreSQL81DialectTestCase extends BaseUnitTestCase {
 		lockOptions.setAliasSpecificLockMode("tableAlias2", LockMode.PESSIMISTIC_WRITE);
 		forUpdateClause = dialect.getForUpdateString("tableAlias1,tableAlias2", lockOptions);
 		assertTrue("for update of tableAlias1,tableAlias2".equals(forUpdateClause));
+	}
+
+	@Test
+	public void testExtractConstraintName() {
+		PostgreSQL81Dialect dialect = new PostgreSQL81Dialect();
+		SQLException psqlException = new java.sql.SQLException("ERROR: duplicate key value violates unique constraint \"uk_4bm1x2ultdmq63y3h5r3eg0ej\" Detail: Key (username, server_config)=(user, 1) already exists.", "23505");
+		BatchUpdateException batchUpdateException = new BatchUpdateException("Concurrent Error", "23505", null);
+		batchUpdateException.setNextException(psqlException);
+		String constraintName = dialect.getViolatedConstraintNameExtracter().extractConstraintName(batchUpdateException);
+		assertThat(constraintName, is("uk_4bm1x2ultdmq63y3h5r3eg0ej"));
 	}
 }

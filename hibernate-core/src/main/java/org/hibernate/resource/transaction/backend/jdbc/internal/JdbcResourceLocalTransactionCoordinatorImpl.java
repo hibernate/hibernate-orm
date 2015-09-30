@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.transaction.Status;
 
+import org.hibernate.TransactionException;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
@@ -83,8 +84,8 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 
 	@Override
 	public boolean isJoined() {
-		log.debug( "Calling TransactionCoordinator#isJoined in resource-local mode always returns false" );
-		return isActive();
+		return physicalTransactionDelegate != null && physicalTransactionDelegate.getStatus() == TransactionStatus.ACTIVE;
+
 	}
 
 	@Override
@@ -141,10 +142,19 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 
 	private void beforeCompletionCallback() {
 		log.trace( "ResourceLocalTransactionCoordinatorImpl#beforeCompletionCallback" );
-		transactionCoordinatorOwner.beforeTransactionCompletion();
-		synchronizationRegistry.notifySynchronizationsBeforeTransactionCompletion();
-		for ( TransactionObserver observer : observers ) {
-			observer.beforeCompletion();
+		try {
+			transactionCoordinatorOwner.beforeTransactionCompletion();
+			synchronizationRegistry.notifySynchronizationsBeforeTransactionCompletion();
+			for ( TransactionObserver observer : observers ) {
+				observer.beforeCompletion();
+			}
+		}
+		catch (RuntimeException e) {
+			if ( physicalTransactionDelegate != null ) {
+				// should never happen that the physicalTransactionDelegate is null, but to be safe
+				physicalTransactionDelegate.markRollbackOnly();
+			}
+			throw e;
 		}
 	}
 
@@ -185,6 +195,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 	public class TransactionDriverControlImpl implements TransactionDriver {
 		private final JdbcResourceTransaction jdbcResourceTransaction;
 		private boolean invalid;
+		private boolean rollbackOnly = false;
 
 		public TransactionDriverControlImpl(JdbcResourceTransaction jdbcResourceTransaction) {
 			super();
@@ -211,25 +222,52 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 
 		@Override
 		public void commit() {
-			JdbcResourceLocalTransactionCoordinatorImpl.this.beforeCompletionCallback();
-			jdbcResourceTransaction.commit();
-			JdbcResourceLocalTransactionCoordinatorImpl.this.afterCompletionCallback( true );
+			try {
+				if ( rollbackOnly ) {
+					throw new TransactionException( "Transaction was marked for rollback only; cannot commit" );
+				}
+
+				JdbcResourceLocalTransactionCoordinatorImpl.this.beforeCompletionCallback();
+				jdbcResourceTransaction.commit();
+				JdbcResourceLocalTransactionCoordinatorImpl.this.afterCompletionCallback( true );
+			}
+			catch (RuntimeException e) {
+				try {
+					rollback();
+				}
+				catch (RuntimeException e2) {
+					log.debug( "Encountered failure rolling back failed commit", e2 );;
+				}
+				throw e;
+			}
 		}
 
 		@Override
 		public void rollback() {
-			jdbcResourceTransaction.rollback();
-			JdbcResourceLocalTransactionCoordinatorImpl.this.afterCompletionCallback( false );
+			if ( rollbackOnly || getStatus() == TransactionStatus.ACTIVE ) {
+				rollbackOnly = false;
+				jdbcResourceTransaction.rollback();
+				JdbcResourceLocalTransactionCoordinatorImpl.this.afterCompletionCallback( false );
+			}
+
+			// no-op otherwise.
 		}
 
 		@Override
 		public TransactionStatus getStatus() {
-			return jdbcResourceTransaction.getStatus();
+			return rollbackOnly ? TransactionStatus.MARKED_ROLLBACK : jdbcResourceTransaction.getStatus();
 		}
 
 		@Override
 		public void markRollbackOnly() {
+			if ( log.isDebugEnabled() ) {
+				log.debug(
+						"JDBC transaction marked for rollback-only (exception provided for stack trace)",
+						new Exception( "exception just for purpose of providing stack trace" )
+				);
+			}
 
+			rollbackOnly = true;
 		}
 	}
 }

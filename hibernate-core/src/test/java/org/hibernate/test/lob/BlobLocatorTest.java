@@ -7,12 +7,12 @@
 package org.hibernate.test.lob;
 
 import java.sql.Blob;
+import java.util.Arrays;
 
 import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.dialect.TeradataDialect;
-import org.hibernate.internal.util.collections.ArrayHelper;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
@@ -180,7 +180,7 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 	}
 
 	public static void assertEquals(byte[] val1, byte[] val2) {
-		if ( !ArrayHelper.isEquals( val1, val2 ) ) {
+		if ( !Arrays.equals( val1, val2 ) ) {
 			throw new AssertionFailedError( "byte arrays did not match" );
 		}
 	}

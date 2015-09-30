@@ -6,6 +6,10 @@
  */
 package org.hibernate.engine.internal;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
+
 import org.hibernate.EntityMode;
 import org.hibernate.LockMode;
 import org.hibernate.UnsupportedLockAttemptException;
@@ -15,48 +19,18 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.persister.entity.EntityPersister;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.Serializable;
-
 /**
- * We need an entry to tell us all about the current state of an mutable object with respect to its persistent state
- *
- * Implementation Warning: Hibernate needs to instantiate a high amount of instances of this class,
- * therefore we need to take care of its impact on memory consumption.
+ * An EntityEntry implementation for immutable entities.  Note that this implementation is not completely
+ * immutable in terms of its internal state; the term immutable here refers to the entity is describes.
  *
  * @author Gavin King
  * @author Emmanuel Bernard <emmanuel@hibernate.org>
  * @author Gunnar Morling
  * @author Sanne Grinovero  <sanne@hibernate.org>
+ *
+ * @see org.hibernate.annotations.Immutable
  */
 public final class ImmutableEntityEntry extends AbstractEntityEntry {
-
-	/**
-	 * Holds several boolean and enum typed attributes in a very compact manner. Enum values are stored in 4 bits
-	 * (where 0 represents {@code null}, and each enum value is represented by its ordinal value + 1), thus allowing
-	 * for up to 15 values per enum. Boolean values are stored in one bit.
-	 * <p>
-	 * The value is structured as follows:
-	 *
-	 * <pre>
-	 * 1 - Lock mode
-	 * 2 - Status
-	 * 3 - Previous Status
-	 * 4 - existsInDatabase
-	 * 5 - isBeingReplicated
-	 * 6 - loadedWithLazyPropertiesUnfetched; NOTE: this is not updated when properties are fetched lazily!
-	 *
-	 * 0000 0000 | 0000 0000 | 0654 3333 | 2222 1111
-	 * </pre>
-	 * Use {@link #setCompressedValue(org.hibernate.engine.internal.ImmutableEntityEntry.EnumState, Enum)},
-	 * {@link #getCompressedValue(org.hibernate.engine.internal.ImmutableEntityEntry.EnumState, Class)} etc
-	 * to access the enums and booleans stored in this value.
-	 * <p>
-	 * Representing enum values by their ordinal value is acceptable for our case as this value itself is never
-	 * serialized or deserialized and thus is not affected should ordinal values change.
-	 */
-	private transient int compressedState;
 
 	/**
 	 * @deprecated the tenantId and entityMode parameters where removed: this constructor accepts but ignores them.

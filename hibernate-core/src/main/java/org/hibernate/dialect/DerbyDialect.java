@@ -7,6 +7,8 @@
 package org.hibernate.dialect;
 
 import java.lang.reflect.Method;
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Locale;
 
@@ -16,6 +18,9 @@ import org.hibernate.dialect.function.DerbyConcatFunction;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.jdbc.env.spi.AnsiSqlKeywords;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
@@ -285,13 +290,13 @@ public class DerbyDialect extends DB2Dialect {
 			}
 
 			if (LimitHelper.hasFirstRow( selection )) {
-				sb.append( " offset ? rows fetch next " );
+				sb.append( " offset " ).append( selection.getFirstRow() ).append( " rows fetch next " );
 			}
 			else {
 				sb.append( " fetch first " );
 			}
 
-			sb.append( "? rows only" );
+			sb.append( getMaxOrLimit( selection ) ).append(" rows only" );
 
 			if (hasForUpdateClause( forUpdateIndex )) {
 				sb.append( ' ' );
@@ -320,4 +325,16 @@ public class DerbyDialect extends DB2Dialect {
 		}
 	}
 
+	@Override
+	public IdentifierHelper buildIdentifierHelper(
+			IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData) throws SQLException {
+		builder.applyIdentifierCasing( dbMetaData );
+
+		builder.applyReservedWords( dbMetaData );
+		builder.applyReservedWords( getKeywords() );
+
+		builder.setNameQualifierSupport( getNameQualifierSupport() );
+
+		return builder.build();
+	}
 }

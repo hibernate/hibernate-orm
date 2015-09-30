@@ -20,6 +20,7 @@ import org.hibernate.boot.jaxb.internal.stax.HbmEventReader;
 import org.hibernate.boot.jaxb.internal.stax.JpaOrmXmlEventReader;
 import org.hibernate.boot.jaxb.internal.stax.LocalSchema;
 import org.hibernate.boot.jaxb.spi.Binding;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 
 import org.jboss.logging.Logger;
 
@@ -35,12 +36,12 @@ public class MappingBinder extends AbstractBinder {
 
 	private final XMLEventFactory xmlEventFactory = XMLEventFactory.newInstance();
 
-	public MappingBinder() {
-		super();
+	public MappingBinder(ClassLoaderService classLoaderService) {
+		super( classLoaderService );
 	}
 
-	public MappingBinder(boolean validateXml) {
-		super( validateXml );
+	public MappingBinder(ClassLoaderService classLoaderService, boolean validateXml) {
+		super( classLoaderService, validateXml );
 	}
 
 	@Override

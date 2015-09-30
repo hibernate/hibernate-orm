@@ -11,7 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.relational.Schema;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.internal.util.collections.JoinedIterator;
 
 /**
@@ -27,25 +27,25 @@ public class DenormalizedTable extends Table {
 		includedTable.setHasDenormalizedTables();
 	}
 
-	public DenormalizedTable(Schema schema, Identifier physicalTableName, boolean isAbstract, Table includedTable) {
-		super( schema, physicalTableName, isAbstract );
+	public DenormalizedTable(Namespace namespace, Identifier physicalTableName, boolean isAbstract, Table includedTable) {
+		super( namespace, physicalTableName, isAbstract );
 		this.includedTable = includedTable;
 		includedTable.setHasDenormalizedTables();
 	}
 
 	public DenormalizedTable(
-			Schema schema,
+			Namespace namespace,
 			Identifier physicalTableName,
 			String subselectFragment,
 			boolean isAbstract,
 			Table includedTable) {
-		super( schema, physicalTableName, subselectFragment, isAbstract );
+		super( namespace, physicalTableName, subselectFragment, isAbstract );
 		this.includedTable = includedTable;
 		includedTable.setHasDenormalizedTables();
 	}
 
-	public DenormalizedTable(Schema schema, String subselect, boolean isAbstract, Table includedTable) {
-		super( schema, subselect, isAbstract );
+	public DenormalizedTable(Namespace namespace, String subselect, boolean isAbstract, Table includedTable) {
+		super( namespace, subselect, isAbstract );
 		this.includedTable = includedTable;
 		includedTable.setHasDenormalizedTables();
 	}

@@ -143,4 +143,46 @@ public interface DeprecationLogger {
 			id = 90000011
 	)
 	void logDeprecationOfTemporaryTableBulkIdStrategy();
+
+	@LogMessage(level = WARN)
+	@Message(value = "Recognized obsolete hibernate namespace %s. Use namespace %s instead.  Support for obsolete DTD/XSD namespaces may be removed at any time.",
+			id = 90000012)
+	void recognizedObsoleteHibernateNamespace(
+			String oldHibernateNamespace,
+			String hibernateNamespace);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000013,
+			value = "Named ConnectionProvider [%s] has been deprecated in favor of %s; that provider will be used instead.  Update your settings"
+	)
+	void connectionProviderClassDeprecated(
+			String providerClassName,
+			String actualProviderClassName);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000014,
+			value = "Found use of deprecated [%s] sequence-based id generator; " +
+					"use org.hibernate.id.enhanced.SequenceStyleGenerator instead.  " +
+					"See Hibernate Domain Model Mapping Guide for details."
+	)
+	void deprecatedSequenceGenerator(String generatorImpl);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000015,
+			value = "Found use of deprecated [%s] table-based id generator; " +
+					"use org.hibernate.id.enhanced.TableGenerator instead.  " +
+					"See Hibernate Domain Model Mapping Guide for details."
+	)
+	void deprecatedTableGenerator(String generatorImpl);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000016,
+			value = "Found use of deprecated 'collection property' syntax in HQL/JPQL query [%2$s.%1$s]; " +
+					"use collection function syntax instead [%1$s(%2$s)]."
+	)
+	void logDeprecationOfCollectionPropertiesInHql(String collectionPropertyName, String alias);
 }

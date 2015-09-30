@@ -2947,11 +2947,17 @@ public class FooBarTest extends LegacyTestCase {
 		s = openSession();
 		s.beginTransaction();
 		s.load( bar, bar.getKey() );
+		bar2 = s.load( Bar.class, bar2.getKey() );
 		assertTrue( "collection contains self", bar.getAbstracts().size() == 2 && bar.getAbstracts().contains( bar ) );
 		assertTrue( "association to self", bar.getFoo()==bar );
-		for ( Object o : bar.getAbstracts() ) {
-			s.delete( o );
-		}
+
+		// for MySQL :(
+		bar.getAbstracts().clear();
+		bar.setFoo( null );
+		s.flush();
+
+		s.delete( bar );
+		s.delete( bar2 );
 		s.getTransaction().commit();
 		s.close();
 	}

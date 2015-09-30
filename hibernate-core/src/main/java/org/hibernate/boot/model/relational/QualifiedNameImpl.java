@@ -12,7 +12,7 @@ import org.hibernate.boot.model.naming.Identifier;
  * @author Steve Ebersole
  */
 public class QualifiedNameImpl extends QualifiedNameParser.NameParts implements QualifiedName {
-	public QualifiedNameImpl(Schema.Name schemaName, Identifier objectName) {
+	public QualifiedNameImpl(Namespace.Name schemaName, Identifier objectName) {
 		this(
 				schemaName.getCatalog(),
 				schemaName.getSchema(),

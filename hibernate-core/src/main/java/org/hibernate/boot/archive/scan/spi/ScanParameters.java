@@ -13,5 +13,4 @@ package org.hibernate.boot.archive.scan.spi;
  * @author Steve Ebersole
  */
 public interface ScanParameters {
-	public JandexInitializer getJandexInitializer();
 }

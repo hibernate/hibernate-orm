@@ -53,7 +53,6 @@ import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
-
 import org.jboss.logging.Logger;
 
 import static org.hibernate.cfg.AvailableSettings.AUTO_CLOSE_SESSION;
@@ -78,6 +77,7 @@ import static org.hibernate.cfg.AvailableSettings.MAX_FETCH_DEPTH;
 import static org.hibernate.cfg.AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER;
 import static org.hibernate.cfg.AvailableSettings.ORDER_INSERTS;
 import static org.hibernate.cfg.AvailableSettings.ORDER_UPDATES;
+import static org.hibernate.cfg.AvailableSettings.PREFER_USER_TRANSACTION;
 import static org.hibernate.cfg.AvailableSettings.QUERY_CACHE_FACTORY;
 import static org.hibernate.cfg.AvailableSettings.QUERY_STARTUP_CHECKING;
 import static org.hibernate.cfg.AvailableSettings.QUERY_SUBSTITUTIONS;
@@ -98,7 +98,6 @@ import static org.hibernate.cfg.AvailableSettings.USE_SQL_COMMENTS;
 import static org.hibernate.cfg.AvailableSettings.USE_STRUCTURED_CACHE;
 import static org.hibernate.cfg.AvailableSettings.WRAP_RESULT_SETS;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
-import static org.hibernate.cfg.AvailableSettings.PREFER_USER_TRANSACTION;
 
 /**
  * @author Gail Badner
@@ -110,7 +109,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	private final MetadataImplementor metadata;
 	private final SessionFactoryOptionsStateStandardImpl options;
 
-	SessionFactoryBuilderImpl(MetadataImplementor metadata) {
+	public SessionFactoryBuilderImpl(MetadataImplementor metadata) {
 		this.metadata = metadata;
 		this.options = new SessionFactoryOptionsStateStandardImpl( metadata.getMetadataBuildingOptions().getServiceRegistry() );
 
@@ -541,9 +540,9 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 
 			final Map configurationSettings = new HashMap();
 			//noinspection unchecked
-			configurationSettings.putAll( cfgService.getSettings() );
-			//noinspection unchecked
 			configurationSettings.putAll( jdbcServices.getJdbcEnvironment().getDialect().getDefaultProperties() );
+			//noinspection unchecked
+			configurationSettings.putAll( cfgService.getSettings() );
 			cfgService = new ConfigurationServiceImpl( configurationSettings );
 			( (ConfigurationServiceImpl) cfgService ).injectServices( (ServiceRegistryImplementor) serviceRegistry );
 
@@ -667,7 +666,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 				this.jdbcBatchSize = 0;
 			}
 
-			this.jdbcBatchVersionedData = ConfigurationHelper.getBoolean( BATCH_VERSIONED_DATA, configurationSettings, false );
+			this.jdbcBatchVersionedData = ConfigurationHelper.getBoolean( BATCH_VERSIONED_DATA, configurationSettings, true );
 			this.scrollableResultSetsEnabled = ConfigurationHelper.getBoolean(
 					USE_SCROLLABLE_RESULTSET,
 					configurationSettings,

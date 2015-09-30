@@ -1,0 +1,414 @@
+<?xml version='1.0' encoding='utf-8' ?>
+
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<chapter xml:id="criteria"
+         xmlns="http://docbook.org/ns/docbook"
+         xmlns:xi="http://www.w3.org/2001/XInclude">
+
+    <title>Criteria</title>
+
+    <para>
+        Criteria queries offer a type-safe alternative to HQL, JPQL and native-sql queries.
+    </para>
+
+    <important>
+        <para>
+            Hibernate offers an older, legacy <interfacename>org.hibernate.Criteria</interfacename> API which should be
+            considered deprecated.  No feature development will target those APIs.  Eventually, Hibernate-specific
+            criteria features will be ported as extensions to the JPA
+            <interfacename>javax.persistence.criteria.CriteriaQuery</interfacename>.  For details on the
+            <interfacename>org.hibernate.Criteria</interfacename> API, see <xref linkend="appendix-legacy-criteria"/>.
+        </para>
+        <para>
+            This chapter will focus on the JPA APIs for declaring type-safe criteria queries.
+        </para>
+    </important>
+
+
+    <para>
+        Criteria queries are a programmatic, type-safe way to express a query.  They are type-safe in terms of
+        using interfaces and classes to represent various structural parts of a query such as the query itself,
+        or the select clause, or an order-by, etc.  They can also be type-safe in terms of referencing attributes
+        as we will see in a bit. Users of the older Hibernate <interfacename>org.hibernate.Criteria</interfacename>
+        query API will recognize the general approach, though we believe the JPA API to be superior
+        as it represents a clean look at the lessons learned from that API.
+    </para>
+
+    <para>
+        Criteria queries are essentially an object graph, where each part of the graph represents an increasing
+        (as we navigate down this graph) more atomic part of query. The first step in performing a criteria query
+        is building this graph. The <interfacename>javax.persistence.criteria.CriteriaBuilder</interfacename>
+        interface is the first thing with which you need to become acquainted to begin using criteria queries. Its
+        role is that of a factory for all the individual pieces of the criteria. You obtain a
+        <interfacename>javax.persistence.criteria.CriteriaBuilder</interfacename> instance by calling the
+        <methodname>getCriteriaBuilder</methodname> method of either
+        <interfacename>javax.persistence.EntityManagerFactory</interfacename> or
+        <interfacename>javax.persistence.EntityManager</interfacename>.
+    </para>
+
+    <para>
+        The next step is to obtain a <interfacename>javax.persistence.criteria.CriteriaQuery</interfacename>. This
+        is accomplished using one of the 3 methods on
+        <interfacename>javax.persistence.criteria.CriteriaBuilder</interfacename> for this purpose:
+    </para>
+
+    <programlisting role="JAVA"><xi:include href="extras/CriteriaBuilder_query_creation_snippet.java" parse="text"/></programlisting>
+
+    <para>
+        Each serves a different purpose depending on the expected type of the query results.
+    </para>
+
+    <note>
+        <para>
+            <citetitle pubwork="chapter">Chapter 6 Criteria API</citetitle> of the JPA Specification
+            already contains a decent amount of reference material pertaining to the various parts of a
+            criteria query. So rather than duplicate all that content here, lets instead look at some of
+            the more widely anticipated usages of the API.
+        </para>
+    </note>
+
+    <section xml:id="querycriteria-typedquery">
+        <title>Typed criteria queries</title>
+
+        <para>
+            The type of the criteria query (aka the <![CDATA[<T>]]>) indicates the expected types in the query
+            result.  This might be an entity, an Integer, or any other object.
+        </para>
+
+        <section xml:id="querycriteria-typedquery-entity">
+            <title>Selecting an entity</title>
+
+            <para>
+                This is probably the most common form of query.  The application wants to select entity instances.
+            </para>
+
+            <example xml:id="ex-criteria-typedquery-entity">
+                <title>Selecting the root entity</title>
+                <programlisting role="JAVA"><xi:include href="extras/select_root_entity_example.java" parse="text"/></programlisting>
+            </example>
+
+            <para>
+                The example uses <methodname>createQuery</methodname> passing in the <classname>Person</classname>
+                class reference as the results of the query will be Person objects.
+            </para>
+
+            <note>
+                <para>
+                    The call to the <methodname>CriteriaQuery.select</methodname> method in this example is
+                    unnecessary because <emphasis>personRoot</emphasis> will be the implied selection since we
+                    have only a single query root. It was done here only for completeness of an example.
+                </para>
+                <para>
+                    The <emphasis>Person_.eyeColor</emphasis> reference is an example of the static form of JPA
+                    metamodel reference.  We will use that form exclusively in this chapter.  See
+                    the documentation for the Hibernate JPA Metamodel Generator for additional details on
+                    the JPA static metamodel.
+                </para>
+            </note>
+        </section>
+
+        <section xml:id="querycriteria-typedquery-expression">
+            <title>Selecting an expression</title>
+
+            <para>
+                The simplest form of selecting an expression is selecting a particular attribute from an entity.
+                But this expression might also represent an aggregation, a mathematical operation, etc.
+            </para>
+
+            <example xml:id="ex-criteria-typedquery-attribute">
+                <title>Selecting an attribute</title>
+                <programlisting role="JAVA"><xi:include href="extras/select_attribute_example.java" parse="text"/></programlisting>
+            </example>
+
+            <para>
+                In this example, the query is typed as <classname>java.lang.Integer</classname> because that
+                is the anticipated type of the results (the type of the <methodname>Person#age</methodname> attribute
+                is <classname>java.lang.Integer</classname>).  Because a query might contain multiple references to
+                the Person entity, attribute references always need to be qualified.  This is accomplished by the
+                <methodname>Root#get</methodname> method call.
+            </para>
+        </section>
+
+
+        <section xml:id="querycriteria-typedquery-multiselect">
+            <title>Selecting multiple values</title>
+
+            <para>
+                There are actually a few different ways to select multiple values using criteria queries. We
+                will explore 2 options here, but an alternative recommended approach is to use tuples as described in
+                <xref linkend="querycriteria-tuple" />.  Or consider a wrapper query; see
+                <xref linkend="querycriteria-typedquery-construct"/> for details.
+            </para>
+
+            <example xml:id="ex-criteria-typedquery-array">
+                <title>Selecting an array</title>
+                <programlisting role="JAVA"><xi:include href="extras/select_multiple_values_array.java" parse="text"/></programlisting>
+            </example>
+
+            <para>
+                Technically this is classified as a typed query, but you can see from handling the results that
+                this is sort of misleading.  Anyway, the expected result type here is an array.
+            </para>
+
+            <para>
+                The example then uses the <methodname>array</methodname> method of
+                <interfacename>javax.persistence.criteria.CriteriaBuilder</interfacename> which explicitly
+                combines individual selections into a
+                <interfacename>javax.persistence.criteria.CompoundSelection</interfacename>.
+            </para>
+
+            <example xml:id="ex-criteria-typedquery-array2">
+                <title>Selecting an array (2)</title>
+                <programlisting role="JAVA"><xi:include href="extras/select_multiple_values_array2.java" parse="text"/></programlisting>
+            </example>
+
+            <para>
+                Just as we saw in <xref linkend="ex-criteria-typedquery-array" /> we have a typed criteria
+                query returning an Object array.  Both queries are functionally equivalent.  This second example
+                uses the <methodname>multiselect</methodname> method which behaves slightly differently based on
+                the type given when the criteria query was first built, but in this case it says to select and
+                return an <emphasis>Object[]</emphasis>.
+            </para>
+        </section>
+
+        <section xml:id="querycriteria-typedquery-construct">
+            <title>Selecting a wrapper</title>
+
+            <para>Another alternative to <xref linkend="querycriteria-typedquery-multiselect" /> is to instead
+                select an object that will <quote>wrap</quote> the multiple values. Going back to the example
+                query there, rather than returning an array of <emphasis>[Person#id, Person#age]</emphasis>
+                instead declare a class that holds these values and instead return that.
+            </para>
+
+            <example xml:id="ex-criteria-typedquery-construct">
+                <title>Selecting an wrapper</title>
+                <programlisting role="JAVA"><xi:include href="extras/select_wrapper.java" parse="text"/></programlisting>
+            </example>
+
+            <para>
+                First we see the simple definition of the wrapper object we will be using to wrap our result
+                values. Specifically notice the constructor and its argument types.  Since we will be returning
+                <classname>PersonWrapper</classname> objects, we use <classname>PersonWrapper</classname> as the
+                type of our criteria query.
+            </para>
+
+            <para>
+                This example illustrates the use of the
+                <interfacename>javax.persistence.criteria.CriteriaBuilder</interfacename> method
+                <methodname>construct</methodname> which is used to build a wrapper expression.  For every row in the
+                result we are saying we would like a <emphasis>PersonWrapper</emphasis> instantiated with
+                the remaining arguments by the matching constructor. This wrapper expression is then passed as
+                the select.
+            </para>
+        </section>
+    </section>
+
+    <section xml:id="querycriteria-tuple">
+        <title>Tuple criteria queries</title>
+
+        <para>
+            A better approach to <xref linkend="querycriteria-typedquery-multiselect" /> is to use either a
+            wrapper (which we just saw in <xref linkend="querycriteria-typedquery-construct" />) or using the
+            <interfacename>javax.persistence.Tuple</interfacename> contract.
+        </para>
+
+        <example xml:id="ex-criteria-typedquery-tuple">
+            <title>Selecting a tuple</title>
+            <programlisting role="JAVA"><xi:include href="extras/select_tuple.java" parse="text"/></programlisting>
+        </example>
+
+        <para>
+            This example illustrates accessing the query results through the
+            <interfacename>javax.persistence.Tuple</interfacename> interface.  The example uses the explicit
+            <methodname>createTupleQuery</methodname> of
+            <interfacename>javax.persistence.criteria.CriteriaBuilder</interfacename>.  An alternate approach
+            is to use <methodname>createQuery</methodname> passing <literal>Tuple.class</literal>.
+        </para>
+
+        <para>
+            Again we see the use of the <methodname>multiselect</methodname> method, just like in
+            <xref linkend="ex-criteria-typedquery-array2" />. The difference here is that the type of the
+            <interfacename>javax.persistence.criteria.CriteriaQuery</interfacename> was defined as
+            <interfacename>javax.persistence.Tuple</interfacename> so the compound selections in this case are
+            interpreted to be the tuple elements.
+        </para>
+
+        <para>
+            The <interfacename>javax.persistence.Tuple</interfacename> contract provides 3 forms of access to
+            the underlying elements:
+        </para>
+
+        <variablelist>
+            <varlistentry>
+                <term>typed</term>
+                <listitem>
+                    <para>
+                        The <xref linkend="ex-criteria-typedquery-tuple"/> example illustrates this form of access
+                        in the <literal>tuple.get( idPath )</literal> and <literal>tuple.get( agePath )</literal> calls.
+                        This allows typed access to the underlying tuple values based on the
+                        <interfacename>javax.persistence.TupleElement</interfacename> expressions used to build
+                        the criteria.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>positional</term>
+                <listitem>
+                    <para>
+                        Allows access to the underlying tuple values based on the position.  The simple
+                        <emphasis>Object get(int position)</emphasis> form is very similar to the access
+                        illustrated in <xref linkend="ex-criteria-typedquery-array" /> and
+                        <xref linkend="ex-criteria-typedquery-array2" />.  The
+                        <emphasis><![CDATA[<X> X get(int position, Class<X> type]]></emphasis> form
+                        allows typed positional access, but based on the explicitly supplied type which the tuple
+                        value must be type-assignable to.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>aliased</term>
+                <listitem>
+                    <para>
+                        Allows access to the underlying tuple values based an (optionally) assigned alias.  The
+                        example query did not apply an alias.  An alias would be applied via the
+                        <methodname>alias</methodname> method on
+                        <interfacename>javax.persistence.criteria.Selection</interfacename>.  Just like
+                        <literal>positional</literal> access, there is both a typed
+                        (<emphasis>Object get(String alias)</emphasis>) and an untyped
+                        (<emphasis><![CDATA[<X> X get(String alias, Class<X> type]]></emphasis> form.
+                    </para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+    </section>
+
+    <section xml:id="querycriteria-from">
+        <title>FROM clause</title>
+
+        <blockquote>
+            <attribution><citetitle>JPA Specification</citetitle>, section 6.5.2 Query Roots, pg 262</attribution>
+
+            <para>
+                A CriteriaQuery object defines a query over one or more entity, embeddable, or basic abstract
+                schema types. The root objects of the query are entities, from which the other types are reached
+                by navigation.
+            </para>
+        </blockquote>
+
+        <note>
+            <para>
+                All the individual parts of the FROM clause (roots, joins, paths) implement the
+                <interfacename>javax.persistence.criteria.From</interfacename> interface.
+            </para>
+        </note>
+
+        <section xml:id="querycriteria-from-root">
+            <title>Roots</title>
+
+            <para>
+                Roots define the basis from which all joins, paths and attributes are available in the query.
+                A root is always an entity type.  Roots are defined and added to the criteria by the overloaded
+                <methodname>from</methodname> methods on
+                <interfacename>javax.persistence.criteria.CriteriaQuery</interfacename>:
+            </para>
+
+            <programlisting role="JAVA"><xi:include href="extras/from_root_methods.java" parse="text"/></programlisting>
+
+            <example>
+                <title>Adding a root</title>
+                <programlisting role="JAVA"><xi:include href="extras/from_root_example.java" parse="text"/></programlisting>
+            </example>
+
+            <para>
+                Criteria queries may define multiple roots, the effect of which is to create a cartesian
+                product between the newly added root and the others. Here is an example matching all single
+                men and all single women:
+            </para>
+
+            <example>
+                <title>Adding multiple roots</title>
+                <programlisting role="JAVA"><xi:include href="extras/from_root_example_multiple.java" parse="text"/></programlisting>
+            </example>
+        </section>
+
+        <section xml:id="querycriteria-from-join">
+            <title>Joins</title>
+
+            <para>
+                Joins allow navigation from other <interfacename>javax.persistence.criteria.From</interfacename>
+                to either association or embedded attributes.  Joins are created by the numerous overloaded
+                <methodname>join</methodname> methods of the
+                <interfacename>javax.persistence.criteria.From</interfacename> interface
+            </para>
+
+            <example xml:id="criteria-join-singular">
+                <title>Example with Embedded and ManyToOne</title>
+                <programlisting role="JAVA"><xi:include href="extras/from_join_example_embedded_and_many2one.java" parse="text"/></programlisting>
+            </example>
+
+            <example xml:id="criteria-join-plural">
+                <title>Example with Collections</title>
+                <programlisting role="JAVA"><xi:include href="extras/from_join_example_plural.java" parse="text"/></programlisting>
+            </example>
+        </section>
+
+        <section xml:id="querycriteria-from-fetch">
+            <title>Fetches</title>
+
+            <para>
+                Just like in HQL and JPQL, criteria queries can specify that associated data be fetched along
+                with the owner.  Fetches are created by the numerous overloaded <methodname>fetch</methodname>
+                methods of the <interfacename>javax.persistence.criteria.From</interfacename> interface.
+            </para>
+
+            <example xml:id="criteria-fetch-singular">
+                <title>Example with Embedded and ManyToOne</title>
+                <programlisting role="JAVA"><xi:include href="extras/from_fetch_example_embedded_and_many2one.java" parse="text"/></programlisting>
+            </example>
+
+            <note>
+                <para>
+                    Technically speaking, embedded attributes are always fetched with their owner.  However in
+                    order to define the fetching of <emphasis>Address#country</emphasis> we needed a
+                    <interfacename>javax.persistence.criteria.Fetch</interfacename> for its parent path.
+                </para>
+            </note>
+
+            <example xml:id="criteria-fetch-plural">
+                <title>Example with Collections</title>
+                <programlisting role="JAVA"><xi:include href="extras/from_fetch_example_plural.java" parse="text"/></programlisting>
+            </example>
+        </section>
+    </section>
+
+    <section xml:id="querycriteria-path">
+        <title>Path expressions</title>
+        <note>
+            <para>
+                Roots, joins and fetches are themselves paths as well.
+            </para>
+        </note>
+    </section>
+
+    <section xml:id="querycriteria-param">
+        <title>Using parameters</title>
+
+        <example xml:id="ex-querycriteria-param">
+            <title>Using parameters</title>
+            <programlisting role="JAVA"><xi:include href="extras/parameter_example.java" parse="text"/></programlisting>
+        </example>
+
+        <para>
+            Use the <methodname>parameter</methodname> method of
+            <interfacename>javax.persistence.criteria.CriteriaBuilder</interfacename> to obtain a parameter
+            reference.  Then use the parameter reference to bind the parameter value to the
+            <interfacename>javax.persistence.Query</interfacename>
+        </para>
+    </section>
+
+</chapter>

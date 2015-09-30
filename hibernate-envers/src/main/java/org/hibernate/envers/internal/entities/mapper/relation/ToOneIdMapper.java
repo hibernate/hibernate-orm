@@ -33,7 +33,7 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 			PropertyData propertyData,
 			String referencedEntityName,
 			boolean nonInsertableFake) {
-		super( propertyData );
+		super( delegate.getServiceRegistry(), propertyData );
 		this.delegate = delegate;
 		this.referencedEntityName = referencedEntityName;
 		this.nonInsertableFake = nonInsertableFake;

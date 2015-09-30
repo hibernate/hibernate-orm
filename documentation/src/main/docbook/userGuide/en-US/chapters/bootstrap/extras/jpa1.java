@@ -1,0 +1,2 @@
+@PersistenceUnit
+EntityManagerFactory emf;

@@ -1,0 +1,682 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<chapter xml:id="persistent-classes" xmlns="http://docbook.org/ns/docbook">
+    <title>Persistent Classes</title>
+
+    <para>
+        Persistent classes are classes in an application that implement the entities of the business problem
+        (e.g. Customer and Order in an E-commerce application).  The term "persistent" here means that the classes
+        are able to be persisted, not that they are in the persistent state (see <xref linkend="objectstate-overview"/>
+        for discussion).
+    </para>
+
+    <para>
+        Hibernate works best if these classes follow some simple rules, also known as the Plain Old Java Object (POJO)
+        programming model. However, none of these rules are hard requirements. Indeed, Hibernate assumes very little
+        about the nature of your persistent objects. You can express a domain model in other ways (using trees of
+        <interfacename>java.util.Map</interfacename> instances, for example).
+    </para>
+
+    <section xml:id="persistent-classes-pojo">
+        <title>A simple POJO example</title>
+
+        <example xml:id="persistent-classes-pojo-example-cat">
+            <title>Simple POJO representing a cat</title>
+            <programlisting role="JAVA">package eg;
+import java.util.Set;
+import java.util.Date;
+
+public class Cat {
+private Long id; // identifier
+
+private Date birthdate;
+private Color color;
+private char sex;
+private float weight;
+    private int litterId;
+
+    private Cat mother;
+    private Set kittens = new HashSet();
+
+    private void setId(Long id) {
+        this.xml:id=id;
+    }
+    public Long getId() {
+        return id;
+    }
+
+    void setBirthdate(Date date) {
+        birthdate = date;
+    }
+    public Date getBirthdate() {
+        return birthdate;
+    }
+
+    void setWeight(float weight) {
+        this.weight = weight;
+    }
+    public float getWeight() {
+        return weight;
+    }
+
+    public Color getColor() {
+        return color;
+    }
+    void setColor(Color color) {
+        this.color = color;
+    }
+
+    void setSex(char sex) {
+        this.sex=sex;
+    }
+    public char getSex() {
+        return sex;
+    }
+
+    void setLitterId(int id) {
+        this.litterId = id;
+    }
+    public int getLitterId() {
+        return litterId;
+    }
+
+    void setMother(Cat mother) {
+        this.mother = mother;
+    }
+    public Cat getMother() {
+        return mother;
+    }
+    void setKittens(Set kittens) {
+        this.kittens = kittens;
+    }
+    public Set getKittens() {
+        return kittens;
+    }
+
+    // addKitten not needed by Hibernate
+    public void addKitten(Cat kitten) {
+        kitten.setMother(this);
+    kitten.setLitterId( kittens.size() );
+        kittens.add(kitten);
+    }
+}</programlisting>
+        </example>
+
+
+        <para>
+            The four main rules of persistent classes are explored in more detail in the following sections.
+        </para>
+
+        <section xml:id="persistent-classes-pojo-constructor">
+            <title>Implement a no-argument constructor</title>
+
+            <para>
+                <classname>Cat</classname> has a no-argument constructor. All persistent classes must have a default
+                constructor (which can be non-public) so that Hibernate can instantiate them using
+                <literal>java.lang.reflect.Constructor.newInstance()</literal>.  It is recommended
+                that this constructor be defined with at least <emphasis>package</emphasis> visibility in order for
+                runtime proxy generation to work properly.
+            </para>
+        </section>
+
+        <section xml:id="persistent-classes-pojo-identifier" revision="2">
+          <title>Provide an identifier property</title>
+
+            <note>
+                <para>
+                    Historically this was considered option.  While still not (yet) enforced, this should be considered
+                    a deprecated feature as it will be completely required to provide an identifier property in an
+                    upcoming release.
+                </para>
+            </note>
+
+            <para>
+                <classname>Cat</classname> has a property named <literal>id</literal>.  This property maps to the
+                primary key column(s) of the underlying database table.  The type of the identifier property can
+                be any "basic" type (see <xref linkend="types.value.basic"/>).  See <xref linkend="components-compositeid"/>
+                for information on mapping composite (multi-column) identifiers.
+            </para>
+
+            <note>
+                <para>
+                    Identifiers do not necessarily need to identify column(s) in the database physically defined
+                    as a primary key.  They should just identify columns that can be used to uniquely identify rows
+                    in the underlying table.
+                </para>
+            </note>
+
+            <para>
+                We recommend that you declare consistently-named identifier properties on persistent classes and that you use
+                a nullable (i.e., non-primitive) type.
+            </para>
+        </section>
+
+
+        <section xml:id="persistent-classes-pojo-final">
+            <title>Prefer non-final classes (semi-optional)</title>
+
+            <para>
+                A central feature of Hibernate, <emphasis>proxies</emphasis> (lazy loading), depends upon the
+                persistent class being either non-final, or the implementation of an interface that declares all public
+                methods.  You can persist <literal>final</literal> classes that do not implement an interface with
+                Hibernate; you will not, however, be able to use proxies for lazy association fetching which will
+                ultimately limit your options for performance tuning.  To persist a <literal>final</literal>
+                class which does not implement a "full" interface you must disable proxy generation.  See
+                <xref linkend="persistent-classes-pojo-final-example-disable-proxies-xml"/> and
+                <xref linkend="persistent-classes-pojo-final-example-disable-proxies-ann"/>.
+            </para>
+
+            <example xml:id="persistent-classes-pojo-final-example-disable-proxies-xml">
+                <title>Disabling proxies in <literal>hbm.xml</literal></title>
+                <programlisting role="XML"><![CDATA[<class name="Cat" lazy="false"...>...</class>]]></programlisting>
+            </example>
+
+            <example xml:id="persistent-classes-pojo-final-example-disable-proxies-ann">
+                <title>Disabling proxies in annotations</title>
+                <programlisting role="JAVA"><![CDATA[@Entity @Proxy(lazy=false) public class Cat { ... }]]></programlisting>
+            </example>
+
+            <para>
+                If the <literal>final</literal> class does implement a proper interface, you could alternatively tell
+                Hibernate to use the interface instead when generating the proxies.  See
+                <xref linkend="persistent-classes-pojo-final-example-proxy-interface-xml"/> and
+                <xref linkend="persistent-classes-pojo-final-example-proxy-interface-ann"/>.
+
+            </para>
+
+            <example xml:id="persistent-classes-pojo-final-example-proxy-interface-xml">
+                <title>Proxying an interface in <literal>hbm.xml</literal></title>
+                <programlisting role="XML"><![CDATA[<class name="Cat" proxy="ICat"...>...</class>]]></programlisting>
+            </example>
+
+            <example xml:id="persistent-classes-pojo-final-example-proxy-interface-ann">
+                <title>Proxying an interface in annotations</title>
+                <programlisting role="JAVA"><![CDATA[@Entity @Proxy(proxyClass=ICat.class) public class Cat implements ICat { ... }]]></programlisting>
+            </example>
+
+            <para>
+                You should also avoid declaring <literal>public final</literal> methods as this will again limit
+                the ability to generate <emphasis>proxies</emphasis> from this class.  If you want to use a
+                class with <literal>public final</literal> methods, you must explicitly disable proxying.  Again, see
+                <xref linkend="persistent-classes-pojo-final-example-disable-proxies-xml"/> and
+                <xref linkend="persistent-classes-pojo-final-example-disable-proxies-ann"/>.
+            </para>
+        </section>
+
+        <section xml:id="persistent-classes-pojo-accessors">
+            <title>Declare accessors and mutators for persistent fields (optional)</title>
+
+            <para>
+                <classname>Cat</classname> declares accessor methods for all its persistent fields. Many other ORM
+                tools directly persist instance variables. It is better to provide an indirection between the relational
+                schema and internal data structures of the class. By default, Hibernate persists JavaBeans style
+                properties and recognizes method names of the form <literal>getFoo</literal>, <literal>isFoo</literal>
+                and <literal>setFoo</literal>.  If required, you can switch to direct field access for particular
+                properties.
+            </para>
+
+            <para>
+                Properties need <emphasis>not</emphasis> be declared public.  Hibernate can persist a property declared
+                with <literal>package</literal>, <literal>protected</literal> or <literal>private</literal> visibility
+                as well.
+            </para>
+        </section>
+    </section>
+
+  <section xml:id="persistent-classes-inheritance">
+    <title>Implementing inheritance</title>
+
+    <para>A subclass must also observe the first and second rules. It inherits
+    its identifier property from the superclass, <literal>Cat</literal>. For
+    example:</para>
+
+    <programlisting role="JAVA">package eg;
+
+public class DomesticCat extends Cat {
+        private String name;
+
+        public String getName() {
+                return name;
+        }
+        protected void setName(String name) {
+                this.name=name;
+        }
+}</programlisting>
+  </section>
+
+  <section xml:id="persistent-classes-equalshashcode" revision="1">
+    <title>Implementing <literal>equals()</literal> and
+    <literal>hashCode()</literal></title>
+
+    <para>You have to override the <literal>equals()</literal> and
+    <literal>hashCode()</literal> methods if you:</para>
+
+    <itemizedlist spacing="compact">
+      <listitem>
+        <para>intend to put instances of persistent classes in a
+        <literal>Set</literal> (the recommended way to represent many-valued
+        associations); <emphasis>and</emphasis></para>
+      </listitem>
+
+      <listitem>
+        <para>intend to use reattachment of detached instances</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>Hibernate guarantees equivalence of persistent identity (database
+    row) and Java identity only inside a particular session scope. When you
+    mix instances retrieved in different sessions, you must implement
+    <literal>equals()</literal> and <literal>hashCode()</literal> if you wish
+    to have meaningful semantics for <literal>Set</literal>s.</para>
+
+    <para>The most obvious way is to implement
+    <literal>equals()</literal>/<literal>hashCode()</literal> by comparing the
+    identifier value of both objects. If the value is the same, both must be
+    the same database row, because they are equal. If both are added to a
+    <literal>Set</literal>, you will only have one element in the
+    <literal>Set</literal>). Unfortunately, you cannot use that approach with
+    generated identifiers. Hibernate will only assign identifier values to
+    objects that are persistent; a newly created instance will not have any
+    identifier value. Furthermore, if an instance is unsaved and currently in
+    a <literal>Set</literal>, saving it will assign an identifier value to the
+    object. If <literal>equals()</literal> and <literal>hashCode()</literal>
+    are based on the identifier value, the hash code would change, breaking
+    the contract of the <literal>Set</literal>. See the Hibernate website for
+    a full discussion of this problem. This is not a Hibernate issue, but
+    normal Java semantics of object identity and equality.</para>
+
+    <para>It is recommended that you implement <literal>equals()</literal> and
+    <literal>hashCode()</literal> using <emphasis>Business key
+    equality</emphasis>. Business key equality means that the
+    <literal>equals()</literal> method compares only the properties that form
+    the business key. It is a key that would identify our instance in the real
+    world (a <emphasis>natural</emphasis> candidate key):</para>
+
+    <programlisting role="JAVA">public class Cat {
+
+    ...
+    public boolean equals(Object other) {
+        if (this == other) return true;
+        if ( !(other instanceof Cat) ) return false;
+
+        final Cat cat = (Cat) other;
+
+        if ( !cat.getLitterId().equals( getLitterId() ) ) return false;
+        if ( !cat.getMother().equals( getMother() ) ) return false;
+
+        return true;
+    }
+
+    public int hashCode() {
+        int result;
+        result = getMother().hashCode();
+        result = 29 * result + getLitterId();
+        return result;
+    }
+
+}</programlisting>
+
+    <para>A business key does not have to be as solid as a database primary
+    key candidate (see <xref linkend="transactions-basics-identity" />).
+    Immutable or unique properties are usually good candidates for a business
+    key.</para>
+  </section>
+
+  <section xml:id="persistent-classes-dynamicmodels" revision="1">
+    <title>Dynamic models</title>
+
+    <note>
+      <title>Note</title>
+
+      <para><emphasis>The following features are currently considered
+      experimental and may change in the near future.</emphasis></para>
+    </note>
+
+    <para>Persistent entities do not necessarily have to be represented as
+    POJO classes or as JavaBean objects at runtime. Hibernate also supports
+    dynamic models (using <literal>Map</literal>s of <literal>Map</literal>s
+    at runtime). With this approach, you do not write persistent classes, 
+    only mapping files.</para>
+
+    <para>By default, Hibernate works in normal POJO mode. You can set a
+    default entity representation mode for a particular
+    <literal>SessionFactory</literal> using the
+    <literal>default_entity_mode</literal> configuration option (see <xref
+    linkend="configuration-optional-properties" />).</para>
+
+    <para>The following examples demonstrate the representation using
+    <literal>Map</literal>s. First, in the mapping file an
+    <literal>entity-name</literal> has to be declared instead of, or in
+    addition to, a class name:</para>
+
+    <programlisting role="XML">&lt;hibernate-mapping&gt;
+
+    &lt;class entity-name="Customer"&gt;
+
+        &lt;id name="id"
+            type="long"
+            column="ID"&gt;
+            &lt;generator class="sequence"/&gt;
+        &lt;/id&gt;
+
+        &lt;property name="name"
+            column="NAME"
+            type="string"/&gt;
+
+        &lt;property name="address"
+            column="ADDRESS"
+            type="string"/&gt;
+
+        &lt;many-to-one name="organization"
+            column="ORGANIZATION_ID"
+            class="Organization"/&gt;
+
+        &lt;bag name="orders"
+            inverse="true"
+            lazy="false"
+            cascade="all"&gt;
+            &lt;key column="CUSTOMER_ID"/&gt;
+            &lt;one-to-many class="Order"/&gt;
+        &lt;/bag&gt;
+
+    &lt;/class&gt;
+    
+&lt;/hibernate-mapping&gt;</programlisting>
+
+    <para>Even though associations are declared using target class names, the
+    target type of associations can also be a dynamic entity instead of a
+    POJO.</para>
+
+    <para>After setting the default entity mode to
+    <literal>dynamic-map</literal> for the <literal>SessionFactory</literal>,
+    you can, at runtime, work with <literal>Map</literal>s of
+    <literal>Map</literal>s:</para>
+
+    <programlisting role="JAVA">Session s = openSession();
+Transaction tx = s.beginTransaction();
+
+// Create a customer
+Map david = new HashMap();
+david.put("name", "David");
+
+// Create an organization
+Map foobar = new HashMap();
+foobar.put("name", "Foobar Inc.");
+
+// Link both
+david.put("organization", foobar);
+
+// Save both
+s.save("Customer", david);
+s.save("Organization", foobar);
+
+tx.commit();
+s.close();</programlisting>
+
+    <para>One of the main advantages of dynamic mapping is quick turnaround
+    time for prototyping, without the need for entity class implementation.
+    However, you lose compile-time type checking and will likely deal with
+    many exceptions at runtime. As a result of the Hibernate mapping, the
+    database schema can easily be normalized and sound, allowing to add a
+    proper domain model implementation on top later on.</para>
+
+    <para>Entity representation modes can also be set on a per
+    <literal>Session</literal> basis:</para>
+
+    <programlisting role="JAVA">Session dynamicSession = pojoSession.getSession(EntityMode.MAP);
+
+// Create a customer
+Map david = new HashMap();
+david.put("name", "David");
+dynamicSession.save("Customer", david);
+...
+dynamicSession.flush();
+dynamicSession.close()
+...
+// Continue on pojoSession
+</programlisting>
+
+    <para>Please note that the call to <literal>getSession()</literal> using
+    an <literal>EntityMode</literal> is on the <literal>Session</literal> API,
+    not the <literal>SessionFactory</literal>. That way, the new
+    <literal>Session</literal> shares the underlying JDBC connection,
+    transaction, and other context information. This means you do not have to
+    call <literal>flush()</literal> and <literal>close()</literal> on the
+    secondary <literal>Session</literal>, and also leave the transaction and
+    connection handling to the primary unit of work.</para>
+  </section>
+
+
+    <section xml:id="persistent-classes-tuplizers" revision="1">
+        <title>Tuplizers</title>
+
+        <para>
+            <interfacename>org.hibernate.tuple.Tuplizer</interfacename> and its sub-interfaces are responsible for
+            managing a particular representation of a piece of data given that representation's
+            <classname>org.hibernate.EntityMode</classname>.  If a given piece of data is thought of as a data
+            structure, then a tuplizer is the thing that knows how to create such a data structure, how to extract
+            values from such a data structure and how to inject values into such a data structure.  For example, for
+            the POJO entity mode, the corresponding tuplizer knows how create the POJO through its constructor.
+            It also knows how to access the POJO properties using the defined property accessors.
+        </para>
+
+        <para>
+            There are two (high-level) types of Tuplizers:
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        <interfacename>org.hibernate.tuple.entity.EntityTuplizer</interfacename> which is
+                        responsible for managing the above mentioned contracts in regards to entities
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <interfacename>org.hibernate.tuple.component.ComponentTuplizer</interfacename> which does the
+                        same for components
+                    </para>
+                </listitem>
+            </itemizedlist>
+        </para>
+
+        <para>
+            Users can also plug in their own tuplizers. Perhaps you require that
+            <interfacename>java.util.Map</interfacename> implementation other than
+            <classname>java.util.HashMap</classname> be used while in the dynamic-map entity-mode.  Or perhaps you
+            need to define a different proxy generation strategy than the one used by default.  Both would be achieved
+            by defining a custom tuplizer implementation.  Tuplizer definitions are attached to the entity or component
+            mapping they are meant to manage.  Going back to the example of our <classname>Customer</classname> entity,
+            <xref linkend="example-specify-custom-tuplizer-ann"/> shows how to specify a custom
+            <interfacename>org.hibernate.tuple.entity.EntityTuplizer</interfacename> using annotations while
+            <xref linkend="example-specify-custom-tuplizer-xml"/> shows how to do the same in <literal>hbm.xml</literal>
+        </para>
+
+        <example xml:id="example-specify-custom-tuplizer-ann">
+            <title>Specify custom tuplizers in annotations</title>
+<programlisting role="JAVA">@Entity
+@Tuplizer(impl = DynamicEntityTuplizer.class)
+public interface Cuisine {
+    @Id
+    @GeneratedValue
+    public Long getId();
+    public void setId(Long id);
+
+    public String getName();
+    public void setName(String name);
+
+    @Tuplizer(impl = DynamicComponentTuplizer.class)
+    public Country getCountry();
+    public void setCountry(Country country);
+}</programlisting>
+        </example>
+        <example xml:id="example-specify-custom-tuplizer-xml">
+            <title>Specify custom tuplizers in <literal>hbm.xml</literal></title>
+<programlisting role="XML">&lt;hibernate-mapping&gt;
+    &lt;class entity-name="Customer"&gt;
+        &lt;!--
+            Override the dynamic-map entity-mode
+            tuplizer for the customer entity
+        --&gt;
+        &lt;tuplizer entity-mode="dynamic-map"
+                class="CustomMapTuplizerImpl"/&gt;
+
+        &lt;id name="id" type="long" column="ID"&gt;
+            &lt;generator class="sequence"/&gt;
+        &lt;/id&gt;
+
+        &lt;!-- other properties --&gt;
+        ...
+    &lt;/class&gt;
+&lt;/hibernate-mapping&gt;</programlisting>
+        </example>
+    </section>
+
+    <section xml:id="persistent-classes-entity-name-resolver">
+        <title>EntityNameResolvers</title>
+
+        <para>
+            <interfacename>org.hibernate.EntityNameResolver</interfacename> is a contract for resolving the entity name
+            of a given entity instance. The interface defines a single method <methodname>resolveEntityName</methodname>
+            which is passed the entity instance and is expected to return the appropriate entity name (null is
+            allowed and would indicate that the resolver does not know how to resolve the entity name of the given entity
+            instance). Generally speaking, an <interfacename>org.hibernate.EntityNameResolver</interfacename> is going
+            to be most useful in the case of dynamic models. One example might be using proxied interfaces as your
+            domain model. The hibernate test suite has an example of this exact style of usage under the
+            <package>org.hibernate.test.dynamicentity.tuplizer2</package>. Here is some of the code from that package
+            for illustration.
+        </para>
+
+<programlisting role="JAVA">/**
+ * A very trivial JDK Proxy InvocationHandler implementation where we proxy an
+ * interface as the domain model and simply store persistent state in an internal
+ * Map.  This is an extremely trivial example meant only for illustration.
+ */
+public final class DataProxyHandler implements InvocationHandler {
+	private String entityName;
+	private HashMap data = new HashMap();
+
+	public DataProxyHandler(String entityName, Serializable id) {
+		this.entityName = entityName;
+		data.put( "Id", id );
+	}
+
+	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+		String methodName = method.getName();
+		if ( methodName.startsWith( "set" ) ) {
+			String propertyName = methodName.substring( 3 );
+			data.put( propertyName, args[0] );
+		}
+		else if ( methodName.startsWith( "get" ) ) {
+			String propertyName = methodName.substring( 3 );
+			return data.get( propertyName );
+		}
+		else if ( "toString".equals( methodName ) ) {
+			return entityName + "#" + data.get( "Id" );
+		}
+		else if ( "hashCode".equals( methodName ) ) {
+			return new Integer( this.hashCode() );
+		}
+		return null;
+	}
+
+	public String getEntityName() {
+		return entityName;
+	}
+
+	public HashMap getData() {
+		return data;
+	}
+}
+
+public class ProxyHelper {
+    public static String extractEntityName(Object object) {
+        // Our custom java.lang.reflect.Proxy instances actually bundle
+        // their appropriate entity name, so we simply extract it from there
+        // if this represents one of our proxies; otherwise, we return null
+        if ( Proxy.isProxyClass( object.getClass() ) ) {
+            InvocationHandler handler = Proxy.getInvocationHandler( object );
+            if ( DataProxyHandler.class.isAssignableFrom( handler.getClass() ) ) {
+                DataProxyHandler myHandler = ( DataProxyHandler ) handler;
+                return myHandler.getEntityName();
+            }
+        }
+        return null;
+    }
+
+    // various other utility methods ....
+
+}
+
+/**
+ * The EntityNameResolver implementation.
+ *
+ * IMPL NOTE : An EntityNameResolver really defines a strategy for how entity names
+ * should be resolved.  Since this particular impl can handle resolution for all of our
+ * entities we want to take advantage of the fact that SessionFactoryImpl keeps these
+ * in a Set so that we only ever have one instance registered.  Why?  Well, when it
+ * comes time to resolve an entity name, Hibernate must iterate over all the registered
+ * resolvers.  So keeping that number down helps that process be as speedy as possible.
+ * Hence the equals and hashCode implementations as is
+ */
+public class MyEntityNameResolver implements EntityNameResolver {
+    public static final MyEntityNameResolver INSTANCE = new MyEntityNameResolver();
+
+    public String resolveEntityName(Object entity) {
+        return ProxyHelper.extractEntityName( entity );
+    }
+
+    public boolean equals(Object obj) {
+        return getClass().equals( obj.getClass() );
+    }
+
+    public int hashCode() {
+        return getClass().hashCode();
+    }
+}
+
+public class MyEntityTuplizer extends PojoEntityTuplizer {
+	public MyEntityTuplizer(EntityMetamodel entityMetamodel, PersistentClass mappedEntity) {
+		super( entityMetamodel, mappedEntity );
+	}
+
+	public EntityNameResolver[] getEntityNameResolvers() {
+		return new EntityNameResolver[] { MyEntityNameResolver.INSTANCE };
+	}
+
+    public String determineConcreteSubclassEntityName(Object entityInstance, SessionFactoryImplementor factory) {
+        String entityName = ProxyHelper.extractEntityName( entityInstance );
+        if ( entityName == null ) {
+            entityName = super.determineConcreteSubclassEntityName( entityInstance, factory );
+        }
+        return entityName;
+    }
+
+    ...
+</programlisting>
+
+        <para>
+            In order to register an <interfacename>org.hibernate.EntityNameResolver</interfacename> users must either:
+            <orderedlist>
+                <listitem>
+                    <para>
+                        Implement a custom tuplizer (see <xref linkend="persistent-classes-tuplizers"/>), implementing
+                        the <methodname>getEntityNameResolvers</methodname> method
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        Register it with the <classname>org.hibernate.impl.SessionFactoryImpl</classname> (which is the
+                        implementation class for <interfacename>org.hibernate.SessionFactory</interfacename>) using the
+                        <methodname>registerEntityNameResolver</methodname> method.
+                    </para>
+                </listitem>
+            </orderedlist>
+        </para>
+    </section>
+
+</chapter>

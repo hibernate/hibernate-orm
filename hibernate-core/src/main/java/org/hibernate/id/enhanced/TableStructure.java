@@ -12,13 +12,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.InitCommand;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
-import org.hibernate.boot.model.relational.Schema;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
@@ -48,16 +49,17 @@ public class TableStructure implements DatabaseStructure {
 			TableStructure.class.getName()
 	);
 
-	private final QualifiedName qualifiedTableName;
-
-	private final String tableNameText;
-	private final String valueColumnNameText;
-
+	private final QualifiedName logicalQualifiedTableName;
+	private final Identifier logicalValueColumnNameIdentifier;
 	private final int initialValue;
 	private final int incrementSize;
 	private final Class numberType;
-	private final String selectQuery;
-	private final String updateQuery;
+
+	private String tableNameText;
+	private String valueColumnNameText;
+
+	private String selectQuery;
+	private String updateQuery;
 
 	private boolean applyIncrementSizeToSourceValues;
 	private int accessCounter;
@@ -69,27 +71,12 @@ public class TableStructure implements DatabaseStructure {
 			int initialValue,
 			int incrementSize,
 			Class numberType) {
-		final Dialect dialect = jdbcEnvironment.getDialect();
-
-		this.qualifiedTableName = qualifiedTableName;
-		this.tableNameText = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				qualifiedTableName,
-				dialect
-		);
-
-		this.valueColumnNameText = valueColumnNameIdentifier.render( jdbcEnvironment.getDialect() );
+		this.logicalQualifiedTableName = qualifiedTableName;
+		this.logicalValueColumnNameIdentifier = valueColumnNameIdentifier;
 
 		this.initialValue = initialValue;
 		this.incrementSize = incrementSize;
 		this.numberType = numberType;
-
-		selectQuery = "select " + valueColumnNameText + " as id_val" +
-				" from " + dialect.appendLockHint( LockMode.PESSIMISTIC_WRITE, tableNameText ) +
-				dialect.getForUpdateString();
-
-		updateQuery = "update " + tableNameText +
-				" set " + valueColumnNameText + "= ?" +
-				" where " + valueColumnNameText + "=?";
 	}
 
 	@Override
@@ -126,6 +113,10 @@ public class TableStructure implements DatabaseStructure {
 		final SqlStatementLogger statementLogger = session.getFactory().getServiceRegistry()
 				.getService( JdbcServices.class )
 				.getSqlStatementLogger();
+		if ( selectQuery == null || updateQuery == null ) {
+			throw new AssertionFailure( "SequenceStyleGenerator's TableStructure was not properly initialized" );
+		}
+
 		final SessionEventListenerManager statsCollector = session.getEventListenerManager();
 
 		return new AccessCallback() {
@@ -138,7 +129,12 @@ public class TableStructure implements DatabaseStructure {
 								final IntegralDataTypeHolder value = makeValue();
 								int rows;
 								do {
-									final PreparedStatement selectStatement = prepareStatement( connection, selectQuery, statementLogger, statsCollector );
+									final PreparedStatement selectStatement = prepareStatement(
+											connection,
+											selectQuery,
+											statementLogger,
+											statsCollector
+									);
 									try {
 										final ResultSet selectRS = executeQuery( selectStatement, statsCollector );
 										if ( !selectRS.next() ) {
@@ -158,7 +154,12 @@ public class TableStructure implements DatabaseStructure {
 									}
 
 
-									final PreparedStatement updatePS = prepareStatement( connection, updateQuery, statementLogger, statsCollector );
+									final PreparedStatement updatePS = prepareStatement(
+											connection,
+											updateQuery,
+											statementLogger,
+											statsCollector
+									);
 									try {
 										final int increment = applyIncrementSizeToSourceValues ? incrementSize : 1;
 										final IntegralDataTypeHolder updateValue = value.copy().add( increment );
@@ -247,18 +248,34 @@ public class TableStructure implements DatabaseStructure {
 
 	@Override
 	public void registerExportables(Database database) {
-		final Dialect dialect = database.getJdbcEnvironment().getDialect();
-		final Schema schema = database.locateSchema(
-				qualifiedTableName.getCatalogName(),
-				qualifiedTableName.getSchemaName()
+		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
+		final Dialect dialect = jdbcEnvironment.getDialect();
+
+		final Namespace namespace = database.locateNamespace(
+				logicalQualifiedTableName.getCatalogName(),
+				logicalQualifiedTableName.getSchemaName()
 		);
 
-		Table table = schema.locateTable( qualifiedTableName.getObjectName() );
-		if ( table != null ) {
-			return;
+		Table table = namespace.locateTable( logicalQualifiedTableName.getObjectName() );
+		if ( table == null ) {
+			table = namespace.createTable( logicalQualifiedTableName.getObjectName(), false );
 		}
 
-		table = schema.createTable( qualifiedTableName.getObjectName(), false );
+		this.tableNameText = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+				table.getQualifiedTableName(),
+				dialect
+		);
+
+		this.valueColumnNameText = logicalValueColumnNameIdentifier.render( dialect );
+
+
+		this.selectQuery = "select " + valueColumnNameText + " as id_val" +
+				" from " + dialect.appendLockHint( LockMode.PESSIMISTIC_WRITE, tableNameText ) +
+				dialect.getForUpdateString();
+
+		this.updateQuery = "update " + tableNameText +
+				" set " + valueColumnNameText + "= ?" +
+				" where " + valueColumnNameText + "=?";
 
 		ExportableColumn valueColumn = new ExportableColumn(
 				database,

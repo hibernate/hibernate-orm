@@ -8,6 +8,8 @@ package org.hibernate.cache.spi.access;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.NaturalIdRegion;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * Contract for managing transactional and concurrent access to cached naturalId
@@ -25,9 +27,9 @@ import org.hibernate.cache.spi.NaturalIdRegion;
  * {@link #lockRegion} -> {@link #removeAll} -> {@link #unlockRegion}
  * <p/>
  * IMPORTANT : NaturalIds are not versioned so {@code null} will always be passed to the version parameter to:<ul>
- *     <li>{@link #putFromLoad(Object, Object, long, Object)}</li>
- *     <li>{@link #putFromLoad(Object, Object, long, Object, boolean)}</li>
- *     <li>{@link #lockItem(Object, Object)}</li>
+ *     <li>{@link RegionAccessStrategy#putFromLoad(SessionImplementor, Object, Object, long, Object)}</li>
+ *     <li>{@link RegionAccessStrategy#putFromLoad(SessionImplementor, Object, Object, long, Object, boolean)}</li>
+ *     <li>{@link RegionAccessStrategy#lockItem(SessionImplementor, Object, Object)}</li>
  * </ul>
  *
  * @author Gavin King
@@ -35,6 +37,24 @@ import org.hibernate.cache.spi.NaturalIdRegion;
  * @author Eric Dalquist
  */
 public interface NaturalIdRegionAccessStrategy extends RegionAccessStrategy {
+
+	/**
+	 * To create instances of NaturalIdCacheKey for this region, Hibernate will invoke this method
+	 * exclusively so that generated implementations can generate optimised keys.
+	 * @param naturalIdValues the sequence of values which unequivocally identifies a cached element on this region
+	 * @param persister the persister of the element being cached
+	 * @param session
+	 * @return a key which can be used to identify this an element unequivocally on this same region
+	 */
+	public Object generateCacheKey(Object[] naturalIdValues, EntityPersister persister, SessionImplementor session);
+
+	/**
+	 * Performs reverse operation to {@link #generateCacheKey(Object[], EntityPersister, SessionImplementor)}, returning
+	 * the original naturalIdValues.
+	 * @param cacheKey key returned from {@link #generateCacheKey(Object[], EntityPersister, SessionImplementor)}
+	 * @return the sequence of values which unequivocally identifies a cached element on this region
+	 */
+	public Object[] getNaturalIdValues(Object cacheKey);
 
 	/**
 	 * Get the wrapped naturalId cache region
@@ -48,47 +68,51 @@ public interface NaturalIdRegionAccessStrategy extends RegionAccessStrategy {
 	 * instead of calling evict().
 	 * This method is used by "synchronous" concurrency strategies.
 	 *
+	 * @param session Current session
 	 * @param key The item key
 	 * @param value The item
 	 * @return Were the contents of the cache actual changed by this operation?
-	 * @throws CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
+	 * @throws CacheException Propagated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
-	public boolean insert(Object key, Object value) throws CacheException;
+	public boolean insert(SessionImplementor session, Object key, Object value) throws CacheException;
 
 	/**
 	 * Called after an item has been inserted (after the transaction completes),
 	 * instead of calling release().
 	 * This method is used by "asynchronous" concurrency strategies.
 	 *
+	 * @param session Current session
 	 * @param key The item key
 	 * @param value The item
 	 * @return Were the contents of the cache actual changed by this operation?
-	 * @throws CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
+	 * @throws CacheException Propagated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
-	public boolean afterInsert(Object key, Object value) throws CacheException;
+	public boolean afterInsert(SessionImplementor session, Object key, Object value) throws CacheException;
 
 	/**
 	 * Called after an item has been updated (before the transaction completes),
 	 * instead of calling evict(). This method is used by "synchronous" concurrency
 	 * strategies.
 	 *
+	 * @param session Current session
 	 * @param key The item key
 	 * @param value The item
 	 * @return Were the contents of the cache actual changed by this operation?
-	 * @throws CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
+	 * @throws CacheException Propagated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
-	public boolean update(Object key, Object value) throws CacheException;
+	public boolean update(SessionImplementor session, Object key, Object value) throws CacheException;
 
 	/**
 	 * Called after an item has been updated (after the transaction completes),
 	 * instead of calling release().  This method is used by "asynchronous"
 	 * concurrency strategies.
 	 *
+	 * @param session Current session
 	 * @param key The item key
 	 * @param value The item
 	 * @param lock The lock previously obtained from {@link #lockItem}
 	 * @return Were the contents of the cache actual changed by this operation?
 	 * @throws CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
-	public boolean afterUpdate(Object key, Object value, SoftLock lock) throws CacheException;
+	public boolean afterUpdate(SessionImplementor session, Object key, Object value, SoftLock lock) throws CacheException;
 }

@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import javax.persistence.AttributeConverter;
 import javax.persistence.SharedCacheMode;
 
@@ -39,18 +40,24 @@ import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
+import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.boot.spi.BasicTypeRegistration;
+import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware;
 import org.hibernate.boot.spi.MappingDefaults;
+import org.hibernate.boot.spi.MetadataBuilderImplementor;
 import org.hibernate.boot.spi.MetadataBuilderInitializer;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.MetadataSourcesContributor;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
@@ -67,8 +74,6 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.CompositeCustomType;
-import org.hibernate.type.CustomType;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
@@ -79,7 +84,7 @@ import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 /**
  * @author Steve Ebersole
  */
-public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
+public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeContributions {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( MetadataBuilderImpl.class );
 
 	private final MetadataSources sources;
@@ -248,19 +253,25 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 
 	@Override
 	public MetadataBuilder applyBasicType(BasicType type) {
-		options.basicTypeRegistrations.add( type );
+		options.basicTypeRegistrations.add( new BasicTypeRegistration( type ) );
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyBasicType(UserType type, String[] keys) {
-		options.basicTypeRegistrations.add( new CustomType( type, keys ) );
+	public MetadataBuilder applyBasicType(BasicType type, String... keys) {
+		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyBasicType(CompositeUserType type, String[] keys) {
-		options.basicTypeRegistrations.add( new CompositeCustomType( type, keys ) );
+	public MetadataBuilder applyBasicType(UserType type, String... keys) {
+		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
+		return this;
+	}
+
+	@Override
+	public MetadataBuilder applyBasicType(CompositeUserType type, String... keys) {
+		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
 		return this;
 	}
 
@@ -272,17 +283,22 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 
 	@Override
 	public void contributeType(BasicType type) {
-		options.basicTypeRegistrations.add( type );
+		options.basicTypeRegistrations.add( new BasicTypeRegistration( type ) );
+	}
+
+	@Override
+	public void contributeType(BasicType type, String... keys) {
+		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
 	}
 
 	@Override
 	public void contributeType(UserType type, String[] keys) {
-		options.basicTypeRegistrations.add( new CustomType( type, keys ) );
+		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
 	}
 
 	@Override
 	public void contributeType(CompositeUserType type, String[] keys) {
-		options.basicTypeRegistrations.add( new CompositeCustomType( type, keys ) );
+		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
 	}
 
 	@Override
@@ -383,7 +399,13 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 //	}
 
 	@Override
-	public MetadataImpl build() {
+	@SuppressWarnings("unchecked")
+	public <T extends MetadataBuilder> T unwrap(Class<T> type) {
+		return (T) this;
+	}
+
+	@Override
+	public MetadataImplementor build() {
 		final CfgXmlAccessService cfgXmlAccessService = options.serviceRegistry.getService( CfgXmlAccessService.class );
 		if ( cfgXmlAccessService.getAggregatedConfig() != null ) {
 			if ( cfgXmlAccessService.getAggregatedConfig().getMappingReferences() != null ) {
@@ -394,6 +416,11 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 		}
 
 		return MetadataBuildingProcess.build( sources, options );
+	}
+
+	@Override
+	public MetadataBuildingOptions getMetadataBuildingOptions() {
+		return options;
 	}
 
 	public static class MappingDefaultsImpl implements MappingDefaults {
@@ -503,11 +530,12 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 		}
 	}
 
-	public static class MetadataBuildingOptionsImpl implements MetadataBuildingOptions {
+	public static class MetadataBuildingOptionsImpl
+			implements MetadataBuildingOptions, JpaOrmXmlPersistenceUnitDefaultAware {
 		private final StandardServiceRegistry serviceRegistry;
 		private final MappingDefaultsImpl mappingDefaults;
 
-		private ArrayList<BasicType> basicTypeRegistrations = new ArrayList<BasicType>();
+		private ArrayList<BasicTypeRegistration> basicTypeRegistrations = new ArrayList<BasicTypeRegistration>();
 
 		private IndexView jandexView;
 		private ClassLoader tempClassLoader;
@@ -539,6 +567,8 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 		private HashMap<Class,AttributeConverterDefinition> attributeConverterDefinitionsByClass;
 
 		private IdGeneratorInterpreterImpl idGenerationTypeInterpreter = new IdGeneratorInterpreterImpl();
+
+		private boolean autoQuoteKeywords;
 
 //		private PersistentAttributeMemberResolver persistentAttributeMemberResolver =
 //				StandardPersistentAttributeMemberResolver.INSTANCE;
@@ -644,7 +674,16 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 			implicitNamingStrategy = strategySelector.resolveDefaultableStrategy(
 					ImplicitNamingStrategy.class,
 					configService.getSettings().get( AvailableSettings.IMPLICIT_NAMING_STRATEGY ),
-					ImplicitNamingStrategyLegacyJpaImpl.INSTANCE
+					new Callable<ImplicitNamingStrategy>() {
+						@Override
+						public ImplicitNamingStrategy call() throws Exception {
+							return strategySelector.resolveDefaultableStrategy(
+									ImplicitNamingStrategy.class,
+									"default",
+									ImplicitNamingStrategyJpaCompliantImpl.INSTANCE
+							);
+						}
+					}
 			);
 
 			physicalNamingStrategy = strategySelector.resolveDefaultableStrategy(
@@ -658,7 +697,7 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 			final boolean useNewIdentifierGenerators = configService.getSetting(
 					AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS,
 					StandardConverters.BOOLEAN,
-					false
+					true
 			);
 			if ( useNewIdentifierGenerators ) {
 				idGenerationTypeInterpreter.disableLegacyFallback();
@@ -694,7 +733,7 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 
 		private ReflectionManager generateDefaultReflectionManager() {
 			final JavaReflectionManager reflectionManager = new JavaReflectionManager();
-			reflectionManager.setMetadataProvider( new JPAMetadataProvider() );
+			reflectionManager.setMetadataProvider( new JPAMetadataProvider( this ) );
 			reflectionManager.injectClassLoaderDelegate( getHcannClassLoaderDelegate() );
 			return reflectionManager;
 		}
@@ -729,7 +768,7 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 		}
 
 		@Override
-		public List<BasicType> getBasicTypeRegistrations() {
+		public List<BasicTypeRegistration> getBasicTypeRegistrations() {
 			return basicTypeRegistrations;
 		}
 
@@ -867,12 +906,6 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 						)
 				);
 			}
-		}
-
-		public static interface JpaOrmXmlPersistenceUnitDefaults {
-			public String getDefaultSchemaName();
-			public String getDefaultCatalogName();
-			public boolean shouldImplicitlyQuoteIdentifiers();
 		}
 
 		/**

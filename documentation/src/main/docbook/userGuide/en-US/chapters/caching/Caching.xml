@@ -1,0 +1,164 @@
+<?xml version='1.0' encoding='utf-8' ?>
+
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<chapter xml:id="caching"
+         xmlns="http://docbook.org/ns/docbook"
+        >
+    <title>Caching</title>
+
+    <section xml:id="caching-config">
+        <title>Configuring second-level caching</title>
+
+        <para>
+            Hibernate defines the ability to integrate with pluggable providers for the purpose of
+            caching data outside the context of a particular Session.  This section defines
+            the settings which control that behavior.
+        </para>
+
+        <section xml:id="caching-config-provider">
+            <title>RegionFactory</title>
+
+            <para>
+                <interfacename>org.hibernate.cache.spi.RegionFactory</interfacename> defines the integration
+                between Hibernate and a pluggable caching provider.  <literal>hibernate.cache.region.factory_class</literal>
+                is used to declare the provider to use.  Hibernate comes with support for 2 popular caching
+                libraries: Ehcache and Infinispan.
+            </para>
+
+            <section xml:id="caching-config-provider-ehcache">
+                <title>Ehcache</title>
+                <important>
+                    <para>
+                        Use of the build-in integration for Ehcache requires that the hibernate-ehcache module
+                        jar (and all of its dependencies) are on the classpath.
+                    </para>
+                </important>
+                <para>
+                    The hibernate-ehcache module defines 2 specific providers:
+                    <itemizedlist>
+                        <listitem>
+                            <para>
+                                <!-- todo : document -->
+                                <literal>ehcache</literal> - todo : document
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                <!-- todo : document -->
+                                <literal>ehcache-singleton</literal> - todo : document
+                            </para>
+                        </listitem>
+                    </itemizedlist>
+                </para>
+            </section>
+
+            <section xml:id="caching-config-provider-infinispan">
+                <title>Infinispan</title>
+                <important>
+                    <para>
+                        Use of the build-in integration for Infinispan requires that the hibernate-infinispan module
+                        jar (and all of its dependencies) are on the classpath.
+                    </para>
+                </important>
+                <para>
+                    The hibernate-infinispan module defines 2 specific providers:
+                    <itemizedlist>
+                        <listitem>
+                            <para>
+                                <!-- todo : document -->
+                                <literal>infinispan</literal> - todo : document
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                <!-- todo : document -->
+                                <literal>infinispan-jndi</literal> - todo : document
+                            </para>
+                        </listitem>
+                    </itemizedlist>
+                </para>
+            </section>
+        </section>
+
+        <section xml:id="caching-config-behavior">
+            <title>Caching behavior</title>
+
+            <para>
+                Besides specific provider configuration, there are a number of configurations options on the
+                Hibernate side of the integration that control various caching behavior:
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            <literal>hibernate.cache.use_second_level_cache</literal> - Enable or disable
+                            second level caching overall.  Default is true.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <literal>hibernate.cache.use_query_cache</literal> - Enable or disable second level
+                        caching of query results.  Default is false.
+                    </listitem>
+                    <listitem>
+                        <literal>hibernate.cache.query_cache_factory</literal> - Query result caching is
+                        handled by a special contract that deals with staleness-based invalidation of the results.
+                        The default implementation does not allow stale results at all.  Use this for applications
+                        that would like to relax that.  Names an implementation of
+                        <interfacename>org.hibernate.cache.spi.QueryCacheFactory</interfacename>
+                    </listitem>
+                    <listitem>
+                        <literal>hibernate.cache.use_minimal_puts</literal> - Optimizes second-level cache
+                        operations to minimize writes, at the cost of more frequent reads.  Providers typically
+                        set this appropriately.
+                    </listitem>
+                    <listitem>
+                        <literal>hibernate.cache.region_prefix</literal> - Defines a name to be used as a prefix to
+                        all second-level cache region names.
+                    </listitem>
+                    <listitem>
+                        <literal>hibernate.cache.default_cache_concurrency_strategy</literal> - In Hibernate
+                        second-level caching, all regions can be configured differently including the concurrency
+                        strategy to use when accessing the region.  This setting allows to define a default strategy to
+                        be used.  This setting is very rarely required as the pluggable providers do specify the
+                        default strategy to use.  Valid values include: <literal>read-only</literal>,
+                        <literal>read-write</literal>, <literal>nonstrict-read-write</literal>,
+                        <literal>transactional</literal>.
+                    </listitem>
+                    <listitem>
+                        <literal>hibernate.cache.use_structured_entries</literal> - If <literal>true</literal>,
+                        forces Hibernate to store data in the second-level cache in a more human-friendly format.
+                        Can be useful if you'd like to be able to "browse" the data directly in your cache, but does
+                        have a performance impact.
+                    </listitem>
+                    <listitem>
+                        <literal>hibernate.cache.auto_evict_collection_cache</literal> - Enables or disables the
+                        automatic eviction of a bi-directional association's collection cache entry when the association
+                        is changed just from the owning side.  This is disabled by default, as it has a performance
+                        impact to track this state.  However if your application does not manage both sides
+                        of bi-directional association where the collection side is cached, the alternative is to
+                        have stale data in that collection cache.
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    </section>
+
+    <section xml:id="caching-management">
+        <title>Managing the Cached Data</title>
+
+        <para>
+            At runtime Hibernate handles moving data into and out of the second-level cache
+            in response to the operations performed by the Session.
+        </para>
+
+        <!-- todo : document org.hibernate.CacheMode, javax.persistence.CacheStoreMode and javax.persistence.CacheRetrieveMode -->
+
+        <para>
+            The <interfacename>org.hibernate.Cache</interfacename> interface (or the <interfacename>javax.persistence.Cache</interfacename>
+            interface if using JPA) allow to clear data from the second-level cache.
+        </para>
+    </section>
+</chapter>

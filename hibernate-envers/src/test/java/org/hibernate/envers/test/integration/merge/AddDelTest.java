@@ -60,8 +60,6 @@ public class AddDelTest extends BaseEnversFunctionalTestCase {
 	public void testRevisionsCountOfGivenIdStrEntity() {
 		// Revision 2 has not changed entity's state.
 		Assert.assertEquals( Arrays.asList( 1, 3 ), getAuditReader().getRevisions( GivenIdStrEntity.class, 1 ) );
-
-		getSession().close();
 	}
 
 	@Test
@@ -74,7 +72,5 @@ public class AddDelTest extends BaseEnversFunctionalTestCase {
 				3
 		)
 		);
-
-		getSession().close();
 	}
 }

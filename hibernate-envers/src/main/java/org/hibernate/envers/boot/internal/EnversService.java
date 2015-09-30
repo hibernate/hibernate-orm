@@ -17,7 +17,9 @@ import org.hibernate.envers.internal.revisioninfo.RevisionInfoNumberReader;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoQueryCreator;
 import org.hibernate.envers.internal.synchronization.AuditProcessManager;
 import org.hibernate.envers.strategy.AuditStrategy;
+import org.hibernate.internal.util.xml.XMLHelper;
 import org.hibernate.service.Service;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * Provides central access to Envers' configuration.
@@ -32,13 +34,7 @@ public interface EnversService extends Service {
 	 * The name of the configuration setting used to control whether the Envers integration
 	 * is enabled.  Default is true
 	 */
-	public static final String INTEGRATION_ENABLED = "hibernate.integration.envers.enabled";
-
-	/**
-	 * The name of the legacy configuration setting used to control whether auto registration
-	 * of envers listeners should happen or not.  Default is true
-	 */
-	public static final String LEGACY_AUTO_REGISTER = "hibernate.listeners.envers.autoRegister";
+	String INTEGRATION_ENABLED = "hibernate.integration.envers.enabled";
 
 	/**
 	 * Is the Envers integration enabled?  This is generally used as a
@@ -60,6 +56,8 @@ public interface EnversService extends Service {
 
 	void initialize(MetadataImplementor metadata, MappingCollector mappingCollector);
 
+	XMLHelper getXmlHelper();
+
 	GlobalConfiguration getGlobalConfiguration();
 
 	AuditEntitiesConfiguration getAuditEntitiesConfiguration();
@@ -77,4 +75,6 @@ public interface EnversService extends Service {
 	ModifiedEntityNamesReader getModifiedEntityNamesReader();
 
 	ClassLoaderService getClassLoaderService();
+
+	ServiceRegistry getServiceRegistry();
 }

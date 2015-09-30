@@ -74,8 +74,7 @@ public class LegacyJpaNamingWithHbmBindingTests extends BaseHbmBindingTests {
 
 	@Override
 	protected void validateOrderPrimaryTableName(String name) {
-		// quoted because "order" is an ansi sql keyword
-		assertEquals( "`Order`", name );
+		assertEquals( "Order", name );
 	}
 
 	@Override
@@ -175,8 +174,7 @@ public class LegacyJpaNamingWithHbmBindingTests extends BaseHbmBindingTests {
 
 	@Override
 	protected void validateCustomerOrdersTableName(String name) {
-		// quoted because "order" is an ansi sql keyword
-		assertEquals( "`Order`", name );
+		assertEquals( "Order", name );
 	}
 
 	@Override

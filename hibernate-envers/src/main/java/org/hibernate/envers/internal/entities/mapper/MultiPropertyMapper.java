@@ -19,7 +19,7 @@ import org.hibernate.envers.internal.tools.MappingTools;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.Tools;
 import org.hibernate.envers.tools.Pair;
-import org.hibernate.property.Getter;
+import org.hibernate.property.access.spi.Getter;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -102,10 +102,10 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 		for ( PropertyData propertyData : properties.keySet() ) {
 			Getter getter;
 			if ( newObj != null ) {
-				getter = ReflectionTools.getGetter( newObj.getClass(), propertyData );
+				getter = ReflectionTools.getGetter( newObj.getClass(), propertyData, session.getFactory().getServiceRegistry() );
 			}
 			else if ( oldObj != null ) {
-				getter = ReflectionTools.getGetter( oldObj.getClass(), propertyData );
+				getter = ReflectionTools.getGetter( oldObj.getClass(), propertyData, session.getFactory().getServiceRegistry() );
 			}
 			else {
 				return false;
@@ -130,10 +130,10 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 		for ( PropertyData propertyData : properties.keySet() ) {
 			Getter getter;
 			if ( newObj != null ) {
-				getter = ReflectionTools.getGetter( newObj.getClass(), propertyData );
+				getter = ReflectionTools.getGetter( newObj.getClass(), propertyData, session.getFactory().getServiceRegistry() );
 			}
 			else if ( oldObj != null ) {
-				getter = ReflectionTools.getGetter( oldObj.getClass(), propertyData );
+				getter = ReflectionTools.getGetter( oldObj.getClass(), propertyData, session.getFactory().getServiceRegistry() );
 			}
 			else {
 				return;

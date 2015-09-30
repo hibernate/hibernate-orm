@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.hibernate.cache.spi.access.RegionAccessStrategy;
 import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
@@ -49,6 +50,7 @@ import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.Transaction;
 import org.hibernate.TypeHelper;
+import org.hibernate.UnknownEntityTypeException;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -110,6 +112,7 @@ import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.config.ConfigurationException;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
@@ -140,6 +143,7 @@ import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
+import static org.hibernate.cfg.AvailableSettings.HBM2DLL_CREATE_NAMESPACES;
 
 
 /**
@@ -200,6 +204,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient TypeResolver typeResolver;
 	private final transient TypeHelper typeHelper;
 	private final transient SessionFactoryOptions sessionFactoryOptions;
+	private final transient Map<String, RegionAccessStrategy> cacheAccessStrategiesMap = new HashMap();
 
 	public SessionFactoryImpl(final MetadataImplementor metadata, SessionFactoryOptions options) {
 		LOG.debug( "Building session factory" );
@@ -319,7 +324,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		// todo : similar for CollectionPersister/CollectionMetadata
 
 		this.entityPersisters = new HashMap<String,EntityPersister>();
-		Map cacheAccessStrategiesMap = new HashMap();
 		Map<String,ClassMetadata> inFlightClassMetadataMap = new HashMap<String,ClassMetadata>();
 		this.entityProxyInterfaceMap = CollectionHelper.concurrentMap( metadata.getEntityBindings().size() );
 		for ( final PersistentClass model : metadata.getEntityBindings() ) {
@@ -429,6 +433,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 				roles.add( persister.getRole() );
 			}
 		}
+
 		this.collectionMetadata = Collections.unmodifiableMap( tmpCollectionMetadata );
 
 		for ( Map.Entry<String,Set<String>> entityToCollectionRoleMapEntry : inFlightEntityToCollectionRoleMap.entrySet() ) {
@@ -464,8 +469,11 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		);
 
 
+		boolean createDropNamespaces = ConfigurationHelper.getBoolean( HBM2DLL_CREATE_NAMESPACES, properties, false );
+
 		if ( settings.isAutoCreateSchema() ) {
-			new SchemaExport( serviceRegistry, metadata )
+
+			new SchemaExport( serviceRegistry, metadata, createDropNamespaces )
 					.setImportSqlCommandExtractor( serviceRegistry.getService( ImportSqlCommandExtractor.class ) )
 					.create( false, true );
 		}
@@ -476,7 +484,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			new SchemaValidator( serviceRegistry, metadata ).validate();
 		}
 		if ( settings.isAutoDropSchema() ) {
-			schemaExport = new SchemaExport( serviceRegistry, metadata )
+			schemaExport = new SchemaExport( serviceRegistry, metadata, createDropNamespaces )
 					.setImportSqlCommandExtractor( serviceRegistry.getService( ImportSqlCommandExtractor.class ) );
 		}
 
@@ -781,7 +789,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		if ( entityPersister == null ) {
-			throw new HibernateException( "Unable to locate persister: " + byClass.getName() );
+			throw new UnknownEntityTypeException( "Unable to locate persister: " + byClass.getName() );
 		}
 
 		return entityPersister;
@@ -791,9 +799,19 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	public EntityPersister locateEntityPersister(String byName) {
 		final EntityPersister entityPersister = entityPersisters.get( byName );
 		if ( entityPersister == null ) {
-			throw new HibernateException( "Unable to locate persister: " + byName );
+			throw new UnknownEntityTypeException( "Unable to locate persister: " + byName );
 		}
 		return entityPersister;
+	}
+
+	@Override
+	public DeserializationResolver getDeserializationResolver() {
+		return new DeserializationResolver() {
+			@Override
+			public SessionFactoryImplementor resolve() {
+				return (SessionFactoryImplementor) SessionFactoryRegistry.INSTANCE.findSessionFactory( uuid, name );
+			}
+		};
 	}
 
 	@Override
@@ -1119,8 +1137,18 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		return cacheAccess.getSecondLevelCacheRegion( regionName );
 	}
 
+	@Override
+	public RegionAccessStrategy getSecondLevelCacheRegionAccessStrategy(String regionName) {
+		return cacheAccessStrategiesMap.get(regionName);
+	}
+
 	public Region getNaturalIdCacheRegion(String regionName) {
 		return cacheAccess.getNaturalIdCacheRegion( regionName );
+	}
+
+	@Override
+	public RegionAccessStrategy getNaturalIdCacheRegionAccessStrategy(String regionName) {
+		return cacheAccessStrategiesMap.get(regionName);
 	}
 
 	@SuppressWarnings( {"unchecked"})

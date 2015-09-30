@@ -31,7 +31,7 @@ import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.test.common.JdbcConnectionAccessImpl;
+import org.hibernate.testing.boot.JdbcConnectionAccessImpl;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

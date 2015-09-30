@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
 import javax.persistence.CollectionTable;
@@ -97,7 +98,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
-
 import org.jboss.logging.Logger;
 
 import static org.hibernate.cfg.BinderHelper.toAliasEntityMap;
@@ -156,7 +156,7 @@ public abstract class CollectionBinder {
 	private SortComparator comparatorSort;
 
 	private String explicitType;
-	private Properties explicitTypeParameters = new Properties();
+	private final Properties explicitTypeParameters = new Properties();
 
 	protected MetadataBuildingContext getBuildingContext() {
 		return buildingContext;
@@ -385,7 +385,6 @@ public abstract class CollectionBinder {
 		String role = StringHelper.qualify( propertyHolder.getPath(), propertyName );
 		LOG.debugf( "Collection role: %s", role );
 		collection.setRole( role );
-		collection.setNodeName( propertyName );
 		collection.setMappedByProperty( mappedBy );
 
 		if ( property.isAnnotationPresent( MapKeyColumn.class )
@@ -525,6 +524,7 @@ public abstract class CollectionBinder {
 		if ( cascadeStrategy != null && cascadeStrategy.indexOf( "delete-orphan" ) >= 0 ) {
 			collection.setOrphanDelete( true );
 		}
+		binder.setLazy( collection.isLazy() );
 		binder.setAccessType( accessType );
 		binder.setProperty( property );
 		binder.setInsertable( insertable );
@@ -911,8 +911,8 @@ public abstract class CollectionBinder {
 		FilterJoinTable simpleFilterJoinTable = property.getAnnotation( FilterJoinTable.class );
 		if ( simpleFilterJoinTable != null ) {
 			if ( hasAssociationTable ) {
-				collection.addFilter(simpleFilterJoinTable.name(), simpleFilterJoinTable.condition(), 
-						simpleFilterJoinTable.deduceAliasInjectionPoints(), 
+				collection.addFilter(simpleFilterJoinTable.name(), simpleFilterJoinTable.condition(),
+						simpleFilterJoinTable.deduceAliasInjectionPoints(),
 						toAliasTableMap(simpleFilterJoinTable.aliases()), toAliasEntityMap(simpleFilterJoinTable.aliases()));
 					}
 			else {
@@ -926,8 +926,8 @@ public abstract class CollectionBinder {
 		if ( filterJoinTables != null ) {
 			for (FilterJoinTable filter : filterJoinTables.value()) {
 				if ( hasAssociationTable ) {
-					collection.addFilter(filter.name(), filter.condition(), 
-							filter.deduceAliasInjectionPoints(), 
+					collection.addFilter(filter.name(), filter.condition(),
+							filter.deduceAliasInjectionPoints(),
 							toAliasTableMap(filter.aliases()), toAliasEntityMap(filter.aliases()));
 				}
 				else {
@@ -973,14 +973,14 @@ public abstract class CollectionBinder {
 //				);
 //		}
 	}
-	
+
 	private String getCondition(FilterJoinTable filter) {
 		//set filtering
 		String name = filter.name();
 		String cond = filter.condition();
 		return getCondition( cond, name );
 	}
-	
+
 	private String getCondition(Filter filter) {
 		//set filtering
 		String name = filter.name();
@@ -1519,7 +1519,7 @@ public abstract class CollectionBinder {
 			);
 		}
 		catch (AnnotationException ex) {
-			throw new AnnotationException( "Unable to map collection " + collectionEntity.getClassName() + "." + property.getName(), ex );
+			throw new AnnotationException( "Unable to map collection " + collValue.getOwner().getClassName() + "." + property.getName(), ex );
 		}
 		SimpleValue key = buildCollectionKey( collValue, joinColumns, cascadeDeleteEnabled, property, buildingContext );
 		if ( property.isAnnotationPresent( ElementCollection.class ) && joinColumns.length > 0 ) {

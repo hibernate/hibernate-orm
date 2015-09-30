@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.transaction.SystemException;
 
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
@@ -29,12 +30,14 @@ import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+import org.hibernate.jpa.internal.EntityManagerImpl;
 import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
 
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.junit4.Helper;
+
 import org.junit.After;
 
 import org.jboss.logging.Logger;
@@ -263,10 +266,28 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 	}
 
 	protected AuditReader getAuditReader() {
+		EntityManager entityManager = getOrCreateEntityManager();
+		PersistenceUnitTransactionType transactionType = ((EntityManagerImpl) entityManager).getTransactionType();
+
+		if ( transactionType == PersistenceUnitTransactionType.JTA ) {
+			if ( !JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) ) {
+				try {
+					TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
+				}
+				catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		else if ( !entityManager.getTransaction().isActive() ) {
+			entityManager.getTransaction().begin();
+		}
+
 		if ( auditReader != null ) {
 			return auditReader;
 		}
-		return auditReader = AuditReaderFactory.get( getOrCreateEntityManager() );
+
+		return auditReader = AuditReaderFactory.get( entityManager );
 	}
 
 	protected EntityManager createIsolatedEntityManager() {

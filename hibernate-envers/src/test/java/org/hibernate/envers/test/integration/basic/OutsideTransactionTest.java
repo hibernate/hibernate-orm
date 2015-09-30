@@ -9,6 +9,7 @@ package org.hibernate.envers.test.integration.basic;
 import java.util.Map;
 
 import org.hibernate.Session;
+import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
@@ -16,13 +17,16 @@ import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.integration.collection.norevision.Name;
 import org.hibernate.envers.test.integration.collection.norevision.Person;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
+
 import org.junit.Test;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @TestForIssue(jiraKey = "HHH-5565")
+@SkipForDialect(value = MySQL5Dialect.class, comment = "The test hangs on")
 public class OutsideTransactionTest extends BaseEnversFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

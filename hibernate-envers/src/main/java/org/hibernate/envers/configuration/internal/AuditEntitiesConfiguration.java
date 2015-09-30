@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.strategy.DefaultAuditStrategy;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -45,7 +46,9 @@ public class  AuditEntitiesConfiguration {
 
 	private final String embeddableSetOrdinalPropertyName;
 
-	public AuditEntitiesConfiguration(Properties properties, String revisionInfoEntityName) {
+	public AuditEntitiesConfiguration(
+			Properties properties,
+			String revisionInfoEntityName) {
 		this.revisionInfoEntityName = revisionInfoEntityName;
 
 		auditTablePrefix = ConfigurationHelper.getString( EnversSettings.AUDIT_TABLE_PREFIX, properties, "" );

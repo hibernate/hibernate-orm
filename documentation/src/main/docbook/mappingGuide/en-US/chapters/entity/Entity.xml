@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<chapter xml:id="entity"
+         xml:lang="en"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns="http://docbook.org/ns/docbook" version="5.0">
+    <info>
+        <title>Entity</title>
+        <abstract>
+            <para>Discuss mapping entities in the application domain model.</para>
+        </abstract>
+    </info>
+
+    <sidebar>
+        <title>Related Topics</title>
+        <para>
+            <itemizedlist>
+                <listitem>
+                    <para><xref linkend="categorization" /></para>
+                </listitem>
+                <listitem>
+                    <para><xref linkend="locking" /></para>
+                </listitem>
+                <!-- caching? -->
+            </itemizedlist>
+        </para>
+    </sidebar>
+
+    <section xml:id="entity-pojo">
+        <title>POJO Models</title>
+
+        <para>
+            Section <citetitle>2.1 The Entity Class</citetitle> of the <citetitle>JPA 2.1 specification</citetitle>
+            defines its requirements for an entity class.  Applications that wish to remain portable across JPA providers
+            should adhere to these requirements.
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        The entity class must be annotated with the <interfacename>javax.persistence.Entity</interfacename>
+                        annotation (or be denoted as such in XML mapping)
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        The entity class must have a public or protected no-argument constructor.  It may define
+                        additional constructors as well.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        The entity class must be a top-level class.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        An enum or interface may not be designated as an entity.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        The entity class must not be final.  No methods or persistent instance variables of the entity
+                        class may be final.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        If an entity instance is to be used remotely as a detached object, the entity class must
+                        implement the Serializable interface.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        Both abstract and concrete classes can be entities.  Entities may extend non-entity classes as
+                        well as entity classes, and non-entity classes may extend entity classes.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        The persistent state of an entity is represented by instance variables, which may correspond to
+                        JavaBean-style properties.  An instance variable must be directly accessed only from within the
+                        methods of the entity by the entity instance itself.  The state of the entity is available to
+                        clients only through the entity’s accessor methods (getter/setter methods) or other business
+                        methods.
+                    </para>
+                </listitem>
+            </itemizedlist>
+        </para>
+
+        <para>
+            Hibernate, however, is not as strict in its requirements.  The differences from the list above include:
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        The entity class must have a no-argument constructor, which may be public, protected or package
+                        visibility.  It may define additional constructors as well.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        The entity class <emphasis>need not</emphasis> be a top-level class.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        Technically Hibernate can persist final classes or classes with final persistent state
+                        accessor (getter/setter) methods.  However, it is generally not a good idea as doing
+                        so will stop Hibernate from being able to generate proxies for lazy-loading the entity.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        Hibernate does not really care if you expose direct access to your instance variables and
+                        use them from outside the entity itself.  The validity of such a paradigm, however, is debatable
+                        at best.
+                    </para>
+                </listitem>
+            </itemizedlist>
+        </para>
+
+        <para>
+            Let's look at each requirement in detail.
+        </para>
+
+        <section xml:id="entity-pojo-final">
+            <title>Prefer non-final classes</title>
+
+            <para>
+                This is a requirement for JPA.  It is more of a recommendation for Hibernate.
+            </para>
+
+            <para>
+                A central feature of Hibernate is the ability to lazy load an entity's data via runtime proxies.  This
+                feature depends upon the entity class being non-final or else implementing an interface that declares
+                all the attribute getters/setters.  You can still persist classes that are declared final and that do
+                not implement such an interface with Hibernate; you just will not be able to use proxies for lazy
+                association fetching which will ultimately limit your options for performance tuning.
+            </para>
+
+            <note>
+                <para>
+                    Starting in 5.0 Hibernate offers a more robust version of bytecode enhancement as another means
+                    for handling lazy loading.  Hibernate had some bytecode re-writing capabilities prior to 5.0 but
+                    they were very rudimentary.
+                    <!-- todo : xref to discussion of bytecode enhancement -->
+                </para>
+            </note>
+
+            <para>
+                You should also avoid declaring persistent attribute getters and setters as final for the reasons
+                already mentioned.  And of course making the instance variable hold the entiy's persistent state would
+                just simply not make any sense.
+            </para>
+        </section>
+
+        <section xml:id="entity-pojo-constructor">
+            <title>Implement a no-argument constructor</title>
+
+            <para>
+                The entity class should have a no-argument constructor.  Both Hibernate and JPA require this.
+            </para>
+
+            <para>
+                JPA requires that this constructor be defined as public or protected.  Hibernate for the most part does
+                note care about the visibility as long as the system's SecurityManager allows overriding the visibility.
+                That said, the constructor should be defined with at least package visibility if you wish to leverage
+                runtime proxy generation.
+            </para>
+        </section>
+
+        <section xml:id="domainmodel-pojo-accessors">
+            <title>Declare getters and setters for persistent attributes</title>
+
+            <para>
+                Standard, portable JPA essentially requires this.  Otherwise your model would violate the requirement
+                quoted above in regards to accessing the entity persistent state fields directly from outside the
+                entity itself.
+            </para>
+
+            <para>
+                Although Hibernate does not require it, it is recommended to follow JavaBean conventions by defining
+                getters and setters for you entities persistent attributes.  You can still tell Hibernate to directly
+                access the entity's fields.
+            </para>
+
+            <para>
+                Attributes (whether fields or getters/setters) need not be declared public.  Hibernate can deal with
+                attributes declared with public, protected, package or private visibility.  Again, if wanting to use
+                runtime proxy generation for lazy loading the visibility for the getter/setter should be at least
+                package visibility.
+            </para>
+        </section>
+
+
+        <section xml:id="entity-pojo-identifier">
+            <title>Provide identifier attribute(s)</title>
+
+            <note>
+                <para>
+                    Historically this was considered optional.  However, not defining identifier attribute(s) on the
+                    entity should be considered a deprecated feature that will be removed in an upcoming release.
+                </para>
+            </note>
+
+            <para>
+                The identifier attribute does not necessarily need to be mapped to the column(s) that physically
+                define the primary key.  However, it should map to column(s) that can uniquely identify each row.
+            </para>
+
+            <para>
+                We recommend that you declare consistently-named identifier attributes on persistent classes and
+                that you use a nullable (i.e., non-primitive) type.
+            </para>
+        </section>
+
+        <section xml:id="entity-pojo-mapping">
+            <title>Mapping the entity</title>
+
+            <para>
+                The main piece in mapping the entity is the <interfacename>javax.persistence.Entity</interfacename>
+                annotation.  The Entity annotation defines just one attribute <methodname>name</methodname> which
+                is used to give the entity a specific name for use in JPQL queries; by default the name is the
+                unqualified name of the entity class.
+            </para>
+
+            <example>
+                <title>Simple @Entity</title>
+                <programlisting role="JAVA"><xi:include href="extras/SimpleEntity.java" parse="text" /></programlisting>
+            </example>
+
+            <para>
+                An entity models a database table.  The identifier uniquely identifies each row in that table.  By
+                default the name of the table is assumed to be the same as the name of the entity.  To explicitly
+                give the name of the table or to specify other information about the table, we would use the
+                <interfacename>javax.persistence.Table</interfacename> annotation.
+            </para>
+
+            <example>
+                <title>Simple @Entity with @Table</title>
+                <programlisting role="JAVA"><xi:include href="extras/SimpleEntityWithTable.java" parse="text" /></programlisting>
+            </example>
+
+            <para>
+                For details on mapping the identifier, see <xref linkend="identifiers" />
+            </para>
+        </section>
+
+        <section xml:id="entity-pojo-optlock">
+            <title>Mapping optimistic locking</title>
+
+            <para>
+                JPA defines support for optimistic locking based on either a version (sequential numeric) or timestamp
+                strategy.  To enable this style of optimistic locking simply add the
+                <interfacename>javax.persistence.Version</interfacename> to the persistent attribute that defines the
+                optimistic locking value.  According to JPA, the valid types for these attributes are limited to:
+                <itemizedlist>
+                    <listitem>
+                        <para>int, or Integer</para>
+                    </listitem>
+                    <listitem>
+                        <para>short, or Short</para>
+                    </listitem>
+                    <listitem>
+                        <para>long, or Long</para>
+                    </listitem>
+                    <listitem>
+                        <para>java.sql.Timestamp</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+
+            <example>
+                <title>Version</title>
+                <programlisting role="JAVA"><xi:include href="extras/Version.java" parse="text" /></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/Timestamp.java" parse="text" /></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/Instant.java" parse="text" /></programlisting>
+                <!-- ^^ Coming soon : HHH-10026 -->
+            </example>
+
+            <para>
+                Hibernate supports a form of optimistic locking that does not require a dedicated "version attribute".
+                This is intended mainly for use with modeling legacy schemas.  The idea is that you can get Hibernate
+                to perform "version checks" using either all of the entity's attributes, or just the attributes that
+                have changed.  This is achieved through the use of the
+                <interfacename>org.hibernate.annotations.OptimisticLocking</interfacename> annotation which defines a
+                single attribute of type <interfacename>org.hibernate.annotations.OptimisticLockType</interfacename>.
+                There are 4 available OptimisticLockTypes:
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            <literal>NONE</literal> - optimistic locking is disabled.  Even if there is a @Version
+                            annotation present.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            <literal>VERSION</literal> (the default) - performs optimistic locking based on a @Version
+                            as described above.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            <literal>ALL</literal> - Perform optimistic locking based on *all* fields as part of an
+                            expanded WHERE clause restriction for the UPDATE/DELETE SQL statement.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            <literal>DIRTY</literal> - Perform optimistic locking based on *dirty* fields as part of
+                            an expanded WHERE clause restriction for the UPDATE/DELETE SQL statement
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+
+        <section xml:id="entity-pojo-inheritance">
+            <title>Inheritance</title>
+            <para>
+                <!-- todo : keep it going! -->
+                blah blah blah
+            </para>
+        </section>
+    </section>
+
+    <para>
+        * dynamic models (hbm.xml)
+            * Map mode
+            * proxy solutions (hibernate-core/src/test/java/org/hibernate/test/dynamicentity/tuplizer2)
+    </para>
+</chapter>

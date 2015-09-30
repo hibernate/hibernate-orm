@@ -7,7 +7,6 @@
 package org.hibernate.test.instrument.buildtime;
 
 import org.junit.Test;
-
 import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
 import org.hibernate.test.instrument.cases.Executable;
 import org.hibernate.test.instrument.cases.TestCustomColumnReadAndWrite;
@@ -15,6 +14,8 @@ import org.hibernate.test.instrument.cases.TestDirtyCheckExecutable;
 import org.hibernate.test.instrument.cases.TestFetchAllExecutable;
 import org.hibernate.test.instrument.cases.TestInjectFieldInterceptorExecutable;
 import org.hibernate.test.instrument.cases.TestIsPropertyInitializedExecutable;
+import org.hibernate.test.instrument.cases.TestLazyBasicFieldAccessExecutable;
+import org.hibernate.test.instrument.cases.TestLazyBasicPropertyAccessExecutable;
 import org.hibernate.test.instrument.cases.TestLazyExecutable;
 import org.hibernate.test.instrument.cases.TestLazyManyToOneExecutable;
 import org.hibernate.test.instrument.cases.TestLazyPropertyCustomTypeExecutable;
@@ -70,6 +71,16 @@ public class InstrumentTest extends BaseUnitTestCase {
 	@Test
 	public void testLazyPropertyCustomTypeExecutable() throws Exception {
 		execute( new TestLazyPropertyCustomTypeExecutable() );
+	}
+
+	@Test
+	public void testLazyBasicFieldAccess() throws Exception {
+		execute( new TestLazyBasicFieldAccessExecutable() );
+	}
+
+	@Test
+	public void testLazyBasicPropertyAccess() throws Exception {
+		execute( new TestLazyBasicPropertyAccessExecutable() );
 	}
 
 	@Test

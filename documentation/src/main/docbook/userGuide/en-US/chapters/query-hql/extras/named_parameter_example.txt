@@ -1,0 +1,15 @@
+String queryString =
+        "select c " +
+        "from Customer c " +
+        "where c.name = :name " +
+        "   or c.nickName = :name";
+
+// HQL
+List customers = session.createQuery( queryString )
+        .setParameter( "name", theNameOfInterest )
+        .list();
+
+// JPQL
+List<Customer> customers = entityManager.createQuery( queryString, Customer.class )
+        .setParameter( "name", theNameOfInterest )
+        .getResultList();

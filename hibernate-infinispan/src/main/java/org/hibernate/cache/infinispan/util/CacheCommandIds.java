@@ -14,7 +14,17 @@ package org.hibernate.cache.infinispan.util;
  */
 public interface CacheCommandIds {
 	/**
-	 * The "evict all" command id
+	 * {@link EvictAllCommand} id
 	 */
-	public static final byte EVICT_ALL = 120;
+	byte EVICT_ALL = 120;
+
+	/**
+	 * {@link EndInvalidationCommand} id
+	 */
+	byte END_INVALIDATION = 121;
+
+	/**
+	 * {@link BeginInvalidationCommand} id
+	 */
+	byte BEGIN_INVALIDATION = 122;
 }

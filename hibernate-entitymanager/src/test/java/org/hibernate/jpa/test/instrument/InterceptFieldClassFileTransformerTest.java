@@ -20,10 +20,18 @@ import javassist.CtMethod;
 import javassist.bytecode.AttributeInfo;
 import javassist.bytecode.StackMapTable;
 
+import org.hibernate.engine.spi.Managed;
+import org.hibernate.engine.spi.ManagedComposite;
+import org.hibernate.engine.spi.ManagedEntity;
+
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.ExtraAssertions;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Emmanuel Bernard
@@ -52,21 +60,25 @@ public class InterceptFieldClassFileTransformerTest {
     @Test
 	public void testEnhancement() throws Exception {
 		// sanity check that the class is unmodified and does not contain getFieldHandler()
-		try {
-			Simple.class.getDeclaredMethod( "getFieldHandler" );
-			Assert.fail();
-		} catch ( NoSuchMethodException nsme ) {
-			// success
-		}
-		
+		assertFalse( implementsManaged( Simple.class ) );
+
 		Class clazz = loader.loadClass( entities.get( 0 ) );
-		
-		// javassist is our default byte code enhancer. Enhancing will eg add the method getFieldHandler()
-		// see org.hibernate.bytecode.internal.javassist.FieldTransformer
-		Method method = clazz.getDeclaredMethod( "getFieldHandler" );
-		Assert.assertNotNull( method );
+
+		// enhancement would have added the ManagedEntity interface...
+		assertTrue( implementsManaged( clazz ) );
 	}
-    
+
+	private boolean implementsManaged(Class clazz) {
+		for ( Class intf : clazz.getInterfaces() ) {
+			if ( Managed.class.getName().equals( intf.getName() )
+					|| ManagedEntity.class.getName().equals( intf.getName() )
+					|| ManagedComposite.class.getName().equals( intf.getName() ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/**
 	 * Tests that methods that were enhanced by javassist have
 	 * StackMapTables for java verification. Without these,

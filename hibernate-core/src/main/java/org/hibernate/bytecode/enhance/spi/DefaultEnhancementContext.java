@@ -6,15 +6,15 @@
  */
 package org.hibernate.bytecode.enhance.spi;
 
-import javassist.CtClass;
-import javassist.CtField;
-
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.Transient;
+
+import javassist.CtClass;
+import javassist.CtField;
 
 /**
  * default implementation of EnhancementContext. May be sub-classed as needed.
@@ -56,6 +56,13 @@ public class DefaultEnhancementContext implements EnhancementContext {
 	 */
 	public boolean doDirtyCheckingInline(CtClass classDescriptor) {
 		return true;
+	}
+
+	/**
+	 * @return false
+	 */
+	public boolean doFieldAccessEnhancement(CtClass classDescriptor) {
+		return false;
 	}
 
 	/**

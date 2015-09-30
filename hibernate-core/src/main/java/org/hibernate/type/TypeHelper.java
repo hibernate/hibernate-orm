@@ -5,12 +5,13 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.type;
+
 import java.io.Serializable;
 import java.util.Map;
 
 import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.property.BackrefPropertyAccessor;
+import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.tuple.NonIdentifierAttribute;
 
 /**
@@ -43,7 +44,7 @@ public class TypeHelper {
 		for ( int i = 0; i < types.length; i++ ) {
 			if ( copy[i] ) {
 				if ( values[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
-					|| values[i] == BackrefPropertyAccessor.UNKNOWN ) {
+					|| values[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
 					target[i] = values[i];
 				}
 				else {
@@ -67,7 +68,7 @@ public class TypeHelper {
 			final SessionImplementor session) {
 		for ( int i = 0; i < types.length; i++ ) {
 			if ( row[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY
-				&& row[i] != BackrefPropertyAccessor.UNKNOWN ) {
+				&& row[i] != PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
 				types[i].beforeAssemble( row[i], session );
 			}
 		}
@@ -89,7 +90,7 @@ public class TypeHelper {
 			final Object owner) {
 		Object[] assembled = new Object[row.length];
 		for ( int i = 0; i < types.length; i++ ) {
-			if ( row[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY || row[i] == BackrefPropertyAccessor.UNKNOWN ) {
+			if ( row[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY || row[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
 				assembled[i] = row[i];
 			}
 			else {
@@ -121,7 +122,7 @@ public class TypeHelper {
 			if ( nonCacheable!=null && nonCacheable[i] ) {
 				disassembled[i] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
 			}
-			else if ( row[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY || row[i] == BackrefPropertyAccessor.UNKNOWN ) {
+			else if ( row[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY || row[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
 				disassembled[i] = (Serializable) row[i];
 			}
 			else {
@@ -153,8 +154,24 @@ public class TypeHelper {
 		Object[] copied = new Object[original.length];
 		for ( int i = 0; i < types.length; i++ ) {
 			if ( original[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
-				|| original[i] == BackrefPropertyAccessor.UNKNOWN ) {
+				|| original[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
 				copied[i] = target[i];
+			}
+			else if ( target[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+				// Should be no need to check for target[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN
+				// because PropertyAccessStrategyBackRefImpl.get( object ) returns
+				// PropertyAccessStrategyBackRefImpl.UNKNOWN, so target[i] == original[i].
+				//
+				// We know from above that original[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY &&
+				// original[i] != PropertyAccessStrategyBackRefImpl.UNKNOWN;
+				// This is a case where the entity being merged has a lazy property
+				// that has been initialized. Copy the initialized value from original.
+				if ( types[i].isMutable() ) {
+					copied[i] = types[i].deepCopy( original[i], session.getFactory() );
+				}
+				else {
+					copied[i] = original[i];
+				}
 			}
 			else {
 				copied[i] = types[i].replace( original[i], target[i], session, owner, copyCache );
@@ -187,7 +204,7 @@ public class TypeHelper {
 		Object[] copied = new Object[original.length];
 		for ( int i = 0; i < types.length; i++ ) {
 			if ( original[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
-				|| original[i] == BackrefPropertyAccessor.UNKNOWN ) {
+					|| original[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
 				copied[i] = target[i];
 			}
 			else {
@@ -225,7 +242,7 @@ public class TypeHelper {
 		Object[] copied = new Object[original.length];
 		for ( int i = 0; i < types.length; i++ ) {
 			if ( original[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
-					|| original[i] == BackrefPropertyAccessor.UNKNOWN ) {
+					|| original[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
 				copied[i] = target[i];
 			}
 			else if ( types[i].isComponentType() ) {

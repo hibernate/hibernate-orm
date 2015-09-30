@@ -69,6 +69,13 @@ public interface JdbcEnvironment extends Service {
 	IdentifierHelper getIdentifierHelper();
 
 	/**
+	 * Obtain the level of support for qualified names.
+	 *
+	 * @return
+	 */
+	NameQualifierSupport getNameQualifierSupport();
+
+	/**
 	 * Obtain the helper for dealing with JDBC {@link java.sql.SQLException} faults.
 	 *
 	 * @return This environment's helper.

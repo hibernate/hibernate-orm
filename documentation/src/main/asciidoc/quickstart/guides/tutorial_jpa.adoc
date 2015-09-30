@@ -1,0 +1,115 @@
+[[tutorial_jpa]]
+== Tutorial Using the Java Persistence API (JPA)
+
+NOTE: This tutorial is located within the download bundle under `entitymanager/`.
+
+.Objectives
+- [*] Bootstrap a JPA `EntityManagerFactory`
+- [*] Use annotations to provide mapping information
+- [*] Use JPA API calls
+
+
+[[hibernate-gsg-tutorial-jpa-config]]
+=== persistence.xml
+
+The previous tutorials used the Hibernate-specific `hibernate.cfg.xml` configuration file.  JPA, however, defines
+a different bootstrap process that uses its own configuration file named `persistence.xml`.  This bootstrapping process
+is defined by the JPA specification.  In Java(TM) SE environments the persistence provider (Hibernate in this case)
+is required to locate all JPA configuration files by classpath lookup of the `META-INF/persistence.xml` resource name.
+
+
+[[hibernate-gsg-tutorial-jpa-config-pu]]
+.persistence.xml
+====
+[source, XML]
+----
+<persistence xmlns="http://java.sun.com/xml/ns/persistence"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
+        version="2.0">
+    <persistence-unit name="org.hibernate.tutorial.jpa">
+        ...
+    </persistence-unit>
+</persistence>
+----
+====
+
+`persistence.xml` files should provide a unique name for each "persistence unit".  Applications use this name to
+reference the configuration when obtaining an `javax.persistence.EntityManagerFactory reference.
+
+The settings defined in the `<properties/>` element are discussed in <<hibernate-gsg-tutorial-basic-config>>.
+Here the `javax.persistence`-prefixed varieties are used when possible.  Notice that the remaining
+Hibernate-specific configuration setting names are now prefixed with `hibernate.`.
+
+Additionally, the `<class/>` element functions the same as we saw in <<hibernate-gsg-tutorial-annotations-config>>.
+
+
+[[hibernate-gsg-tutorial-jpa-entity]]
+=== The annotated entity Java class
+
+The entity is exactly the same as in <<hibernate-gsg-tutorial-annotations-entity>>.
+
+
+[[hibernate-gsg-tutorial-jpa-test]]
+=== Example code
+
+The previous tutorials used the Hibernate native APIs.  This tutorial uses the JPA APIs.
+
+[[hibernate-gsg-tutorial-jpa-test-setUp]]
+.Obtaining the javax.persistence.EntityManagerFactory
+====
+[source, JAVA]
+----
+protected void setUp() throws Exception {
+	entityManagerFactory = Persistence.createEntityManagerFactory( "org.hibernate.tutorial.jpa" );
+}
+----
+====
+
+Notice again that the persistence unit name is `org.hibernate.tutorial.jpa`, which matches <<hibernate-gsg-tutorial-jpa-config-pu>>.
+
+
+[[hibernate-gsg-tutorial-jpa-test-saving]]
+.Saving (persisting) entities
+====
+[source, JAVA]
+----
+EntityManager entityManager = entityManagerFactory.createEntityManager();
+entityManager.getTransaction().begin();
+entityManager.persist( new Event( "Our very first event!", new Date() ) );
+entityManager.persist( new Event( "A follow up event", new Date() ) );
+entityManager.getTransaction().commit();
+entityManager.close();
+----
+====
+
+The code is similar to <<hibernate-gsg-tutorial-basic-test-saving>>.  The `javax.persistence.EntityManager` interface
+is used instead of the `org.hibernate.Session` interface.  JPA calls this operation "persist" instead of "save".
+
+
+[[hibernate-gsg-tutorial-jpa-test-list]]
+.Obtaining a list of entities
+====
+[source, JAVA]
+----
+entityManager = entityManagerFactory.createEntityManager();
+entityManager.getTransaction().begin();
+List<Event> result = entityManager.createQuery( "from Event", Event.class ).getResultList();
+for ( Event event : result ) {
+	System.out.println( "Event (" + event.getDate() + ") : " + event.getTitle() );
+}
+entityManager.getTransaction().commit();
+entityManager.close();
+----
+====
+
+Again, the code is pretty similar to what we saw in <<hibernate-gsg-tutorial-basic-test-list>>.
+
+
+[[hibernate-gsg-tutorial-annotations-further]]
+=== Take it further!
+
+.Practice Exercises
+- [ ] Develop an EJB Session bean to investigate implications of using a container-managed
+persistence context.  Try both stateless and stateful use-cases.
+- [ ] Use listeners with CDI-based injection to develop a JMS-based event message hub

@@ -10,6 +10,7 @@ package org.hibernate.test.annotations.indexcoll;
 import java.math.BigDecimal;
 import java.util.Map;
 
+import javax.persistence.CollectionTable;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -46,6 +47,7 @@ public class ExchangeOffice {
 	}
 
 	@ElementCollection
+	@CollectionTable(name = "ExchangeO_exchangeRateFees")
 	private Map<ExchangeRateKey, BigDecimal> exchangeRateFees = new java.util.HashMap<ExchangeRateKey, BigDecimal>();
 
 	public Map<ExchangeRateKey,BigDecimal> getExchangeRateFees() {

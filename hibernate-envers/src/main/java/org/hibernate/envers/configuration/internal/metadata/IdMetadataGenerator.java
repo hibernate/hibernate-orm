@@ -111,7 +111,7 @@ public final class IdMetadataGenerator {
 					( (Component) pc.getIdentifier() ).getComponentClassName(),
 					mainGenerator.getClassLoaderService()
 			);
-			mapper = new MultipleIdMapper( componentClass );
+			mapper = new MultipleIdMapper( componentClass, pc.getServiceRegistry() );
 			if ( !addIdProperties(
 					relIdMapping,
 					(Iterator<Property>) idMapper.getPropertyIterator(),
@@ -140,7 +140,7 @@ public final class IdMetadataGenerator {
 					idComponent.getComponentClassName(),
 					mainGenerator.getClassLoaderService()
 			);
-			mapper = new EmbeddedIdMapper( getIdPropertyData( idProp ), embeddableClass );
+			mapper = new EmbeddedIdMapper( getIdPropertyData( idProp ), embeddableClass, pc.getServiceRegistry() );
 			if ( !addIdProperties(
 					relIdMapping,
 					(Iterator<Property>) idComponent.getPropertyIterator(),
@@ -164,7 +164,7 @@ public final class IdMetadataGenerator {
 		}
 		else {
 			// Single id
-			mapper = new SingleIdMapper();
+			mapper = new SingleIdMapper( pc.getServiceRegistry() );
 
 			// Last but one parameter: ids are always insertable
 			mainGenerator.getBasicMetadataGenerator().addBasic(

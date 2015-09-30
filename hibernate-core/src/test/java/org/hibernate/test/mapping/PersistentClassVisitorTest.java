@@ -6,8 +6,13 @@
  */
 package org.hibernate.test.mapping;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.PersistentClassVisitor;
 import org.hibernate.mapping.RootClass;
@@ -15,6 +20,7 @@ import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 
 /**
  * Simple smoke style tests to make sure visitors keep working.
@@ -22,14 +28,29 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
  * @author max
  */
 public class PersistentClassVisitorTest extends BaseUnitTestCase {
+
+	private StandardServiceRegistry serviceRegistry;
+	private MetadataBuildingContext metadataBuildingContext;
+
+	@Before
+	public void prepare() {
+		serviceRegistry = new StandardServiceRegistryBuilder().build();
+		metadataBuildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+	}
+
+	@After
+	public void release() {
+		StandardServiceRegistryBuilder.destroy( serviceRegistry );
+	}
+
 	@Test
 	public void testProperCallbacks() {
 		PersistentClassVisitorValidator vv = new PersistentClassVisitorValidator();
-		new RootClass().accept( vv );
-		new Subclass( new RootClass() ).accept( vv );
-		new JoinedSubclass( new RootClass() ).accept( vv );
-		new SingleTableSubclass( new RootClass() ).accept( vv );
-		new UnionSubclass( new RootClass() ).accept( vv );
+		new RootClass( metadataBuildingContext ).accept( vv );
+		new Subclass( new RootClass( metadataBuildingContext ), metadataBuildingContext ).accept( vv );
+		new JoinedSubclass( new RootClass( metadataBuildingContext ), metadataBuildingContext ).accept( vv );
+		new SingleTableSubclass( new RootClass( metadataBuildingContext ), metadataBuildingContext ).accept( vv );
+		new UnionSubclass( new RootClass( metadataBuildingContext ), metadataBuildingContext ).accept( vv );
 	}
 
 	static public class PersistentClassVisitorValidator implements PersistentClassVisitor {

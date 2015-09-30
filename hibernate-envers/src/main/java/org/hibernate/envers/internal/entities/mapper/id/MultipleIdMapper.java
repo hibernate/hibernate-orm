@@ -14,13 +14,14 @@ import java.util.Map;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 public class MultipleIdMapper extends AbstractCompositeIdMapper implements SimpleIdMapperBuilder {
-	public MultipleIdMapper(Class compositeIdClass) {
-		super( compositeIdClass );
+	public MultipleIdMapper(Class compositeIdClass, ServiceRegistry serviceRegistry) {
+		super( compositeIdClass, serviceRegistry );
 	}
 
 	@Override
@@ -47,11 +48,11 @@ public class MultipleIdMapper extends AbstractCompositeIdMapper implements Simpl
 
 	@Override
 	public IdMapper prefixMappedProperties(String prefix) {
-		final MultipleIdMapper ret = new MultipleIdMapper( compositeIdClass );
+		final MultipleIdMapper ret = new MultipleIdMapper( compositeIdClass, getServiceRegistry() );
 
 		for ( PropertyData propertyData : ids.keySet() ) {
 			final String propertyName = propertyData.getName();
-			ret.ids.put( propertyData, new SingleIdMapper( new PropertyData( prefix + propertyName, propertyData ) ) );
+			ret.ids.put( propertyData, new SingleIdMapper( getServiceRegistry(), new PropertyData( prefix + propertyName, propertyData ) ) );
 		}
 
 		return ret;

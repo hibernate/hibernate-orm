@@ -10,6 +10,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
@@ -26,11 +27,9 @@ import org.hibernate.tool.schema.spi.Target;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.test.common.JdbcConnectionAccessImpl;
+import org.hibernate.testing.boot.JdbcConnectionAccessImpl;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.fail;
@@ -64,7 +63,6 @@ public class TableGeneratorQuotingTest extends BaseUnitTestCase {
 		final Target target = new TargetDatabaseImpl( new JdbcConnectionAccessImpl( connectionProvider ) );
 		final SchemaManagementTool tool = serviceRegistry.getService( SchemaManagementTool.class );
 
-		tool.getSchemaDropper( null ).doDrop( metadata, false, target );
 		tool.getSchemaCreator( null ).doCreation( metadata, false, target );
 
 		try {
@@ -79,6 +77,7 @@ public class TableGeneratorQuotingTest extends BaseUnitTestCase {
 	}
 
 	@Entity
+	@Table(name = "test_entity")
 	private static class TestEntity {
 		@Id
 		@GeneratedValue(strategy = GenerationType.TABLE)

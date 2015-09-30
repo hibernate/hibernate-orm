@@ -9,9 +9,13 @@ package org.hibernate.cache.ehcache.internal.strategy;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheEntityRegion;
+import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * Ehcache specific read/write entity region access strategy
@@ -44,7 +48,7 @@ public class ReadWriteEhcacheEntityRegionAccessStrategy
 	 * A no-op since this is an asynchronous cache access strategy.
 	 */
 	@Override
-	public boolean insert(Object key, Object value, Object version) throws CacheException {
+	public boolean insert(SessionImplementor session, Object key, Object value, Object version) throws CacheException {
 		return false;
 	}
 
@@ -54,7 +58,7 @@ public class ReadWriteEhcacheEntityRegionAccessStrategy
 	 * Inserts will only succeed if there is no existing value mapped to this key.
 	 */
 	@Override
-	public boolean afterInsert(Object key, Object value, Object version) throws CacheException {
+	public boolean afterInsert(SessionImplementor session, Object key, Object value, Object version) throws CacheException {
 		region().writeLock( key );
 		try {
 			final Lockable item = (Lockable) region().get( key );
@@ -77,7 +81,7 @@ public class ReadWriteEhcacheEntityRegionAccessStrategy
 	 * A no-op since this is an asynchronous cache access strategy.
 	 */
 	@Override
-	public boolean update(Object key, Object value, Object currentVersion, Object previousVersion)
+	public boolean update(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion)
 			throws CacheException {
 		return false;
 	}
@@ -90,7 +94,7 @@ public class ReadWriteEhcacheEntityRegionAccessStrategy
 	 * the course of this transaction.
 	 */
 	@Override
-	public boolean afterUpdate(Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
+	public boolean afterUpdate(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
 			throws CacheException {
 		//what should we do with previousVersion here?
 		region().writeLock( key );
@@ -116,5 +120,15 @@ public class ReadWriteEhcacheEntityRegionAccessStrategy
 		finally {
 			region().writeUnlock( key );
 		}
+	}
+
+	@Override
+	public Object generateCacheKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+		return DefaultCacheKeysFactory.createEntityKey(id, persister, factory, tenantIdentifier);
+	}
+
+	@Override
+	public Object getCacheKeyId(Object cacheKey) {
+		return DefaultCacheKeysFactory.getEntityId(cacheKey);
 	}
 }

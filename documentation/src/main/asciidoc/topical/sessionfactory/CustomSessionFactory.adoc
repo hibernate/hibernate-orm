@@ -8,7 +8,7 @@ specific to the custom implementation.  The second way is to integrate with the 
 This guide will cover the second approach.
 
 
-=== Implementor contracts
+== Implementor contracts
 
 A Hibernate naming convention is that SPI contracts extending API contracts are named with Implementor appended
 to the API contract name.  For `SessionFactory` and `Session` that is `SessionFactoryImplementor` and
@@ -18,7 +18,7 @@ implement `org.hibernate.engine.spi.SessionFactoryImplementor` and `org.hibernat
 See all pertinent JavaDocs for discussions of implementation details.
 
 
-=== Integration hooks
+== Integration hooks
 
 `org.hibernate.boot.SessionFactoryBuilder` is part of the Hibernate native bootstrap API where we want to configure
 the `SessionFactory` to be built.  Third parties can hook into this process by supplying a

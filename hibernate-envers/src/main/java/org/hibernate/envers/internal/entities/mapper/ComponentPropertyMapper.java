@@ -19,7 +19,7 @@ import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.property.Setter;
+import org.hibernate.property.access.spi.Setter;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -115,7 +115,7 @@ public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperB
 			return;
 		}
 
-		final Setter setter = ReflectionTools.getSetter( obj.getClass(), propertyData );
+		final Setter setter = ReflectionTools.getSetter( obj.getClass(), propertyData, enversService.getServiceRegistry() );
 
 		// If all properties are null and single, then the component has to be null also.
 		boolean allNullAndSingle = true;

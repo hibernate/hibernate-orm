@@ -6,6 +6,7 @@
  */
 package org.hibernate.engine.spi;
 
+import java.io.Serializable;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -21,6 +22,7 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.cache.spi.QueryCache;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.UpdateTimestampsCache;
+import org.hibernate.cache.spi.access.RegionAccessStrategy;
 import org.hibernate.cfg.Settings;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
@@ -189,6 +191,13 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 * @return The region
 	 */
 	Region getSecondLevelCacheRegion(String regionName);
+
+	/**
+	 * Get access strategy to second-level cache region
+	 * @param regionName
+	 * @return
+	 */
+	RegionAccessStrategy getSecondLevelCacheRegionAccessStrategy(String regionName);
 	
 	/**
 	 * Get a named naturalId cache region
@@ -197,6 +206,13 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 * @return The region
 	 */
 	Region getNaturalIdCacheRegion(String regionName);
+
+	/**
+	 * Get access strategy to naturalId cache region
+	 * @param regionName
+	 * @return
+	 */
+	RegionAccessStrategy getNaturalIdCacheRegionAccessStrategy(String regionName);
 
 	/**
 	 * Get a map of all the second level cache regions currently maintained in
@@ -288,7 +304,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 *
 	 * @return The located EntityPersister, never {@code null}
 	 *
-	 * @throws HibernateException If a matching EntityPersister cannot be located
+	 * @throws org.hibernate.UnknownEntityTypeException If a matching EntityPersister cannot be located
 	 */
 	EntityPersister locateEntityPersister(Class byClass);
 
@@ -299,7 +315,16 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 *
 	 * @return The located EntityPersister, never {@code null}
 	 *
-	 * @throws HibernateException If a matching EntityPersister cannot be located
+	 * @throws org.hibernate.UnknownEntityTypeException If a matching EntityPersister cannot be located
 	 */
 	EntityPersister locateEntityPersister(String byName);
+
+	/**
+	 * Contract for resolving this SessionFactory on deserialization
+	 */
+	interface DeserializationResolver<T extends SessionFactoryImplementor> extends Serializable {
+		T resolve();
+	}
+
+	DeserializationResolver getDeserializationResolver();
 }

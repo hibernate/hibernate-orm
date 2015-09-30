@@ -19,6 +19,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
@@ -279,7 +280,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 
 		final AST hqlAst = parser.getAST();
 
-		final NodeTraverser walker = new NodeTraverser( new JavaConstantConverter() );
+		final NodeTraverser walker = new NodeTraverser( new JavaConstantConverter( factory ) );
 		walker.traverseDepthFirst( hqlAst );
 
 		showHqlAst( hqlAst );
@@ -585,7 +586,14 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	}
 
 	public static class JavaConstantConverter implements NodeTraverser.VisitationStrategy {
+		private final SessionFactoryImplementor factory;
 		private AST dotRoot;
+
+		public JavaConstantConverter(SessionFactoryImplementor factory) {
+
+			this.factory = factory;
+		}
+
 		@Override
 		public void visit(AST node) {
 			if ( dotRoot != null ) {
@@ -604,7 +612,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		}
 		private void handleDotStructure(AST dotStructureRoot) {
 			final String expression = ASTUtil.getPathText( dotStructureRoot );
-			final Object constant = ReflectHelper.getConstantValue( expression );
+			final Object constant = ReflectHelper.getConstantValue( expression, factory.getServiceRegistry().getService( ClassLoaderService.class ) );
 			if ( constant != null ) {
 				dotStructureRoot.setFirstChild( null );
 				dotStructureRoot.setType( HqlTokenTypes.JAVA_CONSTANT );

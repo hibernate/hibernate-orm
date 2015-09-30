@@ -9,9 +9,12 @@ package org.hibernate.cache.ehcache.internal.strategy;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheNaturalIdRegion;
+import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * Ehcache specific read-only NaturalId region access strategy
@@ -39,12 +42,12 @@ public class ReadOnlyEhcacheNaturalIdRegionAccessStrategy
 	}
 
 	@Override
-	public Object get(Object key, long txTimestamp) throws CacheException {
+	public Object get(SessionImplementor session, Object key, long txTimestamp) throws CacheException {
 		return region().get( key );
 	}
 
 	@Override
-	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
+	public boolean putFromLoad(SessionImplementor session, Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
 			throws CacheException {
 		if ( minimalPutOverride && region().contains( key ) ) {
 			return false;
@@ -56,7 +59,7 @@ public class ReadOnlyEhcacheNaturalIdRegionAccessStrategy
 	}
 
 	@Override
-	public SoftLock lockItem(Object key, Object version) throws UnsupportedOperationException {
+	public SoftLock lockItem(SessionImplementor session, Object key, Object version) throws UnsupportedOperationException {
 		return null;
 	}
 
@@ -66,7 +69,7 @@ public class ReadOnlyEhcacheNaturalIdRegionAccessStrategy
 	 * A no-op since this cache is read-only
 	 */
 	@Override
-	public void unlockItem(Object key, SoftLock lock) throws CacheException {
+	public void unlockItem(SessionImplementor session, Object key, SoftLock lock) throws CacheException {
 		region().remove( key );
 	}
 
@@ -76,12 +79,12 @@ public class ReadOnlyEhcacheNaturalIdRegionAccessStrategy
 	 * This cache is asynchronous hence a no-op
 	 */
 	@Override
-	public boolean insert(Object key, Object value) throws CacheException {
+	public boolean insert(SessionImplementor session, Object key, Object value) throws CacheException {
 		return false;
 	}
 
 	@Override
-	public boolean afterInsert(Object key, Object value) throws CacheException {
+	public boolean afterInsert(SessionImplementor session, Object key, Object value) throws CacheException {
 		region().put( key, value );
 		return true;
 	}
@@ -94,7 +97,7 @@ public class ReadOnlyEhcacheNaturalIdRegionAccessStrategy
 	 * @throws UnsupportedOperationException always
 	 */
 	@Override
-	public boolean update(Object key, Object value) throws UnsupportedOperationException {
+	public boolean update(SessionImplementor session, Object key, Object value) throws UnsupportedOperationException {
 		throw new UnsupportedOperationException( "Can't write to a readonly object" );
 	}
 
@@ -106,7 +109,17 @@ public class ReadOnlyEhcacheNaturalIdRegionAccessStrategy
 	 * @throws UnsupportedOperationException always
 	 */
 	@Override
-	public boolean afterUpdate(Object key, Object value, SoftLock lock) throws UnsupportedOperationException {
+	public boolean afterUpdate(SessionImplementor session, Object key, Object value, SoftLock lock) throws UnsupportedOperationException {
 		throw new UnsupportedOperationException( "Can't write to a readonly object" );
+	}
+
+	@Override
+	public Object generateCacheKey(Object[] naturalIdValues, EntityPersister persister, SessionImplementor session) {
+		return DefaultCacheKeysFactory.createNaturalIdKey(naturalIdValues, persister, session);
+	}
+
+	@Override
+	public Object[] getNaturalIdValues(Object cacheKey) {
+		return DefaultCacheKeysFactory.getNaturalIdValues(cacheKey);
 	}
 }

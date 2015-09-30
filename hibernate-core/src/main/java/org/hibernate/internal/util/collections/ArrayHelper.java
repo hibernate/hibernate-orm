@@ -329,7 +329,10 @@ public final class ArrayHelper {
 
 	/**
 	 * Compare 2 arrays only at the first level
+	 *
+	 * @deprecated Use {@link java.util.Arrays#equals(Object[], Object[])} instead
 	 */
+	@Deprecated
 	public static boolean isEquals(Object[] o1, Object[] o2) {
 		if ( o1 == o2 ) {
 			return true;
@@ -351,7 +354,10 @@ public final class ArrayHelper {
 
 	/**
 	 * Compare 2 arrays only at the first level
+	 *
+	 * @deprecated Use {@link java.util.Arrays#equals(char[], char[])} instead
 	 */
+	@Deprecated
 	public static boolean isEquals(char[] o1, char[] o2) {
 		if ( o1 == o2 ) {
 			return true;
@@ -373,7 +379,10 @@ public final class ArrayHelper {
 
 	/**
 	 * Compare 2 arrays only at the first level
+	 *
+	 * @deprecated Use {@link java.util.Arrays#equals(byte[], byte[])} instead
 	 */
+	@Deprecated
 	public static boolean isEquals(byte[] b1, byte[] b2) {
 		if ( b1 == b2 ) {
 			return true;

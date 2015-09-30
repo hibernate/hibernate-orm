@@ -74,7 +74,7 @@ public class ManyToManyOwner {
 					)
 			},
 			inverseForeignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT),
-			name = "many_to_many"
+			name = "Many_To_Many"
 	)
 	public Set<ManyToManyTarget> getManyToMany() {
 		return manyToMany;

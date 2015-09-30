@@ -71,6 +71,5 @@ public class QueryingWithProxyObjectTest extends BaseEnversFunctionalTestCase {
 				.getSingleResult();
 		Assert.assertEquals( originalSte, ste );
 
-		getSession().close();
 	}
 }

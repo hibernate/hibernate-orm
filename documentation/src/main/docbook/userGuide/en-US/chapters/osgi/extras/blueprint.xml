@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint  default-activation="eager"
+            xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+            xmlns:jpa="http://aries.apache.org/xmlns/jpa/v1.0.0"
+            xmlns:tx="http://aries.apache.org/xmlns/transactions/v1.0.0">
+
+  <!-- This gets the container-managed EntityManager and injects it into the DataPointServiceImpl bean.
+  Assumes DataPointServiceImpl has an "entityManager" field with a getter and setter. -->
+  <bean id="dpService" class="org.hibernate.osgitest.DataPointServiceImpl"> 
+      <jpa:context unitname="managed-jpa" property="entityManager"/>
+      <tx:transaction method="*" value="Required"/>
+  </bean>
+  <service ref="dpService" interface="org.hibernate.osgitest.DataPointService" />
+</blueprint>

@@ -6,12 +6,16 @@
  */
 package org.hibernate.boot.cfgxml.internal;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import org.hibernate.HibernateException;
+import org.hibernate.boot.jaxb.Origin;
+import org.hibernate.boot.jaxb.cfg.spi.JaxbCfgHibernateConfiguration;
+import org.hibernate.boot.jaxb.internal.stax.LocalXmlResourceResolver;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.internal.util.config.ConfigurationException;
+import org.hibernate.internal.util.xml.XsdException;
+import org.jboss.logging.Logger;
+import org.xml.sax.SAXException;
+
 import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -31,18 +35,12 @@ import javax.xml.stream.util.EventReaderDelegate;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
-
-import org.hibernate.HibernateException;
-import org.hibernate.boot.jaxb.Origin;
-import org.hibernate.boot.jaxb.cfg.spi.JaxbCfgHibernateConfiguration;
-import org.hibernate.boot.jaxb.internal.stax.LocalXmlResourceResolver;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.internal.util.config.ConfigurationException;
-import org.hibernate.internal.util.xml.XsdException;
-
-import org.jboss.logging.Logger;
-
-import org.xml.sax.SAXException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * @author Steve Ebersole
@@ -53,9 +51,11 @@ public class JaxbCfgProcessor {
 	public static final String HIBERNATE_CONFIGURATION_URI = "http://www.hibernate.org/xsd/orm/cfg";
 
 	private final ClassLoaderService classLoaderService;
+	private final LocalXmlResourceResolver xmlResourceResolver;
 
 	public JaxbCfgProcessor(ClassLoaderService classLoaderService) {
 		this.classLoaderService = classLoaderService;
+		this.xmlResourceResolver = new LocalXmlResourceResolver( classLoaderService );
 	}
 
 	public JaxbCfgHibernateConfiguration unmarshal(InputStream stream, Origin origin) {
@@ -89,7 +89,7 @@ public class JaxbCfgProcessor {
 	@SuppressWarnings( { "UnnecessaryLocalVariable" })
 	private XMLInputFactory buildStaxFactory() {
 		XMLInputFactory staxFactory = XMLInputFactory.newInstance();
-		staxFactory.setXMLResolver( LocalXmlResourceResolver.INSTANCE );
+		staxFactory.setXMLResolver( xmlResourceResolver );
 		return staxFactory;
 	}
 
@@ -211,7 +211,7 @@ public class JaxbCfgProcessor {
 		}
 	}
 
-	public class NamespaceAddingEventReader extends EventReaderDelegate {
+	public static class NamespaceAddingEventReader extends EventReaderDelegate {
 		private final XMLEventFactory xmlEventFactory;
 		private final String namespaceUri;
 

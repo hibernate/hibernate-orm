@@ -23,6 +23,7 @@ import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EntityCopyObserver;
@@ -339,6 +340,16 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			FieldInterceptor interceptor = persister.getInstrumentationMetadata().extractInterceptor( target );
 			if ( interceptor != null ) {
 				interceptor.dirty();
+			}
+		}
+
+		// for enhanced entities, copy over the dirty attributes
+		if ( entity instanceof SelfDirtinessTracker && target instanceof SelfDirtinessTracker ) {
+			// clear, because setting the embedded attributes dirties them
+			( (SelfDirtinessTracker) target ).$$_hibernate_clearDirtyAttributes();
+
+			for ( String fieldName : ( (SelfDirtinessTracker) entity ).$$_hibernate_getDirtyAttributes() ) {
+				( (SelfDirtinessTracker) target ).$$_hibernate_trackChange( fieldName );
 			}
 		}
 	}

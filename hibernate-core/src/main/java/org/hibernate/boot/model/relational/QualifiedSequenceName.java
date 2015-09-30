@@ -16,7 +16,7 @@ public class QualifiedSequenceName extends QualifiedNameImpl {
 		super( catalogName, schemaName, sequenceName );
 	}
 
-	public QualifiedSequenceName(Schema.Name schemaName, Identifier sequenceName) {
+	public QualifiedSequenceName(Namespace.Name schemaName, Identifier sequenceName) {
 		super( schemaName, sequenceName );
 	}
 

@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<chapter xml:id="naturalid"
+         version="5.0"
+         xml:lang="en"
+         xmlns="http://docbook.org/ns/docbook"
+         xmlns:xi="http://www.w3.org/2001/XInclude">
+    <title>Natural Ids</title>
+
+    <para>
+        Natural ids represent unique identifiers that naturally exist within your domain model.  Even if
+        a natural id does not make a good primary key, it still is useful to tell Hibernate about it.
+        As we will see later, Hibernate provides a dedicated, efficient API for loading and entity by its natural-id
+        much like it offers for loading by identifier (PK).
+    </para>
+
+    <section xml:id="naturalid-mapping">
+        <title>Natural Id Mapping</title>
+
+        <para>
+            Natural ids are defined in terms of one or more persistent attributes.
+        </para>
+
+        <example>
+            <title>Natural id using single basic attribute</title>
+            <programlisting role="JAVA"><xi:include href="extras/SimpleBasicNaturalIdMapping.java" parse="text" /></programlisting>
+        </example>
+
+        <example>
+            <title>Natural id using single embedded attribute</title>
+            <programlisting role="JAVA"><xi:include href="extras/SimpleCompositeNaturalIdMapping.java" parse="text" /></programlisting>
+        </example>
+
+        <example>
+            <title>Natural id using multiple persistent attributes</title>
+            <programlisting role="JAVA"><xi:include href="extras/NonSimpleNaturalIdMapping.java" parse="text" /></programlisting>
+        </example>
+
+    </section>
+
+    <section xml:id="naturalid-api">
+        <title>Natural Id API</title>
+
+        <para>
+            As stated before, Hibernate provides an API for loading entities by natural id.  This is represented by the
+            <interfacename>org.hibernate.NaturalIdLoadAccess</interfacename> contract obtained via
+            <methodname>Session#byNaturalId</methodname>.  If the entity does not define a natural id, an exception
+            will be thrown there.
+        </para>
+
+        <example>
+            <title>Using NaturalIdLoadAccess</title>
+            <programlisting role="JAVA"><xi:include href="extras/NaturalIdLoadAccessUsage.java" parse="text" /></programlisting>
+        </example>
+
+        <para>
+            NaturalIdLoadAccess offers 2 distinct methods for obtaining the entity:
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        <methodname>load</methodname> - obtains a reference to the entity, making sure
+                        that the entity state is initialized.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <methodname>getReference</methodname> - obtains a reference to the entity.  The state
+                        may or may not be initialized.  If the entity is associated with the Session already,
+                        that reference (loaded or not) is returned; else if the entity supports proxy
+                        generation, an uninitialized proxy is generated and returned; otherwise
+                        the entity is loaded from the database and returned.
+                    </para>
+                </listitem>
+            </itemizedlist>
+        </para>
+
+        <para>
+            NaturalIdLoadAccess also allows to request locking for the load.  We might use that to load an
+            entity by natural id and at the same time apply a pessimistic lock.  For additional details on locking,
+            see the <citetitle>Hibernate User Guide</citetitle>.
+        </para>
+
+        <para>
+            We will discuss the last method available on NaturalIdLoadAccess
+            (<methodname>setSynchronizationEnabled</methodname>) in <xref linkend="naturalid-mutability-caching"/>.
+        </para>
+
+        <para>
+            Because the Company and PostalCarrier entities define "simple" natural ids, we also allow simplified
+            access to load them based on the natural ids.
+        </para>
+
+        <example>
+            <title>Using SimpleNaturalIdLoadAccess</title>
+            <programlisting role="JAVA"><xi:include href="extras/SimpleNaturalIdLoadAccessUsage.java" parse="text" /></programlisting>
+        </example>
+
+        <para>
+            Here we see the use of the <interfacename>org.hibernate.SimpleNaturalIdLoadAccess</interfacename>
+            contract, obtained via <methodname>Session#bySimpleNaturalId</methodname>.  SimpleNaturalIdLoadAccess is similar
+            to NaturalIdLoadAccess except that it does not define the <methodname>using</methodname> method.  Instead,
+            because these "simple" natural ids are defined based on just one attribute we can directly pass the
+            corresponding value of that natural id attribute directly to the <methodname>load</methodname>
+            and <methodname>getReference</methodname> methods.  If the entity does not define a natural id or if the
+            natural id it does define is not simple, an exception will be thrown there.
+        </para>
+    </section>
+
+    <section xml:id="naturalid-mutability-caching">
+        <title>Natural Id - Mutability and Caching</title>
+        <para>
+            A natural id may be mutable or immutable.  By default <literal>@NaturalId</literal> marks
+            an immutable natural id.  An immutable natural id is expected to never change values.
+            If the values of the natural id attribute(s) can change, <literal>@NaturalId(mutable=true)</literal>
+            should be used instead.
+        </para>
+
+        <example>
+            <title>Mutable natural id</title>
+            <programlisting role="JAVA"><xi:include href="extras/MutableNaturalIdMapping.java" parse="text" /></programlisting>
+        </example>
+
+        <para>
+            Within the Session, Hibernate maintains a mapping from natural id values to pk values.  If natural ids
+            values have changed it is possible for this mapping to become out of date until a flush occurs.  To work
+            around this condition, Hibernate will attempt to discover any such pending changes and adjust for them
+            when the <methodname>load</methodname> or <methodname>getReference</methodname> method is executed.  To
+            be clear: this is only pertinent for mutable natural ids.
+        </para>
+
+        <para>
+            This "discovery and adjustment" have a performance impact.  If an application is certain that none of its
+            mutable natural ids already associated with the Session have changed, it can disable that checking by
+            calling <methodname>setSynchronizationEnabled(false)</methodname> (the default is true).  This will force
+            Hibernate to circumvent the checking of mutable natural ids.
+        </para>
+
+        <example>
+            <title>Mutable natural id synchronization use-case</title>
+            <programlisting role="JAVA"><xi:include href="extras/MutableNaturalIdSynchronization.java" parse="text" /></programlisting>
+        </example>
+
+        <para>
+            Not only can this NaturalId-to-PK resolution be cached in the Session, but we can also have it cached in
+            the second-level cache if second level caching is enabled.
+        </para>
+
+        <example>
+            <title>Natural id caching</title>
+            <programlisting role="JAVA"><xi:include href="extras/NaturalIdCaching.java" parse="text" /></programlisting>
+        </example>
+
+    </section>
+</chapter>

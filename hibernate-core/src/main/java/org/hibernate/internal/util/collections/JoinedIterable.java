@@ -36,7 +36,7 @@ public class JoinedIterable<T> implements Iterable<T> {
 		return iterator;
 	}
 
-	private class TypeSafeJoinedIterator<T> implements Iterator<T> {
+	private static class TypeSafeJoinedIterator<T> implements Iterator<T> {
 
 		// wrapped iterators
 		private List<Iterable<T>> iterables;

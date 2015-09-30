@@ -29,8 +29,6 @@ public class ScanResultCollector {
 	private final ScanEnvironment environment;
 	private final ScanOptions options;
 
-	private final ScanParameters scanParameters;
-
 	private final Set<ClassDescriptor> discoveredClasses;
 	private final Set<PackageDescriptor> discoveredPackages;
 	private final Set<MappingFileDescriptor> discoveredMappingFiles;
@@ -38,8 +36,6 @@ public class ScanResultCollector {
 	public ScanResultCollector(ScanEnvironment environment, ScanOptions options, ScanParameters parameters) {
 		this.environment = environment;
 		this.options = options;
-
-		this.scanParameters = parameters;
 
 		if ( environment.getExplicitlyListedClassNames() == null ) {
 			throw new IllegalArgumentException( "ScanEnvironment#getExplicitlyListedClassNames should not return null" );
@@ -55,19 +51,6 @@ public class ScanResultCollector {
 	}
 
 	public void handleClass(ClassDescriptor classDescriptor, boolean rootUrl) {
-		// see if "discovery" of this entry is allowed
-
-//		final ClassInfo classInfo = scanParameters.getJandexInitializer().handle( classDescriptor );
-//
-// 		if ( !isListedOrDetectable( classInfo.name().toString(), rootUrl ) ) {
-//			return;
-//		}
-//
-//		if ( !containsClassAnnotationsOfInterest( classInfo ) ) {
-//			// not strictly needed, but helps cut down on the size of discoveredClasses
-//			return;
-//		}
-
 		if ( !isListedOrDetectable( classDescriptor.getName(), rootUrl ) ) {
 			return;
 		}
@@ -95,21 +78,7 @@ public class ScanResultCollector {
 		}
 	}
 
-//	@SuppressWarnings("SimplifiableIfStatement")
-//	private boolean containsClassAnnotationsOfInterest(ClassInfo classInfo) {
-//		if ( classInfo.annotations() == null ) {
-//			return false;
-//		}
-//
-//		return classInfo.annotations().containsKey( JPADotNames.ENTITY )
-//				|| classInfo.annotations().containsKey( JPADotNames.MAPPED_SUPERCLASS )
-//				|| classInfo.annotations().containsKey( JPADotNames.EMBEDDABLE )
-//				|| classInfo.annotations().containsKey( JPADotNames.CONVERTER );
-//	}
-
 	public void handlePackage(PackageDescriptor packageDescriptor, boolean rootUrl) {
-//		final ClassInfo classInfo = scanParameters.getJandexInitializer().handle( packageDescriptor );
-
 		if ( !isListedOrDetectable( packageDescriptor.getName(), rootUrl ) ) {
 			// not strictly needed, but helps cut down on the size of discoveredPackages
 			return;

@@ -38,8 +38,8 @@ public class Ingres9Dialect extends IngresDialect {
 	private static final LimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
 		@Override
 		public String processSql(String sql, RowSelection selection) {
-			final String soff = " offset ?";
-			final String slim = " fetch first ? rows only";
+			final String soff = " offset " + selection.getFirstRow();
+			final String slim = " fetch first " + getMaxOrLimit( selection ) + " rows only";
 			final StringBuilder sb = new StringBuilder( sql.length() + soff.length() + slim.length() )
 					.append( sql );
 			if (LimitHelper.hasFirstRow( selection )) {

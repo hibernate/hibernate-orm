@@ -645,6 +645,86 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-2851")
+	public void testMultipleRefsToSameParam() {
+		Session s = openSession();
+		s.beginTransaction();
+		Human h = new Human();
+		h.setName( new Name( "Johnny", 'B', "Goode" ) );
+		s.save( h );
+		h = new Human();
+		h.setName( new Name( "Steve", null, "Ebersole" ) );
+		s.save( h );
+		h = new Human();
+		h.setName( new Name( "Bono", null, null ) );
+		s.save( h );
+		h = new Human();
+		h.setName( new Name( "Steve", 'Z', "Johnny" ) );
+		h.setIntValue( 1 );
+		s.save( h );
+		h = new Human();
+		h.setName( new Name( null, null, null ) );
+		s.save( h );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		List results = s.createQuery( "from Human where name.first = :name or name.last=:name" )
+				.setParameter( "name", "Johnny" )
+				.list();
+		assertEquals( 2, results.size() );
+
+		results = s.createQuery( "from Human where name.last = :name or :name is null" )
+				.setParameter( "name", "Goode" )
+				.list();
+		assertEquals( 1, results.size() );
+		results = s.createQuery( "from Human where :name is null or name.last = :name" )
+				.setParameter( "name", "Goode" )
+				.list();
+		assertEquals( 1, results.size() );
+
+		results = s.createQuery( "from Human where name.first = :firstName and (name.last = :name or :name is null)" )
+				.setParameter( "firstName", "Bono" )
+				.setParameter( "name", null )
+				.list();
+		assertEquals( 1, results.size() );
+		results = s.createQuery( "from Human where name.first = :firstName and ( :name is null or name.last = :name )" )
+				.setParameter( "firstName", "Bono" )
+				.setParameter( "name", null )
+				.list();
+		assertEquals( 1, results.size() );
+
+		results = s.createQuery( "from Human where intValue = :intVal or :intVal is null" )
+				.setParameter( "intVal", 1 )
+				.list();
+		assertEquals( 1, results.size() );
+		results = s.createQuery( "from Human where :intVal is null or intValue = :intVal" )
+				.setParameter( "intVal", 1 )
+				.list();
+		assertEquals( 1, results.size() );
+
+
+		results = s.createQuery( "from Human where intValue = :intVal or :intVal is null" )
+				.setParameter( "intVal", null )
+				.list();
+		assertEquals( 5, results.size() );
+		results = s.createQuery( "from Human where :intVal is null or intValue = :intVal" )
+				.setParameter( "intVal", null )
+				.list();
+		assertEquals( 5, results.size() );
+
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		s.createQuery( "delete Human" ).executeUpdate();
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Test
 	public void testComponentNullnessChecks() {
 		Session s = openSession();
 		s.beginTransaction();

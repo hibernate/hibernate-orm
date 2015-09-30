@@ -9,6 +9,7 @@ package org.hibernate.jpa.boot.internal;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import javax.persistence.SharedCacheMode;
@@ -184,7 +185,7 @@ public class ParsedPersistenceXmlDescriptor implements org.hibernate.jpa.boot.sp
 	}
 
 	@Override
-	public void pushClassTransformer(List<String> entityClassNames) {
+	public void pushClassTransformer(Collection<String> entityClassNames) {
 		// todo : log a message that this is currently not supported...
 	}
 }

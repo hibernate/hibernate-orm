@@ -6,13 +6,42 @@
  */
 package org.hibernate.exception.spi;
 
+import java.sql.SQLException;
+
 /**
  * Knows how to extract a violated constraint name from an error message based on the
  * fact that the constraint name is templated within the message.
  *
  * @author Steve Ebersole
+ * @author Brett Meyer
  */
 public abstract class TemplatedViolatedConstraintNameExtracter implements ViolatedConstraintNameExtracter {
+
+	@Override
+	public String extractConstraintName(SQLException sqle) {
+		try {
+			String constraintName = null;
+
+			// handle nested exceptions
+			do {
+				constraintName = doExtractConstraintName(sqle);
+				if (sqle.getNextException() == null
+						|| sqle.getNextException() == sqle) {
+					break;
+				}
+				else {
+					sqle = sqle.getNextException();
+				}
+			} while (constraintName == null);
+
+			return constraintName;
+		}
+		catch (NumberFormatException nfe) {
+			return null;
+		}
+	}
+
+	protected abstract String doExtractConstraintName(SQLException sqle) throws NumberFormatException;
 
 	/**
 	 * Extracts the constraint name based on a template (i.e., <i>templateStart</i><b>constraintName</b><i>templateEnd</i>).

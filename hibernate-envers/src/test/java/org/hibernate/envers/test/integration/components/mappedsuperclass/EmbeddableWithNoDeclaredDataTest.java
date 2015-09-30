@@ -55,6 +55,7 @@ public class EmbeddableWithNoDeclaredDataTest extends BaseEnversJPAFunctionalTes
 
 		// Reload and Compare Revision
 		EntityManager em = getEntityManager();
+		em.getTransaction().begin();
 		EntityWithEmbeddableWithNoDeclaredData entityLoaded = em.find( EntityWithEmbeddableWithNoDeclaredData.class, id );
 
 		AuditReader reader = AuditReaderFactory.get( em );
@@ -64,6 +65,7 @@ public class EmbeddableWithNoDeclaredDataTest extends BaseEnversJPAFunctionalTes
 
 		EntityWithEmbeddableWithNoDeclaredData entityRev1 = reader.find( EntityWithEmbeddableWithNoDeclaredData.class, id, revs.get( 0 ) );
 
+		em.getTransaction().commit();
 		Assert.assertEquals( entityLoaded.getName(), entityRev1.getName() );
 
 		// value should be null because there is no data in EmbeddableWithNoDeclaredData

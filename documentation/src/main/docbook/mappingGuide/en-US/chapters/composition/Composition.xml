@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<chapter xml:id="composition"
+         version="5.0"
+         xml:lang="en"
+         xmlns="http://docbook.org/ns/docbook"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+        >
+    <title>Compositions</title>
+
+    <sidebar>
+        <title>Related topics</title>
+        <itemizedlist>
+            <listitem>
+                <para><xref linkend="access"/></para>
+            </listitem>
+            <listitem>
+                <para><xref linkend="overrides"/></para>
+            </listitem>
+            <listitem>
+                <para><xref linkend="naming"/></para>
+            </listitem>
+        </itemizedlist>
+    </sidebar>
+
+    <para>
+        Historically Hibernate called these components.  JPA calls them embeddables.  Either way the concept is the
+        same: a composition of values.  For example we might have a Name class that is a composition of
+        first-name and last-name, or an Address class that is a composition of street, city, postal code, etc.
+    </para>
+
+    <example xml:id="composition-ex-embeddable">
+        <title>Simple composition example</title>
+        <programlisting role="JAVA"><xi:include href="extras/Name.java" parse="text" /></programlisting>
+        <programlisting role="JAVA"><xi:include href="extras/Address.java" parse="text" /></programlisting>
+    </example>
+
+    <para>
+        A composition is another form of value type.  The lifecycle of a composition is defined by the thing that
+        contains it.
+    </para>
+
+    <para>
+        A composition inherits the attribute access of its parent.  For details on attribute access, see
+        <xref linkend="access"/>.
+    </para>
+
+    <para>
+        Compositions can be made up of basic values as well as associations, with the caveat that compositions which
+        are used as collection elements cannot themselves define collections.
+    </para>
+
+    <section>
+        <title>Component / Embedded</title>
+        <para>
+            This is the form of composition you will see most often.  Here an entity or another composition
+            is the container.
+        </para>
+
+        <example xml:id="composition-ex-embedded1">
+            <title>Simple Embedded</title>
+            <programlisting role="JAVA"><xi:include href="extras/Person.java" parse="text" /></programlisting>
+        </example>
+
+        <note>
+            <para>
+                Notice that JPA defines 2 terms for composition: Embeddable and Embedded.  Embeddable is used to
+                describe the composition class itself (Name).  Embedded is used to describe a usage of that
+                composition (Person.name).
+            </para>
+        </note>
+
+        <para>
+            The composition here is the Name type related to Person.name.
+        </para>
+
+        <example xml:id="composition-ex-embedded1-sql">
+            <title>Person table</title>
+            <programlisting role="SQL"><xi:include href="extras/Person1.sql" parse="text" /></programlisting>
+        </example>
+
+        <para>
+            The composed values are mapped to the same table as the parent table.  Composition is part of good
+            OO data modeling (idiomatic java).  In fact that table could also be mapped by the following entity instead.
+        </para>
+
+        <example xml:id="composition-ex-no-composition">
+            <title>Alternative to composition</title>
+            <programlisting role="JAVA"><xi:include href="extras/Person_alt.java" parse="text" /></programlisting>
+        </example>
+
+        <para>
+            The composition form is certainly more OO.  And that becomes more evident as we work with multiple
+            compositions.
+        </para>
+    </section>
+
+    <section xml:id="composition-multiple">
+        <title>Multiple compositions</title>
+
+        <example xml:id="composition-ex-multiple-compositions">
+            <title>Multiple compositions</title>
+            <programlisting role="JAVA"><xi:include href="extras/Contact.java" parse="text" /></programlisting>
+        </example>
+
+        <para>
+            It is certainly more convenient to work with the compositions.  However, an interesting thing happens
+            in this particular example.  By default, this mapping actually will not work as-is.
+            The problem is in how JPA defines implicit naming rules for columns that are part of a composition, which
+            say that all of the Address compositions would map to the same implicit column names.
+        </para>
+
+        <para>
+            This occurs any time we have multiple compositions based on the same embeddable in a given parent.
+            We have a few options to handle this issue.
+        </para>
+
+        <section xml:id="composition-multiple-jpa">
+            <title>JPA's AttributeOverride</title>
+
+            <para>
+                The JPA-defined way to handle this situation is through the use of its AttributeOverride annotation.
+            </para>
+
+            <example>
+                <title>JPA's AttributeOverride</title>
+                <programlisting role="JAVA"><xi:include href="extras/Contact-AttributeOverride.java"  parse="text"/></programlisting>
+            </example>
+
+            <para>
+                Now, essentially there are no implicit column names in the Address compositions.  We have explicitly
+                named them.
+            </para>
+        </section>
+
+        <section xml:id="composition-multiple-namingstrategy">
+            <title>ImplicitNamingStrategy</title>
+
+            <note>
+                <para>
+                    This is a Hibernate specific feature.  Users concerned with JPA provider portability should instead
+                    prefer explicit column naming with AttributeOverride as per <xref linkend="composition-multiple-jpa"/>
+                </para>
+            </note>
+
+            <para>
+                Hibernate naming strategies are covered in detail in <xref linkend="naming"/>.  However, for the purposes
+                of this discussion, Hibernate has the capability to interpret implicit column names in a way that is
+                safe for use with multiple compositions.
+            </para>
+
+            <example>
+                <title>Enabling composition-safe implicit naming</title>
+                <programlisting role="JAVA"><xi:include href="extras/component-safe-implicit-naming.java" parse="text"/></programlisting>
+            </example>
+
+            <para>
+                Now the "path" to attributes are used in the implicit column naming.
+            </para>
+
+            <example>
+                <title>Enabling composition-safe implicit naming</title>
+                <programlisting role="SQL"><xi:include href="extras/Contact-ImplicitNamingStrategy.sql" parse="text"/></programlisting>
+            </example>
+
+            <para>
+                You could even develop your own to do special implicit naming.
+            </para>
+        </section>
+    </section>
+
+    <section xml:id="composition-collections">
+        <title>Collections of compositions</title>
+        <para>
+            Collections of compositions are specifically value collections (as compositions are a value type).  Value
+            collections are covered in detail in <xref linkend="collections-value"/>.
+        </para>
+        <para>
+            The one thing to add to the discussion of value collections in regards to compositions is that
+            the composition cannot, in turn, define collections.
+        </para>
+    </section>
+
+    <section xml:id="composition-mapkey">
+        <title>Compositions as Map key</title>
+        <para>
+            Compositions can also be used as the key values for Maps.  Mapping Maps and their keys is convered in
+            detail in <xref linkend="collections-map-key"/>.
+        </para>
+        <para>
+            Again, compositions used as a Map key cannot, in turn, define collections.
+        </para>
+    </section>
+
+    <section xml:id="composition-identifier">
+        <title>Compositions as identifiers</title>
+        <para>
+            Compositions can also be used as entity identifiers.  This usage is covered in detail in
+            <xref linkend="identifier-composite"/>
+        </para>
+        <para>
+            Again, compositions used as an entity identifier cannot, in turn, define collections.
+        </para>
+    </section>
+</chapter>

@@ -380,7 +380,7 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 		}
 	}
 
-	private class RootReturnBuilder implements RootReturn, ReturnBuilder {
+	private static class RootReturnBuilder implements RootReturn, ReturnBuilder {
 		private final String alias;
 		private final String entityName;
 		private LockMode lockMode = LockMode.READ;
@@ -433,7 +433,7 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 		}
 	}
 
-	private class FetchReturnBuilder implements FetchReturn, ReturnBuilder {
+	private static class FetchReturnBuilder implements FetchReturn, ReturnBuilder {
 		private final String alias;
 		private String ownerTableAlias;
 		private final String joinedPropertyName;

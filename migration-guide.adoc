@@ -1,0 +1,118 @@
+= 5.0 Migration Guide
+:toc:
+
+This guide discusses migration from Hibernate ORM version 4.3 to version 5.0.  For migration from
+earlier versions, see any other pertinent migration guides as well.
+
+== Re-purposing of Configuration
+
+Configuration, historically, allowed users to iteratively add settings and mappings in any order and to query the
+state of settings and mapping information in the middle of that process.  Which meant that building the mapping
+information could not effectively rely on any settings being available.  This lead to many limitations and problems.
+
+Quite a few methods have been removed from Configuration.  Be sure to see the User Guide chapter on bootstrapping for
+details.  For applications that integrate with Hibernate via one or more APIs, this change might effect your
+integrations as well.
+
+
+== Short-naming
+
+In an effort to insulate applications from refactoring efforts, Hibernate has begun to recognize "short name" values for
+certain configuration settings.  These are discussed in detail in the User Guide in the pertinent sections.
+
+Where available, we highly recommend using the short name for a setting value.
+
+
+== Transactions
+
+The transaction SPI underwent a major redesign as part of 5.0 as well.  From a user perspective this generally
+only comes into view in terms of configuration.  Previously applications would work with the different backend
+transaction stratagies directly via the `org.hibernate.Transaction` API.  In 5.0 a level of indirection has been
+added here.  The API implementation of `org.hibernate.Transaction` is always the same now.  On the backend, the
+`org.hibernate.Transaction` impl talks to a `org.hibernate.resource.transaction.TransactionCoordinator` which represents
+the "transactional context" for a given Session according to the backend transaction strategy.  Users generally do not
+need to care about the distinction.
+
+The change is noted here because it might affect your bootstrap configuration.  Whereas previously applications would
+specify `hibernate.transaction.factory_class` and refer to a `org.hibernate.engine.transaction.spi.TransactionFactory` FQN,
+with 5.0 the new contract is `org.hibernate.resource.transaction.TransactionCoordinatorBuilder` and is specified using the
+`hibernate.transaction.coordinator_class` setting.  See `org.hibernate.cfg.AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY`
+JavaDocs for additional details.
+
+The following short-names are recognized:
+`jdbc`::(the default) says to use JDBC-based transactions (`org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl`)
+`jta`::says to use JTA-based transactions (`org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl`)
+
+See the User Guide for additional details.
+
+
+== Type handling
+
+* Migrated `org.hibernate.metamodel.spi.TypeContributor` and `org.hibernate.metamodel.spi.TypeContributions`
+	to `org.hibernate.boot.model.TypeContributor` and `org.hibernate.boot.model.TypeContributions`
+* Built-in `org.hibernate.type.descriptor.sql.SqlTypeDescriptor` implementations no longer auto-register themselves
+    with `org.hibernate.type.descriptor.sql.SqlTypeDescriptorRegistry`.  Applications using custom SqlTypeDescriptor
+    implementations extending the built-in ones and relying on that behavior should be updated to call
+    `SqlTypeDescriptorRegistry#addDescriptor` themselves.
+* The JDBC type for "big_integer" (org.hibernate.type.BigIntegerType) properties has changed from
+    java.sql.Types,NUMERIC to java.sql.Types.BIGINT.
+* For ids defined as UUID with generation, for some databases it is required to explicitly set the `@Column( length=16 )`
+    in order to generate BINARY(16) so that comparisons properly work.
+* For EnumType mappings defined in hbm.xml where the user wants name-mapping (`javax.persistence.EnumType#STRING`)
+    the configuration must explicitly state that using either the `useNamed` (true) setting or by specifying the `type`
+    setting set to the value 12 (VARCHAR JDBC type code).
+
+
+== Naming strategies
+
+Historically Hibernate provided just a singular contract for applying a "naming strategy". Starting in 5.0 this has
+been split into 2 distinct contracts:
+* `ImplicitNamingStrategy` - is used whenever a table or column is not explicitly named to determine the name to use.
+* `PhysicalNamingStrategy` - is used to convert a "logical name" (either implicit or explicit) name of a table or column
+into a physical name (e.g. following corporate naming guidelines)
+
+
+== Changed setting defaults
+
+* Default value for `hibernate.id.new_generator_mappings` setting changed to true for 5.0.  See
+    `org.hibernate.cfg.AvailableSettings#USE_NEW_ID_GENERATOR_MAPPINGS` javadocs.
+* The default ImplicitNamingStrategy (`hibernate.implicit_naming_strategy`) has changed to the JPA-compliant one.  See
+    `org.hibernate.cfg.AvailableSettings.IMPLICIT_NAMING_STRATEGY` javadocs for details.  If you experience problems
+    migrating dues to implicit table or column names you may want to specify the legacy strategy
+    (`legacy-hbm` \ `org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyHbmImpl`).
+* `hibernate.jdbc.batch_versioned_data` default value is now true; Oracle dialects set this property to false,
+except for Oracle12cDialect
+
+
+== Misc
+
+* `cfg.xml` files are again fully parsed and integrated (events, security, etc)
+* properties loaded from `cfg.xml` through EntityManagerFactory did not previously prefix names with "hibernate." this is now made consistent.
+* `Configuration` is  no longer `Serializable`
+* `org.hibernate.dialect.Dialect.getQuerySequencesString` expected to retrieve catalog, schema, and increment values as well
+* removed AuditConfiguration in preference for new `org.hibernate.envers.boot.internal.EnversService`
+* changed AuditStrategy method parameters from (removed) AuditConfiguration to (new) EnversService
+* Moving `org.hibernate.hql.spi.MultiTableBulkIdStrategy` and friends to new `org.hibernate.hql.spi.id` package
+    and sub-packages
+* Complete redesign of "property access" contracts
+* Valid `hibernate.cache.default_cache_concurrency_strategy` setting values are now defined via
+    `org.hibernate.cache.spi.access.AccessType#getExternalName` rather than the `org.hibernate.cache.spi.access.AccessType`
+    enum names; this is more consistent with other Hibernate settings
+
+
+== Deprecations
+
+* Removed the deprecated `org.hibernate.cfg.AnnotationConfiguration`
+* Removed deprecated `org.hibernate.id.TableGenerator` id-generator
+* Removed deprecated `org.hibernate.id.TableHiLoGenerator` (hilo) id-generator
+* Deprecated `org.hibernate.id.SequenceGenerator` and its subclasses
+* Added a new dedicated "deprecation logger" to consolidate logging for deprecated uses.
+
+== Changed/Moved contracts
+
+* `org.hibernate.integrator.spi.Integrator` contract changed to account for bootstrap redesign
+* Extracted `org.hibernate.engine.jdbc.env.spi.JdbcEnvironment` from `JdbcServices`;
+	created `org.hibernate.engine.jdbc.env` package and moved a few contracts there.
+* Introduction of `org.hibernate.boot.model.relational.ExportableProducer` which will effect any
+	`org.hibernate.id.PersistentIdentifierGenerator` implementations
+* Changed to signature of `org.hibernate.id.Configurable` to accept `ServiceRegistry` rather than just `Dialect`

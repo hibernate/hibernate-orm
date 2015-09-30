@@ -488,10 +488,10 @@ public class TableBinder {
 			String subselect,
 			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
 		schema = BinderHelper.isEmptyAnnotationValue( schema )
-				? extract( buildingContext.getMetadataCollector().getDatabase().getDefaultSchema().getPhysicalName().getSchema() )
+				? extract( buildingContext.getMetadataCollector().getDatabase().getDefaultNamespace().getPhysicalName().getSchema() )
 				: schema;
 		catalog = BinderHelper.isEmptyAnnotationValue( catalog )
-				? extract( buildingContext.getMetadataCollector().getDatabase().getDefaultSchema().getPhysicalName().getCatalog() )
+				? extract( buildingContext.getMetadataCollector().getDatabase().getDefaultNamespace().getPhysicalName().getCatalog() )
 				: catalog;
 
 		final Table table;
@@ -600,8 +600,8 @@ public class TableBinder {
 			}
 			while ( idColumns.hasNext() ) {
 				Column column = (Column) idColumns.next();
-				columns[0].overrideFromReferencedColumnIfNecessary( column );
 				columns[0].linkValueUsingDefaultColumnNaming( column, referencedEntity, value );
+				columns[0].overrideFromReferencedColumnIfNecessary( column );
 			}
 		}
 		else {

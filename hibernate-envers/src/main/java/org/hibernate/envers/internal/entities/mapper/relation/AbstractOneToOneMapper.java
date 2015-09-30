@@ -16,6 +16,7 @@ import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * Template class for property mappers that manage one-to-one relation.
@@ -26,8 +27,12 @@ public abstract class AbstractOneToOneMapper extends AbstractToOneMapper {
 	private final String entityName;
 	private final String referencedEntityName;
 
-	protected AbstractOneToOneMapper(String entityName, String referencedEntityName, PropertyData propertyData) {
-		super( propertyData );
+	protected AbstractOneToOneMapper(
+			String entityName,
+			String referencedEntityName,
+			PropertyData propertyData,
+			ServiceRegistry serviceRegistry) {
+		super( serviceRegistry, propertyData );
 		this.entityName = entityName;
 		this.referencedEntityName = referencedEntityName;
 	}

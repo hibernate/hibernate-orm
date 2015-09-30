@@ -9,8 +9,13 @@ package org.hibernate.test.instrument.cases;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.bytecode.spi.InstrumentedClassLoader;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
@@ -110,13 +115,27 @@ public class TestFetchingLazyToOneExecutable implements Executable {
 
 	@Override
 	public final void prepare() {
-		Configuration cfg = new Configuration()
-				.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
-				.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
-		cfg.addAnnotatedClass( Person.class );
-		cfg.addAnnotatedClass( Passport.class );
-		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() );
-		factory = cfg.buildSessionFactory( serviceRegistry );
+		BootstrapServiceRegistryBuilder bsrb = new BootstrapServiceRegistryBuilder();
+		// make sure we pick up the TCCL, and make sure its the isolated CL...
+		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+		if ( classLoader == null ) {
+			throw new RuntimeException( "Isolated ClassLoader not yet set as TCCL" );
+		}
+		if ( !InstrumentedClassLoader.class.isInstance( classLoader ) ) {
+			throw new RuntimeException( "Isolated ClassLoader not yet set as TCCL" );
+		}
+		bsrb.applyClassLoader( classLoader );
+
+		serviceRegistry = new StandardServiceRegistryBuilder( bsrb.build() )
+				.applySetting( Environment.HBM2DDL_AUTO, "create-drop" )
+				.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" )
+				.build();
+
+		MetadataSources metadataSources = new MetadataSources( serviceRegistry );
+		metadataSources.addAnnotatedClass( Person.class );
+		metadataSources.addAnnotatedClass( Passport.class );
+
+		factory = metadataSources.buildMetadata().buildSessionFactory();
 
 		createData();
 	}
@@ -140,11 +159,7 @@ public class TestFetchingLazyToOneExecutable implements Executable {
 		}
 		finally {
 			factory.close();
-			factory = null;
-			if ( serviceRegistry != null ) {
-				ServiceRegistryBuilder.destroy( serviceRegistry );
-				serviceRegistry = null;
-			}
+			StandardServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 	}
 

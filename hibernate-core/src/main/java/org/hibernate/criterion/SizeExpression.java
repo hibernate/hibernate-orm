@@ -6,6 +6,8 @@
  */
 package org.hibernate.criterion;
 
+import java.util.Locale;
+
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.TypedValue;
@@ -45,6 +47,7 @@ public class SizeExpression implements Criterion {
 				.setCondition( pk, fk );
 
 		return String.format(
+				Locale.ROOT,
 				"? %s (select count(*) from %s where %s)",
 				op,
 				cp.getTableName(),
@@ -59,7 +62,7 @@ public class SizeExpression implements Criterion {
 
 	@Override
 	public String toString() {
-		return propertyName + ".size" + op + size;
+		return Integer.toString(size) + op + propertyName + ".size";
 	}
 
 }

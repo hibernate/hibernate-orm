@@ -23,28 +23,29 @@
  */
 package org.hibernate.test.id;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Properties;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.List;
-import java.util.Properties;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
-
-import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
+
+import org.jboss.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
 
@@ -75,7 +76,7 @@ public class PooledHiLoSequenceIdentifierTest extends BaseCoreFunctionalTestCase
 
 			assertEquals( 7, countInsertedRows( s ) );
 
-			List<Number> ids = s.createSQLQuery( "SELECT id FROM sequenceIdentifier" ).list();
+			List<Number> ids = s.createQuery( "SELECT id FROM sequenceIdentifier" ).list();
 			for ( Number id : ids ) {
 				log.debug( "Found id: " + id );
 			}
@@ -128,16 +129,18 @@ public class PooledHiLoSequenceIdentifierTest extends BaseCoreFunctionalTestCase
 	}
 
 	private void insertNewRow(Session session) {
+		final SessionImplementor si = (SessionImplementor) session;
+		final SessionFactoryImplementor sfi = si.getFactory();
+
 		session.doWork(
 				new Work() {
 					@Override
 					public void execute(Connection connection) throws SQLException {
-						Statement statement = null;
+						PreparedStatement statement = null;
 						try {
-							statement = connection.createStatement();
-							statement.executeUpdate(
-									"INSERT INTO sequenceIdentifier VALUES (NEXT VALUE FOR hibernate_sequence)"
-							);
+							statement = connection.prepareStatement( "INSERT INTO sequenceIdentifier VALUES (?)" );
+							statement.setObject( 1, sfi.getIdentifierGenerator( SequenceIdentifier.class.getName() ).generate( si, null ) );
+							statement.executeUpdate();
 						}
 						finally {
 							if ( statement != null ) {

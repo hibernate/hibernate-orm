@@ -13,6 +13,7 @@ import java.util.Map;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.SingletonIterator;
@@ -22,12 +23,12 @@ import org.hibernate.internal.util.collections.SingletonIterator;
  * @author Gavin King
  */
 public class Subclass extends PersistentClass {
-
 	private PersistentClass superclass;
 	private Class classPersisterClass;
 	private final int subclassId;
 	
-	public Subclass(PersistentClass superclass) {
+	public Subclass(PersistentClass superclass, MetadataBuildingContext metadataBuildingContext) {
+		super( metadataBuildingContext );
 		this.superclass = superclass;
 		this.subclassId = superclass.nextSubclassId();
 	}

@@ -1,0 +1,699 @@
+<?xml version='1.0' encoding='utf-8' ?>
+
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<chapter xml:id="database"
+         xmlns="http://docbook.org/ns/docbook"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+        >
+
+    <title>Database access</title>
+
+
+    <section xml:id="database-connectionprovider">
+        <title>ConnectionProvider</title>
+
+        <para>
+            As an ORM tool, probably the single most important thing you need to tell Hibernate is how to connect to
+            your database so that it may connect on behalf of your application.  This is ultimately the function of
+            the <interfacename>org.hibernate.engine.jdbc.connections.spi.ConnectionProvider</interfacename>
+            interface.  Hibernate provides some out of the box implementations of this interface.  ConnectionProvider
+            is also an extension point, so you can also use custom implementations from third parties or written yourself.
+            The ConnectionProvider to use is defined by the <literal>hibernate.connection.provider_class</literal> setting.
+            See the <interfacename>org.hibernate.cfg.AvailableSettings#CONNECTION_PROVIDER</interfacename>
+        </para>
+
+        <para>
+            Generally speaking applications should not have to configure a ConnectionProvider explicitly if using
+            one of the Hibernate-provided implementations.  Hibernate will internally determine which ConnectionProvider
+            to use based on the following algorithm:
+            <orderedlist spacing="compact">
+                <listitem>
+                    <para>
+                        If <literal>hibernate.connection.provider_class</literal> is set, it takes precedence
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        else if <literal>hibernate.connection.datasource</literal> is set -> <xref linkend="database-connectionprovider-datasource"/>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        else if any setting prefixed by <literal>hibernate.c3p0.</literal> is set -> <xref linkend="database-connectionprovider-c3p0"/>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        else if any setting prefixed by <literal>hibernate.proxool.</literal> is set -> <xref linkend="database-connectionprovider-proxool"/>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        else if any setting prefixed by <literal>hibernate.hikari.</literal> is set -> <xref linkend="database-connectionprovider-hikari"/>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        else if <literal>hibernate.connection.url</literal> is set -> <xref linkend="database-connectionprovider-drivermanager"/>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        else -> <xref linkend="database-connectionprovider-provided"/>
+                    </para>
+                </listitem>
+            </orderedlist>
+        </para>
+
+
+        <section xml:id="database-connectionprovider-datasource">
+            <title>Using DataSources</title>
+
+            <para>
+                Hibernate can integrate with a <interfacename>javax.sql.DataSource</interfacename> for obtaining
+                JDBC Connections.  Applications would tell Hibernate about the DataSource via the (required)
+                <literal>hibernate.connection.datasource</literal> setting which can either specify a JNDI name
+                or would reference the actual DataSource instance.  For cases where a JNDI name is given, be sure
+                to read <xref linkend="jndi"/>
+            </para>
+
+            <note>
+                <para>
+                    For JPA applications, note that <literal>hibernate.connection.datasource</literal> corresponds to
+                    either <literal>javax.persistence.jtaDataSource</literal> or <literal>javax.persistence.nonJtaDataSource</literal>.
+                </para>
+            </note>
+
+            <para>
+                The DataSource ConnectionProvider also (optionally) accepts the <literal>hibernate.connection.username</literal>
+                and <literal>hibernate.connection.password</literal>.  If specified, the form of DataSource#getConnection
+                accepting username and password will be used.  Otherwise the no-arg form is used.
+            </para>
+        </section>
+
+        <section xml:id="database-connectionprovider-c3p0">
+            <title>Using c3p0</title>
+
+            <important>
+                <para>
+                    To use this integration, the application must include the hibernate-c3p0
+                    module jar (as well as its dependencies) on the classpath.
+                </para>
+            </important>
+
+            <para>
+                Hibernate also provides support for applications to use <link xlink:href="http://www.mchange.com/projects/c3p0/">c3p0</link>
+                connection pooling.  When using this c3p0 support, a number of additional configuration settings
+                are recognized.
+            </para>
+
+            <para>
+                Transaction isolation of the Connections is managed by the ConnectionProvider itself.  See
+                <xref linkend="database-connectionprovider-isolation"/>.
+            </para>
+
+            <variablelist>
+                <title>Additional settings</title>
+                <varlistentry>
+                    <term><literal>hibernate.connection.driver_class</literal></term>
+                    <listitem>
+                        <para>
+                            The name of the JDBC Driver class to use
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><literal>hibernate.connection.url</literal></term>
+                    <listitem>
+                        <para>
+                            The JDBC connection url.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>Any settings prefixed with <literal>hibernate.connection.</literal> (other than the "special ones")</term>
+                    <listitem>
+                        <para>
+                            These all have the <literal>hibernate.connection.</literal> prefix stripped and the
+                            rest will be passed as JDBC connection properties
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><literal>hibernate.c3p0.min_size</literal> or <literal>c3p0.minPoolSize</literal></term>
+                    <listitem>
+                        <para>
+                            The minimum size of the c3p0 pool.  See <link xlink:href="http://www.mchange.com/projects/c3p0/#minPoolSize"/>
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><literal>hibernate.c3p0.max_size</literal> or <literal>c3p0.maxPoolSize</literal></term>
+                    <listitem>
+                        <para>
+                            The maximum size of the c3p0 pool.  See <link xlink:href="http://www.mchange.com/projects/c3p0/#maxPoolSize"/>
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><literal>hibernate.c3p0.timeout</literal> or <literal>c3p0.maxIdleTime</literal></term>
+                    <listitem>
+                        <para>
+                            The Connection idle time.  See <link xlink:href="http://www.mchange.com/projects/c3p0/#maxIdleTime"/>
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><literal>hibernate.c3p0.max_statements</literal> or <literal>c3p0.maxStatements</literal></term>
+                    <listitem>
+                        <para>
+                            Controls the c3p0 PreparedStatement cache size (if using).  See <link xlink:href="http://www.mchange.com/projects/c3p0/#maxStatements"/>
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><literal>hibernate.c3p0.acquire_increment</literal> or <literal>c3p0.acquireIncrement</literal></term>
+                    <listitem>
+                        <para>
+                            Number of connections c3p0 should acquire at a time when pool is exhauted.  See <link xlink:href="http://www.mchange.com/projects/c3p0/#acquireIncrement"/>
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><literal>hibernate.c3p0.idle_test_period</literal> or <literal>c3p0.idleConnectionTestPeriod</literal></term>
+                    <listitem>
+                        <para>
+                            Idle time before a c3p0 pooled connection is validated.  See <link xlink:href="http://www.mchange.com/projects/c3p0/#idleConnectionTestPeriod"/>
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><literal>c3p0.initialPoolSize</literal></term>
+                    <listitem>
+                        <para>
+                            The initial c3p0 pool size.  If not specified, default is to use the min pool size.
+                            See <link xlink:href="http://www.mchange.com/projects/c3p0/#initialPoolSize"/>
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>Any other settings prefixed with <literal>hibernate.c3p0.</literal></term>
+                    <listitem>
+                        <para>
+                            Will have the <literal>hibernate.</literal> portion stripped and be passed to c3p0.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>Any other settings prefixed with <literal>c3p0.</literal></term>
+                    <listitem>
+                        <para>
+                            Get passed to c3p0 as is.  See <link xlink:href="http://www.mchange.com/projects/c3p0/#configuration"/>
+                        </para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </section>
+
+        <section xml:id="database-connectionprovider-proxool">
+            <title>Using Proxool</title>
+
+            <important>
+                <para>
+                    To use this integration, the application must include the hibernate-proxool
+                    module jar (as well as its dependencies) on the classpath.
+                </para>
+            </important>
+
+            <para>
+                Hibernate also provides support for applications to use <link xlink:href="http://proxool.sourceforge.net/">Proxool</link>
+                connection pooling.
+            </para>
+
+            <para>
+                Transaction isolation of the Connections is managed by the ConnectionProvider itself.  See
+                <xref linkend="database-connectionprovider-isolation"/>.
+            </para>
+
+            <section xml:id="database-connectionprovider-proxool-existing">
+                <title>Using existing Proxool pools</title>
+
+                <para>
+                    Controlled by the <literal>hibernate.proxool.existing_pool</literal> setting.  If set to true,
+                    this ConnectionProvider will use an already existing Proxool pool by alias as indicated by
+                    the <literal>hibernate.proxool.pool_alias</literal> setting
+                </para>
+            </section>
+
+            <section xml:id="database-connectionprovider-proxool-jaxp">
+                <title>Configuring Proxool via XML</title>
+
+                <para>
+                    The <literal>hibernate.proxool.xml</literal> setting names a Proxool configuration XML
+                    file to be loaded as a classpath resource and loaded by Proxool's JAXPConfigurator.
+                    See <link xlink:href="http://proxool.sourceforge.net/configure.html"/>.
+                    <literal>hibernate.proxool.pool_alias</literal> must be set to indicate which pool to use.
+                </para>
+            </section>
+
+            <section xml:id="database-connectionprovider-proxool-properties">
+                <title>Configuring Proxool via Properties</title>
+
+                <para>
+                    The <literal>hibernate.proxool.properties</literal> setting names a Proxool configuration Properties
+                    file to be loaded as a classpath resource and loaded by Proxool's PropertyConfigurator.
+                    See <link xlink:href="http://proxool.sourceforge.net/configure.html"/>.
+                    <literal>hibernate.proxool.pool_alias</literal> must be set to indicate which pool to use.
+                </para>
+            </section>
+        </section>
+
+        <section xml:id="database-connectionprovider-hikari">
+            <title>Using Hikari</title>
+
+            <important>
+                <para>
+                    To use this integration, the application must include the hibernate-hikari
+                    module jar (as well as its dependencies) on the classpath.
+                </para>
+            </important>
+
+            <para>
+                Hibernate also provides support for applications to use
+                <link xlink:href="http://brettwooldridge.github.io/HikariCP/">Hikari</link> connection pool.
+            </para>
+
+            <para>
+                Set all of your Hikari settings in Hibernate prefixed by <literal>hibernate.hikari.</literal>
+                and this ConnectionProvider will pick them up and pass them along to Hikari.  Additionally, this
+                ConnectionProvider will pick up the following Hibernate-specific properties and map
+                them to the corresponding Hikari ones (any <literal>hibernate.hikari.</literal> prefixed ones have precedence):
+            </para>
+
+            <variablelist>
+                <title>Hibernate-specific properties recognized by Hikari ConnectionProvider</title>
+                <varlistentry>
+                    <term><literal>hibernate.connection.driver_class</literal></term>
+                    <listitem>
+                        <para>Mapped to Hikari's <literal>driverClassName</literal> setting</para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><literal>hibernate.connection.url</literal></term>
+                    <listitem>
+                        <para>Mapped to Hikari's <literal>jdbcUrl</literal> setting</para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><literal>hibernate.connection.username</literal></term>
+                    <listitem>
+                        <para>Mapped to Hikari's <literal>username</literal> setting</para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><literal>hibernate.connection.password</literal></term>
+                    <listitem>
+                        <para>Mapped to Hikari's <literal>password</literal> setting</para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><literal>hibernate.connection.isolation</literal></term>
+                    <listitem>
+                        <para>
+                            Mapped to Hikari's <literal>transactionIsolation</literal> setting.  See
+                            <xref linkend="database-connectionprovider-isolation"/>.  Note that
+                            Hikari only supports JDBC standard isolation levels (apparently).
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><literal>hibernate.connection.autocommit</literal></term>
+                    <listitem>
+                        <para>Mapped to Hikari's <literal>autoCommit</literal> setting</para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </section>
+
+        <section xml:id="database-connectionprovider-drivermanager">
+            <title>Using Hibernate's built-in (and unsupported) pooling</title>
+
+            <important>
+                <para>
+                    The built-in connection pool is not supported supported for use.
+                </para>
+            </important>
+
+            <para>
+                This section is here just for completeness.
+            </para>
+        </section>
+
+        <section xml:id="database-connectionprovider-provided">
+            <title>User-provided Connections</title>
+
+            <para>
+                It is possible to use Hibernate by simply passing a Connection to use to the Session when the Session
+                is opened.  This usage is discouraged and not discussed here.
+            </para>
+        </section>
+
+        <section xml:id="database-connectionprovider-isolation">
+            <title>ConnectionProvider support for transaction isolation setting</title>
+            <para>
+                All of the provided ConnectionProvider implementations, other than DataSourceConnectionProvider,
+                support consistent setting of transaction isolation for all Connections obtained from the underlying
+                pool.  The value for <literal>hibernate.connection.isolation</literal> can be specified in
+                one of 3 formats:
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            the integer value accepted at the JDBC level
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            the name of the <interfacename>java.sql.Connection</interfacename> constant field
+                            representing the isolation you would like to use.  For example,
+                            <literal>TRANSACTION_REPEATABLE_READ</literal> for
+                            <methodname>java.sql.Connection#TRANSACTION_REPEATABLE_READ</methodname>.  Not that this is
+                            only supported for JDBC standard isolations, not for isolation levels specific to
+                            a particular JDBC driver.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            a short-name version of the <interfacename>java.sql.Connection</interfacename> constant field
+                            without the <literal>TRANSACTION_</literal> prefix.  For example,
+                            <literal>REPEATABLE_READ</literal> for
+                            <methodname>java.sql.Connection#TRANSACTION_REPEATABLE_READ</methodname>.  Again, this is
+                            only supported for JDBC standard isolations, not for isolation levels specific to
+                            a particular JDBC driver.
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    </section>
+
+
+
+    <section xml:id="database-dialect">
+        <title>Database Dialect</title>
+
+        <para>
+            Although SQL is relatively standardized, each database vendor uses a subset and superset of
+            ANSI SQL defined syntax.  This is referred to as the database's <firstterm>dialect</firstterm>.
+            Hibernate handles variations across these dialects through its
+            <classname>org.hibernate.dialect.Dialect</classname> class and the various subclasses for each database
+            vendor.
+        </para>
+
+        <para>
+            In most cases Hibernate will be able to determine the proper Dialect to use by asking some questions
+            of the JDBC Connection during bootstrap.  For information on Hibernate's ability to determine the
+            proper Dialect to use (and your ability to influence that resolution), see <xref linkend="portability-dialectresolver"/>
+        </para>
+
+        <para>
+            If for some reason it is not able to determine the proper one
+            or you want to use a custom Dialect, you will need to set the <literal>hibernate.dialect</literal> setting.
+        </para>
+
+        <table>
+            <title>Provided Dialects</title>
+
+            <tgroup cols="2">
+                <colspec colwidth="120px" />
+                <colspec colwidth="320px" />
+                <thead>
+                    <row>
+                        <entry>Dialect (short name)</entry>
+                        <entry>Remarks</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>Cache71</entry>
+                        <entry>
+                            Support for the Cach&#x00C9; database, version 2007.1
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>CUBRID</entry>
+                        <entry>
+                            Support for the CUBRID database, version 8.3.  May work with later versions.
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>DB2</entry>
+                        <entry>
+                            Support for the DB2 database
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>DB2390</entry>
+                        <entry>
+                            Support for DB2 Universal Database for OS/390, also known as DB2/390.
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>DB2400</entry>
+                        <entry>
+                            Support for DB2 Universal Database for iSeries, also known as DB2/400.
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>DerbyTenFive</entry>
+                        <entry>
+                            Support for the Derby database, version 10.5
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>DerbyTenSix</entry>
+                        <entry>
+                            Support for the Derby database, version 10.6
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>DerbyTenSeven</entry>
+                        <entry>
+                            Support for the Derby database, version 10.7
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>Firebird</entry>
+                        <entry>
+                            Support for the Firebird database
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>FrontBase</entry>
+                        <entry>
+                            Support for the Frontbase database
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>H2</entry>
+                        <entry>
+                            Support for the H2 database
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>HSQL</entry>
+                        <entry>
+                            Support for the HSQL (HyperSQL) database
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>Informix</entry>
+                        <entry>
+                            Support for the Informix database
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>Ingres</entry>
+                        <entry>
+                            Support for the Ingres database, version 9.2
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>Ingres9</entry>
+                        <entry>
+                            Support for the Ingres database, version 9.3.  May work with newer versions
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>Ingres10</entry>
+                        <entry>
+                            Support for the Ingres database, version 10.  May work with newer versions
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>Interbase</entry>
+                        <entry>
+                            Support for the Interbase database.
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>JDataStore</entry>
+                        <entry>
+                            Support for the JDataStore database
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>McKoi</entry>
+                        <entry>
+                            Support for the McKoi database
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>Mimer</entry>
+                        <entry>
+                            Support for the Mimer database, version 9.2.1.  May work with newer versions
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>MySQL5</entry>
+                        <entry>
+                            Support for the MySQL database, version 5.x
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>MySQL5InnoDB</entry>
+                        <entry>
+                            Support for the MySQL database, version 5.x preferring the InnoDB storage engine
+                            when exporting tables.
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>MySQL57InnoDB</entry>
+                        <entry>
+                            Support for the MySQL database, version 5.7 preferring the InnoDB storage engine
+                            when exporting tables.  May work with newer versions
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>Oracle8i</entry>
+                        <entry>
+                            Support for the Oracle database, version 8i
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>Oracle9i</entry>
+                        <entry>
+                            Support for the Oracle database, version 9i
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>Oracle10g</entry>
+                        <entry>
+                            Support for the Oracle database, version 10g
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>Pointbase</entry>
+                        <entry>
+                            Support for the Pointbase database
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>PostgresPlus</entry>
+                        <entry>
+                            Support for the Postgres Plus database
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>PostgreSQL81</entry>
+                        <entry>
+                            Support for the PostgrSQL database, version 8.1
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>PostgreSQL82</entry>
+                        <entry>
+                            Support for the PostgreSQL database, version 8.2
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>PostgreSQL9</entry>
+                        <entry>
+                            Support for the PostgreSQL database, version 9.  May work with later versions.
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>Progress</entry>
+                        <entry>
+                            Support for the Progress database, version 9.1C.  May work with newer versions.
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>SAPDB</entry>
+                        <entry>
+                            Support for the SAPDB/MAXDB database.
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>SQLServer</entry>
+                        <entry>
+                            Support for the SQL Server 2000 database
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>SQLServer2005</entry>
+                        <entry>
+                            Support for the SQL Server 2005 database
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>SQLServer2008</entry>
+                        <entry>
+                            Support for the SQL Server 2008 database
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>Sybase11</entry>
+                        <entry>
+                            Support for the Sybase database, up to version 11.9.2
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>SybaseAnywhere</entry>
+                        <entry>
+                            Support for the Sybase Anywhere database
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>SybaseASE15</entry>
+                        <entry>
+                            Support for the Sybase Adaptive Server Enterprise database, version 15
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>SybaseASE157</entry>
+                        <entry>
+                            Support for the Sybase Adaptive Server Enterprise database, version 15.7.  May work with newer versions.
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>Teradata</entry>
+                        <entry>
+                            Support for the Teradata database
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>TimesTen</entry>
+                        <entry>
+                            Support for the TimesTen database, version 5.1.  May work with newer versions
+                        </entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+    </section>
+</chapter>

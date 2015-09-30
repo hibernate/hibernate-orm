@@ -38,8 +38,11 @@ public class QuoteTest extends BaseNonConfigCoreFunctionalTestCase {
 	
 	@Test
 	public void testQuoteManytoMany() {
+		String role = User.class.getName() + ".roles";
+		assertEquals( "User_Role", metadata().getCollectionBinding( role ).getCollectionTable().getName() );
+
 		Session s = openSession();
-		Transaction tx = s.beginTransaction();
+		s.beginTransaction();
 		User u = new User();
 		s.persist( u );
 		Role r = new Role();
@@ -47,11 +50,9 @@ public class QuoteTest extends BaseNonConfigCoreFunctionalTestCase {
 		u.getRoles().add( r );
 		s.flush();
 		s.clear();
-		u = (User) s.get( User.class, u.getId() );
+		u = s.get( User.class, u.getId() );
 		assertEquals( 1, u.getRoles().size() );
-		tx.rollback();
-		String role = User.class.getName() + ".roles";
-		assertEquals( "User_Role", metadata().getCollectionBinding( role ).getCollectionTable().getName() );
+		s.getTransaction().rollback();
 		s.close();
 	}
 	
@@ -66,11 +67,11 @@ public class QuoteTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.persist( house );
 		s.persist( user );
 		s.getTransaction().commit();
-		s.clear();
+		s.close();
 		
 		s = openSession();
 		s.getTransaction().begin();
-		user = (User) s.get( User.class, user.getId() );
+		user = s.get( User.class, user.getId() );
 		assertNotNull( user );
 		assertNotNull( user.getHouse() );
 		// seems trivial, but if quoting normalization worked on the join column, these should all be the same
@@ -98,12 +99,28 @@ public class QuoteTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.persist( container2 );
 		s.persist( container1 );
 		s.getTransaction().commit();
-		s.clear();
-		
-		Container result = (Container) s.get( Container.class, container1.id );
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		Container result = s.get( Container.class, container1.id );
 		assertNotNull( result );
 		assertNotNull( result.items );
 		assertEquals( 2, result.items.size() );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		container1 = s.get( Container.class, container1.id );
+		for ( Item item : container1.items ) {
+			item.parent = null;
+		}
+		container1.items.clear();
+		s.flush();
+		s.createQuery( "delete Item" ).executeUpdate();
+		s.getTransaction().commit();
+		s.close();
 	}
 
 	@Override
@@ -118,7 +135,7 @@ public class QuoteTest extends BaseNonConfigCoreFunctionalTestCase {
 		};
 	}
 	
-	@Entity
+	@Entity( name = "Item" )
 	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 	private static abstract class Item {
 

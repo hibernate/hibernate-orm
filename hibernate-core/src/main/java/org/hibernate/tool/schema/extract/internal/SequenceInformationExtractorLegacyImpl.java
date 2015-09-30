@@ -48,7 +48,7 @@ public class SequenceInformationExtractorLegacyImpl implements SequenceInformati
 									new QualifiedSequenceName(
 											null,
 											null,
-											identifierHelper.fromMetaDataObjectName(
+											identifierHelper.toIdentifier(
 													resultSet.getString( 1 )
 											)
 									),

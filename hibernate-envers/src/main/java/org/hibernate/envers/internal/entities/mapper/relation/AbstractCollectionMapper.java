@@ -29,7 +29,7 @@ import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.I
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.Tools;
-import org.hibernate.property.Setter;
+import org.hibernate.property.access.spi.Setter;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -245,7 +245,8 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 			Number revision) {
 		final Setter setter = ReflectionTools.getSetter(
 				obj.getClass(),
-				commonCollectionMapperData.getCollectionReferencingPropertyData()
+				commonCollectionMapperData.getCollectionReferencingPropertyData(),
+				enversService.getServiceRegistry()
 		);
 		try {
 			setter.set(

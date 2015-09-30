@@ -1,0 +1,1764 @@
+<?xml version='1.0' encoding='utf-8' ?>
+
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<chapter xml:id="hql"
+         xmlns="http://docbook.org/ns/docbook"
+         xmlns:xi="http://www.w3.org/2001/XInclude">
+
+    <info>
+        <title>HQL and JPQL</title>
+        <abstract>
+            <para>Discuss syntax and execution of both HQL and JPQL</para>
+        </abstract>
+    </info>
+
+    <sidebar>
+        <title>Related topics</title>
+        <itemizedlist>
+            <listitem>
+                <para><xref linkend="flushing" /></para>
+            </listitem>
+            <listitem>
+                <para><xref linkend="fetching" /></para>
+            </listitem>
+            <listitem>
+                <para><xref linkend="pc" /></para>
+            </listitem>
+        </itemizedlist>
+    </sidebar>
+
+    <para>
+        The Hibernate Query Language (HQL) and Java Persistence Query Language (JPQL) are both object model
+        focused query languages similar in nature to SQL.  JPQL is a heavily-inspired-by subset of HQL.  A JPQL
+        query is always a valid HQL query, the reverse is not true however.
+    </para>
+
+    <para>
+        Both HQL and JPQL are non-type-safe ways to perform query operations.  Criteria queries offer a
+        type-safe approach to querying.  See <xref linkend="criteria" /> for more information.
+    </para>
+
+    <section>
+        <title>Case Sensitivity</title>
+
+        <para>
+            With the exception of names of Java classes and properties, queries are case-insensitive.
+            So <literal>SeLeCT</literal> is the same as <literal>sELEct</literal> is the same as
+            <literal>SELECT</literal>, but
+            <literal>org.hibernate.eg.FOO</literal> and <literal>org.hibernate.eg.Foo</literal> are different, as are
+            <literal>foo.barSet</literal> and <literal>foo.BARSET</literal>.
+        </para>
+
+        <note>
+            <para>
+                This documentation uses lowercase keywords as convention in examples.
+            </para>
+        </note>
+    </section>
+
+    <section>
+        <title>Statement types</title>
+        <para>
+            Both HQL and JPQL allow <literal>SELECT</literal>, <literal>UPDATE</literal> and <literal>DELETE</literal>
+            statements to be performed.  HQL additionally allows <literal>INSERT</literal> statements, in a form
+            similar to a SQL <literal>INSERT-SELECT</literal>.
+        </para>
+
+        <important>
+            <para>
+                Care should be taken as to when a <literal>UPDATE</literal> or <literal>DELETE</literal> statement is
+                executed.
+            </para>
+            <blockquote>
+                <attribution><citetitle pubwork="section">Section 4.10 of the JPA 2.0 Specification</citetitle></attribution>
+                <para>
+                    Caution should be used when executing bulk update or delete operations because they may result in
+                    inconsistencies between the database and the entities in the active persistence context. In general, bulk
+                    update and delete operations should only be performed within a transaction in a new persistence con-
+                    text or before fetching or accessing entities whose state might be affected by such operations.
+                </para>
+            </blockquote>
+        </important>
+
+        <section>
+            <title>Select statements</title>
+            <para>
+                The BNF for <literal>SELECT</literal> statements in HQL is:
+            </para>
+            <programlisting><xi:include href="extras/statement_select_bnf.txt" parse="text"/></programlisting>
+            <para>
+                The simplest possible HQL <literal>SELECT</literal> statement is of the form:
+            </para>
+            <programlisting>from com.acme.Cat</programlisting>
+            <para>
+                The select statement in JPQL is exactly the same as for HQL except that JPQL requires a
+                <literal>select_clause</literal>, whereas HQL does not.  Even though HQL does not require the presence
+                of a <literal>select_clause</literal>, it is generally good practice to include one.  For simple queries
+                the intent is clear and so the intended result of the <literal>select_clause</literal> is east to
+                infer.  But on more complex queries that is not always the case.  It is usually better to explicitly
+                specify intent.  Hibernate does not actually enforce that a <literal>select_clause</literal> be present
+                even when parsing JPQL queries, however applications interested in JPA portability should take heed of
+                this.
+                <!-- todo : strict compliance setting -->
+            </para>
+        </section>
+
+        <section>
+            <title>Update statements</title>
+            <para>
+                The BNF for <literal>UPDATE</literal> statements is the same in HQL and JPQL:
+            </para>
+            <programlisting role="JAVA"><xi:include href="extras/statement_update_bnf.txt" parse="text"/></programlisting>
+            <para>
+                <literal>UPDATE</literal> statements, by default, do not effect the <literal>version</literal>
+                or the <literal>timestamp</literal> attribute values for the affected entities. However,
+                you can force Hibernate to set the <literal>version</literal> or <literal>timestamp</literal> attribute
+                values through the use of a <literal>versioned update</literal>.  This is achieved by adding the
+                <literal>VERSIONED</literal> keyword after the <literal>UPDATE</literal> keyword.  Note, however, that
+                this is a Hibernate specific feature and will not work in a portable manner.  Custom version types,
+                <interfacename>org.hibernate.usertype.UserVersionType</interfacename>, are not allowed in conjunction
+                with a <literal>update versioned</literal> statement.
+            </para>
+            <para>
+                An <literal>UPDATE</literal> statement is executed using the <methodname>executeUpdate</methodname>
+                of either <interfacename>org.hibernate.Query</interfacename> or
+                <interfacename>javax.persistence.Query</interfacename>.  The method is named for those familiar with
+                the JDBC <methodname>executeUpdate</methodname> on <interfacename>java.sql.PreparedStatement</interfacename>.
+                The <literal>int</literal> value returned by the <methodname>executeUpdate()</methodname> method
+                indicates the number of entities effected by the operation.  This may or may not correlate to the number
+                of rows effected in the database.  An HQL bulk operation might result in multiple actual SQL statements
+                being executed (for joined-subclass, for example).  The returned number indicates the number of actual
+                entities affected by the statement.  Using a JOINED inheritance hierarchy, a delete against one of the
+                subclasses may actually result in deletes against not just the table to which that subclass is mapped,
+                but also the "root" table and tables <quote>in between</quote>
+            </para>
+            <example>
+                <title>Example UPDATE query statements</title>
+                <programlisting role="JAVA"><xi:include href="extras/statement_update_example_hql.java" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/statement_update_example_jpql.java" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/statement_update_example_hql_versioned.java" parse="text"/></programlisting>
+            </example>
+        </section>
+
+        <important>
+            <para>
+                Neither <literal>UPDATE</literal> nor <literal>DELETE</literal> statements are allowed to
+                result in what is called an implicit join.  Their form already disallows explicit joins.
+            </para>
+        </important>
+
+        <section>
+            <title>Delete statements</title>
+            <para>
+                The BNF for <literal>DELETE</literal> statements is the same in HQL and JPQL:
+            </para>
+            <programlisting role="JAVA"><xi:include href="extras/statement_delete_bnf.txt" parse="text"/></programlisting>
+            <para>
+                A <literal>DELETE</literal> statement is also executed using the <methodname>executeUpdate</methodname>
+                method of either <interfacename>org.hibernate.Query</interfacename> or
+                <interfacename>javax.persistence.Query</interfacename>.
+            </para>
+        </section>
+
+        <section>
+            <title>Insert statements</title>
+            <para>
+                HQL adds the ability to define <literal>INSERT</literal> statements as well.  There is no JPQL
+                equivalent to this.  The BNF for an HQL <literal>INSERT</literal> statement is:
+            </para>
+            <programlisting role="JAVA"><xi:include href="extras/statement_insert_bnf.txt" parse="text"/></programlisting>
+            <para>
+                The <literal>attribute_list</literal> is analogous to the <literal>column specification</literal> in the
+                SQL <literal>INSERT</literal> statement.  For entities involved in mapped inheritance, only attributes
+                directly defined on the named entity can be used in the <literal>attribute_list</literal>.  Superclass
+                properties are not allowed and subclass properties do not make sense.  In other words,
+                <literal>INSERT</literal> statements are inherently non-polymorphic.
+            </para>
+            <para>
+                <literal>select_statement</literal> can be any valid HQL select query, with the caveat that the return
+                types must match the types expected by the insert.  Currently, this is checked during query
+                compilation rather than allowing the check to relegate to the database.  This may cause problems
+                between Hibernate Types which are <emphasis>equivalent</emphasis> as opposed to
+                <emphasis>equal</emphasis>.  For example, this might cause lead to issues with mismatches between an
+                attribute mapped as a <classname>org.hibernate.type.DateType</classname> and an attribute defined as
+                a <classname>org.hibernate.type.TimestampType</classname>, even though the database might not make a
+                distinction or might be able to handle the conversion.
+            </para>
+            <para>
+                For the id attribute, the insert statement gives you two options.  You can either explicitly specify
+                the id property in the <literal>attribute_list</literal>, in which case its value is taken from the
+                corresponding select expression, or omit it from the <literal>attribute_list</literal> in which case a
+                generated value is used.  This latter option is only available when using id generators that operate
+                <quote>in the database</quote>; attempting to use this option with any <quote>in memory</quote> type
+                generators will cause an exception during parsing.
+            </para>
+            <para>
+                For optimistic locking attributes, the insert statement again gives you two options.  You can either
+                specify the attribute in the <literal>attribute_list</literal> in which case its value is taken from
+                the corresponding select expressions, or omit it from the <literal>attribute_list</literal> in which
+                case the <literal>seed value</literal> defined by the corresponding
+                <interfacename>org.hibernate.type.VersionType</interfacename> is used.
+            </para>
+            <example>
+                <title>Example INSERT query statements</title>
+                <programlisting role="JAVA"><xi:include href="extras/statement_insert_example_named_id.java" parse="text"/></programlisting>
+            </example>
+        </section>
+    </section>
+
+    <section xml:id="hql-from-clause">
+        <title>The <literal>FROM</literal> clause</title>
+        <para>
+            The <literal>FROM</literal> clause is responsible defining the scope of object model types available to
+            the rest of the query.  It also is responsible for defining all the <quote>identification variables</quote>
+            available to the rest of the query.
+        </para>
+        <section>
+            <title>Identification variables</title>
+            <para>
+                Identification variables are often referred to as aliases.  References to object model classes
+                in the FROM clause can be associated with an identification variable that can then be used to
+                refer to that type thoughout the rest of the query.
+            </para>
+            <para>
+                In most cases declaring an identification variable is optional, though it is usually good practice to
+                declare them.
+            </para>
+            <para>
+                An identification variable must follow the rules for Java identifier validity.
+            </para>
+            <para>
+                According to JPQL, identification variables must be treated as case insensitive.  Good practice
+                says you should use the same case throughout a query to refer to a given identification variable.  In
+                other words, JPQL says they <emphasis>can be</emphasis> case insensitive and so Hibernate must
+                be able to treat them as such, but this does not make it good practice.
+            </para>
+        </section>
+        <section>
+            <title>Root entity references</title>
+            <para>
+                A root entity reference, or what JPA calls a <literal>range variable declaration</literal>, is
+                specifically a reference to a mapped entity type from the application.  It cannot name component/
+                embeddable types.  And associations, including collections, are handled in a different manner
+                discussed later.
+            </para>
+            <para>
+                The BNF for a root entity reference is:
+            </para>
+            <programlisting role="JAVA"><xi:include href="extras/root_entity_ref_bnf.txt" parse="text"/></programlisting>
+            <example xml:id="hql-simple-query-ex">
+                <title>Simple query example</title>
+                <programlisting role="JAVA"><xi:include href="extras/simplest_query.java" parse="text"/></programlisting>
+            </example>
+            <para>
+                We see that the query is defining a root entity reference to the <classname>com.acme.Cat</classname>
+                object model type.  Additionally, it declares an alias of <literal>c</literal> to that
+                <classname>com.acme.Cat</classname> reference; this is the identification variable.
+            </para>
+            <para>
+                Usually the root entity reference just names the <literal>entity name</literal> rather than the
+                entity class FQN.  By default the entity name is the unqualified entity class name,
+                here <literal>Cat</literal>
+            </para>
+            <example>
+                <title>Simple query using entity name for root entity reference</title>
+                <programlisting role="JAVA"><xi:include href="extras/simplest_query2.java" parse="text"/></programlisting>
+            </example>
+            <para>
+                Multiple root entity references can also be specified.  Even naming the same entity!
+            </para>
+            <example>
+                <title>Simple query using multiple root entity references</title>
+                <programlisting role="JAVA"><xi:include href="extras/multiple_root_entity_ref_example.txt" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/multiple_root_entity_ref_example2.txt" parse="text"/></programlisting>
+            </example>
+        </section>
+        <section>
+            <title>Explicit joins</title>
+            <para>
+                The <literal>FROM</literal> clause can also contain explicit relationship joins using the
+                <literal>join</literal> keyword.  These joins can be either <literal>inner</literal>
+                or <literal>left outer</literal> style joins.
+            </para>
+            <example>
+                <title>Explicit inner join examples</title>
+                <programlisting role="JAVA"><xi:include href="extras/join_example_explicit_inner.txt" parse="text"/></programlisting>
+            </example>
+            <example>
+                <title>Explicit left (outer) join examples</title>
+                <programlisting role="JAVA"><xi:include href="extras/join_example_explicit_outer.txt" parse="text"/></programlisting>
+            </example>
+            <para>
+                An important use case for explicit joins is to define <literal>FETCH JOINS</literal> which override
+                the laziness of the joined association.  As an example, given an entity named <classname>Customer</classname>
+                with a collection-valued association named <literal>orders</literal>
+            </para>
+            <example>
+                <title>Fetch join example</title>
+                <programlisting role="JAVA"><xi:include href="extras/join_example_fetch.txt" parse="text"/></programlisting>
+            </example>
+            <para>
+                As you can see from the example, a fetch join is specified by injecting the keyword <literal>fetch</literal>
+                after the keyword <literal>join</literal>.  In the example, we used a left outer join because we want
+                to return customers who have no orders also.  Inner joins can also be fetched.  But inner joins still
+                filter.  In the example, using an inner join instead would have resulted in customers without any orders
+                being filtered out of the result.
+            </para>
+            <important>
+                <para>
+                    Fetch joins are not valid in sub-queries.
+                </para>
+                <para>
+                    Care should be taken when fetch joining a collection-valued association which is in any way further
+                    restricted; the fetched collection will be restricted too!  For this reason it is usually considered
+                    best practice to not assign an identification variable to fetched joins except for the purpose
+                    of specifying nested fetch joins.
+                </para>
+                <para>
+                    Fetch joins should not be used in paged queries (aka, <methodname>setFirstResult</methodname>/
+                    <methodname>setMaxResults</methodname>).  Nor should they be used with the HQL
+                    <methodname>scroll</methodname> or <methodname>iterate</methodname> features.
+                </para>
+            </important>
+            <para>
+                HQL also defines a <literal>WITH</literal> clause to qualify the join conditions.  Again, this is
+                specific to HQL; JPQL does not define this feature.
+            </para>
+            <example>
+                <title>with-clause join example</title>
+                <programlisting role="JAVA"><xi:include href="extras/join_example_with.txt" parse="text"/></programlisting>
+            </example>
+            <para>
+                The important distinction is that in the generated SQL the conditions of the
+                <literal>with clause</literal> are made part of the <literal>on clause</literal> in the generated SQL
+                as opposed to the other queries in this section where the HQL/JPQL conditions are made part of the
+                <literal>where clause</literal> in the generated SQL.  The distinction in this specific example is
+                probably not that significant.  The <literal>with clause</literal> is sometimes necessary in more
+                complicated queries.
+            </para>
+            <para>
+                Explicit joins may reference association or component/embedded attributes.  For further information
+                about collection-valued association references, see <xref linkend="hql-collection-valued-associations"/>.
+                In the case of component/embedded attributes, the join is simply logical and does not correlate to a
+                physical (SQL) join.
+            </para>
+        </section>
+        <section>
+            <title>Implicit joins (path expressions)</title>
+            <para>
+                Another means of adding to the scope of object model types available to the query is through the
+                use of implicit joins, or path expressions.
+            </para>
+            <example>
+                <title>Simple implicit join example</title>
+                <programlisting role="JAVA"><xi:include href="extras/join_example_implicit.txt" parse="text"/></programlisting>
+            </example>
+            <para>
+                An implicit join always starts from an <literal>identification variable</literal>, followed by
+                the navigation operator (.), followed by an attribute for the object model type referenced by the
+                initial <literal>identification variable</literal>.  In the example, the initial
+                <literal>identification variable</literal> is <literal>c</literal> which refers to the
+                <classname>Customer</classname> entity.  The <literal>c.chiefExecutive</literal> reference then refers
+                to the <methodname>chiefExecutive</methodname> attribute of the <classname>Customer</classname> entity.
+                <methodname>chiefExecutive</methodname> is an association type so we further navigate to its
+                <methodname>age</methodname> attribute.
+            </para>
+            <important>
+                <para>
+                    If the attribute represents an entity association (non-collection) or a component/embedded, that
+                    reference can be further navigated.  Basic values and collection-valued associations cannot be
+                    further navigated.
+                </para>
+            </important>
+            <para>
+                As shown in the example, implicit joins can appear outside the <literal>FROM clause</literal>.  However,
+                they affect the <literal>FROM clause</literal>.  Implicit joins are always treated as inner joins.
+                Multiple references to the same implicit join always refer to the same logical and physical (SQL) join.
+            </para>
+            <example>
+                <title>Reused implicit join</title>
+                <programlisting><xi:include href="extras/join_example_implicit_reused.txt" parse="text"/></programlisting>
+            </example>
+            <para>
+                Just as with explicit joins, implicit joins may reference association or component/embedded attributes.
+                For further information about collection-valued association references, see
+                <xref linkend="hql-collection-valued-associations"/>.  In the case of component/embedded attributes,
+                the join is simply logical and does not correlate to a physical (SQL) join.  Unlike explicit joins,
+                however, implicit joins may also reference basic state fields as long as the path expression ends
+                there.
+            </para>
+        </section>
+        <section xml:id="hql-collection-valued-associations">
+            <title>Collection member references</title>
+            <para>
+                References to collection-valued associations actually refer to the <emphasis>values</emphasis> of
+                that collection.
+            </para>
+            <example>
+                <title>Collection references example</title>
+                <programlisting><xi:include href="extras/collection_reference_example.txt" parse="text"/></programlisting>
+            </example>
+            <para>
+                In the example, the identification variable <literal>o</literal> actually refers to the object model
+                type <classname>Order</classname> which is the type of the elements of the
+                <methodname>Customer#orders</methodname> association.
+            </para>
+            <para>
+                The example also shows the alternate syntax for specifying collection association joins using the
+                <literal>IN</literal> syntax.  Both forms are equivalent.  Which form an application chooses to use is
+                simply a matter of taste.
+            </para>
+            <section xml:id="hql-collection-qualification">
+                <title>Special case - qualified path expressions</title>
+                <para>
+                    We said earlier that collection-valued associations actually refer to the <emphasis>values</emphasis>
+                    of that collection.  Based on the type of collection, there are also available a set of
+                    explicit qualification expressions.
+                </para>
+                <example>
+                    <title>Qualified collection references example</title>
+                    <programlisting><xi:include href="extras/qualified_path_expressions_example.txt" parse="text"/></programlisting>
+                </example>
+                <variablelist>
+                    <varlistentry>
+                        <term>VALUE</term>
+                        <listitem>
+                            <para>
+                                Refers to the collection value.  Same as not specifying a qualifier.  Useful to
+                                explicitly show intent.  Valid for any type of collection-valued reference.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>INDEX</term>
+                        <listitem>
+                            <para>
+                                According to HQL rules, this is valid for both Maps and Lists which specify a
+                                <interfacename>javax.persistence.OrderColumn</interfacename> annotation to refer to
+                                the Map key or the List position (aka the OrderColumn value).  JPQL however, reserves
+                                this for use in the List case and adds <literal>KEY</literal> for the MAP case.
+                                Applications interested in JPA provider portability should be aware of this
+                                distinction.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>KEY</term>
+                        <listitem>
+                            <para>
+                                Valid only for Maps.  Refers to the map's key.  If the key is itself an entity,
+                                can be further navigated.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>ENTRY</term>
+                        <listitem>
+                            <para>
+                                Only valid only for Maps.  Refers to the Map's logical
+                                <interfacename>java.util.Map.Entry</interfacename> tuple (the combination  of its key
+                                and value).  <literal>ENTRY</literal> is only valid as a terminal path and only valid
+                                in the select clause.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                </variablelist>
+                <para>
+                    See <xref linkend="hql-collection-expressions"/> for additional details on collection related
+                    expressions.
+                </para>
+            </section>
+        </section>
+        <section>
+            <title>Polymorphism</title>
+            <para>
+                HQL and JPQL queries are inherently polymorphic.
+            </para>
+            <programlisting>select p from Payment p</programlisting>
+            <para>
+                This query names the <classname>Payment</classname> entity explicitly.  However, all subclasses of
+                <classname>Payment</classname> are also available to the query.  So if the
+                <classname>CreditCardPayment</classname> entity and <classname>WireTransferPayment</classname> entity
+                each extend from <classname>Payment</classname> all three types would be available to the query.  And
+                the query would return instances of all three.
+            </para>
+            <note>
+                <title>The logical extreme</title>
+                <para>
+                    The HQL query <literal>from java.lang.Object</literal> is totally valid!  It returns every
+                    object of every type defined in your application. 
+                </para>
+            </note>
+            <para>
+                This can be altered by using either the
+                <interfacename>org.hibernate.annotations.Polymorphism</interfacename> annotation (global, and
+                Hibernate-specific) or limiting them using in the query itself using an entity type expression.
+            </para>
+        </section>
+    </section>
+
+    <section xml:id="hql-expressions">
+        <title>Expressions</title>
+
+        <para>
+            Essentially expressions are references that resolve to basic or tuple values.
+        </para>
+
+        <section>
+            <title>Identification variable</title>
+            <para>
+                See <xref linkend="hql-from-clause"/>.
+            </para>
+        </section>
+
+        <section>
+            <title>Path expressions</title>
+            <para>
+                Again, see <xref linkend="hql-from-clause"/>.
+            </para>
+        </section>
+
+        <section>
+            <title>Literals</title>
+            <para>
+                String literals are enclosed in single-quotes.  To escape a single-quote within a string literal, use
+                double single-quotes.
+            </para>
+            <example>
+                <title>String literal examples</title>
+                <programlisting role="JAVA"><xi:include href="extras/string_literals_example.txt" parse="text"/></programlisting>
+            </example>
+
+            <para>
+                Numeric literals are allowed in a few different forms.
+            </para>
+            <example>
+                <title>Numeric literal examples</title>
+                <programlisting role="JAVA"><xi:include href="extras/numeric_literals_example.txt" parse="text"/></programlisting>
+            </example>
+            <para>
+                In the scientific notation form, the <literal>E</literal> is case insensitive.
+            </para>
+            <para>
+                Specific typing can be achieved through the use of the same suffix approach specified by Java.  So,
+                <literal>L</literal> denotes a long; <literal>D</literal> denotes a double; <literal>F</literal>
+                denotes a float.  The actual suffix is case insensitive.
+            </para>
+
+            <para>
+                The boolean literals are <literal>TRUE</literal> and <literal>FALSE</literal>, again case-insensitive.
+            </para>
+
+            <para>
+                Enums can even be referenced as literals.  The fully-qualified enum class name must be used.  HQL
+                can also handle constants in the same manner, though JPQL does not define that as supported.
+            </para>
+
+            <para>
+                Entity names can also be used as literal.  See <xref linkend="hql-entity-type-exp"/>.
+            </para>
+
+            <para>
+                Date/time literals can be specified using the JDBC escape syntax: <literal>{d 'yyyy-mm-dd'}</literal>
+                for dates, <literal>{t 'hh:mm:ss'}</literal> for times and
+                <literal>{ts 'yyyy-mm-dd hh:mm:ss[.millis]'}</literal> (millis optional) for timestamps.  These
+                literals only work if you JDBC drivers supports them.
+            </para>
+        </section>
+
+        <section>
+            <title>Parameters</title>
+            <para>
+                HQL supports all 3 of the following forms.  JPQL does not support the HQL-specific positional
+                parameters notion.  It is good practice to not mix forms in a given query.
+            </para>
+            <section>
+                <title>Named parameters</title>
+                <para>
+                    Named parameters are declared using a colon followed by an identifier -
+                    <literal>:aNamedParameter</literal>.  The same named parameter can appear multiple times in a query.
+                </para>
+                <example>
+                    <title>Named parameter examples</title>
+                    <programlisting role="JAVA"><xi:include href="extras/named_parameter_example.txt" parse="text"/></programlisting>
+                </example>
+            </section>
+            <section>
+                <title>Positional (JPQL) parameters</title>
+                <para>
+                    JPQL-style positional parameters are declared using a question mark followed by an ordinal -
+                    <literal>?1</literal>, <literal>?2</literal>.  The ordinals start with 1.  Just like with
+                    named parameters, positional parameters can also appear multiple times in a query.
+                </para>
+                <example>
+                    <title>Positional (JPQL) parameter examples</title>
+                    <programlisting role="JAVA"><xi:include href="extras/jpql_positional_parameter_example.txt" parse="text"/></programlisting>
+                </example>
+            </section>
+            <section>
+                <title>Positional (HQL) parameters</title>
+                <para>
+                    HQL-style positional parameters follow JDBC positional parameter syntax.  They are declared using
+                    <literal>?</literal> without a following ordinal.  There is no way to relate two such
+                    positional parameters as being "the same" aside from binding the same value to each.
+                </para>
+                <para>
+                    This form should be considered deprecated and may be removed in the near future.
+                </para>
+            </section>
+        </section>
+
+        <section>
+            <title>Arithmetic</title>
+            <para>
+                Arithmetic operations also represent valid expressions.
+            </para>
+            <example>
+                <title>Numeric arithmetic examples</title>
+                <programlisting role="JAVA"><xi:include href="extras/arithmetic_example.txt" parse="text"/></programlisting>
+            </example>
+            <para>
+                The following rules apply to the result of arithmetic operations:
+            </para>
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        If either of the operands is Double/double, the result is a Double;
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        else, if either of the operands is Float/float, the result is a Float;
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        else, if either operand is BigDecimal, the result is BigDecimal;
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        else, if either operand is BigInteger, the result is BigInteger (except for division, in
+                        which case the result type is not further defined);
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        else, if either operand is Long/long, the result is Long (except for division, in
+                        which case the result type is not further defined);
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        else, (the assumption being that both operands are of integral type) the result is Integer
+                        (except for division, in which case the result type is not further defined);
+                    </para>
+                </listitem>
+            </itemizedlist>
+
+            <para>
+                Date arithmetic is also supported, albeit in a more limited fashion.  This is due partially to
+                differences in database support and partially to the lack of support for <literal>INTERVAL</literal>
+                definition in the query language itself.
+            </para>
+        </section>
+
+        <section>
+            <title>Concatenation (operation)</title>
+            <para>
+                HQL defines a concatenation operator in addition to supporting the concatenation
+                (<literal>CONCAT</literal>) function.  This is not defined by JPQL, so portable applications
+                should avoid it use.  The concatenation operator is taken from the SQL concatenation operator -
+                <literal>||</literal>.
+            </para>
+            <example>
+                <title>Concatenation operation example</title>
+                <programlisting role="JAVA"><xi:include href="extras/concat_op_example.txt" parse="text"/></programlisting>
+            </example>
+            <para>
+                See <xref linkend="hql-exp-functions"/> for details on the <literal>concat()</literal> function
+            </para>
+        </section>
+
+        <section>
+            <title>Aggregate functions</title>
+            <para>
+                Aggregate functions are also valid expressions in HQL and JPQL.  The semantic is the same as their
+                SQL counterpart.  The supported aggregate functions are:
+            </para>
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        <literal>COUNT</literal> (including distinct/all qualifiers) - The result type is always Long.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>AVG</literal> -  The result type is always Double.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>MIN</literal> - The result type is the same as the argument type.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>MAX</literal> - The result type is the same as the argument type.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>SUM</literal> -  The result type of the <literal>avg()</literal> function depends on
+                        the type of the values being averaged.  For integral values (other than BigInteger), the result
+                        type is Long.  For floating point values (other than BigDecimal) the result type is Double.  For
+                        BigInteger values, the result type is BigInteger.  For BigDecimal values, the result type is
+                        BigDecimal.
+                    </para>
+                </listitem>
+            </itemizedlist>
+            <example>
+                <title>Aggregate function examples</title>
+                <programlisting role="JAVA"><xi:include href="extras/agg_func_example.txt" parse="text"/></programlisting>
+            </example>
+            <para>
+                Aggregations often appear with grouping.  For information on grouping see <xref linkend="hql-grouping"/>
+            </para>
+        </section>
+
+        <section xml:id="hql-exp-functions">
+            <title>Scalar functions</title>
+            <para>
+                Both HQL and JPQL define some standard functions that are available regardless of the underlying 
+                database in use.  HQL can also understand additional functions defined by the Dialect as well as the 
+                application.
+            </para>
+
+            <section>
+                <title>Standardized functions - JPQL</title>
+                <para>
+                    Here are the list of functions defined as supported by JPQL.  Applications interested in remaining
+                    portable between JPA providers should stick to these functions.
+                </para>
+                <variablelist>
+                    <varlistentry>
+                        <term>CONCAT</term>
+                        <listitem>
+                            <para>
+                                String concatenation function.  Variable argument length of 2 or more string values
+                                to be concatenated together.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>SUBSTRING</term>
+                        <listitem>
+                            <para>
+                                Extracts a portion of a string value.
+                            </para>
+                            <programlisting><xi:include href="extras/substring_bnf.txt" parse="text"/></programlisting>
+                            <para>
+                                The second argument denotes the starting position.  The third (optional) argument
+                                denotes the length.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>UPPER</term>
+                        <listitem>
+                            <para>
+                                Upper cases the specified string
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>LOWER</term>
+                        <listitem>
+                            <para>
+                                Lower cases the specified string
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>TRIM</term>
+                        <listitem>
+                            <para>
+                                Follows the semantics of the SQL trim function.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>LENGTH</term>
+                        <listitem>
+                            <para>
+                                Returns the length of a string.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>LOCATE</term>
+                        <listitem>
+                            <para>
+                                Locates a string within another string.
+                            </para>
+                            <programlisting><xi:include href="extras/locate_bnf.txt" parse="text"/></programlisting>
+                            <para>
+                                The third argument (optional) is used to denote a position from which to start looking.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>ABS</term>
+                        <listitem>
+                            <para>
+                                Calculates the mathematical absolute value of a numeric value.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>MOD</term>
+                        <listitem>
+                            <para>
+                                Calculates the remainder of dividing the first argument by the second.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>SQRT</term>
+                        <listitem>
+                            <para>
+                                Calculates the mathematical square root of a numeric value.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>CURRENT_DATE</term>
+                        <listitem>
+                            <para>
+                                Returns the database current date.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>CURRENT_TIME</term>
+                        <listitem>
+                            <para>
+                                Returns the database current time.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>CURRENT_TIMESTAMP</term>
+                        <listitem>
+                            <para>
+                                Returns the database current timestamp.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                </variablelist>
+            </section>
+            <section>
+                <title>Standardized functions - HQL</title>
+                <para>
+                    Beyond the JPQL standardized functions, HQL makes some additional functions available regardless
+                    of the underlying database in use.
+                </para>
+                <variablelist>
+                    <varlistentry>
+                        <term>BIT_LENGTH</term>
+                        <listitem>
+                            <para>
+                                Returns the length of binary data.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>CAST</term>
+                        <listitem>
+                            <para>
+                                Performs a SQL cast.  The cast target should name the Hibernate mapping type to use.
+                                See the chapter on data types for more information.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>EXTRACT</term>
+                        <listitem>
+                            <para>
+                                Performs a SQL extraction on datetime values.  An extraction extracts parts of
+                                the datetime (the year, for example).  See the abbreviated forms below.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>SECOND</term>
+                        <listitem>
+                            <para>
+                                Abbreviated extract form for extracting the second.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>MINUTE</term>
+                        <listitem>
+                            <para>
+                                Abbreviated extract form for extracting the minute.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>HOUR</term>
+                        <listitem>
+                            <para>
+                                Abbreviated extract form for extracting the hour.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>DAY</term>
+                        <listitem>
+                            <para>
+                                Abbreviated extract form for extracting the day.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>MONTH</term>
+                        <listitem>
+                            <para>
+                                Abbreviated extract form for extracting the month.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>YEAR</term>
+                        <listitem>
+                            <para>
+                                Abbreviated extract form for extracting the year.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>STR</term>
+                        <listitem>
+                            <para>
+                                Abbreviated form for casting a value as character data.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                </variablelist>
+            </section>
+
+            <section>
+                <title>Non-standardized functions</title>
+                <para>
+                    Hibernate Dialects can register additional functions known to be available for that particular
+                    database product.  These functions are also available in HQL (and JPQL, though only when using
+                    Hibernate as the JPA provider obviously).  However, they would only be available when using that
+                    database/Dialect.  Applications that aim for database portability should avoid using functions
+                    in this category.
+                </para>
+                <para>
+                    Application developers can also supply their own set of functions.  This would usually represent
+                    either custom SQL functions or aliases for snippets of SQL.  Such function declarations are
+                    made by using the <methodname>addSqlFunction</methodname> method of
+                    <classname>org.hibernate.cfg.Configuration</classname>
+                </para>
+            </section>
+        </section>
+
+        <section xml:id="hql-collection-expressions">
+            <title>Collection-related expressions</title>
+            <para>
+                There are a few specialized expressions for working with collection-valued associations.  Generally
+                these are just abbreviated forms or other expressions for the sake of conciseness.
+            </para>
+            <variablelist>
+                <varlistentry>
+                    <term>SIZE</term>
+                    <listitem>
+                        <para>
+                            Calculate the size of a collection.  Equates to a subquery!
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>MAXELEMENT</term>
+                    <listitem>
+                        <para>
+                            Available for use on collections of basic type.  Refers to the maximum value as determined
+                            by applying the <literal>max</literal> SQL aggregation.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>MAXINDEX</term>
+                    <listitem>
+                        <para>
+                            Available for use on indexed collections.  Refers to the maximum index (key/position) as
+                            determined by applying the <literal>max</literal> SQL aggregation.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>MINELEMENT</term>
+                    <listitem>
+                        <para>
+                            Available for use on collections of basic type.  Refers to the minimum value as determined
+                            by applying the <literal>min</literal> SQL aggregation.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>MININDEX</term>
+                    <listitem>
+                        <para>
+                            Available for use on indexed collections.  Refers to the minimum index (key/position) as
+                            determined by applying the <literal>min</literal> SQL aggregation.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>ELEMENTS</term>
+                    <listitem>
+                        <para>
+                            Used to refer to the elements of a collection as a whole.  Only allowed in the where clause.
+                            Often used in conjunction with <literal>ALL</literal>, <literal>ANY</literal> or
+                            <literal>SOME</literal> restrictions.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>INDICES</term>
+                    <listitem>
+                        <para>
+                            Similar to <literal>elements</literal> except that <literal>indices</literal> refers to
+                            the collections indices (keys/positions) as a whole.
+                        </para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+            <example>
+                <title>Collection-related expressions examples</title>
+                <programlisting role="JAVA"><xi:include href="extras/collection_expression_example.txt" parse="text"/></programlisting>
+            </example>
+            <para>
+                Elements of indexed collections (arrays, lists, and maps) can be referred to by index operator.
+            </para>
+            <example>
+                <title>Index operator examples</title>
+                <programlisting role="JAVA"><xi:include href="extras/index_operator_example.txt" parse="text"/></programlisting>
+            </example>
+            <para>
+                See also <xref linkend="hql-collection-qualification"/> as there is a good deal of overlap.
+            </para>
+        </section>
+
+        <section xml:id="hql-entity-type-exp">
+            <title>Entity type</title>
+            <para>
+                We can also refer to the type of an entity as an expression.  This is mainly useful when dealing
+                with entity inheritance hierarchies.  The type can expressed using a <literal>TYPE</literal> function
+                used to refer to the type of an identification variable representing an entity.  The name of the
+                entity also serves as a way to refer to an entity type.  Additionally the entity type can be
+                parametrized, in which case the entity's Java Class reference would be bound as the parameter
+                value.
+            </para>
+            <example>
+                <title>Entity type expression examples</title>
+                <programlisting role="JAVA"><xi:include href="extras/entity_type_exp_example.txt" parse="text"/></programlisting>
+            </example>
+            <para>
+                HQL also has a legacy form of referring to an entity type, though that legacy form is considered
+                deprecated in favor of <literal>TYPE</literal>.  The legacy form would have used <literal>p.class</literal>
+                in the examples rather than <literal>type(p)</literal>.  It is mentioned only for completeness.
+            </para>
+        </section>
+
+        <section>
+            <title>CASE expressions</title>
+            <para>
+                Both the simple and searched forms are supported, as well as the 2 SQL defined abbreviated forms
+                (<literal>NULLIF</literal> and <literal>COALESCE</literal>)
+            </para>
+            <section>
+                <title>Simple CASE expressions</title>
+                <para>
+                    The simple form has the following syntax:
+                </para>
+                <programlisting><xi:include href="extras/simple_case_bnf.txt" parse="text"/></programlisting>
+                <example>
+                    <title>Simple case expression example</title>
+                    <programlisting><xi:include href="extras/simple_case_exp_example.txt" parse="text"/></programlisting>
+                </example>
+            </section>
+            <section>
+                <title>Searched CASE expressions</title>
+                <para>
+                    The searched form has the following syntax:
+                </para>
+                <programlisting><xi:include href="extras/searched_case_bnf.txt" parse="text"/></programlisting>
+                <example>
+                    <title>Searched case expression example</title>
+                    <programlisting><xi:include href="extras/searched_case_exp_example.txt" parse="text"/></programlisting>
+                </example>
+            </section>
+            <section>
+                <title>NULLIF expressions</title>
+                <para>
+                    NULLIF is an abbreviated CASE expression that returns NULL if its operands are considered equal.
+                </para>
+                <example>
+                    <title>NULLIF example</title>
+                    <programlisting><xi:include href="extras/nullif_example.txt" parse="text"/></programlisting>
+                </example>
+            </section>
+            <section>
+                <title>COALESCE expressions</title>
+                <para>
+                    COALESCE is an  abbreviated CASE expression that returns the first non-null operand.  We have seen a 
+                    number of COALESCE examples above.
+                </para>
+            </section>
+        </section>
+    </section>
+
+    <section xml:id="hql-select-clause">
+        <title>The <literal>SELECT</literal> clause</title>
+        <para>
+            The <literal>SELECT</literal> clause identifies which objects and values to return as the query results.
+            The expressions discussed in <xref linkend="hql-expressions"/> are all valid select expressions, except
+            where otherwise noted.  See the section <xref linkend="hql-api"/> for information on handling the results
+            depending on the types of values specified in the <literal>SELECT</literal> clause.
+        </para>
+
+        <para>
+            There is a particular expression type that is only valid in the select clause.  Hibernate calls this
+            <quote>dynamic instantiation</quote>.  JPQL supports some of that feature and calls it
+            a <quote>constructor expression</quote>
+        </para>
+
+        <example>
+            <title>Dynamic instantiation example - constructor</title>
+            <programlisting><xi:include href="extras/ctor_dynamic_instantiation_example.txt" parse="text"/></programlisting>
+        </example>
+
+        <para>
+            So rather than dealing with the Object[] (again, see <xref linkend="hql-api"/>) here we are wrapping
+            the values in a type-safe java object that will be returned as the results of the query.  The class
+            reference must be fully qualified and it must have a matching constructor.
+        </para>
+        <para>
+            The class here need not be mapped.  If it does represent an entity, the resulting instances are
+            returned in the NEW state (not managed!).
+        </para>
+
+        <para>
+            That is the part JPQL supports as well.  HQL supports additional <quote>dynamic instantiation</quote>
+            features.  First, the query can specify to return a List rather than an Object[] for scalar results:
+        </para>
+        <example>
+            <title>Dynamic instantiation example - list</title>
+            <programlisting><xi:include href="extras/list_dynamic_instantiation_example.txt" parse="text"/></programlisting>
+        </example>
+        <para>
+            The results from this query will be a <![CDATA[List<List>]]> as opposed to a <![CDATA[List<Object[]>]]>
+        </para>
+
+        <para>
+            HQL also supports wrapping the scalar results in a Map.
+        </para>
+        <example>
+            <title>Dynamic instantiation example - map</title>
+            <programlisting><xi:include href="extras/map_dynamic_instantiation_example.txt" parse="text"/></programlisting>
+        </example>
+        <para>
+            The results from this query will be a <![CDATA[List<Map<String,Object>>]]> as opposed to a
+            <![CDATA[List<Object[]>]]>.  The keys of the map are defined by the aliases given to the select
+            expressions.
+        </para>
+    </section>
+
+    <section xml:id="hql-conditional-expressions">
+        <title>Predicates</title>
+        <para>
+            Predicates form the basis of the where clause, the having clause and searched case expressions.
+            They are expressions which resolve to a truth value, generally <literal>TRUE</literal> or
+            <literal>FALSE</literal>, although boolean comparisons involving NULLs generally resolve to
+            <literal>UNKNOWN</literal>.
+        </para>
+
+        <section>
+            <title>Relational comparisons</title>
+            <para>
+                Comparisons involve one of the comparison operators - <![CDATA[=, >, >=, <, <=, <>]>.  HQL also defines
+                <![CDATA[!=]]> as a comparison operator synonymous with <![CDATA[<>]]>.  The operands should be
+                of the same type.
+            </para>
+            <example>
+                <title>Relational comparison examples</title>
+                <programlisting><xi:include href="extras/predicate_comparison_example.txt" parse="text"/></programlisting>
+            </example>
+            <para>
+                Comparisons can also involve subquery qualifiers - <literal>ALL</literal>, <literal>ANY</literal>,
+                <literal>SOME</literal>.  SOME and ANY are synonymous.
+            </para>
+            <para>
+                The ALL qualifier resolves to true if the comparison is true for all of the values in the result of
+                the subquery.  It resolves to false if the subquery result is empty.
+            </para>
+            <example>
+                <title>ALL subquery comparison qualifier example</title>
+                <programlisting><xi:include href="extras/predicate_comparison_example_using_all.txt" parse="text"/></programlisting>
+            </example>
+            <para>
+                The ANY/SOME qualifier resolves to true if the comparison is true for some of (at least one of) the
+                values in the result of the subquery.  It resolves to false if the subquery result is empty.
+            </para>
+        </section>
+
+        <section>
+            <title>Nullness predicate</title>
+            <para>
+                Check a value for nullness.  Can be applied to basic attribute references, entity references and
+                parameters.  HQL additionally allows it to be applied to component/embeddable types.
+            </para>
+            <example>
+                <title>Nullness checking examples</title>
+                <programlisting><xi:include href="extras/predicate_nullness_example.txt" parse="text"/></programlisting>
+            </example>
+        </section>
+
+        <section>
+            <title>Like predicate</title>
+            <para>
+                Performs a like comparison on string values.  The syntax is:
+            </para>
+            <programlisting><xi:include href="extras/predicate_like_bnf.txt" parse="text"/></programlisting>
+            <para>
+                The semantics follow that of the SQL like expression.  The <literal>pattern_value</literal> is the
+                pattern to attempt to match in the <literal>string_expression</literal>.  Just like SQL,
+                <literal>pattern_value</literal> can use <quote>_</quote> and <quote>%</quote> as wildcards.  The
+                meanings are the same.  <quote>_</quote> matches any single character.  <quote>%</quote> matches
+                any number of characters.
+            </para>
+            <para>
+                The optional <literal>escape_character</literal> is used to specify an escape character used to
+                escape the special meaning of <quote>_</quote> and <quote>%</quote> in the
+                <literal>pattern_value</literal>.  THis is useful when needing to search on patterns including either
+                <quote>_</quote> or <quote>%</quote>
+            </para>
+            <example>
+                <title>Like predicate examples</title>
+                <programlisting><xi:include href="extras/predicate_like_example.txt" parse="text"/></programlisting>
+            </example>
+        </section>
+
+        <section>
+            <title>Between predicate</title>
+            <para>
+                Analogous to the SQL between expression.  Perform a evaluation that a value is within the range
+                of 2 other values.  All the operands should have comparable types.
+            </para>
+            <example>
+                <title>Between predicate examples</title>
+                <programlisting><xi:include href="extras/predicate_between_example.txt" parse="text"/></programlisting>
+            </example>
+        </section>
+
+        <section>
+            <title>In predicate</title>
+            <para>
+                <literal>IN</literal> predicates performs a check that a particular value is in a list of values.
+                Its syntax is:
+            </para>
+            <programlisting><xi:include href="extras/predicate_in_bnf.txt" parse="text"/></programlisting>
+            <para>
+                The types of the <literal>single_valued_expression</literal> and the individual values in the
+                <literal>single_valued_list</literal> must be consistent.    JPQL limits the valid types here
+                to string, numeric, date, time, timestamp, and enum types.  In JPQL,
+                <literal>single_valued_expression</literal> can only refer to:
+            </para>
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        <quote>state fields</quote>, which is its term for simple attributes.  Specifically this
+                        excludes association and component/embedded attributes.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        entity type expressions.  See <xref linkend="hql-entity-type-exp"/>
+                    </para>
+                </listitem>
+            </itemizedlist>
+            <para>
+                In HQL, <literal>single_valued_expression</literal> can refer to a far more broad set of expression
+                types.  Single-valued association are allowed.  So are component/embedded attributes, although that
+                feature depends on the level of support for tuple or <quote>row value constructor syntax</quote> in
+                the underlying database.  Additionally, HQL does not limit the value type in any way, though
+                application developers should be aware that different types may incur limited support based on
+                the underlying database vendor.  This is largely the reason for the JPQL limitations.
+            </para>
+            <para>
+                The list of values can come from a number of different sources.  In the
+                <literal>constructor_expression</literal> and <literal>collection_valued_input_parameter</literal>, the
+                list of values must not be empty; it must contain at least one value.
+            </para>
+            <example>
+                <title>In predicate examples</title>
+                <programlisting><xi:include href="extras/predicate_in_example.txt" parse="text"/></programlisting>
+            </example>
+        </section>
+
+        <section>
+            <title>Exists predicate</title>
+            <para>
+                Exists expressions test the existence of results from a subquery.  The affirmative form returns true
+                if the subquery result contains values.  The negated form returns true if the subquery
+                result is empty.
+            </para>
+        </section>
+
+        <section>
+            <title>Empty collection predicate</title>
+            <para>
+                The <literal>IS [NOT] EMPTY</literal> expression applies to collection-valued path expressions.  It
+                checks whether the particular collection has any associated values.
+            </para>
+            <example>
+                <title>Empty collection expression examples</title>
+                <programlisting><xi:include href="extras/empty_collection_example.txt" parse="text"/></programlisting>
+            </example>
+        </section>
+
+        <section>
+            <title>Member-of collection predicate</title>
+            <para>
+                The <literal>[NOT] MEMBER [OF]</literal> expression applies to collection-valued path expressions.  It
+                checks whether a value is a member of the specified collection.
+            </para>
+            <example>
+                <title>Member-of collection expression examples</title>
+                <programlisting><xi:include href="extras/member_of_collection_example.txt" parse="text"/></programlisting>
+            </example>
+        </section>
+
+        <section>
+            <title>NOT predicate operator</title>
+            <para>
+                The <literal>NOT</literal> operator is used to negate the predicate that follows it.  If that
+                following predicate is true, the NOT resolves to false.  If the predicate is true, NOT resolves to
+                false.  If the predicate is unknown, the NOT resolves to unknown as well.
+            </para>
+        </section>
+
+        <section>
+            <title>AND predicate operator</title>
+            <para>
+                The <literal>AND</literal> operator is used to combine 2 predicate expressions.  The result of the
+                AND expression is true if and only if both predicates resolve to true.  If either predicate resolves
+                to unknown, the AND expression resolves to unknown as well.  Otherwise, the result is false.
+            </para>
+        </section>
+
+        <section>
+            <title>OR predicate operator</title>
+            <para>
+                The <literal>OR</literal> operator is used to combine 2 predicate expressions.  The result of the
+                OR expression is true if either predicate resolves to true.  If both predicates resolve to unknown, the
+                OR expression resolves to unknown.  Otherwise, the result is false.
+            </para>
+        </section>
+    </section>
+
+    <section xml:id="hql-where-clause">
+        <title>The <literal>WHERE</literal> clause</title>
+        <para>
+            The <literal>WHERE</literal> clause of a query is made up of predicates which assert whether values in
+            each potential row match the predicated checks.  Thus, the where clause restricts the results returned
+            from a select query and limits the scope of update and delete queries.
+        </para>
+    </section>
+
+    <section xml:id="hql-grouping">
+        <title>Grouping</title>
+        <para>
+            The <literal>GROUP BY</literal> clause allows building aggregated results for various value groups.  As an
+            example, consider the following queries:
+        </para>
+        <example xml:id="group_by_illustration">
+            <title>Group-by illustration</title>
+            <programlisting><xi:include href="extras/group_by_illustration.txt" parse="text"/></programlisting>
+        </example>
+        <para>
+            The first query retrieves the complete total of all orders.  The second retrieves the total for each
+            customer; grouped by each customer.
+        </para>
+        <para>
+            In a grouped query, the where clause applies to the non aggregated values (essentially it determines whether
+            rows will make it into the aggregation).  The <literal>HAVING</literal> clause also restricts results,
+            but it operates on the aggregated values.  In the <xref linkend="group_by_illustration"/> example,
+            we retrieved order totals for all customers.  If that ended up being too much data to deal with,
+            we might want to restrict the results to focus only on customers with a summed order total of more than
+            $10,000.00:
+        </para>
+        <example xml:id="having_illustration">
+            <title>Having illustration</title>
+            <programlisting><xi:include href="extras/having_illustration.txt" parse="text"/></programlisting>
+        </example>
+        <para>
+            The HAVING clause follows the same rules as the WHERE clause and is also made up of predicates.  HAVING is
+            applied after the groupings and aggregations have been done; WHERE is applied before.
+        </para>
+    </section>
+
+    <section xml:id="hql-ordering">
+        <title>Ordering</title>
+        <para>
+            The results of the query can also be ordered.  The <literal>ORDER BY</literal> clause is used to specify
+            the selected values to be used to order the result.  The types of expressions considered valid as part
+             of the order-by clause include:
+        </para>
+        <itemizedlist>
+            <listitem>
+                <para>
+                    state fields
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    component/embeddable attributes
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    scalar expressions such as arithmetic operations, functions, etc.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    identification variable declared in the select clause for any of the previous expression types
+                </para>
+            </listitem>
+        </itemizedlist>
+        <para>
+            Additionally, JPQL says that all values referenced in the order-by clause must be named in the select
+            clause.  HQL does not mandate that restriction, but applications desiring database portability should be
+            aware that not all databases support referencing values in the order-by clause that are not referenced
+            in the select clause.
+        </para>
+        <para>
+            Individual expressions in the order-by can be qualified with either <literal>ASC</literal> (ascending) or
+            <literal>DESC</literal> (descending) to indicated the desired ordering direction. Null values can be placed
+            in front or at the end of sorted set using <literal>NULLS FIRST</literal> or <literal>NULLS LAST</literal>
+            clause respectively.
+        </para>
+        <example>
+            <title>Order-by examples</title>
+            <programlisting><xi:include href="extras/order_by_example.txt" parse="text"/></programlisting>
+        </example>
+    </section>
+
+    <section xml:id="hql-api">
+        <title>Query API</title>
+
+        <section>
+            <title>Hibernate Query API</title>
+
+            <para>
+                In Hibernate the HQL/JPQL query is represented as <interfacename>org.hibernate.Query</interfacename> which
+                is obtained from the Session.  If the HQL/JPQL is a named query, <methodname>Session#getNamedQuery</methodname>
+                would be used; otherwise <methodname>Session#createQuery</methodname> would be used.
+            </para>
+
+            <example>
+                <title>Obtaining a Query reference - Hibernate</title>
+                <programlisting role="JAVA"><xi:include href="extras/api/hibernate/GetNamedQuery.java" parse="text" /></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/api/hibernate/CreateQuery.java" parse="text" /></programlisting>
+            </example>
+
+            <para>
+                The Query interface can then be used to control the execution of the query.  For example, we
+                may want to specify an execution timeout or control caching.
+            </para>
+
+            <example>
+                <title>Basic Query usage - Hibernate</title>
+                <programlisting role="JAVA"><xi:include href="extras/api/hibernate/BasicQueryUsage.java" parse="text" /></programlisting>
+            </example>
+
+            <para>
+                For complete details, see the Query javadocs.
+            </para>
+
+            <important>
+                <para>
+                    Query hints here are database query hints.  They are added directly to the generated SQL
+                    according to <methodname>Dialect#getQueryHintString</methodname>.  The JPA notion of query
+                    hints, on the other hand, refer to hints that target the provider (Hibernate).  So even though
+                    they are called the same, be aware they have a very different purpose.  Also be aware that
+                    Hibernate query hints generally make the application non-portable across databases unless the code
+                    adding them first checks the Dialect.
+                </para>
+            </important>
+
+            <para>
+                Flushing is covered in detail in <xref linkend="flushing"/>.  Locking is covered in detail in
+                <xref linkend="locking"/>.  The concept of read-only state is covered in <xref linkend="pc"/>.
+            </para>
+
+            <para>
+                Hibernate also allows an application to hook into the process of building the query results via the
+                <interfacename>org.hibernate.transform.ResultTransformer</interfacename> contract.  See its javadocs
+                as well as the Hibernate-provided implementations for additional details.
+            </para>
+
+            <para>
+                The last thing that needs to happen before we can execute the query is to bind the values for any
+                parameters defined in the query.  Query defines many overloaded methods for this purpose.  The most
+                generic form takes the value as well as the Hibernate Type.
+            </para>
+
+            <example>
+                <title>Parameter binding - Hibernate</title>
+                <programlisting role="JAVA"><xi:include href="extras/api/hibernate/SetParameter.java" parse="text" /></programlisting>
+            </example>
+
+            <para>
+                Hibernate generally understands the expected type of the parameter given its context in the query.
+                In the previous example, since we are using the parameter in a LIKE comparison against a String-typed
+                attribute Hibernate would automatically infer the type; so the above could be simplified.
+            </para>
+
+            <example>
+                <title>Parameter binding (inferred type) - Hibernate</title>
+                <programlisting role="JAVA"><xi:include href="extras/api/hibernate/SetParameterInferredType.java" parse="text" /></programlisting>
+            </example>
+
+            <para>
+                There are also short hand forms for binding common types such as strings, booleans, integers, etc.
+            </para>
+
+            <example>
+                <title>Parameter binding (short forms) - Hibernate</title>
+                <programlisting role="JAVA"><xi:include href="extras/api/hibernate/SetParameterShortForms.java" parse="text" /></programlisting>
+            </example>
+
+            <para>
+                In terms of execution, Hibernate offers 4 different methods.  The 2 most commonly used are
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            <methodname>Query#list</methodname> - executes the select query and returns back the list
+                            of results.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            <methodname>Query#uniqueResult</methodname> - executes the select query and returns the
+                            single result.  If there were more than one result an exception is thrown.
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+
+            <example>
+                <title>list() and uniqueResult()</title>
+                <programlisting role="JAVA"><xi:include href="extras/api/hibernate/List.java" parse="text" /></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/api/hibernate/UniqueResult.java" parse="text" /></programlisting>
+            </example>
+
+            <note>
+                <para>
+                    If the unique result is used often and the attributes upon which it is based are unique, you may
+                    want to consider mapping a natural-id and using the natural-id loading API.  See the
+                    <citetitle>Hibernate Domain Mapping Guide</citetitle> for more information on natural-ids.
+                </para>
+            </note>
+
+            <para>
+                Hibernate offers 2 additional, specialized methods for performing the query and handling results.
+                <methodname>Query#scroll</methodname> works in tandem with the JDBC notion of a scrollable
+                ResultSet.  The <methodname>scroll</methodname> method is overloaded.  Then main form accepts a single
+                argument of type <interfacename>org.hibernate.ScrollMode</interfacename> which indicates the type of
+                scrolling to be used.  See the javadocs for ScrollMode for the details on each.  The second form accepts
+                no argument and will use the ScrollMode indicated by
+                <methodname>Dialect#defaultScrollMode</methodname>.  <methodname>Query#scroll</methodname> returns
+                a <interfacename>org.hibernate.ScrollableResults</interfacename> which wraps the underlying JDBC
+                (scrollable) ResultSet and provides access to the results.  Since this form holds the JDBC ResultSet
+                open, the application should indicate when it is done with the ScrollableResults by calling
+                its <methodname>close</methodname> method (as inherited from <interfacename>java.io.Closeable</interfacename>,
+                so that ScrollableResults will work with try-with-resources blocks!).  If left unclosed by the
+                application, Hibernate will automatically close the ScrollableResults when the current transaction
+                completes.
+            </para>
+
+            <note>
+                <para>
+                    If you plan to use <methodname>Query#scroll</methodname> with collection fetches it is important
+                    that your query explicitly order the results so that the JDBC results contain the the related
+                    rows sequentially.
+                </para>
+            </note>
+
+            <para>
+                The last is <methodname>Query#iterate</methodname>, which is intended for loading entities which the
+                the application feels certain will be in the second-level cache.  The idea behind iterate is that just
+                the matching identifiers will be obtained in the SQL query.  From these the identifiers are resolved
+                by second-level cache lookup.  If these second-level cache lookups fail, additional queries will
+                need to be issued against the database.  This operation can perform significantly better for loading
+                large numbers of entities that for certain already exist in the second-level cache.  In cases where
+                many of the entities do not exist in the second-level cache, this operation will almost definitely
+                perform worse.  The Iterator returned from <methodname>Query#iterate</methodname> is actually a
+                specially typed Iterator: <interfacename>org.hibernate.engine.HibernateIterator</interfacename>.  It
+                is specialized to expose a <methodname>close</methodname> method (again,
+                inherited from <interfacename>java.io.Closeable</interfacename>).  When you are done with this Iterator
+                you should close it, either by casting to HibernateIterator or Closeable, or by calling
+                <methodname>org.hibernate.Hibernate#close</methodname>
+            </para>
+        </section>
+
+        <section>
+            <title>JPA Query API</title>
+
+            <para>
+                In JPA the query is represented by <interfacename>javax.persistence.Query</interfacename> or
+                <interfacename>javax.persistence.TypedQuery</interfacename> as obtained from the EntityManager.  For named
+                queries <methodname>EntityManager#createNamedQuery</methodname> is used; otherwise
+                <methodname>EntityManager#createQuery</methodname> is used.
+            </para>
+
+            <example>
+                <title>Obtaining a Query reference - JPA</title>
+                <programlisting role="JAVA"><xi:include href="extras/api/jpa/CreateNamedQuery.java" parse="text" /></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/api/jpa/CreateQuery.java" parse="text" /></programlisting>
+            </example>
+
+            <note>
+                <para>
+                    This will all sound very familiar.  Not only was the JPQL syntax heavily inspired by HQL, but many
+                    of the JPA APIs were heavily inspired by Hibernate.  The 2 Query contracts are very similar.
+                </para>
+            </note>
+
+            <para>
+                The Query interface can then be used to control the execution of the query.  For example, we
+                may want to specify an execution timeout or control caching.
+            </para>
+
+            <example>
+                <title>Basic Query usage - JPA</title>
+                <programlisting role="JAVA"><xi:include href="extras/api/jpa/BasicQueryUsage.java" parse="text" /></programlisting>
+            </example>
+
+            <para>
+                For complete details, see the Query javadocs.  Many of the settings controlling the execution of the
+                query are defined as hints.  JPA defines some standard hints (like timeout in the example), but most
+                are provider specific.  Relying on provider specific hints limits your applications portability to some
+                degree.
+            </para>
+
+            <itemizedlist>
+                <title>JPA standardized Query hints</title>
+                <listitem>
+                    <para>
+                        <literal>javax.persistence.query.timeout</literal> - Defines the query timeout, in milliseconds.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>javax.persistence.fetchgraph</literal> - Defines a "fetchgraph" EntityGraph.
+                        Attributes explicitly specified as AttributeNodes are treated as FetchType.EAGER (via join fetch
+                        or subsequent select).  For details, see the EntityGraph discussions in <xref linkend="fetching" />.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>javax.persistence.loadgraph</literal> - Defines a "loadgraph" EntityGraph.  Attributes
+                        explicitly specified as AttributeNodes are treated as  FetchType.EAGER (via join fetch or
+                        subsequent select).  Attributes that are not specified are treated as FetchType.LAZY or
+                        FetchType.EAGER depending on the attribute's definition in metadata.  For details, see the
+                        EntityGraph discussions in <xref linkend="fetching" />.
+                    </para>
+                </listitem>
+            </itemizedlist>
+
+            <itemizedlist>
+                <title>Hibernate specific JPA Query hints</title>
+                <listitem>
+                    <para>
+                        <literal>org.hibernate.cacheMode</literal> - Defines the CacheMode to use.  See
+                        <methodname>org.hibernate.Query#setCacheMode</methodname>.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>org.hibernate.cacheable</literal> - Defines whether the query is cacheable.
+                        true/false.  See <methodname>org.hibernate.Query#setCacheable</methodname>.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>org.hibernate.cacheRegion</literal> For queries that are cacheable, defines a specific
+                        cache region to use.  See <methodname>org.hibernate.Query#setCacheRegion</methodname>.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>org.hibernate.comment</literal> - Defines the comment to apply to the generated SQL.
+                        See <methodname>org.hibernate.Query#setComment</methodname>.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>org.hibernate.fetchSize</literal> - Defines the JDBC fetch-size to use.  See
+                        <methodname>org.hibernate.Query#setFetchSize</methodname>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>org.hibernate.flushMode</literal> - Defines the Hibernate-specific FlushMode to use.
+                        See <methodname>org.hibernate.Query#setFlushMode</methodname>.  If possible, prefer using
+                        <methodname>javax.persistence.Query#setFlushMode</methodname> instead.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>org.hibernate.readOnly</literal> - Defines that entities and collections loaded by
+                        this query should be marked as read-only.  See <methodname>org.hibernate.Query#setReadOnly</methodname>
+                    </para>
+                </listitem>
+            </itemizedlist>
+
+            <para>
+                Just as seen in the Hibernate API, the final thing that needs to happen before the query can be
+                executed is to bind the values for any defined parameters.  JPA defines a simplified set of parameter
+                binding methods.  Essentially it supports setting the parameter value (by name/position) and
+                a specialized form for Calendar/Date types additionally accepting a TemporalType.
+            </para>
+
+            <example>
+                <title>Parameter binding - JPA</title>
+                <programlisting role="JAVA"><xi:include href="extras/api/jpa/SetParameter.java" parse="text" /></programlisting>
+            </example>
+
+            <para>
+                Additionally, JPA allows access to read some information about parameters as well.
+            </para>
+
+            <para>
+                As far as execution, JPA supports the two main methods discussed above for the Hibernate API.  It calls
+                these methods <methodname>Query#getResultList</methodname> and <methodname>Query#getSingleResult</methodname>.
+                They behave exactly as described for <methodname>org.hibernate.Query#list</methodname> and
+                <methodname>org.hibernate.Query#uniqueResult</methodname>.
+            </para>
+        </section>
+    </section>
+
+</chapter>

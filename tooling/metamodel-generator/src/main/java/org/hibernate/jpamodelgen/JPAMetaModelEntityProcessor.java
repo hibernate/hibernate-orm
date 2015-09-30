@@ -137,13 +137,13 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	}
 
 	private void createMetaModelClasses() {
-		// keep track of all classes for which model have been generated
-		Collection<String> generatedModelClasses = new ArrayList<String>();
-
 		for ( MetaEntity entity : context.getMetaEntities() ) {
+			if ( context.isAlreadyGenerated( entity.getQualifiedName() ) ) {
+				continue;
+			}
 			context.logMessage( Diagnostic.Kind.OTHER, "Writing meta model for entity " + entity );
 			ClassWriter.writeFile( entity, context );
-			generatedModelClasses.add( entity.getQualifiedName() );
+			context.markGenerated( entity.getQualifiedName() );
 		}
 
 		// we cannot process the delayed entities in any order. There might be dependencies between them.
@@ -154,7 +154,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 			int toProcessCountBeforeLoop = toProcessEntities.size();
 			for ( MetaEntity entity : toProcessEntities ) {
 				// see METAGEN-36
-				if ( generatedModelClasses.contains( entity.getQualifiedName() ) ) {
+				if ( context.isAlreadyGenerated( entity.getQualifiedName() ) ) {
 					processedEntities.add( entity );
 					continue;
 				}
@@ -165,6 +165,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 						Diagnostic.Kind.OTHER, "Writing meta model for embeddable/mapped superclass" + entity
 				);
 				ClassWriter.writeFile( entity, context );
+				context.markGenerated( entity.getQualifiedName() );
 				processedEntities.add( entity );
 			}
 			toProcessEntities.removeAll( processedEntities );
@@ -273,7 +274,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	}
 
 
-	class ContainsAttributeTypeVisitor extends SimpleTypeVisitor6<Boolean, Element> {
+	static class ContainsAttributeTypeVisitor extends SimpleTypeVisitor6<Boolean, Element> {
 
 		private Context context;
 		private TypeElement type;

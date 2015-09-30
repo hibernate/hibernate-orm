@@ -36,16 +36,19 @@ dependencies {
     testCompile( libraries.jandex )
     testCompile( libraries.classmate )
     testCompile( libraries.mockito )
+
     testCompile( libraries.validator ) {
         // for test runtime
         transitive = true
     }
+    testRuntime( libraries.expression_language_api )
+    testRuntime( libraries.expression_language_impl )
+
     // for testing stored procedure support
     testCompile( libraries.derby )
 
     testRuntime( 'jaxen:jaxen:1.1' )
     testRuntime( libraries.javassist )
-    testRuntime( libraries.unified_el )
 }
 
 mavenPom {
@@ -134,3 +137,10 @@ xjc {
 //sourceSets.main.sourceGeneratorsTask.dependsOn xjc
 //sourceSets.main.sourceGeneratorsTask.dependsOn generateGrammarSource
 tasks.compile.dependsOn generateGrammarSource
+
+
+tasks."matrix_mariadb" {
+    beforeTest { descriptor ->
+        println "Starting test: " + descriptor
+    }
+}

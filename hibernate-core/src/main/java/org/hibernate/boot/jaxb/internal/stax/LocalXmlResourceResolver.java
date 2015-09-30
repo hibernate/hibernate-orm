@@ -11,19 +11,24 @@ import java.io.InputStream;
 import java.net.URL;
 import javax.xml.stream.XMLStreamException;
 
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ConfigHelper;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.internal.log.DeprecationLogger;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
  */
 public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( LocalXmlResourceResolver.class );
-
-	public static final LocalXmlResourceResolver INSTANCE = new LocalXmlResourceResolver();
+	private static final Logger log = Logger.getLogger( LocalXmlResourceResolver.class );
 
 	public static final String CLASSPATH_EXTENSION_URL_BASE = "classpath://";
+
+	private final ClassLoaderService classLoaderService;
+
+	public LocalXmlResourceResolver(ClassLoaderService classLoaderService) {
+		this.classLoaderService = classLoaderService;
+	}
 
 	@Override
 	public Object resolveEntity(String publicID, String systemID, String baseURI, String namespace) throws XMLStreamException {
@@ -57,7 +62,7 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 				return openUrlStream( HBM_DTD_MAPPING.getMappedLocalUrl() );
 			}
 			else if ( LEGACY_HBM_DTD_MAPPING.matches( publicID, systemID ) ) {
-				log.recognizedObsoleteHibernateNamespace(
+				DeprecationLogger.DEPRECATION_LOGGER.recognizedObsoleteHibernateNamespace(
 						LEGACY_HBM_DTD_MAPPING.getIdentifierBase(),
 						HBM_DTD_MAPPING.getIdentifierBase()
 				);
@@ -67,7 +72,7 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 				return openUrlStream( HBM_DTD_MAPPING.getMappedLocalUrl() );
 			}
 			else if ( LEGACY2_HBM_DTD_MAPPING.matches( publicID, systemID ) ) {
-				log.recognizedObsoleteHibernateNamespace(
+				DeprecationLogger.DEPRECATION_LOGGER.recognizedObsoleteHibernateNamespace(
 						LEGACY2_HBM_DTD_MAPPING.getIdentifierBase(),
 						HBM_DTD_MAPPING.getIdentifierBase()
 				);
@@ -77,6 +82,16 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 				return openUrlStream( HBM_DTD_MAPPING.getMappedLocalUrl() );
 			}
 			else if ( CFG_DTD_MAPPING.matches( publicID, systemID ) ) {
+				log.debug(
+						"Recognized hibernate-configuration identifier; attempting to resolve on classpath under org/hibernate/"
+				);
+				return openUrlStream( CFG_DTD_MAPPING.getMappedLocalUrl() );
+			}
+			else if ( LEGACY_CFG_DTD_MAPPING.matches( publicID, systemID ) ) {
+				DeprecationLogger.DEPRECATION_LOGGER.recognizedObsoleteHibernateNamespace(
+						LEGACY_CFG_DTD_MAPPING.getIdentifierBase(),
+						CFG_DTD_MAPPING.getIdentifierBase()
+				);
 				log.debug(
 						"Recognized hibernate-configuration identifier; attempting to resolve on classpath under org/hibernate/"
 				);
@@ -115,7 +130,7 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 
 	private InputStream resolveInLocalNamespace(String path) {
 		try {
-			return ConfigHelper.getUserResourceAsStream( path );
+			return classLoaderService.locateResourceStream( path );
 		}
 		catch ( Throwable t ) {
 			return null;
@@ -170,6 +185,11 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 
 	public static final DtdMapping CFG_DTD_MAPPING = new DtdMapping(
 			"http://www.hibernate.org/dtd/hibernate-configuration",
+			"org/hibernate/hibernate-configuration-3.0.dtd"
+	);
+
+	public static final DtdMapping LEGACY_CFG_DTD_MAPPING = new DtdMapping(
+			"http://hibernate.sourceforge.net/hibernate-configuration",
 			"org/hibernate/hibernate-configuration-3.0.dtd"
 	);
 

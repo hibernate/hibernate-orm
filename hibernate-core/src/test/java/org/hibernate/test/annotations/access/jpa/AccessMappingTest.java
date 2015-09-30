@@ -11,8 +11,8 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.property.BasicPropertyAccessor;
-import org.hibernate.property.DirectPropertyAccessor;
+import org.hibernate.property.access.spi.GetterFieldImpl;
+import org.hibernate.property.access.spi.GetterMethodImpl;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tuple.entity.EntityTuplizer;
 
@@ -78,7 +78,7 @@ public class AccessMappingTest {
                 .getTuplizer();
         assertTrue(
                 "Field access should be used.",
-                tuplizer.getIdentifierGetter() instanceof DirectPropertyAccessor.DirectGetter
+				tuplizer.getIdentifierGetter() instanceof GetterFieldImpl
         );
 		factory.close();
     }
@@ -95,7 +95,7 @@ public class AccessMappingTest {
                 .getTuplizer();
         assertTrue(
                 "Property access should be used.",
-                tuplizer.getIdentifierGetter() instanceof BasicPropertyAccessor.BasicGetter
+                tuplizer.getIdentifierGetter() instanceof GetterMethodImpl
         );
 		factory.close();
     }
@@ -112,7 +112,7 @@ public class AccessMappingTest {
                 .getTuplizer();
         assertTrue(
                 "Property access should be used.",
-                tuplizer.getIdentifierGetter() instanceof BasicPropertyAccessor.BasicGetter
+                tuplizer.getIdentifierGetter() instanceof GetterMethodImpl
         );
 		factory.close();
     }
@@ -148,12 +148,12 @@ public class AccessMappingTest {
                 .getTuplizer();
         assertTrue(
                 "Field access should be used.",
-                tuplizer.getIdentifierGetter() instanceof DirectPropertyAccessor.DirectGetter
+                tuplizer.getIdentifierGetter() instanceof GetterFieldImpl
         );
 
         assertTrue(
                 "Property access should be used.",
-                tuplizer.getGetter( 0 ) instanceof BasicPropertyAccessor.BasicGetter
+                tuplizer.getGetter( 0 ) instanceof GetterMethodImpl
         );
 		factory.close();
     }
@@ -170,12 +170,12 @@ public class AccessMappingTest {
                 .getTuplizer();
         assertTrue(
                 "Field access should be used.",
-                tuplizer.getIdentifierGetter() instanceof DirectPropertyAccessor.DirectGetter
+                tuplizer.getIdentifierGetter() instanceof GetterFieldImpl
         );
 
         assertTrue(
                 "Property access should be used.",
-                tuplizer.getGetter( 0 ) instanceof BasicPropertyAccessor.BasicGetter
+                tuplizer.getGetter( 0 ) instanceof GetterMethodImpl
         );
 		factory.close();
     }
@@ -193,7 +193,7 @@ public class AccessMappingTest {
                 .getTuplizer();
         assertTrue(
                 "Field access should be used since the default access mode gets inherited",
-                tuplizer.getIdentifierGetter() instanceof DirectPropertyAccessor.DirectGetter
+                tuplizer.getIdentifierGetter() instanceof GetterFieldImpl
         );
 		factory.close();
     }
@@ -210,7 +210,7 @@ public class AccessMappingTest {
                 .getTuplizer();
         assertTrue(
                 "Property access should be used since explicity configured via @Access",
-                tuplizer.getIdentifierGetter() instanceof BasicPropertyAccessor.BasicGetter
+                tuplizer.getIdentifierGetter() instanceof GetterMethodImpl
         );
 
         tuplizer = factory.getEntityPersister( Horse.class.getName() )
@@ -218,7 +218,7 @@ public class AccessMappingTest {
                 .getTuplizer();
         assertTrue(
                 "Field access should be used since the default access mode gets inherited",
-                tuplizer.getGetter( 0 ) instanceof DirectPropertyAccessor.DirectGetter
+                tuplizer.getGetter( 0 ) instanceof GetterFieldImpl
         );
 		factory.close();
     }

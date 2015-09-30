@@ -13,6 +13,7 @@ import org.geolatte.geom.jts.JTS;
 
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptorRegistry;
 
 /**
  * Descriptor for geolatte-geom {@code Geometry}s.
@@ -32,6 +33,7 @@ public class GeolatteGeometryJavaTypeDescriptor extends AbstractTypeDescriptor<G
 	 */
 	public GeolatteGeometryJavaTypeDescriptor() {
 		super( Geometry.class );
+		JavaTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
 	}
 
 	@Override

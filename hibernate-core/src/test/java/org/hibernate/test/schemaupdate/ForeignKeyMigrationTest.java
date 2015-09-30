@@ -31,7 +31,7 @@ import org.junit.Test;
 /**
  * @author Steve Ebersole
  */
-@RequiresDialectFeature( value = {DialectChecks.SupportSchemaCreation.class, DialectChecks.SupportCatalogCreation.class})
+@RequiresDialectFeature( value = {DialectChecks.SupportCatalogCreation.class})
 public class ForeignKeyMigrationTest extends BaseUnitTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-9716" )

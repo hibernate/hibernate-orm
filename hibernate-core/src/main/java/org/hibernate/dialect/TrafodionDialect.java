@@ -6,16 +6,8 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.CallableStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Types;
-import java.util.List;
-import java.util.Locale;
 
-import org.hibernate.JDBCException;
-import org.hibernate.QueryTimeoutException;
-import org.hibernate.annotations.common.util.StringHelper;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.NvlFunction;
@@ -26,69 +18,24 @@ import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.spi.RowSelection;
-import org.hibernate.exception.ConstraintViolationException;
-import org.hibernate.exception.LockAcquisitionException;
-import org.hibernate.exception.LockTimeoutException;
-import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
-import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
-import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
-import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.local.AfterUseAction;
-import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.procedure.internal.StandardCallableStatementSupport;
-import org.hibernate.procedure.spi.CallableStatementSupport;
-import org.hibernate.sql.CaseFragment;
-import org.hibernate.sql.DecodeCaseFragment;
-import org.hibernate.sql.JoinFragment;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.BitTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
- * A dialect for Trafodion 1.1.
+ * A dialect for Trafodion
  *
  * @author Haifeng Li
+ * Enhanced by Esgyn Corporation
  */
 public class TrafodionDialect extends Dialect {
 
 	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
 		@Override
 		public String processSql(String sql, RowSelection selection) {
-			final boolean hasOffset = LimitHelper.hasFirstRow( selection );
+			final boolean hasOffset = LimitHelper.hasMaxRows( selection );
 			sql = sql.trim();
-			String forUpdateClause = null;
-			boolean isForUpdate = false;
-			final int forUpdateIndex = sql.toLowerCase(Locale.ROOT).lastIndexOf( "for update" );
-			if (forUpdateIndex > -1) {
-				// save 'for update ...' and then remove it
-				forUpdateClause = sql.substring( forUpdateIndex );
-				sql = sql.substring( 0, forUpdateIndex - 1 );
-				isForUpdate = true;
-			}
-
-			final StringBuilder pagingSelect = new StringBuilder( sql.length() + 100 );
-			if (hasOffset) {
-				pagingSelect.append( "select * from ( select row_.*, rownum rownum_ from ( " );
-			}
-			else {
-				pagingSelect.append( "select * from ( " );
-			}
-			pagingSelect.append( sql );
-			if (hasOffset) {
-				pagingSelect.append( " ) row_ where rownum <= ?) where rownum_ > ?" );
-			}
-			else {
-				pagingSelect.append( " ) where rownum <= ?" );
-			}
-
-			if (isForUpdate) {
-				pagingSelect.append( " " );
-				pagingSelect.append( forUpdateClause );
-			}
-
-			return pagingSelect.toString();
+			return sql + (hasOffset ? " limit ?" : " limit ?");
 		}
 
 		@Override
@@ -245,42 +192,12 @@ public class TrafodionDialect extends Dialect {
 	@Override
 	public String getLimitString(String sql, boolean hasOffset) {
 		sql = sql.trim();
-		String forUpdateClause = null;
-		boolean isForUpdate = false;
-		final int forUpdateIndex = sql.toLowerCase(Locale.ROOT).lastIndexOf( "for update") ;
-		if ( forUpdateIndex > -1 ) {
-			// save 'for update ...' and then remove it
-			forUpdateClause = sql.substring( forUpdateIndex );
-			sql = sql.substring( 0, forUpdateIndex-1 );
-			isForUpdate = true;
-		}
-
-		final StringBuilder pagingSelect = new StringBuilder( sql.length() + 100 );
-		if (hasOffset) {
-			pagingSelect.append( "select * from ( select row_.*, rownum rownum_ from ( " );
-		}
-		else {
-			pagingSelect.append( "select * from ( " );
-		}
-		pagingSelect.append( sql );
-		if (hasOffset) {
-			pagingSelect.append( " ) row_ where rownum <= ?) where rownum_ > ?" );
-		}
-		else {
-			pagingSelect.append( " ) where rownum <= ?" );
-		}
-
-		if ( isForUpdate ) {
-			pagingSelect.append( " " );
-			pagingSelect.append( forUpdateClause );
-		}
-
-		return pagingSelect.toString();
+		return sql + (hasOffset ? " limit ? " : " limit ?");
 	}
 
 	@Override
 	public String getCurrentTimestampSelectString() {
-		return "select current_timestamp from dual";
+		return "select current_timestamp from (values(1)) x";
 	}
 
 	@Override
@@ -291,17 +208,12 @@ public class TrafodionDialect extends Dialect {
 
 	@Override
 	public String getAddColumnString() {
-		return "add";
+		return "add ";
 	}
 
 	@Override
 	public String getSequenceNextValString(String sequenceName) {
-		return "select " + getSelectSequenceNextValString( sequenceName ) + " from dual";
-	}
-
-	@Override
-	public String getSelectSequenceNextValString(String sequenceName) {
-		return sequenceName + ".nextval";
+		return "select seqnum(" +  sequenceName  + ") from (values(1)) x";
 	}
 
 	@Override
@@ -315,18 +227,8 @@ public class TrafodionDialect extends Dialect {
 	}
 
 	@Override
-	public String getCascadeConstraintsString() {
-		return " cascade constraints";
-	}
-
-	@Override
 	public boolean dropConstraints() {
 		return false;
-	}
-
-	@Override
-	public String getForUpdateNowaitString() {
-		return " for update nowait";
 	}
 
 	@Override
@@ -345,125 +247,8 @@ public class TrafodionDialect extends Dialect {
 	}
 
 	@Override
-	public String getForUpdateString(String aliases) {
-		return getForUpdateString() + " of " + aliases;
-	}
-
-	@Override
-	public String getForUpdateNowaitString(String aliases) {
-		return getForUpdateString() + " of " + aliases + " nowait";
-	}
-
-	@Override
-	public boolean bindLimitParametersInReverseOrder() {
-		return true;
-	}
-
-	@Override
-	public boolean useMaxForLimit() {
-		return true;
-	}
-
-	@Override
-	public boolean forUpdateOfColumns() {
-		return true;
-	}
-
-	@Override
 	public String getQuerySequencesString() {
-		return    " select sequence_name from all_sequences"
-				+ "  union"
-				+ " select synonym_name"
-				+ "   from all_synonyms us, all_sequences asq"
-				+ "  where asq.sequence_name = us.table_name"
-				+ "    and asq.sequence_owner = us.table_owner";
-	}
-
-	@Override
-	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
-		return EXTRACTER;
-	}
-
-	private static final ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {
-
-		/**
-		 * Extract the name of the violated constraint from the given SQLException.
-		 *
-		 * @param sqle The exception that was the result of the constraint violation.
-		 * @return The extracted constraint name.
-		 */
-		public String extractConstraintName(SQLException sqle) {
-			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqle );
-			if ( errorCode == 1 || errorCode == 2291 || errorCode == 2292 ) {
-				return extractUsingTemplate( "(", ")", sqle.getMessage() );
-			}
-			else if ( errorCode == 1400 ) {
-				// simple nullability constraint
-				return null;
-			}
-			else {
-				return null;
-			}
-		}
-
-	};
-
-	@Override
-	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
-		return new SQLExceptionConversionDelegate() {
-			@Override
-			public JDBCException convert(SQLException sqlException, String message, String sql) {
-
-				final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
-
-
-				// lock timeouts ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-				if ( errorCode == 30006 ) {
-					// ORA-30006: resource busy; acquire with WAIT timeout expired
-					throw new LockTimeoutException( message, sqlException, sql );
-				}
-				else if ( errorCode == 54 ) {
-					// ORA-00054: resource busy and acquire with NOWAIT specified or timeout expired
-					throw new LockTimeoutException( message, sqlException, sql );
-				}
-				else if ( 4021 == errorCode ) {
-					// ORA-04021 timeout occurred while waiting to lock object
-					throw new LockTimeoutException( message, sqlException, sql );
-				}
-
-
-				// deadlocks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-				if ( 60 == errorCode ) {
-					// ORA-00060: deadlock detected while waiting for resource
-					return new LockAcquisitionException( message, sqlException, sql );
-				}
-				else if ( 4020 == errorCode ) {
-					// ORA-04020 deadlock detected while trying to lock object
-					return new LockAcquisitionException( message, sqlException, sql );
-				}
-
-
-				// query cancelled ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-				if ( 1013 == errorCode ) {
-					// ORA-01013: user requested cancel of current operation
-					throw new QueryTimeoutException(  message, sqlException, sql );
-				}
-
-
-				// data integrity violation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-				if ( 1407 == errorCode ) {
-					// ORA-01407: cannot update column to NULL
-					final String constraintName = getViolatedConstraintNameExtracter().extractConstraintName( sqlException );
-					return new ConstraintViolationException( message, sqlException, sql, constraintName );
-				}
-
-				return null;
-			}
-		};
+		return " get all sequences";
 	}
 
 	@Override
@@ -474,30 +259,6 @@ public class TrafodionDialect extends Dialect {
 	@Override
 	public boolean supportsCommentOn() {
 		return true;
-	}
-
-	@Override
-	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
-		return new GlobalTemporaryTableBulkIdStrategy(
-				new IdTableSupportStandardImpl() {
-					@Override
-					public String generateIdTableName(String baseName) {
-						final String name = super.generateIdTableName( baseName );
-						return name.length() > 30 ? name.substring( 0, 30 ) : name;
-					}
-
-					@Override
-					public String getCreateIdTableCommand() {
-						return "create global temporary table";
-					}
-
-					@Override
-					public String getCreateIdTableStatementOptions() {
-						return "on commit delete rows";
-					}
-				},
-				AfterUseAction.CLEAN
-		);
 	}
 
 	@Override
@@ -527,43 +288,16 @@ public class TrafodionDialect extends Dialect {
 	
 	@Override
 	public boolean forceLobAsLastValue() {
-		return true;
+		return false;
 	}
 
 	@Override
 	public boolean useFollowOnLocking() {
-		return true;
+		return false;
 	}
 	
 	@Override
 	public String getNotExpression( String expression ) {
 		return "not (" + expression + ")";
-	}
-	
-	@Override
-	public String getQueryHintString(String sql, List<String> hints) {
-		final String hint = StringHelper.join( ", ", hints.iterator() );
-		
-		if ( StringHelper.isEmpty( hint ) ) {
-			return sql;
-		}
-
-		final int pos = sql.indexOf( "select" );
-		if ( pos > -1 ) {
-			final StringBuilder buffer = new StringBuilder( sql.length() + hint.length() + 8 );
-			if ( pos > 0 ) {
-				buffer.append( sql.substring( 0, pos ) );
-			}
-			buffer.append( "select /*+ " ).append( hint ).append( " */" )
-					.append( sql.substring( pos + "select".length() ) );
-			sql = buffer.toString();
-		}
-
-		return sql;
-	}
-
-	@Override
-	public CallableStatementSupport getCallableStatementSupport() {
-		return StandardCallableStatementSupport.REF_CURSOR_INSTANCE;
 	}
 }

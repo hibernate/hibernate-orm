@@ -67,9 +67,3 @@ public interface ColumnInformation {
 	 */
 	public int getDecimalDigits();
 }
-
-
-
-
-
-

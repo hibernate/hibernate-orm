@@ -13,6 +13,7 @@ import java.util.Set;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.Namespace;
@@ -72,6 +73,38 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 		final Set<String> exportIdentifiers = new HashSet<String>( 50 );
 
 		final Database database = metadata.getDatabase();
+		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
+		final Dialect dialect = jdbcEnvironment.getDialect();
+
+		// Drop all AuxiliaryDatabaseObjects
+		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
+			if ( !auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
+				continue;
+			}
+
+			applySqlStrings(
+					dialect.getAuxiliaryDatabaseObjectExporter().getSqlDropStrings( auxiliaryDatabaseObject, metadata ),
+					targets,
+					true
+			);
+		}
+
+		// Create before-table AuxiliaryDatabaseObjects
+		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
+			if ( auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
+				continue;
+			}
+			if ( !auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
+				continue;
+			}
+
+			applySqlStrings(
+					auxiliaryDatabaseObject.sqlCreateStrings( jdbcEnvironment.getDialect() ),
+					targets,
+					true
+			);
+		}
+
 		boolean tryToCreateCatalogs = false;
 		boolean tryToCreateSchemas = false;
 
@@ -174,6 +207,22 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 						false
 				);
 			}
+		}
+
+		// Create after-table AuxiliaryDatabaseObjects
+		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
+			if ( !auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
+				continue;
+			}
+			if ( !auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
+				continue;
+			}
+
+			applySqlStrings(
+					auxiliaryDatabaseObject.sqlCreateStrings( jdbcEnvironment.getDialect() ),
+					targets,
+					true
+			);
 		}
 	}
 

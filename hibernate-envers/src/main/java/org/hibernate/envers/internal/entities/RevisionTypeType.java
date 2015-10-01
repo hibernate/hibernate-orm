@@ -94,5 +94,3 @@ public class RevisionTypeType implements UserType, Serializable {
 		return EqualsHelper.equals( x, y );
 	}
 }
-
-

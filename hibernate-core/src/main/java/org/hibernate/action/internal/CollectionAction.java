@@ -196,4 +196,3 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		return (EventSource) getSession();
 	}
 }
-

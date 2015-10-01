@@ -24,6 +24,7 @@ import antlr.collections.AST;
  * @author Steve Ebersole
  */
 public abstract class AbstractMapComponentNode extends FromReferenceNode implements HqlSqlTokenTypes {
+	private FromElement mapFromElement;
 	private String[] columns;
 
 	public FromReferenceNode getMapReference() {
@@ -72,11 +73,17 @@ public abstract class AbstractMapComponentNode extends FromReferenceNode impleme
 			throw nonMap();
 		}
 
+		mapFromElement = sourceFromElement;
+
 		setFromElement( sourceFromElement );
 		setDataType( resolveType( sourceFromElement.getQueryableCollection() ) );
 		this.columns = resolveColumns( sourceFromElement.getQueryableCollection() );
 		initText( this.columns );
 		setFirstChild( null );
+	}
+
+	public FromElement getMapFromElement() {
+		return mapFromElement;
 	}
 
 	private boolean isAliasRef(FromReferenceNode mapReference) {
@@ -106,5 +113,20 @@ public abstract class AbstractMapComponentNode extends FromReferenceNode impleme
 	@Override
 	public void resolveIndex(AST parent) throws SemanticException {
 		throw new UnsupportedOperationException( expressionDescription() + " expression cannot be the source for an index operation" );
+	}
+
+	protected MapKeyEntityFromElement findOrAddMapKeyEntityFromElement(QueryableCollection collectionPersister) {
+		if ( !collectionPersister.getIndexType().isEntityType() ) {
+			return null;
+		}
+
+
+		for ( FromElement destination : getFromElement().getDestinations() ) {
+			if ( destination instanceof MapKeyEntityFromElement ) {
+				return (MapKeyEntityFromElement) destination;
+			}
+		}
+
+		return MapKeyEntityFromElement.buildKeyJoin( getFromElement() );
 	}
 }

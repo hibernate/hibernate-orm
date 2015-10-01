@@ -78,8 +78,8 @@ public class ValidityAuditStrategyRevEndTestCustomRevEnt extends BaseEnversJPAFu
 		session
 				.createSQLQuery(
 						"CREATE TABLE children ( parent_id " + getDialect().getTypeName( Types.INTEGER ) +
-								", child1_id " + getDialect().getTypeName( Types.INTEGER ) + " NULL" +
-								", child2_id " + getDialect().getTypeName( Types.INTEGER ) + " NULL )"
+								", child1_id " + getDialect().getTypeName( Types.INTEGER ) + getDialect().getNullColumnString() +
+								", child2_id " + getDialect().getTypeName( Types.INTEGER ) + getDialect().getNullColumnString() + " )"
 				)
 				.executeUpdate();
 		session.createSQLQuery( "DROP TABLE children_AUD" ).executeUpdate();
@@ -90,8 +90,8 @@ public class ValidityAuditStrategyRevEndTestCustomRevEnt extends BaseEnversJPAFu
 								", " + revendTimestampColumName + " " + getDialect().getTypeName( Types.TIMESTAMP ) +
 								", REVTYPE " + getDialect().getTypeName( Types.TINYINT ) +
 								", parent_id " + getDialect().getTypeName( Types.INTEGER ) +
-								", child1_id " + getDialect().getTypeName( Types.INTEGER ) + " NULL" +
-								", child2_id " + getDialect().getTypeName( Types.INTEGER ) + " NULL )"
+								", child1_id " + getDialect().getTypeName( Types.INTEGER ) + getDialect().getNullColumnString() +
+								", child2_id " + getDialect().getTypeName( Types.INTEGER ) + getDialect().getNullColumnString() + " )"
 				)
 				.executeUpdate();
 		em.getTransaction().commit();

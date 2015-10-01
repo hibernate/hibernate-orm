@@ -19,6 +19,7 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Subgraph;
+import javax.persistence.Table;
 
 import org.hibernate.Hibernate;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
@@ -248,6 +249,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
     }
 
     @Entity
+	@Table(name = "foo")
     public static class Foo {
 
 		@Id
@@ -262,6 +264,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Entity
+	@Table(name = "bar")
 	public static class Bar {
 
 		@Id
@@ -273,6 +276,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Entity
+	@Table(name = "baz")
     public static class Baz {
 
 		@Id

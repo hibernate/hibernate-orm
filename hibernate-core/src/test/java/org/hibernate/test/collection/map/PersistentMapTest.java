@@ -24,6 +24,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -197,6 +198,7 @@ public class PersistentMapTest extends BaseCoreFunctionalTestCase {
 	}
 	
 	@Entity
+	@Table(name = "MyUser")
 	private static class User implements Serializable {
 		@Id @GeneratedValue
 		private Integer id;
@@ -207,6 +209,7 @@ public class PersistentMapTest extends BaseCoreFunctionalTestCase {
 	}
 	
 	@Entity
+	@Table(name = "UserData")
 	private static class UserData {
 		@Id @GeneratedValue
 		private Integer id;

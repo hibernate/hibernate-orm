@@ -79,10 +79,3 @@ public final class CollectionRecreateAction extends CollectionAction {
 		}
 	}
 }
-
-
-
-
-
-
-

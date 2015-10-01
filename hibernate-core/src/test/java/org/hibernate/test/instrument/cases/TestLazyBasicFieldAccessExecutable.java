@@ -16,7 +16,7 @@ public class TestLazyBasicFieldAccessExecutable extends AbstractExecutable {
 		return new String[] {"org/hibernate/test/instrument/domain/Documents.hbm.xml"};
 	}
 
-	public void execute() {
+	public void execute() throws Exception {
 		Session s = getFactory().openSession();
 		Transaction t = s.beginTransaction();
 		Owner o = new Owner();
@@ -51,10 +51,16 @@ public class TestLazyBasicFieldAccessExecutable extends AbstractExecutable {
 		doc.setName( "Doc Name 1" );
 		doc.setSummary( "v" );
 		Document docManaged = (Document) s.merge( doc );
-		Assert.assertEquals( "v", docManaged.getSummary() );
-		Assert.assertTrue( Hibernate.isPropertyInitialized( docManaged, "summary" ) );
-		s.getTransaction().commit();
-		s.close();
+		try {
+			Assert.assertEquals("v", docManaged.getSummary());
+			Assert.assertTrue( Hibernate.isPropertyInitialized( docManaged, "summary" ) );
+			s.getTransaction().commit();
+		} catch (Exception e) {
+			s.getTransaction().rollback();
+			throw e;
+		} finally {
+			s.close();
+		}
 
 		s = getFactory().openSession();
 		s.getTransaction().begin();

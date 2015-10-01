@@ -1,0 +1,22 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
+package org.hibernate.test.sql.hand.custom.derby;
+
+import org.hibernate.dialect.DerbyDialect;
+
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.test.sql.hand.custom.CustomStoredProcTestSupport;
+
+/**
+ * @author Andrea Boriero
+ */
+@RequiresDialect(DerbyDialect.class)
+public class DerbyCustomSQLTest extends CustomStoredProcTestSupport {
+	public String[] getMappings() {
+		return new String[] {"sql/hand/custom/derby/Mappings.hbm.xml"};
+	}
+}

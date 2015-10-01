@@ -7,27 +7,40 @@
 
 package org.hibernate.bytecode.enhance.spi.interceptor;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Set;
+import javax.naming.NamingException;
 
-import org.hibernate.LazyInitializationException;
+import org.hibernate.LockMode;
 import org.hibernate.bytecode.enhance.internal.tracker.SimpleFieldTracker;
 import org.hibernate.bytecode.enhance.spi.CollectionTracker;
+import org.hibernate.bytecode.enhance.spi.interceptor.Helper.Consumer;
+import org.hibernate.bytecode.enhance.spi.interceptor.Helper.LazyInitializationWork;
 import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.Status;
+import org.hibernate.persister.entity.EntityPersister;
+
+import org.jboss.logging.Logger;
 
 /**
  * Interceptor that loads attributes lazily
  *
  * @author Luis Barreiro
  */
-public class LazyAttributeLoader implements PersistentAttributeInterceptor {
+public class LazyAttributeLoader implements PersistentAttributeInterceptor, Consumer {
+	private static final Logger log = Logger.getLogger( LazyAttributeLoader.class );
 
 	private transient SessionImplementor session;
+
 	private final Set<String> lazyFields;
 	private final String entityName;
+
+	private String sessionFactoryUuid;
+	private boolean allowLoadOutsideTransaction;
 
 	private final SimpleFieldTracker initializedFields = new SimpleFieldTracker();
 
@@ -35,33 +48,88 @@ public class LazyAttributeLoader implements PersistentAttributeInterceptor {
 		this.session = session;
 		this.lazyFields = lazyFields;
 		this.entityName = entityName;
+
+		this.allowLoadOutsideTransaction = session.getFactory().getSessionFactoryOptions().isInitializeLazyStateOutsideTransactionsEnabled();
+		if ( this.allowLoadOutsideTransaction ) {
+			try {
+				this.sessionFactoryUuid = (String) session.getFactory().getReference().get( "uuid" ).getContent();
+			}
+			catch (NamingException e) {
+				log.debug( "Unable to determine SF UUID in preparation for `allowLoadOutsideTransaction`" );
+			}
+		}
 	}
 
-	protected final Object intercept(Object target, String fieldName, Object value) {
-		if ( !isAttributeLoaded( fieldName ) ) {
-			if ( session == null ) {
-				throw new LazyInitializationException( "entity with lazy properties is not associated with a session" );
-			}
-			else if ( !session.isOpen() || !session.isConnected() ) {
-				throw new LazyInitializationException( "session is not connected" );
-			}
-
-			Object loadedValue = ( (LazyPropertyInitializer) session.getFactory()
-					.getEntityPersister( entityName ) ).initializeLazyProperty(
-					fieldName,
-					target,
-					session
-			);
-
-			initializedFields.add( fieldName );
-			takeCollectionSizeSnapshot( target, fieldName, loadedValue );
-			return loadedValue;
+	protected final Object intercept(Object target, String attributeName, Object value) {
+		if ( !isAttributeLoaded( attributeName ) ) {
+			return loadAttribute( target, attributeName );
 		}
 		return value;
 	}
 
+	private Object loadAttribute(final Object target, final String attributeName) {
+		return new Helper( this ).performWork(
+				new LazyInitializationWork() {
+					@Override
+					public Object doWork(SessionImplementor session, boolean isTemporarySession) {
+						final EntityPersister persister = session.getFactory().getEntityPersister( getEntityName() );
+
+						if ( isTemporarySession ) {
+							final Serializable id = persister.getIdentifier( target, null );
+
+							// Add an entry for this entity in the PC of the temp Session
+							// NOTE : a few arguments that would be nice to pass along here...
+							//		1) loadedState if we know any
+							final Object[] loadedState = null;
+							//		2) does a row exist in the db for this entity?
+							final boolean existsInDb = true;
+							// NOTE2: the final boolean is 'lazyPropertiesAreUnfetched' which is another
+							//	place where a "single lazy fetch group" shows up
+							session.getPersistenceContext().addEntity(
+									target,
+									Status.READ_ONLY,
+									loadedState,
+									session.generateEntityKey( id, persister ),
+									persister.getVersion( target ),
+									LockMode.NONE,
+									existsInDb,
+									persister,
+									true,
+									true
+							);
+						}
+
+						final LazyPropertyInitializer initializer = (LazyPropertyInitializer) persister;
+						final Object loadedValue = initializer.initializeLazyProperty(
+								attributeName,
+								target,
+								session
+						);
+
+						initializedFields.add( attributeName );
+						takeCollectionSizeSnapshot( target, attributeName, loadedValue );
+						return loadedValue;
+					}
+
+					@Override
+					public String getEntityName() {
+						return entityName;
+					}
+
+					@Override
+					public String getAttributeName() {
+						return attributeName;
+					}
+				}
+		);
+	}
+
 	public final void setSession(SessionImplementor session) {
 		this.session = session;
+	}
+
+	public final void unsetSession() {
+		this.session = null;
 	}
 
 	public boolean isAttributeLoaded(String fieldName) {
@@ -219,5 +287,20 @@ public class LazyAttributeLoader implements PersistentAttributeInterceptor {
 			initializedFields.add( name );
 		}
 		return newValue;
+	}
+
+	@Override
+	public SessionImplementor getLinkedSession() {
+		return session;
+	}
+
+	@Override
+	public boolean allowLoadOutsideTransaction() {
+		return allowLoadOutsideTransaction;
+	}
+
+	@Override
+	public String getSessionFactoryUuid() {
+		return sessionFactoryUuid;
 	}
 }

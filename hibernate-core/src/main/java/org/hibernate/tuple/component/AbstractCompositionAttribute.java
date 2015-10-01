@@ -222,4 +222,3 @@ public abstract class AbstractCompositionAttribute
 		return super.loggableMetadata() + ",composition";
 	}
 }
-

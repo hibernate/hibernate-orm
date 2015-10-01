@@ -24,4 +24,3 @@ public interface LockEventListener extends Serializable {
      */
 	public void onLock(LockEvent event) throws HibernateException;
 }
-

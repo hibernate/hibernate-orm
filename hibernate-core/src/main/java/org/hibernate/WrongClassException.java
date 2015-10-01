@@ -46,4 +46,3 @@ public class WrongClassException extends HibernateException {
 		return identifier;
 	}
 }
-

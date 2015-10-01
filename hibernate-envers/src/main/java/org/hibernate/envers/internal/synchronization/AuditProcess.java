@@ -20,10 +20,14 @@ import org.hibernate.envers.internal.revisioninfo.RevisionInfoGenerator;
 import org.hibernate.envers.internal.synchronization.work.AuditWorkUnit;
 import org.hibernate.envers.tools.Pair;
 
+import org.jboss.logging.Logger;
+
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 public class AuditProcess implements BeforeTransactionCompletionProcess {
+	private static final Logger log = Logger.getLogger( AuditProcess.class );
+
 	private final RevisionInfoGenerator revisionInfoGenerator;
 	private final SessionImplementor session;
 
@@ -121,6 +125,11 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 	@Override
 	public void doBeforeTransactionCompletion(SessionImplementor session) {
 		if ( workUnits.size() == 0 && undoQueue.size() == 0 ) {
+			return;
+		}
+
+		if ( !session.getTransactionCoordinator().isActive() ) {
+			log.debug( "Skipping envers transaction hook due to non-active (most likely marked-rollback-only) transaction" );
 			return;
 		}
 

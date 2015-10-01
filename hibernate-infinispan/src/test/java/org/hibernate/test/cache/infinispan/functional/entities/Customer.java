@@ -17,6 +17,8 @@ import java.util.Set;
 public class Customer implements Serializable {
 	Integer id;
 	String name;
+	// mapping added programmatically
+	long version;
 
 	private transient Set<Contact> contacts;
 
@@ -45,5 +47,13 @@ public class Customer implements Serializable {
 
 	public void setContacts(Set<Contact> contacts) {
 		this.contacts = contacts;
+	}
+
+	public long getVersion() {
+		return version;
+	}
+
+	public void setVersion(long version) {
+		this.version = version;
 	}
 }

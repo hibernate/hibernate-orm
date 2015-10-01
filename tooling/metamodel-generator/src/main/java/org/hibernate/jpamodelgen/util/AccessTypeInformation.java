@@ -73,5 +73,3 @@ public class AccessTypeInformation {
 		return sb.toString();
 	}
 }
-
-

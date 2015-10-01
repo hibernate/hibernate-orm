@@ -36,7 +36,7 @@ public class MultiTenancyTest extends SingleNodeTest {
 
 	 @Override
 	 public List<Object[]> getParameters() {
-		  return Collections.singletonList(READ_ONLY);
+		  return Collections.singletonList(READ_ONLY_INVALIDATION);
 	 }
 
 	 @Override

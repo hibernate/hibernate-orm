@@ -98,7 +98,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 
 		Category s = new Category();
 		s.setName(String.valueOf(nextLong++));
-		session.save(s);
+		session.save( s );
 
 		Simple simple = new Simple( Long.valueOf(nextLong++) );
 		simple.init();
@@ -108,7 +108,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 		session.save(a);
 
 		B b = new B();
-		session.save(b);
+		session.save( b );
 		session.flush();
 
 		session.createSQLQuery( "select {category.*} from category {category}" ).addEntity( "category", Category.class ).list();
@@ -128,17 +128,17 @@ public class SQLLoaderTest extends LegacyTestCase {
 		}
 
 		Category s = new Category();
-		s.setName(String.valueOf(nextLong++));
-		session.save(s);
+		s.setName( String.valueOf( nextLong++ ) );
+		session.save( s );
 
 		s = new Category();
-		s.setName("WannaBeFound");
+		s.setName( "WannaBeFound" );
 		session.flush();
 
 		Query query = session.createSQLQuery( "select {category.*} from category {category} where {category}.name = :name" )
 				.addEntity( "category", Category.class );
 
-		query.setProperties(s);
+		query.setProperties( s );
 		//query.setParameter("name", s.getName());
 
 		query.list();
@@ -146,7 +146,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 		query = session.createSQLQuery( "select {category.*} from category {category} where {category}.name in (:names)" )
 				.addEntity( "category", Category.class );
 		String[] str = new String[] { "WannaBeFound", "NotThere" };
-		query.setParameterList("names", str);
+		query.setParameterList( "names", str );
 		query.uniqueResult();
 
 		query = session.createSQLQuery( "select {category.*} from category {category} where {category}.name in :names" )
@@ -157,12 +157,12 @@ public class SQLLoaderTest extends LegacyTestCase {
 		query = session.createSQLQuery( "select {category.*} from category {category} where {category}.name in (:names)" )
 				.addEntity( "category", Category.class );
 		str = new String[] { "WannaBeFound" };
-		query.setParameterList("names", str);
+		query.setParameterList( "names", str );
 		query.uniqueResult();
 
 		query = session.createSQLQuery( "select {category.*} from category {category} where {category}.name in :names" )
 				.addEntity( "category", Category.class );
-		query.setParameterList("names", str);
+		query.setParameterList( "names", str );
 		query.uniqueResult();
 
 		session.getTransaction().commit();
@@ -402,10 +402,10 @@ public class SQLLoaderTest extends LegacyTestCase {
 		}
 		A savedA = new A();
 		savedA.setName("Max");
-		session.save(savedA);
+		session.save( savedA );
 
 		B savedB = new B();
-		session.save(savedB);
+		session.save( savedB );
 		session.flush();
 
 		int count = session.createQuery("from A").list().size();
@@ -429,7 +429,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 		List list = query.list();
 
 		assertNotNull(list);
-		assertEquals(1, list.size());
+		assertEquals( 1, list.size() );
 		session.getTransaction().commit();
 		session.close();
 	}
@@ -443,10 +443,10 @@ public class SQLLoaderTest extends LegacyTestCase {
 		}
 		A savedA = new A();
 		savedA.setName("Max");
-		session.save(savedA);
+		session.save( savedA );
 
 		B savedB = new B();
-		session.save(savedB);
+		session.save( savedB );
 		session.flush();
 
 		int count = session.createQuery("from A").list().size();
@@ -469,7 +469,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 		List list = query.list();
 
 		assertNotNull(list);
-		assertEquals(2, list.size());
+		assertEquals( 2, list.size() );
 		session.getTransaction().commit();
 		session.close();
 	}
@@ -556,12 +556,12 @@ public class SQLLoaderTest extends LegacyTestCase {
 		session.beginTransaction();
 		SQLQuery q = session.createSQLQuery( sql ).addEntity( "comp", Componentizable.class );
 	    List list = q.list();
-	    assertEquals(list.size(),1);
+	    assertEquals( list.size(), 1 );
 
 	    Componentizable co = (Componentizable) list.get(0);
-	    assertEquals(c.getNickName(), co.getNickName());
-	    assertEquals(c.getComponent().getName(), co.getComponent().getName());
-	    assertEquals(c.getComponent().getSubComponent().getSubName(), co.getComponent().getSubComponent().getSubName());
+	    assertEquals( c.getNickName(), co.getNickName() );
+	    assertEquals( c.getComponent().getName(), co.getComponent().getName() );
+	    assertEquals( c.getComponent().getSubComponent().getSubName(), co.getComponent().getSubComponent().getSubName() );
 
 	    session.delete( co );
 		session.getTransaction().commit();
@@ -573,16 +573,16 @@ public class SQLLoaderTest extends LegacyTestCase {
 		session.beginTransaction();
 
 		Componentizable c = new Componentizable();
-	    c.setNickName("Flacky");
+	    c.setNickName( "Flacky" );
 	    Component component = new Component();
 	    component.setName("flakky comp");
 	    SubComponent subComponent = new SubComponent();
 	    subComponent.setSubName("subway");
-        component.setSubComponent(subComponent);
+        component.setSubComponent( subComponent );
 	    
-        c.setComponent(component);
+        c.setComponent( component );
         
-        session.save(c);
+        session.save( c );
 		session.getTransaction().commit();
         session.clear();
 
@@ -603,8 +603,8 @@ public class SQLLoaderTest extends LegacyTestCase {
 				.addEntity( "category", Category.class );
 		List list = query.list();
 
-		assertNotNull(list);
-		assertTrue(list.size() > 0);
+		assertNotNull( list );
+		assertTrue( list.size() > 0 );
 		assertTrue(list.get(0) instanceof Category);
 		session.getTransaction().commit();
 		session.close();
@@ -632,9 +632,9 @@ public class SQLLoaderTest extends LegacyTestCase {
 				.addEntity( "category", Category.class );
 		List list = query.list();
 
-		assertNotNull(list);
-		assertTrue(list.size() > 0);
-		assertTrue(list.get(0) instanceof Category);
+		assertNotNull( list );
+		assertTrue( list.size() > 0 );
+		assertTrue( list.get( 0 ) instanceof Category );
 
 		// How do we handle objects that does not have id property (such as Simple ?)
 		// How do we handle objects with composite id's ? (such as Single)
@@ -667,7 +667,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 		A a2 = (A) list.get(1);
 
 		assertTrue((a2 instanceof B) || (a1 instanceof B));
-		assertFalse(a1 instanceof B && a2 instanceof B);
+		assertFalse( a1 instanceof B && a2 instanceof B );
 
 		if (a1 instanceof B) {
 			assertSame(a1, savedB);
@@ -730,7 +730,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 		s.beginTransaction();
         CompositeIdId id = new CompositeIdId();
         id.setName("Max");
-        id.setSystem("c64");
+        id.setUser( "c64" );
         id.setId("games");
         s.save(id);
 		s.getTransaction().commit();
@@ -741,13 +741,13 @@ public class SQLLoaderTest extends LegacyTestCase {
         // having a composite id with one property named id works since the map used by sqlloader to map names to properties handles it.
 		// NOTE : SYSTEM is an ANSI SQL defined keyword, so it gets quoted; so it needs to get quoted here too
 		String sql = String.format(
-				"select %1$s as {c.system}, " +
+				"select %1$s as {c.user}, " +
 						"  id as {c.id}, name as {c.name}, " +
 						"  foo as {c.composite.foo}, " +
 						"  bar as {c.composite.bar} " +
 						"from CompositeIdId " +
 						"where %1$s=? and id=?",
-				getDialect().openQuote() + "system" + getDialect().closeQuote()
+				getDialect().openQuote() + "user" + getDialect().closeQuote()
 		);
 
 		SQLQuery query = s.createSQLQuery( sql ).addEntity( "c", CompositeIdId.class );
@@ -763,7 +763,7 @@ public class SQLLoaderTest extends LegacyTestCase {
         s = openSession();
 		s.beginTransaction();
         CompositeIdId useForGet = new CompositeIdId();
-        useForGet.setSystem("c64");
+        useForGet.setUser( "c64" );
         useForGet.setId("games");
         // this doesn't work since the verification does not take column span into respect!
         CompositeIdId getted = (CompositeIdId) s.get(CompositeIdId.class, useForGet);
@@ -776,7 +776,6 @@ public class SQLLoaderTest extends LegacyTestCase {
         assertEquals(id,id2);
         assertEquals(id.getName(), id2.getName());
         assertEquals(id.getId(), id2.getId());
-        assertEquals(id.getSystem(), id2.getSystem());
+        assertEquals(id.getUser(), id2.getUser());
     }
-
 }

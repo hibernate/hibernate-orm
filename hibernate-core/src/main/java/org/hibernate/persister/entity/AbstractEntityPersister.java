@@ -45,6 +45,7 @@ import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
 import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.cache.spi.entry.StructuredCacheEntry;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.internal.CacheHelper;
@@ -53,9 +54,11 @@ import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadingActions;
+import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.EntityKey;
@@ -90,7 +93,9 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
+import org.hibernate.mapping.Table;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.walking.internal.EntityIdentifierDefinitionHelper;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
@@ -115,6 +120,7 @@ import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.AssociationType;
+import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
@@ -887,12 +893,46 @@ public abstract class AbstractEntityPersister
 
 	}
 
-	public Object initializeLazyProperty(String fieldName, Object entity, SessionImplementor session)
-			throws HibernateException {
+	public Object initializeLazyProperty(String fieldName, Object entity, SessionImplementor session) {
+		final EntityEntry entry = session.getPersistenceContext().getEntry( entity );
+
+		if ( hasCollections() ) {
+			final Type type = getPropertyType( fieldName );
+			if ( type.isCollectionType() ) {
+				// we have a condition where a collection attribute is being access via enhancement:
+				// 		we can circumvent all the rest and just return the PersistentCollection
+				final CollectionType collectionType = (CollectionType) type;
+				final CollectionPersister persister = factory.getCollectionPersister( collectionType.getRole() );
+
+				// Get/create the collection, and make sure it is initialized!  This initialized part is
+				// different from proxy-based scenarios where we have to create the PersistentCollection
+				// reference "ahead of time" to add as a reference to the proxy.  For bytecode solutions
+				// we are not creating the PersistentCollection ahead of time, but instead we are creating
+				// it on first request through the enhanced entity.
+
+				// see if there is already a collection instance associated with the session
+				// 		NOTE : can this ever happen?
+				final Serializable key = getCollectionKey( persister, entity, entry, session );
+				PersistentCollection collection = session.getPersistenceContext().getCollection( new CollectionKey( persister, key ) );
+				if ( collection == null ) {
+					collection = collectionType.instantiate( session, persister, key );
+					collection.setOwner( entity );
+					session.getPersistenceContext().addUninitializedCollection( persister, collection, key );
+				}
+
+				// Initialize it
+				session.initializeCollection( collection, false );
+
+				if ( collectionType.isArrayType() ) {
+					session.getPersistenceContext().addCollectionHolder( collection );
+				}
+
+				// EARLY EXIT!!!
+				return collection;
+			}
+		}
 
 		final Serializable id = session.getContextEntityIdentifier( entity );
-
-		final EntityEntry entry = session.getPersistenceContext().getEntry( entity );
 		if ( entry == null ) {
 			throw new HibernateException( "entity is not associated with the session: " + id );
 		}
@@ -922,6 +962,27 @@ public abstract class AbstractEntityPersister
 
 		return initializeLazyPropertiesFromDatastore( fieldName, entity, session, id, entry );
 
+	}
+
+	protected Serializable getCollectionKey(
+			CollectionPersister persister,
+			Object owner,
+			EntityEntry ownerEntry,
+			SessionImplementor session) {
+		final CollectionType collectionType = persister.getCollectionType();
+
+		if ( ownerEntry != null ) {
+			// this call only works when the owner is associated with the Session, which is not always the case
+			return collectionType.getKeyOfOwner( owner, session );
+		}
+
+		if ( collectionType.getLHSPropertyName() == null ) {
+			// collection key is defined by the owning entity identifier
+			return persister.getOwnerEntityPersister().getIdentifier( owner, session );
+		}
+		else {
+			return (Serializable) persister.getOwnerEntityPersister().getPropertyValue( owner, collectionType.getLHSPropertyName() );
+		}
 	}
 
 	private Object initializeLazyPropertiesFromDatastore(
@@ -2434,7 +2495,7 @@ public abstract class AbstractEntityPersister
 
 		// append the SQL to return the generated identifier
 		if ( j == 0 && identityInsert && useInsertSelectIdentity() ) { //TODO: suck into Insert
-			result = getFactory().getDialect().appendIdentitySelectToInsert( result );
+			result = getFactory().getDialect().getIdentityColumnSupport().appendIdentitySelectToInsert( result );
 		}
 
 		return result;
@@ -2686,7 +2747,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected boolean useInsertSelectIdentity() {
-		return !useGetGeneratedKeys() && getFactory().getDialect().supportsInsertSelectIdentity();
+		return !useGetGeneratedKeys() && getFactory().getDialect().getIdentityColumnSupport().supportsInsertSelectIdentity();
 	}
 
 	protected boolean useGetGeneratedKeys() {
@@ -2732,11 +2793,12 @@ public abstract class AbstractEntityPersister
 
 	public String getIdentitySelectString() {
 		//TODO: cache this in an instvar
-		return getFactory().getDialect().getIdentitySelectString(
-				getTableName( 0 ),
-				getKeyColumns( 0 )[0],
-				getIdentifierType().sqlTypes( getFactory() )[0]
-		);
+		return getFactory().getDialect().getIdentityColumnSupport()
+				.getIdentitySelectString(
+						getTableName( 0 ),
+						getKeyColumns( 0 )[0],
+						getIdentifierType().sqlTypes( getFactory() )[0]
+				);
 	}
 
 	public String getSelectByUniqueKeyString(String propertyName) {
@@ -5050,6 +5112,17 @@ public abstract class AbstractEntityPersister
 
 	public int determineTableNumberForColumn(String columnName) {
 		return 0;
+	}
+
+	protected String determineTableName(Table table, JdbcEnvironment jdbcEnvironment) {
+		if ( table.getSubselect() != null ) {
+			return "( " + table.getSubselect() + " )";
+		}
+
+		return jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+				table.getQualifiedTableName(),
+				jdbcEnvironment.getDialect()
+		);
 	}
 
 	@Override

@@ -15,6 +15,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.TeradataDialect;
 import org.jboss.logging.Logger;
 import org.junit.Test;
@@ -384,7 +385,7 @@ public class SQLFunctionsTest extends LegacyTestCase {
 		simple.setName("Simple 1");
 		s.save( simple );
 
-		if ( getDialect() instanceof DB2Dialect) {
+		if ( getDialect() instanceof DB2Dialect && !(getDialect() instanceof DerbyDialect) ) {
 			s.createQuery( "from Simple s where repeat('foo', 3) = 'foofoofoo'" ).list();
 			s.createQuery( "from Simple s where repeat(s.name, 3) = 'foofoofoo'" ).list();
 			s.createQuery( "from Simple s where repeat( lower(s.name), 3 + (1-1) / 2) = 'foofoofoo'" ).list();

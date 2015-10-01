@@ -285,7 +285,7 @@ public class TableStructure implements DatabaseStructure {
 		);
 		table.addColumn( valueColumn );
 
-		database.addInitCommand(
+		table.addInitCommand(
 				new InitCommand( "insert into " + tableNameText + " values ( " + initialValue + " )" )
 		);
 	}

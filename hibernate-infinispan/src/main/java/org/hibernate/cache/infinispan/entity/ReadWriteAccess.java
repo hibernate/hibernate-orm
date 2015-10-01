@@ -7,7 +7,7 @@
 package org.hibernate.cache.infinispan.entity;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.infinispan.access.InvalidationCacheAccessDelegate;
+import org.hibernate.cache.infinispan.access.AccessDelegate;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionImplementor;
 
@@ -20,7 +20,7 @@ import org.hibernate.engine.spi.SessionImplementor;
  */
 class ReadWriteAccess extends ReadOnlyAccess {
 
-	ReadWriteAccess(EntityRegionImpl region, InvalidationCacheAccessDelegate delegate) {
+	ReadWriteAccess(EntityRegionImpl region, AccessDelegate delegate) {
 		super(region, delegate);
 	}
 

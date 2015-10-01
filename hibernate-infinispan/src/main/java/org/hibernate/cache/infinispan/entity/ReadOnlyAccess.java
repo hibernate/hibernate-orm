@@ -7,7 +7,7 @@
 package org.hibernate.cache.infinispan.entity;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.infinispan.access.InvalidationCacheAccessDelegate;
+import org.hibernate.cache.infinispan.access.AccessDelegate;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
@@ -25,9 +25,9 @@ import org.hibernate.persister.entity.EntityPersister;
 class ReadOnlyAccess implements EntityRegionAccessStrategy {
 
 	protected final EntityRegionImpl region;
-	protected final InvalidationCacheAccessDelegate delegate;
+	protected final AccessDelegate delegate;
 
-	ReadOnlyAccess(EntityRegionImpl region, InvalidationCacheAccessDelegate delegate) {
+	ReadOnlyAccess(EntityRegionImpl region, AccessDelegate delegate) {
 		this.region = region;
 		this.delegate = delegate;
 	}

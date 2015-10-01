@@ -12,6 +12,7 @@ import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
@@ -140,6 +141,7 @@ public class TimestampPropertyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@javax.persistence.Entity
+	@Table(name = "MyEntity")
 	public static class Entity {
 		@GeneratedValue
 		@Id

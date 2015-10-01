@@ -26,7 +26,7 @@
 		<one-to-one name="successfulBid" 
 				property-ref="abc">
 			<formula>id</formula>
-			<formula>1</formula>
+			<formula>true</formula>
 		</one-to-one>
 	</class>
 	

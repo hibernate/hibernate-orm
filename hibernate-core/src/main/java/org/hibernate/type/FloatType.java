@@ -47,8 +47,3 @@ public class FloatType extends AbstractSingleColumnStandardBasicType<Float> impl
 		return toString( value );
 	}
 }
-
-
-
-
-

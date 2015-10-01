@@ -11,6 +11,7 @@ package org.hibernate.jpa.test.connection;
 
 import java.io.File;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceException;
 
 import org.hibernate.ejb.HibernatePersistence;
 
@@ -37,9 +38,13 @@ public class DataSourceInjectionTest {
 					emf.close();
 				}
 				catch (Exception ignore) {
+					int i = 0;
 				}
 			}
 			Assert.fail( "FakeDatasource should have been used" );
+		}
+		catch (PersistenceException pe) {
+			Assert.assertTrue( pe.getCause() instanceof FakeDataSourceException );
 		}
 		catch (FakeDataSourceException fde) {
 			//success

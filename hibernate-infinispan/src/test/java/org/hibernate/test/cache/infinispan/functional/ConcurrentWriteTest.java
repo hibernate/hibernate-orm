@@ -9,7 +9,6 @@ package org.hibernate.test.cache.infinispan.functional;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -22,6 +21,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.hibernate.FlushMode;
+import org.hibernate.LockMode;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 
 import org.hibernate.test.cache.infinispan.functional.entities.Contact;
@@ -63,7 +63,7 @@ public class ConcurrentWriteTest extends SingleNodeTest {
 
 	@Override
 	public List<Object[]> getParameters() {
-		return Arrays.asList(TRANSACTIONAL, READ_WRITE);
+		return getParameters(true, true, false, true);
 	}
 
 	@Override
@@ -91,9 +91,15 @@ public class ConcurrentWriteTest extends SingleNodeTest {
 	public void testSingleUser() throws Exception {
 		// setup
 		sessionFactory().getStatistics().clear();
+		// wait a while to make sure that timestamp comparison works after invalidateRegion
+		Thread.sleep(1);
+
 		Customer customer = createCustomer( 0 );
 		final Integer customerId = customer.getId();
 		getCustomerIDs().add( customerId );
+
+		// wait a while to make sure that timestamp comparison works after collection remove (during insert)
+		Thread.sleep(1);
 
 		assertNull( "contact exists despite not being added", getFirstContact( customerId ) );
 
@@ -101,9 +107,9 @@ public class ConcurrentWriteTest extends SingleNodeTest {
 		SecondLevelCacheStatistics customerSlcs = sessionFactory()
 				.getStatistics()
 				.getSecondLevelCacheStatistics( Customer.class.getName() );
-		assertEquals( customerSlcs.getPutCount(), 1 );
-		assertEquals( customerSlcs.getElementCountInMemory(), 1 );
-		assertEquals( customerSlcs.getEntries().size(), 1 );
+		assertEquals( 1, customerSlcs.getPutCount() );
+		assertEquals( 1, customerSlcs.getElementCountInMemory() );
+		assertEquals( 1, customerSlcs.getEntries().size() );
 
 		log.infof( "Add contact to customer {0}", customerId );
 		SecondLevelCacheStatistics contactsCollectionSlcs = sessionFactory()
@@ -155,6 +161,7 @@ public class ConcurrentWriteTest extends SingleNodeTest {
 			for ( Future<Void> future : futures ) {
 				future.get();
 			}
+			executor.shutdown();
 			log.info( "All future gets checked" );
 		}
 		catch (Throwable t) {
@@ -269,6 +276,9 @@ public class ConcurrentWriteTest extends SingleNodeTest {
 			}
 
 			Contact contact = contacts.iterator().next();
+			// H2 version 1.3 (without MVCC fails with deadlock on Contacts/Customers modification, therefore,
+			// we have to enforce locking Contacts first
+			s.lock(contact, LockMode.PESSIMISTIC_WRITE);
 			contacts.remove( contact );
 			contact.setCustomer( null );
 

@@ -27,10 +27,3 @@ public interface HibernateProxy extends Serializable {
 	 */
 	public LazyInitializer getHibernateLazyInitializer();
 }
-
-
-
-
-
-
-

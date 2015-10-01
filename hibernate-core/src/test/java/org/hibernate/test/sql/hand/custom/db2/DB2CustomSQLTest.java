@@ -7,8 +7,11 @@
 package org.hibernate.test.sql.hand.custom.db2;
 
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.DerbyDialect;
+
 import org.hibernate.test.sql.hand.custom.CustomStoredProcTestSupport;
 import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.SkipForDialect;
 
 /**
  * Custom SQL tests for DB2
@@ -16,6 +19,7 @@ import org.hibernate.testing.RequiresDialect;
  * @author Max Rydahl Andersen
  */
 @RequiresDialect( DB2Dialect.class )
+@SkipForDialect( DerbyDialect.class )
 public class DB2CustomSQLTest extends CustomStoredProcTestSupport {
 	public String[] getMappings() {
 		return new String[] { "sql/hand/custom/db2/Mappings.hbm.xml" };

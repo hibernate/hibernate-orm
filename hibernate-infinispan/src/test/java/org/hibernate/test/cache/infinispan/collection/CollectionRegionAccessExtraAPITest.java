@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.cache.infinispan.collection;
 
-import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.test.cache.infinispan.AbstractExtraAPITest;
@@ -19,35 +18,9 @@ import static org.mockito.Mockito.mock;
  * @author Galder Zamarreño
  * @since 3.5
  */
-public abstract class CollectionRegionAccessExtraAPITest extends AbstractExtraAPITest<CollectionRegionAccessStrategy> {
+public class CollectionRegionAccessExtraAPITest extends AbstractExtraAPITest<CollectionRegionAccessStrategy> {
 	@Override
 	protected CollectionRegionAccessStrategy getAccessStrategy() {
-		return environment.getCollectionRegion( REGION_NAME, CACHE_DATA_DESCRIPTION).buildAccessStrategy( getAccessType() );
-	}
-
-	public static class Transactional extends CollectionRegionAccessExtraAPITest {
-		@Override
-		protected AccessType getAccessType() {
-			return AccessType.TRANSACTIONAL;
-		}
-
-		@Override
-		protected Class<? extends RegionFactory> getRegionFactoryClass() {
-			return TestInfinispanRegionFactory.Transactional.class;
-		}
-	}
-
-	public static class ReadWrite extends CollectionRegionAccessExtraAPITest {
-		@Override
-		protected AccessType getAccessType() {
-			return AccessType.READ_WRITE;
-		}
-	}
-
-	public static class ReadOnly extends CollectionRegionAccessExtraAPITest {
-		@Override
-		protected AccessType getAccessType() {
-			return AccessType.READ_ONLY;
-		}
+		return environment.getCollectionRegion( REGION_NAME, CACHE_DATA_DESCRIPTION).buildAccessStrategy( accessType );
 	}
 }

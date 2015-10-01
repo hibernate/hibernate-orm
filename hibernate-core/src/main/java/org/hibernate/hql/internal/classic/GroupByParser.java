@@ -47,11 +47,4 @@ public class GroupByParser implements Parser {
 
 	public void end(QueryTranslatorImpl q) throws QueryException {
 	}
-
-
 }
-
-
-
-
-

@@ -26,4 +26,3 @@ public enum NaturalIdMutability {
 	 */
 	NOT_NATURAL_ID
 }
-

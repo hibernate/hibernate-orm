@@ -44,11 +44,4 @@ public final class ParserHelper {
 		}
 		p.end( q );
 	}
-
 }
-
-
-
-
-
-

@@ -149,6 +149,3 @@ public class JpaNamespaceTransformingEventReader extends EventReaderDelegate {
 		return newElementAttributeList;
 	}
 }
-
-
-

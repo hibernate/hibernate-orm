@@ -8,7 +8,6 @@ package org.hibernate.test.cache.infinispan.functional;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -32,11 +31,9 @@ import org.hibernate.testing.TestForIssue;
 import org.infinispan.commons.util.ByRef;
 import org.junit.After;
 import org.junit.Test;
-import org.junit.runners.Parameterized;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
-import static org.hibernate.test.cache.infinispan.util.TxUtil.markRollbackOnly;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -51,7 +48,7 @@ import static org.junit.Assert.fail;
 public class ReadWriteTest extends ReadOnlyTest {
 	@Override
 	public List<Object[]> getParameters() {
-		return Arrays.asList(TRANSACTIONAL, READ_WRITE);
+		return getParameters(true, true, false, true);
 	}
 
 	@Override
@@ -85,14 +82,18 @@ public class ReadWriteTest extends ReadOnlyTest {
 			s.persist( item );
 			s.persist( another );
 		});
+		// The collection has been removed, but we can't add it again immediately using putFromLoad
+		Thread.sleep(1);
 
 		withTxSession(s -> {
 			Item loaded = s.load( Item.class, item.getId() );
 			assertEquals( 1, loaded.getItems().size() );
 		});
 
+		SecondLevelCacheStatistics cStats = stats.getSecondLevelCacheStatistics( Item.class.getName() + ".items" );
+		assertEquals( 1, cStats.getElementCountInMemory() );
+
 		withTxSession(s -> {
-			SecondLevelCacheStatistics cStats = stats.getSecondLevelCacheStatistics( Item.class.getName() + ".items" );
 			Item loadedWithCachedCollection = (Item) s.load( Item.class, item.getId() );
 			stats.logSummary();
 			assertEquals( item.getName(), loadedWithCachedCollection.getName() );
@@ -385,17 +386,19 @@ public class ReadWriteTest extends ReadOnlyTest {
 		SecondLevelCacheStatistics slcs = stats.getSecondLevelCacheStatistics( Item.class.getName() );
 		sessionFactory().getCache().evictEntityRegion( Item.class.getName() );
 
+		Thread.sleep(1);
+
 		assertEquals(0, slcs.getPutCount());
 		assertEquals( 0, slcs.getElementCountInMemory() );
 		assertEquals( 0, slcs.getEntries().size() );
 
-		ByRef<Item> itemRef = new ByRef<>(null);
+		ByRef<Long> idRef = new ByRef<>(null);
 		withTxSession(s -> {
 			Item item = new Item();
 			item.setName( "widget" );
 			item.setDescription( "A really top-quality, full-featured widget." );
 			s.persist( item );
-			itemRef.set(item);
+			idRef.set( item.getId() );
 		});
 
 		assertEquals( 1, slcs.getPutCount() );
@@ -403,7 +406,7 @@ public class ReadWriteTest extends ReadOnlyTest {
 		assertEquals( 1, slcs.getEntries().size() );
 
 		withTxSession(s -> {
-			Item item = s.get( Item.class, itemRef.get().getId() );
+			Item item = s.get( Item.class, idRef.get() );
 			assertEquals( slcs.getHitCount(), 1 );
 			assertEquals( slcs.getMissCount(), 0 );
 			item.setDescription( "A bog standard item" );
@@ -411,12 +414,15 @@ public class ReadWriteTest extends ReadOnlyTest {
 
 		assertEquals( slcs.getPutCount(), 2 );
 
-		CacheEntry entry = (CacheEntry) slcs.getEntries().get( itemRef.get().getId() );
+		CacheEntry entry = (CacheEntry) slcs.getEntries().get( idRef.get() );
 		Serializable[] ser = entry.getDisassembledState();
 		assertTrue( ser[0].equals( "widget" ) );
 		assertTrue( ser[1].equals( "A bog standard item" ) );
 
-		withTxSession(s -> s.delete(itemRef.get()));
+		withTxSession(s -> {
+			Item item = s.load(Item.class, idRef.get());
+			s.delete(item);
+		});
 	}
 
 	@Test

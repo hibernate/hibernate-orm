@@ -74,7 +74,7 @@ public abstract class DualNodeTest extends AbstractFunctionalTest {
 
 		settings.put( NODE_ID_PROP, LOCAL );
 		settings.put( NODE_ID_FIELD, LOCAL );
-		settings.put( REGION_FACTORY_DELEGATE, regionFactoryClass.getName() );
+		settings.put( REGION_FACTORY_DELEGATE, getRegionFactoryClass() );
 	}
 
 	@Override

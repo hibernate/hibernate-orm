@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.cache.infinispan.functional.cluster;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -40,7 +39,7 @@ public class SessionRefreshTest extends DualNodeTest {
 
 	@Override
 	public List<Object[]> getParameters() {
-		return Arrays.asList(TRANSACTIONAL, READ_WRITE);
+		return getParameters(true, true, false, true);
 	}
 
 	@Override

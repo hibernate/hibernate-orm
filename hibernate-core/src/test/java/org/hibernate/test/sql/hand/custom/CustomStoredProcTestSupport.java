@@ -6,6 +6,8 @@
  */
 package org.hibernate.test.sql.hand.custom;
 
+import java.sql.CallableStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -15,6 +17,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.procedure.ProcedureCall;
+
 import org.hibernate.test.sql.hand.Employment;
 import org.hibernate.test.sql.hand.Organization;
 import org.hibernate.test.sql.hand.Person;
@@ -88,6 +92,4 @@ public abstract class CustomStoredProcTestSupport extends CustomSQLTestSupport {
 		t.commit();
 		s.close();
 	}
-
-
 }

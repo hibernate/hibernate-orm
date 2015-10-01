@@ -8,7 +8,6 @@ package org.hibernate.test.cache.infinispan.collection;
 
 import java.util.Properties;
 
-import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CollectionRegion;
@@ -19,24 +18,20 @@ import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.test.cache.infinispan.AbstractEntityCollectionRegionTest;
 import org.infinispan.AdvancedCache;
 
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 
 /**
  * @author Galder Zamarreño
  */
 public class CollectionRegionImplTest extends AbstractEntityCollectionRegionTest {
+	protected static final String CACHE_NAME = "test";
+
 	@Override
 	protected void supportedAccessTypeTest(RegionFactory regionFactory, Properties properties) {
-		CollectionRegion region = regionFactory.buildCollectionRegion("test", properties, MUTABLE_NON_VERSIONED);
-		assertNotNull(region.buildAccessStrategy(AccessType.READ_ONLY));
-		assertNotNull(region.buildAccessStrategy(AccessType.READ_WRITE));
-		assertNotNull(region.buildAccessStrategy(AccessType.TRANSACTIONAL));
-		try {
-			region.buildAccessStrategy(AccessType.NONSTRICT_READ_WRITE);
-			fail("Incorrectly got NONSTRICT_READ_WRITE");
-		} catch (CacheException good) {
+		for (AccessType accessType : AccessType.values()) {
+			CollectionRegion region = regionFactory.buildCollectionRegion(CACHE_NAME, properties, MUTABLE_NON_VERSIONED);
+			assertNotNull(region.buildAccessStrategy(accessType));
+			((InfinispanRegionFactory) regionFactory).getCacheManager().removeCache(CACHE_NAME);
 		}
 	}
 

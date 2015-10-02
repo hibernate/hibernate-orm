@@ -6,12 +6,24 @@
  */
 package org.hibernate.tool.schema.internal;
 
+import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.tool.schema.spi.Target;
 
 /**
  * @author Steve Ebersole
  */
 public class TargetStdoutImpl implements Target {
+	
+	private Formatter formatter;
+	private String delimiter;
+	
+	public TargetStdoutImpl() {}
+	
+	public TargetStdoutImpl(Formatter formatter, String delimiter) {
+		this.formatter = formatter;
+		this.delimiter = delimiter;
+	}
+	
 	@Override
 	public boolean acceptsImportScriptActions() {
 		return true;
@@ -23,6 +35,12 @@ public class TargetStdoutImpl implements Target {
 
 	@Override
 	public void accept(String action) {
+		if (formatter != null) {
+			action = formatter.format(action);
+		}
+		if (delimiter != null) {
+			action += delimiter;
+		}
 		System.out.println( action );
 	}
 

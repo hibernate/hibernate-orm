@@ -15,8 +15,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-import javax.naming.NamingException;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -39,7 +37,6 @@ import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.IntegerType;
 import org.hibernate.type.LongType;
@@ -601,12 +598,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			allowLoadOutsideTransaction = session.getFactory().getSessionFactoryOptions().isInitializeLazyStateOutsideTransactionsEnabled();
 
 			if ( allowLoadOutsideTransaction && sessionFactoryUuid == null ) {
-				try {
-					sessionFactoryUuid = (String) session.getFactory().getReference().get( "uuid" ).getContent();
-				}
-				catch (NamingException e) {
-					//not much we can do if this fails...
-				}
+				sessionFactoryUuid = session.getFactory().getUuid();
 			}
 		}
 	}

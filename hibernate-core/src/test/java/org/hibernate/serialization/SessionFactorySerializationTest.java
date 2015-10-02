@@ -15,6 +15,7 @@ import org.junit.Test;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -39,9 +40,7 @@ public class SessionFactorySerializationTest extends BaseUnitTestCase {
 
 		// we need to do some tricking here so that Hibernate thinks the deserialization happens in a
 		// different VM
-		Reference reference = factory.getReference();
-		StringRefAddr refAddr = (StringRefAddr) reference.get( "uuid" );
-		String uuid = (String) refAddr.getContent();
+		String uuid = ( (SessionFactoryImplementor) factory ).getUuid();
 		// deregister under this uuid...
 		SessionFactoryRegistry.INSTANCE.removeSessionFactory( uuid, NAME, false, null );
 		// and then register under a different uuid...
@@ -66,9 +65,7 @@ public class SessionFactorySerializationTest extends BaseUnitTestCase {
 
 		// we need to do some tricking here so that Hibernate thinks the deserialization happens in a
 		// different VM
-		Reference reference = factory.getReference();
-		StringRefAddr refAddr = (StringRefAddr) reference.get( "uuid" );
-		String uuid = (String) refAddr.getContent();
+		String uuid = ( (SessionFactoryImplementor) factory ).getUuid();
 		// deregister under this uuid...
 		SessionFactoryRegistry.INSTANCE.removeSessionFactory( uuid, null, false, null );
 		// and then register under a different uuid...

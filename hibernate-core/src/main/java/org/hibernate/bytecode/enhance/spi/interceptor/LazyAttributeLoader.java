@@ -10,7 +10,6 @@ package org.hibernate.bytecode.enhance.spi.interceptor;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Set;
-import javax.naming.NamingException;
 
 import org.hibernate.LockMode;
 import org.hibernate.bytecode.enhance.internal.tracker.SimpleFieldTracker;
@@ -51,12 +50,7 @@ public class LazyAttributeLoader implements PersistentAttributeInterceptor, Cons
 
 		this.allowLoadOutsideTransaction = session.getFactory().getSessionFactoryOptions().isInitializeLazyStateOutsideTransactionsEnabled();
 		if ( this.allowLoadOutsideTransaction ) {
-			try {
-				this.sessionFactoryUuid = (String) session.getFactory().getReference().get( "uuid" ).getContent();
-			}
-			catch (NamingException e) {
-				log.debug( "Unable to determine SF UUID in preparation for `allowLoadOutsideTransaction`" );
-			}
+			this.sessionFactoryUuid = session.getFactory().getUuid();
 		}
 	}
 

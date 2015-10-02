@@ -27,6 +27,8 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.internal.FormatStyle;
+import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -55,6 +57,8 @@ public class SchemaUpdate {
 	private final JdbcConnectionAccess jdbcConnectionAccess;
 	private final List<Exception> exceptions = new ArrayList<Exception>();
 	private String outputFile;
+	private Formatter formatter;
+	private String delimiter;
 
 	/**
 	 * Creates a SchemaUpdate object.  This form is intended for use from tooling
@@ -86,6 +90,7 @@ public class SchemaUpdate {
 		this.metadata = metadata;
 		this.serviceRegistry = serviceRegistry;
 		this.jdbcConnectionAccess = serviceRegistry.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess();
+		this.formatter = FormatStyle.DDL.getFormatter();
 	}
 
 	/**
@@ -133,7 +138,7 @@ public class SchemaUpdate {
 		List<org.hibernate.tool.schema.spi.Target> toolTargets = new ArrayList<org.hibernate.tool.schema.spi.Target>();
 
 		if ( target.doScript() ) {
-			toolTargets.add( new TargetStdoutImpl() );
+			toolTargets.add( new TargetStdoutImpl( formatter, delimiter ) );
 		}
 
 		if ( target.doExport() ) {
@@ -142,7 +147,7 @@ public class SchemaUpdate {
 
 		if ( outputFile != null ) {
 			LOG.writingGeneratedSchemaToFile( outputFile );
-			toolTargets.add( new TargetFileImpl( outputFile ) );
+			toolTargets.add( new TargetFileImpl( outputFile, formatter, delimiter ) );
 		}
 
 		return toolTargets;
@@ -161,6 +166,7 @@ public class SchemaUpdate {
 	}
 
 	public void setFormat(boolean format) {
+		formatter = (format ? FormatStyle.DDL : FormatStyle.NONE).getFormatter();
 	}
 
 	public void setOutputFile(String outputFile) {
@@ -168,6 +174,7 @@ public class SchemaUpdate {
 	}
 
 	public void setDelimiter(String delimiter) {
+		this.delimiter = delimiter;
 	}
 
 	public static void main(String[] args) {

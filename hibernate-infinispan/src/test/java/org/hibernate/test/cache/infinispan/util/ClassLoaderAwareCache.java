@@ -26,7 +26,6 @@ import org.infinispan.interceptors.base.CommandInterceptor;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryActivated;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryCreated;
-import org.infinispan.notifications.cachelistener.annotation.CacheEntryEvicted;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryInvalidated;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryLoaded;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryModified;
@@ -95,7 +94,6 @@ public class ClassLoaderAwareCache<K, V> extends AbstractDelegatingAdvancedCache
    static {
       events.put(CacheEntryActivated.class, Event.Type.CACHE_ENTRY_ACTIVATED);
       events.put(CacheEntryCreated.class, Event.Type.CACHE_ENTRY_CREATED);
-      events.put(CacheEntryEvicted.class, Event.Type.CACHE_ENTRY_EVICTED);
       events.put(CacheEntryInvalidated.class, Event.Type.CACHE_ENTRY_INVALIDATED);
       events.put(CacheEntryLoaded.class, Event.Type.CACHE_ENTRY_LOADED);
       events.put(CacheEntryModified.class, Event.Type.CACHE_ENTRY_MODIFIED);
@@ -130,7 +128,6 @@ public class ClassLoaderAwareCache<K, V> extends AbstractDelegatingAdvancedCache
 
       @CacheEntryActivated
       @CacheEntryCreated
-      @CacheEntryEvicted
       @CacheEntryInvalidated
       @CacheEntryLoaded
       @CacheEntryModified

@@ -7,6 +7,7 @@
 package org.hibernate.cache.infinispan.util;
 
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
+import org.infinispan.commands.CommandInvocationId;
 import org.infinispan.commands.ReplicableCommand;
 import org.infinispan.commands.module.ModuleCommandInitializer;
 import org.infinispan.configuration.cache.Configuration;
@@ -66,7 +67,7 @@ public class CacheCommandInitializer implements ModuleCommandInitializer {
 	}
 
 	public BeginInvalidationCommand buildBeginInvalidationCommand(Set<Flag> flags, Object[] keys, Object sessionTransactionId) {
-		return new BeginInvalidationCommand(notifier, flags, keys, clusteringDependentLogic.getAddress(), sessionTransactionId);
+		return new BeginInvalidationCommand(notifier, flags, CommandInvocationId.generateId(clusteringDependentLogic.getAddress()), keys, sessionTransactionId);
 	}
 
 	public EndInvalidationCommand buildEndInvalidationCommand(String cacheName, Object[] keys, Object sessionTransactionId) {

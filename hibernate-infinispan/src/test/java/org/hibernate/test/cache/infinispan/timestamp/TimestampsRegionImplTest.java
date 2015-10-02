@@ -30,7 +30,6 @@ import org.infinispan.context.Flag;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryActivated;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryCreated;
-import org.infinispan.notifications.cachelistener.annotation.CacheEntryEvicted;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryInvalidated;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryLoaded;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryModified;
@@ -132,7 +131,6 @@ public class TimestampsRegionImplTest extends AbstractGeneralDataRegionTest {
 
 			@CacheEntryActivated
 			@CacheEntryCreated
-			@CacheEntryEvicted
 			@CacheEntryInvalidated
 			@CacheEntryLoaded
 			@CacheEntryModified

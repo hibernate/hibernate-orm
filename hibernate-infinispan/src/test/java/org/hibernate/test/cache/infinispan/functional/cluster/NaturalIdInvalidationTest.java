@@ -122,7 +122,7 @@ public class NaturalIdInvalidationTest extends DualNodeTest {
 			deleteCitizenWithCriteria(remoteFactory);
 			sleep(250);
 
-			Set localKeys = Caches.keys(localNaturalIdCache.getAdvancedCache()).toSet();
+			Set localKeys = localNaturalIdCache.keySet();
 			assertEquals(1, localKeys.size());
 			// Only key left is the one for the citizen *not* in France
 			localKeys.toString().contains("000");

@@ -16,7 +16,9 @@ import org.hibernate.cache.spi.RegionFactory;
 
 import org.hibernate.engine.spi.SessionImplementor;
 import org.infinispan.AdvancedCache;
+import org.infinispan.CacheSet;
 import org.infinispan.commons.util.CloseableIterable;
+import org.infinispan.commons.util.CloseableIterator;
 import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.context.Flag;
 import org.infinispan.notifications.Listener;
@@ -109,14 +111,14 @@ public class ClusteredTimestampsRegionImpl extends TimestampsRegionImpl {
 	 * Brings all data from the distributed cache into our local cache.
 	 */
 	private void populateLocalCache() {
-		CloseableIterable<Object> iterable = Caches.keys(cache);
+		CloseableIterator iterator = cache.keySet().iterator();
 		try {
-			for (Object key : iterable) {
-				get(null, key);
+			while (iterator.hasNext()) {
+				get(null, iterator.next());
 			}
 		}
 		finally {
-			iterable.close();
+			iterator.close();
 		}
 	}
 

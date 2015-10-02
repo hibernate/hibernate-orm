@@ -13,6 +13,7 @@ import org.hibernate.test.cache.infinispan.tm.XaConnectionProvider;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.infinispan.AdvancedCache;
 import org.infinispan.commons.util.CloseableIterable;
+import org.infinispan.commons.util.CloseableIterator;
 import org.infinispan.context.Flag;
 import org.junit.Test;
 
@@ -101,8 +102,9 @@ public class MultiTenancyTest extends SingleNodeTest {
 //        }
 		  EntityRegionImpl region = (EntityRegionImpl) sessionFactory().getSecondLevelCacheRegion(Item.class.getName());
 		  AdvancedCache localCache = region.getCache().withFlags(Flag.CACHE_MODE_LOCAL);
-		  CloseableIterable keys = Caches.keys(localCache);
 		  assertEquals(1, localCache.size());
-		  assertEquals("OldCacheKeyImplementation", keys.iterator().next().getClass().getSimpleName());
+		  try (CloseableIterator iterator = localCache.keySet().iterator()) {
+			  assertEquals("OldCacheKeyImplementation", iterator.next().getClass().getSimpleName());
+		  }
 	 }
 }

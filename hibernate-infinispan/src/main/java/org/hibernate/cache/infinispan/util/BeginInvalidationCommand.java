@@ -7,6 +7,7 @@
 package org.hibernate.cache.infinispan.util;
 
 import org.hibernate.internal.util.compare.EqualsHelper;
+import org.infinispan.commands.CommandInvocationId;
 import org.infinispan.commands.write.AbstractDataWriteCommand;
 import org.infinispan.commands.write.InvalidateCommand;
 import org.infinispan.context.Flag;
@@ -14,7 +15,6 @@ import org.infinispan.notifications.cachelistener.CacheNotifier;
 import org.infinispan.remoting.transport.Address;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Set;
@@ -23,56 +23,14 @@ import java.util.Set;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class BeginInvalidationCommand extends InvalidateCommand {
-	// this is a hack to keep compatibility with both Infinispan 7 and 8
-	// TODO: remove this when rebasing on Infinispan 8
-	private static final Field commandInvocationIdField;
-	private static final Method generateIdMethod;
-
-	static {
-		Field commandInvocationId = null;
-		Method generateId = null;
-		try {
-			commandInvocationId = AbstractDataWriteCommand.class.getDeclaredField("commandInvocationId");
-			commandInvocationId.setAccessible(true);
-			Class commandInvocationIdClass = Class.forName("org.infinispan.commands.CommandInvocationId");
-			generateId = commandInvocationIdClass.getMethod("generateId", Address.class);
-		}
-		catch (NoSuchFieldException e) {
-		}
-		catch (ClassNotFoundException e) {
-			// already found field and not the class?
-			throw new IllegalStateException(e);
-		}
-		catch (NoSuchMethodException e) {
-			// already found field and not the method?
-			throw new IllegalStateException(e);
-		}
-		commandInvocationIdField = commandInvocationId;
-		generateIdMethod = generateId;
-	}
-
 	private Object sessionTransactionId;
 
 	public BeginInvalidationCommand() {
 	}
 
-	public BeginInvalidationCommand(CacheNotifier notifier, Set<Flag> flags, Object[] keys, Address address, Object sessionTransactionId) {
-		super();
-		this.notifier = notifier;
-		this.flags = flags;
-		this.keys = keys;
+	public BeginInvalidationCommand(CacheNotifier notifier, Set<Flag> flags, CommandInvocationId commandInvocationId, Object[] keys, Object sessionTransactionId) {
+		super(notifier, flags, commandInvocationId, keys);
 		this.sessionTransactionId = sessionTransactionId;
-		if (commandInvocationIdField != null) {
-			try {
-				commandInvocationIdField.set(this, generateIdMethod.invoke(null, address));
-			}
-			catch (IllegalAccessException e) {
-				throw new IllegalStateException(e);
-			}
-			catch (InvocationTargetException e) {
-				throw new IllegalStateException(e);
-			}
-		}
 	}
 
 	public Object getSessionTransactionId() {
@@ -81,15 +39,6 @@ public class BeginInvalidationCommand extends InvalidateCommand {
 
 	@Override
 	public Object[] getParameters() {
-		Object commandInvocationId = null;
-		if (commandInvocationIdField != null) {
-			try {
-				commandInvocationId = commandInvocationIdField.get(this);
-			}
-			catch (IllegalAccessException e) {
-				throw new IllegalStateException(e);
-			}
-		}
 		if (keys == null || keys.length == 0) {
 			return new Object[]{flags, sessionTransactionId, commandInvocationId, 0};
 		}
@@ -112,15 +61,7 @@ public class BeginInvalidationCommand extends InvalidateCommand {
 		}
 		flags = (Set<Flag>) args[0];
 		sessionTransactionId = args[1];
-		Object commandInvocationId = args[2];
-		if (commandInvocationIdField != null) {
-			try {
-				commandInvocationIdField.set(this, commandInvocationId);
-			}
-			catch (IllegalAccessException e) {
-				throw new IllegalStateException(e);
-			}
-		}
+		commandInvocationId = (CommandInvocationId) args[2];
 		int size = (Integer) args[3];
 		keys = new Object[size];
 		if (size == 1) {

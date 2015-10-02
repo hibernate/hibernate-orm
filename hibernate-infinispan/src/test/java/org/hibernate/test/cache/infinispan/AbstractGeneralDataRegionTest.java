@@ -170,10 +170,10 @@ public abstract class AbstractGeneralDataRegionTest extends AbstractRegionImplTe
 			SessionImplementor remoteSession = (SessionImplementor) sessionFactories.get(1).openSession();
 
 			try {
-				Set localKeys = Caches.keys(localCache).toSet();
+				Set localKeys = localCache.keySet();
 				assertEquals( "No valid children in " + localKeys, 0, localKeys.size() );
 
-				Set remoteKeys = Caches.keys(remoteCache).toSet();
+				Set remoteKeys = remoteCache.keySet();
 				assertEquals( "No valid children in " + remoteKeys, 0, remoteKeys.size() );
 
 				assertNull( "local is clean", localRegion.get(null, KEY ) );
@@ -197,14 +197,14 @@ public abstract class AbstractGeneralDataRegionTest extends AbstractRegionImplTe
 				sleep( 250 );
 				// This should re-establish the region root node in the optimistic case
 				assertNull( localRegion.get(null, KEY ) );
-				localKeys = Caches.keys(localCache).toSet();
+				localKeys = localCache.keySet();
 				assertEquals( "No valid children in " + localKeys, 0, localKeys.size() );
 
 				// Re-establishing the region root on the local node doesn't
 				// propagate it to other nodes. Do a get on the remote node to re-establish
 				// This only adds a node in the case of optimistic locking
 				assertEquals( null, remoteRegion.get(null, KEY ) );
-				remoteKeys = Caches.keys(remoteCache).toSet();
+				remoteKeys = remoteCache.keySet();
 				assertEquals( "No valid children in " + remoteKeys, 0, remoteKeys.size() );
 
 				assertEquals( "local is clean", null, localRegion.get(null, KEY ) );

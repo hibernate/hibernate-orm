@@ -278,7 +278,7 @@ public class Caches {
 
 
 	public static void removeAll(AdvancedCache cache) {
-		CloseableIterator it = keys(cache).iterator();
+		CloseableIterator it = cache.keySet().iterator();
 		try {
 			while (it.hasNext()) {
 				// Cannot use it.next(); it.remove() due to ISPN-5653
@@ -301,24 +301,12 @@ public class Caches {
 		Map<K, V> toMap();
 	}
 
-	public static <K, V> CollectableCloseableIterable<K> keys(AdvancedCache<K, V> cache) {
-		return keys(cache, (KeyValueFilter<K, V>) AcceptAllKeyValueFilter.getInstance());
-	}
-
 	public static <K, V> CollectableCloseableIterable<K> keys(AdvancedCache<K, V> cache, KeyValueFilter<K, V> filter) {
-		if (cache.getCacheConfiguration().transaction().transactionMode().isTransactional()) {
-			// Dummy read to enlist the LocalTransaction as workaround for ISPN-5676
-			cache.containsKey(false);
-		}
 		// HHH-10023: we can't use keySet()
 		final CloseableIterable<CacheEntry<K, Void>> entryIterable = cache
 				.filterEntries( filter )
 				.converter( NullValueConverter.getInstance() );
 		return new CollectableCloseableIterableImpl<K, Void, K>(entryIterable, Selector.KEY);
-	}
-
-	public static <K, V> CollectableCloseableIterable<V> values(AdvancedCache<K, V> cache) {
-		return values(cache, (KeyValueFilter<K, V>) AcceptAllKeyValueFilter.getInstance());
 	}
 
 	public static <K, V> CollectableCloseableIterable<V> values(AdvancedCache<K, V> cache, KeyValueFilter<K, V> filter) {
@@ -340,7 +328,6 @@ public class Caches {
 		final CloseableIterable<CacheEntry<K, T>> entryIterable = cache.filterEntries(filter).converter(converter);
 		return new CollectableCloseableIterableImpl<K, T, T>(entryIterable, Selector.VALUE);
 	}
-
 
 	public static <K, V> MapCollectableCloseableIterable<K, V> entrySet(AdvancedCache<K, V> cache) {
 		return entrySet(cache, (KeyValueFilter<K, V>) AcceptAllKeyValueFilter.getInstance());

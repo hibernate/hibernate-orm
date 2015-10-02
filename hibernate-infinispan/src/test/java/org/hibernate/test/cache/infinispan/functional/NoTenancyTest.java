@@ -5,6 +5,7 @@ import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.test.cache.infinispan.functional.entities.Item;
 import org.infinispan.AdvancedCache;
 import org.infinispan.commons.util.CloseableIterable;
+import org.infinispan.commons.util.CloseableIterator;
 import org.infinispan.context.Flag;
 import org.junit.Test;
 
@@ -38,8 +39,9 @@ public class NoTenancyTest extends SingleNodeTest {
 		  }
 		  EntityRegionImpl region = (EntityRegionImpl) sessionFactory().getSecondLevelCacheRegion(Item.class.getName());
 		  AdvancedCache localCache = region.getCache().withFlags(Flag.CACHE_MODE_LOCAL);
-		  CloseableIterable keys = Caches.keys(localCache);
 		  assertEquals(1, localCache.size());
-		  assertEquals(sessionFactory().getClassMetadata(Item.class).getIdentifierType().getReturnedClass(), keys.iterator().next().getClass());
+		  try (CloseableIterator iterator = localCache.keySet().iterator()) {
+			  assertEquals(sessionFactory().getClassMetadata(Item.class).getIdentifierType().getReturnedClass(), iterator.next().getClass());
+		  }
 	 }
 }

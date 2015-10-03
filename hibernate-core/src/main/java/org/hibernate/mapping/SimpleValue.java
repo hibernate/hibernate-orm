@@ -6,10 +6,13 @@
  */
 package org.hibernate.mapping;
 
+import java.io.Serializable;
 import java.lang.annotation.Annotation;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
 import javax.persistence.AttributeConverter;
 
@@ -34,11 +37,13 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.converter.AttributeConverterSqlTypeDescriptorAdapter;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptorRegistry;
 import org.hibernate.type.descriptor.sql.JdbcTypeJavaClassMappings;
+import org.hibernate.type.descriptor.sql.LobTypeMappings;
 import org.hibernate.type.descriptor.sql.NationalizedTypeMappings;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorRegistry;
@@ -60,6 +65,7 @@ public class SimpleValue implements KeyValue {
 	private String typeName;
 	private Properties typeParameters;
 	private boolean isNationalized;
+	private boolean isLob;
 
 	private Properties identifierGeneratorProperties;
 	private String identifierGeneratorStrategy = DEFAULT_ID_GEN_STRATEGY;
@@ -104,11 +110,11 @@ public class SimpleValue implements KeyValue {
 			columns.add(column);
 		}
 		column.setValue(this);
-		column.setTypeIndex( columns.size()-1 );
+		column.setTypeIndex( columns.size() - 1 );
 	}
 	
 	public void addFormula(Formula formula) {
-		columns.add(formula);
+		columns.add( formula );
 	}
 
 	@Override
@@ -166,6 +172,14 @@ public class SimpleValue implements KeyValue {
 
 	public boolean isNationalized() {
 		return isNationalized;
+	}
+
+	public void makeLob() {
+		this.isLob = true;
+	}
+
+	public boolean isLob() {
+		return isLob;
 	}
 
 	public void setTable(Table table) {
@@ -478,6 +492,26 @@ public class SimpleValue implements KeyValue {
 		// 		of ResultSets).  See JdbcTypeJavaClassMappings for details.  Again, given example, this should return
 		// 		VARCHAR/CHAR
 		int jdbcTypeCode = JdbcTypeJavaClassMappings.INSTANCE.determineJdbcTypeCodeForJavaClass( databaseColumnJavaType );
+		if ( isLob() ) {
+			if ( LobTypeMappings.INSTANCE.hasCorrespondingLobCode( jdbcTypeCode ) ) {
+				jdbcTypeCode = LobTypeMappings.INSTANCE.getCorrespondingLobCode( jdbcTypeCode );
+			}
+			else {
+				if ( Serializable.class.isAssignableFrom( entityAttributeJavaType ) ) {
+					jdbcTypeCode = Types.BLOB;
+				}
+				else {
+					throw new IllegalArgumentException(
+							String.format(
+									Locale.ROOT,
+									"JDBC type-code [%s (%s)] not known to have a corresponding LOB equivalent, and Java type is not Serializable (to use BLOB)",
+									jdbcTypeCode,
+									JdbcTypeNameMapper.getTypeName( jdbcTypeCode )
+							)
+					);
+				}
+			}
+		}
 		if ( isNationalized() ) {
 			jdbcTypeCode = NationalizedTypeMappings.INSTANCE.getCorrespondingNationalizedCode( jdbcTypeCode );
 		}

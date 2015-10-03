@@ -9,6 +9,7 @@ package org.hibernate.cfg.annotations;
 import java.io.Serializable;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Properties;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
@@ -73,6 +74,7 @@ public class SimpleValueBinder {
 	private String defaultType = "";
 	private Properties typeParameters = new Properties();
 	private boolean isNationalized;
+	private boolean isLob;
 
 	private Table table;
 	private SimpleValue simpleValue;
@@ -134,8 +136,9 @@ public class SimpleValueBinder {
 			// we cannot guess anything
 			return;
 		}
+
 		XClass returnedClassOrElement = returnedClass;
-                boolean isArray = false;
+		boolean isArray = false;
 		if ( property.isArray() ) {
 			returnedClassOrElement = property.getElementClass();
 			isArray = true;
@@ -203,6 +206,7 @@ public class SimpleValueBinder {
 			explicitType = type;
 		}
 		else if ( !key && property.isAnnotationPresent( Lob.class ) ) {
+			isLob = true;
 			if ( buildingContext.getBuildingOptions().getReflectionManager().equals( returnedClassOrElement, java.sql.Clob.class ) ) {
 				type = isNationalized
 						? StandardBasicTypes.NCLOB.getName()
@@ -247,7 +251,7 @@ public class SimpleValueBinder {
 			else {
 				type = "blob";
 			}
-			explicitType = type;
+			defaultType = type;
 		}
 		else if ( ( !key && property.isAnnotationPresent( Enumerated.class ) )
 				|| ( key && property.isAnnotationPresent( MapKeyEnumerated.class ) ) ) {
@@ -389,6 +393,9 @@ public class SimpleValueBinder {
 		if ( isNationalized ) {
 			simpleValue.makeNationalized();
 		}
+		if ( isLob ) {
+			simpleValue.makeLob();
+		}
 
 		linkWithValue();
 
@@ -474,7 +481,20 @@ public class SimpleValueBinder {
 		}
 
 		if ( persistentClassName != null || attributeConverterDefinition != null ) {
-			simpleValue.setTypeUsingReflection( persistentClassName, propertyName );
+			try {
+				simpleValue.setTypeUsingReflection( persistentClassName, propertyName );
+			}
+			catch (Exception e) {
+				throw new MappingException(
+						String.format(
+								Locale.ROOT,
+								"Unable to determine basic type mapping via reflection [%s -> %s]",
+								persistentClassName,
+								propertyName
+						),
+						e
+				);
+			}
 		}
 
 		if ( !simpleValue.isTypeSpecified() && isVersion() ) {

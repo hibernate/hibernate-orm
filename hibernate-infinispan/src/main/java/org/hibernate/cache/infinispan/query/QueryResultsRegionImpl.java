@@ -74,6 +74,12 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
 		if (transactional) {
 			log.warn("Use non-transactional query caches for best performance!");
 		}
+
+	}
+
+	@Override
+	protected boolean isRegionAccessStrategyEnabled() {
+		return false;
 	}
 
 	@Override

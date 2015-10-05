@@ -64,7 +64,7 @@ public abstract class BaseTransactionalDataRegion
 	private Strategy strategy;
 
 	protected enum Strategy {
-		VALIDATION, TOMBSTONES, VERSIONED_ENTRIES
+		NONE, VALIDATION, TOMBSTONES, VERSIONED_ENTRIES
 	}
 
 	/**
@@ -89,6 +89,16 @@ public abstract class BaseTransactionalDataRegion
 				&& !configuration.transaction().autoCommit();
 		// TODO: make these timeouts configurable
 		tombstoneExpiration = InfinispanRegionFactory.PENDING_PUTS_CACHE_CONFIGURATION.expiration().maxIdle();
+		if (!isRegionAccessStrategyEnabled()) {
+			strategy = Strategy.NONE;
+		}
+	}
+
+	/**
+	 * @return True if this region is accessed through RegionAccessStrategy, false if it is accessed directly.
+    */
+	protected boolean isRegionAccessStrategyEnabled() {
+		return true;
 	}
 
 	@Override
@@ -182,9 +192,10 @@ public abstract class BaseTransactionalDataRegion
 	@Override
 	protected void runInvalidation(boolean inTransaction) {
 		if (strategy == null) {
-			return;
+			throw new IllegalStateException("Strategy was not set");
 		}
 		switch (strategy) {
+			case NONE:
 			case VALIDATION:
 				super.runInvalidation(inTransaction);
 				return;
@@ -247,9 +258,10 @@ public abstract class BaseTransactionalDataRegion
 	@Override
 	public Map toMap() {
 		if (strategy == null) {
-			return Collections.EMPTY_MAP;
+			throw new IllegalStateException("Strategy was not set");
 		}
 		switch (strategy) {
+			case NONE:
 			case VALIDATION:
 				return super.toMap();
 			case TOMBSTONES:

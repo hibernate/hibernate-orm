@@ -31,6 +31,7 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.annotations.common.util.StandardClassLoaderDelegateImpl;
 import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.spi.AttributeConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AttributeConverterDefinition;
@@ -86,7 +87,7 @@ public class SimpleValueBinder {
 	private XProperty xproperty;
 	private AccessType accessType;
 
-	private AttributeConverterDefinition attributeConverterDefinition;
+	private AttributeConverterDescriptor attributeConverterDescriptor;
 
 	public void setReferencedEntityName(String referencedEntityName) {
 		this.referencedEntityName = referencedEntityName;
@@ -131,7 +132,7 @@ public class SimpleValueBinder {
 
 	//TODO execute it lazily to be order safe
 
-	public void setType(XProperty property, XClass returnedClass, String declaringClassName, AttributeConverterDefinition attributeConverterDefinition) {
+	public void setType(XProperty property, XClass returnedClass, String declaringClassName, AttributeConverterDescriptor attributeConverterDescriptor) {
 		if ( returnedClass == null ) {
 			// we cannot guess anything
 			return;
@@ -302,11 +303,11 @@ public class SimpleValueBinder {
 		defaultType = BinderHelper.isEmptyAnnotationValue( type ) ? returnedClassName : type;
 		this.typeParameters = typeParameters;
 
-		applyAttributeConverter( property, attributeConverterDefinition );
+		applyAttributeConverter( property, attributeConverterDescriptor );
 	}
 
-	private void applyAttributeConverter(XProperty property, AttributeConverterDefinition attributeConverterDefinition) {
-		if ( attributeConverterDefinition == null ) {
+	private void applyAttributeConverter(XProperty property, AttributeConverterDescriptor attributeConverterDescriptor) {
+		if ( attributeConverterDescriptor == null ) {
 			return;
 		}
 
@@ -337,7 +338,7 @@ public class SimpleValueBinder {
 			return;
 		}
 
-		this.attributeConverterDefinition = attributeConverterDefinition;
+		this.attributeConverterDescriptor = attributeConverterDescriptor;
 	}
 
 	private boolean isAssociation() {
@@ -429,7 +430,7 @@ public class SimpleValueBinder {
 	public void fillSimpleValue() {
 		LOG.debugf( "Starting fillSimpleValue for %s", propertyName );
                 
-		if ( attributeConverterDefinition != null ) {
+		if ( attributeConverterDescriptor != null ) {
 			if ( ! BinderHelper.isEmptyAnnotationValue( explicitType ) ) {
 				throw new AnnotationException(
 						String.format(
@@ -442,11 +443,11 @@ public class SimpleValueBinder {
 			}
 			LOG.debugf(
 					"Applying JPA AttributeConverter [%s] to [%s:%s]",
-					attributeConverterDefinition,
+					attributeConverterDescriptor,
 					persistentClassName,
 					propertyName
 			);
-			simpleValue.setJpaAttributeConverterDefinition( attributeConverterDefinition );
+			simpleValue.setJpaAttributeConverterDescriptor( attributeConverterDescriptor );
 		}
 		else {
 			String type;
@@ -480,7 +481,7 @@ public class SimpleValueBinder {
 			simpleValue.setTypeName( type );
 		}
 
-		if ( persistentClassName != null || attributeConverterDefinition != null ) {
+		if ( persistentClassName != null || attributeConverterDescriptor != null ) {
 			try {
 				simpleValue.setTypeUsingReflection( persistentClassName, propertyName );
 			}

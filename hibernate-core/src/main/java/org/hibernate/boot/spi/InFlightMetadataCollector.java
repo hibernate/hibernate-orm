@@ -17,6 +17,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.naming.Identifier;
@@ -213,7 +214,9 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 
 	void addAttributeConverter(AttributeConverterDefinition converter);
 	void addAttributeConverter(Class<? extends AttributeConverter> converterClass);
-	java.util.Collection<AttributeConverterDefinition> getAttributeConverters();
+
+	AttributeConverterAutoApplyHandler getAttributeConverterAutoApplyHandler();
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// second passes
@@ -274,6 +277,8 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 
 	NaturalIdUniqueKeyBinder locateNaturalIdUniqueKeyBinder(String entityName);
 	void registerNaturalIdUniqueKeyBinder(String entityName, NaturalIdUniqueKeyBinder ukBinder);
+
+	ClassmateContext getClassmateContext();
 
 	interface DelayedPropertyReferenceHandler extends Serializable {
 		void process(InFlightMetadataCollector metadataCollector);

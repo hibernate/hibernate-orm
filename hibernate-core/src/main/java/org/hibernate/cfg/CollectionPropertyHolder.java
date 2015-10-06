@@ -25,7 +25,7 @@ import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.MapKeyType;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.boot.model.source.spi.AttributePath;
+import org.hibernate.boot.spi.AttributeConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -345,7 +345,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		}
 	}
 
-	public AttributeConverterDefinition resolveElementAttributeConverterDefinition(XClass elementXClass) {
+	public AttributeConverterDescriptor resolveElementAttributeConverterDescriptor(XProperty collectionXProperty, XClass elementXClass) {
 		AttributeConversionInfo info = locateAttributeConversionInfo( "element" );
 		if ( info != null ) {
 			if ( info.isConversionDisabled() ) {
@@ -353,7 +353,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 			}
 			else {
 				try {
-					return makeAttributeConverterDefinition( info );
+					return makeAttributeConverterDescriptor( info );
 				}
 				catch (Exception e) {
 					throw new IllegalStateException(
@@ -369,25 +369,11 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 				collection.getRole()
 		);
 
-		final Class elementClass = determineElementClass( elementXClass );
-		if ( elementClass != null ) {
-			for ( AttributeConverterDefinition attributeConverterDefinition : getContext().getMetadataCollector().getAttributeConverters() ) {
-				if ( ! attributeConverterDefinition.isAutoApply() ) {
-					continue;
-				}
-				log.debugf(
-						"Checking auto-apply AttributeConverter [%s] type [%s] for match [%s]",
-						attributeConverterDefinition.toString(),
-						attributeConverterDefinition.getEntityAttributeType().getSimpleName(),
-						elementClass.getSimpleName()
-				);
-				if ( areTypeMatch( attributeConverterDefinition.getEntityAttributeType(), elementClass ) ) {
-					return attributeConverterDefinition;
-				}
-			}
-		}
+		// todo : do we need to pass along `XClass elementXClass`?
 
-		return null;
+		return getContext().getMetadataCollector()
+				.getAttributeConverterAutoApplyHandler()
+				.findAutoApplyConverterForCollectionElement( collectionXProperty, getContext() );
 	}
 
 	private Class determineElementClass(XClass elementXClass) {
@@ -419,7 +405,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		return null;
 	}
 
-	public AttributeConverterDefinition keyElementAttributeConverterDefinition(XClass keyXClass) {
+	public AttributeConverterDescriptor mapKeyAttributeConverterDescriptor(XProperty mapXProperty, XClass keyXClass) {
 		AttributeConversionInfo info = locateAttributeConversionInfo( "key" );
 		if ( info != null ) {
 			if ( info.isConversionDisabled() ) {
@@ -427,7 +413,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 			}
 			else {
 				try {
-					return makeAttributeConverterDefinition( info );
+					return makeAttributeConverterDescriptor( info );
 				}
 				catch (Exception e) {
 					throw new IllegalStateException(
@@ -443,25 +429,11 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 				collection.getRole()
 		);
 
-		final Class elementClass = determineKeyClass( keyXClass );
-		if ( elementClass != null ) {
-			for ( AttributeConverterDefinition attributeConverterDefinition : getContext().getMetadataCollector().getAttributeConverters() ) {
-				if ( ! attributeConverterDefinition.isAutoApply() ) {
-					continue;
-				}
-				log.debugf(
-						"Checking auto-apply AttributeConverter [%s] type [%s] for match [%s]",
-						attributeConverterDefinition.toString(),
-						attributeConverterDefinition.getEntityAttributeType().getSimpleName(),
-						elementClass.getSimpleName()
-				);
-				if ( areTypeMatch( attributeConverterDefinition.getEntityAttributeType(), elementClass ) ) {
-					return attributeConverterDefinition;
-				}
-			}
-		}
+		// todo : do we need to pass along `XClass keyXClass`?
 
-		return null;
+		return getContext().getMetadataCollector()
+				.getAttributeConverterAutoApplyHandler()
+				.findAutoApplyConverterForMapKey( mapXProperty, getContext() );
 	}
 
 	private Class determineKeyClass(XClass keyXClass) {

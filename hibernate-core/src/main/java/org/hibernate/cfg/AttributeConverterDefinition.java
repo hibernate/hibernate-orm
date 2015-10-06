@@ -12,20 +12,20 @@ import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
-import org.jboss.logging.Logger;
 
 /**
+ * Externalized representation of an AttributeConverter
+ *
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.boot.spi.AttributeConverterDescriptor
  */
 public class AttributeConverterDefinition {
-	private static final Logger log = Logger.getLogger( AttributeConverterDefinition.class );
-
 	private final AttributeConverter attributeConverter;
 	private final boolean autoApply;
 	private final Class entityAttributeType;

@@ -19,10 +19,11 @@ import javax.persistence.AttributeConverter;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.internal.AttributeConverterDescriptorNonAutoApplicableImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.spi.AttributeConverterDescriptor;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -75,7 +76,7 @@ public class SimpleValue implements KeyValue {
 	private boolean alternateUniqueKey;
 	private boolean cascadeDeleteEnabled;
 
-	private AttributeConverterDefinition attributeConverterDefinition;
+	private AttributeConverterDescriptor attributeConverterDescriptor;
 	private Type type;
 
 	public SimpleValue(MetadataImplementor metadata) {
@@ -155,7 +156,7 @@ public class SimpleValue implements KeyValue {
 					.getService( ClassLoaderService.class );
 			try {
 				final Class<AttributeConverter> converterClass = cls.classForName( converterClassName );
-				attributeConverterDefinition = new AttributeConverterDefinition( converterClass.newInstance(), false );
+				attributeConverterDescriptor = new AttributeConverterDescriptorNonAutoApplicableImpl( converterClass.newInstance() );
 				return;
 			}
 			catch (Exception e) {
@@ -420,7 +421,7 @@ public class SimpleValue implements KeyValue {
 			return;
 		}
 
-		if ( attributeConverterDefinition == null ) {
+		if ( attributeConverterDescriptor == null ) {
 			// this is here to work like legacy.  This should change when we integrate with metamodel to
 			// look for SqlTypeDescriptor and JavaTypeDescriptor individually and create the BasicType (well, really
 			// keep a registry of [SqlTypeDescriptor,JavaTypeDescriptor] -> BasicType...)
@@ -475,8 +476,8 @@ public class SimpleValue implements KeyValue {
 	private Type buildAttributeConverterTypeAdapter() {
 		// todo : validate the number of columns present here?
 
-		final Class entityAttributeJavaType = attributeConverterDefinition.getEntityAttributeType();
-		final Class databaseColumnJavaType = attributeConverterDefinition.getDatabaseColumnType();
+		final Class entityAttributeJavaType = attributeConverterDescriptor.getDomainType();
+		final Class databaseColumnJavaType = attributeConverterDescriptor.getJdbcType();
 
 
 		// resolve the JavaTypeDescriptor ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -523,14 +524,14 @@ public class SimpleValue implements KeyValue {
 		// and finally construct the adapter, which injects the AttributeConverter calls into the binding/extraction
 		// 		process...
 		final SqlTypeDescriptor sqlTypeDescriptorAdapter = new AttributeConverterSqlTypeDescriptorAdapter(
-				attributeConverterDefinition.getAttributeConverter(),
+				attributeConverterDescriptor.getAttributeConverter(),
 				sqlTypeDescriptor,
 				intermediateJavaTypeDescriptor
 		);
 
 		// todo : cache the AttributeConverterTypeAdapter in case that AttributeConverter is applied multiple times.
 
-		final String name = AttributeConverterTypeAdapter.NAME_PREFIX + attributeConverterDefinition.getAttributeConverter().getClass().getName();
+		final String name = AttributeConverterTypeAdapter.NAME_PREFIX + attributeConverterDescriptor.getAttributeConverter().getClass().getName();
 		final String description = String.format(
 				"BasicType adapter for AttributeConverter<%s,%s>",
 				entityAttributeJavaType.getSimpleName(),
@@ -539,7 +540,7 @@ public class SimpleValue implements KeyValue {
 		return new AttributeConverterTypeAdapter(
 				name,
 				description,
-				attributeConverterDefinition.getAttributeConverter(),
+				attributeConverterDescriptor.getAttributeConverter(),
 				sqlTypeDescriptorAdapter,
 				entityAttributeJavaType,
 				databaseColumnJavaType,
@@ -583,8 +584,8 @@ public class SimpleValue implements KeyValue {
 		return getColumnInsertability();
 	}
 
-	public void setJpaAttributeConverterDefinition(AttributeConverterDefinition attributeConverterDefinition) {
-		this.attributeConverterDefinition = attributeConverterDefinition;
+	public void setJpaAttributeConverterDescriptor(AttributeConverterDescriptor attributeConverterDescriptor) {
+		this.attributeConverterDescriptor = attributeConverterDescriptor;
 	}
 
 	private void createParameterImpl() {

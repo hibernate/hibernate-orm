@@ -22,6 +22,7 @@ import org.hibernate.IrrelevantEntity;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.internal.AttributeConverterDescriptorNonAutoApplicableImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -96,8 +97,8 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		try {
 			MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr ).buildMetadata();
 			SimpleValue simpleValue = new SimpleValue( metadata );
-			simpleValue.setJpaAttributeConverterDefinition(
-					new AttributeConverterDefinition( new StringClobConverter(), true )
+			simpleValue.setJpaAttributeConverterDescriptor(
+					new AttributeConverterDescriptorNonAutoApplicableImpl( new StringClobConverter() )
 			);
 			simpleValue.setTypeUsingReflection( IrrelevantEntity.class.getName(), "name" );
 

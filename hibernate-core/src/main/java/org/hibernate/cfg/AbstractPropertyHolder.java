@@ -24,6 +24,8 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.internal.AttributeConverterDescriptorImpl;
+import org.hibernate.boot.spi.AttributeConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.StringHelper;
@@ -68,7 +70,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	protected abstract AttributeConversionInfo locateAttributeConversionInfo(String path);
 
 	@Override
-	public AttributeConverterDefinition resolveAttributeConverterDefinition(XProperty property) {
+	public AttributeConverterDescriptor resolveAttributeConverterDescriptor(XProperty property) {
 		AttributeConversionInfo info = locateAttributeConversionInfo( property );
 		if ( info != null ) {
 			if ( info.isConversionDisabled() ) {
@@ -76,7 +78,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			}
 			else {
 				try {
-					return makeAttributeConverterDefinition( info );
+					return makeAttributeConverterDescriptor( info );
 				}
 				catch (Exception e) {
 					throw new IllegalStateException(
@@ -89,28 +91,15 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 
 		log.debugf( "Attempting to locate auto-apply AttributeConverter for property [%s:%s]", path, property.getName() );
 
-		final Class propertyType = context.getBuildingOptions().getReflectionManager().toClass( property.getType() );
-		for ( AttributeConverterDefinition attributeConverterDefinition : context.getMetadataCollector().getAttributeConverters() ) {
-			if ( ! attributeConverterDefinition.isAutoApply() ) {
-				continue;
-			}
-			log.debugf(
-					"Checking auto-apply AttributeConverter [%s] type [%s] for match [%s]",
-					attributeConverterDefinition.toString(),
-					attributeConverterDefinition.getEntityAttributeType().getSimpleName(),
-					propertyType.getSimpleName()
-			);
-			if ( areTypeMatch( attributeConverterDefinition.getEntityAttributeType(), propertyType ) ) {
-				return attributeConverterDefinition;
-			}
-		}
-
-		return null;
+		return context.getMetadataCollector()
+				.getAttributeConverterAutoApplyHandler()
+				.findAutoApplyConverterForAttribute( property, context );
 	}
 
-	protected AttributeConverterDefinition makeAttributeConverterDefinition(AttributeConversionInfo conversion) {
+	protected AttributeConverterDescriptor makeAttributeConverterDescriptor(AttributeConversionInfo conversion) {
 		try {
-			return new AttributeConverterDefinition( conversion.getConverterClass().newInstance(), false );
+			AttributeConverterDefinition definition = new AttributeConverterDefinition( conversion.getConverterClass().newInstance(), false );
+			return AttributeConverterDescriptorImpl.create( definition, context.getMetadataCollector().getClassmateContext() );
 		}
 		catch (Exception e) {
 			throw new AnnotationException( "Unable to create AttributeConverter instance", e );

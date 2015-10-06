@@ -395,7 +395,6 @@ public interface MetadataBuilder {
 
 	MetadataBuilder applyAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject);
 
-
 	/**
 	 * Adds an AttributeConverter by a AttributeConverterDefinition
 	 *

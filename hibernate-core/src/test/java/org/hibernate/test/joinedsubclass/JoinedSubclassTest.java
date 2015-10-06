@@ -100,7 +100,7 @@ public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
         assertEquals( s.createQuery("from Person p where p.address.zip = '30306'" ).list().size(),1 );
 
         s.createCriteria( Person.class ).add(
-                Restrictions.in( "address", new Address[] { mark.getAddress(), joe.getAddress() } ) ).list();
+                Restrictions.in( "address", mark.getAddress(), joe.getAddress() ) ).list();
 
         s.delete(mark);
 		s.delete(joe);

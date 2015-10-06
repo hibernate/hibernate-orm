@@ -71,7 +71,7 @@ public class Property extends PropertyProjection {
 	 *
 	 * @see Restrictions#in(String, Object[])
 	 */
-	public Criterion in(Object[] values) {
+	public Criterion in(Object... values) {
 		return Restrictions.in( getPropertyName(), values );
 	}
 

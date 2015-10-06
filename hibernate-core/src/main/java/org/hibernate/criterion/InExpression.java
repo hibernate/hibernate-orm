@@ -31,7 +31,7 @@ public class InExpression implements Criterion {
 	 * @param values The values to check against
 	 *
 	 * @see Restrictions#in(String, java.util.Collection)
-	 * @see Restrictions#in(String, Object[])
+	 * @see Restrictions#in(String, Object...)
 	 */
 	protected InExpression(String propertyName, Object[] values) {
 		this.propertyName = propertyName;

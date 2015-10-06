@@ -19,6 +19,7 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -78,15 +79,23 @@ public class MavenEnhancePlugin extends AbstractMojo {
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		if ( !shouldApply() ) {
+			getLog().info( "Skipping Hibernate enhancement plugin execution since there is no feature enabled" );
 			return;
 		}
 
-		getLog().info( "Starting Hibernate enhancement for class sourceSet on " + dir );
-
-		/** Perform a depth first search for sourceSet. */
+		// Perform a depth first search for sourceSet
 		File root = new File( this.dir );
+		if ( !root.exists() ) {
+			getLog().info( "Skipping Hibernate enhancement plugin execution since there is no classes dir " + dir );
+			return;
+		}
 		walkDir( root );
+		if ( sourceSet.isEmpty() ) {
+			getLog().info( "Skipping Hibernate enhancement plugin execution since there are no classes to enhance on " + dir );
+			return;
+		}
 
+		getLog().info( "Starting Hibernate enhancement for classes on " + dir );
 		final ClassLoader classLoader = toClassLoader( Collections.singletonList( root ) );
 
 		EnhancementContext enhancementContext = new DefaultEnhancementContext() {
@@ -161,17 +170,22 @@ public class MavenEnhancePlugin extends AbstractMojo {
 		}
 
 		// HHH-10145 Add dependencies to classpath as well - all but the ones used for testing purposes
+		Set<Artifact> artifacts = null;
 		MavenProject project = ( (MavenProject) getPluginContext().get( "project" ) );
 		if ( project != null ) {
-			for ( Artifact a : project.getDependencyArtifacts() ) {
+			// Prefer execution project when available (it includes transient dependencies)
+			MavenProject executionProject = project.getExecutionProject();
+			artifacts = ( executionProject != null ? executionProject.getArtifacts() : project.getArtifacts() );
+		}
+		if ( artifacts != null) {
+			for ( Artifact a : artifacts ) {
 				if ( !Artifact.SCOPE_TEST.equals( a.getScope() ) ) {
 					try {
 						urls.add( a.getFile().toURI().toURL() );
 						getLog().debug( "Adding classpath entry for dependency " + a.getId() );
 					}
 					catch (MalformedURLException e) {
-						String msg = "Unable to resolve URL for dependency " + a.getId() + " at " + a.getFile()
-								.getAbsolutePath();
+						String msg = "Unable to resolve URL for dependency " + a.getId() + " at " + a.getFile().getAbsolutePath();
 						if ( failOnError ) {
 							throw new MojoExecutionException( msg, e );
 						}

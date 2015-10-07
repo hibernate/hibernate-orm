@@ -36,7 +36,7 @@ ext {
             dom4j:          'dom4j:dom4j:1.6.1@jar',
 
             // Javassist
-            javassist:      'org.javassist:javassist:3.18.1-GA',
+            javassist:      'org.javassist:javassist:3.18.2-GA',
 
             // javax
             jpa:            'org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0.Final',
@@ -106,7 +106,7 @@ ext {
             c3p0:            "com.mchange:c3p0:0.9.2.1",
             ehcache:         "net.sf.ehcache:ehcache-core:2.4.3",
             proxool:         "proxool:proxool:0.8.3",
-            hikaricp:        "com.zaxxer:HikariCP-java6:2.3.3"
+            hikaricp:        "com.zaxxer:HikariCP-java6:2.3.9"
 
         ]
 }

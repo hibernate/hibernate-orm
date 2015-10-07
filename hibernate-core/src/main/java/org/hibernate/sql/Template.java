@@ -13,8 +13,6 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
-
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunction;
@@ -27,8 +25,6 @@ import org.hibernate.sql.ordering.antlr.OrderByFragmentTranslator;
 import org.hibernate.sql.ordering.antlr.OrderByTranslation;
 import org.hibernate.sql.ordering.antlr.SqlValueReference;
 import org.hibernate.sql.ordering.antlr.TranslationContext;
-import org.hibernate.type.BooleanType;
-import org.hibernate.type.Type;
 
 /**
  * Parses SQL fragments specified in mapping documents

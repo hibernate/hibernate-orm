@@ -8,6 +8,7 @@ package org.hibernate.test.converter;
 
 import javax.persistence.AttributeConverter;
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Converter;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
@@ -15,6 +16,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import org.hibernate.HibernateException;
 import org.hibernate.Session;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -23,6 +25,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static junit.framework.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 /**
  * Test AttributeConverter functioning in various Query scenarios.
@@ -34,11 +37,21 @@ public class QueryTest extends BaseNonConfigCoreFunctionalTestCase {
 	public static final float SALARY = 267.89f;
 
 	@Test
-	public void testJpqlLiteral() {
+	public void testJpqlFloatLiteral() {
 		Session session = openSession();
 		session.getTransaction().begin();
 		Employee jDoe = (Employee) session.createQuery( "from Employee e where e.salary = " + SALARY + "f" ).uniqueResult();
 		assertNotNull( jDoe );
+		session.getTransaction().commit();
+		session.close();
+	}
+
+	@Test
+	public void testJpqlBooleanLiteral() {
+		Session session = openSession();
+		session.getTransaction().begin();
+		assertNotNull( session.createQuery( "from Employee e where e.active = true" ).uniqueResult() );
+		assertNull( session.createQuery( "from Employee e where e.active = false" ).uniqueResult() );
 		session.getTransaction().commit();
 		session.close();
 	}
@@ -74,6 +87,8 @@ public class QueryTest extends BaseNonConfigCoreFunctionalTestCase {
 		@Embedded
 		public Name name;
 		public Float salary;
+		@Convert( converter = BooleanConverter.class )
+		public boolean active = true;
 
 		public Employee() {
 		}
@@ -123,6 +138,31 @@ public class QueryTest extends BaseNonConfigCoreFunctionalTestCase {
 			}
 
 			return new Float( ( dbData.floatValue() ) / 100 );
+		}
+	}
+
+	public static class BooleanConverter implements AttributeConverter<Boolean,Integer> {
+
+		@Override
+		public Integer convertToDatabaseColumn(Boolean attribute) {
+			if ( attribute == null ) {
+				return null;
+			}
+			return attribute ? 1 : 0;
+		}
+
+		@Override
+		public Boolean convertToEntityAttribute(Integer dbData) {
+			if ( dbData == null ) {
+				return null;
+			}
+			else if ( dbData == 0 ) {
+				return false;
+			}
+			else if ( dbData == 1 ) {
+				return true;
+			}
+			throw new HibernateException( "Unexpected boolean numeric; expecting null, 0 or 1, but found " + dbData );
 		}
 	}
 }

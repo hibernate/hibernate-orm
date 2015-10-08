@@ -11,6 +11,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.LiteralType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 
 /**
  * Represents a boolean literal within a query.
@@ -21,11 +22,16 @@ public class BooleanLiteralNode extends LiteralNode implements ExpectedTypeAware
 	private Type expectedType;
 
 	public Type getDataType() {
-		return expectedType == null ? StandardBasicTypes.BOOLEAN : expectedType;
+		return getExpectedType() == null ? StandardBasicTypes.BOOLEAN : getExpectedType();
 	}
 
 	public Boolean getValue() {
 		return getType() == TRUE ;
+	}
+
+	@Override
+	public void setText(String s) {
+		super.setText( s );
 	}
 
 	@Override
@@ -41,16 +47,20 @@ public class BooleanLiteralNode extends LiteralNode implements ExpectedTypeAware
 	@Override
 	@SuppressWarnings( {"unchecked"})
 	public String getRenderText(SessionFactoryImplementor sessionFactory) {
-		try {
-			return typeAsLiteralType().objectToSQLString( getValue(), sessionFactory.getDialect() );
-		}
-		catch( Exception t ) {
-			throw new QueryException( "Unable to render boolean literal value", t );
-		}
-	}
+		final boolean literalValue = getValue();
 
-	private LiteralType typeAsLiteralType() {
-		return (LiteralType) getDataType();
+		if ( expectedType instanceof AttributeConverterTypeAdapter ) {
+			return determineConvertedValue( (AttributeConverterTypeAdapter) expectedType, literalValue );
+		}
+		else if ( expectedType instanceof LiteralType ) {
+			try {
+				return ( (LiteralType) expectedType ).objectToSQLString( getValue(), sessionFactory.getDialect() );
+			}
+			catch( Exception t ) {
+				throw new QueryException( "Unable to render boolean literal value using expected LiteralType", t );
+			}
+		}
 
+		return sessionFactory.getDialect().toBooleanValueString( literalValue );
 	}
 }

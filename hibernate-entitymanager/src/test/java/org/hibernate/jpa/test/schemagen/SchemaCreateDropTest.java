@@ -13,12 +13,12 @@ import java.util.List;
 
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.jpamodelgen.test.util.TestForIssue;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.TestForIssue;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -28,7 +28,7 @@ import static org.junit.Assert.assertThat;
  */
 @RequiresDialect(MySQLDialect.class)
 @TestForIssue( jiraKey = "HHH-10104")
-public class schemaCreateDropTest extends BaseEntityManagerFunctionalTestCase {
+public class SchemaCreateDropTest extends BaseEntityManagerFunctionalTestCase {
 
 	private EntityManager em;
 

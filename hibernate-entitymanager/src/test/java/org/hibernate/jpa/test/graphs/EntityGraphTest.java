@@ -10,16 +10,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.Entity;
-import javax.persistence.EntityGraph;
-import javax.persistence.EntityManager;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.Subgraph;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 import org.hibernate.Hibernate;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
@@ -248,6 +239,83 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
         em.close();
     }
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-10179")
+	public void fetchWithTwoDifferentGraphsInOneSameSession() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		Baz barBaz = new Baz();
+		em.persist(barBaz);
+
+		Bar bar = new Bar();
+		bar.baz = barBaz;
+		bar.name = "test";
+		em.persist( bar );
+
+		Baz baz = new Baz();
+		em.persist( baz );
+
+		Foo foo = new Foo();
+		foo.bar = bar;
+		foo.baz = baz;
+		em.persist( foo );
+
+		em.getTransaction().commit();
+		em.clear();
+
+		em.getTransaction().begin();
+
+		// First load with graph on bar
+		EntityGraph<Foo> barGraph = em.createEntityGraph( Foo.class );
+		barGraph.addAttributeNodes("bar");
+
+		Map<String, Object> properties = new HashMap<String, Object>();
+		properties.put("javax.persistence.fetchgraph", barGraph);
+
+		Foo result = em.find( Foo.class, foo.id, properties );
+
+		assertTrue(Hibernate.isInitialized(result));
+		assertTrue(Hibernate.isInitialized(result.bar));
+		assertFalse(Hibernate.isInitialized(result.bar.baz));
+		assertFalse(Hibernate.isInitialized(result.baz));
+
+		// Secondly load with graph on bar and baz
+		EntityGraph<Foo> barBazGraph = em.createEntityGraph( Foo.class );
+		barBazGraph.addAttributeNodes("bar");
+		barBazGraph.addAttributeNodes("baz");
+
+		properties = new HashMap<String, Object>();
+		properties.put( "javax.persistence.fetchgraph", barBazGraph );
+
+		result = em.find( Foo.class, foo.id, properties );
+
+		assertTrue( Hibernate.isInitialized( result ) );
+		assertTrue( Hibernate.isInitialized( result.bar ) );
+		assertFalse(Hibernate.isInitialized(result.bar.baz));
+		assertTrue( Hibernate.isInitialized( result.baz ) );
+
+		// Thirdly load with graph on bar, bar.baz and baz
+		barBazGraph = em.createEntityGraph(Foo.class);
+		barBazGraph.addAttributeNodes("bar");
+		barBazGraph.addAttributeNodes("baz");
+		Subgraph<Bar> barSubGraph = barBazGraph.addSubgraph("bar", Bar.class);
+		barSubGraph.addAttributeNodes("baz");
+
+		properties = new HashMap<String, Object>();
+		properties.put( "javax.persistence.fetchgraph", barBazGraph );
+
+		result = em.find( Foo.class, foo.id, properties );
+
+		assertTrue( Hibernate.isInitialized( result ) );
+		assertTrue( Hibernate.isInitialized( result.bar ) );
+		assertTrue(Hibernate.isInitialized(result.bar.baz));
+		assertTrue( Hibernate.isInitialized( result.baz ) );
+
+		em.getTransaction().commit();
+		em.close();
+	}
+
     @Entity
 	@Table(name = "foo")
     public static class Foo {
@@ -270,6 +338,11 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		@Id
 		@GeneratedValue
 		public Integer id;
+
+		@ManyToOne(fetch = FetchType.LAZY)
+		public Baz baz;
+
+		public String name;
 
         @OneToMany(mappedBy = "bar")
         public Set<Foo> foos = new HashSet<Foo>();

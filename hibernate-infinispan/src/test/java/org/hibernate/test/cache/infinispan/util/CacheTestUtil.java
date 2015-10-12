@@ -27,6 +27,9 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -37,6 +40,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
+import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -66,7 +70,7 @@ public class CacheTestUtil {
                InfinispanRegionFactory.DEF_INFINISPAN_CONFIG_RESOURCE);
       return cfg;
    }
-   
+
    public static Configuration buildCustomQueryCacheConfiguration(String regionPrefix, String queryCacheName) {
       Configuration cfg = buildConfiguration(regionPrefix, InfinispanRegionFactory.class, true, true);
       cfg.setProperty(InfinispanRegionFactory.QUERY_CACHE_RESOURCE_PROP, queryCacheName);
@@ -107,7 +111,7 @@ public class CacheTestUtil {
     * includes method testBar(), while test class SubFooTestCase extends FooTestCase includes method
     * testBarFailureExcluded(). Passing SubFooTestCase.class to this method will return a suite that
     * does not include testBar().
-    * 
+    *
     * FIXME Move this to UnitTestCase
     */
    public static TestSuite createFailureExpectedSuite(Class testClass) {
@@ -137,6 +141,39 @@ public class CacheTestUtil {
       }
 
       return result;
+   }
+
+   /**
+    * Executes {@link #assertEqualsEventually(Object, Callable, long, TimeUnit)} without time limit.
+    * @param expected
+    * @param callable
+    * @param <T>
+    */
+   public static <T> void assertEqualsEventually(T expected, Callable<T> callable) throws Exception {
+      assertEqualsEventually(expected, callable, -1, TimeUnit.SECONDS);
+   }
+
+   /**
+    * Periodically calls callable and compares returned value with expected value. If the value matches to expected,
+    * the method returns. If callable throws an exception, this is propagated. If the returned value does not match to
+    * expected before timeout, {@link TimeoutException} is thrown.
+    * @param expected
+    * @param callable
+    * @param timeout If non-positive, there is no limit.
+    * @param timeUnit
+    * @param <T>
+    */
+   public static <T> void assertEqualsEventually(T expected, Callable<T> callable, long timeout, TimeUnit timeUnit) throws Exception {
+      long now, deadline = timeout <= 0 ? Long.MAX_VALUE : System.currentTimeMillis() + timeUnit.toMillis(timeout);
+      for (;;) {
+         T value = callable.call();
+         if (EqualsHelper.equals(value, expected)) return;
+         now = System.currentTimeMillis();
+         if (now < deadline) {
+            Thread.sleep(Math.min(100, deadline - now));
+         } else break;
+      }
+      throw new TimeoutException();
    }
 
    /**

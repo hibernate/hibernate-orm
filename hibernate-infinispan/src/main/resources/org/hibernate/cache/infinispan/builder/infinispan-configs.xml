@@ -107,17 +107,6 @@
       <expiration maxIdle="100000" wakeUpInterval="5000"/>
       <transaction transactionMode="TRANSACTIONAL" autoCommit="false"
                    lockingMode="OPTIMISTIC"/>
-      <!-- State transfer forces all replication calls to be synchronous,
-           so for calls to remain async, use a cluster cache loader instead -->
-      <loaders passivation="false" shared="false" preload="false">
-         <loader class="org.infinispan.loaders.cluster.ClusterCacheLoader"
-                 fetchPersistentState="false"
-                 ignoreModifications="false" purgeOnStartup="false">
-            <properties>
-               <property name="remoteCallTimeout" value="20000"/>
-            </properties>
-         </loader>
-      </loaders>
    </namedCache>
 
    <!-- Optimized for timestamp caching. A clustered timestamp cache
@@ -135,17 +124,6 @@
       <expiration wakeUpInterval="0"/>
       <!-- Explicitly non transactional -->
       <transaction transactionMode="NON_TRANSACTIONAL"/>
-      <!-- State transfer forces all replication calls to be synchronous,
-           so for calls to remain async, use a cluster cache loader instead -->
-      <loaders passivation="false" shared="false" preload="false">
-         <loader class="org.infinispan.loaders.cluster.ClusterCacheLoader"
-                 fetchPersistentState="false"
-                 ignoreModifications="false" purgeOnStartup="false">
-            <properties>
-               <property name="remoteCallTimeout" value="20000"/>
-            </properties>
-         </loader>
-      </loaders>
    </namedCache>
 
 </infinispan>

@@ -24,9 +24,11 @@
 package org.hibernate.test.cache.infinispan;
 
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
+import org.hibernate.cfg.Configuration;
 import org.infinispan.AdvancedCache;
-import org.infinispan.transaction.tm.BatchModeTransactionManager;
 import org.jboss.logging.Logger;
 import org.junit.Test;
 
@@ -35,10 +37,9 @@ import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.spi.GeneralDataRegion;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.Region;
-import org.hibernate.cfg.Configuration;
-
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 
+import static org.hibernate.test.cache.infinispan.util.CacheTestUtil.assertEqualsEventually;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -55,6 +56,7 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 
 	protected static final String VALUE1 = "value1";
 	protected static final String VALUE2 = "value2";
+	protected static final String VALUE3 = "value3";
 
 	protected Configuration createConfiguration() {
 		return CacheTestUtil.buildConfiguration( "test", InfinispanRegionFactory.class, false, true );
@@ -87,7 +89,7 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 		// Sleep a bit to avoid concurrent FLUSH problem
 		avoidConcurrentFlush();
 
-		GeneralDataRegion localRegion = (GeneralDataRegion) createRegion(
+		final GeneralDataRegion localRegion = (GeneralDataRegion) createRegion(
 				regionFactory,
 				getStandardRegionName( REGION_PREFIX ), cfg.getProperties(), null
 		);
@@ -99,7 +101,7 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 				getCacheTestSupport()
 		);
 
-		GeneralDataRegion remoteRegion = (GeneralDataRegion) createRegion(
+		final GeneralDataRegion remoteRegion = (GeneralDataRegion) createRegion(
 				regionFactory,
 				getStandardRegionName( REGION_PREFIX ),
 				cfg.getProperties(),
@@ -109,32 +111,43 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 		assertNull( "local is clean", localRegion.get( KEY ) );
 		assertNull( "remote is clean", remoteRegion.get( KEY ) );
 
-      regionPut(localRegion);
-		sleep( 1000 );
-      assertEquals( VALUE1, localRegion.get( KEY ) );
+		regionPut(localRegion, KEY, VALUE1);
 
-		// allow async propagation
-		sleep( 250 );
-		Object expected = invalidation ? null : VALUE1;
-		assertEquals( expected, remoteRegion.get( KEY ) );
+		Callable<Object> getFromLocalRegion = new Callable<Object>() {
+			@Override
+			public Object call() throws Exception {
+				return regionGet(localRegion, KEY);
+			}
+		};
+		Callable<Object> getFromRemoteRegion = new Callable<Object>() {
+			@Override
+			public Object call() throws Exception {
+				return regionGet(remoteRegion, KEY);
+			}
+		};
 
-      regionEvict(localRegion);
+		assertEqualsEventually(VALUE1, getFromLocalRegion, 10, TimeUnit.SECONDS);
+		assertEqualsEventually(VALUE1, getFromRemoteRegion, 10, TimeUnit.SECONDS);
 
-      // allow async propagation
-		sleep( 250 );
-		assertEquals( null, localRegion.get( KEY ) );
-		assertEquals( null, remoteRegion.get( KEY ) );
+		regionEvict(localRegion, KEY);
+
+		assertEqualsEventually(null, getFromLocalRegion, 10, TimeUnit.SECONDS);
+		assertEqualsEventually(null, getFromRemoteRegion, 10, TimeUnit.SECONDS);
 	}
 
-   protected void regionEvict(GeneralDataRegion region) throws Exception {
-      region.evict(KEY);
-   }
+	protected void regionEvict(GeneralDataRegion region, String key) throws Exception {
+		region.evict(key);
+	}
 
-   protected void regionPut(GeneralDataRegion region) throws Exception {
-      region.put(KEY, VALUE1);
-   }
+	protected void regionPut(GeneralDataRegion region, String key, String value) throws Exception {
+		region.put(key, value);
+	}
 
-   protected abstract String getStandardRegionName(String regionPrefix);
+	protected Object regionGet(GeneralDataRegion region, String key) throws Exception {
+		return region.get(key);
+	}
+
+	protected abstract String getStandardRegionName(String regionPrefix);
 
 	/**
 	 * Test method for {@link QueryResultsRegion#evictAll()}.
@@ -171,7 +184,7 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 				cfg,
 				getCacheTestSupport()
 		);
-      AdvancedCache remoteCache = getInfinispanCache( regionFactory );
+		AdvancedCache remoteCache = getInfinispanCache( regionFactory );
 
 		// Sleep a bit to avoid concurrent FLUSH problem
 		avoidConcurrentFlush();
@@ -192,14 +205,14 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 		assertNull( "local is clean", localRegion.get( KEY ) );
 		assertNull( "remote is clean", remoteRegion.get( KEY ) );
 
-      regionPut(localRegion);
-      assertEquals( VALUE1, localRegion.get( KEY ) );
+		regionPut(localRegion, KEY, VALUE1);
+		assertEquals( VALUE1, localRegion.get( KEY ) );
 
 		// Allow async propagation
 		sleep( 250 );
 
-      regionPut(remoteRegion);
-      assertEquals( VALUE1, remoteRegion.get( KEY ) );
+		regionPut(remoteRegion, KEY, VALUE1);
+		assertEquals( VALUE1, remoteRegion.get( KEY ) );
 
 		// Allow async propagation
 		sleep( 250 );
@@ -220,14 +233,5 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 
 		assertEquals( "local is clean", null, localRegion.get( KEY ) );
 		assertEquals( "remote is clean", null, remoteRegion.get( KEY ) );
-	}
-
-	protected void rollback() {
-		try {
-			BatchModeTransactionManager.getInstance().rollback();
-		}
-		catch (Exception e) {
-			log.error( e.getMessage(), e );
-		}
 	}
 }

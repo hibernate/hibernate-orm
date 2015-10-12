@@ -103,11 +103,6 @@
       <expiration maxIdle="100000" wakeUpInterval="5000"/>
       <transaction transactionMode="TRANSACTIONAL" autoCommit="false"
                    lockingMode="OPTIMISTIC"/>
-      <!-- State transfer forces all replication calls to be synchronous,
-           so for calls to remain async, use a cluster cache loader instead -->
-      <persistence passivation="false">
-         <cluster remoteCallTimeout="20000" />
-      </persistence>
    </namedCache>
 
    <!-- Optimized for timestamp caching. A clustered timestamp cache
@@ -124,11 +119,6 @@
       <expiration wakeUpInterval="0"/>
       <!-- Explicitly non transactional -->
       <transaction transactionMode="NON_TRANSACTIONAL"/>
-      <!-- State transfer forces all replication calls to be synchronous,
-           so for calls to remain async, use a cluster cache loader instead -->
-      <persistence passivation="false">
-         <cluster remoteCallTimeout="20000" />
-      </persistence>
    </namedCache>
 
 </infinispan>

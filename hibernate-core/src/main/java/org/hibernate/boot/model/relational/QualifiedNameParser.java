@@ -130,7 +130,7 @@ public class QualifiedNameParser {
 			text = unquote( text );
 		}
 
-		final String[] tokens = text.split( "." );
+		final String[] tokens = text.split( "\\." );
 		if ( tokens.length == 0 || tokens.length == 1 ) {
 			// we have just a local name...
 			name = text;

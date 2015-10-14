@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class NonStrictAccessDelegate implements AccessDelegate {
 	private static final Log log = LogFactory.getLog( NonStrictAccessDelegate.class );
+	private static final boolean trace = log.isTraceEnabled();
 
 	private final BaseTransactionalDataRegion region;
 	private final AdvancedCache cache;
@@ -90,10 +91,17 @@ public class NonStrictAccessDelegate implements AccessDelegate {
 				Object oldVersion = getVersion(prev);
 				if (oldVersion != null) {
 					if (versionComparator.compare(version, oldVersion) <= 0) {
+						if (trace) {
+							log.tracef("putFromLoad not executed since version(%s) <= oldVersion(%s)", version, oldVersion);
+						}
 						return false;
 					}
 				}
 				else if (prev instanceof VersionedEntry && txTimestamp <= ((VersionedEntry) prev).getTimestamp()) {
+					if (trace) {
+						log.tracef("putFromLoad not executed since tx started at %d and entry was invalidated at %d",
+								txTimestamp, ((VersionedEntry) prev).getTimestamp());
+					}
 					return false;
 				}
 			}
@@ -119,11 +127,13 @@ public class NonStrictAccessDelegate implements AccessDelegate {
 
 	@Override
 	public void remove(SessionImplementor session, Object key) throws CacheException {
-		Object value = cache.get(key);
-		Object version = getVersion(value);
 		// there's no 'afterRemove', so we have to use our own synchronization
+		// the API does not provide version of removed item but we can't load it from the cache
+		// as that would be prone to race conditions - if the entry was updated in the meantime
+		// the remove could be discarded and we would end up with stale record
+		// See VersionedTest#testCollectionUpdate for such situation
 		TransactionCoordinator transactionCoordinator = session.getTransactionCoordinator();
-		RemovalSynchronization sync = new RemovalSynchronization(transactionCoordinator, writeCache, false, region, key, version);
+		RemovalSynchronization sync = new RemovalSynchronization(transactionCoordinator, writeCache, false, region, key);
 		transactionCoordinator.getLocalSynchronizations().registerSynchronization(sync);
 	}
 

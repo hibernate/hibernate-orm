@@ -124,10 +124,13 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 				}
 
 				if ( resultSet.next() ) {
+					final String catalogName = catalog == null ? "" : catalog.getCanonicalName();
+					final String schemaName = schema == null ? "" : schema.getCanonicalName();
+
 					log.debugf(
 							"Multiple schemas found with that name [%s.%s]",
-							catalog.getCanonicalName(),
-							schema.getCanonicalName()
+							catalogName,
+							schemaName
 					);
 				}
 				return true;
@@ -344,12 +347,14 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 
 			if ( resultSet.next() ) {
 				log.multipleTablesFound( tableName.render() );
+				final String catalogName = catalog == null ? "" : catalog.render();
+				final String schemaName = schema == null ? "" : schema.render();
 				throw new SchemaExtractionException(
 						String.format(
 								Locale.ENGLISH,
 								"More than one table found in namespace (%s, %s) : %s",
-								catalog.render(),
-								schema.render(),
+								catalogName,
+								schemaName,
 								tableName.render()
 						)
 				);

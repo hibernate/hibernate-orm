@@ -560,6 +560,14 @@ public class SimpleValue implements KeyValue {
 		return typeParameters;
 	}
 
+	public void copyTypeFrom( SimpleValue sourceValue ) {
+		setTypeName( sourceValue.getTypeName() );
+		setTypeParameters( sourceValue.getTypeParameters() );
+
+		type = sourceValue.type;
+		attributeConverterDescriptor = sourceValue.attributeConverterDescriptor;
+	}
+
 	@Override
 	public String toString() {
 		return getClass().getName() + '(' + columns.toString() + ')';

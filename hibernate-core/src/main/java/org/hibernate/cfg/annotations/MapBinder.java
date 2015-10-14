@@ -390,8 +390,7 @@ public class MapBinder extends CollectionBinder {
 			}
 			else {
 				targetValue = new SimpleValue( getBuildingContext().getMetadataCollector(), collection.getCollectionTable() );
-				targetValue.setTypeName( sourceValue.getTypeName() );
-				targetValue.setTypeParameters( sourceValue.getTypeParameters() );
+				targetValue.copyTypeFrom( sourceValue );
 			}
 			Iterator columns = sourceValue.getColumnIterator();
 			Random random = new Random();

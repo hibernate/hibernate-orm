@@ -121,7 +121,7 @@ public class MapKeyConversionTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		@Override
 		public ColorType convertToEntityAttribute(String dbData) {
-			return ColorType.fromExternalForm( dbData );
+			return dbData == null ? null : ColorType.fromExternalForm( dbData );
 		}
 	}
 }

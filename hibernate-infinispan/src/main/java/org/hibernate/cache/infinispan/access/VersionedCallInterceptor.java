@@ -18,12 +18,9 @@ import org.infinispan.context.InvocationContext;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.filter.NullValueConverter;
 import org.infinispan.interceptors.CallInterceptor;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 
 import java.util.Comparator;
 import java.util.Set;
-import java.util.UUID;
 
 /**
  * Note that this does not implement all commands, only those appropriate for {@link TombstoneAccessDelegate}

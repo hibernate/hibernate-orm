@@ -64,15 +64,10 @@ public abstract class AbstractNonInvalidationTest extends SingleNodeTest {
       executor.shutdown();
    }
 
-   @Override
-   protected void startUp() {
-      super.startUp();
-      region = sessionFactory().getSecondLevelCacheRegion(Item.class.getName());
-      entityCache = ((EntityRegionImpl) region).getCache();
-   }
-
    @Before
    public void insertAndClearCache() throws Exception {
+      region = sessionFactory().getSecondLevelCacheRegion(Item.class.getName());
+      entityCache = ((EntityRegionImpl) region).getCache();
       Item item = new Item("my item", "Original item");
       withTxSession(s -> s.persist(item));
       entityCache.clear();

@@ -3,12 +3,19 @@ package org.hibernate.test.cache.infinispan.functional;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.Session;
 import org.hibernate.StaleStateException;
+import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.infinispan.util.VersionedEntry;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.test.cache.infinispan.functional.entities.Item;
+import org.hibernate.test.cache.infinispan.functional.entities.OtherItem;
+import org.infinispan.AdvancedCache;
+import org.infinispan.commands.write.PutKeyValueCommand;
 import org.infinispan.commons.util.ByRef;
+import org.infinispan.context.Flag;
+import org.infinispan.context.InvocationContext;
+import org.infinispan.interceptors.base.BaseCustomInterceptor;
 import org.junit.Test;
 
 import javax.transaction.Synchronization;
@@ -17,10 +24,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 
@@ -39,6 +48,11 @@ public class VersionedTest extends AbstractNonInvalidationTest {
    @Override
    public List<Object[]> getParameters() {
       return Arrays.asList(NONSTRICT_REPLICATED, NONSTRICT_DISTRIBUTED);
+   }
+
+   @Override
+   protected boolean getUseQueryCache() {
+      return false;
    }
 
    @Test
@@ -218,6 +232,98 @@ public class VersionedTest extends AbstractNonInvalidationTest {
       assertSingleCacheEntry();
       TIME_SERVICE.advance(TIMEOUT + 1);
       assertSingleCacheEntry();
+   }
+
+   @Test
+   public void testCollectionUpdate() throws Exception {
+      // the first insert puts VersionedEntry(null, null, timestamp), so we have to wait a while to cache the entry
+      TIME_SERVICE.advance(1);
+
+      withTxSession(s -> {
+         Item item = s.load(Item.class, itemId);
+         OtherItem otherItem = new OtherItem();
+         otherItem.setName("Other 1");
+         s.persist(otherItem);
+         item.addOtherItem(otherItem);
+      });
+      withTxSession(s -> {
+         Item item = s.load(Item.class, itemId);
+         Set<OtherItem> otherItems = item.getOtherItems();
+         assertFalse(otherItems.isEmpty());
+         otherItems.remove(otherItems.iterator().next());
+      });
+
+      AdvancedCache collectionCache = ((BaseTransactionalDataRegion) sessionFactory().getSecondLevelCacheRegion(Item.class.getName() + ".otherItems")).getCache();
+      CountDownLatch putFromLoadLatch = new CountDownLatch(1);
+      AtomicBoolean committing = new AtomicBoolean(false);
+      CollectionUpdateTestInterceptor collectionUpdateTestInterceptor = new CollectionUpdateTestInterceptor(putFromLoadLatch);
+      AnotherCollectionUpdateTestInterceptor anotherInterceptor = new AnotherCollectionUpdateTestInterceptor(putFromLoadLatch, committing);
+      collectionCache.addInterceptor(collectionUpdateTestInterceptor, collectionCache.getInterceptorChain().size() - 1);
+      collectionCache.addInterceptor(anotherInterceptor, 0);
+
+      TIME_SERVICE.advance(1);
+      Future<Boolean> addFuture = executor.submit(() -> withTxSessionApply(s -> {
+         collectionUpdateTestInterceptor.updateLatch.await();
+         Item item = s.load(Item.class, itemId);
+         OtherItem otherItem = new OtherItem();
+         otherItem.setName("Other 2");
+         s.persist(otherItem);
+         item.addOtherItem(otherItem);
+         committing.set(true);
+         return true;
+      }));
+
+      Future<Boolean> readFuture = executor.submit(() -> withTxSessionApply(s -> {
+         Item item = s.load(Item.class, itemId);
+         assertTrue(item.getOtherItems().isEmpty());
+         return true;
+      }));
+
+      addFuture.get();
+      readFuture.get();
+      collectionCache.removeInterceptor(CollectionUpdateTestInterceptor.class);
+      collectionCache.removeInterceptor(AnotherCollectionUpdateTestInterceptor.class);
+
+      withTxSession(s -> assertFalse(s.load(Item.class, itemId).getOtherItems().isEmpty()));
+   }
+
+   private class CollectionUpdateTestInterceptor extends BaseCustomInterceptor {
+      final AtomicBoolean firstPutFromLoad = new AtomicBoolean(true);
+      final CountDownLatch putFromLoadLatch;
+      final CountDownLatch updateLatch = new CountDownLatch(1);
+
+      public CollectionUpdateTestInterceptor(CountDownLatch putFromLoadLatch) {
+         this.putFromLoadLatch = putFromLoadLatch;
+      }
+
+      @Override
+      public Object visitPutKeyValueCommand(InvocationContext ctx, PutKeyValueCommand command) throws Throwable {
+         if (command.hasFlag(Flag.ZERO_LOCK_ACQUISITION_TIMEOUT)) {
+            if (firstPutFromLoad.compareAndSet(true, false)) {
+               updateLatch.countDown();
+               putFromLoadLatch.await();
+            }
+         }
+         return super.visitPutKeyValueCommand(ctx, command);
+      }
+   }
+
+   private class AnotherCollectionUpdateTestInterceptor extends BaseCustomInterceptor {
+      final CountDownLatch putFromLoadLatch;
+      final AtomicBoolean committing;
+
+      public AnotherCollectionUpdateTestInterceptor(CountDownLatch putFromLoadLatch, AtomicBoolean committing) {
+         this.putFromLoadLatch = putFromLoadLatch;
+         this.committing = committing;
+      }
+
+      @Override
+      public Object visitPutKeyValueCommand(InvocationContext ctx, PutKeyValueCommand command) throws Throwable {
+         if (committing.get() && !command.hasFlag(Flag.ZERO_LOCK_ACQUISITION_TIMEOUT)) {
+            putFromLoadLatch.countDown();
+         }
+         return super.visitPutKeyValueCommand(ctx, command);
+      }
    }
 
    protected void assertSingleEmpty() {

@@ -316,7 +316,9 @@ public class ActionQueue {
 	 * @throws HibernateException error executing queued insertion actions.
 	 */
 	public void executeInserts() throws HibernateException {
-		executeActions( insertions );
+		if ( !insertions.isEmpty() ) {
+			executeActions( insertions );
+		}
 	}
 
 	/**
@@ -330,7 +332,9 @@ public class ActionQueue {
 		}
 
 		for ( ExecutableList<?> l : executableLists ) {
-			executeActions( l );
+			if ( !l.isEmpty() ) {
+				executeActions( l );
+			}
 		}
 	}
 

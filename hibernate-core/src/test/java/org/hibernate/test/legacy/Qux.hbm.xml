@@ -13,7 +13,7 @@
 		</many-to-one>
 		<property name="deleted"/>
 		<property name="loaded"/>
-		<property name="stored"/>
+		<property name="store"/>
 		<property name="created"/>
 		<property name="childKey" type="long"/>
 		<property name="stuff"/>

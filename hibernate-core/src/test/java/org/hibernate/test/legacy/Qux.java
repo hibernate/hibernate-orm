@@ -15,7 +15,7 @@ public class Qux implements Lifecycle {
 	boolean created;
 	boolean deleted;
 	boolean loaded;
-	boolean stored;
+	boolean store;  // this should more logically be named "stored" but that's a reserved keyword on MySQL 5.7
 	private Long key;
 	private String stuff;
 	private Set fums;
@@ -95,11 +95,11 @@ public class Qux implements Lifecycle {
 		this.loaded = loaded;
 	}
 
-	public boolean getStored() {
-		return stored;
+	public boolean getStore() {
+		return store;
 	}
-	private void setStored(boolean stored) {
-		this.stored = stored;
+	private void setStore(boolean store) {
+		this.store = store;
 	}
 
 	public Long getKey() {
@@ -137,7 +137,7 @@ public class Qux implements Lifecycle {
 	}
 
 	public Qux getChild() throws HibernateException, SQLException {
-		stored=true;
+		store =true;
 		this.childKey = child==null ? null : child.getKey();
 		if (childKey!=null && child==null) child = (Qux) session.load(Qux.class, childKey);
 		return child;

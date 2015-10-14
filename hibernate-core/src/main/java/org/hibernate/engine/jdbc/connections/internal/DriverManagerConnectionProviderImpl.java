@@ -11,7 +11,6 @@ import java.sql.Driver;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -19,11 +18,9 @@ import java.util.concurrent.TimeUnit;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
@@ -56,10 +53,9 @@ public class DriverManagerConnectionProviderImpl
 
 	private boolean active = true;
 
-	private ConcurrentLinkedQueue<Connection> connections = new ConcurrentLinkedQueue<Connection>();
 	private ConnectionCreator connectionCreator;
 	private ScheduledExecutorService executorService;
-
+	private PooledConnections pool;
 
 
 	// create the pool ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -76,60 +72,43 @@ public class DriverManagerConnectionProviderImpl
 		log.usingHibernateBuiltInConnectionPool();
 
 		connectionCreator = buildCreator( configurationValues );
+		pool = buildPool( configurationValues );
 
-		final int minSize = ConfigurationHelper.getInt( MIN_SIZE, configurationValues, 1 );
-		final int maxSize = ConfigurationHelper.getInt( AvailableSettings.POOL_SIZE, configurationValues, 20 );
-		final int initialSize = ConfigurationHelper.getInt( INITIAL_SIZE, configurationValues, minSize );
 		final long validationInterval = ConfigurationHelper.getLong( VALIDATION_INTERVAL, configurationValues, 30 );
-
-		log.hibernateConnectionPoolSize( maxSize, minSize );
-
-		log.debugf( "Initializing Connection pool with %s Connections", initialSize );
-		for ( int i = 0; i < initialSize; i++ ) {
-			connections.add( connectionCreator.createConnection() );
-		}
-
 		executorService = Executors.newSingleThreadScheduledExecutor();
 		executorService.scheduleWithFixedDelay(
 				new Runnable() {
 					private boolean primed;
 					@Override
 					public void run() {
-						int size = connections.size();
-
-						if ( !primed && size >= minSize ) {
-							// IMPL NOTE : the purpose of primed is to allow the pool to lazily reach its
-							// defined min-size.
-							log.debug( "Connection pool now considered primed; min-size will be maintained" );
-							primed = true;
-						}
-
-						if ( size < minSize && primed ) {
-							int numberToBeAdded = minSize - size;
-							log.debugf( "Adding %s Connections to the pool", numberToBeAdded );
-							for (int i = 0; i < numberToBeAdded; i++) {
-								connections.add( connectionCreator.createConnection() );
-							}
-						}
-						else if ( size > maxSize ) {
-							int numberToBeRemoved = size - maxSize;
-							log.debugf( "Removing %s Connections from the pool", numberToBeRemoved );
-							for ( int i = 0; i < numberToBeRemoved; i++ ) {
-								Connection connection = connections.poll();
-								try {
-									connection.close();
-								}
-								catch (SQLException e) {
-									log.unableToCloseConnection( e );
-								}
-							}
-						}
+						pool.validate();
 					}
 				},
 				validationInterval,
 				validationInterval,
 				TimeUnit.SECONDS
 		);
+	}
+
+	private PooledConnections buildPool(Map configurationValues) {
+		final boolean autoCommit = ConfigurationHelper.getBoolean(
+				AvailableSettings.AUTOCOMMIT,
+				configurationValues,
+				false
+		);
+		final int minSize = ConfigurationHelper.getInt( MIN_SIZE, configurationValues, 1 );
+		final int maxSize = ConfigurationHelper.getInt( AvailableSettings.POOL_SIZE, configurationValues, 20 );
+		final int initialSize = ConfigurationHelper.getInt( INITIAL_SIZE, configurationValues, minSize );
+
+		PooledConnections.Builder pooledConnectionBuilder = new PooledConnections.Builder(
+				connectionCreator,
+				autoCommit
+		);
+		pooledConnectionBuilder.initialSize( initialSize );
+		pooledConnectionBuilder.minSize( minSize );
+		pooledConnectionBuilder.maxSize( maxSize );
+
+		return pooledConnectionBuilder.build();
 	}
 
 	private ConnectionCreator buildCreator(Map configurationValues) {
@@ -206,12 +185,11 @@ public class DriverManagerConnectionProviderImpl
 			throw new HibernateException( "Connection pool is no longer active" );
 		}
 
-		Connection connection;
-		if ( (connection = connections.poll()) == null ) {
-			connection = connectionCreator.createConnection();
+		Connection conn = pool.poll();
+		if ( conn == null ) {
+			conn = connectionCreator.createConnection();
 		}
-
-		return connection;
+		return conn;
 	}
 
 	@Override
@@ -220,9 +198,8 @@ public class DriverManagerConnectionProviderImpl
 			return;
 		}
 
-		this.connections.offer( conn );
+		pool.add( conn );
 	}
-
 
 	@Override
 	public boolean supportsAggressiveRelease() {
@@ -265,16 +242,13 @@ public class DriverManagerConnectionProviderImpl
 		}
 		executorService = null;
 
-		for ( Connection connection : connections ) {
-			try {
-				connection.close();
-			}
-			catch (SQLException e) {
-				log.unableToClosePooledConnection( e );
-			}
+		try {
+			pool.close();
+		}
+		catch (SQLException e) {
+			log.unableToClosePooledConnection( e );
 		}
 	}
-
 
 	//CHECKSTYLE:START_ALLOW_FINALIZER
 	@Override

@@ -9,6 +9,8 @@ package org.hibernate.internal;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -1023,6 +1025,19 @@ public abstract class AbstractQueryImpl implements Query {
 		if ( sessionCacheMode != null ) {
 			getSession().setCacheMode( sessionCacheMode );
 			sessionCacheMode = null;
+		}
+		if ( !session.isTransactionInProgress() ) {
+			try {
+				Connection connection = getSession().getJdbcCoordinator()
+						.getLogicalConnection()
+						.getPhysicalConnection();
+				if ( !connection.getAutoCommit() ) {
+					connection.commit();
+				}
+			}
+			catch (SQLException e) {
+				throw new HibernateException( e );
+			}
 		}
 	}
 

@@ -10,6 +10,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.hibernate.boot.model.naming.DatabaseIdentifier;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -120,6 +121,10 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 	private String toMetaDataText(Identifier identifier) {
 		if ( identifier == null ) {
 			throw new IllegalArgumentException( "Identifier cannot be null; bad usage" );
+		}
+
+		if ( identifier instanceof DatabaseIdentifier ) {
+			return identifier.getText();
 		}
 
 		if ( identifier.isQuoted() ) {

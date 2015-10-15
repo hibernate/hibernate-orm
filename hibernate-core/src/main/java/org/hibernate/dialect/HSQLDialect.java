@@ -662,6 +662,6 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public NameQualifierSupport getNameQualifierSupport() {
-		return NameQualifierSupport.CATALOG;
+		return NameQualifierSupport.SCHEMA;
 	}
 }

@@ -22,7 +22,9 @@ import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenerationTime;
 import org.hibernate.annotations.GeneratorType;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.testing.SkipForDialects;
 import org.hibernate.tuple.ValueGenerator;
 
 import org.hibernate.testing.SkipForDialect;
@@ -42,7 +44,10 @@ import static org.junit.Assert.assertTrue;
  * @author Steve Ebersole
  * @author Gunnar Morling
  */
-@SkipForDialect(value=SybaseDialect.class, comment="CURRENT_TIMESTAMP not supported as default value in Sybase")
+@SkipForDialects({
+		@SkipForDialect(value = SybaseDialect.class, comment = "CURRENT_TIMESTAMP not supported as default value in Sybase"),
+		@SkipForDialect(value = MySQLDialect.class, comment = "See HHH-10196", strictMatching = false)
+})
 public class DefaultGeneratedValueTest extends BaseCoreFunctionalTestCase {
 
 	@Test

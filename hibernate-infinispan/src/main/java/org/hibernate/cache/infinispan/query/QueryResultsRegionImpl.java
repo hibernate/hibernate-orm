@@ -43,7 +43,6 @@ import org.infinispan.transaction.TransactionMode;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -102,6 +101,11 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
 
    @Override
    public void evictAll() throws CacheException {
+      for (Map<Object, PostTransactionQueryUpdate> map : transactionContext.values()) {
+         for (PostTransactionQueryUpdate update : map.values()) {
+            update.setValue(null);
+         }
+      }
       transactionContext.clear();
       final Transaction tx = suspend();
       try {
@@ -141,7 +145,7 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
                Map<Object, PostTransactionQueryUpdate> map = transactionContext.get(transaction);
                if (map != null) {
                   PostTransactionQueryUpdate update = map.get(key);
-                  if (update != null) {
+                  if (update != null && update.getValue() != null) {
                      return update.getValue();
                   }
                }
@@ -172,10 +176,10 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
          try {
             transaction = tm != null && tm.getStatus() == Status.STATUS_ACTIVE ? tm.getTransaction() : null;
             if (transaction != null) {
-               // no need to synchronize as the transaction will be accessed by only one thread
                Map<Object, PostTransactionQueryUpdate> map = transactionContext.get(transaction);
                if (map == null) {
-                  transactionContext.put(transaction, map = new HashMap());
+                  // The map implementation needs to be synchronized as we can access that from evict, too.
+                  transactionContext.put(transaction, map = new ConcurrentHashMap());
                }
                PostTransactionQueryUpdate update = map.get(key);
                if (update == null) {

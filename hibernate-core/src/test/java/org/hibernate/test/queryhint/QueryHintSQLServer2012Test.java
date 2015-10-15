@@ -65,7 +65,7 @@ public class QueryHintSQLServer2012Test extends BaseCoreFunctionalTestCase {
 
 		// test Query w/ a simple SQLServer2012 optimizer hint
 		s.getTransaction().begin();
-		Query query = s.createQuery( "FROM QueryHintTest$Employee e WHERE e.department.name = :departmentName" ).addQueryHint( "MAXDOP 2" )
+		Query query = s.createQuery( "FROM QueryHintSQLServer2012Test$Employee e WHERE e.department.name = :departmentName" ).addQueryHint( "MAXDOP 2" )
 				.setParameter( "departmentName", "Sales" );
 		List results = query.list();
 		s.getTransaction().commit();
@@ -78,21 +78,25 @@ public class QueryHintSQLServer2012Test extends BaseCoreFunctionalTestCase {
 
 		// test multiple hints
 		s.getTransaction().begin();
-		query = s.createQuery( "FROM QueryHintTest$Employee e WHERE e.department.name = :departmentName" ).addQueryHint( "MAXDOP 2" )
-				.addQueryHint( "USE_CONCAT" ).setParameter( "departmentName", "Sales" );
+		query = s.createQuery( "FROM QueryHintSQLServer2012Test$Employee e WHERE e.department.name = :departmentName" )
+                .addQueryHint("MAXDOP 2")
+				.addQueryHint("CONCAT UNION")
+                .setParameter("departmentName", "Sales");
 		results = query.list();
 		s.getTransaction().commit();
 		s.clear();
 
 		assertEquals( results.size(), 2 );
-		assertTrue( QueryHintTestSQLServer2012Dialect.getProcessedSql().contains( "OPTION (MAXDOP 2)" ) );
+		assertTrue( QueryHintTestSQLServer2012Dialect.getProcessedSql().contains( "MAXDOP 2" ) );
+		assertTrue( QueryHintTestSQLServer2012Dialect.getProcessedSql().contains( "CONCAT UNION" ) );
 
 		QueryHintTestSQLServer2012Dialect.resetProcessedSql();
 
 		// ensure the insertion logic can handle a comment appended to the front
 		s.getTransaction().begin();
-		query = s.createQuery( "FROM QueryHintTest$Employee e WHERE e.department.name = :departmentName" ).setComment( "this is a test" )
-				.addQueryHint( "MAXDOP 2" ).setParameter( "departmentName", "Sales" );
+		query = s.createQuery( "FROM QueryHintSQLServer2012Test$Employee e WHERE e.department.name = :departmentName" ).setComment( "this is a test" )
+				.addQueryHint( "MAXDOP 2" )
+                .setParameter( "departmentName", "Sales" );
 		results = query.list();
 		s.getTransaction().commit();
 		s.clear();
@@ -112,7 +116,6 @@ public class QueryHintSQLServer2012Test extends BaseCoreFunctionalTestCase {
 
 		assertEquals( results.size(), 2 );
 		assertTrue( QueryHintTestSQLServer2012Dialect.getProcessedSql().contains( "OPTION (MAXDOP 2)" ) );
-		assertEquals( false, true );
 	}
 
 	/**

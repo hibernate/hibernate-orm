@@ -94,7 +94,9 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
    public void evict(Object key) throws CacheException {
       for (Map<Object, PostTransactionQueryUpdate> map : transactionContext.values()) {
          PostTransactionQueryUpdate update = map.remove(key);
-         update.setValue(null);
+         if (update != null) {
+            update.setValue(null);
+         }
       }
       evictCache.remove( key );
    }

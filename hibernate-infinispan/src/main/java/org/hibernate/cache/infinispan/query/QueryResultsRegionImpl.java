@@ -44,6 +44,7 @@ import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -146,9 +147,12 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
             if (transaction != null) {
                Map<Object, PostTransactionQueryUpdate> map = transactionContext.get(transaction);
                if (map != null) {
-                  PostTransactionQueryUpdate update = map.get(key);
-                  if (update != null && update.getValue() != null) {
-                     return update.getValue();
+                  PostTransactionQueryUpdate update = map.get(key);                  
+                  if (update != null) {
+                     Object value = update.getValue();
+                     if (value != null) {
+                        return value;
+                     }
                   }
                }
             }
@@ -221,7 +225,7 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
    private class PostTransactionQueryUpdate implements Synchronization {
       private final Transaction transaction;
       private final Object key;
-      private Object value;
+      private volatile Object value;
 
       public PostTransactionQueryUpdate(Transaction transaction, Object key, Object value) {
          this.transaction = transaction;
@@ -244,6 +248,7 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
       @Override
       public void afterCompletion(int status) {
          transactionContext.remove(transaction);
+         final Object value = this.value;
          if (value == null) {
             return;
          }
@@ -255,12 +260,13 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
                try {
                   suspended = tm.suspend();
                   if (putCacheRequiresTransaction) {
-                     tm.begin();
-                     try {
-                        putCache.put(key, value);
-                     } finally {
-                        tm.commit();
-                     }
+                     Caches.withinTx(tm, new Callable<Void>() {
+                        @Override
+                        public Void call() throws Exception {
+                           putCache.put(key, value);
+                           return null;
+                        }
+                     });	
                   } else {
                      putCache.put(key, value);
                   }

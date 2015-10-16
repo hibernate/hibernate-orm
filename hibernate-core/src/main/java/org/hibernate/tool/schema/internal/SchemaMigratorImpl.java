@@ -177,11 +177,7 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 				}
 
 				final TableInformation tableInformation = existingDatabase.getTableInformation( table.getQualifiedTableName() );
-				if ( tableInformation == null ) {
-					// big problem...
-					throw new SchemaManagementException( "BIG PROBLEM" );
-				}
-				if ( !tableInformation.isPhysicalTable() ) {
+				if ( tableInformation != null && !tableInformation.isPhysicalTable() ) {
 					continue;
 				}
 
@@ -267,9 +263,11 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 				continue;
 			}
 
-			final IndexInformation existingIndex = findMatchingIndex( index, tableInformation );
-			if ( existingIndex != null ) {
-				continue;
+			if ( tableInformation != null ) {
+				final IndexInformation existingIndex = findMatchingIndex( index, tableInformation );
+				if ( existingIndex != null ) {
+					continue;
+				}
 			}
 
 			applySqlStrings(
@@ -364,19 +362,22 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 				continue;
 			}
 
-			final ForeignKeyInformation existingForeignKey = findMatchingForeignKey( foreignKey, tableInformation );
+			if ( tableInformation != null ) {
+				final ForeignKeyInformation existingForeignKey = findMatchingForeignKey( foreignKey, tableInformation );
+				if ( existingForeignKey != null ) {
+					continue;
+				}
+			}
 
 			// todo : shouldn't we just drop+recreate if FK exists?
 			//		this follows the existing code from legacy SchemaUpdate which just skipped
 
-			if ( existingForeignKey == null ) {
-				// in old SchemaUpdate code, this was the trigger to "create"
-				applySqlStrings(
-						exporter.getSqlCreateStrings( foreignKey, metadata ),
-						targets,
-						false
-				);
-			}
+			// in old SchemaUpdate code, this was the trigger to "create"
+			applySqlStrings(
+					exporter.getSqlCreateStrings( foreignKey, metadata ),
+					targets,
+					false
+			);
 		}
 	}
 

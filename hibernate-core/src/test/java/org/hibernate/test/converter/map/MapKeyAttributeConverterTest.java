@@ -8,10 +8,8 @@ package org.hibernate.test.converter.map;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.persistence.AttributeConverter;
 import javax.persistence.CascadeType;
 import javax.persistence.Convert;
-import javax.persistence.Converter;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -315,68 +313,5 @@ public class MapKeyAttributeConverterTest extends BaseNonConfigCoreFunctionalTes
 		}
 	}
 
-	public enum EnumMapKey {
-		VALUE_1,
-		VALUE_2
-	}
 
-	public enum ImplicitEnumMapKey {
-		VALUE_1,
-		VALUE_2
-	}
-
-
-	@Converter
-	public static class CustomColorTypeConverter implements AttributeConverter<ColorType, String> {
-		@Override
-		public String convertToDatabaseColumn(ColorType attribute) {
-			return attribute == null ? null : "COLOR-" + attribute.toExternalForm();
-		}
-
-		@Override
-		public ColorType convertToEntityAttribute(String dbData) {
-			return dbData == null ? null : ColorType.fromExternalForm( dbData.substring( 6 ) );
-		}
-	}
-
-	@Converter
-	public static class ExplicitEnumMapKeyConverter implements AttributeConverter<EnumMapKey, String> {
-		@Override
-		public String convertToDatabaseColumn(EnumMapKey attribute) {
-			return attribute == null ? null : attribute.name().substring( attribute.name().length() - 1 );
-		}
-
-		@Override
-		public EnumMapKey convertToEntityAttribute(String dbData) {
-			return dbData == null ? null : EnumMapKey.valueOf( "VALUE_" + dbData );
-		}
-	}
-
-	@Converter(autoApply = true)
-	public static class ImplicitEnumMapKeyConverter implements AttributeConverter<ImplicitEnumMapKey, String> {
-		@Override
-		public String convertToDatabaseColumn(ImplicitEnumMapKey attribute) {
-			return attribute == null ? null : "I" + attribute.name().substring( attribute.name().length() - 1 );
-		}
-
-		@Override
-		public ImplicitEnumMapKey convertToEntityAttribute(String dbData) {
-			return dbData == null ? null : ImplicitEnumMapKey.valueOf( "VALUE_" + dbData.substring( 1 ) );
-		}
-	}
-
-
-	@Converter
-	public static class ImplicitEnumMapKeyOverridedConverter implements AttributeConverter<ImplicitEnumMapKey, String> {
-		@Override
-		public String convertToDatabaseColumn(ImplicitEnumMapKey attribute) {
-			return attribute == null ? null :
-					( "O" + attribute.name().substring( attribute.name().length() - 1 ) );
-		}
-
-		@Override
-		public ImplicitEnumMapKey convertToEntityAttribute(String dbData) {
-			return dbData == null ? null : ImplicitEnumMapKey.valueOf( "VALUE_" + dbData.substring( 1 ) );
-		}
-	}
 }

@@ -12,6 +12,8 @@ import java.util.List;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 
@@ -36,6 +38,7 @@ public class ManyToManyNotAuditedNullEntity implements Serializable {
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	@ManyToMany(fetch = FetchType.LAZY)
 	@NotFound(action = NotFoundAction.IGNORE)
+	@JoinTable(joinColumns = @JoinColumn(name = "M2MNotAudited_id"))
 	private List<UnversionedStrTestEntity> references = new ArrayList<UnversionedStrTestEntity>();
 
 	protected ManyToManyNotAuditedNullEntity() {

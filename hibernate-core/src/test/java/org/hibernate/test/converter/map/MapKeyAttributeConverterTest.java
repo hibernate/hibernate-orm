@@ -13,6 +13,8 @@ import javax.persistence.CascadeType;
 import javax.persistence.Convert;
 import javax.persistence.Converter;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -38,7 +40,7 @@ public class MapKeyAttributeConverterTest extends BaseNonConfigCoreFunctionalTes
 		return new Class[] {
 				MapEntity.class, MapValue.class,
 
-				MapKeyConversionTest.ColorTypeConverter.class,
+				ColorTypeConverter.class,
 
 				CustomColorTypeConverter.class,
 				ImplicitEnumMapKeyConverter.class,
@@ -50,14 +52,14 @@ public class MapKeyAttributeConverterTest extends BaseNonConfigCoreFunctionalTes
 	@Test
 	public void testImplicitType() {
 		MapValue mapValue = create();
-		mapValue.implicitType = MapKeyConversionTest.ColorType.BLUE;
+		mapValue.implicitType = ColorType.BLUE;
 		mapValue.mapEntity.implicitType.put( mapValue.implicitType, mapValue );
 
 		MapEntity found = persist( mapValue.mapEntity );
 
 		assertEquals( 1, found.implicitType.size() );
-		MapValue foundValue = found.implicitType.get( MapKeyConversionTest.ColorType.BLUE );
-		assertEquals( MapKeyConversionTest.ColorType.BLUE, foundValue.implicitType );
+		MapValue foundValue = found.implicitType.get( ColorType.BLUE );
+		assertEquals( ColorType.BLUE, foundValue.implicitType );
 
 		assertEquals( "blue", findDatabaseValue( foundValue, "implicitType" ) );
 		getSession().close();
@@ -66,14 +68,14 @@ public class MapKeyAttributeConverterTest extends BaseNonConfigCoreFunctionalTes
 	@Test
 	public void testExplicitType() {
 		MapValue mapValue = create();
-		mapValue.explicitType = MapKeyConversionTest.ColorType.RED;
+		mapValue.explicitType = ColorType.RED;
 		mapValue.mapEntity.explicitType.put( mapValue.explicitType, mapValue );
 
 		MapEntity found = persist( mapValue.mapEntity );
 
 		assertEquals( 1, found.explicitType.size() );
-		MapValue foundValue = found.explicitType.get( MapKeyConversionTest.ColorType.RED );
-		assertEquals( MapKeyConversionTest.ColorType.RED, foundValue.explicitType );
+		MapValue foundValue = found.explicitType.get( ColorType.RED );
+		assertEquals( ColorType.RED, foundValue.explicitType );
 
 		assertEquals( "COLOR-red", findDatabaseValue( foundValue, "explicitType" ) );
 		getSession().close();
@@ -92,6 +94,38 @@ public class MapKeyAttributeConverterTest extends BaseNonConfigCoreFunctionalTes
 		assertEquals( EnumMapKey.VALUE_1, foundValue.enumDefault );
 
 		assertEquals( 0, findDatabaseValue( foundValue, "enumDefault" ) );
+		getSession().close();
+	}
+
+	@Test
+	public void testEnumExplicitOrdinalType() {
+		MapValue mapValue = create();
+		mapValue.enumExplicitOrdinal = EnumMapKey.VALUE_2;
+		mapValue.mapEntity.enumExplicitOrdinalType.put( mapValue.enumExplicitOrdinal, mapValue );
+
+		MapEntity found = persist( mapValue.mapEntity );
+
+		assertEquals( 1, found.enumExplicitOrdinalType.size() );
+		MapValue foundValue = found.enumExplicitOrdinalType.get( EnumMapKey.VALUE_2 );
+		assertEquals( EnumMapKey.VALUE_2, foundValue.enumExplicitOrdinal );
+
+		assertEquals( 1, findDatabaseValue( foundValue, "enumExplicitOrdinal" ) );
+		getSession().close();
+	}
+
+	@Test
+	public void testEnumExplicitStringType() {
+		MapValue mapValue = create();
+		mapValue.enumExplicitString = EnumMapKey.VALUE_1;
+		mapValue.mapEntity.enumExplicitStringType.put( mapValue.enumExplicitString, mapValue );
+
+		MapEntity found = persist( mapValue.mapEntity );
+
+		assertEquals( 1, found.enumExplicitStringType.size() );
+		MapValue foundValue = found.enumExplicitStringType.get( EnumMapKey.VALUE_1 );
+		assertEquals( EnumMapKey.VALUE_1, foundValue.enumExplicitString );
+
+		assertEquals( "VALUE_1", findDatabaseValue( foundValue, "enumExplicitString" ) );
 		getSession().close();
 	}
 
@@ -124,6 +158,38 @@ public class MapKeyAttributeConverterTest extends BaseNonConfigCoreFunctionalTes
 		assertEquals( ImplicitEnumMapKey.VALUE_2, foundValue.enumImplicit );
 
 		assertEquals( "I2", findDatabaseValue( foundValue, "enumImplicit" ) );
+		getSession().close();
+	}
+
+	@Test
+	public void testEnumImplicitOverrideOrdinalType() {
+		MapValue mapValue = create();
+		mapValue.enumImplicitOverrideOrdinal = ImplicitEnumMapKey.VALUE_1;
+		mapValue.mapEntity.enumImplicitOverrideOrdinalType.put( mapValue.enumImplicitOverrideOrdinal, mapValue );
+
+		MapEntity found = persist( mapValue.mapEntity );
+
+		assertEquals( 1, found.enumImplicitOverrideOrdinalType.size() );
+		MapValue foundValue = found.enumImplicitOverrideOrdinalType.get( ImplicitEnumMapKey.VALUE_1 );
+		assertEquals( ImplicitEnumMapKey.VALUE_1, foundValue.enumImplicitOverrideOrdinal );
+
+		assertEquals( 0, findDatabaseValue( foundValue, "enumImplicitOverrideOrdinal" ) );
+		getSession().close();
+	}
+
+	@Test
+	public void testEnumImplicitOverrideStringType() {
+		MapValue mapValue = create();
+		mapValue.enumImplicitOverrideString = ImplicitEnumMapKey.VALUE_2;
+		mapValue.mapEntity.enumImplicitOverrideStringType.put( mapValue.enumImplicitOverrideString, mapValue );
+
+		MapEntity found = persist( mapValue.mapEntity );
+
+		assertEquals( 1, found.enumImplicitOverrideStringType.size() );
+		MapValue foundValue = found.enumImplicitOverrideStringType.get( ImplicitEnumMapKey.VALUE_2 );
+		assertEquals( ImplicitEnumMapKey.VALUE_2, foundValue.enumImplicitOverrideString );
+
+		assertEquals( "VALUE_2", findDatabaseValue( foundValue, "enumImplicitOverrideString" ) );
 		getSession().close();
 	}
 
@@ -177,14 +243,20 @@ public class MapKeyAttributeConverterTest extends BaseNonConfigCoreFunctionalTes
 
 		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL)
 		@MapKey(name = "implicitType")
-		private Map<MapKeyConversionTest.ColorType, MapValue> implicitType = new HashMap<MapKeyConversionTest.ColorType, MapValue>();
+		private Map<ColorType, MapValue> implicitType = new HashMap<ColorType, MapValue>();
 		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL)
 		@MapKey(name = "explicitType")
-		private Map<MapKeyConversionTest.ColorType, MapValue> explicitType = new HashMap<MapKeyConversionTest.ColorType, MapValue>();
+		private Map<ColorType, MapValue> explicitType = new HashMap<ColorType, MapValue>();
 
 		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL)
 		@MapKey(name = "enumDefault")
 		private Map<EnumMapKey, MapValue> enumDefaultType = new HashMap<EnumMapKey, MapValue>();
+		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL)
+		@MapKey(name = "enumExplicitOrdinal")
+		private Map<EnumMapKey, MapValue> enumExplicitOrdinalType = new HashMap<EnumMapKey, MapValue>();
+		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL)
+		@MapKey(name = "enumExplicitString")
+		private Map<EnumMapKey, MapValue> enumExplicitStringType = new HashMap<EnumMapKey, MapValue>();
 
 		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL)
 		@MapKey(name = "enumExplicit")
@@ -192,6 +264,12 @@ public class MapKeyAttributeConverterTest extends BaseNonConfigCoreFunctionalTes
 		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL)
 		@MapKey(name = "enumImplicit")
 		private Map<ImplicitEnumMapKey, MapValue> enumImplicitType = new HashMap<ImplicitEnumMapKey, MapValue>();
+		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL)
+		@MapKey(name = "enumImplicitOverrideOrdinal")
+		private Map<ImplicitEnumMapKey, MapValue> enumImplicitOverrideOrdinalType = new HashMap<ImplicitEnumMapKey, MapValue>();
+		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL)
+		@MapKey(name = "enumImplicitOverrideString")
+		private Map<ImplicitEnumMapKey, MapValue> enumImplicitOverrideStringType = new HashMap<ImplicitEnumMapKey, MapValue>();
 
 		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL)
 		@MapKey(name = "enumImplicitOverrided")
@@ -208,14 +286,23 @@ public class MapKeyAttributeConverterTest extends BaseNonConfigCoreFunctionalTes
 		@JoinColumn(name = "map_entity_id")
 		private MapEntity mapEntity;
 
-		private MapKeyConversionTest.ColorType implicitType;
+		private ColorType implicitType;
 		@Convert(converter = CustomColorTypeConverter.class)
-		private MapKeyConversionTest.ColorType explicitType;
+		private ColorType explicitType;
 
 		private EnumMapKey enumDefault;
+		@Enumerated
+		private EnumMapKey enumExplicitOrdinal;
+		@Enumerated(EnumType.STRING)
+		private EnumMapKey enumExplicitString;
 		@Convert(converter = ExplicitEnumMapKeyConverter.class)
 		private EnumMapKey enumExplicit;
+
 		private ImplicitEnumMapKey enumImplicit;
+		@Enumerated
+		private ImplicitEnumMapKey enumImplicitOverrideOrdinal;
+		@Enumerated(EnumType.STRING)
+		private ImplicitEnumMapKey enumImplicitOverrideString;
 
 		@Convert(converter = ImplicitEnumMapKeyOverridedConverter.class)
 		private ImplicitEnumMapKey enumImplicitOverrided;
@@ -240,15 +327,15 @@ public class MapKeyAttributeConverterTest extends BaseNonConfigCoreFunctionalTes
 
 
 	@Converter
-	public static class CustomColorTypeConverter implements AttributeConverter<MapKeyConversionTest.ColorType, String> {
+	public static class CustomColorTypeConverter implements AttributeConverter<ColorType, String> {
 		@Override
-		public String convertToDatabaseColumn(MapKeyConversionTest.ColorType attribute) {
+		public String convertToDatabaseColumn(ColorType attribute) {
 			return attribute == null ? null : "COLOR-" + attribute.toExternalForm();
 		}
 
 		@Override
-		public MapKeyConversionTest.ColorType convertToEntityAttribute(String dbData) {
-			return dbData == null ? null : MapKeyConversionTest.ColorType.fromExternalForm( dbData.substring( 6 ) );
+		public ColorType convertToEntityAttribute(String dbData) {
+			return dbData == null ? null : ColorType.fromExternalForm( dbData.substring( 6 ) );
 		}
 	}
 

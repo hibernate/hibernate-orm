@@ -11,6 +11,8 @@ import java.util.List;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.OrderColumn;
 import javax.persistence.Table;
@@ -35,6 +37,7 @@ public class M2MIndexedListTargetNotAuditedEntity {
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	@OrderColumn(name = "sortOrder")
 	@ManyToMany(fetch = FetchType.LAZY)
+	@JoinTable(joinColumns = @JoinColumn(name = "M2MIndexedList_id"))
 	private List<UnversionedStrTestEntity> references = new ArrayList<UnversionedStrTestEntity>();
 
 

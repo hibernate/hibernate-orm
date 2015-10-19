@@ -9,6 +9,8 @@ package org.hibernate.envers.test.entities.components.relations;
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.Embeddable;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.OneToMany;
 
 import org.hibernate.envers.test.entities.StrTestEntity;
@@ -19,6 +21,7 @@ import org.hibernate.envers.test.entities.StrTestEntity;
 @Embeddable
 public class OneToManyComponent {
 	@OneToMany
+	@JoinTable(joinColumns = @JoinColumn(name = "OneToMany_id"))
 	private Set<StrTestEntity> entities = new HashSet<StrTestEntity>();
 
 	private String data;

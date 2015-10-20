@@ -43,4 +43,4 @@ ObjectStore
 *.hprof
 /.nb-gradle/
 # ctags output for hibernate-core
-hibernate-core/src/main/java/tags
+*/src/main/java/tags

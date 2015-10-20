@@ -9,6 +9,7 @@ package org.hibernate.tool.schema.internal;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.Target;
 
@@ -17,10 +18,14 @@ import org.hibernate.tool.schema.spi.Target;
  */
 public class TargetFileImpl implements Target {
 	private FileWriter fileWriter;
+	private Formatter formatter;
+	private String delimiter;
 
-	public TargetFileImpl(String outputFile) {
+	public TargetFileImpl(String outputFile, Formatter formatter, String delimiter) {
 		try {
 			this.fileWriter = new FileWriter( outputFile );
+			this.formatter = formatter;
+			this.delimiter = delimiter;
 		}
 		catch (IOException e) {
 			throw new SchemaManagementException( "Unable to open FileWriter [" + outputFile + "]", e );
@@ -39,7 +44,11 @@ public class TargetFileImpl implements Target {
 	@Override
 	public void accept(String action) {
 		try {
-			fileWriter.write( action );
+			action = formatter.format(action);
+			if (delimiter != null) {
+				action += delimiter;
+			}
+			fileWriter.write( action);
 			fileWriter.write( "\n" );
 		}
 		catch (IOException e) {

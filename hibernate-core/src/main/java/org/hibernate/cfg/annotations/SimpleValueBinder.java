@@ -29,12 +29,10 @@ import org.hibernate.annotations.Type;
 import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.annotations.common.util.StandardClassLoaderDelegateImpl;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.spi.AttributeConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
-import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.Ejb3Column;
 import org.hibernate.cfg.Ejb3JoinColumn;
@@ -323,12 +321,12 @@ public class SimpleValueBinder {
 			return;
 		}
 
-		if ( property.isAnnotationPresent( Temporal.class ) ) {
+		if ( property.isAnnotationPresent( key ? MapKeyTemporal.class : Temporal.class ) ) {
 			LOG.debugf( "Skipping AttributeConverter checks for Temporal attribute [%s]", property.getName() );
 			return;
 		}
 
-		if ( property.isAnnotationPresent( Enumerated.class ) ) {
+		if ( property.isAnnotationPresent( key ? MapKeyEnumerated.class : Enumerated.class ) ) {
 			LOG.debugf( "Skipping AttributeConverter checks for Enumerated attribute [%s]", property.getName() );
 			return;
 		}

@@ -16,11 +16,13 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.internal.ForeignKeys;
+import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
@@ -303,8 +305,11 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			if ( original == target ) {
 				return target;
 			}
+			// After fixing HHH-9979, it is no longer possible to make assumptions about
+			// whether an entity is transient (because all properties, including properties
+			// with ForeignKeyDirection.TO_PARENT, are copied to a transient entity).
 			if ( session.getContextEntityIdentifier( original ) == null &&
-					ForeignKeys.isTransient( associatedEntityName, original, Boolean.FALSE, session ) ) {
+					ForeignKeys.isTransient( associatedEntityName, original, null, session ) ) {
 				final Object copy = session.getEntityPersister( associatedEntityName, original )
 						.instantiate( null, session );
 				copyCache.put( original, copy );

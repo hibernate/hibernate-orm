@@ -473,7 +473,9 @@ public abstract class AbstractEntityWithManyToManyTest extends BaseCoreFunctiona
 		s.close();
 
 		assertInsertCount( 1 );
-		assertUpdateCount( isContractVersioned && isPlanVersioned ? 2 : 0 );
+		// there should only be 1 update to the existing Plan (p);
+		// there should be no update to the new Contract (newC) because it was inserted;
+		assertUpdateCount( isPlanVersioned ? 1 : 0 );
 		clearCounts();
 
 		s = openSession();

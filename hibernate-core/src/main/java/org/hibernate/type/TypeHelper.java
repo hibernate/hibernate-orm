@@ -192,7 +192,10 @@ public class TypeHelper {
 	 * @param foreignKeyDirection FK directionality to be applied to the replacement
 	 *
 	 * @return The replaced state
+	 *
+	 * @deprecated Use {@link #replace(Object[], Object[], Type[], SessionImplementor, Object, Map)} instead.
 	 */
+	@Deprecated
 	public static Object[] replace(
 			final Object[] original,
 			final Object[] target,
@@ -230,7 +233,10 @@ public class TypeHelper {
 	 * @param foreignKeyDirection FK directionality to be applied to the replacement
 	 *
 	 * @return The replaced state
+	 *
+	 * @deprecated Use {@link #replace(Object[], Object[], Type[], SessionImplementor, Object, Map)} instead.
 	 */
+	@Deprecated
 	public static Object[] replaceAssociations(
 			final Object[] original,
 			final Object[] target,

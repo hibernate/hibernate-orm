@@ -597,7 +597,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		s.getTransaction().commit();
 		s.close();
 
-		assertUpdateCount( 1 );
+		assertUpdateCount( 0 );
 		assertInsertCount( 1 );
 		clearCounts();
 
@@ -610,7 +610,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		assertEquals( 0, child.getVersion() );
 		assertNotNull( parent );
 		assertEquals( 0, parent.getChildren().size() );
-		assertEquals( 1, parent.getVersion() );	// hmmm, why is was version updated?
+		assertEquals( 0, parent.getVersion() );
 		s.setReadOnly( parent, true );
 		s.setReadOnly( child, true );
 		s.delete( parent );
@@ -646,7 +646,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		s.getTransaction().commit();
 		s.close();
 
-		assertUpdateCount( 1 );
+		assertUpdateCount( 0 );
 		assertInsertCount( 1 );
 		clearCounts();
 
@@ -659,7 +659,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		assertEquals( 0, child.getVersion() );
 		assertNotNull( parent );
 		assertEquals( 0, parent.getChildren().size() );
-		assertEquals( 1, parent.getVersion() ); // / hmmm, why is was version updated?
+		assertEquals( 0, parent.getVersion() );
 		s.setReadOnly( parent, true );
 		s.setReadOnly( child, true );
 		s.delete( parent );

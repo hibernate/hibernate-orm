@@ -6,7 +6,6 @@
  */
 package org.hibernate.jpa.test.query;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -19,6 +18,7 @@ import org.junit.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.jpa.test.Distributor;
@@ -28,6 +28,7 @@ import org.hibernate.stat.Statistics;
 
 import junit.framework.Assert;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 
 import static junit.framework.Assert.assertNull;
@@ -79,7 +80,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		catch (IllegalArgumentException expected) {
 		}
 	}
-	
+
 	@Test
 	public void testPagedQuery() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
@@ -96,6 +97,341 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		q.setParameter( "itemName", "%" );
 		q.setFirstResult( 1 );
 		q.setMaxResults( 1 );
+		em.getTransaction().rollback();
+		em.close();
+	}
+
+	@Test
+	public void testNullPositionalParameter() throws Exception {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Item item = new Item( "Mouse", "Micro$oft mouse" );
+		em.persist( item );
+		Query q = em.createQuery( "from Item i where i.intVal=?" );
+		q.setParameter( 1, null );
+		List results = q.getResultList();
+		// null != null
+		assertEquals( 0, results.size() );
+		q = em.createQuery( "from Item i where i.intVal is null and ? is null" );
+		q.setParameter( 1, null );
+		results = q.getResultList();
+		assertEquals( 1, results.size() );
+		q = em.createQuery( "from Item i where i.intVal is null or i.intVal = ?" );
+		q.setParameter( 1, null );
+		results = q.getResultList();
+		assertEquals( 1, results.size() );
+		em.getTransaction().rollback();
+		em.close();
+	}
+
+	@Test
+	public void testNullPositionalParameterParameter() throws Exception {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Item item = new Item( "Mouse", "Micro$oft mouse" );
+		em.persist( item );
+		Query q = em.createQuery( "from Item i where i.intVal=?" );
+		Parameter p = new Parameter() {
+			@Override
+			public String getName() {
+				return null;
+			}
+			@Override
+			public Integer getPosition() {
+				return 1;
+			}
+			@Override
+			public Class getParameterType() {
+				return Integer.class;
+			}
+		};
+		q.setParameter( p, null );
+		Parameter pGotten = q.getParameter( p.getPosition() );
+		List results = q.getResultList();
+		// null != null
+		assertEquals( 0, results.size() );
+		q = em.createQuery( "from Item i where i.intVal is null and ? is null" );
+		q.setParameter( p, null );
+		results = q.getResultList();
+		assertEquals( 1, results.size() );
+		q = em.createQuery( "from Item i where i.intVal is null or i.intVal = ?" );
+		q.setParameter( p, null );
+		results = q.getResultList();
+		assertEquals( 1, results.size() );
+		em.getTransaction().rollback();
+		em.close();
+	}
+
+	@Test
+	public void testNullPositionalParameterParameterIncompatible() throws Exception {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Item item = new Item( "Mouse", "Micro$oft mouse" );
+		em.persist( item );
+		Query q = em.createQuery( "from Item i where i.intVal=?" );
+		Parameter p = new Parameter() {
+			@Override
+			public String getName() {
+				return null;
+			}
+			@Override
+			public Integer getPosition() {
+				return 1;
+			}
+			@Override
+			public Class getParameterType() {
+				return Long.class;
+			}
+		};
+		q.setParameter( p, null );
+		Parameter pGotten = q.getParameter( p.getPosition() );
+		List results = q.getResultList();
+		// null != null
+		assertEquals( 0, results.size() );
+		q = em.createQuery( "from Item i where i.intVal is null and ? is null" );
+		q.setParameter( p, null );
+		results = q.getResultList();
+		assertEquals( 1, results.size() );
+		q = em.createQuery( "from Item i where i.intVal is null or i.intVal = ?" );
+		q.setParameter( p, null );
+		results = q.getResultList();
+		assertEquals( 1, results.size() );
+		em.getTransaction().rollback();
+		em.close();
+	}
+
+	@Test
+	public void testNullNamedParameter() throws Exception {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Item item = new Item( "Mouse", "Micro$oft mouse" );
+		em.persist( item );
+		Query q = em.createQuery( "from Item i where i.intVal=:iVal" );
+		q.setParameter( "iVal", null );
+		List results = q.getResultList();
+		// null != null
+		assertEquals( 0, results.size() );
+		q = em.createQuery( "from Item i where i.intVal is null and :iVal is null" );
+		q.setParameter( "iVal", null );
+		results = q.getResultList();
+		assertEquals( 1, results.size() );
+		q = em.createQuery( "from Item i where i.intVal is null or i.intVal = :iVal" );
+		q.setParameter( "iVal", null );
+		results = q.getResultList();
+		assertEquals( 1, results.size() );
+		em.getTransaction().rollback();
+		em.close();
+	}
+
+	@Test
+	public void testNullNamedParameterParameter() throws Exception {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Item item = new Item( "Mouse", "Micro$oft mouse" );
+		em.persist( item );
+		Query q = em.createQuery( "from Item i where i.intVal=:iVal" );
+		Parameter p = new Parameter() {
+			@Override
+			public String getName() {
+				return "iVal";
+			}
+			@Override
+			public Integer getPosition() {
+				return null;
+			}
+			@Override
+			public Class getParameterType() {
+				return Integer.class;
+			}
+		};
+		q.setParameter( p, null );
+		List results = q.getResultList();
+		// null != null
+		assertEquals( 0, results.size() );
+		q = em.createQuery( "from Item i where i.intVal is null and :iVal is null" );
+		q.setParameter( p, null );
+		results = q.getResultList();
+		assertEquals( 1, results.size() );
+		q = em.createQuery( "from Item i where i.intVal is null or i.intVal = :iVal" );
+		q.setParameter( p, null );
+		results = q.getResultList();
+		assertEquals( 1, results.size() );
+		em.getTransaction().rollback();
+		em.close();
+	}
+
+	@Test
+	public void testNullNamedParameterParameterIncompatible() throws Exception {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Item item = new Item( "Mouse", "Micro$oft mouse" );
+		em.persist( item );
+		Query q = em.createQuery( "from Item i where i.intVal=:iVal" );
+		Parameter p = new Parameter() {
+			@Override
+			public String getName() {
+				return "iVal";
+			}
+			@Override
+			public Integer getPosition() {
+				return null;
+			}
+			@Override
+			public Class getParameterType() {
+				return Long.class;
+			}
+		};
+		q.setParameter( p, null );
+		List results = q.getResultList();
+		// null != null
+		assertEquals( 0, results.size() );
+		q = em.createQuery( "from Item i where i.intVal is null and :iVal is null" );
+		q.setParameter( p, null );
+		results = q.getResultList();
+		assertEquals( 1, results.size() );
+		q = em.createQuery( "from Item i where i.intVal is null or i.intVal = :iVal" );
+		q.setParameter( p, null );
+		results = q.getResultList();
+		assertEquals( 1, results.size() );
+		em.getTransaction().rollback();
+		em.close();
+	}
+
+	@Test
+	@SkipForDialect(
+			value = Oracle8iDialect.class,
+			jiraKey = "HHH-10161",
+			comment = "Oracle cannot convert untyped null (assumed to be BINARY type) to NUMBER")
+	public void testNativeQueryNullPositionalParameter() throws Exception {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Item item = new Item( "Mouse", "Micro$oft mouse" );
+		em.persist( item );
+		// native queries don't seem to flush by default ?!?
+		em.flush();
+		Query q = em.createNativeQuery( "select * from Item i where i.intVal=?" );
+		q.setParameter( 1, null );
+		List results = q.getResultList();
+		// null != null
+		assertEquals( 0, results.size() );
+		q = em.createNativeQuery( "select * from Item i where i.intVal is null and ? is null" );
+		q.setParameter( 1, null );
+		results = q.getResultList();
+		assertEquals( 1, results.size() );
+		q = em.createNativeQuery( "select * from Item i where i.intVal is null or i.intVal = ?" );
+		q.setParameter( 1, null );
+		results = q.getResultList();
+		assertEquals( 1, results.size() );
+		em.getTransaction().rollback();
+		em.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-10161"  )
+	public void testNativeQueryNullPositionalParameterParameter() throws Exception {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Item item = new Item( "Mouse", "Micro$oft mouse" );
+		em.persist( item );
+		// native queries don't seem to flush by default ?!?
+		em.flush();
+		Query q = em.createNativeQuery( "select * from Item i where i.intVal=?" );
+		Parameter p = new Parameter() {
+			@Override
+			public String getName() {
+				return null;
+			}
+			@Override
+			public Integer getPosition() {
+				return 1;
+			}
+			@Override
+			public Class getParameterType() {
+				return Integer.class;
+			}
+		};
+		q.setParameter( p, null );
+		Parameter pGotten = q.getParameter( p.getPosition() );
+		List results = q.getResultList();
+		// null != null
+		assertEquals( 0, results.size() );
+		q = em.createNativeQuery( "select * from Item i where i.intVal is null and ? is null" );
+		q.setParameter( p, null );
+		results = q.getResultList();
+		assertEquals( 1, results.size() );
+		q = em.createNativeQuery( "select * from Item i where i.intVal is null or i.intVal = ?" );
+		q.setParameter( p, null );
+		results = q.getResultList();
+		assertEquals( 1, results.size() );
+		em.getTransaction().rollback();
+		em.close();
+	}
+
+	@Test
+	@SkipForDialect(
+			value = Oracle8iDialect.class,
+			jiraKey = "HHH-10161",
+			comment = "Oracle cannot convert untyped null (assumed to be BINARY type) to NUMBER")
+	public void testNativeQueryNullNamedParameter() throws Exception {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Item item = new Item( "Mouse", "Micro$oft mouse" );
+		em.persist( item );
+		// native queries don't seem to flush by default ?!?
+		em.flush();
+		Query q = em.createNativeQuery( "select * from Item i where i.intVal=:iVal" );
+		q.setParameter( "iVal", null );
+		List results = q.getResultList();
+		// null != null
+		assertEquals( 0, results.size() );
+		q = em.createNativeQuery( "select * from Item i where (i.intVal is null) and (:iVal is null)" );
+		q.setParameter( "iVal", null );
+		results = q.getResultList();
+		assertEquals( 1, results.size() );
+		q = em.createNativeQuery( "select * from Item i where i.intVal is null or i.intVal = :iVal" );
+		q.setParameter( "iVal", null );
+		results = q.getResultList();
+		assertEquals( 1, results.size() );
+		em.getTransaction().rollback();
+		em.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-10161"  )
+	public void testNativeQueryNullNamedParameterParameter() throws Exception {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Item item = new Item( "Mouse", "Micro$oft mouse" );
+		em.persist( item );
+		// native queries don't seem to flush by default ?!?
+		em.flush();
+		Query q = em.createNativeQuery( "select * from Item i where i.intVal=:iVal" );
+		Parameter p = new Parameter() {
+			@Override
+			public String getName() {
+				return "iVal";
+			}
+			@Override
+			public Integer getPosition() {
+				return null;
+			}
+			@Override
+			public Class getParameterType() {
+				return Integer.class;
+			}
+		};
+		q.setParameter( p, null );
+		Parameter pGotten = q.getParameter( p.getName() );
+		List results = q.getResultList();
+		assertEquals( 0, results.size() );
+		q = em.createNativeQuery( "select * from Item i where (i.intVal is null) and (:iVal is null)" );
+		q.setParameter( p, null );
+		results = q.getResultList();
+		assertEquals( 1, results.size() );
+		q = em.createNativeQuery( "select * from Item i where i.intVal is null or i.intVal = :iVal" );
+		q.setParameter( p, null );
+		results = q.getResultList();
+		assertEquals( 1, results.size() );
 		em.getTransaction().rollback();
 		em.close();
 	}

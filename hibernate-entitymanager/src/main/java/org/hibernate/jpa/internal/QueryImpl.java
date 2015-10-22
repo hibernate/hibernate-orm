@@ -28,12 +28,10 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.SQLQuery;
 import org.hibernate.TypeMismatchException;
-import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.NamedParameterDescriptor;
 import org.hibernate.engine.query.spi.OrdinalParameterDescriptor;
 import org.hibernate.engine.query.spi.ParameterMetadata;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.hql.internal.QueryExecutionRequestException;
 import org.hibernate.internal.SQLQueryImpl;
 import org.hibernate.jpa.AvailableSettings;
@@ -42,6 +40,7 @@ import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.jpa.spi.AbstractEntityManagerImpl;
 import org.hibernate.jpa.spi.AbstractQueryImpl;
+import org.hibernate.jpa.spi.NullTypeBindableParameterRegistration;
 import org.hibernate.jpa.spi.ParameterBind;
 import org.hibernate.jpa.spi.ParameterRegistration;
 import org.hibernate.type.CompositeCustomType;
@@ -159,8 +158,8 @@ public class QueryImpl<X> extends AbstractQueryImpl<X>
 		}
 	}
 
-	private static class ParameterRegistrationImpl<T> implements ParameterRegistration<T> {
-		private final Query jpaQuery;
+	private static class ParameterRegistrationImpl<T> implements NullTypeBindableParameterRegistration<T> {
+		private final QueryImpl jpaQuery;
 		private final org.hibernate.Query nativeQuery;
 
 		private final String name;
@@ -170,7 +169,7 @@ public class QueryImpl<X> extends AbstractQueryImpl<X>
 		private ParameterBind<T> bind;
 
 		protected ParameterRegistrationImpl(
-				Query jpaQuery,
+				QueryImpl jpaQuery,
 				org.hibernate.Query nativeQuery,
 				String name,
 				Class<T> javaType) {
@@ -182,7 +181,7 @@ public class QueryImpl<X> extends AbstractQueryImpl<X>
 		}
 
 		protected ParameterRegistrationImpl(
-				Query jpaQuery,
+				QueryImpl jpaQuery,
 				org.hibernate.Query nativeQuery,
 				Integer position,
 				Class<T> javaType) {
@@ -314,6 +313,41 @@ public class QueryImpl<X> extends AbstractQueryImpl<X>
 		public ParameterBind<T> getBind() {
 			return bind;
 		}
+
+		@Override
+		public void bindNullValue(Class<?> nullParameterType) {
+			if ( nullParameterType == null ) {
+				throw new IllegalArgumentException( "nullParameterType must be non-null" );
+			}
+			if ( getParameterType() != null ) {
+				throw new IllegalArgumentException(
+						String.format(
+								"Cannot bind null value as type [%s]; it is already mapped as type [%s]",
+								nullParameterType.getName(),
+								getParameterType().getName()
+						)
+				);
+			}
+			validateBinding( nullParameterType, null, null );
+
+			if ( !org.hibernate.internal.AbstractQueryImpl.class.isInstance( jpaQuery.getHibernateQuery() ) ) {
+				throw new IllegalStateException(
+						"Unknown query type for binding null value" + jpaQuery.getHibernateQuery()
+								.getClass()
+								.getName()
+				);
+			}
+			org.hibernate.internal.AbstractQueryImpl abstractQuery =
+					(org.hibernate.internal.AbstractQueryImpl) jpaQuery.getHibernateQuery();
+			final Type explicitType = abstractQuery.guessType( nullParameterType );
+			if ( name != null ) {
+				nativeQuery.setParameter( name, null, explicitType );
+			}
+			else {
+				nativeQuery.setParameter( position - 1, null, explicitType );
+			}
+			bind = new ParameterBindImpl<T>( null, null );
+		}
 	}
 
 	/**
@@ -325,7 +359,7 @@ public class QueryImpl<X> extends AbstractQueryImpl<X>
 		final Integer position;
 
 		protected JpaPositionalParameterRegistrationImpl(
-				Query jpaQuery,
+				QueryImpl jpaQuery,
 				org.hibernate.Query nativeQuery,
 				Integer position,
 				Class<T> javaType) {

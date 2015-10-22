@@ -463,7 +463,11 @@ public abstract class AbstractQueryImpl implements Query {
 
 	public Query setParameter(int position, Object val) throws HibernateException {
 		if ( val == null ) {
-			setParameter( position, val, StandardBasicTypes.SERIALIZABLE );
+			Type type = parameterMetadata.getOrdinalParameterDescriptor( position + 1 ).getExpectedType();
+			if ( type == null ) {
+				type = StandardBasicTypes.SERIALIZABLE;
+			}
+			setParameter( position, val, type );
 		}
 		else {
 			setParameter( position, val, determineType( position, val ) );
@@ -530,7 +534,7 @@ public abstract class AbstractQueryImpl implements Query {
 		return guessType( clazz );
 	}
 
-	private Type guessType(Class clazz) throws HibernateException {
+	public Type guessType(Class clazz) throws HibernateException {
 		String typename = clazz.getName();
 		Type type = session.getFactory().getTypeResolver().heuristicType( typename );
 		boolean serializable = type != null && type instanceof SerializableType;

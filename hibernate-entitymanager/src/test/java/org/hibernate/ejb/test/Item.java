@@ -42,6 +42,7 @@ public class Item implements Serializable {
 
 	private String name;
 	private String descr;
+	private Integer intVal;
 	private Set<Distributor> distributors = new HashSet<Distributor>();
 
 	public Item() {
@@ -69,6 +70,13 @@ public class Item implements Serializable {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public Integer getIntVal() {
+		return intVal;
+	}
+	public void setIntVal(Integer intVal) {
+		this.intVal = intVal;
 	}
 
 	@OneToMany

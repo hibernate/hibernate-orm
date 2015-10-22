@@ -37,8 +37,11 @@ import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.stat.Statistics;
 import org.hibernate.test.annotations.A320;
@@ -46,8 +49,10 @@ import org.hibernate.test.annotations.A320b;
 import org.hibernate.test.annotations.Plane;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.SkipForDialects;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.type.StandardBasicTypes;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -103,6 +108,180 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		s.createSQLQuery( sql ).addEntity( "t", AllTables.class ).list();
 		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-10161")
+	@SkipForDialects(
+			value = {
+					@SkipForDialect(value = Oracle8iDialect.class, jiraKey = "HHH-10161", comment = "Cannot convert untyped null (assumed to be BINARY type) to NUMBER"),
+					@SkipForDialect(value = PostgreSQL82Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint"),
+					@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
+			}
+       )
+	public void testQueryWithNullParameter(){
+		Chaos c0 = new Chaos();
+		c0.setId( 0L );
+		c0.setName( "c0" );
+		c0.setSize( 0L );
+		Chaos c1 = new Chaos();
+		c1.setId( 1L );
+		c1.setName( "c1" );
+		c1.setSize( 1L );
+		Chaos c2 = new Chaos();
+		c2.setId( 2L );
+		c2.setName( "c2" );
+		c2.setSize( null );
+
+		Session s = openSession();
+		s.beginTransaction();
+		s.persist( c0 );
+		s.persist( c1 );
+		s.persist( c2 );
+
+		s.flush();
+		s.clear();
+
+		List chaoses = s.createQuery( "from Chaos where chaos_size is null or chaos_size = :chaos_size" )
+				.setParameter( "chaos_size", null )
+				.list();
+		assertEquals( 1, chaoses.size() );
+
+		chaoses = s.createQuery( "from Chaos where chaos_size = :chaos_size" )
+				.setParameter( "chaos_size", null )
+				.list();
+		// should be no results because null != null
+		assertEquals( 0, chaoses.size() );
+
+		s.getTransaction().rollback();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-10161")
+	public void testQueryWithNullParameterTyped(){
+		Chaos c0 = new Chaos();
+		c0.setId( 0L );
+		c0.setName( "c0" );
+		c0.setSize( 0L );
+		Chaos c1 = new Chaos();
+		c1.setId( 1L );
+		c1.setName( "c1" );
+		c1.setSize( 1L );
+		Chaos c2 = new Chaos();
+		c2.setId( 2L );
+		c2.setName( "c2" );
+		c2.setSize( null );
+
+		Session s = openSession();
+		s.beginTransaction();
+		s.persist( c0 );
+		s.persist( c1 );
+		s.persist( c2 );
+
+		s.flush();
+		s.clear();
+
+		List chaoses = s.createQuery( "from Chaos where chaos_size is null or chaos_size = :chaos_size" )
+				.setParameter( "chaos_size", null, StandardBasicTypes.LONG )
+				.list();
+		assertEquals( 1, chaoses.size() );
+
+		chaoses = s.createQuery( "from Chaos where chaos_size = :chaos_size" )
+				.setParameter( "chaos_size", null, StandardBasicTypes.LONG )
+				.list();
+		// should be no results because null != null
+		assertEquals( 0, chaoses.size() );
+
+		s.getTransaction().rollback();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-10161")
+	@SkipForDialects(
+			value = {
+					@SkipForDialect(value = Oracle8iDialect.class, jiraKey = "HHH-10161", comment = "Cannot convert untyped null (assumed to be BINARY type) to NUMBER"),
+					@SkipForDialect(value = PostgreSQL82Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint"),
+					@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
+			}
+	)
+	public void testNativeQueryWithNullParameter(){
+		Chaos c0 = new Chaos();
+		c0.setId( 0L );
+		c0.setName( "c0" );
+		c0.setSize( 0L );
+		Chaos c1 = new Chaos();
+		c1.setId( 1L );
+		c1.setName( "c1" );
+		c1.setSize( 1L );
+		Chaos c2 = new Chaos();
+		c2.setId( 2L );
+		c2.setName( "c2" );
+		c2.setSize( null );
+
+		Session s = openSession();
+		s.beginTransaction();
+		s.persist( c0 );
+		s.persist( c1 );
+		s.persist( c2 );
+
+		s.flush();
+		s.clear();
+
+		List chaoses = s.createSQLQuery( "select * from Chaos where chaos_size is null or chaos_size = :chaos_size" )
+				.setParameter( "chaos_size", null )
+				.list();
+		assertEquals( 1, chaoses.size() );
+
+		chaoses = s.createSQLQuery( "select * from Chaos where chaos_size = :chaos_size" )
+				.setParameter( "chaos_size", null )
+				.list();
+		// should be no results because null != null
+		assertEquals( 0, chaoses.size() );
+
+		s.getTransaction().rollback();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-10161")
+	public void testNativeQueryWithNullParameterTyped(){
+		Chaos c0 = new Chaos();
+		c0.setId( 0L );
+		c0.setName( "c0" );
+		c0.setSize( 0L );
+		Chaos c1 = new Chaos();
+		c1.setId( 1L );
+		c1.setName( "c1" );
+		c1.setSize( 1L );
+		Chaos c2 = new Chaos();
+		c2.setId( 2L );
+		c2.setName( "c2" );
+		c2.setSize( null );
+
+		Session s = openSession();
+		s.beginTransaction();
+		s.persist( c0 );
+		s.persist( c1 );
+		s.persist( c2 );
+
+		s.flush();
+		s.clear();
+
+		List chaoses = s.createSQLQuery( "select * from Chaos where chaos_size is null or chaos_size = :chaos_size" )
+				.setParameter( "chaos_size", null, StandardBasicTypes.LONG )
+				.list();
+		assertEquals( 1, chaoses.size() );
+
+		chaoses = s.createSQLQuery( "select * from Chaos where chaos_size = :chaos_size" )
+				.setParameter( "chaos_size", null, StandardBasicTypes.LONG )
+				.list();
+		// should be no results because null != null
+		assertEquals( 0, chaoses.size() );
+
+		s.getTransaction().rollback();
 		s.close();
 	}
 

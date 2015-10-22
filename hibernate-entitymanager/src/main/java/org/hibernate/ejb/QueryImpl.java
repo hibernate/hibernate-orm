@@ -318,10 +318,11 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 	}
 
 	public <T> TypedQuery<X> setParameter(Parameter<T> param, T value) {
-		if ( ! parameters.contains( param ) ) {
-			throw new IllegalArgumentException( "Specified parameter was not found in query" );
+		checkParameterExists( param );
+		if ( value == null ) {
+			setNullParameterValue( param );
 		}
-		if ( param.getName() != null ) {
+		else if ( param.getName() != null ) {
 			// a named param, for not delegate out.  Eventually delegate *into* this method...
 			setParameter( param.getName(), value );
 		}
@@ -332,9 +333,7 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 	}
 
 	public TypedQuery<X> setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
-		if ( ! parameters.contains( param ) ) {
-			throw new IllegalArgumentException( "Specified parameter was not found in query" );
-		}
+		checkParameterExists( param );
 		if ( param.getName() != null ) {
 			// a named param, for not delegate out.  Eventually delegate *into* this method...
 			setParameter( param.getName(), value, temporalType );
@@ -346,9 +345,7 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 	}
 
 	public TypedQuery<X> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
-		if ( ! parameters.contains( param ) ) {
-			throw new IllegalArgumentException( "Specified parameter was not found in query" );
-		}
+		checkParameterExists( param );
 		if ( param.getName() != null ) {
 			// a named param, for not delegate out.  Eventually delegate *into* this method...
 			setParameter( param.getName(), value, temporalType );
@@ -510,6 +507,138 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 				registerParameterBinding( getParameter( position ), value, temporalType );
 			}
 			return this;
+		}
+		catch (QueryParameterException e) {
+			throw new IllegalArgumentException( e );
+		}
+		catch (HibernateException he) {
+			throw getEntityManager().convert( he );
+		}
+	}
+
+	private <T> void checkParameterExists(Parameter<T> param) {
+		// Cannot just check parameters.contains( param ) because
+		// param may be supplied by the application (see HHH-10161).
+		final Parameter<?> paramExisting;
+		if ( param.getName() != null ) {
+			paramExisting = getParameter( param.getName() );
+		}
+		else {
+			paramExisting = getParameter( param.getPosition() );
+		}
+		// #getParameter(int) and #getParameter(String) should throw an exception if the
+		// parameter was not found; check here in case it didn't.
+		if ( paramExisting == null ) {
+			throw new IllegalArgumentException( "Specified parameter was not found in query" );
+		}
+	}
+
+	@SuppressWarnings({ "unchecked" })
+	private <T> void setNullParameterValue(Parameter<T> param) {
+		if ( param.getParameterType() == null ) {
+			if ( param.getName() != null ) {
+				setParameter( param.getName(), null );
+			}
+			else {
+				setParameter( param.getPosition(), null );
+			}
+		}
+		else {
+			final Class existingParameterType;
+			if ( param.getName() != null ) {
+				existingParameterType = getParameter( param.getName() ).getParameterType();
+			}
+			else {
+				existingParameterType = getParameter( param.getPosition() ).getParameterType();
+			}
+			if ( existingParameterType == null ) {
+				// we have:
+				// 1) parameter.getParameterType() supplies a non-null parameter type;
+				// 2) Hibernate has no information about the Java type for the null value;
+				//    NOTE: According to Javadoc for javax.persistenceParameter#getParameterType:
+				//          "Applications that use this method for Java Persistence query language
+				//           queries and native queries will not be portable."
+				if ( param.getName() != null ) {
+					setNullParameterValueWithExplicitType( param.getName(), param.getParameterType() );
+				}
+				else {
+					setNullParameterValueWithExplicitType( param.getPosition(), param.getParameterType() );
+				}
+			}
+			else {
+				// NOTE: The Javadoc for javax.persistence.Query#setParameter(Parameter<T> param, T value)
+				// does not say anything about throwing IllegalArgumentException if
+				// javax.persistenceParameter#getParameterType is not assignable to the type, so we simply log
+				// a message if this is the case.
+				if ( !existingParameterType.isAssignableFrom( param.getParameterType() ) ) {
+					LOG.warnf(
+							"Parameter type [%s] is not assignment compatible with requested type [%s] for parameter %s",
+							existingParameterType.getName(),
+							param.getParameterType().getName(),
+							param.getName() == null ?
+									"at position [" + param.getPosition() + "]" :
+									"named [" + param.getName() + "]"
+					);
+				}
+				// ignore param.getParameterType()
+				if ( param.getName() != null ) {
+					setParameter( param.getName(), null );
+				}
+				else {
+					setParameter( param.getPosition(), null );
+				}
+			}
+		}
+	}
+
+	private <T> void setNullParameterValueWithExplicitType(String name, Class<T> explicitParameterType) {
+		if ( explicitParameterType == null ) {
+			throw new IllegalArgumentException( "explicitParameterType must be non-null." );
+		}
+		final Class existingParameterType = getParameter( name ).getParameterType();
+		if ( existingParameterType != null ) {
+			throw new IllegalArgumentException(
+					String.format(
+							"Cannot bind null value as type [%s]; it is already mapped as type [%s]",
+							explicitParameterType.getName(),
+							existingParameterType.getName()
+					)
+			);
+		}
+		try {
+			query.setParameter( name, null, query.guessType( explicitParameterType ) );
+			registerParameterBinding( getParameter( name ), null );
+		}
+		catch (QueryParameterException e) {
+			throw new IllegalArgumentException( e );
+		}
+		catch (HibernateException he) {
+			throw getEntityManager().convert( he );
+		}
+	}
+
+	private <T> void setNullParameterValueWithExplicitType(int position, Class<T> explicitParameterType) {
+		if ( explicitParameterType == null ) {
+			throw new IllegalArgumentException( "explicitParameterType must be non-null." );
+		}
+		final Class existingParameterType = getParameter( position ).getParameterType();
+		if ( existingParameterType != null ) {
+			throw new IllegalArgumentException(
+					String.format(
+							"Cannot bind null value as type [%s]; it is already mapped as type [%s]",
+							explicitParameterType.getName(),
+							existingParameterType.getName()
+					)
+			);
+		}
+		try {
+			if ( isJpaPositionalParameter( position ) ) {
+				this.setNullParameterValueWithExplicitType( Integer.toString( position ), explicitParameterType );
+			}
+			else {
+				query.setParameter( position - 1, null, query.guessType( explicitParameterType ) );
+				registerParameterBinding( getParameter( position ), null );
+			}
 		}
 		catch (QueryParameterException e) {
 			throw new IllegalArgumentException( e );

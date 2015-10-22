@@ -545,7 +545,41 @@ public abstract class BaseQueryImpl implements Query {
 		checkOpen( true );
 
 		try {
-			findParameterRegistration( param ).bindValue( value );
+			final ParameterRegistration<T> parameterRegistrationExisting = findParameterRegistration( param );
+			if ( value == null
+					&& param.getParameterType() != null
+					&& parameterRegistrationExisting.getParameterType() == null &&
+					NullTypeBindableParameterRegistration.class.isInstance( parameterRegistrationExisting ) ) {
+				// we have:
+				// 1) a null value to bind;
+				// 2) parameterRegistrationExisting has no information about the Java type for that null value;
+				// 3) parameter.getParameterType() supplies a non-null parameter type;
+				//    NOTE: According to Javadoc for javax.persistenceParameter#getParameterType:
+				//          "Applications that use this method for Java Persistence query language
+				//           queries and native queries will not be portable."
+				// and 4) parameterRegistrationExisting allows for overriding the null parameter type when
+				// binding a null value;
+				( (NullTypeBindableParameterRegistration) parameterRegistrationExisting ).bindNullValue( param.getParameterType() );
+			}
+			else {
+				// NOTE: The Javadoc for javax.persistence.Query#setParameter(Parameter<T> param, T value)
+				// does not say anything about throwing IllegalArgumentException if
+				// javax.persistenceParameter#getParameterType is not assignable to the type, so we simply log
+				// a message if this is the case.
+				if ( param.getParameterType() != null &&
+						parameterRegistrationExisting.getParameterType() != null &&
+						!parameterRegistrationExisting.getParameterType().isAssignableFrom( param.getParameterType() ) ) {
+					LOG.warnf(
+							"Parameter type [%s] is not assignment compatible with requested type [%s] for parameter %s",
+							parameterRegistrationExisting.getParameterType().getName(),
+							param.getParameterType().getName(),
+							parameterRegistrationExisting.getName() == null ?
+									"at position [" + param.getPosition() + "]" :
+									"named [" + parameterRegistrationExisting.getName() + "]"
+					);
+				}
+				parameterRegistrationExisting.bindValue( value );
+			}
 		}
 		catch (QueryParameterException e) {
 			entityManager().markForRollbackOnly();

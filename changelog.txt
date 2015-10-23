@@ -5,6 +5,15 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.2.21 (2015.10.23)
+------------------------------------------------------------------------------------------------------------------------
+
+** Bug
+    [HHH-5255] - Merge detached entity failed when the instrumented lazy property is initialized
+    [HHH-7573] - Lazy properties are not processed properly after a PreUpdate callback
+    [HHH-9928] - Pending put leaks when the entity is not found in DB
+    [HHH-10182] - Backport HHH-7898 and HHH-10005 for JTA environment only
+
 Changes in version 4.2.20 (2015.07.24)
 ------------------------------------------------------------------------------------------------------------------------
 

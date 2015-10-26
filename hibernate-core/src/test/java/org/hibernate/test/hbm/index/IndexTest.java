@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.hbm;
+package org.hibernate.test.hbm.index;
 
 import java.util.Collections;
 
@@ -18,7 +18,6 @@ import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.test.hbm.JournalingSchemaToolingTarget;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

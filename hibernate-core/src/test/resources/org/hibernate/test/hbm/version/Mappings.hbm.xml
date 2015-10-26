@@ -9,13 +9,17 @@
         "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping package="org.hibernate.test.hbm.index">
+<hibernate-mapping>
 
-    <class name="Person">
-        <id name="id" type="long">
-            <generator class="native" />
+    <class name="org.hibernate.test.hbm.version.Order">
+        <id name="id">
+            <generator class="increment"/>
         </id>
-        <property name="name" index="person_name_index" type="string"/>
+        <natural-id>
+            <property name="referenceCode"/>
+        </natural-id>
+        <version name="rv" column="rv" type="binaryUserType" insert="false" generated="always" />
     </class>
+
 
 </hibernate-mapping>

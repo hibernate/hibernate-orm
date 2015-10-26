@@ -2476,46 +2476,23 @@ public class ModelBinder {
 
 				// generated properties can *never* be insertable...
 				if ( property.isInsertable() ) {
-					if ( singularAttributeSource.isInsertable() == null ) {
-						// insertable simply because that is the user did not specify
-						// anything; just override it
-						property.setInsertable( false );
-					}
-					else {
-						// the user specifically supplied insert="true",
-						// which constitutes an illegal combo
-						throw new MappingException(
-								String.format(
-										Locale.ENGLISH,
-										"Cannot specify both insert=\"true\" and generated=\"%s\" for property %s",
-										generationTiming.name().toLowerCase(Locale.ROOT),
-										propertySource.getName()
-								),
-								mappingDocument.getOrigin()
-						);
-					}
+					log.debugf(
+							"Property [%s] specified %s generation, setting insertable to false : %s",
+							propertySource.getName(),
+							generationTiming.name(),
+							mappingDocument.getOrigin()
+					);
+					property.setInsertable( false );
 				}
 
 				// properties generated on update can never be updatable...
 				if ( property.isUpdateable() && generationTiming == GenerationTiming.ALWAYS ) {
-					if ( singularAttributeSource.isUpdatable() == null ) {
-						// updatable only because the user did not specify
-						// anything; just override it
-						property.setUpdateable( false );
-					}
-					else {
-						// the user specifically supplied update="true",
-						// which constitutes an illegal combo
-						throw new MappingException(
-								String.format(
-										Locale.ENGLISH,
-										"Cannot specify both update=\"true\" and generated=\"%s\" for property %s",
-										generationTiming.name().toLowerCase(Locale.ROOT),
-										propertySource.getName()
-								),
-								mappingDocument.getOrigin()
-						);
-					}
+					log.debugf(
+							"Property [%s] specified ALWAYS generation, setting updateable to false : %s",
+							propertySource.getName(),
+							mappingDocument.getOrigin()
+					);
+					property.setUpdateable( false );
 				}
 			}
 		}

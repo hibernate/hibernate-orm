@@ -232,7 +232,7 @@ public class JoinWalker {
 				aliasedLhsColumns,
 				subalias,
 				joinType,
-				getWithClause( path ),
+				joinable.consumesEntityAlias() ? getWithClause( path ) : "",
 				hasRestriction( path ),
 				getFactory(),
 				loadQueryInfluencers.getEnabledFilters()

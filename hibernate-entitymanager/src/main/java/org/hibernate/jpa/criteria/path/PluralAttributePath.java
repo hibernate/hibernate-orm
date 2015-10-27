@@ -35,13 +35,13 @@ public class PluralAttributePath<X> extends AbstractPathImpl<X> implements Seria
 		this.persister = resolvePersister( criteriaBuilder, attribute );
 	}
 
-	private static CollectionPersister resolvePersister(CriteriaBuilderImpl criteriaBuilder, PluralAttribute attribute) {
+	private CollectionPersister resolvePersister(CriteriaBuilderImpl criteriaBuilder, PluralAttribute attribute) {
 		SessionFactoryImplementor sfi = criteriaBuilder.getEntityManagerFactory().getSessionFactory();
 		return sfi.getCollectionPersister( resolveRole( attribute ) );
 	}
 
-	private static String resolveRole(PluralAttribute attribute) {
-		return attribute.getDeclaringType().getJavaType().getName() +
+	private String resolveRole(PluralAttribute attribute) {
+		return getPathSource().getJavaType().getName() +
 				'.' + attribute.getName();
 	}
 

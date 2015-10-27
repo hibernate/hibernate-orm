@@ -621,7 +621,7 @@ public class ModelBinder {
 					}
 				}
 		);
-
+		keyBinding.setForeignKeyName( entitySource.getExplicitForeignKeyName() );
 		// model.getKey().setType( new Type( model.getIdentifier() ) );
 		entityDescriptor.createPrimaryKey();
 		entityDescriptor.createForeignKey();

@@ -182,7 +182,7 @@ public class Ejb3Column {
 	}
 
 	public boolean isNullable() {
-		return mappingColumn.isNullable();
+		return isFormula() ? true : mappingColumn.isNullable();
 	}
 
 	public String getDefaultValue() {

@@ -10,6 +10,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -313,6 +314,10 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		EntityManager isolatedEm = entityManagerFactory.createEntityManager(props);
 		isolatedEms.add( isolatedEm );
 		return isolatedEm;
+	}
+
+	protected EntityManager createEntityManager() {
+		return createEntityManager( Collections.emptyMap() );
 	}
 
 	protected EntityManager createEntityManager(Map properties) {

@@ -67,6 +67,11 @@ public class PluralAttributeElementSourceBasicImpl
 					}
 
 					@Override
+					public Boolean isNullable() {
+						return !jaxbElement.isNotNull();
+					}
+
+					@Override
 					public SizeSource getSizeSource() {
 						return Helper.interpretSizeSource(
 								jaxbElement.getLength(),

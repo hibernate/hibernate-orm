@@ -11,14 +11,12 @@
 
 <hibernate-mapping package="org.hibernate.test.hbm.index">
 
-    <class name="PersonGroup">
+    <class name="Person">
+
         <id name="id" type="long">
             <generator class="native" />
         </id>
-        <set name="persons" table="person">
-            <key column="group" foreign-key="person_persongroup_fk"/>
-            <element column="name" type="string" not-null="true" />
-        </set>
+        <property name="name" type="string" not-null="true" unique="true" />
     </class>
 
 </hibernate-mapping>

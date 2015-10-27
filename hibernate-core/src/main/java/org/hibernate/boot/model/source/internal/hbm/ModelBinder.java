@@ -67,6 +67,7 @@ import org.hibernate.boot.model.source.spi.PluralAttributeElementSourceEmbedded;
 import org.hibernate.boot.model.source.spi.PluralAttributeElementSourceManyToAny;
 import org.hibernate.boot.model.source.spi.PluralAttributeElementSourceManyToMany;
 import org.hibernate.boot.model.source.spi.PluralAttributeElementSourceOneToMany;
+import org.hibernate.boot.model.source.spi.PluralAttributeKeySource;
 import org.hibernate.boot.model.source.spi.PluralAttributeMapKeyManyToAnySource;
 import org.hibernate.boot.model.source.spi.PluralAttributeMapKeyManyToManySource;
 import org.hibernate.boot.model.source.spi.PluralAttributeMapKeySourceBasic;
@@ -3271,7 +3272,8 @@ public class ModelBinder {
 		}
 
 		protected void bindCollectionKey() {
-			final String propRef = getPluralAttributeSource().getKeySource().getReferencedPropertyName();
+			final PluralAttributeKeySource keySource = getPluralAttributeSource().getKeySource();
+			final String propRef = keySource.getReferencedPropertyName();
 			getCollectionBinding().setReferencedPropertyName( propRef );
 
 			final KeyValue keyVal;
@@ -3286,6 +3288,7 @@ public class ModelBinder {
 					getCollectionBinding().getCollectionTable(),
 					keyVal
 			);
+			key.setForeignKeyName( keySource.getExplicitForeignKeyName() );
 			key.setCascadeDeleteEnabled( getPluralAttributeSource().getKeySource().isCascadeDeleteEnabled() );
 
 			final ImplicitJoinColumnNameSource.Nature implicitNamingNature;

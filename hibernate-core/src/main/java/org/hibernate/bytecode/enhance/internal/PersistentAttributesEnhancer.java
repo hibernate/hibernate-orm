@@ -480,6 +480,12 @@ public class PersistentAttributesEnhancer extends Enhancer {
 					if ( op != Opcode.PUTFIELD && op != Opcode.GETFIELD ) {
 						continue;
 					}
+
+					// only transform access to fields of the entity being enhanced
+					if ( !managedCtClass.getName().equals( constPool.getFieldrefClassName( itr.u16bitAt( index + 1 ) ) ) ) {
+						continue;
+					}
+
 					final String fieldName = constPool.getFieldrefName( itr.u16bitAt( index + 1 ) );
 					final PersistentAttributeAccessMethods attributeMethods = attributeDescriptorMap.get( fieldName );
 

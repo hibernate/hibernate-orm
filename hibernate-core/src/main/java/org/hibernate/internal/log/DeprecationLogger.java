@@ -6,6 +6,7 @@
  */
 package org.hibernate.internal.log;
 
+import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.LogMessage;
 import org.jboss.logging.annotations.Message;
@@ -22,7 +23,7 @@ import static org.jboss.logging.Logger.Level.WARN;
  */
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 90000001, max = 90001000 )
-public interface DeprecationLogger {
+public interface DeprecationLogger extends BasicLogger {
 	public static final DeprecationLogger DEPRECATION_LOGGER = Logger.getMessageLogger(
 			DeprecationLogger.class,
 			"org.hibernate.orm.deprecation"
@@ -185,4 +186,11 @@ public interface DeprecationLogger {
 					"use collection function syntax instead [%1$s(%2$s)]."
 	)
 	void logDeprecationOfCollectionPropertiesInHql(String collectionPropertyName, String alias);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000017,
+			value = "Found use of deprecated entity-type selector syntax in HQL/JPQL query ['%1$s.class']; use TYPE operator instead : type(%1$s)"
+	)
+	void logDeprecationOfClassEntityTypeSelector(String path);
 }

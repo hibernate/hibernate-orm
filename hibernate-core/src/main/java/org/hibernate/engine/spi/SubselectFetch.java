@@ -17,6 +17,8 @@ import org.hibernate.persister.entity.PropertyMapping;
  * @author Gavin King
  */
 public class SubselectFetch {
+	private static final String FROM_STRING = " from ";
+
 	private final Set resultingEntityKeys;
 	private final String queryString;
 	private final String alias;
@@ -39,11 +41,50 @@ public class SubselectFetch {
 
 		//TODO: ugly here:
 		final String queryString = queryParameters.getFilteredSQL();
-		int fromIndex = queryString.indexOf( " from " );
-		int orderByIndex = queryString.lastIndexOf( "order by" );
+		final int fromIndex = getFromIndex( queryString );
+		final int orderByIndex = queryString.lastIndexOf( "order by" );
 		this.queryString = orderByIndex > 0
 				? queryString.substring( fromIndex, orderByIndex )
 				: queryString.substring( fromIndex );
+	}
+
+	private static int getFromIndex(String queryString) {
+		int index = queryString.indexOf( FROM_STRING );
+
+		if ( index < 0 ) {
+			return index;
+		}
+
+		while ( !parenthesesMatch( queryString.substring( 0, index ) ) ) {
+			String subString = queryString.substring( index + FROM_STRING.length() );
+
+			int subIndex = subString.indexOf( FROM_STRING );
+
+			if ( subIndex < 0 ) {
+				return subIndex;
+			}
+
+			index += FROM_STRING.length() + subIndex;
+		}
+
+		return index;
+	}
+
+	private static boolean parenthesesMatch(String string) {
+		int parenCount = 0;
+
+		for ( int i = 0; i < string.length(); i++ ) {
+			char character = string.charAt( i );
+
+			if ( character == '(' ) {
+				parenCount++;
+			}
+			else if ( character == ')' ) {
+				parenCount--;
+			}
+		}
+
+		return parenCount == 0;
 	}
 
 	public QueryParameters getQueryParameters() {

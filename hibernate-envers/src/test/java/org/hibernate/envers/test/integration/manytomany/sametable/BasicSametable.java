@@ -51,8 +51,8 @@ public class BasicSametable extends BaseEnversJPAFunctionalTestCase {
 		session.createSQLQuery( "DROP TABLE children" ).executeUpdate();
 		session.createSQLQuery(
 				"CREATE TABLE children ( parent_id " + getDialect().getTypeName( Types.INTEGER ) +
-						", child1_id " + getDialect().getTypeName( Types.INTEGER ) + " NULL" +
-						", child2_id " + getDialect().getTypeName( Types.INTEGER ) + " NULL )"
+						", child1_id " + getDialect().getTypeName( Types.INTEGER ) + getDialect().getNullColumnString() +
+						", child2_id " + getDialect().getTypeName( Types.INTEGER ) + getDialect().getNullColumnString() + " )"
 		).executeUpdate();
 		session.createSQLQuery( "DROP TABLE children_AUD" ).executeUpdate();
 		session.createSQLQuery(
@@ -60,8 +60,8 @@ public class BasicSametable extends BaseEnversJPAFunctionalTestCase {
 						", REVEND " + getDialect().getTypeName( Types.INTEGER ) +
 						", REVTYPE " + getDialect().getTypeName( Types.TINYINT ) +
 						", parent_id " + getDialect().getTypeName( Types.INTEGER ) +
-						", child1_id " + getDialect().getTypeName( Types.INTEGER ) + " NULL" +
-						", child2_id " + getDialect().getTypeName( Types.INTEGER ) + " NULL )"
+						", child1_id " + getDialect().getTypeName( Types.INTEGER ) + getDialect().getNullColumnString() +
+						", child2_id " + getDialect().getTypeName( Types.INTEGER ) + getDialect().getNullColumnString() + " )"
 		).executeUpdate();
 		em.getTransaction().commit();
 		em.clear();

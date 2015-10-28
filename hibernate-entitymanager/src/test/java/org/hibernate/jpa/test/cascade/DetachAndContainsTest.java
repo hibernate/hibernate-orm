@@ -14,6 +14,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 import org.junit.Test;
 
@@ -72,6 +73,7 @@ public class DetachAndContainsTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Entity
+	@Table(name = "mouth")
 	public static class Mouth {
 		@Id
 		@GeneratedValue
@@ -81,6 +83,7 @@ public class DetachAndContainsTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Entity
+	@Table(name = "tooth")
 	public static class Tooth {
 		@Id
 		@GeneratedValue

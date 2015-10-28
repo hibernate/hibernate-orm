@@ -43,4 +43,3 @@ public final class QueuedOperationCollectionAction extends CollectionAction {
 		getPersister().processQueuedOps( getCollection(), getKey(), getSession() );
 	}
 }
-

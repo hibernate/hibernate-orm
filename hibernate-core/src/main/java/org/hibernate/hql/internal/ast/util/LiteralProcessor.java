@@ -19,6 +19,7 @@ import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.InvalidPathException;
+import org.hibernate.hql.internal.ast.tree.BooleanLiteralNode;
 import org.hibernate.hql.internal.ast.tree.DotNode;
 import org.hibernate.hql.internal.ast.tree.FromClause;
 import org.hibernate.hql.internal.ast.tree.IdentNode;
@@ -184,16 +185,9 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 	}
 
 	public void processBoolean(AST constant) {
-		// TODO: something much better - look at the type of the other expression!
-		// TODO: Have comparisonExpression and/or arithmeticExpression rules complete the resolution of boolean nodes.
 		String replacement = (String) walker.getTokenReplacements().get( constant.getText() );
 		if ( replacement != null ) {
 			constant.setText( replacement );
-		}
-		else {
-			boolean bool = "true".equals( constant.getText().toLowerCase(Locale.ROOT) );
-			Dialect dialect = walker.getSessionFactoryHelper().getFactory().getDialect();
-			constant.setText( dialect.toBooleanValueString( bool ) );
 		}
 	}
 

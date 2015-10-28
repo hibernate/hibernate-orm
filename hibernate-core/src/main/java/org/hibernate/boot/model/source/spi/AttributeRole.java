@@ -39,4 +39,3 @@ public class AttributeRole extends AbstractAttributeKey {
 		super( parent, property );
 	}
 }
-

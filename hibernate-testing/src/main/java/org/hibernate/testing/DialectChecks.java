@@ -35,7 +35,7 @@ abstract public class DialectChecks {
 
 	public static class SupportsIdentityColumns implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsIdentityColumns();
+			return dialect.getIdentityColumnSupport().supportsIdentityColumns();
 		}
 	}
 
@@ -163,6 +163,18 @@ abstract public class DialectChecks {
 		@Override
 		public boolean isMatch(Dialect dialect) {
 			return '\"' == dialect.openQuote() && '\"' == dialect.closeQuote();
+		}
+	}
+
+	public static class SupportSchemaCreation implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect.canCreateSchema();
+		}
+	}
+
+	public static class SupportCatalogCreation implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect.canCreateCatalog();
 		}
 	}
 }

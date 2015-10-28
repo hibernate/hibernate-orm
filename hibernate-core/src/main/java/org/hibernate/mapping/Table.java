@@ -19,9 +19,11 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Exportable;
+import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.tool.hbm2ddl.ColumnMetadata;
@@ -59,6 +61,8 @@ public class Table implements RelationalModel, Serializable, Exportable {
 	private boolean isAbstract;
 	private boolean hasDenormalizedTables;
 	private String comment;
+
+	private List<InitCommand> initCommands;
 
 	public Table() {
 	}
@@ -103,6 +107,11 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		this.isAbstract = isAbstract;
 	}
 
+	/**
+	 * @deprecated Should use {@link QualifiedObjectNameFormatter#format} on QualifiedObjectNameFormatter
+	 * obtained from {@link org.hibernate.engine.jdbc.env.spi.JdbcEnvironment}
+	 */
+	@Deprecated
 	public String getQualifiedName(Dialect dialect, String defaultCatalog, String defaultSchema) {
 		if ( subselect != null ) {
 			return "( " + subselect + " )";
@@ -117,6 +126,11 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		return qualify( usedCatalog, usedSchema, quotedName );
 	}
 
+	/**
+	 * @deprecated Should use {@link QualifiedObjectNameFormatter#format} on QualifiedObjectNameFormatter
+	 * obtained from {@link org.hibernate.engine.jdbc.env.spi.JdbcEnvironment}
+	 */
+	@Deprecated
 	public static String qualify(String catalog, String schema, String table) {
 		StringBuilder qualifiedName = new StringBuilder();
 		if ( catalog != null ) {
@@ -508,11 +522,11 @@ public class Table implements RelationalModel, Serializable, Exportable {
 
 			if ( identityColumn && col.getQuotedName( dialect ).equals( pkname ) ) {
 				// to support dialects that have their own identity data type
-				if ( dialect.hasDataTypeInIdentityColumn() ) {
+				if ( dialect.getIdentityColumnSupport().hasDataTypeInIdentityColumn() ) {
 					buf.append( col.getSqlType( dialect, p ) );
 				}
 				buf.append( ' ' )
-						.append( dialect.getIdentityColumnString( col.getSqlTypeCode( p ) ) );
+						.append( dialect.getIdentityColumnSupport().getIdentityColumnString( col.getSqlTypeCode( p ) ) );
 			}
 			else {
 
@@ -857,4 +871,19 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		}
 	}
 
+	public void addInitCommand(InitCommand command) {
+		if ( initCommands == null ) {
+			initCommands = new ArrayList<InitCommand>();
+		}
+		initCommands.add( command );
+	}
+
+	public List<InitCommand> getInitCommands() {
+		if ( initCommands == null ) {
+			return Collections.emptyList();
+		}
+		else {
+			return Collections.unmodifiableList( initCommands );
+		}
+	}
 }

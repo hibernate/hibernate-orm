@@ -34,7 +34,7 @@
 				insert="false"
 				update="false">
 			<column name="id"/>
-			<formula>1</formula>
+			<formula>true</formula>
 		</many-to-one>
 		
 	</class>

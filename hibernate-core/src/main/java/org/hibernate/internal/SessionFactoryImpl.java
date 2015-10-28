@@ -719,6 +719,11 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		return properties;
 	}
 
+	@Override
+	public String getUuid() {
+		return uuid;
+	}
+
 	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
 		return null;
 	}
@@ -870,7 +875,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		LOG.debug( "Returning a Reference to the SessionFactory" );
 		return new Reference(
 				SessionFactoryImpl.class.getName(),
-				new StringRefAddr("uuid", uuid),
+				new StringRefAddr("uuid", getUuid()),
 				SessionFactoryRegistry.ObjectFactoryImpl.class.getName(),
 				null
 		);

@@ -13,6 +13,7 @@ import java.util.Set;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.Namespace;
@@ -72,6 +73,38 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 		final Set<String> exportIdentifiers = new HashSet<String>( 50 );
 
 		final Database database = metadata.getDatabase();
+		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
+		final Dialect dialect = jdbcEnvironment.getDialect();
+
+		// Drop all AuxiliaryDatabaseObjects
+		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
+			if ( !auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
+				continue;
+			}
+
+			applySqlStrings(
+					dialect.getAuxiliaryDatabaseObjectExporter().getSqlDropStrings( auxiliaryDatabaseObject, metadata ),
+					targets,
+					true
+			);
+		}
+
+		// Create before-table AuxiliaryDatabaseObjects
+		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
+			if ( auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
+				continue;
+			}
+			if ( !auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
+				continue;
+			}
+
+			applySqlStrings(
+					auxiliaryDatabaseObject.sqlCreateStrings( jdbcEnvironment.getDialect() ),
+					targets,
+					true
+			);
+		}
+
 		boolean tryToCreateCatalogs = false;
 		boolean tryToCreateSchemas = false;
 
@@ -144,11 +177,7 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 				}
 
 				final TableInformation tableInformation = existingDatabase.getTableInformation( table.getQualifiedTableName() );
-				if ( tableInformation == null ) {
-					// big problem...
-					throw new SchemaManagementException( "BIG PROBLEM" );
-				}
-				if ( !tableInformation.isPhysicalTable() ) {
+				if ( tableInformation != null && !tableInformation.isPhysicalTable() ) {
 					continue;
 				}
 
@@ -174,6 +203,22 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 						false
 				);
 			}
+		}
+
+		// Create after-table AuxiliaryDatabaseObjects
+		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
+			if ( !auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
+				continue;
+			}
+			if ( !auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
+				continue;
+			}
+
+			applySqlStrings(
+					auxiliaryDatabaseObject.sqlCreateStrings( jdbcEnvironment.getDialect() ),
+					targets,
+					true
+			);
 		}
 	}
 
@@ -218,9 +263,11 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 				continue;
 			}
 
-			final IndexInformation existingIndex = findMatchingIndex( index, tableInformation );
-			if ( existingIndex != null ) {
-				continue;
+			if ( tableInformation != null ) {
+				final IndexInformation existingIndex = findMatchingIndex( index, tableInformation );
+				if ( existingIndex != null ) {
+					continue;
+				}
 			}
 
 			applySqlStrings(
@@ -315,19 +362,22 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 				continue;
 			}
 
-			final ForeignKeyInformation existingForeignKey = findMatchingForeignKey( foreignKey, tableInformation );
+			if ( tableInformation != null ) {
+				final ForeignKeyInformation existingForeignKey = findMatchingForeignKey( foreignKey, tableInformation );
+				if ( existingForeignKey != null ) {
+					continue;
+				}
+			}
 
 			// todo : shouldn't we just drop+recreate if FK exists?
 			//		this follows the existing code from legacy SchemaUpdate which just skipped
 
-			if ( existingForeignKey == null ) {
-				// in old SchemaUpdate code, this was the trigger to "create"
-				applySqlStrings(
-						exporter.getSqlCreateStrings( foreignKey, metadata ),
-						targets,
-						false
-				);
-			}
+			// in old SchemaUpdate code, this was the trigger to "create"
+			applySqlStrings(
+					exporter.getSqlCreateStrings( foreignKey, metadata ),
+					targets,
+					false
+			);
 		}
 	}
 

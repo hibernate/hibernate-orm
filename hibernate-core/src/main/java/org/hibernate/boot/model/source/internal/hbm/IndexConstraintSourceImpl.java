@@ -36,5 +36,3 @@ class IndexConstraintSourceImpl extends AbstractConstraintSource implements Inde
 		return false;
 	}
 }
-
-

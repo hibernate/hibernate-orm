@@ -62,4 +62,3 @@ public interface IdentifiableTypeSource extends AttributeSourceContainer {
 	 */
 	public List<JpaCallbackSource> getJpaCallbackClasses();
 }
-

@@ -246,7 +246,7 @@ public class Restrictions {
 	 *
 	 * @see InExpression
 	 */
-	public static Criterion in(String propertyName, Object[] values) {
+	public static Criterion in(String propertyName, Object... values) {
 		return new InExpression( propertyName, values );
 	}
 

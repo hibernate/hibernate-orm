@@ -18,6 +18,7 @@ import java.util.StringTokenizer;
 
 import org.hibernate.JDBCException;
 import org.hibernate.boot.model.TruthValue;
+import org.hibernate.boot.model.naming.DatabaseIdentifier;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.cfg.AvailableSettings;
@@ -124,10 +125,13 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 				}
 
 				if ( resultSet.next() ) {
+					final String catalogName = catalog == null ? "" : catalog.getCanonicalName();
+					final String schemaName = schema == null ? "" : schema.getCanonicalName();
+
 					log.debugf(
 							"Multiple schemas found with that name [%s.%s]",
-							catalog.getCanonicalName(),
-							schema.getCanonicalName()
+							catalogName,
+							schemaName
 					);
 				}
 				return true;
@@ -344,12 +348,14 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 
 			if ( resultSet.next() ) {
 				log.multipleTablesFound( tableName.render() );
+				final String catalogName = catalog == null ? "" : catalog.render();
+				final String schemaName = schema == null ? "" : schema.render();
 				throw new SchemaExtractionException(
 						String.format(
 								Locale.ENGLISH,
 								"More than one table found in namespace (%s, %s) : %s",
-								catalog.render(),
-								schema.render(),
+								catalogName,
+								schemaName,
 								tableName.render()
 						)
 				);
@@ -642,6 +648,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 		return fks;
 	}
 
+
 	private ForeignKeyBuilder generateForeignKeyBuilder(Identifier fkIdentifier) {
 		return new ForeignKeyBuilderImpl( fkIdentifier );
 	}
@@ -683,10 +690,10 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 		final String incomingSchemaName = resultSet.getString( prefix + "TABLE_SCHEM" );
 		final String incomingTableName = resultSet.getString( prefix + "TABLE_NAME" );
 
-		return new QualifiedTableName(
-				identifierHelper().toIdentifier( incomingCatalogName ),
-				identifierHelper().toIdentifier( incomingSchemaName ),
-				identifierHelper().toIdentifier( incomingTableName )
-		);
+		final DatabaseIdentifier catalog = DatabaseIdentifier.toIdentifier( incomingCatalogName );
+		final DatabaseIdentifier schema = DatabaseIdentifier.toIdentifier( incomingSchemaName );
+		final DatabaseIdentifier table = DatabaseIdentifier.toIdentifier( incomingTableName );
+
+		return new QualifiedTableName( catalog, schema, table );
 	}
 }

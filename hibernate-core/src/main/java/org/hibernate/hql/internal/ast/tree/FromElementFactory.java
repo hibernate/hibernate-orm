@@ -22,7 +22,7 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.ComponentType;
+import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
@@ -286,7 +286,7 @@ public class FromElementFactory implements SqlTokenTypes {
 		return elem;
 	}
 
-	public FromElement createComponentJoin(ComponentType type) {
+	public FromElement createComponentJoin(CompositeType type) {
 
 		// need to create a "place holder" from-element that can store the component/alias for this
 		// 		component join

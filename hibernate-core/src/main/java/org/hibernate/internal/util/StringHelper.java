@@ -13,6 +13,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -802,5 +803,30 @@ public final class StringHelper {
 
 	public static List<String> parseCommaSeparatedString(String incomingString) {
 		return Arrays.asList( incomingString.split( "\\s*,\\s*" ) );
+	}
+
+	public static <T> String join(Collection<T> values, Renderer<T> renderer) {
+		final StringBuilder buffer = new StringBuilder();
+		boolean firstPass = true;
+		for ( T value : values ) {
+			if ( firstPass ) {
+				firstPass = false;
+			}
+			else {
+				buffer.append( ", " );
+			}
+
+			buffer.append( renderer.render( value ) );
+		}
+
+		return buffer.toString();
+	}
+
+	public static <T> String join(T[] values, Renderer<T> renderer) {
+		return join( Arrays.asList( values ), renderer );
+	}
+
+	public interface Renderer<T> {
+		String render(T value);
 	}
 }

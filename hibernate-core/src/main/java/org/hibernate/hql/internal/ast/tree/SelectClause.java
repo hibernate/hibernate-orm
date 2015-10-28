@@ -432,7 +432,7 @@ public class SelectClause extends SelectExpressionList {
 				if ( !selectExpressions[i].isScalar() ) {
 					FromElement fromElement = selectExpressions[i].getFromElement();
 					if ( fromElement != null ) {
-						renderNonScalarProperties( appender, fromElement, nonscalarSize, k );
+						renderNonScalarProperties( appender, selectExpressions[i], fromElement, nonscalarSize, k );
 						k++;
 					}
 				}
@@ -446,13 +446,24 @@ public class SelectClause extends SelectExpressionList {
 			int j,
 			SelectExpression expr,
 			ASTAppender appender) {
-		String text = fromElement.renderIdentifierSelect( nonscalarSize, j );
 		if ( !fromElement.getFromClause().isSubQuery() ) {
 			if ( !scalarSelect && !getWalker().isShallowQuery() ) {
-				//TODO: is this a bit ugly?
+//				// todo : ugh this is all fugly code
+//				if ( expr instanceof MapKeyNode ) {
+//					// don't over-write node text
+//				}
+//				else if ( expr instanceof MapEntryNode ) {
+//					// don't over-write node text
+//				}
+//				else {
+//					String text = fromElement.renderIdentifierSelect( nonscalarSize, j );
+//					expr.setText( text );
+//				}
+				String text = fromElement.renderIdentifierSelect( nonscalarSize, j );
 				expr.setText( text );
 			}
 			else {
+				String text = fromElement.renderIdentifierSelect( nonscalarSize, j );
 				if (! alreadyRenderedIdentifiers.contains(text)) {
 					appender.append( SqlTokenTypes.SQL_TOKEN, text, false );
 					alreadyRenderedIdentifiers.add(text);
@@ -461,21 +472,43 @@ public class SelectClause extends SelectExpressionList {
 		}
 	}
 
-	private void renderNonScalarProperties(ASTAppender appender, FromElement fromElement, int nonscalarSize, int k) {
-		String text = fromElement.renderPropertySelect( nonscalarSize, k );
-		appender.append( SqlTokenTypes.SQL_TOKEN, text, false );
-		if ( fromElement.getQueryableCollection() != null && fromElement.isFetch() ) {
-			text = fromElement.renderCollectionSelectFragment( nonscalarSize, k );
-			appender.append( SqlTokenTypes.SQL_TOKEN, text, false );
+	private void renderNonScalarProperties(
+			ASTAppender appender,
+			SelectExpression selectExpression,
+			FromElement fromElement,
+			int nonscalarSize,
+			int k) {
+		final String text;
+		if ( selectExpression instanceof MapKeyNode ) {
+			final MapKeyNode mapKeyNode = (MapKeyNode) selectExpression;
+			if ( mapKeyNode.getMapKeyEntityFromElement() != null ) {
+				text = mapKeyNode.getMapKeyEntityFromElement().renderMapKeyPropertySelectFragment( nonscalarSize, k );
+			}
+			else {
+				text = fromElement.renderPropertySelect( nonscalarSize, k );
+			}
 		}
+		else if ( selectExpression instanceof MapEntryNode ) {
+			text = fromElement.renderMapEntryPropertySelectFragment( nonscalarSize, k );
+		}
+		else {
+			text = fromElement.renderPropertySelect( nonscalarSize, k );
+		}
+		appender.append( SqlTokenTypes.SQL_TOKEN, text, false );
+
+		if ( fromElement.getQueryableCollection() != null && fromElement.isFetch() ) {
+			String subText1 = fromElement.renderCollectionSelectFragment( nonscalarSize, k );
+			appender.append( SqlTokenTypes.SQL_TOKEN, subText1, false );
+		}
+
 		// Look through the FromElement's children to find any collections of values that should be fetched...
-		ASTIterator iter = new ASTIterator( fromElement );
-		while ( iter.hasNext() ) {
-			FromElement child = (FromElement) iter.next();
+		ASTIterator itr = new ASTIterator( fromElement );
+		while ( itr.hasNext() ) {
+			FromElement child = (FromElement) itr.next();
 			if ( child.isCollectionOfValuesOrComponents() && child.isFetch() ) {
 				// Need a better way to define the suffixes here...
-				text = child.renderValueCollectionSelectFragment( nonscalarSize, nonscalarSize + k );
-				appender.append( SqlTokenTypes.SQL_TOKEN, text, false );
+				final String subText2 = child.renderValueCollectionSelectFragment( nonscalarSize, nonscalarSize + k );
+				appender.append( SqlTokenTypes.SQL_TOKEN, subText2, false );
 			}
 		}
 	}

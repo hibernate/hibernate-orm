@@ -184,7 +184,7 @@ public class SelectStatementBuilder {
 	 * @return the SQL <tt>SELECT</tt> statement.
 	 */
 	public String toStatementString() {
-		final StringBuilder buf = new StringBuilder( guesstimatedBufferSize );
+		StringBuilder buf = new StringBuilder( guesstimatedBufferSize );
 
 		if ( StringHelper.isNotEmpty( comment ) ) {
 			buf.append( "/* " ).append( comment ).append( " */ " );
@@ -219,7 +219,7 @@ public class SelectStatementBuilder {
 		}
 
 		if ( lockOptions.getLockMode() != LockMode.NONE ) {
-			buf.append( dialect.getForUpdateString( lockOptions ) );
+			buf = new StringBuilder(dialect.applyLocksToSql( buf.toString(), lockOptions, null ) );
 		}
 
 		return dialect.transformSelectString( buf.toString() );

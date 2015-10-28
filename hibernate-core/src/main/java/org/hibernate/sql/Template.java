@@ -305,6 +305,9 @@ public final class Template {
 				else if ( inFromClause && ",".equals(lcToken) ) {
 					beforeTable = true;
 				}
+				if ( isBoolean( token ) ) {
+					token = dialect.toBooleanValueString( Boolean.parseBoolean( token ) );
+				}
 				result.append(token);
 			}
 
@@ -712,7 +715,7 @@ public final class Template {
 	}
 
 	private static boolean isNamedParameter(String token) {
-		return token.startsWith(":");
+		return token.startsWith( ":" );
 	}
 
 	private static boolean isFunctionOrKeyword(String lcToken, String nextToken, Dialect dialect, SQLFunctionRegistry functionRegistry) {
@@ -740,10 +743,16 @@ public final class Template {
 	}
 
 	private static boolean isIdentifier(String token) {
-		return token.charAt(0)=='`' || ( //allow any identifier quoted with backtick
-			Character.isLetter( token.charAt(0) ) && //only recognizes identifiers beginning with a letter
-			token.indexOf('.') < 0
+		if ( isBoolean( token ) ) {
+			return false;
+		}
+		return token.charAt( 0 ) == '`' || ( //allow any identifier quoted with backtick
+				Character.isLetter( token.charAt( 0 ) ) && //only recognizes identifiers beginning with a letter
+						token.indexOf( '.' ) < 0
 		);
 	}
 
+	private static boolean isBoolean(String token) {
+		return "true".equals( token ) || "false".equals( token );
+	}
 }

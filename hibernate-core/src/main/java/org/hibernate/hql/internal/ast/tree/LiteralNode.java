@@ -7,10 +7,13 @@
 package org.hibernate.hql.internal.ast.tree;
 
 import java.sql.Types;
+import java.util.Locale;
 import javax.persistence.AttributeConverter;
 
+import org.hibernate.QueryException;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ColumnHelper;
+import org.hibernate.type.LiteralType;
 import org.hibernate.type.SingleColumnType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
@@ -32,8 +35,8 @@ public class LiteralNode extends AbstractSelectExpression implements HqlSqlToken
 	}
 
 	public Type getDataType() {
-		if ( expectedType != null ) {
-			return expectedType;
+		if ( getExpectedType() != null ) {
+			return getExpectedType();
 		}
 
 		switch ( getType() ) {
@@ -81,18 +84,33 @@ public class LiteralNode extends AbstractSelectExpression implements HqlSqlToken
 
 		if ( AttributeConverterTypeAdapter.class.isInstance( expectedType ) ) {
 			final AttributeConverterTypeAdapter adapterType = (AttributeConverterTypeAdapter) expectedType;
-			if ( getDataType().getReturnedClass().equals( adapterType.getModelType() ) ) {
-				// apply the converter
-				final AttributeConverter converter = ( (AttributeConverterTypeAdapter) expectedType ).getAttributeConverter();
-				final Object converted = converter.convertToDatabaseColumn( getLiteralValue() );
-				if ( isCharacterData( adapterType.sqlType() ) ) {
-					setText( "'" + converted.toString() + "'" );
-				}
-				else {
-					setText( converted.toString() );
-				}
-			}
+			setText( determineConvertedValue( adapterType, getLiteralValue() ) );
 			this.expectedType = expectedType;
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	protected String determineConvertedValue(AttributeConverterTypeAdapter converterTypeAdapter, Object literalValue) {
+		if ( getDataType().getReturnedClass().equals( converterTypeAdapter.getModelType() ) ) {
+			// apply the converter
+			final AttributeConverter converter = converterTypeAdapter.getAttributeConverter();
+			final Object converted = converter.convertToDatabaseColumn( getLiteralValue() );
+			if ( isCharacterData( converterTypeAdapter.sqlType() ) ) {
+				return "'" + converted.toString() + "'";
+			}
+			else {
+				return converted.toString();
+			}
+		}
+		else {
+			throw new QueryException(
+					String.format(
+							Locale.ROOT,
+							"AttributeConverter domain-model attribute type [%s] did not match query literal type [%s]",
+							converterTypeAdapter.getModelType().getName(),
+							getDataType().getReturnedClass().getName()
+					)
+			);
 		}
 	}
 

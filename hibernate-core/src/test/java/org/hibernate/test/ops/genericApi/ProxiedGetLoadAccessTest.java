@@ -38,7 +38,7 @@ public class ProxiedGetLoadAccessTest extends BaseNonConfigCoreFunctionalTestCas
 	}
 
 	@Entity( name = "User" )
-	@Table( name = "user" )
+	@Table( name = "my_user" )
 	@Proxy( proxyClass = User.class )
 	public static class UserImpl implements User {
 		private Integer id;

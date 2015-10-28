@@ -24,11 +24,4 @@ public class IdentifierGenerationException extends HibernateException {
 	public IdentifierGenerationException(String msg, Throwable t) {
 		super(msg, t);
 	}
-
 }
-
-
-
-
-
-

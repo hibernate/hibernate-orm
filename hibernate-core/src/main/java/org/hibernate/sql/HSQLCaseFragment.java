@@ -42,4 +42,3 @@ public class HSQLCaseFragment extends CaseFragment {
 		return buf.toString();
 	}
 }
-

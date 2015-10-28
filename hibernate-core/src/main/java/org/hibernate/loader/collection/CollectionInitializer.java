@@ -22,9 +22,3 @@ public interface CollectionInitializer {
 	 */
 	public void initialize(Serializable id, SessionImplementor session) throws HibernateException;
 }
-
-
-
-
-
-

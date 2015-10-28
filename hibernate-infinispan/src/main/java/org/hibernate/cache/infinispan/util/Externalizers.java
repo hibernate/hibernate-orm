@@ -7,7 +7,6 @@
 package org.hibernate.cache.infinispan.util;
 
 import org.infinispan.commons.marshall.AdvancedExternalizer;
-import org.infinispan.commons.util.Util;
 
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -22,9 +21,23 @@ import java.util.UUID;
 public class Externalizers {
 
 	public final static int UUID = 1200;
+	public final static int TOMBSTONE = 1201;
+	public final static int EXCLUDE_TOMBSTONES_FILTER = 1202;
+	public final static int TOMBSTONE_UPDATE = 1203;
+	public final static int FUTURE_UPDATE = 1204;
+	public final static int VALUE_EXTRACTOR = 1205;
+	public final static int VERSIONED_ENTRY = 1206;
+	public final static int EXCLUDE_EMPTY_EXTRACT_VALUE = 1207;
 
 	public final static AdvancedExternalizer[] ALL_EXTERNALIZERS = new AdvancedExternalizer[] {
-			new UUIDExternalizer()
+			new UUIDExternalizer(),
+			new Tombstone.Externalizer(),
+			new Tombstone.ExcludeTombstonesFilterExternalizer(),
+			new TombstoneUpdate.Externalizer(),
+			new FutureUpdate.Externalizer(),
+			new FutureUpdate.ValueExtractorExternalizer(),
+			new VersionedEntry.Externalizer(),
+			new VersionedEntry.ExcludeEmptyExtractValueExternalizer()
 	};
 
 	public static class UUIDExternalizer implements AdvancedExternalizer<UUID> {

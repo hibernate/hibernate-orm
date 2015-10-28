@@ -76,10 +76,4 @@ public abstract class AbstractUUIDGenerator implements IdentifierGenerator {
 	protected int getLoTime() {
 		return (int) System.currentTimeMillis();
 	}
-
 }
-
-
-
-
-

@@ -281,7 +281,7 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		// Ensure the EntityGraph and explicit fetches do not conflict.
 		Query query = entityManager.createQuery( "from " + Company.class.getName()
 						+ " as c left join fetch c.location left join fetch c.employees where c.location.zip = :zip")
-				.setParameter( "zip", 12345 );
+				.setParameter("zip", 12345);
 		query.setHint( QueryHints.HINT_LOADGRAPH, entityGraph );
 		Company company = (Company) query.getSingleResult();
 
@@ -294,6 +294,22 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		// With "loadgraph", non-specified attributes use the fetch modes defined in the mappings.  So, here,
 		// @ElementCollection(fetch = FetchType.EAGER) should cause the follow-on selects to happen.
 		assertTrue( Hibernate.isInitialized( company.phoneNumbers ) );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-9374")
+	public void testEntityGraphWithCollectionSubquery(){
+		EntityManager entityManager = getOrCreateEntityManager();
+		entityManager.getTransaction().begin();
+
+		EntityGraph<Company> entityGraph = entityManager.createEntityGraph(Company.class);
+		entityGraph.addAttributeNodes("location");
+		Query query = entityManager.createQuery("select c from " + Company.class.getName() + " c where c.employees IS EMPTY");
+		query.setHint(QueryHints.HINT_LOADGRAPH, entityGraph);
+		query.getResultList();
+
+		entityManager.getTransaction().commit();
+		entityManager.close();
 	}
 
 	@Before

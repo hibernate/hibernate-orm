@@ -57,11 +57,4 @@ public class ColumnMetadata {
 	public int getTypeCode() {
 		return typeCode;
 	}
-
 }
-
-
-
-
-
-

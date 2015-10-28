@@ -15,6 +15,7 @@ import javax.persistence.EntityListeners;
 import javax.persistence.EntityManager;
 import javax.persistence.Id;
 import javax.persistence.PrePersist;
+import javax.persistence.Table;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -62,6 +63,7 @@ public class BasicCDITest extends BaseCDIIntegrationTest {
 
 	@Entity
 	@EntityListeners( Monitor.class )
+	@Table(name = "my_entity")
 	public static class MyEntity {
 		private Integer id;
 		private String name;

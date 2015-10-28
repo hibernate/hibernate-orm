@@ -9,6 +9,8 @@ package org.hibernate.dialect;
 import java.sql.Types;
 
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.identity.JDataStoreIdentityColumnSupport;
 
 /**
  * A Dialect for JDataStore.
@@ -59,22 +61,6 @@ public class JDataStoreDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsIdentityColumns() {
-		return true;
-	}
-
-	@Override
-	public String getIdentitySelectString() {
-		// NOT_SUPPORTED_SHOULD_USE_JDBC3_PreparedStatement.getGeneratedKeys_method
-		return null;
-	}
-
-	@Override
-	public String getIdentityColumnString() {
-		return "autoincrement";
-	}
-
-	@Override
 	public String getNoColumnsInsertString() {
 		return "default values";
 	}
@@ -87,6 +73,11 @@ public class JDataStoreDialect extends Dialect {
 	@Override
 	public boolean supportsTableCheck() {
 		return false;
+	}
+
+	@Override
+	public IdentityColumnSupport getIdentityColumnSupport() {
+		return new JDataStoreIdentityColumnSupport();
 	}
 
 }

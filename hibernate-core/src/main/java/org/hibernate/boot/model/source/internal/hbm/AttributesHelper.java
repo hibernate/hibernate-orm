@@ -45,6 +45,8 @@ import org.hibernate.boot.model.source.spi.SingularAttributeSourceEmbedded;
 import org.hibernate.boot.model.source.spi.ToolingHintContext;
 import org.hibernate.internal.util.StringHelper;
 
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+
 /**
  * @author Steve Ebersole
  */
@@ -447,6 +449,7 @@ public class AttributesHelper {
 		);
 
 		processConstraints(
+				mappingDocument,
 				callback,
 				logicalTableName,
 				basicAttributeJaxbMapping.getColumnAttribute(),
@@ -457,6 +460,7 @@ public class AttributesHelper {
 	}
 
 	private static void processConstraints(
+			MappingDocument mappingDocument,
 			Callback callback,
 			String logicalTableName,
 			String columnAttribute,
@@ -470,13 +474,20 @@ public class AttributesHelper {
 		final Set<String> groupedUniqueKeyNameSet = splitNames( groupedUniqueKeyNames );
 		final boolean hasGroupedUniqueKeys = !groupedUniqueKeyNameSet.isEmpty();
 
-		if ( hasGroupedIndexes && StringHelper.isNotEmpty( columnAttribute ) ) {
+		if ( hasGroupedIndexes ) {
+			if ( isNotEmpty( columnAttribute ) ) {
+				for ( String name : groupedIndexNameSet ) {
+					callback.registerIndexColumn( name, logicalTableName, columnAttribute );
+				}
+			}
+		}
+		if ( hasGroupedIndexes && isNotEmpty( columnAttribute ) ) {
 			for ( String name : groupedIndexNameSet ) {
 				callback.registerIndexColumn( name, logicalTableName, columnAttribute );
 			}
 		}
 
-		if ( hasGroupedUniqueKeys && StringHelper.isNotEmpty( columnAttribute ) ) {
+		if ( hasGroupedUniqueKeys && isNotEmpty( columnAttribute ) ) {
 			for ( String name : groupedUniqueKeyNameSet ) {
 				callback.registerUniqueKeyColumn( name, logicalTableName, columnAttribute );
 			}
@@ -488,7 +499,7 @@ public class AttributesHelper {
 			}
 
 			final JaxbHbmColumnType column = (JaxbHbmColumnType) oColumn;
-			if ( StringHelper.isNotEmpty( column.getIndex() ) ) {
+			if ( isNotEmpty( column.getIndex() ) ) {
 				callback.registerIndexColumn( column.getIndex(), logicalTableName, column.getName() );
 			}
 			if ( hasGroupedIndexes ) {
@@ -497,7 +508,7 @@ public class AttributesHelper {
 				}
 			}
 
-			if ( StringHelper.isNotEmpty( column.getUniqueKey() ) ) {
+			if ( isNotEmpty( column.getUniqueKey() ) ) {
 				callback.registerUniqueKeyColumn( column.getUniqueKey(), logicalTableName, column.getName() );
 			}
 			if ( hasGroupedUniqueKeys ) {
@@ -589,6 +600,7 @@ public class AttributesHelper {
 		);
 
 		processConstraints(
+				mappingDocument,
 				callback,
 				logicalTableName,
 				manyToOneAttributeJaxbMapping.getColumnAttribute(),
@@ -632,6 +644,7 @@ public class AttributesHelper {
 		);
 
 		processConstraints(
+				mappingDocument,
 				callback,
 				logicalTableName,
 				null,

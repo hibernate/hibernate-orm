@@ -7,6 +7,7 @@
 package org.hibernate.hql.internal.ast.tree;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -64,7 +65,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 	private boolean initialized;
 	private FromElementType elementType;
 	private boolean useWhereFragment = true;
-	private List destinations = new LinkedList();
+	private List<FromElement> destinations;
 	private boolean manyToMany;
 	private String withClauseFragment;
 	private String withClauseJoinAlias;
@@ -216,6 +217,14 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 	 */
 	String renderPropertySelect(int size, int k) {
 		return elementType.renderPropertySelect( size, k, isAllPropertyFetch );
+	}
+
+	public String renderMapKeyPropertySelectFragment(int size, int k) {
+		return elementType.renderMapKeyPropertySelectFragment( size, k );
+	}
+
+	public String renderMapEntryPropertySelectFragment(int size, int k) {
+		return elementType.renderMapEntryPropertySelectFragment( size, k );
 	}
 
 	String renderCollectionSelectFragment(int size, int k) {
@@ -415,11 +424,19 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 	}
 
 	private void addDestination(FromElement fromElement) {
+		if ( destinations == null ) {
+			destinations = new LinkedList<FromElement>();
+		}
 		destinations.add( fromElement );
 	}
 
-	public List getDestinations() {
-		return destinations;
+	public List<FromElement> getDestinations() {
+		if ( destinations == null ) {
+			return Collections.emptyList();
+		}
+		else {
+			return destinations;
+		}
 	}
 
 	public FromElement getOrigin() {

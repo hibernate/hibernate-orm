@@ -15,7 +15,8 @@ public abstract class AbstractHHH3949TestTask extends AbstractEnhancerTestTask {
 
 	public void prepare() {
 		Configuration cfg = new Configuration();
-		cfg.setProperty( Environment.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
+//		cfg.setProperty( Environment.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
+		cfg.setProperty( Environment.ENABLE_LAZY_LOAD_NO_TRANS, "false" );
 		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "false" );
 		super.prepare( cfg );
 

@@ -70,6 +70,16 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	Properties getProperties();
 
 	/**
+	 * Get the UUID for this SessionFactory.  The value is generated as a {@link java.util.UUID}, but kept
+	 * as a String.
+	 *
+	 * @return The UUID for this SessionFactory.
+	 *
+	 * @see org.hibernate.internal.SessionFactoryRegistry#getSessionFactory
+	 */
+	String getUuid();
+
+	/**
 	 * Get the persister for the named entity
 	 *
 	 * @param entityName The name of the entity for which to retrieve the persister.

@@ -10,6 +10,8 @@ import java.sql.Types;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.identity.MimerSQLIdentityColumnSupport;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -133,11 +135,6 @@ public class MimerSQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsIdentityColumns() {
-		return false;
-	}
-
-	@Override
 	public boolean supportsSequences() {
 		return true;
 	}
@@ -180,5 +177,10 @@ public class MimerSQLDialect extends Dialect {
 	@Override
 	public boolean supportsOuterJoinForUpdate() {
 		return false;
+	}
+
+	@Override
+	public IdentityColumnSupport getIdentityColumnSupport() {
+		return new MimerSQLIdentityColumnSupport();
 	}
 }

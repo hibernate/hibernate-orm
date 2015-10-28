@@ -1936,7 +1936,7 @@ public class FooBarTest extends LegacyTestCase {
 			.add( Restrictions.eq( "integer", f.getInteger() ) )
 			.add( Restrictions.eqProperty("integer", "integer") )
 			.add( Restrictions.like( "string", f.getString().toUpperCase(Locale.ROOT) ).ignoreCase() )
-			.add( Restrictions.in( "boolean", new Boolean[] { f.getBoolean(), f.getBoolean() } ) )
+			.add( Restrictions.in( "boolean", f.getBoolean(), f.getBoolean() ) )
 			.setFetchMode("foo", FetchMode.JOIN)
 			.setFetchMode("baz", FetchMode.SELECT)
 			.setFetchMode("abstracts", FetchMode.JOIN)
@@ -2023,7 +2023,7 @@ public class FooBarTest extends LegacyTestCase {
 		list = s.createCriteria(Foo.class)
 			.add( Restrictions.eq( "integer", f.getInteger() ) )
 			.add( Restrictions.like( "string", f.getString() ) )
-			.add( Restrictions.in( "boolean", new Boolean[] { f.getBoolean(), f.getBoolean() } ) )
+			.add( Restrictions.in( "boolean", f.getBoolean(), f.getBoolean() ) )
 			.add( Restrictions.isNotNull("foo") )
 			.setFetchMode( "foo", FetchMode.JOIN )
 			.setFetchMode( "baz", FetchMode.SELECT )
@@ -3534,22 +3534,29 @@ public class FooBarTest extends LegacyTestCase {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
 		Foo foo = new Foo();
-		s.save(foo);
+		s.save( foo );
 		Foo foo1 = new Foo();
 		s.save(foo1);
-		foo.setFoo(foo1);
+		foo.setFoo( foo1 );
 		List l = s.createQuery( "select parent, child from Foo parent, Foo child where parent.foo = child" ).list();
 		assertTrue( "multi-column find", l.size()==1 );
 
-		Iterator rs = s.createQuery(
-				"select count(distinct child.id), count(distinct parent.id) from Foo parent, Foo child where parent.foo = child"
-		).iterate();
-		Object[] row = (Object[]) rs.next();
-		assertTrue( "multi-column count", ( (Long) row[0] ).intValue()==1 );
-		assertTrue( "multi-column count", ( (Long) row[1] ).intValue()==1 );
-		assertTrue( !rs.hasNext() );
+		Iterator rs = null;
+		Object[] row = null;
+		//Derby does not support multiple DISTINCT aggregates
+		if ( !(getDialect() instanceof DerbyDialect) ) {
+			rs = s.createQuery(
+					"select count(distinct child.id), count(distinct parent.id) from Foo parent, Foo child where parent.foo = child"
+			).iterate();
 
-		rs = s.createQuery( "select child.id, parent.id, child.long from Foo parent, Foo child where parent.foo = child" )
+			row = (Object[]) rs.next();
+			assertTrue( "multi-column count", ((Long) row[0]).intValue() == 1 );
+			assertTrue( "multi-column count", ((Long) row[1]).intValue() == 1 );
+			assertTrue( !rs.hasNext() );
+		}
+		rs = s.createQuery(
+				"select child.id, parent.id, child.long from Foo parent, Foo child where parent.foo = child"
+		)
 				.iterate();
 		row = (Object[]) rs.next();
 		assertTrue( "multi-column id", row[0].equals( foo.getFoo().getKey() ) );

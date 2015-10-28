@@ -7,7 +7,7 @@
 package org.hibernate.cache.infinispan.collection;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
+import org.hibernate.cache.infinispan.access.AccessDelegate;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CacheKeysFactory;
@@ -27,17 +27,16 @@ import javax.transaction.TransactionManager;
  * @since 3.5
  */
 public class CollectionRegionImpl extends BaseTransactionalDataRegion implements CollectionRegion {
-
-   /**
-    * Construct a collection region
-    *
-    * @param cache instance to store collection instances
-    * @param name of collection type
+	/**
+	 * Construct a collection region
+	 *
+	 * @param cache instance to store collection instances
+	 * @param name of collection type
 	 * @param transactionManager
-    * @param metadata for the collection type
-    * @param factory for the region
-	* @param cacheKeysFactory factory for cache keys
-    */
+	 * @param metadata for the collection type
+	 * @param factory for the region
+	 * @param cacheKeysFactory factory for cache keys
+	 */
 	public CollectionRegionImpl(
 			AdvancedCache cache, String name, TransactionManager transactionManager,
 			CacheDataDescription metadata, RegionFactory factory, CacheKeysFactory cacheKeysFactory) {
@@ -46,16 +45,8 @@ public class CollectionRegionImpl extends BaseTransactionalDataRegion implements
 
 	@Override
 	public CollectionRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {
-		if ( AccessType.READ_ONLY.equals( accessType )
-				|| AccessType.TRANSACTIONAL.equals( accessType ) ) {
-			return new TransactionalAccess( this );
-		}
-
-		throw new CacheException( "Unsupported access type [" + accessType.getExternalName() + "]" );
+		checkAccessType( accessType );
+		AccessDelegate accessDelegate = createAccessDelegate(accessType);
+		return new CollectionAccess( this, accessDelegate );
 	}
-
-	public PutFromLoadValidator getPutFromLoadValidator() {
-		return new PutFromLoadValidator( cache );
-	}
-
 }

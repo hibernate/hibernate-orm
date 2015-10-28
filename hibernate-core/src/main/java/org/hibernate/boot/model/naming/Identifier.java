@@ -200,4 +200,3 @@ public class Identifier implements Comparable<Identifier> {
 		return getCanonicalName().compareTo( o.getCanonicalName() );
 	}
 }
-

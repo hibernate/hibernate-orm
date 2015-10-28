@@ -54,7 +54,7 @@ class FailureExpectedHandler extends Statement {
 
 				// handle the expected failure case
 				log.infof(
-						"Ignoring expected failure [{}] : {}",
+						"Ignoring expected failure [%s] : %s",
 						Helper.extractTestName( extendedFrameworkMethod ),
 						Helper.extractMessage( failureExpected )
 				);

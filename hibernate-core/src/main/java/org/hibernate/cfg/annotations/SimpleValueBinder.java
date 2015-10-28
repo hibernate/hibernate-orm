@@ -9,6 +9,7 @@ package org.hibernate.cfg.annotations;
 import java.io.Serializable;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Properties;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
@@ -30,6 +31,7 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.annotations.common.util.StandardClassLoaderDelegateImpl;
 import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.spi.AttributeConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AttributeConverterDefinition;
@@ -73,6 +75,7 @@ public class SimpleValueBinder {
 	private String defaultType = "";
 	private Properties typeParameters = new Properties();
 	private boolean isNationalized;
+	private boolean isLob;
 
 	private Table table;
 	private SimpleValue simpleValue;
@@ -84,7 +87,7 @@ public class SimpleValueBinder {
 	private XProperty xproperty;
 	private AccessType accessType;
 
-	private AttributeConverterDefinition attributeConverterDefinition;
+	private AttributeConverterDescriptor attributeConverterDescriptor;
 
 	public void setReferencedEntityName(String referencedEntityName) {
 		this.referencedEntityName = referencedEntityName;
@@ -129,13 +132,14 @@ public class SimpleValueBinder {
 
 	//TODO execute it lazily to be order safe
 
-	public void setType(XProperty property, XClass returnedClass, String declaringClassName, AttributeConverterDefinition attributeConverterDefinition) {
+	public void setType(XProperty property, XClass returnedClass, String declaringClassName, AttributeConverterDescriptor attributeConverterDescriptor) {
 		if ( returnedClass == null ) {
 			// we cannot guess anything
 			return;
 		}
+
 		XClass returnedClassOrElement = returnedClass;
-                boolean isArray = false;
+		boolean isArray = false;
 		if ( property.isArray() ) {
 			returnedClassOrElement = property.getElementClass();
 			isArray = true;
@@ -203,6 +207,7 @@ public class SimpleValueBinder {
 			explicitType = type;
 		}
 		else if ( !key && property.isAnnotationPresent( Lob.class ) ) {
+			isLob = true;
 			if ( buildingContext.getBuildingOptions().getReflectionManager().equals( returnedClassOrElement, java.sql.Clob.class ) ) {
 				type = isNationalized
 						? StandardBasicTypes.NCLOB.getName()
@@ -247,7 +252,7 @@ public class SimpleValueBinder {
 			else {
 				type = "blob";
 			}
-			explicitType = type;
+			defaultType = type;
 		}
 		else if ( ( !key && property.isAnnotationPresent( Enumerated.class ) )
 				|| ( key && property.isAnnotationPresent( MapKeyEnumerated.class ) ) ) {
@@ -298,11 +303,11 @@ public class SimpleValueBinder {
 		defaultType = BinderHelper.isEmptyAnnotationValue( type ) ? returnedClassName : type;
 		this.typeParameters = typeParameters;
 
-		applyAttributeConverter( property, attributeConverterDefinition );
+		applyAttributeConverter( property, attributeConverterDescriptor );
 	}
 
-	private void applyAttributeConverter(XProperty property, AttributeConverterDefinition attributeConverterDefinition) {
-		if ( attributeConverterDefinition == null ) {
+	private void applyAttributeConverter(XProperty property, AttributeConverterDescriptor attributeConverterDescriptor) {
+		if ( attributeConverterDescriptor == null ) {
 			return;
 		}
 
@@ -333,7 +338,7 @@ public class SimpleValueBinder {
 			return;
 		}
 
-		this.attributeConverterDefinition = attributeConverterDefinition;
+		this.attributeConverterDescriptor = attributeConverterDescriptor;
 	}
 
 	private boolean isAssociation() {
@@ -389,6 +394,9 @@ public class SimpleValueBinder {
 		if ( isNationalized ) {
 			simpleValue.makeNationalized();
 		}
+		if ( isLob ) {
+			simpleValue.makeLob();
+		}
 
 		linkWithValue();
 
@@ -422,7 +430,7 @@ public class SimpleValueBinder {
 	public void fillSimpleValue() {
 		LOG.debugf( "Starting fillSimpleValue for %s", propertyName );
                 
-		if ( attributeConverterDefinition != null ) {
+		if ( attributeConverterDescriptor != null ) {
 			if ( ! BinderHelper.isEmptyAnnotationValue( explicitType ) ) {
 				throw new AnnotationException(
 						String.format(
@@ -435,11 +443,11 @@ public class SimpleValueBinder {
 			}
 			LOG.debugf(
 					"Applying JPA AttributeConverter [%s] to [%s:%s]",
-					attributeConverterDefinition,
+					attributeConverterDescriptor,
 					persistentClassName,
 					propertyName
 			);
-			simpleValue.setJpaAttributeConverterDefinition( attributeConverterDefinition );
+			simpleValue.setJpaAttributeConverterDescriptor( attributeConverterDescriptor );
 		}
 		else {
 			String type;
@@ -473,8 +481,21 @@ public class SimpleValueBinder {
 			simpleValue.setTypeName( type );
 		}
 
-		if ( persistentClassName != null || attributeConverterDefinition != null ) {
-			simpleValue.setTypeUsingReflection( persistentClassName, propertyName );
+		if ( persistentClassName != null || attributeConverterDescriptor != null ) {
+			try {
+				simpleValue.setTypeUsingReflection( persistentClassName, propertyName );
+			}
+			catch (Exception e) {
+				throw new MappingException(
+						String.format(
+								Locale.ROOT,
+								"Unable to determine basic type mapping via reflection [%s -> %s]",
+								persistentClassName,
+								propertyName
+						),
+						e
+				);
+			}
 		}
 
 		if ( !simpleValue.isTypeSpecified() && isVersion() ) {

@@ -67,6 +67,7 @@ import org.hibernate.boot.model.source.spi.PluralAttributeElementSourceEmbedded;
 import org.hibernate.boot.model.source.spi.PluralAttributeElementSourceManyToAny;
 import org.hibernate.boot.model.source.spi.PluralAttributeElementSourceManyToMany;
 import org.hibernate.boot.model.source.spi.PluralAttributeElementSourceOneToMany;
+import org.hibernate.boot.model.source.spi.PluralAttributeKeySource;
 import org.hibernate.boot.model.source.spi.PluralAttributeMapKeyManyToAnySource;
 import org.hibernate.boot.model.source.spi.PluralAttributeMapKeyManyToManySource;
 import org.hibernate.boot.model.source.spi.PluralAttributeMapKeySourceBasic;
@@ -620,7 +621,7 @@ public class ModelBinder {
 					}
 				}
 		);
-
+		keyBinding.setForeignKeyName( entitySource.getExplicitForeignKeyName() );
 		// model.getKey().setType( new Type( model.getIdentifier() ) );
 		entityDescriptor.createPrimaryKey();
 		entityDescriptor.createForeignKey();
@@ -1884,7 +1885,7 @@ public class ModelBinder {
 				attribute
 		);
 
-		if ( StringHelper.isNotEmpty( embeddedSource.getName() ) ) {
+		if ( StringHelper.isNotEmpty( embeddedSource.getXmlNodeName() ) ) {
 			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfDomEntityModeSupport();
 		}
 
@@ -2437,7 +2438,7 @@ public class ModelBinder {
 			Property property) {
 		property.setName( propertySource.getName() );
 
-		if ( StringHelper.isNotEmpty( propertySource.getName() ) ) {
+		if ( StringHelper.isNotEmpty( propertySource.getXmlNodeName() ) ) {
 			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfDomEntityModeSupport();
 		}
 
@@ -2476,46 +2477,23 @@ public class ModelBinder {
 
 				// generated properties can *never* be insertable...
 				if ( property.isInsertable() ) {
-					if ( singularAttributeSource.isInsertable() == null ) {
-						// insertable simply because that is the user did not specify
-						// anything; just override it
-						property.setInsertable( false );
-					}
-					else {
-						// the user specifically supplied insert="true",
-						// which constitutes an illegal combo
-						throw new MappingException(
-								String.format(
-										Locale.ENGLISH,
-										"Cannot specify both insert=\"true\" and generated=\"%s\" for property %s",
-										generationTiming.name().toLowerCase(Locale.ROOT),
-										propertySource.getName()
-								),
-								mappingDocument.getOrigin()
-						);
-					}
+					log.debugf(
+							"Property [%s] specified %s generation, setting insertable to false : %s",
+							propertySource.getName(),
+							generationTiming.name(),
+							mappingDocument.getOrigin()
+					);
+					property.setInsertable( false );
 				}
 
 				// properties generated on update can never be updatable...
 				if ( property.isUpdateable() && generationTiming == GenerationTiming.ALWAYS ) {
-					if ( singularAttributeSource.isUpdatable() == null ) {
-						// updatable only because the user did not specify
-						// anything; just override it
-						property.setUpdateable( false );
-					}
-					else {
-						// the user specifically supplied update="true",
-						// which constitutes an illegal combo
-						throw new MappingException(
-								String.format(
-										Locale.ENGLISH,
-										"Cannot specify both update=\"true\" and generated=\"%s\" for property %s",
-										generationTiming.name().toLowerCase(Locale.ROOT),
-										propertySource.getName()
-								),
-								mappingDocument.getOrigin()
-						);
-					}
+					log.debugf(
+							"Property [%s] specified ALWAYS generation, setting updateable to false : %s",
+							propertySource.getName(),
+							mappingDocument.getOrigin()
+					);
+					property.setUpdateable( false );
 				}
 			}
 		}
@@ -3294,7 +3272,8 @@ public class ModelBinder {
 		}
 
 		protected void bindCollectionKey() {
-			final String propRef = getPluralAttributeSource().getKeySource().getReferencedPropertyName();
+			final PluralAttributeKeySource keySource = getPluralAttributeSource().getKeySource();
+			final String propRef = keySource.getReferencedPropertyName();
 			getCollectionBinding().setReferencedPropertyName( propRef );
 
 			final KeyValue keyVal;
@@ -3309,6 +3288,7 @@ public class ModelBinder {
 					getCollectionBinding().getCollectionTable(),
 					keyVal
 			);
+			key.setForeignKeyName( keySource.getExplicitForeignKeyName() );
 			key.setCascadeDeleteEnabled( getPluralAttributeSource().getKeySource().isCascadeDeleteEnabled() );
 
 			final ImplicitJoinColumnNameSource.Nature implicitNamingNature;

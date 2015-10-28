@@ -20,7 +20,10 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.Target;
 
+import org.hibernate.testing.DialectCheck;
+import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
@@ -28,6 +31,7 @@ import org.junit.Test;
 /**
  * @author Steve Ebersole
  */
+@RequiresDialectFeature( value = {DialectChecks.SupportCatalogCreation.class})
 public class ForeignKeyMigrationTest extends BaseUnitTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-9716" )

@@ -64,4 +64,3 @@ public interface SecondaryTableSource extends ForeignKeyContributingSource {
 	 */
 	public CustomSql getCustomSqlDelete();
 }
-

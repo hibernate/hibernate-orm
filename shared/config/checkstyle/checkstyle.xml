@@ -212,7 +212,19 @@
         <property name="severity" value="warning" />
     </module>
 
-    <module name="NewlineAtEndOfFile" />
+    <!-- We are not using NewLineAtEndOfFile because the new line chars change
+       on different operating systems and that rule allows only one type. This rule
+       is not actually checking for new lines, but it will work if we check that
+       there are not white spaces at the end of a line with another rule. -->
+    <module name="RegexpMultiline">
+        <property name="format" value="\S\z" />
+        <property name="message" value="Missing new line at the end of file" />
+    </module>
+
+    <module name="RegexpMultiline">
+        <property name="format" value="\S\r?\n(\r?\n)+\z" />
+        <property name="message" value="Only one new line is allowed at the end of a file" />
+    </module>
 
     <!--
         Used to collect "todo" comments into a single location

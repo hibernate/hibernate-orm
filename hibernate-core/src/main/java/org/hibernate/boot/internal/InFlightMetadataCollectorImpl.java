@@ -48,6 +48,8 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.source.internal.ConstraintSecondPass;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
+import org.hibernate.boot.spi.AttributeConverterAutoApplyHandler;
+import org.hibernate.boot.spi.AttributeConverterDescriptor;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
@@ -115,6 +117,9 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	private final MetadataBuildingOptions options;
 	private final TypeResolver typeResolver;
 
+	private final AttributeConverterManager attributeConverterManager = new AttributeConverterManager();
+	private final ClassmateContext classmateContext = new ClassmateContext();
+
 	private final UUID uuid;
 	private final MutableIdentifierGeneratorFactory identifierGeneratorFactory;
 
@@ -136,9 +141,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	private final Map<String, FetchProfile> fetchProfileMap = new HashMap<String, FetchProfile>();
 	private final Map<String, IdentifierGeneratorDefinition> idGeneratorDefinitionMap = new HashMap<String, IdentifierGeneratorDefinition>();
 
-	private Map<Class, AttributeConverterDefinition> attributeConverterDefinitionsByClass;
 	private Map<String, SQLFunction> sqlFunctionMap;
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// All the annotation-processing-specific state :(
@@ -335,68 +338,33 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 	}
 
+	@Override
+	public ClassmateContext getClassmateContext() {
+		return classmateContext;
+	}
+
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// attribute converters
 
 	@Override
 	public void addAttributeConverter(AttributeConverterDefinition definition) {
-		if ( attributeConverterDefinitionsByClass == null ) {
-			attributeConverterDefinitionsByClass = new ConcurrentHashMap<Class, AttributeConverterDefinition>();
-		}
-
-		final Object old = attributeConverterDefinitionsByClass.put(
-				definition.getAttributeConverter().getClass(),
-				definition
-		);
-
-		if ( old != null ) {
-			throw new AssertionFailure(
-					String.format(
-							Locale.ENGLISH,
-							"AttributeConverter class [%s] registered multiple times",
-							definition.getAttributeConverter().getClass()
-					)
-			);
-		}
-	}
-
-	public static AttributeConverter instantiateAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass) {
-		try {
-			return attributeConverterClass.newInstance();
-		}
-		catch (Exception e) {
-			throw new AnnotationException(
-					"Unable to instantiate AttributeConverter [" + attributeConverterClass.getName() + "]",
-					e
-			);
-		}
-	}
-
-	public static AttributeConverterDefinition toAttributeConverterDefinition(AttributeConverter attributeConverter) {
-		boolean autoApply = false;
-		Converter converterAnnotation = attributeConverter.getClass().getAnnotation( Converter.class );
-		if ( converterAnnotation != null ) {
-			autoApply = converterAnnotation.autoApply();
-		}
-
-		return new AttributeConverterDefinition( attributeConverter, autoApply );
-	}
-
-	@Override
-	public void addAttributeConverter(Class<? extends AttributeConverter> converterClass) {
-		addAttributeConverter(
-				toAttributeConverterDefinition(
-						instantiateAttributeConverter( converterClass )
+		attributeConverterManager.addConverter(
+				AttributeConverterDescriptorImpl.create(
+						definition,
+						classmateContext
 				)
 		);
 	}
 
 	@Override
-	public java.util.Collection<AttributeConverterDefinition> getAttributeConverters() {
-		if ( attributeConverterDefinitionsByClass == null ) {
-			return Collections.emptyList();
-		}
-		return attributeConverterDefinitionsByClass.values();
+	public void addAttributeConverter(Class<? extends AttributeConverter> converterClass) {
+		addAttributeConverter( AttributeConverterDefinition.from( converterClass ) );
+	}
+
+	@Override
+	public AttributeConverterAutoApplyHandler getAttributeConverterAutoApplyHandler() {
+		return attributeConverterManager;
 	}
 
 
@@ -2164,27 +2132,32 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		processSecondPasses( buildingContext );
 		processExportableProducers( buildingContext );
 
-		return new MetadataImpl(
-				uuid,
-				options,
-				typeResolver,
-				identifierGeneratorFactory,
-				entityBindingMap,
-				mappedSuperClasses,
-				collectionBindingMap,
-				typeDefinitionMap,
-				filterDefinitionMap,
-				fetchProfileMap,
-				imports,
-				idGeneratorDefinitionMap,
-				namedQueryMap,
-				namedNativeQueryMap,
-				namedProcedureCallMap,
-				sqlResultSetMappingMap,
-				namedEntityGraphMap,
-				sqlFunctionMap,
-				getDatabase()
-		);
+		try {
+			return new MetadataImpl(
+					uuid,
+					options,
+					typeResolver,
+					identifierGeneratorFactory,
+					entityBindingMap,
+					mappedSuperClasses,
+					collectionBindingMap,
+					typeDefinitionMap,
+					filterDefinitionMap,
+					fetchProfileMap,
+					imports,
+					idGeneratorDefinitionMap,
+					namedQueryMap,
+					namedNativeQueryMap,
+					namedProcedureCallMap,
+					sqlResultSetMappingMap,
+					namedEntityGraphMap,
+					sqlFunctionMap,
+					getDatabase()
+			);
+		}
+		finally {
+			classmateContext.release();
+		}
 	}
 
 	private void processExportableProducers(MetadataBuildingContext buildingContext) {

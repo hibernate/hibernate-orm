@@ -26,10 +26,3 @@ public class ObjectDeletedException extends UnresolvableObjectException {
 	}
 
 }
-
-
-
-
-
-
-

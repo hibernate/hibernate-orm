@@ -69,7 +69,4 @@ class BaseRegion implements Region {
 	public int getTimeout() {
 		return timeout;
 	}
-
 }
-
-

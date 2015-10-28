@@ -7,7 +7,6 @@
 package org.hibernate.proxy;
 
 import java.io.Serializable;
-import javax.naming.NamingException;
 
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -223,15 +222,10 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 
 	protected void prepareForPossibleLoadingOutsideTransaction() {
 		if ( session != null ) {
-			allowLoadOutsideTransaction = session.getFactory().getSettings().isInitializeLazyStateOutsideTransactionsEnabled();
+			allowLoadOutsideTransaction = session.getFactory().getSessionFactoryOptions().isInitializeLazyStateOutsideTransactionsEnabled();
 
 			if ( allowLoadOutsideTransaction && sessionFactoryUuid == null ) {
-				try {
-					sessionFactoryUuid = (String) session.getFactory().getReference().get( "uuid" ).getContent();
-				}
-				catch (NamingException e) {
-					//not much we can do if this fails...
-				}
+				sessionFactoryUuid = session.getFactory().getUuid();
 			}
 		}
 	}

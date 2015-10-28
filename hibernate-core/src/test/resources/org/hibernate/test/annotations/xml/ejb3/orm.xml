@@ -45,6 +45,7 @@
         <exclude-superclass-listeners/>
         <attributes>
             <basic name="year" optional="false">
+                <column name="model_year"/>
                 <temporal>DATE</temporal>
             </basic>
         </attributes>

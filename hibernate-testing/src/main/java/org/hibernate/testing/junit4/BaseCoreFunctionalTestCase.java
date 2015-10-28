@@ -18,6 +18,7 @@ import javax.persistence.SharedCacheMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
@@ -35,6 +36,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.resource.transaction.TransactionCoordinator;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
@@ -358,6 +360,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		if ( tdc.getStatus().canRollback() ) {
 			session.getTransaction().rollback();
 		}
+		session.close();
 	}
 
 	protected void cleanupCache() {
@@ -369,15 +372,23 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	protected boolean isCleanupTestDataRequired() {
 		return false;
 	}
-	
+
 	protected void cleanupTestData() throws Exception {
 		Session s = openSession();
-		s.beginTransaction();
-		s.createQuery( "delete from java.lang.Object" ).executeUpdate();
-		s.getTransaction().commit();
-		s.close();
+		Transaction transaction = s.beginTransaction();
+		try {
+			s.createQuery( "delete from java.lang.Object" ).executeUpdate();
+			transaction.commit();
+		}
+		catch (Exception e) {
+			if ( transaction.getStatus().canRollback() ) {
+				transaction.rollback();
+			}
+		}
+		finally {
+			s.close();
+		}
 	}
-
 
 	private void cleanupSession() {
 		if ( session != null && ! ( (SessionImplementor) session ).isClosed() ) {
@@ -405,7 +416,9 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		}
 
 		Session tmpSession = sessionFactory.openSession();
+		Transaction transaction = tmpSession.beginTransaction();
 		try {
+
 			List list = tmpSession.createQuery( "select o from java.lang.Object o" ).list();
 
 			Map<String,Integer> items = new HashMap<String,Integer>();
@@ -419,11 +432,16 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 					items.put( tmpSession.getEntityName( element ), l );
 					System.out.println( "Data left: " + element );
 				}
+				transaction.rollback();
 				fail( "Data is left in the database: " + items.toString() );
 			}
+			transaction.rollback();
 		}
 		finally {
 			try {
+				if(transaction.getStatus().canRollback()){
+					transaction.rollback();
+				}
 				tmpSession.close();
 			}
 			catch( Throwable t ) {

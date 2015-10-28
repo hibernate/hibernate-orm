@@ -17,6 +17,8 @@ public class EnumJavaTypeDescriptor<T extends Enum> extends AbstractTypeDescript
 	@SuppressWarnings("unchecked")
 	protected EnumJavaTypeDescriptor(Class<T> type) {
 		super( type, ImmutableMutabilityPlan.INSTANCE );
+
+		JavaTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
 	}
 
 	@Override

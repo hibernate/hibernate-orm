@@ -408,6 +408,11 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
+	public String getUuid() {
+		return delegate.getUuid();
+	}
+
+	@Override
 	public Reference getReference() throws NamingException {
 		return delegate.getReference();
 	}

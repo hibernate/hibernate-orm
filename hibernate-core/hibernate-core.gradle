@@ -11,11 +11,12 @@ apply plugin: 'version-injection'
 apply plugin: 'org.hibernate.build.gradle.xjc'
 
 dependencies {
-    compile( libraries.jta )
     compile( libraries.jpa )
     compile( libraries.javassist )
     compile( libraries.antlr )
     compile( libraries.jandex )
+    compile( libraries.classmate )
+    compile( libraries.jta )
 
     // We need dom4j for a number of things temporarily:
     //      1) (unsupported) EntityMode.DOM4J support
@@ -29,13 +30,13 @@ dependencies {
     provided( libraries.ant )
     provided( libraries.jacc )
     provided( libraries.validation )
-    provided( libraries.classmate )
 
     testCompile( project(':hibernate-testing') )
     testCompile( libraries.validation )
     testCompile( libraries.jandex )
     testCompile( libraries.classmate )
     testCompile( libraries.mockito )
+    testCompile( 'joda-time:joda-time:2.3' )
 
     testCompile( libraries.validator ) {
         // for test runtime

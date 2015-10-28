@@ -20,6 +20,6 @@ public class InsertSelectIdentityInsert extends IdentifierGeneratingInsert {
 	}
 
 	public String toStatementString() {
-		return getDialect().appendIdentitySelectToInsert( super.toStatementString() );
+		return getDialect().getIdentityColumnSupport().appendIdentitySelectToInsert( super.toStatementString() );
 	}
 }

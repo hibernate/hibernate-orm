@@ -426,24 +426,81 @@ public final class ReflectHelper {
 
 			// try "get"
 			if ( methodName.startsWith( "get" ) ) {
-				String testStdMethod = Introspector.decapitalize( methodName.substring( 3 ) );
-				String testOldMethod = methodName.substring( 3 );
-				if ( testStdMethod.equals( propertyName ) || testOldMethod.equals( propertyName ) ) {
+				final String stemName = methodName.substring( 3 );
+				final String decapitalizedStemName = Introspector.decapitalize( stemName );
+				if ( stemName.equals( propertyName ) || decapitalizedStemName.equals( propertyName ) ) {
+					verifyNoIsVariantExists( containerClass, propertyName, method, stemName );
 					return method;
 				}
+
 			}
 
 			// if not "get", then try "is"
 			if ( methodName.startsWith( "is" ) ) {
-				String testStdMethod = Introspector.decapitalize( methodName.substring( 2 ) );
-				String testOldMethod = methodName.substring( 2 );
-				if ( testStdMethod.equals( propertyName ) || testOldMethod.equals( propertyName ) ) {
+				final String stemName = methodName.substring( 2 );
+				String decapitalizedStemName = Introspector.decapitalize( stemName );
+				if ( stemName.equals( propertyName ) || decapitalizedStemName.equals( propertyName ) ) {
+					verifyNoGetVariantExists( containerClass, propertyName, method, stemName );
 					return method;
 				}
 			}
 		}
 
 		return null;
+	}
+
+	private static void verifyNoIsVariantExists(
+			Class containerClass,
+			String propertyName,
+			Method getMethod,
+			String stemName) {
+		// verify that the Class does not also define a method with the same stem name with 'is'
+		try {
+			final Method isMethod = containerClass.getDeclaredMethod( "is" + stemName );
+			// No such method should throw the caught exception.  So if we get here, there was
+			// such a method.
+			checkGetAndIsVariants( containerClass, propertyName, getMethod, isMethod );
+		}
+		catch (NoSuchMethodException ignore) {
+		}
+	}
+
+	private static void checkGetAndIsVariants(
+			Class containerClass,
+			String propertyName,
+			Method getMethod,
+			Method isMethod) {
+		// Check the return types.  If they are the same, its ok.  If they are different
+		// we are in a situation where we could not reasonably know which to use.
+		if ( !isMethod.getReturnType().equals( getMethod.getReturnType() ) ) {
+			throw new MappingException(
+					String.format(
+							Locale.ROOT,
+							"In trying to locate getter for property [%s], Class [%s] defined " +
+									"both a `get` [%s] and `is` [%s] variant",
+							propertyName,
+							containerClass.getName(),
+							getMethod.toString(),
+							isMethod.toString()
+					)
+			);
+		}
+	}
+
+	private static void verifyNoGetVariantExists(
+			Class containerClass,
+			String propertyName,
+			Method isMethod,
+			String stemName) {
+		// verify that the Class does not also define a method with the same stem name with 'is'
+		try {
+			final Method getMethod = containerClass.getDeclaredMethod( "get" + stemName );
+			// No such method should throw the caught exception.  So if we get here, there was
+			// such a method.
+			checkGetAndIsVariants( containerClass, propertyName, getMethod, isMethod );
+		}
+		catch (NoSuchMethodException ignore) {
+		}
 	}
 
 	public static Method findSetterMethod(Class containerClass, String propertyName, Class propertyType) {

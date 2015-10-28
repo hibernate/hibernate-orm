@@ -41,9 +41,3 @@ public interface VersionType<T> extends Type {
 	 */
 	public Comparator<T> getComparator();
 }
-
-
-
-
-
-

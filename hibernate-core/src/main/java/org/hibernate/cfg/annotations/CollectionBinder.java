@@ -1460,7 +1460,7 @@ public abstract class CollectionBinder {
 						property,
 						elementClass,
 						collValue.getOwnerEntityName(),
-						holder.resolveElementAttributeConverterDefinition( elementClass )
+						holder.resolveElementAttributeConverterDescriptor( property, elementClass )
 				);
 				elementBinder.setPersistentClassName( propertyHolder.getEntityName() );
 				elementBinder.setAccessType( accessType );

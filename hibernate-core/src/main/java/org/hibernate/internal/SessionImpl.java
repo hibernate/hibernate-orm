@@ -1327,7 +1327,12 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		errorIfClosed();
 		checkTransactionSynchStatus();
 		queryParameters.validateParameters();
-		HQLQueryPlan plan = getHQLQueryPlan( query, true );
+
+		HQLQueryPlan plan = queryParameters.getQueryPlan();
+		if ( plan == null ) {
+			plan = getHQLQueryPlan( query, true );
+		}
+
 		autoFlushIfRequired( plan.getQuerySpaces() );
 
 		dontFlushFromFind++; //stops flush being called multiple times if this method is recursively called
@@ -1344,8 +1349,14 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	public ScrollableResults scroll(String query, QueryParameters queryParameters) throws HibernateException {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		HQLQueryPlan plan = getHQLQueryPlan( query, false );
+		
+		HQLQueryPlan plan = queryParameters.getQueryPlan();
+		if ( plan == null ) {
+			plan = getHQLQueryPlan( query, false );
+		}
+		
 		autoFlushIfRequired( plan.getQuerySpaces() );
+
 		dontFlushFromFind++;
 		try {
 			return plan.performScroll( queryParameters, this );

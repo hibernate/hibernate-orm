@@ -25,6 +25,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -40,6 +42,8 @@ import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardAnsiSqlAggregationFunctions;
 import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.identity.IdentityColumnSupportImpl;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
 import org.hibernate.dialect.lock.OptimisticLockingStrategy;
@@ -67,7 +71,6 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.persistent.PersistentTableBulkIdStrategy;
 import org.hibernate.id.IdentityGenerator;
-import org.hibernate.id.SequenceGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
@@ -101,8 +104,6 @@ import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-
-import org.jboss.logging.Logger;
 
 /**
  * Represents a dialect of SQL implemented by a particular RDBMS.  Subclasses implement Hibernate compatibility
@@ -728,7 +729,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @return The native generator class.
 	 */
 	public Class getNativeIdentifierGeneratorClass() {
-		if ( supportsIdentityColumns() ) {
+		if ( getIdentityColumnSupport().supportsIdentityColumns() ) {
 			return IdentityGenerator.class;
 		}
 		else {
@@ -740,12 +741,25 @@ public abstract class Dialect implements ConversionContext {
 	// IDENTITY support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
+	 * Get the appropriate {@link IdentityColumnSupport}
+	 *
+	 * @return the IdentityColumnSupport
+	 * @since 5.1
+	 */
+	public IdentityColumnSupport getIdentityColumnSupport(){
+		return new IdentityColumnSupportImpl();
+	}
+
+	/**
 	 * Does this dialect support identity column key generation?
 	 *
 	 * @return True if IDENTITY columns are supported; false otherwise.
+	 *
+	 * @deprecated use {@link IdentityColumnSupport} method instead
 	 */
+	@Deprecated
 	public boolean supportsIdentityColumns() {
-		return false;
+		return getIdentityColumnSupport().supportsIdentityColumns();
 	}
 
 	/**
@@ -754,9 +768,12 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * @return True if the dialect supports selecting the just
 	 * generated IDENTITY in the insert statement.
+	 *
+	 * @deprecated use {@link IdentityColumnSupport} method instead
 	 */
+	@Deprecated
 	public boolean supportsInsertSelectIdentity() {
-		return false;
+		return getIdentityColumnSupport().supportsInsertSelectIdentity();
 	}
 
 	/**
@@ -764,9 +781,12 @@ public abstract class Dialect implements ConversionContext {
 	 * completely separate identity data type
 	 *
 	 * @return boolean
+	 *
+	 * @deprecated use {@link IdentityColumnSupport} method instead
 	 */
+	@Deprecated
 	public boolean hasDataTypeInIdentityColumn() {
-		return true;
+		return getIdentityColumnSupport().hasDataTypeInIdentityColumn();
 	}
 
 	/**
@@ -779,9 +799,12 @@ public abstract class Dialect implements ConversionContext {
 	 * @param insertString The insert command
 	 * @return The insert command with any necessary identity select
 	 * clause attached.
+	 *
+	 * @deprecated use {@link IdentityColumnSupport} method instead
 	 */
+	@Deprecated
 	public String appendIdentitySelectToInsert(String insertString) {
-		return insertString;
+		return getIdentityColumnSupport().appendIdentitySelectToInsert( insertString );
 	}
 
 	/**
@@ -793,20 +816,12 @@ public abstract class Dialect implements ConversionContext {
 	 * @param type The {@link java.sql.Types} type code.
 	 * @return The appropriate select command
 	 * @throws MappingException If IDENTITY generation is not supported.
-	 */
-	public String getIdentitySelectString(String table, String column, int type) throws MappingException {
-		return getIdentitySelectString();
-	}
-
-	/**
-	 * Get the select command to use to retrieve the last generated IDENTITY
-	 * value.
 	 *
-	 * @return The appropriate select command
-	 * @throws MappingException If IDENTITY generation is not supported.
+	 * @deprecated use {@link IdentityColumnSupport} method instead
 	 */
-	protected String getIdentitySelectString() throws MappingException {
-		throw new MappingException( getClass().getName() + " does not support identity key generation" );
+	@Deprecated
+	public String getIdentitySelectString(String table, String column, int type) throws MappingException {
+		return getIdentityColumnSupport().getIdentitySelectString( table, column, type );
 	}
 
 	/**
@@ -816,19 +831,12 @@ public abstract class Dialect implements ConversionContext {
 	 * @param type The {@link java.sql.Types} type code.
 	 * @return The appropriate DDL fragment.
 	 * @throws MappingException If IDENTITY generation is not supported.
-	 */
-	public String getIdentityColumnString(int type) throws MappingException {
-		return getIdentityColumnString();
-	}
-
-	/**
-	 * The syntax used during DDL to define a column as being an IDENTITY.
 	 *
-	 * @return The appropriate DDL fragment.
-	 * @throws MappingException If IDENTITY generation is not supported.
+	 * @deprecated use {@link IdentityColumnSupport} method instead
 	 */
-	protected String getIdentityColumnString() throws MappingException {
-		throw new MappingException( getClass().getName() + " does not support identity key generation" );
+	@Deprecated
+	public String getIdentityColumnString(int type) throws MappingException {
+		return getIdentityColumnSupport().getIdentityColumnString( type );
 	}
 
 	/**
@@ -836,11 +844,13 @@ public abstract class Dialect implements ConversionContext {
 	 * Need if the dialect does not support inserts that specify no column values.
 	 *
 	 * @return The appropriate keyword.
+	 *
+	 * @deprecated use {@link IdentityColumnSupport} method instead
 	 */
+	@Deprecated
 	public String getIdentityInsertString() {
-		return null;
+		return getIdentityColumnSupport().getIdentityInsertString();
 	}
-
 
 	// SEQUENCE support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -43,4 +43,3 @@ public class MckoiCaseFragment extends CaseFragment {
 		return buf.toString();
 	}
 }
-

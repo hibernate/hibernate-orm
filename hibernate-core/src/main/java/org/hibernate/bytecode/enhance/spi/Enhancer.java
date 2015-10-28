@@ -42,6 +42,7 @@ public class Enhancer {
 
 	protected final ClassPool classPool;
 	protected final CtClass managedEntityCtClass;
+	protected final CtClass managedCompositeCtClass;
 	protected final CtClass attributeInterceptorCtClass;
 	protected final CtClass attributeInterceptableCtClass;
 	protected final CtClass entityEntryCtClass;
@@ -57,16 +58,11 @@ public class Enhancer {
 			this.enhancementContext = enhancementContext;
 			this.classPool = buildClassPool( enhancementContext );
 
-			// add ManagedEntity contract
+			// pre-load some of the interfaces that are used
 			this.managedEntityCtClass = loadCtClassFromClass( classPool, ManagedEntity.class );
-
-			// add PersistentAttributeInterceptable contract
+			this.managedCompositeCtClass = loadCtClassFromClass( classPool, ManagedComposite.class );
 			this.attributeInterceptableCtClass = loadCtClassFromClass( classPool, PersistentAttributeInterceptable.class );
-
-			// add PersistentAttributeInterceptor contract
 			this.attributeInterceptorCtClass = loadCtClassFromClass( classPool, PersistentAttributeInterceptor.class );
-
-			// add PersistentAttributeInterceptor contract
 			this.entityEntryCtClass = loadCtClassFromClass( classPool, EntityEntry.class );
 		}
 		catch (IOException e) {
@@ -85,7 +81,7 @@ public class Enhancer {
 	 *
 	 * @throws EnhancementException Indicates a problem performing the enhancement
 	 */
-	public byte[] enhance(String className, byte[] originalBytes) throws EnhancementException {
+	public synchronized byte[] enhance(String className, byte[] originalBytes) throws EnhancementException {
 		try {
 			final CtClass managedCtClass = classPool.makeClassIfNew( new ByteArrayInputStream( originalBytes ) );
 			enhance( managedCtClass );
@@ -125,7 +121,7 @@ public class Enhancer {
 	private void enhance(CtClass managedCtClass) {
 		// can't effectively enhance interfaces
 		if ( managedCtClass.isInterface() ) {
-			log.debugf( "Skipping enhancement of [%s]: it's an interface", managedCtClass );
+			log.debugf( "Skipping enhancement of [%s]: it's an interface!", managedCtClass.getName() );
 			return;
 		}
 		// skip already enhanced classes
@@ -149,7 +145,7 @@ public class Enhancer {
 			new PersistentAttributesEnhancer( enhancementContext ).enhanceFieldAccess( managedCtClass );
 		}
 		else {
-			log.debug( "Skipping enhancement: not entity or composite" );
+			log.debugf( "Skipping enhancement of [%s]: not entity or composite", managedCtClass.getName() );
 		}
 	}
 

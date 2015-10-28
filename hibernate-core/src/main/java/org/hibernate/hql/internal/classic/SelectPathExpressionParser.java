@@ -26,10 +26,3 @@ public class SelectPathExpressionParser extends PathExpressionParser {
 		return getCurrentName();
 	}
 }
-
-
-
-
-
-
-

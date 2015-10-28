@@ -34,13 +34,7 @@ public interface EnversService extends Service {
 	 * The name of the configuration setting used to control whether the Envers integration
 	 * is enabled.  Default is true
 	 */
-	public static final String INTEGRATION_ENABLED = "hibernate.integration.envers.enabled";
-
-	/**
-	 * The name of the legacy configuration setting used to control whether auto registration
-	 * of envers listeners should happen or not.  Default is true
-	 */
-	public static final String LEGACY_AUTO_REGISTER = "hibernate.listeners.envers.autoRegister";
+	String INTEGRATION_ENABLED = "hibernate.integration.envers.enabled";
 
 	/**
 	 * Is the Envers integration enabled?  This is generally used as a

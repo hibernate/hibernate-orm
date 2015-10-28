@@ -180,7 +180,7 @@ public class PropertyBinder {
 				property,
 				returnedClass,
 				containerClassName,
-				holder.resolveAttributeConverterDefinition( property )
+				holder.resolveAttributeConverterDescriptor( property )
 		);
 		simpleValueBinder.setReferencedEntityName( referencedEntityName );
 		simpleValueBinder.setAccessType( accessType );

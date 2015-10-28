@@ -41,5 +41,3 @@ public class ContextProvidingValidationEventHandler implements ValidationEventHa
 		return message;
 	}
 }
-
-

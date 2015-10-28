@@ -4,6 +4,42 @@ Hibernate 5.0 Changelog
 Note: Please refer to JIRA to learn more about each issue.
 
 
+Changes in 5.0.3.Final (October 28, 2015)
+------------------------------------------------------------------------------------------------------------------------
+http://hibernate.atlassian.net/projects/HHH/versions/21650
+
+** Bug
+    * [HHH-1400] - formula-based property leads to generation of invalid SQL with subselect fetches
+    * [HHH-9074] - HQL Query with boolean and @Convert
+    * [HHH-9374] - EntityGraph applied to subquery when using collection function
+    * [HHH-9784] - scroll() and iterate() methods do not support provided HQLQueryPlan
+    * [HHH-10104] - Using JPA 2.1 schema generation together with hbm2ddl runs into deadlock with MySQL
+    * [HHH-10169] - Hibernate ignores foreign-key name in hbm <joined-subclass>
+    * [HHH-10170] - Reuse JAXBContext instance (Slow mapping initialization) - port HHH-10065 fix to 5.0 branch
+    * [HHH-10172] - Throw MappingException when entity/component class defines multiple matching getters by stem name
+    * [HHH-10174] - Incorrect splitting of string using dot as separator
+    * [HHH-10180] - hbm2ddl tools cannot generate create/update script not modifying the database
+    * [HHH-10188] - "stored" is a reserved keyword in MySQL 5.7
+    * [HHH-10189] - NPE in InformationExtractorJdbcDatabaseMetaDataImpl
+    * [HHH-10193] - NameQualifierSupport for Hypersonic should be catalog
+    * [HHH-10194] - Change NameQualifierSupport for Hypersonic from CATALOG to SCHEMA
+    * [HHH-10195] - QueryHintSQLServer2012Test is wrong
+    * [HHH-10196] - DefaultGeneratedValueTest fails on MySQL
+    * [HHH-10197] - SchemaManagementException when performing SchemaUpdate
+    * [HHH-10206] - Primary key not created for a Set after loading from XML mapping file
+    * [HHH-10207] - Constraint name not considered for a Set while loading from XML mapping file
+    * [HHH-10217] - ModelBinder fails to bind version property when generated="always"
+
+** Task
+    * [HHH-10137] - Upgrade to/support Jandex 2.0
+    * [HHH-10153] - Upgrade to Gradle 2.7
+
+** Improvement
+    * [HHH-10087] - Support prepending of locks
+    * [HHH-10190] - org.hibernate.engine.spi.ActionQueue#executeActions() optimization
+
+
+
 Changes in 5.0.2.Final (September 30, 2015)
 ------------------------------------------------------------------------------------------------------------------------
 http://hibernate.atlassian.net/projects/HHH/versions/21250

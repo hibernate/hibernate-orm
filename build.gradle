@@ -45,7 +45,7 @@ allprojects {
 
 ext {
     expectedGradleVersion = '2.7'
-    hibernateTargetVersion = '5.0.3-SNAPSHOT'
+    hibernateTargetVersion = '5.0.3.Final'
 
     osgiExportVersion = hibernateTargetVersion.replaceAll( '-SNAPSHOT', '.SNAPSHOT' )
 }
@@ -62,12 +62,6 @@ idea {
     }
 }
 
-/*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
- */
 // Used in MANIFEST.MF for OSGi Bundles
 def osgiDescription() {
 	return "A module of the Hibernate O/RM project"

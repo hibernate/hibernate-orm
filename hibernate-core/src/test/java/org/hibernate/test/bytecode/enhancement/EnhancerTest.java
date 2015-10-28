@@ -14,6 +14,7 @@ import org.hibernate.test.bytecode.enhancement.association.ManyToManyAssociation
 import org.hibernate.test.bytecode.enhancement.association.OneToManyAssociationTestTask;
 import org.hibernate.test.bytecode.enhancement.association.OneToOneAssociationTestTask;
 import org.hibernate.test.bytecode.enhancement.basic.BasicEnhancementTestTask;
+import org.hibernate.test.bytecode.enhancement.basic.HHH9529TestTask;
 import org.hibernate.test.bytecode.enhancement.dirty.DirtyTrackingTestTask;
 import org.hibernate.test.bytecode.enhancement.field.FieldAccessBidirectionalTestTasK;
 import org.hibernate.test.bytecode.enhancement.field.FieldAccessEnhancementTestTask;
@@ -30,10 +31,10 @@ import org.hibernate.test.bytecode.enhancement.lazy.basic.LazyBasicPropertyAcces
 import org.hibernate.test.bytecode.enhancement.lazy.group.LazyGroupAccessTestTask;
 import org.hibernate.test.bytecode.enhancement.lazyCache.InitFromCacheTestTask;
 import org.hibernate.test.bytecode.enhancement.merge.CompositeMergeTestTask;
-import org.hibernate.test.bytecode.enhancement.pk.EmbeddedPKTestTask;
 import org.hibernate.test.bytecode.enhancement.ondemandload.LazyCollectionWithClearedSessionTestTask;
 import org.hibernate.test.bytecode.enhancement.ondemandload.LazyCollectionWithClosedSessionTestTask;
 import org.hibernate.test.bytecode.enhancement.ondemandload.LazyEntityLoadingWithClosedSessionTestTask;
+import org.hibernate.test.bytecode.enhancement.pk.EmbeddedPKTestTask;
 import org.junit.Test;
 
 /**
@@ -44,6 +45,12 @@ public class EnhancerTest extends BaseUnitTestCase {
 	@Test
 	public void testBasic() {
 		EnhancerTestUtils.runEnhancerTestTask( BasicEnhancementTestTask.class );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9529" )
+	public void testFieldHHH9529() {
+		EnhancerTestUtils.runEnhancerTestTask( HHH9529TestTask.class );
 	}
 
 	@Test

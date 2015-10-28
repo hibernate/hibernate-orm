@@ -51,6 +51,8 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 		registerColumnType( Types.BIGINT, "bigint" );
 		registerColumnType( Types.BIT, "bit" );
 
+		// HHH-8435 fix
+		registerColumnType( Types.NCLOB, "nvarchar(MAX)" );
 
 		registerFunction( "row_number", new NoArgSQLFunction( "row_number", StandardBasicTypes.INTEGER, true ) );
 	}

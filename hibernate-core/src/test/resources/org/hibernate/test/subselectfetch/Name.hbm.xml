@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<!DOCTYPE hibernate-mapping
+  PUBLIC "-//Hibernate?Hibernate Mapping DTD//EN"
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+
+  <class name="org.hibernate.test.subselectfetch.Name" table="Name">
+    <id name="id" column="id"/>
+    <property  name="name" column="name"/>
+
+    <property name="nameLength" formula="(select length(name) from name where id=name.id)"/>
+
+    <bag name="values" inverse="true" lazy="false" fetch="subselect">
+      <key column="name_id"/>
+      <one-to-many class="org.hibernate.test.subselectfetch.Value"/>
+    </bag>
+
+  </class>
+
+</hibernate-mapping>

@@ -318,12 +318,12 @@ public class SimpleValueBinder {
 			return;
 		}
 
-		if ( property.isAnnotationPresent( Temporal.class ) ) {
+		if ( !key && property.isAnnotationPresent( Temporal.class ) ) {
 			LOG.debugf( "Skipping AttributeConverter checks for Temporal attribute [%s]", property.getName() );
 			return;
 		}
 
-		if ( property.isAnnotationPresent( Enumerated.class ) ) {
+		if ( !key && property.isAnnotationPresent( Enumerated.class ) ) {
 			LOG.debugf( "Skipping AttributeConverter checks for Enumerated attribute [%s]", property.getName() );
 			return;
 		}

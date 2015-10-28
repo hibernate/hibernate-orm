@@ -6,129 +6,118 @@
  */
 package org.hibernate.test.converter.elementCollection;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+
 import javax.persistence.AttributeConverter;
-import javax.persistence.CollectionTable;
-import javax.persistence.Column;
 import javax.persistence.Converter;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
 
 import org.hibernate.Session;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-
 /**
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-8529" )
+@TestForIssue(jiraKey = "HHH-8529")
 public class CollectionElementConversionTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {  Customer.class, ColorTypeConverter.class };
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] { Customer.class, ColorConverter.class };
 	}
 
 	@Test
 	public void testElementCollectionConversion() {
 		Session session = openSession();
 		session.getTransaction().begin();
-		Customer customer = new Customer( 1 );
-		customer.colors.add( ColorType.BLUE );
-		session.persist( customer );
+		Customer customer = new Customer();
+		customer.id = 1;
+		customer.set = new HashSet<Color>();
+		customer.set.add(Color.RED);
+		customer.set.add(Color.GREEN);
+		customer.set.add(Color.BLUE);
+		customer.map = new HashMap<Color, Status>();
+		customer.map.put(Color.RED, Status.INACTIVE);
+		customer.map.put(Color.GREEN, Status.ACTIVE);
+		customer.map.put(Color.BLUE, Status.PENDING);
+		session.persist(customer);
 		session.getTransaction().commit();
 		session.close();
 
 		session = openSession();
 		session.getTransaction().begin();
-		assertEquals( 1, session.get( Customer.class, 1 ).colors.size() );
+		assertEquals(customer.set, session.get(Customer.class, 1).set);
+		assertEquals(customer.map, session.get(Customer.class, 1).map);
 		session.getTransaction().commit();
 		session.close();
 
 		session = openSession();
 		session.getTransaction().begin();
-		customer = session.get( Customer.class, 1 );
-		session.delete( customer );
+		customer = session.get(Customer.class, 1);
+		session.delete(customer);
 		session.getTransaction().commit();
 		session.close();
 	}
 
-	@Entity( name = "Customer" )
-	@Table( name = "CUST" )
+	@Entity
 	public static class Customer {
 		@Id
 		private Integer id;
-
-		@ElementCollection(fetch = FetchType.EAGER)
-		@CollectionTable(
-				name = "cust_color",
-				joinColumns = @JoinColumn(name = "cust_fk", nullable = false),
-				uniqueConstraints =  @UniqueConstraint(columnNames = { "cust_fk", "color" })
-		)
-		@Column(name = "color", nullable = false)
-		private Set<ColorType> colors = new HashSet<ColorType>();
-
-		public Customer() {
-		}
-
-		public Customer(Integer id) {
-			this.id = id;
-		}
+		@ElementCollection
+		private Set<Color> set;
+		@ElementCollection
+		@Enumerated(EnumType.STRING)
+		private Map<Color, Status> map;
 	}
 
+	public static class Color {
+		public static Color RED = new Color(0xFF0000);
+		public static Color GREEN = new Color(0x00FF00);
+		public static Color BLUE = new Color(0x0000FF);
 
-	// an enum-like class (converters are technically not allowed to apply to enums)
-	public static class ColorType {
-		public static ColorType BLUE = new ColorType( "blue" );
-		public static ColorType RED = new ColorType( "red" );
-		public static ColorType YELLOW = new ColorType( "yellow" );
+		private final int rgb;
 
-		private final String color;
-
-		public ColorType(String color) {
-			this.color = color;
-		}
-
-		public String toExternalForm() {
-			return color;
-		}
-
-		public static ColorType fromExternalForm(String color) {
-			if ( BLUE.color.equals( color ) ) {
-				return BLUE;
-			}
-			else if ( RED.color.equals( color ) ) {
-				return RED;
-			}
-			else if ( YELLOW.color.equals( color ) ) {
-				return YELLOW;
-			}
-			else {
-				throw new RuntimeException( "Unknown color : " + color );
-			}
-		}
-	}
-
-	@Converter( autoApply = true )
-	public static class ColorTypeConverter implements AttributeConverter<ColorType, String> {
-
-		@Override
-		public String convertToDatabaseColumn(ColorType attribute) {
-			return attribute == null ? null : attribute.toExternalForm();
+		public Color(int rgb) {
+			this.rgb = rgb;
 		}
 
 		@Override
-		public ColorType convertToEntityAttribute(String dbData) {
-			return ColorType.fromExternalForm( dbData );
+		public int hashCode() {
+			return this.rgb;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			return obj instanceof Color && ((Color) obj).rgb == this.rgb;
+		}
+	}
+
+	public static enum Status {
+		ACTIVE,
+		INACTIVE,
+		PENDING
+	}
+
+	@Converter(autoApply = true)
+	public static class ColorConverter implements AttributeConverter<Color, String> {
+		@Override
+		public String convertToDatabaseColumn(Color attribute) {
+			return attribute == null ? null : Integer.toString(attribute.rgb, 16);
+		}
+
+		@Override
+		public Color convertToEntityAttribute(String dbData) {
+			return dbData == null ? null : new Color(Integer.parseInt(dbData, 16));
 		}
 	}
 }

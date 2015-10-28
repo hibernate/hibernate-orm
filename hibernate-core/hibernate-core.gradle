@@ -11,7 +11,6 @@ apply plugin: 'version-injection'
 apply plugin: 'org.hibernate.build.gradle.xjc'
 
 dependencies {
-    compile( libraries.jta )
     compile( libraries.jpa )
     compile( libraries.javassist )
     compile( libraries.antlr )
@@ -26,6 +25,7 @@ dependencies {
 
     antlr( libraries.antlr )
 
+    provided( libraries.jta )
     provided( libraries.ant )
     provided( libraries.jacc )
     provided( libraries.validation )

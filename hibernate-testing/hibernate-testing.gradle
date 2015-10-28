@@ -6,6 +6,7 @@
  */
 dependencies {
     compile project( ':hibernate-core' )
+    compile( libraries.jta )
     compile( libraries.junit )
     compile( libraries.byteman )
     compile( libraries.byteman_install )

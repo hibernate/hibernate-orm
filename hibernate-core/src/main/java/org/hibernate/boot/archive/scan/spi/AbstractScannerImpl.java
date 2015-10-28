@@ -61,7 +61,6 @@ public abstract class AbstractScannerImpl implements Scanner {
 			);
 		}
 		else {
-			validateReuse( descriptorInfo, isRootUrl );
 			descriptor = descriptorInfo.archiveDescriptor;
 		}
 		return descriptor;
@@ -78,14 +77,6 @@ public abstract class AbstractScannerImpl implements Scanner {
 			this.isRoot = isRoot;
 		}
 	}
-
-	@SuppressWarnings("UnusedParameters")
-	protected void validateReuse(ArchiveDescriptorInfo descriptor, boolean root) {
-		// is it really reasonable that a single url be processed multiple times?
-		// for now, throw an exception, mainly because I am interested in situations where this might happen
-		throw new IllegalStateException( "ArchiveDescriptor reused; can URLs be processed multiple times?" );
-	}
-
 
 	public static class ArchiveContextImpl implements ArchiveContext {
 		private final boolean isRootUrl;

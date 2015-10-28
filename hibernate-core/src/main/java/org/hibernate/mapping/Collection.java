@@ -54,8 +54,6 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	private String manyToManyWhere;
 	private String manyToManyOrderBy;
 	private String referencedPropertyName;
-	private String nodeName;
-	private String elementNodeName;
 	private String mappedByProperty;
 	private boolean sorted;
 	private Comparator comparator;
@@ -319,16 +317,6 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		}
 
 		checkColumnDuplication();
-
-		if ( elementNodeName != null && elementNodeName.startsWith( "@" ) ) {
-			throw new MappingException( "element node must not be an attribute: " + elementNodeName );
-		}
-		if ( elementNodeName != null && elementNodeName.equals( "." ) ) {
-			throw new MappingException( "element node must not be the parent: " + elementNodeName );
-		}
-		if ( nodeName != null && nodeName.indexOf( '@' ) > -1 ) {
-			throw new MappingException( "collection node must not be an attribute: " + elementNodeName );
-		}
 	}
 
 	private void checkColumnDuplication(java.util.Set distinctColumns, Iterator columns)
@@ -645,44 +633,9 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		return ArrayHelper.EMPTY_BOOLEAN_ARRAY;
 	}
 
-	public String getNodeName() {
-		return nodeName;
-	}
-
-	public void setNodeName(String nodeName) {
-		this.nodeName = nodeName;
-	}
-
-	public String getElementNodeName() {
-		return elementNodeName;
-	}
-
-	public void setElementNodeName(String elementNodeName) {
-		this.elementNodeName = elementNodeName;
-	}
-
-	/**
-	 * @deprecated To be removed in 5.  Removed as part of removing the notion of DOM entity-mode.
-	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
-	 */
-	@Deprecated
-	public boolean isEmbedded() {
-		return embedded;
-	}
-
-	/**
-	 * @deprecated To be removed in 5.  Removed as part of removing the notion of DOM entity-mode.
-	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
-	 */
-	@Deprecated
-	public void setEmbedded(boolean embedded) {
-		this.embedded = embedded;
-	}
-
 	public boolean isSubselectLoadable() {
 		return subselectLoadable;
 	}
-
 
 	public void setSubselectLoadable(boolean subqueryLoadable) {
 		this.subselectLoadable = subqueryLoadable;

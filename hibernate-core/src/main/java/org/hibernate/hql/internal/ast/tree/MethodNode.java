@@ -15,6 +15,7 @@ import org.hibernate.hql.internal.ast.TypeDiscriminatorMetadata;
 import org.hibernate.hql.internal.ast.util.ASTUtil;
 import org.hibernate.hql.internal.ast.util.ColumnHelper;
 import org.hibernate.internal.CoreLogging;
+import org.hibernate.persister.collection.CollectionPropertyMapping;
 import org.hibernate.persister.collection.CollectionPropertyNames;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.type.Type;
@@ -148,7 +149,12 @@ public class MethodNode extends AbstractSelectExpression implements FunctionNode
 			else {
 				// Not elements(x)
 				fromElement = collectionNode.getFromElement();
-				setDataType( fromElement.getPropertyType( propertyName, propertyName ) );
+
+				final CollectionPropertyReference cpr = fromElement.getCollectionPropertyReference( propertyName );
+				setDataType( cpr.getType() );
+				selectColumns = cpr.toColumns( fromElement.getTableAlias() );
+
+//				setDataType( fromElement.getPropertyType( propertyName, propertyName ) );
 				selectColumns = fromElement.toColumns( fromElement.getTableAlias(), propertyName, inSelect );
 			}
 			if ( collectionNode instanceof DotNode ) {

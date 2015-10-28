@@ -780,18 +780,6 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
-		public String getNodeName() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		public String getElementNodeName() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		public String getIndexNodeName() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
 		public void postInstantiate() throws MappingException {
 			//To change body of implemented methods use File | Settings | File Templates.
 		}

@@ -12,6 +12,7 @@ import org.infinispan.commands.module.ModuleCommandInitializer;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.context.Flag;
 import org.infinispan.factories.annotations.Inject;
+import org.infinispan.interceptors.locking.ClusteringDependentLogic;
 import org.infinispan.notifications.cachelistener.CacheNotifier;
 
 import java.util.Set;
@@ -29,11 +30,13 @@ public class CacheCommandInitializer implements ModuleCommandInitializer {
 			= new ConcurrentHashMap<String, PutFromLoadValidator>();
 	private CacheNotifier notifier;
 	private Configuration configuration;
+	private ClusteringDependentLogic clusteringDependentLogic;
 
 	@Inject
-	public void injectDependencies(CacheNotifier notifier, Configuration configuration) {
+	public void injectDependencies(CacheNotifier notifier, Configuration configuration, ClusteringDependentLogic clusteringDependentLogic) {
 		this.notifier = notifier;
 		this.configuration = configuration;
+		this.clusteringDependentLogic = clusteringDependentLogic;
 	}
 
 	public void addPutFromLoadValidator(String cacheName, PutFromLoadValidator putFromLoadValidator) {
@@ -62,12 +65,12 @@ public class CacheCommandInitializer implements ModuleCommandInitializer {
 		return new EvictAllCommand( regionName );
 	}
 
-	public BeginInvalidationCommand buildBeginInvalidationCommand(Set<Flag> flags, Object[] keys, Object lockOwner) {
-		return new BeginInvalidationCommand(notifier, flags, keys, lockOwner);
+	public BeginInvalidationCommand buildBeginInvalidationCommand(Set<Flag> flags, Object[] keys, Object sessionTransactionId) {
+		return new BeginInvalidationCommand(notifier, flags, keys, clusteringDependentLogic.getAddress(), sessionTransactionId);
 	}
 
-	public EndInvalidationCommand buildEndInvalidationCommand(String cacheName, Object[] keys, Object lockOwner) {
-		return new EndInvalidationCommand( cacheName, keys, lockOwner );
+	public EndInvalidationCommand buildEndInvalidationCommand(String cacheName, Object[] keys, Object sessionTransactionId) {
+		return new EndInvalidationCommand( cacheName, keys, sessionTransactionId );
 	}
 
 	@Override

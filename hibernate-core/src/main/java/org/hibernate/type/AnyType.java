@@ -361,18 +361,6 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		throw new UnsupportedOperationException( "any mappings may not form part of a property-ref" );
 	}
 
-	@Override
-	public void setToXMLNode(Node xml, Object value, SessionFactoryImplementor factory) {
-		throw new UnsupportedOperationException("any types cannot be stringified");
-	}
-
-	@Override
-	public Object fromXMLNode(Node xml, Mapping factory) throws HibernateException {
-		throw new UnsupportedOperationException();
-	}
-
-
-
 	// CompositeType implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
@@ -471,11 +459,6 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 
 	@Override
 	public boolean isAlwaysDirtyChecked() {
-		return false;
-	}
-
-	@Override
-	public boolean isEmbeddedInXML() {
 		return false;
 	}
 

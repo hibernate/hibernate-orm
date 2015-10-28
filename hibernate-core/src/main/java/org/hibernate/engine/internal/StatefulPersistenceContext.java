@@ -58,7 +58,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.tuple.ElementWrapper;
 import org.hibernate.type.CollectionType;
 
 import org.jboss.logging.Logger;
@@ -515,10 +514,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public boolean reassociateIfUninitializedProxy(Object value) throws MappingException {
-		if ( value instanceof ElementWrapper ) {
-			value = ( (ElementWrapper) value ).getElement();
-		}
-
 		if ( !Hibernate.isInitialized( value ) ) {
 			final HibernateProxy proxy = (HibernateProxy) value;
 			final LazyInitializer li = proxy.getHibernateLazyInitializer();
@@ -532,10 +527,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public void reassociateProxy(Object value, Serializable id) throws MappingException {
-		if ( value instanceof ElementWrapper ) {
-			value = ( (ElementWrapper) value ).getElement();
-		}
-
 		if ( value instanceof HibernateProxy ) {
 			LOG.debugf( "Setting proxy identifier: %s", id );
 			final HibernateProxy proxy = (HibernateProxy) value;
@@ -563,10 +554,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public Object unproxy(Object maybeProxy) throws HibernateException {
-		if ( maybeProxy instanceof ElementWrapper ) {
-			maybeProxy = ( (ElementWrapper) maybeProxy ).getElement();
-		}
-
 		if ( maybeProxy instanceof HibernateProxy ) {
 			final HibernateProxy proxy = (HibernateProxy) maybeProxy;
 			final LazyInitializer li = proxy.getHibernateLazyInitializer();
@@ -585,10 +572,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public Object unproxyAndReassociate(Object maybeProxy) throws HibernateException {
-		if ( maybeProxy instanceof ElementWrapper ) {
-			maybeProxy = ( (ElementWrapper) maybeProxy ).getElement();
-		}
-
 		if ( maybeProxy instanceof HibernateProxy ) {
 			final HibernateProxy proxy = (HibernateProxy) maybeProxy;
 			final LazyInitializer li = proxy.getHibernateLazyInitializer();

@@ -44,7 +44,6 @@ public class Property implements Serializable, MetaAttributable {
 	private String propertyAccessorName;
 	private boolean lazy;
 	private boolean optional;
-	private String nodeName;
 	private java.util.Map metaAttributes;
 	private PersistentClass persistentClass;
 	private boolean naturalIdentifier;
@@ -289,14 +288,6 @@ public class Property implements Serializable, MetaAttributable {
 	
 	public void setSelectable(boolean selectable) {
 		this.selectable = selectable;
-	}
-
-	public String getNodeName() {
-		return nodeName;
-	}
-
-	public void setNodeName(String nodeName) {
-		this.nodeName = nodeName;
 	}
 
 	public String getAccessorPropertyName( EntityMode mode ) {

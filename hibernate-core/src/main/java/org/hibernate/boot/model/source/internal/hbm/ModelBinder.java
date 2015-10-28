@@ -434,7 +434,6 @@ public class ModelBinder {
 
 		if ( StringHelper.isNotEmpty( entitySource.getXmlNodeName() ) ) {
 			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfDomEntityModeSupport();
-			entityDescriptor.setNodeName( entitySource.getXmlNodeName() );
 		}
 
 		entityDescriptor.setDynamicInsert( entitySource.isDynamicInsert() );
@@ -918,7 +917,6 @@ public class ModelBinder {
 			rootEntityDescriptor.setIdentifierMapper(mapper);
 			Property property = new Property();
 			property.setName( PropertyPath.IDENTIFIER_MAPPER_PROPERTY );
-			property.setNodeName( "id" );
 			property.setUpdateable( false );
 			property.setInsertable( false );
 			property.setValue( mapper );
@@ -1886,9 +1884,9 @@ public class ModelBinder {
 				attribute
 		);
 
-		final String xmlNodeName = determineXmlNodeName( embeddedSource, componentBinding.getOwner().getNodeName() );
-		componentBinding.setNodeName( xmlNodeName );
-		attribute.setNodeName( xmlNodeName );
+		if ( StringHelper.isNotEmpty( embeddedSource.getName() ) ) {
+			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfDomEntityModeSupport();
+		}
 
 		return attribute;
 	}
@@ -2115,7 +2113,6 @@ public class ModelBinder {
 		if ( oneToOneSource.isEmbedXml() == Boolean.TRUE ) {
 			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfEmbedXmlSupport();
 		}
-		oneToOneBinding.setEmbedded( oneToOneSource.isEmbedXml() != Boolean.FALSE );
 
 		if ( StringHelper.isNotEmpty( oneToOneSource.getExplicitForeignKeyName() ) ) {
 			oneToOneBinding.setForeignKeyName( oneToOneSource.getExplicitForeignKeyName() );
@@ -2234,7 +2231,6 @@ public class ModelBinder {
 		if ( manyToOneSource.isEmbedXml() == Boolean.TRUE ) {
 			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfEmbedXmlSupport();
 		}
-		manyToOneBinding.setEmbedded( manyToOneSource.isEmbedXml() != Boolean.FALSE );
 
 		manyToOneBinding.setIgnoreNotFound( manyToOneSource.isIgnoreNotFound() );
 
@@ -2440,7 +2436,10 @@ public class ModelBinder {
 			AttributeSource propertySource,
 			Property property) {
 		property.setName( propertySource.getName() );
-		property.setNodeName( determineXmlNodeName( propertySource, null ) );
+
+		if ( StringHelper.isNotEmpty( propertySource.getName() ) ) {
+			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfDomEntityModeSupport();
+		}
 
 		property.setPropertyAccessorName(
 				StringHelper.isNotEmpty( propertySource.getPropertyAccessorName() )
@@ -2538,21 +2537,6 @@ public class ModelBinder {
 			message.append( "]" );
 			log.debug( message.toString() );
 		}
-	}
-
-	private String determineXmlNodeName(AttributeSource propertySource, String fallbackXmlNodeName) {
-		String nodeName = propertySource.getXmlNodeName();
-		if ( StringHelper.isNotEmpty( nodeName ) ) {
-			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfDomEntityModeSupport();
-		}
-		else {
-			nodeName = propertySource.getName();
-		}
-		if ( nodeName == null ) {
-			nodeName = fallbackXmlNodeName;
-		}
-
-		return nodeName;
 	}
 
 	private void bindComponent(
@@ -2664,13 +2648,6 @@ public class ModelBinder {
 		if ( StringHelper.isNotEmpty( nodeName ) ) {
 			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfDomEntityModeSupport();
 		}
-		else {
-			nodeName = propertyName;
-		}
-		if ( nodeName == null ) {
-			nodeName = componentBinding.getOwner().getNodeName();
-		}
-		componentBinding.setNodeName( nodeName );
 
 		// todo : anything else to pass along?
 		bindAllCompositeAttributes(
@@ -3988,7 +3965,6 @@ public class ModelBinder {
 
 		collectionBinding.setIndex( indexBinding );
 		collectionBinding.setBaseIndex( indexSource.getBase() );
-		collectionBinding.setIndexNodeName( indexSource.getXmlNodeName() );
 	}
 
 	private void bindMapKey(
@@ -4029,7 +4005,6 @@ public class ModelBinder {
 			);
 
 			collectionBinding.setIndex( value );
-			collectionBinding.setIndexNodeName( mapKeySource.getXmlNodeName() );
 		}
 		else if ( pluralAttributeSource.getIndexSource() instanceof PluralAttributeMapKeySourceEmbedded ) {
 			final PluralAttributeMapKeySourceEmbedded mapKeySource =

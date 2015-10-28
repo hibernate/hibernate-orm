@@ -500,6 +500,10 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		return elementType.getPropertyMapping( propertyName );
 	}
 
+	public CollectionPropertyReference getCollectionPropertyReference(String propertyName) {
+		return elementType.getCollectionPropertyReference( propertyName );
+	}
+
 	public void setFetch(boolean fetch) {
 		this.fetch = fetch;
 		// Fetch can't be used with scroll() or iterate().

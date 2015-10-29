@@ -327,12 +327,15 @@ public class SimpleValueBinder {
 			LOG.debugf( "Skipping AttributeConverter checks for Temporal attribute [%s]", property.getName() );
 			return;
 		}
+		if ( key && property.isAnnotationPresent( MapKeyTemporal.class ) ) {
+			LOG.debugf( "Skipping AttributeConverter checks for map-key annotated as MapKeyTemporal [%s]", property.getName() );
+			return;
+		}
 
 		if ( !key && property.isAnnotationPresent( Enumerated.class ) ) {
 			LOG.debugf( "Skipping AttributeConverter checks for Enumerated attribute [%s]", property.getName() );
 			return;
 		}
-
 		if ( key && property.isAnnotationPresent( MapKeyEnumerated.class ) ) {
 			LOG.debugf( "Skipping AttributeConverter checks for map-key annotated as MapKeyEnumerated [%s]", property.getName() );
 			return;

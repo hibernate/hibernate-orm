@@ -2485,12 +2485,16 @@ public abstract class Loader {
 			SessionImplementor session,
 			QueryParameters queryParameters) {
 		return QueryKey.generateQueryKey(
-				getSQLString(),
+				getQueryStringForQueryKey(),
 				queryParameters,
 				FilterKey.createFilterKeys( session.getLoadQueryInfluencers().getEnabledFilters() ),
 				session,
 				createCacheableResultTransformer( queryParameters )
 		);
+	}
+
+	protected String getQueryStringForQueryKey() {
+		return getSQLString();
 	}
 
 	private CacheableResultTransformer createCacheableResultTransformer(QueryParameters queryParameters) {

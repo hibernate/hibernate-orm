@@ -307,6 +307,11 @@ public class QueryLoader extends BasicLoader {
 	}
 
 	@Override
+	protected String getQueryStringForQueryKey() {
+		return queryTranslator.getQueryString();
+	}
+
+	@Override
 	protected String applyLocks(
 			String sql,
 			QueryParameters parameters,

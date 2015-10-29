@@ -333,6 +333,11 @@ public class SimpleValueBinder {
 			return;
 		}
 
+		if ( key && property.isAnnotationPresent( MapKeyEnumerated.class ) ) {
+			LOG.debugf( "Skipping AttributeConverter checks for map-key annotated as MapKeyEnumerated [%s]", property.getName() );
+			return;
+		}
+
 		if ( isAssociation() ) {
 			LOG.debugf( "Skipping AttributeConverter checks for association attribute [%s]", property.getName() );
 			return;

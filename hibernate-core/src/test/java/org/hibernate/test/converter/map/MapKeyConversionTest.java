@@ -8,9 +8,7 @@ package org.hibernate.test.converter.map;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.persistence.AttributeConverter;
 import javax.persistence.CollectionTable;
-import javax.persistence.Converter;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -75,53 +73,6 @@ public class MapKeyConversionTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		public Customer(Integer id) {
 			this.id = id;
-		}
-	}
-
-
-	// an enum-like class (converters are technically not allowed to apply to enums)
-	public static class ColorType {
-		public static ColorType BLUE = new ColorType( "blue" );
-		public static ColorType RED = new ColorType( "red" );
-		public static ColorType YELLOW = new ColorType( "yellow" );
-
-		private final String color;
-
-		public ColorType(String color) {
-			this.color = color;
-		}
-
-		public String toExternalForm() {
-			return color;
-		}
-
-		public static ColorType fromExternalForm(String color) {
-			if ( BLUE.color.equals( color ) ) {
-				return BLUE;
-			}
-			else if ( RED.color.equals( color ) ) {
-				return RED;
-			}
-			else if ( YELLOW.color.equals( color ) ) {
-				return YELLOW;
-			}
-			else {
-				throw new RuntimeException( "Unknown color : " + color );
-			}
-		}
-	}
-
-	@Converter( autoApply = true )
-	public static class ColorTypeConverter implements AttributeConverter<ColorType, String> {
-
-		@Override
-		public String convertToDatabaseColumn(ColorType attribute) {
-			return attribute == null ? null : attribute.toExternalForm();
-		}
-
-		@Override
-		public ColorType convertToEntityAttribute(String dbData) {
-			return ColorType.fromExternalForm( dbData );
 		}
 	}
 }

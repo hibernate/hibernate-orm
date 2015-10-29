@@ -33,6 +33,7 @@ import org.hibernate.Query;
 import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.ParameterMetadata;
 import org.hibernate.engine.spi.QueryParameters;
@@ -1026,11 +1027,25 @@ public abstract class AbstractQueryImpl implements Query {
 		}
 	}
 
-	public HQLQueryPlan getQueryPlan() {
-		return queryPlan;
-	}
 
-	public void setQueryPlan(HQLQueryPlan queryPlan) {
-		this.queryPlan = queryPlan;
+	/**
+	 * Used from HEM code as a (hopefully temporary) means to apply a custom query plan
+	 * in regards to a JPA entity graph.
+	 *
+	 * @param hint The entity graph hint object
+	 */
+	public void applyEntityGraphQueryHint(EntityGraphQueryHint hint) {
+		verifyParameters();
+		// todo : likely need to update the instance state related to queryString and parameters
+		final Map namedParams = getNamedParams();
+		final String expandedQuery = expandParameterLists( namedParams );
+		this.queryPlan = new HQLQueryPlan(
+				expandedQuery,
+				false,
+				session.getLoadQueryInfluencers().getEnabledFilters(),
+				session.getFactory(),
+				hint
+		);
+
 	}
 }

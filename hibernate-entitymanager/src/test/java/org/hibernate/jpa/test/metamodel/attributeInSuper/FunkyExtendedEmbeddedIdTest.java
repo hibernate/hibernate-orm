@@ -23,7 +23,10 @@ public class FunkyExtendedEmbeddedIdTest extends BaseEntityManagerFunctionalTest
 	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[] {
-				WorkOrderComponentId.class, WorkOrderComponent.class, WorkOrderId.class
+				WorkOrderId.class,
+				WorkOrder.class,
+				WorkOrderComponentId.class,
+				WorkOrderComponent.class
 		};
 	}
 

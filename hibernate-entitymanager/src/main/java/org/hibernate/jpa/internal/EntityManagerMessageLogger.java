@@ -80,8 +80,8 @@ public interface EntityManagerMessageLogger extends CoreMessageLogger {
 			URL jarUrl,
 			@Cause Exception e);
 
-	@LogMessage(level = ERROR)
-	@Message(value = "Unable to locate static metamodel field : %s#%s", id = 15011)
+	@LogMessage(level = WARN)
+	@Message(value = "Unable to locate static metamodel field : %s#%s; this may or may not indicate a problem with the static metamodel", id = 15011)
 	void unableToLocateStaticMetamodelField(
 			String name,
 			String name2);

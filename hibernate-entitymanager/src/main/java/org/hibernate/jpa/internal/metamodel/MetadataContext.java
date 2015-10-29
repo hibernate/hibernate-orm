@@ -19,6 +19,7 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.MappedSuperclassType;
 import javax.persistence.metamodel.SingularAttribute;
+import javax.persistence.metamodel.Type;
 
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -411,7 +412,11 @@ class MetadataContext {
 			//
 			// As a result, in the case of embeddable classes we simply use getField rather than get
 			// getDeclaredField
-			final Field field = attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED
+			final boolean allowNonDeclaredFieldReference =
+					attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED
+							|| attribute.getDeclaringType().getPersistenceType() == Type.PersistenceType.EMBEDDABLE;
+
+			final Field field = allowNonDeclaredFieldReference
 					? metamodelClass.getField( name )
 					: metamodelClass.getDeclaredField( name );
 			try {

@@ -58,6 +58,7 @@ import org.hibernate.cfg.AnnotatedClassType;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.CopyIdentifierComponentSecondPass;
 import org.hibernate.cfg.CreateKeySecondPass;
+import org.hibernate.cfg.DependentSecondPass;
 import org.hibernate.cfg.FkSecondPass;
 import org.hibernate.cfg.JPAIndexHolder;
 import org.hibernate.cfg.PkDrivenByDefaultMapsIdSecondPass;
@@ -1623,12 +1624,52 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			return;
 		}
 
-		for ( SecondPass secondPass : secondPasses ) {
+		for ( SecondPass secondPass : sortSecondPassesByDependencies( secondPasses ) ) {
 			secondPass.doSecondPass( getEntityBindingMap() );
 		}
 
 		secondPasses.clear();
 	}
+
+	private List<SecondPass> sortSecondPassesByDependencies( List<? extends SecondPass> secondPasses ) {
+
+		List<SecondPass> sorted = new ArrayList<SecondPass>( secondPasses.size() );
+		Set<DependentSecondPass> toSort = new HashSet<DependentSecondPass>();
+		for ( SecondPass secondPass : secondPasses ) {
+			if ( secondPass instanceof DependentSecondPass ) {
+				toSort.add( (DependentSecondPass) secondPass );
+			}
+			else {
+				sorted.add( secondPass );
+			}
+		}
+		topologicalSort( sorted, toSort );
+		return sorted;
+	}
+
+	/* naive O(n^3) topological sort */
+	private void topologicalSort( List<SecondPass> sorted, Set<DependentSecondPass> toSort ) {
+		while (!toSort.isEmpty()) {
+			DependentSecondPass independent = null;
+
+			searchForIndependent:
+			for ( DependentSecondPass pass : toSort ) {
+				for ( DependentSecondPass other : toSort ) {
+					if (pass.dependentUpon( other )) {
+						continue searchForIndependent;
+					}
+				}
+				independent = pass;
+				break;
+			}
+			if (independent == null) {
+				throw new MappingException( "cyclic dependency in derived identities" );
+			}
+			toSort.remove( independent );
+			sorted.add( independent );
+		}
+	}
+
 
 	private void processFkSecondPassesInOrder() {
 		if ( fkSecondPassList == null || fkSecondPassList.isEmpty() ) {

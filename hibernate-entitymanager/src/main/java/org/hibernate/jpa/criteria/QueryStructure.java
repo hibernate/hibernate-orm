@@ -32,7 +32,7 @@ import org.hibernate.jpa.criteria.path.RootImpl;
 
 /**
  * Models basic query structure.  Used as a delegate in implementing both
- * {@link org.hibernate.criterion.CriteriaQuery} and
+ * {@link javax.persistence.criteria.CriteriaQuery} and
  * {@link javax.persistence.criteria.Subquery}.
  * <p/>
  * Note the <tt>ORDER BY</tt> specs are neglected here.  That's because it is not valid

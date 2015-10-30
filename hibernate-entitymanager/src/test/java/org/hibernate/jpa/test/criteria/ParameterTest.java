@@ -18,7 +18,9 @@ import org.junit.Test;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author Steve Ebersole
@@ -37,6 +39,7 @@ public class ParameterTest extends BaseEntityManagerFunctionalTestCase {
 		criteria.where( em.getCriteriaBuilder().equal( someBytesPath, param ) );
 		TypedQuery<MultiTypedBasicAttributesEntity> query = em.createQuery( criteria );
 		query.setParameter( param, new byte[] { 1,1,1 } );
+		assertThat( query.getParameterValue( param.getName() ), instanceOf( byte[].class) );
 		query.getResultList();
 		em.getTransaction().commit();
 		em.close();
@@ -54,6 +57,7 @@ public class ParameterTest extends BaseEntityManagerFunctionalTestCase {
 		criteria.where( em.getCriteriaBuilder().equal( thePath, param ) );
 		TypedQuery<MultiTypedBasicAttributesEntity> query = em.createQuery( criteria );
 		query.setParameter( param, new Byte[] { Byte.valueOf((byte)1), Byte.valueOf((byte)1), Byte.valueOf((byte)1) } );
+		assertThat( query.getParameterValue( param.getName() ), instanceOf( Byte[].class ) );
 		query.getResultList();
 		em.getTransaction().commit();
 		em.close();

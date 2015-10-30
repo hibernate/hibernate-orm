@@ -189,7 +189,7 @@ public class CriteriaQueryTypeQueryAdapter<X> implements TypedQuery<X>, Hibernat
 	public Object getParameterValue(String name) {
 		entityManager.checkOpen( false );
 		locateParameterByName( name );
-		return jpqlQuery.getParameter( name );
+		return jpqlQuery.getParameterValue( name );
 	}
 
 	private ExplicitParameterInfo locateParameterByName(String name) {

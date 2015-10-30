@@ -1747,4 +1747,8 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Hikari properties were encountered, but the Hikari ConnectionProvider was not found on the classpath; these properties are going to be ignored.",
 			id = 472)
 	void hikariProviderClassNotFound();
+
+	@LogMessage(level = INFO)
+	@Message(value = "Omitting cached file [%s] as the mapping file is newer", id = 473)
+	void cachedFileObsolete(File cachedFile);
 }

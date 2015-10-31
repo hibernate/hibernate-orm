@@ -19,7 +19,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.MapsId;
@@ -49,7 +48,6 @@ import org.hibernate.boot.model.source.internal.ConstraintSecondPass;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
 import org.hibernate.boot.spi.AttributeConverterAutoApplyHandler;
-import org.hibernate.boot.spi.AttributeConverterDescriptor;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
@@ -58,7 +56,6 @@ import org.hibernate.cfg.AnnotatedClassType;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.CopyIdentifierComponentSecondPass;
 import org.hibernate.cfg.CreateKeySecondPass;
-import org.hibernate.cfg.DependentSecondPass;
 import org.hibernate.cfg.FkSecondPass;
 import org.hibernate.cfg.JPAIndexHolder;
 import org.hibernate.cfg.PkDrivenByDefaultMapsIdSecondPass;
@@ -1592,7 +1589,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 			processSecondPasses( pkDrivenByDefaultMapsIdSecondPassList );
 			processSecondPasses( setSimpleValueTypeSecondPassList );
-			processSecondPasses( copyIdentifierComponentSecondPasList );
+
+			processCopyIdentifierSecondPassesInOrder();
 
 			processFkSecondPassesInOrder();
 
@@ -1619,47 +1617,49 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 	}
 
+	private void processCopyIdentifierSecondPassesInOrder() {
+		if ( copyIdentifierComponentSecondPasList == null ) {
+			return;
+		}
+		sortCopyIdentifierComponentSecondPasses();
+		processSecondPasses( copyIdentifierComponentSecondPasList );
+	}
+
 	private void processSecondPasses(ArrayList<? extends SecondPass> secondPasses) {
 		if ( secondPasses == null ) {
 			return;
 		}
 
-		for ( SecondPass secondPass : sortSecondPassesByDependencies( secondPasses ) ) {
+		for ( SecondPass secondPass : secondPasses ) {
 			secondPass.doSecondPass( getEntityBindingMap() );
 		}
 
 		secondPasses.clear();
 	}
 
-	private List<SecondPass> sortSecondPassesByDependencies( List<? extends SecondPass> secondPasses ) {
+	private void sortCopyIdentifierComponentSecondPasses() {
 
-		List<SecondPass> sorted = new ArrayList<SecondPass>( secondPasses.size() );
-		Set<DependentSecondPass> toSort = new HashSet<DependentSecondPass>();
-		for ( SecondPass secondPass : secondPasses ) {
-			if ( secondPass instanceof DependentSecondPass ) {
-				toSort.add( (DependentSecondPass) secondPass );
-			}
-			else {
-				sorted.add( secondPass );
-			}
-		}
+		ArrayList<CopyIdentifierComponentSecondPass> sorted =
+				new ArrayList<CopyIdentifierComponentSecondPass>( copyIdentifierComponentSecondPasList.size() );
+		Set<CopyIdentifierComponentSecondPass> toSort = new HashSet<CopyIdentifierComponentSecondPass>();
+		toSort.addAll( copyIdentifierComponentSecondPasList );
 		topologicalSort( sorted, toSort );
-		return sorted;
+		copyIdentifierComponentSecondPasList = sorted;
 	}
 
 	/* naive O(n^3) topological sort */
-	private void topologicalSort( List<SecondPass> sorted, Set<DependentSecondPass> toSort ) {
+	private void topologicalSort( List<CopyIdentifierComponentSecondPass> sorted, Set<CopyIdentifierComponentSecondPass> toSort ) {
 		while (!toSort.isEmpty()) {
-			DependentSecondPass independent = null;
+			CopyIdentifierComponentSecondPass independent = null;
 
 			searchForIndependent:
-			for ( DependentSecondPass pass : toSort ) {
-				for ( DependentSecondPass other : toSort ) {
-					if (pass.dependentUpon( other )) {
+			for ( CopyIdentifierComponentSecondPass secondPass : toSort ) {
+				for ( CopyIdentifierComponentSecondPass other : toSort ) {
+					if (secondPass.dependentUpon( other )) {
 						continue searchForIndependent;
 					}
 				}
-				independent = pass;
+				independent = secondPass;
 				break;
 			}
 			if (independent == null) {

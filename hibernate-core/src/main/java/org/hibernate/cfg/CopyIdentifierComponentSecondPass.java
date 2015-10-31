@@ -28,7 +28,7 @@ import org.jboss.logging.Logger;
 /**
  * @author Emmanuel Bernard
  */
-public class CopyIdentifierComponentSecondPass implements DependentSecondPass {
+public class CopyIdentifierComponentSecondPass implements SecondPass {
 	private static final Logger log = Logger.getLogger( CopyIdentifierComponentSecondPass.class );
 
 	private final String referencedEntityName;
@@ -207,12 +207,7 @@ public class CopyIdentifierComponentSecondPass implements DependentSecondPass {
 		return property;
 	}
 
-	@Override
-	public boolean dependentUpon( SecondPass secondPass ) {
-		if ( secondPass instanceof CopyIdentifierComponentSecondPass ) {
-			CopyIdentifierComponentSecondPass other = (CopyIdentifierComponentSecondPass) secondPass;
-			return this.referencedEntityName.equals( other.component.getOwner().getEntityName() );
-		}
-		return false;
+	public boolean dependentUpon( CopyIdentifierComponentSecondPass other ) {
+		return this.referencedEntityName.equals( other.component.getOwner().getEntityName() );
 	}
 }

@@ -57,7 +57,6 @@ import org.hibernate.tuple.component.ComponentTuplizer;
  */
 public class ComponentType extends AbstractType implements CompositeType {
 
-	private final TypeFactory.TypeScope typeScope;
 	private final String[] propertyNames;
 	private final Type[] propertyTypes;
 	private final boolean[] propertyNullability;
@@ -71,7 +70,6 @@ public class ComponentType extends AbstractType implements CompositeType {
 	protected final ComponentTuplizer componentTuplizer;
 
 	public ComponentType(TypeFactory.TypeScope typeScope, ComponentMetamodel metamodel) {
-		this.typeScope = typeScope;
 		// for now, just "re-flatten" the metamodel since this is temporary stuff anyway (HHH-1907)
 		this.isKey = metamodel.isKey();
 		this.propertySpan = metamodel.getPropertySpan();

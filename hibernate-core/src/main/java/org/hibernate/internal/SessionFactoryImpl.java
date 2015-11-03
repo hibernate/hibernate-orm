@@ -271,6 +271,15 @@ public final class SessionFactoryImpl
 			this.observer.addObserver( observer );
 		}
 
+		// name and uuid must be initialized before scoping the TypeResolver to this object.
+		name = settings.getSessionFactoryName();
+		try {
+			uuid = (String) UUID_GENERATOR.generate(null, null);
+		}
+		catch (Exception e) {
+			throw new AssertionFailure("Could not generate UUID");
+		}
+
 		this.typeResolver = cfg.getTypeResolver().scope( this );
 		this.typeHelper = new TypeLocatorImpl( typeResolver );
 
@@ -474,13 +483,6 @@ public final class SessionFactoryImpl
 
 		//JNDI + Serialization:
 
-		name = settings.getSessionFactoryName();
-		try {
-			uuid = (String) UUID_GENERATOR.generate(null, null);
-		}
-		catch (Exception e) {
-			throw new AssertionFailure("Could not generate UUID");
-		}
 		SessionFactoryRegistry.INSTANCE.addSessionFactory(
 				uuid,
 				name,
@@ -693,6 +695,15 @@ public final class SessionFactoryImpl
 			this.observer.addObserver( observer );
 		}
 
+		// name and uuid must be initialized before scoping the TypeResolver to this object.
+		name = settings.getSessionFactoryName();
+		try {
+			uuid = (String) UUID_GENERATOR.generate(null, null);
+		}
+		catch (Exception e) {
+			throw new AssertionFailure("Could not generate UUID");
+		}
+
 		this.typeResolver = metadata.getTypeResolver().scope( this );
 		this.typeHelper = new TypeLocatorImpl( typeResolver );
 
@@ -883,13 +894,6 @@ public final class SessionFactoryImpl
 
 		//JNDI + Serialization:
 
-		name = settings.getSessionFactoryName();
-		try {
-			uuid = (String) UUID_GENERATOR.generate(null, null);
-		}
-		catch (Exception e) {
-			throw new AssertionFailure("Could not generate UUID");
-		}
 		SessionFactoryRegistry.INSTANCE.addSessionFactory(
 				uuid, 
 				name,

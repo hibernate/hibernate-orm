@@ -27,14 +27,16 @@ import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Properties;
 
+import javax.naming.NamingException;
+
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.ParameterizedType;
@@ -73,26 +75,33 @@ public final class TypeFactory implements Serializable {
 			}
 			else {
 				LOG.tracev( "Scoping types to session factory {0}", factory );
-				sessionFactoryUuid = factory.getUuid();
-				String sfName = factory.getSettings().getSessionFactoryName();
-				if ( sfName == null ) {
-					final CfgXmlAccessService cfgXmlAccessService = factory.getServiceRegistry()
-							.getService( CfgXmlAccessService.class );
-					if ( cfgXmlAccessService.getAggregatedConfig() != null ) {
-						sfName = cfgXmlAccessService.getAggregatedConfig().getSessionFactoryName();
-					}
+				try {
+					sessionFactoryUuid = (String) factory.getReference().get( "uuid" ).getContent() ;
 				}
-				sessionFactoryName = sfName;
+				catch (NamingException ex) {
+					throw new HibernateException(
+							"Could not inject SessionFactory because UUID could not be determined.",
+							ex
+					);
+				}
+				if ( sessionFactoryUuid == null ) {
+					throw new IllegalArgumentException( "SessionFactory has null uuid." );
+				}
+				sessionFactoryName = factory.getSettings().getSessionFactoryName();
 			}
 			this.factory = factory;
 		}
 
 		public SessionFactoryImplementor resolveFactory() {
 			if ( factory == null ) {
-				factory = (SessionFactoryImplementor) SessionFactoryRegistry.INSTANCE.findSessionFactory(
-						sessionFactoryUuid,
-						sessionFactoryName
+				factory = (SessionFactoryImplementor) SessionFactoryRegistry.INSTANCE.getSessionFactory(
+						sessionFactoryUuid
 				);
+				if ( factory == null && StringHelper.isNotEmpty( sessionFactoryName ) ) {
+					factory = (SessionFactoryImplementor) SessionFactoryRegistry.INSTANCE.getNamedSessionFactory(
+							sessionFactoryName
+					);
+				}
 				if ( factory == null ) {
 					throw new HibernateException(
 							"Could not find a SessionFactory [uuid=" + sessionFactoryUuid + ",name=" + sessionFactoryName + "]"

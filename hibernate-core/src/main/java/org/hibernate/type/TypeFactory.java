@@ -29,9 +29,11 @@ import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.usertype.CompositeUserType;
@@ -61,7 +63,9 @@ public final class TypeFactory implements Serializable {
 	}
 
 	private static class TypeScopeImpl implements TypeFactory.TypeScope {
-		private SessionFactoryImplementor factory;
+		private transient SessionFactoryImplementor factory;
+		private String sessionFactoryName;
+		private String sessionFactoryUuid;
 
 		public void injectSessionFactory(SessionFactoryImplementor factory) {
 			if ( this.factory != null ) {
@@ -69,13 +73,31 @@ public final class TypeFactory implements Serializable {
 			}
 			else {
 				LOG.tracev( "Scoping types to session factory {0}", factory );
+				sessionFactoryUuid = factory.getUuid();
+				String sfName = factory.getSettings().getSessionFactoryName();
+				if ( sfName == null ) {
+					final CfgXmlAccessService cfgXmlAccessService = factory.getServiceRegistry()
+							.getService( CfgXmlAccessService.class );
+					if ( cfgXmlAccessService.getAggregatedConfig() != null ) {
+						sfName = cfgXmlAccessService.getAggregatedConfig().getSessionFactoryName();
+					}
+				}
+				sessionFactoryName = sfName;
 			}
 			this.factory = factory;
 		}
 
 		public SessionFactoryImplementor resolveFactory() {
 			if ( factory == null ) {
-				throw new HibernateException( "SessionFactory for type scoping not yet known" );
+				factory = (SessionFactoryImplementor) SessionFactoryRegistry.INSTANCE.findSessionFactory(
+						sessionFactoryUuid,
+						sessionFactoryName
+				);
+				if ( factory == null ) {
+					throw new HibernateException(
+							"Could not find a SessionFactory [uuid=" + sessionFactoryUuid + ",name=" + sessionFactoryName + "]"
+					);
+				}
 			}
 			return factory;
 		}

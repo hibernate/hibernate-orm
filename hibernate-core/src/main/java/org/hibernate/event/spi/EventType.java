@@ -12,6 +12,7 @@ import java.security.PrivilegedAction;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hibernate.HibernateException;
 
@@ -20,7 +21,10 @@ import org.hibernate.HibernateException;
  *
  * @author Steve Ebersole
  */
-public class EventType<T> {
+public final class EventType<T> {
+
+	private static AtomicInteger typeCounter = new AtomicInteger( 0 );
+
 	public static final EventType<LoadEventListener> LOAD = create( "load", LoadEventListener.class );
 	public static final EventType<ResolveNaturalIdEventListener> RESOLVE_NATURAL_ID = create( "resolve-natural-id", ResolveNaturalIdEventListener.class );
 
@@ -131,13 +135,14 @@ public class EventType<T> {
 		return EVENT_TYPE_BY_NAME_MAP.values();
 	}
 
-
 	private final String eventName;
 	private final Class<? extends T> baseListenerInterface;
+	private final int ordinal;
 
 	private EventType(String eventName, Class<? extends T> baseListenerInterface) {
 		this.eventName = eventName;
 		this.baseListenerInterface = baseListenerInterface;
+		this.ordinal = typeCounter.getAndIncrement();
 	}
 
 	public String eventName() {
@@ -152,4 +157,17 @@ public class EventType<T> {
 	public String toString() {
 		return eventName();
 	}
+
+	/**
+	 * EventType is effectively an enumeration. Since there is a known, limited number of possible types, we expose an
+	 * ordinal for each in order to be able to efficiently do associations elsewhere in the codebase (array vs. Map)
+	 *
+	 * For the total number of types, see {@link #values()}
+	 *
+	 * @return An unique ordinal for this {@link EventType}, starting at 0 and up to the number of distinct events
+	 */
+	public int ordinal() {
+		return ordinal;
+	}
+
 }

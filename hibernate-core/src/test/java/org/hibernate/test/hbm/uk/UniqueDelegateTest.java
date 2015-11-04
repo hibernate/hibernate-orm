@@ -72,7 +72,7 @@ public class UniqueDelegateTest extends BaseUnitTestCase {
 
 		assertThat( getAlterTableToAddUniqueKeyCommandCallCount, equalTo( 1 ) );
 		assertThat( getColumnDefinitionUniquenessFragmentCallCount, equalTo( 1 ) );
-		assertThat( getTableCreationUniqueConstraintsFragmentCallCount, equalTo( 0 ) );
+		assertThat( getTableCreationUniqueConstraintsFragmentCallCount, equalTo( 1 ) );
 
 		final SchemaDropper schemaDropper = ssr.getService( SchemaManagementTool.class ).getSchemaDropper( Collections.emptyMap() );
 		schemaDropper.doDrop( metadata, false, target );
@@ -80,7 +80,7 @@ public class UniqueDelegateTest extends BaseUnitTestCase {
 		// unique keys are not dropped explicitly
 		assertThat( getAlterTableToAddUniqueKeyCommandCallCount, equalTo( 1 ) );
 		assertThat( getColumnDefinitionUniquenessFragmentCallCount, equalTo( 1 ) );
-		assertThat( getTableCreationUniqueConstraintsFragmentCallCount, equalTo( 0 ) );
+		assertThat( getTableCreationUniqueConstraintsFragmentCallCount, equalTo( 1 ) );
 	}
 
 	public static class MyDialect extends H2Dialect {

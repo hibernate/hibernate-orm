@@ -6,9 +6,12 @@
  */
 package org.hibernate.test.serialization;
 
+import javax.naming.NamingException;
+
 import org.junit.Test;
 
 import org.hibernate.HibernateException;
+import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -55,8 +58,8 @@ public class TypeFactorySerializationTest extends BaseUnitTestCase {
 		assertSame( factory, SessionFactoryRegistry.INSTANCE.getNamedSessionFactory( NAME ) );
 
 		// Remove the session factory from the registry
-		SessionFactoryRegistry.INSTANCE.removeSessionFactory( factory.getUuid(), NAME, false, null );
-		assertNull( SessionFactoryRegistry.INSTANCE.findSessionFactory( factory.getUuid(), NAME ) );
+		SessionFactoryRegistry.INSTANCE.removeSessionFactory( getSessionFactoryUuid( factory ), NAME, false, null );
+		assertNull( SessionFactoryRegistry.INSTANCE.findSessionFactory( getSessionFactoryUuid( factory ), NAME ) );
 
 		TypeFactory typeFactory = factory.getTypeResolver().getTypeFactory();
 		byte[] typeFactoryBytes = SerializationHelper.serialize( typeFactory );
@@ -71,7 +74,7 @@ public class TypeFactorySerializationTest extends BaseUnitTestCase {
 		}
 
 		// Re-register the same session factory.
-		SessionFactoryRegistry.INSTANCE.addSessionFactory( factory.getUuid(), NAME, false, factory, null );
+		SessionFactoryRegistry.INSTANCE.addSessionFactory( getSessionFactoryUuid( factory ), NAME, false, factory, null );
 
 		// Session factory resolved from typeFactory should be the new session factory
 		// (because it is resolved from SessionFactoryRegistry.INSTANCE)
@@ -83,11 +86,11 @@ public class TypeFactorySerializationTest extends BaseUnitTestCase {
 	public void testUnregisterSerializeRegisterSameSessionFactoryNoName() throws Exception {
 		Configuration cfg = new Configuration();
 		SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory();
-		assertSame( factory, SessionFactoryRegistry.INSTANCE.findSessionFactory( factory.getUuid(), null ) );
+		assertSame( factory, SessionFactoryRegistry.INSTANCE.findSessionFactory( getSessionFactoryUuid( factory ), null ) );
 
 		// Remove the session factory from the registry
-		SessionFactoryRegistry.INSTANCE.removeSessionFactory( factory.getUuid(), null, false, null );
-		assertNull( SessionFactoryRegistry.INSTANCE.findSessionFactory( factory.getUuid(), null ) );
+		SessionFactoryRegistry.INSTANCE.removeSessionFactory( getSessionFactoryUuid( factory ), null, false, null );
+		assertNull( SessionFactoryRegistry.INSTANCE.findSessionFactory( getSessionFactoryUuid( factory ), null ) );
 
 		TypeFactory typeFactory = factory.getTypeResolver().getTypeFactory();
 		byte[] typeFactoryBytes = SerializationHelper.serialize( typeFactory );
@@ -102,7 +105,7 @@ public class TypeFactorySerializationTest extends BaseUnitTestCase {
 		}
 
 		// Re-register the same session factory.
-		SessionFactoryRegistry.INSTANCE.addSessionFactory( factory.getUuid(), null, false, factory, null );
+		SessionFactoryRegistry.INSTANCE.addSessionFactory( getSessionFactoryUuid( factory ), null, false, factory, null );
 
 		// Session factory resolved from typeFactory should be the new session factory
 		// (because it is resolved from SessionFactoryRegistry.INSTANCE)
@@ -119,8 +122,8 @@ public class TypeFactorySerializationTest extends BaseUnitTestCase {
 		assertSame( factory, SessionFactoryRegistry.INSTANCE.getNamedSessionFactory( NAME ) );
 
 		// Remove the session factory from the registry
-		SessionFactoryRegistry.INSTANCE.removeSessionFactory( factory.getUuid(), NAME, false, null );
-		assertNull( SessionFactoryRegistry.INSTANCE.findSessionFactory( factory.getUuid(), NAME ) );
+		SessionFactoryRegistry.INSTANCE.removeSessionFactory( getSessionFactoryUuid( factory ), NAME, false, null );
+		assertNull( SessionFactoryRegistry.INSTANCE.findSessionFactory( getSessionFactoryUuid( factory ), NAME ) );
 
 		TypeFactory typeFactory = factory.getTypeResolver().getTypeFactory();
 		byte[] typeFactoryBytes = SerializationHelper.serialize( typeFactory );
@@ -137,7 +140,7 @@ public class TypeFactorySerializationTest extends BaseUnitTestCase {
 		// Now create a new session factory with the same name; it will have a different UUID.
 		SessionFactoryImplementor factoryWithSameName = (SessionFactoryImplementor) cfg.buildSessionFactory();
 		assertSame( factoryWithSameName, SessionFactoryRegistry.INSTANCE.getNamedSessionFactory( NAME ) );
-		assertFalse( factory.getUuid().equals( factoryWithSameName.getUuid() ) );
+		assertFalse( getSessionFactoryUuid( factory ).equals( getSessionFactoryUuid( factoryWithSameName ) ) );
 
 		// Session factory resolved from typeFactory should be the new session factory
 		// (because it is resolved from SessionFactoryRegistry.INSTANCE)
@@ -151,11 +154,11 @@ public class TypeFactorySerializationTest extends BaseUnitTestCase {
 	public void testUnregisterSerializeRegisterDiffSessionFactoryNoName() throws Exception {
 		Configuration cfg = new Configuration();
 		SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory();
-		assertSame( factory, SessionFactoryRegistry.INSTANCE.getSessionFactory( factory.getUuid() ) );
+		assertSame( factory, SessionFactoryRegistry.INSTANCE.getSessionFactory( getSessionFactoryUuid( factory ) ) );
 
 		// Remove the session factory from the registry
-		SessionFactoryRegistry.INSTANCE.removeSessionFactory( factory.getUuid(), null, false, null );
-		assertNull( SessionFactoryRegistry.INSTANCE.getSessionFactory( factory.getUuid() ) );
+		SessionFactoryRegistry.INSTANCE.removeSessionFactory( getSessionFactoryUuid( factory ), null, false, null );
+		assertNull( SessionFactoryRegistry.INSTANCE.getSessionFactory( getSessionFactoryUuid( factory ) ) );
 
 		TypeFactory typeFactory = factory.getTypeResolver().getTypeFactory();
 		byte[] typeFactoryBytes = SerializationHelper.serialize( typeFactory );
@@ -171,8 +174,10 @@ public class TypeFactorySerializationTest extends BaseUnitTestCase {
 
 		// Now create a new session factory with the same name; it will have a different UUID.
 		SessionFactoryImplementor factoryWithDiffUuid = (SessionFactoryImplementor) cfg.buildSessionFactory();
-		assertSame( factoryWithDiffUuid, SessionFactoryRegistry.INSTANCE.getSessionFactory( factoryWithDiffUuid.getUuid() ) );
-		assertFalse( factory.getUuid().equals( factoryWithDiffUuid.getUuid() ) );
+		assertSame( factoryWithDiffUuid, SessionFactoryRegistry.INSTANCE.getSessionFactory(
+						getSessionFactoryUuid( factoryWithDiffUuid ) )
+		);
+		assertFalse( getSessionFactoryUuid( factory ).equals( getSessionFactoryUuid( factoryWithDiffUuid ) ) );
 
 		// It should not be possible to resolve the session factory with no name configured.
 		try {
@@ -186,4 +191,17 @@ public class TypeFactorySerializationTest extends BaseUnitTestCase {
 		factory.close();
 		factoryWithDiffUuid.close();
 	}
+
+	private static String getSessionFactoryUuid(SessionFactory sessionFactory) throws NamingException {
+		try {
+			return (String) sessionFactory.getReference().get( "uuid" ).getContent() ;
+		}
+		catch (NamingException ex) {
+			throw new HibernateException(
+					"Could not determine UUID.",
+					ex
+			);
+		}
+	}
+
 }

@@ -10,6 +10,8 @@ import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Properties;
 
+import javax.naming.NamingException;
+
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
@@ -56,7 +58,15 @@ public final class TypeFactory implements Serializable {
 			}
 			else {
 				LOG.tracev( "Scoping types to session factory {0}", factory );
-				sessionFactoryUuid = factory.getUuid();
+				try {
+					sessionFactoryUuid = (String) factory.getReference().get( "uuid" ).getContent() ;
+				}
+				catch (NamingException ex) {
+					throw new HibernateException(
+							"Could not inject SessionFactory because UUID could not be determined.",
+							ex
+					);
+				}
 				String sfName = factory.getSettings().getSessionFactoryName();
 				if ( sfName == null ) {
 					final CfgXmlAccessService cfgXmlAccessService = factory.getServiceRegistry()

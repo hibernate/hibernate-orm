@@ -289,6 +289,8 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 							)
 					);
 			}
+
+			// todo : I'm not sure the !wasInitialized part should really be part of this check
 			if ( !coll.wasInitialized() && coll.hasQueuedOperations() ) {
 				actionQueue.addAction(
 						new QueuedOperationCollectionAction(

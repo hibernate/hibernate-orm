@@ -18,16 +18,19 @@ import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 
 import org.hibernate.Hibernate;
+import org.hibernate.LazyInitializationException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.collection.spi.PersistentCollection;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
 
 /**
  * @author Steve Ebersole
@@ -70,31 +73,24 @@ public class ListAddTest extends BaseNonConfigCoreFunctionalTestCase {
 	 * This test fails, but shouldn't
 	 */
 	@Test
-	@FailureExpected( jiraKey = "HHH-9195" )
 	public void addQuestionWithIndexShouldAddQuestionAtSpecifiedIndex() {
 		Session session = openSession();
 		Transaction transaction = session.beginTransaction();
-
 		Quizz quizz = session.get( Quizz.class, 1 );
 		quizz.addQuestion( 1, new Question( 4, "question that should be at index 1" ) );
-
 		transaction.commit();
 		session.close();
 
 		session = openSession();
 		transaction = session.beginTransaction();
-
 		quizz = session.get( Quizz.class,  1);
-
 		assertEquals( 4, quizz.getQuestions().size() );
 		assertEquals( 4, quizz.getQuestions().get( 1 ).getId().longValue() );
-
 		transaction.commit();
 		session.close();
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-9195" )
 	public void addQuestionToDetachedQuizz() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -102,21 +98,34 @@ public class ListAddTest extends BaseNonConfigCoreFunctionalTestCase {
 		session.getTransaction().commit();
 		session.close();
 
-		quizz.addQuestion( 1, new Question( 4, "question that should be at index 1" ) );
+		assertFalse( ( (PersistentCollection) quizz.getQuestions() ).wasInitialized() );
 
-		session = openSession();
-		session.beginTransaction();
-		session.merge( quizz );
-		session.getTransaction().commit();
-		session.close();
+		try {
+			// this is the crux of the comment on HHH-9195 in regard to uninitialized, detached collections and
+			// not allowing additions
+			quizz.addQuestion( new Question( 4, "question 4" ) );
 
-		session = openSession();
-		session.getTransaction().begin();
-		quizz = session.get( Quizz.class,  1);
-		assertEquals( 4, quizz.getQuestions().size() );
-		assertEquals( 4, quizz.getQuestions().get( 1 ).getId().longValue() );
-		session.getTransaction().commit();
-		session.close();
+			// indexed-addition should fail
+			quizz.addQuestion( 1, new Question( 5, "question that should be at index 1" ) );
+			fail( "Expecting a failure" );
+		}
+		catch (LazyInitializationException ignore) {
+			// expected
+		}
+
+//		session = openSession();
+//		session.beginTransaction();
+//		session.merge( quizz );
+//		session.getTransaction().commit();
+//		session.close();
+//
+//		session = openSession();
+//		session.getTransaction().begin();
+//		quizz = session.get( Quizz.class,  1);
+//		assertEquals( 5, quizz.getQuestions().size() );
+//		assertEquals( 5, quizz.getQuestions().get( 1 ).getId().longValue() );
+//		session.getTransaction().commit();
+//		session.close();
 	}
 
 	/**

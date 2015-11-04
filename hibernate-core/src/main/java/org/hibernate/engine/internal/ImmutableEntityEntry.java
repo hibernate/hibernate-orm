@@ -52,7 +52,7 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 			final boolean lazyPropertiesAreUnfetched,
 			final PersistenceContext persistenceContext) {
 		this( status, loadedState, rowId, id, version, lockMode, existsInDatabase,
-				persister,disableVersionIncrement, lazyPropertiesAreUnfetched, persistenceContext );
+				persister,disableVersionIncrement, lazyPropertiesAreUnfetched, null );
 	}
 
 	public ImmutableEntityEntry(
@@ -69,7 +69,7 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 			final PersistenceContext persistenceContext) {
 
 		super( status, loadedState, rowId, id, version, lockMode, existsInDatabase, persister,
-				disableVersionIncrement, lazyPropertiesAreUnfetched, persistenceContext );
+				disableVersionIncrement, lazyPropertiesAreUnfetched, null );
 	}
 
 	/**

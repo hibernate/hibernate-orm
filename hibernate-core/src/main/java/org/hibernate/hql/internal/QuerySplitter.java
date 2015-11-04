@@ -74,6 +74,8 @@ public final class QuerySplitter {
 		String next;
 		String last = tokens[start - 1].toLowerCase(Locale.ROOT);
 
+		boolean inQuote = false;
+
 		for ( int i = start; i < tokens.length; i++ ) {
 
 			String token = tokens[i];
@@ -82,11 +84,19 @@ public final class QuerySplitter {
 				templateQuery.append( token );
 				continue;
 			}
-
+			else if ( isQuoteCharacter( token) ) {
+				inQuote = !inQuote;
+				templateQuery.append( token );
+				continue;
+			}
+			else if ( inQuote ) {
+				templateQuery.append( token );
+				continue;
+			}
 			next = nextNonWhite( tokens, i ).toLowerCase(Locale.ROOT);
 
-			boolean process = isJavaIdentifier( token ) &&
-					isPossiblyClassName( last, next );
+			boolean process = isJavaIdentifier( token )
+					&& isPossiblyClassName( last, next );
 
 			last = token.toLowerCase(Locale.ROOT);
 
@@ -114,6 +124,10 @@ public final class QuerySplitter {
 			LOG.noPersistentClassesFound( query );
 		}
 		return results;
+	}
+
+	private static boolean isQuoteCharacter(String token) {
+		return "'".equals( token ) || "\"".equals( token );
 	}
 
 	private static String nextNonWhite(String[] tokens, int start) {

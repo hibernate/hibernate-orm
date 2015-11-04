@@ -14,6 +14,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -314,7 +315,12 @@ public class PersistentList extends AbstractPersistentCollection implements List
 		if ( index < 0 ) {
 			throw new ArrayIndexOutOfBoundsException( "negative index" );
 		}
-		if ( !isOperationQueueEnabled() ) {
+		if ( !isInitialized() && isConnectedToSession() ) {
+			// NOTE : we don't care about the inverse part here because
+			// even if the collection is inverse, this side is driving the
+			// writing of the indexes.  And because this is a positioned-add
+			// we need to load the underlying elements to know how that
+			// affects overall re-ordering
 			write();
 			list.add( index, value );
 		}

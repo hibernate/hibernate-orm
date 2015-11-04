@@ -374,10 +374,14 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		return cachedSize;
 	}
 
-	private boolean isConnectedToSession() {
+	protected boolean isConnectedToSession() {
 		return session != null
 				&& session.isOpen()
 				&& session.getPersistenceContext().containsCollection( this );
+	}
+
+	protected boolean isInitialized() {
+		return initialized;
 	}
 
 	/**
@@ -427,7 +431,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	 * Is this the "inverse" end of a bidirectional association?
 	 */
 	@SuppressWarnings({"JavaDoc"})
-	private boolean isInverseCollection() {
+	protected boolean isInverseCollection() {
 		final CollectionEntry ce = session.getPersistenceContext().getCollectionEntry( this );
 		return ce != null && ce.getLoadedPersister().isInverse();
 	}
@@ -437,7 +441,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	 * no orphan delete enabled?
 	 */
 	@SuppressWarnings({"JavaDoc"})
-	private boolean isInverseCollectionNoOrphanDelete() {
+	protected boolean isInverseCollectionNoOrphanDelete() {
 		final CollectionEntry ce = session.getPersistenceContext().getCollectionEntry( this );
 		return ce != null
 				&&
@@ -450,7 +454,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	 * of a collection with no orphan delete?
 	 */
 	@SuppressWarnings({"JavaDoc"})
-	private boolean isInverseOneToManyOrNoOrphanDelete() {
+	protected boolean isInverseOneToManyOrNoOrphanDelete() {
 		final CollectionEntry ce = session.getPersistenceContext().getCollectionEntry( this );
 		return ce != null
 				&& ce.getLoadedPersister().isInverse()

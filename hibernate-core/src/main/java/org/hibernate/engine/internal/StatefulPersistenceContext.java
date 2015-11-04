@@ -489,7 +489,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 		final EntityEntry e;
 
-		if( (entity instanceof ManagedEntity) &&  ((ManagedEntity) entity).$$_hibernate_getEntityEntry() != null && status == Status.READ_ONLY) {
+		if( status == Status.READ_ONLY && (entity instanceof ManagedEntity) &&  ((ManagedEntity) entity).$$_hibernate_getEntityEntry() != null ) {
 			e = ((ManagedEntity) entity).$$_hibernate_getEntityEntry();
 			e.setStatus( status  );
 		}

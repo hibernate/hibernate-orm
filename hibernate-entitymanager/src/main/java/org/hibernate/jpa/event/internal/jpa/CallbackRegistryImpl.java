@@ -101,6 +101,11 @@ public class CallbackRegistryImpl implements CallbackRegistry {
 		}
 	}
 
+	@Override
+	public boolean hasRegisteredCallbacks(Class entityClass, Class annotationClass) {
+		final HashMap<Class, Callback[]> map = determineAppropriateCallbackMap( annotationClass );
+		return map != null && map.containsKey( entityClass );
+	}
 
 	/**
 	 * Great care should be taken calling this.  Not a fan of it being public, but that is needed because of

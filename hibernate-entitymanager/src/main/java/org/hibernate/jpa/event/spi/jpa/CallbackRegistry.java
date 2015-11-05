@@ -12,17 +12,19 @@ import java.io.Serializable;
  * @author Steve Ebersole
  */
 public interface CallbackRegistry extends Serializable {
-	public void preCreate(Object entity);
-	public boolean hasPostCreateCallbacks(Class entityClass);
-	public void postCreate(Object entity);
+	void preCreate(Object entity);
+	boolean hasPostCreateCallbacks(Class entityClass);
+	void postCreate(Object entity);
 
-	public boolean preUpdate(Object entity);
-	public boolean hasPostUpdateCallbacks(Class entityClass);
-	public void postUpdate(Object entity);
+	boolean preUpdate(Object entity);
+	boolean hasPostUpdateCallbacks(Class entityClass);
+	void postUpdate(Object entity);
 
-	public void preRemove(Object entity);
-	public boolean hasPostRemoveCallbacks(Class entityClass);
-	public void postRemove(Object entity);
+	void preRemove(Object entity);
+	boolean hasPostRemoveCallbacks(Class entityClass);
+	void postRemove(Object entity);
 
-	public boolean postLoad(Object entity);
+	boolean postLoad(Object entity);
+
+	boolean hasRegisteredCallbacks(Class entityClass, Class annotationClass);
 }

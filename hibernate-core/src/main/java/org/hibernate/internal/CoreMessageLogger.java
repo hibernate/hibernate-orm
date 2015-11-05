@@ -23,6 +23,7 @@ import javax.transaction.SystemException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.cache.CacheException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
@@ -1751,4 +1752,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = INFO)
 	@Message(value = "Omitting cached file [%s] as the mapping file is newer", id = 473)
 	void cachedFileObsolete(File cachedFile);
+
+	@Message(value = "Ambiguous property detected %s.%s (of types %s and %s). Mark one as @Transient.", id = 474)
+	HibernateException throwAmbiguousPropertyException(XClass entity, String propertyName, XClass firstPropertyType, XClass secondPropertyType);
 }

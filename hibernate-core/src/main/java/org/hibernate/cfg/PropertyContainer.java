@@ -28,6 +28,10 @@ import org.hibernate.annotations.Target;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.annotations.common.reflection.java.JavaXMember;
+import org.hibernate.boot.jaxb.Origin;
+import org.hibernate.boot.jaxb.SourceType;
+import org.hibernate.cfg.annotations.HCANNHelper;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 
@@ -188,7 +192,14 @@ class PropertyContainer {
 			// HHH-10242 detect registration of the same property twice eg boolean isId() + UUID getId()
 			XProperty oldProperty = propertiesMap.get( property.getName() );
 			if ( oldProperty != null ) {
-				throw LOG.throwAmbiguousPropertyException( this.xClass, oldProperty.getName(), oldProperty.getType(), property.getType() );
+				throw new org.hibernate.boot.MappingException(
+						LOG.ambiguousPropertyMethods(
+								xClass.getName(),
+								HCANNHelper.annotatedElementSignature( oldProperty ),
+								HCANNHelper.annotatedElementSignature( property )
+						),
+						new Origin( SourceType.ANNOTATION, xClass.getName() )
+				);
 			}
 
 			propertiesMap.put( property.getName(), property );

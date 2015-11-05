@@ -1753,6 +1753,9 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Omitting cached file [%s] as the mapping file is newer", id = 473)
 	void cachedFileObsolete(File cachedFile);
 
-	@Message(value = "Ambiguous property detected %s.%s (of types %s and %s). Mark one as @Transient.", id = 474)
-	HibernateException throwAmbiguousPropertyException(XClass entity, String propertyName, XClass firstPropertyType, XClass secondPropertyType);
+	@Message(
+			value = "Ambiguous persistent property methods detected on %s; mark one as @Transient : [%s] and [%s]",
+			id = 474
+	)
+	String ambiguousPropertyMethods(String entityName, String oneMethodSig, String secondMethodSig);
 }

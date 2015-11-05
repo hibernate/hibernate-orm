@@ -19,6 +19,8 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import static org.hamcrest.CoreMatchers.startsWith;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 /**
@@ -50,17 +52,23 @@ public class GetAndIsVariantGetterTest {
 					.buildMetadata();
 			fail( "Expecting a failure" );
 		}
-		catch (MappingException ignore) {
-			// expected
+		catch (MappingException e) {
+			assertThat( e.getMessage(), startsWith( "In trying to locate getter for property [id]" ) );
 		}
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-10172" )
 	public void testAnnotations() {
-		new MetadataSources( ssr )
-				.addAnnotatedClass( TheEntity.class )
-				.buildMetadata();
+		try {
+			new MetadataSources( ssr )
+					.addAnnotatedClass( TheEntity.class )
+					.buildMetadata();
+			fail( "Expecting a failure" );
+		}
+		catch (MappingException e) {
+			assertThat( e.getMessage(), startsWith( "HHH000474: Ambiguous persistent property methods detected on" ) );
+		}
 	}
 
 	@Entity

@@ -51,6 +51,18 @@ public class LegacyCallbackProcessor implements CallbackProcessor {
 			final XClass entityXClass = reflectionManager.classForName( entityClassName );
 			final Class entityClass = reflectionManager.toClass( entityXClass );
 			for ( Class annotationClass : CALLBACK_ANNOTATION_CLASSES ) {
+				if ( callbackRegistry.hasRegisteredCallbacks( entityClass, annotationClass ) ) {
+					// this most likely means we have a class mapped multiple times using the hbm.xml
+					// "entity name" feature
+					log.debugf(
+							"CallbackRegistry reported that Class [%s] already had %s callbacks registered; " +
+									"assuming this means the class was mapped twice " +
+									"(using hbm.xml entity-name support) - skipping subsequent registrations",
+							entityClassName,
+							annotationClass.getSimpleName()
+					);
+					continue;
+				}
 				final Callback[] callbacks = resolveCallbacks( entityXClass, annotationClass, reflectionManager );
 				callbackRegistry.addEntityCallbacks( entityClass, annotationClass, callbacks );
 			}

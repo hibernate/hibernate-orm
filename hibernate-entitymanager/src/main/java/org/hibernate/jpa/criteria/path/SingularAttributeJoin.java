@@ -9,7 +9,10 @@ package org.hibernate.jpa.criteria.path;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Bindable;
+import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
+import javax.persistence.metamodel.Type;
 
 import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
 import org.hibernate.jpa.criteria.CriteriaSubqueryImpl;
@@ -36,13 +39,17 @@ public class SingularAttributeJoin<O,X> extends AbstractJoinImpl<O,X> {
 			SingularAttribute<? super O, ?> joinAttribute,
 			JoinType joinType) {
 		super( criteriaBuilder, javaType, pathSource, joinAttribute, joinType );
-		this.model = (Bindable<X>) (
-				Attribute.PersistentAttributeType.EMBEDDED == joinAttribute.getPersistentAttributeType()
-						? joinAttribute
-						: javaType != null
-						? criteriaBuilder.getEntityManagerFactory().getMetamodel().managedType( javaType )
-						: joinAttribute.getType()
-		);
+		if ( Attribute.PersistentAttributeType.EMBEDDED == joinAttribute.getPersistentAttributeType() ) {
+			this.model = (Bindable<X>) joinAttribute;
+		}
+		else {
+			if ( javaType != null ) {
+				this.model = (Bindable<X>) criteriaBuilder.getEntityManagerFactory().getMetamodel().managedType( javaType );
+			}
+			else {
+				this.model = (Bindable<X>) joinAttribute.getType();
+			}
+		}
 	}
 
 	@Override
@@ -69,6 +76,34 @@ public class SingularAttributeJoin<O,X> extends AbstractJoinImpl<O,X> {
 	@Override
 	protected boolean canBeJoinSource() {
 		return true;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	protected ManagedType<? super X> locateManagedType() {
+		if ( getModel().getBindableType() == Bindable.BindableType.ENTITY_TYPE ) {
+			return (ManagedType<? super X>) getModel();
+		}
+		else if ( getModel().getBindableType() == Bindable.BindableType.SINGULAR_ATTRIBUTE ) {
+			final Type joinedAttributeType = ( (SingularAttribute) getAttribute() ).getType();
+			if ( !ManagedType.class.isInstance( joinedAttributeType ) ) {
+				throw new UnsupportedOperationException(
+						"Cannot further dereference attribute join [" + getPathIdentifier() + "] as its type is not a ManagedType"
+				);
+			}
+			return (ManagedType<? super X>) joinedAttributeType;
+		}
+		else if ( getModel().getBindableType() == Bindable.BindableType.PLURAL_ATTRIBUTE ) {
+			final Type elementType = ( (PluralAttribute) getAttribute() ).getElementType();
+			if ( !ManagedType.class.isInstance( elementType ) ) {
+				throw new UnsupportedOperationException(
+						"Cannot further dereference attribute join [" + getPathIdentifier() + "] (plural) as its element type is not a ManagedType"
+				);
+			}
+			return (ManagedType<? super X>) elementType;
+		}
+
+		return super.locateManagedType();
 	}
 
 	public Bindable<X> getModel() {

@@ -88,7 +88,12 @@ public class ForUpdateFragment {
 
 	public String toFragmentString() {
 		if ( lockOptions!= null ) {
-			return dialect.getForUpdateString( aliases.toString(), lockOptions );
+			if ( aliases.length() == 0) {
+				return dialect.getForUpdateString( lockOptions );
+			}
+			else {
+				return dialect.getForUpdateString( aliases.toString(), lockOptions );
+			}
 		}
 		else if ( aliases.length() == 0) {
 			if ( lockMode != null ) {

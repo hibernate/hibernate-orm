@@ -20,6 +20,7 @@ import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
 import org.hibernate.boot.registry.selector.internal.StrategySelectorBuilder;
 import org.hibernate.integrator.internal.IntegratorServiceImpl;
 import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * Builder for {@link BootstrapServiceRegistry} instances.  Provides registry for services needed for
@@ -221,5 +222,18 @@ public class BootstrapServiceRegistryBuilder {
 				strategySelectorBuilder.buildSelector( classLoaderService ),
 				integratorService
 		);
+	}
+
+	/**
+	 * Destroy a service registry.  Applications should only destroy registries they have explicitly created.
+	 *
+	 * @param serviceRegistry The registry to be closed.
+	 */
+	public static void destroy(ServiceRegistry serviceRegistry) {
+		if ( serviceRegistry == null ) {
+			return;
+		}
+
+		( (BootstrapServiceRegistryImpl) serviceRegistry ).destroy();
 	}
 }

@@ -193,4 +193,11 @@ public interface DeprecationLogger extends BasicLogger {
 			value = "Found use of deprecated entity-type selector syntax in HQL/JPQL query ['%1$s.class']; use TYPE operator instead : type(%1$s)"
 	)
 	void logDeprecationOfClassEntityTypeSelector(String path);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000018,
+			value = "Found use of deprecated transaction factory setting [%s]; use the new TransactionCoordinatorBuilder settings [%s] instead"
+	)
+	void logDeprecatedTransactionFactorySetting(String legacySettingName, String updatedSettingName);
 }

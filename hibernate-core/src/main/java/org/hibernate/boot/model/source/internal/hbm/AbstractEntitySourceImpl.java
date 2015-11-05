@@ -33,7 +33,6 @@ import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.model.source.spi.AttributeRole;
 import org.hibernate.boot.model.source.spi.AttributeSource;
 import org.hibernate.boot.model.source.spi.AttributeSourceContainer;
-import org.hibernate.boot.model.source.spi.ConstraintSource;
 import org.hibernate.boot.model.source.spi.EntityHierarchySource;
 import org.hibernate.boot.model.source.spi.EntityNamingSource;
 import org.hibernate.boot.model.source.spi.EntitySource;
@@ -78,9 +77,6 @@ public abstract class AbstractEntitySourceImpl
 	private final Map<EntityMode, String> tuplizerClassMap;
 
 	private final ToolingHintContext toolingHintContext;
-
-	private Map<String, ConstraintSource> constraintMap = new HashMap<String, ConstraintSource>();
-
 
 	protected AbstractEntitySourceImpl(MappingDocument sourceMappingDocument, JaxbHbmEntityBaseDefinition jaxbEntityMapping) {
 		super( sourceMappingDocument );
@@ -223,84 +219,10 @@ public abstract class AbstractEntitySourceImpl
 			public void addAttributeSource(AttributeSource attributeSource) {
 				attributeSources.add( attributeSource );
 			}
-
-			@Override
-			public void registerIndexColumn(String constraintName, String logicalTableName, String columnName) {
-				registerIndexConstraintColumn( constraintName, logicalTableName, columnName );
-			}
-
-			@Override
-			public void registerUniqueKeyColumn(String constraintName, String logicalTableName, String columnName) {
-				registerUniqueKeyConstraintColumn( constraintName, logicalTableName, columnName );
-			}
 		};
 		buildAttributeSources( attributeBuildingCallback );
 
 		return attributeSources;
-	}
-
-	private void registerIndexConstraintColumn(String constraintName, String logicalTableName, String columnName) {
-		getOrCreateIndexConstraintSource( constraintName, logicalTableName ).addColumnName( columnName );
-	}
-
-	private IndexConstraintSourceImpl getOrCreateIndexConstraintSource(String constraintName, String logicalTableName) {
-		IndexConstraintSourceImpl constraintSource = (IndexConstraintSourceImpl) constraintMap.get( constraintName );
-		if ( constraintSource == null ) {
-			constraintSource = new IndexConstraintSourceImpl( constraintName, logicalTableName );
-			constraintMap.put( constraintName, constraintSource );
-		}
-		else {
-			// make sure we have the same table name...
-			if ( !EqualsHelper.equals( constraintSource.getTableName(), logicalTableName ) ) {
-				throw new MappingException(
-						String.format(
-								Locale.ENGLISH,
-								"Named relational index [%s] referenced more than one table [%s, %s]",
-								constraintName,
-								constraintSource.getTableName() == null
-										? "null(implicit)"
-										: constraintSource.getTableName(),
-								logicalTableName == null
-										? "null(implicit)"
-										: logicalTableName
-						),
-						origin()
-				);
-			}
-		}
-		return constraintSource;
-	}
-
-	private void registerUniqueKeyConstraintColumn(String constraintName, String logicalTableName, String columnName) {
-		getOrCreateUniqueKeyConstraintSource( constraintName, logicalTableName ).addColumnName( columnName );
-	}
-
-	private UniqueKeyConstraintSourceImpl getOrCreateUniqueKeyConstraintSource(String constraintName, String logicalTableName) {
-		UniqueKeyConstraintSourceImpl constraintSource = (UniqueKeyConstraintSourceImpl) constraintMap.get( constraintName );
-		if ( constraintSource == null ) {
-			constraintSource = new UniqueKeyConstraintSourceImpl( constraintName, logicalTableName );
-			constraintMap.put( constraintName, constraintSource );
-		}
-		else {
-			// make sure we have the same table name...
-			if ( !EqualsHelper.equals( constraintSource.getTableName(), logicalTableName ) ) {
-				throw new MappingException(
-						String.format(
-								Locale.ENGLISH,
-								"Named relational unique-key [%s] referenced more than one table [%s, %s]",
-								constraintName,
-								constraintSource.getTableName() == null
-										? "null(implicit)"
-										: constraintSource.getTableName(),
-								logicalTableName == null
-										? "null(implicit)"
-										: logicalTableName
-						),
-						origin()
-				);
-			}
-		}
-		return constraintSource;
 	}
 
 	protected void buildAttributeSources(AttributesHelper.Callback attributeBuildingCallback) {
@@ -343,22 +265,6 @@ public abstract class AbstractEntitySourceImpl
 						@Override
 						public void addAttributeSource(AttributeSource attributeSource) {
 							attributeSources.add( attributeSource );
-						}
-
-						@Override
-						public void registerIndexColumn(
-								String constraintName,
-								String logicalTableName,
-								String columnName) {
-							registerIndexConstraintColumn( constraintName, logicalTableName, columnName );
-						}
-
-						@Override
-						public void registerUniqueKeyColumn(
-								String constraintName,
-								String logicalTableName,
-								String columnName) {
-							registerUniqueKeyConstraintColumn( constraintName, logicalTableName, columnName );
 						}
 					},
 					joinElement.getAttributes(),
@@ -499,11 +405,6 @@ public abstract class AbstractEntitySourceImpl
 		subclassEntitySource.injectHierarchy( entityHierarchy );
 		entityHierarchy.processSubclass( subclassEntitySource );
 		subclassEntitySources.add( subclassEntitySource );
-	}
-
-	@Override
-	public Collection<ConstraintSource> getConstraints() {
-		return constraintMap.values();
 	}
 
 	@Override

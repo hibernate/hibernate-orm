@@ -39,7 +39,6 @@ import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Namespace;
-import org.hibernate.boot.model.source.internal.ConstraintSecondPass;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
 import org.hibernate.boot.model.source.spi.AnyMappingSource;
 import org.hibernate.boot.model.source.spi.AttributePath;
@@ -49,7 +48,6 @@ import org.hibernate.boot.model.source.spi.CascadeStyleSource;
 import org.hibernate.boot.model.source.spi.CollectionIdSource;
 import org.hibernate.boot.model.source.spi.ColumnSource;
 import org.hibernate.boot.model.source.spi.CompositeIdentifierSource;
-import org.hibernate.boot.model.source.spi.ConstraintSource;
 import org.hibernate.boot.model.source.spi.EmbeddableSource;
 import org.hibernate.boot.model.source.spi.EntitySource;
 import org.hibernate.boot.model.source.spi.FilterSource;
@@ -1291,8 +1289,6 @@ public class ModelBinder {
 				}
 			}
 		}
-
-		registerConstraintSecondPasses( mappingDocument, entitySource, entityTableXref );
 	}
 
 	private void handleNaturalIdBinding(
@@ -1323,28 +1319,6 @@ public class ModelBinder {
 		}
 
 		ukBinder.addAttributeBinding( attributeBinding );
-	}
-
-	private void registerConstraintSecondPasses(
-			MappingDocument mappingDocument,
-			EntitySource entitySource,
-			final EntityTableXref entityTableXref) {
-		if ( entitySource.getConstraints() == null ) {
-			return;
-		}
-
-		for ( ConstraintSource constraintSource : entitySource.getConstraints() ) {
-			final String logicalTableName = constraintSource.getTableName();
-			final Table table = entityTableXref.resolveTable( database.toIdentifier( logicalTableName ) );
-
-			mappingDocument.getMetadataCollector().addSecondPass(
-					new ConstraintSecondPass(
-							mappingDocument,
-							table,
-							constraintSource
-					)
-			);
-		}
 	}
 
 	private Property createPluralAttribute(

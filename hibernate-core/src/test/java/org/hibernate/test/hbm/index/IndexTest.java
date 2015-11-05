@@ -44,7 +44,7 @@ public class IndexTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-10208" )
+//	@FailureExpected( jiraKey = "HHH-10208" )
 	public void testOneToMany() throws Exception {
 		verifyIndexCreated(
 				"org/hibernate/test/hbm/index/person_manytoone.hbm.xml",
@@ -68,7 +68,7 @@ public class IndexTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-10208" )
+//	@FailureExpected( jiraKey = "HHH-10208" )
 	public void testProperty() throws Exception {
 		verifyIndexCreated(
 				"org/hibernate/test/hbm/index/person_property.hbm.xml",

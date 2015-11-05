@@ -7,6 +7,8 @@
 package org.hibernate.boot.model.source.internal.hbm;
 
 
+import java.util.Set;
+
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmColumnType;
 import org.hibernate.boot.model.TruthValue;
 import org.hibernate.boot.model.source.spi.ColumnSource;
@@ -22,16 +24,22 @@ class ColumnSourceImpl
 	private final String tableName;
 	private final JaxbHbmColumnType columnElement;
 	private final TruthValue nullable;
+	private final Set<String> indexConstraintNames;
+	private final Set<String> ukConstraintNames;
 
 	ColumnSourceImpl(
 			MappingDocument mappingDocument,
 			String tableName,
-			JaxbHbmColumnType columnElement) {
+			JaxbHbmColumnType columnElement,
+			Set<String> indexConstraintNames,
+			Set<String> ukConstraintNames) {
 		this(
 				mappingDocument,
 				tableName,
 				columnElement,
-				interpretNotNullToNullability( columnElement.isNotNull() )
+				interpretNotNullToNullability( columnElement.isNotNull() ),
+				indexConstraintNames,
+				ukConstraintNames
 		);
 	}
 
@@ -49,11 +57,22 @@ class ColumnSourceImpl
 			MappingDocument mappingDocument,
 			String tableName,
 			JaxbHbmColumnType columnElement,
-			TruthValue nullable) {
+			TruthValue nullable,
+			Set<String> indexConstraintNames,
+			Set<String> ukConstraintNames) {
 		super( mappingDocument );
 		this.tableName = tableName;
 		this.columnElement = columnElement;
 		this.nullable = nullable;
+
+		this.indexConstraintNames = CommaSeparatedStringHelper.splitAndCombine(
+				indexConstraintNames,
+				columnElement.getIndex()
+		);
+		this.ukConstraintNames = CommaSeparatedStringHelper.splitAndCombine(
+				ukConstraintNames,
+				columnElement.getUniqueKey()
+		);
 	}
 
 	@Override
@@ -124,5 +143,15 @@ class ColumnSourceImpl
 	@Override
 	public String getContainingTableName() {
 		return tableName;
+	}
+
+	@Override
+	public Set<String> getIndexConstraintNames() {
+		return indexConstraintNames;
+	}
+
+	@Override
+	public Set<String> getUniqueKeyConstraintNames() {
+		return ukConstraintNames;
 	}
 }

@@ -7,6 +7,7 @@
 package org.hibernate.boot.model.source.internal.hbm;
 
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmBasicAttributeType;
 import org.hibernate.boot.model.source.spi.SizeSource;
@@ -67,8 +68,8 @@ public class BasicAttributeColumnsAndFormulasSource
 	}
 
 	@Override
-	public String getIndex() {
-		return basicAttributeMapping.getIndex();
+	public Set<String> getIndexConstraintNames() {
+		return CommaSeparatedStringHelper.split( basicAttributeMapping.getIndex() );
 	}
 
 	@Override
@@ -77,7 +78,7 @@ public class BasicAttributeColumnsAndFormulasSource
 	}
 
 	@Override
-	public String getUniqueKey() {
-		return basicAttributeMapping.getUniqueKey();
+	public Set<String> getUniqueKeyConstraintNames() {
+		return CommaSeparatedStringHelper.split( basicAttributeMapping.getUniqueKey() );
 	}
 }

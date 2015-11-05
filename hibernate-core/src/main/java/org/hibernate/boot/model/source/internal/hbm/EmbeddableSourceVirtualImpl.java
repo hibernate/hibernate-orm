@@ -70,22 +70,6 @@ public class EmbeddableSourceVirtualImpl extends AbstractHbmSourceNode implement
 					public void addAttributeSource(AttributeSource attributeSource) {
 						attributeSources.add( attributeSource );
 					}
-
-					@Override
-					public void registerIndexColumn(
-							String constraintName,
-							String logicalTableName,
-							String columnName) {
-						containingCallback.registerIndexColumn( constraintName, logicalTableName, columnName );
-					}
-
-					@Override
-					public void registerUniqueKeyColumn(
-							String constraintName,
-							String logicalTableName,
-							String columnName) {
-						containingCallback.registerUniqueKeyColumn( constraintName, logicalTableName, columnName );
-					}
 				},
 				attributeJaxbMappings,
 				logicalTableName,

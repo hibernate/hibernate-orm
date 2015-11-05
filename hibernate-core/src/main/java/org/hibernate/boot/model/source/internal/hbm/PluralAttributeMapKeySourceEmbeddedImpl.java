@@ -108,22 +108,6 @@ public class PluralAttributeMapKeySourceEmbeddedImpl
 					public ToolingHintContext getToolingHintContextBaselineForEmbeddable() {
 						return pluralAttributeSource.getToolingHintContext();
 					}
-
-					@Override
-					public void registerIndexConstraintColumn(
-							String constraintName,
-							String logicalTableName,
-							String columnName) {
-						// todo : how should this be handled?
-					}
-
-					@Override
-					public void registerUniqueKeyConstraintColumn(
-							String constraintName,
-							String logicalTableName,
-							String columnName) {
-						// todo : how should this be handled?
-					}
 				},
 				jaxbEmbeddable,
 				attributeMappings,

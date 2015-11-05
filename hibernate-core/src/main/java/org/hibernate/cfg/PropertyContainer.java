@@ -79,6 +79,7 @@ class PropertyContainer {
 		propertyAccessMap = initProperties( AccessType.PROPERTY );
 
 		considerExplicitFieldAndPropertyAccess();
+
 	}
 
 	public XClass getEntityAtStake() {
@@ -184,6 +185,12 @@ class PropertyContainer {
 			if ( mustBeSkipped( property ) ) {
 				continue;
 			}
+			// HHH-10242 detect registration of the same property twice eg boolean isId() + UUID getId()
+			XProperty oldProperty = propertiesMap.get( property.getName() );
+			if ( oldProperty != null ) {
+				throw LOG.throwAmbiguousPropertyException( this.xClass, oldProperty.getName(), oldProperty.getType(), property.getType() );
+			}
+
 			propertiesMap.put( property.getName(), property );
 		}
 		return propertiesMap;

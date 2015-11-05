@@ -74,7 +74,6 @@ tokens
 	SOME="some";
 	SUM="sum";
 	TRUE="true";
-	UNION="union";
 	UPDATE="update";
 	VERSIONED="versioned";
 	WHERE="where";
@@ -296,10 +295,6 @@ insertablePropertySpec
 		// Just need *something* to distinguish this on the hql-sql.g side
 		#insertablePropertySpec = #([RANGE, "column-spec"], #insertablePropertySpec);
 	}
-	;
-
-union
-	: queryRule (UNION queryRule)*
 	;
 
 //## query:
@@ -805,7 +800,7 @@ compoundExpr
 	;
 
 subQuery
-	: union
+	: queryRule
 	{ #subQuery = #([QUERY,"query"], #subQuery); }
 	;
 

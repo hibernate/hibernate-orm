@@ -22,7 +22,16 @@ public interface IdentifierLoadAccess<T> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public IdentifierLoadAccess<T> with(LockOptions lockOptions);
+	IdentifierLoadAccess<T> with(LockOptions lockOptions);
+
+	/**
+	 * Specify the {@link CacheMode} to use when retrieving the entity.
+	 *
+	 * @param cacheMode The CacheMode to use.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	IdentifierLoadAccess<T> with(CacheMode cacheMode);
 
 	/**
 	 * Return the persistent instance with the given identifier, assuming that the instance exists. This method
@@ -36,7 +45,7 @@ public interface IdentifierLoadAccess<T> {
 	 *
 	 * @return the persistent instance or proxy
 	 */
-	public T getReference(Serializable id);
+	T getReference(Serializable id);
 
 	/**
 	 * Return the persistent instance with the given identifier, or null if there is no such persistent instance.
@@ -47,5 +56,5 @@ public interface IdentifierLoadAccess<T> {
 	 *
 	 * @return The persistent instance or {@code null}
 	 */
-	public T load(Serializable id);
+	T load(Serializable id);
 }

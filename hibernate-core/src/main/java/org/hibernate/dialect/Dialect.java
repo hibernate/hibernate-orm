@@ -77,6 +77,7 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.io.StreamCopier;
+import org.hibernate.loader.BatchLoadSizingStrategy;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.ForeignKey;
@@ -2812,5 +2813,16 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public NameQualifierSupport getNameQualifierSupport() {
 		return null;
+	}
+
+	protected final BatchLoadSizingStrategy STANDARD_DEFAULT_BATCH_LOAD_SIZING_STRATEGY = new BatchLoadSizingStrategy() {
+		@Override
+		public int determineOptimalBatchLoadSize(int numberOfKeyColumns, int numberOfKeys) {
+			return 50;
+		}
+	};
+
+	public BatchLoadSizingStrategy getDefaultBatchLoadSizingStrategy() {
+		return STANDARD_DEFAULT_BATCH_LOAD_SIZING_STRATEGY;
 	}
 }

@@ -21,6 +21,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.LobHelper;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.MultiIdentifierLoadAccess;
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
@@ -660,6 +661,16 @@ public class SessionDelegatorBaseImpl implements SessionImplementor, Session {
 	@Override
 	public IdentifierLoadAccess byId(String entityName) {
 		return session.byId( entityName );
+	}
+
+	@Override
+	public <T> MultiIdentifierLoadAccess<T> byMultipleIds(Class<T> entityClass) {
+		return session.byMultipleIds( entityClass );
+	}
+
+	@Override
+	public MultiIdentifierLoadAccess byMultipleIds(String entityName) {
+		return session.byMultipleIds( entityName );
 	}
 
 	@Override

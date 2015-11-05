@@ -783,6 +783,30 @@ public interface Session extends SharedSessionContract, java.io.Closeable {
 	IdentifierLoadAccess byId(String entityName);
 
 	/**
+	 * Create a {@link MultiIdentifierLoadAccess} instance to retrieve multiple entities at once
+	 * as specified by primary key values.
+	 *
+	 * @param entityClass The entity type to be retrieved
+	 *
+	 * @return load delegate for loading the specified entity type by primary key values
+	 *
+	 * @throws HibernateException If the specified Class cannot be resolved as a mapped entity
+	 */
+	<T> MultiIdentifierLoadAccess<T> byMultipleIds(Class<T> entityClass);
+
+	/**
+	 * Create a {@link MultiIdentifierLoadAccess} instance to retrieve multiple entities at once
+	 * as specified by primary key values.
+	 *
+	 * @param entityName The entity name of the entity type to be retrieved
+	 *
+	 * @return load delegate for loading the specified entity type by primary key values
+	 *
+	 * @throws HibernateException If the specified entity name cannot be resolved as an entity name
+	 */
+	MultiIdentifierLoadAccess byMultipleIds(String entityName);
+
+	/**
 	 * Create an {@link IdentifierLoadAccess} instance to retrieve the specified entity by
 	 * primary key.
 	 *

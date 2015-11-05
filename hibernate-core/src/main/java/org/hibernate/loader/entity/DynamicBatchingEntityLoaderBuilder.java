@@ -11,6 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.LockMode;
@@ -24,9 +25,11 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
 
@@ -40,6 +43,66 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 	private static final Logger log = Logger.getLogger( DynamicBatchingEntityLoaderBuilder.class );
 
 	public static final DynamicBatchingEntityLoaderBuilder INSTANCE = new DynamicBatchingEntityLoaderBuilder();
+
+	@SuppressWarnings("unchecked")
+	public <T, K extends Serializable> List<T> multiLoad(
+			OuterJoinLoadable persister,
+			K[] ids,
+			LockOptions lockOptions,
+		SessionImplementor session) {
+		List<T> result = CollectionHelper.arrayList( ids.length );
+
+		if ( lockOptions == null ) {
+			lockOptions = new LockOptions( LockMode.NONE );
+		}
+
+		int numberOfIdsLeft = ids.length;
+		int optimalMaxBatchSize = session.getFactory().getDialect().getDefaultBatchLoadSizingStrategy().determineOptimalBatchLoadSize(
+				persister.getIdentifierType().getColumnSpan( session.getFactory() ),
+				numberOfIdsLeft
+		);
+
+		int idPosition = 0;
+		while ( numberOfIdsLeft > 0 ) {
+			int batchSize =  Math.min( numberOfIdsLeft, optimalMaxBatchSize );
+			final DynamicEntityLoader batchingLoader = new DynamicEntityLoader(
+					persister,
+					batchSize,
+					lockOptions,
+					session.getFactory(),
+					session.getLoadQueryInfluencers()
+			);
+
+			Serializable[] idsInBatch = new Serializable[batchSize];
+			System.arraycopy( ids, idPosition, idsInBatch, 0, batchSize );
+
+			QueryParameters qp = buildMultiLoadQueryParameters( persister, idsInBatch, lockOptions );
+			result.addAll( batchingLoader.doEntityBatchFetch( session, qp, idsInBatch ) );
+
+			numberOfIdsLeft = numberOfIdsLeft - batchSize;
+			idPosition += batchSize;
+		}
+
+		return result;
+	}
+
+	public static QueryParameters buildMultiLoadQueryParameters(
+			OuterJoinLoadable persister,
+			Serializable[] ids,
+			LockOptions lockOptions) {
+		Type[] types = new Type[ids.length];
+		Arrays.fill( types, persister.getIdentifierType() );
+
+		QueryParameters qp = new QueryParameters();
+		qp.setOptionalEntityName( persister.getEntityName() );
+		qp.setPositionalParameterTypes( types );
+		qp.setPositionalParameterValues( ids );
+		qp.setLockOptions( lockOptions );
+		qp.setOptionalObject( null );
+		qp.setOptionalId( null );
+		return qp;
+	}
+
 
 	@Override
 	protected UniqueEntityLoader buildBatchingLoader(

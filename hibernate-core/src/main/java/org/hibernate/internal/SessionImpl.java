@@ -17,6 +17,7 @@ import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.NClob;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -129,6 +130,8 @@ import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.loader.criteria.CriteriaLoader;
 import org.hibernate.loader.custom.CustomLoader;
 import org.hibernate.loader.custom.CustomQuery;
+import org.hibernate.loader.entity.DynamicBatchingEntityLoaderBuilder;
+import org.hibernate.loader.entity.DynamicBatchingEntityLoaderBuilder.DynamicBatchingEntityLoader;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.OuterJoinLoadable;
@@ -2577,6 +2580,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	private class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
 		private final EntityPersister entityPersister;
 		private LockOptions lockOptions;
+		private CacheMode cacheMode;
 
 		private IdentifierLoadAccessImpl(EntityPersister entityPersister) {
 			this.entityPersister = entityPersister;
@@ -2597,8 +2601,37 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
+		public IdentifierLoadAccess<T> with(CacheMode cacheMode) {
+			this.cacheMode = cacheMode;
+			return this;
+		}
+
+		@Override
 		public final T getReference(Serializable id) {
+			CacheMode sessionCacheMode = getCacheMode();
+			boolean cacheModeChanged = false;
+			if ( cacheMode != null ) {
+				// naive check for now...
+				// todo : account for "conceptually equal"
+				if ( cacheMode != sessionCacheMode ) {
+					setCacheMode( cacheMode );
+					cacheModeChanged = true;
+				}
+			}
+
+			try {
+				return doGetReference( id );
+			}
+			finally {
+				if ( cacheModeChanged ) {
+					// change it back
+					setCacheMode( sessionCacheMode );
+				}
+			}
+		}
+
+		@SuppressWarnings("unchecked")
+		private T doGetReference(Serializable id) {
 			if ( this.lockOptions != null ) {
 				LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), lockOptions, SessionImpl.this );
 				fireLoad( event, LoadEventListener.LOAD );
@@ -2624,8 +2657,31 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public final T load(Serializable id) {
+			CacheMode sessionCacheMode = getCacheMode();
+			boolean cacheModeChanged = false;
+			if ( cacheMode != null ) {
+				// naive check for now...
+				// todo : account for "conceptually equal"
+				if ( cacheMode != sessionCacheMode ) {
+					setCacheMode( cacheMode );
+					cacheModeChanged = true;
+				}
+			}
+
+			try {
+				return doLoad( id );
+			}
+			finally {
+				if ( cacheModeChanged ) {
+					// change it back
+					setCacheMode( sessionCacheMode );
+				}
+			}
+		}
+
+		@SuppressWarnings("unchecked")
+		public final T doLoad(Serializable id) {
 			if ( this.lockOptions != null ) {
 				LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), lockOptions, SessionImpl.this );
 				fireLoad( event, LoadEventListener.GET );
@@ -2645,6 +2701,64 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 				afterOperation( success );
 			}
 			return (T) event.getResult();
+		}
+
+		@Override
+		public <K extends Serializable> List<T> multiLoad(K... ids) {
+			CacheMode sessionCacheMode = getCacheMode();
+			boolean cacheModeChanged = false;
+			if ( cacheMode != null ) {
+				// naive check for now...
+				// todo : account for "conceptually equal"
+				if ( cacheMode != sessionCacheMode ) {
+					setCacheMode( cacheMode );
+					cacheModeChanged = true;
+				}
+			}
+
+			try {
+				return DynamicBatchingEntityLoaderBuilder.INSTANCE.multiLoad(
+						(OuterJoinLoadable) entityPersister,
+						ids,
+						lockOptions,
+						SessionImpl.this
+				);
+			}
+			finally {
+				if ( cacheModeChanged ) {
+					// change it back
+					setCacheMode( sessionCacheMode );
+				}
+			}
+		}
+
+		@Override
+		public <K extends Serializable> List<T> multiLoad(List<K> ids) {
+			CacheMode sessionCacheMode = getCacheMode();
+			boolean cacheModeChanged = false;
+			if ( cacheMode != null ) {
+				// naive check for now...
+				// todo : account for "conceptually equal"
+				if ( cacheMode != sessionCacheMode ) {
+					setCacheMode( cacheMode );
+					cacheModeChanged = true;
+				}
+			}
+
+			try {
+				return DynamicBatchingEntityLoaderBuilder.INSTANCE.multiLoad(
+						(OuterJoinLoadable) entityPersister,
+						ids.toArray( new Serializable[ ids.size() ] ),
+						lockOptions,
+						SessionImpl.this
+				);
+			}
+			finally {
+				if ( cacheModeChanged ) {
+					// change it back
+					setCacheMode( sessionCacheMode );
+				}
+			}
 		}
 	}
 

@@ -33,13 +33,7 @@ import static org.junit.Assert.fail;
  * works properly (i.e. no unexpected syntax errors).
  * todo this should be a unit test.
  */
-public class HqlParserTest{
-
-
-	@Test
-    public void testUnion() throws Exception {
-		parse("from Animal a where a in (from Cat union from Dog) ");
-	}
+public class HqlParserTest {
 
 	/**
 	 * Section 9.2 - from *

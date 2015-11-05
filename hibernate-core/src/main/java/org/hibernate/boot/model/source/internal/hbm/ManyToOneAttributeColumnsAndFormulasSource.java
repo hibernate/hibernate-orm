@@ -7,6 +7,7 @@
 package org.hibernate.boot.model.source.internal.hbm;
 
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmManyToOneType;
 
@@ -55,8 +56,8 @@ public class ManyToOneAttributeColumnsAndFormulasSource extends RelationalValueS
 	}
 
 	@Override
-	public String getIndex() {
-		return manyToOneMapping.getIndex();
+	public Set<String> getIndexConstraintNames() {
+		return CommaSeparatedStringHelper.split( manyToOneMapping.getIndex() );
 	}
 
 	@Override
@@ -65,7 +66,7 @@ public class ManyToOneAttributeColumnsAndFormulasSource extends RelationalValueS
 	}
 
 	@Override
-	public String getUniqueKey() {
-		return manyToOneMapping.getUniqueKey();
+	public Set<String> getUniqueKeyConstraintNames() {
+		return CommaSeparatedStringHelper.split( manyToOneMapping.getUniqueKey() );
 	}
 }

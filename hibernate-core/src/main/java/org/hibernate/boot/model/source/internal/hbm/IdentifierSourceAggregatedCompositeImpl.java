@@ -231,24 +231,6 @@ class IdentifierSourceAggregatedCompositeImpl implements IdentifierSourceAggrega
 			return toolingHintContext;
 		}
 
-		@Override
-		public void registerIndexConstraintColumn(
-				String constraintName,
-				String logicalTableName,
-				String columnName) {
-			// todo : determine the best option here...
-			//		probably (here) delegate back to root entity, but need a general strategy
-		}
-
-		@Override
-		public void registerUniqueKeyConstraintColumn(
-				String constraintName,
-				String logicalTableName,
-				String columnName) {
-			// todo : determine the best option here...
-			//		probably (here) delegate back to root entity, but need a general strategy
-		}
-
 		public List getAttributes() {
 			return jaxbCompositeIdMapping.getKeyPropertyOrKeyManyToOne();
 		}

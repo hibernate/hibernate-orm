@@ -45,7 +45,6 @@ import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.Namespace;
-import org.hibernate.boot.model.source.internal.ConstraintSecondPass;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
@@ -1484,7 +1483,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	private ArrayList<CreateKeySecondPass> createKeySecondPasList;
 	private ArrayList<SecondaryTableSecondPass> secondaryTableSecondPassList;
 	private ArrayList<QuerySecondPass> querySecondPassList;
-	private ArrayList<ConstraintSecondPass> constraintSecondPassList;
 	private ArrayList<ImplicitColumnNamingSecondPass> implicitColumnNamingSecondPassList;
 
 	private ArrayList<SecondPass> generalSecondPassList;
@@ -1516,9 +1514,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 		else if ( secondPass instanceof QuerySecondPass ) {
 			addQuerySecondPass( (QuerySecondPass) secondPass, onTopOfTheQueue );
-		}
-		else if ( secondPass instanceof ConstraintSecondPass ) {
-			addConstraintSecondPass( ( ConstraintSecondPass) secondPass, onTopOfTheQueue );
 		}
 		else if ( secondPass instanceof ImplicitColumnNamingSecondPass ) {
 			addImplicitColumnNamingSecondPass( (ImplicitColumnNamingSecondPass) secondPass );
@@ -1594,13 +1589,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		addSecondPass( secondPass, querySecondPassList, onTopOfTheQueue );
 	}
 
-	private void addConstraintSecondPass(ConstraintSecondPass secondPass, boolean onTopOfTheQueue) {
-		if ( constraintSecondPassList == null ) {
-			constraintSecondPassList = new ArrayList<ConstraintSecondPass>();
-		}
-		addSecondPass( secondPass, constraintSecondPassList, onTopOfTheQueue );
-	}
-
 	private void addImplicitColumnNamingSecondPass(ImplicitColumnNamingSecondPass secondPass) {
 		if ( implicitColumnNamingSecondPassList == null ) {
 			implicitColumnNamingSecondPassList = new ArrayList<ImplicitColumnNamingSecondPass>();
@@ -1637,7 +1625,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 			secondPassCompileForeignKeys( buildingContext );
 
-			processSecondPasses( constraintSecondPassList );
 			processUniqueConstraintHolders( buildingContext );
 			processJPAIndexHolders( buildingContext );
 

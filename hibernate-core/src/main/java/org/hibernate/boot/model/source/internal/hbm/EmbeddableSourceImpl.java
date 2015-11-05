@@ -111,19 +111,6 @@ public class EmbeddableSourceImpl extends AbstractHbmSourceNode implements Embed
 					public void addAttributeSource(AttributeSource attributeSource) {
 						attributeSources.add( attributeSource );
 					}
-
-					@Override
-					public void registerIndexColumn(String constraintName, String logicalTableName, String columnName) {
-
-					}
-
-					@Override
-					public void registerUniqueKeyColumn(
-							String constraintName,
-							String logicalTableName,
-							String columnName) {
-
-					}
 				},
 				attributeMappings,
 				logicalTableName,

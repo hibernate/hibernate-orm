@@ -17,10 +17,7 @@ import org.hibernate.boot.model.source.spi.ToolingHintContext;
  * @author Steve Ebersole
  */
 public interface EmbeddableSourceContainer {
-	public AttributeRole getAttributeRoleBase();
-	public AttributePath getAttributePathBase();
-	public ToolingHintContext getToolingHintContextBaselineForEmbeddable();
-
-	public void registerIndexConstraintColumn(String constraintName, String logicalTableName, String columnName);
-	public void registerUniqueKeyConstraintColumn(String constraintName, String logicalTableName, String columnName);
+	AttributeRole getAttributeRoleBase();
+	AttributePath getAttributePathBase();
+	ToolingHintContext getToolingHintContextBaselineForEmbeddable();
 }

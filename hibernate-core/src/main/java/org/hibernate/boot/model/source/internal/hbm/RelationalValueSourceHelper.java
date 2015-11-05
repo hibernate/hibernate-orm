@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmColumnType;
@@ -40,7 +41,7 @@ public class RelationalValueSourceHelper {
 	 *     <li>a {@code column} XML attribute</li>
 	 * </ul>
 	 */
-	public static interface ColumnsAndFormulasSource  {
+	public interface ColumnsAndFormulasSource  {
 		/**
 		 * What kind of XML element does this information come from?
 		 *
@@ -83,14 +84,11 @@ public class RelationalValueSourceHelper {
 		Boolean isNullable();
 		boolean isUnique();
 
-		String getIndex();
+		Set<String> getIndexConstraintNames();
 
-		String getUniqueKey();
+		Set<String> getUniqueKeyConstraintNames();
 	}
 
-	/**
-	 * @author Steve Ebersole
-	 */
 	public abstract static class AbstractColumnsAndFormulasSource implements ColumnsAndFormulasSource {
 		@Override
 		public String getFormulaAttribute() {
@@ -118,8 +116,8 @@ public class RelationalValueSourceHelper {
 		}
 
 		@Override
-		public String getIndex() {
-			return null;
+		public Set<String> getIndexConstraintNames() {
+			return Collections.emptySet();
 		}
 
 		@Override
@@ -128,8 +126,8 @@ public class RelationalValueSourceHelper {
 		}
 
 		@Override
-		public String getUniqueKey() {
-			return null;
+		public Set<String> getUniqueKeyConstraintNames() {
+			return Collections.emptySet();
 		}
 	}
 
@@ -333,7 +331,9 @@ public class RelationalValueSourceHelper {
 							new ColumnSourceImpl(
 									mappingDocument,
 									containingTableName,
-									columnElement
+									columnElement,
+									columnsAndFormulasSource.getIndexConstraintNames(),
+									columnsAndFormulasSource.getUniqueKeyConstraintNames()
 							)
 					);
 				}
@@ -362,7 +362,9 @@ public class RelationalValueSourceHelper {
 							columnsAndFormulasSource.getColumnAttribute(),
 							columnsAndFormulasSource.getSizeSource(),
 							interpretNullabilityToTruthValue( columnsAndFormulasSource.isNullable() ),
-							columnsAndFormulasSource.isUnique() ? TruthValue.TRUE : TruthValue.FALSE
+							columnsAndFormulasSource.isUnique() ? TruthValue.TRUE : TruthValue.FALSE,
+							columnsAndFormulasSource.getIndexConstraintNames(),
+							columnsAndFormulasSource.getUniqueKeyConstraintNames()
 					)
 			);
 		}

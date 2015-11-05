@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
+import java.util.Set;
+
 import org.hibernate.boot.model.TruthValue;
 import org.hibernate.boot.model.source.spi.ColumnSource;
 import org.hibernate.boot.model.source.spi.JdbcDataType;
@@ -26,6 +28,8 @@ class ColumnAttributeSourceImpl
 	private final SizeSource sizeSource;
 	private final TruthValue nullable;
 	private final TruthValue unique;
+	private final Set<String> indexConstraintNames;
+	private final Set<String> ukConstraintNames;
 
 	ColumnAttributeSourceImpl(
 			MappingDocument mappingDocument,
@@ -33,13 +37,17 @@ class ColumnAttributeSourceImpl
 			String columnName,
 			SizeSource sizeSource,
 			TruthValue nullable,
-			TruthValue unique) {
+			TruthValue unique,
+			Set<String> indexConstraintNames,
+			Set<String> ukConstraintNames) {
 		super( mappingDocument );
 		this.tableName = tableName;
 		this.columnName = columnName;
 		this.sizeSource = sizeSource;
 		this.nullable = nullable;
 		this.unique = unique;
+		this.indexConstraintNames = indexConstraintNames;
+		this.ukConstraintNames = ukConstraintNames;
 	}
 
 	@Override
@@ -105,5 +113,15 @@ class ColumnAttributeSourceImpl
 	@Override
 	public String getComment() {
 		return null;
+	}
+
+	@Override
+	public Set<String> getIndexConstraintNames() {
+		return indexConstraintNames;
+	}
+
+	@Override
+	public Set<String> getUniqueKeyConstraintNames() {
+		return ukConstraintNames;
 	}
 }

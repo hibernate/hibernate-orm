@@ -58,22 +58,6 @@ public class PluralAttributeElementSourceEmbeddedImpl
 					public ToolingHintContext getToolingHintContextBaselineForEmbeddable() {
 						return toolingHintContext;
 					}
-
-					@Override
-					public void registerIndexConstraintColumn(
-							String constraintName,
-							String logicalTableName,
-							String columnName) {
-						// todo : how should this be handled?
-					}
-
-					@Override
-					public void registerUniqueKeyConstraintColumn(
-							String constraintName,
-							String logicalTableName,
-							String columnName) {
-						// todo : how should this be handled?
-					}
 				},
 				new EmbeddableMapping() {
 					@Override

@@ -72,20 +72,6 @@ public abstract class AbstractSingularAttributeSourceEmbeddedImpl
 							public ToolingHintContext getToolingHintContextBaselineForEmbeddable() {
 								return toolingHintContext;
 							}
-
-							@Override
-							public void registerIndexConstraintColumn(
-									String constraintName,
-									String logicalTableName,
-									String columnName) {
-
-							}
-
-							@Override
-							public void registerUniqueKeyConstraintColumn(
-									String constraintName, String logicalTableName, String columnName) {
-
-							}
 						},
 						embeddedAttributeMapping.getEmbeddableMapping(),
 						nestedAttributeMappings,

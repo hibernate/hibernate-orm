@@ -7,10 +7,7 @@
 package org.hibernate.boot.model.source.internal.hbm;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.StringTokenizer;
 import javax.xml.bind.JAXBElement;
 
 import org.hibernate.boot.MappingException;
@@ -18,7 +15,6 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmAnyAssociationType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmArrayType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmBagCollectionType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmBasicAttributeType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmColumnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCompositeAttributeType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCompositeKeyBasicAttributeType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCompositeKeyManyToOneType;
@@ -43,20 +39,14 @@ import org.hibernate.boot.model.source.spi.EmbeddedAttributeMapping;
 import org.hibernate.boot.model.source.spi.NaturalIdMutability;
 import org.hibernate.boot.model.source.spi.SingularAttributeSourceEmbedded;
 import org.hibernate.boot.model.source.spi.ToolingHintContext;
-import org.hibernate.internal.util.StringHelper;
-
-import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**
  * @author Steve Ebersole
  */
 public class AttributesHelper {
-	public static interface Callback {
+	public interface Callback {
 		AttributeSourceContainer getAttributeSourceContainer();
 		void addAttributeSource(AttributeSource attributeSource);
-
-		void registerIndexColumn(String constraintName, String logicalTableName, String columnName);
-		void registerUniqueKeyColumn(String constraintName, String logicalTableName, String columnName);
 	}
 
 	public static void processAttributes(
@@ -303,22 +293,6 @@ public class AttributesHelper {
 					public ToolingHintContext getToolingHintContextBaselineForEmbeddable() {
 						return callback.getAttributeSourceContainer().getToolingHintContext();
 					}
-
-					@Override
-					public void registerIndexConstraintColumn(
-							String constraintName,
-							String logicalTableName,
-							String columnName) {
-						callback.registerIndexColumn( constraintName, logicalTableName, columnName );
-					}
-
-					@Override
-					public void registerUniqueKeyConstraintColumn(
-							String constraintName,
-							String logicalTableName,
-							String columnName) {
-						callback.registerUniqueKeyColumn( constraintName, logicalTableName, columnName );
-					}
 				},
 				propertiesGroupJaxbMapping.getAttributes(),
 				logicalTableName,
@@ -447,89 +421,6 @@ public class AttributesHelper {
 						naturalIdMutability
 				)
 		);
-
-		processConstraints(
-				mappingDocument,
-				callback,
-				logicalTableName,
-				basicAttributeJaxbMapping.getColumnAttribute(),
-				basicAttributeJaxbMapping.getColumnOrFormula(),
-				basicAttributeJaxbMapping.getIndex(),
-				basicAttributeJaxbMapping.getUniqueKey()
-		);
-	}
-
-	private static void processConstraints(
-			MappingDocument mappingDocument,
-			Callback callback,
-			String logicalTableName,
-			String columnAttribute,
-			List columns,
-			String groupedIndexNames,
-			String groupedUniqueKeyNames) {
-
-		final Set<String> groupedIndexNameSet = splitNames( groupedIndexNames );
-		final boolean hasGroupedIndexes = !groupedIndexNameSet.isEmpty();
-
-		final Set<String> groupedUniqueKeyNameSet = splitNames( groupedUniqueKeyNames );
-		final boolean hasGroupedUniqueKeys = !groupedUniqueKeyNameSet.isEmpty();
-
-		if ( hasGroupedIndexes ) {
-			if ( isNotEmpty( columnAttribute ) ) {
-				for ( String name : groupedIndexNameSet ) {
-					callback.registerIndexColumn( name, logicalTableName, columnAttribute );
-				}
-			}
-		}
-		if ( hasGroupedIndexes && isNotEmpty( columnAttribute ) ) {
-			for ( String name : groupedIndexNameSet ) {
-				callback.registerIndexColumn( name, logicalTableName, columnAttribute );
-			}
-		}
-
-		if ( hasGroupedUniqueKeys && isNotEmpty( columnAttribute ) ) {
-			for ( String name : groupedUniqueKeyNameSet ) {
-				callback.registerUniqueKeyColumn( name, logicalTableName, columnAttribute );
-			}
-		}
-
-		for ( Object oColumn : columns ) {
-			if ( !JaxbHbmColumnType.class.isInstance( oColumn ) ) {
-				continue;
-			}
-
-			final JaxbHbmColumnType column = (JaxbHbmColumnType) oColumn;
-			if ( isNotEmpty( column.getIndex() ) ) {
-				callback.registerIndexColumn( column.getIndex(), logicalTableName, column.getName() );
-			}
-			if ( hasGroupedIndexes ) {
-				for ( String name : groupedIndexNameSet ) {
-					callback.registerIndexColumn( name, logicalTableName, column.getName() );
-				}
-			}
-
-			if ( isNotEmpty( column.getUniqueKey() ) ) {
-				callback.registerUniqueKeyColumn( column.getUniqueKey(), logicalTableName, column.getName() );
-			}
-			if ( hasGroupedUniqueKeys ) {
-				for ( String name : groupedUniqueKeyNameSet ) {
-					callback.registerUniqueKeyColumn( name, logicalTableName, column.getName() );
-				}
-			}
-		}
-	}
-
-	private static Set<String> splitNames(String groupedNames) {
-		if ( StringHelper.isEmpty( groupedNames ) ) {
-			return Collections.emptySet();
-		}
-
-		final HashSet<String> splitNames = new HashSet<String>();
-		final StringTokenizer tokens = new StringTokenizer( groupedNames, ", " );
-		while ( tokens.hasMoreTokens() ) {
-			splitNames.add( tokens.nextToken() );
-		}
-		return splitNames;
 	}
 
 	public static void processEmbeddedAttribute(
@@ -598,16 +489,6 @@ public class AttributesHelper {
 						naturalIdMutability
 				)
 		);
-
-		processConstraints(
-				mappingDocument,
-				callback,
-				logicalTableName,
-				manyToOneAttributeJaxbMapping.getColumnAttribute(),
-				manyToOneAttributeJaxbMapping.getColumnOrFormula(),
-				manyToOneAttributeJaxbMapping.getIndex(),
-				manyToOneAttributeJaxbMapping.getUniqueKey()
-		);
 	}
 
 	public static void processOneToOneAttribute(
@@ -641,17 +522,6 @@ public class AttributesHelper {
 						logicalTableName,
 						naturalIdMutability
 				)
-		);
-
-		processConstraints(
-				mappingDocument,
-				callback,
-				logicalTableName,
-				null,
-				// todo : should we skip the discriminator column?
-				anyAttributeJaxbMapping.getColumn(),
-				anyAttributeJaxbMapping.getIndex(),
-				null
 		);
 	}
 

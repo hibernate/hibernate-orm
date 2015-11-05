@@ -72,24 +72,6 @@ class IdentifierSourceNonAggregatedCompositeImpl implements IdentifierSourceNonA
 					public void addAttributeSource(AttributeSource attributeSource) {
 						attributeSources.add( attributeSource );
 					}
-
-					@Override
-					public void registerIndexColumn(
-							String constraintName,
-							String logicalTableName,
-							String columnName) {
-						// todo : determine the best option here...
-						//		probably (here) delegate back to root entity, but need a general strategy
-					}
-
-					@Override
-					public void registerUniqueKeyColumn(
-							String constraintName,
-							String logicalTableName,
-							String columnName) {
-						// todo : determine the best option here...
-						//		probably (here) delegate back to root entity, but need a general strategy
-					}
 				},
 				rootEntitySource.jaxbEntityMapping().getCompositeId().getKeyPropertyOrKeyManyToOne()
 		);

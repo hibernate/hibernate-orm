@@ -457,6 +457,12 @@ public class Ejb3Column {
 	}
 
 	public void forceNotNull() {
+		if ( mappingColumn == null ) {
+			throw new CannotForceNonNullableException(
+					"Cannot perform #forceNotNull because internal org.hibernate.mapping.Column reference is null: " +
+							"likely a formula"
+			);
+		}
 		mappingColumn.setNullable( false );
 	}
 

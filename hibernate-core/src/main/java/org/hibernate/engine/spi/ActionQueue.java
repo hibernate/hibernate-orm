@@ -84,12 +84,27 @@ public class ActionQueue {
 	// ordering is improved.
 	private final ExecutableList<OrphanRemovalAction> orphanRemovals;
 
-	// an immutable array holding all 7 ExecutionLists in execution order
-	private final List<ExecutableList<?>> executableLists;
 
 	private transient boolean isTransactionCoordinatorShared;
 	private AfterTransactionCompletionProcessQueue afterTransactionProcesses;
 	private BeforeTransactionCompletionProcessQueue beforeTransactionProcesses;
+
+	/**
+	 * An array containing providers for all the ExecutableLists in execution order
+	 */
+	private static final ListProvider[] EXECUTABLE_LISTS;
+
+	static {
+		EXECUTABLE_LISTS = new ListProvider[8];
+		EXECUTABLE_LISTS[0] = new ListProvider() {  ExecutableList<?> get(ActionQueue instance) { return instance.orphanRemovals; } };
+		EXECUTABLE_LISTS[1] = new ListProvider() {  ExecutableList<?> get(ActionQueue instance) { return instance.insertions; } };
+		EXECUTABLE_LISTS[2] = new ListProvider() {  ExecutableList<?> get(ActionQueue instance) { return instance.updates; } };
+		EXECUTABLE_LISTS[3] = new ListProvider() {  ExecutableList<?> get(ActionQueue instance) { return instance.collectionQueuedOps; } };
+		EXECUTABLE_LISTS[4] = new ListProvider() {  ExecutableList<?> get(ActionQueue instance) { return instance.collectionRemovals; } };
+		EXECUTABLE_LISTS[5] = new ListProvider() {  ExecutableList<?> get(ActionQueue instance) { return instance.collectionUpdates; } };
+		EXECUTABLE_LISTS[6] = new ListProvider() {  ExecutableList<?> get(ActionQueue instance) { return instance.collectionCreations; } };
+		EXECUTABLE_LISTS[7] = new ListProvider() {  ExecutableList<?> get(ActionQueue instance) { return instance.deletions; } };
+	}
 
 	/**
 	 * Constructs an action queue bound to the given session.
@@ -110,21 +125,6 @@ public class ActionQueue {
 		
 		orphanRemovals = new ExecutableList<OrphanRemovalAction>();
 
-		// Important: these lists are in execution order
-		List<ExecutableList<?>> tmp = Arrays.<ExecutableList<?>>asList(
-				orphanRemovals,
-				insertions,
-				updates,
-				// do before actions are handled in the other collection queues
-				collectionQueuedOps,
-				collectionRemovals,
-				collectionUpdates,
-				collectionCreations,
-				deletions
-		);
-
-		executableLists = Collections.unmodifiableList( tmp );
-
 		isTransactionCoordinatorShared = false;
 		afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
 		beforeTransactionProcesses = new BeforeTransactionCompletionProcessQueue( session );
@@ -132,7 +132,8 @@ public class ActionQueue {
 	}
 
 	public void clear() {
-		for ( ExecutableList<?> l : executableLists ) {
+		for ( ListProvider p : EXECUTABLE_LISTS ) {
+			ExecutableList<?> l = p.get(this);
 			l.clear();
 		}
 		if(unresolvedInsertions != null) {
@@ -338,7 +339,8 @@ public class ActionQueue {
 			throw new IllegalStateException( "About to execute actions, but there are unresolved entity insert actions." );
 		}
 
-		for ( ExecutableList<?> l : executableLists ) {
+		for ( ListProvider p : EXECUTABLE_LISTS ) {
+			ExecutableList<?> l = p.get(this);
 			if ( !l.isEmpty() ) {
 				executeActions( l );
 			}
@@ -405,7 +407,8 @@ public class ActionQueue {
 		if ( tables.isEmpty() ) {
 			return false;
 		}
-		for ( ExecutableList<?> l : executableLists ) {
+		for ( ListProvider p : EXECUTABLE_LISTS ) {
+			ExecutableList<?> l = p.get(this);
 			if ( areTablesToBeUpdated( l, tables ) ) {
 				return true;
 			}
@@ -652,7 +655,8 @@ public class ActionQueue {
 		}
 		unresolvedInsertions.serialize( oos );
 
-		for ( ExecutableList<?> l : executableLists ) {
+		for ( ListProvider p : EXECUTABLE_LISTS ) {
+			ExecutableList<?> l = p.get(this);
 			l.writeExternal( oos );
 		}
 	}
@@ -675,7 +679,8 @@ public class ActionQueue {
 
 		rtn.unresolvedInsertions = UnresolvedEntityInsertActions.deserialize( ois, session );
 
-		for ( ExecutableList<?> l : rtn.executableLists ) {
+		for ( ListProvider p : EXECUTABLE_LISTS ) {
+			ExecutableList<?> l = p.get(rtn);
 			l.readExternal( ois );
 			if ( traceEnabled ) {
 				LOG.tracev( "Deserialized [{0}] entries", l.size() );
@@ -910,4 +915,8 @@ public class ActionQueue {
 
 	}
 
+
+	private static abstract class ListProvider {
+		abstract ExecutableList<?> get(ActionQueue instance);
+	}
 }

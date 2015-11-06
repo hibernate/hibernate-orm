@@ -7,10 +7,9 @@
 package org.hibernate;
 
 import java.io.Serializable;
-import java.util.List;
 
 /**
- * Loads an entity (or multiple) by its primary identifier.
+ * Loads an entity by its primary identifier.
  * 
  * @author Eric Dalquist
  * @author Steve Ebersole
@@ -58,24 +57,4 @@ public interface IdentifierLoadAccess<T> {
 	 * @return The persistent instance or {@code null}
 	 */
 	T load(Serializable id);
-
-	/**
-	 * Perform a load of multiple entities by identifiers
-	 *
-	 * @param ids The ids to load
-	 * @param <K> The identifier type
-	 *
-	 * @return The persistent entities.
-	 */
-	<K extends Serializable> List<T> multiLoad(K... ids);
-
-	/**
-	 * Perform a load of multiple entities by identifiers
-	 *
-	 * @param ids The ids to load
-	 * @param <K> The identifier type
-	 *
-	 * @return The persistent entities.
-	 */
-	<K extends Serializable> List<T> multiLoad(List<K> ids);
 }

@@ -17,7 +17,6 @@ import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.NClob;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -43,6 +42,7 @@ import org.hibernate.LobHelper;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.MultiIdentifierLoadAccess;
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.ObjectNotFoundException;
@@ -131,7 +131,6 @@ import org.hibernate.loader.criteria.CriteriaLoader;
 import org.hibernate.loader.custom.CustomLoader;
 import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.loader.entity.DynamicBatchingEntityLoaderBuilder;
-import org.hibernate.loader.entity.DynamicBatchingEntityLoaderBuilder.DynamicBatchingEntityLoader;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.OuterJoinLoadable;
@@ -1045,6 +1044,16 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	@Override
 	public <T> IdentifierLoadAccessImpl<T> byId(Class<T> entityClass) {
 		return new IdentifierLoadAccessImpl<T>( entityClass );
+	}
+
+	@Override
+	public <T> MultiIdentifierLoadAccess<T> byMultipleIds(Class<T> entityClass) {
+		return new MultiIdentifierLoadAccessImpl<T>( locateEntityPersister( entityClass ) );
+	}
+
+	@Override
+	public MultiIdentifierLoadAccess byMultipleIds(String entityName) {
+		return new MultiIdentifierLoadAccessImpl( locateEntityPersister( entityName ) );
 	}
 
 	@Override
@@ -2702,6 +2711,47 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			}
 			return (T) event.getResult();
 		}
+	}
+
+	private class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T> {
+		private final EntityPersister entityPersister;
+		private LockOptions lockOptions;
+		private CacheMode cacheMode;
+		private Integer batchSize;
+		private boolean sessionCheckingEnabled;
+
+		public MultiIdentifierLoadAccessImpl(EntityPersister entityPersister) {
+			this.entityPersister = entityPersister;
+		}
+
+		@Override
+		public final MultiIdentifierLoadAccessImpl<T> with(LockOptions lockOptions) {
+			this.lockOptions = lockOptions;
+			return this;
+		}
+
+		@Override
+		public MultiIdentifierLoadAccessImpl<T> with(CacheMode cacheMode) {
+			this.cacheMode = cacheMode;
+			return this;
+		}
+
+		@Override
+		public MultiIdentifierLoadAccess<T> withBatchSize(int batchSize) {
+			if ( batchSize < 1 ) {
+				this.batchSize = null;
+			}
+			else {
+				this.batchSize = batchSize;
+			}
+			return this;
+		}
+
+		@Override
+		public MultiIdentifierLoadAccess<T> enableSessionCheck(boolean enabled) {
+			this.sessionCheckingEnabled = enabled;
+			return this;
+		}
 
 		@Override
 		public <K extends Serializable> List<T> multiLoad(K... ids) {
@@ -2721,6 +2771,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 						(OuterJoinLoadable) entityPersister,
 						ids,
 						lockOptions,
+						batchSize,
+						sessionCheckingEnabled,
 						SessionImpl.this
 				);
 			}
@@ -2750,6 +2802,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 						(OuterJoinLoadable) entityPersister,
 						ids.toArray( new Serializable[ ids.size() ] ),
 						lockOptions,
+						batchSize,
+						sessionCheckingEnabled,
 						SessionImpl.this
 				);
 			}

@@ -7,6 +7,7 @@
 package org.hibernate.loader.entity;
 
 import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -17,6 +18,7 @@ import java.util.List;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.QueryParameters;
@@ -49,22 +51,70 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 			OuterJoinLoadable persister,
 			K[] ids,
 			LockOptions lockOptions,
-		SessionImplementor session) {
+			Integer explicitBatchSize,
+			boolean sessionCheckingEnabled,
+			SessionImplementor session) {
 		List<T> result = CollectionHelper.arrayList( ids.length );
+
+		if ( sessionCheckingEnabled ) {
+			// the user requested that we exclude ids corresponding to already managed
+			// entities from the generated load SQL.  So here we will iterate all
+			// incoming id values and see whether it corresponds to an existing
+			// entity associated with the PC - if it does we add it to the result
+			// list immediately and remove its id from the group of ids to load.
+			boolean foundAnyManagedEntities = false;
+			final List<K> nonManagedIds = new ArrayList<K>();
+			for ( K id : ids ) {
+				final EntityKey entityKey = new EntityKey( id, persister );
+				final T managedEntity = (T) session.getPersistenceContext().getEntity( entityKey );
+				if ( managedEntity != null ) {
+					foundAnyManagedEntities = true;
+					result.add( managedEntity );
+				}
+				else {
+					nonManagedIds.add( id );
+				}
+			}
+
+			if ( foundAnyManagedEntities ) {
+				if ( nonManagedIds.isEmpty() ) {
+					// all of the given ids were already associated with the Session
+					return result;
+				}
+				else {
+					// over-write the ids to be loaded with the collection of
+					// just non-managed ones
+					ids = nonManagedIds.toArray(
+							(K[]) Array.newInstance(
+									ids.getClass().getComponentType(),
+									nonManagedIds.size()
+							)
+					);
+				}
+			}
+		}
+
 
 		if ( lockOptions == null ) {
 			lockOptions = new LockOptions( LockMode.NONE );
 		}
 
 		int numberOfIdsLeft = ids.length;
-		int optimalMaxBatchSize = session.getFactory().getDialect().getDefaultBatchLoadSizingStrategy().determineOptimalBatchLoadSize(
-				persister.getIdentifierType().getColumnSpan( session.getFactory() ),
-				numberOfIdsLeft
-		);
+
+		final int maxBatchSize;
+		if ( explicitBatchSize != null && explicitBatchSize > 0 ) {
+			maxBatchSize = explicitBatchSize;
+		}
+		else {
+			maxBatchSize = session.getFactory().getDialect().getDefaultBatchLoadSizingStrategy().determineOptimalBatchLoadSize(
+					persister.getIdentifierType().getColumnSpan( session.getFactory() ),
+					numberOfIdsLeft
+			);
+		}
 
 		int idPosition = 0;
 		while ( numberOfIdsLeft > 0 ) {
-			int batchSize =  Math.min( numberOfIdsLeft, optimalMaxBatchSize );
+			int batchSize =  Math.min( numberOfIdsLeft, maxBatchSize );
 			final DynamicEntityLoader batchingLoader = new DynamicEntityLoader(
 					persister,
 					batchSize,

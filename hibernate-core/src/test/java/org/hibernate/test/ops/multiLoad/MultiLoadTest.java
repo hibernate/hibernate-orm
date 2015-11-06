@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.ops.multiLoad;
 
-import java.io.Serializable;
 import java.util.List;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -20,6 +19,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 
 /**
  * @author Steve Ebersole
@@ -34,7 +34,7 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 	public void before() {
 		Session session = sessionFactory().openSession();
 		session.getTransaction().begin();
-		for ( int i = 0; i < 60; i++ ) {
+		for ( int i = 1; i <= 60; i++ ) {
 			session.save( new SimpleEntity( i, "Entity #" + i ) );
 		}
 		session.getTransaction().commit();
@@ -54,16 +54,44 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 	public void testBasicMultiLoad() {
 		Session session = openSession();
 		session.getTransaction().begin();
-		List<SimpleEntity> list = session.byId( SimpleEntity.class ).multiLoad( ids(56) );
+		List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( ids(56) );
 		assertEquals( 56, list.size() );
+		session.getTransaction().commit();
+		session.close();
+	}
+
+	@Test
+	public void testBasicMultiLoadWithManagedAndNoChecking() {
+		Session session = openSession();
+		session.getTransaction().begin();
+		SimpleEntity first = session.byId( SimpleEntity.class ).load( 1 );
+		List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( ids(56) );
+		assertEquals( 56, list.size() );
+		// this check is HIGHLY specific to implementation in the batch loader
+		// which puts existing managed entities first...
+		assertSame( first, list.get( 0 ) );
+		session.getTransaction().commit();
+		session.close();
+	}
+
+	@Test
+	public void testBasicMultiLoadWithManagedAndChecking() {
+		Session session = openSession();
+		session.getTransaction().begin();
+		SimpleEntity first = session.byId( SimpleEntity.class ).load( 1 );
+		List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).enableSessionCheck( true ).multiLoad( ids(56) );
+		assertEquals( 56, list.size() );
+		// this check is HIGHLY specific to implementation in the batch loader
+		// which puts existing managed entities first...
+		assertSame( first, list.get( 0 ) );
 		session.getTransaction().commit();
 		session.close();
 	}
 
 	private Integer[] ids(int count) {
 		Integer[] ids = new Integer[count];
-		for ( int i = 0; i < count; i++ ) {
-			ids[i] = i;
+		for ( int i = 1; i <= count; i++ ) {
+			ids[i-1] = i;
 		}
 		return ids;
 	}

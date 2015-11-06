@@ -37,10 +37,13 @@ public final class NoopOptimizer extends AbstractOptimizer {
 		// reliable as it might be mutated by multipled threads.
 		// The lastSourceValue field is only accessed by tests,
 		// so this is not a concern.
-		IntegralDataTypeHolder value = null;
-		while ( value == null || value.lt( 1 ) ) {
-			value = callback.getNextValue();
+		IntegralDataTypeHolder value = callback.getNextValue();
+		if ( incrementSize > 0 ) {
+			while ( value.lt( 1 ) ) {
+				value = callback.getNextValue();
+			}
 		}
+
 		lastSourceValue = value;
 		return value.makeValue();
 	}

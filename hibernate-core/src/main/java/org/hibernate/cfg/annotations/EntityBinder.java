@@ -73,6 +73,7 @@ import org.hibernate.cfg.ObjectNameSource;
 import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.UniqueConstraintHolder;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
@@ -342,12 +343,18 @@ public class EntityBinder {
 			persistentClass.setLoaderName( loader.namedQuery() );
 		}
 
+		final JdbcEnvironment jdbcEnvironment = context.getMetadataCollector().getDatabase().getJdbcEnvironment();
 		if ( annotatedClass.isAnnotationPresent( Synchronize.class )) {
 			Synchronize synchronizedWith = annotatedClass.getAnnotation(Synchronize.class);
 
 			String [] tables = synchronizedWith.value();
 			for (String table : tables) {
-				persistentClass.addSynchronizedTable(table);
+				persistentClass.addSynchronizedTable(
+						context.getBuildingOptions().getPhysicalNamingStrategy().toPhysicalTableName(
+								jdbcEnvironment.getIdentifierHelper().toIdentifier( table ),
+								jdbcEnvironment
+						).render( jdbcEnvironment.getDialect() )
+				);
 			}
 		}
 

@@ -95,6 +95,7 @@ import org.hibernate.cfg.FkSecondPass;
 import org.hibernate.cfg.SecondPass;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.internal.CoreLogging;
@@ -461,8 +462,14 @@ public class ModelBinder {
 
 		bindCustomSql( sourceDocument, entitySource, entityDescriptor );
 
+		final JdbcEnvironment jdbcEnvironment = sourceDocument.getMetadataCollector().getDatabase().getJdbcEnvironment();
+
 		for ( String tableName : entitySource.getSynchronizedTableNames() ) {
-			entityDescriptor.addSynchronizedTable( tableName );
+			final Identifier physicalTableName = sourceDocument.getBuildingOptions().getPhysicalNamingStrategy().toPhysicalTableName(
+					jdbcEnvironment.getIdentifierHelper().toIdentifier( tableName ),
+					jdbcEnvironment
+			);
+			entityDescriptor.addSynchronizedTable( physicalTableName.render( jdbcEnvironment.getDialect() ) );
 		}
 
 		for ( FilterSource filterSource : entitySource.getFilterSources() ) {

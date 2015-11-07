@@ -128,9 +128,6 @@ public class ActionQueue {
 	public ActionQueue(SessionImplementor session) {
 		this.session = session;
 		isTransactionCoordinatorShared = false;
-		afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
-		beforeTransactionProcesses = new BeforeTransactionCompletionProcessQueue( session );
-
 	}
 
 	public void clear() {
@@ -305,11 +302,21 @@ public class ActionQueue {
 	}
 
 	private void registerCleanupActions(Executable executable) {
-		beforeTransactionProcesses.register( executable.getBeforeTransactionCompletionProcess() );
+		if( executable.getBeforeTransactionCompletionProcess() != null ) {
+			if( beforeTransactionProcesses == null ) {
+				beforeTransactionProcesses = new BeforeTransactionCompletionProcessQueue( session );
+			}
+			beforeTransactionProcesses.register(executable.getBeforeTransactionCompletionProcess());
+		}
 		if ( session.getFactory().getSessionFactoryOptions().isQueryCacheEnabled() ) {
 			invalidateSpaces( executable.getPropertySpaces() );
 		}
-		afterTransactionProcesses.register( executable.getAfterTransactionCompletionProcess() );
+		if( executable.getAfterTransactionCompletionProcess() != null ) {
+			if( afterTransactionProcesses == null ) {
+				afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
+			}
+			afterTransactionProcesses.register(executable.getAfterTransactionCompletionProcess());
+		}
 	}
 
 	/**
@@ -339,10 +346,16 @@ public class ActionQueue {
 	}
 
 	public void registerProcess(AfterTransactionCompletionProcess process) {
+		if( afterTransactionProcesses == null ) {
+			afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
+		}
 		afterTransactionProcesses.register( process );
 	}
 
 	public void registerProcess(BeforeTransactionCompletionProcess process) {
+		if( beforeTransactionProcesses == null ) {
+			beforeTransactionProcesses = new BeforeTransactionCompletionProcessQueue( session );
+		}
 		beforeTransactionProcesses.register( process );
 	}
 
@@ -404,7 +417,9 @@ public class ActionQueue {
 	public void afterTransactionCompletion(boolean success) {
 		if ( !isTransactionCoordinatorShared ) {
 			// Execute completion actions only in transaction owner (aka parent session).
-			afterTransactionProcesses.afterTransactionCompletion( success );
+			if( afterTransactionProcesses != null ) {
+				afterTransactionProcesses.afterTransactionCompletion(success);
+			}
 		}
 	}
 
@@ -414,7 +429,9 @@ public class ActionQueue {
 	public void beforeTransactionCompletion() {
 		if ( !isTransactionCoordinatorShared ) {
 			// Execute completion actions only in transaction owner (aka parent session).
-			beforeTransactionProcesses.beforeTransactionCompletion();
+			if( beforeTransactionProcesses != null ) {
+				beforeTransactionProcesses.beforeTransactionCompletion();
+			}
 		}
 	}
 
@@ -495,8 +512,18 @@ public class ActionQueue {
 					e.execute();
 				}
 				finally {
-					beforeTransactionProcesses.register( e.getBeforeTransactionCompletionProcess() );
-					afterTransactionProcesses.register( e.getAfterTransactionCompletionProcess() );
+					if( e.getBeforeTransactionCompletionProcess() != null ) {
+						if( beforeTransactionProcesses == null ) {
+							beforeTransactionProcesses = new BeforeTransactionCompletionProcessQueue( session );
+						}
+						beforeTransactionProcesses.register(e.getBeforeTransactionCompletionProcess());
+					}
+					if( e.getAfterTransactionCompletionProcess() != null ) {
+						if( afterTransactionProcesses == null ) {
+							afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
+						}
+						afterTransactionProcesses.register(e.getAfterTransactionCompletionProcess());
+					}
 				}
 			}
 		}
@@ -534,6 +561,9 @@ public class ActionQueue {
 	private void invalidateSpaces(Serializable... spaces) {
 		if ( spaces != null && spaces.length > 0 ) {
 			for ( Serializable s : spaces ) {
+				if( afterTransactionProcesses == null ) {
+					afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
+				}
 				afterTransactionProcesses.addSpaceToInvalidate( (String) s );
 			}
 			// Performance win: If we are processing an ExecutableList, this will only be called once
@@ -606,6 +636,12 @@ public class ActionQueue {
 	}
 
 	public TransactionCompletionProcesses getTransactionCompletionProcesses() {
+		if( beforeTransactionProcesses == null ) {
+			beforeTransactionProcesses = new BeforeTransactionCompletionProcessQueue( session );
+		}
+		if( afterTransactionProcesses == null ) {
+			afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
+		}
 		return new TransactionCompletionProcesses( beforeTransactionProcesses, afterTransactionProcesses );
 	}
 
@@ -673,12 +709,12 @@ public class ActionQueue {
 
 	@SuppressWarnings("SimplifiableConditionalExpression")
 	public boolean hasAfterTransactionActions() {
-		return isTransactionCoordinatorShared ? false : afterTransactionProcesses.hasActions();
+		return isTransactionCoordinatorShared ? false : afterTransactionProcesses != null && afterTransactionProcesses.hasActions();
 	}
 
 	@SuppressWarnings("SimplifiableConditionalExpression")
 	public boolean hasBeforeTransactionActions() {
-		return isTransactionCoordinatorShared ? false : beforeTransactionProcesses.hasActions();
+		return isTransactionCoordinatorShared ? false : beforeTransactionProcesses != null && beforeTransactionProcesses.hasActions();
 	}
 
 	public boolean hasAnyQueuedActions() {

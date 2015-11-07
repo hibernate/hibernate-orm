@@ -333,4 +333,8 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 		}
 	}
 
+	public String toString() {
+		return "ExecutableList{size=" + executables.size() + "}";
+	}
+
 }

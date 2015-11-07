@@ -32,7 +32,6 @@ public class CacheableFileXmlSource extends XmlSource {
 	private final File xmlFile;
 	private final File serFile;
 	private final boolean strict;
-	private final boolean serFileObsolete;
 
 	public CacheableFileXmlSource(Origin origin, File xmlFile, boolean strict) {
 		super( origin );
@@ -41,8 +40,6 @@ public class CacheableFileXmlSource extends XmlSource {
 
 		this.serFile = determineCachedFile( xmlFile );
 
-		this.serFileObsolete = xmlFile.exists() && serFile.exists() && xmlFile.lastModified() > serFile.lastModified();
-
 		if ( strict ) {
 			if ( !serFile.exists() ) {
 				throw new MappingException(
@@ -50,7 +47,7 @@ public class CacheableFileXmlSource extends XmlSource {
 						origin
 				);
 			}
-			if ( serFileObsolete ) {
+			if ( isSerfileObsolete() ) {
 				throw new MappingException(
 						String.format( "Cached file [%s] could not be used as the mapping file is newer", origin.getName() ),
 						origin
@@ -86,7 +83,7 @@ public class CacheableFileXmlSource extends XmlSource {
 			}
 		}
 		else {
-			if ( !serFileObsolete ) {
+			if ( !isSerfileObsolete() ) {
 				try {
 					return readSerFile();
 				}
@@ -140,6 +137,10 @@ public class CacheableFileXmlSource extends XmlSource {
 				xmlFile,
 				determineCachedFile( xmlFile )
 		);
+	}
+	
+	private boolean isSerfileObsolete() {
+		return xmlFile.exists() && serFile.exists() && xmlFile.lastModified() > serFile.lastModified();
 	}
 
 }

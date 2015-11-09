@@ -15,10 +15,13 @@ import javax.persistence.Table;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Session;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.SessionImplementor;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
@@ -28,6 +31,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
@@ -129,6 +133,29 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 		}
 	}
 
+	@Test
+	public void testMultiLoadClearsBatchFetchQueue() {
+		final EntityKey entityKey = new EntityKey(
+				1,
+				sessionFactory().getEntityPersister( SimpleEntity.class.getName() )
+		);
+
+		Session session = openSession();
+		session.getTransaction().begin();
+		// create a proxy, which should add an entry to the BatchFetchQueue
+		SimpleEntity first = session.byId( SimpleEntity.class ).getReference( 1 );
+		assertTrue( ( (SessionImplementor) session ).getPersistenceContext().getBatchFetchQueue().containsEntityKey( entityKey ) );
+
+		// now bulk load, which should clean up the BatchFetchQueue entry
+		List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).enableSessionCheck( true ).multiLoad( ids(56) );
+
+		assertEquals( 56, list.size() );
+		assertFalse( ( (SessionImplementor) session ).getPersistenceContext().getBatchFetchQueue().containsEntityKey( entityKey ) );
+
+		session.getTransaction().commit();
+		session.close();
+	}
+
 	private Integer[] ids(int count) {
 		Integer[] ids = new Integer[count];
 		for ( int i = 1; i <= count; i++ ) {
@@ -140,6 +167,7 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Entity( name = "SimpleEntity" )
 	@Table( name = "SimpleEntity" )
 	@Cacheable()
+	@BatchSize( size = 15 )
 	public static class SimpleEntity {
 		Integer id;
 		String text;

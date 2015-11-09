@@ -153,6 +153,19 @@ public class BatchFetchQueue {
 	}
 
 	/**
+	 * Intended for test usage.  Really has no use-case in Hibernate proper.
+	 */
+	public boolean containsEntityKey(EntityKey key) {
+		if ( key.isBatchLoadable() ) {
+			LinkedHashSet<EntityKey> set =  batchLoadableEntityKeys.get( key.getEntityName());
+			if ( set != null ) {
+				return set.contains( key );
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * Get a batch of unloaded identifiers for this class, using a slightly
 	 * complex algorithm that tries to grab keys registered immediately after
 	 * the given key.

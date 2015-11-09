@@ -94,15 +94,28 @@ public class ParameterParser {
 			final char c = sqlString.charAt( indx );
 			final boolean lastCharacter = indx == stringLength-1;
 
-			if ( inLineComment ) {
+			if ( inDelimitedComment ) {
+				recognizer.other( c );
+				if ( !lastCharacter && '*' == c && '/' == sqlString.charAt( indx+1 ) ) {
+					inDelimitedComment = false;
+					recognizer.other( sqlString.charAt( indx+1 ) );
+					indx++;
+				}
+			}
+			else if ( !lastCharacter && '/' == c && '*' == sqlString.charAt( indx+1 ) ) {
+				inDelimitedComment = true;
+				recognizer.other( c );
+				recognizer.other( sqlString.charAt( indx+1 ) );
+				indx++;
+			}
+			else if ( inLineComment ) {
+				recognizer.other( c );
 				// see if the character ends the line
 				if ( '\n' == c ) {
 					inLineComment = false;
-					recognizer.other( c );
 				}
 				else if ( '\r' == c ) {
 					inLineComment = false;
-					recognizer.other( c );
 					if ( !lastCharacter && '\n' == sqlString.charAt( indx+1 ) ) {
 						recognizer.other( sqlString.charAt( indx+1 ) );
 						indx++;
@@ -116,20 +129,6 @@ public class ParameterParser {
 					recognizer.other( sqlString.charAt( indx+1 ) );
 					indx++;
 				}
-			}
-			else if ( inDelimitedComment ) {
-				recognizer.other( c );
-				if ( !lastCharacter && '*' == c && '/' == sqlString.charAt( indx+1 ) ) {
-					inDelimitedComment = true;
-					recognizer.other( sqlString.charAt( indx+1 ) );
-					indx++;
-				}
-			}
-			else if ( !lastCharacter && '/' == c && '*' == sqlString.charAt( indx+1 ) ) {
-				inDelimitedComment = true;
-				recognizer.other( c );
-				recognizer.other( sqlString.charAt( indx+1 ) );
-				indx++;
 			}
 			else if ( inDoubleQuotes ) {
 				if ( '\"' == c ) {

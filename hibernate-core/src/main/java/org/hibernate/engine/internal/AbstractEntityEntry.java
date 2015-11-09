@@ -290,10 +290,10 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			( (SelfDirtinessTracker) entity ).$$_hibernate_clearDirtyAttributes();
 		}
 
-		persistenceContext.getSession()
+		getPersistenceContext().getSession()
 				.getFactory()
 				.getCustomEntityDirtinessStrategy()
-				.resetDirty( entity, getPersister(), (Session) persistenceContext.getSession() );
+				.resetDirty( entity, getPersister(), (Session) getPersistenceContext().getSession() );
 	}
 
 	@Override
@@ -340,15 +340,14 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 
 	@SuppressWarnings( {"SimplifiableIfStatement"})
 	private boolean isUnequivocallyNonDirty(Object entity) {
-
-		if(entity instanceof SelfDirtinessTracker) {
+		if (entity instanceof SelfDirtinessTracker) {
 			return ! ( (SelfDirtinessTracker) entity ).$$_hibernate_hasDirtyAttributes();
 		}
 
 		final CustomEntityDirtinessStrategy customEntityDirtinessStrategy =
-				persistenceContext.getSession().getFactory().getCustomEntityDirtinessStrategy();
-		if ( customEntityDirtinessStrategy.canDirtyCheck( entity, getPersister(), (Session) persistenceContext.getSession() ) ) {
-			return ! customEntityDirtinessStrategy.isDirty( entity, getPersister(), (Session) persistenceContext.getSession() );
+				getPersistenceContext().getSession().getFactory().getCustomEntityDirtinessStrategy();
+		if ( customEntityDirtinessStrategy.canDirtyCheck( entity, getPersister(), (Session) getPersistenceContext().getSession() ) ) {
+			return ! customEntityDirtinessStrategy.isDirty( entity, getPersister(), (Session) getPersistenceContext().getSession() );
 		}
 
 		if ( getPersister().hasMutableProperties() ) {
@@ -407,7 +406,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			}
 			setStatus( Status.MANAGED );
 			loadedState = getPersister().getPropertyValues( entity );
-			persistenceContext.getNaturalIdHelper().manageLocalNaturalIdCrossReference(
+			getPersistenceContext().getNaturalIdHelper().manageLocalNaturalIdCrossReference(
 					persister,
 					id,
 					loadedState,

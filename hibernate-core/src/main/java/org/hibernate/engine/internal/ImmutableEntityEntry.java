@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.LockMode;
 import org.hibernate.UnsupportedLockAttemptException;
@@ -51,8 +52,20 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 			final boolean disableVersionIncrement,
 			final boolean lazyPropertiesAreUnfetched,
 			final PersistenceContext persistenceContext) {
-		this( status, loadedState, rowId, id, version, lockMode, existsInDatabase,
-				persister,disableVersionIncrement, lazyPropertiesAreUnfetched, null );
+		this(
+				status,
+				loadedState,
+				rowId,
+				id,
+				version,
+				lockMode,
+				existsInDatabase,
+				persister,
+				disableVersionIncrement,
+				lazyPropertiesAreUnfetched,
+				// purposefully do not pass along the session/persistence-context : HHH-10251
+				null
+		);
 	}
 
 	public ImmutableEntityEntry(
@@ -68,8 +81,20 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 			final boolean lazyPropertiesAreUnfetched,
 			final PersistenceContext persistenceContext) {
 
-		super( status, loadedState, rowId, id, version, lockMode, existsInDatabase, persister,
-				disableVersionIncrement, lazyPropertiesAreUnfetched, null );
+		super(
+				status,
+				loadedState,
+				rowId,
+				id,
+				version,
+				lockMode,
+				existsInDatabase,
+				persister,
+				disableVersionIncrement,
+				lazyPropertiesAreUnfetched,
+				// purposefully do not pass along the session/persistence-context : HHH-10251
+				null
+		);
 	}
 
 	/**
@@ -98,13 +123,15 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 
 	@Override
 	public void setLockMode(LockMode lockMode) {
-
-		switch(lockMode) {
-			case NONE : case READ:
+		switch ( lockMode ) {
+			case NONE:
+			case READ: {
 				setCompressedValue( EnumState.LOCK_MODE, lockMode );
 				break;
-			default:
-				throw new UnsupportedLockAttemptException("Lock mode not supported");
+			}
+			default: {
+				throw new UnsupportedLockAttemptException( "Lock mode not supported" );
+			}
 		}
 	}
 
@@ -140,12 +167,13 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 				ois.readBoolean(),
 				ois.readBoolean(),
 				ois.readBoolean(),
-				persistenceContext
+				null
 		);
 	}
 
-	public PersistenceContext getPersistenceContext(){
-		return persistenceContext;
+	@Override
+	public PersistenceContext getPersistenceContext() {
+		throw new AssertionFailure( "Session/PersistenceContext is not available from an ImmutableEntityEntry" );
 	}
 
 }

@@ -84,17 +84,71 @@ public class ParameterParser {
 		boolean foundMainOutputParam = false;
 
 		final int stringLength = sqlString.length();
-		boolean inQuote = false;
+
+		boolean inSingleQuotes = false;
+		boolean inDoubleQuotes = false;
+		boolean inLineComment = false;
+		boolean inDelimitedComment = false;
+
 		for ( int indx = 0; indx < stringLength; indx++ ) {
 			final char c = sqlString.charAt( indx );
-			if ( inQuote ) {
+			final boolean lastCharacter = indx == stringLength-1;
+
+			if ( inLineComment ) {
+				// see if the character ends the line
+				if ( '\n' == c ) {
+					inLineComment = false;
+					recognizer.other( c );
+				}
+				else if ( '\r' == c ) {
+					inLineComment = false;
+					recognizer.other( c );
+					if ( !lastCharacter && '\n' == sqlString.charAt( indx+1 ) ) {
+						recognizer.other( sqlString.charAt( indx+1 ) );
+						indx++;
+					}
+				}
+			}
+			else if ( '-' == c ) {
+				recognizer.other( c );
+				if ( !lastCharacter && '-' == sqlString.charAt( indx+1 ) ) {
+					inLineComment = true;
+					recognizer.other( sqlString.charAt( indx+1 ) );
+					indx++;
+				}
+			}
+			else if ( inDelimitedComment ) {
+				recognizer.other( c );
+				if ( !lastCharacter && '*' == c && '/' == sqlString.charAt( indx+1 ) ) {
+					inDelimitedComment = true;
+					recognizer.other( sqlString.charAt( indx+1 ) );
+					indx++;
+				}
+			}
+			else if ( !lastCharacter && '/' == c && '*' == sqlString.charAt( indx+1 ) ) {
+				inDelimitedComment = true;
+				recognizer.other( c );
+				recognizer.other( sqlString.charAt( indx+1 ) );
+				indx++;
+			}
+			else if ( inDoubleQuotes ) {
+				if ( '\"' == c ) {
+					inDoubleQuotes = false;
+				}
+				recognizer.other( c );
+			}
+			else if ( '\"' == c ) {
+				inDoubleQuotes = true;
+				recognizer.other( c );
+			}
+			else if ( inSingleQuotes ) {
 				if ( '\'' == c ) {
-					inQuote = false;
+					inSingleQuotes = false;
 				}
 				recognizer.other( c );
 			}
 			else if ( '\'' == c ) {
-				inQuote = true;
+				inSingleQuotes = true;
 				recognizer.other( c );
 			}
 			else if ( '\\' == c ) {

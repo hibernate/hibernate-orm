@@ -442,6 +442,8 @@ public abstract class BaseQueryImpl implements Query {
 
 	private Set<ParameterRegistration<?>> parameterRegistrations;
 
+	private Map<Integer, ParameterRegistration<?>> positionParameterRegistrationMap;
+
 	protected <X> ParameterRegistration<X> findParameterRegistration(Parameter<X> parameter) {
 		if ( ParameterRegistration.class.isInstance( parameter ) ) {
 			final ParameterRegistration<X> reg = (ParameterRegistration<X>) parameter;
@@ -488,15 +490,8 @@ public abstract class BaseQueryImpl implements Query {
 
 	@SuppressWarnings("unchecked")
 	protected <X> ParameterRegistration<X> findParameterRegistration(int parameterPosition) {
-		if ( parameterRegistrations != null ) {
-			for ( ParameterRegistration<?> param : parameterRegistrations ) {
-				if ( param.getPosition() == null ) {
-					continue;
-				}
-				if ( parameterPosition == param.getPosition() ) {
-					return (ParameterRegistration<X>) param;
-				}
-			}
+		if ( positionParameterRegistrationMap != null && positionParameterRegistrationMap.containsKey(parameterPosition)) {
+			return (ParameterRegistration<X>) positionParameterRegistrationMap.get(parameterPosition);
 		}
 		throw new IllegalArgumentException( "Parameter with that position [" + parameterPosition + "] did not exist" );
 	}
@@ -523,6 +518,7 @@ public abstract class BaseQueryImpl implements Query {
 		if ( parameterRegistrations == null ) {
 			// todo : could se use an identity set here?
 			parameterRegistrations = new HashSet<ParameterRegistration<?>>();
+			positionParameterRegistrationMap = new HashMap<Integer, ParameterRegistration<?>>();
 		}
 		return parameterRegistrations;
 	}
@@ -538,6 +534,9 @@ public abstract class BaseQueryImpl implements Query {
 		}
 
 		parameterRegistrations().add( parameter );
+		if ( parameter.getPosition() != null ) {
+			positionParameterRegistrationMap.put(parameter.getPosition(), parameter);
+		}
 	}
 
 	@Override

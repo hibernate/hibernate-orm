@@ -530,7 +530,7 @@ public class SimpleValue implements KeyValue {
 		setTypeParameters( sourceValue.getTypeParameters() );
 
 		type = sourceValue.type;
-		attributeConverterDescriptor = sourceValue.attributeConverterDescriptor;
+		attributeConverterDefinition = sourceValue.attributeConverterDefinition;
 	}
 
 	@Override

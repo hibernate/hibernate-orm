@@ -45,8 +45,11 @@ import org.jboss.logging.Logger;
 public class CollectionCacheInvalidator
 		implements Integrator, PostInsertEventListener, PostDeleteEventListener, PostUpdateEventListener {
 	private static final Logger LOG = Logger.getLogger( CollectionCacheInvalidator.class.getName() );
-	public static final String PROPAGATE_EXCEPTION = "hibernate.test.auto_evict_collection_cache.propagate_exception";
-	private boolean propagateException;
+
+	/**
+	 * Exposed for use in testing
+	 */
+	public static boolean PROPAGATE_EXCEPTION = false;
 
 	@Override
 	public void integrate(Metadata metadata, SessionFactoryImplementor sessionFactory,
@@ -87,8 +90,6 @@ public class CollectionCacheInvalidator
 			// Nothing to do, if caching is disabled
 			return;
 		}
-		propagateException = Boolean.parseBoolean(
-				sessionFactory.getProperties().getProperty( PROPAGATE_EXCEPTION ) );
 		EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
 		eventListenerRegistry.appendListeners( EventType.POST_INSERT, this );
 		eventListenerRegistry.appendListeners( EventType.POST_DELETE, this );
@@ -149,7 +150,7 @@ public class CollectionCacheInvalidator
 			}
 		}
 		catch ( Exception e ) {
-			if ( propagateException ) {
+			if ( PROPAGATE_EXCEPTION ) {
 				throw new IllegalStateException( e );
 			}
 			// don't let decaching influence other logic

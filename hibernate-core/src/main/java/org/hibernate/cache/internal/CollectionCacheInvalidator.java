@@ -118,7 +118,11 @@ public class CollectionCacheInvalidator
 					Object ref = persister.getPropertyValue( entity, i );
 					Serializable id = null;
 					if ( ref != null ) {
-						id = session.getIdentifier( ref );
+						id = session.getContextEntityIdentifier( ref );
+						if ( id == null ) {
+							id = session.getSessionFactory().getClassMetadata( ref.getClass() )
+									.getIdentifier( ref, session );
+						}
 					}
 					// only evict if the related entity has changed
 					if ( id != null && !id.equals( oldId ) ) {

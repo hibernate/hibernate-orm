@@ -5,6 +5,7 @@ import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.test.cache.infinispan.functional.entities.Item;
+import org.hibernate.test.cache.infinispan.util.TestInfinispanRegionFactory;
 import org.hibernate.testing.TestForIssue;
 import org.infinispan.AdvancedCache;
 import org.infinispan.commands.read.GetKeyValueCommand;
@@ -16,6 +17,7 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -38,6 +40,12 @@ public class InvalidationTest extends SingleNodeTest {
       return Arrays.asList(TRANSACTIONAL, READ_WRITE_INVALIDATION);
    }
 
+   @Override
+   protected void addSettings(Map settings) {
+      super.addSettings(settings);
+      settings.put(TestInfinispanRegionFactory.PENDING_PUTS_SIMPLE, false);
+   }
+
    @Test
    @TestForIssue(jiraKey = "HHH-9868")
    public void testConcurrentRemoveAndPutFromLoad() throws Exception {
@@ -54,7 +62,7 @@ public class InvalidationTest extends SingleNodeTest {
       HookInterceptor hook = new HookInterceptor();
 
       AdvancedCache pendingPutsCache = entityCache.getCacheManager().getCache(
-            entityCache.getName() + "-" + InfinispanRegionFactory.PENDING_PUTS_CACHE_NAME).getAdvancedCache();
+            entityCache.getName() + "-" + InfinispanRegionFactory.DEF_PENDING_PUTS_RESOURCE).getAdvancedCache();
       pendingPutsCache.addInterceptor(hook, 0);
       AtomicBoolean getThreadBlockedInDB = new AtomicBoolean(false);
 

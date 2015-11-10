@@ -9,6 +9,7 @@ package org.hibernate.test.cache.infinispan.functional.cluster;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.TimeUnit;
@@ -20,6 +21,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.test.cache.infinispan.functional.entities.Contact;
 import org.hibernate.test.cache.infinispan.functional.entities.Customer;
+import org.hibernate.test.cache.infinispan.util.TestInfinispanRegionFactory;
 import org.hibernate.testing.TestForIssue;
 import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
@@ -106,6 +108,12 @@ public class EntityCollectionInvalidationTest extends DualNodeTest {
 		// do not call super.cleanupTest becasue we would clean transaction managers
 	}
 
+	@Override
+	protected void addSettings(Map settings) {
+		super.addSettings(settings);
+		settings.put(TestInfinispanRegionFactory.PENDING_PUTS_SIMPLE, false);
+	}
+
 	@Test
 	public void testAll() throws Exception {
 		assertEmptyCaches();
@@ -181,7 +189,7 @@ public class EntityCollectionInvalidationTest extends DualNodeTest {
 		Phaser getPhaser = new Phaser(2);
 		HookInterceptor hookInterceptor = new HookInterceptor(getException);
 		AdvancedCache remotePPCache = remoteCustomerCache.getCacheManager().getCache(
-				remoteCustomerCache.getName() + "-" + InfinispanRegionFactory.PENDING_PUTS_CACHE_NAME).getAdvancedCache();
+				remoteCustomerCache.getName() + "-" + InfinispanRegionFactory.DEF_PENDING_PUTS_RESOURCE).getAdvancedCache();
 		remotePPCache.getAdvancedCache().addInterceptor(hookInterceptor, 0);
 
 		IdContainer idContainer = new IdContainer();

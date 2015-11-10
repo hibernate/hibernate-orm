@@ -9,51 +9,34 @@
             xmlns="urn:infinispan:config:8.0"
             xsi:schemaLocation="urn:infinispan:config:8.0 http://www.infinispan.org/schemas/infinispan-config-8.0.xsd">
 
-   <jgroups>
-      <stack-file name="hibernate-jgroups" path="${hibernate.cache.infinispan.jgroups_cfg:default-configs/default-jgroups-tcp.xml}"/>
-   </jgroups>
-
+   <!-- This configuration is suitable for non-clustered environments, where only single instance accesses the DB -->
    <cache-container name="SampleCacheManager" statistics="false" default-cache="the-default-cache" shutdown-hook="DEFAULT">
-      <transport stack="hibernate-jgroups" cluster="infinispan-hibernate-cluster"/>
       <jmx duplicate-domains="true"/>
 
       <local-cache-configuration name="the-default-cache" statistics="false" />
 
       <!-- Default configuration is appropriate for entity/collection caching. -->
-      <invalidation-cache-configuration name="entity" mode="SYNC" remote-timeout="20000" statistics="false" statistics-available="false">
-         <locking concurrency-level="1000" acquire-timeout="15000"/>
-         <transaction mode="NONE" />
-         <eviction max-entries="10000" strategy="LRU"/>
-         <expiration max-idle="100000" interval="5000"/>
-      </invalidation-cache-configuration>
-
-      <!-- A config appropriate for query caching. Does not replicate queries. -->
-      <local-cache-configuration name="local-query" statistics="false" statistics-available="false">
-         <locking concurrency-level="1000" acquire-timeout="15000"/>
+      <local-cache-configuration name="entity" simple-cache="true" statistics="false" statistics-available="false">
          <transaction mode="NONE" />
          <eviction max-entries="10000" strategy="LRU"/>
          <expiration max-idle="100000" interval="5000"/>
       </local-cache-configuration>
 
-      <!-- A query cache that replicates queries. Replication is asynchronous. -->
-      <replicated-cache-configuration name="replicated-query" mode="ASYNC" statistics="false" statistics-available="false">
-         <locking concurrency-level="1000" acquire-timeout="15000"/>
+      <!-- A config appropriate for query caching. Does not replicate queries. -->
+      <local-cache-configuration name="local-query" simple-cache="true" statistics="false" statistics-available="false">
          <transaction mode="NONE" />
          <eviction max-entries="10000" strategy="LRU"/>
          <expiration max-idle="100000" interval="5000"/>
-      </replicated-cache-configuration>
+      </local-cache-configuration>
 
-      <!-- Optimized for timestamp caching. A clustered timestamp cache
-           is required if query caching is used, even if the query cache
-           itself is configured with CacheMode=LOCAL. -->
-      <replicated-cache-configuration name="timestamps" mode="ASYNC" statistics="false" statistics-available="false">
+      <local-cache-configuration name="timestamps" simple-cache="true" statistics="false" statistics-available="false">
          <locking concurrency-level="1000" acquire-timeout="15000"/>
          <!-- Explicitly non transactional -->
          <transaction mode="NONE"/>
          <!--  Don't ever evict modification timestamps -->
          <eviction strategy="NONE"/>
          <expiration interval="0"/>
-      </replicated-cache-configuration>
+      </local-cache-configuration>
 
       <!-- When providing custom configuration, always make this cache local and non-transactional.
            To avoid possible leaks, use expiration (max idle time). Optimize for speed.-->

@@ -39,14 +39,7 @@ public abstract class AbstractEntityCollectionRegionTest extends AbstractRegionI
 	}
 
 	private void supportedAccessTypeTest() throws Exception {
-		StandardServiceRegistryBuilder ssrb = CacheTestUtil.buildBaselineStandardServiceRegistryBuilder(
-				"test",
-				InfinispanRegionFactory.class,
-				true,
-				false,
-				jtaPlatform
-		);
-		ssrb.applySetting( InfinispanRegionFactory.ENTITY_CACHE_RESOURCE_PROP, "entity" );
+		StandardServiceRegistryBuilder ssrb = createStandardServiceRegistryBuilder();
 		final StandardServiceRegistry registry = ssrb.build();
 		try {
 			InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(

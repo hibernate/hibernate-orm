@@ -25,15 +25,18 @@ public class TestInfinispanRegionFactory extends InfinispanRegionFactory {
 	public static final String TRANSACTIONAL = PREFIX + "transactional";
 	public static final String CACHE_MODE = PREFIX + "cacheMode";
 	public static final String TIME_SERVICE = PREFIX + "timeService";
+	public static final String PENDING_PUTS_SIMPLE = PREFIX + "pendingPuts.simple";
 
 	private final boolean transactional;
 	private final CacheMode cacheMode;
 	private final TimeService timeService;
+	private final boolean pendingPutsSimple;
 
 	public TestInfinispanRegionFactory(Properties properties) {
 		transactional = (boolean) properties.getOrDefault(TRANSACTIONAL, false);
 		cacheMode = (CacheMode) properties.getOrDefault(CACHE_MODE, null);
 		timeService = (TimeService) properties.getOrDefault(TIME_SERVICE, null);
+		pendingPutsSimple = (boolean) properties.getOrDefault(PENDING_PUTS_SIMPLE, true);
 	}
 
 	@Override
@@ -58,14 +61,18 @@ public class TestInfinispanRegionFactory extends InfinispanRegionFactory {
 		for (Map.Entry<String, ConfigurationBuilder> cfg : holder.getNamedConfigurationBuilders().entrySet()) {
 			amendCacheConfiguration(cfg.getKey(), cfg.getValue());
 		}
+		// disable simple cache for testing as we need to insert interceptors
+		if (!pendingPutsSimple) {
+			holder.getNamedConfigurationBuilders().get(InfinispanRegionFactory.DEF_PENDING_PUTS_RESOURCE).simpleCache(false);
+		}
 	}
 
 	protected void amendCacheConfiguration(String cacheName, ConfigurationBuilder configurationBuilder) {
-		if (cacheName.equals(InfinispanRegionFactory.PENDING_PUTS_CACHE_NAME)) {
+		if (cacheName.equals(InfinispanRegionFactory.DEF_PENDING_PUTS_RESOURCE)) {
 			return;
 		}
 		if (transactional) {
-			if (!cacheName.endsWith("query") && !cacheName.equals(DEF_TIMESTAMPS_RESOURCE)) {
+			if (!cacheName.endsWith("query") && !cacheName.equals(DEF_TIMESTAMPS_RESOURCE) && !cacheName.endsWith(InfinispanRegionFactory.DEF_PENDING_PUTS_RESOURCE)) {
 				configurationBuilder.transaction().transactionMode(TransactionMode.TRANSACTIONAL).useSynchronization(true);
 			}
 		} else {

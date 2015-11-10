@@ -45,13 +45,12 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
 	private final ConcurrentMap<SessionImplementor, Map> transactionContext = new ConcurrentHashMap<SessionImplementor, Map>();
 	private final boolean putCacheRequiresTransaction;
 
-   /**
-    * Query region constructor
-    *
-    * @param cache instance to store queries
-    * @param name of the query region
-    * @param factory for the query region
-    */
+	/**
+	 * Query region constructor
+	 *  @param cache instance to store queries
+	 * @param name of the query region
+	 * @param factory for the query region
+	 */
 	public QueryResultsRegionImpl(AdvancedCache cache, String name, TransactionManager transactionManager, InfinispanRegionFactory factory) {
 		super( cache, name, transactionManager, null, factory, null );
 		// If Infinispan is using INVALIDATION for query cache, we don't want to propagate changes.

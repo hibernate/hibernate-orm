@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.cache.infinispan.collection;
 
+import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -24,6 +25,7 @@ import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.test.cache.infinispan.AbstractRegionAccessStrategyTest;
 import org.hibernate.test.cache.infinispan.NodeEnvironment;
+import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 import org.hibernate.test.cache.infinispan.util.TestingKeyFactory;
 import org.infinispan.AdvancedCache;
 import org.infinispan.manager.EmbeddedCacheManager;
@@ -128,8 +130,6 @@ public class CollectionRegionAccessStrategyTest extends
 
 	private static EmbeddedCacheManager createCacheManager(InfinispanRegionFactory regionFactory) {
 		EmbeddedCacheManager cacheManager = TestCacheManagerFactory.createCacheManager(false);
-		cacheManager.defineConfiguration(InfinispanRegionFactory.PENDING_PUTS_CACHE_NAME,
-				regionFactory.getPendingPutsCacheConfiguration());
 		return cacheManager;
 	}
 
@@ -137,7 +137,10 @@ public class CollectionRegionAccessStrategyTest extends
 																			 CountDownLatch removeLatch, CountDownLatch pferLatch) {
 		// remove the interceptor inserted by default PutFromLoadValidator, we're using different one
 		PutFromLoadValidator.removeFromCache(cache);
-		return new PutFromLoadValidator(cache, cm) {
+		InfinispanRegionFactory regionFactory = new InfinispanRegionFactory();
+		regionFactory.setCacheManager(cm);
+		regionFactory.start(CacheTestUtil.sfOptionsForStart(), new Properties());
+		return new PutFromLoadValidator(cache, regionFactory, cm) {
 			@Override
 			public Lock acquirePutFromLoadLock(SessionImplementor session, Object key, long txTimestamp) {
 				Lock lock = super.acquirePutFromLoadLock(session, key, txTimestamp);

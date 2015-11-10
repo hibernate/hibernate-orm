@@ -129,22 +129,23 @@ public class PutFromLoadValidator {
 	 *
 	 * @param cache Cache instance on which to store pending put information.
 	 */
-	public PutFromLoadValidator(AdvancedCache cache) {
-		this( cache, cache.getCacheManager());
+	public PutFromLoadValidator(AdvancedCache cache, InfinispanRegionFactory regionFactory) {
+		this( cache, regionFactory, cache.getCacheManager());
 	}
 
 	/**
 	 * Creates a new put from load validator instance.
 	 * @param cache Cache instance on which to store pending put information.
+	 * @param regionFactory
 	 * @param cacheManager where to find a cache to store pending put information
 	 */
-	public PutFromLoadValidator(AdvancedCache cache, EmbeddedCacheManager cacheManager) {
+	public PutFromLoadValidator(AdvancedCache cache, InfinispanRegionFactory regionFactory, EmbeddedCacheManager cacheManager) {
 		Configuration cacheConfiguration = cache.getCacheConfiguration();
-		Configuration pendingPutsConfiguration = cacheManager.getCacheConfiguration(InfinispanRegionFactory.PENDING_PUTS_CACHE_NAME);
+		Configuration pendingPutsConfiguration = regionFactory.getPendingPutsCacheConfiguration();
 		ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
 		configurationBuilder.read(pendingPutsConfiguration);
 		configurationBuilder.dataContainer().keyEquivalence(cacheConfiguration.dataContainer().keyEquivalence());
-		String pendingPutsName = cache.getName() + "-" + InfinispanRegionFactory.PENDING_PUTS_CACHE_NAME;
+		String pendingPutsName = cache.getName() + "-" + InfinispanRegionFactory.DEF_PENDING_PUTS_RESOURCE;
 		cacheManager.defineConfiguration(pendingPutsName, configurationBuilder.build());
 
 		if (pendingPutsConfiguration.expiration() != null && pendingPutsConfiguration.expiration().maxIdle() > 0) {

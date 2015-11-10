@@ -13,6 +13,10 @@ if ( project.hasProperty( 'overrideInfinispanVersionForTesting' ) ) {
     configurations.testRuntime.resolutionStrategy.force 'org.infinispan:infinispan-core:' + overrideInfinispanVersionForTesting
 }
 
+apply plugin: 'java'
+
+project.javaTarget.version '1.8'
+
 dependencies {
     compile project( ':hibernate-core' )
     compile( libraries.infinispan )
@@ -55,8 +59,14 @@ test {
    systemProperties['jgroups.bind_addr'] = 'localhost'
    // Use Infinispan's test JGroups stack that uses TEST_PING
    systemProperties['hibernate.cache.infinispan.jgroups_cfg'] = '2lc-test-tcp.xml'
-   // systemProperties['log4j.configuration'] = 'file:/log4j/log4j-infinispan.xml'
+   if (project.hasProperty('log4jconfig')) {
+      systemProperties['log4j.configuration'] = log4jconfig
+   }
    enabled = project.hasProperty('testInfinispan')
+   if (project.hasProperty('debugInfinispan')) {
+      jvmArgs += '-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005'
+      enabled = true;
+   }
    // Without this I have trouble running specific test using --tests switch
    doFirst {
       filter.includePatterns.each {

@@ -30,8 +30,7 @@ import javax.transaction.TransactionManager;
 public class EntityRegionImpl extends BaseTransactionalDataRegion implements EntityRegion {
 	/**
 	 * Construct a entity region
-	 *
-	 * @param cache instance to store entity instances
+	 *  @param cache instance to store entity instances
 	 * @param name of entity type
 	 * @param transactionManager
 	 * @param metadata for the entity type

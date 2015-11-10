@@ -24,6 +24,8 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -38,13 +40,22 @@ public class CollectionCacheEvictionWithoutMappedByTest extends BaseCoreFunction
 		return new Class[] {Person.class, People.class};
 	}
 
+	@Before
+	public void before() {
+		CollectionCacheInvalidator.PROPAGATE_EXCEPTION = true;
+	}
+
+	@After
+	public void after() {
+		CollectionCacheInvalidator.PROPAGATE_EXCEPTION = false;
+	}
+
 	@Override
 	protected void configure(Configuration cfg) {
 		cfg.setProperty( Environment.AUTO_EVICT_COLLECTION_CACHE, "true" );
 		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "true" );
 		cfg.setProperty( Environment.USE_QUERY_CACHE, "true" );
 		cfg.setProperty( Environment.CACHE_PROVIDER_CONFIG, "true" );
-		cfg.setProperty( CollectionCacheInvalidator.PROPAGATE_EXCEPTION, "true" );
 	}
 
 	private People createPeople() {

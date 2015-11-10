@@ -17,8 +17,8 @@ import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.jpa.test.metamodel.Thing;
 import org.hibernate.jpa.test.metamodel.ThingWithQuantity;
 import org.hibernate.jpa.test.metamodel.ThingWithQuantity_;
-import org.hibernate.testing.TestForIssue;
 
+import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -200,6 +200,17 @@ public class TreatKeywordTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
+	public void testSelectSubclassPropertyFromDowncast() {
+		EntityManager em = getOrCreateEntityManager();
+		CriteriaBuilder builder = em.getCriteriaBuilder();
+		CriteriaQuery<Integer> criteria = builder.createQuery( Integer.class );
+		Root<Thing> root = criteria.from( Thing.class );
+		Root<ThingWithQuantity> subroot = builder.treat( root, ThingWithQuantity.class );
+		criteria.select( subroot.<Integer>get( "quantity" ) );
+		em.createQuery( criteria ).getResultList();
+		em.close();
+	}
 
 
 }

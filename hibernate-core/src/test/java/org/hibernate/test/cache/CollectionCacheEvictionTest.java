@@ -8,15 +8,19 @@ package org.hibernate.test.cache;
 
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.Session;
+import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-
-import org.junit.Test;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.persister.collection.CollectionPersister;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 /**
@@ -66,6 +70,31 @@ public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 
 		s.getTransaction().commit();
 		s.close();
+	}
+
+	@Test
+	public void testCachedValueAfterEviction() {
+		CollectionPersister persister = sessionFactory().getCollectionPersister( Company.class.getName() + ".users" );
+
+		Session session = openSession();
+		SessionImplementor sessionImplementor = (SessionImplementor) session;
+
+		CollectionRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+		Object key = cache.generateCacheKey( 1, persister, sessionFactory(), session.getTenantIdentifier() );
+		Object cachedValue = cache.get( sessionImplementor, key, sessionImplementor.getTimestamp() );
+		assertNull( cachedValue );
+
+		Company company = session.get( Company.class, 1 );
+		//should add in cache
+		assertEquals( 1, company.getUsers().size() );
+		session.close();
+
+		session = openSession();
+		sessionImplementor = (SessionImplementor) session;
+		key = cache.generateCacheKey( 1, persister, sessionFactory(), session.getTenantIdentifier() );
+		cachedValue = cache.get( sessionImplementor, key, sessionImplementor.getTimestamp() );
+		assertNotNull( "Collection wasn't cached", cachedValue );
+		session.close();
 	}
 
 	@Test

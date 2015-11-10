@@ -9,9 +9,14 @@ package org.hibernate.cache.internal;
 import java.io.Serializable;
 import java.util.Set;
 
+import org.hibernate.HibernateException;
+import org.hibernate.action.internal.CollectionAction;
+import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.boot.Metadata;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EventType;
@@ -95,7 +100,7 @@ public class CollectionCacheInvalidator
 				return;
 			}
 			for ( String role : collectionRoles ) {
-				CollectionPersister collectionPersister = factory.getCollectionPersister( role );
+				final CollectionPersister collectionPersister = factory.getCollectionPersister( role );
 				if ( !collectionPersister.hasCache() ) {
 					// ignore collection if no caching is used
 					continue;
@@ -125,7 +130,13 @@ public class CollectionCacheInvalidator
 				}
 				else {
 					LOG.debug( "Evict CollectionRegion " + role );
-					collectionPersister.getCacheAccessStrategy().evictAll();
+					final SoftLock softLock = collectionPersister.getCacheAccessStrategy().lockRegion();
+					session.getActionQueue().registerProcess( new AfterTransactionCompletionProcess() {
+						@Override
+						public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
+							collectionPersister.getCacheAccessStrategy().unlockRegion( softLock );
+						}
+					} );
 				}
 			}
 		}
@@ -139,13 +150,32 @@ public class CollectionCacheInvalidator
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debug( "Evict CollectionRegion " + collectionPersister.getRole() + " for id " + id );
 		}
-		CollectionRegionAccessStrategy cache = collectionPersister.getCacheAccessStrategy();
-		Object key = cache.generateCacheKey(
-				id,
+		AfterTransactionCompletionProcess afterTransactionProcess = new CollectionEvictCacheAction(
 				collectionPersister,
-				session.getFactory(),
-				session.getTenantIdentifier()
-		);
-		cache.evict( key );
+				null,
+				id,
+				session
+		).lockCache();
+		session.getActionQueue().registerProcess( afterTransactionProcess );
+	}
+
+	//execute the same process as invalidation with collection operations
+	private static final class CollectionEvictCacheAction extends CollectionAction {
+		protected CollectionEvictCacheAction(
+				CollectionPersister persister,
+				PersistentCollection collection,
+				Serializable key,
+				SessionImplementor session) {
+			super( persister, collection, key, session );
+		}
+
+		@Override
+		public void execute() throws HibernateException {
+		}
+
+		public AfterTransactionCompletionProcess lockCache() {
+			beforeExecutions();
+			return getAfterTransactionCompletionProcess();
+		}
 	}
 }

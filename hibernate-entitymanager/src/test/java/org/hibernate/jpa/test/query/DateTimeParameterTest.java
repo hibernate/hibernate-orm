@@ -6,6 +6,9 @@
  */
 package org.hibernate.jpa.test.query;
 
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.Id;
@@ -13,9 +16,6 @@ import javax.persistence.Query;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.List;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
@@ -54,6 +54,23 @@ public class DateTimeParameterTest extends BaseEntityManagerFunctionalTestCase {
 		}
 
 		deleteTestData();
+	}
+
+	@Test
+	public void testBindingNulls() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		try {
+			Query query = em.createQuery( "from Thing t where t.someDate = :aDate or t.someTime = :aTime or t.someTimestamp = :aTimestamp" );
+			query.setParameter( "aDate", (Date) null, TemporalType.DATE );
+			query.setParameter( "aTime", (Date) null, TemporalType.DATE );
+			query.setParameter( "aTimestamp", (Date) null, TemporalType.DATE );
+		}
+		finally {
+			em.getTransaction().rollback();
+			em.close();
+		}
 	}
 
 	private void createTestData() {

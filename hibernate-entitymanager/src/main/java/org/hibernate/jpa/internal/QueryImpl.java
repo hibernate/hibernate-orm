@@ -253,7 +253,7 @@ public class QueryImpl<X> extends AbstractQueryImpl<X>
 		public void bindValue(T value, TemporalType specifiedTemporalType) {
 			validateBinding( getParameterType(), value, specifiedTemporalType );
 
-			if ( Date.class.isInstance( value ) ) {
+			if ( value == null || Date.class.isInstance( value ) ) {
 				if ( name != null ) {
 					if ( specifiedTemporalType == DATE ) {
 						nativeQuery.setDate( name, (Date) value );

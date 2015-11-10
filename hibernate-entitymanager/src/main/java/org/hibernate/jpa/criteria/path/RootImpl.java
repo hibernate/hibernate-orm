@@ -116,12 +116,14 @@ public class RootImpl<X> extends AbstractFromImpl<X,X> implements Root<X>, Seria
 
 		@Override
 		public void prepareAlias(RenderingContext renderingContext) {
-			// do nothing...
+			// NOTE : we call `original#prepareAlias` here and during render
+			//		since in some cases only one or the other will be called
+			original.prepareAlias( renderingContext );
 		}
 
 		@Override
 		public String render(RenderingContext renderingContext) {
-			original.prepareAlias(renderingContext);
+			original.prepareAlias( renderingContext );
 			return getTreatFragment();
 		}
 

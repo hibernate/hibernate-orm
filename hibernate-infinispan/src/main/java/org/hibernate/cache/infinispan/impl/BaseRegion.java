@@ -8,7 +8,6 @@ package org.hibernate.cache.infinispan.impl;
 
 import java.util.Collections;
 import java.util.Map;
-
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;

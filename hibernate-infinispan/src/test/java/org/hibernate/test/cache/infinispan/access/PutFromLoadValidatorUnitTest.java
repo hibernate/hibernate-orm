@@ -10,6 +10,7 @@ import javax.transaction.TransactionManager;
 
 import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -24,8 +25,10 @@ import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
+import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
 import org.hibernate.testing.TestForIssue;
+import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.test.CacheManagerCallable;
@@ -39,6 +42,7 @@ import org.junit.Test;
 
 import static org.infinispan.test.TestingUtil.withCacheManager;
 import static org.infinispan.test.TestingUtil.withTx;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.junit.Assert.*;
 
@@ -79,9 +83,14 @@ public class PutFromLoadValidatorUnitTest {
 
 	private static EmbeddedCacheManager createCacheManager() {
 		EmbeddedCacheManager cacheManager = TestCacheManagerFactory.createCacheManager(false);
-		cacheManager.defineConfiguration(InfinispanRegionFactory.PENDING_PUTS_CACHE_NAME,
-				InfinispanRegionFactory.DEFAULT_PENDING_PUTS_CACHE_CONFIGURATION);
 		return cacheManager;
+	}
+
+	private static InfinispanRegionFactory regionFactory(EmbeddedCacheManager cm) {
+		InfinispanRegionFactory regionFactory = new InfinispanRegionFactory();
+		regionFactory.setCacheManager(cm);
+		regionFactory.start(CacheTestUtil.sfOptionsForStart(), new Properties());
+		return regionFactory;
 	}
 
 	@Test
@@ -97,7 +106,7 @@ public class PutFromLoadValidatorUnitTest {
 		withCacheManager(new CacheManagerCallable(createCacheManager()) {
 			@Override
 			public void call() {
-				PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm);
+				PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), regionFactory(cm));
 				exec(transactional, new NakedPut(testee, true));
 			}
 		});
@@ -116,7 +125,7 @@ public class PutFromLoadValidatorUnitTest {
 		withCacheManager(new CacheManagerCallable(createCacheManager()) {
 			@Override
 			public void call() {
-				PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm);
+				PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), regionFactory(cm));
 				exec(transactional, new RegularPut(testee));
 			}
 		});
@@ -144,7 +153,7 @@ public class PutFromLoadValidatorUnitTest {
 		withCacheManager(new CacheManagerCallable(createCacheManager()) {
 			@Override
 			public void call() {
-				PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache());
+				PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), regionFactory(cm));
 				Invalidation invalidation = new Invalidation(testee, removeRegion);
 				// the naked put can succeed because it has txTimestamp after invalidation
 				NakedPut nakedPut = new NakedPut(testee, true);
@@ -176,7 +185,7 @@ public class PutFromLoadValidatorUnitTest {
 		withCacheManager(new CacheManagerCallable(createCacheManager()) {
 			@Override
 			public void call() {
-				PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm);
+				PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), regionFactory(cm));
 				Invalidation invalidation = new Invalidation(testee, removeRegion);
 				RegularPut regularPut = new RegularPut(testee);
 				exec(transactional, invalidation, regularPut);
@@ -207,7 +216,7 @@ public class PutFromLoadValidatorUnitTest {
 		withCacheManager(new CacheManagerCallable(createCacheManager()) {
 			@Override
 			public void call() {
-				PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm);
+				PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), regionFactory(cm));
 				try {
 					long txTimestamp = System.currentTimeMillis();
 					if (transactional) {
@@ -257,7 +266,7 @@ public class PutFromLoadValidatorUnitTest {
 		withCacheManager(new CacheManagerCallable(createCacheManager()) {
 			@Override
 			public void call() {
-				final PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm);
+				final PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), regionFactory(cm));
 
 				final CountDownLatch registeredLatch = new CountDownLatch(3);
 				final CountDownLatch finishedLatch = new CountDownLatch(3);
@@ -335,7 +344,7 @@ public class PutFromLoadValidatorUnitTest {
 		withCacheManager(new CacheManagerCallable(createCacheManager()) {
 			@Override
 			public void call() {
-				final PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm);
+				final PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), regionFactory(cm));
 				final CountDownLatch removeLatch = new CountDownLatch(1);
 				final CountDownLatch pferLatch = new CountDownLatch(1);
 				final AtomicReference<Object> cache = new AtomicReference<Object>("INITIAL");
@@ -512,14 +521,19 @@ public class PutFromLoadValidatorUnitTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-9928")
 	public void testGetForNullReleasePuts() {
-		EmbeddedCacheManager cm = TestCacheManagerFactory.createCacheManager(false);
-		ConfigurationBuilder cb = new ConfigurationBuilder().read(InfinispanRegionFactory.DEFAULT_PENDING_PUTS_CACHE_CONFIGURATION);
-		cb.expiration().maxIdle(500);
-		cm.defineConfiguration(InfinispanRegionFactory.PENDING_PUTS_CACHE_NAME, cb.build());
+		EmbeddedCacheManager cm = createCacheManager();
+		InfinispanRegionFactory tmp = new InfinispanRegionFactory();
+		tmp.setCacheManager(cm);
+		ConfigurationBuilder cb = new ConfigurationBuilder();
+		cb.simpleCache(true).expiration().maxIdle(500);
+		Configuration ppCfg = cb.build();
+		cm.defineConfiguration(InfinispanRegionFactory.DEF_PENDING_PUTS_RESOURCE, cb.build());
+		InfinispanRegionFactory regionFactory = mock(InfinispanRegionFactory.class);
+		doReturn(ppCfg).when(regionFactory).getPendingPutsCacheConfiguration();
 		withCacheManager(new CacheManagerCallable(cm) {
 			@Override
 			public void call() {
-				PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm);
+				PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), regionFactory, cm);
 				long lastInsert = Long.MAX_VALUE;
 				for (int i = 0; i < 100; ++i) {
 					lastInsert = System.currentTimeMillis();
@@ -537,7 +551,7 @@ public class PutFromLoadValidatorUnitTest {
 						throw new RuntimeException(e);
 					}
 				}
-				String ppName = cm.getCache().getName() + "-" + InfinispanRegionFactory.PENDING_PUTS_CACHE_NAME;
+				String ppName = cm.getCache().getName() + "-" + InfinispanRegionFactory.DEF_PENDING_PUTS_RESOURCE;
 				Map ppCache = cm.getCache(ppName, false);
 				assertNotNull(ppCache);
 				Object pendingPutMap = ppCache.get(KEY1);

@@ -68,8 +68,7 @@ public abstract class BaseTransactionalDataRegion
 
 	/**
 	 * Base transactional region constructor
-	 *
-	 * @param cache instance to store transactional data
+	 *  @param cache instance to store transactional data
 	 * @param name of the transactional region
 	 * @param transactionManager
 	 * @param metadata for the transactional region
@@ -142,7 +141,7 @@ public abstract class BaseTransactionalDataRegion
 			assert strategy == Strategy.VALIDATION;
 			return;
 		}
-		validator = new PutFromLoadValidator(cache);
+		validator = new PutFromLoadValidator(cache, factory);
 		strategy = Strategy.VALIDATION;
 	}
 

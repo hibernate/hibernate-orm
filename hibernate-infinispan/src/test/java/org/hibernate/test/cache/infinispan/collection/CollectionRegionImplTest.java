@@ -28,11 +28,9 @@ public class CollectionRegionImplTest extends AbstractEntityCollectionRegionTest
 
 	@Override
 	protected void supportedAccessTypeTest(RegionFactory regionFactory, Properties properties) {
-		for (AccessType accessType : AccessType.values()) {
-			CollectionRegion region = regionFactory.buildCollectionRegion(CACHE_NAME, properties, MUTABLE_NON_VERSIONED);
-			assertNotNull(region.buildAccessStrategy(accessType));
-			((InfinispanRegionFactory) regionFactory).getCacheManager().removeCache(CACHE_NAME);
-		}
+		CollectionRegion region = regionFactory.buildCollectionRegion(CACHE_NAME, properties, MUTABLE_NON_VERSIONED);
+		assertNotNull(region.buildAccessStrategy(accessType));
+		((InfinispanRegionFactory) regionFactory).getCacheManager().removeCache(CACHE_NAME);
 	}
 
 	@Override

@@ -316,7 +316,7 @@ public abstract class CorrectnessTestCase {
       protected void amendCacheConfiguration(String cacheName, ConfigurationBuilder configurationBuilder) {
          super.amendCacheConfiguration(cacheName, configurationBuilder);
          // failure to write into timestamps would cause failure even though both DB and cache has been updated
-         if (!cacheName.equals("timestamps") && !cacheName.endsWith(InfinispanRegionFactory.PENDING_PUTS_CACHE_NAME)) {
+         if (!cacheName.equals("timestamps") && !cacheName.endsWith(InfinispanRegionFactory.DEF_PENDING_PUTS_RESOURCE)) {
             configurationBuilder.customInterceptors().addInterceptor()
                   .interceptorClass(FailureInducingInterceptor.class)
                   .position(InterceptorConfiguration.Position.FIRST);

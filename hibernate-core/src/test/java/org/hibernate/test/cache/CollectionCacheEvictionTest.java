@@ -8,6 +8,7 @@ package org.hibernate.test.cache;
 
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.Session;
+import org.hibernate.cache.internal.CollectionCacheInvalidator;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -40,6 +41,7 @@ public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "true" );
 		cfg.setProperty( Environment.USE_QUERY_CACHE, "true" );
 		cfg.setProperty( Environment.CACHE_PROVIDER_CONFIG, "true" );
+		cfg.setProperty( CollectionCacheInvalidator.PROPAGATE_EXCEPTION, "true" );
 	}
 
 	@Override

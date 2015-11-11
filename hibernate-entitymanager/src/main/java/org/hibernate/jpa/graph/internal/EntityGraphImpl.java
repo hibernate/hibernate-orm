@@ -13,6 +13,7 @@ import javax.persistence.Subgraph;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
+import javax.persistence.metamodel.ManagedType;
 
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.graph.spi.GraphNodeImplementor;
@@ -151,5 +152,10 @@ public class EntityGraphImpl<T> extends AbstractGraphNode<T> implements EntityGr
 		}
 
 		return false;
+	}
+
+	@Override
+	ManagedType getManagedType() {
+		return entityType;
 	}
 }

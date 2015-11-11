@@ -31,6 +31,7 @@ import java.util.Map;
 
 import javax.persistence.AttributeNode;
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.ManagedType;
 
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphNodeImplementor;
@@ -79,6 +80,7 @@ public abstract class AbstractGraphNode<T> implements GraphNodeImplementor, Hibe
 		return copy;
 	}
 
+
 	@Override
 	public HibernateEntityManagerFactory getFactory() {
 		return entityManagerFactory;
@@ -122,7 +124,7 @@ public abstract class AbstractGraphNode<T> implements GraphNodeImplementor, Hibe
 	protected abstract Attribute<T,?> resolveAttribute(String attributeName);
 
 	protected <X> AttributeNodeImpl<X> buildAttributeNode(Attribute<T, X> attribute) {
-		return new AttributeNodeImpl<X>( entityManagerFactory, attribute );
+		return new AttributeNodeImpl<X>( entityManagerFactory, getManagedType(), attribute );
 	}
 
 	protected AttributeNodeImpl addAttributeNode(AttributeNodeImpl attributeNode) {
@@ -205,4 +207,6 @@ public abstract class AbstractGraphNode<T> implements GraphNodeImplementor, Hibe
 	public boolean containsAttribute(String name) {
 		return attributeNodeMap != null && attributeNodeMap.containsKey( name );
 	}
+
+	abstract ManagedType getManagedType();
 }

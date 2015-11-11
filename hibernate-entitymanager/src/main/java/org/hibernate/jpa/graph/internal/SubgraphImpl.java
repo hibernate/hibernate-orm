@@ -134,4 +134,9 @@ public class SubgraphImpl<T> extends AbstractGraphNode<T> implements Subgraph<T>
 		}
 		return attribute;
 	}
+
+	@Override
+	ManagedType getManagedType() {
+		return managedType;
+	}
 }

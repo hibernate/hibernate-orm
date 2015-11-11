@@ -10,11 +10,11 @@ import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.infinispan.util.InvocationAfterCompletion;
 import org.hibernate.cache.spi.QueryResultsRegion;
-import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.infinispan.AdvancedCache;
@@ -52,7 +52,7 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
     * @param name of the query region
     * @param factory for the query region
     */
-	public QueryResultsRegionImpl(AdvancedCache cache, String name, TransactionManager transactionManager, RegionFactory factory) {
+	public QueryResultsRegionImpl(AdvancedCache cache, String name, TransactionManager transactionManager, InfinispanRegionFactory factory) {
 		super( cache, name, transactionManager, null, factory, null );
 		// If Infinispan is using INVALIDATION for query cache, we don't want to propagate changes.
 		// We use the Timestamps cache to manage invalidation

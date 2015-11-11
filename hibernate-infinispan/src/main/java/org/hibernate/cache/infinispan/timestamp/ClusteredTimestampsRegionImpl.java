@@ -11,15 +11,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.transaction.Transaction;
 
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.util.Caches;
-import org.hibernate.cache.spi.RegionFactory;
 
 import org.hibernate.engine.spi.SessionImplementor;
 import org.infinispan.AdvancedCache;
-import org.infinispan.CacheSet;
-import org.infinispan.commons.util.CloseableIterable;
 import org.infinispan.commons.util.CloseableIterator;
-import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.context.Flag;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryModified;
@@ -53,7 +50,7 @@ public class ClusteredTimestampsRegionImpl extends TimestampsRegionImpl {
     */
 	public ClusteredTimestampsRegionImpl(
 			AdvancedCache cache,
-			String name, RegionFactory factory) {
+			String name, InfinispanRegionFactory factory) {
 		super( cache, name, factory );
 		cache.addListener( this );
 		populateLocalCache();

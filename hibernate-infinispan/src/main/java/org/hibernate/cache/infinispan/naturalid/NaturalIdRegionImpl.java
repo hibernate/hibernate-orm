@@ -7,12 +7,12 @@
 package org.hibernate.cache.infinispan.naturalid;
 
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.access.AccessDelegate;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.NaturalIdRegion;
-import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.infinispan.AdvancedCache;
@@ -40,7 +40,7 @@ public class NaturalIdRegionImpl extends BaseTransactionalDataRegion
 	 */
 	public NaturalIdRegionImpl(
 			AdvancedCache cache, String name, TransactionManager transactionManager,
-			CacheDataDescription metadata, RegionFactory factory, CacheKeysFactory cacheKeysFactory) {
+			CacheDataDescription metadata, InfinispanRegionFactory factory, CacheKeysFactory cacheKeysFactory) {
 		super( cache, name, transactionManager, metadata, factory, cacheKeysFactory );
 	}
 

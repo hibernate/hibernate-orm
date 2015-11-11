@@ -44,12 +44,7 @@ import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.transaction.TransactionMode;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  * InfinispanRegionFactoryTestCase.
@@ -559,6 +554,37 @@ public class InfinispanRegionFactoryTestCase  {
 			cache = collectionRegion.getCache();
 			assertFalse( factory.getTypeOverrides().get( "collection" ).isExposeStatistics() );
 			assertFalse( cache.getCacheConfiguration().jmxStatistics().enabled() );
+		} finally {
+			factory.stop();
+		}
+	}
+
+	@Test
+	public void testDefaultPendingPutsCache() {
+		Properties p = createProperties();
+		InfinispanRegionFactory factory = createRegionFactory(p);
+		try {
+			Configuration ppConfig = factory.getPendingPutsCacheConfiguration();
+			// workaround for ISPN-5950
+			ConfigurationBuilder cb = new ConfigurationBuilder().read(ppConfig);
+			cb.transaction().useSynchronization(false);
+			ppConfig = cb.build();
+
+			assertEquals(InfinispanRegionFactory.DEFAULT_PENDING_PUTS_CACHE_CONFIGURATION, ppConfig);
+		} finally {
+			factory.stop();
+		}
+	}
+
+	@Test
+	public void testCustomPendingPutsCache() {
+		Properties p = createProperties();
+		p.setProperty(InfinispanRegionFactory.INFINISPAN_CONFIG_RESOURCE_PROP, "alternative-infinispan-configs.xml");
+		InfinispanRegionFactory factory = createRegionFactory(p);
+		try {
+			Configuration ppConfig = factory.getPendingPutsCacheConfiguration();
+			assertEquals(120000, ppConfig.expiration().maxIdle());
+			assertNotEquals(120000, InfinispanRegionFactory.DEFAULT_PENDING_PUTS_CACHE_CONFIGURATION.expiration().maxIdle());
 		} finally {
 			factory.stop();
 		}

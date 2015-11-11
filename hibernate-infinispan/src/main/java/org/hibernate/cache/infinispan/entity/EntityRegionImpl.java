@@ -7,12 +7,12 @@
 package org.hibernate.cache.infinispan.entity;
 
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.access.AccessDelegate;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.EntityRegion;
-import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 
@@ -40,7 +40,7 @@ public class EntityRegionImpl extends BaseTransactionalDataRegion implements Ent
 	 */
 	public EntityRegionImpl(
 			AdvancedCache cache, String name, TransactionManager transactionManager,
-			CacheDataDescription metadata, RegionFactory factory, CacheKeysFactory cacheKeysFactory) {
+			CacheDataDescription metadata, InfinispanRegionFactory factory, CacheKeysFactory cacheKeysFactory) {
 		super( cache, name, transactionManager, metadata, factory, cacheKeysFactory);
 	}
 

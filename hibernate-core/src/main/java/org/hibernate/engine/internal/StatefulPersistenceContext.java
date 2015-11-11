@@ -42,7 +42,6 @@ import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.ManagedEntity;
@@ -489,13 +488,38 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 		final EntityEntry e;
 
-		if( (entity instanceof ManagedEntity) &&  ((ManagedEntity) entity).$$_hibernate_getEntityEntry() != null && status == Status.READ_ONLY) {
-			e = ((ManagedEntity) entity).$$_hibernate_getEntityEntry();
-			e.setStatus( status  );
+		/*
+			IMPORTANT!!!
+
+			The following instanceof checks and castings are intentional.
+
+			DO NOT REFACTOR to make calls through the EntityEntryFactory interface, which would result
+			in polymorphic call sites which will severely impact performance.
+
+			When a virtual method is called via an interface the JVM needs to resolve which concrete
+			implementation to call.  This takes CPU cycles and is a performance penalty.  It also prevents method
+			in-ling which further degrades performance.  Casting to an implementation and making a direct method call
+			removes the virtual call, and allows the methods to be in-lined.  In this critical code path, it has a very
+			large impact on performance to make virtual method calls.
+		*/
+		if (persister.getEntityEntryFactory() instanceof MutableEntityEntryFactory) {
+			//noinspection RedundantCast
+			e = ( (MutableEntityEntryFactory) persister.getEntityEntryFactory() ).createEntityEntry(
+					status,
+					loadedState,
+					rowId,
+					id,
+					version,
+					lockMode,
+					existsInDatabase,
+					persister,
+					disableVersionIncrement,
+					this
+			);
 		}
 		else {
-			final EntityEntryFactory entityEntryFactory = persister.getEntityEntryFactory();
-			e = entityEntryFactory.createEntityEntry(
+			//noinspection RedundantCast
+			e = ( (ImmutableEntityEntryFactory) persister.getEntityEntryFactory() ).createEntityEntry(
 					status,
 					loadedState,
 					rowId,
@@ -511,10 +535,20 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		entityEntryContext.addEntityEntry( entity, e );
-//		entityEntries.put(entity, e);
 
 		setHasNonReadOnlyEnties( status );
 		return e;
+	}
+
+	public EntityEntry addReferenceEntry(
+			final Object entity,
+			final Status status) {
+
+		((ManagedEntity)entity).$$_hibernate_getEntityEntry().setStatus( status );
+		entityEntryContext.addEntityEntry( entity, ((ManagedEntity)entity).$$_hibernate_getEntityEntry() );
+
+		setHasNonReadOnlyEnties( status );
+		return ((ManagedEntity)entity).$$_hibernate_getEntityEntry();
 	}
 
 	@Override

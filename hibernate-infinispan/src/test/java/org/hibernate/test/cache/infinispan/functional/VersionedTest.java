@@ -74,7 +74,7 @@ public class VersionedTest extends AbstractNonInvalidationTest {
 
       assertSingleEmpty();
 
-      TIME_SERVICE.advance(TIMEOUT + 1);
+      TIME_SERVICE.advance(timeout + 1);
       assertEmptyCache();
    }
 
@@ -208,7 +208,7 @@ public class VersionedTest extends AbstractNonInvalidationTest {
 
       assertSingleEmpty();
 
-      TIME_SERVICE.advance(TIMEOUT + 1);
+      TIME_SERVICE.advance(timeout + 1);
       assertEmptyCache();
    }
 
@@ -230,7 +230,7 @@ public class VersionedTest extends AbstractNonInvalidationTest {
       });
 
       assertSingleCacheEntry();
-      TIME_SERVICE.advance(TIMEOUT + 1);
+      TIME_SERVICE.advance(timeout + 1);
       assertSingleCacheEntry();
    }
 

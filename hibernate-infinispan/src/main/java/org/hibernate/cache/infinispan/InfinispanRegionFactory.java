@@ -57,6 +57,7 @@ import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
+import org.infinispan.configuration.cache.ExpirationConfiguration;
 import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.configuration.parsing.ParserRegistry;
 import org.infinispan.factories.GlobalComponentRegistry;
@@ -64,7 +65,6 @@ import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.transaction.TransactionMode;
 import org.infinispan.transaction.lookup.GenericTransactionManagerLookup;
-import org.infinispan.util.concurrent.IsolationLevel;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
@@ -216,13 +216,13 @@ public class InfinispanRegionFactory implements RegionFactory {
 	 * Locking is still required since the putFromLoad validator
 	 * code uses conditional operations (i.e. putIfAbsent)
 	 */
-	public static final Configuration PENDING_PUTS_CACHE_CONFIGURATION = new ConfigurationBuilder()
-			.clustering().cacheMode(CacheMode.LOCAL)
+	public static final Configuration DEFAULT_PENDING_PUTS_CACHE_CONFIGURATION = new ConfigurationBuilder()
+			.clustering().cacheMode(CacheMode.LOCAL).simpleCache(true)
 			.transaction().transactionMode(TransactionMode.NON_TRANSACTIONAL)
 			.expiration().maxIdle(TimeUnit.SECONDS.toMillis(60))
-			.storeAsBinary().enabled(false)
-			.locking().isolationLevel(IsolationLevel.READ_COMMITTED)
-			.jmxStatistics().disable().build();
+			.jmxStatistics().enabled(false).available(false).build();
+
+	private Configuration pendingPutsCacheConfiguration;
 
 	private EmbeddedCacheManager manager;
 
@@ -384,7 +384,24 @@ public class InfinispanRegionFactory implements RegionFactory {
 				}
 			}
 			defineGenericDataTypeCacheConfigurations( properties );
-			manager.defineConfiguration( PENDING_PUTS_CACHE_NAME, PENDING_PUTS_CACHE_CONFIGURATION );
+			pendingPutsCacheConfiguration = manager.getCacheConfiguration(PENDING_PUTS_CACHE_NAME);
+			if (pendingPutsCacheConfiguration == null) {
+				// We need this configuration to be in place, so this is a fallback if the user did not define it
+				pendingPutsCacheConfiguration = DEFAULT_PENDING_PUTS_CACHE_CONFIGURATION;
+				manager.defineConfiguration(PENDING_PUTS_CACHE_NAME, pendingPutsCacheConfiguration);
+			}
+			else {
+				if (pendingPutsCacheConfiguration.clustering().cacheMode().isClustered()) {
+					throw new IllegalStateException("Pending-puts cache must not be clustered!");
+				}
+				if (pendingPutsCacheConfiguration.transaction().transactionMode().isTransactional()) {
+					throw new IllegalStateException("Pending-puts cache must not be transactional!");
+				}
+				ExpirationConfiguration expiration = pendingPutsCacheConfiguration.expiration();
+				if (expiration.maxIdle() <= 0 && expiration.lifespan() <= 0) {
+					log.warn("Pending-puts cache should expire old entries");
+				}
+			}
 		}
 		catch (CacheException ce) {
 			throw ce;
@@ -724,5 +741,9 @@ public class InfinispanRegionFactory implements RegionFactory {
 			override.setExposeStatistics( Boolean.parseBoolean( globalStats ) );
 		}
 		return override;
+	}
+
+	public Configuration getPendingPutsCacheConfiguration() {
+		return pendingPutsCacheConfiguration;
 	}
 }

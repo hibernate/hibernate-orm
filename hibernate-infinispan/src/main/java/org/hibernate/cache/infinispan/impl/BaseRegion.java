@@ -8,16 +8,15 @@ package org.hibernate.cache.infinispan.impl;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
+
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.spi.Region;
-import org.hibernate.cache.spi.RegionFactory;
 
 import org.hibernate.cache.spi.access.AccessType;
 import org.infinispan.AdvancedCache;
@@ -42,7 +41,7 @@ public abstract class BaseRegion implements Region {
 	protected final AdvancedCache cache;
 	protected final AdvancedCache localAndSkipLoadCache;
 	protected final TransactionManager tm;
-	private final RegionFactory factory;
+	protected final InfinispanRegionFactory factory;
 
 	protected volatile long lastRegionInvalidation = Long.MIN_VALUE;
 	protected int invalidations = 0;
@@ -55,7 +54,7 @@ public abstract class BaseRegion implements Region {
 	 * @param transactionManager transaction manager may be needed even for non-transactional caches.
     * @param factory for this region
     */
-	public BaseRegion(AdvancedCache cache, String name, TransactionManager transactionManager, RegionFactory factory) {
+	public BaseRegion(AdvancedCache cache, String name, TransactionManager transactionManager, InfinispanRegionFactory factory) {
 		this.cache = cache;
 		this.name = name;
 		this.tm = transactionManager;
@@ -253,5 +252,9 @@ public abstract class BaseRegion implements Region {
 			log.tracef( "Non-transactional, clear in one go" );
 			localAndSkipLoadCache.clear();
 		}
+	}
+
+	public InfinispanRegionFactory getRegionFactory() {
+		return factory;
 	}
 }

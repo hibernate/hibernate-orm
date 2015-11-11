@@ -80,7 +80,7 @@ public class PutFromLoadValidatorUnitTest {
 	private static EmbeddedCacheManager createCacheManager() {
 		EmbeddedCacheManager cacheManager = TestCacheManagerFactory.createCacheManager(false);
 		cacheManager.defineConfiguration(InfinispanRegionFactory.PENDING_PUTS_CACHE_NAME,
-				InfinispanRegionFactory.PENDING_PUTS_CACHE_CONFIGURATION);
+				InfinispanRegionFactory.DEFAULT_PENDING_PUTS_CACHE_CONFIGURATION);
 		return cacheManager;
 	}
 
@@ -513,7 +513,7 @@ public class PutFromLoadValidatorUnitTest {
 	@TestForIssue(jiraKey = "HHH-9928")
 	public void testGetForNullReleasePuts() {
 		EmbeddedCacheManager cm = TestCacheManagerFactory.createCacheManager(false);
-		ConfigurationBuilder cb = new ConfigurationBuilder().read(InfinispanRegionFactory.PENDING_PUTS_CACHE_CONFIGURATION);
+		ConfigurationBuilder cb = new ConfigurationBuilder().read(InfinispanRegionFactory.DEFAULT_PENDING_PUTS_CACHE_CONFIGURATION);
 		cb.expiration().maxIdle(500);
 		cm.defineConfiguration(InfinispanRegionFactory.PENDING_PUTS_CACHE_NAME, cb.build());
 		withCacheManager(new CacheManagerCallable(cm) {

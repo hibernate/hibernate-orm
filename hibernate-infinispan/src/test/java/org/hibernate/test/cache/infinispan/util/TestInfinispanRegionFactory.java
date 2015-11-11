@@ -14,7 +14,6 @@ import org.infinispan.util.TimeService;
 
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Factory that should be overridden in tests.
@@ -62,6 +61,9 @@ public class TestInfinispanRegionFactory extends InfinispanRegionFactory {
 	}
 
 	protected void amendCacheConfiguration(String cacheName, ConfigurationBuilder configurationBuilder) {
+		if (cacheName.equals(InfinispanRegionFactory.PENDING_PUTS_CACHE_NAME)) {
+			return;
+		}
 		if (transactional) {
 			if (!cacheName.endsWith("query") && !cacheName.equals(DEF_TIMESTAMPS_RESOURCE)) {
 				configurationBuilder.transaction().transactionMode(TransactionMode.TRANSACTIONAL).useSynchronization(true);

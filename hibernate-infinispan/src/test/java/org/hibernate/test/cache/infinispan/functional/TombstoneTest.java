@@ -52,7 +52,7 @@ public class TombstoneTest extends AbstractNonInvalidationTest {
       assertEquals(1, contents.size());
       assertEquals(Tombstone.class, contents.get(itemId).getClass());
 
-      TIME_SERVICE.advance(TIMEOUT + 1);
+      TIME_SERVICE.advance(timeout + 1);
       assertNull(entityCache.get(itemId)); // force expiration
       contents = Caches.entrySet(entityCache).toMap();
       assertEquals(Collections.EMPTY_MAP, contents);
@@ -81,7 +81,7 @@ public class TombstoneTest extends AbstractNonInvalidationTest {
       Object value = contents.get(itemId);
       if (value instanceof FutureUpdate) {
          // DB did not blocked two concurrent updates
-         TIME_SERVICE.advance(TIMEOUT + 1);
+         TIME_SERVICE.advance(timeout + 1);
          assertNull(entityCache.get(itemId));
          contents = Caches.entrySet(entityCache).toMap();
          assertEquals(Collections.EMPTY_MAP, contents);
@@ -89,7 +89,7 @@ public class TombstoneTest extends AbstractNonInvalidationTest {
          // DB left only one update to proceed, and the entry should not be expired
          assertNotNull(value);
          assertEquals(StandardCacheEntryImpl.class, value.getClass());
-         TIME_SERVICE.advance(TIMEOUT + 1);
+         TIME_SERVICE.advance(timeout + 1);
          assertEquals(value, entityCache.get(itemId));
       }
    }
@@ -118,7 +118,7 @@ public class TombstoneTest extends AbstractNonInvalidationTest {
       assertEquals(1, contents.size());
       assertEquals(Tombstone.class, contents.get(itemId).getClass());
 
-      TIME_SERVICE.advance(TIMEOUT + 1);
+      TIME_SERVICE.advance(timeout + 1);
       assertNull(entityCache.get(itemId)); // force expiration
       contents = Caches.entrySet(entityCache).toMap();
       assertEquals(Collections.EMPTY_MAP, contents);
@@ -149,14 +149,14 @@ public class TombstoneTest extends AbstractNonInvalidationTest {
       Object value = contents.get(itemId);
       if (removeSucceeded) {
          assertEquals(Tombstone.class, value.getClass());
-         TIME_SERVICE.advance(TIMEOUT + 1);
+         TIME_SERVICE.advance(timeout + 1);
          assertNull(entityCache.get(itemId)); // force expiration
          contents = Caches.entrySet(entityCache).toMap();
          assertEquals(Collections.EMPTY_MAP, contents);
       } else {
          assertNotNull(value);
          assertEquals(StandardCacheEntryImpl.class, value.getClass());
-         TIME_SERVICE.advance(TIMEOUT + 1);
+         TIME_SERVICE.advance(timeout + 1);
          assertEquals(value, entityCache.get(itemId));
       }
    }
@@ -217,7 +217,7 @@ public class TombstoneTest extends AbstractNonInvalidationTest {
       Object value = contents.get(itemId);
       assertNotNull(value);
       assertEquals(StandardCacheEntryImpl.class, value.getClass());
-      TIME_SERVICE.advance(TIMEOUT + 1);
+      TIME_SERVICE.advance(timeout + 1);
       assertEquals(value, entityCache.get(itemId));
    }
 

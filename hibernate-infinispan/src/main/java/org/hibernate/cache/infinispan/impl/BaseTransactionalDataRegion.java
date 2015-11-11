@@ -21,7 +21,6 @@ import org.hibernate.cache.infinispan.util.Tombstone;
 import org.hibernate.cache.infinispan.util.VersionedEntry;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CacheKeysFactory;
-import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TransactionalDataRegion;
 
 import org.hibernate.cache.spi.access.AccessType;
@@ -79,7 +78,7 @@ public abstract class BaseTransactionalDataRegion
 	 */
 	public BaseTransactionalDataRegion(
 			AdvancedCache cache, String name, TransactionManager transactionManager,
-			CacheDataDescription metadata, RegionFactory factory, CacheKeysFactory cacheKeysFactory) {
+			CacheDataDescription metadata, InfinispanRegionFactory factory, CacheKeysFactory cacheKeysFactory) {
 		super( cache, name, transactionManager, factory);
 		this.metadata = metadata;
 		this.cacheKeysFactory = cacheKeysFactory;
@@ -87,8 +86,7 @@ public abstract class BaseTransactionalDataRegion
 		Configuration configuration = cache.getCacheConfiguration();
 		requiresTransaction = configuration.transaction().transactionMode().isTransactional()
 				&& !configuration.transaction().autoCommit();
-		// TODO: make these timeouts configurable
-		tombstoneExpiration = InfinispanRegionFactory.PENDING_PUTS_CACHE_CONFIGURATION.expiration().maxIdle();
+		tombstoneExpiration = factory.getPendingPutsCacheConfiguration().expiration().maxIdle();
 		if (!isRegionAccessStrategyEnabled()) {
 			strategy = Strategy.NONE;
 		}

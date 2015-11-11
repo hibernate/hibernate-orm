@@ -2,7 +2,6 @@ package org.hibernate.test.cache.infinispan.functional;
 
 import org.hibernate.PessimisticLockException;
 import org.hibernate.StaleStateException;
-import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
 import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.spi.Region;
@@ -37,7 +36,6 @@ import static org.junit.Assert.assertEquals;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class AbstractNonInvalidationTest extends SingleNodeTest {
-   protected static final long TIMEOUT = InfinispanRegionFactory.PENDING_PUTS_CACHE_CONFIGURATION.expiration().maxIdle();
    protected static final int WAIT_TIMEOUT = 2000;
    protected static final TestTimeService TIME_SERVICE = new TestTimeService();
 
@@ -46,6 +44,7 @@ public abstract class AbstractNonInvalidationTest extends SingleNodeTest {
    protected AdvancedCache entityCache;
    protected long itemId;
    protected Region region;
+   protected long timeout;
 
    @BeforeClassOnce
    public void setup() {
@@ -69,6 +68,7 @@ public abstract class AbstractNonInvalidationTest extends SingleNodeTest {
       super.startUp();
       region = sessionFactory().getSecondLevelCacheRegion(Item.class.getName());
       entityCache = ((EntityRegionImpl) region).getCache();
+      timeout = ((EntityRegionImpl) region).getRegionFactory().getPendingPutsCacheConfiguration().expiration().maxIdle();
    }
 
    @Before

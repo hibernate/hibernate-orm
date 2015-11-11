@@ -9,9 +9,9 @@ package org.hibernate.cache.infinispan.timestamp;
 import javax.transaction.Transaction;
 
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.impl.BaseGeneralDataRegion;
 import org.hibernate.cache.infinispan.util.Caches;
-import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
 
 import org.hibernate.engine.spi.SessionImplementor;
@@ -39,7 +39,7 @@ public class TimestampsRegionImpl extends BaseGeneralDataRegion implements Times
     */
 	public TimestampsRegionImpl(
 			AdvancedCache cache, String name,
-			RegionFactory factory) {
+			InfinispanRegionFactory factory) {
 		super( cache, name, factory );
 		this.removeCache = Caches.ignoreReturnValuesCache( cache );
 

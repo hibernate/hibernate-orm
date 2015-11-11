@@ -65,7 +65,7 @@
       <!-- This configuration should match to InfinispanRegionFactory.DEFAULT_PENDING_PUTS_CACHE_CONFIGURATION -->
       <local-cache name="pending-puts" statistics="false">
          <transaction mode="NONE"/>
-         <expiration max-idle="60000" />
+         <expiration max-idle="120000" />
       </local-cache>
    </cache-container>
 

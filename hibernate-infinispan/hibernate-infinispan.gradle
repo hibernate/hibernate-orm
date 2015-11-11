@@ -58,7 +58,7 @@ test {
    // Use Infinispan's test JGroups stack that uses TEST_PING
    systemProperties['hibernate.cache.infinispan.jgroups_cfg'] = '2lc-test-tcp.xml'
    // systemProperties['log4j.configuration'] = 'file:/log4j/log4j-infinispan.xml'
-   enabled = false
+   enabled = project.hasProperty('testInfinispan')
    // Without this I have trouble running specific test using --tests switch
    doFirst {
       filter.includePatterns.each {

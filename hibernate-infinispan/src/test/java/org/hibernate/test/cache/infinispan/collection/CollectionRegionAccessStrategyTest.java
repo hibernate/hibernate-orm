@@ -77,7 +77,7 @@ public class CollectionRegionAccessStrategyTest extends
 	public void doPutFromLoadRemoveDoesNotProduceStaleDataInvalidation() {
 		final CountDownLatch pferLatch = new CountDownLatch( 1 );
 		final CountDownLatch removeLatch = new CountDownLatch( 1 );
-		withCacheManager(new CacheManagerCallable(createCacheManager()) {
+		withCacheManager(new CacheManagerCallable(createCacheManager(localRegion.getRegionFactory())) {
 			@Override
 			public void call() {
 				PutFromLoadValidator validator = getPutFromLoadValidator(remoteRegion.getCache(), cm, removeLatch, pferLatch);
@@ -126,10 +126,10 @@ public class CollectionRegionAccessStrategyTest extends
 		});
 	}
 
-	private static EmbeddedCacheManager createCacheManager() {
+	private static EmbeddedCacheManager createCacheManager(InfinispanRegionFactory regionFactory) {
 		EmbeddedCacheManager cacheManager = TestCacheManagerFactory.createCacheManager(false);
 		cacheManager.defineConfiguration(InfinispanRegionFactory.PENDING_PUTS_CACHE_NAME,
-				InfinispanRegionFactory.PENDING_PUTS_CACHE_CONFIGURATION);
+				regionFactory.getPendingPutsCacheConfiguration());
 		return cacheManager;
 	}
 

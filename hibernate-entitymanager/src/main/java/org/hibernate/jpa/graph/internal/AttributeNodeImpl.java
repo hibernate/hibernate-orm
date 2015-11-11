@@ -37,12 +37,15 @@ import org.hibernate.type.Type;
 public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImplementor<T>, HibernateEntityManagerFactoryAware {
 	private final EntityManagerFactoryImpl entityManagerFactory;
 	private final Attribute<?,T> attribute;
+	private final ManagedType managedType;
 
 	private Map<Class, Subgraph> subgraphMap;
 	private Map<Class, Subgraph> keySubgraphMap;
 
-	public <X> AttributeNodeImpl(EntityManagerFactoryImpl entityManagerFactory, Attribute<X,T> attribute) {
+	public <X> AttributeNodeImpl(
+			EntityManagerFactoryImpl entityManagerFactory, ManagedType managedType, Attribute<X, T> attribute) {
 		this.entityManagerFactory = entityManagerFactory;
+		this.managedType = managedType;
 		this.attribute = attribute;
 	}
 
@@ -51,10 +54,12 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 	 */
 	private AttributeNodeImpl(
 			EntityManagerFactoryImpl entityManagerFactory,
-			Attribute<?,T> attribute,
+			ManagedType managedType,
+			Attribute<?, T> attribute,
 			Map<Class, Subgraph> subgraphMap,
 			Map<Class, Subgraph> keySubgraphMap) {
 		this.entityManagerFactory = entityManagerFactory;
+		this.managedType = managedType;
 		this.attribute = attribute;
 		this.subgraphMap = subgraphMap;
 		this.keySubgraphMap = keySubgraphMap;
@@ -120,7 +125,9 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 			subgraphMap = new HashMap<Class, Subgraph>();
 		}
 
-		final AssociationType attributeType = (AssociationType) Helper.resolveType( sessionFactory(), attribute );
+		final Helper.AttributeSource attributeSource = Helper.resolveAttributeSource( sessionFactory(), managedType );
+		final AssociationType attributeType = (AssociationType) attributeSource.findType( attribute.getName() );
+
 		final Joinable joinable = attributeType.getAssociatedJoinable( sessionFactory() );
 
 		if ( joinable.isCollection() ) {
@@ -256,6 +263,7 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 	public AttributeNodeImpl<T> makeImmutableCopy() {
 		return new AttributeNodeImpl<T>(
 				this.entityManagerFactory,
+				this.managedType,
 				this.attribute,
 				makeSafeMapCopy( subgraphMap ),
 				makeSafeMapCopy( keySubgraphMap )

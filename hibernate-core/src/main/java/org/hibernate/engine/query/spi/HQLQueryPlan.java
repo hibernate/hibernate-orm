@@ -215,8 +215,9 @@ public class HQLQueryPlan implements Serializable {
 		final List combinedResults = new ArrayList( guessedResultSize );
 		final IdentitySet distinction;
 		if ( needsLimit ) {
-			distinction = new IdentitySet(guessedResultSize);
-		} else {
+			distinction = new IdentitySet( guessedResultSize );
+		}
+		else {
 			distinction = null;
 		}
 		int includedCount = -1;

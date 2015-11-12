@@ -28,7 +28,7 @@ public class ExchangeRateKey
         this.currency2 = currency2;
     }
 
-    @Column(nullable = false)
+    @Column(name="`date`", nullable = false)
     protected long date;
     
     @javax.persistence.ManyToOne(fetch = FetchType.LAZY, optional = false)

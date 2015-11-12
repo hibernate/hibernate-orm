@@ -200,4 +200,13 @@ public interface DeprecationLogger extends BasicLogger {
 			value = "Found use of deprecated transaction factory setting [%s]; use the new TransactionCoordinatorBuilder settings [%s] instead"
 	)
 	void logDeprecatedTransactionFactorySetting(String legacySettingName, String updatedSettingName);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000019,
+			value = "You are using the deprecated legacy bytecode enhancement feature which has been superseded by a vastly improved bytecode enhancer."
+	)
+	void logDeprecatedBytecodeEnhancement();
+
+
 }

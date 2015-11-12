@@ -20,6 +20,7 @@ import org.hibernate.bytecode.buildtime.spi.Logger;
 import org.hibernate.bytecode.internal.javassist.BytecodeProviderImpl;
 import org.hibernate.bytecode.internal.javassist.FieldHandled;
 import org.hibernate.bytecode.spi.ClassTransformer;
+import org.hibernate.internal.log.DeprecationLogger;
 
 /**
  * Strategy for performing build-time instrumentation of persistent classes in order to enable
@@ -42,6 +43,7 @@ public class JavassistInstrumenter extends AbstractInstrumenter {
 	 */
 	public JavassistInstrumenter(Logger logger, Options options) {
 		super( logger, options );
+		DeprecationLogger.DEPRECATION_LOGGER.logDeprecatedBytecodeEnhancement();
 	}
 
 	@Override

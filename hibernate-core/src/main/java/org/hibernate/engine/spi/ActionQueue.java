@@ -137,7 +137,7 @@ public class ActionQueue {
 				l.clear();
 			}
 		}
-		if(unresolvedInsertions != null) {
+		if( unresolvedInsertions != null ) {
 			unresolvedInsertions.clear();
 		}
 	}
@@ -169,7 +169,7 @@ public class ActionQueue {
 				LOG.tracev( "Adding insert with non-nullable, transient entities; insert=[{0}], dependencies=[{1}]", insert,
 							nonNullableTransientDependencies.toLoggableString( insert.getSession() ) );
 			}
-			if(unresolvedInsertions == null) {
+			if( unresolvedInsertions == null ) {
 				unresolvedInsertions = new UnresolvedEntityInsertActions();
 			}
 			unresolvedInsertions.addUnresolvedEntityInsertAction( insert, nonNullableTransientDependencies );
@@ -185,13 +185,13 @@ public class ActionQueue {
 		}
 		else {
 			LOG.trace( "Adding resolved non-early insert action." );
-			if(insertions == null) {
+			if( insertions == null ) {
 				insertions = new ExecutableList<AbstractEntityInsertAction>( new InsertActionSorter() );
 			}
 			insertions.add(insert);
 		}
 		insert.makeEntityManaged();
-		if(unresolvedInsertions != null) {
+		if( unresolvedInsertions != null ) {
 			for (AbstractEntityInsertAction resolvedAction : unresolvedInsertions.resolveDependentActions(insert.getInstance(), session)) {
 				addResolvedEntityInsertAction(resolvedAction);
 			}
@@ -214,7 +214,7 @@ public class ActionQueue {
 	 * @param action The action representing the entity deletion
 	 */
 	public void addAction(EntityDeleteAction action) {
-		if(deletions == null) {
+		if( deletions == null ) {
 			deletions = new ExecutableList<EntityDeleteAction>();
 		}
 		deletions.add( action );
@@ -238,7 +238,7 @@ public class ActionQueue {
 	 * @param action The action representing the entity update
 	 */
 	public void addAction(EntityUpdateAction action) {
-		if(updates == null) {
+		if( updates == null ) {
 			updates = new ExecutableList<EntityUpdateAction>();
 		}
 		updates.add( action );
@@ -262,7 +262,7 @@ public class ActionQueue {
 	 * @param action The action representing the removal of a collection
 	 */
 	public void addAction(CollectionRemoveAction action) {
-		if(collectionRemovals == null) {
+		if( collectionRemovals == null ) {
 			collectionRemovals = new ExecutableList<CollectionRemoveAction>();
 		}
 		collectionRemovals.add( action );
@@ -441,7 +441,7 @@ public class ActionQueue {
 	 * @return {@code true} if insertions or deletions are currently queued; {@code false} otherwise.
 	 */
 	public boolean areInsertionsOrDeletionsQueued() {
-		return (insertions != null && !insertions.isEmpty()) || hasUnresolvedEntityInsertActions() || (deletions != null && !deletions.isEmpty()) || (orphanRemovals != null && !orphanRemovals.isEmpty());
+		return ( insertions != null && !insertions.isEmpty() ) || hasUnresolvedEntityInsertActions() || (deletions != null && !deletions.isEmpty()) || (orphanRemovals != null && !orphanRemovals.isEmpty());
 	}
 
 	/**
@@ -457,7 +457,7 @@ public class ActionQueue {
 		}
 		for ( int i = 0; i < EXECUTABLE_LISTS.length; ++i ) {
 			ExecutableList<?> l = EXECUTABLE_LISTS[i].get(this);
-			if (areTablesToBeUpdated(l, tables)) {
+			if ( areTablesToBeUpdated(l, tables) ) {
 				return true;
 			}
 		}
@@ -595,21 +595,21 @@ public class ActionQueue {
 	}
 
 	public int numberOfCollectionRemovals() {
-		if(collectionRemovals == null) {
+		if( collectionRemovals == null ) {
 			return 0;
 		}
 		return collectionRemovals.size();
 	}
 
 	public int numberOfCollectionUpdates() {
-		if(collectionUpdates == null) {
+		if( collectionUpdates == null ) {
 			return 0;
 		}
 		return collectionUpdates.size();
 	}
 
 	public int numberOfCollectionCreations() {
-		if(collectionCreations == null) {
+		if( collectionCreations == null ) {
 			return 0;
 		}
 		return collectionCreations.size();
@@ -622,14 +622,14 @@ public class ActionQueue {
 	}
 
 	public int numberOfUpdates() {
-		if(updates == null) {
+		if( updates == null ) {
 			return 0;
 		}
 		return updates.size();
 	}
 
 	public int numberOfInsertions() {
-		if(insertions == null) {
+		if( insertions == null ) {
 			return 0;
 		}
 		return insertions.size();
@@ -682,7 +682,7 @@ public class ActionQueue {
 			// sort the updates by pk
 			updates.sort();
 		}
-		if ( session.getFactory().getSessionFactoryOptions().isOrderInsertsEnabled() && insertions != null) {
+		if ( session.getFactory().getSessionFactoryOptions().isOrderInsertsEnabled() && insertions != null ) {
 			insertions.sort();
 		}
 	}
@@ -718,10 +718,10 @@ public class ActionQueue {
 	}
 
 	public boolean hasAnyQueuedActions() {
-		return (updates != null && !updates.isEmpty()) || (insertions != null && !insertions.isEmpty()) || hasUnresolvedEntityInsertActions()
-				|| (deletions != null && !deletions.isEmpty()) || (collectionUpdates != null && !collectionUpdates.isEmpty())
-				|| (collectionQueuedOps != null && !collectionQueuedOps.isEmpty()) || (collectionRemovals != null && !collectionRemovals.isEmpty())
-				|| (collectionCreations != null && !collectionCreations.isEmpty());
+		return ( updates != null && !updates.isEmpty() ) || ( insertions != null && !insertions.isEmpty() ) || hasUnresolvedEntityInsertActions()
+				|| ( deletions != null && !deletions.isEmpty()) || ( collectionUpdates != null && !collectionUpdates.isEmpty() )
+				|| ( collectionQueuedOps != null && !collectionQueuedOps.isEmpty() ) || ( collectionRemovals != null && !collectionRemovals.isEmpty() )
+				|| ( collectionCreations != null && !collectionCreations.isEmpty() );
 	}
 
 	public void unScheduleDeletion(EntityEntry entry, Object rescuedEntity) {
@@ -731,8 +731,8 @@ public class ActionQueue {
 				rescuedEntity = initializer.getImplementation( session );
 			}
 		}
-		if(deletions != null) {
-			for (int i = 0; i < deletions.size(); i++) {
+		if( deletions != null ) {
+			for ( int i = 0; i < deletions.size(); i++ ) {
 				EntityDeleteAction action = deletions.get(i);
 				if (action.getInstance() == rescuedEntity) {
 					deletions.remove(i);
@@ -740,8 +740,8 @@ public class ActionQueue {
 				}
 			}
 		}
-		if(orphanRemovals != null) {
-			for (int i = 0; i < orphanRemovals.size(); i++) {
+		if( orphanRemovals != null ) {
+			for ( int i = 0; i < orphanRemovals.size(); i++ ) {
 				EntityDeleteAction action = orphanRemovals.get(i);
 				if (action.getInstance() == rescuedEntity) {
 					orphanRemovals.remove(i);
@@ -760,14 +760,14 @@ public class ActionQueue {
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
 		LOG.trace( "Serializing action-queue" );
-		if(unresolvedInsertions == null) {
+		if( unresolvedInsertions == null ) {
 			unresolvedInsertions = new UnresolvedEntityInsertActions();
 		}
 		unresolvedInsertions.serialize( oos );
 
 		for ( ListProvider p : EXECUTABLE_LISTS ) {
 			ExecutableList<?> l = p.get(this);
-			if(l == null) {
+			if( l == null ) {
 				oos.writeBoolean(false);
 			} else {
 				oos.writeBoolean(true);

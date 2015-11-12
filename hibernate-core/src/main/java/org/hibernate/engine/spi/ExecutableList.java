@@ -111,14 +111,14 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 		if ( querySpaces == null ) {
 			for ( E e : executables ) {
 				Serializable[] propertySpaces = e.getPropertySpaces();
-				if (propertySpaces != null && propertySpaces.length > 0) {
-					if(querySpaces == null) {
+				if ( propertySpaces != null && propertySpaces.length > 0 ) {
+					if( querySpaces == null ) {
 						querySpaces = new HashSet<Serializable>();
 					}
 					Collections.addAll( querySpaces, propertySpaces );
 				}
 			}
-			if(querySpaces == null) {
+			if( querySpaces == null ) {
 				return Collections.emptySet();
 			}
 		}

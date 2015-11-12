@@ -95,29 +95,77 @@ public class ActionQueue {
 	static {
 		EXECUTABLE_LISTS = new ListProvider[8];
 		EXECUTABLE_LISTS[0] = new ListProvider() {
-			ExecutableList<?> get(ActionQueue instance) { return instance.orphanRemovals; }
-			ExecutableList<?> init(ActionQueue instance) { return  instance.orphanRemovals = new ExecutableList<OrphanRemovalAction>();}  };
+			ExecutableList<?> get(ActionQueue instance) {
+				return instance.orphanRemovals;
+			}
+
+			ExecutableList<?> init(ActionQueue instance) {
+				return instance.orphanRemovals = new ExecutableList<OrphanRemovalAction>();
+			}
+		};
 		EXECUTABLE_LISTS[1] = new ListProvider() {
-			ExecutableList<?> get(ActionQueue instance) { return instance.insertions; }
-			ExecutableList<?> init(ActionQueue instance) { return  instance.insertions = new ExecutableList<AbstractEntityInsertAction>( new InsertActionSorter() );}  };
+			ExecutableList<?> get(ActionQueue instance) {
+				return instance.insertions;
+			}
+
+			ExecutableList<?> init(ActionQueue instance) {
+				return instance.insertions = new ExecutableList<AbstractEntityInsertAction>( new InsertActionSorter() );
+			}
+		};
 		EXECUTABLE_LISTS[2] = new ListProvider() {
-			ExecutableList<?> get(ActionQueue instance) { return instance.updates; }
-			ExecutableList<?> init(ActionQueue instance) { return  instance.updates = new ExecutableList<EntityUpdateAction>();}  };
+			ExecutableList<?> get(ActionQueue instance) {
+				return instance.updates;
+			}
+
+			ExecutableList<?> init(ActionQueue instance) {
+				return instance.updates = new ExecutableList<EntityUpdateAction>();
+			}
+		};
 		EXECUTABLE_LISTS[3] = new ListProvider() {
-			ExecutableList<?> get(ActionQueue instance) { return instance.collectionQueuedOps; }
-			ExecutableList<?> init(ActionQueue instance) { return  instance.collectionQueuedOps = new ExecutableList<QueuedOperationCollectionAction>();}  };
+			ExecutableList<?> get(ActionQueue instance) {
+				return instance.collectionQueuedOps;
+			}
+
+			ExecutableList<?> init(ActionQueue instance) {
+				return instance.collectionQueuedOps = new ExecutableList<QueuedOperationCollectionAction>();
+			}
+		};
 		EXECUTABLE_LISTS[4] = new ListProvider() {
-			ExecutableList<?> get(ActionQueue instance) { return instance.collectionRemovals; }
-			ExecutableList<?> init(ActionQueue instance) { return  instance.collectionRemovals = new ExecutableList<CollectionRemoveAction>();}  };
+			ExecutableList<?> get(ActionQueue instance) {
+				return instance.collectionRemovals;
+			}
+
+			ExecutableList<?> init(ActionQueue instance) {
+				return instance.collectionRemovals = new ExecutableList<CollectionRemoveAction>();
+			}
+		};
 		EXECUTABLE_LISTS[5] = new ListProvider() {
-			ExecutableList<?> get(ActionQueue instance) { return instance.collectionUpdates; }
-			ExecutableList<?> init(ActionQueue instance) { return  instance.collectionUpdates = new ExecutableList<CollectionUpdateAction>();}  };
+			ExecutableList<?> get(ActionQueue instance) {
+				return instance.collectionUpdates;
+			}
+
+			ExecutableList<?> init(ActionQueue instance) {
+				return instance.collectionUpdates = new ExecutableList<CollectionUpdateAction>();
+			}
+		};
 		EXECUTABLE_LISTS[6] = new ListProvider() {
-			ExecutableList<?> get(ActionQueue instance) { return instance.collectionCreations; }
-			ExecutableList<?> init(ActionQueue instance) { return  instance.collectionCreations = new ExecutableList<CollectionRecreateAction>();}  };
+			ExecutableList<?> get(ActionQueue instance) {
+				return instance.collectionCreations;
+			}
+
+			ExecutableList<?> init(ActionQueue instance) {
+				return instance.collectionCreations = new ExecutableList<CollectionRecreateAction>();
+			}
+		};
 		EXECUTABLE_LISTS[7] = new ListProvider() {
-			ExecutableList<?> get(ActionQueue instance) { return instance.deletions; }
-			ExecutableList<?> init(ActionQueue instance) { return  instance.deletions = new ExecutableList<EntityDeleteAction>();}  };
+			ExecutableList<?> get(ActionQueue instance) {
+				return instance.deletions;
+			}
+
+			ExecutableList<?> init(ActionQueue instance) {
+				return instance.deletions = new ExecutableList<EntityDeleteAction>();
+			}
+		};
 	}
 
 	/**
@@ -769,9 +817,10 @@ public class ActionQueue {
 			ExecutableList<?> l = p.get(this);
 			if( l == null ) {
 				oos.writeBoolean(false);
-			} else {
-				oos.writeBoolean(true);
-				l.writeExternal(oos);
+			}
+			else {
+				oos.writeBoolean( true );
+				l.writeExternal( oos );
 			}
 		}
 	}

@@ -3570,6 +3570,7 @@ public class ModelBinder {
 								: FetchMode.JOIN
 				);
 
+				elementBinding.setForeignKeyName( elementSource.getExplicitForeignKeyName() );
 
 				elementBinding.setReferencedEntityName( elementSource.getReferencedEntityName() );
 				if ( StringHelper.isNotEmpty( elementSource.getReferencedEntityAttributeName() ) ) {

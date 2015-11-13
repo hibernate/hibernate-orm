@@ -13,8 +13,12 @@ import java.sql.SQLException;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.SQLServer2012Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.exception.GenericJDBCException;
 import org.hibernate.jdbc.Work;
@@ -31,6 +35,19 @@ public class SequenceValueExtractor {
 		this.dialect = dialect;
 		if ( dialect instanceof DerbyDialect ) {
 			queryString = "VALUES SYSCS_UTIL.SYSCS_PEEK_AT_SEQUENCE('HIBERNATE_ORM_TEST', '" + sequenceName.toUpperCase() + "')";
+		}
+		else if ( dialect instanceof DB2Dialect ) {
+			queryString = "values PREVIOUS value for " + sequenceName;
+		}
+		else if ( dialect instanceof Oracle8iDialect ) {
+			queryString = "select " + sequenceName + ".currval from dual";
+		}
+		else if ( dialect instanceof SQLServer2012Dialect ) {
+			queryString = "SELECT CONVERT(varchar(200), Current_value) FROM SYS.Sequences WHERE name = '" + sequenceName + "'";
+		}
+		else if ( dialect instanceof HSQLDialect ) {
+
+			queryString = "call current value for " + sequenceName;
 		}
 		else {
 			queryString = "select currval('" + sequenceName + "');";

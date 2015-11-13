@@ -1014,6 +1014,7 @@
                 <xs:attribute name="node" type="xs:string"/>
                 <xs:attribute name="not-found" default="exception" type="NotFoundEnum"/>
                 <xs:attribute name="not-null" type="xs:boolean"/>
+                <xs:attribute name="on-delete" default="noaction" type="OnDeleteEnum"/>
                 <xs:attribute name="optimistic-lock" default="true" type="xs:boolean"/>
                 <!-- only supported for properties of a class (not component) -->
                 <xs:attribute name="outer-join" type="OuterJoinEnum"/>

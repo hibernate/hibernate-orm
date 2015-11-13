@@ -17,10 +17,8 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.exception.GenericJDBCException;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.type.StandardBasicTypes;
@@ -101,20 +99,6 @@ public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 	@Test
 	public void testHiLoAlgorithm() {
 		sessionImpl = (SessionImpl) sessionFactory.openSession();
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// initially sequence should be uninitialized
-		if ( sessionFactory.getDialect() instanceof PostgreSQL81Dialect ) {
-			try {
-				assertEquals( 0L, extractSequenceValue() );
-			}
-			catch (GenericJDBCException ge) {
-				// PostgreSQL throws an exception if currval is called before nextval for this sequence in this session
-			}
-		}
-		else {
-			assertEquals( 0L, extractSequenceValue() );
-		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// historically the hilo generators skipped the initial block of values;

@@ -12,9 +12,9 @@ import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.criterion.Projections;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
@@ -107,7 +107,7 @@ public class SaveOrUpdateTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	public void testSaveOrUpdateDeepTreeWithGeneratedId() {
-		boolean instrumented = FieldInterceptionHelper.isInstrumented( new NumberedNode() );
+		boolean instrumented = PersistentAttributeInterceptable.class.isAssignableFrom( NumberedNode.class );
 		clearCounts();
 
 		Session s = openSession();
@@ -283,7 +283,7 @@ public class SaveOrUpdateTest extends BaseNonConfigCoreFunctionalTestCase {
 	public void testSaveOrUpdateGot() {
 		clearCounts();
 
-		boolean instrumented = FieldInterceptionHelper.isInstrumented( new NumberedNode() );
+		boolean instrumented = PersistentAttributeInterceptable.class.isAssignableFrom( NumberedNode.class );
 
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();

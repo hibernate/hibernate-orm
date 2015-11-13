@@ -7,7 +7,6 @@
 package org.hibernate.test.bytecode.enhancement.lazy;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.Hibernate;
@@ -17,8 +16,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.proxy.HibernateProxy;
 
 import org.hibernate.test.bytecode.enhancement.AbstractEnhancerTestTask;
-import org.hibernate.test.bytecode.enhancement.EnhancerTestUtils;
-import org.junit.Assert;
+import org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;

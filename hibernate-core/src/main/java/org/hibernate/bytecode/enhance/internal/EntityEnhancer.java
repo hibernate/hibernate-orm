@@ -25,7 +25,7 @@ import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
-import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoader;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 
@@ -315,7 +315,7 @@ public class EntityEnhancer extends Enhancer {
 							EnhancerConstants.TRACKER_COLLECTION_CLEAR_NAME,
 							EnhancerConstants.TRACKER_COLLECTION_NAME,
 							COLLECTION_TRACKER_IMPL,
-							LazyAttributeLoader.class.getName()
+							LazyAttributeLoadingInterceptor.class.getName()
 					)
 			);
 
@@ -324,7 +324,7 @@ public class EntityEnhancer extends Enhancer {
 						String.format(
 										"  if(%1$s != null && %1$s instanceof %2$s) lazyInterceptor = (%2$s) %1$s;%n%n",
 								EnhancerConstants.INTERCEPTOR_FIELD_NAME,
-								LazyAttributeLoader.class.getName()
+								LazyAttributeLoadingInterceptor.class.getName()
 						)
 				);
 			}

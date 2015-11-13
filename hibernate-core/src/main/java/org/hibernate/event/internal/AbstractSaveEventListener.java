@@ -14,7 +14,6 @@ import org.hibernate.NonUniqueObjectException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.internal.EntityIdentityInsertAction;
 import org.hibernate.action.internal.EntityInsertAction;
-import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
@@ -288,8 +287,6 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 			insert.handleNaturalIdPostSaveNotifications( id );
 		}
 
-		markInterceptorDirty( entity, persister, source );
-
 		EntityEntry newEntry = source.getPersistenceContext().getEntry( entity );
 
 		if ( newEntry != original ) {
@@ -324,18 +321,6 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 			);
 			source.getActionQueue().addAction( insert );
 			return insert;
-		}
-	}
-
-	private void markInterceptorDirty(Object entity, EntityPersister persister, EventSource source) {
-		if ( persister.getInstrumentationMetadata().isInstrumented() ) {
-			FieldInterceptor interceptor = persister.getInstrumentationMetadata().injectInterceptor(
-					entity,
-					persister.getEntityName(),
-					null,
-					source
-			);
-			interceptor.dirty();
 		}
 	}
 

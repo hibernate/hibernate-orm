@@ -6,16 +6,12 @@
  */
 package org.hibernate.bytecode.spi;
 
-import org.hibernate.bytecode.buildtime.spi.ClassFilter;
-import org.hibernate.bytecode.buildtime.spi.FieldFilter;
-
 /**
  * Contract for providers of bytecode services to Hibernate.
  * <p/>
- * Bytecode requirements break down into basically 3 areas<ol>
+ * Bytecode requirements break down into the following areas<ol>
  *     <li>proxy generation (both for runtime-lazy-loading and basic proxy generation) {@link #getProxyFactoryFactory()}</li>
  *     <li>bean reflection optimization {@link #getReflectionOptimizer}</li>
- *     <li>field-access instrumentation {@link #getTransformer}</li>
  * </ol>
  *
  * @author Steve Ebersole
@@ -27,7 +23,7 @@ public interface BytecodeProvider {
 	 *
 	 * @return The provider specific factory.
 	 */
-	public ProxyFactoryFactory getProxyFactoryFactory();
+	ProxyFactoryFactory getProxyFactoryFactory();
 
 	/**
 	 * Retrieve the ReflectionOptimizer delegate for this provider
@@ -39,26 +35,5 @@ public interface BytecodeProvider {
 	 * @param types The types of all properties to be accessed.
 	 * @return The reflection optimization delegate.
 	 */
-	public ReflectionOptimizer getReflectionOptimizer(Class clazz, String[] getterNames, String[] setterNames, Class[] types);
-
-	/**
-	 * Generate a ClassTransformer capable of performing bytecode manipulation.
-	 *
-	 * @param classFilter filter used to limit which classes are to be instrumented
-	 * via this ClassTransformer.
-	 * @param fieldFilter filter used to limit which fields are to be instrumented
-	 * via this ClassTransformer.
-	 * @return The appropriate ClassTransformer.
-	 */
-	public ClassTransformer getTransformer(ClassFilter classFilter, FieldFilter fieldFilter);
-
-	/**
-	 * Retrieve the interception metadata for the particular entity type.
-	 *
-	 * @param entityClass The entity class.  Note: we pass class here instead of the usual "entity name" because
-	 * only real classes can be instrumented.
-	 *
-	 * @return The metadata
-	 */
-	public EntityInstrumentationMetadata getEntityInstrumentationMetadata(Class entityClass);
+	ReflectionOptimizer getReflectionOptimizer(Class clazz, String[] getterNames, String[] setterNames, Class[] types);
 }

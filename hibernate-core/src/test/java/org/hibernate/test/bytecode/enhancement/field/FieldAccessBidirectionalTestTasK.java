@@ -13,7 +13,7 @@ import javax.persistence.Id;
 import javax.persistence.OneToOne;
 
 import org.hibernate.test.bytecode.enhancement.AbstractEnhancerTestTask;
-import org.hibernate.test.bytecode.enhancement.EnhancerTestUtils;
+import org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils;
 import org.junit.Assert;
 
 /**

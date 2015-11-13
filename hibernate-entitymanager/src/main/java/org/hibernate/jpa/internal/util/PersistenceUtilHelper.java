@@ -18,9 +18,9 @@ import java.util.WeakHashMap;
 import javax.persistence.spi.LoadState;
 
 import org.hibernate.HibernateException;
-import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
-import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
@@ -53,8 +53,8 @@ public final class PersistenceUtilHelper {
 	 *     </li>
 	 *     <li>
 	 *         If the reference is an enhanced (by Hibernate) entity, we return {@link LoadState#LOADED} if
-	 *         {@link org.hibernate.bytecode.instrumentation.spi.FieldInterceptor#isInitialized()} returns {@code true};
-	 *         else we return {@link LoadState#NOT_LOADED}
+	 *         {@link LazyAttributeLoadingInterceptor#hasAnyUninitializedAttributes()} returns {@code false};
+	 *         otherwise we return {@link LoadState#NOT_LOADED}
 	 *     </li>
 	 *     <li>
 	 *         If the reference is a {@link PersistentCollection}, we return {@link LoadState#LOADED} if
@@ -76,9 +76,8 @@ public final class PersistenceUtilHelper {
 			final boolean isInitialized = !( (HibernateProxy) reference ).getHibernateLazyInitializer().isUninitialized();
 			return isInitialized ? LoadState.LOADED : LoadState.NOT_LOADED;
 		}
-		else if ( FieldInterceptionHelper.isInstrumented( reference ) ) {
-			FieldInterceptor interceptor = FieldInterceptionHelper.extractFieldInterceptor( reference );
-			final boolean isInitialized = interceptor == null || interceptor.isInitialized();
+		else if ( reference instanceof PersistentAttributeInterceptable ) {
+			boolean isInitialized = isInitialized( (PersistentAttributeInterceptable) reference );
 			return isInitialized ? LoadState.LOADED : LoadState.NOT_LOADED;
 		}
 		else if ( reference instanceof PersistentCollection ) {
@@ -88,6 +87,17 @@ public final class PersistenceUtilHelper {
 		else {
 			return LoadState.UNKNOWN;
 		}
+	}
+
+	@SuppressWarnings("SimplifiableIfStatement")
+	private static boolean isInitialized(PersistentAttributeInterceptable interceptable) {
+		final LazyAttributeLoadingInterceptor interceptor = extractInterceptor( interceptable );
+		return interceptable == null || !interceptor.hasAnyUninitializedAttributes();
+	}
+
+	private static LazyAttributeLoadingInterceptor extractInterceptor(PersistentAttributeInterceptable interceptable) {
+		return (LazyAttributeLoadingInterceptor) interceptable.$$_hibernate_getInterceptor();
+
 	}
 
 	/**
@@ -116,9 +126,9 @@ public final class PersistenceUtilHelper {
 		}
 
 		// we are instrumenting but we can't assume we are the only ones
-		if ( FieldInterceptionHelper.isInstrumented( entity ) ) {
-			FieldInterceptor interceptor = FieldInterceptionHelper.extractFieldInterceptor( entity );
-			final boolean isInitialized = interceptor == null || interceptor.isInitialized( attributeName );
+		if ( entity instanceof PersistentAttributeInterceptable ) {
+			final LazyAttributeLoadingInterceptor interceptor = extractInterceptor( (PersistentAttributeInterceptable) entity );
+			final boolean isInitialized = interceptor == null || interceptor.isAttributeLoaded( attributeName );
 			LoadState state;
 			if (isInitialized && interceptor != null) {
 				// attributeName is loaded according to bytecode enhancement, but is it loaded as far as association?

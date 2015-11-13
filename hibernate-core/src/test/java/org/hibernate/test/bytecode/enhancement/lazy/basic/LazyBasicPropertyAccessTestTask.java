@@ -21,7 +21,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
 import org.hibernate.test.bytecode.enhancement.AbstractEnhancerTestTask;
-import org.hibernate.test.bytecode.enhancement.EnhancerTestUtils;
+import org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils;
 import org.junit.Assert;
 
 /**

@@ -15,6 +15,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.bytecode.enhancement.EnhancerTestTask;
 
 /**
  * @author Luis Barreiro

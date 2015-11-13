@@ -14,7 +14,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
-import org.hibernate.bytecode.spi.EntityInstrumentationMetadata;
+import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.OptimisticCacheSource;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
@@ -779,7 +779,7 @@ public interface EntityPersister extends OptimisticCacheSource, EntityDefinition
 	public EntityMode getEntityMode();
 	public EntityTuplizer getEntityTuplizer();
 
-	public EntityInstrumentationMetadata getInstrumentationMetadata();
+	public BytecodeEnhancementMetadata getInstrumentationMetadata();
 	
 	public FilterAliasGenerator getFilterAliasGenerator(final String rootAlias);
 

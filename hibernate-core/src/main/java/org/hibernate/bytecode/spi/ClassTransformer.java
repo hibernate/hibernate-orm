@@ -6,6 +6,7 @@
  */
 package org.hibernate.bytecode.spi;
 
+import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 
 /**
@@ -18,21 +19,22 @@ import java.security.ProtectionDomain;
  * @author <a href="mailto:bill@jboss.org">Bill Burke</a>
  * @author Emmanuel Bernard
  */
-public interface ClassTransformer {
+public interface ClassTransformer extends javax.persistence.spi.ClassTransformer {
 	/**
 	 * Invoked when a class is being loaded or redefined to add hooks for persistence bytecode manipulation.
 	 *
 	 * @param loader the defining class loaderof the class being transformed.  It may be null if using bootstrap loader
-	 * @param classname The name of the class being transformed
+	 * @param className The name of the class being transformed
 	 * @param classBeingRedefined If an already loaded class is being redefined, then pass this as a parameter
 	 * @param protectionDomain ProtectionDomain of the class being (re)-defined
 	 * @param classfileBuffer The input byte buffer in class file format
 	 * @return A well-formed class file that can be loaded
 	 */
+	@Override
 	public byte[] transform(
 			ClassLoader loader,
-			String classname,
-			Class classBeingRedefined,
+			String className,
+			Class<?> classBeingRedefined,
 			ProtectionDomain protectionDomain,
-			byte[] classfileBuffer);
+			byte[] classfileBuffer) throws IllegalClassFormatException;
 }

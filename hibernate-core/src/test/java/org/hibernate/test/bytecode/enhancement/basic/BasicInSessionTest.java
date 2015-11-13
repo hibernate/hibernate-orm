@@ -12,7 +12,7 @@ import java.net.URLClassLoader;
 import org.hibernate.Session;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.test.bytecode.enhancement.EnhancerTestUtils;
+import org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils;
 import org.junit.Assert;
 import org.junit.Test;
 

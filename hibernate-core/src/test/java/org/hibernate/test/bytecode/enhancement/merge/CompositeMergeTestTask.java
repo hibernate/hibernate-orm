@@ -10,7 +10,6 @@ import java.util.Arrays;
 import java.util.List;
 import javax.persistence.Basic;
 import javax.persistence.CollectionTable;
-import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
@@ -26,7 +25,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
 import org.hibernate.test.bytecode.enhancement.AbstractEnhancerTestTask;
-import org.hibernate.test.bytecode.enhancement.EnhancerTestUtils;
+import org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils;
 
 import org.junit.Assert;
 

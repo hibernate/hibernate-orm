@@ -10,9 +10,9 @@ import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.Collection;
-import javax.persistence.spi.ClassTransformer;
 
 import org.hibernate.bytecode.enhance.spi.Enhancer;
+import org.hibernate.bytecode.spi.ClassTransformer;
 
 /**
  * @author Steve Ebersole

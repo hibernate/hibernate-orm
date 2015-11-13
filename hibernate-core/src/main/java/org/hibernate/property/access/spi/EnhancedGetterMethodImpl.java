@@ -14,7 +14,7 @@ import java.lang.reflect.Method;
 import java.util.Map;
 
 import org.hibernate.PropertyAccessException;
-import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoader;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -41,8 +41,8 @@ public class EnhancedGetterMethodImpl implements Getter {
 	private boolean isAttributeLoaded(Object owner) {
 		if ( owner instanceof PersistentAttributeInterceptable ) {
 			PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) owner ).$$_hibernate_getInterceptor();
-			if ( interceptor != null && interceptor instanceof LazyAttributeLoader ) {
-				return ( (LazyAttributeLoader) interceptor ).isAttributeLoaded( propertyName );
+			if ( interceptor != null && interceptor instanceof LazyAttributeLoadingInterceptor ) {
+				return ( (LazyAttributeLoadingInterceptor) interceptor ).isAttributeLoaded( propertyName );
 			}
 		}
 		return true;

@@ -16,7 +16,6 @@ import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
-import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryExtraState;
@@ -279,13 +278,6 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			getPersister().setPropertyValue( entity, getPersister().getVersionProperty(), nextVersion );
 		}
 
-		if ( getPersister().getInstrumentationMetadata().isInstrumented() ) {
-			final FieldInterceptor interceptor = getPersister().getInstrumentationMetadata().extractInterceptor( entity );
-			if ( interceptor != null ) {
-				interceptor.clearDirty();
-			}
-		}
-
 		if( entity instanceof SelfDirtinessTracker ) {
 			( (SelfDirtinessTracker) entity ).$$_hibernate_clearDirtyAttributes();
 		}
@@ -340,7 +332,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 
 	@SuppressWarnings( {"SimplifiableIfStatement"})
 	private boolean isUnequivocallyNonDirty(Object entity) {
-		if (entity instanceof SelfDirtinessTracker) {
+		if ( entity instanceof SelfDirtinessTracker ) {
 			return ! ( (SelfDirtinessTracker) entity ).$$_hibernate_hasDirtyAttributes();
 		}
 
@@ -352,11 +344,6 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 
 		if ( getPersister().hasMutableProperties() ) {
 			return false;
-		}
-
-		if ( getPersister().getInstrumentationMetadata().isInstrumented() ) {
-			// the entity must be instrumented (otherwise we cant check dirty flag) and the dirty flag is false
-			return ! getPersister().getInstrumentationMetadata().extractInterceptor( entity ).isDirty();
 		}
 
 		return false;

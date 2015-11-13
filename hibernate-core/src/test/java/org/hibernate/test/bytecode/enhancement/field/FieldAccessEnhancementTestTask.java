@@ -16,7 +16,7 @@ import javax.persistence.OneToMany;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 
 import org.hibernate.test.bytecode.enhancement.AbstractEnhancerTestTask;
-import org.hibernate.test.bytecode.enhancement.EnhancerTestUtils;
+import org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils;
 import org.hibernate.test.bytecode.enhancement.basic.ObjectAttributeMarkerInterceptor;
 import org.junit.Assert;
 

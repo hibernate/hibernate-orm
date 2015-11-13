@@ -12,9 +12,10 @@ import org.junit.Test;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+
 import org.hibernate.testing.Skip;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -87,7 +88,7 @@ public class LazyOneToOneTest extends BaseCoreFunctionalTestCase {
 		@Override
 		public boolean isMatch() {
 			// we match (to skip) when the classes are *not* instrumented...
-			return ! FieldInterceptionHelper.isInstrumented( Person.class );
+			return ! PersistentAttributeInterceptable.class.isAssignableFrom( Person.class );
 		}
 	}
 }

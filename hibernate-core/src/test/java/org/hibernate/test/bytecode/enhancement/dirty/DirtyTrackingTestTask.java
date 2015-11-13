@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.test.bytecode.enhancement.AbstractEnhancerTestTask;
-import org.hibernate.test.bytecode.enhancement.EnhancerTestUtils;
+import org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils;
 
 /**
  * @author Luis Barreiro

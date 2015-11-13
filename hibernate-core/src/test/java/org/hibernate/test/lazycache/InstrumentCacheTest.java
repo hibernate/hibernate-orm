@@ -11,9 +11,10 @@ import org.junit.Test;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+
 import org.hibernate.testing.Skip;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -29,7 +30,7 @@ public class InstrumentCacheTest extends BaseCoreFunctionalTestCase {
 	public static class SkipMatcher implements Skip.Matcher {
 		@Override
 		public boolean isMatch() {
-			return ! FieldInterceptionHelper.isInstrumented( Document.class );
+			return ! PersistentAttributeInterceptable.class.isAssignableFrom( Document.class );
 		}
 	}
 

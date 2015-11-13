@@ -8,9 +8,7 @@ package org.hibernate;
 
 import java.util.Iterator;
 
-import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoader;
-import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
-import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.HibernateIterator;
 import org.hibernate.engine.jdbc.LobCreator;
@@ -174,14 +172,9 @@ public final class Hibernate {
 
 		if ( entity instanceof PersistentAttributeInterceptable ) {
 			PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor();
-			if ( interceptor != null && interceptor instanceof LazyAttributeLoader ) {
-				return ( (LazyAttributeLoader) interceptor ).isAttributeLoaded( propertyName );
+			if ( interceptor != null && interceptor instanceof LazyAttributeLoadingInterceptor ) {
+				return ( (LazyAttributeLoadingInterceptor) interceptor ).isAttributeLoaded( propertyName );
 			}
-		}
-
-		if ( FieldInterceptionHelper.isInstrumented( entity ) ) {
-			final FieldInterceptor interceptor = FieldInterceptionHelper.extractFieldInterceptor( entity );
-			return interceptor == null || interceptor.isInitialized( propertyName );
 		}
 
 		return true;

@@ -33,10 +33,9 @@ import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
-import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoader;
-import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
-import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
-import org.hibernate.bytecode.spi.EntityInstrumentationMetadata;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntry;
@@ -66,8 +65,6 @@ import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.PersistenceContext.NaturalIdHelper;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
@@ -577,7 +574,7 @@ public abstract class AbstractEntityPersister
 
 		// PROPERTIES
 
-		final boolean lazyAvailable = isInstrumented() || entityMetamodel.isLazyLoadingBytecodeEnhanced();
+		final boolean lazyAvailable = isInstrumented();
 
 		int hydrateSpan = entityMetamodel.getPropertySpan();
 		propertyColumnSpans = new int[hydrateSpan];
@@ -4244,27 +4241,17 @@ public abstract class AbstractEntityPersister
 //	}
 
 	public void afterReassociate(Object entity, SessionImplementor session) {
-		if ( getEntityMetamodel().getInstrumentationMetadata().isInstrumented() ) {
-			FieldInterceptor interceptor = getEntityMetamodel().getInstrumentationMetadata()
-					.extractInterceptor( entity );
-			if ( interceptor != null ) {
-				interceptor.setSession( session );
-			}
-			else {
-				FieldInterceptor fieldInterceptor = getEntityMetamodel().getInstrumentationMetadata().injectInterceptor(
+		if ( getEntityMetamodel().getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
+			LazyAttributeLoadingInterceptor interceptor = getEntityMetamodel().getBytecodeEnhancementMetadata().extractInterceptor( entity );
+			if ( interceptor == null ) {
+				getEntityMetamodel().getBytecodeEnhancementMetadata().injectInterceptor(
 						entity,
-						getEntityName(),
 						null,
 						session
 				);
-				fieldInterceptor.dirty();
 			}
-		}
-
-		if ( entity instanceof PersistentAttributeInterceptable ) {
-			PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor();
-			if ( interceptor != null && interceptor instanceof LazyAttributeLoader ) {
-				( (LazyAttributeLoader) interceptor ).setSession( session );
+			else {
+				interceptor.setSession( session );
 			}
 		}
 
@@ -4378,7 +4365,7 @@ public abstract class AbstractEntityPersister
 
 	public boolean hasProxy() {
 		// skip proxy instantiation if entity is bytecode enhanced
-		return entityMetamodel.isLazy() && !entityMetamodel.isLazyLoadingBytecodeEnhanced();
+		return entityMetamodel.isLazy() && !entityMetamodel.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
 	}
 
 	public IdentifierGenerator getIdentifierGenerator() throws HibernateException {
@@ -4477,7 +4464,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	public boolean isInstrumented() {
-		return entityMetamodel.isInstrumented();
+		return entityMetamodel.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
 	}
 
 	public boolean hasInsertGeneratedProperties() {
@@ -5101,8 +5088,8 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public EntityInstrumentationMetadata getInstrumentationMetadata() {
-		return entityMetamodel.getInstrumentationMetadata();
+	public BytecodeEnhancementMetadata getInstrumentationMetadata() {
+		return entityMetamodel.getBytecodeEnhancementMetadata();
 	}
 
 	@Override

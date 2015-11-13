@@ -388,22 +388,11 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		Map<String,CollectionMetadata> tmpCollectionMetadata = new HashMap<String,CollectionMetadata>();
 		for ( final Collection model : metadata.getCollectionBindings() ) {
 			final String cacheRegionName = cacheRegionPrefix + model.getCacheRegionName();
-			final AccessType accessType = AccessType.fromExternalName( model.getCacheConcurrencyStrategy() );
-			final CollectionRegionAccessStrategy accessStrategy;
-			if ( accessType != null && settings.isSecondLevelCacheEnabled() ) {
-				LOG.tracev( "Building shared cache region for collection data [{0}]", model.getRole() );
-				CollectionRegion collectionRegion = regionFactory.buildCollectionRegion(
-						cacheRegionName,
-						properties,
-						CacheDataDescriptionImpl.decode( model )
-				);
-				accessStrategy = collectionRegion.buildAccessStrategy( accessType );
-				cacheAccessStrategiesMap.put( cacheRegionName, accessStrategy );
-				cacheAccess.addCacheRegion( cacheRegionName, collectionRegion );
-			}
-			else {
-				accessStrategy = null;
-			}
+			final CollectionRegionAccessStrategy accessStrategy = determineCollectionRegionAccessStrategy(
+					regionFactory, 
+					cacheAccessStrategiesMap, 
+					model, 
+					cacheRegionName);
 
 			final CollectionPersister persister = persisterFactory.createCollectionPersister(
 					model,
@@ -635,6 +624,22 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 				accessStrategy = entityRegion.buildAccessStrategy( accessType );
 				cacheAccessStrategiesMap.put( cacheRegionName, accessStrategy );
 				cacheAccess.addCacheRegion( cacheRegionName, entityRegion );
+			}
+		}
+		return accessStrategy;
+	}
+
+	private CollectionRegionAccessStrategy determineCollectionRegionAccessStrategy(final RegionFactory regionFactory, Map cacheAccessStrategiesMap, final Collection model,
+			final String cacheRegionName) {
+		CollectionRegionAccessStrategy accessStrategy = (CollectionRegionAccessStrategy) cacheAccessStrategiesMap.get(cacheRegionName);
+		if (accessStrategy == null && settings.isSecondLevelCacheEnabled()) {
+			final AccessType accessType = AccessType.fromExternalName(model.getCacheConcurrencyStrategy());
+			if (accessType != null) {
+				LOG.tracev("Building shared cache region for collection data [{0}]", model.getRole());
+				CollectionRegion collectionRegion = regionFactory.buildCollectionRegion(cacheRegionName, properties, CacheDataDescriptionImpl.decode(model));
+				accessStrategy = collectionRegion.buildAccessStrategy(accessType);
+				cacheAccessStrategiesMap.put(cacheRegionName, accessStrategy);
+				cacheAccess.addCacheRegion(cacheRegionName, collectionRegion);
 			}
 		}
 		return accessStrategy;

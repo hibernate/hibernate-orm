@@ -4,104 +4,102 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
+package org.hibernate.test.bytecode.enhancement.lazyCache;
 
-//$Id: Document.java 7772 2005-08-05 23:03:46Z oneovthafew $
-package org.hibernate.test.lazycache;
 import java.util.Date;
 import java.util.Locale;
+import javax.persistence.Basic;
+import javax.persistence.Cacheable;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Formula;
 
 /**
  * @author Gavin King
  */
+@Entity
+@Cacheable
+@Cache( usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, include = "non-lazy", region = "foo" )
 public class Document {
-	
+	@Id
+	@GeneratedValue
 	private Long id;
 	private String name;
+	@Basic( fetch = FetchType.LAZY )
+	@Formula( "upper(name)" )
 	private String upperCaseName;
+	@Basic( fetch = FetchType.LAZY )
 	private String summary;
+	@Basic( fetch = FetchType.LAZY )
 	private String text;
+	@Basic( fetch = FetchType.LAZY )
 	private Date lastTextModification;
+
+	Document() {
+	}
 	
 	public Document(String name, String summary, String text) {
-		lastTextModification = new Date();
+		this.lastTextModification = new Date();
 		this.name = name;
-		upperCaseName = name.toUpperCase(Locale.ROOT);
+		this.upperCaseName = name.toUpperCase( Locale.ROOT );
 		this.summary = summary;
 		this.text = text;
 	}
-	
-	Document() {}
-	
-	public Date getLastTextModification() {
-		return lastTextModification;
-	}
 
-	/**
-	 * @return Returns the id.
-	 */
 	public Long getId() {
 		return id;
 	}
-	/**
-	 * @param id The id to set.
-	 */
+
 	public void setId(Long id) {
 		this.id = id;
 	}
-	/**
-	 * @return Returns the name.
-	 */
+
 	public String getName() {
 		return name;
 	}
-	/**
-	 * @param name The name to set.
-	 */
+
 	public void setName(String name) {
 		this.name = name;
 	}
-	/**
-	 * @return Returns the summary.
-	 */
-	public String getSummary() {
-		return summary;
-	}
-	/**
-	 * @param summary The summary to set.
-	 */
-	public void setSummary(String summary) {
-		this.summary = summary;
-	}
-	/**
-	 * @return Returns the text.
-	 */
-	public String getText() {
-		return text;
-	}
-	/**
-	 * @param text The text to set.
-	 */
-	private void setText(String text) {
-		this.text = text;
-	}
-	/**
-	 * @return Returns the upperCaseName.
-	 */
+
 	public String getUpperCaseName() {
 		return upperCaseName;
 	}
-	/**
-	 * @param upperCaseName The upperCaseName to set.
-	 */
+
 	public void setUpperCaseName(String upperCaseName) {
 		this.upperCaseName = upperCaseName;
 	}
-	
+
+	public String getSummary() {
+		return summary;
+	}
+
+	public void setSummary(String summary) {
+		this.summary = summary;
+	}
+
+	public String getText() {
+		return text;
+	}
+
+	private void setText(String text) {
+		this.text = text;
+	}
+
 	public void updateText(String newText) {
 		if ( !newText.equals(text) ) {
 			this.text = newText;
 			lastTextModification = new Date();
 		}
+	}
+
+	public Date getLastTextModification() {
+		return lastTextModification;
 	}
 	
 }

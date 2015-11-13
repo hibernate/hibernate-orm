@@ -27,6 +27,7 @@ import org.hibernate.test.bytecode.enhancement.lazy.LazyLoadingIntegrationTestTa
 import org.hibernate.test.bytecode.enhancement.lazy.LazyLoadingTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.basic.LazyBasicFieldAccessTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.basic.LazyBasicPropertyAccessTestTask;
+import org.hibernate.test.bytecode.enhancement.lazyCache.InitFromCacheTestTask;
 import org.hibernate.test.bytecode.enhancement.merge.CompositeMergeTestTask;
 import org.hibernate.test.bytecode.enhancement.pk.EmbeddedPKTestTask;
 import org.hibernate.test.bytecode.enhancement.ondemandload.LazyCollectionWithClearedSessionTestTask;
@@ -122,5 +123,10 @@ public class EnhancerTest extends BaseUnitTestCase {
 	@TestForIssue( jiraKey = "HHH-9937")
 	public void testLazyBasicFieldNotInitialized() {
 		EnhancerTestUtils.runEnhancerTestTask( LazyBasicFieldNotInitializedTestTask.class );
+	}
+
+	@Test
+	public void testInitFromCache() {
+		EnhancerTestUtils.runEnhancerTestTask( InitFromCacheTestTask.class );
 	}
 }

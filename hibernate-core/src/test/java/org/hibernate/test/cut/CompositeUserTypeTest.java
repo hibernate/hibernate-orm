@@ -18,6 +18,9 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.hql.internal.ast.QuerySyntaxException;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipForDialects;
 import org.hibernate.testing.TestForIssue;
@@ -221,16 +224,17 @@ public class CompositeUserTypeTest extends BaseCoreFunctionalTestCase {
 	 */
 	@Test( expected = QuerySyntaxException.class )
 	@TestForIssue( jiraKey = "HHH-5946" )
+	@RequiresDialectFeature( value = DialectChecks.DoesNotSupportRowValueConstructorSyntax.class )
 	public void testLessThanOperator() {
 		final Session s = openSession();
-		s.getTransaction().begin();
-
-		final Query q = s.createQuery( "from Transaction where value < :amount" );
-		q.setParameter( "amount", new MonetoryAmount( BigDecimal.ZERO, Currency.getInstance( "EUR" ) ) );
-		q.list();
-
-		s.getTransaction().commit();
-		s.close();
+		try {
+			final Query q = s.createQuery( "from Transaction where value < :amount" );
+			q.setParameter( "amount", new MonetoryAmount( BigDecimal.ZERO, Currency.getInstance( "EUR" ) ) );
+			q.list();
+		}
+		finally {
+			s.close();
+		}
 	}
 
 	/**
@@ -239,16 +243,17 @@ public class CompositeUserTypeTest extends BaseCoreFunctionalTestCase {
 	 */
 	@Test( expected = QuerySyntaxException.class )
 	@TestForIssue( jiraKey = "HHH-5946" )
+	@RequiresDialectFeature( value = DialectChecks.DoesNotSupportRowValueConstructorSyntax.class )
 	public void testLessOrEqualOperator() {
 		final Session s = openSession();
-		s.getTransaction().begin();
-
-		final Query q = s.createQuery( "from Transaction where value <= :amount" );
-		q.setParameter( "amount", new MonetoryAmount( BigDecimal.ZERO, Currency.getInstance( "USD" ) ) );
-		q.list();
-
-		s.getTransaction().commit();
-		s.close();
+		try {
+			final Query q = s.createQuery( "from Transaction where value <= :amount" );
+			q.setParameter( "amount", new MonetoryAmount( BigDecimal.ZERO, Currency.getInstance( "USD" ) ) );
+			q.list();
+		}
+		finally {
+			s.close();
+		}
 	}
 
 	/**
@@ -257,16 +262,17 @@ public class CompositeUserTypeTest extends BaseCoreFunctionalTestCase {
 	 */
 	@Test( expected = QuerySyntaxException.class )
 	@TestForIssue( jiraKey = "HHH-5946" )
+	@RequiresDialectFeature( value = DialectChecks.DoesNotSupportRowValueConstructorSyntax.class )
 	public void testGreaterThanOperator() {
 		final Session s = openSession();
-		s.getTransaction().begin();
-
-		final Query q = s.createQuery( "from Transaction where value > :amount" );
-		q.setParameter( "amount", new MonetoryAmount( BigDecimal.ZERO, Currency.getInstance( "EUR" ) ) );
-		q.list();
-
-		s.getTransaction().commit();
-		s.close();
+		try {
+			final Query q = s.createQuery( "from Transaction where value > :amount" );
+			q.setParameter( "amount", new MonetoryAmount( BigDecimal.ZERO, Currency.getInstance( "EUR" ) ) );
+			q.list();
+		}
+		finally {
+			s.close();
+		}
 	}
 
 	/**
@@ -275,16 +281,17 @@ public class CompositeUserTypeTest extends BaseCoreFunctionalTestCase {
 	 */
 	@Test( expected = QuerySyntaxException.class )
 	@TestForIssue( jiraKey = "HHH-5946" )
+	@RequiresDialectFeature( value = DialectChecks.DoesNotSupportRowValueConstructorSyntax.class )
 	public void testGreaterOrEqualOperator() {
 		final Session s = openSession();
-		s.getTransaction().begin();
-
-		final Query q = s.createQuery( "from Transaction where value >= :amount" );
-		q.setParameter( "amount", new MonetoryAmount( BigDecimal.ZERO, Currency.getInstance( "USD" ) ) );
-		q.list();
-
-		s.getTransaction().commit();
-		s.close();
+		try {
+			final Query q = s.createQuery( "from Transaction where value >= :amount" );
+			q.setParameter( "amount", new MonetoryAmount( BigDecimal.ZERO, Currency.getInstance( "USD" ) ) );
+			q.list();
+		}
+		finally {
+			s.close();
+		}
 	}
 
 }

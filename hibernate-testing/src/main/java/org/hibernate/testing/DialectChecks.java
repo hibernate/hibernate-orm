@@ -177,4 +177,10 @@ abstract public class DialectChecks {
 			return dialect.canCreateCatalog();
 		}
 	}
+
+	public static class DoesNotSupportRowValueConstructorSyntax implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect.supportsRowValueConstructorSyntax() == false;
+		}
+	}
 }

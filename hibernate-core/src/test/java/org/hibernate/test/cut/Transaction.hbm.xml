@@ -27,12 +27,12 @@
 			<column name="currency" not-null="true"/>
 		</property>
 		<property name="timestamp" type="userDateTime">
-			<column name="year"/>
-			<column name="month"/>
-			<column name="day"/>
-			<column name="hour"/>
-			<column name="minute"/>
-			<column name="second"/>
+			<column name="ts_year"/>
+			<column name="ts_month"/>
+			<column name="ts_day"/>
+			<column name="ts_hour"/>
+			<column name="ts_minute"/>
+			<column name="ts_second"/>
 		</property>
 	</class>
 	

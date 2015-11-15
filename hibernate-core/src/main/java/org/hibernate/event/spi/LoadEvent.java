@@ -45,6 +45,7 @@ public class LoadEvent extends AbstractEvent {
 	private LockOptions lockOptions;
 	private boolean isAssociationFetch;
 	private Object result;
+	private PostLoadEvent postLoadEvent;
 
 	public LoadEvent(Serializable entityId, Object instanceToLoad, EventSource source) {
 		this( entityId, null, instanceToLoad, DEFAULT_LOCK_OPTIONS, false, source );
@@ -104,6 +105,7 @@ public class LoadEvent extends AbstractEvent {
 		this.instanceToLoad = instanceToLoad;
 		this.lockOptions = lockOptions;
 		this.isAssociationFetch = isAssociationFetch;
+		this.postLoadEvent = new PostLoadEvent(source);
 	}
 
 	public Serializable getEntityId() {
@@ -179,5 +181,13 @@ public class LoadEvent extends AbstractEvent {
 
 	public void setResult(Object result) {
 		this.result = result;
+	}
+
+	public PostLoadEvent getPostLoadEvent() {
+		return postLoadEvent;
+	}
+
+	public void setPostLoadEvent(PostLoadEvent postLoadEvent) {
+		this.postLoadEvent = postLoadEvent;
 	}
 }

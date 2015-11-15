@@ -615,7 +615,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			}
 			else {
 				entity = convertCacheReferenceEntryToEntity( (ReferenceCacheEntryImpl) entry,
-						event.getEntityId(), persister, event.getSession(), entityKey );
+						event.getEntityId(), persister, event.getSession(), entityKey, event );
 			}
 		}
 		else {
@@ -638,7 +638,8 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			Serializable entityId,
 			EntityPersister persister,
 			EventSource session,
-			EntityKey entityKey) {
+			EntityKey entityKey,
+			LoadEvent loadEvent) {
 		final Object entity = referenceCacheEntry.getReference();
 
 		if ( entity == null ) {
@@ -651,15 +652,15 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			EventListenerGroup<PostLoadEventListener> evenListenerGroup = getEvenListenerGroup(session);
 
 			if(!evenListenerGroup.isEmpty()) {
-				postLoad(session, evenListenerGroup.listeners(), entity, entityId, persister);
+				postLoad(session, evenListenerGroup.listeners(), entity, entityId, persister, loadEvent);
 			}
 			return entity;
 		}
 	}
 
 	private void postLoad(EventSource session, Iterable<PostLoadEventListener> listeners,
-							Object entity, Serializable entityId, EntityPersister persister) {
-		PostLoadEvent postLoadEvent = new PostLoadEvent(session)
+							Object entity, Serializable entityId, EntityPersister persister, LoadEvent event) {
+		PostLoadEvent postLoadEvent = event.getPostLoadEvent()
 				.setEntity(entity)
 				.setId(entityId)
 				.setPersister(persister);
@@ -788,7 +789,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		persistenceContext.initializeNonLazyCollections();
 
 		//PostLoad is needed for EJB3
-		PostLoadEvent postLoadEvent = new PostLoadEvent( session )
+		PostLoadEvent postLoadEvent = event.getPostLoadEvent()
 				.setEntity( entity )
 				.setId( entityId )
 				.setPersister( persister );
@@ -885,7 +886,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 
 		//PostLoad is needed for EJB3
 		//TODO: reuse the PostLoadEvent...
-		PostLoadEvent postLoadEvent = new PostLoadEvent( session )
+		PostLoadEvent postLoadEvent = event.getPostLoadEvent()
 				.setEntity( result )
 				.setId( id )
 				.setPersister( persister );

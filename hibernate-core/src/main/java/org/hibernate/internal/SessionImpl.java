@@ -205,6 +205,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	private transient ExceptionMapper exceptionMapper;
 	private transient ManagedFlushChecker managedFlushChecker;
 	private transient AfterCompletionAction afterCompletionAction;
+	private transient LoadEvent loadEvent; //cached LoadEvent instance
 
 	/**
 	 * Constructor used for openSession(...) processing, as well as construction
@@ -936,8 +937,26 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 	@Override
 	public void load(Object object, Serializable id) throws HibernateException {
-		LoadEvent event = new LoadEvent( id, object, this );
+		LoadEvent event = loadEvent;
+		loadEvent = null;
+		if(event == null) {
+			event = new LoadEvent( id, object, this );
+		} else {
+			event.setEntityClassName(null);
+			event.setEntityId(id);
+			event.setInstanceToLoad(object);
+			event.setLockMode(LoadEvent.DEFAULT_LOCK_MODE);
+			event.setLockScope(LoadEvent.DEFAULT_LOCK_OPTIONS.getScope());
+			event.setLockTimeout(LoadEvent.DEFAULT_LOCK_OPTIONS.getTimeOut());
+		}
 		fireLoad( event, LoadEventListener.RELOAD );
+		if(loadEvent == null) {
+			event.setEntityClassName(null);
+			event.setEntityId(null);
+			event.setInstanceToLoad(null);
+			event.setResult(null);
+			loadEvent = event;
+		}
 	}
 
 	@Override
@@ -971,10 +990,28 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			EntityPersister persister = getFactory().getEntityPersister( entityName );
 			LOG.debugf( "Initializing proxy: %s", MessageHelper.infoString( persister, id, getFactory() ) );
 		}
-
-		LoadEvent event = new LoadEvent( id, entityName, true, this );
+		LoadEvent event = loadEvent;
+		loadEvent = null;
+		if(event == null) {
+			event = new LoadEvent( id, entityName, true, this );
+		} else {
+			event.setEntityClassName(entityName);
+			event.setEntityId(id);
+			event.setInstanceToLoad(null);
+			event.setLockMode(LoadEvent.DEFAULT_LOCK_MODE);
+			event.setLockScope(LoadEvent.DEFAULT_LOCK_OPTIONS.getScope());
+			event.setLockTimeout(LoadEvent.DEFAULT_LOCK_OPTIONS.getTimeOut());
+		}
 		fireLoad( event, LoadEventListener.IMMEDIATE_LOAD );
-		return event.getResult();
+		Object result = event.getResult();
+		if(loadEvent == null) {
+			event.setEntityClassName(null);
+			event.setEntityId(null);
+			event.setInstanceToLoad(null);
+			event.setResult(null);
+			loadEvent = event;
+		}
+		return result;
 	}
 
 	@Override
@@ -986,12 +1023,32 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 				: eager
 				? LoadEventListener.INTERNAL_LOAD_EAGER
 				: LoadEventListener.INTERNAL_LOAD_LAZY;
-		LoadEvent event = new LoadEvent( id, entityName, true, this );
-		fireLoad( event, type );
-		if ( !nullable ) {
-			UnresolvableObjectException.throwIfNull( event.getResult(), id, entityName );
+
+		LoadEvent event = loadEvent;
+		loadEvent = null;
+		if(event == null) {
+			event = new LoadEvent( id, entityName, true, this );
+		} else {
+			event.setEntityClassName(entityName);
+			event.setEntityId(id);
+			event.setInstanceToLoad(null);
+			event.setLockMode(LoadEvent.DEFAULT_LOCK_MODE);
+			event.setLockScope(LoadEvent.DEFAULT_LOCK_OPTIONS.getScope());
+			event.setLockTimeout(LoadEvent.DEFAULT_LOCK_OPTIONS.getTimeOut());
 		}
-		return event.getResult();
+		fireLoad( event, type );
+		Object result = event.getResult();
+		if ( !nullable ) {
+			UnresolvableObjectException.throwIfNull(result, id, entityName );
+		}
+		if(loadEvent == null) {
+			event.setEntityClassName(null);
+			event.setEntityId(null);
+			event.setInstanceToLoad(null);
+			event.setResult(null);
+			loadEvent = event;
+		}
+		return result;
 	}
 
 	@Override

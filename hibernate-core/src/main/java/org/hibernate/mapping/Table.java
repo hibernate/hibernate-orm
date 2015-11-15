@@ -856,9 +856,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 
 		public boolean equals(Object other) {
 			ForeignKeyKey fkk = (ForeignKeyKey) other;
-			return fkk.columns.equals( columns ) &&
-					fkk.referencedClassName.equals( referencedClassName ) && fkk.referencedColumns
-					.equals( referencedColumns );
+			return fkk.columns.equals( columns ) && fkk.referencedColumns.equals( referencedColumns );
 		}
 
 		@Override

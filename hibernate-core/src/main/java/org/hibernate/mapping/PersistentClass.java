@@ -356,9 +356,8 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 	public void createPrimaryKey() {
 		//Primary key constraint
-		PrimaryKey pk = new PrimaryKey();
-		Table table = getTable();
-		pk.setTable( table );
+		final Table table = getTable();
+		PrimaryKey pk = new PrimaryKey( table );
 		pk.setName( PK_ALIAS.toAliasString( table.getName() ) );
 		table.setPrimaryKey( pk );
 

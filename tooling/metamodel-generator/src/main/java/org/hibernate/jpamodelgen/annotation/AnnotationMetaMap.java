@@ -23,7 +23,7 @@ public class AnnotationMetaMap extends AnnotationMetaCollection {
 		this.keyType = keyType;
 	}
 
-	public String getDeclarationString() {
+	public String getAttributeDeclarationString() {
 		return "public static volatile " + getHostingEntity().importType( getMetaType() )
 				+ "<" + getHostingEntity().importType( getHostingEntity().getQualifiedName() )
 				+ ", " + getHostingEntity().importType( keyType ) + ", "

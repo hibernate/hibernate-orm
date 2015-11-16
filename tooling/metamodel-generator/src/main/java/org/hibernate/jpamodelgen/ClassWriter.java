@@ -111,7 +111,9 @@ public final class ClassWriter {
 
 			List<MetaAttribute> members = entity.getMembers();
 			for ( MetaAttribute metaMember : members ) {
-				pw.println( "	" + metaMember.getDeclarationString() );
+				for(String declaration: metaMember.getDeclarationStrings()){
+					pw.println( "	" + declaration );
+				}
 			}
 
 			pw.println();

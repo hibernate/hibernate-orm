@@ -20,7 +20,7 @@ public interface CacheEntry extends Serializable {
 	 *
 	 * @return true/false
 	 */
-	public boolean isReferenceEntry();
+	boolean isReferenceEntry();
 
 	/**
 	 * Hibernate stores all entries pertaining to a given entity hierarchy in a single region.  This attribute
@@ -28,21 +28,14 @@ public interface CacheEntry extends Serializable {
 	 *
 	 * @return The entry's exact entity type.
 	 */
-	public String getSubclass();
+	String getSubclass();
 
 	/**
 	 * Retrieves the version (optimistic locking) associated with this cache entry.
 	 *
 	 * @return The version of the entity represented by this entry
 	 */
-	public Object getVersion();
-
-	/**
-	 * Does the represented data contain any un-fetched attribute values?
-	 *
-	 * @return true/false
-	 */
-	public boolean areLazyPropertiesUnfetched();
+	Object getVersion();
 
 	/**
 	 * Get the underlying disassembled state
@@ -53,6 +46,5 @@ public interface CacheEntry extends Serializable {
 	 *
 	 * @return The disassembled state
 	 */
-	public Serializable[] getDisassembledState();
-
+	Serializable[] getDisassembledState();
 }

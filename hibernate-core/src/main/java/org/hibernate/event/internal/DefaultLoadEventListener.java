@@ -675,7 +675,6 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 				entity,
 				subclassPersister,
 				LockMode.NONE,
-				entry.areLazyPropertiesUnfetched(),
 				entry.getVersion(),
 				session
 		);
@@ -728,10 +727,9 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 				LockMode.NONE,
 				true,
 				subclassPersister,
-				false,
-				entry.areLazyPropertiesUnfetched()
+				false
 		);
-		subclassPersister.afterInitialize( entity, entry.areLazyPropertiesUnfetched(), session );
+		subclassPersister.afterInitialize( entity, session );
 		persistenceContext.initializeNonLazyCollections();
 
 		//PostLoad is needed for EJB3
@@ -775,7 +773,6 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 				result,
 				subclassPersister,
 				LockMode.NONE,
-				entry.areLazyPropertiesUnfetched(),
 				entry.getVersion(),
 				session
 		);
@@ -822,10 +819,9 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 				LockMode.NONE,
 				true,
 				subclassPersister,
-				false,
-				entry.areLazyPropertiesUnfetched()
+				false
 		);
-		subclassPersister.afterInitialize( result, entry.areLazyPropertiesUnfetched(), session );
+		subclassPersister.afterInitialize( result, session );
 		persistenceContext.initializeNonLazyCollections();
 		// upgrade the lock if necessary:
 		//lock(result, lockMode);

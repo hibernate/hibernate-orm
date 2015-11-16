@@ -31,6 +31,5 @@ public interface EntityEntryFactory extends Serializable {
 			final boolean existsInDatabase,
 			final EntityPersister persister,
 			final boolean disableVersionIncrement,
-			final boolean lazyPropertiesAreUnfetched,
 			final PersistenceContext persistenceContext);
 }

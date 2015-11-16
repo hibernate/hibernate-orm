@@ -26,14 +26,17 @@ public class MyEntityTuplizer extends PojoEntityTuplizer {
 		super( entityMetamodel, mappedEntity );
 	}
 
+	@Override
 	public EntityNameResolver[] getEntityNameResolvers() {
 		return new EntityNameResolver[] { MyEntityNameResolver.INSTANCE };
 	}
 
-	protected Instantiator buildInstantiator(PersistentClass persistentClass) {
+	@Override
+	protected Instantiator buildInstantiator(EntityMetamodel entityMetamodel, PersistentClass persistentClass) {
 		return new MyEntityInstantiator( persistentClass.getEntityName() );
 	}
 
+	@Override
 	public String determineConcreteSubclassEntityName(Object entityInstance, SessionFactoryImplementor factory) {
 		String entityName = ProxyHelper.extractEntityName( entityInstance );
 		if ( entityName == null ) {
@@ -42,6 +45,7 @@ public class MyEntityTuplizer extends PojoEntityTuplizer {
 		return entityName;
 	}
 
+	@Override
 	protected ProxyFactory buildProxyFactory(PersistentClass persistentClass, Getter idGetter, Setter idSetter) {
 		// allows defining a custom proxy factory, which is responsible for
 		// generating lazy proxies for a given entity.

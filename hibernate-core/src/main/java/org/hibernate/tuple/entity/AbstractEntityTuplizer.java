@@ -100,7 +100,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	 *
 	 * @return An appropriate Instantiator instance.
 	 */
-	protected abstract Instantiator buildInstantiator(PersistentClass mappingInfo);
+	protected abstract Instantiator buildInstantiator(EntityMetamodel entityMetamodel, PersistentClass mappingInfo);
 
 	/**
 	 * Build an appropriate ProxyFactory for the given mapped entity.
@@ -151,7 +151,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		}
 		hasCustomAccessors = foundCustomAccessor;
 
-		instantiator = buildInstantiator( mappingInfo );
+		instantiator = buildInstantiator( entityMetamodel, mappingInfo );
 
 		if ( entityMetamodel.isLazy() && !entityMetamodel.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
 			proxyFactory = buildProxyFactory( mappingInfo, idGetter, idSetter );
@@ -486,7 +486,11 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	}
 
 	protected boolean shouldGetAllProperties(Object entity) {
-		return !hasUninitializedLazyProperties( entity );
+		if ( !getEntityMetamodel().getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
+			return true;
+		}
+
+		return !getEntityMetamodel().getBytecodeEnhancementMetadata().hasUnFetchedAttributes( entity );
 	}
 
 	@Override
@@ -641,13 +645,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	}
 
 	@Override
-	public void afterInitialize(Object entity, boolean lazyPropertiesAreUnfetched, SessionImplementor session) {
-	}
-
-	@Override
-	public boolean hasUninitializedLazyProperties(Object entity) {
-		// the default is to simply not lazy fetch properties for now...
-		return false;
+	public void afterInitialize(Object entity, SessionImplementor session) {
 	}
 
 	@Override

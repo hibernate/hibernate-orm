@@ -27,7 +27,6 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Sanne Grinovero  <sanne@hibernate.org>
  */
 public final class MutableEntityEntry extends AbstractEntityEntry {
-
 	/**
 	 * @deprecated the tenantId and entityMode parameters where removed: this constructor accepts but ignores them.
 	 * Use the other constructor!
@@ -45,10 +44,10 @@ public final class MutableEntityEntry extends AbstractEntityEntry {
 			final EntityMode entityMode,
 			final String tenantId,
 			final boolean disableVersionIncrement,
-			final boolean lazyPropertiesAreUnfetched,
 			final PersistenceContext persistenceContext) {
 		this( status, loadedState, rowId, id, version, lockMode, existsInDatabase,
-				persister,disableVersionIncrement, lazyPropertiesAreUnfetched, persistenceContext );
+				persister,disableVersionIncrement, persistenceContext
+		);
 	}
 
 	public MutableEntityEntry(
@@ -61,11 +60,10 @@ public final class MutableEntityEntry extends AbstractEntityEntry {
 			final boolean existsInDatabase,
 			final EntityPersister persister,
 			final boolean disableVersionIncrement,
-			final boolean lazyPropertiesAreUnfetched,
 			final PersistenceContext persistenceContext) {
-
 		super( status, loadedState, rowId, id, version, lockMode, existsInDatabase, persister,
-				disableVersionIncrement, lazyPropertiesAreUnfetched, persistenceContext );
+				disableVersionIncrement, persistenceContext
+		);
 	}
 
 	/**
@@ -84,14 +82,11 @@ public final class MutableEntityEntry extends AbstractEntityEntry {
 			final LockMode lockMode,
 			final boolean existsInDatabase,
 			final boolean isBeingReplicated,
-			final boolean loadedWithLazyPropertiesUnfetched,
 			final PersistenceContext persistenceContext) {
-
 		super( factory, entityName, id, status, previousStatus, loadedState, deletedState,
-				version, lockMode, existsInDatabase, isBeingReplicated, loadedWithLazyPropertiesUnfetched,
-				persistenceContext );
+				version, lockMode, existsInDatabase, isBeingReplicated, persistenceContext
+		);
 	}
-
 
 	/**
 	 * Custom deserialization routine used during deserialization of a
@@ -122,7 +117,6 @@ public final class MutableEntityEntry extends AbstractEntityEntry {
 				(Object[]) ois.readObject(),
 				ois.readObject(),
 				LockMode.valueOf( (String) ois.readObject() ),
-				ois.readBoolean(),
 				ois.readBoolean(),
 				ois.readBoolean(),
 				persistenceContext

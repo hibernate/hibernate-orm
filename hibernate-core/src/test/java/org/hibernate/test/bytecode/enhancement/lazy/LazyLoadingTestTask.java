@@ -18,6 +18,9 @@ import org.hibernate.test.bytecode.enhancement.AbstractEnhancerTestTask;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils;
 import org.junit.Assert;
 
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.Assert.assertThat;
+
 /**
  * @author Luis Barreiro
  */
@@ -43,8 +46,9 @@ public class LazyLoadingTestTask extends AbstractEnhancerTestTask {
 		Parent parent = new Parent();
 		parent.setChildren(new ArrayList<Child>());
 		for ( int i = 0; i < CHILDREN_SIZE; i++ ) {
-			final Child child = new Child();
+			final Child child = new Child( "Child #" + i );
 			child.setParent( parent );
+			parent.getChildren().add( child );
 			s.persist( child );
 			lastChildID = child.getId();
 		}
@@ -62,11 +66,17 @@ public class LazyLoadingTestTask extends AbstractEnhancerTestTask {
 
 		Child loadedChild = s.load( Child.class, lastChildID );
 
+		Object nameByReflection = EnhancerTestUtils.getFieldByReflection( loadedChild, "name" );
+		Assert.assertNotNull( "Non-lazy field 'name' was not loaded", nameByReflection );
+
 		Object parentByReflection = EnhancerTestUtils.getFieldByReflection( loadedChild, "parent" );
 		Assert.assertNull( "Lazy field 'parent' is initialized", parentByReflection );
 		Assert.assertFalse( loadedChild instanceof HibernateProxy );
 
 		Parent loadedParent = loadedChild.getParent();
+		assertThat( loadedChild.getName(), notNullValue() );
+		assertThat( loadedParent, notNullValue() );
+		assertThat( loadedChild.getParent(), notNullValue() );
 
 		EnhancerTestUtils.checkDirtyTracking( loadedChild );
 

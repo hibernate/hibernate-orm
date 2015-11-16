@@ -67,7 +67,6 @@ public final class TwoPhaseLoad {
 	 * @param rowId The rowId for the entity
 	 * @param object An optional instance for the entity being loaded
 	 * @param lockMode The lock mode
-	 * @param lazyPropertiesAreUnFetched Whether properties defined as lazy are yet un-fetched
 	 * @param session The Session
 	 */
 	public static void postHydrate(
@@ -77,7 +76,6 @@ public final class TwoPhaseLoad {
 			final Object rowId,
 			final Object object,
 			final LockMode lockMode,
-			final boolean lazyPropertiesAreUnFetched,
 			final SessionImplementor session) {
 		final Object version = Versioning.getVersion( values, persister );
 		session.getPersistenceContext().addEntry(
@@ -90,8 +88,7 @@ public final class TwoPhaseLoad {
 				lockMode,
 				true,
 				persister,
-				false,
-				lazyPropertiesAreUnFetched
+				false
 			);
 
 		if ( version != null && LOG.isTraceEnabled() ) {
@@ -264,11 +261,7 @@ public final class TwoPhaseLoad {
 			persistenceContext.setEntryStatus( entityEntry, Status.MANAGED );
 		}
 
-		persister.afterInitialize(
-				entity,
-				entityEntry.isLoadedWithLazyPropertiesUnfetched(),
-				session
-		);
+		persister.afterInitialize( entity, session );
 
 		if ( debugEnabled ) {
 			LOG.debugf(
@@ -317,11 +310,13 @@ public final class TwoPhaseLoad {
 	}
 
 	private static boolean useMinimalPuts(SessionImplementor session, EntityEntry entityEntry) {
-		return ( session.getFactory().getSettings().isMinimalPutsEnabled()
-				&& session.getCacheMode()!=CacheMode.REFRESH )
-				|| ( entityEntry.getPersister().hasLazyProperties()
-				&& entityEntry.isLoadedWithLazyPropertiesUnfetched()
-				&& entityEntry.getPersister().isLazyPropertiesCacheable() );
+		if ( session.getFactory().getSessionFactoryOptions().isMinimalPutsEnabled() ) {
+			return session.getCacheMode() != CacheMode.REFRESH;
+		}
+		else {
+			return entityEntry.getPersister().hasLazyProperties()
+					&& entityEntry.getPersister().isLazyPropertiesCacheable();
+		}
 	}
 
 	/**
@@ -335,7 +330,6 @@ public final class TwoPhaseLoad {
 	 * @param object The entity instance
 	 * @param persister The entity persister
 	 * @param lockMode The lock mode
-	 * @param lazyPropertiesAreUnFetched Are lazy properties still un-fetched?
 	 * @param session The Session
 	 */
 	public static void addUninitializedEntity(
@@ -343,7 +337,6 @@ public final class TwoPhaseLoad {
 			final Object object,
 			final EntityPersister persister,
 			final LockMode lockMode,
-			final boolean lazyPropertiesAreUnFetched,
 			final SessionImplementor session) {
 		session.getPersistenceContext().addEntity(
 				object,
@@ -354,8 +347,7 @@ public final class TwoPhaseLoad {
 				lockMode,
 				true,
 				persister,
-				false,
-				lazyPropertiesAreUnFetched
+				false
 		);
 	}
 
@@ -366,7 +358,6 @@ public final class TwoPhaseLoad {
 	 * @param object The entity instance
 	 * @param persister The entity persister
 	 * @param lockMode The lock mode
-	 * @param lazyPropertiesAreUnFetched Are lazy properties still un-fetched?
 	 * @param version The version
 	 * @param session The Session
 	 */
@@ -375,7 +366,6 @@ public final class TwoPhaseLoad {
 			final Object object,
 			final EntityPersister persister,
 			final LockMode lockMode,
-			final boolean lazyPropertiesAreUnFetched,
 			final Object version,
 			final SessionImplementor session) {
 		session.getPersistenceContext().addEntity(
@@ -387,8 +377,7 @@ public final class TwoPhaseLoad {
 				lockMode,
 				true,
 				persister,
-				false,
-				lazyPropertiesAreUnFetched
-			);
+				false
+		);
 	}
 }

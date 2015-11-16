@@ -9,6 +9,7 @@ package org.hibernate.cache.spi.entry;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -21,6 +22,9 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Steve Ebersole
  */
 public class StructuredCacheEntry implements CacheEntryStructure {
+	public static final String SUBCLASS_KEY = "_subclass";
+	public static final String VERSION_KEY = "_version";
+
 	private EntityPersister persister;
 
 	/**
@@ -33,18 +37,18 @@ public class StructuredCacheEntry implements CacheEntryStructure {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public Object destructure(Object structured, SessionFactoryImplementor factory) {
 		final Map map = (Map) structured;
-		final boolean lazyPropertiesUnfetched = (Boolean) map.get( "_lazyPropertiesUnfetched" );
-		final String subclass = (String) map.get( "_subclass" );
-		final Object version = map.get( "_version" );
+		final String subclass = (String) map.get( SUBCLASS_KEY );
+		final Object version = map.get( VERSION_KEY );
 		final EntityPersister subclassPersister = factory.getEntityPersister( subclass );
 		final String[] names = subclassPersister.getPropertyNames();
 		final Serializable[] state = new Serializable[names.length];
 		for ( int i = 0; i < names.length; i++ ) {
 			state[i] = (Serializable) map.get( names[i] );
 		}
-		return new StandardCacheEntryImpl( state, subclass, lazyPropertiesUnfetched, version );
+		return new StandardCacheEntryImpl( state, subclass, version );
 	}
 
 	@Override
@@ -53,9 +57,8 @@ public class StructuredCacheEntry implements CacheEntryStructure {
 		final CacheEntry entry = (CacheEntry) item;
 		final String[] names = persister.getPropertyNames();
 		final Map map = new HashMap( names.length + 3, 1f );
-		map.put( "_subclass", entry.getSubclass() );
-		map.put( "_version", entry.getVersion() );
-		map.put( "_lazyPropertiesUnfetched", entry.areLazyPropertiesUnfetched() );
+		map.put( SUBCLASS_KEY, entry.getSubclass() );
+		map.put( VERSION_KEY, entry.getVersion() );
 		for ( int i=0; i<names.length; i++ ) {
 			map.put( names[i], entry.getDisassembledState()[i] );
 		}

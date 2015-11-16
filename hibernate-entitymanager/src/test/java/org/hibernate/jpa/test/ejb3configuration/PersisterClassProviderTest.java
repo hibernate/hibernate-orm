@@ -474,7 +474,7 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public void afterInitialize(Object entity, boolean lazyPropertiesAreUnfetched, SessionImplementor session) {
+		public void afterInitialize(Object entity, SessionImplementor session) {
 		}
 
 		@Override

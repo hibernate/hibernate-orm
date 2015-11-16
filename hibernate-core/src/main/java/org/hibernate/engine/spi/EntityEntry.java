@@ -9,6 +9,7 @@ package org.hibernate.engine.spi;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.Set;
 
 import org.hibernate.LockMode;
 import org.hibernate.persister.entity.EntityPersister;
@@ -123,8 +124,6 @@ public interface EntityEntry {
 
 	@Override
 	String toString();
-
-	boolean isLoadedWithLazyPropertiesUnfetched();
 
 	/**
 	 * Custom serialization routine used during serialization of a

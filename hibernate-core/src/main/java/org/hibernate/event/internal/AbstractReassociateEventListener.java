@@ -76,8 +76,7 @@ public abstract class AbstractReassociateEventListener implements Serializable {
 				LockMode.NONE,
 				true,
 				persister,
-				false,
-				true //will be ignored, using the existing Entry instead
+				false
 		);
 
 		new OnLockVisitor( source, id, object ).process( object, persister );

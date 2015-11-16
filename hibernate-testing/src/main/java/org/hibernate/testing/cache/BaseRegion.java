@@ -16,7 +16,7 @@ import org.hibernate.cache.spi.Region;
 /**
  * @author Strong Liu
  */
-class BaseRegion implements Region {
+public class BaseRegion implements Region {
 	protected final Map cache = new ConcurrentHashMap();
 	private final String name;
 	private static int timeout = Timestamper.ONE_MS * 60000;  //60s
@@ -68,5 +68,9 @@ class BaseRegion implements Region {
 	@Override
 	public int getTimeout() {
 		return timeout;
+	}
+
+	public Map getDataMap() {
+		return cache;
 	}
 }

@@ -9,6 +9,7 @@ package org.hibernate.bytecode.spi;
 import java.util.Set;
 
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributesMetadata;
 import org.hibernate.engine.spi.SessionImplementor;
 
 /**
@@ -32,11 +33,12 @@ public interface BytecodeEnhancementMetadata {
 	 */
 	boolean isEnhancedForLazyLoading();
 
+	LazyAttributesMetadata getLazyAttributesMetadata();
+
 	/**
 	 * Build and inject an interceptor instance into the enhanced entity.
 	 *
 	 * @param entity The entity into which built interceptor should be injected
-	 * @param uninitializedFieldNames The name of fields marked as lazy
 	 * @param session The session to which the entity instance belongs.
 	 *
 	 * @return The built and injected interceptor
@@ -45,7 +47,6 @@ public interface BytecodeEnhancementMetadata {
 	 */
 	LazyAttributeLoadingInterceptor injectInterceptor(
 			Object entity,
-			Set<String> uninitializedFieldNames,
 			SessionImplementor session) throws NotInstrumentedException;
 
 	/**
@@ -58,4 +59,6 @@ public interface BytecodeEnhancementMetadata {
 	 * @throws NotInstrumentedException Thrown if {@link #isEnhancedForLazyLoading()} returns {@code false}
 	 */
 	LazyAttributeLoadingInterceptor extractInterceptor(Object entity) throws NotInstrumentedException;
+
+	boolean hasUnFetchedAttributes(Object entity);
 }

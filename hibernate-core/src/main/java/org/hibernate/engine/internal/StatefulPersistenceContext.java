@@ -455,8 +455,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			final LockMode lockMode,
 			final boolean existsInDatabase,
 			final EntityPersister persister,
-			final boolean disableVersionIncrement,
-			boolean lazyPropertiesAreUnfetched) {
+			final boolean disableVersionIncrement) {
 		addEntity( entityKey, entity );
 		return addEntry(
 				entity,
@@ -468,8 +467,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				lockMode,
 				existsInDatabase,
 				persister,
-				disableVersionIncrement,
-				lazyPropertiesAreUnfetched
+				disableVersionIncrement
 		);
 	}
 
@@ -484,9 +482,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			final LockMode lockMode,
 			final boolean existsInDatabase,
 			final EntityPersister persister,
-			final boolean disableVersionIncrement,
-			boolean lazyPropertiesAreUnfetched) {
-
+			final boolean disableVersionIncrement) {
 		final EntityEntry e;
 
 		if( (entity instanceof ManagedEntity) &&  ((ManagedEntity) entity).$$_hibernate_getEntityEntry() != null && status == Status.READ_ONLY) {
@@ -505,7 +501,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 					existsInDatabase,
 					persister,
 					disableVersionIncrement,
-					lazyPropertiesAreUnfetched,
 					this
 			);
 		}
@@ -1382,8 +1377,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				oldEntry.getLockMode(),
 				oldEntry.isExistsInDatabase(),
 				oldEntry.getPersister(),
-				oldEntry.isBeingReplicated(),
-				oldEntry.isLoadedWithLazyPropertiesUnfetched()
+				oldEntry.isBeingReplicated()
 		);
 	}
 

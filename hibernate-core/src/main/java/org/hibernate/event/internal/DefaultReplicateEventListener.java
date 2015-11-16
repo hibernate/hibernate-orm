@@ -191,8 +191,7 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 				LockMode.NONE,
 				true,
 				persister,
-				true,
-				false
+				true
 		);
 
 		cascadeAfterReplicate( entity, persister, replicationMode, source );

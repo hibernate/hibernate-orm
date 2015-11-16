@@ -97,6 +97,7 @@ import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.GenericGenerators;
 import org.hibernate.annotations.Index;
+import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.annotations.ListIndexBase;
@@ -1665,6 +1666,11 @@ public final class AnnotationBinder {
 				( property.isAnnotationPresent( Id.class )
 						|| property.isAnnotationPresent( EmbeddedId.class ) );
 		propertyBinder.setId( isId );
+
+		final LazyGroup lazyGroupAnnotation = property.getAnnotation( LazyGroup.class );
+		if ( lazyGroupAnnotation != null ) {
+			propertyBinder.setLazyGroup( lazyGroupAnnotation.value() );
+		}
 
 		if ( property.isAnnotationPresent( Version.class ) ) {
 			if ( isIdentifierMapper ) {

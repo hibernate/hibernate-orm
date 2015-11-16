@@ -9,6 +9,7 @@ package org.hibernate.tuple.entity;
 import java.util.Set;
 
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributesMetadata;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.bytecode.spi.NotInstrumentedException;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -18,10 +19,12 @@ import org.hibernate.engine.spi.SessionImplementor;
  */
 public class BytecodeEnhancementMetadataNonPojoImpl implements BytecodeEnhancementMetadata {
 	private final String entityName;
+	private final LazyAttributesMetadata lazyAttributesMetadata;
 	private final String errorMsg;
 
 	public BytecodeEnhancementMetadataNonPojoImpl(String entityName) {
 		this.entityName = entityName;
+		this.lazyAttributesMetadata = LazyAttributesMetadata.nonEnhanced( entityName );
 		this.errorMsg = "Entity [" + entityName + "] is non-pojo, and therefore not instrumented";
 	}
 
@@ -36,9 +39,13 @@ public class BytecodeEnhancementMetadataNonPojoImpl implements BytecodeEnhanceme
 	}
 
 	@Override
+	public LazyAttributesMetadata getLazyAttributesMetadata() {
+		return lazyAttributesMetadata;
+	}
+
+	@Override
 	public LazyAttributeLoadingInterceptor injectInterceptor(
 			Object entity,
-			Set<String> uninitializedFieldNames,
 			SessionImplementor session) throws NotInstrumentedException {
 		throw new NotInstrumentedException( errorMsg );
 	}
@@ -46,5 +53,10 @@ public class BytecodeEnhancementMetadataNonPojoImpl implements BytecodeEnhanceme
 	@Override
 	public LazyAttributeLoadingInterceptor extractInterceptor(Object entity) throws NotInstrumentedException {
 		throw new NotInstrumentedException( errorMsg );
+	}
+
+	@Override
+	public boolean hasUnFetchedAttributes(Object entity) {
+		return false;
 	}
 }

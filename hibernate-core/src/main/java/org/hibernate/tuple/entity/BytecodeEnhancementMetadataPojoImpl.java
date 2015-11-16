@@ -9,32 +9,70 @@ package org.hibernate.tuple.entity;
 import java.util.Set;
 
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributesMetadata;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.bytecode.spi.NotInstrumentedException;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.mapping.PersistentClass;
 
 /**
  * @author Steve Ebersole
  */
 public class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhancementMetadata {
+	public static BytecodeEnhancementMetadata from(PersistentClass persistentClass) {
+		final Class mappedClass = persistentClass.getMappedClass();
+		final boolean enhancedForLazyLoading = PersistentAttributeInterceptable.class.isAssignableFrom( mappedClass );
+		final LazyAttributesMetadata lazyAttributesMetadata = enhancedForLazyLoading
+				? LazyAttributesMetadata.from( persistentClass )
+				: LazyAttributesMetadata.nonEnhanced( persistentClass.getEntityName() );
+
+		return new BytecodeEnhancementMetadataPojoImpl(
+				persistentClass.getEntityName(),
+				mappedClass,
+				enhancedForLazyLoading,
+				lazyAttributesMetadata
+		);
+	}
+
+	private final String entityName;
 	private final Class entityClass;
 	private final boolean enhancedForLazyLoading;
+	private final LazyAttributesMetadata lazyAttributesMetadata;
 
-	public BytecodeEnhancementMetadataPojoImpl(Class entityClass) {
+	public BytecodeEnhancementMetadataPojoImpl(
+			String entityName,
+			Class entityClass,
+			boolean enhancedForLazyLoading,
+			LazyAttributesMetadata lazyAttributesMetadata) {
+		this.entityName = entityName;
 		this.entityClass = entityClass;
-		this.enhancedForLazyLoading = PersistentAttributeInterceptable.class.isAssignableFrom( entityClass );
+		this.enhancedForLazyLoading = enhancedForLazyLoading;
+		this.lazyAttributesMetadata = lazyAttributesMetadata;
 	}
 
 	@Override
 	public String getEntityName() {
-		return entityClass.getName();
+		return entityName;
 	}
 
 	@Override
 	public boolean isEnhancedForLazyLoading() {
 		return enhancedForLazyLoading;
+	}
+
+	@Override
+	public LazyAttributesMetadata getLazyAttributesMetadata() {
+		return lazyAttributesMetadata;
+	}
+
+	@Override
+	public boolean hasUnFetchedAttributes(Object entity) {
+		LazyAttributeLoadingInterceptor interceptor = isEnhancedForLazyLoading()
+				? extractInterceptor( entity )
+				: null;
+		return interceptor != null && interceptor.hasAnyUninitializedAttributes();
 	}
 
 	@Override
@@ -62,10 +100,7 @@ public class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhancementM
 	}
 
 	@Override
-	public LazyAttributeLoadingInterceptor injectInterceptor(
-			Object entity,
-			Set<String> uninitializedFieldNames,
-			SessionImplementor session) throws NotInstrumentedException {
+	public LazyAttributeLoadingInterceptor injectInterceptor(Object entity, SessionImplementor session) {
 		if ( !enhancedForLazyLoading ) {
 			throw new NotInstrumentedException( "Entity class [" + entityClass.getName() + "] is not enhanced for lazy loading" );
 		}
@@ -80,7 +115,11 @@ public class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhancementM
 			);
 		}
 
-		final LazyAttributeLoadingInterceptor interceptor = new LazyAttributeLoadingInterceptor( session, uninitializedFieldNames, getEntityName() );
+		final LazyAttributeLoadingInterceptor interceptor = new LazyAttributeLoadingInterceptor(
+				getEntityName(),
+				lazyAttributesMetadata.getLazyAttributeNames(),
+				session
+		);
 		( (PersistentAttributeInterceptable) entity ).$$_hibernate_setInterceptor( interceptor );
 		return interceptor;
 	}

@@ -8,6 +8,7 @@
 package org.hibernate.engine.internal;
 
 import java.io.Serializable;
+import java.util.Set;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.EntityEntry;
@@ -43,7 +44,6 @@ public class MutableEntityEntryFactory implements EntityEntryFactory {
 			boolean existsInDatabase,
 			EntityPersister persister,
 			boolean disableVersionIncrement,
-			boolean lazyPropertiesAreUnfetched,
 			PersistenceContext persistenceContext) {
 		return new MutableEntityEntry(
 				status,
@@ -55,7 +55,6 @@ public class MutableEntityEntryFactory implements EntityEntryFactory {
 				existsInDatabase,
 				persister,
 				disableVersionIncrement,
-				lazyPropertiesAreUnfetched,
 				persistenceContext
 		);
 	}

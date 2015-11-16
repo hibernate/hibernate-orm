@@ -213,7 +213,6 @@ public abstract class EnhancerTestUtils extends BaseUnitTestCase {
 				false,
 				null,
 				false,
-				false,
 				null
 		);
 	}

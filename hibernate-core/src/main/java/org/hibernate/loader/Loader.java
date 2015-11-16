@@ -1697,8 +1697,9 @@ public abstract class Loader {
 		final Loadable persister = (Loadable) getFactory().getEntityPersister( instanceEntityName );
 
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev(
-					"Initializing object from ResultSet: {0}", MessageHelper.infoString(
+			LOG.tracef(
+					"Initializing object from ResultSet: %s",
+					MessageHelper.infoString(
 							persister,
 							id,
 							getFactory()
@@ -1706,7 +1707,7 @@ public abstract class Loader {
 			);
 		}
 
-		boolean eagerPropertyFetch = isEagerPropertyFetchEnabled( i );
+		boolean fetchAllPropertiesRequested = isEagerPropertyFetchEnabled( i );
 
 		// add temp entry so that the next step is circular-reference
 		// safe - only needed because some types don't take proper
@@ -1716,7 +1717,6 @@ public abstract class Loader {
 				object,
 				persister,
 				lockMode,
-				!eagerPropertyFetch,
 				session
 		);
 
@@ -1731,7 +1731,7 @@ public abstract class Loader {
 				object,
 				rootPersister,
 				cols,
-				eagerPropertyFetch,
+				fetchAllPropertiesRequested,
 				session
 		);
 
@@ -1768,7 +1768,6 @@ public abstract class Loader {
 				rowId,
 				object,
 				lockMode,
-				!eagerPropertyFetch,
 				session
 		);
 

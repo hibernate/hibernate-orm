@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -235,7 +236,7 @@ public interface PersistenceContext {
 	/**
 	 * Adds an entity to the internal caches.
 	 */
-	public EntityEntry addEntity(
+	EntityEntry addEntity(
 			final Object entity,
 			final Status status,
 			final Object[] loadedState,
@@ -244,8 +245,7 @@ public interface PersistenceContext {
 			final LockMode lockMode,
 			final boolean existsInDatabase,
 			final EntityPersister persister,
-			final boolean disableVersionIncrement,
-			boolean lazyPropertiesAreUnfetched);
+			final boolean disableVersionIncrement);
 
 	/**
 	 * Generates an appropriate EntityEntry instance and adds it 
@@ -261,8 +261,7 @@ public interface PersistenceContext {
 			final LockMode lockMode,
 			final boolean existsInDatabase,
 			final EntityPersister persister,
-			final boolean disableVersionIncrement,
-			boolean lazyPropertiesAreUnfetched);
+			final boolean disableVersionIncrement);
 
 	/**
 	 * Is the given collection associated with this persistence context?

@@ -19,19 +19,21 @@ import org.hibernate.tuple.entity.PojoEntityTuplizer;
  */
 public class DynamicEntityTuplizer extends PojoEntityTuplizer {
 
-		public DynamicEntityTuplizer(EntityMetamodel entityMetamodel, PersistentClass mappedEntity) {
-			super( entityMetamodel, mappedEntity );
-		}
-
-		protected Instantiator buildInstantiator(PersistentClass persistentClass) {
-			return new DynamicInstantiator( persistentClass.getEntityName() );
-		}
-
-		protected ProxyFactory buildProxyFactory(PersistentClass persistentClass, Getter idGetter, Setter idSetter) {
-			// allows defining a custom proxy factory, which is responsible for
-			// generating lazy proxies for a given entity.
-			//
-			// Here we simply use the default...
-			return super.buildProxyFactory( persistentClass, idGetter, idSetter );
-		}
+	public DynamicEntityTuplizer(EntityMetamodel entityMetamodel, PersistentClass mappedEntity) {
+		super( entityMetamodel, mappedEntity );
 	}
+
+	@Override
+	protected Instantiator buildInstantiator(EntityMetamodel entityMetamodel, PersistentClass persistentClass) {
+		return new DynamicInstantiator( persistentClass.getEntityName() );
+	}
+
+	@Override
+	protected ProxyFactory buildProxyFactory(PersistentClass persistentClass, Getter idGetter, Setter idSetter) {
+		// allows defining a custom proxy factory, which is responsible for
+		// generating lazy proxies for a given entity.
+		//
+		// Here we simply use the default...
+		return super.buildProxyFactory( persistentClass, idGetter, idSetter );
+	}
+}

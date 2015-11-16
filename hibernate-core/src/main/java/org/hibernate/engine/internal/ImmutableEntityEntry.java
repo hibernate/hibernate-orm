@@ -50,7 +50,6 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 			final EntityMode entityMode,
 			final String tenantId,
 			final boolean disableVersionIncrement,
-			final boolean lazyPropertiesAreUnfetched,
 			final PersistenceContext persistenceContext) {
 		this(
 				status,
@@ -62,7 +61,6 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 				existsInDatabase,
 				persister,
 				disableVersionIncrement,
-				lazyPropertiesAreUnfetched,
 				// purposefully do not pass along the session/persistence-context : HHH-10251
 				null
 		);
@@ -78,7 +76,6 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 			final boolean existsInDatabase,
 			final EntityPersister persister,
 			final boolean disableVersionIncrement,
-			final boolean lazyPropertiesAreUnfetched,
 			final PersistenceContext persistenceContext) {
 
 		super(
@@ -91,7 +88,6 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 				existsInDatabase,
 				persister,
 				disableVersionIncrement,
-				lazyPropertiesAreUnfetched,
 				// purposefully do not pass along the session/persistence-context : HHH-10251
 				null
 		);
@@ -113,12 +109,11 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 			final LockMode lockMode,
 			final boolean existsInDatabase,
 			final boolean isBeingReplicated,
-			final boolean loadedWithLazyPropertiesUnfetched,
 			final PersistenceContext persistenceContext) {
 
 		super( factory, entityName, id, status, previousStatus, loadedState, deletedState,
-				version, lockMode, existsInDatabase, isBeingReplicated, loadedWithLazyPropertiesUnfetched,
-				persistenceContext );
+				version, lockMode, existsInDatabase, isBeingReplicated, persistenceContext
+		);
 	}
 
 	@Override
@@ -164,7 +159,6 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 				(Object[]) ois.readObject(),
 				ois.readObject(),
 				LockMode.valueOf( (String) ois.readObject() ),
-				ois.readBoolean(),
 				ois.readBoolean(),
 				ois.readBoolean(),
 				null

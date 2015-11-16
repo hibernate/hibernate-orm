@@ -113,7 +113,6 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 					LockMode.NONE,
 					true,
 					persister,
-					false,
 					false
 			);
 		}

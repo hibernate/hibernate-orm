@@ -20,10 +20,15 @@ import org.hibernate.internal.CoreMessageLogger;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
+ * A specialized Setter implementation for handling setting values into
+ * a into a bytecode-enhanced Class.  The reason we need specialized handling
+ * is to render the fact that the
+ *
  * @author Steve Ebersole
+ * @author Luis Barreiro
  */
-public class EnhancedSetterMethodImpl implements Setter {
-	private static final CoreMessageLogger LOG = messageLogger( EnhancedSetterMethodImpl.class );
+public class EnhancedSetterImpl implements Setter {
+	private static final CoreMessageLogger LOG = messageLogger( EnhancedSetterImpl.class );
 
 	private final Class containerClass;
 	private final String propertyName;
@@ -31,7 +36,7 @@ public class EnhancedSetterMethodImpl implements Setter {
 
 	private final boolean isPrimitive;
 
-	public EnhancedSetterMethodImpl(Class containerClass, String propertyName, Method setterMethod) {
+	public EnhancedSetterImpl(Class containerClass, String propertyName, Method setterMethod) {
 		this.containerClass = containerClass;
 		this.propertyName = propertyName;
 		this.setterMethod = setterMethod;
@@ -153,7 +158,7 @@ public class EnhancedSetterMethodImpl implements Setter {
 		}
 
 		private Object readResolve() {
-			return new EnhancedSetterMethodImpl( containerClass, propertyName, resolveMethod() );
+			return new EnhancedSetterImpl( containerClass, propertyName, resolveMethod() );
 		}
 
 		@SuppressWarnings("unchecked")

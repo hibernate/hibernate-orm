@@ -43,6 +43,7 @@ public class Property implements Serializable, MetaAttributable {
 	private ValueGeneration valueGenerationStrategy;
 	private String propertyAccessorName;
 	private boolean lazy;
+	private String lazyGroup;
 	private boolean optional;
 	private java.util.Map metaAttributes;
 	private PersistentClass persistentClass;
@@ -257,7 +258,15 @@ public class Property implements Serializable, MetaAttributable {
 		}
 		return lazy;
 	}
-	
+
+	public String getLazyGroup() {
+		return lazyGroup;
+	}
+
+	public void setLazyGroup(String lazyGroup) {
+		this.lazyGroup = lazyGroup;
+	}
+
 	public boolean isOptimisticLocked() {
 		return optimisticLocked;
 	}

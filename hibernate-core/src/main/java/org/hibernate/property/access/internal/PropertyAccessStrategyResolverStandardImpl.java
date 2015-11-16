@@ -34,11 +34,13 @@ public class PropertyAccessStrategyResolverStandardImpl implements PropertyAcces
 			String explicitAccessStrategyName,
 			EntityMode entityMode) {
 
-		if ( ( BuiltInPropertyAccessStrategies.BASIC.getExternalName().equals( explicitAccessStrategyName ) ||
-				BuiltInPropertyAccessStrategies.FIELD.getExternalName().equals( explicitAccessStrategyName ) ||
-				BuiltInPropertyAccessStrategies.MIXED.getExternalName().equals( explicitAccessStrategyName ) ) &&
-				Managed.class.isAssignableFrom( containerClass ) ) {
-			return PropertyAccessStrategyEnhancedImpl.INSTANCE;
+		if ( BuiltInPropertyAccessStrategies.BASIC.getExternalName().equals( explicitAccessStrategyName )
+				|| BuiltInPropertyAccessStrategies.FIELD.getExternalName().equals( explicitAccessStrategyName )
+				|| BuiltInPropertyAccessStrategies.MIXED.getExternalName().equals( explicitAccessStrategyName ) ) {
+			if ( Managed.class.isAssignableFrom( containerClass ) ) {
+				// PROPERTY (BASIC) and MIXED are not valid for bytecode enhanced entities...
+				return PropertyAccessStrategyEnhancedImpl.INSTANCE;
+			}
 		}
 
 		if ( StringHelper.isNotEmpty( explicitAccessStrategyName ) ) {

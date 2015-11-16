@@ -44,6 +44,7 @@ import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
+import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.Loader;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.OptimisticLock;
@@ -525,6 +526,10 @@ public abstract class CollectionBinder {
 			collection.setOrphanDelete( true );
 		}
 		binder.setLazy( collection.isLazy() );
+		final LazyGroup lazyGroupAnnotation = property.getAnnotation( LazyGroup.class );
+		if ( lazyGroupAnnotation != null ) {
+			binder.setLazyGroup( lazyGroupAnnotation.value() );
+		}
 		binder.setAccessType( accessType );
 		binder.setProperty( property );
 		binder.setInsertable( insertable );

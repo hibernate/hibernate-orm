@@ -143,7 +143,7 @@ public class EntityMetamodel implements Serializable {
 		versioned = persistentClass.isVersioned();
 
 		if ( persistentClass.hasPojoRepresentation() ) {
-			bytecodeEnhancementMetadata = new BytecodeEnhancementMetadataPojoImpl( persistentClass.getMappedClass() );
+			bytecodeEnhancementMetadata = BytecodeEnhancementMetadataPojoImpl.from( persistentClass );
 		}
 		else {
 			bytecodeEnhancementMetadata = new BytecodeEnhancementMetadataNonPojoImpl( persistentClass.getEntityName() );

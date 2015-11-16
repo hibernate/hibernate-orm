@@ -9,14 +9,16 @@ package org.hibernate.bytecode.enhance.spi.interceptor;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.LockMode;
-import org.hibernate.bytecode.enhance.internal.tracker.SimpleFieldTracker;
 import org.hibernate.bytecode.enhance.spi.CollectionTracker;
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.InterceptorImplementor;
 import org.hibernate.bytecode.enhance.spi.interceptor.Helper.Consumer;
 import org.hibernate.bytecode.enhance.spi.interceptor.Helper.LazyInitializationWork;
-import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -29,29 +31,30 @@ import org.jboss.logging.Logger;
  * Interceptor that loads attributes lazily
  *
  * @author Luis Barreiro
+ * @author Steve Ebersole
  */
-public class LazyAttributeLoadingInterceptor implements PersistentAttributeInterceptor, Consumer {
+public class LazyAttributeLoadingInterceptor
+		implements PersistentAttributeInterceptor, Consumer, InterceptorImplementor {
 	private static final Logger log = Logger.getLogger( LazyAttributeLoadingInterceptor.class );
 
-	private transient SessionImplementor session;
-
-	private final Set<String> lazyFields;
 	private final String entityName;
+	private final Set<String> lazyFields;
 
-	private String sessionFactoryUuid;
+	private Set<String> initializedLazyFields;
+
+	private transient SessionImplementor session;
 	private boolean allowLoadOutsideTransaction;
+	private String sessionFactoryUuid;
 
-	private final SimpleFieldTracker initializedFields = new SimpleFieldTracker();
 
-	public LazyAttributeLoadingInterceptor(SessionImplementor session, Set<String> lazyFields, String entityName) {
-		this.session = session;
-		this.lazyFields = lazyFields;
+	public LazyAttributeLoadingInterceptor(
+			String entityName,
+			Set<String> lazyFields,
+			SessionImplementor session) {
 		this.entityName = entityName;
+		this.lazyFields = lazyFields;
 
-		this.allowLoadOutsideTransaction = session.getFactory().getSessionFactoryOptions().isInitializeLazyStateOutsideTransactionsEnabled();
-		if ( this.allowLoadOutsideTransaction ) {
-			this.sessionFactoryUuid = session.getFactory().getUuid();
-		}
+		setSession( session );
 	}
 
 	protected final Object intercept(Object target, String attributeName, Object value) {
@@ -77,8 +80,6 @@ public class LazyAttributeLoadingInterceptor implements PersistentAttributeInter
 							final Object[] loadedState = null;
 							//		2) does a row exist in the db for this entity?
 							final boolean existsInDb = true;
-							// NOTE2: the final boolean is 'lazyPropertiesAreUnfetched' which is another
-							//	place where a "single lazy fetch group" shows up
 							session.getPersistenceContext().addEntity(
 									target,
 									Status.READ_ONLY,
@@ -88,7 +89,6 @@ public class LazyAttributeLoadingInterceptor implements PersistentAttributeInter
 									LockMode.NONE,
 									existsInDb,
 									persister,
-									true,
 									true
 							);
 						}
@@ -100,7 +100,6 @@ public class LazyAttributeLoadingInterceptor implements PersistentAttributeInter
 								session
 						);
 
-						initializedFields.add( attributeName );
 						takeCollectionSizeSnapshot( target, attributeName, loadedValue );
 						return loadedValue;
 					}
@@ -120,6 +119,12 @@ public class LazyAttributeLoadingInterceptor implements PersistentAttributeInter
 
 	public final void setSession(SessionImplementor session) {
 		this.session = session;
+		if ( session != null && !allowLoadOutsideTransaction ) {
+			this.allowLoadOutsideTransaction = session.getFactory().getSessionFactoryOptions().isInitializeLazyStateOutsideTransactionsEnabled();
+			if ( this.allowLoadOutsideTransaction ) {
+				this.sessionFactoryUuid = session.getFactory().getUuid();
+			}
+		}
 	}
 
 	public final void unsetSession() {
@@ -127,26 +132,33 @@ public class LazyAttributeLoadingInterceptor implements PersistentAttributeInter
 	}
 
 	public boolean isAttributeLoaded(String fieldName) {
-		return lazyFields == null || !lazyFields.contains( fieldName ) || initializedFields.contains( fieldName );
+		return !isLazyAttribute( fieldName ) || isInitializedLazyField( fieldName );
+	}
+
+	private boolean isLazyAttribute(String fieldName) {
+		return lazyFields == null || lazyFields.contains( fieldName );
+	}
+
+	private boolean isInitializedLazyField(String fieldName) {
+		return initializedLazyFields != null && initializedLazyFields.contains( fieldName );
 	}
 
 	public boolean hasAnyUninitializedAttributes() {
-		if ( lazyFields != null ) {
-			for ( String fieldName : lazyFields ) {
-				if ( !initializedFields.contains( fieldName ) ) {
-					return true;
-				}
+		if ( lazyFields == null ) {
+			return false;
+		}
+
+		if ( initializedLazyFields == null ) {
+			return true;
+		}
+
+		for ( String fieldName : lazyFields ) {
+			if ( !initializedLazyFields.contains( fieldName ) ) {
+				return true;
 			}
 		}
+
 		return false;
-	}
-
-	public void setLoaded(String attributeName) {
-		initializedFields.add( attributeName );
-	}
-
-	public String[] getiInitializedFields() {
-		return initializedFields.get();
 	}
 
 	@Override
@@ -174,7 +186,7 @@ public class LazyAttributeLoadingInterceptor implements PersistentAttributeInter
 	@Override
 	public boolean writeBoolean(Object obj, String name, boolean oldValue, boolean newValue) {
 		if ( lazyFields != null && lazyFields.contains( name ) ) {
-			initializedFields.add( name );
+			attributeInitialized( name );
 		}
 		return newValue;
 	}
@@ -187,7 +199,7 @@ public class LazyAttributeLoadingInterceptor implements PersistentAttributeInter
 	@Override
 	public byte writeByte(Object obj, String name, byte oldValue, byte newValue) {
 		if ( lazyFields != null && lazyFields.contains( name ) ) {
-			initializedFields.add( name );
+			attributeInitialized( name );
 		}
 		return newValue;
 	}
@@ -200,7 +212,7 @@ public class LazyAttributeLoadingInterceptor implements PersistentAttributeInter
 	@Override
 	public char writeChar(Object obj, String name, char oldValue, char newValue) {
 		if ( lazyFields != null && lazyFields.contains( name ) ) {
-			initializedFields.add( name );
+			attributeInitialized( name );
 		}
 		return newValue;
 	}
@@ -213,7 +225,7 @@ public class LazyAttributeLoadingInterceptor implements PersistentAttributeInter
 	@Override
 	public short writeShort(Object obj, String name, short oldValue, short newValue) {
 		if ( lazyFields != null && lazyFields.contains( name ) ) {
-			initializedFields.add( name );
+			attributeInitialized( name );
 		}
 		return newValue;
 	}
@@ -226,7 +238,7 @@ public class LazyAttributeLoadingInterceptor implements PersistentAttributeInter
 	@Override
 	public int writeInt(Object obj, String name, int oldValue, int newValue) {
 		if ( lazyFields != null && lazyFields.contains( name ) ) {
-			initializedFields.add( name );
+			attributeInitialized( name );
 		}
 		return newValue;
 	}
@@ -239,7 +251,7 @@ public class LazyAttributeLoadingInterceptor implements PersistentAttributeInter
 	@Override
 	public float writeFloat(Object obj, String name, float oldValue, float newValue) {
 		if ( lazyFields != null && lazyFields.contains( name ) ) {
-			initializedFields.add( name );
+			attributeInitialized( name );
 		}
 		return newValue;
 	}
@@ -252,7 +264,7 @@ public class LazyAttributeLoadingInterceptor implements PersistentAttributeInter
 	@Override
 	public double writeDouble(Object obj, String name, double oldValue, double newValue) {
 		if ( lazyFields != null && lazyFields.contains( name ) ) {
-			initializedFields.add( name );
+			attributeInitialized( name );
 		}
 		return newValue;
 	}
@@ -265,7 +277,7 @@ public class LazyAttributeLoadingInterceptor implements PersistentAttributeInter
 	@Override
 	public long writeLong(Object obj, String name, long oldValue, long newValue) {
 		if ( lazyFields != null && lazyFields.contains( name ) ) {
-			initializedFields.add( name );
+			attributeInitialized( name );
 		}
 		return newValue;
 	}
@@ -278,7 +290,7 @@ public class LazyAttributeLoadingInterceptor implements PersistentAttributeInter
 	@Override
 	public Object writeObject(Object obj, String name, Object oldValue, Object newValue) {
 		if ( lazyFields != null && lazyFields.contains( name ) ) {
-			initializedFields.add( name );
+			attributeInitialized( name );
 		}
 		return newValue;
 	}
@@ -297,4 +309,21 @@ public class LazyAttributeLoadingInterceptor implements PersistentAttributeInter
 	public String getSessionFactoryUuid() {
 		return sessionFactoryUuid;
 	}
+
+	@Override
+	public void attributeInitialized(String name) {
+		if ( !isLazyAttribute( name ) ) {
+			return;
+		}
+		if ( initializedLazyFields == null ) {
+			initializedLazyFields = new HashSet<String>();
+		}
+		initializedLazyFields.add( name );
+	}
+
+	@Override
+	public Set<String> getInitializedLazyAttributeNames() {
+		return initializedLazyFields == null ? Collections.<String>emptySet() : initializedLazyFields;
+	}
+
 }

@@ -7,6 +7,7 @@
 package org.hibernate.bytecode.enhance.spi;
 
 import java.io.Serializable;
+import java.util.Set;
 
 import org.hibernate.engine.spi.SessionImplementor;
 
@@ -20,7 +21,7 @@ public interface LazyPropertyInitializer {
 	/**
 	 * Marker value for uninitialized properties.
 	 */
-	public static final Serializable UNFETCHED_PROPERTY = new Serializable() {
+	Serializable UNFETCHED_PROPERTY = new Serializable() {
 		@Override
 		public String toString() {
 			return "<lazy>";
@@ -31,6 +32,11 @@ public interface LazyPropertyInitializer {
 		}
 	};
 
+	interface InterceptorImplementor {
+		Set<String> getInitializedLazyAttributeNames();
+		void attributeInitialized(String name);
+	}
+
 	/**
 	 * Initialize the property, and return its new value.
 	 *
@@ -40,6 +46,6 @@ public interface LazyPropertyInitializer {
 	 *
 	 * @return ?
 	 */
-	public Object initializeLazyProperty(String fieldName, Object entity, SessionImplementor session);
+	Object initializeLazyProperty(String fieldName, Object entity, SessionImplementor session);
 
 }

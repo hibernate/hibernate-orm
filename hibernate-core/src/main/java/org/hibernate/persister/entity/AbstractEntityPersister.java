@@ -33,8 +33,10 @@ import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
-import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeDescriptor;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributesMetadata;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
@@ -65,6 +67,7 @@ import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.PersistenceContext.NaturalIdHelper;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
@@ -160,8 +163,6 @@ public abstract class AbstractEntityPersister
 	private final boolean hasSubselectLoadableCollections;
 	protected final String rowIdName;
 
-	private final Set lazyProperties;
-
 	// The optional SQL string defined in the where attribute
 	private final String sqlWhereString;
 	private final String sqlWhereStringTemplate;
@@ -227,7 +228,7 @@ public abstract class AbstractEntityPersister
 	// SQL strings
 	private String sqlVersionSelectString;
 	private String sqlSnapshotSelectString;
-	private String sqlLazySelectString;
+	private Map<String,String> sqlLazySelectStringsByFetchGroup;
 
 	private String sqlIdentityInsertString;
 	private String sqlUpdateByRowIdString;
@@ -379,8 +380,8 @@ public abstract class AbstractEntityPersister
 		return sqlSnapshotSelectString;
 	}
 
-	protected String getSQLLazySelectString() {
-		return sqlLazySelectString;
+	protected String getSQLLazySelectString(String fetchGroup) {
+		return sqlLazySelectStringsByFetchGroup.get( fetchGroup );
 	}
 
 	protected String[] getSQLDeleteStrings() {
@@ -590,7 +591,6 @@ public abstract class AbstractEntityPersister
 		propertyColumnInsertable = new boolean[hydrateSpan][];
 		HashSet thisClassProperties = new HashSet();
 
-		lazyProperties = new HashSet();
 		ArrayList lazyNames = new ArrayList();
 		ArrayList lazyNumbers = new ArrayList();
 		ArrayList lazyTypes = new ArrayList();
@@ -635,7 +635,6 @@ public abstract class AbstractEntityPersister
 			propertyColumnAliases[i] = colAliases;
 
 			if ( lazyAvailable && prop.isLazy() ) {
-				lazyProperties.add( prop.getName() );
 				lazyNames.add( prop.getName() );
 				lazyNumbers.add( i );
 				lazyTypes.add( prop.getValue().getType() );
@@ -844,54 +843,68 @@ public abstract class AbstractEntityPersister
 				Template.renderWhereStringTemplate( string, factory.getDialect(), factory.getSqlFunctionRegistry() );
 	}
 
-	protected String generateLazySelectString() {
-
-		if ( !entityMetamodel.hasLazyProperties() ) {
-			return null;
+	protected Map<String,String> generateLazySelectStringsByFetchGroup() {
+		final BytecodeEnhancementMetadata enhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
+		if ( !enhancementMetadata.isEnhancedForLazyLoading()
+				|| !enhancementMetadata.getLazyAttributesMetadata().hasLazyAttributes() ) {
+			return Collections.emptyMap();
 		}
 
-		HashSet tableNumbers = new HashSet();
-		ArrayList columnNumbers = new ArrayList();
-		ArrayList formulaNumbers = new ArrayList();
-		for ( String lazyPropertyName : lazyPropertyNames ) {
-			// all this only really needs to consider properties
-			// of this class, not its subclasses, but since we
-			// are reusing code used for sequential selects, we
-			// use the subclass closure
-			int propertyNumber = getSubclassPropertyIndex( lazyPropertyName );
+		Map<String,String> result = new HashMap<String, String>();
 
-			int tableNumber = getSubclassPropertyTableNumber( propertyNumber );
-			tableNumbers.add( tableNumber );
+		final LazyAttributesMetadata lazyAttributesMetadata = enhancementMetadata.getLazyAttributesMetadata();
+		for ( String groupName : lazyAttributesMetadata.getFetchGroupNames() ) {
+			HashSet tableNumbers = new HashSet();
+			ArrayList columnNumbers = new ArrayList();
+			ArrayList formulaNumbers = new ArrayList();
 
-			int[] colNumbers = subclassPropertyColumnNumberClosure[propertyNumber];
-			for ( int colNumber : colNumbers ) {
-				if ( colNumber != -1 ) {
-					columnNumbers.add( colNumber );
+			for ( LazyAttributeDescriptor lazyAttributeDescriptor :
+					lazyAttributesMetadata.getFetchGroupAttributeDescriptors( groupName ) ) {
+				// all this only really needs to consider properties
+				// of this class, not its subclasses, but since we
+				// are reusing code used for sequential selects, we
+				// use the subclass closure
+				int propertyNumber = getSubclassPropertyIndex( lazyAttributeDescriptor.getName() );
+
+				int tableNumber = getSubclassPropertyTableNumber( propertyNumber );
+				tableNumbers.add( tableNumber );
+
+				int[] colNumbers = subclassPropertyColumnNumberClosure[propertyNumber];
+				for ( int colNumber : colNumbers ) {
+					if ( colNumber != -1 ) {
+						columnNumbers.add( colNumber );
+					}
+				}
+				int[] formNumbers = subclassPropertyFormulaNumberClosure[propertyNumber];
+				for ( int formNumber : formNumbers ) {
+					if ( formNumber != -1 ) {
+						formulaNumbers.add( formNumber );
+					}
 				}
 			}
-			int[] formNumbers = subclassPropertyFormulaNumberClosure[propertyNumber];
-			for ( int formNumber : formNumbers ) {
-				if ( formNumber != -1 ) {
-					formulaNumbers.add( formNumber );
-				}
+
+			if ( columnNumbers.size() == 0 && formulaNumbers.size() == 0 ) {
+				// only one-to-one is lazy fetched
+				continue;
 			}
+
+			result.put(
+					groupName,
+					renderSelect(
+							ArrayHelper.toIntArray( tableNumbers ),
+							ArrayHelper.toIntArray( columnNumbers ),
+							ArrayHelper.toIntArray( formulaNumbers )
+					)
+			);
 		}
 
-		if ( columnNumbers.size() == 0 && formulaNumbers.size() == 0 ) {
-			// only one-to-one is lazy fetched
-			return null;
-		}
-
-		return renderSelect(
-				ArrayHelper.toIntArray( tableNumbers ),
-				ArrayHelper.toIntArray( columnNumbers ),
-				ArrayHelper.toIntArray( formulaNumbers )
-		);
-
+		return result;
 	}
 
 	public Object initializeLazyProperty(String fieldName, Object entity, SessionImplementor session) {
 		final EntityEntry entry = session.getPersistenceContext().getEntry( entity );
+		final InterceptorImplementor interceptor = ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor();
+		assert interceptor != null : "Expecting bytecode interceptor to be non-null";
 
 		if ( hasCollections() ) {
 			final Type type = getPropertyType( fieldName );
@@ -919,6 +932,7 @@ public abstract class AbstractEntityPersister
 
 				// Initialize it
 				session.initializeCollection( collection, false );
+				interceptor.attributeInitialized( fieldName );
 
 				if ( collectionType.isArrayType() ) {
 					session.getPersistenceContext().addCollectionHolder( collection );
@@ -944,16 +958,17 @@ public abstract class AbstractEntityPersister
 			);
 		}
 
-		if ( session.getCacheMode().isGetEnabled() && hasCache() ) {
+		if ( session.getCacheMode().isGetEnabled() && hasCache() && isLazyPropertiesCacheable() ) {
 			final EntityRegionAccessStrategy cache = getCacheAccessStrategy();
 			final Object cacheKey = cache.generateCacheKey(id, this, session.getFactory(), session.getTenantIdentifier() );
 			final Object ce = CacheHelper.fromSharedCache( session, cacheKey, cache );
 			if ( ce != null ) {
 				final CacheEntry cacheEntry = (CacheEntry) getCacheEntryStructure().destructure( ce, factory );
-				if ( !cacheEntry.areLazyPropertiesUnfetched() ) {
-					//note early exit here:
-					return initializeLazyPropertiesFromCache( fieldName, entity, session, entry, cacheEntry );
-				}
+				final Object initializedValue = initializeLazyPropertiesFromCache( fieldName, entity, session, entry, cacheEntry );
+				interceptor.attributeInitialized( fieldName );
+
+				// NOTE EARLY EXIT!!!
+				return initializedValue;
 			}
 		}
 
@@ -993,14 +1008,26 @@ public abstract class AbstractEntityPersister
 			throw new AssertionFailure( "no lazy properties" );
 		}
 
+		final InterceptorImplementor interceptor = ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor();
+		assert interceptor != null : "Expecting bytecode interceptor to be non-null";
+
 		LOG.trace( "Initializing lazy properties from datastore" );
 
-		try {
+		final String fetchGroup = getEntityMetamodel().getBytecodeEnhancementMetadata()
+				.getLazyAttributesMetadata()
+				.getFetchGroupName( fieldName );
+		final List<LazyAttributeDescriptor> fetchGroupAttributeDescriptors = getEntityMetamodel().getBytecodeEnhancementMetadata()
+				.getLazyAttributesMetadata()
+				.getFetchGroupAttributeDescriptors( fetchGroup );
 
+		final Set<String> initializedLazyAttributeNames = interceptor.getInitializedLazyAttributeNames();
+
+		final String lazySelect = getSQLLazySelectString( fetchGroup );
+
+		try {
 			Object result = null;
 			PreparedStatement ps = null;
 			try {
-				final String lazySelect = getSQLLazySelectString();
 				ResultSet rs = null;
 				try {
 					if ( lazySelect != null ) {
@@ -1015,16 +1042,31 @@ public abstract class AbstractEntityPersister
 						rs.next();
 					}
 					final Object[] snapshot = entry.getLoadedState();
-					for ( int j = 0; j < lazyPropertyNames.length; j++ ) {
-						Object propValue = lazyPropertyTypes[j].nullSafeGet(
+					for ( LazyAttributeDescriptor fetchGroupAttributeDescriptor : fetchGroupAttributeDescriptors ) {
+						final boolean previousInitialized = initializedLazyAttributeNames.contains( fetchGroupAttributeDescriptor.getName() );
+						final Object loadedValue = fetchGroupAttributeDescriptor.getType().nullSafeGet(
 								rs,
-								lazyPropertyColumnAliases[j],
+								lazyPropertyColumnAliases[fetchGroupAttributeDescriptor.getLazyIndex()],
 								session,
 								entity
 						);
-						if ( initializeLazyProperty( fieldName, entity, session, snapshot, j, propValue ) ) {
-							result = propValue;
+						final boolean set = initializeLazyProperty(
+								fieldName,
+								entity,
+								session,
+								snapshot,
+								fetchGroupAttributeDescriptor.getLazyIndex(),
+								loadedValue
+						);
+						if ( previousInitialized ) {
+							// its already been initialized (e.g. by a write) so we don't want to overwrite
+							continue;
 						}
+						if ( set ) {
+							result = loadedValue;
+							interceptor.attributeInitialized( fetchGroupAttributeDescriptor.getName() );
+						}
+
 					}
 				}
 				finally {
@@ -1048,9 +1090,8 @@ public abstract class AbstractEntityPersister
 		catch (SQLException sqle) {
 			throw getFactory().getSQLExceptionHelper().convert(
 					sqle,
-					"could not initialize lazy properties: " +
-							MessageHelper.infoString( this, id, getFactory() ),
-					getSQLLazySelectString()
+					"could not initialize lazy properties: " + MessageHelper.infoString( this, id, getFactory() ),
+					lazySelect
 			);
 		}
 	}
@@ -1060,8 +1101,7 @@ public abstract class AbstractEntityPersister
 			final Object entity,
 			final SessionImplementor session,
 			final EntityEntry entry,
-			final CacheEntry cacheEntry
-	) {
+			final CacheEntry cacheEntry) {
 
 		LOG.trace( "Initializing lazy properties from second-level cache" );
 
@@ -1107,10 +1147,6 @@ public abstract class AbstractEntityPersister
 
 	public Serializable[] getQuerySpaces() {
 		return getPropertySpaces();
-	}
-
-	protected Set getLazyProperties() {
-		return lazyProperties;
 	}
 
 	public boolean isBatchLoadable() {
@@ -3475,8 +3511,8 @@ public abstract class AbstractEntityPersister
 	protected void logStaticSQL() {
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Static SQL for entity: %s", getEntityName() );
-			if ( sqlLazySelectString != null ) {
-				LOG.debugf( " Lazy select: %s", sqlLazySelectString );
+			for ( Map.Entry<String, String> entry : sqlLazySelectStringsByFetchGroup.entrySet() ) {
+				LOG.debugf( " Lazy select (%s) : %s", entry.getKey(), entry.getValue() );
 			}
 			if ( sqlVersionSelectString != null ) {
 				LOG.debugf( " Version select: %s", sqlVersionSelectString );
@@ -3815,7 +3851,7 @@ public abstract class AbstractEntityPersister
 
 		//select SQL
 		sqlSnapshotSelectString = generateSnapshotSelectString();
-		sqlLazySelectString = generateLazySelectString();
+		sqlLazySelectStringsByFetchGroup = generateLazySelectStringsByFetchGroup();
 		sqlVersionSelectString = generateSelectVersionString();
 		if ( hasInsertGeneratedProperties() ) {
 			sqlInsertGeneratedValuesSelectString = generateInsertGeneratedValuesSelectString();
@@ -4244,11 +4280,7 @@ public abstract class AbstractEntityPersister
 		if ( getEntityMetamodel().getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
 			LazyAttributeLoadingInterceptor interceptor = getEntityMetamodel().getBytecodeEnhancementMetadata().extractInterceptor( entity );
 			if ( interceptor == null ) {
-				getEntityMetamodel().getBytecodeEnhancementMetadata().injectInterceptor(
-						entity,
-						null,
-						session
-				);
+				getEntityMetamodel().getBytecodeEnhancementMetadata().injectInterceptor( entity, session );
 			}
 			else {
 				interceptor.setSession( session );
@@ -4483,8 +4515,9 @@ public abstract class AbstractEntityPersister
 		return isVersioned() && getPropertyInsertability()[getVersionProperty()];
 	}
 
-	public void afterInitialize(Object entity, boolean lazyPropertiesAreUnfetched, SessionImplementor session) {
-		getEntityTuplizer().afterInitialize( entity, lazyPropertiesAreUnfetched, session );
+	@Override
+	public void afterInitialize(Object entity, SessionImplementor session) {
+		getEntityTuplizer().afterInitialize( entity, session );
 	}
 
 	public String[] getPropertyNames() {
@@ -4609,7 +4642,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public boolean hasUninitializedLazyProperties(Object object) {
-		return getEntityTuplizer().hasUninitializedLazyProperties( object );
+		return entityMetamodel.getBytecodeEnhancementMetadata().hasUnFetchedAttributes( object );
 	}
 
 	@Override
@@ -5143,7 +5176,6 @@ public abstract class AbstractEntityPersister
 			return new StandardCacheEntryImpl(
 					state,
 					persister,
-					persister.hasUninitializedLazyProperties( entity ),
 					version,
 					session,
 					entity
@@ -5188,7 +5220,6 @@ public abstract class AbstractEntityPersister
 			return new StandardCacheEntryImpl(
 					state,
 					persister,
-					persister.hasUninitializedLazyProperties( entity ),
 					version,
 					session,
 					entity

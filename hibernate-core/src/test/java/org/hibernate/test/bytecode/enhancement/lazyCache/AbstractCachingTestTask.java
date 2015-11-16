@@ -36,6 +36,7 @@ public abstract class AbstractCachingTestTask implements EnhancerTestTask {
 		StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder();
 		registryBuilder.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
 		registryBuilder.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
+		registryBuilder.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" );
 		registryBuilder.addService( ClassLoaderService.class, new ClassLoaderServiceImpl( Thread.currentThread().getContextClassLoader() ) );
 		StandardServiceRegistry registry = registryBuilder.build();
 

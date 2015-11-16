@@ -61,12 +61,6 @@ public class ReferenceCacheEntryImpl implements CacheEntry {
 	}
 
 	@Override
-	public boolean areLazyPropertiesUnfetched() {
-		// reference data cannot define lazy attributes
-		return false;
-	}
-
-	@Override
 	public Serializable[] getDisassembledState() {
 		// reference data is not disassembled into the cache
 		return null;

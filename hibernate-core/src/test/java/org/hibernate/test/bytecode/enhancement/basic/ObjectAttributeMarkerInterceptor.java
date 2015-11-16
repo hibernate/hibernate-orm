@@ -7,6 +7,8 @@
 
 package org.hibernate.test.bytecode.enhancement.basic;
 
+import java.util.Set;
+
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 
 /**
@@ -111,5 +113,15 @@ public class ObjectAttributeMarkerInterceptor implements PersistentAttributeInte
 	@Override
 	public Object writeObject(Object obj, String name, Object oldValue, Object newValue) {
 		return WRITE_MARKER;
+	}
+
+	@Override
+	public Set<String> getInitializedLazyAttributeNames() {
+		return null;
+	}
+
+	@Override
+	public void attributeInitialized(String name) {
+
 	}
 }

@@ -58,6 +58,7 @@ public class PropertyBinder {
 	private String name;
 	private String returnedClassName;
 	private boolean lazy;
+	private String lazyGroup;
 	private AccessType accessType;
 	private Ejb3Column[] columns;
 	private PropertyHolder holder;
@@ -113,6 +114,10 @@ public class PropertyBinder {
 
 	public void setLazy(boolean lazy) {
 		this.lazy = lazy;
+	}
+
+	public void setLazyGroup(String lazyGroup) {
+		this.lazyGroup = lazyGroup;
 	}
 
 	public void setAccessType(AccessType accessType) {
@@ -262,6 +267,7 @@ public class PropertyBinder {
 		prop.setName( name );
 		prop.setValue( value );
 		prop.setLazy( lazy );
+		prop.setLazyGroup( lazyGroup );
 		prop.setCascade( cascade );
 		prop.setPropertyAccessorName( accessType.getType() );
 

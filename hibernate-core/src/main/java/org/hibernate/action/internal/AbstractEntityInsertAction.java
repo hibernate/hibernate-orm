@@ -132,8 +132,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 				LockMode.WRITE,
 				isExecuted,
 				getPersister(),
-				isVersionIncrementDisabled,
-				false
+				isVersionIncrementDisabled
 		);
 	}
 

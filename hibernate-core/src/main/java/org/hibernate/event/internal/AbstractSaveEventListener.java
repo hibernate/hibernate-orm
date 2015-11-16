@@ -23,6 +23,7 @@ import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryExtraState;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
@@ -96,6 +97,10 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 			Object anything,
 			EventSource source,
 			boolean requiresImmediateIdAccess) {
+		if ( entity instanceof SelfDirtinessTracker ) {
+			( (SelfDirtinessTracker) entity ).$$_hibernate_clearDirtyAttributes();
+		}
+
 		EntityPersister persister = source.getEntityPersister( entityName, entity );
 		Serializable generatedId = persister.getIdentifierGenerator().generate( source, entity );
 		if ( generatedId == null ) {
@@ -241,7 +246,6 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 				LockMode.WRITE,
 				useIdentityColumn,
 				persister,
-				false,
 				false
 		);
 

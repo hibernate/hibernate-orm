@@ -22,10 +22,12 @@ public class MyEntityTuplizer extends PojoEntityTuplizer {
 		super( entityMetamodel, mappedEntity );
 	}
 
-	protected Instantiator buildInstantiator(PersistentClass persistentClass) {
+	@Override
+	protected Instantiator buildInstantiator(EntityMetamodel entityMetamodel, PersistentClass persistentClass) {
 		return new MyEntityInstantiator( persistentClass.getEntityName() );
 	}
 
+	@Override
 	protected ProxyFactory buildProxyFactory(PersistentClass persistentClass, Getter idGetter, Setter idSetter) {
 		// allows defining a custom proxy factory, which is responsible for
 		// generating lazy proxies for a given entity.

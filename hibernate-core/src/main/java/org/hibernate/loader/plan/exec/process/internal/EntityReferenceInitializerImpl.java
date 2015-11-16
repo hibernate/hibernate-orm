@@ -296,7 +296,6 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 				entityInstance,
 				concreteEntityPersister,
 				lockModeToAcquire,
-				!context.getLoadPlan().areLazyAttributesForceFetched(),
 				context.getSession()
 		);
 
@@ -373,7 +372,6 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 				rowId,
 				entityInstance,
 				lockModeToAcquire,
-				!context.getLoadPlan().areLazyAttributesForceFetched(),
 				context.getSession()
 		);
 

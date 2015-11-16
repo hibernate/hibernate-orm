@@ -6,10 +6,6 @@
  */
 package org.hibernate.engine.spi;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -18,7 +14,12 @@ import java.io.ObjectOutputStream;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.internal.MutableEntityEntry;
+
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests for setting and getting the enum/boolean values stored in the compressed state int.
@@ -35,7 +36,6 @@ public class EntityEntryTest {
 		assertEquals( Status.MANAGED, entityEntry.getStatus() );
 		assertEquals( true, entityEntry.isExistsInDatabase() );
 		assertEquals( true, entityEntry.isBeingReplicated() );
-		assertEquals( true, entityEntry.isLoadedWithLazyPropertiesUnfetched() );
 	}
 
 	@Test
@@ -47,7 +47,6 @@ public class EntityEntryTest {
 		assertEquals( Status.MANAGED, entityEntry.getStatus() );
 		assertEquals( true, entityEntry.isExistsInDatabase() );
 		assertEquals( true, entityEntry.isBeingReplicated() );
-		assertEquals( true, entityEntry.isLoadedWithLazyPropertiesUnfetched() );
 
 		// When
 		entityEntry.setLockMode( LockMode.PESSIMISTIC_READ );
@@ -57,7 +56,6 @@ public class EntityEntryTest {
 		assertEquals( Status.MANAGED, entityEntry.getStatus() );
 		assertEquals( true, entityEntry.isExistsInDatabase() );
 		assertEquals( true, entityEntry.isBeingReplicated() );
-		assertEquals( true, entityEntry.isLoadedWithLazyPropertiesUnfetched() );
 	}
 
 	@Test
@@ -73,7 +71,6 @@ public class EntityEntryTest {
 		assertEquals( Status.DELETED, entityEntry.getStatus() );
 		assertEquals( true, entityEntry.isExistsInDatabase() );
 		assertEquals( true, entityEntry.isBeingReplicated() );
-		assertEquals( true, entityEntry.isLoadedWithLazyPropertiesUnfetched() );
 	}
 
 	@Test
@@ -89,7 +86,6 @@ public class EntityEntryTest {
 		assertEquals( Status.GONE, entityEntry.getStatus() );
 		assertEquals( false, entityEntry.isExistsInDatabase() );
 		assertEquals( true, entityEntry.isBeingReplicated() );
-		assertEquals( true, entityEntry.isLoadedWithLazyPropertiesUnfetched() );
 	}
 
 	@Test
@@ -108,23 +104,30 @@ public class EntityEntryTest {
 		assertEquals( Status.MANAGED, deserializedEntry.getStatus() );
 		assertEquals( true, deserializedEntry.isExistsInDatabase() );
 		assertEquals( true, deserializedEntry.isBeingReplicated() );
-		assertEquals( true, deserializedEntry.isLoadedWithLazyPropertiesUnfetched() );
 	}
 
 	private EntityEntry createEntityEntry() {
 
 		return new MutableEntityEntry(
-				Status.MANAGED,                        // status
-				new Object[]{},                        // loadedState
-				1L,                                    // rowId
-				42L,                                   // id
-				23L,                                   // version
-				LockMode.OPTIMISTIC,                   // lockMode
-				true,                                  // existsInDatabase
-				null,                                  // persister
-				true,                                  // disableVersionIncrement
-				true,                                  // lazyPropertiesAreUnfetched
-				getPersistenceContextMock()            // persistenceContext)
+				// status
+				Status.MANAGED,
+				// loadedState
+				new Object[]{},
+				// rowId
+				1L,
+				// id
+				42L,
+				// version
+				23L,
+				// lockMode
+				LockMode.OPTIMISTIC,
+				// existsInDatabase
+				true,
+				// persister
+				null,
+				// disableVersionIncrement
+				true,
+				getPersistenceContextMock()
 		);
 	}
 

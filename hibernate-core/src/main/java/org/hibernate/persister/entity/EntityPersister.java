@@ -8,6 +8,7 @@ package org.hibernate.persister.entity;
 
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -589,7 +590,7 @@ public interface EntityPersister extends OptimisticCacheSource, EntityDefinition
 	/**
 	 * Called just after the entities properties have been initialized
 	 */
-	public void afterInitialize(Object entity, boolean lazyPropertiesAreUnfetched, SessionImplementor session);
+	void afterInitialize(Object entity, SessionImplementor session);
 
 	/**
 	 * Called just after the entity has been reassociated with the session

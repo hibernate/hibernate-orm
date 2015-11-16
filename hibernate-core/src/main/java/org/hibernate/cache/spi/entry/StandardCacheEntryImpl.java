@@ -7,6 +7,7 @@
 package org.hibernate.cache.spi.entry;
 
 import java.io.Serializable;
+import java.util.Set;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -19,6 +20,7 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.TypeHelper;
 
@@ -30,7 +32,6 @@ import org.hibernate.type.TypeHelper;
 public class StandardCacheEntryImpl implements CacheEntry {
 	private final Serializable[] disassembledState;
 	private final String subclass;
-	private final boolean lazyPropertiesAreUnfetched;
 	private final Object version;
 
 	/**
@@ -38,7 +39,6 @@ public class StandardCacheEntryImpl implements CacheEntry {
 	 *
 	 * @param state The extracted state
 	 * @param persister The entity persister
-	 * @param unfetched Are any values present in state unfetched?
 	 * @param version The current version (if versioned)
 	 * @param session The originating session
 	 * @param owner The owner
@@ -48,11 +48,9 @@ public class StandardCacheEntryImpl implements CacheEntry {
 	public StandardCacheEntryImpl(
 			final Object[] state,
 			final EntityPersister persister,
-			final boolean unfetched,
 			final Object version,
 			final SessionImplementor session,
-			final Object owner)
-			throws HibernateException {
+			final Object owner) throws HibernateException {
 		// disassembled state gets put in a new array (we write to cache by value!)
 		this.disassembledState = TypeHelper.disassemble(
 				state,
@@ -62,14 +60,12 @@ public class StandardCacheEntryImpl implements CacheEntry {
 				owner
 		);
 		subclass = persister.getEntityName();
-		lazyPropertiesAreUnfetched = unfetched || !persister.isLazyPropertiesCacheable();
 		this.version = version;
 	}
 
-	StandardCacheEntryImpl(Serializable[] state, String subclass, boolean unfetched, Object version) {
+	StandardCacheEntryImpl(Serializable[] state, String subclass, Object version) {
 		this.disassembledState = state;
 		this.subclass = subclass;
-		this.lazyPropertiesAreUnfetched = unfetched;
 		this.version = version;
 	}
 
@@ -91,11 +87,6 @@ public class StandardCacheEntryImpl implements CacheEntry {
 	@Override
 	public String getSubclass() {
 		return subclass;
-	}
-
-	@Override
-	public boolean areLazyPropertiesUnfetched() {
-		return lazyPropertiesAreUnfetched;
 	}
 
 	@Override

@@ -313,8 +313,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 				LockMode.NONE,
 				true,
 				persister,
-				false,
-				true // assume true, since we don't really know, and it doesn't matter
+				false
 		);
 
 		persister.afterReassociate( entity, source );

@@ -7,6 +7,7 @@
 package org.hibernate.tuple.entity;
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
@@ -188,10 +189,9 @@ public interface EntityTuplizer extends Tuplizer {
      * Called just after the entities properties have been initialized.
      *
      * @param entity The entity being initialized.
-     * @param lazyPropertiesAreUnfetched Are defined lazy properties currently unfecthed
      * @param session The session initializing this entity.
      */
-	void afterInitialize(Object entity, boolean lazyPropertiesAreUnfetched, SessionImplementor session);
+	void afterInitialize(Object entity, SessionImplementor session);
 
 	/**
 	 * Does this entity, for this mode, present a possibility for proxying?
@@ -228,21 +228,6 @@ public interface EntityTuplizer extends Tuplizer {
 	 * @return The java class to which generated proxies will be typed
 	 */
 	Class getConcreteProxyClass();
-	
-    /**
-     * Does the given entity instance have any currently uninitialized lazy properties?
-     *
-     * @param entity The entity to be check for uninitialized lazy properties.
-     * @return True if uninitialized lazy properties were found; false otherwise.
-     */
-	boolean hasUninitializedLazyProperties(Object entity);
-	
-	/**
-	 * Is it an instrumented POJO?
-	 *
-	 * @return {@code true} if the entity class is instrumented; {@code false} otherwise.
-	 */
-	boolean isInstrumented();
 
 	/**
 	 * Get any {@link EntityNameResolver EntityNameResolvers} associated with this {@link Tuplizer}.

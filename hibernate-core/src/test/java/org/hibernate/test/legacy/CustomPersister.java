@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -45,9 +46,9 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
+import org.hibernate.tuple.entity.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
-import org.hibernate.tuple.entity.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
@@ -324,7 +325,6 @@ public class CustomPersister implements EntityPersister {
 					clone,
 					this,
 					LockMode.NONE,
-					false,
 					session
 			);
 			TwoPhaseLoad.postHydrate(
@@ -333,7 +333,6 @@ public class CustomPersister implements EntityPersister {
 					null,
 					clone,
 					LockMode.NONE,
-					false,
 					session
 			);
 			TwoPhaseLoad.initializeEntity(
@@ -561,7 +560,7 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
-	public void afterInitialize(Object entity, boolean fetched, SessionImplementor session) {
+	public void afterInitialize(Object entity, SessionImplementor session) {
 	}
 
 	@Override
@@ -594,7 +593,6 @@ public class CustomPersister implements EntityPersister {
 		return new StandardCacheEntryImpl(
 				state,
 				this,
-				this.hasUninitializedLazyProperties( entity ),
 				version,
 				session,
 				entity

@@ -46,6 +46,7 @@
 
     <xi:include href="chapters/architecture/Architecture.xml"  />
     <xi:include href="chapters/domain/DomainModel.xml" />
+    <xi:include href="chapters/enhancement/BytecodeEnhancement.xml" />
     <xi:include href="chapters/bootstrap/Bootstrap.xml" />
     <xi:include href="chapters/pc/PersistenceContext.xml" />
     <xi:include href="chapters/jdbc/Database_Access.xml" />

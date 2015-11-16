@@ -21,18 +21,23 @@ import org.jboss.logging.Logger;
 public class PrimaryKey extends Constraint {
 	private static final Logger log = Logger.getLogger( PrimaryKey.class );
 
+	public PrimaryKey(Table table){
+		setTable( table );
+	}
+
 	@Override
 	public void addColumn(Column column) {
-		if ( column.isNullable() ) {
-			if ( log.isDebugEnabled() ) {
-				final String columnName = column.getCanonicalName();
+		final Iterator<Column> columnIterator = getTable().getColumnIterator();
+		while ( columnIterator.hasNext() ) {
+			final Column next = columnIterator.next();
+			if ( next.getCanonicalName().equals( column.getCanonicalName() ) ) {
+				next.setNullable( false );
 				log.debugf(
 						"Forcing column [%s] to be non-null as it is part of the primary key for table [%s]",
-						columnName,
-						getTableNameForLogging( column )
+						column.getCanonicalName(),
+						getTable().getNameIdentifier().getCanonicalName()
 				);
 			}
-			column.setNullable( false );
 		}
 		super.addColumn( column );
 	}

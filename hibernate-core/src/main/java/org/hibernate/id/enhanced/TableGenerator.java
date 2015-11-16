@@ -688,8 +688,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 			table.addColumn( segmentColumn );
 
 			// lol
-			table.setPrimaryKey( new PrimaryKey() );
-			table.getPrimaryKey().setTable( table );
+			table.setPrimaryKey( new PrimaryKey( table ) );
 			table.getPrimaryKey().addColumn( segmentColumn );
 
 			final Column valueColumn = new ExportableColumn(

@@ -319,7 +319,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 			table = namespace.createTable( qualifiedTableName.getObjectName(), false );
 
 			// todo : note sure the best solution here.  do we add the columns if missing?  other?
-			table.setPrimaryKey( new PrimaryKey() );
+			table.setPrimaryKey( new PrimaryKey( table ) );
 
 			final Column pkColumn = new ExportableColumn(
 					database,

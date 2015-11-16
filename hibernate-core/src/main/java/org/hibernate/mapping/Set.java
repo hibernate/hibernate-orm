@@ -60,7 +60,7 @@ public class Set extends Collection {
 
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
-			PrimaryKey pk = new PrimaryKey();
+			PrimaryKey pk = new PrimaryKey( getCollectionTable() );
 			pk.addColumns( getKey().getColumnIterator() );
 			Iterator iter = getElement().getColumnIterator();
 			while ( iter.hasNext() ) {

@@ -27,7 +27,6 @@ import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.tool.hbm2ddl.ColumnMetadata;
-import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.TableMetadata;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
@@ -41,6 +40,8 @@ import org.jboss.logging.Logger;
  */
 @SuppressWarnings("unchecked")
 public class Table implements RelationalModel, Serializable, Exportable {
+	private static final Logger log = Logger.getLogger( Table.class );
+
 	private Identifier catalog;
 	private Identifier schema;
 	private Identifier name;
@@ -254,8 +255,20 @@ public class Table implements RelationalModel, Serializable, Exportable {
 	public void addColumn(Column column) {
 		Column old = getColumn( column );
 		if ( old == null ) {
-			columns.put( column.getCanonicalName(), column );
-			column.uniqueInteger = columns.size();
+			if ( primaryKey != null ) {
+				for ( Column c : primaryKey.getColumns() ) {
+					if ( c.getCanonicalName().equals( column.getCanonicalName() ) ) {
+						column.setNullable( false );
+						log.debugf(
+								"Forcing column [%s] to be non-null as it is part of the primary key for table [%s]",
+								column.getCanonicalName(),
+								getNameIdentifier().getCanonicalName()
+						);
+					}
+				}
+			}
+			this.columns.put( column.getCanonicalName(), column );
+			column.uniqueInteger = this.columns.size();
 		}
 		else {
 			column.uniqueInteger = old.uniqueInteger;
@@ -489,7 +502,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		}
 
 		if ( results.isEmpty() ) {
-			Logger.getLogger( SchemaUpdate.class ).debugf( "No alter strings for table : %s", getQuotedName() );
+			log.debugf( "No alter strings for table : %s", getQuotedName() );
 		}
 
 		return results.iterator();

@@ -91,8 +91,7 @@ public class Join implements AttributeContainer, Serializable {
 
 	public void createPrimaryKey() {
 		//Primary key constraint
-		PrimaryKey pk = new PrimaryKey();
-		pk.setTable(table);
+		PrimaryKey pk = new PrimaryKey( table );
 		pk.setName( PK_ALIAS.toAliasString( table.getName() ) );
 		table.setPrimaryKey(pk);
 

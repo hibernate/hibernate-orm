@@ -7,6 +7,10 @@
 package org.hibernate.dialect;
 
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
+import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.local.AfterUseAction;
+import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.PostgresUUIDType;
 
@@ -27,5 +31,24 @@ public class PostgreSQL82Dialect extends PostgreSQL81Dialect {
 
 		// HHH-9562
 		typeContributions.contributeType( PostgresUUIDType.INSTANCE );
+	}
+
+	@Override
+	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
+		return new LocalTemporaryTableBulkIdStrategy(
+				new IdTableSupportStandardImpl() {
+					@Override
+					public String getCreateIdTableCommand() {
+						return "create temporary  table";
+					}
+
+					@Override
+					public String getDropIdTableCommand() {
+						return "drop table";
+					}
+				},
+				AfterUseAction.DROP,
+				null
+		);
 	}
 }

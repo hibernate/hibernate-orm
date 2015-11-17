@@ -691,13 +691,12 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 					entity,
 					subclassPersister,
 					LockMode.NONE,
-					referenceCacheEntry.areLazyPropertiesUnfetched(),
 					referenceCacheEntry.getVersion(),
 					session
 			);
 		}
 
-		subclassPersister.afterInitialize( entity, referenceCacheEntry.areLazyPropertiesUnfetched(), session );
+		subclassPersister.afterInitialize( entity, session );
 		statefulPersistenceContext.initializeNonLazyCollections();
 	}
 

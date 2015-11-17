@@ -494,6 +494,11 @@ public class StatefulPersistenceContext implements PersistenceContext {
 						Please do *not* refactor to make calls through the EntityEntryFactory
 						interface. Refactoring will results in polymorphic call sites which will
 						severely impact performance.
+
+         When a virtual method is called via an interface the JVM needs to resolve which concrete implementation to call.
+         This takes CPU cycles and is a performance penatly.  It also prevents method inling which further degrades performance.
+         Casting to an implementation and making a direct method call removes the vitual call, and allows the methods to be inlined.
+         In this critical code path, it has a very large impact on performance to make virtual method calls.
 		*/
 		if (persister.getEntityEntryFactory() instanceof MutableEntityEntryFactory){
 			e = ((MutableEntityEntryFactory) persister.getEntityEntryFactory()).createEntityEntry(

@@ -42,14 +42,13 @@ import static org.junit.Assert.fail;
  * utility class to use in bytecode enhancement tests
  *
  * @author Steve Ebersole
+ * @author Luis Barreiro
  */
 public abstract class EnhancerTestUtils extends BaseUnitTestCase {
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( EnhancerTestUtils.class );
 
 	private static EnhancementContext enhancementContext = new EnhancerTestContext();
-
 	private static String workingDir = System.getProperty( "java.io.tmpdir" );
-
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( EnhancerTestUtils.class );
 
 	/**
 	 * method that performs the enhancement of a class
@@ -126,6 +125,7 @@ public abstract class EnhancerTestUtils extends BaseUnitTestCase {
 
 	private static ClassLoader getEnhancerClassLoader(final String packageName) {
 		return new ClassLoader() {
+			@SuppressWarnings("ResultOfMethodCallIgnored")
 			@Override
 			public Class<?> loadClass(String name) throws ClassNotFoundException {
 				if ( !name.startsWith( packageName ) ) {
@@ -158,11 +158,12 @@ public abstract class EnhancerTestUtils extends BaseUnitTestCase {
 				}
 				catch (Throwable t) {
 					throw new ClassNotFoundException( name + " not found", t );
-				} finally {
+				}
+				finally {
 					try {
 						is.close();
 					}
-					catch (IOException e) { // ignore
+					catch (IOException ignore) {
 					}
 				}
 			}

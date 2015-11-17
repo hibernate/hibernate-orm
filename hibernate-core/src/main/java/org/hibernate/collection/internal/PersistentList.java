@@ -315,7 +315,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 		if ( index < 0 ) {
 			throw new ArrayIndexOutOfBoundsException( "negative index" );
 		}
-		if ( !isInitialized() && isConnectedToSession() ) {
+		if ( !isInitialized() || isConnectedToSession() ) {
 			// NOTE : we don't care about the inverse part here because
 			// even if the collection is inverse, this side is driving the
 			// writing of the indexes.  And because this is a positioned-add

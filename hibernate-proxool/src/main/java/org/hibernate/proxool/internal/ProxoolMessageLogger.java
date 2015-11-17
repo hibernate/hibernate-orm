@@ -7,10 +7,12 @@
 package org.hibernate.proxool.internal;
 
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.log.ConnectionPoolingLogger;
 
 import org.jboss.logging.annotations.LogMessage;
 import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
+import org.jboss.logging.annotations.ValidIdRange;
 
 import static org.jboss.logging.Logger.Level.INFO;
 
@@ -21,16 +23,8 @@ import static org.jboss.logging.Logger.Level.INFO;
  * New messages must be added after the last message defined to ensure message codes are unique.
  */
 @MessageLogger(projectCode = "HHH")
-public interface ProxoolMessageLogger extends CoreMessageLogger {
-
-	/**
-	 * Logs the autocommit mode to be used for pooled connections
-	 *
-	 * @param autocommit The autocommit mode
-	 */
-	@LogMessage(level = INFO)
-	@Message(value = "Autocommit mode: %s", id = 30001)
-	void autoCommmitMode(boolean autocommit);
+@ValidIdRange( min = 30001, max = 35000 )
+public interface ProxoolMessageLogger extends ConnectionPoolingLogger {
 
 	/**
 	 * Logs the name of a named pool to be used for configuration information

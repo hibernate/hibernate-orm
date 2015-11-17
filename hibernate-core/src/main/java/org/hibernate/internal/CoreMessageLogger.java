@@ -67,7 +67,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void autoCommitMode(boolean autocommit);
 
 	@LogMessage(level = WARN)
-	@Message(value = "JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()",
+	@Message(value = "JTASessionContext being used with JDBC transactions; auto-flush will not operate correctly with getCurrentSession()",
 			id = 8)
 	void autoFlushWillNotWork();
 
@@ -95,10 +95,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "Calling joinTransaction() on a non JTA EntityManager", id = 27)
 	void callingJoinTransactionOnNonJtaEntityManager();
-
-	@LogMessage(level = INFO)
-	@Message(value = "Cleaning up connection pool [%s]", id = 30)
-	void cleaningUpConnectionPool(String url);
 
 	@LogMessage(level = DEBUG)
 	@Message(value = "Closing", id = 31)
@@ -159,10 +155,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = INFO)
 	@Message(value = "Configuring from XML document", id = 45)
 	void configuringFromXmlDocument();
-
-	@LogMessage(level = INFO)
-	@Message(value = "Connection properties: %s", id = 46)
-	void connectionProperties(Properties connectionProps);
 
 	@LogMessage(level = INFO)
 	@Message(value = "Connections obtained: %s", id = 48)
@@ -483,19 +475,8 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "%s = false breaks the EJB3 specification", id = 144)
 	void jdbcAutoCommitFalseBreaksEjb3Spec(String autocommit);
 
-	@LogMessage(level = WARN)
-	@Message(value = "No JDBC Driver class was specified by property %s", id = 148)
-	void jdbcDriverNotSpecified(String driver);
-
-	@LogMessage(level = INFO)
-	@Message(value = "JDBC isolation level: %s", id = 149)
-	void jdbcIsolationLevel(String isolationLevelToString);
-
 	@Message(value = "JDBC rollback failed", id = 151)
 	String jdbcRollbackFailed();
-
-	@Message(value = "JDBC URL was not specified by property %s", id = 152)
-	String jdbcUrlNotSpecified(String url);
 
 	@LogMessage(level = INFO)
 	@Message(value = "JNDI InitialContext properties:%s", id = 154)
@@ -992,10 +973,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "IOException occurred closing output stream", id = 292)
 	void unableToCloseOutputStream(@Cause IOException e);
 
-	@LogMessage(level = WARN)
-	@Message(value = "Problem closing pooled connection", id = 293)
-	void unableToClosePooledConnection(@Cause SQLException e);
-
 	@LogMessage(level = ERROR)
 	@Message(value = "Could not close session", id = 294)
 	void unableToCloseSession(@Cause HibernateException e);
@@ -1436,16 +1413,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = INFO)
 	@Message(value = "Using dialect: %s", id = 400)
 	void usingDialect(Dialect dialect);
-
-	@LogMessage(level = INFO)
-	@Message(value = "using driver [%s] at URL [%s]", id = 401)
-	void usingDriver(
-			String driverClassName,
-			String url);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Using Hibernate built-in connection pool (not for production use!)", id = 402)
-	void usingHibernateBuiltInConnectionPool();
 
 	@LogMessage(level = ERROR)
 	@Message(value = "Don't use old DTDs, read the Hibernate 3.x Migration Guide!", id = 404)

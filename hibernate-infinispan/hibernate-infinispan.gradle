@@ -18,6 +18,8 @@ dependencies {
     compile( libraries.infinispan )
     compile( libraries.rhq )
 
+    provided( libraries.jta )
+
     testCompile project( ':hibernate-testing' )
     testCompile( libraries.infinispan_test )
     testCompile( libraries.jboss_common_core )

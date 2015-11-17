@@ -178,7 +178,7 @@
                         <term>enableDirtyTracking</term>
                         <listitem>
                             <para>
-                                Whether enhancement for sefl-dirty tracking should be done.
+                                Whether enhancement for self-dirty tracking should be done.
                             </para>
                         </listitem>
                     </varlistentry>

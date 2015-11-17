@@ -9,6 +9,7 @@ package org.hibernate.c3p0.internal;
 import java.sql.SQLException;
 
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.log.ConnectionPoolingLogger;
 
 import org.jboss.logging.annotations.Cause;
 import org.jboss.logging.annotations.LogMessage;
@@ -25,7 +26,7 @@ import static org.jboss.logging.Logger.Level.WARN;
  * New messages must be added after the last message defined to ensure message codes are unique.
  */
 @MessageLogger(projectCode = "HHH")
-public interface C3P0MessageLogger extends CoreMessageLogger {
+public interface C3P0MessageLogger extends ConnectionPoolingLogger {
 
 	/**
 	 * Log a message (WARN) about conflicting {@code hibernate.c3p0.XYZ} and {@code c3p0.XYZ} settings

@@ -19,8 +19,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.log.ConnectionPoolingLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
@@ -44,7 +43,7 @@ import org.hibernate.service.spi.Stoppable;
 public class DriverManagerConnectionProviderImpl
 		implements ConnectionProvider, Configurable, Stoppable, ServiceRegistryAwareService {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( DriverManagerConnectionProviderImpl.class );
+	private static final ConnectionPoolingLogger log = ConnectionPoolingLogger.CONNECTIONS_LOGGER;
 
 	public static final String MIN_SIZE = "hibernate.connection.min_pool_size";
 	public static final String INITIAL_SIZE = "hibernate.connection.initial_pool_size";

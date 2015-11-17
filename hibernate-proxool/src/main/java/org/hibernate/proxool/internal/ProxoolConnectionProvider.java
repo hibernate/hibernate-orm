@@ -193,7 +193,7 @@ public class ProxoolConnectionProvider
 		LOG.jdbcIsolationLevel( ConnectionProviderInitiator.toIsolationNiceName( isolation ) );
 
 		autocommit = ConfigurationHelper.getBoolean( Environment.AUTOCOMMIT, props );
-		LOG.autoCommmitMode( autocommit );
+		LOG.autoCommitMode( autocommit );
 	}
 
 	private Reader getConfigStreamReader(String resource) {

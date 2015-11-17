@@ -13,11 +13,13 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapsId;
+import javax.persistence.Table;
 
 /**
  * @author Emmanuel Bernard
  */
 @Entity
+@Table(name="`Dependent`")
 public class Dependent {
 	// default column name for "name" attribute is overridden
 	@AttributeOverride(name = "name", column = @Column(name = "dep_name"))

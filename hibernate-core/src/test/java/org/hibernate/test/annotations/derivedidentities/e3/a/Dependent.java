@@ -12,11 +12,13 @@ import javax.persistence.IdClass;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 /**
  * @author Emmanuel Bernard
  */
 @Entity
+@Table(name = "`Dependent`")
 @IdClass(DependentId.class)
 public class Dependent {
 	@Id

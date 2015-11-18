@@ -928,6 +928,15 @@ public interface AvailableSettings {
 	 * Oracle), this is disabled by default.
 	 */
 	String ENABLE_SYNONYMS = "hibernate.synonyms";
+
+	/**
+	 * Identifies a comma-separate list of values to specify extra table types,
+	 * other than the default "TABLE" value, to recognize as defining a physical table
+	 * by schema update, creation and validation.
+	 *
+	 * @since 5.0
+	 */
+	String EXTRA_PHYSICAL_TABLE_TYPES = "hibernate.hbm2dll.extra_physical_table_types";
 	
 	/**
 	 * Unique columns and unique keys both use unique constraints in most dialects.
@@ -964,12 +973,5 @@ public interface AvailableSettings {
 	 * Defines a default {@link org.hibernate.SessionEventListener} to be applied to opened Sessions.
 	 */
 	String AUTO_SESSION_EVENTS_LISTENER = "hibernate.session.events.auto";
-
-
-
-
-
-
-
 
 }

@@ -236,16 +236,26 @@ public final class StringHelper {
 	}
 
 
-	public static String[] split(String seperators, String list) {
-		return split( seperators, list, false );
+	public static String[] split(String separators, String list) {
+		return split( separators, list, false );
 	}
 
-	public static String[] split(String seperators, String list, boolean include) {
-		StringTokenizer tokens = new StringTokenizer( list, seperators, include );
+	public static String[] split(String separators, String list, boolean include) {
+		StringTokenizer tokens = new StringTokenizer( list, separators, include );
 		String[] result = new String[tokens.countTokens()];
 		int i = 0;
 		while ( tokens.hasMoreTokens() ) {
 			result[i++] = tokens.nextToken();
+		}
+		return result;
+	}
+
+	public static String[] splitTrimmingTokens(String separators, String list, boolean include) {
+		StringTokenizer tokens = new StringTokenizer( list, separators, include );
+		String[] result = new String[tokens.countTokens()];
+		int i = 0;
+		while ( tokens.hasMoreTokens() ) {
+			result[i++] = tokens.nextToken().trim();
 		}
 		return result;
 	}

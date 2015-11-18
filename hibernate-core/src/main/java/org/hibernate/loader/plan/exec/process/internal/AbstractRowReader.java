@@ -46,14 +46,33 @@ public abstract class AbstractRowReader implements RowReader {
 	private final List<CollectionReferenceInitializer> arrayReferenceInitializers;
 	private final List<CollectionReferenceInitializer> collectionReferenceInitializers;
 
+	// cache map for looking up EntityReferenceInitializer by EntityReference to help with resolving
+	// bidirectional EntityReference and fetches.
+	private final Map<EntityReference,EntityReferenceInitializer> entityInitializerByEntityReference;
+
 	public AbstractRowReader(ReaderCollector readerCollector) {
-		this.entityReferenceInitializers = readerCollector.getEntityReferenceInitializers() != null
-				? new ArrayList<EntityReferenceInitializer>( readerCollector.getEntityReferenceInitializers() )
-				: Collections.<EntityReferenceInitializer>emptyList();
-		this.arrayReferenceInitializers = readerCollector.getArrayReferenceInitializers() != null
+		if ( CollectionHelper.isNotEmpty( readerCollector.getEntityReferenceInitializers() ) ) {
+			entityReferenceInitializers = new ArrayList<EntityReferenceInitializer>(
+					readerCollector.getEntityReferenceInitializers()
+			);
+			entityInitializerByEntityReference =
+					new HashMap<EntityReference, EntityReferenceInitializer>( entityReferenceInitializers.size() );
+			for ( EntityReferenceInitializer entityReferenceInitializer : entityReferenceInitializers ) {
+				entityInitializerByEntityReference.put(
+						entityReferenceInitializer.getEntityReference(),
+						entityReferenceInitializer
+				);
+			}
+		}
+		else {
+			entityReferenceInitializers = Collections.<EntityReferenceInitializer>emptyList();
+			entityInitializerByEntityReference = Collections.<EntityReference,EntityReferenceInitializer>emptyMap();
+		}
+		this.arrayReferenceInitializers = CollectionHelper.isNotEmpty( readerCollector.getArrayReferenceInitializers() )
 				? new ArrayList<CollectionReferenceInitializer>( readerCollector.getArrayReferenceInitializers() )
 				: Collections.<CollectionReferenceInitializer>emptyList();
-		this.collectionReferenceInitializers = readerCollector.getNonArrayCollectionReferenceInitializers() != null
+		this.collectionReferenceInitializers =
+				CollectionHelper.isNotEmpty ( readerCollector.getNonArrayCollectionReferenceInitializers() )
 				? new ArrayList<CollectionReferenceInitializer>( readerCollector.getNonArrayCollectionReferenceInitializers() )
 				: Collections.<CollectionReferenceInitializer>emptyList();
 	}
@@ -71,17 +90,11 @@ public abstract class AbstractRowReader implements RowReader {
 			for ( EntityReferenceInitializer entityReferenceInitializer : entityReferenceInitializers ) {
 				entityReferenceInitializer.hydrateIdentifier( resultSet, context );
 			}
-			final Map<EntityReference,EntityReferenceInitializer> initializerByEntityReference =
-					new HashMap<EntityReference, EntityReferenceInitializer>( entityReferenceInitializers.size() );
-			for ( EntityReferenceInitializer entityReferenceInitializerFromMap : entityReferenceInitializers ) {
-				initializerByEntityReference.put( entityReferenceInitializerFromMap.getEntityReference(), entityReferenceInitializerFromMap );
-			}
 			for ( EntityReferenceInitializer entityReferenceInitializer : entityReferenceInitializers ) {
 				resolveEntityKey(
 						resultSet,
 						context,
-						entityReferenceInitializer,
-						initializerByEntityReference
+						entityReferenceInitializer
 				);
 			}
 
@@ -120,13 +133,12 @@ public abstract class AbstractRowReader implements RowReader {
 	private void resolveEntityKey(
 			ResultSet resultSet,
 			ResultSetProcessingContextImpl context,
-			EntityReferenceInitializer entityReferenceInitializer,
-			Map<EntityReference,EntityReferenceInitializer> initializerByEntityReference) throws SQLException {
+			EntityReferenceInitializer entityReferenceInitializer) throws SQLException {
 		final EntityReference entityReference = entityReferenceInitializer.getEntityReference();
 		final EntityIdentifierDescription identifierDescription = entityReference.getIdentifierDescription();
 
 		if ( identifierDescription.hasFetches() || identifierDescription.hasBidirectionalEntityReferences() ) {
-			resolveEntityKey( resultSet, context, (FetchSource) identifierDescription, initializerByEntityReference );
+			resolveEntityKey( resultSet, context, (FetchSource) identifierDescription );
 		}
 		entityReferenceInitializer.resolveEntityKey( resultSet, context );
 	}
@@ -134,31 +146,30 @@ public abstract class AbstractRowReader implements RowReader {
 	private void resolveEntityKey(
 			ResultSet resultSet,
 			ResultSetProcessingContextImpl context,
-			FetchSource fetchSource,
-			Map<EntityReference,EntityReferenceInitializer> initializerByEntityReference) throws SQLException {
+			FetchSource fetchSource) throws SQLException {
 		// Resolve any bidirectional entity references first.
 		for ( BidirectionalEntityReference bidirectionalEntityReference : fetchSource.getBidirectionalEntityReferences() ) {
-			final EntityReferenceInitializer targetEntityReferenceInitializer = initializerByEntityReference.get(
+			final EntityReferenceInitializer targetEntityReferenceInitializer = entityInitializerByEntityReference.get(
 					bidirectionalEntityReference.getTargetEntityReference()
 			);
 			resolveEntityKey(
 					resultSet,
 					context,
-					targetEntityReferenceInitializer,
-					initializerByEntityReference
+					targetEntityReferenceInitializer
 			);
 			targetEntityReferenceInitializer.hydrateEntityState( resultSet, context );
 		}
 		for ( Fetch fetch : fetchSource.getFetches() ) {
 			if ( EntityFetch.class.isInstance( fetch ) ) {
 				final EntityFetch entityFetch = (EntityFetch) fetch;
-				final EntityReferenceInitializer  entityReferenceInitializer = initializerByEntityReference.get( entityFetch );
+				final EntityReferenceInitializer  entityReferenceInitializer = entityInitializerByEntityReference.get(
+						entityFetch
+				);
 				if ( entityReferenceInitializer != null ) {
 					resolveEntityKey(
 							resultSet,
 							context,
-							entityReferenceInitializer,
-							initializerByEntityReference
+							entityReferenceInitializer
 					);
 					entityReferenceInitializer.hydrateEntityState( resultSet, context );
 				}
@@ -167,8 +178,8 @@ public abstract class AbstractRowReader implements RowReader {
 				resolveEntityKey(
 						resultSet,
 						context,
-						(CompositeFetch) fetch,
-						initializerByEntityReference );
+						(CompositeFetch) fetch
+				);
 			}
 		}
 	}

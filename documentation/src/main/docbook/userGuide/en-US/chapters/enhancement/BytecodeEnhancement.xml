@@ -117,7 +117,7 @@
                 This blows up in normal Java usage.  The correct normal Java usage is:
             </para>
             <example>
-                <title>Incorrect normal Java usage</title>
+                <title>Correct normal Java usage</title>
                 <programlisting role="JAVA"><xi:include href="extras/BiDirManagementNormalJavaCorrect.java" parse="text" /></programlisting>
             </example>
             <para>
@@ -178,7 +178,7 @@
                         <term>enableDirtyTracking</term>
                         <listitem>
                             <para>
-                                Whether enhancement for sefl-dirty tracking should be done.
+                                Whether enhancement for self-dirty tracking should be done.
                             </para>
                         </listitem>
                     </varlistentry>

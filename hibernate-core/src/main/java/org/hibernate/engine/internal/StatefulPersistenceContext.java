@@ -513,8 +513,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 					lockMode,
 					existsInDatabase,
 					persister,
-					lazyPropertiesAreUnfetched,
 					disableVersionIncrement,
+					lazyPropertiesAreUnfetched,
 					this
 			);
 		}

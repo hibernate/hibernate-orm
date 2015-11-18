@@ -191,7 +191,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 		return null;
 	}
 
-	public List getColumns() {
+	public List<Column> getColumns() {
 		return columns;
 	}
 

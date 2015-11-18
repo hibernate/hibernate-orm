@@ -41,6 +41,8 @@ import org.jboss.logging.Logger;
  */
 @SuppressWarnings("unchecked")
 public class Table implements RelationalModel, Serializable, Exportable {
+	private static final Logger log = Logger.getLogger( Table.class );
+
 	private Identifier catalog;
 	private Identifier schema;
 	private Identifier name;
@@ -489,7 +491,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		}
 
 		if ( results.isEmpty() ) {
-			Logger.getLogger( SchemaUpdate.class ).debugf( "No alter strings for table : %s", getQuotedName() );
+			log.debugf( "No alter strings for table : %s", getQuotedName() );
 		}
 
 		return results.iterator();
@@ -603,6 +605,20 @@ public class Table implements RelationalModel, Serializable, Exportable {
 	}
 
 	public void setPrimaryKey(PrimaryKey primaryKey) {
+		for ( Column c : primaryKey.getColumns() ) {
+			final Column column  = ((Column) columns.get( c.getCanonicalName() ));
+			if ( column.isNullable() ) {
+				if ( log.isDebugEnabled() ) {
+					final String columnName = column.getCanonicalName();
+					log.debugf(
+							"Forcing column [%s] to be non-null as it is part of the primary key for table [%s]",
+							columnName,
+							getNameIdentifier().getCanonicalName()
+					);
+				}
+				column.setNullable( false );
+			}
+		}
 		this.primaryKey = primaryKey;
 	}
 

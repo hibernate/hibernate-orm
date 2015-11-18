@@ -211,6 +211,10 @@ public class HQLQueryPlan implements Serializable {
 			queryParametersToUse = queryParameters;
 		}
 
+		//fast path to avoid unessesary allocation and copying
+		if( translators.length == 1 ) {
+			return translators[0].list( session, queryParametersToUse );
+		}
 		final int guessedResultSize = guessResultSize( rowSelection );
 		final List combinedResults = new ArrayList( guessedResultSize );
 		final IdentitySet distinction;

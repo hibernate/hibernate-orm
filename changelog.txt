@@ -4,6 +4,203 @@ Hibernate 5.0 Changelog
 Note: Please refer to JIRA to learn more about each issue.
 
 
+Changes in 5.0.4.Final (November 18, 2015)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/21750
+
+** Bug
+    * [HHH-1689] - Support subqueries in HQL as CASE statement alternatives
+    * [HHH-1706] - Named parameters ignored when single apostrophe encountered within an SQL comment
+    * [HHH-5764] - AssertionFailure: Unexpected nested component on the referenced entity when mapping a @MapsId
+    * [HHH-5946] - Wrong SQL generated when composites are compared using not-equal operator
+    * [HHH-5948] - Trying to get a PluralAttributePath from a @MappedSuperclass throws org.hibernate.MappingException: Unknown collection role
+    * [HHH-6475] - Metamodel check fails when subclasses are used
+    * [HHH-6672] - Remove UNION support from 5.x grammars
+    * [HHH-8435] - @Lob + @Nationalized results in NCLOB on SQLServer2005+ rather than NVARCHAR(MAX)
+    * [HHH-8712] - Hibernate startup error "HHH015011: Unable to locate static metamodel field"
+    * [HHH-8775] - Exception when mapping a class more than once
+    * [HHH-8802] - Class cast exception thrown when trying to access Embedded type relationship path in Tuple
+    * [HHH-8847] - Exception thrown when trying to select a treated property
+    * [HHH-9140] - Error in CollectionCacheInvalidator when hibernate.cache.auto_evict_collection_cache is enabled
+    * [HHH-9160] - javax.persistence.Query#getParameterValue(String) returns the ParameterRegistration not the parameter value
+    * [HHH-9195] - Adding an entity at a given index in a list annotated with OrderColumn adds the entity at the end
+    * [HHH-9230] - NullPointer when combining JPQL query with in clause and @NamedEntityGraph
+    * [HHH-9475] - Cannot mix @MapKey with @Convert
+    * [HHH-9529] - Enhancer indiscriminately re-writes field accesses
+    * [HHH-9710] - IllegalArgumentException passing null as parameter value with explicit TemporalType
+    * [HHH-9794] - Replace string with preceding comma is not replacing string as required
+    * [HHH-10112] - Unable to enhance persistent attribute with declared targetEntity
+    * [HHH-10145] - Include maven dependencies in enhancement classpath
+    * [HHH-10146] - Compiled classes not included in enhancer class path
+    * [HHH-10163] - QueryResultsRegion is not invalidated from evictAll()
+    * [HHH-10181] - CacheableFileXmlSource.doBind uses obsolete .bin file
+    * [HHH-10203] - Overriden UniqueDelegate.getTableCreationUniqueConstraintsFragment not called anymore in SchemaExport
+    * [HHH-10208] - Index and unique-key constraints not properly handled with implicit columns in hbm.xml binding
+    * [HHH-10219] - Infinite loop generating IDs if using negative increment
+    * [HHH-10242] - Deal with HCANN poor handling of multiple properties by matching stem name
+    * [HHH-10247] - Hibernate ignores foreign-key attribute name in hbm <many-to-many>
+    * [HHH-10251] - Memory Leak when using Reference Cached, bytecode enhanced Immutable Entities
+    * [HHH-10259] - ForUpdateFragment.toFragmentString() does not check if aliases are defined when lockOptions are not null
+    * [HHH-10264] - hibernate.cache.auto_evict_collection_cache problems
+    * [HHH-10270] - Hibernate User Guide transactions chapter examples are not properly rendered
+    * [HHH-10273] - Reserved word used for database object in testsuite
+    * [HHH-10274] - org.hibernate.id.SequenceValueExtractor does not work for DB2, Oracle, or SQL Server
+    * [HHH-10275] - Inverse foreign key for many-to-many set is nullable
+    * [HHH-10288] - Temporary table support is broken using PostgresPlusDialect
+    * [HHH-10289] - CPU performance regression in StatefulPersistenceContext.addEntry()
+    * [HHH-10293] - Schema Update - Single table Inheritance with bi-directional OneToMany referencing superclass fails
+    * [HHH-10295] - Derived entity ID columns are nullable when @JoinColumns is overriden
+
+** New Feature
+    * [HHH-10222] - AttributeConverter not applied to @ElementCollection
+
+** Task
+    * [HHH-10279] - Memory usage improvements
+
+** Improvement
+    * [HHH-10101] - Implement nonstrict-read-write mode in Infinispan 2LC
+    * [HHH-10161] - Allow parameter type for null value to be specified using javax.persistence.Parameter#getParameterType()
+    * [HHH-10178] - Make JTA a provided (non-transitive) dependency
+    * [HHH-10202] - Delay resolving TypeScopeImpl#factory after deserialization until resolveFactory() is called.
+    * [HHH-10248] - map removed TransactionFactory classes
+    * [HHH-10271] - Improve performance of EventListenerRegistry
+    * [HHH-10272] - Make pending-puts cache template configurable
+    * [HHH-10297] - Cache HashMap in AbstractRowReader instead of re-creating for each row that is read
+
+** Deprecation
+    * [HHH-10281] - More formally deprecate the legacy bytecode enhancement code
+
+
+
+
+Changes in 5.0.3.Final (October 28, 2015)
+------------------------------------------------------------------------------------------------------------------------
+http://hibernate.atlassian.net/projects/HHH/versions/21650
+
+** Bug
+    * [HHH-1400] - formula-based property leads to generation of invalid SQL with subselect fetches
+    * [HHH-9074] - HQL Query with boolean and @Convert
+    * [HHH-9374] - EntityGraph applied to subquery when using collection function
+    * [HHH-9784] - scroll() and iterate() methods do not support provided HQLQueryPlan
+    * [HHH-10104] - Using JPA 2.1 schema generation together with hbm2ddl runs into deadlock with MySQL
+    * [HHH-10169] - Hibernate ignores foreign-key name in hbm <joined-subclass>
+    * [HHH-10170] - Reuse JAXBContext instance (Slow mapping initialization) - port HHH-10065 fix to 5.0 branch
+    * [HHH-10172] - Throw MappingException when entity/component class defines multiple matching getters by stem name
+    * [HHH-10174] - Incorrect splitting of string using dot as separator
+    * [HHH-10180] - hbm2ddl tools cannot generate create/update script not modifying the database
+    * [HHH-10188] - "stored" is a reserved keyword in MySQL 5.7
+    * [HHH-10189] - NPE in InformationExtractorJdbcDatabaseMetaDataImpl
+    * [HHH-10193] - NameQualifierSupport for Hypersonic should be catalog
+    * [HHH-10194] - Change NameQualifierSupport for Hypersonic from CATALOG to SCHEMA
+    * [HHH-10195] - QueryHintSQLServer2012Test is wrong
+    * [HHH-10196] - DefaultGeneratedValueTest fails on MySQL
+    * [HHH-10197] - SchemaManagementException when performing SchemaUpdate
+    * [HHH-10206] - Primary key not created for a Set after loading from XML mapping file
+    * [HHH-10207] - Constraint name not considered for a Set while loading from XML mapping file
+    * [HHH-10217] - ModelBinder fails to bind version property when generated="always"
+
+** Task
+    * [HHH-10137] - Upgrade to/support Jandex 2.0
+    * [HHH-10153] - Upgrade to Gradle 2.7
+
+** Improvement
+    * [HHH-10087] - Support prepending of locks
+    * [HHH-10190] - org.hibernate.engine.spi.ActionQueue#executeActions() optimization
+
+
+
+Changes in 5.0.2.Final (September 30, 2015)
+------------------------------------------------------------------------------------------------------------------------
+http://hibernate.atlassian.net/projects/HHH/versions/21250
+
+** Bug
+    * [HHH-9731] - Potential bug in SearchedCaseExpression type handling
+    * [HHH-10055] - Lazy loading of collections in enhanced entity not working
+    * [HHH-10110] - DerbyTenSevenDialect fails to update schema because of sequence error
+    * [HHH-10111] - AttributeConverter based attributes are not marked for update when their state is modified
+    * [HHH-10115] - HHH90000003: Use of DOM4J entity-mode is considered deprecated
+    * [HHH-10119] - Config setting names loaded from cfg.xml stored in augmented (prefixed with "hibernate.") form but not original form
+    * [HHH-10120] - InputStream not closed in ConfigLoader.loadConfigXmlResource(String)
+    * [HHH-10125] - KEY() function in HQL causes inaccurate SQL when map key is an entity
+    * [HHH-10126] - Table-backed sequences are not populated on creation using SchemaUpdate
+    * [HHH-10131] - CacheableFileXmlSource.doBind returns null instead of created binding when .hbm.xml.bin have not been created yet
+    * [HHH-10132] - ENTRY() function in HQL causes invalid SQL when map key is an entity
+    * [HHH-10133] - CatalogSeparator of dialect metadata not used in runtime, just in schema tool
+    * [HHH-10135] - DB2Dialect should override getSelectSequenceNextValString
+    * [HHH-10139] - <one-to-one> and  <many-to-one> mapping with <formula>1</formula> related to a boolean field causes java.sql.SQLSyntaxErrorException:
+    * [HHH-10140] - Apache Derby does not support tuples in subqueries
+    * [HHH-10141] - ClassicQueryTranslatorFactory unable to determine the correct RevisionType type
+    * [HHH-10142] - Derby dialect missing SQL keyword
+    * [HHH-10149] - PostgreSQL81Dialect.#getForUpdateString(String aliases,LockOptions lockOptions) returning a wrong value for update String when aliases is an empty String
+    * [HHH-10150] - PostgreSQL -MultiTableBulkIdStrategy fails with multiple delete of parent entity in the same transaction
+
+** New Feature
+    * [HHH-10045] - Force all columns in primary key to be non-null
+
+** Task
+    * [HHH-9995] - Finish pgsql database profile
+    * [HHH-9996] - Finish Derby database profile
+    * [HHH-10154] - Change built-in JavaTypeDescriptor impls to not auto-register themselves with JavaTypeDescriptorRegistry
+
+** Improvement
+    * [HHH-9685] - Envers should do nothing when JTA transaction is already marked as rollback-only
+    * [HHH-10066] - Drop and recreate AuxiliaryDatabaseObjects as part of schema update
+    * [HHH-10083] - Support replicated and distributed caches
+    * [HHH-10086] - Deprecate Dialect#getIdentityColumnString() and Dialect#getIdentitySelectString()
+    * [HHH-10121] - Have EMF#getProperties expose ValidatorFactory injected via 2-phase load
+    * [HHH-10129] - Evaluate AttributeConverter tests in hibernate-entitymanager for move to hibernate-core
+
+** Patch
+    * [HHH-10108] - checkstyle test <module name="NewlineAtEndOfFile" /> causes build time problem
+
+** Deprecation
+    * [HHH-10122] - Deprecate ".class" property-style entity-type-expression format
+
+
+
+Changes in 5.0.1.Final (September 3, 2015)
+------------------------------------------------------------------------------------------------------------------------
+http://hibernate.atlassian.net/projects/HHH/versions/21051
+
+** Bug
+    * [HHH-9962] - Second level query cache returns stale data if query and update statements are executed concurrently
+    * [HHH-9975] - CacheImpl.containsQuery(String) does not check if query cache is enabled
+    * [HHH-10008] - SessionImplementor.getTimestamp() does not return transaction start time
+    * [HHH-10024] - Cannot define Path rooted at a collection join referencing attribute named same as "collection property"
+    * [HHH-10044] - hibernate-osgi unmanaged JPA not able to locate persistence.xml schema in entitymanager jar
+    * [HHH-10053] - Revert HHH-9736; BigIntegerType really should use NumericTypeDescriptor
+    * [HHH-10057] - hibernate-infinispan incompatible with Infinispan 8.0.0.CR1
+    * [HHH-10060] - Order of subclass joins are no longer determinate
+    * [HHH-10064] - Broken documentation page link in User guide
+    * [HHH-10065] - Reuse JAXBContext instance (Slow mapping initialization)
+    * [HHH-10068] - Missing generated JPA static metamodel class for envers revision entity
+    * [HHH-10069] - ClassCastException between CompositeCustomType and ComponentType part 2
+    * [HHH-10073] - Remove obsolete Type, AssociationType and TypeFactory methods
+    * [HHH-10076] - Multiple bytecode enhancement attempts if hibernate.enable_lazy_load_no_trans set multiple times
+    * [HHH-10077] - Gradle plugin does not enhance any classes
+    * [HHH-10078] - Enforce synchronization on Enhancer.enhance()
+    * [HHH-10079] - Restrict enhanced getter/setter usage
+
+** New Feature
+    * [HHH-10030] - Add read-write cache concurrency strategy to Infinispan 2LC
+
+** Task
+    * [HHH-9593] - Remove superfluous references to enclosing class
+    * [HHH-9954] - Add EqualsHelper#areEqual which adds array-specific equality checks
+
+** Improvement
+    * [HHH-10020] - Improvements to org.hibernate.bytecode.enhance.internal.AttributeTypeDescriptor#buildInLineDirtyCheckingBodyFragment
+    * [HHH-10026] - Consider hibernate-java8 types for use with @Version
+    * [HHH-10054] - Modify Create Index SQL to support the Teradata database
+    * [HHH-10056] - Separate settings for notions of (1) disabling EnversService and (2) auto-registering Envers listeners
+    * [HHH-10058] - Parameterized test runner compatible with CustomRunner
+    * [HHH-10059] - Make EntityManagerFactoryBuilderImpl.populate methods protected
+
+** Deprecation
+    * [HHH-10070] - Deprecate use of "collection properties" in HQL
+
+
+
 Changes in 5.0.0.Final (August 20, 2015)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/20851

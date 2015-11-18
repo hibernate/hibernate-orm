@@ -17,6 +17,7 @@ import javax.persistence.Table;
 
 import org.hibernate.Session;
 
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -154,5 +155,65 @@ public class SubQueryTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-1689, SQM-30" )
+	public void testSubQueryAsSearchedCaseResultExpression() {
+		final String query = "SELECT CASE WHEN l.id IS NOT NULL THEN (SELECT COUNT(r.id) FROM Root r) ELSE 0 END FROM Leaf l";
+		// simple syntax check
+		Session s = openSession();
+		s.beginTransaction();
+		s.createQuery( query ).list();
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-1689, SQM-30" )
+	public void testSubQueryAsSearchedCaseExpression() {
+		final String query = "SELECT CASE WHEN (SELECT COUNT(r.id) FROM Root r) > 1 THEN 1 ELSE 0 END FROM Leaf l";
+		// simple syntax check
+		Session s = openSession();
+		s.beginTransaction();
+		s.createQuery( query ).list();
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-1689, SQM-30" )
+	public void testSubQueryAsCaseElseResultExpression() {
+		final String query = "SELECT CASE WHEN  l.id > 1 THEN 1 ELSE (SELECT COUNT(r.id) FROM Root r) END FROM Leaf l";
+		// simple syntax check
+		Session s = openSession();
+		s.beginTransaction();
+		s.createQuery( query ).list();
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-1689, SQM-30" )
+	public void testSubQueryAsSimpleCaseTestExpression() {
+		final String query = "SELECT CASE (SELECT COUNT(r.id) FROM Root r) WHEN  1 THEN 1 ELSE 0 END FROM Leaf l";
+		// simple syntax check
+		Session s = openSession();
+		s.beginTransaction();
+		s.createQuery( query ).list();
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-1689, SQM-30" )
+	public void testSubQueryAsSimpleCaseWhenExpression() {
+		final String query = "SELECT CASE l.id WHEN (SELECT COUNT(r.id) FROM Root r) THEN 1 ELSE 0 END FROM Leaf l";
+		// simple syntax check
+		Session s = openSession();
+		s.beginTransaction();
+		s.createQuery( query ).list();
+		s.getTransaction().commit();
+		s.close();
 	}
 }

@@ -611,9 +611,35 @@ arithmeticExpr
 	;
 
 caseExpr
-	: #(CASE { inCase = true; } (#(WHEN logicalExpr expr))+ (#(ELSE expr))?) { inCase = false; }
-	| #(CASE2 { inCase = true; } expr (#(WHEN expr expr))+ (#(ELSE expr))?) { inCase = false; }
+	: simpleCaseExpression
+	| searchedCaseExpression
 	;
+
+expressionOrSubQuery
+	: expr
+	| query
+	;
+
+simpleCaseExpression
+	: #(CASE2 {inCase=true;} expressionOrSubQuery (simpleCaseWhenClause)+ (elseClause)?) {inCase=false;}
+	;
+
+simpleCaseWhenClause
+	: #(WHEN expressionOrSubQuery expressionOrSubQuery)
+	;
+
+elseClause
+	: #(ELSE expressionOrSubQuery)
+	;
+
+searchedCaseExpression
+	: #(CASE {inCase = true;} (searchedCaseWhenClause)+ (elseClause)?) {inCase = false;}
+	;
+
+searchedCaseWhenClause
+	: #(WHEN logicalExpr expressionOrSubQuery)
+	;
+
 
 //TODO: I don't think we need this anymore .. how is it different to 
 //      maxelements, etc, which are handled by functionCall

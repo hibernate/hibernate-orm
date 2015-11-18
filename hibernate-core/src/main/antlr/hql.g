@@ -639,22 +639,33 @@ unaryExpression
 	| quantifiedExpression
 	| atom
 	;
-	
+
 caseExpression
-	: CASE^ (whenClause)+ (elseClause)? END! 
-	| CASE^ { #CASE.setType(CASE2); } unaryExpression (altWhenClause)+ (elseClause)? END!
+	// NOTE : the unaryExpression rule contains the subQuery rule
+	: simpleCaseStatement
+	| searchedCaseStatement
 	;
-	
-whenClause
-	: (WHEN^ logicalExpression THEN! unaryExpression)
+
+simpleCaseStatement
+	: CASE^ unaryExpression (simpleCaseWhenClause)+ (elseClause)? END! {
+		#simpleCaseStatement.setType(CASE2);
+	}
 	;
-	
-altWhenClause
+
+simpleCaseWhenClause
 	: (WHEN^ unaryExpression THEN! unaryExpression)
 	;
-	
+
 elseClause
 	: (ELSE^ unaryExpression)
+	;
+
+searchedCaseStatement
+	: CASE^ (searchedCaseWhenClause)+ (elseClause)? END!
+	;
+
+searchedCaseWhenClause
+	: (WHEN^ logicalExpression THEN! unaryExpression)
 	;
 	
 quantifiedExpression

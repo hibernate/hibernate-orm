@@ -10,6 +10,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -72,6 +73,7 @@ public class Passport {
 		this.person = person;
 	}
 
+	@Column(name="`number`")
 	public String getNumber() {
 		return number;
 	}

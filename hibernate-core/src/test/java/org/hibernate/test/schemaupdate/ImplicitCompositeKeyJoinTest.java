@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.hibernate.testing.TestForIssue;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Andrea Boriero
@@ -36,45 +37,83 @@ import static org.junit.Assert.assertTrue;
 public class ImplicitCompositeKeyJoinTest {
 	private static final Logger LOGGER = Logger.getLogger( ImplicitCompositeKeyJoinTest.class );
 
-	private final static String EXPECTED_SQL = "create table Employee " +
-			"(age varchar(15) not null" +
-			", birthday varchar(255) not null" +
-			", name varchar(20) not null" +
-			", manager_age varchar(15)" +
-			", manager_birthday varchar(255)" +
-			", manager_name varchar(20)" +
-			", primary key (age, birthday, name))";
-
 	@Test
-	public void testImplicitCompositeJoin() throws Exception {
-
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+	public void testSchemaCreationSQLCommandIsGeneratedWithTheCorrectColumnSizeValues() throws Exception {
+		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
 		try {
-			org.hibernate.boot.Metadata metadata = new MetadataSources( ssr )
+			final org.hibernate.boot.Metadata metadata = new MetadataSources( ssr )
 					.addAnnotatedClass( Employee.class )
 					.buildMetadata();
 
-			boolean passed = false;
+			boolean createTableEmployeeFound = false;
 
-			List<String> commands = new SchemaCreatorImpl().generateCreationCommands(
+			final List<String> commands = new SchemaCreatorImpl().generateCreationCommands(
 					metadata,
 					false
 			);
+
 			for ( String command : commands ) {
 				LOGGER.info( command );
+				if ( command.toLowerCase().contains( "create table employee" ) ) {
+					final String[] columnsDefinition = getColumnsDefinition( command );
 
-				if ( EXPECTED_SQL.equals( command ) ) {
-					passed = true;
+					for ( int i = 0; i < columnsDefinition.length; i++ ) {
+						checkColumnSize( columnsDefinition[i] );
+					}
+					createTableEmployeeFound = true;
 				}
 			}
 			assertTrue(
 					"Expected create table command for Employee entity not found",
-					passed
+					createTableEmployeeFound
 			);
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
 		}
+	}
+
+	private String[] getColumnsDefinition(String command) {
+		String substring = command.toLowerCase().replaceAll( "create table employee ", "" );
+		substring = substring.substring( 0, substring.toLowerCase().indexOf( "primary key" ) );
+		return substring.split( "\\," );
+	}
+
+	private void checkColumnSize(String s) {
+		if ( s.toLowerCase().contains( "manager_age" ) ) {
+			if ( !s.contains( "15" ) ) {
+				fail( expectedMessage( "manager_age", 15, s ) );
+			}
+		}
+		else if ( s.toLowerCase().contains( "manager_birthday" ) ) {
+			if ( !s.contains( "255" ) ) {
+				fail( expectedMessage( "manager_birthday", 255, s ) );
+			}
+		}
+		else if ( s.toLowerCase().contains( "manager_name" ) ) {
+			if ( !s.contains( "20" ) ) {
+				fail( expectedMessage( "manager_name", 20, s ) );
+			}
+		}
+		else if ( s.toLowerCase().contains( "age" ) ) {
+			if ( !s.contains( "15" ) ) {
+				fail( expectedMessage( "age", 15, s ) );
+			}
+		}
+		else if ( s.toLowerCase().contains( "birthday" ) ) {
+			if ( !s.contains( "255" ) ) {
+				fail( expectedMessage( "birthday", 255, s ) );
+			}
+		}
+		else if ( s.toLowerCase().contains( "name" ) ) {
+			if ( !s.contains( "20" ) ) {
+				fail( expectedMessage( "name", 20, s ) );
+			}
+		}
+	}
+
+	private String expectedMessage(String column_name, int size, String actual) {
+		return "Expected " + column_name + " " + size + " but was " + actual;
 	}
 
 	@Entity
@@ -87,34 +126,10 @@ public class ImplicitCompositeKeyJoinTest {
 		@ManyToOne(optional = true)
 		@ForeignKey(name = "none")
 		private Employee manager;
-
-		public void setId(EmployeeId id) {
-			this.id = id;
-		}
-
-		public EmployeeId getId() {
-			return id;
-		}
-
-		public void setManager(Employee manager) {
-			this.manager = manager;
-		}
-
-		public Employee getManager() {
-			return manager;
-		}
 	}
 
 	@Embeddable
 	public class EmployeeId implements Serializable {
-		private static final long serialVersionUID = 1L;
-
-		public EmployeeId(String name, String birthday, String age) {
-			this.name = name;
-			this.birthday = birthday;
-			this.age = age;
-		}
-
 		@Column(length = 15)
 		public String age;
 
@@ -122,60 +137,5 @@ public class ImplicitCompositeKeyJoinTest {
 		private String name;
 
 		private String birthday;
-
-		@Override
-		public int hashCode() {
-			int hash = 1;
-			hash = hash * 31 + (name != null ? name.hashCode() : 0);
-			hash = hash * 31 + (age != null ? age.hashCode() : 0);
-			return hash * 31 + (birthday != null ? birthday.hashCode() : 0);
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if ( obj == this ) {
-				return true;
-			}
-
-			if ( !(obj instanceof EmployeeId) ) {
-				return false;
-			}
-			EmployeeId that = (EmployeeId) obj;
-			if ( age != that.age ) {
-				return false;
-			}
-			if ( birthday != that.birthday ) {
-				return false;
-			}
-			if ( name != null && !name.equals( that.name ) ) {
-				return false;
-			}
-			return true;
-		}
-
-		public void setAge(String age) {
-			this.age = age;
-		}
-
-		public void setName(String name) {
-			this.name = name;
-		}
-
-
-		public void setBirthday(String birthday) {
-			this.birthday = birthday;
-		}
-
-		public String getAge() {
-			return age;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public String getBirthday() {
-			return birthday;
-		}
 	}
 }

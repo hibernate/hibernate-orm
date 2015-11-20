@@ -6,7 +6,7 @@ import java.io.Serializable;
 
 @Embeddable
 public class PolicyId implements Serializable {
-	@Column(name="`type`")
+	@Column(name="`type`", length=32)
 	String type;
 	DependentId depPK;
 }

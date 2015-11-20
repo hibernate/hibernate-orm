@@ -26,6 +26,9 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  * @author Steve Ebersole
  */
 public class EnhancedGetterMethodImpl implements Getter {
+
+	private static final Object[] EMPTY = new Object[0];
+
 	private static final CoreMessageLogger LOG = messageLogger( EnhancedGetterMethodImpl.class );
 
 	private final Class containerClass;
@@ -54,7 +57,7 @@ public class EnhancedGetterMethodImpl implements Getter {
 
 			// We don't want to trigger lazy loading of byte code enhanced attributes
 			if ( isAttributeLoaded( owner ) ) {
-				return getterMethod.invoke( owner );
+				return getterMethod.invoke( owner, EMPTY );
 			}
 			return null;
 

@@ -9,6 +9,7 @@ package org.hibernate.type.descriptor.converter;
 import javax.persistence.AttributeConverter;
 
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
+import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -32,8 +33,9 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 	private final Class jdbcType;
 	private final AttributeConverter<? extends T,?> attributeConverter;
 
-	private final AttributeConverterMutabilityPlanImpl<T> mutabilityPlan;
+	private final MutabilityPlan<T> mutabilityPlan;
 
+	@SuppressWarnings("unchecked")
 	public AttributeConverterTypeAdapter(
 			String name,
 			String description,
@@ -49,7 +51,10 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 		this.jdbcType = jdbcType;
 		this.attributeConverter = attributeConverter;
 
-		this.mutabilityPlan = new AttributeConverterMutabilityPlanImpl<T>( attributeConverter );
+		this.mutabilityPlan =
+				entityAttributeJavaTypeDescriptor.getMutabilityPlan().isMutable() ?
+						new AttributeConverterMutabilityPlanImpl<T>( attributeConverter ) :
+						ImmutableMutabilityPlan.INSTANCE;
 
 		log.debug( "Created AttributeConverterTypeAdapter -> " + name );
 	}

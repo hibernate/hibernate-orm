@@ -14,10 +14,13 @@ import javax.persistence.Id;
 
 import org.hibernate.Session;
 
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
@@ -107,6 +110,13 @@ public class DirtyCheckingTest extends BaseNonConfigCoreFunctionalTestCase {
 		session.delete( loaded );
 		session.getTransaction().commit();
 		session.close();
+	}
+
+	@Test
+	public void checkConverterMutabilityPlans() {
+		final EntityPersister persister = sessionFactory().getEntityPersister( SomeEntity.class.getName() );
+		assertFalse( persister.getPropertyType( "number" ).isMutable() );
+		assertTrue( persister.getPropertyType( "name" ).isMutable() );
 	}
 
 	@Override

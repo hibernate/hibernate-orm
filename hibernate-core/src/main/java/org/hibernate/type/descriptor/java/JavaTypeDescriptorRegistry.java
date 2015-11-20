@@ -122,9 +122,19 @@ public class JavaTypeDescriptorRegistry {
 
 	public static class FallbackJavaTypeDescriptor<T> extends AbstractTypeDescriptor<T> {
 		@SuppressWarnings("unchecked")
-		protected FallbackJavaTypeDescriptor(Class<T> type) {
-			// MutableMutabilityPlan would be the "safest" option, but we do not necessarily know how to deepCopy etc...
-			super( type, ImmutableMutabilityPlan.INSTANCE );
+		protected FallbackJavaTypeDescriptor(final Class<T> type) {
+			// MutableMutabilityPlan is the "safest" option, but we do not necessarily know how to deepCopy etc...
+			super(
+					type,
+					new MutableMutabilityPlan<T>() {
+						@Override
+						protected T deepCopyNotNull(T value) {
+							throw new HibernateException(
+									"Not known how to deep copy value of type: [" + type.getName() + "]"
+							);
+						}
+					}
+			);
 		}
 
 		@Override

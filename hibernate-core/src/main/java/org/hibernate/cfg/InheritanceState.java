@@ -216,11 +216,11 @@ public class InheritanceState {
 			for ( XClass classToProcessForMappedSuperclass : classesToProcessForMappedSuperclass ) {
 				PropertyContainer propertyContainer = new PropertyContainer(
 						classToProcessForMappedSuperclass,
-						clazz
+						clazz,
+						accessType
 				);
 				int currentIdPropertyCount = AnnotationBinder.addElementsOfClass(
 						elements,
-						accessType,
 						propertyContainer,
 						buildingContext
 				);

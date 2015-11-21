@@ -13,11 +13,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
 
-import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.cfg.Environment;
-import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -27,8 +24,6 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-
-import org.dom4j.Node;
 
 /**
  * Convenience base class for {@link BasicType} implementations
@@ -233,8 +228,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	public final T nullSafeGet(ResultSet rs, String name, final SessionImplementor session) throws SQLException {
-		final WrapperOptions options = getOptions(session);
-		return nullSafeGet( rs, name, options );
+		return nullSafeGet( rs, name, (WrapperOptions) session );
 	}
 
 	protected final T nullSafeGet(ResultSet rs, String name, WrapperOptions options) throws SQLException {
@@ -251,8 +245,7 @@ public abstract class AbstractStandardBasicType<T>
 			Object value,
 			int index,
 			final SessionImplementor session) throws SQLException {
-		final WrapperOptions options = getOptions(session);
-		nullSafeSet( st, value, index, options );
+		nullSafeSet( st, value, index, (WrapperOptions) session );
 	}
 
 	@SuppressWarnings({ "unchecked" })
@@ -340,38 +333,15 @@ public abstract class AbstractStandardBasicType<T>
 
 	@Override
 	public T extract(CallableStatement statement, int startIndex, final SessionImplementor session) throws SQLException {
-		final WrapperOptions options = getOptions(session);
-		return remapSqlTypeDescriptor( options ).getExtractor( javaTypeDescriptor ).extract(
+		return remapSqlTypeDescriptor( session ).getExtractor( javaTypeDescriptor ).extract(
 				statement,
 				startIndex,
-				options
+				session
 		);
 	}
 
 	@Override
 	public T extract(CallableStatement statement, String[] paramNames, final SessionImplementor session) throws SQLException {
-		final WrapperOptions options = getOptions(session);
-		return remapSqlTypeDescriptor( options ).getExtractor( javaTypeDescriptor ).extract( statement, paramNames, options );
-	}
-	
-	// TODO : have SessionImplementor extend WrapperOptions
-	private WrapperOptions getOptions(final SessionImplementor session) {
-		return new WrapperOptions() {
-			public boolean useStreamForLobBinding() {
-				return Environment.useStreamsForBinary()
-						|| session.getFactory().getDialect().useInputStreamToInsertBlob();
-			}
-
-			public LobCreator getLobCreator() {
-				return Hibernate.getLobCreator( session );
-			}
-
-			public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-				final SqlTypeDescriptor remapped = sqlTypeDescriptor.canBeRemapped()
-						? session.getFactory().getDialect().remapSqlTypeDescriptor( sqlTypeDescriptor )
-						: sqlTypeDescriptor;
-				return remapped == null ? sqlTypeDescriptor : remapped;
-			}
-		};
+		return remapSqlTypeDescriptor( session ).getExtractor( javaTypeDescriptor ).extract( statement, paramNames, session );
 	}
 }

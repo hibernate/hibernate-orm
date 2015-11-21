@@ -19,6 +19,8 @@ import org.junit.Test;
 import org.hibernate.Hibernate;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.PostgreSQL9Dialect;
+import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.jpa.test.Distributor;
@@ -29,6 +31,7 @@ import org.hibernate.stat.Statistics;
 import junit.framework.Assert;
 
 import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.SkipForDialects;
 import org.hibernate.testing.TestForIssue;
 
 import static junit.framework.Assert.assertNull;
@@ -298,10 +301,13 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(
-			value = Oracle8iDialect.class,
-			jiraKey = "HHH-10161",
-			comment = "Oracle cannot convert untyped null (assumed to be BINARY type) to NUMBER")
+	@SkipForDialects(
+			value = {
+					@SkipForDialect(value = Oracle8iDialect.class, jiraKey = "HHH-10161", comment = "Cannot convert untyped null (assumed to be BINARY type) to NUMBER"),
+					@SkipForDialect(value = PostgreSQL9Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint"),
+					@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
+			}
+	)
 	public void testNativeQueryNullPositionalParameter() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -368,10 +374,13 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(
-			value = Oracle8iDialect.class,
-			jiraKey = "HHH-10161",
-			comment = "Oracle cannot convert untyped null (assumed to be BINARY type) to NUMBER")
+	@SkipForDialects(
+			value = {
+					@SkipForDialect(value = Oracle8iDialect.class, jiraKey = "HHH-10161", comment = "Cannot convert untyped null (assumed to be BINARY type) to NUMBER"),
+					@SkipForDialect(value = PostgreSQL9Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint"),
+					@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
+			}
+	)
 	public void testNativeQueryNullNamedParameter() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

@@ -14,6 +14,8 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.AttributeConverter;
+import javax.persistence.CollectionTable;
+import javax.persistence.Column;
 import javax.persistence.Converter;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -74,6 +76,7 @@ public class CollectionElementConversionTest extends BaseNonConfigCoreFunctional
 		@Id
 		private Integer id;
 		@ElementCollection
+		@Column(name = "`set`")
 		private Set<Color> set;
 		@ElementCollection
 		@Enumerated(EnumType.STRING)

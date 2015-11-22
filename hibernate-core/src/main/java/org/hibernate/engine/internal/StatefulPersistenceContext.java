@@ -383,7 +383,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void addEntity(EntityKey key, Object entity) {
 		entitiesByKey.put( key, entity );
-		getBatchFetchQueue().removeBatchLoadableEntityKey( key );
+		if( batchFetchQueue != null ) {
+			getBatchFetchQueue().removeBatchLoadableEntityKey(key);
+		}
 	}
 
 	@Override
@@ -409,8 +411,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		parentsByChild.clear();
 		entitySnapshotsByKey.remove( key );
 		nullifiableEntityKeys.remove( key );
-		getBatchFetchQueue().removeBatchLoadableEntityKey( key );
-		getBatchFetchQueue().removeSubselect( key );
+		if( batchFetchQueue != null ) {
+			getBatchFetchQueue().removeBatchLoadableEntityKey(key);
+			getBatchFetchQueue().removeSubselect(key);
+		}
 		return entity;
 	}
 

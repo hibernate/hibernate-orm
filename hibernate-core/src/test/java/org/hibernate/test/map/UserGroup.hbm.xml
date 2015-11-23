@@ -26,7 +26,7 @@
 	
 	<class name="User" table="users">
 		<id name="name"/>
-		<property name="password" column="`password`"/>
+		<property name="password" column="pw"/>
 		<map name="session" cascade="persist,save-update,delete,delete-orphan">
 			<key column="userName" not-null="true"/>
 			<map-key formula="lower(name)" type="string"/>
@@ -47,7 +47,7 @@
 		<return alias="u" class="User"/>
 		<return-join alias="s" property="u.session"/>
 		select 
-			lower(u.name) as {u.name}, lower(u."password") as {u.password}, 
+			lower(u.name) as {u.name}, lower(u.pw) as {u.password},
 			lower(s.userName) as {s.key}, lower(s.name) as {s.index}, s.id as {s.element}, 
 			{s.element.*}
 		from users u 

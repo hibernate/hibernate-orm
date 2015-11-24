@@ -8,22 +8,22 @@ package org.hibernate.test.subselectfetch;
 
 import java.util.List;
 
-import org.hibernate.Session;
-import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.mapping.Collection;
-
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.Session;
+import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.mapping.Collection;
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-@SkipForDialect({SQLServerDialect.class, SybaseDialect.class})
-public class SubselectFetchWithFormulaTest extends BaseNonConfigCoreFunctionalTestCase {
+@RequiresDialect({SQLServerDialect.class,SybaseDialect.class})
+public class SubselectFetchWithFormulaTransactSqlTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
 	protected String getBaseForMappings() {
 		return "";
@@ -32,7 +32,7 @@ public class SubselectFetchWithFormulaTest extends BaseNonConfigCoreFunctionalTe
 	@Override
 	protected String[] getMappings() {
 		return new String[] {
-				"org/hibernate/test/subselectfetch/Name.hbm.xml",
+				"org/hibernate/test/subselectfetch/NameTransactSql.hbm.xml",
 				"org/hibernate/test/subselectfetch/Value.hbm.xml"
 		};
 	}

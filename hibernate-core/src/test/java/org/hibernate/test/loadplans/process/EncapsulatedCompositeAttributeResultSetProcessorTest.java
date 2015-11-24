@@ -312,6 +312,7 @@ public class EncapsulatedCompositeAttributeResultSetProcessorTest extends BaseCo
 		public void setDescription(String description) {
 			this.description = description;
 		}
+		@Column(name="`date`")
 		public Date getDate() {
 			return date;
 		}

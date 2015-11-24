@@ -95,6 +95,7 @@ public class TestFkUpdating {
 	}
 
 	@Entity( name = "Role" )
+	@Table( name = "`Role`")
 	public class Role {
 		private Integer id;
 

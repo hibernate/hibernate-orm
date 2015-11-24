@@ -485,7 +485,7 @@ public class FooBarTest extends LegacyTestCase {
 			// && !db.equals("weblogic") {
 			if ( !( getDialect() instanceof InterbaseDialect ) ) {
 				list = s.createQuery( "from Foo foo where ? = some elements(foo.component.importantDates)" )
-						.setParameter( 0, new Date(), StandardBasicTypes.DATE )
+						.setParameter( 0, foo.getTimestamp(), StandardBasicTypes.DATE )
 						.list();
 				assertTrue( "component query", list.size()==2 );
 			}

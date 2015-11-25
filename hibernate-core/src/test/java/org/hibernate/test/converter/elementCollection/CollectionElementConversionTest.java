@@ -22,6 +22,7 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 import org.hibernate.Session;
 import org.hibernate.testing.TestForIssue;
@@ -72,6 +73,7 @@ public class CollectionElementConversionTest extends BaseNonConfigCoreFunctional
 	}
 
 	@Entity
+	@Table(name = "Customer")
 	public static class Customer {
 		@Id
 		private Integer id;

@@ -101,7 +101,7 @@ public class SuperclassCollectionTest extends BaseEntityManagerFunctionalTestCas
 		return query.getResultList();
 	}
 
-	@Entity
+	@Entity(name="Address")
 	public static class Address {
 		@Id
 		@GeneratedValue
@@ -127,7 +127,7 @@ public class SuperclassCollectionTest extends BaseEntityManagerFunctionalTestCas
 		protected abstract List<Address> getLocalAddresses();
 	}
 
-	@Entity
+	@Entity(name="Person")
 	public static class Person extends PersonBase {
 		@OneToMany(cascade = CascadeType.ALL)
 		@JoinTable(name = "person_localaddress")
@@ -139,7 +139,7 @@ public class SuperclassCollectionTest extends BaseEntityManagerFunctionalTestCas
 		}
 	}
 
-	@Entity
+	@Entity(name="OtherSubclass")
 	public static class OtherSubclass extends PersonBase {
 		@OneToMany(cascade = CascadeType.ALL)
 		@JoinTable(name = "other_person_localaddress")

@@ -55,7 +55,7 @@ public class TimePropertyTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.getTransaction().begin();
-		final Query queryWithParameter = s.createQuery( "from TimePropertyTest$Entity where tAsDate=?" ).setParameter( 0, eOrig.tAsDate );
+		final Query queryWithParameter = s.createQuery( "from TimePropertyTest$Entity where tAsDate=?" ).setParameter( 0, eGotten.tAsDate );
 		final Entity eQueriedWithParameter = (Entity) queryWithParameter.uniqueResult();
 		assertNotNull( eQueriedWithParameter );
 		s.getTransaction().commit();
@@ -63,7 +63,7 @@ public class TimePropertyTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.getTransaction().begin();
-		final Query query = s.createQuery( "from TimePropertyTest$Entity where tAsDate=?" ).setTime( 0, eOrig.tAsDate );
+		final Query query = s.createQuery( "from TimePropertyTest$Entity where tAsDate=?" ).setTime( 0, eGotten.tAsDate );
 		final Entity eQueried = (Entity) query.uniqueResult();
 		assertNotNull( eQueried );
 		s.getTransaction().commit();

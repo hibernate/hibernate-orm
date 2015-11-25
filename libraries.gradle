@@ -26,7 +26,7 @@ ext {
 
             // Annotations
             commons_annotations: 'org.hibernate.common:hibernate-commons-annotations:5.0.1.Final',
-            jandex:         'org.jboss:jandex:2.0.0.CR1',
+            jandex:         'org.jboss:jandex:2.0.0.Final',
             classmate:      'com.fasterxml:classmate:1.3.0',
 
             // Woodstox

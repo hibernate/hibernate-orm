@@ -887,7 +887,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return temp;
 	}
 
-
 	public String fromTableFragment(String alias) {
 		return getTableName() + ' ' + alias;
 	}
@@ -902,9 +901,22 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				select.setExtraSelectList( discriminatorFragment( name ), getDiscriminatorAlias() );
 			}
 			else {
+				if ( getEntityMetamodel().getSuperclass() != null ) {
+					name = generateTableAlias( name, getRootHierarchyClassTableIndex() );
+				}
 				select.addColumn( name, explicitDiscriminatorColumnName, discriminatorAlias );
 			}
 		}
+	}
+
+	private int getRootHierarchyClassTableIndex() {
+		final String rootHierarchyClassTableName = naturalOrderTableNames[0];
+		for ( int i = 0; i < subclassTableNameClosure.length; i++ ) {
+			if ( subclassTableNameClosure[i].equals( rootHierarchyClassTableName ) ) {
+				return i;
+			}
+		}
+		return 0;
 	}
 
 	private CaseFragment discriminatorFragment(String alias) {

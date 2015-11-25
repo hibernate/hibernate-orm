@@ -87,6 +87,11 @@ public class DynamicProperty implements XProperty {
 	}
 
 	@Override
+	public Object invoke(Object target) {
+		return null;
+	}
+
+	@Override
 	public boolean isTypeResolved() {
 		return false;
 	}

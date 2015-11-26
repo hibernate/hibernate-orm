@@ -145,12 +145,12 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 				|| source.getAttributePath() == null ) {
 			name = transformEntityName( source.getEntityNaming() )
 					+ '_'
-					+ source.getReferencedColumnName();
+					+ source.getReferencedColumnName().getText();
 		}
 		else {
 			name = transformAttributePath( source.getAttributePath() )
 					+ '_'
-					+ source.getReferencedColumnName();
+					+ source.getReferencedColumnName().getText();
 		}
 
 		return toIdentifier( name, source.getBuildingContext() );

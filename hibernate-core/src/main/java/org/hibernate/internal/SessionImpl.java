@@ -939,22 +939,22 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	public void load(Object object, Serializable id) throws HibernateException {
 		LoadEvent event = loadEvent;
 		loadEvent = null;
-		if(event == null) {
+		if ( event == null ) {
 			event = new LoadEvent( id, object, this );
 		} else {
-			event.setEntityClassName(null);
-			event.setEntityId(id);
-			event.setInstanceToLoad(object);
-			event.setLockMode(LoadEvent.DEFAULT_LOCK_MODE);
-			event.setLockScope(LoadEvent.DEFAULT_LOCK_OPTIONS.getScope());
-			event.setLockTimeout(LoadEvent.DEFAULT_LOCK_OPTIONS.getTimeOut());
+			event.setEntityClassName( null );
+			event.setEntityId( id );
+			event.setInstanceToLoad( object );
+			event.setLockMode( LoadEvent.DEFAULT_LOCK_MODE );
+			event.setLockScope( LoadEvent.DEFAULT_LOCK_OPTIONS.getScope() );
+			event.setLockTimeout( LoadEvent.DEFAULT_LOCK_OPTIONS.getTimeOut() );
 		}
 		fireLoad( event, LoadEventListener.RELOAD );
-		if(loadEvent == null) {
-			event.setEntityClassName(null);
-			event.setEntityId(null);
-			event.setInstanceToLoad(null);
-			event.setResult(null);
+		if ( loadEvent == null ) {
+			event.setEntityClassName( null );
+			event.setEntityId( null );
+			event.setInstanceToLoad( null );
+			event.setResult( null );
 			loadEvent = event;
 		}
 	}
@@ -992,23 +992,14 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 		LoadEvent event = loadEvent;
 		loadEvent = null;
-		if(event == null) {
-			event = new LoadEvent( id, entityName, true, this );
-		} else {
-			event.setEntityClassName(entityName);
-			event.setEntityId(id);
-			event.setInstanceToLoad(null);
-			event.setLockMode(LoadEvent.DEFAULT_LOCK_MODE);
-			event.setLockScope(LoadEvent.DEFAULT_LOCK_OPTIONS.getScope());
-			event.setLockTimeout(LoadEvent.DEFAULT_LOCK_OPTIONS.getTimeOut());
-		}
+		event = recycleEventInstance( event, id, entityName );
 		fireLoad( event, LoadEventListener.IMMEDIATE_LOAD );
 		Object result = event.getResult();
-		if(loadEvent == null) {
-			event.setEntityClassName(null);
-			event.setEntityId(null);
-			event.setInstanceToLoad(null);
-			event.setResult(null);
+		if ( loadEvent == null ) {
+			event.setEntityClassName( null );
+			event.setEntityId( null );
+			event.setInstanceToLoad( null );
+			event.setResult( null );
 			loadEvent = event;
 		}
 		return result;
@@ -1026,29 +1017,38 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 		LoadEvent event = loadEvent;
 		loadEvent = null;
-		if(event == null) {
-			event = new LoadEvent( id, entityName, true, this );
-		} else {
-			event.setEntityClassName(entityName);
-			event.setEntityId(id);
-			event.setInstanceToLoad(null);
-			event.setLockMode(LoadEvent.DEFAULT_LOCK_MODE);
-			event.setLockScope(LoadEvent.DEFAULT_LOCK_OPTIONS.getScope());
-			event.setLockTimeout(LoadEvent.DEFAULT_LOCK_OPTIONS.getTimeOut());
-		}
+		event = recycleEventInstance( event, id, entityName );
 		fireLoad( event, type );
 		Object result = event.getResult();
 		if ( !nullable ) {
-			UnresolvableObjectException.throwIfNull(result, id, entityName );
+			UnresolvableObjectException.throwIfNull( result, id, entityName );
 		}
-		if(loadEvent == null) {
-			event.setEntityClassName(null);
-			event.setEntityId(null);
-			event.setInstanceToLoad(null);
-			event.setResult(null);
+		if ( loadEvent == null ) {
+			event.setEntityClassName( null );
+			event.setEntityId( null );
+			event.setInstanceToLoad( null );
+			event.setResult( null );
 			loadEvent = event;
 		}
 		return result;
+	}
+
+	/**
+	 * Helper to avoid creating many new instances of LoadEvent: it's an allocation hot spot.
+	 */
+	private LoadEvent recycleEventInstance(final LoadEvent event, final Serializable id, final String entityName) {
+		if ( event == null ) {
+			return new LoadEvent( id, entityName, true, this );
+		}
+		else {
+			event.setEntityClassName( entityName );
+			event.setEntityId( id );
+			event.setInstanceToLoad( null );
+			event.setLockMode( LoadEvent.DEFAULT_LOCK_MODE );
+			event.setLockScope( LoadEvent.DEFAULT_LOCK_OPTIONS.getScope() );
+			event.setLockTimeout( LoadEvent.DEFAULT_LOCK_OPTIONS.getTimeOut() );
+			return event;
+		}
 	}
 
 	@Override

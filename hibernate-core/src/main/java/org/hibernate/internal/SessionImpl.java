@@ -943,7 +943,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		loadEvent = null;
 		if ( event == null ) {
 			event = new LoadEvent( id, object, this );
-		} else {
+		}
+		else {
 			event.setEntityClassName( null );
 			event.setEntityId( id );
 			event.setInstanceToLoad( object );

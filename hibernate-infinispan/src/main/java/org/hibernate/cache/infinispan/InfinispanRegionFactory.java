@@ -476,7 +476,6 @@ public class InfinispanRegionFactory implements RegionFactory {
 										.globalJmxStatistics()
 										.enabled( Boolean.parseBoolean( globalStats ) );
 							}
-							holder.getGlobalConfigurationBuilder().serialization().addAdvancedExternalizer(Externalizers.ALL_EXTERNALIZERS);
 
 							return createCacheManager( holder );
 						}

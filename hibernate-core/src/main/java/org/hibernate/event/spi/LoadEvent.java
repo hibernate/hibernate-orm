@@ -105,7 +105,7 @@ public class LoadEvent extends AbstractEvent {
 		this.instanceToLoad = instanceToLoad;
 		this.lockOptions = lockOptions;
 		this.isAssociationFetch = isAssociationFetch;
-		this.postLoadEvent = new PostLoadEvent(source);
+		this.postLoadEvent = new PostLoadEvent( source );
 	}
 
 	public Serializable getEntityId() {

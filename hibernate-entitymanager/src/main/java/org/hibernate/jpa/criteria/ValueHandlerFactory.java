@@ -68,6 +68,10 @@ public class ValueHandlerFactory {
 				|| Double.TYPE.isInstance( value );
 	}
 
+	public static boolean isBoolean(Object value) {
+		return Boolean.class.isInstance( value );
+	}
+
 	public static class ByteValueHandler extends BaseValueHandler<Byte> implements Serializable {
 		public static final ByteValueHandler INSTANCE = new ByteValueHandler();
 		@SuppressWarnings({ "UnnecessaryBoxing" })
@@ -230,6 +234,23 @@ public class ValueHandlerFactory {
 		}
 	}
 
+	public static class BooleanValueHandler extends BaseValueHandler<Boolean> implements Serializable {
+		public static final BooleanValueHandler INSTANCE = new BooleanValueHandler();
+
+		public Boolean convert(Object value) {
+			if ( value == null ) {
+				return null;
+			}
+			if ( Boolean.class.isInstance( value ) ) {
+				return (Boolean) value;
+			}
+			if ( String.class.isInstance( value ) ) {
+				return Boolean.getBoolean( (String) value );
+			}
+			throw unknownConversion( value, Boolean.class );
+		}
+	}
+
 	public static class StringValueHandler extends BaseValueHandler<String> implements Serializable {
 		public static final StringValueHandler INSTANCE = new StringValueHandler();
 		public String convert(Object value) {
@@ -307,6 +328,9 @@ public class ValueHandlerFactory {
 		}
 		if ( BigDecimal.class.equals( targetType ) ) {
 			return (ValueHandler<T>) BigDecimalValueHandler.INSTANCE;
+		}
+		if ( Boolean.class.equals( targetType ) ) {
+			return (ValueHandler<T>) BooleanValueHandler.INSTANCE;
 		}
 		return null;
 	}

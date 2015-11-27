@@ -10,14 +10,18 @@ import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
+
+import org.hibernate.testing.TestForIssue;
 
 import static javax.persistence.criteria.CriteriaBuilder.SimpleCase;
 
@@ -32,6 +36,88 @@ public class BasicSimpleCaseTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {Customer.class};
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-9343")
+	public void testCaseStringResult() {
+		EntityManager em = getOrCreateEntityManager();
+		CriteriaBuilder builder = em.getCriteriaBuilder();
+
+		CriteriaQuery<Tuple> query = builder.createTupleQuery();
+		Root<Customer> root = query.from( Customer.class );
+
+		Path<String> emailPath = root.get( "email" );
+		CriteriaBuilder.Case<String> selectCase = builder.selectCase();
+		selectCase.when( builder.greaterThan( builder.length( emailPath ), 13 ), "Long" );
+		selectCase.when( builder.greaterThan( builder.length( emailPath ), 12 ), "Normal" );
+		Expression<String> emailType = selectCase.otherwise( "Unknown" );
+
+		query.multiselect( emailPath, emailType );
+
+		em.createQuery( query ).getResultList();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-9343")
+	public void testCaseIntegerResult() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		CriteriaBuilder builder = em.getCriteriaBuilder();
+
+		CriteriaQuery<Tuple> query = builder.createTupleQuery();
+		Root<Customer> root = query.from( Customer.class );
+
+		Path<String> emailPath = root.get( "email" );
+		CriteriaBuilder.Case<Integer> selectCase = builder.selectCase();
+		selectCase.when( builder.greaterThan( builder.length( emailPath ), 13 ), 2 );
+		selectCase.when( builder.greaterThan( builder.length( emailPath ), 12 ), 1 );
+		Expression<Integer> emailType = selectCase.otherwise( 0 );
+
+		query.multiselect( emailPath, emailType );
+
+		em.createQuery( query ).getResultList();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-9343")
+	public void testCaseLiteralResult() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<Boolean> cq = cb.createQuery( Boolean.class );
+		Root<Customer> expense_ = cq.from( Customer.class );
+		em.createQuery(
+				cq.distinct( true ).where(
+						cb.equal( expense_.get( "email" ), "@hibernate.com" )
+				).multiselect(
+						cb.selectCase()
+								.when( cb.gt( cb.count( expense_ ), cb.literal( 0L ) ), cb.literal( true ) )
+								.otherwise( cb.literal( false ) )
+				)
+		).getSingleResult();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-9343")
+	public void testCaseLiteralResult2() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<Boolean> cq = cb.createQuery( Boolean.class );
+		Root<Customer> expense_ = cq.from( Customer.class );
+		em.createQuery(
+				cq.distinct( true ).where(
+						cb.equal( expense_.get( "email" ), "@hibernate.com" )
+				).multiselect(
+						cb.selectCase()
+								.when( cb.gt( cb.count( expense_ ), cb.literal( 0L ) ), true )
+								.otherwise( false )
+				)
+		).getSingleResult();
 	}
 
 	@Test

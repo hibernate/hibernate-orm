@@ -150,7 +150,7 @@
                 <term>hibernate-ehcache</term>
                 <listitem>
                     <para>
-                        Privides integration between Hibernate and <application>EhCache</application>, as a
+                        Provides integration between Hibernate and <application>EhCache</application>, as a
                         second-level cache. See <link xlink:href="http://ehcache.sourceforge.net/"/> for more
                         information about<application>EhCache</application>.
                     </para>

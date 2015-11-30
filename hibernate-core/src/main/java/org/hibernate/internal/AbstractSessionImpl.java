@@ -57,6 +57,8 @@ import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.TransactionCoordinatorBuilder.TransactionCoordinatorOptions;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.WrapperOptionsContext;
 
 /**
  * Functionality common to stateless and stateful sessions
@@ -64,12 +66,14 @@ import org.hibernate.service.ServiceRegistry;
  * @author Gavin King
  */
 public abstract class AbstractSessionImpl
-		implements Serializable, SharedSessionContract, SessionImplementor, JdbcSessionOwner, TransactionCoordinatorOptions {
+		implements Serializable, SharedSessionContract, SessionImplementor, JdbcSessionOwner, TransactionCoordinatorOptions, WrapperOptionsContext {
+
 	protected transient SessionFactoryImpl factory;
 	private final String tenantIdentifier;
 	private boolean closed;
 
 	protected transient Transaction currentHibernateTransaction;
+	protected transient WrapperOptionsImpl wrapperOptions;
 
 	protected AbstractSessionImpl(SessionFactoryImpl factory, String tenantIdentifier) {
 		this.factory = factory;
@@ -589,4 +593,12 @@ public abstract class AbstractSessionImpl
 		return factory.getServiceRegistry().getService( TransactionCoordinatorBuilder.class );
 	}
 
+	@Override
+	public WrapperOptions getWrapperOptions() {
+		if ( wrapperOptions == null ) {
+			wrapperOptions = new WrapperOptionsImpl( this );
+		}
+
+		return wrapperOptions;
+	}
 }

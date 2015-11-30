@@ -13,22 +13,19 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
 
-import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.cfg.Environment;
-import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.WrapperOptionsImpl;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.WrapperOptionsContext;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-
-import org.dom4j.Node;
 
 /**
  * Convenience base class for {@link BasicType} implementations
@@ -354,24 +351,11 @@ public abstract class AbstractStandardBasicType<T>
 		return remapSqlTypeDescriptor( options ).getExtractor( javaTypeDescriptor ).extract( statement, paramNames, options );
 	}
 	
-	// TODO : have SessionImplementor extend WrapperOptions
 	private WrapperOptions getOptions(final SessionImplementor session) {
-		return new WrapperOptions() {
-			public boolean useStreamForLobBinding() {
-				return Environment.useStreamsForBinary()
-						|| session.getFactory().getDialect().useInputStreamToInsertBlob();
-			}
+		if ( session instanceof WrapperOptionsContext ) {
+			return ( (WrapperOptionsContext) session ).getWrapperOptions();
+		}
 
-			public LobCreator getLobCreator() {
-				return Hibernate.getLobCreator( session );
-			}
-
-			public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-				final SqlTypeDescriptor remapped = sqlTypeDescriptor.canBeRemapped()
-						? session.getFactory().getDialect().remapSqlTypeDescriptor( sqlTypeDescriptor )
-						: sqlTypeDescriptor;
-				return remapped == null ? sqlTypeDescriptor : remapped;
-			}
-		};
+		return new WrapperOptionsImpl( session );
 	}
 }

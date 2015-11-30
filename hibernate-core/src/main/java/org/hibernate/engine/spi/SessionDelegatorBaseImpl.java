@@ -39,6 +39,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
+import org.hibernate.internal.WrapperOptionsImpl;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.loader.custom.CustomQuery;
@@ -46,6 +47,8 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.stat.SessionStatistics;
+import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.WrapperOptionsContext;
 
 /**
  * This class is meant to be extended.
@@ -57,7 +60,7 @@ import org.hibernate.stat.SessionStatistics;
  * 
  * @author Sanne Grinovero <sanne@hibernate.org> (C) 2012 Red Hat Inc.
  */
-public class SessionDelegatorBaseImpl implements SessionImplementor, Session {
+public class SessionDelegatorBaseImpl implements SessionImplementor, Session, WrapperOptionsContext {
 
 	protected final SessionImplementor sessionImplementor;
 	protected final Session session;
@@ -765,5 +768,18 @@ public class SessionDelegatorBaseImpl implements SessionImplementor, Session {
 	@Override
 	public void addEventListeners(SessionEventListener... listeners) {
 		session.addEventListeners( listeners );
+	}
+
+	@Override
+	public WrapperOptions getWrapperOptions() {
+		if ( sessionImplementor instanceof WrapperOptionsContext ) {
+			return ( (WrapperOptionsContext) sessionImplementor ).getWrapperOptions();
+		}
+		else if ( session instanceof WrapperOptionsContext ) {
+			return ( (WrapperOptionsContext) session ).getWrapperOptions();
+		}
+		else {
+			return new WrapperOptionsImpl( sessionImplementor );
+		}
 	}
 }

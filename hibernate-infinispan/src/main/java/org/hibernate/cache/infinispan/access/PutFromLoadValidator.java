@@ -178,6 +178,11 @@ public class PutFromLoadValidator {
 			}
 			boolean transactional = cache.getCacheConfiguration().transaction().transactionMode().isTransactional();
 			if (transactional) {
+				cache.removeInterceptor(invalidationPosition);
+				TxInvalidationInterceptor txInvalidationInterceptor = new TxInvalidationInterceptor();
+				cache.getComponentRegistry().registerComponent(txInvalidationInterceptor, TxInvalidationInterceptor.class);
+				cache.addInterceptor(txInvalidationInterceptor, invalidationPosition);
+
 				// Note that invalidation does *NOT* acquire locks; therefore, we have to start invalidating before
 				// wrapping the entry, since if putFromLoad was invoked between wrap and beginInvalidatingKey, the invalidation
 				// would not commit the entry removal (as during wrap the entry was not in cache)
@@ -221,6 +226,13 @@ public class PutFromLoadValidator {
 				cache.getComponentRegistry().registerComponent(invalidationInterceptor, InvalidationInterceptor.class);
 				cache.addInterceptorBefore(invalidationInterceptor, NonTxInvalidationInterceptor.class);
 				cache.removeInterceptor(NonTxInvalidationInterceptor.class);
+				break;
+			}
+			else if (i instanceof TxInvalidationInterceptor) {
+				InvalidationInterceptor invalidationInterceptor = new InvalidationInterceptor();
+				cache.getComponentRegistry().registerComponent(invalidationInterceptor, InvalidationInterceptor.class);
+				cache.addInterceptorBefore(invalidationInterceptor, TxInvalidationInterceptor.class);
+				cache.removeInterceptor(TxInvalidationInterceptor.class);
 				break;
 			}
 		}

@@ -29,6 +29,7 @@ import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.WrapperOptionsContext;
 
 /**
  * Defines the internal contract between {@link org.hibernate.Session} / {@link org.hibernate.StatelessSession} and
@@ -38,7 +39,7 @@ import org.hibernate.type.Type;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface SessionImplementor extends Serializable, LobCreationContext {
+public interface SessionImplementor extends Serializable, LobCreationContext, WrapperOptionsContext {
 	/**
 	 * Match te method on {@link org.hibernate.Session} and {@link org.hibernate.StatelessSession}
 	 *

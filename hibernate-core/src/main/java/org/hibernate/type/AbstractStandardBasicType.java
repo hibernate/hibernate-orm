@@ -19,10 +19,8 @@ import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.internal.WrapperOptionsImpl;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.WrapperOptionsContext;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -230,8 +228,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	public final T nullSafeGet(ResultSet rs, String name, final SessionImplementor session) throws SQLException {
-		final WrapperOptions options = getOptions(session);
-		return nullSafeGet( rs, name, options );
+		return nullSafeGet( rs, name, session.getWrapperOptions() );
 	}
 
 	protected final T nullSafeGet(ResultSet rs, String name, WrapperOptions options) throws SQLException {
@@ -248,8 +245,7 @@ public abstract class AbstractStandardBasicType<T>
 			Object value,
 			int index,
 			final SessionImplementor session) throws SQLException {
-		final WrapperOptions options = getOptions(session);
-		nullSafeSet( st, value, index, options );
+		nullSafeSet( st, value, index, session.getWrapperOptions() );
 	}
 
 	@SuppressWarnings({ "unchecked" })
@@ -337,25 +333,19 @@ public abstract class AbstractStandardBasicType<T>
 
 	@Override
 	public T extract(CallableStatement statement, int startIndex, final SessionImplementor session) throws SQLException {
-		final WrapperOptions options = getOptions(session);
-		return remapSqlTypeDescriptor( options ).getExtractor( javaTypeDescriptor ).extract(
+		return remapSqlTypeDescriptor( session.getWrapperOptions() ).getExtractor( javaTypeDescriptor ).extract(
 				statement,
 				startIndex,
-				options
+				session.getWrapperOptions()
 		);
 	}
 
 	@Override
 	public T extract(CallableStatement statement, String[] paramNames, final SessionImplementor session) throws SQLException {
-		final WrapperOptions options = getOptions(session);
-		return remapSqlTypeDescriptor( options ).getExtractor( javaTypeDescriptor ).extract( statement, paramNames, options );
-	}
-	
-	private WrapperOptions getOptions(final SessionImplementor session) {
-		if ( session instanceof WrapperOptionsContext ) {
-			return ( (WrapperOptionsContext) session ).getWrapperOptions();
-		}
-
-		return new WrapperOptionsImpl( session );
+		return remapSqlTypeDescriptor( session.getWrapperOptions() ).getExtractor( javaTypeDescriptor ).extract(
+				statement,
+				paramNames,
+				session.getWrapperOptions()
+		);
 	}
 }

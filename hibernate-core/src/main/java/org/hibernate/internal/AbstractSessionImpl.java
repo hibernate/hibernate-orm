@@ -58,7 +58,6 @@ import org.hibernate.resource.transaction.TransactionCoordinatorBuilder.Transact
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.WrapperOptionsContext;
 
 /**
  * Functionality common to stateless and stateful sessions
@@ -66,7 +65,7 @@ import org.hibernate.type.descriptor.WrapperOptionsContext;
  * @author Gavin King
  */
 public abstract class AbstractSessionImpl
-		implements Serializable, SharedSessionContract, SessionImplementor, JdbcSessionOwner, TransactionCoordinatorOptions, WrapperOptionsContext {
+		implements Serializable, SharedSessionContract, SessionImplementor, JdbcSessionOwner, TransactionCoordinatorOptions {
 
 	protected transient SessionFactoryImpl factory;
 	private final String tenantIdentifier;

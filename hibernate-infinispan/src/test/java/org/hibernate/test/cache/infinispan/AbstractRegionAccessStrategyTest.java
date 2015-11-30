@@ -47,6 +47,7 @@ import java.util.concurrent.CountDownLatch;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -334,7 +335,7 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 
 		// Test whether the get above messes up the optimistic version
 		SessionImplementor s9 = mockedSession();
-		remoteAccessStrategy.putFromLoad(s9, KEY, VALUE1, s9.getTimestamp(), 1);
+ 		assertTrue(remoteAccessStrategy.putFromLoad(s9, KEY, VALUE1, s9.getTimestamp(), 1));
 		SessionImplementor s10 = mockedSession();
 		assertEquals(VALUE1, remoteAccessStrategy.get(s10, KEY, s10.getTimestamp()));
 		assertEquals(1, remoteRegion.getCache().size());

@@ -102,7 +102,8 @@ public class PGGeometryTypeDescriptor implements SqlTypeDescriptor {
 			if (pgValue.charAt( 0 ) == 'S') { // /we have a Wkt value
 				final WktDecoder decoder = Wkt.newDecoder( Wkt.Dialect.POSTGIS_EWKT_1 );
 				return decoder.decode(pgValue);
-			} else {
+			}
+			else {
 				buffer = ByteBuffer.from( pgValue );
 				final WkbDecoder decoder = Wkb.newDecoder( Wkb.Dialect.POSTGIS_EWKB_1 );
 				return decoder.decode( buffer );

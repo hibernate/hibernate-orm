@@ -121,6 +121,7 @@ import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
@@ -4731,8 +4732,7 @@ public abstract class AbstractEntityPersister
 					int propertyIndex = -1;
 					for ( NonIdentifierAttribute attribute : entityMetamodel.getProperties() ) {
 						propertyIndex++;
-						final ValueGeneration valueGeneration = attribute.getValueGenerationStrategy();
-						if ( isReadRequired( valueGeneration, matchTiming ) ) {
+						if ( isValueGenerationRequired( attribute, matchTiming ) ) {
 							final Object hydratedState = attribute.getType().hydrate(
 									rs, getPropertyAliases(
 											"",
@@ -4743,6 +4743,7 @@ public abstract class AbstractEntityPersister
 							setPropertyValue( entity, propertyIndex, state[propertyIndex] );
 						}
 					}
+
 //					for ( int i = 0; i < getPropertySpan(); i++ ) {
 //						if ( includeds[i] != ValueInclusion.NONE ) {
 //							Object hydratedState = getPropertyTypes()[i].hydrate( rs, getPropertyAliases( "", i ), session, entity );
@@ -4770,6 +4771,22 @@ public abstract class AbstractEntityPersister
 			);
 		}
 
+	}
+
+	private boolean isValueGenerationRequired(NonIdentifierAttribute attribute, GenerationTiming matchTiming) {
+		if ( attribute.getType() instanceof ComponentType ) {
+			final ComponentType type = (ComponentType) attribute.getType();
+			final ValueGeneration[] propertyValueGenerationStrategies = type.getPropertyValueGenerationStrategies();
+			for ( int i = 0; i < propertyValueGenerationStrategies.length; i++ ) {
+				if ( isReadRequired( propertyValueGenerationStrategies[i], matchTiming ) ) {
+					return true;
+				}
+			}
+			return false;
+		}
+		else {
+			return isReadRequired( attribute.getValueGenerationStrategy(), matchTiming );
+		}
 	}
 
 	/**

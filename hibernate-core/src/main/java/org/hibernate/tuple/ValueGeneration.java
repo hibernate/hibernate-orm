@@ -6,12 +6,14 @@
  */
 package org.hibernate.tuple;
 
+import java.io.Serializable;
+
 /**
  * Describes the generation of property values.
  *
  * @author Steve Ebersole
  */
-public interface ValueGeneration {
+public interface ValueGeneration extends Serializable {
 	/**
 	 * When is this value generated : NEVER, INSERT, ALWAYS (INSERT+UPDATE)
 	 *

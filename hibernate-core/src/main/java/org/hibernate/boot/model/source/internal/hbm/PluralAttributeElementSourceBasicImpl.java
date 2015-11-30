@@ -75,8 +75,8 @@ public class PluralAttributeElementSourceBasicImpl
 					public SizeSource getSizeSource() {
 						return Helper.interpretSizeSource(
 								jaxbElement.getLength(),
-								jaxbElement.getPrecision(),
-								jaxbElement.getScale()
+								jaxbElement.getScale(),
+								jaxbElement.getPrecision()
 						);
 					}
 				}

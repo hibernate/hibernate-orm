@@ -84,11 +84,18 @@ class TxPutFromLoadInterceptor extends BaseRpcInterceptor {
 				if (wc instanceof InvalidateCommand) {
 					// ISPN-5605 InvalidateCommand does not correctly implement getAffectedKeys()
 					for (Object key : ((InvalidateCommand) wc).getKeys()) {
+						if (log.isTraceEnabled()) {
+							log.tracef("Invalidating key %s with lock owner %s", key, ctx.getLockOwner());
+						}
 						putFromLoadValidator.beginInvalidatingKey(ctx.getLockOwner(), key);
 					}
 				}
 				else {
-					for (Object key : wc.getAffectedKeys()) {
+					Set<Object> keys = wc.getAffectedKeys();
+					if (log.isTraceEnabled()) {
+						log.tracef("Invalidating keys %s with lock owner %s", keys, ctx.getLockOwner());
+					}
+					for (Object key : keys ) {
 						putFromLoadValidator.beginInvalidatingKey(ctx.getLockOwner(), key);
 					}
 				}
@@ -99,11 +106,19 @@ class TxPutFromLoadInterceptor extends BaseRpcInterceptor {
 
 	@Override
 	public Object visitCommitCommand(TxInvocationContext ctx, CommitCommand command) throws Throwable {
+		if (log.isTraceEnabled()) {
+			log.tracef( "Commit command received, end invalidation" );
+		}
+
 		return endInvalidationAndInvokeNextInterceptor(ctx, command);
 	}
 
 	@Override
 	public Object visitRollbackCommand(TxInvocationContext ctx, RollbackCommand command) throws Throwable {
+		if (log.isTraceEnabled()) {
+			log.tracef( "Rollback command received, end invalidation" );
+		}
+
 		return endInvalidationAndInvokeNextInterceptor(ctx, command);
 	}
 
@@ -112,6 +127,11 @@ class TxPutFromLoadInterceptor extends BaseRpcInterceptor {
 			if (ctx.isOriginLocal()) {
 				// send async Commit
 				Set<Object> affectedKeys = ctx.getAffectedKeys();
+
+				if (log.isTraceEnabled()) {
+					log.tracef( "Sending end invalidation for keys %s asynchronously", affectedKeys );
+				}
+
 				if (!affectedKeys.isEmpty()) {
 					EndInvalidationCommand commitCommand = cacheCommandInitializer.buildEndInvalidationCommand(
 							cacheName, affectedKeys.toArray(), ctx.getGlobalTransaction());

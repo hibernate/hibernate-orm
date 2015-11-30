@@ -37,6 +37,7 @@ import org.hibernate.Transaction;
 import org.hibernate.TypeHelper;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
@@ -47,6 +48,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.stat.SessionStatistics;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * This class is meant to be extended.
@@ -776,5 +778,20 @@ public class SessionDelegatorBaseImpl implements SessionImplementor, Session {
 	@Override
 	public void addEventListeners(SessionEventListener... listeners) {
 		session.addEventListeners( listeners );
+	}
+
+	@Override
+	public boolean useStreamForLobBinding() {
+		return sessionImplementor.useStreamForLobBinding();
+	}
+
+	@Override
+	public LobCreator getLobCreator() {
+		return sessionImplementor.getLobCreator();
+	}
+
+	@Override
+	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
+		return sessionImplementor.remapSqlTypeDescriptor( sqlTypeDescriptor );
 	}
 }

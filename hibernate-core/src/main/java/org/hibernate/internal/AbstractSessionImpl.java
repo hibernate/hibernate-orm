@@ -15,6 +15,7 @@ import java.util.UUID;
 
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
+import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.MultiTenancyStrategy;
@@ -26,7 +27,9 @@ import org.hibernate.SessionException;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.LobCreationContext;
+import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
@@ -57,6 +60,7 @@ import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.TransactionCoordinatorBuilder.TransactionCoordinatorOptions;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * Functionality common to stateless and stateful sessions
@@ -589,4 +593,19 @@ public abstract class AbstractSessionImpl
 		return factory.getServiceRegistry().getService( TransactionCoordinatorBuilder.class );
 	}
 
+	public boolean useStreamForLobBinding() {
+		return Environment.useStreamsForBinary()
+				|| getFactory().getDialect().useInputStreamToInsertBlob();
+	}
+
+	public LobCreator getLobCreator() {
+		return Hibernate.getLobCreator( this );
+	}
+
+	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
+		final SqlTypeDescriptor remapped = sqlTypeDescriptor.canBeRemapped()
+				? getFactory().getDialect().remapSqlTypeDescriptor( sqlTypeDescriptor )
+				: sqlTypeDescriptor;
+		return remapped == null ? sqlTypeDescriptor : remapped;
+	}
 }

@@ -28,6 +28,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.tuple.StandardProperty;
+import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.tuple.component.ComponentTuplizer;
 
@@ -41,6 +42,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	private final TypeFactory.TypeScope typeScope;
 	private final String[] propertyNames;
 	private final Type[] propertyTypes;
+	private final ValueGeneration[] propertyValueGenerationStrategies;
 	private final boolean[] propertyNullability;
 	protected final int propertySpan;
 	private final CascadeStyle[] cascade;
@@ -58,6 +60,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		this.propertySpan = metamodel.getPropertySpan();
 		this.propertyNames = new String[propertySpan];
 		this.propertyTypes = new Type[propertySpan];
+		this.propertyValueGenerationStrategies = new ValueGeneration[propertySpan];
 		this.propertyNullability = new boolean[propertySpan];
 		this.cascade = new CascadeStyle[propertySpan];
 		this.joinedFetch = new FetchMode[propertySpan];
@@ -72,6 +75,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 			if ( !prop.isNullable() ) {
 				hasNotNullProperty = true;
 			}
+			this.propertyValueGenerationStrategies[i] = prop.getValueGenerationStrategy();
 		}
 
 		this.entityMode = metamodel.getEntityMode();
@@ -446,6 +450,10 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	@Override
 	public Type[] getSubtypes() {
 		return propertyTypes;
+	}
+
+	public ValueGeneration[] getPropertyValueGenerationStrategies() {
+		return propertyValueGenerationStrategies;
 	}
 
 	@Override

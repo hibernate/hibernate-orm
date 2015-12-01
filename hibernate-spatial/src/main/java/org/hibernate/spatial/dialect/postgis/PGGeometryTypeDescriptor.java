@@ -19,6 +19,8 @@ import org.geolatte.geom.Geometry;
 import org.geolatte.geom.codec.Wkb;
 import org.geolatte.geom.codec.WkbDecoder;
 import org.geolatte.geom.codec.WkbEncoder;
+import org.geolatte.geom.codec.Wkt;
+import org.geolatte.geom.codec.WktDecoder;
 import org.postgresql.util.PGobject;
 
 import org.hibernate.type.descriptor.ValueBinder;
@@ -90,17 +92,23 @@ public class PGGeometryTypeDescriptor implements SqlTypeDescriptor {
 		};
 	}
 
-	private Geometry toGeometry(Object object) {
+	public static Geometry toGeometry(Object object) {
 		if ( object == null ) {
 			return null;
 		}
 		ByteBuffer buffer = null;
 		if ( object instanceof PGobject ) {
-			buffer = ByteBuffer.from( ( (PGobject) object ).getValue() );
-			final WkbDecoder decoder = Wkb.newDecoder( Wkb.Dialect.POSTGIS_EWKB_1 );
-			return decoder.decode( buffer );
+			String pgValue = ((PGobject) object ).getValue();
+			if (pgValue.charAt( 0 ) == 'S') { // /we have a Wkt value
+				final WktDecoder decoder = Wkt.newDecoder( Wkt.Dialect.POSTGIS_EWKT_1 );
+				return decoder.decode(pgValue);
+			}
+			else {
+				buffer = ByteBuffer.from( pgValue );
+				final WkbDecoder decoder = Wkb.newDecoder( Wkb.Dialect.POSTGIS_EWKB_1 );
+				return decoder.decode( buffer );
+			}
 		}
 		throw new IllegalStateException( "Received object of type " + object.getClass().getCanonicalName() );
-
 	}
 }

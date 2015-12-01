@@ -75,6 +75,10 @@ public class GeoDbWkb {
 			return null;
 		}
 		try {
+
+			if (object instanceof com.vividsolutions.jts.geom.Geometry) {
+				return JTS.from( (com.vividsolutions.jts.geom.Geometry) object );
+			}
 			final WkbDecoder decoder = Wkb.newDecoder( Wkb.Dialect.POSTGIS_EWKB_1 );
 			if ( object instanceof Blob ) {
 				return decoder.decode( toByteBuffer( (Blob) object ) );

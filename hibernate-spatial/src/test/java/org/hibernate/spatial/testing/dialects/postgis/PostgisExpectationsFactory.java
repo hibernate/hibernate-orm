@@ -18,6 +18,7 @@ import org.postgresql.util.PGobject;
 import org.jboss.logging.Logger;
 
 import org.hibernate.spatial.HSMessageLogger;
+import org.hibernate.spatial.dialect.postgis.PGGeometryTypeDescriptor;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.DataSourceUtils;
 import org.hibernate.spatial.testing.NativeSQLStatement;
@@ -244,17 +245,8 @@ public class PostgisExpectationsFactory extends AbstractExpectationsFactory {
 	//remove redundancy with toGeometry function in PGGeometryTypeDescriptor
 	@Override
 	protected Geometry decode(Object object) {
-		ByteBuffer buffer = null;
-		if (object instanceof PGobject ) {
-			buffer = ByteBuffer.from( ( (PGobject) object ).getValue() );
-		} else if ( object instanceof byte[] ) {
-			byte[] bytes = (byte[]) object;
-			ByteBuffer.from( bytes );
-		} else {
-			throw new IllegalStateException( "Received object of type " + object.getClass().getCanonicalName() );
-		}
-		WkbDecoder decoder = Wkb.newDecoder( Wkb.Dialect.POSTGIS_EWKB_1 );
-		return JTS.to(decoder.decode( buffer));
+		org.geolatte.geom.Geometry geometry = PGGeometryTypeDescriptor.toGeometry( object );
+		return JTS.to( geometry );
 	}
 
 }

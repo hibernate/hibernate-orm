@@ -1097,7 +1097,6 @@ public abstract class CollectionBinder {
 		key.setUpdateable( joinColumns.length == 0 || joinColumns[0].isUpdatable() );
 		key.setCascadeDeleteEnabled( cascadeDeleteEnabled );
 		collValue.setKey( key );
-
 		if ( property != null ) {
 			final ForeignKey fk = property.getAnnotation( ForeignKey.class );
 			if ( fk != null && !BinderHelper.isEmptyAnnotationValue( fk.name() ) ) {
@@ -1122,6 +1121,17 @@ public abstract class CollectionBinder {
 						else {
 							key.setForeignKeyName( StringHelper.nullIfEmpty( joinTableAnn.foreignKey().name() ) );
 
+						}
+					}
+					else {
+						final JoinColumn joinColumnAnn = property.getAnnotation( JoinColumn.class );
+						if ( joinColumnAnn != null ) {
+							if ( joinColumnAnn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT ) {
+								key.setForeignKeyName( "none" );
+							}
+							else {
+								key.setForeignKeyName( StringHelper.nullIfEmpty( joinColumnAnn.foreignKey().name() ) );
+							}
 						}
 					}
 				}

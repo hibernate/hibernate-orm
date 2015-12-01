@@ -34,6 +34,8 @@ import org.hibernate.internal.util.ClassLoaderHelper;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleEvent;
+import org.osgi.framework.BundleListener;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceRegistration;
 
@@ -95,6 +97,14 @@ public class HibernateBundleActivator implements BundleActivator {
 				new OsgiSessionFactoryService( osgiClassLoader, osgiJtaPlatform, osgiServiceUtil ),
 				new Hashtable()
 		);
+
+		context.addBundleListener(new BundleListener() {
+			@Override
+			public void bundleChanged(BundleEvent bundleEvent) {
+				if (bundleEvent.getType() == BundleEvent.UNRESOLVED)
+					osgiClassLoader.removeBundle(bundleEvent.getBundle());
+			}
+		});
 	}
 
 	@Override

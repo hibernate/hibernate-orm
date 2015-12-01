@@ -35,6 +35,8 @@ import java.util.Set;
 
 import org.hibernate.service.spi.Stoppable;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleReference;
+import org.osgi.framework.wiring.BundleWiring;
 
 /**
  * Custom OSGI ClassLoader helper which knows all the "interesting"
@@ -214,7 +216,7 @@ public class OsgiClassLoader extends ClassLoader implements Stoppable {
 	 * @param bundle The Bundle to add
 	 */
 	public void addBundle( Bundle bundle ) {
-		bundles.add( bundle );
+		addClassLoader( bundle.adapt(BundleWiring.class).getClassLoader() );
 	}
 
 	@Override
@@ -225,4 +227,18 @@ public class OsgiClassLoader extends ClassLoader implements Stoppable {
 		resourceCache.clear();
 	}
 
+	public void removeBundle(Bundle bundle) {
+		List<ClassLoader> toRemove = new ArrayList<ClassLoader>();
+		for (ClassLoader cl : classLoaders) {
+			if (cl instanceof BundleReference) {
+				Bundle b = ((BundleReference) cl).getBundle();
+				if (b == bundle) {
+					toRemove.add(cl);
+				}
+			}
+		}
+		if (classLoaders.removeAll(toRemove)) {
+			clear();
+		}
+	}
 }

@@ -34,6 +34,8 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleReference;
+import org.osgi.framework.wiring.BundleWiring;
 
 /**
  * Custom OSGI ClassLoader helper which knows all the "interesting"
@@ -204,7 +206,7 @@ public class OsgiClassLoader extends ClassLoader {
 	}
 
 	public void addBundle( Bundle bundle ) {
-		bundles.add( bundle );
+		addClassLoader( bundle.adapt(BundleWiring.class).getClassLoader() );
 	}
 	
 	public void clear() {
@@ -212,4 +214,18 @@ public class OsgiClassLoader extends ClassLoader {
 		resourceCache.clear();
 	}
 
+	public void removeBundle(Bundle bundle) {
+		List<ClassLoader> toRemove = new ArrayList<ClassLoader>();
+		for (ClassLoader cl : classLoaders) {
+			if (cl instanceof BundleReference) {
+				Bundle b = ((BundleReference) cl).getBundle();
+				if (b == bundle) {
+					toRemove.add(cl);
+				}
+			}
+		}
+		if (classLoaders.removeAll(toRemove)) {
+			clear();
+		}
+	}
 }

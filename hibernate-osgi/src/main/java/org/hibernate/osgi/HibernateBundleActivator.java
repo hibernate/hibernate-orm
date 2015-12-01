@@ -34,6 +34,8 @@ import org.hibernate.ejb.HibernatePersistence;
 import org.hibernate.internal.util.ClassLoaderHelper;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleEvent;
+import org.osgi.framework.BundleListener;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceRegistration;
 
@@ -66,7 +68,7 @@ public class HibernateBundleActivator implements BundleActivator {
 	@Override
 	public void start(BundleContext context) throws Exception {
 
-		OsgiClassLoader osgiClassLoader = new OsgiClassLoader();
+		final OsgiClassLoader osgiClassLoader = new OsgiClassLoader();
 		osgiClassLoader.addBundle( FrameworkUtil.getBundle( Session.class ) );
 		osgiClassLoader.addBundle( FrameworkUtil.getBundle( HibernatePersistence.class ) );
 		ClassLoaderHelper.overridenClassLoader = osgiClassLoader;
@@ -82,6 +84,14 @@ public class HibernateBundleActivator implements BundleActivator {
 		
 		sessionFactoryService = context.registerService( SessionFactory.class.getName(),
 				new OsgiSessionFactoryService( osgiClassLoader, osgiJtaPlatform, context ), new Hashtable());
+
+		context.addBundleListener(new BundleListener() {
+			@Override
+			public void bundleChanged(BundleEvent bundleEvent) {
+				if (bundleEvent.getType() == BundleEvent.UNRESOLVED)
+					osgiClassLoader.removeBundle(bundleEvent.getBundle());
+			}
+		});
 	}
 
 	@Override

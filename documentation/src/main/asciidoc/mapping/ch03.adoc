@@ -1,0 +1,1138 @@
+Chapter 3. Basic Types
+======================
+
+http://www.hibernate.org[*Hibernate.org*]http://hibernate.org/Documentation/DocumentationOverview[*Community
+Documentation*]
+
+* link:ch02.html[*Prev*]
+* link:ch04.html[*Next*]
+
+Chapter 3. Basic Types
+~~~~~~~~~~~~~~~~~~~~~~
+
+*Abstract*
+
+This chapter will discuss actual basic type mappings as well as how to
+override those mappings and provide extra mappings.
+
+*Table of Contents*
+
+link:ch03.html#basic-provided[3.1. Hibernate-provided BasicTypes]
+
+link:ch03.html#basic-annotation[3.2. The `@Basic` annotation]
+
+link:ch03.html#d5e555[3.3. The `@Column` annotation]
+
+link:ch03.html#basic-registry[3.4. BasicTypeRegistry]
+
+link:ch03.html#basic-explicit[3.5. Explicit BasicTypes]
+
+link:ch03.html#basic-custom[3.6. Custom BasicTypes]
+
+link:ch03.html#basic-enums[3.7. Mapping enums]
+
+link:ch03.html#d5e637[3.7.1. @Enumerated]
+
+link:ch03.html#d5e678[3.7.2. AttributeConverter]
+
+link:ch03.html#d5e702[3.7.3. Custom type]
+
+link:ch03.html#basic-lob[3.8. Mapping LOBs]
+
+link:ch03.html#basic-nationalized[3.9. Mapping Nationalized Character
+Data]
+
+link:ch03.html#basic-uuid[3.10. Mapping UUID Values]
+
+link:ch03.html#d5e806[3.10.1. UUID as binary]
+
+link:ch03.html#d5e810[3.10.2. UUID as (var)char]
+
+link:ch03.html#d5e813[3.10.3. PostgeSQL-specific UUID]
+
+link:ch03.html#d5e819[3.10.4. UUID as identifier]
+
+link:ch03.html#basic-datetime[3.11. Mapping Date/Time Values]
+
+link:ch03.html#basic-jpaconvert[3.12. JPA 2.1 AttributeConverters]
+
+Basic value types usually map a single database value, or column, to a
+single, non-aggregated Java type. Hibernate provides a number of
+built-in basic types, which follow the natural mappings recommended in
+the JDBC specifications.
+
+Internally Hibernate uses a registry of basic types when it needs to
+resolve the specific `org.hibernate.type.Type` to use in certain
+situations.
+
+3.1. Hibernate-provided BasicTypes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+*Table 3.1. Standard BasicTypes*
+
+[cols=",,,",options="header",]
+|=======================================================================
+|Hibernate type (org.hibernate.type package) |JDBC type |Java type
+|BasicTypeRegistry key(s)
+|StringType |VARCHAR |java.lang.String |string, java.lang.String
+
+|MaterializedClob |CLOB |java.lang.String |materialized_clob
+
+|TextType |LONGVARCHAR |java.lang.String |text
+
+|CharacterType |CHAR |char, java.lang.Character |char,
+java.lang.Character
+
+|BooleanType |BIT |boolean, java.lang.Boolean |boolean,
+java.lang.Boolean
+
+|NumericBooleanType |INTEGER, 0 is false, 1 is true |boolean,
+java.lang.Boolean |numeric_boolean
+
+|YesNoType |CHAR, 'N'/'n' is false, 'Y'/'y' is true. The uppercase value
+is written to the database. |boolean, java.lang.Boolean |yes_no
+
+|TrueFalseType |CHAR, 'F'/'f' is false, 'T'/'t' is true. The uppercase
+value is written to the database. |boolean, java.lang.Boolean
+|true_false
+
+|ByteType |TINYINT |byte, java.lang.Byte |byte, java.lang.Byte
+
+|ShortType |SMALLINT |short, java.lang.Short |short, java.lang.Short
+
+|IntegerTypes |INTEGER |int, java.lang.Integer |int, java.lang.Integer
+
+|LongType |BIGINT |long, java.lang.Long |long, java.lang.Long
+
+|FloatType |FLOAT |float, java.lang.Float |float, java.lang.Float
+
+|DoubleType |DOUBLE |double, java.lang.Double |double, java.lang.Double
+
+|BigIntegerType |NUMERIC |java.math.BigInteger |big_integer,
+java.math.BigInteger
+
+|BigDecimalType |NUMERIC |java.math.BigDecimal |big_decimal,
+java.math.bigDecimal
+
+|TimestampType |TIMESTAMP |java.sql.Timestamp |timestamp,
+java.sql.Timestamp
+
+|TimeType |TIME |java.sql.Time |time, java.sql.Time
+
+|DateType |DATE |java.sql.Date |date, java.sql.Date
+
+|CalendarType |TIMESTAMP |java.util.Calendar |calendar,
+java.util.Calendar
+
+|CalendarDateType |DATE |java.util.Calendar |calendar_date
+
+|CurrencyType |java.util.Currency |VARCHAR |currency, java.util.Currency
+
+|LocaleType |VARCHAR |java.util.Locale |locale, java.utility.locale
+
+|TimeZoneType |VARCHAR, using the TimeZone ID |java.util.TimeZone
+|timezone, java.util.TimeZone
+
+|UrlType |VARCHAR |java.net.URL |url, java.net.URL
+
+|ClassType |VARCHAR (class FQN) |java.lang.Class |class, java.lang.Class
+
+|BlobType |BLOB |java.sql.Blob |blog, java.sql.Blob
+
+|ClobType |CLOB |java.sql.Clob |clob, java.sql.Clob
+
+|BinaryType |VARBINARY |byte[] |binary, byte[]
+
+|MaterializedBlobType |BLOB |byte[] |materized_blob
+
+|ImageType |LONGVARBINARY |byte[] |image
+
+|WrapperBinaryType |VARBINARY |java.lang.Byte[] |wrapper-binary, Byte[],
+java.lang.Byte[]
+
+|CharArrayType |VARCHAR |char[] |characters, char[]
+
+|CharacterArrayType |VARCHAR |java.lang.Character[] |wrapper-characters,
+Character[], java.lang.Character[]
+
+|UUIDBinaryType |BINARY |java.util.UUID |uuid-binary, java.util.UUID
+
+|UUIDCharType |CHAR, can also read VARCHAR |java.util.UUID |uuid-char
+
+|PostgresUUIDType |PostgreSQL UUID, through Types#OTHER, which complies
+to the PostgreSQL JDBC driver definition |java.util.UUID |pg-uuid
+
+|SerializableType |VARBINARY |implementors of java.lang.Serializable
+|Unlike the other value types, multiple instances of this type are
+registered. It is registered once under java.io.Serializable, and
+registered under the specific java.io.Serializable implementation class
+names.
+
+|StringNVarcharType |NVARCHAR |java.lang.String |nstring
+
+|NTextType |LONGNVARCHAR |java.lang.String |ntext
+
+|NClobType |NCLOB |java.sql.NClob |nclob, java.sql.NClob
+
+|MaterializedNClobType |NCLOB |java.lang.String |materialized_nclob
+
+|PrimitiveCharacterArrayNClobType |NCHAR |char[] |N/A
+
+|CharacterNCharType |NCHAR |java.lang.Character |ncharacter
+
+|CharacterArrayNClobType |NCLOB |java.lang.Character[] |N/A
+|=======================================================================
+
+ +
+
+*Table 3.2. BasicTypes added by hibernate-java8*
+
+[cols=",,,",options="header",]
+|=======================================================================
+|Hibernate type (org.hibernate.type package) |JDBC type |Java type
+|BasicTypeRegistry key(s)
+|DurationType |BIGINT |java.time.Duration |Duration, java.time.Duration
+
+|InstantType |TIMESTAMP |java.time.Instant |Instant, java.time.Instant
+
+|LocalDateTimeType |TIMESTAMP |java.time.LocalDateTime |LocalDateTime,
+java.time.LocalDateTime
+
+|LocalDateType |DATE |java.time.LocalDate |LocalDate,
+java.time.LocalDate
+
+|LocalTimeType |TIME |java.time.LocalTime |LocalTime,
+java.time.LocalTime
+
+|OffsetDateTimeType |TIMESTAMP |java.time.OffsetDateTime
+|OffsetDateTime, java.time.OffsetDateTime
+
+|OffsetTimeType |TIME |java.time.OffsetTime |OffsetTime,
+java.time.OffsetTime
+
+|OffsetTimeType |TIMESTAMP |java.time.ZonedDateTime |ZonedDateTime,
+java.time.ZonedDateTime
+|=======================================================================
+
+ +
+
+Note
+~~~~
+
+To use these hibernate-java8 types just add the hibernate-java8 jar to
+your classpath; Hibernate will take care of the rest. See
+link:ch03.html#basic-datetime[Section 3.11, “Mapping Date/Time Values”]
+
+These mappings are managed by a service inside Hibernate called the
+`org.hibernate.type.BasicTypeRegistry`, which essentially maintains a
+map of `org.hibernate.type.BasicType` (a `org.hibernate.type.Type`
+specialization) instances keyed by a name. That is the purpose of the
+"BasicTypeRegistry key(s)" column in the previous tables. We will
+revisit this detail later.
+
+3.2. The `@Basic` annotation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Strictly speaking, a basic type is denoted with the
+`javax.persistence.Basic` annotation. Generally speaking the `@Basic`
+annotation can be ignored. Both of the following examples are ultimately
+the same.
+
+*Example 3.1. With `@Basic`*
+
+--------------------------------
+@Entity
+public class Product {
+    @Id
+    @Basic
+    private Integer id;
+    @Basic
+    private String sku;
+    @Basic
+    private String name;
+    @Basic
+    private String description;
+}
+--------------------------------
+
+ +
+
+*Example 3.2. Without `@Basic`*
+
+--------------------------------
+@Entity
+public class Product {
+    @Id
+    private Integer id;
+    private String sku;
+    private String name;
+    private String description;
+}
+--------------------------------
+
+ +
+
+Tip
+~~~
+
+The JPA specification strictly limits the Java types that can be marked
+as basic to the following:
+
+* Java primitive types (boolean, int, etc)
+* wrappers for the primitive types (java.lang.Boolean,
+java.lang.Integer, etc)
+* java.lang.String
+* java.math.BigInteger
+* java.math.BigDecimal
+* java.util.Date
+* java.util.Calendar
+* java.sql.Date
+* java.sql.Time
+* java.sql.Timestamp
+* byte[]
+* Byte[]
+* char[]
+* Character[]
+* enums
+* any other type that implements Serializable*
+
+* JPA's "support" for Serializable types is to directly serialize their
+state to the database.
+
+If provider portability is a concern, you should stick to just these
+basic types. Note that JPA 2.1 did add the notion of an
+`javax.persistence.AttributeConverter` to help alleviate some of these
+concerns; see link:ch03.html#basic-jpaconvert[Section 3.12, “JPA 2.1
+AttributeConverters”]
+
+The `@Basic` annotation defines 2 attributes.
+
+* `optional` - boolean (defaults to true) - Defines whether this
+attribute allows nulls. JPA defines this as "a hint", which essentially
+means that it affect is specifically required. As long as the type is
+not primitive, Hibernate takes this to mean that the underlying column
+should be `NULLABLE`.
+* `fetch` - FetchType (defaults to EAGER) - Defines whether this
+attribute should be fetched eagerly or lazily. JPA says that EAGER is a
+requirement to the provider (Hibernate) that the value should be fetched
+when the owner is fetched but that LAZY is merely a hint that the value
+be fetched when the attribute is accessed. Hibernate ignores this
+setting for basic types unless you are using bytecode enhancement. See
+the _Hibernate User Guide_ for additional information on fetching and on
+bytecode enhancement.
+
+3.3. The `@Column` annotation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+JPA defines rules for implicitly determining the name of tables and
+columns. For a detailed discussion of implicit naming see link:[???].
+
+For basic type attributes, the implicit naming rule is that the column
+name is the same as the attribute name. If that implicit naming rule
+does not meet your requirements, you can explicitly tell Hibernate (and
+other providers) the column name to use.
+
+*Example 3.3. Explicit column naming*
+
+--------------------------------
+@Entity
+public class Product {
+    @Id
+    @Basic
+    private Integer id;
+    @Basic
+    private String sku;
+    @Basic
+    private String name;
+    @Basic
+    @Column( name = "NOTES" )
+    private String description;
+}
+--------------------------------
+
+ +
+
+Here we use `@Column` to explicitly map the `description` attribute to
+the `NOTES` column, as opposed to the implicit column name
+`description`.
+
+The `@Column` annotation defines other mapping information as well. See
+its javadocs for details.
+
+3.4. BasicTypeRegistry
+~~~~~~~~~~~~~~~~~~~~~~
+
+We said before that a Hibernate type is not a Java type, nor a SQL type,
+but that it understands both and performs the marshalling between them.
+But looking at the basic type mappings from the previous examples, how
+did Hibernate know to use its `org.hibernate.type.StringType` for
+mapping for `java.lang.String` attributes or its
+`org.hibernate.type.IntegerType` for mapping `java.lang.Integer`
+attributes?
+
+The answer lies in a service inside Hibernate called the
+`org.hibernate.type.BasicTypeRegistry`, which essentially maintains a
+map of `org.hibernate.type.BasicType` (a `org.hibernate.type.Type`
+specialization) instances keyed by a name.
+
+We will see later (link:ch03.html#basic-explicit[Section 3.5, “Explicit
+BasicTypes”]) that we can explicitly tell Hibernate which BasicType to
+use for a particular attribute. But first let's explore how implicit
+resolution works and how applications can adjust implicit resolution.
+
+Note
+~~~~
+
+A thorough discussion of the BasicTypeRegistry and all the different
+ways to contribute types to it is beyond the scope of this
+documentation. Please see _Integrations Guide_ for complete details.
+
+As an example, take a String attribute such as we saw before with
+Product#sku. Since there was no explicit type mapping, Hibernate looks
+to the BasicTypeRegistry to find the registered mapping for
+`java.lang.String`. This goes back to the "BasicTypeRegistry key(s)"
+column we saw in the tables at the start of this chapter.
+
+As a baseline within BasicTypeRegistry, Hibernate follows the
+recommended mappings of JDBC for Java types. JDBC recommends mapping
+Strings to VARCHAR, which is the exact mapping that StringType handles.
+So that is the baseline mapping within BasicTypeRegistry for Strings.
+
+Applications can also extend (add new BasicType registrations) or
+override (replace an exiting BasicType registration) using one of the
+`MetadataBuilder#applyBasicType` methods or the
+`MetadataBuilder#applyTypes` method during bootstrap. For more details,
+see link:ch03.html#basic-custom[Section 3.6, “Custom BasicTypes”]
+
+3.5. Explicit BasicTypes
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Sometimes you want a particular attribute to be handled differently.
+Occasionally Hibernate will implicitly pick a BasicType that you do not
+want (and for some reason you do not want to adjust the
+BasicTypeRegistry).
+
+In these cases you must explicitly tell Hibernate the BasicType to use,
+via the `org.hibernate.annotations.Type` annotation.
+
+*Example 3.4. Using @org.hibernate.annotations.Type*
+
+-------------------------------------------------------------
+@org.hibernate.annotations.Type( type="nstring" )
+private String name;
+
+@org.hibernate.annotations.Type( type="materialized_nclob" )
+private String description;
+-------------------------------------------------------------
+
+ +
+
+This tells Hibernate to store the Strings as nationalized data. This is
+just for illustration purposes; for better ways to indicate nationalized
+character data see link:ch03.html#basic-nationalized[Section 3.9,
+“Mapping Nationalized Character Data”]
+
+Additionally the description is to be handled as a LOB. Again, for
+better ways to indicate LOBs see link:ch03.html#basic-lob[Section 3.8,
+“Mapping LOBs”].
+
+The `org.hibernate.annotations.Type#type` attribute can name any of the
+following:
+
+* FQN of any `org.hibernate.type.Type` implementation
+* Any key registered with BasicTypeRegistry
+* The name of any known "type definitions"
+
+3.6. Custom BasicTypes
+~~~~~~~~~~~~~~~~~~~~~~
+
+Hibernate makes it relatively easy for developers to create their own
+basic type mappings type. For example, you might want to persist
+properties of type `java.lang.BigInteger` to `VARCHAR` columns, or
+support completely new types.
+
+There are 2 approaches to developing a custom BasicType. As a means of
+illustrating the different approaches, lets consider a use case where we
+need to support a class called Fizzywig from a third party library. Lets
+assume that Fizzywig naturally stores as a VARCHAR.
+
+The first approach is to directly implement the BasicType interface.
+
+*Example 3.5. Custom BasicType implementation*
+
+--------------------------------------------------------------------------------
+public class FizzywigType1 implements org.hibernate.type.BasicType {
+    public static final FizzywigType1 INSTANCE = new FizzywigType1();
+
+    @Override
+    public String[] getRegistrationKeys() {
+        return new String[] { Fizzywig.class.getName() };
+    }
+
+    @Override
+    public int[] sqlTypes(Mapping mapping) {
+        return new int[] { java.sql.Types.VARCHAR };
+    }
+
+    @Override
+    public Class getReturnedClass() {
+        return Money.class;
+    }
+
+    @Override
+    public Object nullSafeGet(
+            ResultSet rs,
+            String[] names,
+            SessionImplementor session,
+            Object owner) throws SQLException {
+        return Fizzwig.fromString(
+                StringType.INSTANCE.get( rs, names[0], sesson )
+        );
+    }
+
+    @Override
+    public void nullSafeSet(
+            PreparedStatement st,
+            Object value,
+            int index,
+            boolean[] settable,
+            SessionImplementor session) throws SQLException {
+        final String dbValue = value == null
+                ? null
+                : ( (Fizzywig) value ).asString();
+        StringType.INSTANCE.nullSafeSet( st, value, index, settable, session );
+    }
+
+    ...
+}
+--------------------------------------------------------------------------------
+
+-------------------------------------------------
+MetadataSources metadataSources = ...;
+
+metadataSources.getMetaDataBuilder()
+        .applyBasicType( FizzwigType1.INSTANCE )
+        ...
+-------------------------------------------------
+
+ +
+
+The second approach is to implement the UserType interface.
+
+*Example 3.6. Custom UserType implementation*
+
+---------------------------------------------------------------------------------
+public class FizzywigType2 implements org.hibernate.usertype.UserType {
+    public static final String KEYS = new String[] { Fizzywig.class.getName() };
+    public static final FizzywigType1 INSTANCE = new FizzywigType1();
+
+    @Override
+    public int[] sqlTypes(Mapping mapping) {
+        return new int[] { java.sql.Types.VARCHAR };
+    }
+
+    @Override
+    public Class getReturnedClass() {
+        return Fizzywig.class;
+    }
+
+    @Override
+    public Object nullSafeGet(
+            ResultSet rs,
+            String[] names,
+            SessionImplementor session,
+            Object owner) throws SQLException {
+        return Fizzwig.fromString(
+                StringType.INSTANCE.get( rs, names[0], sesson )
+        );
+    }
+
+    @Override
+    public void nullSafeSet(
+            PreparedStatement st,
+            Object value,
+            int index,
+            SessionImplementor session) throws SQLException {
+        final String dbValue = value == null
+                ? null
+                : ( (Fizzywig) value ).asString();
+        StringType.INSTANCE.nullSafeSet( st, value, index, session );
+    }
+
+    ...
+}
+---------------------------------------------------------------------------------
+
+--------------------------------------------------------------------
+MetadataSources metadataSources = ...;
+
+metadataSources.getMetaDataBuilder()
+        .applyBasicType( FizzwigType2.KEYS, FizzwigType2.INSTANCE )
+        ...
+--------------------------------------------------------------------
+
+ +
+
+For additional information on developing and registering custom types,
+see the __Hibernate Integration Guide__.
+
+3.7. Mapping enums
+~~~~~~~~~~~~~~~~~~
+
+Hibernate supports the mapping of Java enums as basic value types in a
+number of different ways.
+
+3.7.1. @Enumerated
+^^^^^^^^^^^^^^^^^^
+
+The original JPA-compliant way to map enums was via the `@Enumerated`
+and `@MapKeyEnumerated` for map keys annotations which works on the
+principle that the enum values are stored according to one of 2
+strategies indicated by `javax.persistence.EnumType`:
+
+* `ORDINAL` - stored according to the enum value's ordinal position
+within the enum class, as indicated by java.lang.Enum#ordinal
+* `STRING` - stored according to the enum value's name, as indicated by
+java.lang.Enum#name
+
+*Example 3.7. @Enumerated(ORDINAL) example*
+
+--------------------------------
+@Entity
+public class Person {
+    ...
+    @Enumerated
+    public Gender gender;
+
+    public static enum Gender {
+        MALE,
+        FEMALE
+    }
+}
+--------------------------------
+
+ +
+
+In the ORDINAL example, the gender column is defined as an (nullable)
+INTEGER type and would hold:
+
+* `NULL` - null
+* `0` - MALE
+* `1` - FEMALE
+
+*Example 3.8. @Enumerated(STRING) example*
+
+--------------------------------
+@Entity
+public class Person {
+    ...
+    @Enumerated(STRING)
+    public Gender gender;
+
+    public static enum Gender {
+        MALE,
+        FEMALE
+    }
+}
+--------------------------------
+
+ +
+
+In the STRING example, the gender column is defined as an (nullable)
+VARCHAR type and would hold:
+
+* `NULL` - null
+* `MALE` - MALE
+* `FEMALE` - FEMALE
+
+3.7.2. AttributeConverter
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can also map enums in a JPA compliant way using a JPA 2.1
+AttributeConverter. Let's revisit the Gender enum example, but instead
+we want to store the more standardized `'M'` and `'F'` codes.
+
+*Example 3.9. Enum mapping with AttributeConverter example*
+
+--------------------------------------------------------------
+@Entity
+public class Person {
+    ...
+    @Basic
+    @Convert( converter=GenderConverter.class )
+    public Gender gender;
+}
+
+public enum Gender {
+    MALE( 'M' ),
+    FEMALE( 'F' );
+
+    private final char code;
+
+    private Gender(char code) {
+        this.code = code;
+    }
+
+    public char getCode() {
+        return code;
+    }
+
+    public static Gender fromCode(char code) {
+        if ( code == 'M' || code == 'm' ) {
+            return MALE;
+        }
+        if ( code == 'F' || code == 'f' ) {
+            return FEMALE;
+        }
+        throw ...
+    }
+}
+
+@Converter
+public class GenderConverter
+        implements AttributeConverter<Character,Gender> {
+
+    public Character convertToDatabaseColumn(Gender value) {
+        if ( value == null ) {
+            return null;
+        }
+
+        return value.getCode();
+    }
+
+    public Gender convertToEntityAttribute(Character value) {
+        if ( value == null ) {
+            return null;
+        }
+
+        return Gender.fromCode( value );
+    }
+}
+--------------------------------------------------------------
+
+ +
+
+Here, the gender column is defined as a CHAR type and would hold:
+
+* `NULL` - null
+* `'M'` - MALE
+* `'F'` - FEMALE
+
+For additional details on using AttributeConverters, see
+link:ch03.html#basic-jpaconvert[Section 3.12, “JPA 2.1
+AttributeConverters”].
+
+Note that JPA explicitly disallows the use of an AttributeConverter with
+an attribute marked as `@Enumerated`. So if using the AttributeConverter
+approach, be sure to not mark the attribute as `@Enumerated`.
+
+3.7.3. Custom type
+^^^^^^^^^^^^^^^^^^
+
+You can also map enums using a Hibernate custom type mapping. Let's
+again revisit the Gender enum example, this time using a custom Type to
+store the more standardized `'M'` and `'F'` codes.
+
+*Example 3.10. Enum mapping with custom Type example*
+
+--------------------------------------------------------------------------------------------
+import org.hibernate.type.descriptor.java.CharacterTypeDescriptor;
+
+@Entity
+public class Person {
+    ...
+    @Basic
+    @Type( type = GenderType.class )
+    public Gender gender;
+}
+
+public enum Gender {
+    MALE( 'M' ),
+    FEMALE( 'F' );
+
+    private final char code;
+
+    private Gender(char code) {
+        this.code = code;
+    }
+
+    public char getCode() {
+        return code;
+    }
+
+    public static Gender fromCode(char code) {
+        if ( code == 'M' || code == 'm' ) {
+            return MALE;
+        }
+        if ( code == 'F' || code == 'f' ) {
+            return FEMALE;
+        }
+        throw ...
+    }
+}
+
+@Converter
+public class GenderType
+        extends AbstractSingleColumnStandardBasicType<Gender> {
+
+    public static final GenderType INSTANCE = new GenderType();
+
+    private GenderType() {
+        super(
+                CharTypeDescriptor.INSTANCE,
+                GenderJavaTypeDescriptor.INSTANCE
+        );
+    }
+
+    public String getName() {
+        return "gender";
+    }
+
+    @Override
+    protected boolean registerUnderJavaType() {
+        return true;
+    }
+}
+
+public static class GenderJavaTypeDescriptor
+        extends AbstractTypeDescriptor<Gender> {
+    public static final GenderJavaTypeDescriptor INSTANCE = new GenderJavaTypeDescriptor();
+
+    public String toString(Gender value) {
+        return value == null ? null : value.name();
+    }
+
+    public Gender fromString(String string) {
+        return string == null ? null : Gender.valueOf( string );
+    }
+
+    public <X> X unwrap(Gender value, Class<X> type, WrapperOptions options) {
+        return CharacterTypeDescriptor.INSTANCE.unwrap(
+                value == null ? null : value.getCode(),
+                type,
+                options
+        );
+    }
+
+    public <X> Gender wrap(X value, WrapperOptions options) {
+        return CharacterTypeDescriptor.INSTANCE.wrap( value, options );
+    }
+}
+--------------------------------------------------------------------------------------------
+
+ +
+
+Again, the gender column is defined as a CHAR type and would hold:
+
+* `NULL` - null
+* `'M'` - MALE
+* `'F'` - FEMALE
+
+For additional details on using custom types, see
+link:ch03.html#basic-custom[Section 3.6, “Custom BasicTypes”].
+
+3.8. Mapping LOBs
+~~~~~~~~~~~~~~~~~
+
+Mapping LOBs (database Large OBjects) come in 2 forms, those using the
+JDBC locator types and those _materializing_ the LOB data.
+
+*Locator versus materialized*
+
+JDBC LOB locators exist to allow efficient access to the LOB data. They
+allow the JDBC driver to stream parts of the LOB data as needed,
+potentially freeing up memory space. However they can be unnatural to
+deal with and have certain limitations. For example, a LOB locator is
+only portably valid during the duration of the transaction in which it
+was obtained.
+
+The idea of materialized LOBs is to trade-off the potential efficiency
+(not all drivers handle LOB data efficiently) for a more natural
+programming paradigm using familiar Java types such as String or byte[],
+etc for these LOBs.
+
+Materialized deals with the entire LOB contents in memory, whereas LOB
+locators (in theory) allow streaming parts of the LOB contents into
+memory as needed.
+
+The JDBC LOB locator types include:
+
+* `java.sql.Blob`
++
+`java.sql.Clob`
++
+`java.sql.NClob`
+
+Mapping materialized forms of these LOB values would use more familiar
+Java types such as String, char[], byte[], etc. The trade off for "more
+familiar" is usually performance.
+
+For a first look lets assume we have a CLOB column that we would like to
+map (NCLOB character LOB data will be covered in
+link:ch03.html#basic-nationalized[Section 3.9, “Mapping Nationalized
+Character Data”]).
+
+*Example 3.11. CLOB - SQL*
+
+-------------------------------
+create table product(
+    ...
+    description CLOB not null,
+    ...
+)
+-------------------------------
+
+ +
+
+Let's first map this using the JDBC locator.
+
+*Example 3.12. CLOB - locator mapping*
+
+-----------------------------
+@Entity
+public class Product {
+    ...
+    @Lob
+    @Basic
+    public Clob description;
+    ...
+}
+-----------------------------
+
+ +
+
+We could also map a materialized form.
+
+*Example 3.13. CLOB - materialized mapping*
+
+-------------------------------
+@Entity
+public class Product {
+    ...
+    @Lob
+    @Basic
+    public String description;
+    ...
+}
+-------------------------------
+
+ +
+
+Note
+~~~~
+
+How JDBC deals with LOB data varies from driver to driver. Hibernate
+tries to handle all these variances for you. However some drivers do not
+allow Hibernate to always do that in an automatic fashion (looking
+directly at you PostgreSQL JDBC drivers). In such cases you may have to
+do some extra to get LOBs working. Such discussions are beyond the scope
+of this guide however.
+
+We might even want the materialized data as a char array (for some crazy
+reason).
+
+*Example 3.14. CLOB - materialized char[] mapping*
+
+-------------------------------
+@Entity
+public class Product {
+    ...
+    @Lob
+    @Basic
+    public char[] description;
+    ...
+}
+-------------------------------
+
+ +
+
+We'd map BLOB data in a similar fashion.
+
+*Example 3.15. BLOB - SQL*
+
+-------------------------------
+create table step(
+    ...
+    instruction BLOB not null,
+    ...
+)
+-------------------------------
+
+ +
+
+Let's first map this using the JDBC locator.
+
+*Example 3.16. BLOB - locator mapping*
+
+------------------------------
+@Entity
+public class Step {
+    ...
+    @Lob
+    @Basic
+    public Blob instructions;
+    ...
+}
+------------------------------
+
+ +
+
+We could also map a materialized BLOB form.
+
+*Example 3.17. BLOB - materialized mapping*
+
+--------------------------------
+@Entity
+public class Step {
+    ...
+    @Lob
+    @Basic
+    public byte[] instructions;
+    ...
+}
+--------------------------------
+
+ +
+
+3.9. Mapping Nationalized Character Data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+JDBC 4 added the ability to explicitly handle nationalized character
+data. To this end it added specific nationalized character data types.
+
+* `NCHAR`
++
+`NVARCHAR`
++
+`LONGNVARCHAR`
++
+`NCLOB`
+
+To map a specific attribute to a nationalized variant datatype,
+Hibernate defines the `@Nationalized` annotation.
+
+*Example 3.18. NVARCHAR mapping*
+
+-------------------------------
+@Entity
+public class Product {
+    ...
+    @Basic
+    @Nationalized
+    public String description;
+    ...
+}
+-------------------------------
+
+ +
+
+*Example 3.19. NCLOB (locator) mapping*
+
+--------------------------------------
+@Entity
+public class Product {
+    ...
+    @Lob
+    @Basic
+    @Nationalized
+    public NClob description;
+    // Clob also works, because NClob
+    // extends Clob.  The db type is
+    // still NCLOB either way and
+    // handled as such
+}
+--------------------------------------
+
+ +
+
+*Example 3.20. NCLOB (materialized) mapping*
+
+-------------------------------
+@Entity
+public class Product {
+    ...
+    @Lob
+    @Basic
+    @Nationalized
+    public String description;
+}
+-------------------------------
+
+ +
+
+If you application and database are entirely nationalized you may
+instead want to enable nationalized character data as the default. You
+can do this via the `hibernate.use_nationalized_character_data` setting
+or by calling
+`MetadataBuilder#enableGlobalNationalizedCharacterDataSupport` during
+bootstrap.
+
+3.10. Mapping UUID Values
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Hibernate also allows you to map UUID values, again in a number of ways.
+
+Note
+~~~~
+
+The default UUID mapping is as binary because it represents more
+efficient storage. However many applications prefer the readability of
+character storage. To switch the default mapping, simply call
+`MetadataBuilder.applyBasicType( UUIDCharType.INSTANCE, UUID.class.getName() )`
+
+3.10.1. UUID as binary
+^^^^^^^^^^^^^^^^^^^^^^
+
+As mentioned, the default mapping for UUID attributes. Maps the UUID to
+a byte[] using java.util.UUID#getMostSignificantBits and
+java.util.UUID#getLeastSignificantBits and stores that as BINARY data.
+
+Chosen as the default simply because it is generally more efficient from
+storage perspective.
+
+3.10.2. UUID as (var)char
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Maps the UUID to a String using java.util.UUID#toString and
+java.util.UUID#fromString and stores that as CHAR or VARCHAR data.
+
+3.10.3. PostgeSQL-specific UUID
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Important
+~~~~~~~~~
+
+When using one of the PostgreSQL Dialects, this becomes the default UUID
+mapping
+
+Maps the UUID using PostgreSQL's specific UUID data type. The PostgreSQL
+JDBC driver choses to map its UUID type to the `OTHER` code. Note that
+this can cause difficulty as the driver chooses to map many different
+data types to OTHER.
+
+3.10.4. UUID as identifier
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Hibernate supports using UUID values as identifiers. They can even be
+generated! For details see the discussion of generators in
+link:ch06.html#identifiers-generators[Section 6.3, “Generated identifier
+values”]
+
+3.11. Mapping Date/Time Values
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+blah blah blah
+
+3.12. JPA 2.1 AttributeConverters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+blah blah blah
+
+'''''
+
+link:legalnotice.html[]
+
+* link:ch02.html[**Prev**Chapter 2. Entity]
+* link:#[*Up*]
+* link:index.html[*Home*]
+* link:ch04.html[**Next**Chapter 4. Compositions]

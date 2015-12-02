@@ -35,7 +35,7 @@ configurations {
     asciidoclet {
         description = 'Dependencies for Asciidoclet (the javadoc doclet tool for using Asciidoc)'
     }
-//	asciidoctor
+    //asciidoctor
 }
 
 if ( JavaVersion.current().isJava8Compatible() ) {
@@ -229,6 +229,24 @@ task renderGettingStartedGuides(type: AsciidoctorTask, group: 'Documentation') {
 	separateOutputDirs false
 	options logDocuments: true
 	attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify'
+}
+
+// Mapping Guides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+task renderMappingGuides(type: AsciidoctorTask, group: 'Documentation') {
+    description = 'Renders the Mapping Guides in HTML format using Asciidoctor.'
+    sourceDir = file( 'src/main/asciidoc/mapping' )
+    outputDir = new File("$buildDir/asciidoc/mapping/html")
+    backends "html5"
+    separateOutputDirs false
+    options logDocuments: true
+    attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true, stylesheet: "css/hibernate.css"
+    resources {
+        from('src/main/asciidoc/') {
+            include 'images/**'
+            include 'css/**'
+        }
+    }
 }
 
 buildDocs.dependsOn renderGettingStartedGuides

@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 12.0.1, SVG Export Plug-In  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [
+	<!ENTITY ns_flows "http://ns.adobe.com/Flows/1.0/">
+	<!ENTITY ns_svg "http://www.w3.org/2000/svg">
+	<!ENTITY ns_xlink "http://www.w3.org/1999/xlink">
+]>
+<svg  version="1.1" xmlns="&ns_svg;" xmlns:xlink="&ns_xlink;" xmlns:a="http://ns.adobe.com/AdobeSVGViewerExtensions/3.0/"
+	 width="17" height="17" viewBox="-0.75 -0.457 17 17" enable-background="new -0.75 -0.457 17 17" xml:space="preserve">
+<defs>
+</defs>
+<g>
+	<defs>
+		<circle id="XMLID_6_" cx="7.86" cy="7.859" r="7.485"/>
+	</defs>
+	<clipPath id="XMLID_9_">
+		<use xlink:href="#XMLID_6_" />
+	</clipPath>
+	<polygon clip-path="url(#XMLID_9_)" fill="#CBD2D8" points="0.375,10.797 4.797,15.344 0.375,15.344 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#CBD2D8" points="0.375,10.645 4.941,15.344 4.797,15.344 0.375,10.793 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#C9D0D5" points="0.375,10.496 5.086,15.344 4.941,15.344 0.375,10.645 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#C6CDD3" points="0.375,10.348 5.234,15.344 5.086,15.344 0.375,10.496 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#C5CCD2" points="0.375,10.199 5.375,15.344 5.234,15.344 0.375,10.348 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#C3C9D0" points="0.375,10.051 5.523,15.344 5.375,15.344 0.375,10.199 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#C1C8CE" points="5.668,15.344 0.375,9.902 0.375,10.051 5.523,15.344 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#BFC5CC" points="5.812,15.344 0.375,9.75 0.375,9.902 5.668,15.344 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#BEC4CB" points="0.375,9.602 5.957,15.344 5.812,15.344 0.375,9.75 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#BBC2C9" points="0.375,9.453 6.102,15.344 5.957,15.344 0.375,9.602 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#BAC0C8" points="0.375,9.305 6.246,15.344 6.102,15.344 0.375,9.453 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#B7BEC6" points="0.375,9.152 6.391,15.344 6.246,15.344 0.375,9.305 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#B6BDC5" points="6.539,15.344 0.375,9.004 0.375,9.152 6.391,15.344 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#B5BBC3" points="6.68,15.344 0.375,8.855 0.375,9.004 6.539,15.344 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#B3BAC2" points="0.375,8.707 6.828,15.344 6.68,15.344 0.375,8.855 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#B1B7C0" points="0.375,8.559 6.973,15.344 6.828,15.344 0.375,8.707 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#B0B6BF" points="7.117,15.344 0.375,8.41 0.375,8.559 6.973,15.344 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#AEB5BE" points="0.375,8.262 7.262,15.344 7.117,15.344 0.375,8.41 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#ADB3BC" points="0.375,8.109 7.406,15.344 7.262,15.344 0.375,8.262 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#ABB2BC" points="0.375,7.961 7.551,15.344 7.406,15.344 0.375,8.109 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#AAB0BA" points="0.375,7.812 7.695,15.344 7.551,15.344 0.375,7.961 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#A8AEB8" points="0.375,7.664 7.844,15.344 7.695,15.344 0.375,7.812 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#A6ADB7" points="0.375,7.516 7.984,15.344 7.844,15.344 0.375,7.664 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#A6ACB6" points="8.133,15.344 0.375,7.363 0.375,7.516 7.984,15.344 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#A3AAB4" points="0.375,7.215 8.277,15.344 8.133,15.344 0.375,7.363 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#A2A8B3" points="8.422,15.344 0.375,7.066 0.375,7.215 8.277,15.344 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#A0A7B1" points="0.375,6.918 8.566,15.344 8.422,15.344 0.375,7.066 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#9FA6B0" points="0.375,6.77 8.711,15.344 8.566,15.344 0.375,6.918 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#9EA4AF" points="0.375,6.621 8.855,15.344 8.711,15.344 0.375,6.77 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#9CA3AE" points="0.375,6.469 9,15.344 8.855,15.344 0.375,6.621 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#9BA1AD" points="9.148,15.344 0.375,6.32 0.375,6.469 9,15.344 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#9AA0AB" points="0.375,6.172 9.293,15.344 9.148,15.344 0.375,6.32 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#989FAA" points="0.375,6.023 9.438,15.344 9.293,15.344 0.375,6.172 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#979EAA" points="0.375,5.875 9.582,15.344 9.438,15.344 0.375,6.023 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#969CA8" points="0.375,5.723 9.727,15.344 9.582,15.344 0.375,5.875 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#949BA7" points="0.375,5.574 9.871,15.344 9.727,15.344 0.375,5.723 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#9399A5" points="0.375,5.426 10.016,15.344 9.871,15.344 0.375,5.574 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#9298A4" points="0.375,5.277 10.16,15.344 10.016,15.344 0.375,5.426 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#9097A3" points="0.375,5.129 10.305,15.344 10.16,15.344 0.375,5.277 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#8F95A2" points="0.375,4.98 10.453,15.344 10.305,15.344 0.375,5.129 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#8E95A1" points="0.375,4.832 10.598,15.344 10.453,15.344 0.375,4.98 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#8D93A0" points="0.375,4.68 10.742,15.344 10.598,15.344 0.375,4.832 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#8B929F" points="0.375,4.531 10.887,15.344 10.742,15.344 0.375,4.68 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#8A919E" points="0.375,4.383 11.031,15.344 10.887,15.344 0.375,4.531 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#898F9D" points="0.375,4.234 11.176,15.344 11.031,15.344 0.375,4.383 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#878E9B" points="0.375,4.082 11.32,15.344 11.176,15.344 0.375,4.234 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#878D9B" points="0.375,3.934 11.469,15.344 11.32,15.344 0.375,4.082 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#858C9A" points="0.375,3.785 11.609,15.344 11.469,15.344 0.375,3.934 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#848B98" points="0.375,3.637 11.758,15.344 11.609,15.344 0.375,3.785 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#838A97" points="0.375,3.488 11.902,15.344 11.758,15.344 0.375,3.637 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#828997" points="0.375,3.34 12.047,15.344 11.902,15.344 0.375,3.488 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#818895" points="0.375,3.191 12.191,15.344 12.047,15.344 0.375,3.34 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#808794" points="0.375,3.039 12.336,15.344 12.191,15.344 0.375,3.191 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#7E8594" points="0.375,2.891 12.48,15.344 12.336,15.344 0.375,3.039 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#7D8593" points="12.625,15.344 0.375,2.742 0.375,2.891 12.48,15.344 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#7C8392" points="0.375,2.594 12.773,15.344 12.625,15.344 0.375,2.742 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#7B8290" points="0.375,2.445 12.914,15.344 12.773,15.344 0.375,2.594 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#7A8190" points="0.375,2.293 13.062,15.344 12.914,15.344 0.375,2.445 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#79808F" points="0.375,2.145 13.207,15.344 13.062,15.344 0.375,2.293 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#787F8D" points="0.375,1.996 13.352,15.344 13.207,15.344 0.375,2.145 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#777E8D" points="0.375,1.848 13.496,15.344 13.352,15.344 0.375,1.996 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#767D8C" points="0.375,1.699 13.641,15.344 13.496,15.344 0.375,1.848 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#767C8B" points="0.375,1.551 13.785,15.344 13.641,15.344 0.375,1.699 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#747B8A" points="0.375,1.402 13.93,15.344 13.785,15.344 0.375,1.551 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#737A89" points="0.375,1.25 14.078,15.344 13.93,15.344 0.375,1.402 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#727989" points="0.375,1.102 14.219,15.344 14.078,15.344 0.375,1.25 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#717888" points="0.375,0.953 14.367,15.344 14.219,15.344 0.375,1.102 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#707786" points="0.375,0.844 0.395,0.824 14.512,15.344 14.367,15.344 0.375,0.953 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#6F7686" points="14.656,15.344 0.469,0.754 0.395,0.824 14.512,15.344 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#6D7585" points="0.469,0.754 0.543,0.68 14.801,15.344 14.656,15.344 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#6D7584" points="0.543,0.68 0.617,0.605 14.906,15.301 14.863,15.344 14.801,15.344 	
+		"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#6C7383" points="0.617,0.605 0.695,0.535 14.98,15.23 14.906,15.301 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#6B7383" points="0.695,0.535 0.766,0.461 15.055,15.156 14.98,15.23 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#6A7281" points="0.766,0.461 0.844,0.391 15.129,15.086 15.055,15.156 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#697181" points="0.844,0.391 0.859,0.375 0.973,0.375 15.203,15.012 15.129,15.086 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#697080" points="1.117,0.375 15.277,14.941 15.203,15.012 0.973,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#686F7F" points="1.266,0.375 15.344,14.859 15.344,14.875 15.277,14.941 1.117,0.375 	
+		"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#676E7E" points="1.406,0.375 15.344,14.711 15.344,14.859 1.266,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#656D7D" points="1.555,0.375 15.344,14.562 15.344,14.711 1.406,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#646C7D" points="1.699,0.375 15.344,14.41 15.344,14.562 1.555,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#646C7C" points="1.844,0.375 15.344,14.262 15.344,14.41 1.699,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#636B7C" points="1.988,0.375 15.344,14.113 15.344,14.262 1.844,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#626B7B" points="15.344,13.965 2.133,0.375 1.988,0.375 15.344,14.113 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#616A7A" points="2.277,0.375 15.344,13.816 15.344,13.965 2.133,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#606979" points="2.422,0.375 15.344,13.668 15.344,13.816 2.277,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#5F6878" points="2.566,0.375 15.344,13.516 15.344,13.668 2.422,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#5F6878" points="2.715,0.375 15.344,13.367 15.344,13.516 2.566,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#5E6777" points="2.859,0.375 15.344,13.219 15.344,13.367 2.715,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#5D6676" points="3.004,0.375 15.344,13.07 15.344,13.219 2.859,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#5C6576" points="3.148,0.375 15.344,12.922 15.344,13.07 3.004,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#5B6475" points="3.293,0.375 15.344,12.77 15.344,12.922 3.148,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#5B6475" points="15.344,12.621 3.438,0.375 3.293,0.375 15.344,12.77 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#5A6373" points="3.582,0.375 15.344,12.473 15.344,12.621 3.438,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#596273" points="3.727,0.375 15.344,12.324 15.344,12.473 3.582,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#586172" points="3.875,0.375 15.344,12.176 15.344,12.324 3.727,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#576172" points="4.02,0.375 15.344,12.027 15.344,12.176 3.875,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#566071" points="4.164,0.375 15.344,11.875 15.344,12.027 4.02,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#566070" points="4.309,0.375 15.344,11.727 15.344,11.875 4.164,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#555F70" points="4.453,0.375 15.344,11.578 15.344,11.727 4.309,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#545E6F" points="4.598,0.375 15.344,11.43 15.344,11.578 4.453,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#535E6F" points="4.742,0.375 15.344,11.281 15.344,11.43 4.598,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#535D6E" points="4.891,0.375 15.344,11.129 15.344,11.281 4.742,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#525C6D" points="15.344,10.98 5.031,0.375 4.891,0.375 15.344,11.129 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#515C6D" points="5.18,0.375 15.344,10.832 15.344,10.98 5.031,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#505B6C" points="5.324,0.375 15.344,10.684 15.344,10.832 5.18,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#505B6C" points="5.469,0.375 15.344,10.535 15.344,10.684 5.324,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#505A6B" points="5.613,0.375 15.344,10.387 15.344,10.535 5.469,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#4F596A" points="5.758,0.375 15.344,10.234 15.344,10.387 5.613,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#4E596A" points="15.344,10.086 5.902,0.375 5.758,0.375 15.344,10.234 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#4D5869" points="6.047,0.375 15.344,9.938 15.344,10.086 5.902,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#4C5869" points="6.195,0.375 15.344,9.789 15.344,9.938 6.047,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#4C5768" points="15.344,9.641 6.336,0.375 6.195,0.375 15.344,9.789 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#4B5768" points="15.344,9.492 6.484,0.375 6.336,0.375 15.344,9.641 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#4B5667" points="6.629,0.375 15.344,9.34 15.344,9.492 6.484,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#4A5567" points="6.773,0.375 15.344,9.191 15.344,9.34 6.629,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#495566" points="6.918,0.375 15.344,9.043 15.344,9.191 6.773,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#485566" points="7.062,0.375 15.344,8.895 15.344,9.043 6.918,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#485466" points="7.207,0.375 15.344,8.746 15.344,8.895 7.062,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#475365" points="7.352,0.375 15.344,8.598 15.344,8.746 7.207,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#475365" points="7.496,0.375 15.344,8.445 15.344,8.598 7.352,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#465264" points="7.641,0.375 15.344,8.297 15.344,8.445 7.496,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#455264" points="7.789,0.375 15.344,8.148 15.344,8.297 7.641,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#445263" points="7.934,0.375 15.344,8 15.344,8.148 7.789,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#445163" points="8.078,0.375 15.344,7.848 15.344,8 7.934,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#445062" points="15.344,7.699 8.223,0.375 8.078,0.375 15.344,7.848 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#425062" points="8.367,0.375 15.344,7.551 15.344,7.699 8.223,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#425062" points="8.512,0.375 15.344,7.402 15.344,7.551 8.367,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#424F61" points="8.656,0.375 15.344,7.254 15.344,7.402 8.512,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#414F61" points="8.805,0.375 15.344,7.105 15.344,7.254 8.656,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#404E60" points="8.945,0.375 15.344,6.957 15.344,7.105 8.805,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#3F4E60" points="9.094,0.375 15.344,6.805 15.344,6.957 8.945,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#3F4D60" points="9.238,0.375 15.344,6.656 15.344,6.805 9.094,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#3F4D5F" points="15.344,6.508 9.383,0.375 9.238,0.375 15.344,6.656 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#3E4D5F" points="9.527,0.375 15.344,6.359 15.344,6.508 9.383,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#3E4C5E" points="9.672,0.375 15.344,6.211 15.344,6.359 9.527,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#3D4C5E" points="9.816,0.375 15.344,6.059 15.344,6.211 9.672,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#3D4C5E" points="9.961,0.375 15.344,5.91 15.344,6.059 9.816,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#3C4B5D" points="10.109,0.375 15.344,5.762 15.344,5.91 9.961,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#3C4B5D" points="10.254,0.375 15.344,5.613 15.344,5.762 10.109,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#3C4B5D" points="10.398,0.375 15.344,5.465 15.344,5.613 10.254,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#3B4A5C" points="10.543,0.375 15.344,5.316 15.344,5.465 10.398,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#3B4A5C" points="10.688,0.375 15.344,5.164 15.344,5.316 10.543,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#3A495C" points="10.832,0.375 15.344,5.016 15.344,5.164 10.688,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#3A495B" points="10.977,0.375 15.344,4.867 15.344,5.016 10.832,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#39495B" points="11.121,0.375 15.344,4.719 15.344,4.867 10.977,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#38495B" points="11.266,0.375 15.344,4.57 15.344,4.719 11.121,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#38485B" points="11.414,0.375 15.344,4.422 15.344,4.57 11.266,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#38485A" points="11.555,0.375 15.344,4.27 15.344,4.422 11.414,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#37485A" points="11.703,0.375 15.344,4.121 15.344,4.27 11.555,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#38475A" points="11.848,0.375 15.344,3.973 15.344,4.121 11.703,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#37475A" points="11.992,0.375 15.344,3.824 15.344,3.973 11.848,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#374659" points="12.137,0.375 15.344,3.676 15.344,3.824 11.992,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#364659" points="12.281,0.375 15.344,3.527 15.344,3.676 12.137,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#364659" points="12.426,0.375 15.344,3.375 15.344,3.527 12.281,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#364659" points="12.57,0.375 15.344,3.227 15.344,3.375 12.426,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#354659" points="12.719,0.375 15.344,3.078 15.344,3.227 12.57,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#354659" points="12.863,0.375 15.344,2.93 15.344,3.078 12.719,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#354658" points="13.008,0.375 15.344,2.777 15.344,2.93 12.863,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#344558" points="13.152,0.375 15.344,2.629 15.344,2.777 13.008,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#344558" points="13.297,0.375 15.344,2.48 15.344,2.629 13.152,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#344558" points="13.441,0.375 15.344,2.332 15.344,2.48 13.297,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#344558" points="13.586,0.375 15.344,2.184 15.344,2.332 13.441,0.375 	"/>
+	<polygon clip-path="url(#XMLID_9_)" fill="#344558" points="15.344,2.184 13.586,0.375 15.344,0.375 	"/>
+</g>
+<path fill="#AEADAE" d="M14.97,7.859c0,3.92-3.189,7.109-7.109,7.109c-3.921,0-7.11-3.189-7.11-7.109S3.939,0.75,7.86,0.75
+	C11.78,0.75,14.97,3.939,14.97,7.859z M7.86,0C3.526,0,0,3.525,0,7.859s3.526,7.859,7.86,7.859s7.859-3.525,7.859-7.859
+	S12.194,0,7.86,0z"/>
+<path fill="#FFFFFF" d="M9.568,5.934c-0.011-0.154-0.021-0.33-0.143-0.572C9.052,4.635,8.359,4.635,8.183,4.635
+	c-0.451,0-1.045,0.11-1.463,0.902C6.334,6.252,6.302,7,6.269,7.594C6.379,7.418,6.5,7.197,6.841,6.956
+	c0.517-0.374,1.056-0.451,1.44-0.451c1.397,0,2.432,1.013,2.432,2.563c0,1.451-0.99,2.541-2.586,2.541
+	c-1.198,0-2.002-0.572-2.441-1.541C5.521,9.695,5.279,9.023,5.279,7.736c0-1.242,0.264-2.541,1.209-3.354
+	c0.594-0.517,1.232-0.616,1.717-0.616c1.43,0,2.232,0.902,2.354,2.102L9.568,5.934z M8.149,7.418c-0.868,0-1.616,0.627-1.616,1.617
+	c0,0.781,0.473,1.683,1.605,1.683c0.913,0,1.551-0.671,1.551-1.649C9.689,8.034,9.019,7.418,8.149,7.418z"/>
+</svg>

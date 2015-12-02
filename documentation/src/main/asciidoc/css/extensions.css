@@ -1,0 +1,7 @@
+/* Firefox */
+
+pre {-moz-border-radius:11px;}
+
+.example {-moz-border-radius:15px;}
+
+div.note, div.tip, div.important, div.caution, div.warning {-moz-border-radius:11px;}

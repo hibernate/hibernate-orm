@@ -1,0 +1,307 @@
+Hibernate Domain Model Mapping Guide
+====================================
+
+http://www.hibernate.org[*Hibernate.org*]http://hibernate.org/Documentation/DocumentationOverview[*Community
+Documentation*]
+
+* 
+* link:pr01.html[*Next*]
+
+Hibernate - Relational Persistence for Idiomatic Java
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+http://hibernate.org[The Hibernate Team]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+http://design.jboss.org/[The JBoss Visual Design Team]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+5.1.0-SNAPSHOT
+
+Copyright © 2011 Red Hat, Inc.
+
+2015-12-02
+
+'''''
+
+*Table of Contents*
+
+link:pr01.html[Preface]
+
+link:ch01.html[1. Data categorizations]
+
+link:ch01.html#categorization-value[1.1. Value types]
+
+link:ch01.html#categorization-entity[1.2. Entity Types]
+
+link:ch01.html#categorization-significance[1.3. Significance of type
+categories]
+
+link:ch02.html[2. Entity]
+
+link:ch02.html#entity-pojo[2.1. POJO Models]
+
+link:ch02.html#entity-pojo-final[2.1.1. Prefer non-final classes]
+
+link:ch02.html#entity-pojo-constructor[2.1.2. Implement a no-argument
+constructor]
+
+link:ch02.html#domainmodel-pojo-accessors[2.1.3. Declare getters and
+setters for persistent attributes]
+
+link:ch02.html#entity-pojo-identifier[2.1.4. Provide identifier
+attribute(s)]
+
+link:ch02.html#entity-pojo-mapping[2.1.5. Mapping the entity]
+
+link:ch02.html#entity-pojo-optlock[2.1.6. Mapping optimistic locking]
+
+link:ch02.html#entity-pojo-inheritance[2.1.7. Inheritance]
+
+link:ch03.html[3. Basic Types]
+
+link:ch03.html#basic-provided[3.1. Hibernate-provided BasicTypes]
+
+link:ch03.html#basic-annotation[3.2. The `@Basic` annotation]
+
+link:ch03.html#d5e555[3.3. The `@Column` annotation]
+
+link:ch03.html#basic-registry[3.4. BasicTypeRegistry]
+
+link:ch03.html#basic-explicit[3.5. Explicit BasicTypes]
+
+link:ch03.html#basic-custom[3.6. Custom BasicTypes]
+
+link:ch03.html#basic-enums[3.7. Mapping enums]
+
+link:ch03.html#d5e637[3.7.1. @Enumerated]
+
+link:ch03.html#d5e678[3.7.2. AttributeConverter]
+
+link:ch03.html#d5e702[3.7.3. Custom type]
+
+link:ch03.html#basic-lob[3.8. Mapping LOBs]
+
+link:ch03.html#basic-nationalized[3.9. Mapping Nationalized Character
+Data]
+
+link:ch03.html#basic-uuid[3.10. Mapping UUID Values]
+
+link:ch03.html#d5e806[3.10.1. UUID as binary]
+
+link:ch03.html#d5e810[3.10.2. UUID as (var)char]
+
+link:ch03.html#d5e813[3.10.3. PostgeSQL-specific UUID]
+
+link:ch03.html#d5e819[3.10.4. UUID as identifier]
+
+link:ch03.html#basic-datetime[3.11. Mapping Date/Time Values]
+
+link:ch03.html#basic-jpaconvert[3.12. JPA 2.1 AttributeConverters]
+
+link:ch04.html[4. Compositions]
+
+link:ch04.html#d5e852[4.1. Component / Embedded]
+
+link:ch04.html#composition-multiple[4.2. Multiple compositions]
+
+link:ch04.html#composition-multiple-jpa[4.2.1. JPA's AttributeOverride]
+
+link:ch04.html#composition-multiple-namingstrategy[4.2.2.
+ImplicitNamingStrategy]
+
+link:ch04.html#composition-collections[4.3. Collections of compositions]
+
+link:ch04.html#composition-mapkey[4.4. Compositions as Map key]
+
+link:ch04.html#composition-identifier[4.5. Compositions as identifiers]
+
+link:ch05.html[5. Collections]
+
+link:ch05.html#collections-synopsis[5.1. Collections as a value type]
+
+link:ch05.html#collections-value[5.2. Collections of value types]
+
+link:ch05.html#collections-entity[5.3. Collections of entities]
+
+link:ch05.html#collections-list[5.4. List - index]
+
+link:ch05.html#collections-map[5.5. Map - key]
+
+link:ch05.html#collections-bag[5.6. Bags]
+
+link:ch05.html#collections-array[5.7. Arrays]
+
+link:ch05.html#collections-as-basic[5.8. Collections as basic value
+type]
+
+link:ch06.html[6. Identifiers]
+
+link:ch06.html#identifiers-simple[6.1. Simple identifiers]
+
+link:ch06.html#identifiers-composite[6.2. Composite identifiers]
+
+link:ch06.html#identifiers-composite-aggregated[6.2.1. Composite
+identifiers - aggregated (EmbeddedId)]
+
+link:ch06.html#identifiers-composite-nonaggregated[6.2.2. Composite
+identifiers - non-aggregated (IdClass)]
+
+link:ch06.html#identifiers-generators[6.3. Generated identifier values]
+
+link:ch06.html#identifiers-generators-auto[6.3.1. Interpreting AUTO]
+
+link:ch06.html#identifiers-generators-sequence[6.3.2. Using sequences]
+
+link:ch06.html#identifiers-generators-identity[6.3.3. Using IDENTITY
+columns]
+
+link:ch06.html#identifiers-generators-table[6.3.4. Using identifier
+table]
+
+link:ch06.html#identifiers-generators-uuid[6.3.5. Using UUID generation]
+
+link:ch06.html#identifiers-generators-generic[6.3.6. Using
+@GenericGenerator]
+
+link:ch06.html#identifiers-generators-optimizer[6.3.7. Optimizers]
+
+link:ch06.html#identifiers-derived[6.4. Derived Identifiers]
+
+link:ch07.html[7. Natural Ids]
+
+link:ch07.html#naturalid-mapping[7.1. Natural Id Mapping]
+
+link:ch07.html#naturalid-api[7.2. Natural Id API]
+
+link:ch07.html#naturalid-mutability-caching[7.3. Natural Id - Mutability
+and Caching]
+
+*List of Tables*
+
+3.1. link:ch03.html#d5e216[Standard BasicTypes]
+
+3.2. link:ch03.html#d5e451[BasicTypes added by hibernate-java8]
+
+*List of Examples*
+
+1.1. link:ch01.html#d5e40[Simple table and domain model]
+
+2.1. link:ch02.html#d5e157[Simple @Entity]
+
+2.2. link:ch02.html#d5e162[Simple @Entity with @Table]
+
+2.3. link:ch02.html#d5e180[Version]
+
+3.1. link:ch03.html#d5e514[With `@Basic`]
+
+3.2. link:ch03.html#d5e518[Without `@Basic`]
+
+3.3. link:ch03.html#d5e561[Explicit column naming]
+
+3.4. link:ch03.html#d5e599[Using @org.hibernate.annotations.Type]
+
+3.5. link:ch03.html#d5e623[Custom BasicType implementation]
+
+3.6. link:ch03.html#d5e628[Custom UserType implementation]
+
+3.7. link:ch03.html#d5e650[@Enumerated(ORDINAL) example]
+
+3.8. link:ch03.html#d5e664[@Enumerated(STRING) example]
+
+3.9. link:ch03.html#d5e683[Enum mapping with AttributeConverter example]
+
+3.10. link:ch03.html#d5e707[Enum mapping with custom Type example]
+
+3.11. link:ch03.html#d5e744[CLOB - SQL]
+
+3.12. link:ch03.html#d5e748[CLOB - locator mapping]
+
+3.13. link:ch03.html#d5e752[CLOB - materialized mapping]
+
+3.14. link:ch03.html#d5e758[CLOB - materialized char[] mapping]
+
+3.15. link:ch03.html#d5e762[BLOB - SQL]
+
+3.16. link:ch03.html#d5e766[BLOB - locator mapping]
+
+3.17. link:ch03.html#d5e770[BLOB - materialized mapping]
+
+3.18. link:ch03.html#d5e788[NVARCHAR mapping]
+
+3.19. link:ch03.html#d5e791[NCLOB (locator) mapping]
+
+3.20. link:ch03.html#d5e794[NCLOB (materialized) mapping]
+
+4.1. link:ch04.html#composition-ex-embeddable[Simple composition
+example]
+
+4.2. link:ch04.html#composition-ex-embedded1[Simple Embedded]
+
+4.3. link:ch04.html#composition-ex-embedded1-sql[Person table]
+
+4.4. link:ch04.html#composition-ex-no-composition[Alternative to
+composition]
+
+4.5. link:ch04.html#composition-ex-multiple-compositions[Multiple
+compositions]
+
+4.6. link:ch04.html#d5e879[JPA's AttributeOverride]
+
+4.7. link:ch04.html#d5e890[Enabling composition-safe implicit naming]
+
+4.8. link:ch04.html#d5e894[Enabling composition-safe implicit naming]
+
+5.1. link:ch05.html#d5e943[Delimited set of tags]
+
+6.1. link:ch06.html#d5e992[Simple assigned identifier]
+
+6.2. link:ch06.html#d5e997[Simple generated identifier]
+
+6.3. link:ch06.html#d5e1026[Basic EmbeddedId]
+
+6.4. link:ch06.html#d5e1030[EmbeddedId with ManyToOne]
+
+6.5. link:ch06.html#d5e1039[Basic IdClass]
+
+6.6. link:ch06.html#d5e1043[IdClass with ManyToOne]
+
+6.7. link:ch06.html#d5e1047[IdClass with partial generation]
+
+6.8. link:ch06.html#d5e1116[Unnamed sequence]
+
+6.9. link:ch06.html#d5e1120[Named sequence]
+
+6.10. link:ch06.html#d5e1125[Configured sequence]
+
+6.11. link:ch06.html#d5e1148[Table generator table structure]
+
+6.12. link:ch06.html#d5e1153[Unnamed table generator]
+
+6.13. link:ch06.html#d5e1166[Implicitly using the random UUID strategy]
+
+6.14. link:ch06.html#d5e1171[Implicitly using the random UUID strategy]
+
+7.1. link:ch07.html#d5e1211[Natural id using single basic attribute]
+
+7.2. link:ch07.html#d5e1214[Natural id using single embedded attribute]
+
+7.3. link:ch07.html#d5e1217[Natural id using multiple persistent
+attributes]
+
+7.4. link:ch07.html#d5e1225[Using NaturalIdLoadAccess]
+
+7.5. link:ch07.html#d5e1242[Using SimpleNaturalIdLoadAccess]
+
+7.6. link:ch07.html#d5e1256[Mutable natural id]
+
+7.7. link:ch07.html#d5e1264[Mutable natural id synchronization use-case]
+
+7.8. link:ch07.html#d5e1268[Natural id caching]
+
+'''''
+
+link:legalnotice.html[]
+
+* 
+* link:pr01.html[**Next**Preface]

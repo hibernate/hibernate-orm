@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 12.0.1, SVG Export Plug-In . SVG Version: 6.00 Build 51448)  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [
+	<!ENTITY ns_svg "http://www.w3.org/2000/svg">
+	<!ENTITY ns_xlink "http://www.w3.org/1999/xlink">
+]>
+<svg  version="1.1" id="Layer_1" xmlns="&ns_svg;" xmlns:xlink="&ns_xlink;" width="48" height="48" viewBox="0 0 48 48"
+	 overflow="visible" enable-background="new 0 0 48 48" xml:space="preserve">
+<polygon fill="none" stroke="#243446" stroke-width="4.403" stroke-linejoin="round" points="6.486,37.712 24.021,7.338 
+	41.559,37.712 "/>
+<polygon fill="none" stroke="#FFFFFF" stroke-width="1.4677" stroke-linejoin="round" points="6.486,37.712 24.021,7.338 
+	41.559,37.712 "/>
+<polygon fill="#CC0000" points="6.486,37.712 24.021,7.338 41.559,37.712 "/>
+<polygon fill="#CC0000" points="6.486,37.712 24.021,7.338 41.559,37.712 "/>
+<linearGradient id="XMLID_4_" gradientUnits="userSpaceOnUse" x1="22.3276" y1="33.249" x2="10.7696" y2="15.7285">
+	<stop  offset="0" style="stop-color:#7B1E1E"/>
+	<stop  offset="1" style="stop-color:#FFFFFF"/>
+</linearGradient>
+<polygon fill="url(#XMLID_4_)" points="6.486,37.712 24.021,7.338 41.559,37.712 "/>
+<g>
+	<path fill="#656565" d="M27.092,13.988l-0.59,14.035h-3.479l-0.59-14.035H27.092z M22.64,30.145h4.245v4.423H22.64V30.145z"/>
+</g>
+<g>
+	<linearGradient id="XMLID_5_" gradientUnits="userSpaceOnUse" x1="26.9766" y1="25.9307" x2="22.815" y2="17.0526">
+		<stop  offset="0" style="stop-color:#656565"/>
+		<stop  offset="1" style="stop-color:#FFFFFF"/>
+	</linearGradient>
+	<polygon fill="url(#XMLID_5_)" points="26.441,13.431 25.852,27.466 22.373,27.466 21.783,13.431 	"/>
+	<linearGradient id="XMLID_6_" gradientUnits="userSpaceOnUse" x1="25.1895" y1="34.0957" x2="23.5154" y2="30.5243">
+		<stop  offset="0" style="stop-color:#656565"/>
+		<stop  offset="1" style="stop-color:#FFFFFF"/>
+	</linearGradient>
+	<rect x="21.99" y="29.588" fill="url(#XMLID_6_)" width="4.245" height="4.423"/>
+</g>
+</svg>

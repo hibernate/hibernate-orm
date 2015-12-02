@@ -1,0 +1,149 @@
+Chapter 1. Data categorizations
+===============================
+
+http://www.hibernate.org[*Hibernate.org*]http://hibernate.org/Documentation/DocumentationOverview[*Community
+Documentation*]
+
+* link:pr01.html[*Prev*]
+* link:ch02.html[*Next*]
+
+Chapter 1. Data categorizations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+*Table of Contents*
+
+link:ch01.html#categorization-value[1.1. Value types]
+
+link:ch01.html#categorization-entity[1.2. Entity Types]
+
+link:ch01.html#categorization-significance[1.3. Significance of type
+categories]
+
+Before diving into the actual topics of how to map different categories
+of things in your domain mode it helps to understand what those
+categories are. Hibernate and JPA both express these categorizations.
+
+Hibernate understands both the Java and JDBC representations of
+application data. The ability to read and write the this data to/from
+the database is the function of a Hibernate __type__. A type, in this
+usage, is an implementation of the `org.hibernate.type.Type` interface.
+This Hibernate type also describes various aspects of behavior of the
+Java type such as how to check for equality, how to clone values, etc.
+
+Usage of the word _type_
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+The Hibernate type is neither a Java type nor a SQL datatype. It
+provides information about both of these as well as understanding
+marshalling between.
+
+When you encounter the term type in discussions of Hibernate, it may
+refer to the Java type, the JDBC type, or the Hibernate type, depending
+on context.
+
+To help understand these categorizations, lets look at a simple table
+and domain model that we wish to map.
+
+*Example 1.1. Simple table and domain model*
+
+-------------------------
+create table Contact (
+    id INTEGER NOT NULL,
+    first_name VARCHAR,
+    middle_name VARCHAR,
+    last_name VARCHAR,
+    notes VARCHAR,
+    starred BIT,
+    website VARCHAR
+)
+-------------------------
+
+------------------------------------
+public class Contact {
+    private Integer id;
+    private Name name;
+    private String notes;
+    private URL website;
+    private boolean starred;
+    // getters and setters ommitted
+}
+
+public class Name {
+    private String first;
+    private String middle;
+    private String last;
+    // getters and setters ommitted
+}
+------------------------------------
+
+ +
+
+In the broadest sense, Hibernate categorizes types into two groups:
+
+* Value types (link:ch01.html#categorization-value[Section 1.1, “Value
+types”])
+* Entity types (link:ch01.html#categorization-entity[Section 1.2,
+“Entity Types”])
+
+1.1. Value types
+~~~~~~~~~~~~~~~~
+
+A value type is a piece of data that does not define its own lifecycle.
+It is, in effect, owned by an entity, which defines its lifecycle.
+
+Looked at another way, all the state of an entity is made up entirely of
+value types. These state fields or JavaBean-properties are termed
+__persistent attributes__. The persistent attributes of the Contact
+class are value types.
+
+Value types are further classified into three sub-categories;
+
+* Basic types - In mapping the Contact table, all attributes except for
+name would be basic types. Basic types are discussed in detail in
+link:ch03.html[Chapter 3, _Basic Types_]
+* Composite (or Embeddable) types - the name attribute is an example of
+a composite type, which is discussed in details in link:[???]
+* Collection types - the example has no collections. Collection types
+are discussed in <ref></ref>
+
+1.2. Entity Types
+~~~~~~~~~~~~~~~~~
+
+Entities are application-specific classes which correlate to rows in a
+table, using a unique identifier. Because of the requirement for a
+unique identifier, entities exist independently and define their own
+lifecycle. The Contact class itself would be an example of an entity.
+
+Mapping entities is discussed in detail in link:ch02.html[Chapter 2,
+_Entity_].
+
+1.3. Significance of type categories
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Why do we spend so much time categorizing the various types of types?
+What is the significance of the distinction?
+
+The main categorization was between entity types and value types. To
+review we said that entities, by nature of their unique identifier,
+exist independently of other objects whereas values do not. An
+application cannot "delete" the Contact website; instead, the website is
+removed when the Contact itself is deleted (obviously you can _update_
+the website of that website to null to make it "go away", but even there
+the access is done through the website).
+
+Nor can you define an association _to_ that Contact website. You _can_
+define an association to Contact _based on_ its website (assuming
+website is unique), but that is totally different.
+
+equality
+
+TBC...
+
+'''''
+
+link:legalnotice.html[]
+
+* link:pr01.html[**Prev**Preface]
+* link:#[*Up*]
+* link:index.html[*Home*]
+* link:ch02.html[**Next**Chapter 2. Entity]

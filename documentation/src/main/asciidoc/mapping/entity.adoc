@@ -1,47 +1,19 @@
-Chapter 2. Entity
-=================
+[[entity]]
+== Entity
 
-http://www.hibernate.org[*Hibernate.org*]http://hibernate.org/Documentation/DocumentationOverview[*Community
-Documentation*]
-
-* link:ch01.html[*Prev*]
-* link:ch03.html[*Next*]
-
-Chapter 2. Entity
-~~~~~~~~~~~~~~~~~
+:sourcedir: extras
 
 *Abstract*
 
 Discuss mapping entities in the application domain model.
 
-*Table of Contents*
-
-link:ch02.html#entity-pojo[2.1. POJO Models]
-
-link:ch02.html#entity-pojo-final[2.1.1. Prefer non-final classes]
-
-link:ch02.html#entity-pojo-constructor[2.1.2. Implement a no-argument
-constructor]
-
-link:ch02.html#domainmodel-pojo-accessors[2.1.3. Declare getters and
-setters for persistent attributes]
-
-link:ch02.html#entity-pojo-identifier[2.1.4. Provide identifier
-attribute(s)]
-
-link:ch02.html#entity-pojo-mapping[2.1.5. Mapping the entity]
-
-link:ch02.html#entity-pojo-optlock[2.1.6. Mapping optimistic locking]
-
-link:ch02.html#entity-pojo-inheritance[2.1.7. Inheritance]
-
 *Related Topics*
 
-* link:ch01.html[Chapter 1, _Data categorizations_]
-* link:[???]
+* link:data_categorizations.html[Categorization]
+* link:locking.html[Locking]
 
-2.1. POJO Models
-~~~~~~~~~~~~~~~~
+[[entity-pojo]]
+=== POJO Models
 
 Section _2.1 The Entity Class_ of the _JPA 2.1 specification_ defines
 its requirements for an entity class. Applications that wish to remain
@@ -84,8 +56,8 @@ validity of such a paradigm, however, is debatable at best.
 
 Let's look at each requirement in detail.
 
-2.1.1. Prefer non-final classes
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[[entity-pojo-final]]
+=== Prefer non-final classes
 
 This is a requirement for JPA. It is more of a recommendation for
 Hibernate.
@@ -99,21 +71,21 @@ Hibernate; you just will not be able to use proxies for lazy association
 fetching which will ultimately limit your options for performance
 tuning.
 
-Note
-~~~~
-
+[NOTE]
+====
 Starting in 5.0 Hibernate offers a more robust version of bytecode
 enhancement as another means for handling lazy loading. Hibernate had
 some bytecode re-writing capabilities prior to 5.0 but they were very
 rudimentary.
+====
 
 You should also avoid declaring persistent attribute getters and setters
 as final for the reasons already mentioned. And of course making the
 instance variable hold the entiy's persistent state would just simply
 not make any sense.
 
-2.1.2. Implement a no-argument constructor
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[[entity-pojo-constructor]]
+=== Implement a no-argument constructor
 
 The entity class should have a no-argument constructor. Both Hibernate
 and JPA require this.
@@ -124,8 +96,8 @@ as the system's SecurityManager allows overriding the visibility. That
 said, the constructor should be defined with at least package visibility
 if you wish to leverage runtime proxy generation.
 
-2.1.3. Declare getters and setters for persistent attributes
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[[domainmodel-pojo-accessors]]
+=== Declare getters and setters for persistent attributes
 
 Standard, portable JPA essentially requires this. Otherwise your model
 would violate the requirement quoted above in regards to accessing the
@@ -142,15 +114,15 @@ protected, package or private visibility. Again, if wanting to use
 runtime proxy generation for lazy loading the visibility for the
 getter/setter should be at least package visibility.
 
-2.1.4. Provide identifier attribute(s)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[[entity-pojo-identifier]]
+=== Provide identifier attribute(s)
 
-Note
-~~~~
-
+[NOTE]
+====
 Historically this was considered optional. However, not defining
 identifier attribute(s) on the entity should be considered a deprecated
 feature that will be removed in an upcoming release.
+====
 
 The identifier attribute does not necessarily need to be mapped to the
 column(s) that physically define the primary key. However, it should map
@@ -160,8 +132,8 @@ We recommend that you declare consistently-named identifier attributes
 on persistent classes and that you use a nullable (i.e., non-primitive)
 type.
 
-2.1.5. Mapping the entity
-^^^^^^^^^^^^^^^^^^^^^^^^^
+[[entity-pojo-mapping]]
+=== Mapping the entity
 
 The main piece in mapping the entity is the `javax.persistence.Entity`
 annotation. The Entity annotation defines just one attribute `name`
@@ -169,25 +141,11 @@ which is used to give the entity a specific name for use in JPQL
 queries; by default the name is the unqualified name of the entity
 class.
 
-*Example 2.1. Simple @Entity*
-
-------------------------------------
-@Entity
-public class Simple {
-    @Id
-    private Integer id;
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-}
-------------------------------------
-
- +
+.Simple `@Entity`
+[source,java]
+----
+include::{sourcedir}/entity/SimpleEntity.java[]
+----
 
 An entity models a database table. The identifier uniquely identifies
 each row in that table. By default the name of the table is assumed to
@@ -195,32 +153,16 @@ be the same as the name of the entity. To explicitly give the name of
 the table or to specify other information about the table, we would use
 the `javax.persistence.Table` annotation.
 
-*Example 2.2. Simple @Entity with @Table*
+.Simple `@Entity` with `@Table`
+[source,java]
+----
+include::{sourcedir}/entity/SimpleEntityWithTable.java[]
+----
 
---------------------------------------------------------------
-@Entity
-@Table( catalog="CRM", schema="purchasing", name="t_simple" )
-public class Simple {
-    @Id
-    private Integer id;
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-}
---------------------------------------------------------------
+For details on mapping the identifier, see link:identifiers.html[Chapter 6,_Identifiers_]
 
- +
-
-For details on mapping the identifier, see link:ch06.html[Chapter 6,
-_Identifiers_]
-
-2.1.6. Mapping optimistic locking
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[[entity-pojo-optlock]]
+=== Mapping optimistic locking
 
 JPA defines support for optimistic locking based on either a version
 (sequential numeric) or timestamp strategy. To enable this style of
@@ -233,42 +175,21 @@ According to JPA, the valid types for these attributes are limited to:
 * long, or Long
 * java.sql.Timestamp
 
-*Example 2.3. Version*
+.Version
+[source,java]
+----
+include::{sourcedir}/entity/Version.java[]
+----
 
------------------------------
-@Entity
-public class Course {
-    @Id
-    private Integer id;
-    @Version
-    private Integer version;
-    ...
-}
------------------------------
+[source,java]
+----
+include::{sourcedir}/entity/Timestamp.java[]
+----
 
-------------------------
-@Entity
-public class Thing {
-    @Id
-    private Integer id;
-    @Version
-    Timestamp ts;
-    ...
-}
-------------------------
-
-------------------------
-@Entity
-public class Thing2 {
-    @Id
-    private Integer id;
-    @Version
-    private Instant ts;
-    ...
-}
-------------------------
-
- +
+[source,java]
+----
+include::{sourcedir}/entity/Instant.java[]
+----
 
 Hibernate supports a form of optimistic locking that does not require a
 dedicated "version attribute". This is intended mainly for use with
@@ -290,19 +211,11 @@ expanded WHERE clause restriction for the UPDATE/DELETE SQL statement.
 of an expanded WHERE clause restriction for the UPDATE/DELETE SQL
 statement
 
-2.1.7. Inheritance
-^^^^^^^^^^^^^^^^^^
+[[entity-pojo-inheritance]]
+=== Inheritance
 
 blah blah blah
 
-* dynamic models (hbm.xml) * Map mode * proxy solutions
-(hibernate-core/src/test/java/org/hibernate/test/dynamicentity/tuplizer2)
-
-'''''
-
-link:legalnotice.html[]
-
-* link:ch01.html[**Prev**Chapter 1. Data categorizations]
-* link:#[*Up*]
-* link:index.html[*Home*]
-* link:ch03.html[**Next**Chapter 3. Basic Types]
+* dynamic models (hbm.xml)
+* Map mode
+* proxy solutions (hibernate-core/src/test/java/org/hibernate/test/dynamicentity/tuplizer2)

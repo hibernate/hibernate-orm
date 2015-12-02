@@ -240,7 +240,8 @@ task renderMappingGuides(type: AsciidoctorTask, group: 'Documentation') {
     backends "html5"
     separateOutputDirs false
     options logDocuments: true
-    attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true, stylesheet: "css/hibernate.css"
+    //attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true, stylesheet: "css/hibernate.css"
+    attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true
     resources {
         from('src/main/asciidoc/') {
             include 'images/**'

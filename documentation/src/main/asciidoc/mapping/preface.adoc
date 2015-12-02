@@ -1,14 +1,5 @@
-Preface
-=======
-
-http://www.hibernate.org[*Hibernate.org*]http://hibernate.org/Documentation/DocumentationOverview[*Community
-Documentation*]
-
-* link:index.html[*Prev*]
-* link:ch01.html[*Next*]
-
-Preface
-~~~~~~~
+[[preface]]
+== Preface
 
 The goal of this document is to discuss how to map an application's
 domain model to a relational database.
@@ -20,12 +11,3 @@ across ORM/JPA providers using annotations (and/or standardized XML
 format). This document will focus on JPA mapping where possible. For
 Hibernate mapping features not supported by JPA we will prefer Hibernate
 extension annotations, again where possible.
-
-'''''
-
-link:legalnotice.html[]
-
-* link:index.html[**Prev**Hibernate Domain Model Mapping Guide]
-* link:#[*Up*]
-* link:index.html[*Home*]
-* link:ch01.html[**Next**Chapter 1. Data categorizations]

@@ -1,23 +1,5 @@
-Chapter 7. Natural Ids
-======================
-
-http://www.hibernate.org[*Hibernate.org*]http://hibernate.org/Documentation/DocumentationOverview[*Community
-Documentation*]
-
-* link:ch06.html[*Prev*]
-* 
-
-Chapter 7. Natural Ids
-~~~~~~~~~~~~~~~~~~~~~~
-
-*Table of Contents*
-
-link:ch07.html#naturalid-mapping[7.1. Natural Id Mapping]
-
-link:ch07.html#naturalid-api[7.2. Natural Id API]
-
-link:ch07.html#naturalid-mutability-caching[7.3. Natural Id - Mutability
-and Caching]
+[[natural_ids]]
+== Natural Ids
 
 Natural ids represent unique identifiers that naturally exist within
 your domain model. Even if a natural id does not make a good primary
@@ -26,7 +8,7 @@ later, Hibernate provides a dedicated, efficient API for loading and
 entity by its natural-id much like it offers for loading by identifier
 (PK).
 
-7.1. Natural Id Mapping
+embeddableNatural Id Mapping
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 Natural ids are defined in terms of one or more persistent attributes.
@@ -34,13 +16,20 @@ Natural ids are defined in terms of one or more persistent attributes.
 *Example 7.1. Natural id using single basic attribute*
 
 ----------------------------------
-@Entity
-public class Company {
-    @Id
-    private Integer id;
-    @NaturalId
-    private String taxIdentifier;
-    ...
+@Entity
+
+public class Company {
+
+    @Id
+
+    private Integer id;
+
+    @NaturalId
+
+    private String taxIdentifier;
+
+    ...
+
 }
 ----------------------------------
 
@@ -49,21 +38,36 @@ public class Company {
 *Example 7.2. Natural id using single embedded attribute*
 
 -----------------------------------
-@Entity
-public class PostalCarrier {
-    @Id
-    private Integer id;
-    @NaturalId
-    @Embedded
-    private PostalCode postalCode;
-    ...
-
-}
-
-@Embeddable
-public class PostalCode {
-    ...
-}
+@Entity
+
+public class PostalCarrier {
+
+    @Id
+
+    private Integer id;
+
+    @NaturalId
+
+    @Embedded
+
+    private PostalCode postalCode;
+
+    ...
+
+
+
+}
+
+
+
+@Embeddable
+
+public class PostalCode {
+
+    ...
+
+}
+
 -----------------------------------
 
  +
@@ -71,22 +75,32 @@ public class PostalCode {
 *Example 7.3. Natural id using multiple persistent attributes*
 
 -----------------------------------
-@Entity
-public class Course {
-    @Id
-    private Integer id;
-    @NaturalId
-    @ManyToOne
-    private Department department;
-    @NaturalId
-    private String code;
-    ...
+@Entity
+
+public class Course {
+
+    @Id
+
+    private Integer id;
+
+    @NaturalId
+
+    @ManyToOne
+
+    private Department department;
+
+    @NaturalId
+
+    private String code;
+
+    ...
+
 }
 -----------------------------------
 
  +
 
-7.2. Natural Id API
+embeddableNatural Id API
 ~~~~~~~~~~~~~~~~~~~
 
 As stated before, Hibernate provides an API for loading entities by
@@ -98,20 +112,34 @@ exception will be thrown there.
 *Example 7.4. Using NaturalIdLoadAccess*
 
 -------------------------------------------------------------------
-Session session = ...;
-
-Company company = session.byNaturalId( Company.class )
-        .using( "taxIdentifier", "abc-123-xyz" )
-        .load();
-
-PostalCarrier carrier = session.byNaturalId( PostalCarrier.class )
-        .using( "postalCode", new PostalCode( ... ) )
-        .load();
-
-Department department = ...;
-Course course = session.byNaturalId( Course.class )
-        .using( "department", department )
-        .using( "code", "101" )
+Session session = ...;
+
+
+
+Company company = session.byNaturalId( Company.class )
+
+        .using( "taxIdentifier", "abc-123-xyz" )
+
+        .load();
+
+
+
+PostalCarrier carrier = session.byNaturalId( PostalCarrier.class )
+
+        .using( "postalCode", new PostalCode( ... ) )
+
+        .load();
+
+
+
+Department department = ...;
+
+Course course = session.byNaturalId( Course.class )
+
+        .using( "department", department )
+
+        .using( "code", "101" )
+
         .load();
 -------------------------------------------------------------------
 
@@ -134,7 +162,7 @@ __Hibernate User Guide__.
 
 We will discuss the last method available on NaturalIdLoadAccess
 (`setSynchronizationEnabled`) in
-link:ch07.html#naturalid-mutability-caching[Section 7.3, “Natural Id -
+link:natural_id.html#naturalid-mutability-caching[Section 7.3, “Natural Id -
 Mutability and Caching”].
 
 Because the Company and PostalCarrier entities define "simple" natural
@@ -144,12 +172,18 @@ ids.
 *Example 7.5. Using SimpleNaturalIdLoadAccess*
 
 -------------------------------------------------------------------------
-Session session = ...;
-
-Company company = session.bySimpleNaturalId( Company.class )
-        .load( "abc-123-xyz" );
-
-PostalCarrier carrier = session.bySimpleNaturalId( PostalCarrier.class )
+Session session = ...;
+
+
+
+Company company = session.bySimpleNaturalId( Company.class )
+
+        .load( "abc-123-xyz" );
+
+
+
+PostalCarrier carrier = session.bySimpleNaturalId( PostalCarrier.class )
+
         .load( new PostalCode( ... ) );
 -------------------------------------------------------------------------
 
@@ -165,7 +199,7 @@ the corresponding value of that natural id attribute directly to the
 natural id or if the natural id it does define is not simple, an
 exception will be thrown there.
 
-7.3. Natural Id - Mutability and Caching
+embeddableNatural Id - Mutability and Caching
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A natural id may be mutable or immutable. By default `@NaturalId` marks
@@ -176,13 +210,20 @@ change values. If the values of the natural id attribute(s) can change,
 *Example 7.6. Mutable natural id*
 
 -----------------------------
-@Entity
-public class Person {
-    @Id
-    private Integer id;
-    @NaturalId(mutable=true)
-    private String ssn;
-    ...
+@Entity
+
+public class Person {
+
+    @Id
+
+    private Integer id;
+
+    @NaturalId(mutable=true)
+
+    private String ssn;
+
+    ...
+
 }
 -----------------------------
 
@@ -205,22 +246,38 @@ ids.
 *Example 7.7. Mutable natural id synchronization use-case*
 
 ----------------------------------------------------------
-Session session = ...;
-
-Person person = session.bySimpleNaturalId( Person.class )
-        .load( "123-45-6789" );
-person.setSsn( "987-65-4321" );
-
-...
-
-// returns null!
-person = session.bySimpleNaturalId( Person.class )
-        .setSynchronizationEnabled( false )
-        .load( "987-65-4321" );
-
-// returns correctly!
-person = session.bySimpleNaturalId( Person.class )
-        .setSynchronizationEnabled( true )
+Session session = ...;
+
+
+
+Person person = session.bySimpleNaturalId( Person.class )
+
+        .load( "123-45-6789" );
+
+person.setSsn( "987-65-4321" );
+
+
+
+...
+
+
+
+// returns null!
+
+person = session.bySimpleNaturalId( Person.class )
+
+        .setSynchronizationEnabled( false )
+
+        .load( "987-65-4321" );
+
+
+
+// returns correctly!
+
+person = session.bySimpleNaturalId( Person.class )
+
+        .setSynchronizationEnabled( true )
+
         .load( "987-65-4321" );
 ----------------------------------------------------------
 
@@ -233,23 +290,21 @@ caching is enabled.
 *Example 7.8. Natural id caching*
 
 ----------------------------------
-@Entity
-@NaturalIdCache
-public class Company {
-    @Id
-    private Integer id;
-    @NaturalId
-    private String taxIdentifier;
-    ...
+@Entity
+
+@NaturalIdCache
+
+public class Company {
+
+    @Id
+
+    private Integer id;
+
+    @NaturalId
+
+    private String taxIdentifier;
+
+    ...
+
 }
 ----------------------------------
-
- +
-
-'''''
-
-link:legalnotice.html[]
-
-* link:ch06.html[**Prev**Chapter 6. Identifiers]
-* link:#[*Up*]
-* link:index.html[*Home*]

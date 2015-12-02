@@ -1,23 +1,7 @@
-Chapter 1. Data categorizations
-===============================
+[[data_categorizations]]
+== Data categorizations
 
-http://www.hibernate.org[*Hibernate.org*]http://hibernate.org/Documentation/DocumentationOverview[*Community
-Documentation*]
-
-* link:pr01.html[*Prev*]
-* link:ch02.html[*Next*]
-
-Chapter 1. Data categorizations
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-*Table of Contents*
-
-link:ch01.html#categorization-value[1.1. Value types]
-
-link:ch01.html#categorization-entity[1.2. Entity Types]
-
-link:ch01.html#categorization-significance[1.3. Significance of type
-categories]
+:sourcedir: extras
 
 Before diving into the actual topics of how to map different categories
 of things in your domain mode it helps to understand what those
@@ -30,13 +14,10 @@ usage, is an implementation of the `org.hibernate.type.Type` interface.
 This Hibernate type also describes various aspects of behavior of the
 Java type such as how to check for equality, how to clone values, etc.
 
-Usage of the word _type_
-~~~~~~~~~~~~~~~~~~~~~~~~
-
+NOTE: Usage of the word _type_
 The Hibernate type is neither a Java type nor a SQL datatype. It
 provides information about both of these as well as understanding
 marshalling between.
-
 When you encounter the term type in discussions of Hibernate, it may
 refer to the Java type, the JDBC type, or the Hibernate type, depending
 on context.
@@ -44,49 +25,24 @@ on context.
 To help understand these categorizations, lets look at a simple table
 and domain model that we wish to map.
 
-*Example 1.1. Simple table and domain model*
+.Simple table and domain model
+[source,sql]
+----
+include::{sourcedir}/categorizations/Contact.sql[]
+----
 
--------------------------
-create table Contact (
-    id INTEGER NOT NULL,
-    first_name VARCHAR,
-    middle_name VARCHAR,
-    last_name VARCHAR,
-    notes VARCHAR,
-    starred BIT,
-    website VARCHAR
-)
--------------------------
-
-------------------------------------
-public class Contact {
-    private Integer id;
-    private Name name;
-    private String notes;
-    private URL website;
-    private boolean starred;
-    // getters and setters ommitted
-}
-
-public class Name {
-    private String first;
-    private String middle;
-    private String last;
-    // getters and setters ommitted
-}
-------------------------------------
-
- +
+[source,java]
+----
+include::{sourcedir}/categorizations/Contact.java[]
+----
 
 In the broadest sense, Hibernate categorizes types into two groups:
 
-* Value types (link:ch01.html#categorization-value[Section 1.1, “Value
-types”])
-* Entity types (link:ch01.html#categorization-entity[Section 1.2,
-“Entity Types”])
+* <<value-types,Value types>>
+* <<entity-types,Entity types>>
 
-1.1. Value types
-~~~~~~~~~~~~~~~~
+[[value-types]]
+=== Value types
 
 A value type is a piece of data that does not define its own lifecycle.
 It is, in effect, owned by an entity, which defines its lifecycle.
@@ -100,25 +56,24 @@ Value types are further classified into three sub-categories;
 
 * Basic types - In mapping the Contact table, all attributes except for
 name would be basic types. Basic types are discussed in detail in
-link:ch03.html[Chapter 3, _Basic Types_]
+link:basic_types.html[_Basic Types_]
 * Composite (or Embeddable) types - the name attribute is an example of
 a composite type, which is discussed in details in link:[???]
 * Collection types - the example has no collections. Collection types
 are discussed in <ref></ref>
 
-1.2. Entity Types
-~~~~~~~~~~~~~~~~~
+[[entity-types]]
+=== Entity types
 
 Entities are application-specific classes which correlate to rows in a
 table, using a unique identifier. Because of the requirement for a
 unique identifier, entities exist independently and define their own
 lifecycle. The Contact class itself would be an example of an entity.
 
-Mapping entities is discussed in detail in link:ch02.html[Chapter 2,
-_Entity_].
+Mapping entities is discussed in detail in link:entity.html[_Entity_].
 
-1.3. Significance of type categories
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[[significance-of-type-categories]]
+=== Significance of type categories
 
 Why do we spend so much time categorizing the various types of types?
 What is the significance of the distinction?
@@ -138,12 +93,3 @@ website is unique), but that is totally different.
 equality
 
 TBC...
-
-'''''
-
-link:legalnotice.html[]
-
-* link:pr01.html[**Prev**Preface]
-* link:#[*Up*]
-* link:index.html[*Home*]
-* link:ch02.html[**Next**Chapter 2. Entity]

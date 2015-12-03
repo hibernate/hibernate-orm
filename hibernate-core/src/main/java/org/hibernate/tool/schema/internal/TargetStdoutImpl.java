@@ -12,6 +12,16 @@ import org.hibernate.tool.schema.spi.Target;
  * @author Steve Ebersole
  */
 public class TargetStdoutImpl implements Target {
+	final private String delimiter;
+
+	public TargetStdoutImpl() {
+		this( null );
+	}
+
+	public TargetStdoutImpl(String delimiter) {
+		this.delimiter = delimiter;
+	}
+
 	@Override
 	public boolean acceptsImportScriptActions() {
 		return true;
@@ -23,10 +33,14 @@ public class TargetStdoutImpl implements Target {
 
 	@Override
 	public void accept(String action) {
+		if ( delimiter != null ) {
+			action += delimiter;
+		}
 		System.out.println( action );
 	}
 
 	@Override
 	public void release() {
 	}
+
 }

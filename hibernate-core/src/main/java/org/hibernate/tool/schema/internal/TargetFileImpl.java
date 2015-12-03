@@ -16,10 +16,12 @@ import org.hibernate.tool.schema.spi.Target;
  * @author Steve Ebersole
  */
 public class TargetFileImpl implements Target {
-	private FileWriter fileWriter;
+	final private FileWriter fileWriter;
+	final private String delimiter;
 
-	public TargetFileImpl(String outputFile) {
+	public TargetFileImpl(String outputFile, String delimter) {
 		try {
+			this.delimiter = delimter;
 			this.fileWriter = new FileWriter( outputFile );
 		}
 		catch (IOException e) {
@@ -40,6 +42,9 @@ public class TargetFileImpl implements Target {
 	public void accept(String action) {
 		try {
 			fileWriter.write( action );
+			if ( delimiter != null ) {
+				fileWriter.write( delimiter );
+			}
 			fileWriter.write( "\n" );
 		}
 		catch (IOException e) {
@@ -57,4 +62,5 @@ public class TargetFileImpl implements Target {
 			}
 		}
 	}
+
 }

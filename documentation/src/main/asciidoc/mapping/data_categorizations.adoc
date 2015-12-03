@@ -1,7 +1,5 @@
-[[data_categorizations]]
+[[categorization]]
 == Data categorizations
-
-:sourcedir: extras
 
 Before diving into the actual topics of how to map different categories
 of things in your domain mode it helps to understand what those
@@ -14,13 +12,18 @@ usage, is an implementation of the `org.hibernate.type.Type` interface.
 This Hibernate type also describes various aspects of behavior of the
 Java type such as how to check for equality, how to clone values, etc.
 
-NOTE: Usage of the word _type_
+[NOTE]
+====
+Usage of the word _type_
+
 The Hibernate type is neither a Java type nor a SQL datatype. It
 provides information about both of these as well as understanding
 marshalling between.
+
 When you encounter the term type in discussions of Hibernate, it may
 refer to the Java type, the JDBC type, or the Hibernate type, depending
 on context.
+====
 
 To help understand these categorizations, lets look at a simple table
 and domain model that we wish to map.
@@ -38,10 +41,10 @@ include::{sourcedir}/categorizations/Contact.java[]
 
 In the broadest sense, Hibernate categorizes types into two groups:
 
-* <<value-types,Value types>>
-* <<entity-types,Entity types>>
+* <<categorization-value,Value types>>
+* <<categorization-entity,Entity types>>
 
-[[value-types]]
+[[categorization-value]]
 === Value types
 
 A value type is a piece of data that does not define its own lifecycle.
@@ -56,13 +59,13 @@ Value types are further classified into three sub-categories;
 
 * Basic types - In mapping the Contact table, all attributes except for
 name would be basic types. Basic types are discussed in detail in
-link:basic_types.html[_Basic Types_]
+link:basic_types.adoc[_Basic Types_]
 * Composite (or Embeddable) types - the name attribute is an example of
 a composite type, which is discussed in details in link:[???]
 * Collection types - the example has no collections. Collection types
 are discussed in <ref></ref>
 
-[[entity-types]]
+[[categorization-entity]]
 === Entity types
 
 Entities are application-specific classes which correlate to rows in a
@@ -70,7 +73,7 @@ table, using a unique identifier. Because of the requirement for a
 unique identifier, entities exist independently and define their own
 lifecycle. The Contact class itself would be an example of an entity.
 
-Mapping entities is discussed in detail in link:entity.html[_Entity_].
+Mapping entities is discussed in detail in link:entity.adoc[_Entity_].
 
 [[significance-of-type-categories]]
 === Significance of type categories

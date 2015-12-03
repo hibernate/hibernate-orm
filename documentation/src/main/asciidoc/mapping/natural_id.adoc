@@ -1,5 +1,6 @@
-[[natural_ids]]
+[[naturalid]]
 == Natural Ids
+:sourcedir: extras
 
 Natural ids represent unique identifiers that naturally exist within
 your domain model. Even if a natural id does not make a good primary
@@ -8,149 +9,49 @@ later, Hibernate provides a dedicated, efficient API for loading and
 entity by its natural-id much like it offers for loading by identifier
 (PK).
 
-embeddableNatural Id Mapping
-~~~~~~~~~~~~~~~~~~~~~~~
+[[naturalid-mapping]]
+=== Natural Id Mapping
 
 Natural ids are defined in terms of one or more persistent attributes.
 
-*Example 7.1. Natural id using single basic attribute*
+.Natural id using single basic attribute
+[source,java]
+----
+include::{sourcedir}/natural_id/SimpleBasicNaturalIdMapping.java[]
+----
 
-----------------------------------
-@Entity
+.Natural id using single embedded attribute
+[source,java]
+----
+include::{sourcedir}/natural_id/SimpleCompositeNaturalIdMapping.java[]
+----
 
-public class Company {
+.Natural id using multiple persistent attributes
+[source,java]
+----
+include::{sourcedir}/natural_id/NonSimpleNaturalIdMapping.java[]
+----
 
-    @Id
-
-    private Integer id;
-
-    @NaturalId
-
-    private String taxIdentifier;
-
-    ...
-
-}
-----------------------------------
-
- +
-
-*Example 7.2. Natural id using single embedded attribute*
-
------------------------------------
-@Entity
-
-public class PostalCarrier {
-
-    @Id
-
-    private Integer id;
-
-    @NaturalId
-
-    @Embedded
-
-    private PostalCode postalCode;
-
-    ...
-
-
-
-}
-
-
-
-@Embeddable
-
-public class PostalCode {
-
-    ...
-
-}
-
------------------------------------
-
- +
-
-*Example 7.3. Natural id using multiple persistent attributes*
-
------------------------------------
-@Entity
-
-public class Course {
-
-    @Id
-
-    private Integer id;
-
-    @NaturalId
-
-    @ManyToOne
-
-    private Department department;
-
-    @NaturalId
-
-    private String code;
-
-    ...
-
-}
------------------------------------
-
- +
-
-embeddableNatural Id API
-~~~~~~~~~~~~~~~~~~~
+[[naturalid-api]]
+=== Natural Id API
 
 As stated before, Hibernate provides an API for loading entities by
-natural id. This is represented by the
-`org.hibernate.NaturalIdLoadAccess` contract obtained via
-`Session#byNaturalId`. If the entity does not define a natural id, an
-exception will be thrown there.
+natural id. This is represented by the org.hibernate.NaturalIdLoadAccess
+contract obtained via Session#byNaturalId. If the entity does not define
+a natural id, an exception will be thrown there.
 
-*Example 7.4. Using NaturalIdLoadAccess*
-
--------------------------------------------------------------------
-Session session = ...;
-
-
-
-Company company = session.byNaturalId( Company.class )
-
-        .using( "taxIdentifier", "abc-123-xyz" )
-
-        .load();
-
-
-
-PostalCarrier carrier = session.byNaturalId( PostalCarrier.class )
-
-        .using( "postalCode", new PostalCode( ... ) )
-
-        .load();
-
-
-
-Department department = ...;
-
-Course course = session.byNaturalId( Course.class )
-
-        .using( "department", department )
-
-        .using( "code", "101" )
-
-        .load();
--------------------------------------------------------------------
-
- +
+.Using NaturalIdLoadAccess
+[source,java]
+----
+include::{sourcedir}/natural_id/NaturalIdLoadAccessUsage.java[]
+----
 
 NaturalIdLoadAccess offers 2 distinct methods for obtaining the entity:
 
-* `load` - obtains a reference to the entity, making sure that the
-entity state is initialized.
-* `getReference` - obtains a reference to the entity. The state may or
-may not be initialized. If the entity is associated with the Session
+* load - obtains a reference to the entity, making sure that the entity
+state is initialized.
+* getReference - obtains a reference to the entity. The state may or may
+not be initialized. If the entity is associated with the Session
 already, that reference (loaded or not) is returned; else if the entity
 supports proxy generation, an uninitialized proxy is generated and
 returned; otherwise the entity is loaded from the database and returned.
@@ -158,153 +59,71 @@ returned; otherwise the entity is loaded from the database and returned.
 NaturalIdLoadAccess also allows to request locking for the load. We
 might use that to load an entity by natural id and at the same time
 apply a pessimistic lock. For additional details on locking, see the
-__Hibernate User Guide__.
+Hibernate User Guide.
 
 We will discuss the last method available on NaturalIdLoadAccess
-(`setSynchronizationEnabled`) in
-link:natural_id.html#naturalid-mutability-caching[Section 7.3, “Natural Id -
-Mutability and Caching”].
+(setSynchronizationEnabled) in
+link:#naturalid-mutability-caching[Natural Id - Mutability and Caching].
 
 Because the Company and PostalCarrier entities define "simple" natural
 ids, we also allow simplified access to load them based on the natural
 ids.
 
-*Example 7.5. Using SimpleNaturalIdLoadAccess*
+.Using SimpleNaturalIdLoadAccess
+[source,java]
+----
+include::{sourcedir}/natural_id/SimpleNaturalIdLoadAccessUsage.java[]
+----
 
--------------------------------------------------------------------------
-Session session = ...;
-
-
-
-Company company = session.bySimpleNaturalId( Company.class )
-
-        .load( "abc-123-xyz" );
-
-
-
-PostalCarrier carrier = session.bySimpleNaturalId( PostalCarrier.class )
-
-        .load( new PostalCode( ... ) );
--------------------------------------------------------------------------
-
- +
-
-Here we see the use of the `org.hibernate.SimpleNaturalIdLoadAccess`
-contract, obtained via `Session#bySimpleNaturalId`.
+Here we see the use of the org.hibernate.SimpleNaturalIdLoadAccess
+contract, obtained via Session#bySimpleNaturalId.
 SimpleNaturalIdLoadAccess is similar to NaturalIdLoadAccess except that
-it does not define the `using` method. Instead, because these "simple"
+it does not define the using method. Instead, because these "simple"
 natural ids are defined based on just one attribute we can directly pass
 the corresponding value of that natural id attribute directly to the
-`load` and `getReference` methods. If the entity does not define a
-natural id or if the natural id it does define is not simple, an
-exception will be thrown there.
+load and getReference methods. If the entity does not define a natural
+id or if the natural id it does define is not simple, an exception will
+be thrown there.
 
-embeddableNatural Id - Mutability and Caching
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[[naturalid-mutability-caching]]
+=== Natural Id - Mutability and Caching
 
 A natural id may be mutable or immutable. By default `@NaturalId` marks
 an immutable natural id. An immutable natural id is expected to never
 change values. If the values of the natural id attribute(s) can change,
 `@NaturalId(mutable=true)` should be used instead.
 
-*Example 7.6. Mutable natural id*
-
------------------------------
-@Entity
-
-public class Person {
-
-    @Id
-
-    private Integer id;
-
-    @NaturalId(mutable=true)
-
-    private String ssn;
-
-    ...
-
-}
------------------------------
-
- +
+.Mutable natural id
+[source,java]
+----
+include::{sourcedir}/natural_id/MutableNaturalIdMapping.java[]
+----
 
 Within the Session, Hibernate maintains a mapping from natural id values
 to pk values. If natural ids values have changed it is possible for this
 mapping to become out of date until a flush occurs. To work around this
 condition, Hibernate will attempt to discover any such pending changes
-and adjust for them when the `load` or `getReference` method is
-executed. To be clear: this is only pertinent for mutable natural ids.
+and adjust for them when the load or getReference method is executed. To
+be clear: this is only pertinent for mutable natural ids.
 
 This "discovery and adjustment" have a performance impact. If an
 application is certain that none of its mutable natural ids already
 associated with the Session have changed, it can disable that checking
-by calling `setSynchronizationEnabled(false)` (the default is true).
-This will force Hibernate to circumvent the checking of mutable natural
-ids.
+by calling setSynchronizationEnabled(false) (the default is true). This
+will force Hibernate to circumvent the checking of mutable natural ids.
 
-*Example 7.7. Mutable natural id synchronization use-case*
-
-----------------------------------------------------------
-Session session = ...;
-
-
-
-Person person = session.bySimpleNaturalId( Person.class )
-
-        .load( "123-45-6789" );
-
-person.setSsn( "987-65-4321" );
-
-
-
-...
-
-
-
-// returns null!
-
-person = session.bySimpleNaturalId( Person.class )
-
-        .setSynchronizationEnabled( false )
-
-        .load( "987-65-4321" );
-
-
-
-// returns correctly!
-
-person = session.bySimpleNaturalId( Person.class )
-
-        .setSynchronizationEnabled( true )
-
-        .load( "987-65-4321" );
-----------------------------------------------------------
-
- +
+.Mutable natural id synchronization use-case
+[source,java]
+----
+include::{sourcedir}/natural_id/MutableNaturalIdSynchronization.java[]
+----
 
 Not only can this NaturalId-to-PK resolution be cached in the Session,
 but we can also have it cached in the second-level cache if second level
 caching is enabled.
 
-*Example 7.8. Natural id caching*
-
-----------------------------------
-@Entity
-
-@NaturalIdCache
-
-public class Company {
-
-    @Id
-
-    private Integer id;
-
-    @NaturalId
-
-    private String taxIdentifier;
-
-    ...
-
-}
-----------------------------------
+.Natural id caching
+[source,java]
+----
+include::{sourcedir}/natural_id/NaturalIdCaching.java[]
+----

@@ -1,8 +1,9 @@
 [[collections]]
 == Collections
+:sourcedir: extras
 
-embeddableCollections as a value type
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[[collections-synopsis]]
+=== Collections as a value type
 
 discussions of what it means for them to be value types - lifecycle,
 opt-locking
@@ -25,40 +26,40 @@ principles. From a practical perspective, Hibernate (really all
 persistence providers) will use their own collection implementations
 which conform to the Java Collections Framework interfaces.
 
-embeddableCollections of value types
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[[collections-value]]
+=== Collections of value types
 
 collection of values - elements can be of any value type except for
 collections (in fact even compositions as the element cannot contain
 collections) * basics * compositions
 
-embeddableCollections of entities
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[[collections-entity]]
+=== Collections of entities
 
 * one-to-many * many-to-many
 
-embeddableList - index
-~~~~~~~~~~~~~~~~~
+[[collections-list]]
+=== List - index
 
 todo : discuss mapping list index
 
-embeddableMap - key
-~~~~~~~~~~~~~~
+[[collections-map]]
+=== Map - key
 
 todo : discuss mapping map key
 
-embeddableBags
-~~~~~~~~~
+[[collections-bag]]
+=== Bags
 
 todo : discuss mapping bags and idbags
 
-embeddableArrays
-~~~~~~~~~~~
+[[collections-array]]
+=== Arrays
 
 todo : discuss mapping arrays
 
-embeddableCollections as basic value type
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[[collections-as-basic]]
+=== Collections as basic value type
 
 Notice how all the previous examples explicitly mark the collection
 attribute as either ElementCollection, OneToMany or ManyToMany.
@@ -69,130 +70,12 @@ into a single column in the containing table.
 This is sometimes beneficial. Consider a use-case such as a VARCHAR
 column that represents a delimited list or set of Strings.
 
-*Example 5.1. Delimited set of tags*
-
-----------------------------------------------------------------------------------------------
-@Entity
-
-public static class Post {
-
-    @Id
-
-    public Integer id;
-
-    @Basic
-
-    @Type( type = "delimited_strings" )
-
-    Set<String> tags;
-
-}
-
-
-
-
-
-public static class DelimitedStringsType extends AbstractSingleColumnStandardBasicType<Set> {
-
-    public DelimitedStringsType() {
-
-        super(
-
-                VarcharTypeDescriptor.INSTANCE,
-
-                new DelimitedStringsJavaTypeDescriptor()
-
-        );
-
-    }
-
-
-
-    @Override
-
-    public String getName() {
-
-        return "delimited_strings";
-
-    }
-
-}
-
-
-
-public static class DelimitedStringsJavaTypeDescriptor extends AbstractTypeDescriptor<Set> {
-
-    public DelimitedStringsJavaTypeDescriptor() {
-
-        super(
-
-                Set.class,
-
-                new MutableMutabilityPlan<Set>() {
-
-                    @Override
-
-                    protected Set deepCopyNotNull(Set value) {
-
-                        Set<String> copy = new HashSet<String>();
-
-                        copy.addAll( value );
-
-                        return copy;
-
-                    }
-
-                }
-
-        );
-
-    }
-
-
-
-    @Override
-
-    public String toString(Set value) {
-
-        return null;
-
-    }
-
-
-
-    @Override
-
-    public Set fromString(String string) {
-
-        return null;
-
-    }
-
-
-
-    @Override
-
-    public <X> X unwrap(Set value, Class<X> type, WrapperOptions options) {
-
-        return null;
-
-    }
-
-
-
-    @Override
-
-    public <X> Set wrap(X value, WrapperOptions options) {
-
-        return null;
-
-    }
-
-}
-----------------------------------------------------------------------------------------------
-
- +
-
-See the _Hibernate Integrations Guide_ for more details on developing
+.Delimited set of tags
+[source,java]
+----
+include::{sourcedir}/collection/DelimitedStringTagsExample.java[]
+----
+
+See the Hibernate Integrations Guide for more details on developing
 custom value type mappings. Without the special type mapping above the
 "set of tags" would have simply been marshalled using serialization.

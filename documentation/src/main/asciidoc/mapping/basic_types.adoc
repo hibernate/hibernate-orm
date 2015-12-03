@@ -1,10 +1,6 @@
-[[basic_types]]
+[[basic]]
 == Basic Types
-
-*Abstract*
-
-This chapter will discuss actual basic type mappings as well as how to
-override those mappings and provide extra mappings.
+:sourcedir: extras
 
 Basic value types usually map a single database value, or column, to a
 single, non-aggregated Java type. Hibernate provides a number of
@@ -12,14 +8,13 @@ built-in basic types, which follow the natural mappings recommended in
 the JDBC specifications.
 
 Internally Hibernate uses a registry of basic types when it needs to
-resolve the specific `org.hibernate.type.Type` to use in certain
+resolve the specific org.hibernate.type.Type to use in certain
 situations.
 
-embeddableHibernate-provided BasicTypes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[[basic-provided]]
+=== Hibernate-provided BasicTypes
 
-*Table 3.1. Standard BasicTypes*
-
+.Standard BasicTypes
 [cols=",,,",options="header",]
 |=======================================================================
 |Hibernate type (org.hibernate.type package) |JDBC type |Java type
@@ -133,10 +128,7 @@ names.
 |CharacterArrayNClobType |NCLOB |java.lang.Character[] |N/A
 |=======================================================================
 
- +
-
-*Table 3.2. BasicTypes added by hibernate-java8*
-
+.BasicTypes added by hibernate-java8
 [cols=",,,",options="header",]
 |=======================================================================
 |Hibernate type (org.hibernate.type package) |JDBC type |Java type
@@ -164,85 +156,42 @@ java.time.OffsetTime
 java.time.ZonedDateTime
 |=======================================================================
 
- +
-
-Note
-~~~~
-
+[NOTE]
+====
 To use these hibernate-java8 types just add the hibernate-java8 jar to
 your classpath; Hibernate will take care of the rest. See
-link:basic_types.html#basic-datetime[Section 3.11, “Mapping Date/Time Values”]
+link:#basic-datetime[section_title]
+====
 
 These mappings are managed by a service inside Hibernate called the
 `org.hibernate.type.BasicTypeRegistry`, which essentially maintains a
-map of `org.hibernate.type.BasicType` (a `org.hibernate.type.Type`
+map of org.hibernate.type.BasicType (a org.hibernate.type.Type
 specialization) instances keyed by a name. That is the purpose of the
 "BasicTypeRegistry key(s)" column in the previous tables. We will
 revisit this detail later.
 
-embeddableThe `@Basic` annotation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[[basic-annotation]]
+=== The `@Basic` annotation
 
 Strictly speaking, a basic type is denoted with the
-`javax.persistence.Basic` annotation. Generally speaking the `@Basic`
+javax.persistence.Basic annotation. Generally speaking the `@Basic`
 annotation can be ignored. Both of the following examples are ultimately
 the same.
 
-*Example 3.1. With `@Basic`*
+.With `@Basic`
+[source,java]
+----
+include::{sourcedir}/basic/ex1.java[]
+----
 
---------------------------------
-@Entity
+.Without `@Basic`
+[source,java]
+----
+include::{sourcedir}/basic/ex2.java[]
+----
 
-public class Product {
-
-    @Id
-
-    @Basic
-
-    private Integer id;
-
-    @Basic
-
-    private String sku;
-
-    @Basic
-
-    private String name;
-
-    @Basic
-
-    private String description;
-
-}
---------------------------------
-
- +
-
-*Example 3.2. Without `@Basic`*
-
---------------------------------
-@Entity
-
-public class Product {
-
-    @Id
-
-    private Integer id;
-
-    private String sku;
-
-    private String name;
-
-    private String description;
-
-}
---------------------------------
-
- +
-
-Tip
-~~~
-
+[TIP]
+====
 The JPA specification strictly limits the Java types that can be marked
 as basic to the following:
 
@@ -269,9 +218,9 @@ state to the database.
 
 If provider portability is a concern, you should stick to just these
 basic types. Note that JPA 2.1 did add the notion of an
-`javax.persistence.AttributeConverter` to help alleviate some of these
-concerns; see link:basic_types.html#basic-jpaconvert[Section 3.12, “JPA 2.1
-AttributeConverters”]
+javax.persistence.AttributeConverter to help alleviate some of these
+concerns; see link:#basic-jpaconvert[section_title]
+====
 
 The `@Basic` annotation defines 2 attributes.
 
@@ -286,51 +235,25 @@ requirement to the provider (Hibernate) that the value should be fetched
 when the owner is fetched but that LAZY is merely a hint that the value
 be fetched when the attribute is accessed. Hibernate ignores this
 setting for basic types unless you are using bytecode enhancement. See
-the _Hibernate User Guide_ for additional information on fetching and on
+the Hibernate User Guide for additional information on fetching and on
 bytecode enhancement.
 
-embeddableThe `@Column` annotation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+=== The `@Column` annotation
 
 JPA defines rules for implicitly determining the name of tables and
-columns. For a detailed discussion of implicit naming see link:[???].
+columns. For a detailed discussion of implicit naming see
+link:#naming[???].
 
 For basic type attributes, the implicit naming rule is that the column
 name is the same as the attribute name. If that implicit naming rule
 does not meet your requirements, you can explicitly tell Hibernate (and
 other providers) the column name to use.
 
-*Example 3.3. Explicit column naming*
-
---------------------------------
-@Entity
-
-public class Product {
-
-    @Id
-
-    @Basic
-
-    private Integer id;
-
-    @Basic
-
-    private String sku;
-
-    @Basic
-
-    private String name;
-
-    @Basic
-
-    @Column( name = "NOTES" )
-
-    private String description;
-
-}
---------------------------------
-
- +
+.Explicit column naming
+[source,java]
+----
+include::{sourcedir}/basic/ExplicitColumnNaming.java[]
+----
 
 Here we use `@Column` to explicitly map the `description` attribute to
 the `NOTES` column, as opposed to the implicit column name
@@ -339,8 +262,8 @@ the `NOTES` column, as opposed to the implicit column name
 The `@Column` annotation defines other mapping information as well. See
 its javadocs for details.
 
-embeddableBasicTypeRegistry
-~~~~~~~~~~~~~~~~~~~~~~
+[[basic-registry]]
+=== BasicTypeRegistry
 
 We said before that a Hibernate type is not a Java type, nor a SQL type,
 but that it understands both and performs the marshalling between them.
@@ -352,20 +275,20 @@ attributes?
 
 The answer lies in a service inside Hibernate called the
 `org.hibernate.type.BasicTypeRegistry`, which essentially maintains a
-map of `org.hibernate.type.BasicType` (a `org.hibernate.type.Type`
+map of org.hibernate.type.BasicType (a org.hibernate.type.Type
 specialization) instances keyed by a name.
 
-We will see later (link:basic_types.html#basic-explicit[Section 3.5, “Explicit
-BasicTypes”]) that we can explicitly tell Hibernate which BasicType to
-use for a particular attribute. But first let's explore how implicit
-resolution works and how applications can adjust implicit resolution.
+We will see later (link:#basic-explicit[section_title]) that we can
+explicitly tell Hibernate which BasicType to use for a particular
+attribute. But first let's explore how implicit resolution works and how
+applications can adjust implicit resolution.
 
-Note
-~~~~
-
+[NOTE]
+====
 A thorough discussion of the BasicTypeRegistry and all the different
 ways to contribute types to it is beyond the scope of this
-documentation. Please see _Integrations Guide_ for complete details.
+documentation. Please see Integrations Guide for complete details.
+====
 
 As an example, take a String attribute such as we saw before with
 Product#sku. Since there was no explicit type mapping, Hibernate looks
@@ -380,12 +303,12 @@ So that is the baseline mapping within BasicTypeRegistry for Strings.
 
 Applications can also extend (add new BasicType registrations) or
 override (replace an exiting BasicType registration) using one of the
-`MetadataBuilder#applyBasicType` methods or the
-`MetadataBuilder#applyTypes` method during bootstrap. For more details,
-see link:basic_types.html#basic-custom[Section 3.6, “Custom BasicTypes”]
+MetadataBuilder#applyBasicType methods or the MetadataBuilder#applyTypes
+method during bootstrap. For more details, see
+link:#basic-custom[section_title]
 
-embeddableExplicit BasicTypes
-~~~~~~~~~~~~~~~~~~~~~~~~
+[[basic-explicit]]
+=== Explicit BasicTypes
 
 Sometimes you want a particular attribute to be handled differently.
 Occasionally Hibernate will implicitly pick a BasicType that you do not
@@ -393,42 +316,30 @@ want (and for some reason you do not want to adjust the
 BasicTypeRegistry).
 
 In these cases you must explicitly tell Hibernate the BasicType to use,
-via the `org.hibernate.annotations.Type` annotation.
+via the org.hibernate.annotations.Type annotation.
 
-*Example 3.4. Using @org.hibernate.annotations.Type*
-
--------------------------------------------------------------
-@org.hibernate.annotations.Type( type="nstring" )
-
-private String name;
-
-
-
-@org.hibernate.annotations.Type( type="materialized_nclob" )
-
-private String description;
--------------------------------------------------------------
-
- +
+.Using `@org.hibernate.annotations.Type`
+[source,java]
+----
+include::{sourcedir}/basic/explicitType.java[]
+----
 
 This tells Hibernate to store the Strings as nationalized data. This is
 just for illustration purposes; for better ways to indicate nationalized
-character data see link:basic_types.html#basic-nationalized[Section 3.9,
-“Mapping Nationalized Character Data”]
+character data see link:#basic-nationalized[section_title]
 
 Additionally the description is to be handled as a LOB. Again, for
-better ways to indicate LOBs see link:basic_types.html#basic-lob[Section 3.8,
-“Mapping LOBs”].
+better ways to indicate LOBs see link:#basic-lob[section_title].
 
-The `org.hibernate.annotations.Type#type` attribute can name any of the
+The org.hibernate.annotations.Type#type attribute can name any of the
 following:
 
-* FQN of any `org.hibernate.type.Type` implementation
+* FQN of any org.hibernate.type.Type implementation
 * Any key registered with BasicTypeRegistry
 * The name of any known "type definitions"
 
-embeddableCustom BasicTypes
-~~~~~~~~~~~~~~~~~~~~~~
+[[basic-custom]]
+=== Custom BasicTypes
 
 Hibernate makes it relatively easy for developers to create their own
 basic type mappings type. For example, you might want to persist
@@ -442,259 +353,56 @@ assume that Fizzywig naturally stores as a VARCHAR.
 
 The first approach is to directly implement the BasicType interface.
 
-*Example 3.5. Custom BasicType implementation*
+.Custom BasicType implementation
+[source,java]
+----
+include::{sourcedir}/basic/FizzywigType1.java[]
+----
 
---------------------------------------------------------------------------------
-public class FizzywigType1 implements org.hibernate.type.BasicType {
-
-    public static final FizzywigType1 INSTANCE = new FizzywigType1();
-
-
-
-    @Override
-
-    public String[] getRegistrationKeys() {
-
-        return new String[] { Fizzywig.class.getName() };
-
-    }
-
-
-
-    @Override
-
-    public int[] sqlTypes(Mapping mapping) {
-
-        return new int[] { java.sql.Types.VARCHAR };
-
-    }
-
-
-
-    @Override
-
-    public Class getReturnedClass() {
-
-        return Money.class;
-
-    }
-
-
-
-    @Override
-
-    public Object nullSafeGet(
-
-            ResultSet rs,
-
-            String[] names,
-
-            SessionImplementor session,
-
-            Object owner) throws SQLException {
-
-        return Fizzwig.fromString(
-
-                StringType.INSTANCE.get( rs, names[0], sesson )
-
-        );
-
-    }
-
-
-
-    @Override
-
-    public void nullSafeSet(
-
-            PreparedStatement st,
-
-            Object value,
-
-            int index,
-
-            boolean[] settable,
-
-            SessionImplementor session) throws SQLException {
-
-        final String dbValue = value == null
-
-                ? null
-
-                : ( (Fizzywig) value ).asString();
-
-        StringType.INSTANCE.nullSafeSet( st, value, index, settable, session );
-
-    }
-
-
-
-    ...
-
-}
---------------------------------------------------------------------------------
-
--------------------------------------------------
-MetadataSources metadataSources = ...;
-
-
-
-metadataSources.getMetaDataBuilder()
-
-        .applyBasicType( FizzwigType1.INSTANCE )
-
-        ...
--------------------------------------------------
-
- +
+[source,java]
+----
+include::{sourcedir}/basic/FizzywigType1_reg.java[]
+----
 
 The second approach is to implement the UserType interface.
 
-*Example 3.6. Custom UserType implementation*
+.Custom UserType implementation
+[source,java]
+----
+include::{sourcedir}/basic/FizzywigType2.java[]
+----
 
----------------------------------------------------------------------------------
-public class FizzywigType2 implements org.hibernate.usertype.UserType {
-
-    public static final String KEYS = new String[] { Fizzywig.class.getName() };
-
-    public static final FizzywigType1 INSTANCE = new FizzywigType1();
-
-
-
-    @Override
-
-    public int[] sqlTypes(Mapping mapping) {
-
-        return new int[] { java.sql.Types.VARCHAR };
-
-    }
-
-
-
-    @Override
-
-    public Class getReturnedClass() {
-
-        return Fizzywig.class;
-
-    }
-
-
-
-    @Override
-
-    public Object nullSafeGet(
-
-            ResultSet rs,
-
-            String[] names,
-
-            SessionImplementor session,
-
-            Object owner) throws SQLException {
-
-        return Fizzwig.fromString(
-
-                StringType.INSTANCE.get( rs, names[0], sesson )
-
-        );
-
-    }
-
-
-
-    @Override
-
-    public void nullSafeSet(
-
-            PreparedStatement st,
-
-            Object value,
-
-            int index,
-
-            SessionImplementor session) throws SQLException {
-
-        final String dbValue = value == null
-
-                ? null
-
-                : ( (Fizzywig) value ).asString();
-
-        StringType.INSTANCE.nullSafeSet( st, value, index, session );
-
-    }
-
-
-
-    ...
-
-}
----------------------------------------------------------------------------------
-
---------------------------------------------------------------------
-MetadataSources metadataSources = ...;
-
-
-
-metadataSources.getMetaDataBuilder()
-
-        .applyBasicType( FizzwigType2.KEYS, FizzwigType2.INSTANCE )
-
-        ...
---------------------------------------------------------------------
-
- +
+[source,java]
+----
+include::{sourcedir}/basic/FizzywigType2_reg.java[]
+----
 
 For additional information on developing and registering custom types,
-see the __Hibernate Integration Guide__.
+see the Hibernate Integration Guide.
 
-embeddableMapping enums
-~~~~~~~~~~~~~~~~~~
+[[basic-enums]]
+=== Mapping enums
 
 Hibernate supports the mapping of Java enums as basic value types in a
 number of different ways.
 
-embeddable. @Enumerated
-^^^^^^^^^^^^^^^^^^
+==== @Enumerated
 
 The original JPA-compliant way to map enums was via the `@Enumerated`
 and `@MapKeyEnumerated` for map keys annotations which works on the
 principle that the enum values are stored according to one of 2
-strategies indicated by `javax.persistence.EnumType`:
+strategies indicated by javax.persistence.EnumType:
 
 * `ORDINAL` - stored according to the enum value's ordinal position
 within the enum class, as indicated by java.lang.Enum#ordinal
 * `STRING` - stored according to the enum value's name, as indicated by
 java.lang.Enum#name
 
-*Example 3.7. @Enumerated(ORDINAL) example*
-
---------------------------------
-@Entity
-
-public class Person {
-
-    ...
-
-    @Enumerated
-
-    public Gender gender;
-
-
-
-    public static enum Gender {
-
-        MALE,
-
-        FEMALE
-
-    }
-
-}
---------------------------------
-
- +
+.`@Enumerated(ORDINAL)` example
+[source,java]
+----
+include::{sourcedir}/basic/EnumeratedOrdinal.java[]
+----
 
 In the ORDINAL example, the gender column is defined as an (nullable)
 INTEGER type and would hold:
@@ -703,33 +411,11 @@ INTEGER type and would hold:
 * `0` - MALE
 * `1` - FEMALE
 
-*Example 3.8. @Enumerated(STRING) example*
-
---------------------------------
-@Entity
-
-public class Person {
-
-    ...
-
-    @Enumerated(STRING)
-
-    public Gender gender;
-
-
-
-    public static enum Gender {
-
-        MALE,
-
-        FEMALE
-
-    }
-
-}
---------------------------------
-
- +
+.`@Enumerated(STRING)` example
+[source,java]
+----
+include::{sourcedir}/basic/EnumeratedString.java[]
+----
 
 In the STRING example, the gender column is defined as an (nullable)
 VARCHAR type and would hold:
@@ -738,124 +424,17 @@ VARCHAR type and would hold:
 * `MALE` - MALE
 * `FEMALE` - FEMALE
 
-embeddable. AttributeConverter
-^^^^^^^^^^^^^^^^^^^^^^^^^
+==== AttributeConverter
 
 You can also map enums in a JPA compliant way using a JPA 2.1
 AttributeConverter. Let's revisit the Gender enum example, but instead
 we want to store the more standardized `'M'` and `'F'` codes.
 
-*Example 3.9. Enum mapping with AttributeConverter example*
-
---------------------------------------------------------------
-@Entity
-
-public class Person {
-
-    ...
-
-    @Basic
-
-    @Convert( converter=GenderConverter.class )
-
-    public Gender gender;
-
-}
-
-
-
-public enum Gender {
-
-    MALE( 'M' ),
-
-    FEMALE( 'F' );
-
-
-
-    private final char code;
-
-
-
-    private Gender(char code) {
-
-        this.code = code;
-
-    }
-
-
-
-    public char getCode() {
-
-        return code;
-
-    }
-
-
-
-    public static Gender fromCode(char code) {
-
-        if ( code == 'M' || code == 'm' ) {
-
-            return MALE;
-
-        }
-
-        if ( code == 'F' || code == 'f' ) {
-
-            return FEMALE;
-
-        }
-
-        throw ...
-
-    }
-
-}
-
-
-
-@Converter
-
-public class GenderConverter
-
-        implements AttributeConverter<Character,Gender> {
-
-
-
-    public Character convertToDatabaseColumn(Gender value) {
-
-        if ( value == null ) {
-
-            return null;
-
-        }
-
-
-
-        return value.getCode();
-
-    }
-
-
-
-    public Gender convertToEntityAttribute(Character value) {
-
-        if ( value == null ) {
-
-            return null;
-
-        }
-
-
-
-        return Gender.fromCode( value );
-
-    }
-
-}
---------------------------------------------------------------
-
- +
+.Enum mapping with AttributeConverter example
+[source,java]
+----
+include::{sourcedir}/basic/EnumAttributeConverter.java[]
+----
 
 Here, the gender column is defined as a CHAR type and would hold:
 
@@ -864,189 +443,23 @@ Here, the gender column is defined as a CHAR type and would hold:
 * `'F'` - FEMALE
 
 For additional details on using AttributeConverters, see
-link:basic_types.html#basic-jpaconvert[Section 3.12, “JPA 2.1
-AttributeConverters”].
+link:#basic-jpaconvert[section_title].
 
 Note that JPA explicitly disallows the use of an AttributeConverter with
 an attribute marked as `@Enumerated`. So if using the AttributeConverter
 approach, be sure to not mark the attribute as `@Enumerated`.
 
-embeddable. Custom type
-^^^^^^^^^^^^^^^^^^
+==== Custom type
 
 You can also map enums using a Hibernate custom type mapping. Let's
 again revisit the Gender enum example, this time using a custom Type to
 store the more standardized `'M'` and `'F'` codes.
 
-*Example 3.10. Enum mapping with custom Type example*
-
---------------------------------------------------------------------------------------------
-import org.hibernate.type.descriptor.java.CharacterTypeDescriptor;
-
-
-
-@Entity
-
-public class Person {
-
-    ...
-
-    @Basic
-
-    @Type( type = GenderType.class )
-
-    public Gender gender;
-
-}
-
-
-
-public enum Gender {
-
-    MALE( 'M' ),
-
-    FEMALE( 'F' );
-
-
-
-    private final char code;
-
-
-
-    private Gender(char code) {
-
-        this.code = code;
-
-    }
-
-
-
-    public char getCode() {
-
-        return code;
-
-    }
-
-
-
-    public static Gender fromCode(char code) {
-
-        if ( code == 'M' || code == 'm' ) {
-
-            return MALE;
-
-        }
-
-        if ( code == 'F' || code == 'f' ) {
-
-            return FEMALE;
-
-        }
-
-        throw ...
-
-    }
-
-}
-
-
-
-@Converter
-
-public class GenderType
-
-        extends AbstractSingleColumnStandardBasicType<Gender> {
-
-
-
-    public static final GenderType INSTANCE = new GenderType();
-
-
-
-    private GenderType() {
-
-        super(
-
-                CharTypeDescriptor.INSTANCE,
-
-                GenderJavaTypeDescriptor.INSTANCE
-
-        );
-
-    }
-
-
-
-    public String getName() {
-
-        return "gender";
-
-    }
-
-
-
-    @Override
-
-    protected boolean registerUnderJavaType() {
-
-        return true;
-
-    }
-
-}
-
-
-
-public static class GenderJavaTypeDescriptor
-
-        extends AbstractTypeDescriptor<Gender> {
-
-    public static final GenderJavaTypeDescriptor INSTANCE = new GenderJavaTypeDescriptor();
-
-
-
-    public String toString(Gender value) {
-
-        return value == null ? null : value.name();
-
-    }
-
-
-
-    public Gender fromString(String string) {
-
-        return string == null ? null : Gender.valueOf( string );
-
-    }
-
-
-
-    public <X> X unwrap(Gender value, Class<X> type, WrapperOptions options) {
-
-        return CharacterTypeDescriptor.INSTANCE.unwrap(
-
-                value == null ? null : value.getCode(),
-
-                type,
-
-                options
-
-        );
-
-    }
-
-
-
-    public <X> Gender wrap(X value, WrapperOptions options) {
-
-        return CharacterTypeDescriptor.INSTANCE.wrap( value, options );
-
-    }
-
-}
---------------------------------------------------------------------------------------------
-
- +
+.Enum mapping with custom Type example
+[source,java]
+----
+include::{sourcedir}/basic/EnumCustomType.java[]
+----
 
 Again, the gender column is defined as a CHAR type and would hold:
 
@@ -1055,15 +468,13 @@ Again, the gender column is defined as a CHAR type and would hold:
 * `'F'` - FEMALE
 
 For additional details on using custom types, see
-link:basic_types.html#basic-custom[Section 3.6, “Custom BasicTypes”].
+link:#basic-custom[section_title].
 
-embeddableMapping LOBs
-~~~~~~~~~~~~~~~~~
+[[basic-lob]]
+=== Mapping LOBs
 
 Mapping LOBs (database Large OBjects) come in 2 forms, those using the
-JDBC locator types and those _materializing_ the LOB data.
-
-*Locator versus materialized*
+JDBC locator types and those materializing the LOB data.
 
 JDBC LOB locators exist to allow efficient access to the LOB data. They
 allow the JDBC driver to stream parts of the LOB data as needed,
@@ -1083,11 +494,11 @@ memory as needed.
 
 The JDBC LOB locator types include:
 
-* `java.sql.Blob`
+* java.sql.Blob
 +
-`java.sql.Clob`
+java.sql.Clob
 +
-`java.sql.NClob`
+java.sql.NClob
 
 Mapping materialized forms of these LOB values would use more familiar
 Java types such as String, char[], byte[], etc. The trade off for "more
@@ -1095,176 +506,75 @@ familiar" is usually performance.
 
 For a first look lets assume we have a CLOB column that we would like to
 map (NCLOB character LOB data will be covered in
-link:basic_types.html#basic-nationalized[Section 3.9, “Mapping Nationalized
-Character Data”]).
+link:#basic-nationalized[section_title]).
 
-*Example 3.11. CLOB - SQL*
-
--------------------------------
-create table product(
-
-    ...
-
-    description CLOB not null,
-
-    ...
-
-)
--------------------------------
-
- +
+.CLOB - SQL
+[source,sql]
+----
+include::{sourcedir}/basic/Clob.sql[]
+----
 
 Let's first map this using the JDBC locator.
 
-*Example 3.12. CLOB - locator mapping*
-
------------------------------
-@Entity
-
-public class Product {
-
-    ...
-
-    @Lob
-
-    @Basic
-
-    public Clob description;
-
-    ...
-
-}
------------------------------
-
- +
+.CLOB - locator mapping
+[source,java]
+----
+include::{sourcedir}/basic/ClobLocator.java[]
+----
 
 We could also map a materialized form.
 
-*Example 3.13. CLOB - materialized mapping*
+.CLOB - materialized mapping
+[source,java]
+----
+include::{sourcedir}/basic/ClobMaterialized.java[]
+----
 
--------------------------------
-@Entity
-
-public class Product {
-
-    ...
-
-    @Lob
-
-    @Basic
-
-    public String description;
-
-    ...
-
-}
--------------------------------
-
- +
-
-Note
-~~~~
-
+[NOTE]
+====
 How JDBC deals with LOB data varies from driver to driver. Hibernate
 tries to handle all these variances for you. However some drivers do not
 allow Hibernate to always do that in an automatic fashion (looking
 directly at you PostgreSQL JDBC drivers). In such cases you may have to
 do some extra to get LOBs working. Such discussions are beyond the scope
 of this guide however.
+====
 
 We might even want the materialized data as a char array (for some crazy
 reason).
 
-*Example 3.14. CLOB - materialized char[] mapping*
-
--------------------------------
-@Entity
-
-public class Product {
-
-    ...
-
-    @Lob
-
-    @Basic
-
-    public char[] description;
-
-    ...
-
-}
--------------------------------
-
- +
+.CLOB - materialized char[] mapping
+[source,java]
+----
+include::{sourcedir}/basic/ClobMaterializedCharArray.java[]
+----
 
 We'd map BLOB data in a similar fashion.
 
-*Example 3.15. BLOB - SQL*
-
--------------------------------
-create table step(
-
-    ...
-
-    instruction BLOB not null,
-
-    ...
-
-)
--------------------------------
-
- +
+.BLOB - SQL
+[source,sql]
+----
+include::{sourcedir}/basic/Blob.sql[]
+----
 
 Let's first map this using the JDBC locator.
 
-*Example 3.16. BLOB - locator mapping*
-
-------------------------------
-@Entity
-
-public class Step {
-
-    ...
-
-    @Lob
-
-    @Basic
-
-    public Blob instructions;
-
-    ...
-
-}
-------------------------------
-
- +
+.BLOB - locator mapping
+[source,java]
+----
+include::{sourcedir}/basic/BlobLocator.java[]
+----
 
 We could also map a materialized BLOB form.
 
-*Example 3.17. BLOB - materialized mapping*
+.BLOB - materialized mapping
+[source,java]
+----
+include::{sourcedir}/basic/BlobMaterialized.java[]
+----
 
---------------------------------
-@Entity
-
-public class Step {
-
-    ...
-
-    @Lob
-
-    @Basic
-
-    public byte[] instructions;
-
-    ...
-
-}
---------------------------------
-
- +
-
-embeddableMapping Nationalized Character Data
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[[basic-nationalized]]
+=== Mapping Nationalized Character Data
 
 JDBC 4 added the ability to explicitly handle nationalized character
 data. To this end it added specific nationalized character data types.
@@ -1280,102 +590,45 @@ data. To this end it added specific nationalized character data types.
 To map a specific attribute to a nationalized variant datatype,
 Hibernate defines the `@Nationalized` annotation.
 
-*Example 3.18. NVARCHAR mapping*
+.NVARCHAR mapping
+[source,java]
+----
+include::{sourcedir}/basic/NVARCHAR.java[]
+----
 
--------------------------------
-@Entity
+.NCLOB (locator) mapping
+[source,java]
+----
+include::{sourcedir}/basic/NCLOB_locator.java[]
+----
 
-public class Product {
-
-    ...
-
-    @Basic
-
-    @Nationalized
-
-    public String description;
-
-    ...
-
-}
--------------------------------
-
- +
-
-*Example 3.19. NCLOB (locator) mapping*
-
---------------------------------------
-@Entity
-
-public class Product {
-
-    ...
-
-    @Lob
-
-    @Basic
-
-    @Nationalized
-
-    public NClob description;
-
-    // Clob also works, because NClob
-
-    // extends Clob.  The db type is
-
-    // still NCLOB either way and
-
-    // handled as such
-
-}
---------------------------------------
-
- +
-
-*Example 3.20. NCLOB (materialized) mapping*
-
--------------------------------
-@Entity
-
-public class Product {
-
-    ...
-
-    @Lob
-
-    @Basic
-
-    @Nationalized
-
-    public String description;
-
-}
--------------------------------
-
- +
+.NCLOB (materialized) mapping
+[source,java]
+----
+include::{sourcedir}/basic/NCLOB_materialized.java[]
+----
 
 If you application and database are entirely nationalized you may
 instead want to enable nationalized character data as the default. You
 can do this via the `hibernate.use_nationalized_character_data` setting
 or by calling
-`MetadataBuilder#enableGlobalNationalizedCharacterDataSupport` during
+MetadataBuilder#enableGlobalNationalizedCharacterDataSupport during
 bootstrap.
 
-embeddableMapping UUID Values
-~~~~~~~~~~~~~~~~~~~~~~~~~
+[[basic-uuid]]
+=== Mapping UUID Values
 
 Hibernate also allows you to map UUID values, again in a number of ways.
 
-Note
-~~~~
-
+[NOTE]
+====
 The default UUID mapping is as binary because it represents more
 efficient storage. However many applications prefer the readability of
 character storage. To switch the default mapping, simply call
 `MetadataBuilder.applyBasicType( UUIDCharType.INSTANCE, UUID.class.getName() )`
+====
 
-embeddable. UUID as binary
-^^^^^^^^^^^^^^^^^^^^^^
+==== UUID as binary
 
 As mentioned, the default mapping for UUID attributes. Maps the UUID to
 a byte[] using java.util.UUID#getMostSignificantBits and
@@ -1384,40 +637,36 @@ java.util.UUID#getLeastSignificantBits and stores that as BINARY data.
 Chosen as the default simply because it is generally more efficient from
 storage perspective.
 
-embeddable. UUID as (var)char
-^^^^^^^^^^^^^^^^^^^^^^^^^
+==== UUID as (var)char
 
 Maps the UUID to a String using java.util.UUID#toString and
 java.util.UUID#fromString and stores that as CHAR or VARCHAR data.
 
-embeddable. PostgeSQL-specific UUID
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+==== PostgeSQL-specific UUID
 
-Important
-~~~~~~~~~
-
+[IMPORTANT]
+====
 When using one of the PostgreSQL Dialects, this becomes the default UUID
 mapping
+====
 
 Maps the UUID using PostgreSQL's specific UUID data type. The PostgreSQL
 JDBC driver choses to map its UUID type to the `OTHER` code. Note that
 this can cause difficulty as the driver chooses to map many different
 data types to OTHER.
 
-embeddable. UUID as identifier
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+==== UUID as identifier
 
 Hibernate supports using UUID values as identifiers. They can even be
 generated! For details see the discussion of generators in
-link:identifiers.html#identifiers-generators[Section 6.3, “Generated identifier
-values”]
+link:#identifiers-generators[???]
 
-embeddableMapping Date/Time Values
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[[basic-datetime]]
+=== Mapping Date/Time Values
 
 blah blah blah
 
-embeddableJPA 2.1 AttributeConverters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[[basic-jpaconvert]]
+=== JPA 2.1 AttributeConverters
 
 blah blah blah

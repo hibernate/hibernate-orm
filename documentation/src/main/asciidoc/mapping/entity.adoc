@@ -1,6 +1,5 @@
 [[entity]]
 == Entity
-
 :sourcedir: extras
 
 *Abstract*
@@ -9,8 +8,8 @@ Discuss mapping entities in the application domain model.
 
 *Related Topics*
 
-* link:data_categorizations.html[Categorization]
-* link:locking.html[Locking]
+* link:data_categorizations.adoc[Categorization]
+* link:locking.adoc[Locking]
 
 [[entity-pojo]]
 === POJO Models
@@ -159,7 +158,7 @@ the `javax.persistence.Table` annotation.
 include::{sourcedir}/entity/SimpleEntityWithTable.java[]
 ----
 
-For details on mapping the identifier, see link:identifiers.html[Chapter 6,_Identifiers_]
+For details on mapping the identifier, see link:identifiers.adoc[Chapter 6,_Identifiers_]
 
 [[entity-pojo-optlock]]
 === Mapping optimistic locking
@@ -219,3 +218,5 @@ blah blah blah
 * dynamic models (hbm.xml)
 * Map mode
 * proxy solutions (hibernate-core/src/test/java/org/hibernate/test/dynamicentity/tuplizer2)
+
+

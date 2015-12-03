@@ -1,10 +1,6 @@
 [[identifiers]]
 == Identifiers
-
-*Abstract*
-
-This chapter discusses the characteristics of entity identifier
-attributes and modelling them.
+:sourcedir: extras
 
 Identifiers model the primary key of an entity. They are used to
 uniquely identify each specific entity.
@@ -21,16 +17,16 @@ defines the behavior of changing the value of the identifier attribute
 to be undefined; Hibernate simply does not support that. In cases where
 the values for the PK you have chosen will be updated, Hibernate
 recommends mapping the mutable value as a natural id, and use a
-surrogate id for the PK. See link:natural_id.html[_Natural Ids_].
+surrogate id for the PK. See link:natural_id.adoc#naturalid[Natural Ids].
 
-Note
-~~~~
-
+[NOTE]
+====
 Technically the identifier does not have to map to the column(s)
 physically defined as the entity table's primary key. They just need to
 map to column(s) that uniquely identify each row. However this
 documentation will continue to use the terms identifier and primary key
 interchangeably.
+====
 
 Every entity must define an identifier. For entity inheritance
 hierarchies, the identifier must be defined just on the entity that is
@@ -39,11 +35,11 @@ the root of the hierarchy.
 An identifier might be simple (single value) or composite (multiple
 values).
 
-embeddableSimple identifiers
-~~~~~~~~~~~~~~~~~~~~~~~
+[[identifiers-simple]]
+=== Simple identifiers
 
 Simple identifiers map to a single basic attribute, and are denoted
-using the `javax.persistence.Id` annotation.
+using the javax.persistence.Id annotation.
 
 According to JPA only the following types should be used as identifier
 attribute types:
@@ -64,47 +60,21 @@ examples above. The expectation for assigned identifier values is that
 the application assigns (sets them on the entity attribute) prior to
 calling save/persist.
 
-*Example 6.1. Simple assigned identifier*
-
-------------------------
-@Entity
-
-public class MyEntity {
-
-    @Id
-
-    public Integer id;
-
-    ...
-
-}
-------------------------
-
- +
+.Simple assigned identifier
+[source,java]
+----
+include::{sourcedir}/id/SimpleAssigned.java[]
+----
 
 Values for simple identifiers can be generated. To denote that an
 identifier attribute is generated, it is annotated with
-`javax.persistence.GeneratedValue`
+javax.persistence.GeneratedValue
 
-*Example 6.2. Simple generated identifier*
-
-------------------------
-@Entity
-
-public class MyEntity {
-
-    @Id
-
-    @GeneratedValue
-
-    public Integer id;
-
-    ...
-
-}
-------------------------
-
- +
+.Simple generated identifier
+[source,java]
+----
+include::{sourcedir}/id/SimpleGenerated.java[]
+----
 
 Additionally to the type restriction list above, JPA says that if using
 generated identifier values (see below) only integer types (short, int,
@@ -114,11 +84,10 @@ The expectation for generated identifier values is that Hibernate will
 generate the value when the save/persist occurs.
 
 Identifier value generations strategies are discussed in detail in
-link:identifiers.html#identifiers-generators[Section 6.3, “Generated identifier
-values”].
+link:#identifiers-generators[Generated identifier values].
 
-embeddableComposite identifiers
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+[[identifiers-composite]]
+=== Composite identifiers
 
 Composite identifiers correspond to one or more persistent attributes.
 Here are the rules governing composite identifiers, as defined by the
@@ -126,12 +95,10 @@ JPA specification.
 
 * The composite identifier must be represented by a "primary key class".
 The primary key class may be defined using the
-`javax.persistence.EmbeddedId` annotation (see
-link:identifiers.html#identifiers-composite-aggregated[Section 6.2.1,
-“Composite identifiers - aggregated (EmbeddedId)”]) or defined using the
-`javax.persistence.IdClass` annotation (see
-link:identifiers.html#identifiers-composite-nonaggregated[Section 6.2.2,
-“Composite identifiers - non-aggregated (IdClass)”]).
+javax.persistence.EmbeddedId annotation (see
+link:#identifiers-composite-aggregated[Composite identifiers - aggregated (EmbeddedId)]) or defined using
+the javax.persistence.IdClass annotation (see
+link:#identifiers-composite-nonaggregated[Composite identifiers - non-aggregated (IdClass)]).
 * The primary key class must be public and must have a public no-arg
 constructor.
 * The primary key class must be serializable.
@@ -139,330 +106,156 @@ constructor.
 consistent with equality for the underlying database types to which the
 key is mapped.
 
-Note
-~~~~
-
+[NOTE]
+====
 The restriction that a composite identifier has to be represented by a
 "primary key class" is a JPA restriction. Hibernate does allow composite
 identifiers to be defined without a "primary key class", but use of that
 modeling technique is deprecated and not discussed here.
+====
 
 The attributes making up the composition can be either basic, composite,
 ManyToOne. Note especially that collections and one-to-ones are never
 appropriate.
 
-embeddable. Composite identifiers - aggregated (EmbeddedId)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[[identifiers-composite-aggregated]]
+==== Composite identifiers - aggregated (EmbeddedId)
 
 Modelling a composite identifier using an EmbeddedId simply means
 defining an Embeddable to be a composition for the the one or more
 attributes making up the identifier and then exposing an attribute of
 that Embeddable type on the entity.
 
-*Example 6.3. Basic EmbeddedId*
-
-------------------------------------------------------
-@Entity
-
-public class Login {
-
-    @Embeddable
-
-    public static class PK implements Serializable  {
-
-        private String system;
-
-        private String username;
-
-        ...
-
-    }
-
-
-
-    @EmbeddedId
-
-    private PK pk;
-
-    ...
-
-}
-------------------------------------------------------
-
- +
+.Basic EmbeddedId
+[source,java]
+----
+include::{sourcedir}/id/EmbeddedId1.java[]
+----
 
 As mentioned before, EmbeddedIds can even contain ManyToOne attributes.
 
-*Example 6.4. EmbeddedId with ManyToOne*
+.EmbeddedId with ManyToOne
+[source,java]
+----
+include::{sourcedir}/id/EmbeddedId2.java[]
+----
 
------------------------------------------------------
-@Entity
-
-public class Login {
-
-    @Embeddable
-
-    public static class PK implements Serializable {
-
-        @ManyToOne
-
-        private System system;
-
-        private String username;
-
-        ...
-
-    }
-
-
-
-    @EmbeddedId
-
-    private PK pk;
-
-    ...
-
-}
------------------------------------------------------
-
- +
-
-Note
-~~~~
-
+[NOTE]
+====
 Hibernate supports directly modeling the ManyToOne in the PK class,
 whether EmbeddedId or IdClass. However that is not portably supported by
 the JPA specification. In JPA terms one would use "derived identifiers";
-for details, see link:identifiers.html#identifiers-derived[Section 6.4,
-“Derived Identifiers”].
+for details, see link:#identifiers-derived[Derived Identifiers].
+====
 
-embeddable. Composite identifiers - non-aggregated (IdClass)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[[identifiers-composite-nonaggregated]]
+==== Composite identifiers - non-aggregated (IdClass)
 
 Modelling a composite identifier using an IdClass differs from using an
 EmbeddedId in that the entity defines each individual attribute making
 up the composition. The IdClass simply acts as a "shadow".
 
-*Example 6.5. Basic IdClass*
-
-------------------------------------------------------
-@Entity
-
-@IdClass(PK.class)
-
-public class Login {
-
-    public static class PK implements Serializable  {
-
-        private String system;
-
-        private String username;
-
-        ...
-
-    }
-
-
-
-    @Id
-
-    private String system;
-
-    @Id
-
-    private String username;
-
-    ...
-
-}
-------------------------------------------------------
-
- +
+.Basic IdClass
+[source,java]
+----
+include::{sourcedir}/id/IdClass1.java[]
+----
 
 Non-aggregated composite identifiers can also contain ManyToOne
 attributes as we saw with aggregated ones (still non-portably)
 
-*Example 6.6. IdClass with ManyToOne*
-
------------------------------------------------------
-@Entity
-
-@IdClass(PK.class)
-
-public class Login {
-
-    public static class PK implements Serializable {
-
-        private System system;
-
-        private String username;
-
-        ...
-
-    }
-
-
-
-    @Id
-
-    @ManyToOne
-
-    private System system;
-
-    @Id
-
-    private String username;
-
-
-
-    ...
-
-}
------------------------------------------------------
-
- +
+.IdClass with ManyToOne
+[source,java]
+----
+include::{sourcedir}/id/IdClass2.java[]
+----
 
 With non-aggregated composite identifiers, Hibernate also supports
 "partial" generation of the composite values.
 
-*Example 6.7. IdClass with partial generation*
+.IdClass with partial generation
+[source,java]
+----
+include::{sourcedir}/id/IdClass3.java[]
+----
 
------------------------------------------------------
-@Entity
-
-@IdClass(PK.class)
-
-public class LogFile {
-
-    public static class PK implements Serializable {
-
-        private String name;
-
-        private LocalDate date;
-
-        private Integer uniqueStamp;
-
-        ...
-
-    }
-
-
-
-    @Id
-
-    private String name;
-
-    @Id
-
-    private LocalDate date;
-
-    @Id
-
-    @GeneratedValue
-
-    private Integer uniqueStamp;
-
-    ...
-
-}
-
-
-
------------------------------------------------------
-
- +
-
-Note
-~~~~
-
+[NOTE]
+====
 This feature exists because of a highly questionable interpretation of
 the JPA specification made by the SpecJ committee. Hibernate does not
 feel that JPA defines support for this, but added the feature simply to
 be usable in SpecJ benchmarks. Use of this feature may or may not be
 portable from a JPA perspective.
+====
 
-embeddableGenerated identifier values
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[[identifiers-generators]]
+=== Generated identifier values
 
-Note
-~~~~
-
+[NOTE]
+====
 For discussion of generated values for non-identifier attributes, see
-link:[???]
+link:#generated[???]
+====
 
 Hibernate supports identifier value generation across a number of
 different types. Remember that JPA portably defines identifier value
 generation just for integer types.
 
 Identifier value generation is indicates using the
-`javax.persistence.GeneratedValue` annotation. The most important piece
-of information here is the specified `javax.persistence.GenerationType`
-which indicates how values will be generated.
+javax.persistence.GeneratedValue annotation. The most important piece of
+information here is the specified javax.persistence.GenerationType which
+indicates how values will be generated.
 
-Note
-~~~~
-
+[NOTE]
+====
 The discussions below assume that the application is using Hibernate's
 "new generator mappings" as indicated by the
-`hibernate.id.new_generator_mappings` setting or
-`MetadataBuilder.enableNewIdentifierGeneratorSupport` method during
+`hibernate.id.new====generator====mappings` setting or
+MetadataBuilder.enableNewIdentifierGeneratorSupport method during
 bootstrap. This is set to true by default, however if applications set
 this to false the resolutions discussed here will be very different. The
 rest of the discussion here assumes this setting is enabled (true).
-
-*GenerationTypes*
+====
 
 * `AUTO` (the default) - Indicates that the persistence provider
 (Hibernate) should chose an appropriate generation strategy. See
-link:identifiers.html#identifiers-generators-auto[Section 6.3.1, “Interpreting
-AUTO”].
+link:#identifiers-generators-auto[Interpreting AUTO].
 * `IDENTITY` - Indicates that database IDENTITY columns will be used for
 primary key value generation. See
-link:identifiers.html#identifiers-generators-identity[Section 6.3.3, “Using
-IDENTITY columns”].
+link:#identifiers-generators-identity[Using IDENTITY columns].
 * `SEQUENCE` - Indicates that database sequence should be used for
 obtaining primary key values. See
-link:identifiers.html#identifiers-generators-sequence[Section 6.3.2, “Using
-sequences”].
+link:#identifiers-generators-sequence[Using sequences].
 * `TABLE` - Indicates that a database table should be used for obtaining
 primary key values. See
-link:identifiers.html#identifiers-generators-table[Section 6.3.4, “Using
-identifier table”].
+link:#identifiers-generators-table[Using identifier table].
 
-embeddable. Interpreting AUTO
-^^^^^^^^^^^^^^^^^^^^^^^^
+[[identifiers-generators-auto]]
+==== Interpreting AUTO
 
 How a persistence provider interprets the AUTO generation type is left
 up to the provider. Hibernate interprets it in the following order:
 
 * If the given name matches the name for a
-`javax.persistence.SequenceGenerator` annotation ->
-link:identifiers.html#identifiers-generators-sequence[Section 6.3.2, “Using
-sequences”].
+javax.persistence.SequenceGenerator annotation ->
+link:#identifiers-generators-sequence[Using sequences].
 * If the given name matches the name for a
-`javax.persistence.TableGenerator` annotation ->
-link:identifiers.html#identifiers-generators-table[Section 6.3.4, “Using
-identifier table”].
+javax.persistence.TableGenerator annotation ->
+link:#identifiers-generators-table[Using identifier table].
 * If the given name matches the name for a
-`org.hibernate.annotations.GenericGenerator` annotation ->
-link:identifiers.html#identifiers-generators-generic[Section 6.3.6, “Using
-@GenericGenerator”].
+org.hibernate.annotations.GenericGenerator annotation ->
+link:#identifiers-generators-generic[Using @GenericGenerator].
 
 The fallback is to consult with the pluggable
-`org.hibernate.boot.model.IdGeneratorStrategyInterpreter` contract,
-which is covered in detail in the __Hibernate Integrations Guide__. The
-default behavior is to look at the java type of the identifier
-attribute:
+org.hibernate.boot.model.IdGeneratorStrategyInterpreter contract, which
+is covered in detail in the Hibernate Integrations Guide. The default
+behavior is to look at the java type of the identifier attribute:
 
-* If it is UUID ->
-link:identifiers.html#identifiers-generators-uuid[Section 6.3.5, “Using UUID
-generation”]
-* Otherwise ->
-link:identifiers.html#identifiers-generators-sequence[Section 6.3.2, “Using
-sequences”]
+* If it is UUID -> link:#identifiers-generators-uuid[Using UUID generation]
+* Otherwise -> link:#identifiers-generators-sequence[Using sequences]
 
-embeddable. Using sequences
-^^^^^^^^^^^^^^^^^^^^^^
+[[identifiers-generators-sequence]]
+==== Using sequences
 
 For implementing database sequence-based identifier value generation
 Hibernate makes use of its
@@ -475,81 +268,37 @@ generation behavior (versus say choosing between sequence and IDENTITY).
 This backing storage is completely transparent to the user.
 
 The preferred (and portable) way to configure this generator is using
-the JPA-defined `javax.persistence.SequenceGenerator` annotation.
+the JPA-defined javax.persistence.SequenceGenerator annotation.
 
 The simplest form is to simply request sequence generation; Hibernate
-will use a single, implicitly-named sequence (`hibernate_sequence`) for
+will use a single, implicitly-named sequence (`hibernate====sequence`) for
 all such unnamed definitions.
 
-*Example 6.8. Unnamed sequence*
-
------------------------------------------
-@Entity
-
-public class MyEntity {
-
-    @Id
-
-    @GeneratedValue(generation=SEQUENCE)
-
-    public Integer id;
-
-    ...
-
-}
------------------------------------------
-
- +
+.Unnamed sequence
+[source,java]
+----
+include::{sourcedir}/id/UnnamedSequence.java[]
+----
 
 Or a specifically named sequence can be requested
 
-*Example 6.9. Named sequence*
+.Named sequence
+[source,java]
+----
+include::{sourcedir}/id/NamedSequence.java[]
+----
 
--------------------------------------------------------------
-@Entity
-
-public class MyEntity {
-
-    @Id
-
-    @GeneratedValue(generation=SEQUENCE, name="my_sequence")
-
-    public Integer id;
-
-    ...
-
-}
--------------------------------------------------------------
-
- +
-
-Use `javax.persistence.SequenceGenerator` to specify additional
+Use javax.persistence.SequenceGenerator to specify additional
 configuration.
 
-*Example 6.10. Configured sequence*
+.Configured sequence
+[source,java]
+----
+include::{sourcedir}/id/ConfiguredSequence.java[]
+----
 
-----------------------------------------------------------------------------------------
-@Entity
-
-public class MyEntity {
-
-    @Id
-
-    @GeneratedValue(generation=SEQUENCE, name="my_sequence")
-
-    @SequenceGenerator( name = "my_sequence", schema = "globals", allocationSize = 30 )
-
-    public Integer id;
-
-    ...
-
-}
-----------------------------------------------------------------------------------------
-
- +
-
-embeddable. Using IDENTITY columns
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[[identifiers-generators-identity]]
+==== Using IDENTITY columns
 
 For implementing identifier value generation based on IDENTITY columns,
 Hibernate makes use of its `org.hibernate.id.IdentityGenerator` id
@@ -558,13 +307,13 @@ table. IdentityGenerator understands 3 different ways that the
 INSERT-generated value might be retrieved:
 
 * If Hibernate believes the JDBC environment supports
-`java.sql.Statement#getGeneratedKeys`, then that approach will be used
-for extracting the IDENTITY generated keys.
-* Otherwise, if `Dialect#supportsInsertSelectIdentity` reports true,
+java.sql.Statement#getGeneratedKeys, then that approach will be used for
+extracting the IDENTITY generated keys.
+* Otherwise, if Dialect#supportsInsertSelectIdentity reports true,
 Hibernate will use the Dialect specific INSERT+SELECT statement syntax.
 * Otherwise, Hibernate will expect that the database supports some form
 of asking for the most recently inserted IDENTITY value via a separate
-SQL command as indicated by `Dialect#getIdentitySelectString`
+SQL command as indicated by Dialect#getIdentitySelectString
 
 It is important to realize that this imposes a runtime behavior where
 the entity row *must* be physically inserted prior to the identifier
@@ -580,60 +329,38 @@ not usually creating many new instances of a given type of entity that
 uses IDENTITY generation, then this is not an important impact since
 batching would not have been helpful anyway.
 
-embeddable. Using identifier table
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[[identifiers-generators-table]]
+==== Using identifier table
 
 Hibernate achieves table-based identifier generation based on its
-`org.hibernate.id.enhanced.TableGenerator` id generator which defines a
+org.hibernate.id.enhanced.TableGenerator id generator which defines a
 table capable of holding multiple named value segments for any number of
 entities.
 
-*Example 6.11. Table generator table structure*
-
-------------------------------------
-create table hibernate_sequences(
-
-    sequence_name VARCHAR NOT NULL,
-
-    next_val INTEGER NOT NULL
-
-)
-------------------------------------
-
- +
+.Table generator table structure
+[source,sql]
+----
+include::{sourcedir}/id/TableGenerator.sql[]
+----
 
 The basic idea is that a given table-generator table
-(`hibernate_sequences` for example) can hold multiple segments of
+(`hibernate====sequences` for example) can hold multiple segments of
 identifier generation values.
 
-*Example 6.12. Unnamed table generator*
-
---------------------------------------
-@Entity
-
-public class MyEntity {
-
-    @Id
-
-    @GeneratedValue(generation=TABLE)
-
-    public Integer id;
-
-    ...
-
-}
---------------------------------------
-
- +
+.Unnamed table generator
+[source,java]
+----
+include::{sourcedir}/id/UnnamedTable.java[]
+----
 
 If no table name is given Hibernate assumes an implicit name of
-`hibernate_sequences`. Additionally, because no
-`javax.persistence.TableGenerator#pkColumnValue` is specified, Hibernate
-will use the default segment (`sequence_name='default'`) from the
-hibernate_sequences table.
+`hibernate====sequences`. Additionally, because no
+javax.persistence.TableGenerator#pkColumnValue is specified, Hibernate
+will use the default segment (`sequence====name='default'`) from the
+hibernate====sequences table.
 
-embeddable. Using UUID generation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[[identifiers-generators-uuid]]
+==== Using UUID generation
 
 As mentioned above, Hibernate supports UUID identifier value generation.
 This is supported through its `org.hibernate.id.UUIDGenerator` id
@@ -641,85 +368,37 @@ generator.
 
 UUIDGenerator supports pluggable strategies for exactly how the UUID is
 generated. These strategies are defined by the
-`org.hibernate.id.UUIDGenerationStrategy` contract. The default strategy
+org.hibernate.id.UUIDGenerationStrategy contract. The default strategy
 is a version 4 (random) strategy according to IETF RFC 4122. Hibernate
 does ship with an alternative strategy which is a RFC 4122 version 1
 (time-based) strategy (using ip address rather than mac address).
 
-*Example 6.13. Implicitly using the random UUID strategy*
-
-------------------------
-@Entity
-
-public class MyEntity {
-
-    @Id
-
-    @GeneratedValue
-
-    public UUID id;
-
-    ...
-
-}
-------------------------
-
- +
+.Implicitly using the random UUID strategy
+[source,java]
+----
+include::{sourcedir}/id/UUIDRandom.java[]
+----
 
 To specify an alternative generation strategy, we'd have to define some
 configuration via @GenericGenerator. Here we choose the RFC 4122 version
 1 compliant strategy named
 `org.hibernate.id.uuid.CustomVersionOneStrategy`
 
-*Example 6.14. Implicitly using the random UUID strategy*
+.Implicitly using the random UUID strategy
+[source,java]
+----
+include::{sourcedir}/id/UUIDCustomVersionOneStrategy.java[]
+----
 
------------------------------------------------------------------------------------
-@Entity
-
-public class MyEntity {
-
-    @Id
-
-    @GeneratedValue( generator="uuid" )
-
-    @GenericGenerator(
-
-            name="uuid",
-
-            strategy="org.hibernate.id.UUIDGenerator",
-
-            parameters = {
-
-                    @Parameter(
-
-                            name="uuid_gen_strategy_class",
-
-                            value="org.hibernate.id.uuid.CustomVersionOneStrategy"
-
-                    )
-
-            }
-
-    )
-
-    public UUID id;
-
-    ...
-
-}
------------------------------------------------------------------------------------
-
- +
-
-embeddable. Using @GenericGenerator
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[[identifiers-generators-generic]]
+==== Using @GenericGenerator
 
 @GenericGenerator allows integration of any Hibernate
-`org.hibernate.id.IdentifierGenerator` implementation, including any of
+org.hibernate.id.IdentifierGenerator implementation, including any of
 the specific ones discussed here and any custom ones.
 
-embeddable. Optimizers
-^^^^^^^^^^^^^^^^^
+[[identifiers-generators-optimizer]]
+==== Optimizers
 
 Most of the Hibernate generators that separately obtain identifier
 values from database structures support the use of pluggable optimizers.
@@ -741,7 +420,7 @@ pooled-lo::
   In sequence-terms this means that the sequence is defined with a
   greater-that-1 increment size. For example, consider a brand new
   sequence defined as
-  `create sequence my_sequence start with 1 increment by 20`. This
+  `create sequence my====sequence start with 1 increment by 20`. This
   sequence essentially defines a "pool" of 20 usable id values each and
   every time we ask it for its next-value. The pooled-lo optimizer
   interprets the next-value as the low end of that pool. So when we
@@ -753,16 +432,16 @@ pooled-lo::
 pooled::
   Just like pooled-lo, except that here the value from the
   table/sequence is interpreted as the high end of the value pool.
-hilo, legacy-hilo::
+hilo; legacy-hilo::
   Define a custom algorithm for generating pools of values based on a
   single value from a table or sequence. These optimizers are not
   recommended for use. They are maintained (and mentioned) here simply
   for use by legacy applications that used these strategies previously.
 
 Applications can also implement and use their own optimizer strategies,
-as defined by the `org.hibernate.id.enhanced.Optimizer` contract.
+as defined by the org.hibernate.id.enhanced.Optimizer contract.
 
-embeddableDerived Identifiers
-~~~~~~~~~~~~~~~~~~~~~~~~
+[[identifiers-derived]]
+=== Derived Identifiers
 
 Ugh...

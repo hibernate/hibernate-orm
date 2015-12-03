@@ -396,7 +396,7 @@ public String getLastname() \{ return lastname; } public void
 setLastname(String lastname) \{ this.lastname = lastname; } }
 </programlisting>
 
-_________________________________________________________________________________________________________________________________________________
+====
 *Tip*
 
 If you retrieve a single entity using the default mapping, you can
@@ -405,7 +405,7 @@ specify the `resultClass` attribute instead of `resultSetMapping`:
 @NamedNativeQuery(name="implicitSample", query="select * from
 SpaceShip", resultClass=SpaceShip.class) public class SpaceShip
 \{</programlisting>
-_________________________________________________________________________________________________________________________________________________
+====
 
 In some of your native queries, you'll have to return scalar values, for
 example when building report queries. You can map them in the
@@ -578,7 +578,7 @@ sql="UPDATE CASIMIR_PARTICULE SET chaos_fk = null where id = ?") private
 Set<CasimirParticle> particles = new
 HashSet<CasimirParticle>();</programlisting>
 
-_______________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+====
 *Tip*
 
 The parameter order is important and is defined by the order Hibernate
@@ -588,7 +588,7 @@ enabled Hibernate will print out the static SQL that is used to create,
 update, delete etc. entities. (To see the expected sequence, remember to
 not include your custom SQL through annotations or mapping files as that
 will override the Hibernate generated static sql)
-_______________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+====
 
 Overriding SQL statements for secondary tables is also possible using
 `@org.hibernate.annotations.Table` and either (or all) attributes
@@ -606,13 +606,13 @@ The previous example also shows that you can give a comment to a given
 table (primary or secondary): This comment will be used for DDL
 generation.
 
-________________________________________________________________________________________________________________________________________________________________________________
+====
 *Tip*
 
 The SQL is directly executed in your database, so you can use any
 dialect you like. This will, however, reduce the portability of your
 mapping if you use database specific SQL.
-________________________________________________________________________________________________________________________________________________________________________________
+====
 
 Last but not least, stored procedures are in most cases required to
 return the number of rows inserted, updated and deleted. Hibernate

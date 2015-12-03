@@ -12,12 +12,12 @@ persistence context.
 * Might refer to the application notion of a Unit-of-Work, as defined by
 the archetypal pattern.
 
-___________________________________________________________________________________________________
-*Note*
+====
+[NOTE]
 
 This documentation largely treats the physical and logic notions of
 transaction as one-in-the-same.
-___________________________________________________________________________________________________
+====
 
 [[transactions-physical]]
 = Physical Transactions
@@ -42,12 +42,12 @@ java.sql.Connection
 * `jta` - Manages transactions via JTA. See
 link:#bootstrap-jtaplatform[???]
 
-___________________________________________________________________________________________________________________________________________
-*Note*
+====
+[NOTE]
 
 For details on implementing a custom TransactionCoordinatorBuilder, or
 simply better understanding how it works, see the Integrations Guide
-___________________________________________________________________________________________________________________________________________
+====
 
 Hibernate uses JDBC connections and JTA resources directly, without
 adding any additional locking behavior. Hibernate does not lock objects
@@ -56,7 +56,7 @@ transactions does not change when you use Hibernate. The Hibernate
 Session acts as a transaction-scoped cache providing repeatable reads
 for lookup by identifier and queries that result in loading entities.
 
-_______________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+====
 *Important*
 
 To reduce lock contention in the database, the physical database
@@ -65,7 +65,7 @@ prevent your application from scaling to a highly-concurrent load. Do
 not hold a database transaction open during end-user-level work, but
 open it after the end-user-level work is finished. This is concept is
 referred to as `transactional write-behind`.
-_______________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+====
 
 [[transactions-physical-jtaplatform]]
 == JTA configuration
@@ -77,13 +77,13 @@ javax.transaction.UserTransaction for that system as well as exposing
 the ability to register javax.transaction.Synchronization instances,
 check transaction status, etc.
 
-_________________________________________________________________________________________________________________________________________________________________________
-*Note*
+====
+[NOTE]
 
 Generally JtaPlatform will need access to JNDI to resolve the JTA
 TransactionManager, UserTransaction, etc. See link:#jndi[???] for
 details on configuring access to JNDI
-_________________________________________________________________________________________________________________________________________________________________________
+====
 
 Hibernate tries to discover the JtaPlatform it should use through the
 use of another service named
@@ -187,14 +187,14 @@ data, because many small transactions are unlikely to perform better
 than one clearly-defined unit of work, and are more difficult to
 maintain and extend.
 
-_________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
-*Note*
+====
+[NOTE]
 
 Using auto-commit does not circumvent database transactions. Instead,
 when in auto-commit mode, JDBC drivers simply perform each call in an
 implicit transaction call. It is as if your application called commit
 after each and every JDBC call.
-_________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+====
 
 [[session-per-request]]
 == Session-per-request pattern
@@ -238,7 +238,7 @@ Some common examples of such "external components" include:
 ** AOP interceptor with a pointcut on the service methods
 ** A proxy/interception container
 
-_____________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+====
 *Important*
 
 The getCurrentSession() method has one downside in a JTA environment. If
@@ -248,7 +248,7 @@ automatically clean up any unclosed ScrollableResults or Iterator
 instances returned by scroll() or iterate(). Release the underlying
 database cursor by calling ScrollableResults.close() or
 Hibernate.close(Iterator) explicitly from a finally block.
-_____________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+====
 
 [[long-conversations]]
 == Conversations

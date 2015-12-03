@@ -9,13 +9,13 @@ To audit changes that are performed on an entity, you only need two
 things: the `hibernate-envers` jar on the classpath and an `@Audited`
 annotation on the entity.
 
-______________________________________________________________________________________________________________________________________________________________________________________________________________
+====
 *Important*
 
 Unlike in previous versions, you no longer need to specify listeners in
 the Hibernate configuration file. Just putting the Envers jar on the
 classpath is enough - listeners will be registered automatically.
-______________________________________________________________________________________________________________________________________________________________________________________________________________
+====
 
 And that's all - you can create, modify and delete the entities as
 always. If you look at the generated schema for your entities, or at the
@@ -172,7 +172,7 @@ deleted entities. Exactly one row with `null` end date exists for each
 identifier.
 |=======================================================================
 
-____________________________________________________________________________________________________
+====
 *Important*
 
 The following configuration options have been added recently and should
@@ -181,7 +181,7 @@ be regarded as experimental:
 1.  org.hibernate.envers.track_entities_changed_in_revision
 2.  org.hibernate.envers.using_modified_flag
 3.  org.hibernate.envers.modified_flag_suffix
-____________________________________________________________________________________________________
+====
 
 = Additional mapping annotations
 
@@ -898,8 +898,8 @@ Generally SQL tables must be partitioned on a column that exists within
 the table. As a rule it makes sense to use either the _end revision_ or
 the _end revision timestamp_ column for partioning of audit tables.
 
-_____________________________________________________________________________________________
-*Note*
+====
+[NOTE]
 
 End revision information is not available for the default AuditStrategy.
 
@@ -919,7 +919,7 @@ properties:
 `org.hibernate.envers.audit_strategy_validity_revend_timestamp_field_name`
 
 For more information, see link:#envers-configuration[section_title].
-_____________________________________________________________________________________________
+====
 
 The reason why the end revision information should be used for audit
 table partioning is based on the assumption that audit tables should be

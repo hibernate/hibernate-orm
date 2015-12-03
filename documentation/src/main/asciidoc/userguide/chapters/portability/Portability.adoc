@@ -89,13 +89,13 @@ issue the insert immediately when the users requests the entitiy be
 associated with the session (like via save() e.g.) regardless of current
 transactional semantics.
 
-________________________________________________________________________________________________________________________________________________
-*Note*
+====
+[NOTE]
 
 Hibernate was changed slightly once the implication of this was better
 understood so that the insert is delayed in cases where that is
 feasible.
-________________________________________________________________________________________________________________________________________________
+====
 
 The underlying issue is that the actual semanctics of the application
 itself changes in these cases.
@@ -104,14 +104,14 @@ Starting with version 3.2.3, Hibernate comes with a set of
 http://in.relation.to/2082.lace[enhanced] identifier generators
 targetting portability in a much different way.
 
-________________________________________________________
-*Note*
+====
+[NOTE]
 
 There are specifically 2 bundled __enhanced__generators:
 
 * `org.hibernate.id.enhanced.SequenceStyleGenerator`
 * `org.hibernate.id.enhanced.TableGenerator`
-________________________________________________________
+====
 
 The idea behind these generators is to port the actual semantics of the
 identifer value generation to the different databases. For example, the
@@ -122,13 +122,13 @@ table.
 [[portability-functions]]
 = Database functions
 
-______________________________________________________________________________________________________________________________________________________________________________________________________
+====
 *Warning*
 
 This is an area in Hibernate in need of improvement. In terms of
 portability concerns, this function handling currently works pretty well
 from HQL; however, it is quite lacking in all other aspects.
-______________________________________________________________________________________________________________________________________________________________________________________________________
+====
 
 SQL functions can be referenced in many ways by users. However, not all
 databases support the same set of functions. Hibernate, provides a means
@@ -136,7 +136,7 @@ of mapping a _logical_ function name to a delegate which knows how to
 render that particular function, perhaps even using a totally different
 physical function call.
 
-_____________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+====
 *Important*
 
 Technically this function registration is handled through the
@@ -148,7 +148,7 @@ completed as of yet.
 It is sort of implemented such that users can programatically register
 functions with the `org.hibernate.cfg.Configuration` and those functions
 will be recognized for HQL.
-_____________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+====
 
 [[portability-types]]
 = Type mappings

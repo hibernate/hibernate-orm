@@ -7,14 +7,13 @@ building a fully functional SessionFactory instance or
 EntityManagerFactory instance for JPA. The process is very different for
 each.
 
-__________________________________________________________________________________________________________________________________________________________________________________________________________________________
-*Note*
-
+[NOTE]
+====
 This chapter will not focus on all the possibilities of bootstrapping.
 Those will be covered in each specific more-relevant chapters later on.
 Instead we focus here on the API calls needed to perform the
 bootstrapping.
-__________________________________________________________________________________________________________________________________________________________________________________________________________________________
+====
 
 [[bootstrap-native]]
 = Native Bootstrapping
@@ -22,7 +21,7 @@ ________________________________________________________________________________
 This section discusses the process of bootstrapping a Hibernate
 SessionFactory. Specifically it discusses the bootstrapping APIs as
 redesigned in 5.0. For a discussion of the legacy bootstrapping API, see
-link:#appendix-legacy-bootstrap[???]
+link:#appendix-legacy-bootstrap[Legacy Bootstrapping]
 
 [[bootstrap-native-registry]]
 == Building the ServiceRegistry
@@ -88,16 +87,15 @@ build the Metadata object. If you are ok with the default behavior in
 building the Metadata then you can simply call
 MetadataSources#buildMetadata.
 
-__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
-*Note*
-
+[NOTE]
+====
 Notice that a ServiceRegistry can be passed at a number of points in
 this bootstrapping process. The suggested approach is to build a
 StandardServiceRegistry yourself and pass that along to the
 MetadataSources constructor. From there, MetadataBuilder, Metadata,
 SessionFactoryBuilder and SessionFactory will all pick up that same
 StandardServiceRegistry.
-__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+====
 
 However, if you wish to adjust the process of building Metadata from
 MetadataSources you will need to use the MetadataBuilder as obtained via

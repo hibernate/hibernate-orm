@@ -146,12 +146,12 @@ Reattachment is the process of taking an incoming entity instance that
 is in detached state and re-associating it with the current persistence
 context.
 
-____________________________________________________________________________________________________
+====
 *Important*
 
 JPA does not provide for this model. This is only available through
 Hibernate org.hibernate.Session.
-____________________________________________________________________________________________________
+====
 
 The method name update is a bit misleading here. It does not mean that
 an `SQL` `UPDATE` is immediately performed. It does, however, mean that

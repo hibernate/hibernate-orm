@@ -1,8 +1,8 @@
 [[architecture]]
-= Architecture
+== Architecture
 
 [[architecture-overview]]
-= Overview
+=== Overview
 
 image:images/overview.svg[image]
 
@@ -37,7 +37,7 @@ Transaction (org.hibernate.Transaction)::
   transaction system in use (JDBC, JTA, CORBA, etc).
 
 [[architecture-current-session]]
-= Contextual sessions
+=== Contextual sessions
 
 Most applications using Hibernate need some form of "contextual"
 session, where a given session is in effect throughout the scope of a
@@ -100,7 +100,7 @@ transaction system from your code. If you use JTA, you can utilize the
 JTA interfaces to demarcate transactions. If you execute in an EJB
 container that supports CMT, transaction boundaries are defined
 declaratively and you do not need any transaction or session demarcation
-operations in your code. Refer to link:#transactions[???] for more
+operations in your code. Refer to link:#transactions[Transactions] for more
 information and code examples.
 
 The `hibernate.current_session_context_class` configuration parameter

@@ -19,12 +19,12 @@ Interceptor implementation that automatically sets the `createTimestamp`
 property when an Auditable entity is created and updates the
 `lastUpdateTimestamp` property when an Auditable entity is updated.
 
-_________________________________________________________________________________________
-*Note*
+====
+[NOTE]
 
 You can either implement Interceptor directly or extend
 `org.hibernate.EmptyInterceptor`.
-_________________________________________________________________________________________
+====
 
 An Interceptor can be either Session-scoped or SessionFactory-scoped.
 
@@ -55,12 +55,12 @@ the `LoadEvent` is processed by the registered implementation of the
 be responsible for processing any `load()` requests made of the
 `Session`.
 
-___________________________________________________________________________________________________
-*Note*
+====
+[NOTE]
 
 See link:#registering-listeners-example[???] for information on
 registering custom event listeners.
-___________________________________________________________________________________________________
+====
 
 The listeners should be considered stateless; they are shared between
 requests, and should not save any state as instance variables.

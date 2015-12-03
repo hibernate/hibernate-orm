@@ -17,15 +17,15 @@ There are 3 main approaches to isolating information in these
 multi-tenant systems which goes hand-in-hand with different database
 schema definitions and JDBC setups.
 
-__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
-*Note*
+====
+[NOTE]
 
 Each approach has pros and cons as well as specific techniques and
 considerations. Such topics are beyond the scope of this documentation.
 Many resources exist which delve into these other topics. One example is
 http://msdn.microsoft.com/en-us/library/aa479086.aspx which does a great
 job of covering these topics.
-__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+====
 
 == Separate database
 

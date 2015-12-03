@@ -18,12 +18,12 @@ The concept of fetching breaks down into two different questions.
 * When should the data be fetched? Now? Later?
 * How should the data be fetched?
 
-__________________________________________________________________________________________
-*Note*
+====
+[NOTE]
 
 "now" is generally termed eager or immediate. "later" is generally
 termed lazy or delayed.
-__________________________________________________________________________________________
+====
 
 There are a number of scopes for defining fetching:
 
@@ -65,7 +65,7 @@ SUBSELECT::
 Let's consider these topics as it relates to an simple domain model and
 a few use cases.
 
-_______________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+====
 *Important*
 
 The Hibernate recommendation is to statically mark all associations lazy
@@ -73,7 +73,7 @@ and to use dynamic fetching strategies for eagerness. This is
 unfortunately at odds with the JPA specification which defines that all
 one-to-one and many-to-one associations should be eagerly fetched by
 default. Hibernate, as a JPA provider, honors that default.
-_______________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+====
 
 == No fetching
 

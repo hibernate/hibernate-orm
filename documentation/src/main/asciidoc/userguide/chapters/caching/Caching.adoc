@@ -20,13 +20,13 @@ Ehcache and Infinispan.
 [[caching-config-provider-ehcache]]
 === Ehcache
 
-______________________________________________________________________________________________________________________________________________
+====
 *Important*
 
 Use of the build-in integration for Ehcache requires that the
 hibernate-ehcache module jar (and all of its dependencies) are on the
 classpath.
-______________________________________________________________________________________________________________________________________________
+====
 
 The hibernate-ehcache module defines 2 specific providers:
 
@@ -36,13 +36,13 @@ The hibernate-ehcache module defines 2 specific providers:
 [[caching-config-provider-infinispan]]
 === Infinispan
 
-____________________________________________________________________________________________________________________________________________________
+====
 *Important*
 
 Use of the build-in integration for Infinispan requires that the
 hibernate-infinispan module jar (and all of its dependencies) are on the
 classpath.
-____________________________________________________________________________________________________________________________________________________
+====
 
 The hibernate-infinispan module defines 2 specific providers:
 

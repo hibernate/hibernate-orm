@@ -43,13 +43,13 @@ either specify a JNDI name or would reference the actual DataSource
 instance. For cases where a JNDI name is given, be sure to read
 link:#jndi[???]
 
-__________________________________________________________________________________________________________________________________________________________________
-*Note*
+====
+[NOTE]
 
 For JPA applications, note that `hibernate.connection.datasource`
 corresponds to either `javax.persistence.jtaDataSource` or
 `javax.persistence.nonJtaDataSource`.
-__________________________________________________________________________________________________________________________________________________________________
+====
 
 The DataSource ConnectionProvider also (optionally) accepts the
 `hibernate.connection.username` and `hibernate.connection.password`. If
@@ -59,12 +59,12 @@ password will be used. Otherwise the no-arg form is used.
 [[database-connectionprovider-c3p0]]
 == Using c3p0
 
-___________________________________________________________________________________________________________________________________
+====
 *Important*
 
 To use this integration, the application must include the hibernate-c3p0
 module jar (as well as its dependencies) on the classpath.
-___________________________________________________________________________________________________________________________________
+====
 
 Hibernate also provides support for applications to use
 http://www.mchange.com/projects/c3p0/[c3p0] connection pooling. When
@@ -114,13 +114,13 @@ Any other settings prefixed with `c3p0.`::
 [[database-connectionprovider-proxool]]
 == Using Proxool
 
-______________________________________________________________________________________________________________________________________
+====
 *Important*
 
 To use this integration, the application must include the
 hibernate-proxool module jar (as well as its dependencies) on the
 classpath.
-______________________________________________________________________________________________________________________________________
+====
 
 Hibernate also provides support for applications to use
 http://proxool.sourceforge.net/[Proxool] connection pooling.
@@ -158,13 +158,13 @@ use.
 [[database-connectionprovider-hikari]]
 == Using Hikari
 
-_____________________________________________________________________________________________________________________________________
+====
 *Important*
 
 To use this integration, the application must include the
 hibernate-hikari module jar (as well as its dependencies) on the
 classpath.
-_____________________________________________________________________________________________________________________________________
+====
 
 Hibernate also provides support for applications to use
 http://brettwooldridge.github.io/HikariCP/[Hikari] connection pool.
@@ -194,11 +194,11 @@ precedence):
 [[database-connectionprovider-drivermanager]]
 == Using Hibernate's built-in (and unsupported) pooling
 
-________________________________________________________________
+====
 *Important*
 
 The built-in connection pool is not supported supported for use.
-________________________________________________________________
+====
 
 This section is here just for completeness.
 

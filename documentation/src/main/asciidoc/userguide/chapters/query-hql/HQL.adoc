@@ -24,11 +24,11 @@ case-insensitive. So `SeLeCT` is the same as `sELEct` is the same as
 `SELECT`, but `org.hibernate.eg.FOO` and `org.hibernate.eg.Foo` are
 different, as are `foo.barSet` and `foo.BARSET`.
 
-_____________________________________________________________________
-*Note*
+====
+[NOTE]
 
 This documentation uses lowercase keywords as convention in examples.
-_____________________________________________________________________
+====
 
 = Statement types
 
@@ -36,14 +36,14 @@ Both HQL and JPQL allow `SELECT`, `UPDATE` and `DELETE` statements to be
 performed. HQL additionally allows `INSERT` statements, in a form
 similar to a SQL `INSERT-SELECT`.
 
-________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+====
 --
 *Important*
 
 Care should be taken as to when a `UPDATE` or `DELETE` statement is
 executed.
 
-________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+====
 Caution should be used when executing bulk update or delete operations
 because they may result in inconsistencies between the database and the
 entities in the active persistence context. In general, bulk update and
@@ -52,10 +52,10 @@ persistence con- text or before fetching or accessing entities whose
 state might be affected by such operations.
 
 — Section 4.10 of the JPA 2.0 Specification
-________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+====
 
 --
-________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+====
 
 == Select statements
 
@@ -100,12 +100,12 @@ the subclasses may actually result in deletes against not just the table
 to which that subclass is mapped, but also the "root" table and tables
 ``in between''
 
-_______________________________________________________________________________________________________________________________________________
+====
 *Important*
 
 Neither `UPDATE` nor `DELETE` statements are allowed to result in what
 is called an implicit join. Their form already disallows explicit joins.
-_______________________________________________________________________________________________________________________________________________
+====
 
 == Delete statements
 
@@ -220,7 +220,7 @@ also. Inner joins can also be fetched. But inner joins still filter. In
 the example, using an inner join instead would have resulted in
 customers without any orders being filtered out of the result.
 
-________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+====
 *Important*
 
 Fetch joins are not valid in sub-queries.
@@ -234,7 +234,7 @@ purpose of specifying nested fetch joins.
 Fetch joins should not be used in paged queries (aka, setFirstResult/
 setMaxResults). Nor should they be used with the HQL scroll or iterate
 features.
-________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+====
 
 HQL also defines a `WITH` clause to qualify the join conditions. Again,
 this is specific to HQL; JPQL does not define this feature.
@@ -266,13 +266,13 @@ The `c.chiefExecutive` reference then refers to the chiefExecutive
 attribute of the `Customer` entity. chiefExecutive is an association
 type so we further navigate to its age attribute.
 
-_________________________________________________________________________________________________________________________________________________________________________________________________________________
+====
 *Important*
 
 If the attribute represents an entity association (non-collection) or a
 component/embedded, that reference can be further navigated. Basic
 values and collection-valued associations cannot be further navigated.
-_________________________________________________________________________________________________________________________________________________________________________________________________________________
+====
 
 As shown in the example, implicit joins can appear outside the
 `FROM clause`. However, they affect the `FROM clause`. Implicit joins
@@ -342,12 +342,12 @@ subclasses of `Payment` are also available to the query. So if the
 from `Payment` all three types would be available to the query. And the
 query would return instances of all three.
 
-__________________________________________________________________________________________________________________________
-*Note*
+====
+[NOTE]
 
 The HQL query `from java.lang.Object` is totally valid! It returns every
 object of every type defined in your application.
-__________________________________________________________________________________________________________________________
+====
 
 This can be altered by using either the
 org.hibernate.annotations.Polymorphism annotation (global, and
@@ -868,7 +868,7 @@ control caching.
 
 For complete details, see the Query javadocs.
 
-_________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+====
 *Important*
 
 Query hints here are database query hints. They are added directly to
@@ -878,7 +878,7 @@ provider (Hibernate). So even though they are called the same, be aware
 they have a very different purpose. Also be aware that Hibernate query
 hints generally make the application non-portable across databases
 unless the code adding them first checks the Dialect.
-_________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+====
 
 Flushing is covered in detail in link:#flushing[???]. Locking is covered
 in detail in link:#locking[???]. The concept of read-only state is
@@ -911,14 +911,14 @@ results.
 * Query#uniqueResult - executes the select query and returns the single
 result. If there were more than one result an exception is thrown.
 
-________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
-*Note*
+====
+[NOTE]
 
 If the unique result is used often and the attributes upon which it is
 based are unique, you may want to consider mapping a natural-id and
 using the natural-id loading API. See the Hibernate Domain Mapping Guide
 for more information on natural-ids.
-________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+====
 
 Hibernate offers 2 additional, specialized methods for performing the
 query and handling results. Query#scroll works in tandem with the JDBC
@@ -936,13 +936,13 @@ ScrollableResults will work with try-with-resources blocks!). If left
 unclosed by the application, Hibernate will automatically close the
 ScrollableResults when the current transaction completes.
 
-________________________________________________________________________________________________________________________________________________________________________________________
-*Note*
+====
+[NOTE]
 
 If you plan to use Query#scroll with collection fetches it is important
 that your query explicitly order the results so that the JDBC results
 contain the the related rows sequentially.
-________________________________________________________________________________________________________________________________________________________________________________________
+====
 
 The last is Query#iterate, which is intended for loading entities which
 the the application feels certain will be in the second-level cache. The
@@ -968,13 +968,13 @@ javax.persistence.TypedQuery as obtained from the EntityManager. For
 named queries EntityManager#createNamedQuery is used; otherwise
 EntityManager#createQuery is used.
 
-_____________________________________________________________________________________________________________________________________________________________________________________________
-*Note*
+====
+[NOTE]
 
 This will all sound very familiar. Not only was the JPQL syntax heavily
 inspired by HQL, but many of the JPA APIs were heavily inspired by
 Hibernate. The 2 Query contracts are very similar.
-_____________________________________________________________________________________________________________________________________________________________________________________________
+====
 
 The Query interface can then be used to control the execution of the
 query. For example, we may want to specify an execution timeout or

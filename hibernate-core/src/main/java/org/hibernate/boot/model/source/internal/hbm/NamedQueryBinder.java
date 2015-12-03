@@ -45,10 +45,14 @@ public class NamedQueryBinder {
 
 		for ( Object content : namedQueryBinding.getContent() ) {
 			if ( String.class.isInstance( content ) ) {
-				query = (String) content;
+				String trimmed = ((String)content).trim();
+				if (!"".equals(trimmed)) {
+					query = trimmed;
+				}
 			}
 			else {
-				final JaxbHbmQueryParamType paramTypeBinding = (JaxbHbmQueryParamType) content;
+				final JaxbHbmQueryParamType paramTypeBinding = 
+						(JaxbHbmQueryParamType)((JAXBElement)content).getValue();
 				if ( parameterTypeMap == null ) {
 					parameterTypeMap = new HashMap<String,String>();
 				}

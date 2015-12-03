@@ -7,6 +7,7 @@
 package org.hibernate.test.hql;
 
 import java.util.Set;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
@@ -60,6 +61,7 @@ public class SizeAttributeReferenceTest extends BaseNonConfigCoreFunctionalTestC
 		public EntityWithAttributeNamedSize parent;
 		@OneToMany( mappedBy = "parent" )
 		public Set<EntityWithAttributeNamedSize> children;
+		@Column(name="`size`")
 		private String size;
 	}
 

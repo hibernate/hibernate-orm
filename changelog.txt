@@ -4,6 +4,39 @@ Hibernate 5.0 Changelog
 Note: Please refer to JIRA to learn more about each issue.
 
 
+
+
+Changes in 5.0.5.Final (December 2, 2015)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/21850
+
+** Bug
+    * [HHH-9191] - Inheritance.JOINED + @DiscriminatorColumn : ERROR on quering
+    * [HHH-9302] - SQLGrammarException with @DiscriminatorColumn in an inheritance hierarchy
+    * [HHH-9343] - Case/when in criteria with string literal result fails type checking
+    * [HHH-10157] - Postgis geometry type for JTS geometrys not usable
+    * [HHH-10185] - In nonstrict-read-write mode the remove may be not applied
+    * [HHH-10291] - Partially generated composite attribute is not retrieved after insert
+    * [HHH-10304] - ImplicitCompositeKeyJoinTest#testImplicitCompositeJoin fails due to dialect-specific differences in generated SQL string
+    * [HHH-10309] - HHH-10242 is too aggressive in cases of FIELD access
+    * [HHH-10321] - HHH-9866 is alive; Wrong join table column names generation with globally_quoted_identifiers
+    * [HHH-10325] - Test failure on MySQL and MariaDB because they do not allow casting as float type
+
+** Task
+    * [HHH-10335] - Upgrade to Hibernate Commons Annotations 5.0.1.Final
+    * [HHH-10336] - Upgrade to Jandex 2.0.0.Final
+
+** Improvement
+    * [HHH-10301] - HQLQueryPlan allocates a new ArrayList every time even if it is not required
+    * [HHH-10302] - Lots of allocations of LoadEvent and PostLoadEvent
+    * [HHH-10306] - Use module initializer to add Hibernate 2LC externalizers
+    * [HHH-10308] - Don't make deep copy of property with AttributeConverter if Java type is known to be immutable
+    * [HHH-10313] - Make SessionImplementor extend WrapperOptions
+    * [HHH-10314] - In some cases BatchFetchQueue is created just to try and remove a key
+    * [HHH-10338] - Use an explicit empty object array to prevent the varargs method allocating one
+
+
+
 Changes in 5.0.4.Final (November 18, 2015)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/21750

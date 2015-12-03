@@ -1,0 +1,13 @@
+Flushing
+========
+
+[[flushing]]
+= Flushing
+
+* link:#pc[???]
+* link:#hql[???]
+* link:#criteria[???]
+* link:#querynative[???]
+
+Flushing is the process of synchronizing the state of the persistence
+context to the database. TBC...

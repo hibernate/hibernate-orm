@@ -1,0 +1,188 @@
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<appendix xml:id="appendix-legacy-bootstrap" xmlns="http://docbook.org/ns/docbook">
+    <title>Legacy Bootstrapping</title>
+
+    <para>
+        The legacy way to bootstrap a SessionFactory is via the <classname>org.hibernate.cfg.Configuration</classname>
+        object.  Configuration represents, essentially, a single point for specifying all aspects of building
+        the SessionFactory: everything from settings, to mappings, to strategies, etc.  I like to think of
+        Configuration as a big pot to which we add a bunch of stuff (mappings, settings, etc) and from which
+        we eventually get a SessionFactory.
+    </para>
+
+    <note>
+        <para>
+            There are some significant draw backs to this approach which led to its deprecation and the development
+            of the new approach, which is discussed in <xref linkend="bootstrap-native"/>.  Configuration is
+            semi-deprecated but still available for use, in a limited form that eliminates these draw backs.
+            "Under the covers", Configuration uses the new bootstrapping code, so the things available there as also
+            available here in terms of auto-discovery.
+        </para>
+    </note>
+
+    <para>
+        You can obtain the Configuration by instantiating it directly.  You then specify mapping metadata (XML
+        mapping documents, annotated classes) that describe your applications object model and its mapping to a
+        SQL database.
+    </para>
+
+    <example>
+        <title>Configuration usage</title>
+        <programlisting role="JAVA">Configuration cfg = new Configuration()
+            // addResource does a classpath resource lookup
+            .addResource("Item.hbm.xml")
+            .addResource("Bid.hbm.xml")
+
+            // calls addResource using "/org/hibernate/auction/User.hbm.xml"
+            .addClass(org.hibernate.auction.User.class)
+
+            // parses Address class for mapping annotations
+            .addAnnotatedClass( Address.class )
+
+            // reads package-level (package-info.class) annotations in the named package
+            .addPackage( "org.hibernate.auction" )
+
+            .setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect")
+            .setProperty("hibernate.connection.datasource", "java:comp/env/jdbc/test")
+            .setProperty("hibernate.order_updates", "true");</programlisting>
+    </example>
+
+    <para>
+        There are other ways to specify Configuration information, including:
+        <itemizedlist>
+            <listitem>
+                Place a file named hibernate.properties in a root directory of the classpath
+            </listitem>
+            <listitem>
+                Pass an instance of java.util.Properties to Configuration#setProperties
+            </listitem>
+            <listitem>
+                Via a Hibernate cfg.xml file
+            </listitem>
+            <listitem>
+                System properties using java `-Dproperty=value`
+            </listitem>
+        </itemizedlist>
+    </para>
+
+    <section>
+        <title>Migration</title>
+
+        <para>
+            Mapping Configuration methods to the corresponding methods in the new APIs..
+        </para>
+
+        <variablelist>
+            <title>Mapping metadata</title>
+            <varlistentry>
+                <term>Configuration#addFile</term>
+                <listitem>MetadataSources#addFile</listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>Configuration#add(XmlDocument)</term>
+                <listitem>No replacement</listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>Configuration#addXML</term>
+                <listitem>No replacement</listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>Configuration#addCacheableFile</term>
+                <listitem>MetadataSources#addCacheableFile</listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>Configuration#addURL</term>
+                <listitem>MetadataSources#addURL</listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>Configuration#addInputStream</term>
+                <listitem>MetadataSources#addInputStream</listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>Configuration#addResource</term>
+                <listitem>MetadataSources#addResource</listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>Configuration#addClass</term>
+                <listitem>MetadataSources#addClass</listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>Configuration#addAnnotatedClass</term>
+                <listitem>MetadataSources#addAnnotatedClass</listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>Configuration#addPackage</term>
+                <listitem>MetadataSources#addPackage</listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>Configuration#addJar</term>
+                <listitem>MetadataSources#addJar</listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>Configuration#addDirectory</term>
+                <listitem>MetadataSources#addDirectory</listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>Configuration#registerTypeContributor</term>
+                <listitem>MetadataBuilder#applyTypes</listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>Configuration#registerTypeOverride</term>
+                <listitem>MetadataBuilder#applyBasicType</listitem>
+            </varlistentry>
+        </variablelist>
+
+        <variablelist>
+            <title>Settings</title>
+            <varlistentry>
+                <term>Configuration#setProperty</term>
+                <listitem>StandardServiceRegistryBuilder#applySetting</listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>Configuration#setProperties</term>
+                <listitem>No replacement</listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>Configuration#addProperties</term>
+                <listitem>StandardServiceRegistryBuilder#applySettings</listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>Configuration#setNamingStrategy</term>
+                <listitem>No replacement.  NamingStrategy split into implicit/physical strategies</listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>Configuration#setImplicitNamingStrategy</term>
+                <listitem>MetadataBuilder#setImplicitNamingStrategy</listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>Configuration#setPhysicalNamingStrategy</term>
+                <listitem>MetadataBuilder#setPhysicalNamingStrategy</listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>Configuration#configure</term>
+                <listitem>StandardServiceRegistryBuilder#configure</listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>Configuration#setInterceptor</term>
+                <listitem>SessionFactoryBuilder#applyInterceptor</listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>Configuration#setEntityNotFoundDelegate</term>
+                <listitem>SessionFactoryBuilder#applyEntityNotFoundDelegate</listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>Configuration#setSessionFactoryObserver</term>
+                <listitem>SessionFactoryBuilder#addSessionFactoryObservers</listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>Configuration#setCurrentTenantIdentifierResolver</term>
+                <listitem>SessionFactoryBuilder#applyCurrentTenantIdentifierResolver</listitem>
+            </varlistentry>
+        </variablelist>
+    </section>
+</appendix>

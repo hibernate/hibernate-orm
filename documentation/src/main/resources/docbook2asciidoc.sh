@@ -1,6 +1,6 @@
 #!/bin/bash
 
-xmls=`find ../docbook/mappingGuide/en-US/chapters/categoizations  -name '*.xml'`
+xmls=`find ../docbook/userGuide  -name '*.xml'`
 
 for xml in $xmls
 do

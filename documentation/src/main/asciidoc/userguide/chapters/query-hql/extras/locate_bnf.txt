@@ -1,0 +1,1 @@
+locate( string_expression, string_expression[, numeric_expression] )

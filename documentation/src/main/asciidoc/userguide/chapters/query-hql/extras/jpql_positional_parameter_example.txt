@@ -1,0 +1,16 @@
+String queryString =
+        "select c " +
+        "from Customer c " +
+        "where c.name = ?1 " +
+        "   or c.nickName = ?1";
+
+// HQL - as you can see, handled just like named parameters
+//      in terms of API
+List customers = session.createQuery( queryString )
+        .setParameter( "1", theNameOfInterest )
+        .list();
+
+// JPQL
+List<Customer> customers = entityManager.createQuery( queryString, Customer.class )
+        .setParameter( 1, theNameOfInterest )
+        .getResultList();

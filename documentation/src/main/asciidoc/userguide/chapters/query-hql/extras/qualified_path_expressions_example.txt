@@ -1,0 +1,33 @@
+// Product.images is a Map<String,String> : key = a name, value = file path
+
+// select all the image file paths (the map value) for Product#123
+select i
+from Product p
+    join p.images i
+where p.id = 123
+
+// same as above
+select value(i)
+from Product p
+    join p.images i
+where p.id = 123
+
+// select all the image names (the map key) for Product#123
+select key(i)
+from Product p
+    join p.images i
+where p.id = 123
+
+// select all the image names and file paths (the 'Map.Entry') for Product#123
+select entry(i)
+from Product p
+    join p.images i
+where p.id = 123
+
+// total the value of the initial line items for all orders for a customer
+select sum( li.amount )
+from Customer c
+        join c.orders o
+        join o.lineItems li
+where c.id = 123
+  and index(li) = 1

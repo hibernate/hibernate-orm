@@ -1,0 +1,1 @@
+session.lock( someDetachedCat, LockMode.NONE );

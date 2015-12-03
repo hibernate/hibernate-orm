@@ -1,4 +1,5 @@
-=== Multi-tenancy
+[[multitenacy]
+== Multi-tenancy
 
 === What is multi-tenancy?
 
@@ -17,9 +18,8 @@ There are 3 main approaches to isolating information in these
 multi-tenant systems which goes hand-in-hand with different database
 schema definitions and JDBC setups.
 
-====
 [NOTE]
-
+====
 Each approach has pros and cons as well as specific techniques and
 considerations. Such topics are beyond the scope of this documentation.
 Many resources exist which delve into these other topics. One example is
@@ -27,7 +27,7 @@ http://msdn.microsoft.com/en-us/library/aa479086.aspx which does a great
 job of covering these topics.
 ====
 
-== Separate database
+=== Separate database
 
 image:chapters/multitenancy/images/multitenacy_database.png[image]
 
@@ -38,7 +38,7 @@ be to define a JDBC Connection pool per-tenant and to select the pool to
 use based on the ``tenant identifier'' associated with the currently
 logged in user.
 
-== Separate schema
+=== Separate schema
 
 image:chapters/multitenancy/images/multitenacy_schema.png[image]
 
@@ -61,7 +61,7 @@ Connection pool for use to service all tenants, but before using the
 Connection it would be altered to reference the schema named by the
 ``tenant identifier'' associated with the currently logged in user.
 
-== Partitioned (discriminator) data
+=== Partitioned (discriminator) data
 
 image:chapters/multitenancy/images/multitenacy_discriminator.png[image]
 
@@ -106,7 +106,7 @@ DISCRIMINATOR::
   strategy. This strategy is not yet implemented in Hibernate as of 4.0
   and 4.1. Its support is planned for 5.0.
 
-== MultiTenantConnectionProvider
+=== MultiTenantConnectionProvider
 
 When using either the DATABASE or SCHEMA approach, Hibernate needs to be
 able to obtain Connections in a tenant specific manner. That is the role
@@ -134,7 +134,7 @@ implementation which works on a number of pretty reasonable assumptions
 when running inside of an app server and using one javax.sql.DataSource
 per tenant. See its javadocs for more details.
 
-== CurrentTenantIdentifierResolver
+=== CurrentTenantIdentifierResolver
 
 org.hibernate.context.spi.CurrentTenantIdentifierResolver is a contract
 for Hibernate to be able to resolve what the application considers the
@@ -168,13 +168,13 @@ will make sure any existing sessions that are found in scope have a
 matching tenant identifier. This capability is only pertinent when the
 CurrentTenantIdentifierResolver is used in current-session settings.
 
-== Caching
+=== Caching
 
 Multi-tenancy support in Hibernate works seamlessly with the Hibernate
 second level cache. The key used to cache data encodes the tenant
 identifier.
 
-== Odds and ends
+=== Odds and ends
 
 Currently schema export will not really work with multi-tenancy. That
 may not change.

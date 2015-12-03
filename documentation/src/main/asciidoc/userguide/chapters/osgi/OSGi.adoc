@@ -1,7 +1,5 @@
-OSGi
-====
-
-=== OSGi
+[[osgi]]
+== OSGi
 
 === OSGi Specification and Environment
 
@@ -67,7 +65,7 @@ and automatically creating the `EntityManagerFactory` (one EMF per PU).
 It uses the JPA provider (hibernate-osgi) that has registered itself
 with the OSGi `PersistenceProvider` service.
 
-== Enterprise OSGi JPA Container
+=== Enterprise OSGi JPA Container
 
 In order to utilize container-managed JPA, an Enterprise OSGi JPA
 container must be active in the runtime. In Karaf, this means Aries JPA,
@@ -83,12 +81,12 @@ https://github.com/hibernate/hibernate-demos/tree/master/hibernate-orm/osgi/mana
 showing which features need activated in Karaf in order to support this
 environment. As mentioned, use this purely as a reference!
 
-== persistence.xml
+=== persistence.xml
 
 Similar to any other JPA setup, your bundle must include a
 `persistence.xml` file. This is typically located in `META-INF`.
 
-== DataSource
+=== DataSource
 
 Typical Enterprise OSGi JPA usage includes a DataSource installed in the
 container. Your bundle's `persistence.xml` calls out the DataSource
@@ -100,7 +98,7 @@ That DS is then used by your `persistence.xml` persistence-unit. The
 following works in Karaf, but the names may need tweaked in alternative
 containers.
 
-== Bundle Package Imports
+=== Bundle Package Imports
 
 Your bundle's manifest will need to import, at a minimum,
 
@@ -109,7 +107,7 @@ Your bundle's manifest will need to import, at a minimum,
 ability to return proxies for lazy initialization (Javassist enhancement
 occurs on the entity's ClassLoader during runtime).
 
-== Obtaining an EntityManger
+=== Obtaining an EntityManger
 
 The easiest, and most supported, method of obtaining an `EntityManager`
 utilizes OSGi's `OSGI-INF/blueprint/blueprint.xml` in your bundle. The
@@ -123,12 +121,12 @@ Hibernate also supports the use of JPA through hibernate-entitymanager,
 unmanaged by the OSGi container. The client bundle is responsible for
 managing the EntityManagerFactory and EntityManagers.
 
-== persistence.xml
+=== persistence.xml
 
 Similar to any other JPA setup, your bundle must include a
 `persistence.xml` file. This is typically located in `META-INF`.
 
-== Bundle Package Imports
+=== Bundle Package Imports
 
 Your bundle's manifest will need to import, at a minimum,
 
@@ -139,7 +137,7 @@ occurs on the entity's ClassLoader during runtime)
 * JDBC driver package (example: `org.h2`)
 * `org.osgi.framework`, necessary to discover the EMF (described below)
 
-== Obtaining an EntityMangerFactory
+=== Obtaining an EntityMangerFactory
 
 `hibernate-osgi` registers an OSGi service, using the JPA
 `PersistenceProvider` interface name, that bootstraps and creates an
@@ -155,7 +153,7 @@ guaranteed to NOT work during runtime!
 Native Hibernate use is also supported. The client bundle is responsible
 for managing the SessionFactory and Sessions.
 
-== Bundle Package Imports
+=== Bundle Package Imports
 
 Your bundle's manifest will need to import, at a minimum,
 
@@ -168,7 +166,7 @@ occurs on the entity's ClassLoader during runtime)
 * `org.hibernate.*` packages, as necessary (ex: cfg, criterion, service,
 etc.)
 
-== Obtaining an SessionFactory
+=== Obtaining an SessionFactory
 
 `hibernate-osgi` registers an OSGi service, using the `SessionFactory`
 interface name, that bootstraps and creates an `SessionFactory` specific

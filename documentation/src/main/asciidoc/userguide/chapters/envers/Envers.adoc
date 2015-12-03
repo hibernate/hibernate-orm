@@ -1,7 +1,5 @@
-Envers
-======
-
-=== Envers
+[[envers]]
+== Envers
 
 === Basics
 
@@ -9,9 +7,8 @@ To audit changes that are performed on an entity, you only need two
 things: the `hibernate-envers` jar on the classpath and an `@Audited`
 annotation on the entity.
 
+[IMPORTANT]
 ====
-*Important*
-
 Unlike in previous versions, you no longer need to specify listeners in
 the Hibernate configuration file. Just putting the Envers jar on the
 classpath is enough - listeners will be registered automatically.
@@ -172,9 +169,8 @@ deleted entities. Exactly one row with `null` end date exists for each
 identifier.
 |=======================================================================
 
+[IMPORTANT]
 ====
-*Important*
-
 The following configuration options have been added recently and should
 be regarded as experimental:
 
@@ -348,7 +344,7 @@ exampleRevEntity.setUsername(identity.getUsername()); } }
 </programlisting>
 
 [[envers-tracking-modified-entities-revchanges]]
-== Tracking entity names modified during revisions
+=== Tracking entity names modified during revisions
 
 By default entity types that have been changed in each revision are not
 being tracked. This implies the necessity to query all tables storing
@@ -502,7 +498,7 @@ storing both start and end revisions for entities. See
 link:#envers-configuration[section_title].
 
 [[entities-at-revision]]
-== Querying for entities of a class at a given revision
+=== Querying for entities of a class at a given revision
 
 The entry point for this type of queries is:
 
@@ -539,7 +535,7 @@ List personsAtAddress = getAuditReader().createQuery()
 </programlisting>
 
 [[revisions-of-entity]]
-== Querying for revisions, at which entities of a given class changed
+=== Querying for revisions, at which entities of a given class changed
 
 The entry point for this type of queries is:
 
@@ -617,7 +613,7 @@ yes, such entities will have the revision type DEL and all fields,
 except the id, `null`.
 
 [[envers-tracking-properties-changes-queries]]
-== Querying for revisions of entity that modified given property
+=== Querying for revisions of entity that modified given property
 
 For the two types of queries described above it's possible to use
 special Audit criteria called `hasChanged()` and `hasNotChanged()` that
@@ -662,7 +658,7 @@ AuditQuery query = getAuditReader().createQuery()
 </programlisting>
 
 [[envers-tracking-modified-entities-queries]]
-== Querying for entities modified in a given revision
+=== Querying for entities modified in a given revision
 
 The basic query allows retrieving entity names and corresponding Java
 classes changed in a specified revision:
@@ -827,7 +823,7 @@ FK8E488775E4C3EA63 foreign key (address_id) references Address;
 [[envers-mappingexceptions]]
 === Mapping exceptions
 
-== What isn't and will not be supported
+=== What isn't and will not be supported
 
 Bags, as they can contain non-unique elements. The reason is that
 persisting, for example a bag of String-s, violates a principle of
@@ -844,12 +840,12 @@ There are at least two ways out if you need bag semantics:
 2.  provide a unique id for your elements with the `@CollectionId`
 annotation.
 
-== What isn't and _will_ be supported
+=== What isn't and _will_ be supported
 
 1.  Bag style collection which identifier column has been defined using
 @CollectionId annotation (JIRA ticket HHH-3950).
 
-== `@OneToMany`+`@JoinColumn`
+=== `@OneToMany`+`@JoinColumn`
 
 When a collection is mapped using these two annotations, Hibernate
 doesn't generate a join table. Envers, however, has to do this, so that
@@ -879,7 +875,7 @@ the future.
 === Advanced: Audit table partitioning
 
 [[envers-partitioning-benefits]]
-== Benefits of audit table partitioning
+=== Benefits of audit table partitioning
 
 Because audit tables tend to grow indefinitely they can quickly become
 really large. When the audit tables have grown to a certain limit
@@ -892,15 +888,14 @@ partitions (or even purging old rows)
 2.  Faster data loads, index creation, etc.
 
 [[envers-partitioning-columns]]
-== Suitable columns for audit table partitioning
+=== Suitable columns for audit table partitioning
 
 Generally SQL tables must be partitioned on a column that exists within
 the table. As a rule it makes sense to use either the _end revision_ or
 the _end revision timestamp_ column for partioning of audit tables.
 
-====
 [NOTE]
-
+====
 End revision information is not available for the default AuditStrategy.
 
 Therefore the following Envers configuration options are required:
@@ -934,7 +929,7 @@ This should be stored on the fastest media, both for reading and
 writing.
 
 [[envers-partitioning-example]]
-== Audit table partitioning example
+=== Audit table partitioning example
 
 In order to determine a suitable column for the 'increasing level of
 interestingness', consider a simplified example of a salary registration

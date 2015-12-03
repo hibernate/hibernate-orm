@@ -221,9 +221,8 @@ Reattachment is the process of taking an incoming entity instance that
 is in detached state and re-associating it with the current persistence
 context.
 
+[IMPORTANT]
 ====
-*Important*
-
 JPA does not provide for this model. This is only available through
 Hibernate org.hibernate.Session.
 ====

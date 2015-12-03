@@ -1,5 +1,6 @@
 [[jndi]]
-=== JNDI
+== JNDI
+:sourcedir: extras
 
 Hibernate does optionally interact with JNDI on the applications behalf.
 Generally it does this when the application:
@@ -21,9 +22,8 @@ See `javax.naming.Context.PROVIDER_URL`
 * Any other settings prefixed with `hibernate.jndi.` will be collected
 and passed along to the JNDI provider.
 
-====
 [NOTE]
-
+====
 The standard JndiService assumes that all JNDI calls are relative to the
 same InitialContext. If your application uses multiple naming servers
 for whatever reason, you will need a custom JndiService implementation

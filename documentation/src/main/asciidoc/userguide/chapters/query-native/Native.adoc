@@ -1,5 +1,5 @@
 [[querynative]]
-=== Native SQL Queries
+== Native SQL Queries
 
 You may also express queries in the native SQL dialect of your database.
 This is useful if you want to utilize database specific features such as
@@ -16,7 +16,7 @@ Execution of native SQL queries is controlled via the `SQLQuery`
 interface, which is obtained by calling `Session.createSQLQuery()`. The
 following sections describe how to use this API for querying.
 
-== Scalar queries
+=== Scalar queries
 
 The most basic SQL query is to get a list of scalars (values).
 
@@ -63,7 +63,7 @@ Hibernate types is controlled by the Dialect. If a specific type is not
 mapped, or does not result in the expected type, it is possible to
 customize it via calls to `registerHibernateType` in the Dialect.
 
-== Entity queries
+=== Entity queries
 
 The above queries were all about returning scalar values, basically
 returning the "raw" values from the resultset. The following shows how
@@ -94,7 +94,7 @@ CATS").addEntity(Cat.class); </programlisting>
 
 This will allow cat.getDog() to function properly.
 
-== Handling associations and collections
+=== Handling associations and collections
 
 It is possible to eagerly join in the `Dog` to avoid the possible extra
 roundtrip for initializing the proxy. This is done via the `addJoin()`
@@ -119,7 +119,7 @@ native queries, without starting to enhance the sql queries to make them
 usable in Hibernate. Problems can arise when returning multiple entities
 of the same type or when the default alias/column names are not enough.
 
-== Returning multiple entities
+=== Returning multiple entities
 
 Until now, the result set column names are assumed to be the same as the
 column names specified in the mapping document. This can be problematic
@@ -212,7 +212,7 @@ used.
 |All properties of the collection |`{[aliasname].*}` |`{coll.*}`
 |=======================================================================
 
-== Returning non-managed entities
+=== Returning non-managed entities
 
 It is possible to apply a ResultTransformer to native SQL queries,
 allowing it to return non-managed entities.
@@ -229,13 +229,13 @@ The above query will return a list of `CatDTO` which has been
 instantiated and injected the values of NAME and BIRTHNAME into its
 corresponding properties or fields.
 
-== Handling inheritance
+=== Handling inheritance
 
 Native SQL queries which query for entities that are mapped as part of
 an inheritance must include all properties for the baseclass and all its
 subclasses.
 
-== Parameters
+=== Parameters
 
 Native SQL queries support positional as well as named parameters:
 
@@ -396,9 +396,8 @@ public String getLastname() \{ return lastname; } public void
 setLastname(String lastname) \{ this.lastname = lastname; } }
 </programlisting>
 
+[TIP]
 ====
-*Tip*
-
 If you retrieve a single entity using the default mapping, you can
 specify the `resultClass` attribute instead of `resultSetMapping`:
 
@@ -423,7 +422,7 @@ An other query hint specific to native queries has been introduced:
 the query is a stored procedure or not.
 
 [[propertyresults]]
-== Using return-property to explicitly specify column/alias names
+=== Using return-property to explicitly specify column/alias names
 
 You can explicitly tell Hibernate what column aliases to use with
 `<return-property>`, instead of using the `{}`-syntax to let Hibernate
@@ -458,7 +457,7 @@ If your mapping has a discriminator you must use
 `<return-discriminator>` to specify the discriminator column.
 
 [[sp_query]]
-== Using stored procedures for querying
+=== Using stored procedures for querying
 
 Hibernate provides support for queries via stored procedures and
 functions. Most of the following documentation is equivalent for both.
@@ -578,9 +577,8 @@ sql="UPDATE CASIMIR_PARTICULE SET chaos_fk = null where id = ?") private
 Set<CasimirParticle> particles = new
 HashSet<CasimirParticle>();</programlisting>
 
+[TIP]
 ====
-*Tip*
-
 The parameter order is important and is defined by the order Hibernate
 handles properties. You can see the expected order by enabling debug
 logging for the `org.hibernate.persister.entity` level. With this level
@@ -606,9 +604,8 @@ The previous example also shows that you can give a comment to a given
 table (primary or secondary): This comment will be used for DDL
 generation.
 
+[TIP]
 ====
-*Tip*
-
 The SQL is directly executed in your database, so you can use any
 dialect you like. This will, however, reduce the portability of your
 mapping if you use database specific SQL.

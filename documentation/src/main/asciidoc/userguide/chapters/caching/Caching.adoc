@@ -1,5 +1,5 @@
 [[caching]]
-=== Caching
+== Caching
 
 [[caching-config]]
 === Configuring second-level caching
@@ -9,7 +9,7 @@ the purpose of caching data outside the context of a particular Session.
 This section defines the settings which control that behavior.
 
 [[caching-config-provider]]
-== RegionFactory
+=== RegionFactory
 
 org.hibernate.cache.spi.RegionFactory defines the integration between
 Hibernate and a pluggable caching provider.
@@ -20,9 +20,8 @@ Ehcache and Infinispan.
 [[caching-config-provider-ehcache]]
 === Ehcache
 
+[IMPORTANT]
 ====
-*Important*
-
 Use of the build-in integration for Ehcache requires that the
 hibernate-ehcache module jar (and all of its dependencies) are on the
 classpath.
@@ -36,9 +35,8 @@ The hibernate-ehcache module defines 2 specific providers:
 [[caching-config-provider-infinispan]]
 === Infinispan
 
+[IMPORTANT]
 ====
-*Important*
-
 Use of the build-in integration for Infinispan requires that the
 hibernate-infinispan module jar (and all of its dependencies) are on the
 classpath.
@@ -50,7 +48,7 @@ The hibernate-infinispan module defines 2 specific providers:
 * `infinispan-jndi` - todo : document
 
 [[caching-config-behavior]]
-== Caching behavior
+=== Caching behavior
 
 Besides specific provider configuration, there are a number of
 configurations options on the Hibernate side of the integration that

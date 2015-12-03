@@ -1,5 +1,5 @@
 [[bootstrap]]
-=== Bootstrap
+== Bootstrap
 :sourcedir: extras
 
 The term bootstrapping refers to initializing and starting a software

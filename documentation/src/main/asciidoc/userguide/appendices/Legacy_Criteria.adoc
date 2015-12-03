@@ -1,9 +1,8 @@
 [[appendix-legacy-criteria]]
 == Legacy Hibernate Criteria Queries
 
-___________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
-*Note*
-
+[NOTE]
+====
 This appendix covers the legacy Hibernate org.hibernate.Criteria API,
 which should be considered deprecated. New development should focus on
 the JPA javax.persistence.criteria.CriteriaQuery API. Eventually,
@@ -12,7 +11,7 @@ JPA javax.persistence.criteria.CriteriaQuery. For details on the JPA
 APIs, see link:#criteria[???].
 
 This information is copied as-is from the older Hibernate documentation.
-___________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+====
 
 Hibernate features an intuitive, extensible criteria query API.
 

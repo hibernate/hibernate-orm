@@ -1,8 +1,5 @@
-HQL and JPQL
-============
-
 [[hql]]
-=== HQL and JPQL
+== HQL and JPQL
 
 * link:#flushing[???]
 * link:#fetching[???]
@@ -24,9 +21,8 @@ case-insensitive. So `SeLeCT` is the same as `sELEct` is the same as
 `SELECT`, but `org.hibernate.eg.FOO` and `org.hibernate.eg.Foo` are
 different, as are `foo.barSet` and `foo.BARSET`.
 
-====
 [NOTE]
-
+====
 This documentation uses lowercase keywords as convention in examples.
 ====
 
@@ -36,10 +32,8 @@ Both HQL and JPQL allow `SELECT`, `UPDATE` and `DELETE` statements to be
 performed. HQL additionally allows `INSERT` statements, in a form
 similar to a SQL `INSERT-SELECT`.
 
+[IMPORTANT]
 ====
---
-*Important*
-
 Care should be taken as to when a `UPDATE` or `DELETE` statement is
 executed.
 
@@ -57,7 +51,7 @@ state might be affected by such operations.
 --
 ====
 
-== Select statements
+=== Select statements
 
 The BNF for `SELECT` statements in HQL is:
 
@@ -73,7 +67,7 @@ explicitly specify intent. Hibernate does not actually enforce that a
 `select_clause` be present even when parsing JPQL queries, however
 applications interested in JPA portability should take heed of this.
 
-== Update statements
+=== Update statements
 
 The BNF for `UPDATE` statements is the same in HQL and JPQL:
 
@@ -100,21 +94,20 @@ the subclasses may actually result in deletes against not just the table
 to which that subclass is mapped, but also the "root" table and tables
 ``in between''
 
+[IMPORTANT]
 ====
-*Important*
-
 Neither `UPDATE` nor `DELETE` statements are allowed to result in what
 is called an implicit join. Their form already disallows explicit joins.
 ====
 
-== Delete statements
+=== Delete statements
 
 The BNF for `DELETE` statements is the same in HQL and JPQL:
 
 A `DELETE` statement is also executed using the executeUpdate method of
 either org.hibernate.Query or javax.persistence.Query.
 
-== Insert statements
+=== Insert statements
 
 HQL adds the ability to define `INSERT` statements as well. There is no
 JPQL equivalent to this. The BNF for an HQL `INSERT` statement is:
@@ -161,7 +154,7 @@ types available to the rest of the query. It also is responsible for
 defining all the ``identification variables'' available to the rest of
 the query.
 
-== Identification variables
+=== Identification variables
 
 Identification variables are often referred to as aliases. References to
 object model classes in the FROM clause can be associated with an
@@ -180,7 +173,7 @@ a query to refer to a given identification variable. In other words,
 JPQL says they _can be_ case insensitive and so Hibernate must be able
 to treat them as such, but this does not make it good practice.
 
-== Root entity references
+=== Root entity references
 
 A root entity reference, or what JPA calls a
 `range variable declaration`, is specifically a reference to a mapped
@@ -202,7 +195,7 @@ entity class name, here `Cat`
 Multiple root entity references can also be specified. Even naming the
 same entity!
 
-== Explicit joins
+=== Explicit joins
 
 The `FROM` clause can also contain explicit relationship joins using the
 `join` keyword. These joins can be either `inner` or `left outer` style
@@ -220,9 +213,8 @@ also. Inner joins can also be fetched. But inner joins still filter. In
 the example, using an inner join instead would have resulted in
 customers without any orders being filtered out of the result.
 
+[IMPORTANT]
 ====
-*Important*
-
 Fetch joins are not valid in sub-queries.
 
 Care should be taken when fetch joining a collection-valued association
@@ -252,7 +244,7 @@ references, see link:#hql-collection-valued-associations[section_title].
 In the case of component/embedded attributes, the join is simply logical
 and does not correlate to a physical (SQL) join.
 
-== Implicit joins (path expressions)
+=== Implicit joins (path expressions)
 
 Another means of adding to the scope of object model types available to
 the query is through the use of implicit joins, or path expressions.
@@ -266,9 +258,8 @@ The `c.chiefExecutive` reference then refers to the chiefExecutive
 attribute of the `Customer` entity. chiefExecutive is an association
 type so we further navigate to its age attribute.
 
+[IMPORTANT]
 ====
-*Important*
-
 If the attribute represents an entity association (non-collection) or a
 component/embedded, that reference can be further navigated. Basic
 values and collection-valued associations cannot be further navigated.
@@ -289,7 +280,7 @@ implicit joins may also reference basic state fields as long as the path
 expression ends there.
 
 [[hql-collection-valued-associations]]
-== Collection member references
+=== Collection member references
 
 References to collection-valued associations actually refer to the
 _values_ of that collection.
@@ -332,7 +323,7 @@ ENTRY::
 See link:#hql-collection-expressions[section_title] for additional
 details on collection related expressions.
 
-== Polymorphism
+=== Polymorphism
 
 HQL and JPQL queries are inherently polymorphic.
 
@@ -342,9 +333,8 @@ subclasses of `Payment` are also available to the query. So if the
 from `Payment` all three types would be available to the query. And the
 query would return instances of all three.
 
-====
 [NOTE]
-
+====
 The HQL query `from java.lang.Object` is totally valid! It returns every
 object of every type defined in your application.
 ====
@@ -360,15 +350,15 @@ entity type expression.
 Essentially expressions are references that resolve to basic or tuple
 values.
 
-== Identification variable
+=== Identification variable
 
 See link:#hql-from-clause[section_title].
 
-== Path expressions
+=== Path expressions
 
 Again, see link:#hql-from-clause[section_title].
 
-== Literals
+=== Literals
 
 String literals are enclosed in single-quotes. To escape a single-quote
 within a string literal, use double single-quotes.
@@ -395,7 +385,7 @@ Date/time literals can be specified using the JDBC escape syntax:
 `{ts 'yyyy-mm-dd hh:mm:ss[.millis]'}` (millis optional) for timestamps.
 These literals only work if you JDBC drivers supports them.
 
-== Parameters
+=== Parameters
 
 HQL supports all 3 of the following forms. JPQL does not support the
 HQL-specific positional parameters notion. It is good practice to not
@@ -424,7 +414,7 @@ binding the same value to each.
 This form should be considered deprecated and may be removed in the near
 future.
 
-== Arithmetic
+=== Arithmetic
 
 Arithmetic operations also represent valid expressions.
 
@@ -447,7 +437,7 @@ This is due partially to differences in database support and partially
 to the lack of support for `INTERVAL` definition in the query language
 itself.
 
-== Concatenation (operation)
+=== Concatenation (operation)
 
 HQL defines a concatenation operator in addition to supporting the
 concatenation (`CONCAT`) function. This is not defined by JPQL, so
@@ -457,7 +447,7 @@ taken from the SQL concatenation operator - `||`.
 See link:#hql-exp-functions[section_title] for details on the `concat()`
 function
 
-== Aggregate functions
+=== Aggregate functions
 
 Aggregate functions are also valid expressions in HQL and JPQL. The
 semantic is the same as their SQL counterpart. The supported aggregate
@@ -479,7 +469,7 @@ Aggregations often appear with grouping. For information on grouping see
 link:#hql-grouping[section_title]
 
 [[hql-exp-functions]]
-== Scalar functions
+=== Scalar functions
 
 Both HQL and JPQL define some standard functions that are available
 regardless of the underlying database in use. HQL can also understand
@@ -569,7 +559,7 @@ snippets of SQL. Such function declarations are made by using the
 addSqlFunction method of `org.hibernate.cfg.Configuration`
 
 [[hql-collection-expressions]]
-== Collection-related expressions
+=== Collection-related expressions
 
 There are a few specialized expressions for working with
 collection-valued associations. Generally these are just abbreviated
@@ -604,7 +594,7 @@ See also link:#hql-collection-qualification[section_title] as there is a
 good deal of overlap.
 
 [[hql-entity-type-exp]]
-== Entity type
+=== Entity type
 
 We can also refer to the type of an entity as an expression. This is
 mainly useful when dealing with entity inheritance hierarchies. The type
@@ -619,7 +609,7 @@ legacy form is considered deprecated in favor of `TYPE`. The legacy form
 would have used `p.class` in the examples rather than `type(p)`. It is
 mentioned only for completeness.
 
-== CASE expressions
+=== CASE expressions
 
 Both the simple and searched forms are supported, as well as the 2 SQL
 defined abbreviated forms (`NULLIF` and `COALESCE`)
@@ -686,7 +676,7 @@ searched case expressions. They are expressions which resolve to a truth
 value, generally `TRUE` or `FALSE`, although boolean comparisons
 involving NULLs generally resolve to `UNKNOWN`.
 
-== Relational comparisons
+=== Relational comparisons
 
 Comparisons involve one of the comparison operators - =, >, >=, <, <=,
 <>]>. HQL also defines <![CDATA[!= as a comparison operator synonymous
@@ -703,13 +693,13 @@ The ANY/SOME qualifier resolves to true if the comparison is true for
 some of (at least one of) the values in the result of the subquery. It
 resolves to false if the subquery result is empty.
 
-== Nullness predicate
+=== Nullness predicate
 
 Check a value for nullness. Can be applied to basic attribute
 references, entity references and parameters. HQL additionally allows it
 to be applied to component/embeddable types.
 
-== Like predicate
+=== Like predicate
 
 Performs a like comparison on string values. The syntax is:
 
@@ -724,13 +714,13 @@ used to escape the special meaning of ``_'' and ``%'' in the
 `pattern_value`. THis is useful when needing to search on patterns
 including either ``_'' or ``%''
 
-== Between predicate
+=== Between predicate
 
 Analogous to the SQL between expression. Perform a evaluation that a
 value is within the range of 2 other values. All the operands should
 have comparable types.
 
-== In predicate
+=== In predicate
 
 `IN` predicates performs a check that a particular value is in a list of
 values. Its syntax is:
@@ -758,39 +748,39 @@ The list of values can come from a number of different sources. In the
 `constructor_expression` and `collection_valued_input_parameter`, the
 list of values must not be empty; it must contain at least one value.
 
-== Exists predicate
+=== Exists predicate
 
 Exists expressions test the existence of results from a subquery. The
 affirmative form returns true if the subquery result contains values.
 The negated form returns true if the subquery result is empty.
 
-== Empty collection predicate
+=== Empty collection predicate
 
 The `IS [NOT] EMPTY` expression applies to collection-valued path
 expressions. It checks whether the particular collection has any
 associated values.
 
-== Member-of collection predicate
+=== Member-of collection predicate
 
 The `[NOT] MEMBER [OF]` expression applies to collection-valued path
 expressions. It checks whether a value is a member of the specified
 collection.
 
-== NOT predicate operator
+=== NOT predicate operator
 
 The `NOT` operator is used to negate the predicate that follows it. If
 that following predicate is true, the NOT resolves to false. If the
 predicate is true, NOT resolves to false. If the predicate is unknown,
 the NOT resolves to unknown as well.
 
-== AND predicate operator
+=== AND predicate operator
 
 The `AND` operator is used to combine 2 predicate expressions. The
 result of the AND expression is true if and only if both predicates
 resolve to true. If either predicate resolves to unknown, the AND
 expression resolves to unknown as well. Otherwise, the result is false.
 
-== OR predicate operator
+=== OR predicate operator
 
 The `OR` operator is used to combine 2 predicate expressions. The result
 of the OR expression is true if either predicate resolves to true. If
@@ -855,7 +845,7 @@ sorted set using `NULLS FIRST` or `NULLS LAST` clause respectively.
 [[hql-api]]
 === Query API
 
-== Hibernate Query API
+=== Hibernate Query API
 
 In Hibernate the HQL/JPQL query is represented as org.hibernate.Query
 which is obtained from the Session. If the HQL/JPQL is a named query,
@@ -868,9 +858,8 @@ control caching.
 
 For complete details, see the Query javadocs.
 
+[IMPORTANT]
 ====
-*Important*
-
 Query hints here are database query hints. They are added directly to
 the generated SQL according to Dialect#getQueryHintString. The JPA
 notion of query hints, on the other hand, refer to hints that target the
@@ -911,9 +900,8 @@ results.
 * Query#uniqueResult - executes the select query and returns the single
 result. If there were more than one result an exception is thrown.
 
-====
 [NOTE]
-
+====
 If the unique result is used often and the attributes upon which it is
 based are unique, you may want to consider mapping a natural-id and
 using the natural-id loading API. See the Hibernate Domain Mapping Guide
@@ -936,9 +924,8 @@ ScrollableResults will work with try-with-resources blocks!). If left
 unclosed by the application, Hibernate will automatically close the
 ScrollableResults when the current transaction completes.
 
-====
 [NOTE]
-
+====
 If you plan to use Query#scroll with collection fetches it is important
 that your query explicitly order the results so that the JDBC results
 contain the the related rows sequentially.
@@ -961,16 +948,15 @@ done with this Iterator you should close it, either by casting to
 HibernateIterator or Closeable, or by calling
 org.hibernate.Hibernate#close
 
-== JPA Query API
+=== JPA Query API
 
 In JPA the query is represented by javax.persistence.Query or
 javax.persistence.TypedQuery as obtained from the EntityManager. For
 named queries EntityManager#createNamedQuery is used; otherwise
 EntityManager#createQuery is used.
 
-====
 [NOTE]
-
+====
 This will all sound very familiar. Not only was the JPQL syntax heavily
 inspired by HQL, but many of the JPA APIs were heavily inspired by
 Hibernate. The 2 Query contracts are very similar.

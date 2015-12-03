@@ -1,8 +1,5 @@
-Example of specifying JPA callbacks
-===================================
-
 [[events]]
-=== Interceptors and events
+== Interceptors and events
 
 It is useful for the application to react to certain events that occur
 inside Hibernate. This allows for the implementation of generic
@@ -19,9 +16,8 @@ Interceptor implementation that automatically sets the `createTimestamp`
 property when an Auditable entity is created and updates the
 `lastUpdateTimestamp` property when an Auditable entity is updated.
 
-====
 [NOTE]
-
+====
 You can either implement Interceptor directly or extend
 `org.hibernate.EmptyInterceptor`.
 ====
@@ -55,9 +51,8 @@ the `LoadEvent` is processed by the registered implementation of the
 be responsible for processing any `load()` requests made of the
 `Session`.
 
-====
 [NOTE]
-
+====
 See link:#registering-listeners-example[???] for information on
 registering custom event listeners.
 ====
@@ -71,7 +66,7 @@ even the default event listeners used by Hibernate out-of-the-box as
 these are declared non-final for this purpose). Here is an example of a
 custom load event listener:
 
-== Hibernate declarative security
+=== Hibernate declarative security
 
 Usually, declarative security in Hibernate applications is managed in a
 session facade layer. Hibernate allows certain actions to be

@@ -1,5 +1,5 @@
 [[portability]]
-=== Database Portability Considerations
+== Database Portability Considerations
 
 [[portability-basics]]
 === Portability Basics
@@ -89,9 +89,8 @@ issue the insert immediately when the users requests the entitiy be
 associated with the session (like via save() e.g.) regardless of current
 transactional semantics.
 
-====
 [NOTE]
-
+====
 Hibernate was changed slightly once the implication of this was better
 understood so that the insert is delayed in cases where that is
 feasible.
@@ -104,9 +103,8 @@ Starting with version 3.2.3, Hibernate comes with a set of
 http://in.relation.to/2082.lace[enhanced] identifier generators
 targetting portability in a much different way.
 
-====
 [NOTE]
-
+====
 There are specifically 2 bundled __enhanced__generators:
 
 * `org.hibernate.id.enhanced.SequenceStyleGenerator`
@@ -136,9 +134,8 @@ of mapping a _logical_ function name to a delegate which knows how to
 render that particular function, perhaps even using a totally different
 physical function call.
 
+[IMPORTANT]
 ====
-*Important*
-
 Technically this function registration is handled through the
 `org.hibernate.dialect.function.SQLFunctionRegistry` class which is
 intended to allow users to provide custom function definitions without

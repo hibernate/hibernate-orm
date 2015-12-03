@@ -1,5 +1,5 @@
 [[batch]]
-=== Batching
+== Batching
 
 First we need to decide what all to discuss here as that phrase has so
 many connotations. Do we cover

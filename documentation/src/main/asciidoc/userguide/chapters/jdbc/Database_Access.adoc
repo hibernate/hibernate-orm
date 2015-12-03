@@ -1,5 +1,5 @@
 [[database]]
-=== Database access
+== Database access
 
 [[database-connectionprovider]]
 === ConnectionProvider
@@ -22,30 +22,29 @@ ConnectionProvider to use based on the following algorithm:
 
 1.  If `hibernate.connection.provider_class` is set, it takes precedence
 2.  else if `hibernate.connection.datasource` is set ->
-link:#database-connectionprovider-datasource[section_title]
+link:#database-connectionprovider-datasource[Using DataSources]
 3.  else if any setting prefixed by `hibernate.c3p0.` is set ->
-link:#database-connectionprovider-c3p0[section_title]
+link:#database-connectionprovider-c3p0[Using c3p0]
 4.  else if any setting prefixed by `hibernate.proxool.` is set ->
-link:#database-connectionprovider-proxool[section_title]
+link:#database-connectionprovider-proxool[Using Proxool]
 5.  else if any setting prefixed by `hibernate.hikari.` is set ->
-link:#database-connectionprovider-hikari[section_title]
+link:#database-connectionprovider-hikari[Using Hikari]
 6.  else if `hibernate.connection.url` is set ->
-link:#database-connectionprovider-drivermanager[section_title]
-7.  else -> link:#database-connectionprovider-provided[section_title]
+link:#database-connectionprovider-drivermanager[Using Hibernate's built-in (and unsupported) pooling]
+7.  else -> link:#database-connectionprovider-provided[User-provided Connections]
 
 [[database-connectionprovider-datasource]]
-== Using DataSources
+=== Using DataSources
 
 Hibernate can integrate with a javax.sql.DataSource for obtaining JDBC
 Connections. Applications would tell Hibernate about the DataSource via
 the (required) `hibernate.connection.datasource` setting which can
 either specify a JNDI name or would reference the actual DataSource
 instance. For cases where a JNDI name is given, be sure to read
-link:#jndi[???]
+<<jndi/JNDI.adoc#jndi,JNDI>>
 
-====
 [NOTE]
-
+====
 For JPA applications, note that `hibernate.connection.datasource`
 corresponds to either `javax.persistence.jtaDataSource` or
 `javax.persistence.nonJtaDataSource`.
@@ -57,11 +56,10 @@ specified, the form of DataSource#getConnection accepting username and
 password will be used. Otherwise the no-arg form is used.
 
 [[database-connectionprovider-c3p0]]
-== Using c3p0
+=== Using c3p0
 
+[IMPORTANT]
 ====
-*Important*
-
 To use this integration, the application must include the hibernate-c3p0
 module jar (as well as its dependencies) on the classpath.
 ====
@@ -73,7 +71,7 @@ are recognized.
 
 Transaction isolation of the Connections is managed by the
 ConnectionProvider itself. See
-link:#database-connectionprovider-isolation[section_title].
+link:#database-connectionprovider-isolation[ConnectionProvider support for transaction isolation setting].
 
 `hibernate.connection.driver_class`::
   The name of the JDBC Driver class to use
@@ -112,11 +110,10 @@ Any other settings prefixed with `c3p0.`::
   http://www.mchange.com/projects/c3p0/#configuration
 
 [[database-connectionprovider-proxool]]
-== Using Proxool
+=== Using Proxool
 
+[IMPORTANT]
 ====
-*Important*
-
 To use this integration, the application must include the
 hibernate-proxool module jar (as well as its dependencies) on the
 classpath.
@@ -127,7 +124,7 @@ http://proxool.sourceforge.net/[Proxool] connection pooling.
 
 Transaction isolation of the Connections is managed by the
 ConnectionProvider itself. See
-link:#database-connectionprovider-isolation[section_title].
+link:#database-connectionprovider-isolation[ConnectionProvider support for transaction isolation setting].
 
 [[database-connectionprovider-proxool-existing]]
 === Using existing Proxool pools
@@ -156,11 +153,10 @@ http://proxool.sourceforge.net/configure.html.
 use.
 
 [[database-connectionprovider-hikari]]
-== Using Hikari
+=== Using Hikari
 
+[IMPORTANT]
 ====
-*Important*
-
 To use this integration, the application must include the
 hibernate-hikari module jar (as well as its dependencies) on the
 classpath.
@@ -186,31 +182,30 @@ precedence):
   Mapped to Hikari's `password` setting
 `hibernate.connection.isolation`::
   Mapped to Hikari's `transactionIsolation` setting. See
-  link:#database-connectionprovider-isolation[section_title]. Note that
+  link:#database-connectionprovider-isolation[ConnectionProvider support for transaction isolation setting]. Note that
   Hikari only supports JDBC standard isolation levels (apparently).
 `hibernate.connection.autocommit`::
   Mapped to Hikari's `autoCommit` setting
 
 [[database-connectionprovider-drivermanager]]
-== Using Hibernate's built-in (and unsupported) pooling
+=== Using Hibernate's built-in (and unsupported) pooling
 
+[IMPORTANT]
 ====
-*Important*
-
 The built-in connection pool is not supported supported for use.
 ====
 
 This section is here just for completeness.
 
 [[database-connectionprovider-provided]]
-== User-provided Connections
+=== User-provided Connections
 
 It is possible to use Hibernate by simply passing a Connection to use to
 the Session when the Session is opened. This usage is discouraged and
 not discussed here.
 
 [[database-connectionprovider-isolation]]
-== ConnectionProvider support for transaction isolation setting
+=== ConnectionProvider support for transaction isolation setting
 
 All of the provided ConnectionProvider implementations, other than
 DataSourceConnectionProvider, support consistent setting of transaction
@@ -244,7 +239,7 @@ In most cases Hibernate will be able to determine the proper Dialect to
 use by asking some questions of the JDBC Connection during bootstrap.
 For information on Hibernate's ability to determine the proper Dialect
 to use (and your ability to influence that resolution), see
-link:#portability-dialectresolver[???]
+<<portability/Portability.adoc#portability-dialectresolver,Dialect resolution>>
 
 If for some reason it is not able to determine the proper one or you
 want to use a custom Dialect, you will need to set the

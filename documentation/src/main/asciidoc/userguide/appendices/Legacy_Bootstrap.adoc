@@ -9,9 +9,8 @@ etc. I like to think of Configuration as a big pot to which we add a
 bunch of stuff (mappings, settings, etc) and from which we eventually
 get a SessionFactory.
 
-_____________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
-*Note*
-
+[NOTE]
+====
 There are some significant draw backs to this approach which led to its
 deprecation and the development of the new approach, which is discussed
 in link:#bootstrap-native[???]. Configuration is semi-deprecated but
@@ -19,7 +18,7 @@ still available for use, in a limited form that eliminates these draw
 backs. "Under the covers", Configuration uses the new bootstrapping
 code, so the things available there as also available here in terms of
 auto-discovery.
-_____________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+====
 
 You can obtain the Configuration by instantiating it directly. You then
 specify mapping metadata (XML mapping documents, annotated classes) that

@@ -1,5 +1,5 @@
 [[fetching]]
-=== Fetching
+== Fetching
 
 Fetching, essentially, is the process of grabbing data from the database
 and making it available to the application. Tuning how an application
@@ -18,9 +18,8 @@ The concept of fetching breaks down into two different questions.
 * When should the data be fetched? Now? Later?
 * How should the data be fetched?
 
-====
 [NOTE]
-
+====
 "now" is generally termed eager or immediate. "later" is generally
 termed lazy or delayed.
 ====
@@ -65,9 +64,24 @@ SUBSELECT::
 Let's consider these topics as it relates to an simple domain model and
 a few use cases.
 
-====
-*Important*
+.Sample domain model
+[source,java]
+----
+include::{sourcedir}/Employee.java[]
+----
 
+[source,java]
+----
+include::{sourcedir}/Department.java[]
+----
+
+[source,java]
+----
+include::{sourcedir}/Project.java[]
+----
+
+[IMPORTANT]
+====
 The Hibernate recommendation is to statically mark all associations lazy
 and to use dynamic fetching strategies for eagerness. This is
 unfortunately at odds with the JPA specification which defines that all
@@ -75,13 +89,19 @@ one-to-one and many-to-one associations should be eagerly fetched by
 default. Hibernate, as a JPA provider, honors that default.
 ====
 
-== No fetching
+=== No fetching
 
 The login use-case
 
 For the first use case, consider the application's login process for an
 Employee. Lets assume that login only requires access to the Employee
 information, not Project nor Department information.
+
+.No fetching example
+[source,java]
+----
+include::{sourcedir}/Login.java[]
+----
 
 In this example, the application gets the Employee data. However,
 because all associations from Employee are declared as LAZY (JPA defines
@@ -91,7 +111,13 @@ If the login process does not need access to the Employee information
 specifically, another fetching optimization here would be to limit the
 width of the query results.
 
-== Dynamic fetching via queries
+.No fetching (scalar) example
+[source,java]
+----
+include::{sourcedir}/LoginScalar.java[]
+----
+
+=== Dynamic fetching via queries
 
 The projects for an employee use-case
 
@@ -100,12 +126,23 @@ an Employee. Certainly access to the Employee is needed, as is the
 collection of Projects for that Employee. Information about Departments,
 other Employees or other Projects is not needed.
 
+.Dynamic query fetching example
+[source,java]
+----
+include::{sourcedir}/ProjectsForAnEmployeeHql.java[]
+----
+
+[source,java]
+----
+include::{sourcedir}/ProjectsForAnEmployeeCriteria.java[]
+----
+
 In this example we have an Employee and their Projects loaded in a
 single query shown both as an HQL query and a JPA Criteria query. In
 both cases, this resolves to exactly one database query to get all that
 information.
 
-== Dynamic fetching via profiles
+=== Dynamic fetching via profiles
 
 The projects for an employee use-case using natural-id
 
@@ -114,6 +151,17 @@ Employee information in the "projects for and employee" use-case.
 Loading by natural-id uses the statically defined fetching strategies,
 but does not expose a means to define load-specific fetching. So we
 would leverage a fetch profile.
+
+.Fetch profile example
+[source,java]
+----
+include::{sourcedir}/FetchOverrides.java[]
+----
+
+[source,java]
+----
+include::{sourcedir}/ProjectsForAnEmployeeFetchProfile.java[]
+----
 
 Here the Employee is obtained by natural-id lookup and the Employee's
 Project data is fetched eagerly. If the Employee data is resolved from

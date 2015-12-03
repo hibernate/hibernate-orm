@@ -1,12 +1,11 @@
 [[criteria]]
-=== Criteria
+== Criteria
 
 Criteria queries offer a type-safe alternative to HQL, JPQL and
 native-sql queries.
 
+[IMPORTANT]
 ====
-*Important*
-
 Hibernate offers an older, legacy org.hibernate.Criteria API which
 should be considered deprecated. No feature development will target
 those APIs. Eventually, Hibernate-specific criteria features will be
@@ -46,9 +45,8 @@ javax.persistence.criteria.CriteriaBuilder for this purpose:
 Each serves a different purpose depending on the expected type of the
 query results.
 
-====
 [NOTE]
-
+====
 Chapter 6 Criteria API of the JPA Specification already contains a
 decent amount of reference material pertaining to the various parts of a
 criteria query. So rather than duplicate all that content here, lets
@@ -63,7 +61,7 @@ types in the query result. This might be an entity, an Integer, or any
 other object.
 
 [[querycriteria-typedquery-entity]]
-== Selecting an entity
+=== Selecting an entity
 
 This is probably the most common form of query. The application wants to
 select entity instances.
@@ -71,9 +69,8 @@ select entity instances.
 The example uses createQuery passing in the `Person` class reference as
 the results of the query will be Person objects.
 
-====
 [NOTE]
-
+====
 The call to the CriteriaQuery.select method in this example is
 unnecessary because _personRoot_ will be the implied selection since we
 have only a single query root. It was done here only for completeness of
@@ -86,7 +83,7 @@ additional details on the JPA static metamodel.
 ====
 
 [[querycriteria-typedquery-expression]]
-== Selecting an expression
+=== Selecting an expression
 
 The simplest form of selecting an expression is selecting a particular
 attribute from an entity. But this expression might also represent an
@@ -99,7 +96,7 @@ multiple references to the Person entity, attribute references always
 need to be qualified. This is accomplished by the Root#get method call.
 
 [[querycriteria-typedquery-multiselect]]
-== Selecting multiple values
+=== Selecting multiple values
 
 There are actually a few different ways to select multiple values using
 criteria queries. We will explore 2 options here, but an alternative
@@ -124,7 +121,7 @@ criteria query was first built, but in this case it says to select and
 return an __Object[]__.
 
 [[querycriteria-typedquery-construct]]
-== Selecting a wrapper
+=== Selecting a wrapper
 
 Another alternative to
 link:#querycriteria-typedquery-multiselect[section_title] is to instead
@@ -203,15 +200,14 @@ navigation.
 — JPA Specification, section 6.5.2 Query Roots, pg 262
 ====
 
-====
 [NOTE]
-
+====
 All the individual parts of the FROM clause (roots, joins, paths)
 implement the javax.persistence.criteria.From interface.
 ====
 
 [[querycriteria-from-root]]
-== Roots
+=== Roots
 
 Roots define the basis from which all joins, paths and attributes are
 available in the query. A root is always an entity type. Roots are
@@ -223,7 +219,7 @@ create a cartesian product between the newly added root and the others.
 Here is an example matching all single men and all single women:
 
 [[querycriteria-from-join]]
-== Joins
+=== Joins
 
 Joins allow navigation from other javax.persistence.criteria.From to
 either association or embedded attributes. Joins are created by the
@@ -231,16 +227,15 @@ numerous overloaded join methods of the javax.persistence.criteria.From
 interface
 
 [[querycriteria-from-fetch]]
-== Fetches
+=== Fetches
 
 Just like in HQL and JPQL, criteria queries can specify that associated
 data be fetched along with the owner. Fetches are created by the
 numerous overloaded fetch methods of the javax.persistence.criteria.From
 interface.
 
-====
 [NOTE]
-
+====
 Technically speaking, embedded attributes are always fetched with their
 owner. However in order to define the fetching of _Address#country_ we
 needed a javax.persistence.criteria.Fetch for its parent path.
@@ -249,9 +244,8 @@ needed a javax.persistence.criteria.Fetch for its parent path.
 [[querycriteria-path]]
 === Path expressions
 
-====
 [NOTE]
-
+====
 Roots, joins and fetches are themselves paths as well.
 ====
 

@@ -3,7 +3,7 @@ Hibernate 5.0 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
-Changes in 5.0.5,Finale (December 2, 2015)
+Changes in 5.0.5.Final (December 2, 2015)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/21850
 

@@ -1,9 +1,9 @@
 OSGi
 ====
 
-= OSGi
+=== OSGi
 
-= OSGi Specification and Environment
+=== OSGi Specification and Environment
 
 Hibernate targets the OSGi 4.3 spec or later. It was necessary to start
 with 4.3, over 4.2, due to our dependency on OSGi's `BundleWiring` for
@@ -21,7 +21,7 @@ Hibernate supports three types of configurations within OSGi.
 +
 :
 
-= hibernate-osgi
+=== hibernate-osgi
 
 Rather than embed OSGi capabilities into hibernate-core,
 hibernate-entitymanager, and sub-modules, hibernate-osgi was created.
@@ -30,7 +30,7 @@ provides an OSGi-specific ClassLoader (aggregates the container's CL
 with core and entitymanager CLs), JPA persistence provider, SF/EMF
 bootstrapping, entities/mappings scanner, and service management.
 
-= features.xml
+=== features.xml
 
 Apache Karaf environments tend to make heavy use of its "features"
 concept, where a feature is a set of order-specific bundles focused on a
@@ -53,13 +53,13 @@ for necessary bundles to activate and their correct ordering. However,
 note that Karaf starts a number of bundles automatically, several of
 which would need to be installed manually on alternatives.
 
-= QuickStarts/Demos
+=== QuickStarts/Demos
 
 All three configurations have a QuickStart/Demo available in the
 https://github.com/hibernate/hibernate-demos[hibernate-demos] project:
 
 [[osgi-managed-jpa]]
-= Container-Managed JPA
+=== Container-Managed JPA
 
 The Enterprise OSGi specification includes container-managed JPA. The
 container is responsible for discovering persistence units in bundles
@@ -117,7 +117,7 @@ container takes the name of your persistence unit, then automatically
 injects an `EntityManager` instance into your given bean attribute.
 
 [[osgi-unmanaged-jpa]]
-= Unmanaged JPA
+=== Unmanaged JPA
 
 Hibernate also supports the use of JPA through hibernate-entitymanager,
 unmanaged by the OSGi container. The client bundle is responsible for
@@ -150,7 +150,7 @@ points, scanning, etc. Manually creating an `EntityManagerFactory` is
 guaranteed to NOT work during runtime!
 
 [[osgi-unmanaged-native]]
-= Unmanaged Native
+=== Unmanaged Native
 
 Native Hibernate use is also supported. The client bundle is responsible
 for managing the SessionFactory and Sessions.
@@ -177,7 +177,7 @@ service, rather than creating it manually. The service handles the OSGi
 ClassLoader, discovered extension points, scanning, etc. Manually
 creating an `SessionFactory` is guaranteed to NOT work during runtime!
 
-= Optional Modules
+=== Optional Modules
 
 The
 https://github.com/hibernate/hibernate-demos/tree/master/hibernate-orm/osgi/unmanaged-native[unmanaged-native]
@@ -189,7 +189,7 @@ added in 4.3, however none of their 3rd party libraries currently work
 in OSGi (lots of ClassLoader problems, etc.). We're tracking the issues
 in JIRA.
 
-= Extension Points
+=== Extension Points
 
 Multiple contracts exist to allow applications to integrate with and
 extend Hibernate capabilities. Most apps utilize JDK services to provide
@@ -226,7 +226,7 @@ Extension points can also be registered programmatically with
 `BundleContext#registerService`, typically within your
 `BundleActivator#start`.
 
-= Caveats
+=== Caveats
 
 * Technically, multiple persistence units are supported by Enterprise
 OSGi JPA and unmanaged Hibernate JPA use. However, we cannot currently

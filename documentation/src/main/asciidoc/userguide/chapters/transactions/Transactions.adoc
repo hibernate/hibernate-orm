@@ -1,5 +1,5 @@
 [[transactions]]
-= Transactions and concurrency control
+=== Transactions and concurrency control
 
 It is important to understand that the term transaction has many
 different yet related meanings in regards to persistence and
@@ -20,7 +20,7 @@ transaction as one-in-the-same.
 ====
 
 [[transactions-physical]]
-= Physical Transactions
+=== Physical Transactions
 
 Hibernate uses the JDBC API for persistence. In the world of Java there
 are 2 well defined mechanism for dealing with transactions in JDBC: JDBC
@@ -113,7 +113,7 @@ Application Server.
 Application Server.
 
 [[transactions-api]]
-= Hibernate Transaction API
+=== Hibernate Transaction API
 
 Hibernate provides an API for helping to isolate applications from the
 differences in the underlying physical transaction system in use. Based
@@ -170,7 +170,7 @@ all environments. To that end, it generally defers to the JTA
 specification when there are differences (for example automatically
 trying rollback on a failed commit).
 
-= Transactional patterns (and anti-patterns)
+=== Transactional patterns (and anti-patterns)
 
 [[session-per-operation]]
 == Session-per-operation anti-pattern
@@ -318,7 +318,7 @@ each have advantages and disadvantages.
 Discussion coming soon..
 
 [[transactions-basics-issues]]
-= Common issues
+=== Common issues
 
 * A Session is not thread-safe. Things that work concurrently, like HTTP
 requests, session beans, or Swing workers, will cause race conditions if

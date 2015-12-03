@@ -1,5 +1,5 @@
 [[fetching]]
-= Fetching
+=== Fetching
 
 Fetching, essentially, is the process of grabbing data from the database
 and making it available to the application. Tuning how an application
@@ -11,7 +11,7 @@ too little data causes additional fetches to be needed. Tuning how an
 application fetches data presents a great opportunity to influence the
 application's overall performance.
 
-= The basics
+=== The basics
 
 The concept of fetching breaks down into two different questions.
 
@@ -60,7 +60,7 @@ SUBSELECT::
   EAGER (the second select is issued immediately) or LAZY (the second
   select is delayed until the data is needed).
 
-= Applying fetch strategies
+=== Applying fetch strategies
 
 Let's consider these topics as it relates to an simple domain model and
 a few use cases.

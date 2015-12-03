@@ -1,6 +1,6 @@
-= Multi-tenancy
+=== Multi-tenancy
 
-= What is multi-tenancy?
+=== What is multi-tenancy?
 
 The term multi-tenancy in general is applied to software development to
 indicate an architecture in which a single running instance of an
@@ -11,7 +11,7 @@ challenge in these systems. This includes the data owned by each tenant
 stored in the database. It is this last piece, sometimes called
 multi-tenant data, on which we will focus.
 
-= Multi-tenant data approaches
+=== Multi-tenant data approaches
 
 There are 3 main approaches to isolating information in these
 multi-tenant systems which goes hand-in-hand with different database
@@ -73,7 +73,7 @@ Connection pool to service all tenants. However, in this approach the
 application needs to alter each and every SQL statement sent to the
 database to reference the ``tenant identifier'' discriminator.
 
-= Multi-tenancy in Hibernate
+=== Multi-tenancy in Hibernate
 
 Using Hibernate with multi-tenant data comes down to both an API and
 then integration piece(s). As usual Hibernate strives to keep the API
@@ -182,7 +182,7 @@ may not change.
 The JPA expert group is in the process of defining multi-tenancy support
 for the upcoming 2.1 version of the specification.
 
-= Strategies for MultiTenantConnectionProvider implementors
+=== Strategies for MultiTenantConnectionProvider implementors
 
 The approach above is valid for the DATABASE approach. It is also valid
 for the SCHEMA approach provided the underlying database allows naming

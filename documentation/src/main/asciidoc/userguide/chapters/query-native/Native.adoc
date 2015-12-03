@@ -1,5 +1,5 @@
 [[querynative]]
-= Native SQL Queries
+=== Native SQL Queries
 
 You may also express queries in the native SQL dialect of your database.
 This is useful if you want to utilize database specific features such as
@@ -10,7 +10,7 @@ Hibernate/JPA. Hibernate also allows you to specify handwritten SQL
 operations.
 
 [[querynative-creating]]
-= Using a `SQLQuery`
+=== Using a `SQLQuery`
 
 Execution of native SQL queries is controlled via the `SQLQuery`
 interface, which is obtained by calling `Session.createSQLQuery()`. The
@@ -246,7 +246,7 @@ NAME like :name").addEntity(Cat.class); List pusList =
 query.setString("name", "Pus%").list(); </programlisting>
 
 [[querysql-namedqueries]]
-= Named SQL queries
+=== Named SQL queries
 
 Named SQL queries can also be defined in the mapping document and called
 in exactly the same way as a named HQL query. In this case, you do _not_
@@ -522,7 +522,7 @@ its return value. Everything else will be discarded.
 be more efficient, but this is not a requirement.
 
 [[querysql-cud]]
-= Custom SQL for create, update and delete
+=== Custom SQL for create, update and delete
 
 Hibernate can use custom SQL for create, update, and delete operations.
 The SQL can be overridden at the statement level or inidividual column
@@ -624,7 +624,7 @@ VARCHAR2) RETURN NUMBER IS BEGIN update PERSON set NAME = uname, where
 ID = uid; return SQL%ROWCOUNT; END updatePerson;</programlisting>
 
 [[querysql-load]]
-= Custom SQL for loading
+=== Custom SQL for loading
 
 You can also declare your own SQL (or HQL) queries for entity loading.
 As with inserts, updates, and deletes, this can be done at the

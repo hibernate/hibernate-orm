@@ -1,5 +1,5 @@
 [[jndi]]
-= JNDI
+=== JNDI
 
 Hibernate does optionally interact with JNDI on the applications behalf.
 Generally it does this when the application:

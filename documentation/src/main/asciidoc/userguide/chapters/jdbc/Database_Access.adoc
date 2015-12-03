@@ -1,8 +1,8 @@
 [[database]]
-= Database access
+=== Database access
 
 [[database-connectionprovider]]
-= ConnectionProvider
+=== ConnectionProvider
 
 As an ORM tool, probably the single most important thing you need to
 tell Hibernate is how to connect to your database so that it may connect
@@ -232,7 +232,7 @@ supported for JDBC standard isolations, not for isolation levels
 specific to a particular JDBC driver.
 
 [[database-dialect]]
-= Database Dialect
+=== Database Dialect
 
 Although SQL is relatively standardized, each database vendor uses a
 subset and superset of ANSI SQL defined syntax. This is referred to as

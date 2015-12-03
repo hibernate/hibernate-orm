@@ -2,13 +2,13 @@ Example of specifying JPA callbacks
 ===================================
 
 [[events]]
-= Interceptors and events
+=== Interceptors and events
 
 It is useful for the application to react to certain events that occur
 inside Hibernate. This allows for the implementation of generic
 functionality and the extension of Hibernate functionality.
 
-= Interceptors
+=== Interceptors
 
 The org.hibernate.Interceptor interface provides callbacks from the
 session to the application, allowing the application to inspect and/or
@@ -38,7 +38,7 @@ from that SessionFactory. SessionFactory-scoped interceptors must be
 thread safe. Ensure that you do not store session-specific states, since
 multiple sessions will use this interceptor potentially concurrently.
 
-= Native Event system
+=== Native Event system
 
 If you have to react to particular events in the persistence layer, you
 can also use the Hibernate _event_ architecture. The event system can be
@@ -87,7 +87,7 @@ implementation for this purpose.
 You must also decide how to configure your JACC provider. Consult your
 JACC provider documentation.
 
-= JPA Callbacks
+=== JPA Callbacks
 
 JPA also defines a more limited set of callbacks through annotations.
 

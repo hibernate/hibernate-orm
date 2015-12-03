@@ -144,7 +144,7 @@ You could even develop your own to do special implicit naming.
 
 Collections of compositions are specifically value collections (as
 compositions are a value type). Value collections are covered in detail
-in link:collection.adoc#collections-value[Collections of value types].
+in <<collection.adoc#collections-value,Collections of value types>>.
 
 The one thing to add to the discussion of value collections in regards
 to compositions is that the composition cannot, in turn, define
@@ -154,7 +154,7 @@ collections.
 === Compositions as Map key
 
 Compositions can also be used as the key values for Maps. Mapping Maps
-and their keys is convered in detail in link:collection.adoc#collections-map[Map - key].
+and their keys is converted in detail in <<collection.adoc#collections-map,Map - key>>.
 
 Again, compositions used as a Map key cannot, in turn, define
 collections.

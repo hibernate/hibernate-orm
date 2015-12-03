@@ -1,8 +1,8 @@
 [[portability]]
-= Database Portability Considerations
+=== Database Portability Considerations
 
 [[portability-basics]]
-= Portability Basics
+=== Portability Basics
 
 One of the selling points of Hibernate (and really Object/Relational
 Mapping as a whole) is the notion of database portability. This could
@@ -15,7 +15,7 @@ changes to your code, and ideally without any changes to the mapping
 metadata.
 
 [[portability-dialect]]
-= Dialect
+=== Dialect
 
 The first line of portability for Hibernate is the dialect, which is a
 specialization of the `org.hibernate.dialect.Dialect` contract. A
@@ -27,7 +27,7 @@ If you find that your particular database is not among them, it is not
 terribly difficult to write your own.
 
 [[portability-dialectresolver]]
-= Dialect resolution
+=== Dialect resolution
 
 Originally, Hibernate would always require that users specify which
 dialect to use. In the case of users looking to simultaneously target
@@ -70,7 +70,7 @@ configuration setting (see the `DIALECT_RESOLVERS` constant on
 `org.hibernate.cfg.Environment`).
 
 [[portability-idgen]]
-= Identifier generation
+=== Identifier generation
 
 When considering portability between databases, another important
 decision is selecting the identifier generation stratagy you want to
@@ -120,7 +120,7 @@ of a sequence on databases which do not support sequences by using a
 table.
 
 [[portability-functions]]
-= Database functions
+=== Database functions
 
 ====
 *Warning*
@@ -151,7 +151,7 @@ will be recognized for HQL.
 ====
 
 [[portability-types]]
-= Type mappings
+=== Type mappings
 
 This section scheduled for completion at a later date...
 

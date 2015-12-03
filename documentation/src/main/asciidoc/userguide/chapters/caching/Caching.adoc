@@ -1,8 +1,8 @@
 [[caching]]
-= Caching
+=== Caching
 
 [[caching-config]]
-= Configuring second-level caching
+=== Configuring second-level caching
 
 Hibernate defines the ability to integrate with pluggable providers for
 the purpose of caching data outside the context of a particular Session.
@@ -122,7 +122,7 @@ side is cached, the alternative is to have stale data in that collection
 cache.
 
 [[caching-management]]
-= Managing the Cached Data
+=== Managing the Cached Data
 
 At runtime Hibernate handles moving data into and out of the
 second-level cache in response to the operations performed by the

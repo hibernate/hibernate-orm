@@ -17,7 +17,7 @@ defines the behavior of changing the value of the identifier attribute
 to be undefined; Hibernate simply does not support that. In cases where
 the values for the PK you have chosen will be updated, Hibernate
 recommends mapping the mutable value as a natural id, and use a
-surrogate id for the PK. See link:natural_id.adoc#naturalid[Natural Ids].
+surrogate id for the PK. See <<natural_id.adoc#naturalid,Natural Ids>>.
 
 [NOTE]
 ====

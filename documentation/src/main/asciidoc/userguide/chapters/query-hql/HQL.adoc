@@ -2,7 +2,7 @@ HQL and JPQL
 ============
 
 [[hql]]
-= HQL and JPQL
+=== HQL and JPQL
 
 * link:#flushing[???]
 * link:#fetching[???]
@@ -17,7 +17,7 @@ Both HQL and JPQL are non-type-safe ways to perform query operations.
 Criteria queries offer a type-safe approach to querying. See
 link:#criteria[???] for more information.
 
-= Case Sensitivity
+=== Case Sensitivity
 
 With the exception of names of Java classes and properties, queries are
 case-insensitive. So `SeLeCT` is the same as `sELEct` is the same as
@@ -30,7 +30,7 @@ different, as are `foo.barSet` and `foo.BARSET`.
 This documentation uses lowercase keywords as convention in examples.
 ====
 
-= Statement types
+=== Statement types
 
 Both HQL and JPQL allow `SELECT`, `UPDATE` and `DELETE` statements to be
 performed. HQL additionally allows `INSERT` statements, in a form
@@ -154,7 +154,7 @@ the `seed value` defined by the corresponding
 org.hibernate.type.VersionType is used.
 
 [[hql-from-clause]]
-= The `FROM` clause
+=== The `FROM` clause
 
 The `FROM` clause is responsible defining the scope of object model
 types available to the rest of the query. It also is responsible for
@@ -355,7 +355,7 @@ Hibernate-specific) or limiting them using in the query itself using an
 entity type expression.
 
 [[hql-expressions]]
-= Expressions
+=== Expressions
 
 Essentially expressions are references that resolve to basic or tuple
 values.
@@ -643,7 +643,7 @@ COALESCE is an abbreviated CASE expression that returns the first
 non-null operand. We have seen a number of COALESCE examples above.
 
 [[hql-select-clause]]
-= The `SELECT` clause
+=== The `SELECT` clause
 
 The `SELECT` clause identifies which objects and values to return as the
 query results. The expressions discussed in
@@ -679,7 +679,7 @@ opposed to a List<Object[]>. The keys of the map are defined by the
 aliases given to the select expressions.
 
 [[hql-conditional-expressions]]
-= Predicates
+=== Predicates
 
 Predicates form the basis of the where clause, the having clause and
 searched case expressions. They are expressions which resolve to a truth
@@ -798,7 +798,7 @@ both predicates resolve to unknown, the OR expression resolves to
 unknown. Otherwise, the result is false.
 
 [[hql-where-clause]]
-= The `WHERE` clause
+=== The `WHERE` clause
 
 The `WHERE` clause of a query is made up of predicates which assert
 whether values in each potential row match the predicated checks. Thus,
@@ -806,7 +806,7 @@ the where clause restricts the results returned from a select query and
 limits the scope of update and delete queries.
 
 [[hql-grouping]]
-= Grouping
+=== Grouping
 
 The `GROUP BY` clause allows building aggregated results for various
 value groups. As an example, consider the following queries:
@@ -828,7 +828,7 @@ made up of predicates. HAVING is applied after the groupings and
 aggregations have been done; WHERE is applied before.
 
 [[hql-ordering]]
-= Ordering
+=== Ordering
 
 The results of the query can also be ordered. The `ORDER BY` clause is
 used to specify the selected values to be used to order the result. The
@@ -853,7 +853,7 @@ ordering direction. Null values can be placed in front or at the end of
 sorted set using `NULLS FIRST` or `NULLS LAST` clause respectively.
 
 [[hql-api]]
-= Query API
+=== Query API
 
 == Hibernate Query API
 

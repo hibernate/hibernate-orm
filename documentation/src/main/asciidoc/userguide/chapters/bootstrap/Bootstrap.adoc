@@ -1,5 +1,6 @@
 [[bootstrap]]
-= Bootstrap
+=== Bootstrap
+:sourcedir: extras
 
 The term bootstrapping refers to initializing and starting a software
 component. In Hibernate we are specifically talking about the process of
@@ -16,15 +17,15 @@ bootstrapping.
 ====
 
 [[bootstrap-native]]
-= Native Bootstrapping
+=== Native Bootstrapping
 
 This section discusses the process of bootstrapping a Hibernate
 SessionFactory. Specifically it discusses the bootstrapping APIs as
 redesigned in 5.0. For a discussion of the legacy bootstrapping API, see
-link:#appendix-legacy-bootstrap[Legacy Bootstrapping]
+<<appendices/Legacy_Bootstrap.adoc#appendix-legacy-bootstrap,Legacy Bootstrapping>>
 
 [[bootstrap-native-registry]]
-== Building the ServiceRegistry
+==== Building the ServiceRegistry
 
 The first step in native bootstrapping is the building of a
 ServiceRegistry holding the services Hibernate will need at bootstrap
@@ -54,6 +55,12 @@ If you wish to alter how the BootstrapServiceRegistry is built, that is
 controlled through the
 org.hibernate.boot.registry.BootstrapServiceRegistryBuilder:
 
+.Controlling BootstrapServiceRegistry building
+[source,java]
+----
+include::{sourcedir}/native1.java[]
+----
+
 The services of the BootstrapServiceRegistry cannot be extended (added
 to) nor overridden (replaced).
 
@@ -62,13 +69,30 @@ org.hibernate.boot.registry.StandardServiceRegistry. You will almost
 always need to configure the StandardServiceRegistry, which is done
 through `org.hibernate.boot.registry.StandardServiceRegistryBuilder`:
 
+.Building a BootstrapServiceRegistryBuilder
+[source,java]
+----
+include::{sourcedir}/native2.java[]
+----
+
+[source,java]
+----
+include::{sourcedir}/native3.java[]
+----
+
 A StandardServiceRegistry is also highly configurable via the
 StandardServiceRegistryBuilder API. See the
 StandardServiceRegistryBuilder javadocs for full details. Some specific
 methods of interest:
 
+.Configuring a MetadataSources
+[source,java]
+----
+include::{sourcedir}/native5.java[]
+----
+
 [[bootstrap-native-metadata]]
-== Building the Metadata
+==== Building the Metadata
 
 The second step in native bootstrapping is the building of a
 org.hibernate.boot.Metadata object containing the parsed representations
@@ -81,6 +105,12 @@ source information to be parsed (annotated classes, `hbm.xml` files,
 MetadataSources has many other methods as well; explore its API and
 javadocs for more information. Also, all methods on MetadataSources
 allow for chaining should you prefer that style:
+
+.Configuring a MetadataSources with method chaining
+[source,java]
+----
+include::{sourcedir}/native6.java[]
+----
 
 Once we have the sources of mapping information defined, we need to
 build the Metadata object. If you are ok with the default behavior in
@@ -103,8 +133,14 @@ MetadataSources#getMetadataBuilder. MetadataBuilder allows a lot of
 control over the Metadata building process. See its javadocs for full
 details.
 
+.Building Metadata via MetadataBuilder
+[source,java]
+----
+include::{sourcedir}/native7.java[]
+----
+
 [[bootstrap-native-sessionfactory]]
-== Building the SessionFactory
+==== Building the SessionFactory
 
 The final step in native bootstrapping is to build the SessionFactory
 itself. Much like discussed above, if you are ok with the default
@@ -116,6 +152,12 @@ to use SessionFactoryBuilder as obtained via
 Metadata#getSessionFactoryBuilder. Again, see its javadocs for full
 details.
 
+.Native Bootstrapping - Putting it all together
+[source,java]
+----
+include::{sourcedir}/native9.java[]
+----
+
 The bootstrapping API is quite flexible, but in most cases it makes the
 most sense to think of it as a 3 step process:
 
@@ -123,8 +165,14 @@ most sense to think of it as a 3 step process:
 2.  Build the Metadata
 3.  Use those 2 things to build the SessionFactory
 
+.Building SessionFactory via SessionFactoryBuilder
+[source,java]
+----
+include::{sourcedir}/native8.java[]
+----
+
 [[bootstrap-jpa]]
-= JPA Bootstrapping
+=== JPA Bootstrapping
 
 Bootstrapping Hibernate as a JPA provider can be done in a JPA-spec
 compliant manner or using a proprietary bootstrapping approach. The
@@ -133,7 +181,7 @@ aside from those limitations, it is *highly* recommended that you use
 JPA-standardized bootstrapping.
 
 [[bootstrap-jpa-compliant]]
-== JPA-compliant bootstrapping
+==== JPA-compliant bootstrapping
 
 In JPA we are ultimately interested in bootstrapping an
 javax.persistence.EntityManagerFactory instance. The JPA specification
@@ -158,6 +206,12 @@ deployment's META-INF/persistence.xml and make that available to the
 application for injection via the javax.persistence.PersistenceUnit
 annotation or via JNDI lookup.
 
+.Injecting a EntityManagerFactory
+[source,java]
+----
+include::{sourcedir}/jpa1.java[]
+----
+
 For compliant application-bootstrapping, rather than the container
 building the EntityManagerFactory for the application, the application
 builds the EntityManagerFactory itself using the
@@ -165,7 +219,13 @@ javax.persistence.Persistence bootstrap class. The application creates
 an entity manager factory by calling the createEntityManagerFactory
 method:
 
+.Application bootstrapped EntityManagerFactory
+[source,java]
+----
+include::{sourcedir}/jpa2.java[]
+----
+
 [[bootstrap-jpa-hibernate]]
-== Proprietary 2-phase bootstrapping
+==== Proprietary 2-phase bootstrapping
 
 todo

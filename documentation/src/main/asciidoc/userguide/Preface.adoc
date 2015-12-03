@@ -1,5 +1,5 @@
 [[preface]]
-= Preface
+== Preface
 
 Developing Object-Oriented software that deals with data from Relational
 Databases can be cumbersome and resource consuming. Development costs
@@ -48,13 +48,13 @@ representation to a graph of objects.
 See http://hibernate.org/orm/contribute/ for information on getting
 involved.
 
-__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
-*Tip*
 
+[TIP]
+====
 If you are just getting started with using Hibernate you may want to
 start with the Hibernate Getting Started Guide available from the
 http://hibernate.org/orm/documentation[documentation page]. It contains
 quick-start style tutorials as well as lots of introductory information.
 There is also a series of topical guides providing deep dives into
 various topics.
-__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+====

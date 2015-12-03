@@ -1,8 +1,6 @@
-Persistence Contexts
-====================
-
 [[pc]]
-= Persistence Contexts
+== Persistence Contexts
+:sourcedir: extras
 
 Both the org.hibernate.Session API and javax.persistence.EntityManager
 API represent a context for dealing with persistent data. This concept
@@ -26,12 +24,23 @@ database.
 Much of the org.hibernate.Session and javax.persistence.EntityManager
 methods deal with moving entities between these states.
 
-= Making entities persistent
+=== Making entities persistent
 
 Once you've created a new entity instance (using the standard `new`
 operator) it is in `new` state. You can make it persistent by
 associating it to either a org.hibernate.Session or
 javax.persistence.EntityManager
+
+.Example of making an entity persistent
+[source,java]
+----
+include::{sourcedir}/MakingPersistentWithSession.java[]
+----
+
+[source,java]
+----
+include::{sourcedir}/MakingPersistentWithEM.java[]
+----
 
 org.hibernate.Session also has a method named persist which follows the
 exact semantic defined in the JPA specification for the persist method.
@@ -44,9 +53,20 @@ identifier is not automatically generated, the application-assigned
 (usually natural) key value has to be set on the instance before save or
 persist is called.
 
-= Deleting entities
+=== Deleting entities
 
 Entities can also be deleted.
+
+.Example of deleting an entity
+[source,java]
+----
+include::{sourcedir}/DeletingWithSession.java[]
+----
+
+[source,java]
+----
+include::{sourcedir}/DeletingWithEM.java[]
+----
 
 It is important to note that Hibernate itself can handle deleting
 detached state. JPA, however, disallows it. The implication here is that
@@ -55,12 +75,23 @@ can be either in managed or detached state, while the entity instance
 passed to remove on javax.persistence.EntityManager must be in managed
 state.
 
-= Obtain an entity reference without initializing its data
+=== Obtain an entity reference without initializing its data
 
 Sometimes referred to as lazy loading, the ability to obtain a reference
 to an entity without having to load its data is hugely important. The
 most common case being the need to create an association between an
 entity and another, existing entity.
+
+.Example of obtaining an entity reference without initializing its data
+[source,java]
+----
+include::{sourcedir}/GetReferenceWithSession.java[]
+----
+
+[source,java]
+----
+include::{sourcedir}/GetReferenceWithEM.java[]
+----
 
 The above works on the assumption that the entity is defined to allow
 lazy loading, generally through use of runtime proxies. For more
@@ -69,17 +100,39 @@ exception will be thrown later if the given entity does not refer to
 actual database state if and when the application attempts to use the
 returned proxy in any way that requires access to its data.
 
-= Obtain an entity with its data initialized
+=== Obtain an entity with its data initialized
 
 It is also quite common to want to obtain an entity along with with its
 data, for display for example.
 
+.Example of obtaining an entity reference with its data initialized
+[source,java]
+----
+include::{sourcedir}/LoadWithSession.java[]
+----
+
+[source,java]
+----
+include::{sourcedir}/LoadWithSession.java[]
+----
+
 In both cases null is returned if no matching database row was found.
 
-= Obtain an entity by natural-id
+=== Obtain an entity by natural-id
 
 In addition to allowing to load by identifier, Hibernate allows
 applications to load by declared natural identifier.
+
+.Example of simple natural-id access
+[source,java]
+----
+include::{sourcedir}/SimpleNaturalIdLoading.java[]
+----
+
+[source,java]
+----
+include::{sourcedir}/NaturalIdLoading.java[]
+----
 
 Just like we saw above, access entity data by natural id allows both the
 load and getReference forms, with the same semantics.
@@ -102,9 +155,20 @@ In addition to those 2 methods, each also defines the method with
 accepting a org.hibernate.LockOptions argument. Locking is discussed in
 a separate chapter.
 
-= Refresh entity state
+=== Refresh entity state
 
 You can reload an entity instance and it's collections at any time.
+
+.Example of refreshing entity state
+[source,java]
+----
+include::{sourcedir}/RefreshWithSession.java[]
+----
+
+[source,java]
+----
+include::{sourcedir}/RefreshWithEM.java[]
+----
 
 One case where this is useful is when it is known that the database
 state has changed since the data was read. Refreshing allows the current
@@ -119,14 +183,25 @@ that Hibernate has the capability to handle this automatically through
 its notion of generated properties. See the discussion of non-identifier
 generated attributes in the Hibernate User Guide
 
-= Modifying managed/persistent state
+=== Modifying managed/persistent state
 
 Entities in managed/persistent state may be manipulated by the
 application and any changes will be automatically detected and persisted
 when the persistence context is flushed. There is no need to call a
 particular method to make your modifications persistent.
 
-= Working with detached data
+.Example of modifying managed state
+[source,java]
+----
+include::{sourcedir}/ManagedUpdateWithSession.java[]
+----
+
+[source,java]
+----
+include::{sourcedir}/ManagedUpdateWithEM.java[]
+----
+
+=== Working with detached data
 
 Detachment is the process of working with data outside the scope of any
 persistence context. Data becomes detached in a number of ways. Once the
@@ -140,7 +215,7 @@ Detached data can still be manipulated, however the persistence context
 will no longer automatically know about these modification and the
 application will need to intervene to make the changes persistent.
 
-== Reattaching detached data
+==== Reattaching detached data
 
 Reattachment is the process of taking an incoming entity instance that
 is in detached state and re-associating it with the current persistence
@@ -153,6 +228,17 @@ JPA does not provide for this model. This is only available through
 Hibernate org.hibernate.Session.
 ====
 
+.Example of reattaching a detached entity
+[source,java]
+----
+include::{sourcedir}/ReattachingWithSession1.java[]
+----
+
+[source,java]
+----
+include::{sourcedir}/ReattachingWithSession2.java[]
+----
+
 The method name update is a bit misleading here. It does not mean that
 an `SQL` `UPDATE` is immediately performed. It does, however, mean that
 an `SQL` `UPDATE` will be performed when the persistence context is
@@ -164,24 +250,75 @@ state from the database and see if an update is needed.
 Provided the entity is detached, update and saveOrUpdate operate exactly
 the same.
 
-== Merging detached data
+==== Merging detached data
 
 Merging is the process of taking an incoming entity instance that is in
 detached state and copying its data over onto a new instance that is in
 managed state.
 
+.Visualizing merge
+[source,java]
+----
+include::{sourcedir}/VisualizingMerge.java[]
+----
+
 That is not exactly what happens, but its a good visualization.
 
-= Checking persistent state
+.Example of merging a detached entity
+[source,java]
+----
+include::{sourcedir}/MergeWithSession.java[]
+----
+
+[source,java]
+----
+include::{sourcedir}/MergeWithEM.java[]
+----
+
+=== Checking persistent state
 
 An application can verify the state of entities and collections in
 relation to the persistence context.
+
+.Examples of verifying managed state
+[source,java]
+----
+include::{sourcedir}/ContainsWithSession.java[]
+----
+
+[source,java]
+----
+include::{sourcedir}/ContainsWithEM.java[]
+----
+
+.Examples of verifying laziness
+[source,java]
+----
+include::{sourcedir}/CheckingLazinessWithHibernate.java[]
+----
+
+[source,java]
+----
+include::{sourcedir}/CheckingLazinessWithJPA.java[]
+----
 
 In JPA there is an alternative means to check laziness using the
 following javax.persistence.PersistenceUtil pattern. However, the
 javax.persistence.PersistenceUnitUtil is recommended where ever possible
 
-= Accessing Hibernate APIs from JPA
+.Alternative JPA means to verify laziness
+[source,java]
+----
+include::{sourcedir}/CheckingLazinessWithJPA2.java[]
+----
+
+=== Accessing Hibernate APIs from JPA
 
 JPA defines an incredibly useful method to allow applications access to
 the APIs of the underlying provider.
+
+.Accessing Hibernate APIs from JPA
+[source,java]
+----
+include::{sourcedir}/UnwrapWithEM.java[]
+----

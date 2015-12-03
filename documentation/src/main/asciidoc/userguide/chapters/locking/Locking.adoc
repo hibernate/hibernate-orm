@@ -1,4 +1,4 @@
-= Locking
+=== Locking
 
 Locking refers to actions taken to prevent data in a relational database
 from changing between the time it is read and the time that it is used.
@@ -22,7 +22,7 @@ Pessimistic::
 Hibernate provides mechanisms for implementing both types of locking in
 your applications.
 
-= Optimistic
+=== Optimistic
 
 When your application uses long transactions or conversations that span
 several database transactions, you can store versioning data, so that if
@@ -154,7 +154,7 @@ also be unsafe for locking, because of lack of precision.
 database. Optional, defaults to `never`.
 |=======================================================================
 
-= Pessimistic
+=== Pessimistic
 
 Typically, you only need to specify an isolation level for the JDBC
 connections and let the database handle locking issues. If you do need

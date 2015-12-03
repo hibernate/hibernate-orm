@@ -1,9 +1,9 @@
 Envers
 ======
 
-= Envers
+=== Envers
 
-= Basics
+=== Basics
 
 To audit changes that are performed on an entity, you only need two
 things: the `hibernate-envers` jar on the classpath and an `@Audited`
@@ -39,7 +39,7 @@ interface, which can be obtained having an open `EntityManager` or
 classes for details on the functionality offered.
 
 [[envers-configuration]]
-= Configuration
+=== Configuration
 
 It is possible to configure various aspects of Hibernate Envers
 behavior, such as table names, etc.
@@ -183,7 +183,7 @@ be regarded as experimental:
 3.  org.hibernate.envers.modified_flag_suffix
 ====
 
-= Additional mapping annotations
+=== Additional mapping annotations
 
 The name of the audit table can be set on a per-entity basis, using the
 `@AuditTable` annotation. It may be tedious to add this annotation to
@@ -225,7 +225,7 @@ on any properties or on the class), you can list the superclasses in the
 `@AuditOverride(forClass = SomeEntity.class, isAudited = true/false)`
 instead.
 
-= Choosing an audit strategy
+=== Choosing an audit strategy
 
 After the basic configuration it is important to choose the audit
 strategy that will be used to persist and retrieve audit information.
@@ -255,7 +255,7 @@ retrieving audit information will be a lot faster. This can be improved
 by adding extra indexes.
 
 [[envers-revisionlog]]
-= Revision Log
+=== Revision Log
 
 Logging data for revisions
 
@@ -341,7 +341,7 @@ org.hibernate.envers.RevisionListener; import
 org.jboss.seam.security.Identity; import org.jboss.seam.Component;
 public class ExampleListener implements RevisionListener \{ public void
 newRevision(Object revisionEntity) \{ ExampleRevEntity exampleRevEntity
-= (ExampleRevEntity) revisionEntity; Identity identity = (Identity)
+=== (ExampleRevEntity) revisionEntity; Identity identity = (Identity)
 Component.getInstance("org.jboss.seam.security.identity");
 exampleRevEntity.setUsername(identity.getUsername()); } }
 
@@ -439,7 +439,7 @@ revEntity.getModifiedEntityTypes()
 </programlisting>
 
 [[envers-tracking-properties-changes]]
-= Tracking entity changes at property level
+=== Tracking entity changes at property level
 
 By default the only information stored by Envers are revisions of
 modified entities. This approach lets user create audit queries based on
@@ -476,7 +476,7 @@ query API that uses them:
 link:#envers-tracking-properties-changes-queries[section_title].
 
 [[envers-queries]]
-= Queries
+=== Queries
 
 You can think of historic data as having two dimension. The first -
 horizontal - is the state of the database at a given revision. Thus, you
@@ -692,7 +692,7 @@ Note that methods described above can be legally used only when default
 mechanism of tracking changed entity names is enabled (see
 link:#envers-tracking-modified-entities-revchanges[section_title]).
 
-= Conditional auditing
+=== Conditional auditing
 
 Envers persists audit data in reaction to various Hibernate events (e.g.
 post update, post insert, and so on), using a series of even listeners
@@ -722,7 +722,7 @@ up, you will need to add a
 jar. The file should contain the fully qualified name of the class
 implementing the interface.
 
-= Understanding the Envers Schema
+=== Understanding the Envers Schema
 
 For each audited entity (that is, for each entity containing at least
 one audited field), an audit table is created. By default, the audit
@@ -781,7 +781,7 @@ of the graph induced by relations between entities. Your opinions on the
 subject are very welcome on the forum! :)
 
 [[envers-generateschema]]
-= Generating schema with Ant
+=== Generating schema with Ant
 
 If you'd like to generate the database schema file with the Hibernate
 Tools Ant task, you'll probably notice that the generated file doesn't
@@ -825,7 +825,7 @@ FK8E488775E4C3EA63 foreign key (address_id) references Address;
 </programlisting>
 
 [[envers-mappingexceptions]]
-= Mapping exceptions
+=== Mapping exceptions
 
 == What isn't and will not be supported
 
@@ -876,7 +876,7 @@ works. Please note that the annotation is experimental and may change in
 the future.
 
 [[envers-partitioning]]
-= Advanced: Audit table partitioning
+=== Advanced: Audit table partitioning
 
 [[envers-partitioning-benefits]]
 == Benefits of audit table partitioning
@@ -1046,7 +1046,7 @@ This partition contains the most interesting audit data and is the new
 'extension bucket'.
 
 [[envers-links]]
-= Envers links
+=== Envers links
 
 1.  http://hibernate.org[Hibernate main page]
 2.  http://community.jboss.org/en/envers?view=discussions[Forum]

@@ -1,5 +1,5 @@
 [[batch]]
-= Batching
+=== Batching
 
 First we need to decide what all to discuss here as that phrase has so
 many connotations. Do we cover
@@ -12,7 +12,7 @@ many connotations. Do we cover
 * Others?
 
 [[batch-jdbcbatch]]
-= JDBC batching
+=== JDBC batching
 
 JDBC offers support for batching together SQL statements that can be
 represented as a single PreparedStatement. Implementation wise this

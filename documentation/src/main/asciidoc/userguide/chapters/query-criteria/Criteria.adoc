@@ -1,5 +1,5 @@
 [[criteria]]
-= Criteria
+=== Criteria
 
 Criteria queries offer a type-safe alternative to HQL, JPQL and
 native-sql queries.
@@ -56,7 +56,7 @@ instead look at some of the more widely anticipated usages of the API.
 ====
 
 [[querycriteria-typedquery]]
-= Typed criteria queries
+=== Typed criteria queries
 
 The type of the criteria query (aka the <T>) indicates the expected
 types in the query result. This might be an entity, an Integer, or any
@@ -146,7 +146,7 @@ arguments by the matching constructor. This wrapper expression is then
 passed as the select.
 
 [[querycriteria-tuple]]
-= Tuple criteria queries
+=== Tuple criteria queries
 
 A better approach to
 link:#querycriteria-typedquery-multiselect[section_title] is to use
@@ -192,7 +192,7 @@ aliased::
   (__<X> X get(String alias, Class<X> type__ form.
 
 [[querycriteria-from]]
-= FROM clause
+=== FROM clause
 
 ====
 A CriteriaQuery object defines a query over one or more entity,
@@ -247,7 +247,7 @@ needed a javax.persistence.criteria.Fetch for its parent path.
 ====
 
 [[querycriteria-path]]
-= Path expressions
+=== Path expressions
 
 ====
 [NOTE]
@@ -256,7 +256,7 @@ Roots, joins and fetches are themselves paths as well.
 ====
 
 [[querycriteria-param]]
-= Using parameters
+=== Using parameters
 
 Use the parameter method of javax.persistence.criteria.CriteriaBuilder
 to obtain a parameter reference. Then use the parameter reference to

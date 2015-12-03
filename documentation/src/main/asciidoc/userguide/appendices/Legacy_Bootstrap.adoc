@@ -1,5 +1,5 @@
 [[appendix-legacy-bootstrap]]
-= Legacy Bootstrapping
+== Legacy Bootstrapping
 
 The legacy way to bootstrap a SessionFactory is via the
 `org.hibernate.cfg.Configuration` object. Configuration represents,

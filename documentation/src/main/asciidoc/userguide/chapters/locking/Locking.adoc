@@ -1,5 +1,6 @@
 [[locking]]
 == Locking
+:sourcedir: extras
 
 Locking refers to actions taken to prevent data in a relational database
 from changing between the time it is read and the time that it is used.

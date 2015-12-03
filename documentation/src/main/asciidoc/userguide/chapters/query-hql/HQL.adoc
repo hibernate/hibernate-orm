@@ -1,9 +1,10 @@
 [[hql]]
 == HQL and JPQL
+:sourcedir: extras
 
-* link:#flushing[???]
-* link:#fetching[???]
-* link:#pc[???]
+* <<chapters/flushing/Flushing.adoc#flushing,Flushing>>
+* <<chapters/fetching/Fetching.adoc#fetching,Fetching>>
+* <<chapters/pc/PersistenceContext.adoc#pc,Persistence Contexts>>
 
 The Hibernate Query Language (HQL) and Java Persistence Query Language
 (JPQL) are both object model focused query languages similar in nature
@@ -12,7 +13,7 @@ always a valid HQL query, the reverse is not true however.
 
 Both HQL and JPQL are non-type-safe ways to perform query operations.
 Criteria queries offer a type-safe approach to querying. See
-link:#criteria[???] for more information.
+<<chapters/query-criteria/Criteria.adoc#criteria,Criteria>> for more information.
 
 === Case Sensitivity
 
@@ -45,17 +46,29 @@ delete operations should only be performed within a transaction in a new
 persistence con- text or before fetching or accessing entities whose
 state might be affected by such operations.
 
-— Section 4.10 of the JPA 2.0 Specification
-====
-
---
-====
+[quote, Section 4.10 of the JPA 2.0 Specification]
+____
+Caution should be used when executing bulk update or delete operations because they may result in
+inconsistencies between the database and the entities in the active persistence context. In general, bulk
+update and delete operations should only be performed within a transaction in a new persistence con-
+text or before fetching or accessing entities whose state might be affected by such operations.
+____
 
 === Select statements
 
 The BNF for `SELECT` statements in HQL is:
 
+[source,sql]
+----
+include::{sourcedir}/statement_select_bnf.txt[]
+----
+
 The simplest possible HQL `SELECT` statement is of the form:
+
+[source,sql]
+----
+from com.acme.Cat
+----
 
 The select statement in JPQL is exactly the same as for HQL except that
 JPQL requires a `select_clause`, whereas HQL does not. Even though HQL
@@ -70,6 +83,11 @@ applications interested in JPA portability should take heed of this.
 === Update statements
 
 The BNF for `UPDATE` statements is the same in HQL and JPQL:
+
+[source,sql]
+----
+include::{sourcedir}/statement_update_bnf.txt[]
+----
 
 `UPDATE` statements, by default, do not effect the `version` or the
 `timestamp` attribute values for the affected entities. However, you can
@@ -92,7 +110,23 @@ returned number indicates the number of actual entities affected by the
 statement. Using a JOINED inheritance hierarchy, a delete against one of
 the subclasses may actually result in deletes against not just the table
 to which that subclass is mapped, but also the "root" table and tables
-``in between''
+"in between".
+
+.Example UPDATE query statements
+[source,sql]
+----
+include::{sourcedir}/statement_update_example_hql.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/statement_update_example_jpql.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/statement_update_example_hql_versioned.java[]
+----
 
 [IMPORTANT]
 ====
@@ -104,6 +138,11 @@ is called an implicit join. Their form already disallows explicit joins.
 
 The BNF for `DELETE` statements is the same in HQL and JPQL:
 
+[source,sql]
+----
+include::{sourcedir}/statement_delete_bnf.txt[]
+----
+
 A `DELETE` statement is also executed using the executeUpdate method of
 either org.hibernate.Query or javax.persistence.Query.
 
@@ -111,6 +150,11 @@ either org.hibernate.Query or javax.persistence.Query.
 
 HQL adds the ability to define `INSERT` statements as well. There is no
 JPQL equivalent to this. The BNF for an HQL `INSERT` statement is:
+
+[source,sql]
+----
+include::{sourcedir}/statement_insert_bnf.txt[]
+----
 
 The `attribute_list` is analogous to the `column specification` in the
 SQL `INSERT` statement. For entities involved in mapped inheritance,
@@ -145,6 +189,12 @@ two options. You can either specify the attribute in the
 select expressions, or omit it from the `attribute_list` in which case
 the `seed value` defined by the corresponding
 org.hibernate.type.VersionType is used.
+
+.Example INSERT query statements
+[source,sql]
+----
+include::{sourcedir}/statement_insert_example_named_id.java[]
+----
 
 [[hql-from-clause]]
 === The `FROM` clause
@@ -183,6 +233,18 @@ different manner discussed later.
 
 The BNF for a root entity reference is:
 
+[source,sql]
+----
+include::{sourcedir}/root_entity_ref_bnf.txt[]
+----
+
+[[hql-simple-query-ex]]
+.Simple query example
+[source,sql]
+----
+include::{sourcedir}/simplest_query.java[]
+----
+
 We see that the query is defining a root entity reference to the
 `com.acme.Cat` object model type. Additionally, it declares an alias of
 `c` to that `com.acme.Cat` reference; this is the identification
@@ -192,14 +254,37 @@ Usually the root entity reference just names the `entity name` rather
 than the entity class FQN. By default the entity name is the unqualified
 entity class name, here `Cat`
 
+.Simple query using entity name for root entity reference
+[source,sql]
+----
+include::{sourcedir}/simplest_query2.java[]
+----
+
 Multiple root entity references can also be specified. Even naming the
 same entity!
+
+.Simple query using multiple root entity references
+[source,sql]
+----
+include::{sourcedir}/multiple_root_entity_ref_example.txt[]
+----
+
+[source,java]
+----
+include::{sourcedir}/multiple_root_entity_ref_example2.txt[]
+----
 
 === Explicit joins
 
 The `FROM` clause can also contain explicit relationship joins using the
 `join` keyword. These joins can be either `inner` or `left outer` style
 joins.
+
+.Explicit inner join examples
+[source,sql]
+----
+include::{sourcedir}/join_example_explicit_inner.txt[]
+----
 
 An important use case for explicit joins is to define `FETCH JOINS`
 which override the laziness of the joined association. As an example,
@@ -240,7 +325,7 @@ The `with clause` is sometimes necessary in more complicated queries.
 
 Explicit joins may reference association or component/embedded
 attributes. For further information about collection-valued association
-references, see link:#hql-collection-valued-associations[section_title].
+references, see link:#hql-collection-valued-associations[Collection member references].
 In the case of component/embedded attributes, the join is simply logical
 and does not correlate to a physical (SQL) join.
 
@@ -273,7 +358,7 @@ implicit join always refer to the same logical and physical (SQL) join.
 Just as with explicit joins, implicit joins may reference association or
 component/embedded attributes. For further information about
 collection-valued association references, see
-link:#hql-collection-valued-associations[section_title]. In the case of
+link:#hql-collection-valued-associations[Collection member references]. In the case of
 component/embedded attributes, the join is simply logical and does not
 correlate to a physical (SQL) join. Unlike explicit joins, however,
 implicit joins may also reference basic state fields as long as the path
@@ -320,7 +405,7 @@ ENTRY::
   `ENTRY` is only valid as a terminal path and only valid in the select
   clause.
 
-See link:#hql-collection-expressions[section_title] for additional
+See link:#hql-collection-expressions[Collection-related expressions] for additional
 details on collection related expressions.
 
 === Polymorphism
@@ -352,11 +437,11 @@ values.
 
 === Identification variable
 
-See link:#hql-from-clause[section_title].
+See link:#hql-from-clause[The `FROM` clause].
 
 === Path expressions
 
-Again, see link:#hql-from-clause[section_title].
+Again, see link:#hql-from-clause[The `FROM` clause].
 
 === Literals
 
@@ -378,7 +463,7 @@ name must be used. HQL can also handle constants in the same manner,
 though JPQL does not define that as supported.
 
 Entity names can also be used as literal. See
-link:#hql-entity-type-exp[section_title].
+link:#hql-entity-type-exp[Entity type].
 
 Date/time literals can be specified using the JDBC escape syntax:
 `{d 'yyyy-mm-dd'}` for dates, `{t 'hh:mm:ss'}` for times and
@@ -444,7 +529,7 @@ concatenation (`CONCAT`) function. This is not defined by JPQL, so
 portable applications should avoid it use. The concatenation operator is
 taken from the SQL concatenation operator - `||`.
 
-See link:#hql-exp-functions[section_title] for details on the `concat()`
+See link:#hql-exp-functions[Scalar functions] for details on the `concat()`
 function
 
 === Aggregate functions
@@ -466,7 +551,7 @@ type is BigInteger. For BigDecimal values, the result type is
 BigDecimal.
 
 Aggregations often appear with grouping. For information on grouping see
-link:#hql-grouping[section_title]
+link:#hql-grouping[Grouping]
 
 [[hql-exp-functions]]
 === Scalar functions
@@ -590,7 +675,7 @@ INDICES::
 Elements of indexed collections (arrays, lists, and maps) can be
 referred to by index operator.
 
-See also link:#hql-collection-qualification[section_title] as there is a
+See also link:#hql-collection-qualification[Special case - qualified path expressions] as there is a
 good deal of overlap.
 
 [[hql-entity-type-exp]]
@@ -637,9 +722,9 @@ non-null operand. We have seen a number of COALESCE examples above.
 
 The `SELECT` clause identifies which objects and values to return as the
 query results. The expressions discussed in
-link:#hql-expressions[section_title] are all valid select expressions,
+link:#hql-expressions[Expressions] are all valid select expressions,
 except where otherwise noted. See the section
-link:#hql-api[section_title] for information on handling the results
+link:#hql-api[Query API] for information on handling the results
 depending on the types of values specified in the `SELECT` clause.
 
 There is a particular expression type that is only valid in the select
@@ -647,7 +732,7 @@ clause. Hibernate calls this ``dynamic instantiation''. JPQL supports
 some of that feature and calls it a ``constructor expression''
 
 So rather than dealing with the Object[] (again, see
-link:#hql-api[section_title]) here we are wrapping the values in a
+link:#hql-api[Query API]) here we are wrapping the values in a
 type-safe java object that will be returned as the results of the query.
 The class reference must be fully qualified and it must have a matching
 constructor.
@@ -733,7 +818,7 @@ here to string, numeric, date, time, timestamp, and enum types. In JPQL,
 * ``state fields'', which is its term for simple attributes.
 Specifically this excludes association and component/embedded
 attributes.
-* entity type expressions. See link:#hql-entity-type-exp[section_title]
+* entity type expressions. See link:#hql-entity-type-exp[Entity type]
 
 In HQL, `single_valued_expression` can refer to a far more broad set of
 expression types. Single-valued association are allowed. So are
@@ -808,7 +893,7 @@ In a grouped query, the where clause applies to the non aggregated
 values (essentially it determines whether rows will make it into the
 aggregation). The `HAVING` clause also restricts results, but it
 operates on the aggregated values. In the
-link:#group_by_illustration[example_title] example, we retrieved order
+link:#group_by_illustration[???] example, we retrieved order
 totals for all customers. If that ended up being too much data to deal
 with, we might want to restrict the results to focus only on customers
 with a summed order total of more than $10,000.00:
@@ -869,9 +954,9 @@ hints generally make the application non-portable across databases
 unless the code adding them first checks the Dialect.
 ====
 
-Flushing is covered in detail in link:#flushing[???]. Locking is covered
-in detail in link:#locking[???]. The concept of read-only state is
-covered in link:#pc[???].
+Flushing is covered in detail in <<chapters/flushing/Flushing.adoc#flushing,Flushing>>. Locking is covered
+in detail in <<chapters/locking/Locking.adoc#locking,Locking>>. The concept of read-only state is
+covered in <<chapters/pc/PersistenceContext.adoc#pc,Persistence Contexts>>.
 
 Hibernate also allows an application to hook into the process of
 building the query results via the
@@ -977,13 +1062,13 @@ milliseconds.
 * `javax.persistence.fetchgraph` - Defines a "fetchgraph" EntityGraph.
 Attributes explicitly specified as AttributeNodes are treated as
 FetchType.EAGER (via join fetch or subsequent select). For details, see
-the EntityGraph discussions in link:#fetching[???].
+the EntityGraph discussions in <<chapters/fetching/Fetching.adoc#fetching,Fetching>>.
 * `javax.persistence.loadgraph` - Defines a "loadgraph" EntityGraph.
 Attributes explicitly specified as AttributeNodes are treated as
 FetchType.EAGER (via join fetch or subsequent select). Attributes that
 are not specified are treated as FetchType.LAZY or FetchType.EAGER
 depending on the attribute's definition in metadata. For details, see
-the EntityGraph discussions in link:#fetching[???].
+the EntityGraph discussions in <<chapters/fetching/Fetching.adoc#fetching,Fetching>>.
 
 * `org.hibernate.cacheMode` - Defines the CacheMode to use. See
 org.hibernate.Query#setCacheMode.

@@ -40,7 +40,7 @@ TransactionCoordinatorBuilder implementation to use is defined by the
 * `jdbc` (the default) - Manages transactions via calls to
 java.sql.Connection
 * `jta` - Manages transactions via JTA. See
-<<bootstrap/Bootstrap.adoc#bootstrap-jpa-compliant,JTA>>
+<<chapters/bootstrap/Bootstrap.adoc#bootstrap-jpa-compliant,JTA>>
 
 [NOTE]
 ====
@@ -78,7 +78,7 @@ check transaction status, etc.
 [NOTE]
 ====
 Generally JtaPlatform will need access to JNDI to resolve the JTA
-TransactionManager, UserTransaction, etc. See <<jndi/JNDI.adoc#jndi,JNDI>> for
+TransactionManager, UserTransaction, etc. See <<chapters/jndi/JNDI.adoc#jndi,JNDI>> for
 details on configuring access to JNDI
 ====
 
@@ -356,6 +356,6 @@ an OutOfMemoryException. One solution is to call clear() and evict() to
 manage the Session cache, but you should consider an alternate means of
 dealing with large amounts of data such as a Stored Procedure. Java is
 simply not the right tool for these kind of operations. Some solutions
-are shown in <<batch/Batching.adoc#batch,Batching>>. Keeping a Session open for the duration
+are shown in <<chapters/batch/Batching.adoc#batch,Batching>>. Keeping a Session open for the duration
 of a user session also means a higher probability of stale data.
 

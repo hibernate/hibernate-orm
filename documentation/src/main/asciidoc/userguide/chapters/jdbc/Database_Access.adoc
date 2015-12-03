@@ -41,7 +41,7 @@ Connections. Applications would tell Hibernate about the DataSource via
 the (required) `hibernate.connection.datasource` setting which can
 either specify a JNDI name or would reference the actual DataSource
 instance. For cases where a JNDI name is given, be sure to read
-<<jndi/JNDI.adoc#jndi,JNDI>>
+<<chapters/jndi/JNDI.adoc#jndi,JNDI>>
 
 [NOTE]
 ====
@@ -239,7 +239,7 @@ In most cases Hibernate will be able to determine the proper Dialect to
 use by asking some questions of the JDBC Connection during bootstrap.
 For information on Hibernate's ability to determine the proper Dialect
 to use (and your ability to influence that resolution), see
-<<portability/Portability.adoc#portability-dialectresolver,Dialect resolution>>
+<<chapters/portability/Portability.adoc#portability-dialectresolver,Dialect resolution>>
 
 If for some reason it is not able to determine the proper one or you
 want to use a custom Dialect, you will need to set the

@@ -1,8 +1,8 @@
 [[flushing]]
 == Flushing
 
-* link:#pc[???]
-* link:#hql[???]
+* <<chapters/pc/PersistenceContext.adoc#pc,Persistence Contexts>>
+* <<chapters/query-hql/HQL.adoc#hql,HQL and JPQL>>
 * link:#criteria[???]
 * link:#querynative[???]
 

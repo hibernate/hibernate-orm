@@ -1,5 +1,6 @@
 [[fetching]]
 == Fetching
+:sourcedir: extras
 
 Fetching, essentially, is the process of grabbing data from the database
 and making it available to the application. Tuning how an application

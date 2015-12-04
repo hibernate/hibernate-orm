@@ -32,6 +32,7 @@ associating it to either a org.hibernate.Session or
 javax.persistence.EntityManager
 
 .Example of making an entity persistent
+====
 [source,java]
 ----
 include::{sourcedir}/MakingPersistentWithSession.java[]
@@ -41,6 +42,7 @@ include::{sourcedir}/MakingPersistentWithSession.java[]
 ----
 include::{sourcedir}/MakingPersistentWithEM.java[]
 ----
+====
 
 org.hibernate.Session also has a method named persist which follows the
 exact semantic defined in the JPA specification for the persist method.
@@ -58,6 +60,7 @@ persist is called.
 Entities can also be deleted.
 
 .Example of deleting an entity
+====
 [source,java]
 ----
 include::{sourcedir}/DeletingWithSession.java[]
@@ -67,6 +70,7 @@ include::{sourcedir}/DeletingWithSession.java[]
 ----
 include::{sourcedir}/DeletingWithEM.java[]
 ----
+====
 
 It is important to note that Hibernate itself can handle deleting
 detached state. JPA, however, disallows it. The implication here is that
@@ -83,6 +87,7 @@ most common case being the need to create an association between an
 entity and another, existing entity.
 
 .Example of obtaining an entity reference without initializing its data
+====
 [source,java]
 ----
 include::{sourcedir}/GetReferenceWithSession.java[]
@@ -92,6 +97,7 @@ include::{sourcedir}/GetReferenceWithSession.java[]
 ----
 include::{sourcedir}/GetReferenceWithEM.java[]
 ----
+====
 
 The above works on the assumption that the entity is defined to allow
 lazy loading, generally through use of runtime proxies. For more
@@ -106,6 +112,7 @@ It is also quite common to want to obtain an entity along with with its
 data, for display for example.
 
 .Example of obtaining an entity reference with its data initialized
+====
 [source,java]
 ----
 include::{sourcedir}/LoadWithSession.java[]
@@ -115,6 +122,7 @@ include::{sourcedir}/LoadWithSession.java[]
 ----
 include::{sourcedir}/LoadWithSession.java[]
 ----
+====
 
 In both cases null is returned if no matching database row was found.
 
@@ -124,6 +132,7 @@ In addition to allowing to load by identifier, Hibernate allows
 applications to load by declared natural identifier.
 
 .Example of simple natural-id access
+====
 [source,java]
 ----
 include::{sourcedir}/SimpleNaturalIdLoading.java[]
@@ -133,6 +142,7 @@ include::{sourcedir}/SimpleNaturalIdLoading.java[]
 ----
 include::{sourcedir}/NaturalIdLoading.java[]
 ----
+====
 
 Just like we saw above, access entity data by natural id allows both the
 load and getReference forms, with the same semantics.
@@ -160,6 +170,7 @@ a separate chapter.
 You can reload an entity instance and it's collections at any time.
 
 .Example of refreshing entity state
+====
 [source,java]
 ----
 include::{sourcedir}/RefreshWithSession.java[]
@@ -169,6 +180,7 @@ include::{sourcedir}/RefreshWithSession.java[]
 ----
 include::{sourcedir}/RefreshWithEM.java[]
 ----
+====
 
 One case where this is useful is when it is known that the database
 state has changed since the data was read. Refreshing allows the current
@@ -191,6 +203,7 @@ when the persistence context is flushed. There is no need to call a
 particular method to make your modifications persistent.
 
 .Example of modifying managed state
+====
 [source,java]
 ----
 include::{sourcedir}/ManagedUpdateWithSession.java[]
@@ -200,6 +213,7 @@ include::{sourcedir}/ManagedUpdateWithSession.java[]
 ----
 include::{sourcedir}/ManagedUpdateWithEM.java[]
 ----
+====
 
 === Working with detached data
 
@@ -228,6 +242,7 @@ Hibernate org.hibernate.Session.
 ====
 
 .Example of reattaching a detached entity
+====
 [source,java]
 ----
 include::{sourcedir}/ReattachingWithSession1.java[]
@@ -237,6 +252,7 @@ include::{sourcedir}/ReattachingWithSession1.java[]
 ----
 include::{sourcedir}/ReattachingWithSession2.java[]
 ----
+====
 
 The method name update is a bit misleading here. It does not mean that
 an `SQL` `UPDATE` is immediately performed. It does, however, mean that
@@ -256,14 +272,17 @@ detached state and copying its data over onto a new instance that is in
 managed state.
 
 .Visualizing merge
+====
 [source,java]
 ----
 include::{sourcedir}/VisualizingMerge.java[]
 ----
+====
 
 That is not exactly what happens, but its a good visualization.
 
 .Example of merging a detached entity
+====
 [source,java]
 ----
 include::{sourcedir}/MergeWithSession.java[]
@@ -273,6 +292,7 @@ include::{sourcedir}/MergeWithSession.java[]
 ----
 include::{sourcedir}/MergeWithEM.java[]
 ----
+====
 
 === Checking persistent state
 
@@ -280,6 +300,7 @@ An application can verify the state of entities and collections in
 relation to the persistence context.
 
 .Examples of verifying managed state
+====
 [source,java]
 ----
 include::{sourcedir}/ContainsWithSession.java[]
@@ -289,8 +310,10 @@ include::{sourcedir}/ContainsWithSession.java[]
 ----
 include::{sourcedir}/ContainsWithEM.java[]
 ----
+====
 
 .Examples of verifying laziness
+====
 [source,java]
 ----
 include::{sourcedir}/CheckingLazinessWithHibernate.java[]
@@ -300,16 +323,19 @@ include::{sourcedir}/CheckingLazinessWithHibernate.java[]
 ----
 include::{sourcedir}/CheckingLazinessWithJPA.java[]
 ----
+====
 
 In JPA there is an alternative means to check laziness using the
 following javax.persistence.PersistenceUtil pattern. However, the
 javax.persistence.PersistenceUnitUtil is recommended where ever possible
 
 .Alternative JPA means to verify laziness
+====
 [source,java]
 ----
 include::{sourcedir}/CheckingLazinessWithJPA2.java[]
 ----
+====
 
 === Accessing Hibernate APIs from JPA
 
@@ -317,7 +343,9 @@ JPA defines an incredibly useful method to allow applications access to
 the APIs of the underlying provider.
 
 .Accessing Hibernate APIs from JPA
+====
 [source,java]
 ----
 include::{sourcedir}/UnwrapWithEM.java[]
 ----
+====

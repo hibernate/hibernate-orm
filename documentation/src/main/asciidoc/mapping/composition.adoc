@@ -13,6 +13,7 @@ first-name and last-name, or an Address class that is a composition of
 street, city, postal code, etc.
 
 .Simple composition example
+====
 [source,java]
 ----
 include::{sourcedir}/composition/Name.java[]
@@ -22,6 +23,7 @@ include::{sourcedir}/composition/Name.java[]
 ----
 include::{sourcedir}/composition/Address.java[]
 ----
+====
 
 A composition is another form of value type. The lifecycle of a
 composition is defined by the thing that contains it.
@@ -39,10 +41,12 @@ This is the form of composition you will see most often. Here an entity
 or another composition is the container.
 
 .Simple Embedded
+====
 [source,java]
 ----
 include::{sourcedir}/composition/Person.java[]
 ----
+====
 
 [NOTE]
 ====
@@ -55,20 +59,24 @@ Embedded. Embeddable is used to describe the composition class itself
 The composition here is the Name type related to Person.name.
 
 .Person table
+====
 [source,sql]
 ----
 include::{sourcedir}/composition/Person1.sql[]
 ----
+====
 
 The composed values are mapped to the same table as the parent table.
 Composition is part of good OO data modeling (idiomatic java). In fact
 that table could also be mapped by the following entity instead.
 
 .Alternative to composition
+====
 [source,java]
 ----
 include::{sourcedir}/composition/Person_alt.java[]
 ----
+====
 
 The composition form is certainly more OO. And that becomes more evident
 as we work with multiple compositions.
@@ -77,10 +85,12 @@ as we work with multiple compositions.
 === Multiple compositions
 
 .Multiple compositions
+====
 [source,java]
 ----
 include::{sourcedir}/composition/Contact.java[]
 ----
+====
 
 It is certainly more convenient to work with the compositions. However,
 an interesting thing happens in this particular example. By default,
@@ -100,10 +110,12 @@ The JPA-defined way to handle this situation is through the use of its
 AttributeOverride annotation.
 
 .JPA's AttributeOverride
+====
 [source,java]
 ----
 include::{sourcedir}/composition/Contact-AttributeOverride.java[]
 ----
+====
 
 Now, essentially there are no implicit column names in the Address
 compositions. We have explicitly named them.
@@ -124,18 +136,22 @@ capability to interpret implicit column names in a way that is safe for
 use with multiple compositions.
 
 .Enabling composition-safe implicit naming
+====
 [source,java]
 ----
 include::{sourcedir}/composition/component-safe-implicit-naming.java[]
 ----
+====
 
 Now the "path" to attributes are used in the implicit column naming.
 
 .Enabling composition-safe implicit naming
+====
 [source,sql]
 ----
 include::{sourcedir}/composition/Contact-ImplicitNamingStrategy.sql[]
 ----
+====
 
 You could even develop your own to do special implicit naming.
 

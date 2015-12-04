@@ -179,16 +179,20 @@ annotation can be ignored. Both of the following examples are ultimately
 the same.
 
 .With `@Basic`
+====
 [source,java]
 ----
 include::{sourcedir}/basic/ex1.java[]
 ----
+====
 
 .Without `@Basic`
+====
 [source,java]
 ----
 include::{sourcedir}/basic/ex2.java[]
 ----
+====
 
 [TIP]
 ====
@@ -250,10 +254,12 @@ does not meet your requirements, you can explicitly tell Hibernate (and
 other providers) the column name to use.
 
 .Explicit column naming
+====
 [source,java]
 ----
 include::{sourcedir}/basic/ExplicitColumnNaming.java[]
 ----
+====
 
 Here we use `@Column` to explicitly map the `description` attribute to
 the `NOTES` column, as opposed to the implicit column name
@@ -319,10 +325,12 @@ In these cases you must explicitly tell Hibernate the BasicType to use,
 via the org.hibernate.annotations.Type annotation.
 
 .Using `@org.hibernate.annotations.Type`
+====
 [source,java]
 ----
 include::{sourcedir}/basic/explicitType.java[]
 ----
+====
 
 This tells Hibernate to store the Strings as nationalized data. This is
 just for illustration purposes; for better ways to indicate nationalized
@@ -354,6 +362,7 @@ assume that Fizzywig naturally stores as a VARCHAR.
 The first approach is to directly implement the BasicType interface.
 
 .Custom BasicType implementation
+====
 [source,java]
 ----
 include::{sourcedir}/basic/FizzywigType1.java[]
@@ -363,10 +372,12 @@ include::{sourcedir}/basic/FizzywigType1.java[]
 ----
 include::{sourcedir}/basic/FizzywigType1_reg.java[]
 ----
+====
 
 The second approach is to implement the UserType interface.
 
 .Custom UserType implementation
+====
 [source,java]
 ----
 include::{sourcedir}/basic/FizzywigType2.java[]
@@ -376,6 +387,7 @@ include::{sourcedir}/basic/FizzywigType2.java[]
 ----
 include::{sourcedir}/basic/FizzywigType2_reg.java[]
 ----
+====
 
 For additional information on developing and registering custom types,
 see the Hibernate Integration Guide.
@@ -399,10 +411,12 @@ within the enum class, as indicated by java.lang.Enum#ordinal
 java.lang.Enum#name
 
 .`@Enumerated(ORDINAL)` example
+====
 [source,java]
 ----
 include::{sourcedir}/basic/EnumeratedOrdinal.java[]
 ----
+====
 
 In the ORDINAL example, the gender column is defined as an (nullable)
 INTEGER type and would hold:
@@ -412,10 +426,12 @@ INTEGER type and would hold:
 * `1` - FEMALE
 
 .`@Enumerated(STRING)` example
+====
 [source,java]
 ----
 include::{sourcedir}/basic/EnumeratedString.java[]
 ----
+====
 
 In the STRING example, the gender column is defined as an (nullable)
 VARCHAR type and would hold:
@@ -431,10 +447,12 @@ AttributeConverter. Let's revisit the Gender enum example, but instead
 we want to store the more standardized `'M'` and `'F'` codes.
 
 .Enum mapping with AttributeConverter example
+====
 [source,java]
 ----
 include::{sourcedir}/basic/EnumAttributeConverter.java[]
 ----
+====
 
 Here, the gender column is defined as a CHAR type and would hold:
 
@@ -456,10 +474,12 @@ again revisit the Gender enum example, this time using a custom Type to
 store the more standardized `'M'` and `'F'` codes.
 
 .Enum mapping with custom Type example
+====
 [source,java]
 ----
 include::{sourcedir}/basic/EnumCustomType.java[]
 ----
+====
 
 Again, the gender column is defined as a CHAR type and would hold:
 
@@ -509,26 +529,32 @@ map (NCLOB character LOB data will be covered in
 link:#basic-nationalized[section_title]).
 
 .CLOB - SQL
+====
 [source,sql]
 ----
 include::{sourcedir}/basic/Clob.sql[]
 ----
+====
 
 Let's first map this using the JDBC locator.
 
 .CLOB - locator mapping
+====
 [source,java]
 ----
 include::{sourcedir}/basic/ClobLocator.java[]
 ----
+====
 
 We could also map a materialized form.
 
 .CLOB - materialized mapping
+====
 [source,java]
 ----
 include::{sourcedir}/basic/ClobMaterialized.java[]
 ----
+====
 
 [NOTE]
 ====
@@ -544,34 +570,42 @@ We might even want the materialized data as a char array (for some crazy
 reason).
 
 .CLOB - materialized char[] mapping
+====
 [source,java]
 ----
 include::{sourcedir}/basic/ClobMaterializedCharArray.java[]
 ----
+====
 
 We'd map BLOB data in a similar fashion.
 
 .BLOB - SQL
+====
 [source,sql]
 ----
 include::{sourcedir}/basic/Blob.sql[]
 ----
+====
 
 Let's first map this using the JDBC locator.
 
 .BLOB - locator mapping
+====
 [source,java]
 ----
 include::{sourcedir}/basic/BlobLocator.java[]
 ----
+====
 
 We could also map a materialized BLOB form.
 
 .BLOB - materialized mapping
+====
 [source,java]
 ----
 include::{sourcedir}/basic/BlobMaterialized.java[]
 ----
+====
 
 [[basic-nationalized]]
 === Mapping Nationalized Character Data
@@ -591,22 +625,28 @@ To map a specific attribute to a nationalized variant datatype,
 Hibernate defines the `@Nationalized` annotation.
 
 .NVARCHAR mapping
+====
 [source,java]
 ----
 include::{sourcedir}/basic/NVARCHAR.java[]
 ----
+====
 
 .NCLOB (locator) mapping
+====
 [source,java]
 ----
 include::{sourcedir}/basic/NCLOB_locator.java[]
 ----
+====
 
 .NCLOB (materialized) mapping
+====
 [source,java]
 ----
 include::{sourcedir}/basic/NCLOB_materialized.java[]
 ----
+====
 
 If you application and database are entirely nationalized you may
 instead want to enable nationalized character data as the default. You

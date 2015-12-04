@@ -1,5 +1,6 @@
 [[envers]]
 == Envers
+:sourcedir: extras
 
 === Basics
 
@@ -137,8 +138,8 @@ The default implementation creates `REVCHANGES` table that stores entity
 names of modified persistent objects. Single record encapsulates the
 revision identifier (foreign key to `REVINFO` table) and a string value.
 For more information refer to
-link:#envers-tracking-modified-entities-revchanges[section_title] and
-link:#envers-tracking-modified-entities-queries[section_title].
+<<envers-tracking-modified-entities-revchanges>> and
+<<envers-tracking-modified-entities-queries>>.
 
 |org.hibernate.envers.global_with_modified_flag |false, can be
 individually overriden with `@Audited(withModifiedFlag=true)` |Should
@@ -148,8 +149,8 @@ column in the audit tables will be created, filled with information if
 the given property changed in the given revision. When set to false,
 such column can be added to selected entities or properties using the
 `@Audited` annotation. For more information refer to
-link:#envers-tracking-properties-changes[section_title] and
-link:#envers-tracking-properties-changes-queries[section_title].
+<<envers-tracking-properties-changes>> and
+<<envers-tracking-properties-changes-queries>>.
 
 |org.hibernate.envers.modified_flag_suffix |_MOD |The suffix for columns
 storing "Modified Flags". For example: a property called "age", will by
@@ -197,7 +198,7 @@ apply the `@AuditOverride(s)` annotation on the subtype or usage site of
 the component.
 
 If you want to audit a relation mapped with `@OneToMany+@JoinColumn`,
-please see link:#envers-mappingexceptions[section_title] for a
+please see <<envers-mappingexceptions>> for a
 description of the additional `@AuditJoinTable` annotation that you'll
 probably want to use.
 
@@ -298,12 +299,19 @@ org.hibernate.envers.revision_listener property to it's fully qualified
 name. Class name defined by the configuration parameter overrides
 revision entity's value attribute.
 
-@Entity @RevisionEntity( MyCustomRevisionListener.class ) public class
-MyCustomRevisionEntity \{ ... } public class MyCustomRevisionListener
-implements RevisionListener \{ public void newRevision(Object
-revisionEntity) \{ ( (MyCustomRevisionEntity) revisionEntity )...; } }
+[source,java]
+----
+@RevisionEntity( MyCustomRevisionListener.class )
+public class MyCustomRevisionEntity {
+    ...
+}
 
-</programlisting>
+public class MyCustomRevisionListener implements RevisionListener {
+    public void newRevision(Object revisionEntity) {
+        ( (MyCustomRevisionEntity) revisionEntity )...;
+    }
+}
+----
 
 An alternative method to using the org.hibernate.envers.RevisionListener
 is to instead call the getCurrentRevision method of the
@@ -317,31 +325,49 @@ are any audited entities changed. `false` means that the revision number
 will be `null`, but the revision entity will be persisted only if some
 audited entities have changed.
 
-ExampleRevEntity.java
+.ExampleRevEntity.java
+====
+[source,java]
+----
+package org.hibernate.envers.example;
 
-package org.hibernate.envers.example; import
-org.hibernate.envers.RevisionEntity; import
-org.hibernate.envers.DefaultRevisionEntity; import
-javax.persistence.Entity; @Entity @RevisionEntity(ExampleListener.class)
-public class ExampleRevEntity extends DefaultRevisionEntity \{ private
-String username; public String getUsername() \{ return username; }
-public void setUsername(String username) \{ this.username = username; }
+import org.hibernate.envers.RevisionEntity;
+import org.hibernate.envers.DefaultRevisionEntity;
+
+import javax.persistence.Entity;
+
+@Entity
+@RevisionEntity(ExampleListener.class)
+public class ExampleRevEntity extends DefaultRevisionEntity {
+    private String username;
+
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
 }
+----
+====
 
-</programlisting>
+.ExampleListener.java
+====
+[source,java]
+----
+package org.hibernate.envers.example;
 
-ExampleListener.java
+import org.hibernate.envers.RevisionListener;
+import org.jboss.seam.security.Identity;
+import org.jboss.seam.Component;
 
-package org.hibernate.envers.example; import
-org.hibernate.envers.RevisionListener; import
-org.jboss.seam.security.Identity; import org.jboss.seam.Component;
-public class ExampleListener implements RevisionListener \{ public void
-newRevision(Object revisionEntity) \{ ExampleRevEntity exampleRevEntity
-=== (ExampleRevEntity) revisionEntity; Identity identity = (Identity)
-Component.getInstance("org.jboss.seam.security.identity");
-exampleRevEntity.setUsername(identity.getUsername()); } }
+public class ExampleListener implements RevisionListener {
+    public void newRevision(Object revisionEntity) {
+        ExampleRevEntity exampleRevEntity = (ExampleRevEntity) revisionEntity;
+        Identity identity =
+            (Identity) Component.getInstance("org.jboss.seam.security.identity");
 
-</programlisting>
+        exampleRevEntity.setUsername(identity.getUsername());
+    }
+}
+----
+====
 
 [[envers-tracking-modified-entities-revchanges]]
 === Tracking entity names modified during revisions
@@ -365,24 +391,39 @@ will be implicitly used as the revision log entity.
 `org.hibernate.envers.DefaultTrackingModifiedEntitiesRevisionEntity`
 class.
 +
-@Entity @RevisionEntity public class ExtendedRevisionEntity extends
-DefaultTrackingModifiedEntitiesRevisionEntity \{ ... }
+[source,java]
+----
+@RevisionEntity
+public class ExtendedRevisionEntity
+             extends DefaultTrackingModifiedEntitiesRevisionEntity {
+    ...
+}
+----
 +
-</programlisting>
 3.  Mark an appropriate field of a custom revision entity with
 @org.hibernate.envers.ModifiedEntityNames annotation. The property is
 required to be of `Set<String>` type.
 +
-@Entity @RevisionEntity public class AnnotatedTrackingRevisionEntity \{
-... @ElementCollection @JoinTable(name = "REVCHANGES", joinColumns =
-@JoinColumn(name = "REV")) @Column(name = "ENTITYNAME")
-@ModifiedEntityNames private Set<String> modifiedEntityNames; ... }
+[source,java]
+----
+@RevisionEntity
+public class AnnotatedTrackingRevisionEntity {
+    ...
+
+    @ElementCollection
+    @JoinTable(name = "REVCHANGES", joinColumns = @JoinColumn(name = "REV"))
+    @Column(name = "ENTITYNAME")
+    @ModifiedEntityNames
+    private Set<String> modifiedEntityNames;
+
+    ...
+}
+----
 +
-</programlisting>
 
 Users, that have chosen one of the approaches listed above, can retrieve
 all entities modified in a specified revision by utilizing API described
-in link:#envers-tracking-modified-entities-queries[section_title].
+in <<envers-tracking-modified-entities-queries>>.
 
 Users are also allowed to implement custom mechanism of tracking
 modified entity types. In this case, they shall pass their own
@@ -392,47 +433,81 @@ annotation. EntityTrackingRevisionListener interface exposes one method
 that notifies whenever audited entity instance has been added, modified
 or removed within current revision boundaries.
 
-CustomEntityTrackingRevisionListener.java
+.CustomEntityTrackingRevisionListener.java
+====
+[source,java]
+----
+public class CustomEntityTrackingRevisionListener
+             implements EntityTrackingRevisionListener {
+    @Override
+    public void entityChanged(Class entityClass, String entityName,
+                              Serializable entityId, RevisionType revisionType,
+                              Object revisionEntity) {
+        String type = entityClass.getName();
+        ((CustomTrackingRevisionEntity)revisionEntity).addModifiedEntityType(type);
+    }
 
-public class CustomEntityTrackingRevisionListener implements
-EntityTrackingRevisionListener \{ @Override public void
-entityChanged(Class entityClass, String entityName, Serializable
-entityId, RevisionType revisionType, Object revisionEntity) \{ String
-type = entityClass.getName();
-((CustomTrackingRevisionEntity)revisionEntity).addModifiedEntityType(type);
-} @Override public void newRevision(Object revisionEntity) \{ } }
+    @Override
+    public void newRevision(Object revisionEntity) {
+    }
+}
+----
+====
 
-</programlisting>
+.CustomTrackingRevisionEntity.java
+====
+[source,java]
+----
+@Entity
+@RevisionEntity(CustomEntityTrackingRevisionListener.class)
+public class CustomTrackingRevisionEntity {
+    @Id
+    @GeneratedValue
+    @RevisionNumber
+    private int customId;
 
-CustomTrackingRevisionEntity.java
+    @RevisionTimestamp
+    private long customTimestamp;
 
-@Entity @RevisionEntity(CustomEntityTrackingRevisionListener.class)
-public class CustomTrackingRevisionEntity \{ @Id @GeneratedValue
-@RevisionNumber private int customId; @RevisionTimestamp private long
-customTimestamp; @OneToMany(mappedBy="revision",
-cascade=\{CascadeType.PERSIST, CascadeType.REMOVE}) private
-Set<ModifiedEntityTypeEntity> modifiedEntityTypes = new
-HashSet<ModifiedEntityTypeEntity>(); public void
-addModifiedEntityType(String entityClassName) \{
-modifiedEntityTypes.add(new ModifiedEntityTypeEntity(this,
-entityClassName)); } ... }
+    @OneToMany(mappedBy="revision", cascade={CascadeType.PERSIST, CascadeType.REMOVE})
+    private Set<ModifiedEntityTypeEntity> modifiedEntityTypes =
+                                              new HashSet<ModifiedEntityTypeEntity>();
 
-</programlisting>
+    public void addModifiedEntityType(String entityClassName) {
+        modifiedEntityTypes.add(new ModifiedEntityTypeEntity(this, entityClassName));
+    }
 
-ModifiedEntityTypeEntity.java
+    ...
+}
+----
+====
 
-@Entity public class ModifiedEntityTypeEntity \{ @Id @GeneratedValue
-private Integer id; @ManyToOne private CustomTrackingRevisionEntity
-revision; private String entityClassName; ... }
+.ModifiedEntityTypeEntity.java
+====
+[source,java]
+----
+@Entity
+public class ModifiedEntityTypeEntity {
+    @Id
+    @GeneratedValue
+    private Integer id;
 
-</programlisting>
+    @ManyToOne
+    private CustomTrackingRevisionEntity revision;
 
+    private String entityClassName;
+
+    ...
+}
+----
+====
+
+[source,java]
+----
 CustomTrackingRevisionEntity revEntity =
-getAuditReader().findRevision(CustomTrackingRevisionEntity.class,
-revisionNumber); Set<ModifiedEntityTypeEntity> modifiedEntityTypes =
-revEntity.getModifiedEntityTypes()
-
-</programlisting>
+    getAuditReader().findRevision(CustomTrackingRevisionEntity.class, revisionNumber);
+Set<ModifiedEntityTypeEntity> modifiedEntityTypes = revEntity.getModifiedEntityTypes();
+----
 
 [[envers-tracking-properties-changes]]
 === Tracking entity changes at property level
@@ -443,7 +518,7 @@ historical values of entity's properties. Sometimes it is useful to
 store additional metadata for each revision, when you are interested
 also in the type of changes, not only about the resulting values. The
 feature described in
-link:#envers-tracking-modified-entities-revchanges[section_title] makes
+<<envers-tracking-modified-entities-revchanges>> makes
 it possible to tell which entities were modified in given revision.
 Feature described here takes it one step further. "Modification Flags"
 enable Envers to track which properties of audited entities were
@@ -469,7 +544,7 @@ configuration means described above.
 
 To see how "Modified Flags" can be utilized, check out the very simple
 query API that uses them:
-link:#envers-tracking-properties-changes-queries[section_title].
+<<envers-tracking-properties-changes-queries>>.
 
 [[envers-queries]]
 === Queries
@@ -495,29 +570,38 @@ correlated subselects.
 In the future, queries will be improved both in terms of speed and
 possibilities, when using the valid-time audit strategy, that is when
 storing both start and end revisions for entities. See
-link:#envers-configuration[section_title].
+<<envers-configuration>>.
 
 [[entities-at-revision]]
 === Querying for entities of a class at a given revision
 
 The entry point for this type of queries is:
 
-AuditQuery query = getAuditReader() .createQuery()
-.forEntitiesAtRevision(MyEntity.class, revisionNumber);
-
-</programlisting>
+[source,java]
+----
+AuditQuery query = getAuditReader()
+    .createQuery()
+    .forEntitiesAtRevision(MyEntity.class, revisionNumber);
+----
 
 You can then specify constraints, which should be met by the entities
 returned, by adding restrictions, which can be obtained using the
 `AuditEntity` factory class. For example, to select only entities, where
 the "name" property is equal to "John":
 
-And to select only entites that are related to a given entity:
+[source,java]
+----
+query.add(AuditEntity.property("name").eq("John"));
+----
 
-query.add(AuditEntity.property("address").eq(relatedEntityInstance)); //
-or query.add(AuditEntity.relatedId("address").eq(relatedEntityId));
+And to select only entities that are related to a given entity:
 
-</programlisting>
+[source,java]
+----
+query.add(AuditEntity.property("address").eq(relatedEntityInstance));
+// or
+query.add(AuditEntity.relatedId("address").eq(relatedEntityId));
+----
 
 You can limit the number of results, order them, and set aggregations
 and projections (except grouping) in the usual way. When your query is
@@ -526,23 +610,27 @@ or `getResultList()` methods.
 
 A full query, can look for example like this:
 
+[source,java]
+----
 List personsAtAddress = getAuditReader().createQuery()
-.forEntitiesAtRevision(Person.class, 12)
-.addOrder(AuditEntity.property("surname").desc())
-.add(AuditEntity.relatedId("address").eq(addressId)) .setFirstResult(4)
-.setMaxResults(2) .getResultList();
-
-</programlisting>
+    .forEntitiesAtRevision(Person.class, 12)
+    .addOrder(AuditEntity.property("surname").desc())
+    .add(AuditEntity.relatedId("address").eq(addressId))
+    .setFirstResult(4)
+    .setMaxResults(2)
+    .getResultList();
+----
 
 [[revisions-of-entity]]
 === Querying for revisions, at which entities of a given class changed
 
 The entry point for this type of queries is:
 
+[source,java]
+----
 AuditQuery query = getAuditReader().createQuery()
-.forRevisionsOfEntity(MyEntity.class, false, true);
-
-</programlisting>
+    .forRevisionsOfEntity(MyEntity.class, false, true);
+----
 
 You can add constraints to this query in the same way as to the previous
 one. There are some additional possibilities:
@@ -563,19 +651,23 @@ than a specified value, etc. For example, the following query will
 select the smallest revision number, at which entity of class `MyEntity`
 with id `entityId` has changed, after revision number 42:
 
+[source,java]
+----
 Number revision = (Number) getAuditReader().createQuery()
-.forRevisionsOfEntity(MyEntity.class, false, true)
-.setProjection(AuditEntity.revisionNumber().min())
-.add(AuditEntity.id().eq(entityId))
-.add(AuditEntity.revisionNumber().gt(42)) .getSingleResult();
-
-</programlisting>
+    .forRevisionsOfEntity(MyEntity.class, false, true)
+    .setProjection(AuditEntity.revisionNumber().min())
+    .add(AuditEntity.id().eq(entityId))
+    .add(AuditEntity.revisionNumber().gt(42))
+    .getSingleResult();
+----
 
 The second additional feature you can use in queries for revisions is
 the ability to maximalize/minimize a property. For example, if you want
 to select the revision, at which the value of the `actualDate` for a
 given entity was larger then a given value, but as small as possible:
 
+[source,java]
+----
 Number revision = (Number) getAuditReader().createQuery()
 .forRevisionsOfEntity(MyEntity.class, false, true) // We are only
 interested in the first revision
@@ -583,8 +675,7 @@ interested in the first revision
 .add(AuditEntity.property("actualDate").minimize()
 .add(AuditEntity.property("actualDate").ge(givenDate))
 .add(AuditEntity.id().eq(givenEntityId))) .getSingleResult();
-
-</programlisting>
+----
 
 The `minimize()` and `maximize()` methods return a criteria, to which
 you can add constraints, which must be met by the entities with the
@@ -618,16 +709,17 @@ except the id, `null`.
 For the two types of queries described above it's possible to use
 special Audit criteria called `hasChanged()` and `hasNotChanged()` that
 makes use of the functionality described in
-link:#envers-tracking-properties-changes[section_title]. They're best
+<<envers-tracking-properties-changes>>. They're best
 suited for vertical queries, however existing API doesn't restrict their
 usage for horizontal ones. Let's have a look at following examples:
 
+[source,java]
+----
 AuditQuery query = getAuditReader().createQuery()
 .forRevisionsOfEntity(MyEntity.class, false, true)
 .add(AuditEntity.id().eq(id));
 .add(AuditEntity.property("actualDate").hasChanged())
-
-</programlisting>
+----
 
 This query will return all revisions of MyEntity with given id, where
 the actualDate property has been changed. Using this query we won't get
@@ -635,12 +727,13 @@ all other revisions in which actualDate wasn't touched. Of course
 nothing prevents user from combining hasChanged condition with some
 additional criteria - add method can be used here in a normal way.
 
+[source,java]
+----
 AuditQuery query = getAuditReader().createQuery()
 .forEntitiesAtRevision(MyEntity.class, revisionNumber)
 .add(AuditEntity.property("prop1").hasChanged())
 .add(AuditEntity.property("prop2").hasNotChanged());
-
-</programlisting>
+----
 
 This query will return horizontal slice for MyEntity at the time
 revisionNumber was generated. It will be limited to revisions that
@@ -650,12 +743,13 @@ cannot read this query as "Give me all MyEntities changed in
 revisionNumber with prop1 modified and prop2 untouched". To get such
 result we have to use the `forEntitiesModifiedAtRevision` query:
 
+[source,java]
+----
 AuditQuery query = getAuditReader().createQuery()
 .forEntitiesModifiedAtRevision(MyEntity.class, revisionNumber)
 .add(AuditEntity.property("prop1").hasChanged())
 .add(AuditEntity.property("prop2").hasNotChanged());
-
-</programlisting>
+----
 
 [[envers-tracking-modified-entities-queries]]
 === Querying for entities modified in a given revision
@@ -663,8 +757,11 @@ AuditQuery query = getAuditReader().createQuery()
 The basic query allows retrieving entity names and corresponding Java
 classes changed in a specified revision:
 
+[source,java]
+----
 modifiedEntityTypes = getAuditReader()
-.getCrossTypeRevisionChangesReader().findEntityTypes(revisionNumber);]]></programlisting>
+.getCrossTypeRevisionChangesReader().findEntityTypes(revisionNumber);
+----
 
 Other queries (also accessible from
 org.hibernate.envers.CrossTypeRevisionChangesReader):
@@ -686,7 +783,7 @@ of different entity classes modified within specified revision.
 
 Note that methods described above can be legally used only when default
 mechanism of tracking changed entity names is enabled (see
-link:#envers-tracking-modified-entities-revchanges[section_title]).
+<<envers-tracking-modified-entities-revchanges>>).
 
 === Conditional auditing
 
@@ -762,7 +859,7 @@ inserted into this table on each new revision, that is, on each commit
 of a transaction, which changes audited data. The name of this table can
 be configured, the name of its columns as well as adding additional
 columns can be achieved as discussed in
-link:#envers-revisionlog[section_title].
+<<envers-revisionlog>>.
 
 While global revisions are a good way to provide correct auditing of
 relations, some people have pointed out that this may be a bottleneck in
@@ -789,36 +886,83 @@ entities. So you can use the task just as you used to.
 
 For example:
 
-<target name="schemaexport" depends="build-demo" description="Exports a
-generated schema to DB and file"> <taskdef name="hibernatetool"
-classname="org.hibernate.tool.ant.EnversHibernateToolTask"
-classpathref="build.demo.classpath"/> <hibernatetool destdir=".">
-<classpath> <fileset refid="lib.hibernate" /> <path
-location="$\{build.demo.dir}" /> <path location="$\{build.main.dir}" />
-</classpath> <jpaconfiguration persistenceunit="ConsolePU" /> <hbm2ddl
-drop="false" create="true" export="false"
-outputfilename="versioning-ddl.sql" delimiter=";" format="true"/>
-</hibernatetool> </target>
+[source,xml]
+----
+<target name="schemaexport" depends="build-demo"
+  description="Exports a generated schema to DB and file">
+  <taskdef name="hibernatetool"
+    classname="org.hibernate.tool.ant.EnversHibernateToolTask"
+    classpathref="build.demo.classpath"/>
 
-</programlisting>
+  <hibernatetool destdir=".">
+    <classpath>
+      <fileset refid="lib.hibernate" />
+      <path location="${build.demo.dir}" />
+      <path location="${build.main.dir}" />
+    </classpath>
+    <jpaconfiguration persistenceunit="ConsolePU" />
+    <hbm2ddl
+      drop="false"
+      create="true"
+      export="false"
+      outputfilename="versioning-ddl.sql"
+      delimiter=";"
+      format="true"/>
+  </hibernatetool>
+</target>
+----
 
 Will generate the following schema:
 
-create table Address ( id integer generated by default as identity
-(start with 1), flatNumber integer, houseNumber integer, streetName
-varchar(255), primary key (id) ); create table Address_AUD ( id integer
-not null, REV integer not null, flatNumber integer, houseNumber integer,
-streetName varchar(255), REVTYPE tinyint, primary key (id, REV) );
-create table Person ( id integer generated by default as identity (start
-with 1), name varchar(255), surname varchar(255), address_id integer,
-primary key (id) ); create table Person_AUD ( id integer not null, REV
-integer not null, name varchar(255), surname varchar(255), REVTYPE
-tinyint, address_id integer, primary key (id, REV) ); create table
-REVINFO ( REV integer generated by default as identity (start with 1),
-REVTSTMP bigint, primary key (REV) ); alter table Person add constraint
-FK8E488775E4C3EA63 foreign key (address_id) references Address;
+[source,sql]
+----
+    create table Address (
+        id integer generated by default as identity (start with 1),
+        flatNumber integer,
+        houseNumber integer,
+        streetName varchar(255),
+        primary key (id)
+    );
 
-</programlisting>
+    create table Address_AUD (
+        id integer not null,
+        REV integer not null,
+        flatNumber integer,
+        houseNumber integer,
+        streetName varchar(255),
+        REVTYPE tinyint,
+        primary key (id, REV)
+    );
+
+    create table Person (
+        id integer generated by default as identity (start with 1),
+        name varchar(255),
+        surname varchar(255),
+        address_id integer,
+        primary key (id)
+    );
+
+    create table Person_AUD (
+        id integer not null,
+        REV integer not null,
+        name varchar(255),
+        surname varchar(255),
+        REVTYPE tinyint,
+        address_id integer,
+        primary key (id, REV)
+    );
+
+    create table REVINFO (
+        REV integer generated by default as identity (start with 1),
+        REVTSTMP bigint,
+        primary key (REV)
+    );
+
+    alter table Person
+        add constraint FK8E488775E4C3EA63
+        foreign key (address_id)
+        references Address;
+----
 
 [[envers-mappingexceptions]]
 === Mapping exceptions
@@ -913,7 +1057,7 @@ properties:
 
 `org.hibernate.envers.audit_strategy_validity_revend_timestamp_field_name`
 
-For more information, see link:#envers-configuration[section_title].
+For more information, see <<envers-configuration>>.
 ====
 
 The reason why the end revision information should be used for audit

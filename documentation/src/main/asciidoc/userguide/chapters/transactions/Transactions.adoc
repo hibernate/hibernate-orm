@@ -155,22 +155,28 @@ Let's take a look at using the Transaction API in the various
 environments.
 
 .Using Transaction API in JDBC
+====
 [source,java]
 ----
 include::{sourcedir}/jdbc.java[]
 ----
+====
 
 .Using Transaction API in JTA (CMT)
+====
 [source,java]
 ----
 include::{sourcedir}/cmt.java[]
 ----
+====
 
 .Using Transaction API in JTA (BMT)
+====
 [source,java]
 ----
 include::{sourcedir}/bmt.java[]
 ----
+====
 
 In the CMT case we really could have omitted all of the Transaction
 calls. But the point of the examples was to show that the Transaction

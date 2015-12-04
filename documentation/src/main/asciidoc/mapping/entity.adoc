@@ -141,10 +141,12 @@ queries; by default the name is the unqualified name of the entity
 class.
 
 .Simple `@Entity`
+====
 [source,java]
 ----
 include::{sourcedir}/entity/SimpleEntity.java[]
 ----
+====
 
 An entity models a database table. The identifier uniquely identifies
 each row in that table. By default the name of the table is assumed to
@@ -153,10 +155,12 @@ the table or to specify other information about the table, we would use
 the `javax.persistence.Table` annotation.
 
 .Simple `@Entity` with `@Table`
+====
 [source,java]
 ----
 include::{sourcedir}/entity/SimpleEntityWithTable.java[]
 ----
+====
 
 For details on mapping the identifier, see link:identifiers.adoc[Chapter 6,_Identifiers_]
 
@@ -175,6 +179,7 @@ According to JPA, the valid types for these attributes are limited to:
 * java.sql.Timestamp
 
 .Version
+====
 [source,java]
 ----
 include::{sourcedir}/entity/Version.java[]
@@ -189,6 +194,7 @@ include::{sourcedir}/entity/Timestamp.java[]
 ----
 include::{sourcedir}/entity/Instant.java[]
 ----
+====
 
 Hibernate supports a form of optimistic locking that does not require a
 dedicated "version attribute". This is intended mainly for use with

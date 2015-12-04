@@ -1,5 +1,6 @@
 [[portability]]
 == Database Portability Considerations
+:sourcedir: extras
 
 [[portability-basics]]
 === Portability Basics
@@ -47,6 +48,11 @@ automatically determine which dialect to should be used by relying on a
 series of delegates which implement the
 org.hibernate.dialect.resolver.DialectResolver which defines only a
 single method:
+
+[source,java]
+----
+public Dialect resolveDialect(DatabaseMetaData metaData) throws JDBCConnectionException
+----
 
 The basic contract here is that if the resolver 'understands' the given
 database metadata then it returns the corresponding Dialect; if not it

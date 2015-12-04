@@ -71,10 +71,12 @@ This is sometimes beneficial. Consider a use-case such as a VARCHAR
 column that represents a delimited list or set of Strings.
 
 .Delimited set of tags
+====
 [source,java]
 ----
 include::{sourcedir}/collection/DelimitedStringTagsExample.java[]
 ----
+====
 
 See the Hibernate Integrations Guide for more details on developing
 custom value type mappings. Without the special type mapping above the

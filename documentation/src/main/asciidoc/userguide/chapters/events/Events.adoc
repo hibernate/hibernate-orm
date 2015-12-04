@@ -27,10 +27,12 @@ An Interceptor can be either Session-scoped or SessionFactory-scoped.
 
 A Session-scoped interceptor is specified when a session is opened.
 
+====
 [source,java]
 ----
 include::{sourcedir}/SessionScopedExample.java[]
 ----
+====
 
 A SessionFactory-scoped interceptor is registered with the
 `Configuration` object prior to building the SessionFactory. Unless a
@@ -40,10 +42,12 @@ from that SessionFactory. SessionFactory-scoped interceptors must be
 thread safe. Ensure that you do not store session-specific states, since
 multiple sessions will use this interceptor potentially concurrently.
 
+====
 [source,java]
 ----
 include::{sourcedir}/SessionFactoryScopedExample.java[]
 ----
+====
 
 === Native Event system
 
@@ -91,10 +95,12 @@ example of an appropriate org.hibernate.integrator.spi.Integrator
 implementation for this purpose.
 
 .JACC listener registration example
+====
 [source,java]
 ----
 include::{sourcedir}/jacc-event-reg-example.java[]
 ----
+====
 
 You must also decide how to configure your JACC provider. Consult your
 JACC provider documentation.
@@ -143,10 +149,12 @@ class. The entity listener class is then associated with the entity
 using the javax.persistence.EntityListeners annotation
 
 .Example of specifying JPA callbacks
+====
 [source,java]
 ----
 include::{sourcedir}/JpaCallbacksExample.java[]
 ----
+====
 
 These approaches can be mixed, meaning you can use both together.
 

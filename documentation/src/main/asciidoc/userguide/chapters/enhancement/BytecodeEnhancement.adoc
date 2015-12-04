@@ -33,10 +33,12 @@ controllable through the @org.hibernate.annotations.LazyGroup
 annotation.
 
 .`@LazyGroup` example
+====
 [source,java]
 ----
 include::{sourcedir}/LazyGroupExample.java[]
 ----
+====
 
 In the above example we have 2 lazy attributes: accountsPayableXrefId
 and image. Each is part of a different fetch group
@@ -83,18 +85,22 @@ usage" (idiomatic Java) as possible. Consider a domain model with a
 normal Order/LineItem bi-directional association:
 
 .Incorrect normal Java usage
+====
 [source,java]
 ----
 include::{sourcedir}/BiDirManagementNormalJavaIncorrect.java[]
 ----
+====
 
 This blows up in normal Java usage. The correct normal Java usage is:
 
 .Correct normal Java usage
+====
 [source,java]
 ----
 include::{sourcedir}/BiDirManagementNormalJavaCorrect.java[]
 ----
+====
 
 Bytecode-enhanced bi-directional association management makes that first
 example work by managing the "other side" of a bi-directional
@@ -128,10 +134,12 @@ of a Gradle build. To use the plugin a project would first need to apply
 it:
 
 .Apply the Gradle plugin
+====
 [source,gradle]
 ----
 include::{sourcedir}/gradle-example.gradle[]
 ----
+====
 
 The configuration that is available is exposed through a registered
 Gradle DSL extension:
@@ -163,7 +171,9 @@ behavior is to fail the build, but it can be set so that only a warning
 is issued.
 
 .Apply the Maven plugin
+====
 [source,xml]
 ----
 include::{sourcedir}/maven-example.pom[]
 ----
+====

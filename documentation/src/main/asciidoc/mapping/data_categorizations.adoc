@@ -29,6 +29,7 @@ To help understand these categorizations, lets look at a simple table
 and domain model that we wish to map.
 
 .Simple table and domain model
+====
 [source,sql]
 ----
 include::{sourcedir}/categorizations/Contact.sql[]
@@ -38,6 +39,7 @@ include::{sourcedir}/categorizations/Contact.sql[]
 ----
 include::{sourcedir}/categorizations/Contact.java[]
 ----
+====
 
 In the broadest sense, Hibernate categorizes types into two groups:
 

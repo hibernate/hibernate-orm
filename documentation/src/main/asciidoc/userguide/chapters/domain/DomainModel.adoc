@@ -136,23 +136,28 @@ specific Person multiple times we will actually get back the same
 __instance__:
 
 .Scope of identity
+====
 [source,java]
 ----
 include::{sourcedir}/listing1.java[]
 ----
+====
 
 Consider another example using a persistent java.util.Set:
 
 .Set usage with Session-scoped identity
+====
 [source,java]
 ----
 include::{sourcedir}/listing3.java[]
 ----
+====
 
 However, the semantic changes when we mix instances loaded from
 different Sessions:
 
 .Mixed Sessions
+====
 [source,java]
 ----
 include::{sourcedir}/listing2.java[]
@@ -162,6 +167,7 @@ include::{sourcedir}/listing2.java[]
 ----
 include::{sourcedir}/listing4.java[]
 ----
+====
 
 Specifically the outcome in this last example will depend on whether the
 Person class implemented equals/hashCode, and if so how.
@@ -169,10 +175,12 @@ Person class implemented equals/hashCode, and if so how.
 Consider yet another case:
 
 .Sets with transient entities
+====
 [source,java]
 ----
 include::{sourcedir}/listing5.java[]
 ----
+====
 
 In cases where you will be dealing with entities outside of a Session
 (whether they be transient or detached), especially in cases where you
@@ -183,19 +191,23 @@ A common initial approach is to use the entity's identifier attribute as
 the basis for equals/hashCode calculations:
 
 .Naive equals/hashCode implementation
+====
 [source,java]
 ----
 include::{sourcedir}/listing6.java[]
 ----
+====
 
 It turns out that this still breaks when adding transient instance of
 Person to a set as we saw in the last example:
 
 .Still trouble
+====
 [source,java]
 ----
 include::{sourcedir}/listing7.java[]
 ----
+====
 
 The issue here is a conflict between (1) the use of generated identifier
 and (2) the contract of Set and (3) the equals/hashCode implementations.
@@ -212,10 +224,12 @@ Another option is to force the identifier to be generated and set prior
 to adding to the Set:
 
 .Forcing identifier generation
+====
 [source,java]
 ----
 include::{sourcedir}/listing8.java[]
 ----
+====
 
 But this is often not feasible.
 
@@ -223,10 +237,12 @@ The final approach is to use a "better" equals/hashCode implementation,
 making use of a natural-id or business-key.
 
 .Better equals/hashCode with natural-id
+====
 [source,java]
 ----
 include::{sourcedir}/listing9.java[]
 ----
+====
 
 As you can see the question of equals/hashCode is not trivial. Nor is
 there a one-size-fits-all solution.
@@ -253,10 +269,12 @@ now also be mixed within a domain model; a dynamic entity might
 reference a POJO entity, and vice versa.
 
 .Working with Dynamic Domain Models
+====
 [source,java]
 ----
 include::{sourcedir}/listing10.java[]
 ----
+====
 
 The main advantage of dynamic models is quick turnaround time for
 prototyping without the need for entity class implementation. The main

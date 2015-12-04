@@ -18,7 +18,6 @@ include::chapters/fetching/Fetching.adoc[]
 include::chapters/batch/Batching.adoc[]
 include::chapters/caching/Caching.adoc[]
 include::chapters/events/Events.adoc[]
-
 include::chapters/query-hql/HQL.adoc[]
 include::chapters/query-criteria/Criteria.adoc[]
 include::chapters/query-native/Native.adoc[]

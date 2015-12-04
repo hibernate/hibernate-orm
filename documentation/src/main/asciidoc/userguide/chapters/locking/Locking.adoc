@@ -56,10 +56,12 @@ The version number mechanism for optimistic locking is provided through
 a `@Version` annotation.
 
 .The @Version annotation
+====
 [source,java]
 ----
 include::{sourcedir}/version_annotation.java[]
 ----
+====
 
 Here, the version property is mapped to the `OPTLOCK` column, and the
 entity manager uses it to detect conflicting updates, and prevent the
@@ -83,10 +85,12 @@ use the annotation
 ====
 
 .Declaring a version property in `hbm.xml`
+====
 [source,xml]
 ----
 include::{sourcedir}/version_property.java[]
 ----
+====
 
 [cols=",",]
 |=======================================================================
@@ -121,10 +125,12 @@ Timestamping is automatically used if you the `@Version` annotation on a
 `Date` or `Calendar`.
 
 .Using timestamps for optimistic locking
+====
 [source,java]
 ----
 include::{sourcedir}/timestamp_version.java[]
 ----
+====
 
 Hibernate can retrieve the timestamp value from the database or the JVM,
 by reading the value you specify for the
@@ -140,10 +146,12 @@ Hibernate, if you use the
 annotation.
 
 .The timestamp element in `hbm.xml`
+====
 [source,xml]
 ----
 include::{sourcedir}/timestamp_version.xml[]
 ----
+====
 
 [cols=",",]
 |=======================================================================

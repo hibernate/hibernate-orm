@@ -56,10 +56,12 @@ controlled through the
 org.hibernate.boot.registry.BootstrapServiceRegistryBuilder:
 
 .Controlling BootstrapServiceRegistry building
+====
 [source,java]
 ----
 include::{sourcedir}/native1.java[]
 ----
+====
 
 The services of the BootstrapServiceRegistry cannot be extended (added
 to) nor overridden (replaced).
@@ -70,6 +72,7 @@ always need to configure the StandardServiceRegistry, which is done
 through `org.hibernate.boot.registry.StandardServiceRegistryBuilder`:
 
 .Building a BootstrapServiceRegistryBuilder
+====
 [source,java]
 ----
 include::{sourcedir}/native2.java[]
@@ -79,6 +82,7 @@ include::{sourcedir}/native2.java[]
 ----
 include::{sourcedir}/native3.java[]
 ----
+====
 
 A StandardServiceRegistry is also highly configurable via the
 StandardServiceRegistryBuilder API. See the
@@ -86,10 +90,12 @@ StandardServiceRegistryBuilder javadocs for full details. Some specific
 methods of interest:
 
 .Configuring a MetadataSources
+====
 [source,java]
 ----
 include::{sourcedir}/native5.java[]
 ----
+====
 
 [[bootstrap-native-metadata]]
 ==== Building the Metadata
@@ -107,10 +113,12 @@ javadocs for more information. Also, all methods on MetadataSources
 allow for chaining should you prefer that style:
 
 .Configuring a MetadataSources with method chaining
+====
 [source,java]
 ----
 include::{sourcedir}/native6.java[]
 ----
+====
 
 Once we have the sources of mapping information defined, we need to
 build the Metadata object. If you are ok with the default behavior in
@@ -134,10 +142,12 @@ control over the Metadata building process. See its javadocs for full
 details.
 
 .Building Metadata via MetadataBuilder
+====
 [source,java]
 ----
 include::{sourcedir}/native7.java[]
 ----
+====
 
 [[bootstrap-native-sessionfactory]]
 ==== Building the SessionFactory
@@ -153,10 +163,12 @@ Metadata#getSessionFactoryBuilder. Again, see its javadocs for full
 details.
 
 .Native Bootstrapping - Putting it all together
+====
 [source,java]
 ----
 include::{sourcedir}/native9.java[]
 ----
+====
 
 The bootstrapping API is quite flexible, but in most cases it makes the
 most sense to think of it as a 3 step process:
@@ -166,10 +178,12 @@ most sense to think of it as a 3 step process:
 3.  Use those 2 things to build the SessionFactory
 
 .Building SessionFactory via SessionFactoryBuilder
+====
 [source,java]
 ----
 include::{sourcedir}/native8.java[]
 ----
+====
 
 [[bootstrap-jpa]]
 === JPA Bootstrapping
@@ -207,10 +221,12 @@ application for injection via the javax.persistence.PersistenceUnit
 annotation or via JNDI lookup.
 
 .Injecting a EntityManagerFactory
+====
 [source,java]
 ----
 include::{sourcedir}/jpa1.java[]
 ----
+====
 
 For compliant application-bootstrapping, rather than the container
 building the EntityManagerFactory for the application, the application
@@ -220,10 +236,12 @@ an entity manager factory by calling the createEntityManagerFactory
 method:
 
 .Application bootstrapped EntityManagerFactory
+====
 [source,java]
 ----
 include::{sourcedir}/jpa2.java[]
 ----
+====
 
 [[bootstrap-jpa-hibernate]]
 ==== Proprietary 2-phase bootstrapping

@@ -1,5 +1,6 @@
 [[osgi]]
 == OSGi
+:sourcedir: extras
 
 === OSGi Specification and Environment
 
@@ -9,15 +10,9 @@ entity/mapping scanning.
 
 Hibernate supports three types of configurations within OSGi.
 
-1.  Container-Managed JPA
-+
-:
-2.  Unmanaged JPA
-+
-:
-3.  Unmanaged Native
-+
-:
+. Container-Managed JPA <<osgi-managed-jpa>>
+. Unmanaged JPA <<osgi-unmanaged-jpa>>
+. Unmanaged Native <<osgi-unmanaged-native>>
 
 === hibernate-osgi
 
@@ -94,9 +89,25 @@ through JNDI. For example, you could install the following H2 DS. You
 can deploy the DS manually (Karaf has a `deploy` dir), or through a
 "blueprint bundle" (`blueprint:file:/[PATH]/datasource-h2.xml`).
 
+.datasource-h2.xml
+====
+[source,xml]
+----
+include::{sourcedir}/datasource-h2.xml[]
+----
+====
+
 That DS is then used by your `persistence.xml` persistence-unit. The
 following works in Karaf, but the names may need tweaked in alternative
 containers.
+
+.META-INF/persistence.xml
+====
+[source,xml]
+----
+<jta-data-source>osgi:service/javax.sql.DataSource/(osgi.jndi.service.name=jdbc/h2ds)</jta-data-source>
+----
+====
 
 === Bundle Package Imports
 
@@ -113,6 +124,14 @@ The easiest, and most supported, method of obtaining an `EntityManager`
 utilizes OSGi's `OSGI-INF/blueprint/blueprint.xml` in your bundle. The
 container takes the name of your persistence unit, then automatically
 injects an `EntityManager` instance into your given bean attribute.
+
+.OSGI-INF/blueprint/blueprint.xml
+====
+[source,xml]
+----
+include::{sourcedir}/blueprint.xml[]
+----
+====
 
 [[osgi-unmanaged-jpa]]
 === Unmanaged JPA
@@ -147,6 +166,14 @@ manually. The service handles the OSGi ClassLoader, discovered extension
 points, scanning, etc. Manually creating an `EntityManagerFactory` is
 guaranteed to NOT work during runtime!
 
+.Discover/Use EntityManagerFactory
+====
+[source,java]
+----
+include::{sourcedir}/UnmanagedJPAHibernateUtil.java[]
+----
+====
+
 [[osgi-unmanaged-native]]
 === Unmanaged Native
 
@@ -174,6 +201,14 @@ for OSGi environments. It is VITAL that your SF be obtained through the
 service, rather than creating it manually. The service handles the OSGi
 ClassLoader, discovered extension points, scanning, etc. Manually
 creating an `SessionFactory` is guaranteed to NOT work during runtime!
+
+.Discover/Use EntityManagerFactory
+====
+[source,java]
+----
+include::{sourcedir}/NativeHibernateUtil.java[]
+----
+====
 
 === Optional Modules
 
@@ -220,6 +255,14 @@ The easiest way to register extension point implementations is through a
 `blueprint.xml` file. Add `OSGI-INF/blueprint/blueprint.xml` to your
 classpath. Envers' blueprint is a great example:
 
+.Example extension point registrations in blueprint.xml
+====
+[source,xml]
+----
+include::{sourcedir}/extension_point_blueprint.xml[]
+----
+====
+
 Extension points can also be registered programmatically with
 `BundleContext#registerService`, typically within your
 `BundleActivator#start`.
@@ -255,3 +298,5 @@ other container providers.
 * Hibernate ORM has many dependencies that do not currently provide OSGi
 manifests. The QuickStart tutorials make heavy use of 3rd party bundles
 (SpringSource, ServiceMix) or the `wrap:...` operator.
+
+

@@ -66,6 +66,7 @@ Let's consider these topics as it relates to an simple domain model and
 a few use cases.
 
 .Sample domain model
+====
 [source,java]
 ----
 include::{sourcedir}/Employee.java[]
@@ -80,6 +81,7 @@ include::{sourcedir}/Department.java[]
 ----
 include::{sourcedir}/Project.java[]
 ----
+====
 
 [IMPORTANT]
 ====
@@ -99,10 +101,12 @@ Employee. Lets assume that login only requires access to the Employee
 information, not Project nor Department information.
 
 .No fetching example
+====
 [source,java]
 ----
 include::{sourcedir}/Login.java[]
 ----
+====
 
 In this example, the application gets the Employee data. However,
 because all associations from Employee are declared as LAZY (JPA defines
@@ -113,10 +117,12 @@ specifically, another fetching optimization here would be to limit the
 width of the query results.
 
 .No fetching (scalar) example
+====
 [source,java]
 ----
 include::{sourcedir}/LoginScalar.java[]
 ----
+====
 
 === Dynamic fetching via queries
 
@@ -128,6 +134,7 @@ collection of Projects for that Employee. Information about Departments,
 other Employees or other Projects is not needed.
 
 .Dynamic query fetching example
+====
 [source,java]
 ----
 include::{sourcedir}/ProjectsForAnEmployeeHql.java[]
@@ -137,6 +144,7 @@ include::{sourcedir}/ProjectsForAnEmployeeHql.java[]
 ----
 include::{sourcedir}/ProjectsForAnEmployeeCriteria.java[]
 ----
+====
 
 In this example we have an Employee and their Projects loaded in a
 single query shown both as an HQL query and a JPA Criteria query. In
@@ -154,6 +162,7 @@ but does not expose a means to define load-specific fetching. So we
 would leverage a fetch profile.
 
 .Fetch profile example
+====
 [source,java]
 ----
 include::{sourcedir}/FetchOverrides.java[]
@@ -163,6 +172,7 @@ include::{sourcedir}/FetchOverrides.java[]
 ----
 include::{sourcedir}/ProjectsForAnEmployeeFetchProfile.java[]
 ----
+====
 
 Here the Employee is obtained by natural-id lookup and the Employee's
 Project data is fetched eagerly. If the Employee data is resolved from

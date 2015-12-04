@@ -25,17 +25,26 @@ specify mapping metadata (XML mapping documents, annotated classes) that
 describe your applications object model and its mapping to a SQL
 database.
 
-Configuration cfg = new Configuration() // addResource does a classpath
-resource lookup .addResource("Item.hbm.xml") .addResource("Bid.hbm.xml")
-// calls addResource using "/org/hibernate/auction/User.hbm.xml"
-.addClass(org.hibernate.auction.User.class) // parses Address class for
-mapping annotations .addAnnotatedClass( Address.class ) // reads
-package-level (package-info.class) annotations in the named package
-.addPackage( "org.hibernate.auction" ) .setProperty("hibernate.dialect",
-"org.hibernate.dialect.H2Dialect")
-.setProperty("hibernate.connection.datasource",
-"java:comp/env/jdbc/test") .setProperty("hibernate.order_updates",
-"true");</programlisting>
+[source,java]
+----
+Configuration cfg = new Configuration()
+    // addResource does a classpath resource lookup
+    .addResource("Item.hbm.xml")
+    .addResource("Bid.hbm.xml")
+
+    // calls addResource using "/org/hibernate/auction/User.hbm.xml"
+    .addClass(org.hibernate.auction.User.class)
+
+    // parses Address class for mapping annotations
+    .addAnnotatedClass( Address.class )
+
+    // reads package-level (package-info.class) annotations in the named package
+    .addPackage( "org.hibernate.auction" )
+
+    .setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect")
+    .setProperty("hibernate.connection.datasource", "java:comp/env/jdbc/test")
+    .setProperty("hibernate.order_updates", "true");
+----
 
 There are other ways to specify Configuration information, including:
 
@@ -46,7 +55,7 @@ Configuration#setProperties
 * Via a Hibernate cfg.xml file
 * System properties using java `-Dproperty=value`
 
-= Migration
+== Migration
 
 Mapping Configuration methods to the corresponding methods in the new
 APIs..

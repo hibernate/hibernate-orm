@@ -23,11 +23,6 @@
  */
 package org.hibernate.osgi;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
-
-import javax.persistence.spi.PersistenceProvider;
-
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.internal.util.ClassLoaderHelper;
@@ -38,6 +33,10 @@ import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceRegistration;
+
+import javax.persistence.spi.PersistenceProvider;
+import java.util.Dictionary;
+import java.util.Hashtable;
 
 /**
  * This BundleActivator provides three different uses of Hibernate in OSGi

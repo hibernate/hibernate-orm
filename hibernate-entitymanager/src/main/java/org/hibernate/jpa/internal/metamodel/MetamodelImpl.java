@@ -207,7 +207,7 @@ public class MetamodelImpl implements Metamodel, Serializable {
 			type = embeddables.get( cls );
 		}
 		if ( type == null ) {
-			throw new IllegalArgumentException( "Not an managed type: " + cls );
+			throw new IllegalArgumentException( "Not a managed type: " + cls );
 		}
 		return (ManagedType<X>) type;
 	}

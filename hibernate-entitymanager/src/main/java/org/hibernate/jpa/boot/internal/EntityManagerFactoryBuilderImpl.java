@@ -22,6 +22,9 @@ import javax.persistence.PersistenceException;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.sql.DataSource;
 
+import javassist.CtClass;
+import javassist.CtField;
+
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
@@ -45,6 +48,8 @@ import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.MetadataBuilderImplementor;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
+import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.beanvalidation.BeanValidationIntegrator;
@@ -201,9 +206,25 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// push back class transformation to the environment; for the time being this only has any effect in EE
 		// container situations, calling back into PersistenceUnitInfo#addClassTransformer
-		final boolean useClassTransformer = "true".equals( configurationValues.remove( AvailableSettings.USE_CLASS_ENHANCER ) );
-		if ( useClassTransformer ) {
-			persistenceUnit.pushClassTransformer( managedResources.getAnnotatedClassNames() );
+
+		final boolean dirtyTrackingEnabled = readBooleanConfigurationValue( AvailableSettings.ENHANCER_ENABLE_DIRTY_TRACKING );
+		final boolean lazyInitializationEnabled = readBooleanConfigurationValue( AvailableSettings.ENHANCER_ENABLE_LAZY_INITIALIZATION );
+		final boolean associationManagementEnabled = readBooleanConfigurationValue( AvailableSettings.ENHANCER_ENABLE_ASSOCIATION_MANAGEMENT );
+
+		// todo: remove the support for the old instrumentation property in the future
+		final boolean deprecatedInstrumentation = readBooleanConfigurationValue( AvailableSettings.USE_CLASS_ENHANCER );
+		if ( deprecatedInstrumentation ) {
+			LOG.deprecatedInstrumentationProperty();
+		}
+
+		if ( deprecatedInstrumentation || dirtyTrackingEnabled || lazyInitializationEnabled || associationManagementEnabled ) {
+			EnhancementContext enhancementContext = getEnhancementContext(
+					deprecatedInstrumentation || dirtyTrackingEnabled,
+					deprecatedInstrumentation || lazyInitializationEnabled,
+					deprecatedInstrumentation || associationManagementEnabled
+			);
+
+			persistenceUnit.pushClassTransformer( enhancementContext );
 		}
 
 		// for the time being we want to revoke access to the temp ClassLoader if one was passed
@@ -218,6 +239,62 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	private boolean readBooleanConfigurationValue(String propertyName) {
+		Object propertyValue = configurationValues.remove( propertyName );
+		return propertyValue != null && Boolean.parseBoolean( propertyValue.toString() );
+	}
+
+	/**
+	 * Builds the context to be used in runtime bytecode enhancement
+	 *
+	 * @param dirtyTrackingEnabled To enable dirty tracking feature
+	 * @param lazyInitializationEnabled To enable lazy initialization feature
+	 * @param associationManagementEnabled To enable association management feature
+	 * @return An enhancement context for classes managed by this EM
+	 */
+	protected EnhancementContext getEnhancementContext(final boolean dirtyTrackingEnabled, final boolean lazyInitializationEnabled, final boolean associationManagementEnabled ) {
+		return new DefaultEnhancementContext() {
+
+			@Override
+			public boolean isEntityClass(CtClass classDescriptor) {
+				return managedResources.getAnnotatedClassNames().contains( classDescriptor.getName() )
+						&& super.isEntityClass( classDescriptor );
+			}
+
+			@Override
+			public boolean isCompositeClass(CtClass classDescriptor) {
+				return managedResources.getAnnotatedClassNames().contains( classDescriptor.getName() )
+						&& super.isCompositeClass( classDescriptor );
+			}
+
+			@Override
+			public boolean doBiDirectionalAssociationManagement(CtField field) {
+				return associationManagementEnabled;
+			}
+
+			@Override
+			public boolean doDirtyCheckingInline(CtClass classDescriptor) {
+				return dirtyTrackingEnabled;
+			}
+
+			@Override
+			public boolean hasLazyLoadableAttributes(CtClass classDescriptor) {
+				return lazyInitializationEnabled;
+			}
+
+			@Override
+			public boolean isLazyLoadable(CtField field) {
+				return lazyInitializationEnabled;
+			}
+
+			@Override
+			public boolean doExtendedEnhancement(CtClass classDescriptor) {
+				// doesn't make any sense to have extended enhancement enabled at runtime. we only enhance entities anyway.
+				return false;
+			}
+
+		};
+	}
 
 	/**
 	 * Builds the {@link BootstrapServiceRegistry} used to eventually build the {@link org.hibernate.boot.registry.StandardServiceRegistryBuilder}; mainly

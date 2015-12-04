@@ -11,6 +11,10 @@ import java.io.InputStream;
 import java.lang.instrument.IllegalClassFormatException;
 import java.util.List;
 
+import javassist.CtClass;
+
+import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
+import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.jpa.internal.enhance.EnhancingClassTransformerImpl;
 
 /**
@@ -77,10 +81,10 @@ public class InstrumentedClassLoader extends ClassLoader {
 		catch (IOException e) {
 			throw new ClassNotFoundException( name + " not found", e );
 		}
-		EnhancingClassTransformerImpl t = new EnhancingClassTransformerImpl( entities );
-		byte[] transformed = new byte[0];
+
+		EnhancingClassTransformerImpl t = new EnhancingClassTransformerImpl( getEnhancementContext( getParent(), entities ) );
 		try {
-			transformed = t.transform(
+			return t.transform(
 					getParent(),
 					name,
 					null,
@@ -91,11 +95,30 @@ public class InstrumentedClassLoader extends ClassLoader {
 		catch (IllegalClassFormatException e) {
 			throw new ClassNotFoundException( name + " not found", e );
 		}
-		
-		return transformed;
 	}
 
 	public void setEntities(List<String> entities) {
 		this.entities = entities;
 	}
+
+	public EnhancementContext getEnhancementContext(final ClassLoader cl, final List<String> entities) {
+		return new DefaultEnhancementContext() {
+
+			@Override
+			public ClassLoader getLoadingClassLoader() {
+				return cl;
+			}
+
+			@Override
+			public boolean isEntityClass(CtClass classDescriptor) {
+				return entities.contains( classDescriptor.getName() ) && super.isEntityClass( classDescriptor );
+			}
+
+			@Override
+			public boolean isCompositeClass(CtClass classDescriptor) {
+				return entities.contains( classDescriptor.getName() ) && super.isCompositeClass( classDescriptor );
+			}
+		};
+	}
+
 }

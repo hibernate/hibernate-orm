@@ -11,7 +11,7 @@ This section defines the settings which control that behavior.
 [[caching-config-provider]]
 === RegionFactory
 
-org.hibernate.cache.spi.RegionFactory defines the integration between
+`org.hibernate.cache.spi.RegionFactory` defines the integration between
 Hibernate and a pluggable caching provider.
 `hibernate.cache.region.factory_class` is used to declare the provider
 to use. Hibernate comes with support for 2 popular caching libraries:
@@ -89,5 +89,5 @@ At runtime Hibernate handles moving data into and out of the
 second-level cache in response to the operations performed by the
 Session.
 
-The org.hibernate.Cache interface (or the javax.persistence.Cache
+The `org.hibernate.Cache` interface (or the javax.persistence.Cache
 interface if using JPA) allow to clear data from the second-level cache.

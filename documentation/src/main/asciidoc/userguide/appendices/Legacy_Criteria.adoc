@@ -3,7 +3,7 @@
 
 [NOTE]
 ====
-This appendix covers the legacy Hibernate org.hibernate.Criteria API,
+This appendix covers the legacy Hibernate `org.hibernate.Criteria` API,
 which should be considered deprecated. New development should focus on
 the JPA javax.persistence.criteria.CriteriaQuery API. Eventually,
 Hibernate-specific criteria features will be ported as extensions to the

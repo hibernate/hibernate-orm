@@ -7,12 +7,12 @@ native-sql queries.
 
 [IMPORTANT]
 ====
-Hibernate offers an older, legacy org.hibernate.Criteria API which
+Hibernate offers an older, legacy `org.hibernate.Criteria` API which
 should be considered deprecated. No feature development will target
 those APIs. Eventually, Hibernate-specific criteria features will be
 ported as extensions to the JPA
 `javax.persistence.criteria.CriteriaQuery`. For details on the
-org.hibernate.Criteria API, see <<appendices/Legacy_Criteria.adoc#appendix-legacy-criteria, Legacy Hibernate Criteria Queries>>.
+`org.hibernate.Criteria` API, see <<appendices/Legacy_Criteria.adoc#appendix-legacy-criteria, Legacy Hibernate Criteria Queries>>.
 
 This chapter will focus on the JPA APIs for declaring type-safe criteria
 queries.
@@ -23,7 +23,7 @@ They are type-safe in terms of using interfaces and classes to represent
 various structural parts of a query such as the query itself, or the
 select clause, or an order-by, etc. They can also be type-safe in terms
 of referencing attributes as we will see in a bit. Users of the older
-Hibernate org.hibernate.Criteria query API will recognize the general
+Hibernate `org.hibernate.Criteria` query API will recognize the general
 approach, though we believe the JPA API to be superior as it represents
 a clean look at the lessons learned from that API.
 
@@ -226,7 +226,7 @@ typed::
   The <<ex-criteria-typedquery-tuple>> example
   illustrates this form of access in the `tuple.get( idPath )` and
   `tuple.get( agePath )` calls. This allows typed access to the
-  underlying tuple values based on the javax.persistence.TupleElement
+  underlying tuple values based on the `javax.persistence.TupleElement`
   expressions used to build the criteria.
 positional::
   Allows access to the underlying tuple values based on the position.
@@ -241,7 +241,7 @@ aliased::
   Allows access to the underlying tuple values based an (optionally)
   assigned alias. The example query did not apply an alias. An alias
   would be applied via the alias method on
-  javax.persistence.criteria.Selection. Just like `positional` access,
+  `javax.persistence.criteria.Selection`. Just like `positional` access,
   there is both a typed (__Object get(String alias)__) and an untyped
   (__<X> X get(String alias, Class<X> type__ form.
 

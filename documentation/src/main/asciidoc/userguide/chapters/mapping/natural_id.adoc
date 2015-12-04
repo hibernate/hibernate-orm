@@ -42,7 +42,7 @@ include::{sourcedir}/natural_id/NonSimpleNaturalIdMapping.java[]
 ==== Natural Id API
 
 As stated before, Hibernate provides an API for loading entities by
-natural id. This is represented by the org.hibernate.NaturalIdLoadAccess
+natural id. This is represented by the `org.hibernate.NaturalIdLoadAccess`
 contract obtained via Session#byNaturalId. If the entity does not define
 a natural id, an exception will be thrown there.
 
@@ -85,7 +85,7 @@ include::{sourcedir}/natural_id/SimpleNaturalIdLoadAccessUsage.java[]
 ----
 ====
 
-Here we see the use of the org.hibernate.SimpleNaturalIdLoadAccess
+Here we see the use of the `org.hibernate.SimpleNaturalIdLoadAccess`
 contract, obtained via Session#bySimpleNaturalId.
 SimpleNaturalIdLoadAccess is similar to NaturalIdLoadAccess except that
 it does not define the using method. Instead, because these "simple"

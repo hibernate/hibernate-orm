@@ -118,7 +118,7 @@ ValidityAuditStrategy is used.
 |REVEND_TSTMP |Column name of the timestamp of the end revision until
 which the data was valid. Only used if the ValidityAuditStrategy is
 used, and
-org.hibernate.envers.audit_strategy_validity_store_revend_timestamp
+`org.hibernate.envers.audit_strategy_validity_store_revend_timestamp`
 evaluates to true
 
 |org.hibernate.envers.use_revision_entity_with_native_id |true a|
@@ -129,8 +129,8 @@ users are advised to set this property to false. In this case revision
 numbers are created by preconfigured
 `org.hibernate.id.enhanced.SequenceStyleGenerator`. See:
 
-1.  org.hibernate.envers.DefaultRevisionEntity
-2.  org.hibernate.envers.enhanced.SequenceIdRevisionEntity
+1.  `org.hibernate.envers.DefaultRevisionEntity`
+2.  `org.hibernate.envers.enhanced.SequenceIdRevisionEntity`
 
 |org.hibernate.envers.track_entities_changed_in_revision |false |Should
 entity types, that have been modified during each revision, be tracked.
@@ -175,9 +175,9 @@ identifier.
 The following configuration options have been added recently and should
 be regarded as experimental:
 
-1.  org.hibernate.envers.track_entities_changed_in_revision
-2.  org.hibernate.envers.using_modified_flag
-3.  org.hibernate.envers.modified_flag_suffix
+1.  `org.hibernate.envers.track_entities_changed_in_revision`
+2.  `org.hibernate.envers.using_modified_flag`
+3.  `org.hibernate.envers.modified_flag_suffix`
 ====
 
 === Additional mapping annotations
@@ -290,12 +290,12 @@ entities marked as @org.hibernate.envers.RevisionEntity
 revision entity which is handled by the newRevision method of the
 org.jboss.envers.RevisionListener interface.
 +
-You tell Envers your custom org.hibernate.envers.RevisionListener
+You tell Envers your custom `org.hibernate.envers.RevisionListener`
 implementation to use by specifying it on the
 @org.hibernate.envers.RevisionEntity annotation, using the value
 attribute. If your RevisionListener class is inaccessible from
 @RevisionEntity (e.g. exists in a different module), set
-org.hibernate.envers.revision_listener property to it's fully qualified
+`org.hibernate.envers.revision_listener` property to it's fully qualified
 name. Class name defined by the configuration parameter overrides
 revision entity's value attribute.
 
@@ -313,9 +313,9 @@ public class MyCustomRevisionListener implements RevisionListener {
 }
 ----
 
-An alternative method to using the org.hibernate.envers.RevisionListener
+An alternative method to using the `org.hibernate.envers.RevisionListener`
 is to instead call the getCurrentRevision method of the
-org.hibernate.envers.AuditReader interface to obtain the current
+`org.hibernate.envers.AuditReader` interface to obtain the current
 revision, and fill it with desired information. The method accepts a
 `persist` parameter indicating whether the revision entity should be
 persisted prior to returning from this method. `true` ensures that the
@@ -329,10 +329,10 @@ audited entities have changed.
 ====
 [source,java]
 ----
-package org.hibernate.envers.example;
+package `org.hibernate.envers.example;`
 
-import org.hibernate.envers.RevisionEntity;
-import org.hibernate.envers.DefaultRevisionEntity;
+import `org.hibernate.envers.RevisionEntity;`
+import `org.hibernate.envers.DefaultRevisionEntity;`
 
 import javax.persistence.Entity;
 
@@ -351,9 +351,9 @@ public class ExampleRevEntity extends DefaultRevisionEntity {
 ====
 [source,java]
 ----
-package org.hibernate.envers.example;
+package `org.hibernate.envers.example;`
 
-import org.hibernate.envers.RevisionListener;
+import `org.hibernate.envers.RevisionListener;`
 import org.jboss.seam.security.Identity;
 import org.jboss.seam.Component;
 
@@ -383,7 +383,7 @@ table) and a string value.
 Tracking of modified entity names can be enabled in three different
 ways:
 
-1.  Set org.hibernate.envers.track_entities_changed_in_revision
+1.  Set `org.hibernate.envers.track_entities_changed_in_revision`
 parameter to `true`. In this case
 `org.hibernate.envers.DefaultTrackingModifiedEntitiesRevisionEntity`
 will be implicitly used as the revision log entity.
@@ -427,7 +427,7 @@ in <<envers-tracking-modified-entities-queries>>.
 
 Users are also allowed to implement custom mechanism of tracking
 modified entity types. In this case, they shall pass their own
-implementation of org.hibernate.envers.EntityTrackingRevisionListener
+implementation of `org.hibernate.envers.EntityTrackingRevisionListener`
 interface as the value of @org.hibernate.envers.RevisionEntity
 annotation. EntityTrackingRevisionListener interface exposes one method
 that notifies whenever audited entity instance has been added, modified
@@ -526,7 +526,7 @@ modified in a given revision.
 
 Tracking entity changes at property level can be enabled by:
 
-1.  setting org.hibernate.envers.global_with_modified_flag configuration
+1.  setting `org.hibernate.envers.global_with_modified_flag` configuration
 property to `true`. This global switch will cause adding modification
 flags for all audited properties in all audited entities.
 2.  using `@Audited(withModifiedFlag=true)` on a property or on an
@@ -764,7 +764,7 @@ modifiedEntityTypes = getAuditReader()
 ----
 
 Other queries (also accessible from
-org.hibernate.envers.CrossTypeRevisionChangesReader):
+`org.hibernate.envers.CrossTypeRevisionChangesReader`):
 
 1.  List<Object> findEntities(Number) - Returns snapshots of all audited
 entities changed (added, updated and removed) in a given revision.

@@ -28,9 +28,9 @@ itself and JTA. Hibernate supports both mechanisms for integrating with
 transactions and allowing applications to manage physical transactions.
 
 Transaction handling per Session is handled by the
-org.hibernate.resource.transaction.TransactionCoordinator contract,
+`org.hibernate.resource.transaction.TransactionCoordinator` contract,
 which are built by the
-org.hibernate.resource.transaction.TransactionCoordinatorBuilder
+`org.hibernate.resource.transaction.TransactionCoordinatorBuilder`
 service. TransactionCoordinatorBuilder represents a strategy for dealing
 with transactions whereas TransactionCoordinator represents one instance
 of that strategy related to a Session. Which
@@ -69,7 +69,7 @@ referred to as `transactional write-behind`.
 === JTA configuration
 
 Interaction with a JTA system is consolidated behind a single contract
-named org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform
+named `org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform`
 which exposes access to the javax.transaction.TransactionManager and
 javax.transaction.UserTransaction for that system as well as exposing
 the ability to register javax.transaction.Synchronization instances,
@@ -84,7 +84,7 @@ details on configuring access to JNDI
 
 Hibernate tries to discover the JtaPlatform it should use through the
 use of another service named
-org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformResolver.
+`org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformResolver`.
 If that resolution does not work, or if you wish to provide a custom
 implementation you will need to specify the
 `hibernate.transaction.jta.platform` setting. Hibernate provides many
@@ -119,7 +119,7 @@ do the right thing when this transaction API is used by the application.
 This allows your applications and components to be more portable move
 around into different environments.
 
-To use this API, you would obtain the org.hibernate.Transaction from the
+To use this API, you would obtain the `org.hibernate.Transaction` from the
 Session.
 
 Transaction allows for all the normal operations you'd expect. begin,
@@ -234,20 +234,20 @@ application components that may need access to it. Hibernate provides
 support for this technique through the getCurrentSession method of the
 SessionFactory. The concept of a "current" session has to have a scope
 that defines the bounds in which the notion of "current" is valid. This
-is purpose of the org.hibernate.context.spi.CurrentSessionContext
+is purpose of the `org.hibernate.context.spi.CurrentSessionContext`
 contract. There are 2 reliable defining scopes:
 
 * First is a JTA transaction because it allows a callback hook to know
 when it is ending which gives Hibernate a chance to close the Session
 and clean up. This is represented by the
 `org.hibernate.context.internal.JTASessionContext` implementation of the
-org.hibernate.context.spi.CurrentSessionContext contract. Using this
+`org.hibernate.context.spi.CurrentSessionContext` contract. Using this
 implementation, a Session will be opened the first time
 getCurrentSession is called within that transaction.
 * Secondly is this application request cycle itself. This is best
 represented with the
 `org.hibernate.context.internal.ManagedSessionContext` implementation of
-the org.hibernate.context.spi.CurrentSessionContext contract. Here an
+the `org.hibernate.context.spi.CurrentSessionContext` contract. Here an
 external component is responsible for managing the lifecycle and scoping
 of a "current" session. At the start of such a scope,
 `ManagedSessionContext`'s bind method is called passing in the Session.

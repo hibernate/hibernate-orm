@@ -1,8 +1,6 @@
 == References
 
-PoEAA 0-321-12742-0 Martin Fowler 2003 Pearson Education, Inc.
-Addison-Wesley Publishing Company
-
-JPwH Second Edition of Hibernate in Action 1-932394-88-5
-http://www.manning.com/bauer2 Christian Bauer Gavin King 2007 Manning
-Publications Co. Manning Publications Co.
+[bibliography]
+- [[[PoEAA]]] Martin Fowler. Patterns of Enterprise Application Architecture.
+  Addison-Wesley Publishing Company. 2003.
+- [[[JPwH]]] Christian Bauer & Gavin King. http://www.manning.com/bauer2[Java Persistence with Hibernate]. Manning Publications Co. 2007.

@@ -35,7 +35,7 @@ optimitic lock checks. Currently defaults to false to be safe.
 * `hibernate.jdbc.batch.builder` - Names the implementation class used
 to manage batching capabilities. It is almost never a good idea to
 switch from Hibernate's default implementation. But if you wish to, this
-setting would name the org.hibernate.engine.jdbc.batch.spi.BatchBuilder
+setting would name the `org.hibernate.engine.jdbc.batch.spi.BatchBuilder`
 implementation to use.
 
 * `hibernate.order_update` - Forces Hibernate to order SQL updates by

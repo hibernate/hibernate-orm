@@ -32,16 +32,16 @@ ServiceRegistry holding the services Hibernate will need at bootstrap
 and run time.
 
 Actually we are concerned with building 2 different ServiceRegistries.
-First is the org.hibernate.boot.registry.BootstrapServiceRegistry. The
+First is the `org.hibernate.boot.registry.BootstrapServiceRegistry`. The
 BootstrapServiceRegistry is intended to hold services that Hibernate
 needs at both bootstrap and run time. This boils down to 3 services:
 
-* org.hibernate.boot.registry.classloading.spi.ClassLoaderService -
+* `org.hibernate.boot.registry.classloading.spi.ClassLoaderService` -
 which controls how Hibernate interacts with ClassLoaders
-* org.hibernate.integrator.spi.IntegratorService - which controls the
-management ands discovery of org.hibernate.integrator.spi.Integrator
+* `org.hibernate.integrator.spi.IntegratorService` - which controls the
+management ands discovery of `org.hibernate.integrator.spi.Integrator`
 instances.
-* org.hibernate.boot.registry.selector.spi.StrategySelector - which
+* `org.hibernate.boot.registry.selector.spi.StrategySelector` - which
 control how Hibernate resolves implementations of various strategy
 contracts. This is a very powerful service, but a full discussion of it
 is beyond the scope of this guide.
@@ -53,7 +53,7 @@ BootstrapServiceRegistry can be skipped.
 
 If you wish to alter how the BootstrapServiceRegistry is built, that is
 controlled through the
-org.hibernate.boot.registry.BootstrapServiceRegistryBuilder:
+`org.hibernate.boot.registry.BootstrapServiceRegistryBuilder:`
 
 .Controlling BootstrapServiceRegistry building
 ====
@@ -67,7 +67,7 @@ The services of the BootstrapServiceRegistry cannot be extended (added
 to) nor overridden (replaced).
 
 The second ServiceRegistry is the
-org.hibernate.boot.registry.StandardServiceRegistry. You will almost
+`org.hibernate.boot.registry.StandardServiceRegistry`. You will almost
 always need to configure the StandardServiceRegistry, which is done
 through `org.hibernate.boot.registry.StandardServiceRegistryBuilder`:
 
@@ -101,7 +101,7 @@ include::{sourcedir}/native5.java[]
 ==== Building the Metadata
 
 The second step in native bootstrapping is the building of a
-org.hibernate.boot.Metadata object containing the parsed representations
+`org.hibernate.boot.Metadata` object containing the parsed representations
 of an application's domain model and its mapping to a database. The
 first thing we obviously need to build a parsed representation is the
 source information to be parsed (annotated classes, `hbm.xml` files,

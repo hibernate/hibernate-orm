@@ -11,7 +11,7 @@ Generally it does this when the application:
 for TM, UT, etc
 
 All of these JNDI calls route through a single service whose role is
-org.hibernate.engine.jndi.spi.JndiService. The standard JndiService
+`org.hibernate.engine.jndi.spi.JndiService`. The standard JndiService
 accepts a number of configuration settings
 
 * `hibernate.jndi.class` - names the javax.naming.InitialContext

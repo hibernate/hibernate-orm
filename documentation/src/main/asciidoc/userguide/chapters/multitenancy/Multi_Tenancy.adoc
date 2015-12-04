@@ -145,7 +145,7 @@ per tenant. See its javadocs for more details.
 
 === CurrentTenantIdentifierResolver
 
-org.hibernate.context.spi.CurrentTenantIdentifierResolver is a contract
+`org.hibernate.context.spi.CurrentTenantIdentifierResolver` is a contract
 for Hibernate to be able to resolve what the application considers the
 current tenant identifier. The implementation to use is either passed
 directly to `Configuration` via its setCurrentTenantIdentifierResolver
@@ -155,7 +155,7 @@ hibernate.tenant_identifier_resolver setting.
 There are 2 situations where CurrentTenantIdentifierResolver is used:
 
 * The first situation is when the application is using the
-org.hibernate.context.spi.CurrentSessionContext feature in conjunction
+`org.hibernate.context.spi.CurrentSessionContext` feature in conjunction
 with multi-tenancy. In the case of the current-session feature,
 Hibernate will need to open a session if it cannot find an existing one
 in scope. However, when a session is opened in a multi-tenant

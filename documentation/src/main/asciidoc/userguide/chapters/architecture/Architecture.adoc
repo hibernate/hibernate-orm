@@ -13,28 +13,24 @@ store, query, etc its domain data. Here we will introduce the essential
 Hibernate APIs. This will be a brief introduction; we will discuss these
 contracts in detail later.
 
-SessionFactory (org.hibernate.SessionFactory)::
-  A thread-safe (and immutable) representation of the mapping of the
-  application domain model to a database. Acts as a factory for
-  org.hibernate.Session instances.
-  +
-  A SessionFactory is very expensive to create; there should be only one
-  SessionFactory for an application for a given database. Maintains
-  services that Hibernate uses across all Sessions such as second level
-  caches, connection pools, transaction system integrations, etc.
-Session (org.hibernate.Session)::
-  A single-threaded, short-lived object conceptually modeling a "Unit of
-  Work"PoEAA.
-  +
-  Wraps a JDBC java.sql.Connection. Acts as a factory for
-  org.hibernate.Transaction instances. Maintains a generally "repeatable
-  read" persistence context (first level cache) of the application's
-  domain model.
-Transaction (org.hibernate.Transaction)::
-  A single-threaded, short-lived object used by the application to
-  demarcate individual physical transaction boundaries. It acts as an
-  abstraction API to isolate the application from the underling
-  transaction system in use (JDBC, JTA, CORBA, etc).
+SessionFactory (`org.hibernate.SessionFactory`):: A thread-safe (and immutable) representation of the mapping of the application domain model to a database. Acts as a factory for `org.hibernate.Session` instances.
++
+A SessionFactory is very expensive to create; there should be only one
+SessionFactory for an application for a given database. Maintains
+services that Hibernate uses across all Sessions such as second level
+caches, connection pools, transaction system integrations, etc.
+
+Session (`org.hibernate.Session`):: A single-threaded, short-lived object conceptually modeling a "Unit of Work" <<Bibliography.adoc#PoEAA,PoEAA>>.
++
+Wraps a JDBC java.sql.Connection. Acts as a factory for
+`org.hibernate.Transaction` instances. Maintains a generally "repeatable
+read" persistence context (first level cache) of the application's
+domain model.
+
+Transaction (`org.hibernate.Transaction`):: A single-threaded, short-lived object used by the application to
+demarcate individual physical transaction boundaries. It acts as an
+abstraction API to isolate the application from the underling
+transaction system in use (JDBC, JTA, CORBA, etc).
 
 [[architecture-current-session]]
 === Contextual sessions

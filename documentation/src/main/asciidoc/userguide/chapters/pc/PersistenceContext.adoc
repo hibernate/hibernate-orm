@@ -2,7 +2,7 @@
 == Persistence Contexts
 :sourcedir: extras
 
-Both the org.hibernate.Session API and javax.persistence.EntityManager
+Both the `org.hibernate.Session` API and javax.persistence.EntityManager
 API represent a context for dealing with persistent data. This concept
 is called a `persistence context`. Persistent data has a state in
 relation to both a persistence context and the underlying database.
@@ -21,14 +21,14 @@ context was closed or the instance was evicted from the context)
 with a persistence context, however it is scheduled for removal from the
 database.
 
-Much of the org.hibernate.Session and javax.persistence.EntityManager
+Much of the `org.hibernate.Session` and javax.persistence.EntityManager
 methods deal with moving entities between these states.
 
 === Making entities persistent
 
 Once you've created a new entity instance (using the standard `new`
 operator) it is in `new` state. You can make it persistent by
-associating it to either a org.hibernate.Session or
+associating it to either a `org.hibernate.Session` or
 javax.persistence.EntityManager
 
 .Example of making an entity persistent
@@ -44,9 +44,9 @@ include::{sourcedir}/MakingPersistentWithEM.java[]
 ----
 ====
 
-org.hibernate.Session also has a method named persist which follows the
+`org.hibernate.Session` also has a method named persist which follows the
 exact semantic defined in the JPA specification for the persist method.
-It is this method on org.hibernate.Session to which the Hibernate
+It is this method on `org.hibernate.Session` to which the Hibernate
 javax.persistence.EntityManager implementation delegates.
 
 If the `DomesticCat` entity type has a generated identifier, the value
@@ -74,7 +74,7 @@ include::{sourcedir}/DeletingWithEM.java[]
 
 It is important to note that Hibernate itself can handle deleting
 detached state. JPA, however, disallows it. The implication here is that
-the entity instance passed to the org.hibernate.Session delete method
+the entity instance passed to the `org.hibernate.Session` delete method
 can be either in managed or detached state, while the entity instance
 passed to remove on javax.persistence.EntityManager must be in managed
 state.
@@ -162,7 +162,7 @@ load::
   value or null if that identifier does not exist.
 
 In addition to those 2 methods, each also defines the method with
-accepting a org.hibernate.LockOptions argument. Locking is discussed in
+accepting a `org.hibernate.LockOptions` argument. Locking is discussed in
 a separate chapter.
 
 === Refresh entity state
@@ -238,7 +238,7 @@ context.
 [IMPORTANT]
 ====
 JPA does not provide for this model. This is only available through
-Hibernate org.hibernate.Session.
+Hibernate `org.hibernate.Session`.
 ====
 
 .Example of reattaching a detached entity
@@ -326,7 +326,7 @@ include::{sourcedir}/CheckingLazinessWithJPA.java[]
 ====
 
 In JPA there is an alternative means to check laziness using the
-following javax.persistence.PersistenceUtil pattern. However, the
+following `javax.persistence.PersistenceUtil` pattern. However, the
 javax.persistence.PersistenceUnitUtil is recommended where ever possible
 
 .Alternative JPA means to verify laziness

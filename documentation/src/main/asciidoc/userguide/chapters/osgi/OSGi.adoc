@@ -232,13 +232,13 @@ configurations. `hibernate-osgi` will discover and integrate them during
 EMF/SF bootstrapping. Supported extension points are as follows. The
 specified interface should be used during service registration.
 
-* org.hibernate.integrator.spi.Integrator
+* `org.hibernate.integrator.spi.Integrator`
 +
 (as of 4.2)
-* org.hibernate.boot.registry.selector.StrategyRegistrationProvider
+* `org.hibernate.boot.registry.selector.StrategyRegistrationProvider`
 +
 (as of 4.3)
-* org.hibernate.boot.model.TypeContributor
+* `org.hibernate.boot.model.TypeContributor`
 +
 (as of 4.3)
 * JTA's

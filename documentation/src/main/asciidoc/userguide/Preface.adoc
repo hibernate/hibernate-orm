@@ -22,7 +22,7 @@ http://en.wikipedia.org/wiki/Data_modeling are good starting points for
 understanding these data modeling principles.
 
 Understanding the basics of transactions and design patterns such as
-"Unit of Work"PoEAA or "ApplicationTransaction" are important as well.
+"Unit of Work" <<Bibliography.adoc#PoEAA,PoEAA>> or "ApplicationTransaction" are important as well.
 These topics will be discussed in the documentation, but a prior
 understanding will certainly help.
 

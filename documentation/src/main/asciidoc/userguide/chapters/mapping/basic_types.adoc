@@ -8,7 +8,7 @@ built-in basic types, which follow the natural mappings recommended in
 the JDBC specifications.
 
 Internally Hibernate uses a registry of basic types when it needs to
-resolve the specific org.hibernate.type.Type to use in certain
+resolve the specific `org.hibernate.type.Type` to use in certain
 situations.
 
 [[basic-provided]]
@@ -17,7 +17,7 @@ situations.
 .Standard BasicTypes
 [cols=",,,",options="header",]
 |=======================================================================
-|Hibernate type (org.hibernate.type package) |JDBC type |Java type
+|Hibernate type (`org.hibernate.type` package) |JDBC type |Java type
 |BasicTypeRegistry key(s)
 |StringType |VARCHAR |java.lang.String |string, java.lang.String
 
@@ -131,7 +131,7 @@ names.
 .BasicTypes added by hibernate-java8
 [cols=",,,",options="header",]
 |=======================================================================
-|Hibernate type (org.hibernate.type package) |JDBC type |Java type
+|Hibernate type (`org.hibernate.type` package) |JDBC type |Java type
 |BasicTypeRegistry key(s)
 |DurationType |BIGINT |java.time.Duration |Duration, java.time.Duration
 
@@ -165,7 +165,7 @@ link:#basic-datetime[section_title]
 
 These mappings are managed by a service inside Hibernate called the
 `org.hibernate.type.BasicTypeRegistry`, which essentially maintains a
-map of org.hibernate.type.BasicType (a org.hibernate.type.Type
+map of `org.hibernate.type.BasicType` (a `org.hibernate.type.Type`
 specialization) instances keyed by a name. That is the purpose of the
 "BasicTypeRegistry key(s)" column in the previous tables. We will
 revisit this detail later.
@@ -281,7 +281,7 @@ attributes?
 
 The answer lies in a service inside Hibernate called the
 `org.hibernate.type.BasicTypeRegistry`, which essentially maintains a
-map of org.hibernate.type.BasicType (a org.hibernate.type.Type
+map of `org.hibernate.type.BasicType` (a `org.hibernate.type.Type`
 specialization) instances keyed by a name.
 
 We will see later (link:#basic-explicit[section_title]) that we can
@@ -322,7 +322,7 @@ want (and for some reason you do not want to adjust the
 BasicTypeRegistry).
 
 In these cases you must explicitly tell Hibernate the BasicType to use,
-via the org.hibernate.annotations.Type annotation.
+via the `org.hibernate.annotations.Type` annotation.
 
 .Using `@org.hibernate.annotations.Type`
 ====
@@ -339,10 +339,10 @@ character data see link:#basic-nationalized[section_title]
 Additionally the description is to be handled as a LOB. Again, for
 better ways to indicate LOBs see link:#basic-lob[section_title].
 
-The org.hibernate.annotations.Type#type attribute can name any of the
+The `org.hibernate.annotations.Type#type` attribute can name any of the
 following:
 
-* FQN of any org.hibernate.type.Type implementation
+* FQN of any `org.hibernate.type.Type` implementation
 * Any key registered with BasicTypeRegistry
 * The name of any known "type definitions"
 

@@ -257,11 +257,11 @@ link:#identifiers-generators-sequence[Using sequences].
 javax.persistence.TableGenerator annotation ->
 link:#identifiers-generators-table[Using identifier table].
 * If the given name matches the name for a
-org.hibernate.annotations.GenericGenerator annotation ->
+`org.hibernate.annotations.GenericGenerator` annotation ->
 link:#identifiers-generators-generic[Using @GenericGenerator].
 
 The fallback is to consult with the pluggable
-org.hibernate.boot.model.IdGeneratorStrategyInterpreter contract, which
+`org.hibernate.boot.model.IdGeneratorStrategyInterpreter` contract, which
 is covered in detail in the Hibernate Integrations Guide. The default
 behavior is to look at the java type of the identifier attribute:
 
@@ -353,7 +353,7 @@ batching would not have been helpful anyway.
 ==== Using identifier table
 
 Hibernate achieves table-based identifier generation based on its
-org.hibernate.id.enhanced.TableGenerator id generator which defines a
+`org.hibernate.id.enhanced.TableGenerator` id generator which defines a
 table capable of holding multiple named value segments for any number of
 entities.
 
@@ -392,7 +392,7 @@ generator.
 
 UUIDGenerator supports pluggable strategies for exactly how the UUID is
 generated. These strategies are defined by the
-org.hibernate.id.UUIDGenerationStrategy contract. The default strategy
+`org.hibernate.id.UUIDGenerationStrategy` contract. The default strategy
 is a version 4 (random) strategy according to IETF RFC 4122. Hibernate
 does ship with an alternative strategy which is a RFC 4122 version 1
 (time-based) strategy (using ip address rather than mac address).
@@ -422,7 +422,7 @@ include::{sourcedir}/id/UUIDCustomVersionOneStrategy.java[]
 ==== Using @GenericGenerator
 
 @GenericGenerator allows integration of any Hibernate
-org.hibernate.id.IdentifierGenerator implementation, including any of
+`org.hibernate.id.IdentifierGenerator` implementation, including any of
 the specific ones discussed here and any custom ones.
 
 [[identifiers-generators-optimizer]]
@@ -467,7 +467,7 @@ hilo; legacy-hilo::
   for use by legacy applications that used these strategies previously.
 
 Applications can also implement and use their own optimizer strategies,
-as defined by the org.hibernate.id.enhanced.Optimizer contract.
+as defined by the `org.hibernate.id.enhanced.Optimizer` contract.
 
 [[identifiers-derived]]
 ==== Derived Identifiers

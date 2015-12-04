@@ -8,7 +8,7 @@ functionality and the extension of Hibernate functionality.
 
 === Interceptors
 
-The org.hibernate.Interceptor interface provides callbacks from the
+The `org.hibernate.Interceptor` interface provides callbacks from the
 session to the application, allowing the application to inspect and/or
 manipulate properties of a persistent object before it is saved,
 updated, deleted or loaded. One possible use for this is to track
@@ -91,7 +91,7 @@ functionality that is built on top of the event architecture.
 First, you must configure the appropriate event listeners, to enable the
 use of JACC authorization. Again, see
 link:#registering-listeners-example[???] for the details. Below is an
-example of an appropriate org.hibernate.integrator.spi.Integrator
+example of an appropriate `org.hibernate.integrator.spi.Integrator`
 implementation for this purpose.
 
 .JACC listener registration example

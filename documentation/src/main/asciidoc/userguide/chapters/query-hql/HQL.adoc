@@ -101,11 +101,11 @@ force Hibernate to set the `version` or `timestamp` attribute values
 through the use of a `versioned update`. This is achieved by adding the
 `VERSIONED` keyword after the `UPDATE` keyword. Note, however, that this
 is a Hibernate specific feature and will not work in a portable manner.
-Custom version types, org.hibernate.usertype.UserVersionType, are not
+Custom version types, `org.hibernate.usertype.UserVersionType`, are not
 allowed in conjunction with a `update versioned` statement.
 
 An `UPDATE` statement is executed using the executeUpdate of either
-org.hibernate.Query or javax.persistence.Query. The method is named for
+`org.hibernate.Query` or javax.persistence.Query. The method is named for
 those familiar with the JDBC executeUpdate on
 java.sql.PreparedStatement. The `int` value returned by the
 executeUpdate() method indicates the number of entities effected by the
@@ -154,7 +154,7 @@ include::{sourcedir}/statement_delete_bnf.txt[]
 ====
 
 A `DELETE` statement is also executed using the executeUpdate method of
-either org.hibernate.Query or javax.persistence.Query.
+either `org.hibernate.Query` or javax.persistence.Query.
 
 === Insert statements
 
@@ -200,7 +200,7 @@ two options. You can either specify the attribute in the
 `attribute_list` in which case its value is taken from the corresponding
 select expressions, or omit it from the `attribute_list` in which case
 the `seed value` defined by the corresponding
-org.hibernate.type.VersionType is used.
+`org.hibernate.type.VersionType` is used.
 
 .Example INSERT query statements
 ====
@@ -471,7 +471,7 @@ VALUE::
   collection-valued reference.
 INDEX::
   According to HQL rules, this is valid for both Maps and Lists which
-  specify a javax.persistence.OrderColumn annotation to refer to the Map
+  specify a `javax.persistence.OrderColumn` annotation to refer to the Map
   key or the List position (aka the OrderColumn value). JPQL however,
   reserves this for use in the List case and adds `KEY` for the MAP
   case. Applications interested in JPA provider portability should be
@@ -505,7 +505,7 @@ object of every type defined in your application.
 ====
 
 This can be altered by using either the
-org.hibernate.annotations.Polymorphism annotation (global, and
+`org.hibernate.annotations.Polymorphism` annotation (global, and
 Hibernate-specific) or limiting them using in the query itself using an
 entity type expression.
 
@@ -1248,7 +1248,7 @@ include::{sourcedir}/order_by_example.txt[]
 
 === Hibernate Query API
 
-In Hibernate the HQL/JPQL query is represented as org.hibernate.Query
+In Hibernate the HQL/JPQL query is represented as `org.hibernate.Query`
 which is obtained from the Session. If the HQL/JPQL is a named query,
 Session#getNamedQuery would be used; otherwise Session#createQuery would
 be used.
@@ -1297,7 +1297,7 @@ covered in <<chapters/pc/PersistenceContext.adoc#pc,Persistence Contexts>>.
 
 Hibernate also allows an application to hook into the process of
 building the query results via the
-org.hibernate.transform.ResultTransformer contract. See its javadocs as
+`org.hibernate.transform.ResultTransformer` contract. See its javadocs as
 well as the Hibernate-provided implementations for additional details.
 
 The last thing that needs to happen before we can execute the query is
@@ -1370,11 +1370,11 @@ for more information on natural-ids.
 Hibernate offers 2 additional, specialized methods for performing the
 query and handling results. Query#scroll works in tandem with the JDBC
 notion of a scrollable ResultSet. The scroll method is overloaded. Then
-main form accepts a single argument of type org.hibernate.ScrollMode
+main form accepts a single argument of type `org.hibernate.ScrollMode`
 which indicates the type of scrolling to be used. See the javadocs for
 ScrollMode for the details on each. The second form accepts no argument
 and will use the ScrollMode indicated by Dialect#defaultScrollMode.
-Query#scroll returns a org.hibernate.ScrollableResults which wraps the
+Query#scroll returns a `org.hibernate.ScrollableResults` which wraps the
 underlying JDBC (scrollable) ResultSet and provides access to the
 results. Since this form holds the JDBC ResultSet open, the application
 should indicate when it is done with the ScrollableResults by calling
@@ -1401,11 +1401,11 @@ entities that for certain already exist in the second-level cache. In
 cases where many of the entities do not exist in the second-level cache,
 this operation will almost definitely perform worse. The Iterator
 returned from Query#iterate is actually a specially typed Iterator:
-org.hibernate.engine.HibernateIterator. It is specialized to expose a
+`org.hibernate.engine.HibernateIterator`. It is specialized to expose a
 close method (again, inherited from java.io.Closeable). When you are
 done with this Iterator you should close it, either by casting to
 HibernateIterator or Closeable, or by calling
-org.hibernate.Hibernate#close
+`org.hibernate.Hibernate#close`
 
 === JPA Query API
 
@@ -1466,21 +1466,21 @@ depending on the attribute's definition in metadata. For details, see
 the EntityGraph discussions in <<chapters/fetching/Fetching.adoc#fetching,Fetching>>.
 
 * `org.hibernate.cacheMode` - Defines the CacheMode to use. See
-org.hibernate.Query#setCacheMode.
+`org.hibernate.Query#setCacheMode`.
 * `org.hibernate.cacheable` - Defines whether the query is cacheable.
-true/false. See org.hibernate.Query#setCacheable.
+true/false. See `org.hibernate.Query#setCacheable`.
 * `org.hibernate.cacheRegion` For queries that are cacheable, defines a
-specific cache region to use. See org.hibernate.Query#setCacheRegion.
+specific cache region to use. See `org.hibernate.Query#setCacheRegion`.
 * `org.hibernate.comment` - Defines the comment to apply to the
-generated SQL. See org.hibernate.Query#setComment.
+generated SQL. See `org.hibernate.Query#setComment`.
 * `org.hibernate.fetchSize` - Defines the JDBC fetch-size to use. See
-org.hibernate.Query#setFetchSize
+`org.hibernate.Query#setFetchSize`
 * `org.hibernate.flushMode` - Defines the Hibernate-specific FlushMode
-to use. See org.hibernate.Query#setFlushMode. If possible, prefer using
+to use. See `org.hibernate.Query#setFlushMode.` If possible, prefer using
 javax.persistence.Query#setFlushMode instead.
 * `org.hibernate.readOnly` - Defines that entities and collections
 loaded by this query should be marked as read-only. See
-org.hibernate.Query#setReadOnly
+`org.hibernate.Query#setReadOnly`
 
 Just as seen in the Hibernate API, the final thing that needs to happen
 before the query can be executed is to bind the values for any defined
@@ -1503,4 +1503,4 @@ parameters as well.
 As far as execution, JPA supports the two main methods discussed above
 for the Hibernate API. It calls these methods Query#getResultList and
 Query#getSingleResult. They behave exactly as described for
-org.hibernate.Query#list and org.hibernate.Query#uniqueResult.
+`org.hibernate.Query#list` and `org.hibernate.Query#uniqueResult.`

@@ -419,8 +419,26 @@ public interface AvailableSettings {
 
 	/**
 	 * Enable the class file enhancement
+	 *
+	 * @deprecated Split into multiple 'hibernate.enhancer.enable[]' properties
 	 */
+	@Deprecated
 	String USE_CLASS_ENHANCER = "hibernate.ejb.use_class_enhancer";
+
+	/**
+	 * Enable dirty tracking feature in runtime bytecode enhancement
+	 */
+	String ENHANCER_ENABLE_DIRTY_TRACKING = "hibernate.enhancer.enableDirtyTracking";
+
+	/**
+	 * Enable lazy loading feature in runtime bytecode enhancement
+	 */
+	String ENHANCER_ENABLE_LAZY_INITIALIZATION = "hibernate.enhancer.enableLazyInitialization";
+
+	/**
+	 * Enable association management feature in runtime bytecode enhancement
+	 */
+	String ENHANCER_ENABLE_ASSOCIATION_MANAGEMENT = "hibernate.enhancer.enableAssociationManagement";
 
 	/**
 	 * Whether or not discard persistent context on entityManager.close()

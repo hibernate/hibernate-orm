@@ -9,7 +9,6 @@ package org.hibernate.jpa.test.enhancement.cases;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -18,6 +17,7 @@ import javax.persistence.SharedCacheMode;
 import javax.persistence.ValidationMode;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 
+import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.jpa.AvailableSettings;
@@ -185,7 +185,7 @@ public abstract class AbstractExecutable implements EnhancerTestTask {
 			}
 
 			@Override
-			public void pushClassTransformer(Collection<String> entityClassNames) {
+			public void pushClassTransformer(EnhancementContext enhancementContext) {
 			}
 		};
 	}

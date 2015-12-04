@@ -119,4 +119,13 @@ public interface EntityManagerMessageLogger extends CoreMessageLogger {
 			value = "Encountered a deprecated javax.persistence.spi.PersistenceProvider [%s]; use [%s] instead."
 	)
 	void deprecatedPersistenceProvider(String deprecated, String replacement);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 15017,
+			value = "'hibernate.ejb.use_class_enhancer' property is deprecated. " +
+					"Use 'hibernate.enhance.enable[...]' properties instead to enable each individual feature."
+	)
+	void deprecatedInstrumentationProperty();
+
 }

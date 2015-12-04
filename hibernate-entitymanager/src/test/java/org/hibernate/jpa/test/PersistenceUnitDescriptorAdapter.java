@@ -7,7 +7,6 @@
 package org.hibernate.jpa.test;
 
 import java.net.URL;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
@@ -16,6 +15,7 @@ import javax.persistence.ValidationMode;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.sql.DataSource;
 
+import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 
@@ -110,6 +110,6 @@ public class PersistenceUnitDescriptorAdapter implements PersistenceUnitDescript
 	}
 
 	@Override
-	public void pushClassTransformer(Collection<String> entityClassNames) {
+	public void pushClassTransformer(EnhancementContext enhancementContext) {
 	}
 }

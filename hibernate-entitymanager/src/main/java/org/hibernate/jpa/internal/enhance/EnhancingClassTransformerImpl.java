@@ -12,19 +12,22 @@ import java.util.ArrayList;
 import java.util.Collection;
 import javax.persistence.spi.ClassTransformer;
 
+import javassist.CtClass;
+import javassist.CtField;
+
+import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 
 /**
  * @author Steve Ebersole
+ * @author Luis Barreiro
  */
 public class EnhancingClassTransformerImpl implements ClassTransformer {
-	private final Collection<String> classNames;
 
-	private Enhancer enhancer;
+	private final EnhancementContext enhancementContext;
 
-	public EnhancingClassTransformerImpl(Collection<String> incomingClassNames) {
-		this.classNames = new ArrayList<String>( incomingClassNames.size() );
-		this.classNames.addAll( incomingClassNames );
+	public EnhancingClassTransformerImpl(EnhancementContext enhancementContext) {
+		this.enhancementContext = enhancementContext;
 	}
 
 	@Override
@@ -34,20 +37,89 @@ public class EnhancingClassTransformerImpl implements ClassTransformer {
 			Class<?> classBeingRedefined,
 			ProtectionDomain protectionDomain,
 			byte[] classfileBuffer) throws IllegalClassFormatException {
-		if ( enhancer == null ) {
-			enhancer = new Enhancer( new EnhancementContextImpl( classNames, loader ) );
-		}
+
+		// The first design had the enhancer as a class variable. That approach had some goods and bads.
+		// We don't had to create an enhancer for each class, but on the other end it would stay in memory forever.
+		// It also assumed that all calls come from the same class loader, which is fair, but this makes it more robust.
 
 		try {
+			Enhancer enhancer = new Enhancer( new EnhancementContextWrapper( enhancementContext, loader ) );
 			return enhancer.enhance( className, classfileBuffer );
 		}
 		catch (final Exception e) {
-			throw new IllegalClassFormatException( "Error performing enhancement" ) {
+			throw new IllegalClassFormatException( "Error performing enhancement of " + className ) {
 				@Override
 				public synchronized Throwable getCause() {
 					return e;
 				}
 			};
+		}
+	}
+
+	// Wrapper for a EnhancementContext that allows to set the right classloader.
+	private class EnhancementContextWrapper implements EnhancementContext {
+
+		private final ClassLoader loadingClassloader;
+		private final EnhancementContext wrappedContext;
+
+		private EnhancementContextWrapper(EnhancementContext wrappedContext, ClassLoader loadingClassloader) {
+			this.wrappedContext = wrappedContext;
+			this.loadingClassloader = loadingClassloader;
+		}
+
+		@Override
+		public ClassLoader getLoadingClassLoader() {
+			return loadingClassloader;
+		}
+
+		@Override
+		public boolean isEntityClass(CtClass classDescriptor) {
+			return wrappedContext.isEntityClass( classDescriptor );
+		}
+
+		@Override
+		public boolean isCompositeClass(CtClass classDescriptor) {
+			return wrappedContext.isCompositeClass( classDescriptor );
+		}
+
+		@Override
+		public boolean doBiDirectionalAssociationManagement(CtField field) {
+			return wrappedContext.doBiDirectionalAssociationManagement( field );
+		}
+
+		@Override
+		public boolean doDirtyCheckingInline(CtClass classDescriptor) {
+			return wrappedContext.doDirtyCheckingInline( classDescriptor );
+		}
+
+		@Override
+		public boolean doExtendedEnhancement(CtClass classDescriptor) {
+			return wrappedContext.doExtendedEnhancement( classDescriptor );
+		}
+
+		@Override
+		public boolean hasLazyLoadableAttributes(CtClass classDescriptor) {
+			return wrappedContext.hasLazyLoadableAttributes( classDescriptor );
+		}
+
+		@Override
+		public boolean isPersistentField(CtField ctField) {
+			return wrappedContext.isPersistentField( ctField );
+		}
+
+		@Override
+		public CtField[] order(CtField[] persistentFields) {
+			return wrappedContext.order( persistentFields );
+		}
+
+		@Override
+		public boolean isLazyLoadable(CtField field) {
+			return wrappedContext.isLazyLoadable( field );
+		}
+
+		@Override
+		public boolean isMappedCollection(CtField field) {
+			return wrappedContext.isMappedCollection( field );
 		}
 	}
 

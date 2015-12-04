@@ -61,7 +61,7 @@ public class DefaultEnhancementContext implements EnhancementContext {
 	/**
 	 * @return false
 	 */
-	public boolean doFieldAccessEnhancement(CtClass classDescriptor) {
+	public boolean doExtendedEnhancement(CtClass classDescriptor) {
 		return false;
 	}
 

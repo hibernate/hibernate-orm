@@ -1,12 +1,8 @@
 /*
- *   SPECjEnterprise2010 - a benchmark for enterprise middleware
- *  Copyright 1995-2010 Standard Performance Evaluation Corporation
- *   All Rights Reserved
+ * Hibernate, Relational Persistence for Idiomatic Java
  *
- *  History:
- *  Date        ID, Company             Description
- *  ----------  ----------------        ----------------------------------------------
- *  2009/05/31  Anoop Gupta, Oracle     Created for SPECjEnterprise2010
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
 package org.hibernate.test.bytecode.enhancement.pk;

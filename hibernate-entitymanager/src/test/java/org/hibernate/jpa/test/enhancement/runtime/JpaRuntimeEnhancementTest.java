@@ -25,7 +25,7 @@ public class JpaRuntimeEnhancementTest extends BaseUnitTestCase {
 //				public ClassLoader buildIsolatedClassLoader() {
 //					final EnhancementContext enhancementContext = new DefaultEnhancementContext() {
 //						@Override
-//						public boolean doFieldAccessEnhancement(CtClass classDescriptor) {
+//						public boolean doExtendedEnhancement(CtClass classDescriptor) {
 //							return classDescriptor.getPackageName().startsWith( "org.hibernate.jpa.test.enhancement.domain" );
 //						}
 //					};

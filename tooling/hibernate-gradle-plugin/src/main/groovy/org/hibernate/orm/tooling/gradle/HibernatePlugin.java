@@ -111,10 +111,14 @@ public class HibernatePlugin implements Plugin<Project> {
 								}
 
 								@Override
-								public boolean doFieldAccessEnhancement(CtClass classDescriptor) {
-									return  hibernateExtension.enhance.getEnableFieldAccessEnhancement();
+								public boolean doExtendedEnhancement(CtClass classDescriptor) {
+									return hibernateExtension.enhance.getEnableFieldAccessEnhancement();
 								}
 							};
+
+							if ( hibernateExtension.enhance.getEnableFieldAccessEnhancement() ) {
+								logger.warn( "Extended enhancement is enabled. Classes other than entities may be modified. You should consider access the entities using getter/setter methods and disable this property. Use at your own risk." );
+							}
 
 							final Enhancer enhancer = new Enhancer( enhancementContext );
 							final ClassPool classPool = new ClassPool( false );

@@ -81,7 +81,7 @@ public interface EnhancementContext {
 	 * @return {@code true} indicates that any direct access to fields of entities should be routed to the enhanced
 	 *         getter / setter  method.
 	 */
-	public boolean doFieldAccessEnhancement(CtClass classDescriptor);
+	public boolean doExtendedEnhancement(CtClass classDescriptor);
 
 	/**
 	 * Does the given class define any lazy loadable attributes?

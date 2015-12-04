@@ -146,9 +146,9 @@ public class Enhancer {
 			log.debugf( "Enhancing [%s] as Composite", managedCtClass.getName() );
 			new CompositeEnhancer( enhancementContext ).enhance( managedCtClass );
 		}
-		else if ( enhancementContext.doFieldAccessEnhancement( managedCtClass ) ) {
-			log.debugf( "Enhancing field access in [%s]", managedCtClass.getName() );
-			new PersistentAttributesEnhancer( enhancementContext ).enhanceFieldAccess( managedCtClass );
+		else if ( enhancementContext.doExtendedEnhancement( managedCtClass ) ) {
+			log.debugf( "Extended enhancement of [%s]", managedCtClass.getName() );
+			new PersistentAttributesEnhancer( enhancementContext ).extendedEnhancement( managedCtClass );
 		}
 		else {
 			log.debugf( "Skipping enhancement of [%s]: not entity or composite", managedCtClass.getName() );

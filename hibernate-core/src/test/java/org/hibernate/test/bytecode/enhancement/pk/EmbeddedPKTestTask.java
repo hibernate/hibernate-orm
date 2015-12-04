@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.bytecode.enhancement.pk;
 
-
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;

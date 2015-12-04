@@ -185,7 +185,7 @@ public class EnhancementTask extends Task implements EnhancementContext {
 	}
 
 	@Override
-	public boolean doFieldAccessEnhancement(CtClass classDescriptor) {
+	public boolean doExtendedEnhancement(CtClass classDescriptor) {
 		return false;
 	}
 

@@ -70,11 +70,11 @@ public class MavenEnhancePlugin extends AbstractMojo {
 	@Parameter(property = "enableAssociationManagement", defaultValue = "true")
 	private boolean enableAssociationManagement = true;
 
-	@Parameter(property = "enableFieldAccessEnhancement", defaultValue = "false")
-	private boolean enableFieldAccessEnhancement = false;
+	@Parameter(property = "enableExtendedEnhancement", defaultValue = "false")
+	private boolean enableExtendedEnhancement = false;
 
 	private boolean shouldApply() {
-		return enableLazyInitialization || enableDirtyTracking || enableAssociationManagement || enableFieldAccessEnhancement;
+		return enableLazyInitialization || enableDirtyTracking || enableAssociationManagement || enableExtendedEnhancement;
 	}
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
@@ -125,10 +125,14 @@ public class MavenEnhancePlugin extends AbstractMojo {
 			}
 
 			@Override
-			public boolean doFieldAccessEnhancement(CtClass classDescriptor) {
-				return enableFieldAccessEnhancement;
+			public boolean doExtendedEnhancement(CtClass classDescriptor) {
+				return enableExtendedEnhancement;
 			}
 		};
+
+		if ( enableExtendedEnhancement ) {
+			getLog().warn( "Extended enhancement is enabled. Classes other than entities may be modified. You should consider access the entities using getter/setter methods and disable this property. Use at your own risk." );
+		}
 
 		final Enhancer enhancer = new Enhancer( enhancementContext );
 		final ClassPool classPool = new ClassPool( false );

@@ -1,0 +1,101 @@
+[[categorization]]
+=== Data categorizations
+:sourcedir: extras
+
+Before diving into the actual topics of how to map different categories
+of things in your domain mode it helps to understand what those
+categories are. Hibernate and JPA both express these categorizations.
+
+Hibernate understands both the Java and JDBC representations of
+application data. The ability to read and write the this data to/from
+the database is the function of a Hibernate __type__. A type, in this
+usage, is an implementation of the `org.hibernate.type.Type` interface.
+This Hibernate type also describes various aspects of behavior of the
+Java type such as how to check for equality, how to clone values, etc.
+
+[NOTE]
+====
+Usage of the word _type_
+
+The Hibernate type is neither a Java type nor a SQL datatype. It
+provides information about both of these as well as understanding
+marshalling between.
+
+When you encounter the term type in discussions of Hibernate, it may
+refer to the Java type, the JDBC type, or the Hibernate type, depending
+on context.
+====
+
+To help understand these categorizations, lets look at a simple table
+and domain model that we wish to map.
+
+.Simple table and domain model
+====
+[source,sql]
+----
+include::{sourcedir}/categorizations/Contact.sql[]
+----
+
+[source,java]
+----
+include::{sourcedir}/categorizations/Contact.java[]
+----
+====
+
+In the broadest sense, Hibernate categorizes types into two groups:
+
+* <<categorization-value,Value types>>
+* <<categorization-entity,Entity types>>
+
+[[categorization-value]]
+==== Value types
+
+A value type is a piece of data that does not define its own lifecycle.
+It is, in effect, owned by an entity, which defines its lifecycle.
+
+Looked at another way, all the state of an entity is made up entirely of
+value types. These state fields or JavaBean-properties are termed
+__persistent attributes__. The persistent attributes of the Contact
+class are value types.
+
+Value types are further classified into three sub-categories;
+
+* Basic types - In mapping the Contact table, all attributes except for
+name would be basic types. Basic types are discussed in detail in
+link:basic_types.adoc[_Basic Types_]
+* Composite (or Embeddable) types - the name attribute is an example of
+a composite type, which is discussed in details in link:[???]
+* Collection types - the example has no collections. Collection types
+are discussed in <ref></ref>
+
+[[categorization-entity]]
+==== Entity types
+
+Entities are application-specific classes which correlate to rows in a
+table, using a unique identifier. Because of the requirement for a
+unique identifier, entities exist independently and define their own
+lifecycle. The Contact class itself would be an example of an entity.
+
+Mapping entities is discussed in detail in link:entity.adoc[_Entity_].
+
+[[significance-of-type-categories]]
+==== Significance of type categories
+
+Why do we spend so much time categorizing the various types of types?
+What is the significance of the distinction?
+
+The main categorization was between entity types and value types. To
+review we said that entities, by nature of their unique identifier,
+exist independently of other objects whereas values do not. An
+application cannot "delete" the Contact website; instead, the website is
+removed when the Contact itself is deleted (obviously you can _update_
+the website of that website to null to make it "go away", but even there
+the access is done through the website).
+
+Nor can you define an association _to_ that Contact website. You _can_
+define an association to Contact _based on_ its website (assuming
+website is unique), but that is totally different.
+
+equality
+
+TBC...

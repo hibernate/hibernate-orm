@@ -1007,7 +1007,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	}
 
 	@Override
-	public Object internalLoad(String entityName, Serializable id, boolean eager, boolean nullable)
+	public final Object internalLoad(String entityName, Serializable id, boolean eager, boolean nullable)
 			throws HibernateException {
 		// todo : remove
 		LoadEventListener.LoadType type = nullable

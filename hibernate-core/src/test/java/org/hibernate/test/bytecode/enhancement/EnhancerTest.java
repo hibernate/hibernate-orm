@@ -15,8 +15,8 @@ import org.hibernate.test.bytecode.enhancement.association.OneToOneAssociationTe
 import org.hibernate.test.bytecode.enhancement.basic.BasicEnhancementTestTask;
 import org.hibernate.test.bytecode.enhancement.basic.HHH9529TestTask;
 import org.hibernate.test.bytecode.enhancement.dirty.DirtyTrackingTestTask;
-import org.hibernate.test.bytecode.enhancement.field.FieldAccessBidirectionalTestTasK;
-import org.hibernate.test.bytecode.enhancement.field.FieldAccessEnhancementTestTask;
+import org.hibernate.test.bytecode.enhancement.extended.ExtendedAssociationManagementTestTasK;
+import org.hibernate.test.bytecode.enhancement.extended.ExtendedEnhancementTestTask;
 import org.hibernate.test.bytecode.enhancement.join.HHH3949TestTask1;
 import org.hibernate.test.bytecode.enhancement.join.HHH3949TestTask2;
 import org.hibernate.test.bytecode.enhancement.join.HHH3949TestTask3;
@@ -97,9 +97,9 @@ public class EnhancerTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void testFieldAccess() {
-		EnhancerTestUtils.runEnhancerTestTask( FieldAccessEnhancementTestTask.class );
-		EnhancerTestUtils.runEnhancerTestTask( FieldAccessBidirectionalTestTasK.class );
+	public void testExtendedEnhancement() {
+		EnhancerTestUtils.runEnhancerTestTask( ExtendedEnhancementTestTask.class );
+		EnhancerTestUtils.runEnhancerTestTask( ExtendedAssociationManagementTestTasK.class );
 	}
 
 	@Test

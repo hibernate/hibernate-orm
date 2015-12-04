@@ -18,7 +18,7 @@ import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 public class EnhancerTestContext extends DefaultEnhancementContext {
 
 	@Override
-	public boolean doFieldAccessEnhancement(CtClass classDescriptor) {
+	public boolean doExtendedEnhancement(CtClass classDescriptor) {
 		return true;
 	}
 }

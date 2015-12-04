@@ -69,8 +69,8 @@ public class PersistentAttributesEnhancer extends Enhancer {
 		enhanceAttributesAccess( managedCtClass, attrDescriptorMap );
 
 		// same thing for direct access to fields of other entities
-		if ( this.enhancementContext.doFieldAccessEnhancement( managedCtClass ) ) {
-			enhanceFieldAccess( managedCtClass );
+		if ( this.enhancementContext.doExtendedEnhancement( managedCtClass ) ) {
+			extendedEnhancement( managedCtClass );
 		}
 	}
 
@@ -390,7 +390,7 @@ public class PersistentAttributesEnhancer extends Enhancer {
 							"  if ($1 != null && %s) {%n" +
 							"    Object[] array = $1.toArray();%n" +
 							"    for (int i = 0; i < array.length; i++) {%n" +
-							"      %s target = (%<s) array[i];%n" +
+							"      %s target = (%s) array[i];%n" +
 							"	   if (%s) {%n" +
 							"        java.util.Collection c = target.%s();%n" +
 							"        if (c != this && c != null) { c.add(this); }%n" +
@@ -398,6 +398,7 @@ public class PersistentAttributesEnhancer extends Enhancer {
 							"    }%n" +
 							"  }%n",
 							newAssociationLoaded,
+							targetEntity.getName(),
 							targetEntity.getName(),
 							targetElementLoaded,
 							mappedByGetterName
@@ -537,16 +538,18 @@ public class PersistentAttributesEnhancer extends Enhancer {
 		}
 	}
 
+	// --- //
+
 	/**
 	 * Replace access to fields of entities (for example, entity.field) with a call to the enhanced getter / setter
 	 * (in this example, entity.$$_hibernate_read_field()). It's assumed that the target entity is enhanced as well.
 	 *
-	 * @param managedCtClass Class to enhance
+	 * @param aCtClass Class to enhance (not an entity class).
 	 */
-	public void enhanceFieldAccess(CtClass managedCtClass) {
-		final ConstPool constPool = managedCtClass.getClassFile().getConstPool();
+	public void extendedEnhancement(CtClass aCtClass) {
+		final ConstPool constPool = aCtClass.getClassFile().getConstPool();
 
-		for ( Object oMethod : managedCtClass.getClassFile().getMethods() ) {
+		for ( Object oMethod : aCtClass.getClassFile().getMethods() ) {
 			final MethodInfo methodInfo = (MethodInfo) oMethod;
 			final String methodName = methodInfo.getName();
 
@@ -570,14 +573,18 @@ public class PersistentAttributesEnhancer extends Enhancer {
 					if ( !enhancementContext.isEntityClass( targetCtClass ) && !enhancementContext.isCompositeClass( targetCtClass ) ) {
 						continue;
 					}
-					if ( targetCtClass == managedCtClass
+					if ( targetCtClass == aCtClass
 							|| !enhancementContext.isPersistentField( targetCtClass.getField( fieldName ) )
 							|| PersistentAttributesHelper.hasAnnotation( targetCtClass, fieldName, Id.class )
 							|| "this$0".equals( fieldName ) ) {
 						continue;
 					}
 
-					log.debugf( "Transforming access to field [%s] from method [%s]", fieldName, methodName );
+					log.debugf( "Extended enhancement: Transforming access to field [%s.%s] from method [%s#%s]",
+								fieldClassName,
+								fieldName,
+								aCtClass.getName(),
+								methodName );
 
 					if ( op == Opcode.GETFIELD ) {
 						int fieldReaderMethodIndex = constPool.addMethodrefInfo(
@@ -603,14 +610,14 @@ public class PersistentAttributesEnhancer extends Enhancer {
 			}
 			catch (BadBytecode bb) {
 				final String msg = String.format(
-						"Unable to perform field access transformation in method [%s]",
+						"Unable to perform extended enhancement in method [%s]",
 						methodName
 				);
 				throw new EnhancementException( msg, bb );
 			}
 			catch (NotFoundException nfe) {
 				final String msg = String.format(
-						"Unable to perform field access transformation in method [%s]",
+						"Unable to perform extended enhancement in method [%s]",
 						methodName
 				);
 				throw new EnhancementException( msg, nfe );

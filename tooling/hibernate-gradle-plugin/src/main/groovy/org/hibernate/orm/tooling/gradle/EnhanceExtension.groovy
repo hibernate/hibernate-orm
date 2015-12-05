@@ -13,12 +13,12 @@ package org.hibernate.orm.tooling.gradle
  * @author Steve Ebersole
  */
 class EnhanceExtension {
-	def boolean enableLazyInitialization = true
-	def boolean enableDirtyTracking = true
-	def boolean enableAssociationManagement = true
-	def boolean enableFieldAccessEnhancement = false
+	def boolean enableLazyInitialization = false
+	def boolean enableDirtyTracking = false
+	def boolean enableAssociationManagement = false
+	def boolean enableExtendedEnhancement = false
 
 	boolean shouldApply() {
-		return enableLazyInitialization || enableDirtyTracking || enableAssociationManagement || enableFieldAccessEnhancement;
+		return enableLazyInitialization || enableDirtyTracking || enableAssociationManagement || enableExtendedEnhancement;
 	}
 }

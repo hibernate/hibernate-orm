@@ -138,85 +138,106 @@
 
     <section>
         <title>Performing enhancement</title>
+        <para>
+            There are two methods to perform bytecode enhancement.  It can be done during run time or build time,
+            using one of the provided plugins for build automation tools.  Each capability must be enabled
+            independently, using the respective property:
+            <variablelist>
+                <varlistentry>
+                    <term>enableLazyInitialization</term>
+                    <listitem>
+                        <para>
+                            Whether enhancement for lazy attribute loading should be done.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>enableDirtyTracking</term>
+                    <listitem>
+                        <para>
+                            Whether enhancement for self-dirty tracking should be done.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>enableAssociationManagement</term>
+                    <listitem>
+                        <para>
+                            Whether enhancement for bi-directional association management should be done.
+                        </para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </para>
+        <para>
+            Ultimately all enhancement is handled by the <code>org.hibernate.bytecode.enhance.spi.Enhancer</code> class.
+            Custom means to enhancement can certainly be crafted on top of Enhancer, but that is beyond the scope of
+            this guide.  Here we will focus on the means Hibernate already exposes for performing these enhancements.
+        </para>
 
         <section>
             <title>Run-time enhancement</title>
             <para>
                 Currently run-time enhancement of the domain model is only supported in managed JPA
                 environments following the JPA defined SPI for performing class transformations. Even then, this
-                support is disabled by default.  To enable run-time enhancement, specify
-                <property>hibernate.ejb.use_class_enhancer=true</property> as a persistent unit property.
+                support is disabled by default.  To enable run-time enhancement, turn on one or more of the following
+                properties in the persistent unit:
+                <example>
+                    <title>Example persistence.xml</title>
+                    <programlisting role="XML"><xi:include href="extras/persistence-example.xml" parse="text"/></programlisting>
+                </example>
             </para>
             <para>
-                Also, at the moment only annotated classes are supported for run-time enhancement
+                Also, at the moment only annotated classes are supported for run-time enhancement.  Only the
+                classes declared in the persistent unit will be enhanced.
             </para>
         </section>
 
         <section>
-            <title>Gradle plugin</title>
+            <title>Build-time enhancement</title>
             <para>
-                Hibernate provides a Gradle plugin that is capable of providing build-time enhancement of the
-                domain model as they are compiled as part of a Gradle build. To use the plugin a project would
-                first need to apply it:
+                Hibernate provides plugins for Gradle and Maven build tools.
             </para>
-            <example>
-                <title>Apply the Gradle plugin</title>
-                <programlisting role="JAVA"><xi:include href="extras/gradle-example.gradle" parse="text"/></programlisting>
-            </example>
-            <para>
-                The configuration that is available is exposed through a registered Gradle DSL extension:
-                <variablelist>
-                    <varlistentry>
-                        <term>enableLazyInitialization</term>
-                        <listitem>
-                            <para>
-                                Whether enhancement for lazy attribute loading should be done.
-                            </para>
-                        </listitem>
-                    </varlistentry>
-                    <varlistentry>
-                        <term>enableDirtyTracking</term>
-                        <listitem>
-                            <para>
-                                Whether enhancement for self-dirty tracking should be done.
-                            </para>
-                        </listitem>
-                    </varlistentry>
-                    <varlistentry>
-                        <term>enableAssociationManagement</term>
-                        <listitem>
-                            <para>
-                                Whether enhancement for bi-directional association management should be done.
-                            </para>
-                        </listitem>
-                    </varlistentry>
-                </variablelist>
-                The default value for all 3 configuration settings is <literal>true</literal>
-            </para>
-            <para>
-                The <code>enhance { }</code> block is required in order for enhancement to occur; enhancement
-                is disabled by default in preparation for additions capabilities (hbm2ddl, etc) in the plugin.
-            </para>
-        </section>
 
-        <section>
-            <title>Maven plugin</title>
-            <para>
-                Hibernate provides a Maven plugin capable of providing build-time enhancement of the
-                domain model as they are compiled as part of a Maven build.  See the section on the Gradle plugin
-                for details on the configuration settings.  Again, the default for those 3 is <literal>true</literal>.
-            </para>
-            <para>
-                The Maven plugin supports one additional configuration settings: failOnError, which controls
-                what happens in case of an error.  Default behavior is to fail the build, but it can be set so
-                that only a warning is issued.
-            </para>
-            <example>
-                <title>Apply the Maven plugin</title>
-                <programlisting role="JAVA"><xi:include href="extras/maven-example.pom" parse="text"/></programlisting>
-            </example>
-        </section>
+            <section>
+                <title>Gradle plugin</title>
+                <para>
+                    Hibernate provides a Gradle plugin that is capable of providing build-time enhancement of the
+                    domain model as they are compiled as part of a Gradle build. To use the plugin a project would
+                    first need to apply it.
+                </para>
+                <example>
+                    <title>Apply the Gradle plugin</title>
+                    <programlisting role="JAVA"><xi:include href="extras/gradle-example.gradle" parse="text"/></programlisting>
+                </example>
+                <para>
+                    The configuration that is available is exposed through a registered Gradle DSL extension. The default
+                    value for all configuration settings is <literal>false</literal>.
+                </para>
+                <para>
+                    The <code>enhance { }</code> block is required in order for enhancement to occur. Enhancement
+                    is disabled by default in preparation for additions capabilities (hbm2ddl, etc) in the plugin.
+                </para>
+            </section>
 
+            <section>
+                <title>Maven plugin</title>
+                <para>
+                    Hibernate provides a Maven plugin capable of providing build-time enhancement of the
+                    domain model as they are compiled as part of a Maven build.  The configuration has the same properties
+                    as the Gradle plugin and the default value for all settings is also <literal>false</literal>.
+                </para>
+                <para>
+                    The Maven plugin supports one additional configuration settings: failOnError, which controls
+                    what happens in case of an error.  Default behavior is to fail the build, but it can be set so
+                    that only a warning is issued.
+                </para>
+                <example>
+                    <title>Apply the Maven plugin</title>
+                    <programlisting role="XML"><xi:include href="extras/maven-example.pom" parse="text"/></programlisting>
+                </example>
+            </section>
+        </section>
     </section>
 
 </chapter>

@@ -67,7 +67,7 @@
           <description>Enable enhancement for management of bi-direction associations</description>
         </parameter>
         <parameter>
-          <name>enableFieldAccessEnhancement</name>
+          <name>enableExtendedEnhancement</name>
           <type>java.lang.Boolean</type>
           <required>false</required>
           <editable>true</editable>
@@ -77,10 +77,10 @@
       <configuration>
         <dir>${project.build.outputDirectory}</dir>
         <failOnError>true</failOnError>
-        <enableLazyInitialization>true</enableLazyInitialization>
-        <enableDirtyTracking>true</enableDirtyTracking>
-        <enableAssociationManagement>true</enableAssociationManagement>
-        <enableFieldAccessEnhancement>false</enableFieldAccessEnhancement>
+        <enableLazyInitialization>false</enableLazyInitialization>
+        <enableDirtyTracking>false</enableDirtyTracking>
+        <enableAssociationManagement>false</enableAssociationManagement>
+        <enableExtendedEnhancement>false</enableExtendedEnhancement>
       </configuration>
     </mojo>
   </mojos>

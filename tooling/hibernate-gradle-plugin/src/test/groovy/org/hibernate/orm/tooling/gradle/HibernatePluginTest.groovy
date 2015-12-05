@@ -35,7 +35,7 @@ class HibernatePluginTest {
 			enableLazyInitialization = true
 			enableDirtyTracking = true
 			enableAssociationManagement = false
-			enableFieldAccessEnhancement = false
+			enableExtendedEnhancement = false
 		}
 	}
 }

@@ -79,9 +79,10 @@
       <configuration>
         <dir>${project.build.outputDirectory}</dir>
         <failOnError>true</failOnError>
-        <enableLazyInitialization>true</enableLazyInitialization>
-        <enableDirtyTracking>true</enableDirtyTracking>
-        <enableAssociationManagement>true</enableAssociationManagement>
+        <enableLazyInitialization>false</enableLazyInitialization>
+        <enableDirtyTracking>false</enableDirtyTracking>
+        <enableAssociationManagement>false</enableAssociationManagement>
+        <enableExtendedEnhancement>false</enableExtendedEnhancement>
       </configuration>
     </mojo>
   </mojos>

@@ -83,7 +83,7 @@ Currently the "enhance" extension supports 4 properties:
     * `enableLazyInitialization`
     * `enableDirtyTracking`
     * `enableAssociationManagement`
-    * `enableFieldAccessEnhancement`
+    * `enableExtendedEnhancement`
 
 Once enhancement overall is enabled, the default for the first 3 properties is `true`. Field access is not enhanced by
 default, as it can potentially trigger enhancement of code outside the entities, and also because it assumes that all
@@ -102,7 +102,7 @@ on the plugin are:
     * `enableLazyInitialization`
     * `enableDirtyTracking`
     * `enableAssociationManagement`
-    * `enableFieldAccessEnhancement`
+    * `enableExtendedEnhancement`
 
 Field access is not enhanced by default, because it can potentially trigger enhancement of code outside the entities.
 Other capabilities are enabled by default. Even if the plugin is enabled, the bytecode enhancement can be bypassed by
@@ -133,7 +133,7 @@ already in use. The XML snippet below is an example of how to declare and config
                         <enableLazyInitialization>true</enableLazyInitialization>
                         <enableDirtyTracking>true</enableDirtyTracking>
                         <enableAssociationManagement>true</enableAssociationManagement>
-                        <enableFieldAccessEnhancement>false</enableFieldAccessEnhancement>
+                        <enableExtendedEnhancement>false</enableExtendedEnhancement>
                     </configuration>
                     <goals>
                         <goal>enhance</goal>

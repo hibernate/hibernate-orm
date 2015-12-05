@@ -4,14 +4,14 @@
         <plugin>
             <groupId>org.hibernate.orm.tooling</groupId>
             <artifactId>hibernate-enhance-maven-plugin</artifactId>
-            <version>$currentHibernateVersion</version>
+            <version>$hibernateVersion</version>
             <executions>
                 <execution>
                     <configuration>
                         <failOnError>true</failOnError>
-                        <enableLazyInitialization>true</enableLazyInitialization>
-                        <enableDirtyTracking>true</enableDirtyTracking>
-                        <enableAssociationManagement>true</enableAssociationManagement>
+                        <enableLazyInitialization>false</enableLazyInitialization>
+                        <enableDirtyTracking>false</enableDirtyTracking>
+                        <enableAssociationManagement>false</enableAssociationManagement>
                     </configuration>
                     <goals>
                         <goal>enhance</goal>

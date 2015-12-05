@@ -56,22 +56,22 @@ public class MavenEnhancePlugin extends AbstractMojo {
 	private List<File> sourceSet = new ArrayList<File>();
 
 	@Parameter(property = "dir", defaultValue = "${project.build.outputDirectory}")
-	private String dir = null;
+	private String dir;
 
 	@Parameter(property = "failOnError", defaultValue = "true")
 	private boolean failOnError = true;
 
-	@Parameter(property = "enableLazyInitialization", defaultValue = "true")
-	private boolean enableLazyInitialization = true;
+	@Parameter(property = "enableLazyInitialization", defaultValue = "false")
+	private boolean enableLazyInitialization;
 
-	@Parameter(property = "enableDirtyTracking", defaultValue = "true")
-	private boolean enableDirtyTracking = true;
+	@Parameter(property = "enableDirtyTracking", defaultValue = "false")
+	private boolean enableDirtyTracking;
 
-	@Parameter(property = "enableAssociationManagement", defaultValue = "true")
-	private boolean enableAssociationManagement = true;
+	@Parameter(property = "enableAssociationManagement", defaultValue = "false")
+	private boolean enableAssociationManagement;
 
 	@Parameter(property = "enableExtendedEnhancement", defaultValue = "false")
-	private boolean enableExtendedEnhancement = false;
+	private boolean enableExtendedEnhancement;
 
 	private boolean shouldApply() {
 		return enableLazyInitialization || enableDirtyTracking || enableAssociationManagement || enableExtendedEnhancement;
@@ -79,7 +79,7 @@ public class MavenEnhancePlugin extends AbstractMojo {
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		if ( !shouldApply() ) {
-			getLog().info( "Skipping Hibernate enhancement plugin execution since there is no feature enabled" );
+			getLog().warn( "Skipping Hibernate bytecode enhancement plugin execution since no feature is enabled" );
 			return;
 		}
 

@@ -69,6 +69,7 @@ public class HibernatePlugin implements Plugin<Project> {
 
 	private void applyEnhancement(final Project project, final HibernateExtension hibernateExtension) {
 		if ( !hibernateExtension.enhance.shouldApply() ) {
+			project.getLogger().warn( "Skipping Hibernate bytecode enhancement since no feature is enabled" );
 			return;
 		}
 
@@ -112,11 +113,11 @@ public class HibernatePlugin implements Plugin<Project> {
 
 								@Override
 								public boolean doExtendedEnhancement(CtClass classDescriptor) {
-									return hibernateExtension.enhance.getEnableFieldAccessEnhancement();
+									return hibernateExtension.enhance.getEnableExtendedEnhancement();
 								}
 							};
 
-							if ( hibernateExtension.enhance.getEnableFieldAccessEnhancement() ) {
+							if ( hibernateExtension.enhance.getEnableExtendedEnhancement() ) {
 								logger.warn( "Extended enhancement is enabled. Classes other than entities may be modified. You should consider access the entities using getter/setter methods and disable this property. Use at your own risk." );
 							}
 

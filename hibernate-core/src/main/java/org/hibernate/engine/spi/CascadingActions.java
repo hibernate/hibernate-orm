@@ -362,18 +362,16 @@ public class CascadingActions {
 		@Override
 		public void noCascade(
 				EventSource session,
-				Object child,
 				Object parent,
 				EntityPersister persister,
+				Type propertyType,
 				int propertyIndex) {
-			if ( child == null ) {
-				return;
-			}
-			Type type = persister.getPropertyTypes()[propertyIndex];
-			if ( type.isEntityType() ) {
-				String childEntityName = ((EntityType) type).getAssociatedEntityName( session.getFactory() );
+			if ( propertyType.isEntityType() ) {
+				Object child = persister.getPropertyValue( parent, propertyIndex );
+				String childEntityName = ((EntityType) propertyType).getAssociatedEntityName( session.getFactory() );
 
-				if ( !isInManagedState( child, session )
+				if ( child != null
+						&& !isInManagedState( child, session )
 						&& !(child instanceof HibernateProxy) //a proxy cannot be transient and it breaks ForeignKeys.isTransient
 						&& ForeignKeys.isTransient( childEntityName, child, null, session ) ) {
 					String parentEntiytName = persister.getEntityName();
@@ -453,7 +451,7 @@ public class CascadingActions {
 		}
 
 		@Override
-		public void noCascade(EventSource session, Object child, Object parent, EntityPersister persister, int propertyIndex) {
+		public void noCascade(EventSource session, Object parent, EntityPersister persister, Type propertyType, int propertyIndex) {
 		}
 
 		@Override

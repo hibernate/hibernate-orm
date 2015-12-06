@@ -80,12 +80,13 @@ public final class Cascade {
 			}
 
 			final Type[] types = persister.getPropertyTypes();
+			final String[] propertyNames = persister.getPropertyNames();
 			final CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
 			final boolean hasUninitializedLazyProperties = persister.hasUninitializedLazyProperties( parent );
 			final int componentPathStackDepth = 0;
-			for ( int i=0; i<types.length; i++) {
+			for ( int i = 0; i < types.length; i++) {
 				final CascadeStyle style = cascadeStyles[i];
-				final String propertyName = persister.getPropertyNames()[i];
+				final String propertyName = propertyNames[i];
 				if ( hasUninitializedLazyProperties && persister.getPropertyLaziness()[i] && ! action.performOnLazyProperty() ) {
 					//do nothing to avoid a lazy property initialization
 					continue;
@@ -109,9 +110,9 @@ public final class Cascade {
 				else if ( action.requiresNoCascadeChecking() ) {
 					action.noCascade(
 							eventSource,
-							persister.getPropertyValue( parent, i ),
 							parent,
 							persister,
+							types[i],
 							i
 					);
 				}
@@ -166,7 +167,6 @@ public final class Cascade {
 						parent,
 						child,
 						(CompositeType) type,
-						propertyName,
 						anything
 				);
 			}
@@ -263,15 +263,19 @@ public final class Cascade {
 			final Object parent,
 			final Object child,
 			final CompositeType componentType,
-			final String componentPropertyName,
 			final Object anything) {
 
-		final Object[] children = componentType.getPropertyValues( child, eventSource );
+		Object[] children = null;
 		final Type[] types = componentType.getSubtypes();
-		for ( int i=0; i<types.length; i++ ) {
+		final String[] propertyNames = componentType.getPropertyNames();
+		for ( int i = 0; i < types.length; i++ ) {
 			final CascadeStyle componentPropertyStyle = componentType.getCascadeStyle( i );
-			final String subPropertyName = componentType.getPropertyNames()[i];
+			final String subPropertyName = propertyNames[i];
 			if ( componentPropertyStyle.doCascade( action ) ) {
+				if (children == null) {
+					// Get children on demand.
+					children = componentType.getPropertyValues( child, eventSource );
+				}
 				cascadeProperty(
 						action,
 						cascadePoint,

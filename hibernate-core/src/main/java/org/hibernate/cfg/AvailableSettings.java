@@ -755,8 +755,14 @@ public interface AvailableSettings {
 	 */
 	String HBM2DLL_CREATE_NAMESPACES = "hibernate.hbm2dll.create_namespaces";
 
-
-
+	/**
+	 * Used to specify the {@link org.hibernate.tool.schema.spi.SchemaFilterProvider} to be used by create, drop, migrate and validate
+	 * operations on the database schema. {@link org.hibernate.tool.schema.spi.SchemaFilter}s can be used to limit the scope of these 
+	 * operations to specific namespaces, tables and sequences. All objects are included by default.
+	 * 
+	 * @since 5.1
+	 */
+	String SCHEMA_FILTER_PROVIDER = "hibernate.schema.filter.provider";
 
 	/**
 	 * The EntityMode in which set the Session opened from the SessionFactory.
@@ -964,6 +970,7 @@ public interface AvailableSettings {
 	 * Defines a default {@link org.hibernate.SessionEventListener} to be applied to opened Sessions.
 	 */
 	String AUTO_SESSION_EVENTS_LISTENER = "hibernate.session.events.auto";
+
 
 
 

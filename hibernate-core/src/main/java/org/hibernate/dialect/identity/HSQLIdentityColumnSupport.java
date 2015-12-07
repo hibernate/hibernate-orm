@@ -36,6 +36,6 @@ public class HSQLIdentityColumnSupport extends IdentityColumnSupportImpl {
 
 	@Override
 	public String getIdentityInsertString() {
-		return hsqldbVersion < 20 ? "null" : "default";
+		return hsqldbVersion < 200 ? "null" : "default";
 	}
 }

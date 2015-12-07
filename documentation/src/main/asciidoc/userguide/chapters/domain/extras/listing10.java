@@ -2,11 +2,11 @@ Session s = openSession();
 Transaction tx = s.beginTransaction();
 
 // Create a customer entity
-Map david = new HashMap();
+Map<String, String> david = new HashMap<>();
 david.put("name", "David");
 
 // Create an organization entity
-Map foobar = new HashMap();
+Map<String, String> foobar = new HashMap<>();
 foobar.put("name", "Foobar Inc.");
 
 // Link both

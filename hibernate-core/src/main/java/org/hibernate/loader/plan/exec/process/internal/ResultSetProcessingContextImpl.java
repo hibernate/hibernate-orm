@@ -33,7 +33,8 @@ import org.hibernate.type.EntityType;
 /**
  * @author Steve Ebersole
  */
-public class ResultSetProcessingContextImpl implements ResultSetProcessingContext {
+public class
+ResultSetProcessingContextImpl implements ResultSetProcessingContext {
 	private final ResultSet resultSet;
 	private final SessionImplementor session;
 	private final LoadPlan loadPlan;

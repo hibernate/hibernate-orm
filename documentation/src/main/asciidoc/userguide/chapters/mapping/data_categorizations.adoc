@@ -2,32 +2,25 @@
 === Data categorizations
 :sourcedir: extras
 
-Before diving into the actual topics of how to map different categories
-of things in your domain mode it helps to understand what those
-categories are. Hibernate and JPA both express these categorizations.
+Before diving into the actual topics of how to map different categories of things in your domain mode it helps to understand what those categories are.
+Hibernate and JPA both express these categorizations.
 
-Hibernate understands both the Java and JDBC representations of
-application data. The ability to read and write the this data to/from
-the database is the function of a Hibernate __type__. A type, in this
-usage, is an implementation of the `org.hibernate.type.Type` interface.
-This Hibernate type also describes various aspects of behavior of the
-Java type such as how to check for equality, how to clone values, etc.
+Hibernate understands both the Java and JDBC representations of application data.
+The ability to read/write this data from/to the database is the function of a Hibernate __type__.
+A type, in this usage, is an implementation of the `org.hibernate.type.Type` interface.
+This Hibernate type also describes various aspects of behavior of the Java type such as how to check for equality, how to clone values, etc.
 
+.Usage of the word _type_
 [NOTE]
 ====
-Usage of the word _type_
 
-The Hibernate type is neither a Java type nor a SQL datatype. It
-provides information about both of these as well as understanding
-marshalling between.
+The Hibernate type is neither a Java type nor a SQL data type.
+It provides information about both of these as well as understanding marshalling between.
 
-When you encounter the term type in discussions of Hibernate, it may
-refer to the Java type, the JDBC type, or the Hibernate type, depending
-on context.
+When you encounter the term type in discussions of Hibernate, it may refer to the Java type, the JDBC type, or the Hibernate type, depending on context.
 ====
 
-To help understand these categorizations, lets look at a simple table
-and domain model that we wish to map.
+To help understand these categorizations, lets look at a simple table and domain model that we wish to map.
 
 .Simple table and domain model
 ====
@@ -44,8 +37,8 @@ include::{sourcedir}/categorizations/Contact.java[]
 
 In the broadest sense, Hibernate categorizes types into two groups:
 
-* <<categorization-value,Value types>>
-* <<categorization-entity,Entity types>>
+* <<categorization-value>>
+* <<categorization-entity>>
 
 [[categorization-value]]
 ==== Value types

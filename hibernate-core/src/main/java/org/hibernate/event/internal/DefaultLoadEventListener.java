@@ -71,8 +71,9 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	 *
 	 * @throws HibernateException
 	 */
-	public void onLoad(final LoadEvent event,
-					   final LoadEventListener.LoadType loadType) throws HibernateException {
+	public void onLoad(
+			final LoadEvent event,
+			final LoadEventListener.LoadType loadType) throws HibernateException {
 
 		final EntityPersister persister = getPersister( event );
 
@@ -81,8 +82,9 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		}
 
 		final Class idClass = persister.getIdentifierType().getReturnedClass();
-		if ( idClass != null && !idClass.isInstance( event.getEntityId() ) )
+		if ( idClass != null && !idClass.isInstance( event.getEntityId() ) ) {
 			checkIdClass( persister, event, loadType, idClass );
+		}
 
 		doOnLoad( persister, event, loadType );
 	}

@@ -2,15 +2,6 @@
 === Entity
 :sourcedir: extras
 
-*Abstract*
-
-Discuss mapping entities in the application domain model.
-
-*Related Topics*
-
-* link:data_categorizations.adoc[Categorization]
-* link:locking.adoc[Locking]
-
 [[entity-pojo]]
 ==== POJO Models
 
@@ -58,51 +49,31 @@ Let's look at each requirement in detail.
 [[entity-pojo-final]]
 ==== Prefer non-final classes
 
-This is a requirement for JPA. It is more of a recommendation for
-Hibernate.
-
-A central feature of Hibernate is the ability to lazy load an entity's
-data via runtime proxies. This feature depends upon the entity class
-being non-final or else implementing an interface that declares all the
-attribute getters/setters. You can still persist classes that are
-declared final and that do not implement such an interface with
-Hibernate; you just will not be able to use proxies for lazy association
-fetching which will ultimately limit your options for performance
-tuning.
-
-include::access.adoc[]
+A central feature of Hibernate is the ability to lazy load an entity's data via runtime proxies.
+This feature depends upon the entity class being non-final or else implementing an interface that declares all the attribute getters/setters.
+You can still persist final classes that do not implement such an interface with Hibernate; you just will not be able to use proxies for lazy association fetching which will ultimately limit your options for performance tuning.
+You should also avoid declaring persistent attribute getters and setters as final for the reasons already mentioned.
 
 [NOTE]
 ====
-Starting in 5.0 Hibernate offers a more robust version of bytecode
-enhancement as another means for handling lazy loading. Hibernate had
-some bytecode re-writing capabilities prior to 5.0 but they were very
-rudimentary.
+Starting in 5.0 Hibernate offers a more robust version of bytecode enhancement as another means for handling lazy loading.
+Hibernate had some bytecode re-writing capabilities prior to 5.0 but they were very rudimentary.
 ====
-
-You should also avoid declaring persistent attribute getters and setters
-as final for the reasons already mentioned. And of course making the
-instance variable hold the entiy's persistent state would just simply
-not make any sense.
 
 [[entity-pojo-constructor]]
 ==== Implement a no-argument constructor
 
-The entity class should have a no-argument constructor. Both Hibernate
-and JPA require this.
+The entity class should have a no-argument constructor. Both Hibernate and JPA require this.
 
 JPA requires that this constructor be defined as public or protected.
-Hibernate for the most part does note care about the visibility as long
-as the system's SecurityManager allows overriding the visibility. That
-said, the constructor should be defined with at least package visibility
-if you wish to leverage runtime proxy generation.
+Hibernate for the most part does note care about the visibility as long as the system's SecurityManager allows overriding the visibility.
+That said, the constructor should be defined with at least package visibility if you wish to leverage runtime proxy generation.
 
-[[domainmodel-pojo-accessors]]
+[[entity-pojo-accessors]]
 ==== Declare getters and setters for persistent attributes
 
-Standard, portable JPA essentially requires this. Otherwise your model
-would violate the requirement quoted above in regards to accessing the
-entity persistent state fields directly from outside the entity itself.
+Standard, portable JPA essentially requires this.
+Otherwise your model would violate the requirement quoted above in regards to accessing the entity persistent state fields directly from outside the entity itself.
 
 Although Hibernate does not require it, it is recommended to follow
 JavaBean conventions by defining getters and setters for you entities
@@ -129,9 +100,10 @@ The identifier attribute does not necessarily need to be mapped to the
 column(s) that physically define the primary key. However, it should map
 to column(s) that can uniquely identify each row.
 
-We recommend that you declare consistently-named identifier attributes
-on persistent classes and that you use a nullable (i.e., non-primitive)
-type.
+[IMPORTANT]
+====
+We recommend that you declare consistently-named identifier attributes on persistent classes and that you use a nullable (i.e., non-primitive) type.
+====
 
 [[entity-pojo-mapping]]
 ==== Mapping the entity
@@ -163,6 +135,130 @@ the `javax.persistence.Table` annotation.
 include::{sourcedir}/entity/SimpleEntityWithTable.java[]
 ----
 ====
+
+include::access.adoc[]
+
+[[mapping-model-pojo-equalshashcode]]
+==== Implementing `equals()` and `hashCode()`
+
+[NOTE]
+====
+Much of the discussion in this section deals with the relation of an entity to a Hibernate Session; whether the entity is managed or transient or detached.
+These topics are explained in <<chapters/pc/PersistenceContext.adoc#pc,Persistence Context>> if you are unfamiliar with them.
+====
+
+Whether to implement `equals()` and `hashCode()` methods in your domain model, let alone how to implement them, is a surprisingly tricky discussion when it comes to ORM.
+
+There is really just one absolute case: a class that acts as an identifier must implement equals/hashCode based on the id value(s).
+Generally this is pertinent for user classes used as composite identifiers.
+Beyond this one absolute case and the few others we will discuss below, you may want to consider not implementing equals/hashCode.
+
+So what's all the fuss? Normally, most Java objects provide a built-in `equals()` and `hashCode()` based on the object's identity, so each new object will be different from all others.
+This is generally what you want in ordinary Java programming.
+Conceptually however this starts to break down when you start to think about the possibility multiple instances of a class representing the same data which is in fact the case when we start dealing with data from a database.
+Every time we load a specific `Person` from the database we would naturally get a unique instance.
+Hibernate, however, works hard to make sure that does not happen within a given `Session`.
+In fact Hibernate guarantees equivalence of persistent identity (database row) and Java identity inside a particular session scope.
+So if we ask a Hibernate `Session` to load that specific Person multiple times we will actually get back the same __instance__:
+
+.Scope of identity
+====
+[source,java]
+----
+include::{sourcedir}/entity/listing1.java[]
+----
+====
+
+Consider another example using a persistent `java.util.Set`:
+
+.Set usage with Session-scoped identity
+====
+[source,java]
+----
+include::{sourcedir}/entity/listing3.java[]
+----
+====
+
+However, the semantic changes when we mix instances loaded from different Sessions:
+
+.Mixed Sessions
+====
+[source,java]
+----
+include::{sourcedir}/entity/listing2.java[]
+----
+
+[source,java]
+----
+include::{sourcedir}/entity/listing4.java[]
+----
+====
+
+Specifically the outcome in this last example will depend on whether the `Person` class implemented equals/hashCode, and, if so, how.
+
+Consider yet another case:
+
+.Sets with transient entities
+====
+[source,java]
+----
+include::{sourcedir}/entity/listing5.java[]
+----
+====
+
+In cases where you will be dealing with entities outside of a Session (whether they be transient or detached), especially in cases where you will be using them in Java collections,
+you should consider implementing equals/hashCode.
+
+A common initial approach is to use the entity's identifier attribute as the basis for equals/hashCode calculations:
+
+.Naive equals/hashCode implementation
+====
+[source,java]
+----
+include::{sourcedir}/entity/listing6.java[]
+----
+====
+
+It turns out that this still breaks when adding transient instance of `Person` to a set as we saw in the last example:
+
+.Still trouble
+====
+[source,java]
+----
+include::{sourcedir}/entity/listing7.java[]
+----
+====
+
+The issue here is a conflict between (1) the use of generated identifier and (2) the contract of `Set` and (3) the equals/hashCode implementations.
+`Set` says that the equals/hashCode value for an object should not change while it is part of the Set.
+But that is exactly what happened here because the equals/hasCode are based on the (generated) id, which was not set until the `session.getTransaction().commit()` call.
+
+Note that this is just a concern when using generated identifiers.
+If you are using assigned identifiers this will not be a problem, assuming the identifier value is assigned prior to adding to the `Set`.
+
+Another option is to force the identifier to be generated and set prior to adding to the `Set`:
+
+.Forcing identifier generation
+====
+[source,java]
+----
+include::{sourcedir}/entity/listing8.java[]
+----
+====
+
+But this is often not feasible.
+
+The final approach is to use a "better" equals/hashCode implementation, making use of a natural-id or business-key.
+
+.Better equals/hashCode with natural-id
+====
+[source,java]
+----
+include::{sourcedir}/entity/listing9.java[]
+----
+====
+
+As you can see the question of equals/hashCode is not trivial, nor is there a one-size-fits-all solution.
 
 For details on mapping the identifier, see link:identifiers.adoc[Chapter 6,_Identifiers_]
 

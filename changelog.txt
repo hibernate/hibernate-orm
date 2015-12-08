@@ -5,6 +5,17 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.2.21 (2015.12.07)
+------------------------------------------------------------------------------------------------------------------------
+
+** Bug
+    [HHH-5764] - AssertionFailure: Unexpected nested component on the referenced entity when mapping a @MapsId
+    [HHH-10346] - Hibernate and Bundle ClassLoaders out of sync on Bundle Refresh
+
+** Improvement
+    [HHH-10161] - Allow parameter type for null value to be specified using javax.persistence.Parameter#getParameterType()
+    [HHH-10202] - Delay resolving TypeScopeImpl#factory after deserialization until resolveFactory() is called.
+
 Changes in version 4.2.21 (2015.10.23)
 ------------------------------------------------------------------------------------------------------------------------
 

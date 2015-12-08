@@ -1,5 +1,5 @@
 [[entity]]
-== Entity
+=== Entity
 :sourcedir: extras
 
 *Abstract*
@@ -12,7 +12,7 @@ Discuss mapping entities in the application domain model.
 * link:locking.adoc[Locking]
 
 [[entity-pojo]]
-=== POJO Models
+==== POJO Models
 
 Section _2.1 The Entity Class_ of the _JPA 2.1 specification_ defines
 its requirements for an entity class. Applications that wish to remain
@@ -56,7 +56,7 @@ validity of such a paradigm, however, is debatable at best.
 Let's look at each requirement in detail.
 
 [[entity-pojo-final]]
-=== Prefer non-final classes
+==== Prefer non-final classes
 
 This is a requirement for JPA. It is more of a recommendation for
 Hibernate.
@@ -69,6 +69,8 @@ declared final and that do not implement such an interface with
 Hibernate; you just will not be able to use proxies for lazy association
 fetching which will ultimately limit your options for performance
 tuning.
+
+include::access.adoc[]
 
 [NOTE]
 ====
@@ -84,7 +86,7 @@ instance variable hold the entiy's persistent state would just simply
 not make any sense.
 
 [[entity-pojo-constructor]]
-=== Implement a no-argument constructor
+==== Implement a no-argument constructor
 
 The entity class should have a no-argument constructor. Both Hibernate
 and JPA require this.
@@ -96,7 +98,7 @@ said, the constructor should be defined with at least package visibility
 if you wish to leverage runtime proxy generation.
 
 [[domainmodel-pojo-accessors]]
-=== Declare getters and setters for persistent attributes
+==== Declare getters and setters for persistent attributes
 
 Standard, portable JPA essentially requires this. Otherwise your model
 would violate the requirement quoted above in regards to accessing the
@@ -114,7 +116,7 @@ runtime proxy generation for lazy loading the visibility for the
 getter/setter should be at least package visibility.
 
 [[entity-pojo-identifier]]
-=== Provide identifier attribute(s)
+==== Provide identifier attribute(s)
 
 [NOTE]
 ====
@@ -132,7 +134,7 @@ on persistent classes and that you use a nullable (i.e., non-primitive)
 type.
 
 [[entity-pojo-mapping]]
-=== Mapping the entity
+==== Mapping the entity
 
 The main piece in mapping the entity is the `javax.persistence.Entity`
 annotation. The Entity annotation defines just one attribute `name`
@@ -165,7 +167,7 @@ include::{sourcedir}/entity/SimpleEntityWithTable.java[]
 For details on mapping the identifier, see link:identifiers.adoc[Chapter 6,_Identifiers_]
 
 [[entity-pojo-optlock]]
-=== Mapping optimistic locking
+==== Mapping optimistic locking
 
 JPA defines support for optimistic locking based on either a version
 (sequential numeric) or timestamp strategy. To enable this style of
@@ -217,7 +219,7 @@ of an expanded WHERE clause restriction for the UPDATE/DELETE SQL
 statement
 
 [[entity-pojo-inheritance]]
-=== Inheritance
+==== Inheritance
 
 blah blah blah
 

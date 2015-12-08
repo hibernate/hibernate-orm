@@ -1,5 +1,6 @@
 = Hibernate User Guide
 :toc:
+:toclevels: 3
 
 include::Preface.adoc[]
 
@@ -7,8 +8,6 @@ include::Preface.adoc[]
 
 include::chapters/architecture/Architecture.adoc[]
 include::chapters/domain/DomainModel.adoc[]
-include::chapters/mapping/index.adoc[]
-include::chapters/enhancement/BytecodeEnhancement.adoc[]
 include::chapters/bootstrap/Bootstrap.adoc[]
 include::chapters/pc/PersistenceContext.adoc[]
 include::chapters/jdbc/Database_Access.adoc[]

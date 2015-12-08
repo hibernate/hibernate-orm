@@ -349,3 +349,5 @@ the APIs of the underlying provider.
 include::{sourcedir}/UnwrapWithEM.java[]
 ----
 ====
+
+include::BytecodeEnhancement.adoc[]

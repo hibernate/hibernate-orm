@@ -55,7 +55,7 @@ Value types are further classified into three sub-categories;
 
 * Basic types - In mapping the Contact table, all attributes except for
 name would be basic types. Basic types are discussed in detail in
-link:basic_types.adoc[_Basic Types_]
+<<basic_types.adoc#basic,_Basic Types_>>
 * Composite (or Embeddable) types - the name attribute is an example of
 a composite type, which is discussed in details in link:[???]
 * Collection types - the example has no collections. Collection types
@@ -91,4 +91,4 @@ website is unique), but that is totally different.
 
 equality
 
-TBC...
+TO DO

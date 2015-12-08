@@ -1,5 +1,5 @@
 [[basic]]
-== Basic Types
+=== Basic Types
 :sourcedir: extras
 
 Basic value types usually map a single database value, or column, to a
@@ -12,7 +12,7 @@ resolve the specific `org.hibernate.type.Type` to use in certain
 situations.
 
 [[basic-provided]]
-=== Hibernate-provided BasicTypes
+==== Hibernate-provided BasicTypes
 
 .Standard BasicTypes
 [cols=",,,",options="header",]
@@ -171,7 +171,7 @@ specialization) instances keyed by a name. That is the purpose of the
 revisit this detail later.
 
 [[basic-annotation]]
-=== The `@Basic` annotation
+==== The `@Basic` annotation
 
 Strictly speaking, a basic type is denoted with the
 javax.persistence.Basic annotation. Generally speaking the `@Basic`
@@ -242,11 +242,10 @@ setting for basic types unless you are using bytecode enhancement. See
 the Hibernate User Guide for additional information on fetching and on
 bytecode enhancement.
 
-=== The `@Column` annotation
+==== The `@Column` annotation
 
 JPA defines rules for implicitly determining the name of tables and
-columns. For a detailed discussion of implicit naming see
-link:#naming[???].
+columns. For a detailed discussion of implicit naming see <<naming.adoc#naming,Naming>>.
 
 For basic type attributes, the implicit naming rule is that the column
 name is the same as the attribute name. If that implicit naming rule
@@ -269,7 +268,7 @@ The `@Column` annotation defines other mapping information as well. See
 its javadocs for details.
 
 [[basic-registry]]
-=== BasicTypeRegistry
+==== BasicTypeRegistry
 
 We said before that a Hibernate type is not a Java type, nor a SQL type,
 but that it understands both and performs the marshalling between them.
@@ -314,7 +313,7 @@ method during bootstrap. For more details, see
 link:#basic-custom[section_title]
 
 [[basic-explicit]]
-=== Explicit BasicTypes
+==== Explicit BasicTypes
 
 Sometimes you want a particular attribute to be handled differently.
 Occasionally Hibernate will implicitly pick a BasicType that you do not
@@ -347,7 +346,7 @@ following:
 * The name of any known "type definitions"
 
 [[basic-custom]]
-=== Custom BasicTypes
+==== Custom BasicTypes
 
 Hibernate makes it relatively easy for developers to create their own
 basic type mappings type. For example, you might want to persist
@@ -393,7 +392,7 @@ For additional information on developing and registering custom types,
 see the Hibernate Integration Guide.
 
 [[basic-enums]]
-=== Mapping enums
+==== Mapping enums
 
 Hibernate supports the mapping of Java enums as basic value types in a
 number of different ways.
@@ -491,7 +490,7 @@ For additional details on using custom types, see
 link:#basic-custom[section_title].
 
 [[basic-lob]]
-=== Mapping LOBs
+==== Mapping LOBs
 
 Mapping LOBs (database Large OBjects) come in 2 forms, those using the
 JDBC locator types and those materializing the LOB data.
@@ -608,7 +607,7 @@ include::{sourcedir}/basic/BlobMaterialized.java[]
 ====
 
 [[basic-nationalized]]
-=== Mapping Nationalized Character Data
+==== Mapping Nationalized Character Data
 
 JDBC 4 added the ability to explicitly handle nationalized character
 data. To this end it added specific nationalized character data types.
@@ -656,7 +655,7 @@ MetadataBuilder#enableGlobalNationalizedCharacterDataSupport during
 bootstrap.
 
 [[basic-uuid]]
-=== Mapping UUID Values
+==== Mapping UUID Values
 
 Hibernate also allows you to map UUID values, again in a number of ways.
 
@@ -702,11 +701,11 @@ generated! For details see the discussion of generators in
 link:#identifiers-generators[???]
 
 [[basic-datetime]]
-=== Mapping Date/Time Values
+==== Mapping Date/Time Values
 
 blah blah blah
 
 [[basic-jpaconvert]]
-=== JPA 2.1 AttributeConverters
+==== JPA 2.1 AttributeConverters
 
 blah blah blah

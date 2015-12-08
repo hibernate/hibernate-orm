@@ -30,8 +30,8 @@ which conform to the Java Collections Framework interfaces.
 ==== Collections of value types
 
 collection of values - elements can be of any value type except for
-collections (in fact even compositions as the element cannot contain
-collections) * basics * compositions
+collections (in fact even embeddables as the element cannot contain
+collections) * basics * embeddables
 
 [[collections-entity]]
 ==== Collections of entities

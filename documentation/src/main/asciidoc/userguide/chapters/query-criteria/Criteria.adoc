@@ -57,7 +57,7 @@ query results.
 ====
 Chapter 6 Criteria API of the JPA Specification already contains a
 decent amount of reference material pertaining to the various parts of a
-criteria query. So rather than duplicate all that content here, lets
+criteria query. So rather than duplicate all that content here, let's
 instead look at some of the more widely anticipated usages of the API.
 ====
 

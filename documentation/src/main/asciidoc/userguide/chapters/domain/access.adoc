@@ -1,5 +1,0 @@
-[[access]]
-=== Access strategies
-:sourcedir: extras
-
-TO DO

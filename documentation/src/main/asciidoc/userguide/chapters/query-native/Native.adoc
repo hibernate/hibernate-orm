@@ -417,7 +417,7 @@ called named native queries. You can use `@NamedNativeQuery`
 (`@NamedNativeQueries`) in conjunction with `@SqlResultSetMapping`
 (`@SqlResultSetMappings`). Like `@NamedQuery`, `@NamedNativeQuery` and
 `@SqlResultSetMapping` can be defined at class level, but their scope is
-global to the application. Lets look at a view examples.
+global to the application. Let's look at a view examples.
 
 <<example-named-native-query-annotation-with-result-set-mapping>>
 shows how a `resultSetMapping` parameter is defined in

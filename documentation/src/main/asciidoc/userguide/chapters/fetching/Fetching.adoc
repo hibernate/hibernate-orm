@@ -97,7 +97,7 @@ default. Hibernate, as a JPA provider, honors that default.
 The login use-case
 
 For the first use case, consider the application's login process for an
-Employee. Lets assume that login only requires access to the Employee
+Employee. Let's assume that login only requires access to the Employee
 information, not Project nor Department information.
 
 .No fetching example

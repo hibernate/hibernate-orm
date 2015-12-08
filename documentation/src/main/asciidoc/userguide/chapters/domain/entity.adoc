@@ -136,7 +136,10 @@ include::{sourcedir}/entity/SimpleEntityWithTable.java[]
 ----
 ====
 
-include::access.adoc[]
+[[access]]
+==== Access strategies
+
+TO DO
 
 [[mapping-model-pojo-equalshashcode]]
 ==== Implementing `equals()` and `hashCode()`

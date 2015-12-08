@@ -17,7 +17,7 @@ It provides information about both of these as well as understanding marshalling
 When you encounter the term type in discussions of Hibernate, it may refer to the Java type, the JDBC type, or the Hibernate type, depending on context.
 ====
 
-To help understand these categorizations, lets look at a simple table and domain model that we wish to map.
+To help understand these categorizations, let's look at a simple table and domain model that we wish to map.
 
 .Simple table and domain model
 ====

@@ -431,7 +431,8 @@ public abstract class AbstractLoadPlanBasedLoader {
 
 		try {
 			ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st );
-			rs = wrapResultSetIfEnabled( rs , session );
+			if(session.getFactory().getSessionFactoryOptions().isWrapResultSetsEnabled())
+				rs = wrapResultSetIfEnabled( rs , session );
 
 			if ( !limitHandler.supportsLimitOffset() || !LimitHelper.useLimit( limitHandler, selection ) ) {
 				advance( rs, selection );
@@ -471,22 +472,17 @@ public abstract class AbstractLoadPlanBasedLoader {
 	private synchronized ResultSet wrapResultSetIfEnabled(final ResultSet rs, final SessionImplementor session) {
 		// synchronized to avoid multi-thread access issues; defined as method synch to avoid
 		// potential deadlock issues due to nature of code.
-		if ( session.getFactory().getSessionFactoryOptions().isWrapResultSetsEnabled() ) {
-			try {
-				if ( log.isDebugEnabled() ) {
-					log.debugf( "Wrapping result set [%s]", rs );
-				}
-				return session.getFactory()
-						.getServiceRegistry()
-						.getService( JdbcServices.class )
-						.getResultSetWrapper().wrap( rs, retreiveColumnNameToIndexCache( rs ) );
+		try {
+			if ( log.isDebugEnabled() ) {
+				log.debugf( "Wrapping result set [%s]", rs );
 			}
-			catch(SQLException e) {
-				log.unableToWrapResultSet( e );
-				return rs;
-			}
+			return session.getFactory()
+					.getServiceRegistry()
+					.getService( JdbcServices.class )
+					.getResultSetWrapper().wrap( rs, retreiveColumnNameToIndexCache( rs ) );
 		}
-		else {
+		catch(SQLException e) {
+			log.unableToWrapResultSet( e );
 			return rs;
 		}
 	}

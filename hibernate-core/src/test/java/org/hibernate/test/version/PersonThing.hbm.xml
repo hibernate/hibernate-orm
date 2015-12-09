@@ -19,7 +19,7 @@
 
 	<class name="Person">
 		<id name="name"/>
-		<version name="version"/>
+		<version name="version" column="`version`"/>
 		<bag name="things" 
 				inverse="true"
 				cascade="all,delete-orphan"> 
@@ -37,14 +37,14 @@
 
     <class name="Thing">
     	<id name="description"/>
-    	<version name="version"/>
+    	<version name="version" column="`version`"/>
     	<property name="longDescription"/>
     	<many-to-one name="person"/>
     </class>	
 
     <class name="Task">
     	<id name="description"/>
-    	<version name="version"/>
+    	<version name="version" column="`version`"/>
     	<many-to-one name="person"/>
     </class>	
 

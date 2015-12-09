@@ -12,11 +12,13 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 import org.hibernate.HibernateException;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoader;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
@@ -87,19 +89,32 @@ public final class Cascade {
 			for ( int i = 0; i < types.length; i++) {
 				final CascadeStyle style = cascadeStyles[i];
 				final String propertyName = propertyNames[i];
-				if ( hasUninitializedLazyProperties && persister.getPropertyLaziness()[i] && ! action.performOnLazyProperty() ) {
-					//do nothing to avoid a lazy property initialization
-					continue;
-				}
 
 				if ( style.doCascade( action ) ) {
+					Object child;
+
+					// For bytecode enhanced entities, need to fetch the attribute
+					boolean lazy = hasUninitializedLazyProperties && persister.getPropertyLaziness()[i] && action.performOnLazyProperty();
+					if ( lazy && parent instanceof PersistentAttributeInterceptable ) {
+						Object interceptor = ( (PersistentAttributeInterceptable) parent ).$$_hibernate_getInterceptor();
+						if ( interceptor instanceof LazyAttributeLoader ) {
+							child = ( (LazyAttributeLoader) interceptor ).fetchAttribute( parent, propertyName );
+						}
+						else {
+							child = null;
+						}
+					}
+					else {
+						child = persister.getPropertyValue( parent, i );
+					}
+
 					cascadeProperty(
 							action,
 							cascadePoint,
 							eventSource,
 							componentPathStackDepth,
 							parent,
-							persister.getPropertyValue( parent, i ),
+							child,
 							types[i],
 							style,
 							propertyName,

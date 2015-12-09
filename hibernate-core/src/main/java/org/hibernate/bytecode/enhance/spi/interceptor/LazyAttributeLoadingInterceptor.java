@@ -46,7 +46,6 @@ public class LazyAttributeLoadingInterceptor
 	private boolean allowLoadOutsideTransaction;
 	private String sessionFactoryUuid;
 
-
 	public LazyAttributeLoadingInterceptor(
 			String entityName,
 			Set<String> lazyFields,
@@ -59,12 +58,21 @@ public class LazyAttributeLoadingInterceptor
 
 	protected final Object intercept(Object target, String attributeName, Object value) {
 		if ( !isAttributeLoaded( attributeName ) ) {
-			return loadAttribute( target, attributeName );
+			Object loadedValue = fetchAttribute( target, attributeName );
+			attributeInitialized( attributeName );
+			return loadedValue;
 		}
 		return value;
 	}
 
-	private Object loadAttribute(final Object target, final String attributeName) {
+	/**
+	 * Fetches the lazy attribute. The attribute does not get associated with the entity. (To be used by hibernate methods)
+	 */
+	public Object fetchAttribute(final Object target, final String attributeName) {
+		return loadAttribute( target, attributeName );
+	}
+
+	protected Object loadAttribute(final Object target, final String attributeName) {
 		return new Helper( this ).performWork(
 				new LazyInitializationWork() {
 					@Override
@@ -173,6 +181,7 @@ public class LazyAttributeLoadingInterceptor
 			CollectionTracker tracker = ( (SelfDirtinessTracker) target ).$$_hibernate_getCollectionTracker();
 			if ( tracker == null ) {
 				( (SelfDirtinessTracker) target ).$$_hibernate_clearDirtyAttributes();
+				tracker = ( (SelfDirtinessTracker) target ).$$_hibernate_getCollectionTracker();
 			}
 			tracker.add( fieldName, ( (Collection) value ).size() );
 		}

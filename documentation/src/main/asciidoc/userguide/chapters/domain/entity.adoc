@@ -184,19 +184,21 @@ include::{sourcedir}/entity/SimpleEntityPropertyAccessOverride.java[]
 
 [NOTE]
 ====
-Much of the discussion in this section deals with the relation of an entity to a Hibernate Session; whether the entity is managed or transient or detached.
-These topics are explained in <<chapters/pc/PersistenceContext.adoc#pc,Persistence Context>> if you are unfamiliar with them.
+Much of the discussion in this section deals with the relation of an entity to a Hibernate Session, whether the entity is managed, transient or detached.
+If you are unfamiliar with these topics, they are explained in the <<chapters/pc/PersistenceContext.adoc#pc,Persistence Context>> chapter.
 ====
 
 Whether to implement `equals()` and `hashCode()` methods in your domain model, let alone how to implement them, is a surprisingly tricky discussion when it comes to ORM.
 
 There is really just one absolute case: a class that acts as an identifier must implement equals/hashCode based on the id value(s).
-Generally this is pertinent for user classes used as composite identifiers.
-Beyond this one absolute case and the few others we will discuss below, you may want to consider not implementing equals/hashCode.
+Generally this is pertinent for user-defined classes used as composite identifiers.
+Beyond this one very specific use case and few others we will discuss below, you may want to consider not implementing equals/hashCode altogether.
 
 So what's all the fuss? Normally, most Java objects provide a built-in `equals()` and `hashCode()` based on the object's identity, so each new object will be different from all others.
 This is generally what you want in ordinary Java programming.
-Conceptually however this starts to break down when you start to think about the possibility multiple instances of a class representing the same data which is in fact the case when we start dealing with data from a database.
+Conceptually however this starts to break down when you start to think about the possibility of multiple instances of a class representing the same data.
+
+This is, in fact, exactly the case when dealing with data coming from a database.
 Every time we load a specific `Person` from the database we would naturally get a unique instance.
 Hibernate, however, works hard to make sure that does not happen within a given `Session`.
 In fact Hibernate guarantees equivalence of persistent identity (database row) and Java identity inside a particular session scope.
@@ -270,8 +272,8 @@ include::{sourcedir}/entity/listing7.java[]
 ----
 ====
 
-The issue here is a conflict between (1) the use of generated identifier and (2) the contract of `Set` and (3) the equals/hashCode implementations.
-`Set` says that the equals/hashCode value for an object should not change while it is part of the Set.
+The issue here is a conflict between _the use of generated identifier_, _the contract of `Set`_ and _the equals/hashCode implementations_.
+`Set` says that the equals/hashCode value for an object should not change while the object is part of the Set.
 But that is exactly what happened here because the equals/hasCode are based on the (generated) id, which was not set until the `session.getTransaction().commit()` call.
 
 Note that this is just a concern when using generated identifiers.
@@ -301,21 +303,19 @@ include::{sourcedir}/entity/listing9.java[]
 
 As you can see the question of equals/hashCode is not trivial, nor is there a one-size-fits-all solution.
 
-For details on mapping the identifier, see link:identifiers.adoc[Chapter 6,_Identifiers_]
+For details on mapping the identifier, see the <<chapters/domain/identifiers.adoc#identiifers,Identifiers>> chapter.
 
 [[entity-pojo-optlock]]
 ==== Mapping optimistic locking
 
-JPA defines support for optimistic locking based on either a version
-(sequential numeric) or timestamp strategy. To enable this style of
-optimistic locking simply add the `javax.persistence.Version` to the
-persistent attribute that defines the optimistic locking value.
+JPA defines support for optimistic locking based on either a version (sequential numeric) or timestamp strategy.
+To enable this style of optimistic locking simply add the `javax.persistence.Version` to the persistent attribute that defines the optimistic locking value.
 According to JPA, the valid types for these attributes are limited to:
 
-* int, or Integer
-* short, or Short
-* long, or Long
-* java.sql.Timestamp
+* `int` or `Integer`
+* `short` or `Short`
+* `long` or `Long`
+* `java.sql.Timestamp`
 
 .Version
 ====
@@ -335,25 +335,16 @@ include::{sourcedir}/entity/Instant.java[]
 ----
 ====
 
-Hibernate supports a form of optimistic locking that does not require a
-dedicated "version attribute". This is intended mainly for use with
-modeling legacy schemas. The idea is that you can get Hibernate to
-perform "version checks" using either all of the entity's attributes, or
-just the attributes that have changed. This is achieved through the use
-of the `org.hibernate.annotations.OptimisticLocking` annotation which
-defines a single attribute of type
-`org.hibernate.annotations.OptimisticLockType`. There are 4 available
-OptimisticLockTypes:
+Hibernate supports a form of optimistic locking that does not require a dedicated "version attribute".
+This is intended mainly for use with modeling legacy schemas.
+The idea is that you can get Hibernate to perform "version checks" using either all of the entity's attributes, or just the attributes that have changed.
+This is achieved through the use of the `org.hibernate.annotations.OptimisticLocking` annotation which defines a single attribute of type `org.hibernate.annotations.OptimisticLockType`.
+There are 4 available OptimisticLockTypes:
 
-* `NONE` - optimistic locking is disabled. Even if there is a @Version
-annotation present.
-* `VERSION` (the default) - performs optimistic locking based on a
-@Version as described above.
-* `ALL` - Perform optimistic locking based on *all* fields as part of an
-expanded WHERE clause restriction for the UPDATE/DELETE SQL statement.
-* `DIRTY` - Perform optimistic locking based on *dirty* fields as part
-of an expanded WHERE clause restriction for the UPDATE/DELETE SQL
-statement
+`NONE`:: optimistic locking is disabled even if there is a `@Version` annotation present
+`VERSION` (the default)::  performs optimistic locking based on a `@Version` as described above
+`ALL`:: performs optimistic locking based on _all_ fields as part of an expanded WHERE clause restriction for the UPDATE/DELETE SQL statements
+`DIRTY`:: performs optimistic locking based on _dirty_ fields as part of an expanded WHERE clause restriction for the UPDATE/DELETE SQL statements.
 
 [[entity-pojo-inheritance]]
 ==== Inheritance

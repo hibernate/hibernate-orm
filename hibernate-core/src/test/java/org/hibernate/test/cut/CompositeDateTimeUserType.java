@@ -27,6 +27,7 @@ import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -117,7 +118,7 @@ public class CompositeDateTimeUserType implements CompositeUserType {
 	public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session) throws HibernateException, SQLException {
 		if ( value == null ) {
 			for (int i = 0; i < 6; i++ ) {
-				st.setObject( index + i, null );
+				st.setNull( index + i, Types.INTEGER );
 			}
 		} else {
 			final CompositeDateTime dateTime = (CompositeDateTime) value;

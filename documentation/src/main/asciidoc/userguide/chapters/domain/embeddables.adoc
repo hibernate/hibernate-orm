@@ -1,5 +1,5 @@
 [[embeddables]]
-=== Embeddables
+=== Embeddable types
 :sourcedir: extras
 
 * <<chapters/domain/entity.adoc#access,Access strategies>>
@@ -11,7 +11,7 @@ JPA calls them embeddables.
 Either way the concept is the same: a composition of values.
 For example we might have a Name class that is a composition of first-name and last-name, or an Address class that is a composition of street, city, postal code, etc.
 
-.Simple embeddable example
+.Simple embeddable type example
 ====
 [source,java]
 ----
@@ -24,11 +24,9 @@ include::{sourcedir}/embeddable/Address.java[]
 ----
 ====
 
-An embeddable is another form of value type, and its lifecycle is bound to a parent entity.
+An embeddable type is another form of value type, and its lifecycle is bound to a parent entity type, therefore inheriting the attribute access from its parent (for details on attribute access, see <<chapters/domain/entity.adoc#access,Access strategies>>).
 
-An embeddable inherits the attribute access of its parent. For details on attribute access, see link:#access[???].
-
-Embeddables can be made up of basic values as well as associations, with the caveat that, when used as collection elements, they cannot define collections themselves.
+Embeddable types can be made up of basic values as well as associations, with the caveat that, when used as collection elements, they cannot define collections themselves.
 
 ==== Component / Embedded
 
@@ -49,7 +47,7 @@ JPA defines two terms for working with an embeddable type: `@Embeddable` and `@E
 `@Embedded` is for referencing a given embeddable type (e.g. `person.name`).
 ====
 
-The embeddable is represented by the `Name` class and the parent makes use of it through the `person.name` object composition.
+So, the embeddable type is represented by the `Name` class and the parent makes use of it through the `person.name` object composition.
 
 .Person table
 ====
@@ -61,7 +59,7 @@ include::{sourcedir}/embeddable/Person1.sql[]
 
 The composed values are mapped to the same table as the parent table.
 Composition is part of good OO data modeling (idiomatic Java).
-In fact, that table could also be mapped by the following entity instead.
+In fact, that table could also be mapped by the following entity type instead.
 
 .Alternative to embeddable type composition
 ====
@@ -85,7 +83,7 @@ include::{sourcedir}/embeddable/Contact.java[]
 ====
 
 Although from an object-oriented perspective, it's much more convenient to work with embeddable types, this example doesn't work as-is.
-When the same embeddable type is included multiple times in the same parent entity, the JPA specification demands setting the associated column names explicitly.
+When the same embeddable type is included multiple times in the same parent entity type, the JPA specification demands setting the associated column names explicitly.
 
 This requirement is due to how object properties are mapped to database columns.
 By default, JPA expects a database column having the same name with its associated object property.
@@ -120,7 +118,7 @@ Users concerned with JPA provider portability should instead prefer explicit col
 Hibernate naming strategies are covered in detail in <<naming.adoc#naming,Naming>>.
 However, for the purposes of this discussion, Hibernate has the capability to interpret implicit column names in a way that is safe for use with multiple embeddable types.
 
-.Enabling embeddable-safe implicit naming
+.Enabling embeddable type safe implicit naming
 ====
 [source,java]
 ----
@@ -153,10 +151,10 @@ This topic is converted in detail in <<collection.adoc#collections-map,Map - key
 [[embeddable-identifier]]
 ==== Embeddable types as identifiers
 
-Embeddable types can also be used as entity identifiers.
+Embeddable types can also be used as entity type identifiers.
 This usage is covered in detail in link:#identifier-composite[Composite identifiers]
 
 [IMPORTANT]
 ====
-Embeddable types that are used as collection entries, map keys or entity identifiers cannot include their own collection mappings.
+Embeddable types that are used as collection entries, map keys or entity type identifiers cannot include their own collection mappings.
 ====

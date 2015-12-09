@@ -1,5 +1,3 @@
 MetadataSources metadataSources = ...;
-
-metadataSources.getMetaDataBuilder()
-		.applyBasicType( FizzwigType1.INSTANCE )
-		...
+metadataSources.getMetaDataBuilder().applyBasicType( FizzwigType1.INSTANCE );
+...

@@ -1,7 +1,7 @@
-Session session = ...;
+Session session=...;
 session.getTransaction().begin();
 
-Club club = session.get( Club.class, 1 );
+Club club = session.get( Club.class,1 );
 
 Person p1 = new Person(...);
 Person p2 = new Person(...);

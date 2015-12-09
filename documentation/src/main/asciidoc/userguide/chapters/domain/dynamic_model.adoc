@@ -42,8 +42,3 @@ However, as a result of the Hibernate mapping, the database schema can easily be
 It is also interesting to note that dynamic models are great for certain integration use cases as well.
 Envers, for example, makes extensive use of dynamic models to represent the historical data.
 ====
-
-Historically applications using Hibernate would have used its proprietary XML mapping file format for this purpose.
-With the coming of JPA, most of this information is now defined in a way that is portable across ORM/JPA providers using annotations (and/or standardized XML format).
-This chapter will focus on JPA mapping where possible.
-For Hibernate mapping features not supported by JPA we will prefer Hibernate extension annotations, again where possible.

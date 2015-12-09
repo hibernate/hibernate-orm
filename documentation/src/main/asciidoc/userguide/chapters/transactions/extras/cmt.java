@@ -1,7 +1,7 @@
 public void doSomeWork() {
 	StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
-			.applySetting( AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta" )
-			...;
+		.applySetting( AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta" )
+		...;
 
 	// Note: depending on the JtaPlatform used and some optional settings,
 	// the underlying transactions here will be controlled through either
@@ -18,12 +18,12 @@ public void doSomeWork() {
 
 		doTheWork();
 
-		// Since we did not start the transaction (CMT),
+		// Since we did not start the transaction ( CMT ),
 		// we also will not end it.  This call essentially
 		// no-ops in terms of transaction handling.
 		session.getTransaction().commit();
 	}
-	catch (Exception e) {
+	catch ( Exception e ) {
 		// again, the rollback call here would no-op (aside from
 		// marking the underlying CMT transaction for rollback only).
 		if ( session.getTransaction().getStatus() == ACTIVE

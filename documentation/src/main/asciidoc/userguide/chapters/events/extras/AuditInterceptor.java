@@ -1,14 +1,16 @@
-import java.io.Serializable;
-import java.util.Date;
-
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.Transaction;
 import org.hibernate.type.Type;
 
+import java.io.Serializable;
+import java.util.Date;
+
 public class AuditInterceptor extends EmptyInterceptor {
 
     private int updates;
+
     private int creates;
+
     private int loads;
 
     public void onDelete(Object entity,
@@ -28,8 +30,8 @@ public class AuditInterceptor extends EmptyInterceptor {
 
         if ( entity instanceof Auditable ) {
             updates++;
-            for ( int i=0; i < propertyNames.length; i++ ) {
-                if ( "lastUpdateTimestamp".equals( propertyNames[i] ) ) {
+            for ( int i = 0; i < propertyNames.length; i++ ) {
+                if ( "lastUpdateTimestamp".equals( propertyNames[i]  ) ) {
                     currentState[i] = new Date();
                     return true;
                 }
@@ -57,8 +59,8 @@ public class AuditInterceptor extends EmptyInterceptor {
 
         if ( entity instanceof Auditable ) {
             creates++;
-            for ( int i=0; i<propertyNames.length; i++ ) {
-                if ( "createTimestamp".equals( propertyNames[i] ) ) {
+            for ( int i = 0; i < propertyNames.length; i++ ) {
+                if ( "createTimestamp".equals( propertyNames[i]  ) ) {
                     state[i] = new Date();
                     return true;
                 }
@@ -67,13 +69,13 @@ public class AuditInterceptor extends EmptyInterceptor {
         return false;
     }
 
-    public void afterTransactionCompletion(Transaction tx) {
+    public void afterTransactionCompletion( Transaction tx ) {
         if ( tx.wasCommitted() ) {
-            System.out.println("Creations: " + creates + ", Updates: " + updates + "Loads: " + loads);
+            System.out.println( "Creations: " + creates + ", Updates: " + updates + "Loads: " + loads );
         }
-        updates=0;
-        creates=0;
-        loads=0;
+        updates = 0;
+        creates = 0;
+        loads = 0;
     }
 
 }

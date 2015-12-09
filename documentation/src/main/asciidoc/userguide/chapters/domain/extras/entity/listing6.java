@@ -1,30 +1,31 @@
 @Entity
 public class Person {
-	@Id
-	@GeneratedValue
-	private Integer id;
 
-	...
+    @Id
+    @GeneratedValue
+    private Integer id;
 
-	@Override
-	public int hashCode() {
-		return id != null ? id.hashCode() : 0;
-	}
+    ...
 
-	@Override
-	public boolean equals() {
-		if ( this == o ) {
-			return true;
-		}
-		if ( !( o instanceof Person ) ) {
-			return false;
-		}
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
+    }
 
-		if ( id == null ) {
-			return false;
-		}
+    @Override
+    public boolean equals() {
+        if ( this == o ) {
+            return true;
+        }
+        if (!( o instanceof Person ) ) {
+            return false;
+        }
 
-		final Person other = (Person) o;
-		return id.equals( other.id );
-	}
+        if ( id == null ) {
+            return false;
+        }
+
+        final Person other = ( Person ) o;
+        return id.equals( other.id );
+    }
 }

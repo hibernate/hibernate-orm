@@ -17,7 +17,7 @@ It provides information about both of these as well as understanding marshalling
 When you encounter the term type in discussions of Hibernate, it may refer to the Java type, the JDBC type, or the Hibernate type, depending on context.
 ====
 
-To help understand these categorizations, let's look at a simple table and domain model that we wish to map.
+To help understand the type categorizations, let's look at a simple table and domain model that we wish to map.
 
 .Simple table and domain model
 ====
@@ -47,10 +47,11 @@ Looked at another way, all the state of an entity is made up entirely of value t
 These state fields or JavaBean properties are termed __persistent attributes__.
 The persistent attributes of the `Contact` class are value types.
 
-Value types are further classified into three sub-categories;
+Value types are further classified into three sub-categories:
 
-* Basic types - In mapping the `Contact` table, all attributes except for name would be basic types. Basic types are discussed in detail in <<chapters/domain/basic_types.adoc#basic,_Basic Types_>>
-* Embeddable types - the name attribute is an example of an embeddable type, which is discussed in details in <<chapters/domain/embeddables.adoc#embeddables,_Embeddable Types_>>
+Basic types:: in mapping the `Contact` table, all attributes except for name would be basic types. Basic types are discussed in detail in <<chapters/domain/basic_types.adoc#basic,_Basic Types_>>
+Embeddable types:: the name attribute is an example of an embeddable type, which is discussed in details in <<chapters/domain/embeddables.adoc#embeddables,_Embeddable Types_>>
+Collection types:: although not featured n the aforementioned example, collection types are also a distinct category among value types. Collection types are further discussed in <<chapters/domain/collection.adoc#collections,_Collections_>>
 
 [[categorization-entity]]
 ==== Entity types

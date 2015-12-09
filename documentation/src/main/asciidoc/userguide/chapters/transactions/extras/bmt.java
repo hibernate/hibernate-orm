@@ -1,7 +1,8 @@
 public void doSomeWork() {
+
 	StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
-			.applySetting( AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta" )
-			...;
+        .applySetting( AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta" )
+        ...;
 
 	// Note: depending on the JtaPlatform used and some optional settings,
 	// the underlying transactions here will be controlled through either
@@ -24,7 +25,7 @@ public void doSomeWork() {
 		// calls TM/UT commit method, assuming we are initiator.
 		session.getTransaction().commit();
 	}
-	catch (Exception e) {
+	catch ( Exception e ) {
 		// we may need to rollback depending on
 		// where the exception happened
 		if ( session.getTransaction().getStatus() == ACTIVE

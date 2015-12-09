@@ -1,6 +1,8 @@
 @Entity
 public class MyEntity {
-	@Id
-	public Integer id;
-	...
+
+    @Id
+    public Integer id;
+
+    ...
 }

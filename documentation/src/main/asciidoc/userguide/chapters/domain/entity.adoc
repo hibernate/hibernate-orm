@@ -1,63 +1,58 @@
 [[entity]]
-=== Entity
+=== Entity types
 :sourcedir: extras
+
+.Usage of the word _entity_
+[NOTE]
+====
+The entity type describes the mapping between the actual persistable domain model object and a database table row.
+To avoid any confusion with the annotation that marks a given entity type, the annotation will be further referred as `@Entity`.
+
+Throughout this chapter and thereafter, entity types will be simply referred as _entity_.
+====
 
 [[entity-pojo]]
 ==== POJO Models
 
-Section _2.1 The Entity Class_ of the _JPA 2.1 specification_ defines
-its requirements for an entity class. Applications that wish to remain
-portable across JPA providers should adhere to these requirements.
+Section _2.1 The Entity Class_ of the _JPA 2.1 specification_ defines its requirements for an entity class.
+Applications that wish to remain portable across JPA providers should adhere to these requirements.
 
-* The entity class must be annotated with the `javax.persistence.Entity`
-annotation (or be denoted as such in XML mapping)
-* The entity class must have a public or protected no-argument
-constructor. It may define additional constructors as well.
+* The entity class must be annotated with the `javax.persistence.Entity` annotation (or be denoted as such in XML mapping)
+* The entity class must have a public or protected no-argument constructor. It may define additional constructors as well.
 * The entity class must be a top-level class.
 * An enum or interface may not be designated as an entity.
-* The entity class must not be final. No methods or persistent instance
-variables of the entity class may be final.
-* If an entity instance is to be used remotely as a detached object, the
-entity class must implement the Serializable interface.
-* Both abstract and concrete classes can be entities. Entities may
-extend non-entity classes as well as entity classes, and non-entity
-classes may extend entity classes.
-* The persistent state of an entity is represented by instance
-variables, which may correspond to JavaBean-style properties. An
-instance variable must be directly accessed only from within the methods
-of the entity by the entity instance itself. The state of the entity is
-available to clients only through the entity’s accessor methods
-(getter/setter methods) or other business methods.
+* The entity class must not be final. No methods or persistent instance variables of the entity class may be final.
+* If an entity instance is to be used remotely as a detached object, the entity class must implement the `Serializable` interface.
+* Both abstract and concrete classes can be entities. Entities may extend non-entity classes as well as entity classes, and non-entity classes may extend entity classes.
+* The persistent state of an entity is represented by instance variables, which may correspond to JavaBean-style properties.
+An instance variable must be directly accessed only from within the methods of the entity by the entity instance itself.
+The state of the entity is available to clients only through the entity’s accessor methods (getter/setter methods) or other business methods.
 
-Hibernate, however, is not as strict in its requirements. The
-differences from the list above include:
+Hibernate, however, is not as strict in its requirements. The differences from the list above include:
 
-* The entity class must have a no-argument constructor, which may be
-public, protected or package visibility. It may define additional
-constructors as well.
+* The entity class must have a no-argument constructor, which may be public, protected or package visibility. It may define additional constructors as well.
 * The entity class _need not_ be a top-level class.
-* Technically Hibernate can persist final classes or classes with final
-persistent state accessor (getter/setter) methods. However, it is
-generally not a good idea as doing so will stop Hibernate from being
-able to generate proxies for lazy-loading the entity.
-* Hibernate does not really care if you expose direct access to your
-instance variables and use them from outside the entity itself. The
-validity of such a paradigm, however, is debatable at best.
+* Technically Hibernate can persist final classes or classes with final persistent state accessor (getter/setter) methods.
+However, it is generally not a good idea as doing so will stop Hibernate from being able to generate proxies for lazy-loading the entity.
+* Hibernate does not restrict the application developer from exposing instance variables and reference them from outside the entity class itself.
+The validity of such a paradigm, however, is debatable at best.
 
 Let's look at each requirement in detail.
 
 [[entity-pojo-final]]
 ==== Prefer non-final classes
 
-A central feature of Hibernate is the ability to lazy load an entity's data via runtime proxies.
+A central feature of Hibernate is the ability to load lazily certain entity instance variables (attributes) via runtime proxies.
 This feature depends upon the entity class being non-final or else implementing an interface that declares all the attribute getters/setters.
-You can still persist final classes that do not implement such an interface with Hibernate; you just will not be able to use proxies for lazy association fetching which will ultimately limit your options for performance tuning.
-You should also avoid declaring persistent attribute getters and setters as final for the reasons already mentioned.
+You can still persist final classes that do not implement such an interface with Hibernate,
+but you will not be able to use proxies for fetching lazy associations, therefore limiting your options for performance tuning.
+For the very same reason, you should also avoid declaring persistent attribute getters and setters as final.
 
 [NOTE]
 ====
 Starting in 5.0 Hibernate offers a more robust version of bytecode enhancement as another means for handling lazy loading.
 Hibernate had some bytecode re-writing capabilities prior to 5.0 but they were very rudimentary.
+See the <chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,BytecodeEnhancement>> for additional information on fetching and on bytecode enhancement.
 ====
 
 [[entity-pojo-constructor]]
@@ -66,41 +61,34 @@ Hibernate had some bytecode re-writing capabilities prior to 5.0 but they were v
 The entity class should have a no-argument constructor. Both Hibernate and JPA require this.
 
 JPA requires that this constructor be defined as public or protected.
-Hibernate for the most part does note care about the visibility as long as the system's SecurityManager allows overriding the visibility.
+Hibernate, for the most part, does not care about the constructor visibility, as long as the system SecurityManager allows overriding the visibility setting.
 That said, the constructor should be defined with at least package visibility if you wish to leverage runtime proxy generation.
 
 [[entity-pojo-accessors]]
 ==== Declare getters and setters for persistent attributes
 
-Standard, portable JPA essentially requires this.
-Otherwise your model would violate the requirement quoted above in regards to accessing the entity persistent state fields directly from outside the entity itself.
+The JPA specification requires this, otherwise the model would prevent accessing the entity persistent state fields directly from outside the entity itself.
 
-Although Hibernate does not require it, it is recommended to follow
-JavaBean conventions by defining getters and setters for you entities
-persistent attributes. You can still tell Hibernate to directly access
-the entity's fields.
+Although Hibernate does not require it, it is recommended to follow the JavaBean conventions and define getters and setters for entity persistent attributes.
+Nevertheless, you can still tell Hibernate to directly access the entity fields.
 
-Attributes (whether fields or getters/setters) need not be declared
-public. Hibernate can deal with attributes declared with public,
-protected, package or private visibility. Again, if wanting to use
-runtime proxy generation for lazy loading the visibility for the
-getter/setter should be at least package visibility.
+Attributes (whether fields or getters/setters) need not be declared public.
+Hibernate can deal with attributes declared with public, protected, package or private visibility.
+Again, if wanting to use runtime proxy generation for lazy loading, the getter/setter should grant access to at least package visibility.
 
 [[entity-pojo-identifier]]
 ==== Provide identifier attribute(s)
 
-[NOTE]
-====
-Historically this was considered optional. However, not defining
-identifier attribute(s) on the entity should be considered a deprecated
-feature that will be removed in an upcoming release.
-====
-
-The identifier attribute does not necessarily need to be mapped to the
-column(s) that physically define the primary key. However, it should map
-to column(s) that can uniquely identify each row.
-
 [IMPORTANT]
+====
+Historically this was considered optional.
+However, not defining identifier attribute(s) on the entity should be considered a deprecated feature that will be removed in an upcoming release.
+====
+
+The identifier attribute does not necessarily need to be mapped to the column(s) that physically define the primary key.
+However, it should map to column(s) that can uniquely identify each row.
+
+[NOTE]
 ====
 We recommend that you declare consistently-named identifier attributes on persistent classes and that you use a nullable (i.e., non-primitive) type.
 ====
@@ -108,11 +96,9 @@ We recommend that you declare consistently-named identifier attributes on persis
 [[entity-pojo-mapping]]
 ==== Mapping the entity
 
-The main piece in mapping the entity is the `javax.persistence.Entity`
-annotation. The Entity annotation defines just one attribute `name`
-which is used to give the entity a specific name for use in JPQL
-queries; by default the name is the unqualified name of the entity
-class.
+The main piece in mapping the entity is the `javax.persistence.Entity` annotation.
+The `@Entity` annotation defines just one attribute `name` which is used to give a specific entity name for use in JPQL queries.
+By default, the entity name represents the unqualified name of the entity class itself.
 
 .Simple `@Entity`
 ====
@@ -122,11 +108,10 @@ include::{sourcedir}/entity/SimpleEntity.java[]
 ----
 ====
 
-An entity models a database table. The identifier uniquely identifies
-each row in that table. By default the name of the table is assumed to
-be the same as the name of the entity. To explicitly give the name of
-the table or to specify other information about the table, we would use
-the `javax.persistence.Table` annotation.
+An entity models a database table.
+The identifier uniquely identifies each row in that table.
+By default, the name of the table is assumed to be the same as the name of the entity.
+To explicitly give the name of the table or to specify other information about the table, we would use the `javax.persistence.Table` annotation.
 
 .Simple `@Entity` with `@Table`
 ====
@@ -139,7 +124,60 @@ include::{sourcedir}/entity/SimpleEntityWithTable.java[]
 [[access]]
 ==== Access strategies
 
-TO DO
+As a JPA provider, Hibernate can introspect both the entity attributes (instance fields) or the accessors (instance properties).
+By default, the placement of the `@Id` annotation gives the default access strategy.
+When placed on a field, Hibernate will assume field-based access.
+Place on the identifier getter, Hibernate will use property-based access.
+
+Embeddable types inherit the access strategy from their parent entities.
+
+[[field-based-access]]
+===== Field-based access
+
+.Field-based access
+====
+[source,java]
+----
+include::{sourcedir}/entity/SimpleEntityFieldAccess.java[]
+----
+====
+
+When using field-based access, adding other entity-level methods is much more flexible because Hibernate won't consider those part of the persistence state.
+To exclude a field from being part of the entity persistent state, the field must be marked with the `@Transient` annotation.
+
+[NOTE]
+====
+Another advantage of using field-based access is that some entity attributes can be hidden from outside the entity.
+An example of such attribute is the entity `@Version` field, which must not be manipulated by the data access layer.
+With field-based access, we can simply omit the the getter and the setter for this version field, and Hibernate can still leverage the optimistic concurrency control mechanism.
+====
+
+[[property-based-access]]
+===== Property-based access
+
+.Property-based access
+====
+[source,java]
+----
+include::{sourcedir}/entity/SimpleEntityPropertyAccess.java[]
+----
+====
+
+When using property-based access, Hibernate uses the accessors for both reading and writing the entity state.
+Every other method that will be added to the entity (e.g. helper methods for synchronizing both ends of a bidirectional one-to-many association) will have to be marked with the `@Transient` annotation.
+
+===== Overriding the default access strategy
+
+The default access strategy mechanism can be overridden with the JPA `@Access` annotation.
+In the following example, the `@Version` attribute is accessed by its field and not by its getter, like the rest of entity attributes.
+
+.Overriding access strategy
+====
+[source,java]
+----
+include::{sourcedir}/entity/SimpleEntityPropertyAccessOverride.java[]
+----
+====
 
 [[mapping-model-pojo-equalshashcode]]
 ==== Implementing `equals()` and `hashCode()`
@@ -320,7 +358,7 @@ statement
 [[entity-pojo-inheritance]]
 ==== Inheritance
 
-blah blah blah
+TODO
 
 * dynamic models (hbm.xml)
 * Map mode

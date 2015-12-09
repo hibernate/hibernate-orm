@@ -1,8 +1,10 @@
 @Entity
 public class Product {
-	...
-	@Lob
-	@Basic
-	public String description;
-	...
+    ...
+
+    @Lob
+    @Basic
+    public String description;
+
+    ...
 }

@@ -1,15 +1,15 @@
 ext {
-	hibernateVersion = 'hibernate-version-you-want'
+    hibernateVersion = 'hibernate-version-you-want'
 }
 
 buildscript {
-	dependencies {
-		classpath "org.hibernate:hibernate-gradle-plugin:$hibernateVersion"
-	}
+    dependencies {
+        classpath "org.hibernate:hibernate-gradle-plugin:$hibernateVersion"
+    }
 }
 
 hibernate {
-	enhance {
-		// any configuration goes here
-	}
+    enhance {
+        // any configuration goes here
+    }
 }

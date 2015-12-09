@@ -7,7 +7,7 @@ criteria.where( builder.equal( personRoot.get( Person_.eyeColor ), "brown" ) );
 
 List<Object[]> valueArray = em.createQuery( criteria ).getResultList();
 for ( Object[] values : valueArray ) {
-    final Long id = (Long) values[0];
-    final Integer age = (Integer) values[1];
+    final Long id = ( Long ) values[0];
+    final Integer age = ( Integer ) values[1];
     ...
 }

@@ -1,1 +1,1 @@
-session.lock( someDetachedCat, LockMode.NONE );
+session.lock( someDetachedCat,LockMode.NONE );

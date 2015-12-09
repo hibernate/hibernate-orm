@@ -1,5 +1,4 @@
-BootstrapServiceRegistryBuilder bootstrapRegistryBuilder
-		= new BootstrapServiceRegistryBuilder();
+BootstrapServiceRegistryBuilder bootstrapRegistryBuilder = new BootstrapServiceRegistryBuilder();
 
 // add a special ClassLoader
 bootstrapRegistryBuilder.applyClassLoader( mySpecialClassLoader );

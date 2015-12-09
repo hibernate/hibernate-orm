@@ -12,7 +12,7 @@ public class HibernateUtil {
             BundleContext context = thisBundle.getBundleContext();
 
             ServiceReference serviceReference = context.getServiceReference( PersistenceProvider.class.getName() );
-            PersistenceProvider persistenceProvider = (PersistenceProvider) context.getService( serviceReference );
+            PersistenceProvider persistenceProvider = ( PersistenceProvider ) context.getService( serviceReference );
 
             emf = persistenceProvider.createEntityManagerFactory( "YourPersistenceUnitName", null );
         }

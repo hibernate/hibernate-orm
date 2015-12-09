@@ -1,8 +1,10 @@
 @Entity
 public class Product {
-	...
-	@Basic
-	@Nationalized
-	public String description;
-	...
+    ...
+
+    @Basic
+    @Nationalized
+    public String description;
+
+    ...
 }

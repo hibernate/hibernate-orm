@@ -1,4 +1,5 @@
-Session session = sessionFactory.withOptions()
-        .tenantIdentifier( yourTenantIdentifier )
-        ...
-        .openSession();
+Session session = sessionFactory
+    .withOptions()
+    .tenantIdentifier( yourTenantIdentifier )
+    ...
+    .openSession();

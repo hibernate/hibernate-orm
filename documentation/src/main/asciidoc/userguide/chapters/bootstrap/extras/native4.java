@@ -7,13 +7,13 @@ standardRegistryBuilder.loadProperties( "org/hibernate/example/MyProperties.prop
 standardRegistryBuilder.configure( "org/hibernate/example/my.cfg.xml" );
 
 // apply a random setting
-standardRegistryBuilder.applySetting( "myProp", "some value" );
+standardRegistryBuilder.applySetting( "myProp","some value" );
 
 // apply a service initiator
 standardRegistryBuilder.addInitiator( new CustomServiceInitiator() );
 
 // apply a service impl
-standardRegistryBuilder.addService( SomeCustomService.class, new SomeCustomServiceImpl() );
+standardRegistryBuilder.addService( SomeCustomService.class,new SomeCustomServiceImpl() );
 
 // and finally build the StandardServiceRegistry
 StandardServiceRegistry standardRegistry = standardRegistryBuilder.build();

@@ -161,7 +161,7 @@ public class MapKeyCustomEnumTypeTest extends BaseNonConfigCoreFunctionalTestCas
 		// **************
 		// custom global type(LastNumberType)
 		entityMapEnum = new EntityMapEnum();
-		entityMapEnum.lastNumberMap.put( LastNumber.NUMBER_1, "LastNumber.NUMBER_1 " );
+		entityMapEnum.lastNumberMap.put( LastNumber.NUMBER_1, "LastNumber.NUMBER_1c" );
 		id = save( entityMapEnum );
 
 		found = assertFindEntityMapEnum(
@@ -178,7 +178,7 @@ public class MapKeyCustomEnumTypeTest extends BaseNonConfigCoreFunctionalTestCas
 		// override global type
 		entityMapEnum = new EntityMapEnum();
 		entityMapEnum.explicitOverridingImplicitMap.put(
-				LastNumber.NUMBER_2, "LastNumber.NUMBER_2 "
+				LastNumber.NUMBER_2, "LastNumber.NUMBER_2a"
 		);
 		id = save( entityMapEnum );
 
@@ -268,7 +268,7 @@ public class MapKeyCustomEnumTypeTest extends BaseNonConfigCoreFunctionalTestCas
 		// override global type
 		entityMapEnum = new EntityMapEnum();
 		entityMapEnum.explicitOverridingImplicitMap.put(
-				LastNumber.NUMBER_2, "LastNumber.NUMBER_2 "
+				LastNumber.NUMBER_2, "LastNumber.NUMBER_2b"
 		);
 		id = save( entityMapEnum );
 

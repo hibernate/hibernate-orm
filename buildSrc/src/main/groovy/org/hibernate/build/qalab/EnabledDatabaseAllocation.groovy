@@ -88,7 +88,7 @@ class EnabledDatabaseAllocation implements DatabaseAllocation {
                 Thread.sleep( 60000 );
             }
             def allocatorUrl = DB_ALLOCATOR_URL +
-                    "?operation=alloc&label=${databaseProfile.name}&requestee=${requester}&expiry=${EXPIRY}"
+		     "?operation=allocate&expression=${databaseProfile.name}%26%26geo_BOS&requestee=${requester}&expiry=${EXPIRY}"
             ant.get(
                     src: allocatorUrl,
                     dest: allocatorOutputFile.absolutePath,

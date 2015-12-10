@@ -11,6 +11,14 @@ JPA calls them embeddables.
 Either way the concept is the same: a composition of values.
 For example we might have a Name class that is a composition of first-name and last-name, or an Address class that is a composition of street, city, postal code, etc.
 
+.Usage of the word _embeddable_
+[NOTE]
+====
+To avoid any confusion with the annotation that marks a given embeddable type, the annotation will be further referred as `@Embeddable`.
+
+Throughout this chapter and thereafter, for brevity sake, embeddable types may also be referred as _embeddable_.
+====
+
 .Simple embeddable type example
 ====
 [source,java]
@@ -24,7 +32,7 @@ include::{sourcedir}/embeddable/Address.java[]
 ----
 ====
 
-An embeddable type is another form of value type, and its lifecycle is bound to a parent entity type, therefore inheriting the attribute access from its parent (for details on attribute access, see <<chapters/domain/entity.adoc#access,Access strategies>>).
+An embeddable type is another form of value type, and its lifecycle is bound to a parent entity type, therefore inheriting the attribute access from its parent (for details on attribute access, see <<chapters/domain/entity.adoc#access-embeddable-types,Access strategies>>).
 
 Embeddable types can be made up of basic values as well as associations, with the caveat that, when used as collection elements, they cannot define collections themselves.
 

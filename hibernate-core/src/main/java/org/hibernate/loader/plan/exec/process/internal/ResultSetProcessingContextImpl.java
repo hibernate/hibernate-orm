@@ -124,7 +124,7 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 				.getLockMode() != null ) {
 			return queryParameters.getLockOptions().getLockMode();
 		}
-		return LockMode.READ;
+		return LockMode.NONE;
 	}
 
 	private Map<EntityReference,EntityReferenceProcessingState> identifierResolutionContextMap;

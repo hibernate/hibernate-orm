@@ -12,6 +12,8 @@ import java.sql.SQLException;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreLogging;
@@ -39,20 +41,22 @@ public abstract class AbstractLoadPlanBasedCollectionInitializer
 
 	private final QueryableCollection collectionPersister;
 	private final LoadQueryDetails staticLoadQuery;
+	private final LockOptions lockOptions;
 
 	public AbstractLoadPlanBasedCollectionInitializer(
 			QueryableCollection collectionPersister,
 			QueryBuildingParameters buildingParameters) {
 		super( collectionPersister.getFactory() );
 		this.collectionPersister = collectionPersister;
+		this.lockOptions = buildingParameters.getLockMode() != null
+				? new LockOptions( buildingParameters.getLockMode() )
+				: buildingParameters.getLockOptions();
 
 		final FetchStyleLoadPlanBuildingAssociationVisitationStrategy strategy =
 				new FetchStyleLoadPlanBuildingAssociationVisitationStrategy(
 						collectionPersister.getFactory(),
 						buildingParameters.getQueryInfluencers(),
-						buildingParameters.getLockMode() != null
-								? buildingParameters.getLockMode()
-								: buildingParameters.getLockOptions().getLockMode()
+						this.lockOptions.getLockMode()
 		);
 
 		final LoadPlan plan = MetamodelDrivenLoadPlanBuilder.buildRootCollectionLoadPlan( strategy, collectionPersister );
@@ -78,6 +82,8 @@ public abstract class AbstractLoadPlanBasedCollectionInitializer
 			qp.setPositionalParameterTypes( new Type[]{ collectionPersister.getKeyType() } );
 			qp.setPositionalParameterValues( ids );
 			qp.setCollectionKeys( ids );
+
+			qp.setLockOptions( lockOptions );
 
 			executeLoad(
 					session,

@@ -111,11 +111,15 @@ public class LocalDateJavaDescriptor extends AbstractTypeDescriptor<LocalDate> {
 		}
 
 		if ( Date.class.isInstance( value ) ) {
-			final Date ts = (Date) value;
-			final Instant instant = Instant.ofEpochMilli( ts.getTime() );
-			return LocalDateTime.ofInstant( instant, ZoneId.systemDefault() ).toLocalDate();
+			if ( java.sql.Date.class.isInstance( value ) ) {
+				return ((java.sql.Date) value).toLocalDate();
+			}
+			else {
+				return Instant.ofEpochMilli( ((Date) value).getTime() ).atZone( ZoneId.systemDefault() ).toLocalDate();
+			}
 		}
 
 		throw unknownWrap( value.getClass() );
 	}
+
 }

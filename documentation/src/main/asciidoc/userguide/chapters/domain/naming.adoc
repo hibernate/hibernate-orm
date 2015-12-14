@@ -38,21 +38,15 @@ You can switch to the any of these implementations by setting the `hibernate.imp
 
 `default`:: for org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl
 
-`jpa`:: for `org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl`
+`jpa`:: for `org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl` (the JPA 2.0 compliant naming strategy)
 
-`legacy-jpa` for `org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl`
+`legacy-jpa` for `org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl` (the original JPA 1.0 naming strategy, which was later subject to change)
 
-`legacy-hbm` for `org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyHbmImpl`
+`legacy-hbm` for `org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyHbmImpl` (the original Hibernate naming strategy behavior)
 
-`component-path` for `org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl`
+`component-path` for `org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl` (A JPA compliant strategy that uses the full composite paths, as opposed to just the ending property part)
 
 By default, Hibernate 5.0 chooses the `default` value, which designates the `ImplicitNamingStrategyJpaCompliantImpl` strategy.
 
 To provide a custom implementation, you have to set the `hibernate.implicit_naming_strategy` configuration property with the fully-qualified class name of the custom `PhysicalNamingStrategy` implementation.
 ====
-
-TO DO: Work in progress
-
-http://in.relation.to/2015/08/05/hibernate-orm-500-cr4-release/
-http://in.relation.to/2015/08/20/hibernate-orm-500-final-release/
-http://stackoverflow.com/questions/32165694/spring-hibernate-5-naming-strategy-configuration

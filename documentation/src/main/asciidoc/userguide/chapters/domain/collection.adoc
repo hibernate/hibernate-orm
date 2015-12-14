@@ -2,35 +2,205 @@
 === Collections
 :sourcedir: extras
 
-[[collections-synopsis]]
-==== Collections as a value type
+Naturally Hibernate also allows to persist collections. 
+These persistent collections can contain almost any other Hibernate type, including: basic types, custom types, components and references to other entities. 
+In this context, the distinction between value and reference semantics is very important. 
+An object in a collection might be handled with _value_ semantics (its life cycle being fully depends on the collection owner), 
+or it might be a reference to another entity with its own life cycle. 
+In the latter case, only the _link_ between the two objects is considered to be a state held by the collection.
 
-TODO: discussions of what it means for them to be value types - lifecycle, opt-locking
+The owner of the collection is always an entity, even if the collection is defined by an embeddable type.
+Collections form one/many-to-many associations between types, so there can be:
 
-Collections have the usual behavior of value types.
-They are automatically persisted when referenced by a persistent object and are automatically deleted when unreferenced.
-If a collection is passed from one persistent object to another, its elements might be moved from one table to another.
-Two entities cannot share a reference to the same collection instance.
+- value type collections
+- embeddable type collections
+- entity collections
 
-[IMPORTANT]
+Hibernate uses its own collection implementations which are enriched with lazy-loading, caching or state change detection semantics.
+For this reason, persistent collections must be declared as an interface type.
+The actual interface might be `java.util.Collection`, `java.util.List`, `java.util.Set`, `java.util.Map`, `java.util.SortedSet`, `java.util.SortedMap` or even other object types (meaning you will have to write an implementation of `org.hibernate.usertype.UserCollectionType`).
+
+As the following example demonstrates, it's important to use the interface type and not the collection implementation, as declared in the entity mapping.
+
+.Hibernate uses its own collection implementations
 ====
-Collection attributes do not support null value semantics because Hibernate does not distinguish between a null collection reference and an empty collection.
+[source,java]
+----
+include::{sourcedir}/collection/CollectionProxy.java[]
+----
+====
 
+[NOTE]
+====
 It is important that collections be defined using the appropriate Java Collections Framework interface rather than a specific implementation.
 From a theoretical perspective, this just follows good design principles.
 From a practical perspective, Hibernate (like other persistence providers) will use their own collection implementations which conform to the Java Collections Framework interfaces.
 ====
 
+The persistent collections injected by Hibernate behave like `ArrayList`, `HashSet`, `TreeSet`, `HashMap` or `TreeMap`, depending on the interface type.
+
+[[collections-synopsis]]
+==== Collections as a value type
+
+Value and embeddable type collections have a similar behavior as simple value types because they are automatically persisted when referenced by a persistent object and are automatically deleted when unreferenced.
+If a collection is passed from one persistent object to another, its elements might be moved from one table to another, and two entities cannot share a reference to the same collection instance.
+
+[IMPORTANT]
+====
+Two entities cannot share a reference to the same collection instance.
+Collection-valued properties do not support null value semantics because Hibernate does not distinguish between a null collection reference and an empty collection.
+====
+
 [[collections-value]]
 ==== Collections of value types
 
-TODO : collection of values - elements can be of any value type except for collections (in fact even embeddables as the element cannot contain collections) * basics * embeddables
+Collections of value type include basic and embeddable types.
+Collections cannot be nested, and, when used in collections, embeddable types are not allowed to define other collections.
+
+For collections of value types, JPA 2.0 defines the `@ElementCollection` annotation.
+The lifecycle of the value-type collection is entirely controlled by its owning entity.
+
+Considering the previous example mapping, when clearing the phone collection, Hibernate deletes all the associated phones.
+When adding a new element to the value type collection, Hibernate issues a new insert statement.
+
+.Value type collection lifecycle
+====
+[source,java]
+----
+include::{sourcedir}/collection/ElementCollectionLifecycle.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/collection/ElementCollectionLifecycle.sql[]
+----
+====
+
+If removing all elements or adding new ones is rather straightforward, removing a certain entry actually requires reconstructing the whole collection from scratch.
+
+.Removing collection elements
+====
+[source,java]
+----
+include::{sourcedir}/collection/ElementCollectionLifecycleRemove.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/collection/ElementCollectionLifecycleRemove.sql[]
+----
+====
+
+Depending on the number of elements, this behavior might not be efficient, if many elements need to be deleted and reinserted back into the database table.
+A workaround is to use an `@OrderColumn`, which, although not as efficient as when using an actual link table primary key, can improve the efficiency of the remove operations.
+
+.Removing collection elements using the order column
+====
+[source,java]
+----
+include::{sourcedir}/collection/ElementCollectionOrderColumnLifecycleRemove.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/collection/ElementCollectionOrderColumnLifecycleRemove.sql[]
+----
+====
+
+[NOTE]
+====
+The `@OrderColumn` column works best when removing from the tail of the collection, as it only requires a single delete statement.
+Removing from the head or the middle of the collection requires deleting the extra elements and updating the remaining ones to preserve ordering.
+====
+
+Embeddable type collections behave the same way for value type ones.
+Adding embeddables to the collections triggers the associated insert statements and removing elements from the collection will generate delete statements as well.
+
+.Embeddable type collections
+====
+[source,java]
+----
+include::{sourcedir}/collection/EmbeddableElementCollectionLifecycle.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/collection/EmbeddableElementCollectionLifecycle.sql[]
+----
+====
 
 [[collections-entity]]
 ==== Collections of entities
 
-TODO : one-to-many * many-to-many
+If value type collections can only form a one-to-many association between the owner entity and multiple basic or embeddable types,
+entity collections can represent both one-to-many and many-to-many associations.
 
+From a relational database perspective, associations are defined by the foreign key side (the child side).
+With value type collections, only the entity can control the association (the parent side), but for a collection of entities, both sides of the association are managed by the persistence context.
+
+For ths reason, entity collections can be devised into two main categories: unidirectional and bidirectional associations.
+Unidirectional associations are very similar to value type collections, since only the parent side controls this relationship.
+Bidirectional associations are more tricky, since, even if sides need to be in-sync at all times, only one side is responsible for managing the association.
+A bidirectional association has an _owning_ side and an _inverse (mappedBy)_ side.
+
+Another way of categorizing entity collections is by the underlying collection type, and so w ecan have:
+
+* bags
+* indexed lists
+* sets
+* sorted sets
+* maps
+* sorted maps
+* arrays
+
+In the following sections, we will go through all these collection types and discuss both unidirectional and bidirectional associations.
+
+[[collections-bag]]
+==== Bags
+
+Bags are unordered lists and we can have unidirectional bags or bidirectional ones, if the other side has a reference back to the parent entity.
+
+[[collections-unidirectional-bag]]
+===== Unidirectional bags
+
+The unidirectional bag is mapped using a single `@OneToMany` annotation on the parent side of the association.
+Behind the scenes, Hibernate requires an association table to manage the parent-child relationship, as we can see in the following example:
+
+.Unidirectional bag
+====
+[source,java]
+----
+include::{sourcedir}/collection/UnidirectionalBag.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/collection/UnidirectionalBag.sql[]
+----
+====
+
+[NOTE]
+====
+Because both the parent and the child sides are entities, the persistence context manages each entity separately.
+Cascades can propagate an entity state transition from a parent entity to its children.
+====
+
+By marking the parent side with the `CascadeType.ALL` attribute, the unidirectional association lifecycle becomes very similar to that of a value type collection.
+
+.Unidirectional bag lifecycle
+====
+[source,java]
+----
+include::{sourcedir}/collection/UnidirectionalBagLifecyclePersist.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/collection/UnidirectionalBagLifecyclePersist.sql[]
+----
+====
+
+In the example above, once the parent entity is persisted, the child entities are going to be persisted as well.
 
 [[collections-list]]
 ==== List - index
@@ -41,9 +211,6 @@ TODO : discuss mapping list index
 ==== Map - key
 
 TODO : discuss mapping map key
-
-[[collections-bag]]
-==== Bags
 
 TODO : discuss mapping bags and idbags
 

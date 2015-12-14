@@ -12,6 +12,6 @@ public class Person  {
     }
 }
 
-Person person = entityManager.find(Person.class, 1L);
+Person person = entityManager.find( Person.class, 1L );
 //Throws java.lang.ClassCastException: org.hibernate.collection.internal.PersistentBag cannot be cast to java.util.ArrayList
-ArrayList<String> phones = (ArrayList<String>) person.getPhones();
+ArrayList<String> phones = ( ArrayList<String> ) person.getPhones();

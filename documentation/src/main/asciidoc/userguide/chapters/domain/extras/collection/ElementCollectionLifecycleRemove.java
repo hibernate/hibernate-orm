@@ -1,1 +1,1 @@
-person.getPhones().remove(0);
+person.getPhones().remove( 0 );

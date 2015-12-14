@@ -35,5 +35,5 @@ public class Phone  {
     }
 }
 
-person.getPhones().add(new Phone("landline", "028-234-9876"));
-person.getPhones().add(new Phone("mobile", "072-122-9876"));
+person.getPhones().add( new Phone( "landline", "028-234-9876" ) );
+person.getPhones().add( new Phone( "mobile", "072-122-9876" ) );

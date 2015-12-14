@@ -613,12 +613,12 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		if(entry.isReferenceEntry()) {
 			if( event.getInstanceToLoad() != null ) {
 				throw new HibernateException(
-						String.format( "Attempt to load entity [%s] from cache using provided object instance, but cache " +
-								"is storing references: "+ event.getEntityId()));
+						"Attempt to load entity [%s] from cache using provided object instance, but cache " +
+								"is storing references: "+ event.getEntityId());
 			}
 			else {
 				return convertCacheReferenceEntryToEntity( (ReferenceCacheEntryImpl) entry,
-						event.getEntityId(), persister, event.getSession(), entityKey, event );
+						event.getSession(), entityKey);
 			}
 		}
 		else {
@@ -666,51 +666,25 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 
 	private Object convertCacheReferenceEntryToEntity(
 			ReferenceCacheEntryImpl referenceCacheEntry,
-			Serializable entityId,
-			EntityPersister persister,
 			EventSource session,
-			EntityKey entityKey,
-			LoadEvent loadEvent) {
+			EntityKey entityKey) {
 		final Object entity = referenceCacheEntry.getReference();
 
 		if ( entity == null ) {
 			throw new IllegalStateException(
-					"Reference cache entry contained null : " + entityId);
+					"Reference cache entry contained null : " + referenceCacheEntry.toString());
 		}
 		else {
-			makeEntityCircularReferenceSafe(referenceCacheEntry, entityId, session, entity, entityKey);
-			//PostLoad is needed for EJB3
-			//but not for reference cached entities??
-			/*
-			EventListenerGroup<PostLoadEventListener> evenListenerGroup = getEvenListenerGroup(session);
-
-			if(!evenListenerGroup.isEmpty()) {
-				postLoad(session, evenListenerGroup.listeners(), entity, entityId, persister, loadEvent);
-			}
-			*/
+			makeEntityCircularReferenceSafe( referenceCacheEntry, session, entity, entityKey );
 			return entity;
 		}
 	}
 
-	private void postLoad(EventSource session, Iterable<PostLoadEventListener> listeners,
-							Object entity, Serializable entityId, EntityPersister persister, LoadEvent event) {
-		PostLoadEvent postLoadEvent = event.getPostLoadEvent()
-				.setEntity(entity)
-				.setId(entityId)
-				.setPersister(persister);
-
-		for (PostLoadEventListener listener : listeners) {
-			listener.onPostLoad(postLoadEvent);
-		}
-	}
-
 	private void makeEntityCircularReferenceSafe(ReferenceCacheEntryImpl referenceCacheEntry,
-												Serializable entityId,
 												EventSource session,
 												Object entity,
 												EntityKey entityKey) {
 
-		//final EntityPersister subclassPersister = referenceCacheEntry.getSubclassPersister();
 		// make it circular-reference safe
 		final StatefulPersistenceContext statefulPersistenceContext = (StatefulPersistenceContext) session.getPersistenceContext();
 
@@ -730,8 +704,6 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 					session
 			);
 		}
-
-		//subclassPersister.afterInitialize( entity, referenceCacheEntry.areLazyPropertiesUnfetched(), session );
 		statefulPersistenceContext.initializeNonLazyCollections();
 	}
 

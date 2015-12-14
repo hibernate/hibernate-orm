@@ -116,7 +116,9 @@ public class StandardQueryCache implements QueryCache {
 		}
 
 		final List cacheable = new ArrayList( result.size() + 1 );
-		logCachedResultDetails( key, null, returnTypes, cacheable );
+		if ( TRACING ) {
+			logCachedResultDetails( key, null, returnTypes, cacheable );
+		}
 		cacheable.add( session.getTimestamp() );
 
 		final boolean isSingleResult = returnTypes.length == 1;
@@ -125,7 +127,9 @@ public class StandardQueryCache implements QueryCache {
 					? returnTypes[0].disassemble( aResult, session, null )
 					: TypeHelper.disassemble( (Object[]) aResult, returnTypes, null, session, null );
 			cacheable.add( cacheItem );
-			logCachedResultRowDetails( returnTypes, aResult );
+			if ( TRACING ) {
+				logCachedResultRowDetails( returnTypes, aResult );
+			}
 		}
 
 		try {
@@ -152,8 +156,9 @@ public class StandardQueryCache implements QueryCache {
 		}
 
 		final List cacheable = getCachedResults( key, session );
-		logCachedResultDetails( key, spaces, returnTypes, cacheable );
-
+		if ( TRACING ) {
+			logCachedResultDetails( key, spaces, returnTypes, cacheable );
+		}
 		if ( cacheable == null ) {
 			if ( DEBUGGING ) {
 				LOG.debug( "Query results were not found in cache" );
@@ -205,7 +210,9 @@ public class StandardQueryCache implements QueryCache {
 					result.add(
 							TypeHelper.assemble( (Serializable[]) cacheable.get( i ), returnTypes, session, null )
 					);
-					logCachedResultRowDetails( returnTypes, result.get( i - 1 ) );
+					if ( TRACING ) {
+						logCachedResultRowDetails( returnTypes, result.get( i - 1 ) );
+					}
 				}
 			}
 			return result;
@@ -280,9 +287,6 @@ public class StandardQueryCache implements QueryCache {
 	}
 
 	private static void logCachedResultRowDetails(Type[] returnTypes, Object result) {
-		if ( !TRACING ) {
-			return;
-		}
 		logCachedResultRowDetails(
 				returnTypes,
 				( result instanceof Object[] ? (Object[]) result : new Object[] { result } )

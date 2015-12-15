@@ -416,22 +416,97 @@ include::{sourcedir}/collection/BidirectionalSet.java[]
 ----
 ====
 
+[[collections-sorted-set]]
+==== Sorted sets
+
+For sorted sets, the entity mapping must use the `SortedSet` interface instead.
+According to the `SortedSet` contract, all elements must implement the comparable interface and therefore provide the sorting logic.
+
 [[collections-unidirectional-sorted-set]]
 ===== Unidirectional sorted sets
 
-TODO
+A `SortedSet` that relies on the natural sorting order given by the child element `Comparable` implementation logic,
+must be annotated with the `@SortNatural` Hibernate annotation.
+
+.Unidirectional natural sorted set
+====
+[source,java]
+----
+include::{sourcedir}/collection/UnidirectionalNaturalSortedSet.java[]
+----
+====
+
+The lifecycle and the database mapping are identical to the <<collections-unidirectional-bag>>, so they are intentionally omitted.
+
+To provide a custom sorting logic, Hibernate also provides a `@SortComparator` annotation:
+
+.Unidirectional custom comparator sorted set
+====
+[source,java]
+----
+include::{sourcedir}/collection/UnidirectionalCustomSortedSet.java[]
+----
+====
 
 [[collections-bidirectional-sorted-set]]
 ===== Bidirectional sorted sets
 
-TODO
+The `@SortNatural` and `@SortComparator` work the same for bidirectional sorted sets too:
+
+.Bidirectional natural sorted set
+====
+[source,java]
+----
+include::{sourcedir}/collection/BidirectionalSortedSet.java[]
+----
+====
 
 [[collections-map]]
-==== Map - key
+==== Maps
 
-TODO : discuss mapping map key
+To map a `java.util.Map`, Hibernate allows using the following map keys:
 
-TODO : discuss mapping bags and idbags
+`MapKeyColumn`:: for value type maps, the map key is a column in the link table that defines the grouping logic
+`MapKey`:: the map key is either the primary key or another property of the entity stored as a map entry value
+`MapKeyEnumerated`:: the map key is an `Enum` of the child entity
+`MapKeyTemporal`:: the map key is a `Date` or a `Calendar` of the child entity
+`MapKeyJoinColumn`:: the map key is a an entity mapped as an association in the child entity that's stored as a map entry key
+
+[[collections-map-value-type]]
+===== Value type maps
+
+A map of value type must use the `@ElementCollection` annotation, just like value type lists, bags or sets.
+
+.Value type map with an entity as a map key
+====
+[source,java]
+----
+include::{sourcedir}/collection/ElementCollectionMap.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/collection/ElementCollectionMap.sql[]
+----
+====
+
+Adding entries to the map generates the following SQL statements:
+
+.Adding value type map entries
+====
+[source,java]
+----
+include::{sourcedir}/collection/ElementCollectionMapPersist.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/collection/ElementCollectionMapPersist.sql[]
+----
+====
+
+A map is like a ternary association because it maps a parent entity with a map key and a map value.
+An entity can either be a map key or a map value, depending on the mapping.
 
 [[collections-array]]
 ==== Arrays

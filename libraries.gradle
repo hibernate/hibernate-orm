@@ -100,7 +100,6 @@ ext {
             infinispan:      "org.infinispan:infinispan-core:${infinispanVersion}",
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~~  infinispan test
             infinispan_test: "org.infinispan:infinispan-core:${infinispanVersion}:tests@jar",
-            rhq:             "org.rhq.helpers:rhq-pluginAnnotations:3.0.4",
             jboss_common_core: "org.jboss:jboss-common-core:2.2.16.GA@jar",
             jnp_client:      "org.jboss.naming:jnp-client:${jnpVersion}",
             jnp_server:      "org.jboss.naming:jnpserver:${jnpVersion}",

@@ -23,9 +23,12 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
@@ -49,6 +52,8 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 
 	private final String[] tableTypes;
 
+	private String[] extraPhysicalTableTypes;
+
 	private final ExtractionContext extractionContext;
 
 	public InformationExtractorJdbcDatabaseMetaDataImpl(ExtractionContext extractionContext) {
@@ -56,11 +61,33 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 		
 		ConfigurationService configService = extractionContext.getServiceRegistry()
 				.getService( ConfigurationService.class );
+
+		final String extraPhysycalTableTypesConfig = configService.getSetting(
+				AvailableSettings.EXTRA_PHYSICAL_TABLE_TYPES,
+				StandardConverters.STRING,
+				""
+		);
+		if ( !"".equals( extraPhysycalTableTypesConfig.trim() ) ) {
+			this.extraPhysicalTableTypes = StringHelper.splitTrimmingTokens(
+					",;",
+					extraPhysycalTableTypesConfig,
+					false
+			);
+		}
+
+		final String[] tempTableTypes;
 		if ( ConfigurationHelper.getBoolean( AvailableSettings.ENABLE_SYNONYMS, configService.getSettings(), false ) ) {
-			this.tableTypes = new String[] { "TABLE", "VIEW", "SYNONYM" };
+			tempTableTypes = new String[] {"TABLE", "VIEW", "SYNONYM"};
 		}
 		else {
-			this.tableTypes = new String[] { "TABLE", "VIEW" };
+			tempTableTypes = new String[] {"TABLE", "VIEW"};
+		}
+
+		if ( this.extraPhysicalTableTypes != null ) {
+			this.tableTypes = ArrayHelper.join( tempTableTypes, this.extraPhysicalTableTypes );
+		}
+		else {
+			this.tableTypes = tempTableTypes;
 		}
 	}
 
@@ -373,7 +400,20 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 	}
 
 	protected boolean isPhysicalTableType(String tableType) {
-		return "TABLE".equalsIgnoreCase( tableType );
+		if ( extraPhysicalTableTypes == null ) {
+			return "TABLE".equalsIgnoreCase( tableType );
+		}
+		else {
+			if ( "TABLE".equalsIgnoreCase( tableType ) ) {
+				return true;
+			}
+			for ( int i = 0; i < extraPhysicalTableTypes.length; i++ ) {
+				if ( extraPhysicalTableTypes[i].equalsIgnoreCase( tableType ) ) {
+					return true;
+				}
+			}
+			return false;
+		}
 	}
 
 	@Override

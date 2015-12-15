@@ -273,9 +273,112 @@ include::{sourcedir}/collection/BidirectionalBagOrphanRemoval.java[]
 When rerunning the previous example, the child will get removed because the parent-side propagates the removal upon disassociating the child entity reference.
 
 [[collections-list]]
-==== List - index
+==== Ordered Lists
 
-TODO : discuss mapping list index
+Although they use the `List` interface on the Java side, bags don't retain element order.
+To preserve the collection element order, there are two possibilities:
+
+`@OrderBy`:: the collection is ordered upon retrieval using a child entity property
+`@OrderColumn`:: the collection uses a dedicated order column in the collection link table
+
+[[collections-unidirectional-ordered-list]]
+===== Unidirectional ordered lists
+
+When using the `@OrderBy` annotation, the mapping looks as follows:
+
+.Unidirectional `@OrderBy` list
+====
+[source,java]
+----
+include::{sourcedir}/collection/UnidirectionalOrderByList.java[]
+----
+====
+
+The database mapping is the same as with the <<collections-unidirectional-bag>> example, so it won't be repeated.
+Upon fetching the collection, Hibernate generates the following select statement:
+
+.Unidirectional `@OrderBy` list select statement
+====
+[source,sql]
+----
+include::{sourcedir}/collection/UnidirectionalOrderByListSelect.sql[]
+----
+====
+
+The child table column is used to order the list elements.
+
+[NOTE]
+====
+The `@OrderBy` annotation can take multiple entity properties, and each property can be take an ordering direction too (e.g. `@OrderBy("name ASC, type DESC")`).
+
+If no property is specified (`@OrderBy`), the primary key of the child entity table is used for ordering.
+====
+
+Another ordering option is to use the `@OrderColumn` annotation:
+
+.Unidirectional `@OrderColumn` list
+====
+[source,java]
+----
+include::{sourcedir}/collection/UnidirectionalOrderColumnList.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/collection/UnidirectionalOrderColumnList.sql[]
+----
+====
+
+This time, the link table takes the `order_id` column and uses it to materialize the collection element order.
+When fetching the list, the following select query is executed:
+
+.Unidirectional `@OrderColumn` list select statement
+====
+[source,sql]
+----
+include::{sourcedir}/collection/UnidirectionalOrderColumnListSelect.sql[]
+----
+====
+
+With the `order_id` column in place, Hibernate can order the list in-memory after it's being fetched from the database.
+
+[[collections-bidirectional-ordered-list]]
+===== Bidirectional ordered lists
+
+The mapping is similar with the <<collections-bidirectional-bag>> example, just that the parent side is going to be annotated with either `@OrderBy` or `@OrderColumn`.
+
+.Bidirectional `@OrderBy` list
+====
+[source,java]
+----
+include::{sourcedir}/collection/BidirectionalOrderByList.java[]
+----
+====
+
+Just like with the unidirectional `@OrderBy` list, the `number` column is used to order the statement on the SQL level.
+
+When using the `@OrderColumn` annotation, the `order_id` column is going to be embedded in the child table:
+
+.Bidirectional `@OrderColumn` list
+====
+[source,java]
+----
+include::{sourcedir}/collection/BidirectionalOrderColumnList.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/collection/BidirectionalOrderColumnList.sql[]
+----
+====
+
+When fetching the collection, Hibernate will use the fetched ordered columns to sort the elements according to the `@OrderColumn` mapping.
+
+[[collections-set]]
+==== Set - unsorted
+
+TODO : discuss mapping set
+
 
 [[collections-map]]
 ==== Map - key

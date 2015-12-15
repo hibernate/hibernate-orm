@@ -375,10 +375,56 @@ include::{sourcedir}/collection/BidirectionalOrderColumnList.sql[]
 When fetching the collection, Hibernate will use the fetched ordered columns to sort the elements according to the `@OrderColumn` mapping.
 
 [[collections-set]]
-==== Set - unsorted
+==== Sets
 
-TODO : discuss mapping set
+Hibernate supports two types of sets: `Set` and `SortedSet`.
 
+[[collections-unidirectional-set]]
+===== Unidirectional sets
+
+The unidirectional set uses a link table to hold the parent-child associations and the entity mapping looks as follows:
+
+.Unidirectional set
+====
+[source,java]
+----
+include::{sourcedir}/collection/UnidirectionalSet.java[]
+----
+====
+
+The unidirectional set lifecycle is similar to that of the <<collections-unidirectional-bag>>, so it can be omitted.
+The only difference is that `Set` doesn't allow duplicates, but this constraint is enforced by the Java object contract, rather then the database mapping.
+
+[NOTE]
+====
+When using sets, it's very important to supply proper equals/hashCode implementations for the child entity.
+In the absence of a custom equals/hashCode implementation logic, Hibernate will use the default Java reference equality,
+which might render unexpected results when mixing detached and managed object instances.
+====
+
+[[collections-bidirectional-set]]
+===== Bidirectional sets
+
+Just like bidirectional bags, the bidirectional set doesn't use a link table, and the child table has a FOREIGN KEY referencing the parent table PRIMARY KEY.
+The lifecycle is just like with bidirectional bags, except for the duplicates which are filtered out.
+
+.Bidirectional set
+====
+[source,java]
+----
+include::{sourcedir}/collection/BidirectionalSet.java[]
+----
+====
+
+[[collections-unidirectional-sorted-set]]
+===== Unidirectional sorted sets
+
+TODO
+
+[[collections-bidirectional-sorted-set]]
+===== Bidirectional sorted sets
+
+TODO
 
 [[collections-map]]
 ==== Map - key

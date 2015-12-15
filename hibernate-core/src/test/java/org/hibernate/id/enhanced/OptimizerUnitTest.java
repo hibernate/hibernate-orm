@@ -6,6 +6,7 @@
  */
 package org.hibernate.id.enhanced;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import org.hibernate.id.IdentifierGeneratorHelper;
@@ -237,7 +238,6 @@ public class OptimizerUnitTest extends BaseUnitTestCase {
 		assertEquals( 3, sequence.getTimesCalled() );
 		assertEquals( 7, sequence.getCurrentValue() );
 	}
-
 	@Test
 	public void testRecoveredPooledLoOptimizerUsage() {
 		final SourceMock sequence = new SourceMock( 1, 3 );
@@ -259,6 +259,39 @@ public class OptimizerUnitTest extends BaseUnitTestCase {
 		assertEquals( 4, sequence.getCurrentValue() );
 	}
 
+	@Test
+	public void testBasicPooledThreadLocalLoOptimizerUsage() {
+		final SourceMock sequence = new SourceMock( 1, 5000 ); // pass 5000 to match default for PooledThreadLocalLoOptimizer.THREAD_LOCAL_BLOCK_SIZE
+		final Optimizer optimizer = buildPooledThreadLocalLoOptimizer( 1, 5000 );
+
+		assertEquals( 0, sequence.getTimesCalled() );
+		assertEquals( -1, sequence.getCurrentValue() );
+
+		Long next = ( Long ) optimizer.generate( sequence );
+		assertEquals( 1, next.intValue() );
+		assertEquals( 1, sequence.getTimesCalled() );
+		assertEquals( 1, sequence.getCurrentValue() );
+
+		next = ( Long ) optimizer.generate( sequence );
+		assertEquals( 2, next.intValue() );
+		assertEquals( 1, sequence.getTimesCalled() );
+		assertEquals( 1, sequence.getCurrentValue() );
+
+		next = ( Long ) optimizer.generate( sequence );
+		assertEquals( 3, next.intValue() );
+		assertEquals( 1, sequence.getTimesCalled() );
+		assertEquals( 1, sequence.getCurrentValue() );
+
+		for( int looper = 0; looper < 5001; looper++) {
+			next = ( Long ) optimizer.generate( sequence );
+		}
+
+		assertEquals( 3 + 5001, next.intValue() );
+		assertEquals( 2, sequence.getTimesCalled() );
+		assertEquals( 5001, sequence.getCurrentValue() );
+
+	}
+
 	private static Optimizer buildNoneOptimizer(long initial, int increment) {
 		return buildOptimizer( StandardOptimizerDescriptor.NONE, initial, increment );
 	}
@@ -273,6 +306,10 @@ public class OptimizerUnitTest extends BaseUnitTestCase {
 
 	private static Optimizer buildPooledLoOptimizer(long initial, int increment) {
 		return buildOptimizer( StandardOptimizerDescriptor.POOLED_LO, initial, increment );
+	}
+
+	private static Optimizer buildPooledThreadLocalLoOptimizer(long initial, int increment) {
+		return buildOptimizer( StandardOptimizerDescriptor.POOLED_LOTL, initial, increment );
 	}
 
 	private static Optimizer buildOptimizer(

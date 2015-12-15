@@ -141,6 +141,7 @@ public class HSQLDialect extends Dialect {
 		registerColumnType( Types.TIMESTAMP, "timestamp" );
 		registerColumnType( Types.VARCHAR, "varchar($l)" );
 		registerColumnType( Types.VARBINARY, "varbinary($l)" );
+		registerColumnType( Types.NCLOB, "clob" );
 
 		if ( hsqldbVersion < 200 ) {
 			registerColumnType( Types.NUMERIC, "numeric" );

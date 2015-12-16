@@ -43,7 +43,7 @@ public enum StandardOptimizerDescriptor {
 	 * Describes the optimizer for use with tables/sequences that store the chunk information.  Here, specifically the
 	 * lo value is stored in the database and ThreadLocal used to cache the generation state.
 	 */
-	POOLED_LOTL( "pooled-lotl", PooledThreadLocalLoOptimizer.class, true );
+	POOLED_LOTL( "pooled-lotl", PooledLoThreadLocalOptimizer.class, true );
 
 	private static final Logger log = Logger.getLogger( StandardOptimizerDescriptor.class );
 
@@ -51,11 +51,11 @@ public enum StandardOptimizerDescriptor {
 	private final Class<? extends Optimizer> optimizerClass;
 	private final boolean isPooled;
 
-	private StandardOptimizerDescriptor(String externalName, Class<? extends Optimizer> optimizerClass) {
+	StandardOptimizerDescriptor(String externalName, Class<? extends Optimizer> optimizerClass) {
 		this( externalName, optimizerClass, false );
 	}
 
-	private StandardOptimizerDescriptor(String externalName, Class<? extends Optimizer> optimizerClass, boolean pooled) {
+	StandardOptimizerDescriptor(String externalName, Class<? extends Optimizer> optimizerClass, boolean pooled) {
 		this.externalName = externalName;
 		this.optimizerClass = optimizerClass;
 		this.isPooled = pooled;

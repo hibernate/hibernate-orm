@@ -7,9 +7,14 @@
 package org.hibernate.id.enhanced;
 
 import java.lang.reflect.Constructor;
+import java.util.Properties;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -143,6 +148,26 @@ public class OptimizerFactory {
 	@Deprecated
 	@SuppressWarnings( {"UnusedDeclaration"})
 	public static final String POOL_LO = "pooled-lo";
+
+	/**
+	 * Determine the optimizer to use when there was not one explicitly specified.
+	 */
+	public static String determineImplicitOptimizerName(int incrementSize, Properties configSettings) {
+		if ( incrementSize <= 1 ) {
+			return StandardOptimizerDescriptor.NONE.getExternalName();
+		}
+
+		// see if the user defined a preferred pooled optimizer...
+		final String preferredPooledOptimizerStrategy = configSettings.getProperty( AvailableSettings.PREFERRED_POOLED_OPTIMIZER );
+		if ( StringHelper.isNotEmpty( preferredPooledOptimizerStrategy ) ) {
+			return preferredPooledOptimizerStrategy;
+		}
+
+		// otherwise fallback to the fallback strategy (considering the deprecated PREFER_POOLED_VALUES_LO setting)
+		return ConfigurationHelper.getBoolean( AvailableSettings.PREFER_POOLED_VALUES_LO, configSettings, false )
+				? StandardOptimizerDescriptor.POOLED_LO.getExternalName()
+				: StandardOptimizerDescriptor.POOLED.getExternalName();
+	}
 
 	private OptimizerFactory() {
 	}

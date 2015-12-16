@@ -8,8 +8,6 @@ package org.hibernate.jpa.internal.enhance;
 
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
-import java.util.ArrayList;
-import java.util.Collection;
 import javax.persistence.spi.ClassTransformer;
 
 import javassist.CtClass;

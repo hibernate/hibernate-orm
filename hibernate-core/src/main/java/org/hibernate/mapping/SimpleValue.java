@@ -269,6 +269,12 @@ public class SimpleValue implements KeyValue {
 				AvailableSettings.PREFER_POOLED_VALUES_LO,
 				cs.getSetting( AvailableSettings.PREFER_POOLED_VALUES_LO, StandardConverters.BOOLEAN, false )
 		);
+		if ( cs.getSettings().get( AvailableSettings.PREFERRED_POOLED_OPTIMIZER ) != null ) {
+			params.put(
+					AvailableSettings.PREFERRED_POOLED_OPTIMIZER,
+					cs.getSettings().get( AvailableSettings.PREFERRED_POOLED_OPTIMIZER )
+			);
+		}
 
 		identifierGeneratorFactory.setDialect( dialect );
 		identifierGenerator = identifierGeneratorFactory.createIdentifierGenerator( identifierGeneratorStrategy, getType(), params );

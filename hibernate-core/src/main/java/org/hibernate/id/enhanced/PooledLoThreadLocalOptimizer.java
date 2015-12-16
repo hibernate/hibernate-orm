@@ -23,7 +23,6 @@ import org.jboss.logging.Logger;
  * @author Stuart Douglas
  * @author Scott Marlow
  * @author Steve Ebersole
- *
  * @see PooledOptimizer
  */
 public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
@@ -35,9 +34,10 @@ public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 	private static class GenerationState {
 		private GenerationState(final AccessCallback callback, final int incrementSize) {
 			lastSourceValue = callback.getNextValue();
-			upperLimitValue = lastSourceValue.copy().add(incrementSize);
+			upperLimitValue = lastSourceValue.copy().add( incrementSize );
 			value = lastSourceValue.copy();
 		}
+
 		// last value read from db source
 		private IntegralDataTypeHolder lastSourceValue;
 		// the current generator value
@@ -65,10 +65,13 @@ public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 
 		GenerationState local = null;
 
-		if ( callback.getTenantIdentifier() == null ) {  // for non-multi-tenancy, using a pool per thread
+		if ( callback.getTenantIdentifier() == null ) {
+			// for non-multi-tenancy, using a pool per thread
 			local = localAssignedIds.get();
-		} else if (tenantSpecificState != null) {		 // for multi-tenancy, using a pool per unique tenant
-			local = tenantSpecificState.get( callback.getTenantIdentifier());
+		}
+		else if ( tenantSpecificState != null ) {
+			// for multi-tenancy, using a pool per unique tenant
+			local = tenantSpecificState.get( callback.getTenantIdentifier() );
 		}
 
 		if ( local != null && local.value.lt( local.upperLimitValue ) ) {
@@ -76,21 +79,22 @@ public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 		}
 
 		synchronized (this) {
-			final GenerationState generationState = locateGenerationState(callback);
+			final GenerationState generationState = locateGenerationState( callback );
 
-			if(callback.getTenantIdentifier() != null) {
+			if ( callback.getTenantIdentifier() != null ) {
 				return generationState.value.makeValueThenIncrement();
-			} else {
+			}
+			else {
 				if ( local == null ) {
 					localAssignedIds.set( generationState );
 				}
 				// if we reached the upper limit value, increment to next block of sequences
-				if (!generationState.value.lt(generationState.upperLimitValue)) {
+				if ( !generationState.value.lt( generationState.upperLimitValue ) ) {
 					generationState.lastSourceValue = callback.getNextValue();
-					generationState.upperLimitValue = generationState.lastSourceValue.copy().add(incrementSize);
+					generationState.upperLimitValue = generationState.lastSourceValue.copy().add( incrementSize );
 					generationState.value = generationState.lastSourceValue.copy();
 					// handle cases where initial-value is less that one (hsqldb for instance).
-					while (generationState.value.lt(1)) {
+					while ( generationState.value.lt( 1 ) ) {
 						generationState.value.increment();
 					}
 				}
@@ -100,13 +104,13 @@ public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 	}
 
 	private GenerationState noTenantState;
-	private Map<String,GenerationState> tenantSpecificState;
+	private Map<String, GenerationState> tenantSpecificState;
 	private final ThreadLocal<GenerationState> localAssignedIds = new ThreadLocal<GenerationState>();
 
 	private GenerationState locateGenerationState(final AccessCallback callback) {
 		if ( callback.getTenantIdentifier() == null ) {
-			if (noTenantState == null) {
-				noTenantState = new GenerationState(callback, incrementSize);
+			if ( noTenantState == null ) {
+				noTenantState = new GenerationState( callback, incrementSize );
 			}
 			return noTenantState;
 		}
@@ -114,13 +118,13 @@ public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 			GenerationState state;
 			if ( tenantSpecificState == null ) {
 				tenantSpecificState = new ConcurrentHashMap<String, GenerationState>();
-				state = new GenerationState(callback, incrementSize);
+				state = new GenerationState( callback, incrementSize );
 				tenantSpecificState.put( callback.getTenantIdentifier(), state );
 			}
 			else {
 				state = tenantSpecificState.get( callback.getTenantIdentifier() );
 				if ( state == null ) {
-					state = new GenerationState(callback, incrementSize);
+					state = new GenerationState( callback, incrementSize );
 					tenantSpecificState.put( callback.getTenantIdentifier(), state );
 				}
 			}

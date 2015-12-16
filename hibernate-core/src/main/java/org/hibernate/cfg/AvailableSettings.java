@@ -784,8 +784,18 @@ public interface AvailableSettings {
 	/**
 	 * When using pooled {@link org.hibernate.id.enhanced.Optimizer optimizers}, prefer interpreting the
 	 * database value as the lower (lo) boundary.  The default is to interpret it as the high boundary.
+	 *
+	 * @deprecated Use {@link #PREFERRED_POOLED_OPTIMIZER} instead
 	 */
+	@Deprecated
 	String PREFER_POOLED_VALUES_LO = "hibernate.id.optimizer.pooled.prefer_lo";
+
+	/**
+	 * When a generator specified an increment-size and an optimizer was not explicitly specified, which of
+	 * the "pooled" optimizers should be preferred?  Can specify an optimizer short name or an Optimizer
+	 * impl FQN.
+	 */
+	String PREFERRED_POOLED_OPTIMIZER = "hibernate.id.optimizer.pooled.preferred";
 
 	/**
 	 * The maximum number of strong references maintained by {@link org.hibernate.engine.query.spi.QueryPlanCache}. Default is 128.

@@ -6,29 +6,30 @@
  */
 package org.hibernate.id.enhanced;
 
-import org.hibernate.HibernateException;
-import org.hibernate.id.IntegralDataTypeHolder;
-import org.hibernate.internal.CoreMessageLogger;
-import org.jboss.logging.Logger;
-
 import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.hibernate.HibernateException;
+import org.hibernate.id.IntegralDataTypeHolder;
+import org.hibernate.internal.CoreMessageLogger;
+
+import org.jboss.logging.Logger;
 
 /**
  * Variation of {@link PooledOptimizer} which interprets the incoming database value as the lo value, rather than
  * the hi value, as well as using thread local to cache the generation state.
  *
- * @author Steve Ebersole
  * @author Stuart Douglas
  * @author Scott Marlow
+ * @author Steve Ebersole
  *
  * @see PooledOptimizer
  */
-public class PooledThreadLocalLoOptimizer extends AbstractOptimizer {
+public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
-			PooledThreadLocalLoOptimizer.class.getName()
+			PooledLoThreadLocalOptimizer.class.getName()
 	);
 
 	private static class GenerationState {
@@ -51,7 +52,7 @@ public class PooledThreadLocalLoOptimizer extends AbstractOptimizer {
 	 * @param returnClass The Java type of the values to be generated
 	 * @param incrementSize The increment size.
 	 */
-	public PooledThreadLocalLoOptimizer(Class returnClass, int incrementSize) {
+	public PooledLoThreadLocalOptimizer(Class returnClass, int incrementSize) {
 		super( returnClass, incrementSize );
 		if ( incrementSize < 1 ) {
 			throw new HibernateException( "increment size cannot be less than 1" );

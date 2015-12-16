@@ -15,7 +15,6 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -347,15 +346,11 @@ public class SequenceStyleGenerator
 	 * @return The optimizer strategy (name)
 	 */
 	protected String determineOptimizationStrategy(Properties params, int incrementSize) {
-		// if the increment size is greater than one, we prefer pooled optimization; but we first
-		// need to see if the user prefers POOL or POOL_LO...
-		final String defaultPooledOptimizerStrategy = ConfigurationHelper.getBoolean( Environment.PREFER_POOLED_VALUES_LO, params, false )
-				? StandardOptimizerDescriptor.POOLED_LO.getExternalName()
-				: StandardOptimizerDescriptor.POOLED.getExternalName();
-		final String defaultOptimizerStrategy = incrementSize <= 1
-				? StandardOptimizerDescriptor.NONE.getExternalName()
-				: defaultPooledOptimizerStrategy;
-		return ConfigurationHelper.getString( OPT_PARAM, params, defaultOptimizerStrategy );
+		return ConfigurationHelper.getString(
+				OPT_PARAM,
+				params,
+				OptimizerFactory.determineImplicitOptimizerName( incrementSize, params )
+		);
 	}
 
 	/**

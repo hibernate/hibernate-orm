@@ -270,7 +270,7 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void testPreferPooledLoSettingHonored() {
+	public void testPreferredPooledOptimizerSetting() {
 		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, PooledSequenceDialect.class.getName() )
 				.build();
@@ -294,6 +294,15 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 			);
 			assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
 			assertClassAssignability( PooledLoOptimizer.class, generator.getOptimizer().getClass() );
+
+			props.setProperty( Environment.PREFERRED_POOLED_OPTIMIZER, StandardOptimizerDescriptor.POOLED_LOTL.getExternalName() );
+			generator = new SequenceStyleGenerator();
+			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.registerExportables(
+					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
+			);
+			assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
+			assertClassAssignability( PooledLoThreadLocalOptimizer.class, generator.getOptimizer().getClass() );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( serviceRegistry );

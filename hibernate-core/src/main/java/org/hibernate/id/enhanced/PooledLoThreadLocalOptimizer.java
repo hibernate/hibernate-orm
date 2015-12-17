@@ -7,8 +7,8 @@
 package org.hibernate.id.enhanced;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.HibernateException;
 import org.hibernate.id.IntegralDataTypeHolder;
@@ -65,49 +65,38 @@ public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 		}
 
 		synchronized (this) {
-			final GenerationState generationState = locateGenerationState(callback.getTenantIdentifier());
+			final GenerationState generationState = locateGenerationState( callback.getTenantIdentifier() );
 
-			if (generationState.lastSourceValue == null
-					|| !generationState.value.lt(generationState.upperLimitValue)) {
+			if ( generationState.lastSourceValue == null
+					|| !generationState.value.lt( generationState.upperLimitValue )) {
 				generationState.lastSourceValue = callback.getNextValue();
-				generationState.upperLimitValue = generationState.lastSourceValue.copy().add(incrementSize);
+				generationState.upperLimitValue = generationState.lastSourceValue.copy().add( incrementSize );
 				generationState.value = generationState.lastSourceValue.copy();
 				// handle cases where initial-value is less that one (hsqldb for instance).
-				while (generationState.value.lt(1)) {
+				while (generationState.value.lt( 1 )) {
 					generationState.value.increment();
 				}
 			}
-			if(callback.getTenantIdentifier() != null) {
-				return generationState.value.makeValueThenIncrement();
-			} else {
-				if ( local == null ) {
-					local = new GenerationState();
-					localAssignedIds.set( local );
-				}
-				local.upperLimitValue = generationState.upperLimitValue.copy();
-				local.value = generationState.value.copy();
-				local.lastSourceValue = generationState.lastSourceValue.copy();
-				generationState.value = generationState.upperLimitValue.copy();
-				return local.value.makeValueThenIncrement();
-			}
+			return generationState.value.makeValueThenIncrement();
 		}
 	}
 
-	private GenerationState noTenantState;
 	private Map<String, GenerationState> tenantSpecificState;
 	private final ThreadLocal<GenerationState> localAssignedIds = new ThreadLocal<GenerationState>();
 
 	private GenerationState locateGenerationState(String tenantIdentifier) {
 		if ( tenantIdentifier == null ) {
+			GenerationState noTenantState = localAssignedIds.get();
 			if ( noTenantState == null ) {
 				noTenantState = new GenerationState();
+				localAssignedIds.set(noTenantState);
 			}
 			return noTenantState;
 		}
 		else {
 			GenerationState state;
 			if ( tenantSpecificState == null ) {
-				tenantSpecificState = new ConcurrentHashMap<String, GenerationState>();
+				tenantSpecificState = new HashMap<String, GenerationState>();
 				state = new GenerationState();
 				tenantSpecificState.put( tenantIdentifier, state );
 			}
@@ -122,13 +111,17 @@ public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 		}
 	}
 
+	// for Hibernate testsuite use only
 	private GenerationState noTenantGenerationState() {
+		GenerationState noTenantState = locateGenerationState( null );
+
 		if ( noTenantState == null ) {
 			throw new IllegalStateException( "Could not locate previous generation state for no-tenant" );
 		}
 		return noTenantState;
 	}
 
+	// for Hibernate testsuite use only
 	@Override
 	public IntegralDataTypeHolder getLastSourceValue() {
 		return noTenantGenerationState().lastSourceValue;

@@ -472,6 +472,9 @@ To map a `java.util.Map`, Hibernate allows using the following map keys:
 `MapKeyTemporal`:: the map key is a `Date` or a `Calendar` of the child entity
 `MapKeyJoinColumn`:: the map key is a an entity mapped as an association in the child entity that's stored as a map entry key
 
+A map is like a ternary association because it maps a parent entity with a map key and a map value.
+An entity can either be a map key or a map value, depending on the mapping.
+
 [[collections-map-value-type]]
 ===== Value type maps
 
@@ -505,30 +508,100 @@ include::{sourcedir}/collection/ElementCollectionMapPersist.sql[]
 ----
 ====
 
-A map is like a ternary association because it maps a parent entity with a map key and a map value.
-An entity can either be a map key or a map value, depending on the mapping.
+[[collections-map-unidirectional]]
+===== Unidirectional maps
+
+A unidirectional map controls exposes a parent-child association from the parent-side only.
+The following example shows a unidirectional map which also uses a `@MapKeyTemporal` annotation.
+The map key is a timestamp and it's taken from the child entity table.
+
+.Unidirectional Map
+====
+[source,java]
+----
+include::{sourcedir}/collection/UnidirectionalMap.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/collection/UnidirectionalMap.sql[]
+----
+====
+
+[[collections-map-bidirectional]]
+===== Bidirectional maps
+
+Like most bidirectional associations, the relationship can be owned by the child-side, while the parent can propagate entity state transitions to the child entity too.
+In the following example, you can see that `@MapKeyEnumerated` was used for associating the `Phone` type enum as a map key.
+
+.Bidirectional Map
+====
+[source,java]
+----
+include::{sourcedir}/collection/BidirectionalMap.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/collection/BidirectionalMap.sql[]
+----
+====
 
 [[collections-array]]
 ==== Arrays
 
-TODO : discuss mapping arrays
+When it comes to arrays, there is quite a difference between Java arrays and relational database array type (e.g. VARRAY, ARRAY).
+First, now all database systems implement the SQL-92 standard ARRAY type, and, for this reason, Hibernate doesn't support native database array types.
+Second, Java arrays are relevant for basic types only, since storing Embeddable or Entity types should always be done using the Java Collection API.
+
+[[collections-array-binary]]
+==== Arrays as binary
+
+By default, Hibernate will choose a BINARY type, as supported by the current `Dialect`.
+
+.Binary arrays
+====
+[source,java]
+----
+include::{sourcedir}/collection/BaseTypeBinaryArray.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/collection/BaseTypeBinaryArray.sql[]
+----
+====
 
 [[collections-as-basic]]
 ==== Collections as basic value type
 
 Notice how all the previous examples explicitly mark the collection attribute as either `ElementCollection`, `OneToMany` or `ManyToMany`.
+Collections not marked as such require a custom Hibernate `Type`, and all there values must be stored into a single column in the database table.
 
-TODO : Collections not marked as such, or collections explicitly marked with @Basic are treated as JPA basic values. Meaning there value is stored into a single column in the containing table.
+This is sometimes beneficial. Consider a use-case such as a VARCHAR column that represents a delimited list or set of Strings.
 
-TODO : This is sometimes beneficial. Consider a use-case such as a VARCHAR column that represents a delimited list or set of Strings.
-
-.Delimited set of tags
+.Comma delimited backed collection
 ====
 [source,java]
 ----
-include::{sourcedir}/collection/DelimitedStringTagsExample.java[]
+include::{sourcedir}/collection/CommaDelimitedStringCollection.java[]
+----
+====
+
+The developer can use the collection like any other collection we've discussed so far, and Hibernate will take care of the transforming part.
+The collection itself behaves like any other basic value type, as its lifecycle is bound to its owner entity.
+
+.Comma delimited collection lifecycle
+====
+[source,java]
+----
+include::{sourcedir}/collection/CommaDelimitedStringCollectionLifecycle.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/collection/CommaDelimitedStringCollectionLifecycle.sql[]
 ----
 ====
 
 See the Hibernate Integrations Guide for more details on developing custom value type mappings.
-Without the special type mapping above the "set of tags" would have simply been marshalled using serialization.

@@ -529,9 +529,9 @@ For details see the discussion of generators in <<chapters/domain/identifiers.ad
 [[basic-datetime]]
 ==== Mapping Date/Time Values
 
-TO DO
+TODO
 
 [[basic-jpaconvert]]
 ==== JPA 2.1 AttributeConverters
 
-TO DO
+TODO

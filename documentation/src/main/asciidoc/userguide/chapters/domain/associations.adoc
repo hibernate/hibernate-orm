@@ -1,0 +1,20 @@
+[[associations]]
+=== Associations
+:sourcedir: extras
+
+==== `@ManyToOne`
+
+TODO
+
+==== `@OneToOne`
+
+TODO
+
+==== `@OneToMany`
+
+TODO
+
+==== `@ManyToMany`
+
+TODO
+

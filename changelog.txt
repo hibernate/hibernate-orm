@@ -3,6 +3,44 @@ Hibernate 5.0 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.0.6.Final (December 16, 2015)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/22050
+
+** Bug
+    * [HHH-1122] - hbm2ddl.SchemaUpdate has no delimiter (SchemaExport works fine)
+    * [HHH-9029] - Missing parentheses around composite fields
+    * [HHH-9764] - StaleObjectStateExceptions raising outside flush context.
+    * [HHH-10158] - SchemaUpdate does not properly support formatter and delimiter anymore
+    * [HHH-10200] - Too long identifiers causing Envers test failures on Oracle databases
+    * [HHH-10223] - Element 'query-param' in *.hbm.xml files causes ClassCastException
+    * [HHH-10252] - Cascade delete does not work for instrumented/enhanced entities
+    * [HHH-10286] - SessionFactoryImpl doesn't cache and reuse existing collection cache region access strategies
+    * [HHH-10298] - Add new configuration type hibernate.hbm2dll.extra_physical_table_types
+    * [HHH-10331] - HSQLDialect returns supportsTupleDistinctCounts false which seems wrong
+    * [HHH-10343] - Precision and scale are reversed when using decimal as element in map
+    * [HHH-10344] - Bring transaction invalidation interceptor into Infinispan 2LC
+    * [HHH-10353] - Interceptor afterTransactionBegin() is not fired
+    * [HHH-10359] - Change default values in bytecode enhance build-time plugins
+    * [HHH-10364] - HSQL does not support Nationalized annotation
+    * [HHH-10367] - Fix more DB reserved words used by tests
+    * [HHH-10368] - Unit test failure because Sybase does not support binding an untyped null object
+    * [HHH-10369] - Unit test failure because Sybase trims trailing spaces
+    * [HHH-10371] - LocalDate value changes after fetching the row from the database
+
+** New Feature
+    * [HHH-10356] - Make runtime bytecode enhancement configurable
+
+** Task
+    * [HHH-10381] - Introduce a ThreadLocal-based pooled-lo optimizer to avoid locking
+
+** Improvement
+    * [HHH-10349] - PersistenceUtilHelper should call getDeclaredField/Method inside of privileged block
+    * [HHH-10354] - Rename 'field access' bytecode enhancement
+    * [HHH-10358] - EntityLoader is contended when calling AbstractLoadPlanBasedLoader.wrapResultSetIfEnabled
+    * [HHH-10363] - The Cascade class makes unnecessary calls to the Reflection API.
+    * [HHH-10366] - Improve performance and reduce CPU load when fetching reference cached objects
+    * [HHH-10379] - Remove dependency to rhq-pluginAnnotations
 
 
 

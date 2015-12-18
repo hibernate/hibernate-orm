@@ -231,18 +231,6 @@ include::{sourcedir}/collection/BidirectionalBag.sql[]
 ----
 ====
 
-[IMPORTANT]
-====
-Whenever a bidirectional association is formed, the application developer must make sure both side are in-sync at all times.
-The `addPhone()` and `removePhone()` methods are utilities methods that synchronize both sides whenever an element is added or removed.
-====
-
-Because the `Phone` class has a `@NaturalId` columns since the phone number must be universally unique,
-the `equals()` and the `hashCode()` can safely use this column, and so the `removePhone()` logic is greatly simplified.
-
-Unlike the unidirectional association, this time, there is no additional table to store the entity association information.
-The `Phone` table has a `person_id` FOREIGN KEY, which is the most natural representation of a one-to-many database association.S
-
 .Bidirectional bag lifecycle
 ====
 [source,java]
@@ -255,12 +243,6 @@ include::{sourcedir}/collection/BidirectionalBagLifecycle.java[]
 include::{sourcedir}/collection/BidirectionalBagLifecycle.sql[]
 ----
 ====
-
-Unlike the unidirectional bag, the bidirectional one is much more efficient in managing the collection persistence state.
-Every element removal only requires a single update, in which the FOREIGN KEY column is set to `NULL`.
-
-If the child entity lifecycle is bound to its owning parent so that the child cannot exist without a parent,
-then we can annotate the association with the `orphan-removal` attribute.
 
 .Bidirectional bag with orphan removal
 ====

@@ -2,15 +2,144 @@
 === Associations
 :sourcedir: extras
 
+Associations describe how two or more entities are form a relationship based on a relational database joining semantics.
+
 ==== `@ManyToOne`
 
-TODO
+`@ManyToOne` is the most common association, having a direct equivalent in the relational database as well (e.g. `FOREIGN KEY`),
+and so it establishes a relationship between a child entity and a parent.
 
-==== `@OneToOne`
+.`@ManyToOne` association
+====
+[source,java]
+----
+include::{sourcedir}/associations/ManyToOne.java[]
+----
 
-TODO
+[source,sql]
+----
+include::{sourcedir}/associations/ManyToOne.sql[]
+----
+====
+
+Each entity has a lifecycle of its own. Once the `@ManyToOne` association is set, Hibernate will set the associated `FOREIGN KEY`.
+
+.`@ManyToOne` association lifecycle
+====
+[source,java]
+----
+include::{sourcedir}/associations/ManyToOneLifecycle.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/associations/ManyToOneLifecycle.sql[]
+----
+====
 
 ==== `@OneToMany`
+
+The `@OneToMany` association links a parent entity with a child one.
+If the `@OneToMany` doesn't have a mirroring `@ManyToOne` association on the other end, then the association is unidirectional.
+If the `@OneToMany` has a `@ManyToOne` association on the child side, the association is bidirectional, and the application developer can navigate this relationship from both ends.
+
+===== Unidirectional `@OneToMany`
+
+When using a unidirectional `@OneToMany` association, Hibernate resorts to using a link table between the joining entities.
+
+.Unidirectional `@OneToMany` association
+====
+[source,java]
+----
+include::{sourcedir}/associations/UnidirectionalOneToMany.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/associations/UnidirectionalOneToMany.sql[]
+----
+====
+
+[NOTE]
+====
+Only the parent side of an association makes sense to cascade entity state transitions to its children.
+The `@OneToMany` association is by definition a parent association, even if it's a unidirectional or a bidirectional one.
+====
+
+.Cascading `@OneToMany` association
+====
+[source,java]
+----
+include::{sourcedir}/associations/UnidirectionalOneToManyLifecycle.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/associations/UnidirectionalOneToManyLifecycle.sql[]
+----
+====
+
+When persisting the parent `Person` entity, the cascade will propagate the persist operation to the underlying `Phone` children as well.
+Upon removing a `Phone` from the phones collection, the association row is deleted from the link table, and the `orphanRemoval` attribute will propagate a `Phone` removal as well.
+
+[NOTE]
+====
+The unidirectional associations are not very efficient when it comes to removing child entities.
+In this particular example, upon flushing the persistence context, Hibernate deletes all database child entries and reinserts the ones that are still found in the persistence context.
+
+On the other hand, a bidirectional `@OneToMany` association is much more efficient when the child entity controls the association.
+====
+
+===== Bidirectional `@OneToMany`
+
+The bidirectional `@OneToMany` association also requires a `@ManyToOne` association on the child side.
+The database has only one side of this association, which is the `FOREIGN KEY`, but the persistent entities have two sides to navigate this association.
+
+Every bidirectional association must have only one owning side (the child side), the other one being referred to as the _inverse_ side.
+
+.`@OneToMany` association mappedBy the `@ManyToOne` side
+====
+[source,java]
+----
+include::{sourcedir}/associations/BidirectionalOneToMany.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/associations/BidirectionalOneToMany.sql[]
+----
+====
+
+[IMPORTANT]
+====
+Whenever a bidirectional association is formed, the application developer must make sure both side are in-sync at all times.
+The `addPhone()` and `removePhone()` methods are utilities methods that synchronize both sides whenever an element is added or removed.
+====
+
+Because the `Phone` class has a `@NaturalId` columns since the phone number must be universally unique,
+the `equals()` and the `hashCode()` can safely use this column, and so the `removePhone()` logic is greatly simplified.
+
+
+.Bidirectional `@OneToMany` with an owner `@ManyToOne` side lifecycle
+====
+[source,java]
+----
+include::{sourcedir}/associations/BidirectionalOneToManyLifecycle.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/associations/BidirectionalOneToManyLifecycle.sql[]
+----
+====
+
+Unlike the unidirectional `@OneToMany`, the bidirectional association is much more efficient in managing the collection persistence state.
+Every element removal only requires a single update, in which the `FOREIGN KEY` column is set to `NULL`.
+
+If the child entity lifecycle is bound to its owning parent so that the child cannot exist without a parent,
+then we can annotate the association with the `orphan-removal` attribute.
+
+==== `@OneToOne`
 
 TODO
 

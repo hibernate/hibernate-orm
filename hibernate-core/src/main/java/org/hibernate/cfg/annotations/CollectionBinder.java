@@ -1115,12 +1115,22 @@ public abstract class CollectionBinder {
 				else {
 					final JoinTable joinTableAnn = property.getAnnotation( JoinTable.class );
 					if ( joinTableAnn != null ) {
-						if ( joinTableAnn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT ) {
+						String foreignKeyName = joinTableAnn.foreignKey().name();
+						ConstraintMode foreignKeyValue = joinTableAnn.foreignKey().value();
+						if ( joinTableAnn.joinColumns().length != 0 ) {
+							final JoinColumn joinColumnAnn = joinTableAnn.joinColumns()[0];
+							if ( "".equals( foreignKeyName ) ) {
+								foreignKeyName = joinColumnAnn.foreignKey().name();
+							}
+							if ( foreignKeyValue != ConstraintMode.NO_CONSTRAINT ) {
+								foreignKeyValue = joinColumnAnn.foreignKey().value();
+							}
+						}
+						if ( foreignKeyValue == ConstraintMode.NO_CONSTRAINT ) {
 							key.setForeignKeyName( "none" );
 						}
 						else {
-							key.setForeignKeyName( StringHelper.nullIfEmpty( joinTableAnn.foreignKey().name() ) );
-
+							key.setForeignKeyName( StringHelper.nullIfEmpty( foreignKeyName ) );
 						}
 					}
 					else {
@@ -1309,11 +1319,22 @@ public abstract class CollectionBinder {
 			else {
 				final JoinTable joinTableAnn = property.getAnnotation( JoinTable.class );
 				if ( joinTableAnn != null ) {
+					String foreignKeyName = joinTableAnn.inverseForeignKey().name();
+					ConstraintMode foreignKeyValue = joinTableAnn.foreignKey().value();
+					if ( joinTableAnn.inverseJoinColumns().length != 0 ) {
+						final JoinColumn joinColumnAnn = joinTableAnn.inverseJoinColumns()[0];
+						if ( "".equals( foreignKeyName ) ) {
+							foreignKeyName = joinColumnAnn.foreignKey().name();
+						}
+						if ( foreignKeyValue != ConstraintMode.NO_CONSTRAINT ) {
+							foreignKeyValue = joinColumnAnn.foreignKey().value();
+						}
+					}
 					if ( joinTableAnn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT ) {
 						element.setForeignKeyName( "none" );
 					}
 					else {
-						element.setForeignKeyName( StringHelper.nullIfEmpty( joinTableAnn.inverseForeignKey().name() ) );
+						element.setForeignKeyName( StringHelper.nullIfEmpty( foreignKeyName ) );
 					}
 				}
 			}

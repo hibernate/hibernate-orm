@@ -141,7 +141,68 @@ then we can annotate the association with the `orphan-removal` attribute.
 
 ==== `@OneToOne`
 
-TODO
+The `@OneToOne` association can either be unidirectional or bidirectional.
+A unidirectional association follows the relational database `FOREIGN KEY` semantics, and the client-side own this relationship.
+A bidirectional association also features a `mappedBy` parent side too.
+
+.Unidirectional `@OneToOne`
+====
+[source,java]
+----
+include::{sourcedir}/associations/OneToOne.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/associations/OneToOne.sql[]
+----
+====
+
+From a relational database point of view, the underlying schema is identical to the unidirectional `@ManyToOne` case,
+as the client-side controls the association based on the foreign key relationship.
+
+But then, it's unusual to consider the `Phone` as a client-side and the `PhoneDetails` as the parent-side, because the details cannot exist without a phone.
+A much more natural mapping would be if the `Phone` is the parent-side, therefore moving the `FOREIGN KEY` into the `PhoneDetails` table.
+This mapping requires a bidirectional `@OneToOne` association, as you can see in the following example:
+
+.Bidirectional `@OneToOne`
+====
+[source,java]
+----
+include::{sourcedir}/associations/BidirectionalOneToOne.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/associations/BidirectionalOneToOne.sql[]
+----
+====
+
+This time, the `PhoneDetails` owns the association, and, like any bidirectional association, the parent-side propagates its lifecycle to the child-side, through cascading.
+
+.Bidirectional `@OneToOne` lifecycle
+====
+[source,java]
+----
+include::{sourcedir}/associations/BidirectionalOneToOneLifecycle.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/associations/BidirectionalOneToOneLifecycle.sql[]
+----
+====
+
+When using a bidirectional `@OneToOne` association, Hibernate enforces the unique constraint upon fetching the child-side.
+If there are more than one children associated to the same parent, Hibernate will throw the following exception:
+
+.Bidirectional `@OneToOne` unique constraint
+====
+[source,java]
+----
+include::{sourcedir}/associations/BidirectionalOneToOneConstraint.java[]
+----
+====
 
 ==== `@ManyToMany`
 

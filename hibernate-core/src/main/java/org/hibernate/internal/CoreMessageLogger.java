@@ -1725,4 +1725,8 @@ public interface CoreMessageLogger extends BasicLogger {
 			id = 474
 	)
 	String ambiguousPropertyMethods(String entityName, String oneMethodSig, String secondMethodSig);
+
+	@LogMessage(level = INFO)
+	@Message(value = "Cannot locate column information using identifier [%s]; ignoring index [%s]", id = 475 )
+	void logCannotLocateIndexColumnInformation(String columnIdentifierText, String indexIdentifierText);
 }

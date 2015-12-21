@@ -592,8 +592,10 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 					final Identifier columnIdentifier = identifierHelper().toIdentifier( resultSet.getString( "COLUMN_NAME" ) );
 					final ColumnInformation columnInformation = tableInformation.getColumn( columnIdentifier );
 					if ( columnInformation == null ) {
-						throw new SchemaManagementException(
-								"Could not locate column information using identifier [" + columnIdentifier.getText() + "]"
+						// See HHH-10191: this may happen when dealing with Oracle/PostgreSQL function indexes
+						log.logCannotLocateIndexColumnInformation(
+								columnIdentifier.getText(),
+								indexIdentifier.getText()
 						);
 					}
 					builder.addColumn( columnInformation );

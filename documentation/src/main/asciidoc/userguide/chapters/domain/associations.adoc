@@ -283,3 +283,82 @@ include::{sourcedir}/associations/UnidirectionalManyToManyRemove.sql[]
 ====
 
 ===== Bidirectional `@ManyToMany`
+
+A bidirectional `@ManyToMany` association has an owning and a `mappedBy` side.
+To preserve synchronicity between both sides, it's good practice to provide helper methods for adding or removing associations.
+
+.Bidirectional `@ManyToMany`
+====
+[source,java]
+----
+include::{sourcedir}/associations/BidirectionalManyToMany.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/associations/BidirectionalManyToMany.sql[]
+----
+====
+
+With the helper methods in place, the synchronicity management can be simplified, as you can see in the following example:
+
+.Bidirectional `@ManyToMany` lifecycle
+====
+[source,java]
+----
+include::{sourcedir}/associations/BidirectionalManyToManyLifecycle.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/associations/BidirectionalManyToManyLifecycle.sql[]
+----
+====
+
+If for a bidirectional `@OneToMany` association performs better when removing or changing elements order,
+the `@ManyToMany` relationship cannot benefit from such an optimization, unless it is replaced by two bidirectional `@OneToMany` associations.
+
+===== Bidirectional many-to-many with a link entity
+
+To most natural `@ManyToMany` association follows the same logic employed by the database schema.
+The link table has an associated entity, which controls the relationship for both sides that need to be joined.
+
+.Bidirectional many-to-many with link entity
+====
+[source,java]
+----
+include::{sourcedir}/associations/BidirectionalManyToManyWithLinkEntity.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/associations/BidirectionalManyToManyWithLinkEntity.sql[]
+----
+====
+
+Both the `Person` and the `Address` have a` mappedBy` `@OneToMany` side, while the `PersonAddress` own both the `person` and the `address` associations.
+The helper methods are still required by the bidirectional associations.
+
+[NOTE]
+====
+The aforementioned example uses a Hibernate specific mapping for the link entity, since JPA doesn't allow building a composite identifier directly out of multiple `@ManyToOne` associations.
+For more details, see the <<chapters/domain/identifiers.adoc#identifiers-composite-associations,Composite identifiers - associations>> section.
+====
+
+The entity state transitions are better managed than in the previous bidirectional `@ManyToMany` case.
+
+.Bidirectional many-to-many with link entity lifecycle
+====
+[source,java]
+----
+include::{sourcedir}/associations/BidirectionalManyToManyWithLinkEntityLifecycle.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/associations/BidirectionalManyToManyWithLinkEntityLifecycle.sql[]
+----
+====
+
+There is only one delete statement executed because, this time, the association is controlled by the `@ManyToOne` side,
+which only has to monitor the state of the underlying `FOREIGN KEY` relationship.

@@ -164,6 +164,11 @@ Hibernate does not feel that JPA defines support for this, but added the feature
 Use of this feature may or may not be portable from a JPA perspective.
 ====
 
+[[identifiers-composite-associations]]
+==== Composite identifiers - associations
+
+TODO: Add composite @Id on @ManyToOne like it's the case in the @ManyToMany section
+
 [[identifiers-generators]]
 ==== Generated identifier values
 

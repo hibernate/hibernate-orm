@@ -26,6 +26,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Assume;
 import org.junit.Test;
 
 /**
@@ -35,6 +36,10 @@ import org.junit.Test;
 public class ServiceBootstrappingTest extends BaseUnitTestCase {
 	@Test
 	public void testBasicBuild() {
+		// this test requires that SHOW_SQL property isn't passed from the outside (eg. via Gradle)
+		final String showSqlPropertyFromOutside = System.getProperty(Environment.SHOW_SQL);
+		Assume.assumeFalse("true".equals(showSqlPropertyFromOutside));
+
 		final StandardServiceRegistryImpl serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
 				.applySettings( ConnectionProviderBuilder.getConnectionProviderProperties() )
 				.build();

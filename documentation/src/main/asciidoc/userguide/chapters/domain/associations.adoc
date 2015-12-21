@@ -145,16 +145,18 @@ The `@OneToOne` association can either be unidirectional or bidirectional.
 A unidirectional association follows the relational database `FOREIGN KEY` semantics, and the client-side own this relationship.
 A bidirectional association also features a `mappedBy` parent side too.
 
+===== Unidirectional `@OneToOne`
+
 .Unidirectional `@OneToOne`
 ====
 [source,java]
 ----
-include::{sourcedir}/associations/OneToOne.java[]
+include::{sourcedir}/associations/UnidirectionalOneToOne.java[]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/associations/OneToOne.sql[]
+include::{sourcedir}/associations/UnidirectionalOneToOne.sql[]
 ----
 ====
 
@@ -164,6 +166,8 @@ as the client-side controls the association based on the foreign key relationshi
 But then, it's unusual to consider the `Phone` as a client-side and the `PhoneDetails` as the parent-side, because the details cannot exist without a phone.
 A much more natural mapping would be if the `Phone` is the parent-side, therefore moving the `FOREIGN KEY` into the `PhoneDetails` table.
 This mapping requires a bidirectional `@OneToOne` association, as you can see in the following example:
+
+===== Bidirectional `@OneToOne`
 
 .Bidirectional `@OneToOne`
 ====
@@ -206,5 +210,76 @@ include::{sourcedir}/associations/BidirectionalOneToOneConstraint.java[]
 
 ==== `@ManyToMany`
 
-TODO
+The `@ManyToMany` requires a link table that joins two entities.
+It's a rather exotic association, and most often it can be replaced by two bidirectional `@OneToMany` relationships.
 
+Like the `@OneToMany` association, `@ManyToMany` can be a either unidirectional or bidirectional.
+
+===== Unidirectional `@ManyToMany`
+
+.Unidirectional `@ManyToMany`
+====
+[source,java]
+----
+include::{sourcedir}/associations/UnidirectionalManyToMany.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/associations/UnidirectionalManyToMany.sql[]
+----
+====
+
+Just like with unidirectional `@OneToMany` associations, the link table is controlled by the owning side.
+
+When an entity is removed from the `@ManyToMany` collection, Hibernate simply deletes the joining record in the link table.
+Unfortunately, this operation requires removing all entries associated to a given parent and recreating the ones that are listed in the current running persistent context.
+
+.Unidirectional `@ManyToMany` lifecycle
+====
+[source,java]
+----
+include::{sourcedir}/associations/UnidirectionalManyToManyLifecycle.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/associations/UnidirectionalManyToManyLifecycle.sql[]
+----
+====
+
+[NOTE]
+====
+For `@ManyToMany` associations, the `REMOVE` entity state transitions doesn't make sense to be cascaded, because it will propagate beyond the link table.
+Because the other side might be referenced by other entities on the parent-side, the automatic removal might end up in a `ConstraintViolationException`.
+
+If `@ManyToMany(cascade = CascadeType.ALL)` was defined and the first person would be deleted,
+Hibernate would throw an exception because another person is also associated to the address that's automatically deleted.
+
+[source,java]
+----
+Person person1 = entityManager.find(Person.class, personId);
+entityManager.remove(person1);
+
+Caused by: javax.persistence.PersistenceException: org.hibernate.exception.ConstraintViolationException: could not execute statement
+Caused by: org.hibernate.exception.ConstraintViolationException: could not execute statement
+Caused by: java.sql.SQLIntegrityConstraintViolationException: integrity constraint violation: foreign key no action; FKM7J0BNABH2YR0PE99IL1D066U table: PERSON_ADDRESS
+----
+====
+
+By simply removing the parent-side, Hibernate can safely remove the associated link records, as you can see in the following example:
+
+.Unidirectional `@ManyToMany` entity removal
+====
+[source,java]
+----
+include::{sourcedir}/associations/UnidirectionalManyToManyRemove.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/associations/UnidirectionalManyToManyRemove.sql[]
+----
+====
+
+===== Bidirectional `@ManyToMany`

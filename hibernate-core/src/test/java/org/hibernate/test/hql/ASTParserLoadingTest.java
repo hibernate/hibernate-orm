@@ -1416,6 +1416,30 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 				.setParameterList( "1", params )
 				.list();
 
+		s.createQuery( "from Human where nickname = ?1 and ( name.first = ?2 or name.last in (?3) )" )
+				.setParameter( "1", "Yogster" )
+				.setParameter( "2", "Yogi"  )
+				.setParameterList( "3", params )
+				.list();
+
+		s.createQuery( "from Human where nickname = ?1 and ( name.first = ?2 or name.last in ?3 )" )
+				.setParameter( "1", "Yogster" )
+				.setParameter( "2", "Yogi" )
+				.setParameterList( "3", params )
+				.list();
+
+		s.createQuery( "from Human where nickname = ?1 or ( name.first = ?2 and name.last in (?3) )" )
+				.setParameter( "1", "Yogster" )
+				.setParameter( "2", "Yogi"  )
+				.setParameterList( "3", params )
+				.list();
+
+		s.createQuery( "from Human where nickname = ?1 or ( name.first = ?2 and name.last in ?3 )" )
+				.setParameter( "1", "Yogster" )
+				.setParameter( "2", "Yogi"  )
+				.setParameterList( "3", params )
+				.list();
+
 		s.getTransaction().commit();
 		s.close();
 	}

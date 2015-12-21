@@ -172,11 +172,17 @@ public final class StringHelper {
 				!wholeWords
 						|| afterPlaceholder.length() == 0
 						|| !Character.isJavaIdentifierPart( afterPlaceholder.charAt( 0 ) );
+		// We only need to check the left param to determine if the placeholder is already
+		// enclosed in parentheses (HHH-10383)
+		// Examples:
+		// 1) "... IN (?1", we assume that "?1" does not need to be enclosed because there
+		// there is already a right-parenthesis; we assume there will be a matching right-parenthesis.
+		// 2) "... IN ?1", we assume that "?1" needs to be enclosed in parentheses, because there
+		// is no left-parenthesis.
 		boolean encloseInParens =
 				actuallyReplace
 						&& encloseInParensIfNecessary
-						&& !( getLastNonWhitespaceCharacter( beforePlaceholder ) == '(' )
-						&& !( getFirstNonWhitespaceCharacter( afterPlaceholder ) == ')' );
+						&& !( getLastNonWhitespaceCharacter( beforePlaceholder ) == '(' );
 		StringBuilder buf = new StringBuilder( beforePlaceholder );
 		if ( encloseInParens ) {
 			buf.append( '(' );

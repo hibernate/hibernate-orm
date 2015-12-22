@@ -109,6 +109,8 @@ public class DatabaseMetadata {
 
 			try {
 				ResultSet rs = null;
+				// HHH-9081 Initial fix
+				schema = decodeSchema(schema);
 				try {
 					if ( (isQuoted && meta.storesMixedCaseQuotedIdentifiers())) {
 						rs = meta.getTables(catalog, schema, name, types);
@@ -161,6 +163,22 @@ public class DatabaseMetadata {
 
 	}
 
+	private String decodeSchema(String schema) {
+	    if (schema == null) {
+	        return schema;
+	    }
+	    
+	    switch (schema.charAt(0)) {
+            case '"':
+            case '[':
+            case '\'':
+            case '`':
+                return schema.substring(1, schema.length() - 1);
+            default:
+                return schema;
+        }
+	}
+	
 	private Object identifier(String catalog, String schema, String name) {
 		return Table.qualify(catalog,schema,name);
 	}

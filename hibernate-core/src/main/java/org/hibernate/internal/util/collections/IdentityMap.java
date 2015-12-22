@@ -216,7 +216,7 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 		@SuppressWarnings( {"EqualsWhichDoesntCheckParameterClass"})
 		@Override
 		public boolean equals(Object other) {
-			return key == ( (IdentityKey) other ).key;
+			return other != null && key == ( (IdentityKey) other ).key;
 		}
 
 		@Override

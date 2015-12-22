@@ -7,7 +7,7 @@ Associations describe how two or more entities form a relationship based on a da
 [[associations-many-to-one]]
 ==== `@ManyToOne`
 
-`@ManyToOne` is the most common association, having a direct equivalent in the relational database as well (e.g. `FOREIGN KEY`),
+`@ManyToOne` is the most common association, having a direct equivalent in the relational database as well (e.g. foreign key),
 and so it establishes a relationship between a child entity and a parent.
 
 .`@ManyToOne` association
@@ -23,7 +23,7 @@ include::{sourcedir}/associations/ManyToOne.sql[]
 ----
 ====
 
-Each entity has a lifecycle of its own. Once the `@ManyToOne` association is set, Hibernate will set the associated database `FOREIGN KEY` column.
+Each entity has a lifecycle of its own. Once the `@ManyToOne` association is set, Hibernate will set the associated database foreign key column.
 
 .`@ManyToOne` association lifecycle
 ====
@@ -97,7 +97,7 @@ On the other hand, a bidirectional `@OneToMany` association is much more efficie
 ===== Bidirectional `@OneToMany`
 
 The bidirectional `@OneToMany` association also requires a `@ManyToOne` association on the child side.
-Although the Domain Model exposes two sides to navigate this association, behind the scenes, the relational database has only one `FOREIGN KEY` for this relationship.
+Although the Domain Model exposes two sides to navigate this association, behind the scenes, the relational database has only one foreign key for this relationship.
 
 Every bidirectional association must have one owning side only (the child side), the other one being referred to as the _inverse_ (or the `mappedBy`) side.
 
@@ -137,15 +137,15 @@ include::{sourcedir}/associations/BidirectionalOneToManyLifecycle.sql[]
 ====
 
 Unlike the unidirectional `@OneToMany`, the bidirectional association is much more efficient when managing the collection persistence state.
-Every element removal only requires a single update (in which the `FOREIGN KEY` column is set to `NULL`), and,
+Every element removal only requires a single update (in which the foreign key column is set to `NULL`), and,
 if the child entity lifecycle is bound to its owning parent so that the child cannot exist without its parent,
-then we can annotate the association with the `orphan-removal` attribute and dissociating the child will trigger a delete statement on the actual child table row as well.
+then we can annotate the association with the `orphan-removal` attribute and disassociating the child will trigger a delete statement on the actual child table row as well.
 
 [[associations-one-to-one]]
 ==== `@OneToOne`
 
 The `@OneToOne` association can either be unidirectional or bidirectional.
-A unidirectional association follows the relational database `FOREIGN KEY` semantics, the client-side owning the relationship.
+A unidirectional association follows the relational database foreign key semantics, the client-side owning the relationship.
 A bidirectional association features a `mappedBy` `@OneToOne` parent side too.
 
 [[associations-one-to-one-unidirectional]]
@@ -168,7 +168,7 @@ From a relational database point of view, the underlying schema is identical to 
 as the client-side controls the relationship based on the foreign key column.
 
 But then, it's unusual to consider the `Phone` as a client-side and the `PhoneDetails` as the parent-side because the details cannot exist without an actual phone.
-A much more natural mapping would be if the `Phone` was the parent-side, therefore pushing the `FOREIGN KEY` into the `PhoneDetails` table.
+A much more natural mapping would be if the `Phone` was the parent-side, therefore pushing the foreign key into the `PhoneDetails` table.
 This mapping requires a bidirectional `@OneToOne` association as you can see in the following example:
 
 [[associations-one-to-one-bidirectional]]
@@ -368,4 +368,4 @@ include::{sourcedir}/associations/BidirectionalManyToManyWithLinkEntityLifecycle
 ----
 ====
 
-There is only one delete statement executed because, this time, the association is controlled by the `@ManyToOne` side which only has to monitor the state of the underlying `FOREIGN KEY` relationship to trigger the right DML statement.
+There is only one delete statement executed because, this time, the association is controlled by the `@ManyToOne` side which only has to monitor the state of the underlying foreign key relationship to trigger the right DML statement.

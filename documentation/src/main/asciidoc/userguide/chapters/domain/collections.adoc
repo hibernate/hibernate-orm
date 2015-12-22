@@ -26,7 +26,7 @@ As the following example demonstrates, it's important to use the interface type 
 ====
 [source,java]
 ----
-include::{sourcedir}/collection/CollectionProxy.java[]
+include::{sourcedir}/collections/CollectionProxy.java[]
 ----
 ====
 
@@ -42,8 +42,8 @@ The persistent collections injected by Hibernate behave like `ArrayList`, `HashS
 [[collections-synopsis]]
 ==== Collections as a value type
 
-Value and embeddable type collections have a similar behavior as simple value types because they are automatically persisted when referenced by a persistent object and are automatically deleted when unreferenced.
-If a collection is passed from one persistent object to another, its elements might be moved from one table to another, and two entities cannot share a reference to the same collection instance.
+Value and embeddable type collections have a similar behavior as simple value types because they are automatically persisted when referenced by a persistent object and automatically deleted when unreferenced.
+If a collection is passed from one persistent object to another, its elements might be moved from one table to another.
 
 [IMPORTANT]
 ====
@@ -67,12 +67,12 @@ When adding a new element to the value type collection, Hibernate issues a new i
 ====
 [source,java]
 ----
-include::{sourcedir}/collection/ElementCollectionLifecycle.java[]
+include::{sourcedir}/collections/ElementCollectionLifecycle.java[]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/collection/ElementCollectionLifecycle.sql[]
+include::{sourcedir}/collections/ElementCollectionLifecycle.sql[]
 ----
 ====
 
@@ -82,68 +82,68 @@ If removing all elements or adding new ones is rather straightforward, removing 
 ====
 [source,java]
 ----
-include::{sourcedir}/collection/ElementCollectionLifecycleRemove.java[]
+include::{sourcedir}/collections/ElementCollectionLifecycleRemove.java[]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/collection/ElementCollectionLifecycleRemove.sql[]
+include::{sourcedir}/collections/ElementCollectionLifecycleRemove.sql[]
 ----
 ====
 
 Depending on the number of elements, this behavior might not be efficient, if many elements need to be deleted and reinserted back into the database table.
-A workaround is to use an `@OrderColumn`, which, although not as efficient as when using an actual link table primary key, can improve the efficiency of the remove operations.
+A workaround is to use an `@OrderColumn`, which, although not as efficient as when using the actual link table primary key, might improve the efficiency of the remove operations.
 
 .Removing collection elements using the order column
 ====
 [source,java]
 ----
-include::{sourcedir}/collection/ElementCollectionOrderColumnLifecycleRemove.java[]
+include::{sourcedir}/collections/ElementCollectionOrderColumnLifecycleRemove.java[]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/collection/ElementCollectionOrderColumnLifecycleRemove.sql[]
+include::{sourcedir}/collections/ElementCollectionOrderColumnLifecycleRemove.sql[]
 ----
 ====
 
 [NOTE]
 ====
 The `@OrderColumn` column works best when removing from the tail of the collection, as it only requires a single delete statement.
-Removing from the head or the middle of the collection requires deleting the extra elements and updating the remaining ones to preserve ordering.
+Removing from the head or the middle of the collection requires deleting the extra elements and updating the remaining ones to preserve element order.
 ====
 
-Embeddable type collections behave the same way for value type ones.
-Adding embeddables to the collections triggers the associated insert statements and removing elements from the collection will generate delete statements as well.
+Embeddable type collections behave the same way as value type collections.
+Adding embeddables to the collection triggers the associated insert statements and removing elements from the collection will generate delete statements.
 
 .Embeddable type collections
 ====
 [source,java]
 ----
-include::{sourcedir}/collection/EmbeddableElementCollectionLifecycle.java[]
+include::{sourcedir}/collections/EmbeddableElementCollectionLifecycle.java[]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/collection/EmbeddableElementCollectionLifecycle.sql[]
+include::{sourcedir}/collections/EmbeddableElementCollectionLifecycle.sql[]
 ----
 ====
 
 [[collections-entity]]
 ==== Collections of entities
 
-If value type collections can only form a one-to-many association between the owner entity and multiple basic or embeddable types,
-entity collections can represent both one-to-many and many-to-many associations.
+If value type collections can only form a one-to-many association between an owner entity and multiple basic or embeddable types,
+entity collections can represent both <<chapters/domain/associations.adoc#associations-one-to-many,@OneToMany>> and <<chapters/domain/associations.adoc#associations-many-to-many,@ManyToMany>> associations.
 
-From a relational database perspective, associations are defined by the foreign key side (the child side).
-With value type collections, only the entity can control the association (the parent side), but for a collection of entities, both sides of the association are managed by the persistence context.
+From a relational database perspective, associations are defined by the foreign key side (the child-side).
+With value type collections, only the entity can control the association (the parent-side), but for a collection of entities, both sides of the association are managed by the persistence context.
 
 For ths reason, entity collections can be devised into two main categories: unidirectional and bidirectional associations.
 Unidirectional associations are very similar to value type collections, since only the parent side controls this relationship.
 Bidirectional associations are more tricky, since, even if sides need to be in-sync at all times, only one side is responsible for managing the association.
 A bidirectional association has an _owning_ side and an _inverse (mappedBy)_ side.
 
-Another way of categorizing entity collections is by the underlying collection type, and so w ecan have:
+Another way of categorizing entity collections is by the underlying collection type, and so we can have:
 
 * bags
 * indexed lists
@@ -158,7 +158,7 @@ In the following sections, we will go through all these collection types and dis
 [[collections-bag]]
 ==== Bags
 
-Bags are unordered lists and we can have unidirectional bags or bidirectional ones, if the other side has a reference back to the parent entity.
+Bags are unordered lists and we can have unidirectional bags or bidirectional ones.
 
 [[collections-unidirectional-bag]]
 ===== Unidirectional bags
@@ -170,12 +170,12 @@ Behind the scenes, Hibernate requires an association table to manage the parent-
 ====
 [source,java]
 ----
-include::{sourcedir}/collection/UnidirectionalBag.java[]
+include::{sourcedir}/collections/UnidirectionalBag.java[]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/collection/UnidirectionalBag.sql[]
+include::{sourcedir}/collections/UnidirectionalBag.sql[]
 ----
 ====
 
@@ -191,12 +191,12 @@ By marking the parent side with the `CascadeType.ALL` attribute, the unidirectio
 ====
 [source,java]
 ----
-include::{sourcedir}/collection/UnidirectionalBagLifecyclePersist.java[]
+include::{sourcedir}/collections/UnidirectionalBagLifecyclePersist.java[]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/collection/UnidirectionalBagLifecyclePersist.sql[]
+include::{sourcedir}/collections/UnidirectionalBagLifecyclePersist.sql[]
 ----
 ====
 
@@ -205,29 +205,25 @@ In the example above, once the parent entity is persisted, the child entities ar
 [NOTE]
 ====
 Just like value type collections, unidirectional bags are not as efficient when it comes to modifying the collection structure (removing or reshuffling elements).
-Because the parent-side cannot uniquely identify each individual child, Hibernate may delete all associated table rows and re-add the rows according to the current collection state.
+Because the parent-side cannot uniquely identify each individual child, Hibernate might delete all child table rows associate to the parent entity and re-add them according to the current collection state.
 ====
 
 [[collections-bidirectional-bag]]
 ===== Bidirectional bags
 
 The bidirectional bag is the most common type of entity collection.
-Although it's technically possible to have the parent-side managing the bidirectional association,
-it's better for the child-side to propagate the collection persistence state.
-
-The `@ManyToOne` side is therefore the owning side of the bidirectional bag association,
-while the `@OneToMany` is the _inverse_ side, being marked with the `mappedBy` attribute.
+The `@ManyToOne` side is the owning side of the bidirectional bag association, while the `@OneToMany` is the _inverse_ side, being marked with the `mappedBy` attribute.
 
 .Bidirectional bag
 ====
 [source,java]
 ----
-include::{sourcedir}/collection/BidirectionalBag.java[]
+include::{sourcedir}/collections/BidirectionalBag.java[]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/collection/BidirectionalBag.sql[]
+include::{sourcedir}/collections/BidirectionalBag.sql[]
 ----
 ====
 
@@ -235,12 +231,12 @@ include::{sourcedir}/collection/BidirectionalBag.sql[]
 ====
 [source,java]
 ----
-include::{sourcedir}/collection/BidirectionalBagLifecycle.java[]
+include::{sourcedir}/collections/BidirectionalBagLifecycle.java[]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/collection/BidirectionalBagLifecycle.sql[]
+include::{sourcedir}/collections/BidirectionalBagLifecycle.sql[]
 ----
 ====
 
@@ -248,7 +244,7 @@ include::{sourcedir}/collection/BidirectionalBagLifecycle.sql[]
 ====
 [source,java]
 ----
-include::{sourcedir}/collection/BidirectionalBagOrphanRemoval.java[]
+include::{sourcedir}/collections/BidirectionalBagOrphanRemoval.java[]
 ----
 ====
 
@@ -272,7 +268,7 @@ When using the `@OrderBy` annotation, the mapping looks as follows:
 ====
 [source,java]
 ----
-include::{sourcedir}/collection/UnidirectionalOrderByList.java[]
+include::{sourcedir}/collections/UnidirectionalOrderByList.java[]
 ----
 ====
 
@@ -283,7 +279,7 @@ Upon fetching the collection, Hibernate generates the following select statement
 ====
 [source,sql]
 ----
-include::{sourcedir}/collection/UnidirectionalOrderByListSelect.sql[]
+include::{sourcedir}/collections/UnidirectionalOrderByListSelect.sql[]
 ----
 ====
 
@@ -291,9 +287,9 @@ The child table column is used to order the list elements.
 
 [NOTE]
 ====
-The `@OrderBy` annotation can take multiple entity properties, and each property can be take an ordering direction too (e.g. `@OrderBy("name ASC, type DESC")`).
+The `@OrderBy` annotation can take multiple entity properties, and each property can take an ordering direction too (e.g. `@OrderBy("name ASC, type DESC")`).
 
-If no property is specified (`@OrderBy`), the primary key of the child entity table is used for ordering.
+If no property is specified (e.g. `@OrderBy`), the primary key of the child entity table is used for ordering.
 ====
 
 Another ordering option is to use the `@OrderColumn` annotation:
@@ -302,12 +298,12 @@ Another ordering option is to use the `@OrderColumn` annotation:
 ====
 [source,java]
 ----
-include::{sourcedir}/collection/UnidirectionalOrderColumnList.java[]
+include::{sourcedir}/collections/UnidirectionalOrderColumnList.java[]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/collection/UnidirectionalOrderColumnList.sql[]
+include::{sourcedir}/collections/UnidirectionalOrderColumnList.sql[]
 ----
 ====
 
@@ -318,7 +314,7 @@ When fetching the list, the following select query is executed:
 ====
 [source,sql]
 ----
-include::{sourcedir}/collection/UnidirectionalOrderColumnListSelect.sql[]
+include::{sourcedir}/collections/UnidirectionalOrderColumnListSelect.sql[]
 ----
 ====
 
@@ -333,7 +329,7 @@ The mapping is similar with the <<collections-bidirectional-bag>> example, just 
 ====
 [source,java]
 ----
-include::{sourcedir}/collection/BidirectionalOrderByList.java[]
+include::{sourcedir}/collections/BidirectionalOrderByList.java[]
 ----
 ====
 
@@ -345,12 +341,12 @@ When using the `@OrderColumn` annotation, the `order_id` column is going to be e
 ====
 [source,java]
 ----
-include::{sourcedir}/collection/BidirectionalOrderColumnList.java[]
+include::{sourcedir}/collections/BidirectionalOrderColumnList.java[]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/collection/BidirectionalOrderColumnList.sql[]
+include::{sourcedir}/collections/BidirectionalOrderColumnList.sql[]
 ----
 ====
 
@@ -359,7 +355,7 @@ When fetching the collection, Hibernate will use the fetched ordered columns to 
 [[collections-set]]
 ==== Sets
 
-Hibernate supports two types of sets: `Set` and `SortedSet`.
+Sets are collections that don't allow duplicate entries and Hibernate supports both the unordered `Set` and the natural-ordering `SortedSet`.
 
 [[collections-unidirectional-set]]
 ===== Unidirectional sets
@@ -370,31 +366,30 @@ The unidirectional set uses a link table to hold the parent-child associations a
 ====
 [source,java]
 ----
-include::{sourcedir}/collection/UnidirectionalSet.java[]
+include::{sourcedir}/collections/UnidirectionalSet.java[]
 ----
 ====
 
 The unidirectional set lifecycle is similar to that of the <<collections-unidirectional-bag>>, so it can be omitted.
-The only difference is that `Set` doesn't allow duplicates, but this constraint is enforced by the Java object contract, rather then the database mapping.
+The only difference is that `Set` doesn't allow duplicates, but this constraint is enforced by the Java object contract rather then the database mapping.
 
 [NOTE]
 ====
-When using sets, it's very important to supply proper equals/hashCode implementations for the child entity.
-In the absence of a custom equals/hashCode implementation logic, Hibernate will use the default Java reference equality,
-which might render unexpected results when mixing detached and managed object instances.
+When using sets, it's very important to supply proper equals/hashCode implementations for child entities.
+In the absence of a custom equals/hashCode implementation logic, Hibernate will use the default Java reference-based object equality which might render unexpected results when mixing detached and managed object instances.
 ====
 
 [[collections-bidirectional-set]]
 ===== Bidirectional sets
 
-Just like bidirectional bags, the bidirectional set doesn't use a link table, and the child table has a FOREIGN KEY referencing the parent table PRIMARY KEY.
-The lifecycle is just like with bidirectional bags, except for the duplicates which are filtered out.
+Just like bidirectional bags, the bidirectional set doesn't use a link table, and the child table has a foreign key referencing the parent table primary key.
+The lifecycle is just like with bidirectional bags except for the duplicates which are filtered out.
 
 .Bidirectional set
 ====
 [source,java]
 ----
-include::{sourcedir}/collection/BidirectionalSet.java[]
+include::{sourcedir}/collections/BidirectionalSet.java[]
 ----
 ====
 
@@ -407,14 +402,13 @@ According to the `SortedSet` contract, all elements must implement the comparabl
 [[collections-unidirectional-sorted-set]]
 ===== Unidirectional sorted sets
 
-A `SortedSet` that relies on the natural sorting order given by the child element `Comparable` implementation logic,
-must be annotated with the `@SortNatural` Hibernate annotation.
+A `SortedSet` that relies on the natural sorting order given by the child element `Comparable` implementation logic must be annotated with the `@SortNatural` Hibernate annotation.
 
 .Unidirectional natural sorted set
 ====
 [source,java]
 ----
-include::{sourcedir}/collection/UnidirectionalNaturalSortedSet.java[]
+include::{sourcedir}/collections/UnidirectionalNaturalSortedSet.java[]
 ----
 ====
 
@@ -426,7 +420,7 @@ To provide a custom sorting logic, Hibernate also provides a `@SortComparator` a
 ====
 [source,java]
 ----
-include::{sourcedir}/collection/UnidirectionalCustomSortedSet.java[]
+include::{sourcedir}/collections/UnidirectionalCustomSortedSet.java[]
 ----
 ====
 
@@ -439,23 +433,22 @@ The `@SortNatural` and `@SortComparator` work the same for bidirectional sorted 
 ====
 [source,java]
 ----
-include::{sourcedir}/collection/BidirectionalSortedSet.java[]
+include::{sourcedir}/collections/BidirectionalSortedSet.java[]
 ----
 ====
 
 [[collections-map]]
 ==== Maps
 
-To map a `java.util.Map`, Hibernate allows using the following map keys:
+A `java.util.Map` is ternary association because it required a parent entity a map key and a value.
+An entity can either be a map key or a map value, depending on the mapping.
+Hibernate allows using the following map keys:
 
 `MapKeyColumn`:: for value type maps, the map key is a column in the link table that defines the grouping logic
 `MapKey`:: the map key is either the primary key or another property of the entity stored as a map entry value
-`MapKeyEnumerated`:: the map key is an `Enum` of the child entity
-`MapKeyTemporal`:: the map key is a `Date` or a `Calendar` of the child entity
+`MapKeyEnumerated`:: the map key is an `Enum` of the target child entity
+`MapKeyTemporal`:: the map key is a `Date` or a `Calendar` of the target child entity
 `MapKeyJoinColumn`:: the map key is a an entity mapped as an association in the child entity that's stored as a map entry key
-
-A map is like a ternary association because it maps a parent entity with a map key and a map value.
-An entity can either be a map key or a map value, depending on the mapping.
 
 [[collections-map-value-type]]
 ===== Value type maps
@@ -466,12 +459,12 @@ A map of value type must use the `@ElementCollection` annotation, just like valu
 ====
 [source,java]
 ----
-include::{sourcedir}/collection/ElementCollectionMap.java[]
+include::{sourcedir}/collections/ElementCollectionMap.java[]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/collection/ElementCollectionMap.sql[]
+include::{sourcedir}/collections/ElementCollectionMap.sql[]
 ----
 ====
 
@@ -481,19 +474,19 @@ Adding entries to the map generates the following SQL statements:
 ====
 [source,java]
 ----
-include::{sourcedir}/collection/ElementCollectionMapPersist.java[]
+include::{sourcedir}/collections/ElementCollectionMapPersist.java[]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/collection/ElementCollectionMapPersist.sql[]
+include::{sourcedir}/collections/ElementCollectionMapPersist.sql[]
 ----
 ====
 
 [[collections-map-unidirectional]]
 ===== Unidirectional maps
 
-A unidirectional map controls exposes a parent-child association from the parent-side only.
+A unidirectional map exposes a parent-child association from the parent-side only.
 The following example shows a unidirectional map which also uses a `@MapKeyTemporal` annotation.
 The map key is a timestamp and it's taken from the child entity table.
 
@@ -501,40 +494,40 @@ The map key is a timestamp and it's taken from the child entity table.
 ====
 [source,java]
 ----
-include::{sourcedir}/collection/UnidirectionalMap.java[]
+include::{sourcedir}/collections/UnidirectionalMap.java[]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/collection/UnidirectionalMap.sql[]
+include::{sourcedir}/collections/UnidirectionalMap.sql[]
 ----
 ====
 
 [[collections-map-bidirectional]]
 ===== Bidirectional maps
 
-Like most bidirectional associations, the relationship can be owned by the child-side, while the parent can propagate entity state transitions to the child entity too.
-In the following example, you can see that `@MapKeyEnumerated` was used for associating the `Phone` type enum as a map key.
+Like most bidirectional associations, this relationship is owned by the child-side while the parent is the inverse side abd can propagate its own state transitions to the child entities.
+In the following example, you can see that `@MapKeyEnumerated` was used so that the `Phone` enumeration becomes the map key.
 
 .Bidirectional Map
 ====
 [source,java]
 ----
-include::{sourcedir}/collection/BidirectionalMap.java[]
+include::{sourcedir}/collections/BidirectionalMap.java[]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/collection/BidirectionalMap.sql[]
+include::{sourcedir}/collections/BidirectionalMap.sql[]
 ----
 ====
 
 [[collections-array]]
 ==== Arrays
 
-When it comes to arrays, there is quite a difference between Java arrays and relational database array type (e.g. VARRAY, ARRAY).
-First, now all database systems implement the SQL-92 standard ARRAY type, and, for this reason, Hibernate doesn't support native database array types.
-Second, Java arrays are relevant for basic types only, since storing Embeddable or Entity types should always be done using the Java Collection API.
+When it comes to arrays, there is quite a difference between Java arrays and relational database array types (e.g. VARRAY, ARRAY).
+First, not all database systems implement the SQL-99 ARRAY type, and, for this reason, Hibernate doesn't support native database array types.
+Second, Java arrays are relevant for basic types only, since storing multiple embeddables or entities should always be done using the Java Collection API.
 
 [[collections-array-binary]]
 ==== Arrays as binary
@@ -545,12 +538,12 @@ By default, Hibernate will choose a BINARY type, as supported by the current `Di
 ====
 [source,java]
 ----
-include::{sourcedir}/collection/BaseTypeBinaryArray.java[]
+include::{sourcedir}/collections/BaseTypeBinaryArray.java[]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/collection/BaseTypeBinaryArray.sql[]
+include::{sourcedir}/collections/BaseTypeBinaryArray.sql[]
 ----
 ====
 
@@ -558,31 +551,31 @@ include::{sourcedir}/collection/BaseTypeBinaryArray.sql[]
 ==== Collections as basic value type
 
 Notice how all the previous examples explicitly mark the collection attribute as either `ElementCollection`, `OneToMany` or `ManyToMany`.
-Collections not marked as such require a custom Hibernate `Type`, and all there values must be stored into a single column in the database table.
+Collections not marked as such require a custom Hibernate `Type` and the collection elements must be stored in a single database column.
 
-This is sometimes beneficial. Consider a use-case such as a VARCHAR column that represents a delimited list or set of Strings.
+This is sometimes beneficial. Consider a use-case such as a `VARCHAR` column that represents a delimited list/set of Strings.
 
-.Comma delimited backed collection
+.Comma delimited collection
 ====
 [source,java]
 ----
-include::{sourcedir}/collection/CommaDelimitedStringCollection.java[]
+include::{sourcedir}/collections/CommaDelimitedStringCollection.java[]
 ----
 ====
 
-The developer can use the collection like any other collection we've discussed so far, and Hibernate will take care of the transforming part.
+The developer can use the comma-delimited collection like any other collection we've discussed so far and Hibernate will take care of the type transformation part.
 The collection itself behaves like any other basic value type, as its lifecycle is bound to its owner entity.
 
 .Comma delimited collection lifecycle
 ====
 [source,java]
 ----
-include::{sourcedir}/collection/CommaDelimitedStringCollectionLifecycle.java[]
+include::{sourcedir}/collections/CommaDelimitedStringCollectionLifecycle.java[]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/collection/CommaDelimitedStringCollectionLifecycle.sql[]
+include::{sourcedir}/collections/CommaDelimitedStringCollectionLifecycle.sql[]
 ----
 ====
 

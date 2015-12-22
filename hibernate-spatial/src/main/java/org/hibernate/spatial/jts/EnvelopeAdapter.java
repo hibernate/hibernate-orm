@@ -44,7 +44,7 @@ public class EnvelopeAdapter {
 		return pg;
 	}
 
-	public static void setGeometryFactory(GeometryFactory gf) {
+	public static synchronized void setGeometryFactory(GeometryFactory gf) {
 		geomFactory = gf;
 	}
 

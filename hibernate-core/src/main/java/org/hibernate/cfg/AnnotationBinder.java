@@ -1139,7 +1139,7 @@ public final class AnnotationBinder {
 
 	private static CacheConcurrencyStrategy DEFAULT_CACHE_CONCURRENCY_STRATEGY;
 
-	private static CacheConcurrencyStrategy determineCacheConcurrencyStrategy(MetadataBuildingContext context) {
+	private static synchronized CacheConcurrencyStrategy determineCacheConcurrencyStrategy(MetadataBuildingContext context) {
 		if ( DEFAULT_CACHE_CONCURRENCY_STRATEGY == null ) {
 			DEFAULT_CACHE_CONCURRENCY_STRATEGY = CacheConcurrencyStrategy.fromAccessType(
 					context.getBuildingOptions().getImplicitCacheAccessType()

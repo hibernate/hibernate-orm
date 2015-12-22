@@ -175,7 +175,7 @@ public class StandardRefCursorSupport implements RefCursorSupport {
 
 	private static Integer refCursorTypeCode;
 
-	private int refCursorTypeCode() {
+	private synchronized int refCursorTypeCode() {
 		if ( refCursorTypeCode == null ) {
 			try {
 				refCursorTypeCode = (Integer) Types.class.getField( "REF_CURSOR" ).get( null );
@@ -193,7 +193,7 @@ public class StandardRefCursorSupport implements RefCursorSupport {
 
 	private static Method getResultSetByPositionMethod;
 
-	private Method getResultSetByPositionMethod() {
+	private synchronized Method getResultSetByPositionMethod() {
 		if ( getResultSetByPositionMethod == null ) {
 			try {
 				getResultSetByPositionMethod = CallableStatement.class.getMethod( "getObject", int.class, Class.class );
@@ -211,7 +211,7 @@ public class StandardRefCursorSupport implements RefCursorSupport {
 
 	private static Method getResultSetByNameMethod;
 
-	private Method getResultSetByNameMethod() {
+	private synchronized Method getResultSetByNameMethod() {
 		if ( getResultSetByNameMethod == null ) {
 			try {
 				getResultSetByNameMethod = CallableStatement.class.getMethod( "getObject", String.class, Class.class );

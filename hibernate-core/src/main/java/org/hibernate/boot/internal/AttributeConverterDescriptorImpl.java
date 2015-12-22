@@ -150,7 +150,7 @@ public class AttributeConverterDescriptorImpl implements AttributeConverterDescr
 
 	private static Method memberMethod;
 
-	private static Member toMember(XProperty xProperty) {
+	private static synchronized Member toMember(XProperty xProperty) {
 		if ( memberMethod == null ) {
 			Class<JavaXMember> javaXMemberClass = JavaXMember.class;
 			try {

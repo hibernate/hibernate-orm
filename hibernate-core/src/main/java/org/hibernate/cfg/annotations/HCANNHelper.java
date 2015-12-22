@@ -55,7 +55,7 @@ public class HCANNHelper {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static void resolveGetMemberMethod() {
+	private static synchronized void resolveGetMemberMethod() {
 		try {
 			getMemberMethod = javaXMemberClass.getDeclaredMethod( "getMember" );
 			getMemberMethod.setAccessible( true );

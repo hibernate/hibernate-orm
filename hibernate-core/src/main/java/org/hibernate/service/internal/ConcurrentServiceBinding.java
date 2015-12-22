@@ -118,7 +118,7 @@ public class ConcurrentServiceBinding<K,V> {
 			//so just let it happen as a form of assertion.
 			final Entry<K,V> other = (Entry<K,V>)obj;
 			//Reference equality on the key only!
-			return other.key == this.key;
+			return other != null && other.key == this.key;
 		}
 
 		@Override

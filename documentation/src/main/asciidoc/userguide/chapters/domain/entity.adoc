@@ -300,12 +300,4 @@ There are 4 available OptimisticLockTypes:
 `ALL`:: performs optimistic locking based on _all_ fields as part of an expanded WHERE clause restriction for the UPDATE/DELETE SQL statements
 `DIRTY`:: performs optimistic locking based on _dirty_ fields as part of an expanded WHERE clause restriction for the UPDATE/DELETE SQL statements.
 
-[[entity-pojo-inheritance]]
-==== Inheritance
-
-TODO
-* dynamic models (hbm.xml)
-* Map mode
-* proxy solutions (hibernate-core/src/test/java/org/hibernate/test/dynamicentity/tuplizer2)
-
 

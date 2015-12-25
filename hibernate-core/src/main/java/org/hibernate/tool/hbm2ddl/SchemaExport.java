@@ -433,6 +433,7 @@ public class SchemaExport {
 				perform( createSQL, exporters );
 				if ( !importFileReaders.isEmpty() ) {
 					for ( NamedReader namedReader : importFileReaders ) {
+						LOG.executingImportScript( namedReader.getName() );
 						importScript( namedReader, exporters );
 					}
 				}

@@ -136,7 +136,46 @@ The `@DiscriminatorValue` defines the mapping between the result of the `@Discri
 [[entity-inheritance-joined-table]]
 ==== Joined table
 
-TODO
+Each subclass can also be mapped to its own table.
+This is also called _table-per-subclass_ mapping strategy.
+An inherited state is retrieved by joining with the table of the superclass.
+
+A discriminator column is not required for this mapping strategy.
+Each subclass must, however, declare a table column holding the object identifier.
+
+.Join Table
+====
+[source,java]
+----
+include::{sourcedir}/inheritance/JoinTable.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/inheritance/JoinTable.sql[]
+----
+====
+
+[NOTE]
+====
+The primary key of this table is also a foreign key to the superclass table and described by the `@PrimaryKeyJoinColumns`.
+
+The table name still defaults to the non qualified class name.
+Also if `@PrimaryKeyJoinColumn` is not set, the primary key / foreign key columns are assumed to have the same names as the primary key columns of the primary table of the superclass.
+====
+
+.Join Table with `@PrimaryKeyJoinColumn`
+====
+[source,java]
+----
+include::{sourcedir}/inheritance/JoinTablePrimaryKeyJoinColumn.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/inheritance/JoinTablePrimaryKeyJoinColumn.sql[]
+----
+====
 
 [[entity-inheritance-table-per-class]]
 ==== Table per class

@@ -42,7 +42,96 @@ it's not therefore possible to query entities by their base class (like it's the
 [[entity-inheritance-single-table]]
 ==== Single table
 
-TODO
+The single table inheritance strategy maps all subclasses to only one database table.
+With this approach the properties of all the subclasses in a given mapped class hierarchy are stored in a single table.
+
+Each subclass declares its own persistent properties and subclasses.
+Version and id properties are assumed to be inherited from the root class.
+
+[NOTE]
+====
+When omitting an explicit inheritance strategy (e.g. `@Inheritance`), JPA will choose the `SINGLE_TABLE` strategy by default.
+====
+
+.Single Table inheritance
+====
+[source,java]
+----
+include::{sourcedir}/inheritance/SingleTable.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/inheritance/SingleTable.sql[]
+----
+====
+
+Each subclass in a hierarchy must define a unique discriminator value, which is used to differentiate between rows belonging to any given subclass type.
+If this is not specified, the `DTYPE` column is used as a discriminator, storing associated subclass name.
+
+.Single Table inheritance discriminator column
+====
+[source,java]
+----
+include::{sourcedir}/inheritance/SingleTablePersist.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/inheritance/SingleTablePersist.sql[]
+----
+====
+
+===== Discriminator
+
+Discriminators are required for polymorphic persistence using the table-per-class-hierarchy mapping strategy.
+It declares a discriminator column of the table.
+The discriminator column contains marker values that tell the persistence layer what subclass to instantiate for a particular row.
+Hibernate Core supports the following restricted set of types as discriminator column: `String`, `char`, `int`, `byte`, `short`, `boolean`(including `yes_no`, `true_false`).
+
+Use the `@DiscriminatorColumn` to define the discriminator column as well as the discriminator type.
+
+[NOTE]
+====
+The enum `DiscriminatorType` used in `javax.persitence.DiscriminatorColumn` only contains the values STRING, CHAR and INTEGER which means that not all Hibernate supported types are available via the `@DiscriminatorColumn` annotation.
+You can also use `@DiscriminatorFormula` to express in SQL a virtual discriminator column.
+This is particularly useful when the discriminator value can be extracted from one or more columns of the table.
+Both `@DiscriminatorColumn` and `@DiscriminatorFormula` are to be set on the root entity (once per persisted hierarchy).
+
+`@org.hibernate.annotations.DiscriminatorOptions` allows to optionally specify Hibernate specific discriminator options which are not standardized in JPA.
+The available options are `force` and `insert`.
+
+The `force` attribute is useful if the table contains rows with _extra_ discriminator values that are not mapped to a persistent class.
+This could for example occur when working with a legacy database.
+If `force` is set to true Hibernate will specify the allowed discriminator values in the SELECT query, even when retrieving all instances of the root class.
+
+The second option - `insert` - tells Hibernate whether or not to include the discriminator column in SQL INSERTs.
+Usually the column should be part of the INSERT statement, but if your discriminator column is also part of a mapped composite identifier you have to set this option to false.
+====
+
+[IMPORTANT]
+====
+There used to be `@org.hibernate.annotations.ForceDiscriminator` annotation which was deprecated in version 3.6 and later removed. Use `@DiscriminatorOptions` instead.
+====
+
+Assuming a legacy database schema where the discriminator is based on inspecting a certain column,
+we can take advantage of the Hibernate specific `@DiscriminatorFormula` annotation and map the inheritance model as follows:
+
+.Single Table discriminator formula
+====
+[source,java]
+----
+include::{sourcedir}/inheritance/SingleTableDiscriminatorFormula.java[]
+----
+
+[source,sql]
+----
+include::{sourcedir}/inheritance/SingleTableDiscriminatorFormula.sql[]
+----
+====
+
+The `@DiscriminatorFormula` defines a custom SQL clause that can be used to identify a certain subclass type.
+The `@DiscriminatorValue` defines the mapping between the result of the `@DiscriminatorFormula` and the inheritance subclass type.
 
 [[entity-inheritance-joined-table]]
 ==== Joined table

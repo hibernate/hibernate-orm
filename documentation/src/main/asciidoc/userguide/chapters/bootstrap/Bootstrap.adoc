@@ -246,4 +246,4 @@ include::{sourcedir}/jpa2.java[]
 [[bootstrap-jpa-hibernate]]
 ==== Proprietary 2-phase bootstrapping
 
-todo
+TODO

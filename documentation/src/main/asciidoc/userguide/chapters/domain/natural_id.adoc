@@ -36,7 +36,7 @@ include::{sourcedir}/natural_id/NonSimpleNaturalIdMapping.java[]
 ====
 
 [[naturalid-api]]
-==== Natural id API
+==== Natural Id API
 
 As stated before, Hibernate provides an API for loading entities by their associate natural id.
 This is represented by the `org.hibernate.NaturalIdLoadAccess` contract obtained via Session#byNaturalId.

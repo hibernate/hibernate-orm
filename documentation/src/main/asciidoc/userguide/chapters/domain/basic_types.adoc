@@ -35,6 +35,7 @@ Internally Hibernate uses a registry of basic types when it needs to resolve a s
 |DateType |DATE |java.sql.Date |date, java.sql.Date
 |CalendarType |TIMESTAMP |java.util.Calendar |calendar, java.util.Calendar
 |CalendarDateType |DATE |java.util.Calendar |calendar_date
+|CalendarTimeType |TIME |java.util.Calendar |calendar_time
 |CurrencyType |java.util.Currency |VARCHAR |currency, java.util.Currency
 |LocaleType |VARCHAR |java.util.Locale |locale, java.utility.locale
 |TimeZoneType |VARCHAR, using the TimeZone ID |java.util.TimeZone |timezone, java.util.TimeZone
@@ -127,7 +128,7 @@ The JPA specification strictly limits the Java types that can be marked as basic
 * any other type that implements `Serializable` (JPA's "support" for `Serializable` types is to directly serialize their state to the database).
 
 If provider portability is a concern, you should stick to just these basic types.
-Note that JPA 2.1 did add the notion of an `javax.persistence.AttributeConverter` to help alleviate some of these concerns; see <<basic-jpaconvert>> for more on this topic.
+Note that JPA 2.1 did add the notion of an `javax.persistence.AttributeConverter` to help alleviate some of these concerns; see <<basic-jpa-convert>> for more on this topic.
 ====
 
 The `@Basic` annotation defines 2 attributes.
@@ -320,7 +321,7 @@ Here, the gender column is defined as a CHAR type and would hold:
 * `'M'` - MALE
 * `'F'` - FEMALE
 
-For additional details on using AttributeConverters, see <<basic-jpaconvert>> section.
+For additional details on using AttributeConverters, see <<basic-jpa-convert>> section.
 
 Note that JPA explicitly disallows the use of an AttributeConverter with an attribute marked as `@Enumerated`.
 So if using the AttributeConverter approach, be sure to not mark the attribute as `@Enumerated`.
@@ -529,9 +530,109 @@ For details see the discussion of generators in <<chapters/domain/identifiers.ad
 [[basic-datetime]]
 ==== Mapping Date/Time Values
 
+Hibernate allows various Java Date/Time classes to be mapped as persistent domain model entity properties.
+The SQL standard defines three Date/Time types:
+
+DATE:: Represents a calendar date by storing years, months and days. The JDBC equivalent is `java.sql.Date`
+TIME:: Represents the time of a day and it stores hours, minutes and seconds. The JDBC equivalent is `java.sql.Time`
+TIMESTAMP:: It stores both a DATE and a TIME plus nanoseconds. The JDBC equivalent is `java.sql.Timestamp`
+
+[NOTE]
+====
+To avoid dependencies on the `java.sql` package, it's common to use the `java.util` or `java.time` Date/Time classes instead.
+====
+
+While the `java.sql` classes define a direct association to the SQL Date/Time data types,
+the `java.util` or `java.time` properties need to explicitly mark the SQL type correlation with the `@Temporal` annotation.
+This way, a `java.util.Date` or a `java.util.Calendar` cn be mapped to either an SQL `DATE`, `TIME` or `TIMESTAMP` type.
+
+Considering the following entity:
+
+.`java.util.Date` mapping
+====
+[source,java]
+----
+include::{sourcedir}/basic/DateTemporal.java[]
+----
+====
+
+When persisting such entity:
+
+====
+[source,java]
+----
+DateEvent dateEvent = new DateEvent(new Date());
+entityManager.persist(dateEvent);
+----
+====
+
+Hibernate generates the following INSERT statement:
+
+====
+[source,sql]
+----
+INSERT INTO DateEvent
+       ( timestamp, id )
+VALUES ( '2015-12-29', 1 )
+----
+====
+
+Only the year, month and the day field were saved into the the database.
+
+If we change the `@Temporal` type to TIME:
+
+====
+[source,java]
+----
+@Temporal(TemporalType.TIME)
+private Date timestamp;
+----
+====
+
+Hibernate will issue an INSERT statement containing the hour, minutes and seconds.
+
+====
+[source,sql]
+----
+INSERT INTO DateEvent
+       ( timestamp, id )
+VALUES ( '16:51:58', 1 )
+----
+====
+
+When the the `@Temporal` type is set to TIMESTAMP:
+
+====
+[source,java]
+----
+@Temporal(TemporalType.TIMESTAMP)
+private Date timestamp;
+----
+====
+
+Hibernate will include both the DATE, the TIME and the nanoseconds in the INSERT statement:
+
+====
+[source,sql]
+----
+INSERT INTO DateEvent
+       ( timestamp, id )
+VALUES ( '2015-12-29 16:54:04.544', 1 )
+----
+====
+
+[NOTE]
+====
+Just like the `java.util.Date`, the `java.util.Calendar` requires the `@Temporal` annotation in order to know what JDBC data type to be chosen: DATE, TIME or TIMESTAMP.
+If the `java.util.Date` marks a point in time, the `java.util.Calendar` takes into consideration the default Time Zone.
+====
+
+[[basic-datetime-java8]]
+===== Mapping Java 8 Date/Time Values
+
 TODO
 
-[[basic-jpaconvert]]
+[[basic-jpa-convert]]
 ==== JPA 2.1 AttributeConverters
 
 TODO

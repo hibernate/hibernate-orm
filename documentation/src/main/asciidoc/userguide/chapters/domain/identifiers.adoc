@@ -194,7 +194,7 @@ include::{sourcedir}/id/CompositeIdAssociationsQuery.java[]
 
 [NOTE]
 ====
-For discussion of generated values for non-identifier attributes, see link:#generated[TO DO]
+For discussion of generated values for non-identifier attributes, see link:#generated[TODO]
 ====
 
 Hibernate supports identifier value generation across a number of different types.

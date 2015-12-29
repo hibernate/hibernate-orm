@@ -222,4 +222,8 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 				getQueryReturns()
 		);
 	}
+	
+	public void setQueryReturns(NativeSQLQueryReturn[] queryReturns) {
+		this.queryReturns = queryReturns;
+	}	
 }

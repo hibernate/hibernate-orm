@@ -167,7 +167,27 @@ Use of this feature may or may not be portable from a JPA perspective.
 [[identifiers-composite-associations]]
 ==== Composite identifiers - associations
 
-TODO: Add composite @Id on @ManyToOne like it's the case in the @ManyToMany section
+Hibernate allows defining a composite identifier out of entity associations.
+In the following example, the `PersonAddress` entity identifier is formed of two `@ManyToOne` associations.
+
+.Composite identifiers with associations
+====
+[source,java]
+----
+include::{sourcedir}/id/CompositeIdAssociations.java[]
+----
+====
+
+Although the mapping is much simpler than using an `@EmbeddedId` or an `@IdClass`, there's no separation between the entity instance and the actual identifier.
+To query this entity, an instance of the entity itself must be supplied to the persistence context.
+
+.Composite identifiers with associations query
+====
+[source,java]
+----
+include::{sourcedir}/id/CompositeIdAssociationsQuery.java[]
+----
+====
 
 [[identifiers-generators]]
 ==== Generated identifier values
@@ -374,4 +394,31 @@ Applications can also implement and use their own optimizer strategies, as defin
 [[identifiers-derived]]
 ==== Derived Identifiers
 
-TODO @MapsId
+JPA 2.0 added support for derived identifiers which allow an entity to borrow the identifier from a many-to-one or one-to-one association.
+
+.Derived identifier with `@MapsId`
+====
+[source,java]
+----
+include::{sourcedir}/id/DerivedIdentifier.java[]
+----
+====
+
+In the example above, the `PersonDetails` entity uses the `id` column for both the entity identifier and for the many-to-one association to the `Person` entity.
+The value of the `PersonDetails` entity identifier is "derived" from the the identifier of its parent `Person` entity.
+The `@MapsId` annotation can also reference columns from an `@EmbeddedId` identifier as well.
+
+The previous example can also be mapped using `@PrimaryKeyJoinColumn`.
+
+.Derived identifier `@PrimaryKeyJoinColumn`
+====
+[source,java]
+----
+include::{sourcedir}/id/CompositeIdAssociationPrimaryKeyJoinColumn.java[]
+----
+====
+
+[NOTE]
+====
+Unlike `@MapsId`, the application developer is responsible of ensuring that the identifier and the many-to-one (or one-to-one) association are in sync.
+====

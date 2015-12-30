@@ -812,7 +812,7 @@ The `write` expression, if specified, must contain exactly one '?' placeholder f
 Sometimes, you want the Database to do some computation for you rather than in the JVM, you might also create some kind of virtual column.
 You can use a SQL fragment (aka formula) instead of mapping a property into a column. This kind of property is read only (its value is calculated by your formula fragment)
 
-.`@Formula` usage
+.`@Formula` mapping usage
 ====
 [source,java]
 ----
@@ -824,5 +824,74 @@ private long objectVolume;
 [NOTE]
 ====
 The SQL fragment can be as complex as you want and even include subselects.
+====
+
+[[mapping-column-any]]
+==== Any
+
+There is one more type of property mapping.
+The `@Any` mapping defines a polymorphic association to classes from multiple tables.
+This type of mapping requires more than one column.
+The first column contains the type of the associated entity.
+The remaining columns contain the identifier.
+
+[NOTE]
+====
+It is impossible to specify a foreign key constraint for this kind of association.
+This is not the usual way of mapping polymorphic associations and you should use this only in special cases (e.g. audit logs, user session data, etc).
+====
+
+The `@Any` annotation describes the column holding the metadata information.
+To link the value of the metadata information and an actual entity type, the `@AnyDef` and `@AnyDefs` annotations are used.
+The `metaType` attribute allows the application to specify a custom type that maps database column values to persistent classes that have identifier properties of the type specified by `idType`.
+You must specify the mapping from values of the metaType to class names.
+
+.`@Any` mapping usage
+====
+[source,java]
+----
+@Any(
+    metaColumn = @Column( name = "property_type" ),
+    fetch=FetchType.EAGER
+)
+@AnyMetaDef(
+    idType = "integer",
+    metaType = "string",
+    metaValues = {
+        @MetaValue( value = "S", targetEntity = StringProperty.class ),
+        @MetaValue( value = "I", targetEntity = IntegerProperty.class )
+    }
+)
+@JoinColumn( name = "property_id" )
+private Property mainProperty;
+----
+====
+
+Note that `@AnyDef` can be mutualized and reused. It is recommended to place it as a package metadata in this case.
+
+.`@AnyMetaDef` mapping usage
+====
+[source,java]
+----
+//on a package
+@AnyMetaDef( name="property"
+    idType = "integer",
+    metaType = "string",
+    metaValues = {
+        @MetaValue( value = "S", targetEntity = StringProperty.class ),
+        @MetaValue( value = "I", targetEntity = IntegerProperty.class )
+    }
+)
+package org.hibernate.test.annotations.any;
+
+//in a class
+@Any(
+    metaDef="property",
+    metaColumn = @Column( name = "property_type" ),
+    fetch=FetchType.EAGER
+)
+@JoinColumn( name = "property_id" )
+private Property mainProperty;
+----
 ====
 

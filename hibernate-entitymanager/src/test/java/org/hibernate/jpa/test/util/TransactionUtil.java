@@ -18,56 +18,99 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * <code>TransactionUtil</code> - Transaction Utilities
- *
  * @author Vlad Mihalcea
  */
 public class TransactionUtil {
 
+    /**
+     * Hibernate transaction function
+     * @param <T> function result
+     */
     @FunctionalInterface
     public interface HibernateTransactionFunction<T> extends Function<Session, T> {
+        /**
+         * Before transaction completion function
+         */
         default void beforeTransactionCompletion() {
 
         }
 
+        /**
+         * After transaction completion function
+         */
         default void afterTransactionCompletion() {
 
         }
     }
 
+    /**
+     * Hibernate transaction function without return value
+     */
     @FunctionalInterface
     public interface HibernateTransactionConsumer extends Consumer<Session> {
+        /**
+         * Before transaction completion function
+         */
         default void beforeTransactionCompletion() {
 
         }
 
+        /**
+         * After transaction completion function
+         */
         default void afterTransactionCompletion() {
 
         }
     }
 
+    /**
+     * JPA transaction function
+     * @param <T> function result
+     */
     @FunctionalInterface
     public interface JPATransactionFunction<T> extends Function<EntityManager, T> {
+        /**
+         * Before transaction completion function
+         */
         default void beforeTransactionCompletion() {
 
         }
 
+        /**
+         * After transaction completion function
+         */
         default void afterTransactionCompletion() {
 
         }
     }
 
+    /**
+     * JPA transaction function without return value
+     */
     @FunctionalInterface
     public interface JPATransactionVoidFunction extends Consumer<EntityManager> {
+        /**
+         * Before transaction completion function
+         */
         default void beforeTransactionCompletion() {
 
         }
 
+        /**
+         * After transaction completion function
+         */
         default void afterTransactionCompletion() {
 
         }
     }
 
+    /**
+     * Execute function in a JPA transaction 
+     * @param factorySupplier EntityManagerFactory supplier
+     * @param function function
+     * @param <T> result type
+     * @return result
+     */
     public static <T> T doInJPA(Supplier<EntityManagerFactory> factorySupplier, JPATransactionFunction<T> function) {
         T result = null;
         EntityManager entityManager = null;
@@ -91,6 +134,11 @@ public class TransactionUtil {
         return result;
     }
 
+    /**
+     * Execute function in a JPA transaction without return value
+     * @param factorySupplier EntityManagerFactory supplier
+     * @param function function
+     */
     public static void doInJPA(Supplier<EntityManagerFactory> factorySupplier, JPATransactionVoidFunction function) {
         EntityManager entityManager = null;
         EntityTransaction txn = null;
@@ -112,22 +160,29 @@ public class TransactionUtil {
         }
     }
 
-    public static <T> T doInHibernate(Supplier<SessionFactory> factorySupplier, HibernateTransactionFunction<T> callable) {
+    /**
+     * Execute function in a Hibernate transaction 
+     * @param factorySupplier EntityManagerFactory supplier
+     * @param function function
+     * @param <T> result type
+     * @return result
+     */
+    public static <T> T doInHibernate(Supplier<SessionFactory> factorySupplier, HibernateTransactionFunction<T> function) {
         T result = null;
         Session session = null;
         Transaction txn = null;
         try {
             session = factorySupplier.get().openSession();
-            callable.beforeTransactionCompletion();
+            function.beforeTransactionCompletion();
             txn = session.beginTransaction();
 
-            result = callable.apply(session);
+            result = function.apply(session);
             txn.commit();
         } catch (RuntimeException e) {
             if ( txn != null ) txn.rollback();
             throw e;
         } finally {
-            callable.afterTransactionCompletion();
+            function.afterTransactionCompletion();
             if (session != null) {
                 session.close();
             }
@@ -135,21 +190,26 @@ public class TransactionUtil {
         return result;
     }
 
-    public static void doInHibernate(Supplier<SessionFactory> factorySupplier, HibernateTransactionConsumer callable) {
+    /**
+     * Execute function in a JPA transaction without return value
+     * @param factorySupplier EntityManagerFactory supplier
+     * @param function function
+     */
+    public static void doInHibernate(Supplier<SessionFactory> factorySupplier, HibernateTransactionConsumer function) {
         Session session = null;
         Transaction txn = null;
         try {
             session = factorySupplier.get().openSession();
-            callable.beforeTransactionCompletion();
+            function.beforeTransactionCompletion();
             txn = session.beginTransaction();
 
-            callable.accept(session);
+            function.accept(session);
             txn.commit();
         } catch (RuntimeException e) {
             if ( txn != null ) txn.rollback();
             throw e;
         } finally {
-            callable.afterTransactionCompletion();
+            function.afterTransactionCompletion();
             if (session != null) {
                 session.close();
             }

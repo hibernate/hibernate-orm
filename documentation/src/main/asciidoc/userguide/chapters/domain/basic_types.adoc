@@ -188,7 +188,7 @@ As a baseline within `BasicTypeRegistry`, Hibernate follows the recommended mapp
 JDBC recommends mapping Strings to VARCHAR, which is the exact mapping that `StringType` handles.
 So that is the baseline mapping within `BasicTypeRegistry` for Strings.
 
-Applications can also extend (add new `BasicType` registrations) or override (replace an exiting `BasicTyp`e registration) using one of the
+Applications can also extend (add new `BasicType` registrations) or override (replace an exiting `BasicType` registration) using one of the
 `MetadataBuilder#applyBasicType` methods or the `MetadataBuilder#applyTypes` method during bootstrap.
 For more details, see <<basic-custom>> section.
 
@@ -630,9 +630,72 @@ If the `java.util.Date` marks a point in time, the `java.util.Calendar` takes in
 [[basic-datetime-java8]]
 ===== Mapping Java 8 Date/Time Values
 
-TODO
+Java 8 came with a new Date/Time API, offering support for instant dates, intervals, local and zoned Date/Time immutable instances, bundled in the `java.time` package.
+Hibernate added support for the new Date/Time API in a new module, which must be included with the following Maven dependency:
+
+.`hibernate-java8` Maven dependency
+====
+[source,xml]
+----
+<dependency>
+    <groupId>org.hibernate</groupId>
+    <artifactId>hibernate-java8</artifactId>
+    <version>${hibernate.version}</version>
+</dependency>
+----
+====
+
+The mapping between the standard SQL Date/Time types and the supported Java 8 Date/Time class types looks as follows;
+
+DATE:: `java.time.LocalDate`
+TIME:: `java.time.LocalTime`, `java.time.OffsetTime`
+TIMESTAMP:: `java.time.Instant`, `java.time.LocalDateTime`, `java.time.OffsetDateTime` and `java.time.ZonedDateTime`
+
+[IMPORTANT]
+====
+Because the mapping between Java 8 Date/Time classes and the SQL types is implicit, there is not need to specify the `@Temporal` annotation.
+Setting it on the `java.time` classes throws the following exception:
+
+----
+org.hibernate.AnnotationException: @Temporal should only be set on a java.util.Date or java.util.Calendar property
+----
+====
 
 [[basic-jpa-convert]]
 ==== JPA 2.1 AttributeConverters
 
-TODO
+Although Hibernate has long been offering <<basic-custom,custom types>>, as a JPA 2.1 provider,
+it also supports `AttributeConverter`s as well.
+
+With a custom `AttributeConverter`, the application developer can map a given JDBC type to an entity basic type.
+
+In the following example, the `java.util.Period` is going to be mapped to a `VARCHAR` database column.
+
+.`java.util.Period` custom `AttributeConverter`
+====
+[source,java]
+----
+include::{sourcedir}/basic/PeriodStringConverter.java[]
+----
+====
+
+To make use of this custom converter, the `@Convert` annotation must decorate the entity attribute.
+
+.Entity using the custom `AttributeConverter`
+====
+[source,java]
+----
+include::{sourcedir}/basic/PeriodStringConvert.java[]
+----
+====
+
+When persisting such entity, Hibernate will do the type conversion based on the `AttributeConverter` logic:
+
+.Persisting entity using the custom `AttributeConverter`
+====
+[source,sql]
+----
+include::{sourcedir}/basic/PeriodStringConvert.sql[]
+----
+====
+

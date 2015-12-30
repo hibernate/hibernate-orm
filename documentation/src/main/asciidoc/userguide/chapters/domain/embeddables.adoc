@@ -2,10 +2,6 @@
 === Embeddable types
 :sourcedir: extras
 
-* <<chapters/domain/entity.adoc#access,Access strategies>>
-* link:#overrides[???]
-* <<chapters/domain/naming.adoc#naming,Naming strategies>>
-
 Historically Hibernate called these components.
 JPA calls them embeddables.
 Either way the concept is the same: a composition of values.

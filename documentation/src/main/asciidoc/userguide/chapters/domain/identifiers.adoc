@@ -207,7 +207,8 @@ The most important piece of information here is the specified `javax.persistence
 ====
 The discussions below assume that the application is using Hibernate's "new generator mappings" as indicated by the `hibernate.id.new_generator_mappings` setting or
 `MetadataBuilder.enableNewIdentifierGeneratorSupport` method during bootstrap.
-This is set to true by default, however if applications set this to false the resolutions discussed here will be very different.
+Starting with Hibernate 5, this is set to true by default.
+If applications set this to false the resolutions discussed here will be very different.
 The rest of the discussion here assumes this setting is enabled (true).
 ====
 

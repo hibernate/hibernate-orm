@@ -194,7 +194,7 @@ include::{sourcedir}/id/CompositeIdAssociationsQuery.java[]
 
 [NOTE]
 ====
-For discussion of generated values for non-identifier attributes, see link:#generated[TODO]
+For discussion of generated values for non-identifier attributes, see <<chapters/domain/basic_types.adoc#mapping-generated,Generated properties>>
 ====
 
 Hibernate supports identifier value generation across a number of different types.

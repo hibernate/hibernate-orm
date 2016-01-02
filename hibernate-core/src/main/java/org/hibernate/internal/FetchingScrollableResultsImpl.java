@@ -72,7 +72,7 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 				getResultSet(),
 				getSession(),
 				getQueryParameters(),
-				false
+				true
 		);
 
 

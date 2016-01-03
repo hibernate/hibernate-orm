@@ -6,12 +6,17 @@
  */
 package org.hibernate.envers.internal.reader;
 
+import static org.hibernate.envers.internal.tools.ArgumentsTools.checkNotNull;
+import static org.hibernate.envers.internal.tools.ArgumentsTools.checkPositive;
+import static org.hibernate.envers.internal.tools.EntityTools.getTargetClassIfProxied;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.persistence.NoResultException;
 
 import org.hibernate.Criteria;
@@ -29,10 +34,6 @@ import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.query.AuditQueryCreator;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.proxy.HibernateProxy;
-
-import static org.hibernate.envers.internal.tools.ArgumentsTools.checkNotNull;
-import static org.hibernate.envers.internal.tools.ArgumentsTools.checkPositive;
-import static org.hibernate.envers.internal.tools.EntityTools.getTargetClassIfProxied;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -137,6 +138,12 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 			throws IllegalArgumentException, NotAuditedException, IllegalStateException {
 		cls = getTargetClassIfProxied( cls );
 		return this.getRevisions( cls, cls.getName(), primaryKey );
+	}
+
+	@Override
+	public <T> T find(Class<T> cls, Object primaryKey, Date date)
+			throws IllegalArgumentException, NotAuditedException, RevisionDoesNotExistException, IllegalStateException {
+		return find(cls, primaryKey, getRevisionNumberForDate(date));
 	}
 
 	@Override

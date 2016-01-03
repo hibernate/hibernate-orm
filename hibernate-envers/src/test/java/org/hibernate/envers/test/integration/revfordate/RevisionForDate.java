@@ -25,6 +25,7 @@ public class RevisionForDate extends BaseEnversJPAFunctionalTestCase {
 	private long timestamp2;
 	private long timestamp3;
 	private long timestamp4;
+	private Integer id;
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -43,7 +44,7 @@ public class RevisionForDate extends BaseEnversJPAFunctionalTestCase {
 		em.getTransaction().begin();
 		StrTestEntity rfd = new StrTestEntity( "x" );
 		em.persist( rfd );
-		Integer id = rfd.getId();
+		id = rfd.getId();
 		em.getTransaction().commit();
 
 		timestamp2 = System.currentTimeMillis();
@@ -73,12 +74,24 @@ public class RevisionForDate extends BaseEnversJPAFunctionalTestCase {
 	public void testTimestamps1() {
 		getAuditReader().getRevisionNumberForDate( new Date( timestamp1 ) );
 	}
+	
+	@Test(expected = RevisionDoesNotExistException.class)
+	public void testTimestampslWithFind() {
+		getAuditReader().find( StrTestEntity.class, id, new Date( timestamp1 ) );
+	}
 
 	@Test
 	public void testTimestamps() {
 		assert getAuditReader().getRevisionNumberForDate( new Date( timestamp2 ) ).intValue() == 1;
 		assert getAuditReader().getRevisionNumberForDate( new Date( timestamp3 ) ).intValue() == 2;
 		assert getAuditReader().getRevisionNumberForDate( new Date( timestamp4 ) ).intValue() == 3;
+	}
+	
+	@Test
+	public void testEntitiesForTimestamps() {
+		assert "x".equals( getAuditReader().find( StrTestEntity.class, id, new Date( timestamp2 ) ).getStr() );
+		assert "y".equals( getAuditReader().find( StrTestEntity.class, id, new Date( timestamp3 ) ).getStr() );
+		assert "z".equals( getAuditReader().find( StrTestEntity.class, id, new Date( timestamp4 ) ).getStr() );
 	}
 
 	@Test

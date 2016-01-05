@@ -192,8 +192,9 @@ public class InfinispanRegionFactory implements RegionFactory {
 
 	/**
 	 * Default value for {@link #IMMUTABLE_ENTITY_CACHE_RESOURCE_PROP}.
+	 * @deprecated {@link #DEF_ENTITY_RESOURCE} is now the default for the {@link #IMMUTABLE_ENTITY_CACHE_RESOURCE_PROP} property.
 	 */
-	public static final String DEF_IMMUTABLE_ENTITY_RESOURCE = "immutable-entity";
+	@Deprecated public static final String DEF_IMMUTABLE_ENTITY_RESOURCE = "immutable-entity";
 
 	/**
 	 * Default value for {@link #TIMESTAMPS_CACHE_RESOURCE_PROP}.
@@ -539,7 +540,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 		entityOverrides.setCacheName( DEF_ENTITY_RESOURCE );
 		typeOverrides.put( ENTITY_KEY, entityOverrides );
 		final TypeOverrides immutableEntityOverrides = new TypeOverrides();
-		immutableEntityOverrides.setCacheName( DEF_IMMUTABLE_ENTITY_RESOURCE );
+		immutableEntityOverrides.setCacheName( DEF_ENTITY_RESOURCE );
 		typeOverrides.put( IMMUTABLE_ENTITY_KEY, immutableEntityOverrides );
 		final TypeOverrides collectionOverrides = new TypeOverrides();
 		collectionOverrides.setCacheName( DEF_ENTITY_RESOURCE );

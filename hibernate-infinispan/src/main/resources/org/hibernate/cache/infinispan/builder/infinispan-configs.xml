@@ -26,14 +26,6 @@
          <expiration max-idle="100000" interval="5000"/>
       </invalidation-cache>
 
-      <!-- Default configuration for immutable entities -->
-      <invalidation-cache name="immutable-entity" mode="SYNC" remote-timeout="20000">
-         <locking concurrency-level="1000" acquire-timeout="15000"/>
-         <transaction mode="NONE"/>
-         <eviction max-entries="10000" strategy="LRU"/>
-         <expiration max-idle="100000" interval="5000"/>
-      </invalidation-cache>
-
       <!-- A config appropriate for query caching. Does not replicate queries. -->
       <local-cache name="local-query">
          <locking concurrency-level="1000" acquire-timeout="15000"/>

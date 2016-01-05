@@ -196,6 +196,18 @@ include::{sourcedir}/jpa2.java[]
 ====
 
 [[bootstrap-jpa-hibernate]]
-==== Proprietary 2-phase bootstrapping
+==== Proprietary JPA bootstrapping
 
-TODO
+Hibernate defines a proprietary https://docs.jboss.org/hibernate/stable/orm/javadocs/org/hibernate/jpa/boot/internal/EntityManagerFactoryBuilderImpl.html[`EntityManagerFactoryBuilderImpl`]
+utility, which allows bootstrapping the JPA environment without even in the absence of the `persistence.xml` configuration file.
+To substitute the `persistence.xml` file, Hibernate offers the `PersistenceUnitInfoDescriptor` utility, which can take configuration that's available in the standard XML configuration file.
+
+.Proprietary bootstrapped `EntityManagerFactory`
+====
+[source,java]
+----
+include::{sourcedir}/jpa3.java[]
+----
+====
+
+The `integrationSettings` allows the application develoepr to customize the bootstrapping process by specifying different `hibernate.integrator_provider` or `hibernate.strategy_registration_provider` integration providers.

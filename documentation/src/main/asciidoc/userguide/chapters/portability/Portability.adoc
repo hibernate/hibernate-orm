@@ -126,9 +126,8 @@ table.
 [[portability-functions]]
 === Database functions
 
+[WARNING]
 ====
-*Warning*
-
 This is an area in Hibernate in need of improvement. In terms of
 portability concerns, this function handling currently works pretty well
 from HQL; however, it is quite lacking in all other aspects.

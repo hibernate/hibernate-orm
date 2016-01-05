@@ -2,34 +2,23 @@
 == Persistence Contexts
 :sourcedir: extras
 
-Both the `org.hibernate.Session` API and javax.persistence.EntityManager
-API represent a context for dealing with persistent data. This concept
-is called a `persistence context`. Persistent data has a state in
-relation to both a persistence context and the underlying database.
+Both the `org.hibernate.Session` API and `javax.persistence.EntityManager` API represent a context for dealing with persistent data.
+This concept is called a `persistence context`.
+Persistent data has a state in relation to both a persistence context and the underlying database.
 
-* `transient` - the entity has just been instantiated and is not
-associated with a persistence context. It has no persistent
-representation in the database and typically no identifier value has
-been assigned.
-* `managed`, or `persistent` - the entity has an associated identifier
-and is associated with a persistence context. It may or may not
-physically exist in the database yet.
-* `detached` - the entity has an associated identifier, but is no longer
-associated with a persistence context (usually because the persistence
-context was closed or the instance was evicted from the context)
-* `removed` - the entity has an associated identifier and is associated
-with a persistence context, however it is scheduled for removal from the
-database.
+`transient`:: the entity has just been instantiated and is not associated with a persistence context.
+It has no persistent representation in the database and typically no identifier value has been assigned (unless the _assigned_ generator was used).
+`managed`, or `persistent`:: the entity has an associated identifier and is associated with a persistence context.
+It may or may not physically exist in the database yet.
+`detached`:: the entity has an associated identifier, but is no longer associated with a persistence context (usually because the persistence context was closed or the instance was evicted from the context)
+`removed`:: the entity has an associated identifier and is associated with a persistence context, however it is scheduled for removal from the database.
 
-Much of the `org.hibernate.Session` and javax.persistence.EntityManager
-methods deal with moving entities between these states.
+Much of the `org.hibernate.Session` and `javax.persistence.EntityManager` methods deal with moving entities between these states.
 
 === Making entities persistent
 
-Once you've created a new entity instance (using the standard `new`
-operator) it is in `new` state. You can make it persistent by
-associating it to either a `org.hibernate.Session` or
-javax.persistence.EntityManager
+Once you've created a new entity instance (using the standard `new` operator) it is in `new` state.
+You can make it persistent by associating it to either a `org.hibernate.Session` or `javax.persistence.EntityManager`.
 
 .Example of making an entity persistent
 ====
@@ -44,16 +33,11 @@ include::{sourcedir}/MakingPersistentWithEM.java[]
 ----
 ====
 
-`org.hibernate.Session` also has a method named persist which follows the
-exact semantic defined in the JPA specification for the persist method.
-It is this method on `org.hibernate.Session` to which the Hibernate
-javax.persistence.EntityManager implementation delegates.
+`org.hibernate.Session` also has a method named persist which follows the exact semantic defined in the JPA specification for the persist method.
+It is this `org.hibernate.Session` method to which the Hibernate `javax.persistence.EntityManager` implementation delegates.
 
-If the `DomesticCat` entity type has a generated identifier, the value
-is associated to the instance when the save or persist is called. If the
-identifier is not automatically generated, the application-assigned
-(usually natural) key value has to be set on the instance before save or
-persist is called.
+If the `DomesticCat` entity type has a generated identifier, the value is associated to the instance when the save or persist is called.
+If the identifier is not automatically generated, the manually assigned (usually natural) key value has to be set on the instance before the save or persist methods are called.
 
 === Deleting entities
 
@@ -72,19 +56,18 @@ include::{sourcedir}/DeletingWithEM.java[]
 ----
 ====
 
-It is important to note that Hibernate itself can handle deleting
-detached state. JPA, however, disallows it. The implication here is that
-the entity instance passed to the `org.hibernate.Session` delete method
-can be either in managed or detached state, while the entity instance
-passed to remove on javax.persistence.EntityManager must be in managed
-state.
+[NOTE]
+====
+Hibernate itself can handle deleting detached state.
+JPA, however, disallows it.
+The implication here is that the entity instance passed to the `org.hibernate.Session` delete method can be either in managed or detached state,
+while the entity instance passed to remove on `javax.persistence.EntityManager` must be in managed state.
+====
 
 === Obtain an entity reference without initializing its data
 
-Sometimes referred to as lazy loading, the ability to obtain a reference
-to an entity without having to load its data is hugely important. The
-most common case being the need to create an association between an
-entity and another, existing entity.
+Sometimes referred to as lazy loading, the ability to obtain a reference to an entity without having to load its data is hugely important.
+The most common case being the need to create an association between an entity and another existing entity.
 
 .Example of obtaining an entity reference without initializing its data
 ====
@@ -99,17 +82,12 @@ include::{sourcedir}/GetReferenceWithEM.java[]
 ----
 ====
 
-The above works on the assumption that the entity is defined to allow
-lazy loading, generally through use of runtime proxies. For more
-information see link:#devguide-mappingEntities[???]. In both cases an
-exception will be thrown later if the given entity does not refer to
-actual database state if and when the application attempts to use the
-returned proxy in any way that requires access to its data.
+The above works on the assumption that the entity is defined to allow lazy loading, generally through use of runtime proxies.
+In both cases an exception will be thrown later if the given entity does not refer to actual database state when the application attempts to use the returned proxy in any way that requires access to its data.
 
 === Obtain an entity with its data initialized
 
-It is also quite common to want to obtain an entity along with with its
-data, for display for example.
+It is also quite common to want to obtain an entity along with its data (e.g. like when we need to display it in the UI).
 
 .Example of obtaining an entity reference with its data initialized
 ====
@@ -128,8 +106,7 @@ In both cases null is returned if no matching database row was found.
 
 === Obtain an entity by natural-id
 
-In addition to allowing to load by identifier, Hibernate allows
-applications to load by declared natural identifier.
+In addition to allowing to load by identifier, Hibernate allows applications to load by declared natural identifier.
 
 .Example of simple natural-id access
 ====
@@ -144,30 +121,22 @@ include::{sourcedir}/NaturalIdLoading.java[]
 ----
 ====
 
-Just like we saw above, access entity data by natural id allows both the
-load and getReference forms, with the same semantics.
+We can also opt to fetch the entity or just retrieve a reference to it when using the natural identifier loading methods.
 
-Accessing persistent data by identifier and by natural-id is consistent
-in the Hibernate API. Each defines the same 2 data access methods:
+Hibernate offer a consistent API for accessing persistent data by identifier or by the natural-id. Each of these defines the same two data access methods:
 
-getReference::
-  Should be used in cases where the identifier is assumed to exist,
-  where non-existence would be an actual error. Should never be used to
-  test existence. That is because this method will prefer to create and
-  return a proxy if the data is not already associated with the Session
-  rather than hit the database. The quintessential use-case for using
-  this method is to create foreign-key based associations.
-load::
-  Will return the persistent data associated with the given identifier
-  value or null if that identifier does not exist.
+getReference:: Should be used in cases where the identifier is assumed to exist, where non-existence would be an actual error.
+Should never be used to test existence.
+That is because this method will prefer to create and return a proxy if the data is not already associated with the Session rather than hit the database.
+The quintessential use-case for using this method is to create foreign-key based associations.
+load:: Will return the persistent data associated with the given identifier value or null if that identifier does not exist.
 
-In addition to those 2 methods, each also defines the method with
-accepting a `org.hibernate.LockOptions` argument. Locking is discussed in
-a separate chapter.
+Each of these two methods define an overloading variant accepting a `org.hibernate.LockOptions` argument.
+Locking is discussed in a separate <<chapters/locking/locking.adoc#locking,chapter>>.
 
 === Refresh entity state
 
-You can reload an entity instance and it's collections at any time.
+You can reload an entity instance and its collections at any time.
 
 .Example of refreshing entity state
 ====
@@ -182,25 +151,22 @@ include::{sourcedir}/RefreshWithEM.java[]
 ----
 ====
 
-One case where this is useful is when it is known that the database
-state has changed since the data was read. Refreshing allows the current
-database state to be pulled into the entity instance and the persistence
-context.
+One case where this is useful is when it is known that the database state has changed since the data was read.
+Refreshing allows the current database state to be pulled into the entity instance and the persistence context.
 
-Another case where this might be useful is when database triggers are
-used to initialize some of the properties of the entity. Note that only
-the entity instance and its collections are refreshed unless you specify
-`REFRESH` as a cascade style of any associations. However, please note
-that Hibernate has the capability to handle this automatically through
-its notion of generated properties. See the discussion of non-identifier
-generated attributes in the Hibernate User Guide
+Another case where this might be useful is when database triggers are used to initialize some of the properties of the entity.
+
+[NOTE]
+====
+Only the entity instance and its value type collections are refreshed unless you specify `REFRESH` as a cascade style of any associations.
+However, please note that Hibernate has the capability to handle this automatically through its notion of generated properties.
+See the discussion of non-identifier <<chapters/domain/basic_types.adoc#mapping-generated,generated attributes>>.
+====
 
 === Modifying managed/persistent state
 
-Entities in managed/persistent state may be manipulated by the
-application and any changes will be automatically detected and persisted
-when the persistence context is flushed. There is no need to call a
-particular method to make your modifications persistent.
+Entities in managed/persistent state may be manipulated by the application and any changes will be automatically detected and persisted when the persistence context is flushed.
+There is no need to call a particular method to make your modifications persistent.
 
 .Example of modifying managed state
 ====
@@ -217,28 +183,22 @@ include::{sourcedir}/ManagedUpdateWithEM.java[]
 
 === Working with detached data
 
-Detachment is the process of working with data outside the scope of any
-persistence context. Data becomes detached in a number of ways. Once the
-persistence context is closed, all data that was associated with it
-becomes detached. Clearing the persistence context has the same effect.
-Evicting a particular entity from the persistence context makes it
-detached. And finally, serialization will make the deserialized form be
-detached (the original instance is still managed).
+Detachment is the process of working with data outside the scope of any persistence context.
+Data becomes detached in a number of ways.
+Once the persistence context is closed, all data that was associated with it becomes detached.
+Clearing the persistence context has the same effect.
+Evicting a particular entity from the persistence context makes it detached.
+And finally, serialization will make the deserialized form be detached (the original instance is still managed).
 
-Detached data can still be manipulated, however the persistence context
-will no longer automatically know about these modification and the
-application will need to intervene to make the changes persistent.
+Detached data can still be manipulated, however the persistence context will no longer automatically know about these modification and the application will need to intervene to make the changes persistent again.
 
 ==== Reattaching detached data
 
-Reattachment is the process of taking an incoming entity instance that
-is in detached state and re-associating it with the current persistence
-context.
+Reattachment is the process of taking an incoming entity instance that is in detached state and re-associating it with the current persistence context.
 
 [IMPORTANT]
 ====
-JPA does not provide for this model. This is only available through
-Hibernate `org.hibernate.Session`.
+JPA does not provide for this model. This is only available through Hibernate `org.hibernate.Session`.
 ====
 
 .Example of reattaching a detached entity
@@ -254,22 +214,21 @@ include::{sourcedir}/ReattachingWithSession2.java[]
 ----
 ====
 
-The method name update is a bit misleading here. It does not mean that
-an `SQL` `UPDATE` is immediately performed. It does, however, mean that
-an `SQL` `UPDATE` will be performed when the persistence context is
-flushed since Hibernate does not know its previous state against which
-to compare for changes. Unless the entity is mapped with
-`select-before-update`, in which case Hibernate will pull the current
-state from the database and see if an update is needed.
+[NOTE]
+====
+The method name `update` is a bit misleading here.
+It does not mean that an `SQL` `UPDATE` is immediately performed.
+It does, however, mean that an `SQL` `UPDATE` will be performed when the persistence context is flushed since Hibernate does not know its previous state against which to compare for changes.
+If the entity is mapped with `select-before-update`, Hibernate will pull the current state from the database and see if an update is needed.
+====
 
-Provided the entity is detached, update and saveOrUpdate operate exactly
-the same.
+Provided the entity is detached, `update` and `saveOrUpdate` operate exactly the same.
 
 ==== Merging detached data
 
-Merging is the process of taking an incoming entity instance that is in
-detached state and copying its data over onto a new instance that is in
-managed state.
+Merging is the process of taking an incoming entity instance that is in detached state and copying its data over onto a new managed instance.
+
+Although not exactly per se, the following example is a good visualization of the `merge` operation internals.
 
 .Visualizing merge
 ====
@@ -278,8 +237,6 @@ managed state.
 include::{sourcedir}/VisualizingMerge.java[]
 ----
 ====
-
-That is not exactly what happens, but its a good visualization.
 
 .Example of merging a detached entity
 ====
@@ -296,8 +253,7 @@ include::{sourcedir}/MergeWithEM.java[]
 
 === Checking persistent state
 
-An application can verify the state of entities and collections in
-relation to the persistence context.
+An application can verify the state of entities and collections in relation to the persistence context.
 
 .Examples of verifying managed state
 ====
@@ -325,9 +281,7 @@ include::{sourcedir}/CheckingLazinessWithJPA.java[]
 ----
 ====
 
-In JPA there is an alternative means to check laziness using the
-following `javax.persistence.PersistenceUtil` pattern. However, the
-javax.persistence.PersistenceUnitUtil is recommended where ever possible
+In JPA there is an alternative means to check laziness using the following `javax.persistence.PersistenceUtil` pattern (which is recommended where ever possible).
 
 .Alternative JPA means to verify laziness
 ====
@@ -339,8 +293,7 @@ include::{sourcedir}/CheckingLazinessWithJPA2.java[]
 
 === Accessing Hibernate APIs from JPA
 
-JPA defines an incredibly useful method to allow applications access to
-the APIs of the underlying provider.
+JPA defines an incredibly useful method to allow applications access to the APIs of the underlying provider.
 
 .Accessing Hibernate APIs from JPA
 ====

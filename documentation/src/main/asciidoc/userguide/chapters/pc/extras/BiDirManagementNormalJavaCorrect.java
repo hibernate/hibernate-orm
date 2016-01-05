@@ -4,4 +4,4 @@ order.getLineItems().add( lineItem );
 lineItem.setOrder( order );
 
 // Now this is OK...
-lineItem.getOrder.getname();
+lineItem.getOrder.getName();

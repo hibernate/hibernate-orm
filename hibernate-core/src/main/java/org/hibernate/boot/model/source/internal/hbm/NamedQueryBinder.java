@@ -6,13 +6,10 @@
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
-import java.util.ArrayList;
+import javax.xml.bind.JAXBElement;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.xml.bind.JAXBElement;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.jaxb.hbm.internal.ImplicitResultSetMappingDefinition;
@@ -170,32 +167,18 @@ public class NamedQueryBinder {
 
 			final ImplicitResultSetMappingDefinition implicitResultSetMappingDefinition = implicitResultSetMappingBuilder.build();
 			builder.setResultSetRef( implicitResultSetMappingDefinition.getName() );
-
 			context.getMetadataCollector().addSecondPass(
 					new SecondPass() {
 						@Override
 						public void doSecondPass(Map persistentClasses) throws MappingException {
-							ResultSetMappingDefinition resultSetMappingDefinition = 
-									ResultSetMappingBinder.bind(implicitResultSetMappingDefinition, context);
-							context.getMetadataCollector().addResultSetMapping(resultSetMappingDefinition);
+							final ResultSetMappingDefinition resultSetMappingDefinition =
+									ResultSetMappingBinder.bind( implicitResultSetMappingDefinition, context );
+							context.getMetadataCollector().addResultSetMapping( resultSetMappingDefinition );
 							NativeSQLQueryReturn[] newQueryReturns = resultSetMappingDefinition.getQueryReturns();
-							if (newQueryReturns != null && newQueryReturns.length > 0) {
-								List<NativeSQLQueryReturn> queryReturnList = 
-										new ArrayList<NativeSQLQueryReturn>();
-								NamedSQLQueryDefinition queryDefinition = 
-										context.getMetadataCollector().getNamedNativeQueryDefinition(queryName);
-								NativeSQLQueryReturn[] existingQueryReturns = queryDefinition.getQueryReturns();
-								if (existingQueryReturns != null && existingQueryReturns.length > 0) {
-									for (NativeSQLQueryReturn queryReturn : existingQueryReturns) {
-										queryReturnList.add(queryReturn);
-									}
-								}
-								for (NativeSQLQueryReturn queryReturn : newQueryReturns) {
-									queryReturnList.add(queryReturn);
-								}
-								NativeSQLQueryReturn[] allQueryReturns = 
-										queryReturnList.toArray(new NativeSQLQueryReturn[queryReturnList.size()]);
-								queryDefinition.setQueryReturns(allQueryReturns);
+							final NamedSQLQueryDefinition queryDefinition =
+									context.getMetadataCollector().getNamedNativeQueryDefinition( queryName );
+							if ( queryDefinition != null ) {
+								queryDefinition.addQueryReturns( newQueryReturns );
 							}
 						}
 					}

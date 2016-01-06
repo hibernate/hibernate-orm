@@ -2,60 +2,44 @@
 == Locking
 :sourcedir: extras
 
-Locking refers to actions taken to prevent data in a relational database
-from changing between the time it is read and the time that it is used.
+In a relational database, locking refers to actions taken to prevent data from changing between the time it is read and the time is used.
 
 Your locking strategy can be either optimistic or pessimistic.
 
 Optimistic::
-  Optimistic locking assumes that multiple transactions can complete
-  without affecting each other, and that therefore transactions can
-  proceed without locking the data resources that they affect. Before
-  committing, each transaction verifies that no other transaction has
-  modified its data. If the check reveals conflicting modifications, the
-  committing transaction rolls
-  backfootnote:[http://en.wikipedia.org/wiki/Optimistic_locking].
+http://en.wikipedia.org/wiki/Optimistic_locking[Optimistic locking] assumes that multiple transactions can complete without affecting each other,
+and that therefore transactions can proceed without locking the data resources that they affect.
+Before committing, each transaction verifies that no other transaction has modified its data.
+If the check reveals conflicting modifications, the committing transaction rolls back.
 Pessimistic::
-  Pessimistic locking assumes that concurrent transactions will conflict
-  with each other, and requires resources to be locked after they are
-  read and only unlocked after the application has finished using the
-  data.
+Pessimistic locking assumes that concurrent transactions will conflict with each other,
+and requires resources to be locked after they are read and only unlocked after the application has finished using the data.
 
-Hibernate provides mechanisms for implementing both types of locking in
-your applications.
+Hibernate provides mechanisms for implementing both types of locking in your applications.
 
 === Optimistic
 
-When your application uses long transactions or conversations that span
-several database transactions, you can store versioning data, so that if
-the same entity is updated by two conversations, the last to commit
-changes is informed of the conflict, and does not override the other
-conversation's work. This approach guarantees some isolation, but scales
-well and works particularly well in Read-Often Write-Sometimes
-situations.
+When your application uses long transactions or conversations that span several database transactions,
+you can store versioning data, so that if the same entity is updated by two conversations, the last to commit changes is informed of the conflict,
+and does not override the other conversation's work.
+This approach guarantees some isolation, but scales well and works particularly well in _read-often-write-sometimes_ situations.
 
-Hibernate provides two different mechanisms for storing versioning
-information, a dedicated version number or a timestamp.
-
-Version number::
-Timestamp::
+Hibernate provides two different mechanisms for storing versioning information, a dedicated version number or a timestamp.
 
 [NOTE]
 ====
-A version or timestamp property can never be null for a detached
-instance. Hibernate detects any instance with a null version or
-timestamp as transient, regardless of other unsaved-value strategies
-that you specify. Declaring a nullable version or timestamp property is
-an easy way to avoid problems with transitive reattachment in Hibernate,
+A version or timestamp property can never be null for a detached instance.
+Hibernate detects any instance with a null version or timestamp as transient, regardless of other unsaved-value strategies that you specify.
+Declaring a nullable version or timestamp property is an easy way to avoid problems with transitive reattachment in Hibernate,
 especially useful if you use assigned identifiers or composite keys.
 ====
 
+[[locking-optimistic-version-number]]
 === Dedicated version number
 
-The version number mechanism for optimistic locking is provided through
-a `@Version` annotation.
+The version number mechanism for optimistic locking is provided through a `@Version` annotation.
 
-.The @Version annotation
+.@Version annotation
 ====
 [source,java]
 ----
@@ -63,25 +47,18 @@ include::{sourcedir}/version_annotation.java[]
 ----
 ====
 
-Here, the version property is mapped to the `OPTLOCK` column, and the
-entity manager uses it to detect conflicting updates, and prevent the
-loss of updates that would be overwritten by a last-commit-wins
-strategy.
+Here, the version property is mapped to the `OPTLOCK` column, and the entity manager uses it to detect conflicting updates,
+and prevent the loss of updates that would otherwise be overwritten by a last-commit-wins strategy.
 
-The version column can be any kind of type, as long as you define and
-implement the appropriate `UserVersionType`.
+The version column can be any kind of type, as long as you define and implement the appropriate `UserVersionType`.
 
-Your application is forbidden from altering the version number set by
-Hibernate. To artificially increase the version number, see the
-documentation for properties LockModeType.OPTIMISTIC_FORCE_INCREMENT or
-LockModeType.PESSIMISTIC_FORCE_INCREMENTcheck in the Hibernate Entity
-Manager reference documentation.
+Your application is forbidden from altering the version number set by Hibernate.
+To artificially increase the version number, see the documentation for properties `LockModeType.OPTIMISTIC_FORCE_INCREMENT` or
+`LockModeType.PESSIMISTIC_FORCE_INCREMENT` check in the Hibernate Entity Manager reference documentation.
 
 [NOTE]
 ====
-If the version number is generated by the database, such as a trigger,
-use the annotation
-`@org.hibernate.annotations.Generated(GenerationTime.ALWAYS)`.
+If the version number is generated by the database, such as a trigger, use the annotation `@org.hibernate.annotations.Generated(GenerationTime.ALWAYS)` on the version attribute.
 ====
 
 .Declaring a version property in `hbm.xml`
@@ -94,35 +71,23 @@ include::{sourcedir}/version_property.java[]
 
 [cols=",",]
 |=======================================================================
-|column |The name of the column holding the version number. Optional,
-defaults to the property name.
-
+|column |The name of the column holding the version number. Optional, defaults to the property name.
 |name |The name of a property of the persistent class.
-
 |type |The type of the version number. Optional, defaults to `integer`.
-
-|access |Hibernate's strategy for accessing the property value.
-Optional, defaults to `property`.
-
-|unsaved-value |Indicates that an instance is newly instantiated and
-thus unsaved. This distinguishes it from detached instances that were
-saved or loaded in a previous session. The default value, `undefined`,
-indicates that the identifier property value should be used. Optional.
-
-|generated |Indicates that the version property value is generated by
-the database. Optional, defaults to `never`.
-
-|insert |Whether or not to include the `version` column in SQL `insert`
-statements. Defaults to `true`, but you can set it to `false` if the
-database column is defined with a default value of `0`.
+|access |Hibernate's strategy for accessing the property value. Optional, defaults to `property`.
+|unsaved-value |Indicates that an instance is newly instantiated and thus unsaved.
+This distinguishes it from detached instances that were saved or loaded in a previous session.
+The default value, `undefined`, indicates that the identifier property value should be used. Optional.
+|generated |Indicates that the version property value is generated by the database. Optional, defaults to `never`.
+|insert |Whether or not to include the `version` column in SQL `insert` statements.
+Defaults to `true`, but you can set it to `false` if the database column is defined with a default value of `0`.
 |=======================================================================
 
+[[locking-optimistic-timestamp]]
 === Timestamp
 
-Timestamps are a less reliable way of optimistic locking than version
-numbers, but can be used by applications for other purposes as well.
-Timestamping is automatically used if you the `@Version` annotation on a
-`Date` or `Calendar`.
+Timestamps are a less reliable way of optimistic locking than version numbers, but can be used by applications for other purposes as well.
+Timestamping is automatically used if you the `@Version` annotation on a `Date` or `Calendar` property type.
 
 .Using timestamps for optimistic locking
 ====
@@ -132,18 +97,11 @@ include::{sourcedir}/timestamp_version.java[]
 ----
 ====
 
-Hibernate can retrieve the timestamp value from the database or the JVM,
-by reading the value you specify for the
-`@org.hibernate.annotations.Source` annotation. The value can be either
-`org.hibernate.annotations.SourceType.DB` or
-`org.hibernate.annotations.SourceType.VM`. The default behavior is to
-use the database, and is also used if you don't specify the annotation
-at all.
+Hibernate can retrieve the timestamp value from the database or the JVM, by reading the value you specify for the `@org.hibernate.annotations.Source` annotation.
+The value can be either `org.hibernate.annotations.SourceType.DB` or `org.hibernate.annotations.SourceType.VM`.
+The default behavior is to use the database, and is also used if you don't specify the annotation at all.
 
-The timestamp can also be generated by the database instead of
-Hibernate, if you use the
-`@org.hibernate.annotations.Generated(GenerationTime.ALWAYS)`
-annotation.
+The timestamp can also be generated by the database instead of Hibernate, if you use the `@org.hibernate.annotations.Generated(GenerationTime.ALWAYS)` annotation.
 
 .The timestamp element in `hbm.xml`
 ====
@@ -155,94 +113,57 @@ include::{sourcedir}/timestamp_version.xml[]
 
 [cols=",",]
 |=======================================================================
-|column |The name of the column which holds the timestamp. Optional,
-defaults to the property namel
-
-|name |The name of a JavaBeans style property of Java type Date or
-Timestamp of the persistent class.
-
-|access |The strategy Hibernate uses to access the property value.
-Optional, defaults to `property`.
-
-|unsaved-value |A version property which indicates than instance is
-newly instantiated, and unsaved. This distinguishes it from detached
-instances that were saved or loaded in a previous session. The default
-value of `undefined` indicates that Hibernate uses the identifier
-property value.
-
-|source |Whether Hibernate retrieves the timestamp from the database or
-the current JVM. Database-based timestamps incur an overhead because
-Hibernate needs to query the database each time to determine the
-incremental next value. However, database-derived timestamps are safer
-to use in a clustered environment. Not all database dialects are known
-to support the retrieval of the database's current timestamp. Others may
-also be unsafe for locking, because of lack of precision.
-
-|generated |Whether the timestamp property value is generated by the
-database. Optional, defaults to `never`.
+|column |The name of the column which holds the timestamp. Optional, defaults to the property name
+|name |The name of a JavaBeans style property of Java type `Date` or `Timestamp` of the persistent class.
+|access |The strategy Hibernate uses to access the property value. Optional, defaults to `property`.
+|unsaved-value |A version property which indicates than instance is newly instantiated, and unsaved.
+This distinguishes it from detached instances that were saved or loaded in a previous session.
+The default value of `undefined` indicates that Hibernate uses the identifier property value.
+|source |Whether Hibernate retrieves the timestamp from the database or the current JVM.
+Database-based timestamps incur an overhead because Hibernate needs to query the database each time to determine the incremental next value.
+However, database-derived timestamps are safer to use in a clustered environment.
+Not all database dialects are known to support the retrieval of the database's current timestamp.
+Others may also be unsafe for locking, because of lack of precision.
+|generated |Whether the timestamp property value is generated by the database. Optional, defaults to `never`.
 |=======================================================================
 
 === Pessimistic
 
-Typically, you only need to specify an isolation level for the JDBC
-connections and let the database handle locking issues. If you do need
-to obtain exclusive pessimistic locks or re-obtain locks at the start of
-a new transaction, Hibernate gives you the tools you need.
+Typically, you only need to specify an isolation level for the JDBC connections and let the database handle locking issues.
+If you do need to obtain exclusive pessimistic locks or re-obtain locks at the start of a new transaction, Hibernate gives you the tools you need.
 
 [NOTE]
 ====
-Hibernate always uses the locking mechanism of the database, and never
-lock objects in memory.
+Hibernate always uses the locking mechanism of the database, and never lock objects in memory.
 ====
 
 === The `LockMode` class
 
-The `LockMode` class defines the different lock levels that Hibernate
-can acquire.
+The `LockMode` class defines the different lock levels that Hibernate can acquire.
 
 [cols=",",]
 |=======================================================================
-|LockMode.WRITE |acquired automatically when Hibernate updates or
-inserts a row.
-
-|LockMode.UPGRADE |acquired upon explicit user request using
-`SELECT ... FOR UPDATE` on databases which support that syntax.
-
-|LockMode.UPGRADE_NOWAIT |acquired upon explicit user request using a
-`SELECT ... FOR UPDATE NOWAIT` in Oracle.
-
-|LockMode.UPGRADE_SKIPLOCKED |acquired upon explicit user request using
-a `SELECT ... FOR UPDATE SKIP LOCKED` in Oracle, or
-`SELECT ... with (rowlock,updlock,readpast) in SQL Server`.
-
-|LockMode.READ |acquired automatically when Hibernate reads data under
-Repeatable Read or Serializable isolation level. It can be re-acquired
-by explicit user request.
-
-|LockMode.NONE |The absence of a lock. All objects switch to this lock
-mode at the end of a Transaction. Objects associated with the session
-via a call to update() or saveOrUpdate() also start out in this lock
-mode.
+|LockMode.WRITE |acquired automatically when Hibernate updates or inserts a row.
+|LockMode.UPGRADE |acquired upon explicit user request using `SELECT ... FOR UPDATE` on databases which support that syntax.
+|LockMode.UPGRADE_NOWAIT |acquired upon explicit user request using a `SELECT ... FOR UPDATE NOWAIT` in Oracle.
+|LockMode.UPGRADE_SKIPLOCKED |acquired upon explicit user request using a `SELECT ... FOR UPDATE SKIP LOCKED` in Oracle, or `SELECT ... with (rowlock,updlock,readpast) in SQL Server`.
+|LockMode.READ |acquired automatically when Hibernate reads data under Repeatable Read or Serializable isolation level. It can be re-acquired by explicit user request.
+|LockMode.NONE |The absence of a lock. All objects switch to this lock mode at the end of a Transaction. Objects associated with the session via a call to update() or saveOrUpdate() also start out in this lock mode.
 |=======================================================================
 
-The explicit user request mentioned above occurs as a consequence of any
-of the following actions:
+The explicit user request mentioned above occurs as a consequence of any of the following actions:
 
-* A call to Session.load(), specifying a LockMode.
-* A call to Session.lock().
-* A call to Query.setLockMode().
+* a call to `Session.load()`, specifying a `LockMode`.
+* a call to `Session.lock()`.
+* a call to `Query.setLockMode()`.
 
-If you call Session.load() with option `UPGRADE`, `UPGRADE_NOWAIT` or
-`UPGRADE_SKIPLOCKED`, and the requested object is not already loaded by
-the session, the object is loaded using `SELECT ... FOR UPDATE`. If you
-call load() for an object that is already loaded with a less restrictive
-lock than the one you request, Hibernate calls lock() for that object.
+If you call `Session.load()` with option `UPGRADE`, `UPGRADE_NOWAIT` or `UPGRADE_SKIPLOCKED`,
+and the requested object is not already loaded by the session, the object is loaded using `SELECT ... FOR UPDATE`.
 
-Session.lock() performs a version number check if the specified lock
-mode is `READ`, `UPGRADE`, `UPGRADE_NOWAIT` or `UPGRADE_SKIPLOCKED`. In
-the case of `UPGRADE`, `UPGRADE_NOWAIT` or `UPGRADE_SKIPLOCKED`,
-`SELECT ... FOR UPDATE` syntax is used.
+If you call `load()` for an object that is already loaded with a less restrictive lock than the one you request, Hibernate calls `lock()` for that object.
 
-If the requested lock mode is not supported by the database, Hibernate
-uses an appropriate alternate mode instead of throwing an exception.
+`Session.lock(`) performs a version number check if the specified lock mode is `READ`, `UPGRADE`, `UPGRADE_NOWAIT` or `UPGRADE_SKIPLOCKED`.
+In the case of `UPGRADE`, `UPGRADE_NOWAIT` or `UPGRADE_SKIPLOCKED`, the `SELECT ... FOR UPDATE` syntax is used.
+
+If the requested lock mode is not supported by the database, Hibernate uses an appropriate alternate mode instead of throwing an exception.
 This ensures that applications are portable.

@@ -356,10 +356,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 					return makeAttributeConverterDescriptor( info );
 				}
 				catch (Exception e) {
-					throw new IllegalStateException(
-							String.format( "Unable to instantiate AttributeConverter [%s", info.getConverterClass().getName() ),
-							e
-					);
+					throw buildExceptionFromInstantiationError( info, e );
 				}
 			}
 		}
@@ -416,10 +413,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 					return makeAttributeConverterDescriptor( info );
 				}
 				catch (Exception e) {
-					throw new IllegalStateException(
-							String.format( "Unable to instantiate AttributeConverter [%s", info.getConverterClass().getName() ),
-							e
-					);
+					throw buildExceptionFromInstantiationError( info, e );
 				}
 			}
 		}

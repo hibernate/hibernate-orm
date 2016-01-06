@@ -156,7 +156,7 @@ This topic is converted in detail in <<collection.adoc#collections-map,Map - key
 ==== Embeddable types as identifiers
 
 Embeddable types can also be used as entity type identifiers.
-This usage is covered in detail in link:#identifier-composite[Composite identifiers]
+This usage is covered in detail in <chapters/domain/identifiers.adoc#identifiers-composite,Composite identifiers>>.
 
 [IMPORTANT]
 ====

@@ -7,4 +7,6 @@
 * link:#querynative[???]
 
 Flushing is the process of synchronizing the state of the persistence
-context to the database. TBC...
+context to the database.
+
+TODO

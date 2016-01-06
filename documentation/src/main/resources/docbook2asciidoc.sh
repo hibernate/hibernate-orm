@@ -2,7 +2,7 @@
 
 xmls=`find ../docbook/mappingGuide/en-US/chapters/basic  -name '*.xml'`
 
-for xml in $xmls
+for xml in ../docbook/devguide-old/en-US/Batch_Processing.xml
 do
     adoc="${xml%.*}.adoc"
     echo 'Converting' $xml to $adoc

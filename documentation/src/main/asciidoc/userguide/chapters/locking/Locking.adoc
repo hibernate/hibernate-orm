@@ -167,3 +167,5 @@ In the case of `UPGRADE`, `UPGRADE_NOWAIT` or `UPGRADE_SKIPLOCKED`, the `SELECT 
 
 If the requested lock mode is not supported by the database, Hibernate uses an appropriate alternate mode instead of throwing an exception.
 This ensures that applications are portable.
+
+TODO: write about buildLockRequest and LockOptions and more about JPA LockType

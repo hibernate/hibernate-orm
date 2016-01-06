@@ -85,6 +85,19 @@ include::{sourcedir}/native5.java[]
 ----
 ====
 
+[[event-listener-registration]]
+==== Event Listener registration
+
+The main use cases for an `org.hibernate.integrator.spi.Integrator` right now are registering event listeners and providing services (see `org.hibernate.integrator.spi.ServiceContributingIntegrator`).
+With 5.0 we plan on expanding that to allow altering the metamodel describing the mapping between object and relational models.
+
+====
+[source,java]
+----
+include::{sourcedir}/register-event-listeners-example.java[]
+----
+====
+
 [[bootstrap-native-metadata]]
 ==== Building the Metadata
 

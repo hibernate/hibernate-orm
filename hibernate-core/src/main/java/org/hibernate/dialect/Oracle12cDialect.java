@@ -11,6 +11,7 @@ import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.Oracle12cIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.SQL2008StandardLimitHandler;
+import org.hibernate.id.enhanced.SequenceStyleGenerator;
 
 /**
  * An SQL dialect for Oracle 12c.
@@ -32,6 +33,11 @@ public class Oracle12cDialect extends Oracle10gDialect {
 	@Override
 	public LimitHandler getLimitHandler() {
 		return SQL2008StandardLimitHandler.INSTANCE;
+	}
+
+	@Override
+	public Class getNativeIdentifierGeneratorClass() {
+		return SequenceStyleGenerator.class;
 	}
 
 	@Override

@@ -81,10 +81,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 					return makeAttributeConverterDescriptor( info );
 				}
 				catch (Exception e) {
-					throw new IllegalStateException(
-							String.format( "Unable to instantiate AttributeConverter [%s", info.getConverterClass().getName() ),
-							e
-					);
+					throw buildExceptionFromInstantiationError( info, e );
 				}
 			}
 		}
@@ -94,6 +91,13 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		return context.getMetadataCollector()
 				.getAttributeConverterAutoApplyHandler()
 				.findAutoApplyConverterForAttribute( property, context );
+	}
+
+	protected IllegalStateException buildExceptionFromInstantiationError(AttributeConversionInfo info, Exception e) {
+		return new IllegalStateException(
+				String.format( "Unable to instantiate AttributeConverter [%s]", info.getConverterClass().getName() ),
+				e
+		);
 	}
 
 	protected AttributeConverterDescriptor makeAttributeConverterDescriptor(AttributeConversionInfo conversion) {

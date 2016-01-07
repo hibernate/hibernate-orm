@@ -9,13 +9,22 @@ package org.hibernate.test.schemaupdate.foreignkeys.crossschema;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
+import org.hibernate.tool.schema.extract.internal.DatabaseInformationImpl;
+import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
+import org.hibernate.tool.schema.internal.TargetDatabaseImpl;
+import org.hibernate.tool.schema.internal.TargetStdoutImpl;
+import org.hibernate.tool.schema.spi.SchemaManagementTool;
 
 import org.junit.After;
 import org.junit.Before;
@@ -50,7 +59,7 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-10420")
-	public void testForeignKeysAreGeneratedAfterAllTheTablesAreCreated() throws Exception {
+	public void testSchemaExportForeignKeysAreGeneratedAfterAllTheTablesAreCreated() throws Exception {
 
 		final MetadataSources metadataSources = new MetadataSources( ssr );
 
@@ -71,4 +80,48 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 				is( true )
 		);
 	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-10420")
+	public void testSchemaMigrationForeignKeysAreGeneratedAfterAllTheTablesAreCreated() throws Exception {
+
+		final MetadataSources metadataSources = new MetadataSources( ssr );
+
+		metadataSources.addAnnotatedClass( SchemaOneEntity.class );
+		metadataSources.addAnnotatedClass( SchemaTwoEntity.class );
+		metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.validate();
+
+		final Database database = metadata.getDatabase();
+
+		DatabaseInformation dbInfo = new DatabaseInformationImpl(
+				ssr,
+				database.getJdbcEnvironment(),
+				ssr.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess(),
+				database.getDefaultNamespace().getPhysicalName().getCatalog(),
+				database.getDefaultNamespace().getPhysicalName().getSchema()
+		);
+
+		ssr.getService( SchemaManagementTool.class ).getSchemaMigrator( Collections.emptyMap() ).doMigration(
+				metadata,
+				dbInfo,
+				true,
+				Arrays.asList(
+						new TargetStdoutImpl(),
+						new TargetDatabaseImpl( ssr.getService( JdbcServices.class )
+														.getBootstrapJdbcConnectionAccess() )
+				)
+		);
+
+		ssr.getService( SchemaManagementTool.class ).getSchemaDropper( null ).doDrop(
+				metadata,
+				false,
+				Arrays.asList(
+						new TargetStdoutImpl(),
+						new TargetDatabaseImpl( ssr.getService( JdbcServices.class )
+														.getBootstrapJdbcConnectionAccess() )
+				)
+		);
+	}
+
 }

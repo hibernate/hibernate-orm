@@ -235,8 +235,6 @@ public class SchemaCreatorImpl implements SchemaCreator {
 
 			for ( Table table : namespace.getTables() ) {
 
-				// NOTE : Foreign keys must be created *after* unique keys for numerous DBs.  See HHH-8390
-
 				// indexes
 				final Iterator indexItr = table.getIndexIterator();
 				while ( indexItr.hasNext() ) {
@@ -258,12 +256,18 @@ public class SchemaCreatorImpl implements SchemaCreator {
 							dialect.getUniqueKeyExporter().getSqlCreateStrings( uniqueKey, metadata )
 					);
 				}
+			}
+		}
 
+		//NOTE : Foreign keys must be created *after* all tables of all namespaces for cross namespace fks. see HHH-10420
+		for ( Namespace namespace : database.getNamespaces() ) {
+			// NOTE : Foreign keys must be created *after* unique keys for numerous DBs.  See HHH-8390
+
+			for ( Table table : namespace.getTables() ) {
 				// foreign keys
 				final Iterator fkItr = table.getForeignKeyIterator();
 				while ( fkItr.hasNext() ) {
 					final ForeignKey foreignKey = (ForeignKey) fkItr.next();
-//					checkExportIdentifier( foreignKey, exportIdentifiers );
 					applySqlStrings(
 							targets,
 							dialect.getForeignKeyExporter().getSqlCreateStrings( foreignKey, metadata )

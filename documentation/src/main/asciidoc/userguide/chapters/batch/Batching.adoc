@@ -153,7 +153,7 @@ include::{sourcedir}/executeUpdate.java[]
 ----
 ====
 
-In keeping with the EJB3 specification, HQL UPDATE statements, by default, do not affect the version or the timestamp property values for the affected entities.
+In keeping with the EJB3 specification, HQL UPDATE statements, by default, do not effect the version or the timestamp property values for the affected entities.
 You can use a versioned update to force Hibernate to reset the version or timestamp property values, by adding the `VERSIONED` keyword after the `UPDATE` keyword.
 
 .Updating the version of timestamp

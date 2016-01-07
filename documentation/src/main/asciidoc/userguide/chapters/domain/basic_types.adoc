@@ -112,19 +112,19 @@ include::{sourcedir}/basic/ex2.java[]
 ====
 The JPA specification strictly limits the Java types that can be marked as basic to the following listing:
 
-* Java primitive types (boolean, int, etc)
-* wrappers for the primitive types (java.lang.Boolean, java.lang.Integer, etc)
-* java.lang.String
-* java.math.BigInteger
-* java.math.BigDecimal
-* java.util.Date
-* java.util.Calendar
-* java.sql.Date
-* java.sql.Time
-* java.sql.Timestamp
-* byte[] or Byte[]
-* char[] or Character[]
-* enums
+* Java primitive types (`boolean`, `int`, etc)
+* wrappers for the primitive types (`java.lang.Boolean`, `java.lang.Integer`, etc)
+* `java.lang.String`
+* `java.math.BigInteger`
+* `java.math.BigDecimal`
+* `java.util.Date`
+* `java.util.Calendar`
+* `java.sql.Date`
+* `java.sql.Time`
+* `java.sql.Timestamp`
+* `byte[]` or `Byte[]`
+* `char[]` or `Character[]`
+* `enums`
 * any other type that implements `Serializable` (JPA's "support" for `Serializable` types is to directly serialize their state to the database).
 
 If provider portability is a concern, you should stick to just these basic types.
@@ -134,7 +134,7 @@ Note that JPA 2.1 did add the notion of an `javax.persistence.AttributeConverter
 The `@Basic` annotation defines 2 attributes.
 
 `optional` - boolean (defaults to true):: Defines whether this attribute allows nulls.
-JPA defines this as "a hint", which essentially means that it affect is specifically required.
+JPA defines this as "a hint", which essentially means that it effect is specifically required.
 As long as the type is not primitive, Hibernate takes this to mean that the underlying column should be `NULLABLE`.
 `fetch` - FetchType (defaults to EAGER):: Defines whether this attribute should be fetched eagerly or lazily.
 JPA says that EAGER is a requirement to the provider (Hibernate) that the value should be fetched when the owner is fetched, while LAZY is merely a hint that the value be fetched when the attribute is accessed.

@@ -1,1 +1,2 @@
-select c from Cat c
+select c
+from Cat c

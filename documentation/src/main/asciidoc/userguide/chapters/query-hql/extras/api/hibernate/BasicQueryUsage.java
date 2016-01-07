@@ -5,5 +5,5 @@ query.setTimeout( 2 );
 query.setCacheMode( CacheMode.REFRESH );
 // assuming query cache was enabled for the SessionFactory
 query.setCacheable( true );
-// add a comment to the generated SQL if enabled with the SF
+// add a comment to the generated SQL if enabled via the hibernate.use_sql_comments configuration property
 query.setComment( "e pluribus unum" )

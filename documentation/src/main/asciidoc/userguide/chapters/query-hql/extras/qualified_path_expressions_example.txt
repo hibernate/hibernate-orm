@@ -1,4 +1,4 @@
-// Product.images is a Map<String,String> : key = a name, value = file path
+// Product.images is a Map<String,String>, where the Map key is the image name and the Map value is the image path
 
 // select all the image file paths (the map value) for Product#123
 select i

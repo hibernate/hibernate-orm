@@ -1,1 +1,2 @@
-select c from com.acme.Cat c
+select c
+from com.acme.Cat c

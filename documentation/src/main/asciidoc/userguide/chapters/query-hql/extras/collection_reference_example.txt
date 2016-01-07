@@ -4,7 +4,7 @@ from Customer c
     join o.lineItems l
     join l.product p
 where o.status = 'pending'
-  and p.status = 'backorder'
+    and p.status = 'backorder'
 
 // alternate syntax
 select c
@@ -13,4 +13,4 @@ from Customer c,
     in(o.lineItems) l
     join l.product p
 where o.status = 'pending'
-  and p.status = 'backorder'
+    and p.status = 'backorder'

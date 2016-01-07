@@ -7,8 +7,8 @@ where c.id = 123
 select c
 from Customer c
 where c.president.dateOfBirth
-        between {d '1945-01-01'}
-            and {d '1965-01-01'}
+    between {d '1945-01-01'}
+        and {d '1965-01-01'}
 
 select o
 from Order o

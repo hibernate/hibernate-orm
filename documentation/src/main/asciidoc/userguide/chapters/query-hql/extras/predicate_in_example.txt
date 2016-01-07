@@ -21,9 +21,10 @@ where c.hqAddress.state in (
 // Not JPQL compliant!
 select c
 from Customer c
-where c.name in (
-    ('John','Doe'),
-    ('Jane','Doe')
+where
+    ( c.firstName, c.lastName ) in (
+    ( 'John','Doe' ),
+    ( 'Jane','Doe' )
 )
 
 // Not JPQL compliant!

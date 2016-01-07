@@ -940,14 +940,25 @@ The `pattern_value` is the pattern to attempt to match in the `string_expression
 Just like SQL, `pattern_value` can use `\_` and `%` as wildcards.
 The meanings are the same. The `_` symbol matches any single character and `%` matches any number of characters.
 
-The optional `escape_character` is used to specify an escape character used to escape the special meaning of `\_` and `%` in the `pattern_value`.
-This is useful when needing to search on patterns including either `_` or `%`
-
 .Like predicate examples
 ====
 [source]
 ----
 include::{sourcedir}/predicate_like_example.txt[]
+----
+====
+
+The optional `escape 'escape character'` is used to specify an escape character used to escape the special meaning of `\_` and `%` in the `pattern_value`.
+This is useful when needing to search on patterns including either `_` or `%`.
+
+The syntax is formed as follows: `'like_predicate' escape 'escape_symbol'`
+So, if `|` is the escape symbol and we want to match all stored procedures prefixed with `sp_`, the like criteria becomes: `'sp|_%' escape '|'`:
+
+.Like with escape symbol
+====
+[source]
+----
+include::{sourcedir}/predicate_like_escape_example.txt[]
 ----
 ====
 
@@ -1332,15 +1343,4 @@ Additionally, JPA allows access to read some information about parameters as wel
 
 As far as execution, JPA supports the two main methods discussed above for the Hibernate API.
 It calls these methods `Query#getResultList` and `Query#getSingleResult`.
-They behave exactly as described for `org.hibernate.Query#list` and `org.hibernate.Query#uniqueResult.`
-
-TODO add escape reserved symbols section
-
-TODO
-
-select c
-from Customer c
-where c.name in (
-    ('John','Doe'),
-    ('Jane','Doe')
-)
+They behave exactly as described for `org.hibernate.Query#list` and `org.hibernate.Query#uniqueResult`.

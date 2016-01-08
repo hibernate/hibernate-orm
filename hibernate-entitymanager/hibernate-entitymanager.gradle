@@ -23,8 +23,7 @@ dependencies {
     compile( libraries.commons_annotations )
     compile( libraries.jpa )
     compile( libraries.javassist )
-
-    provided( libraries.jta )
+    compile( libraries.jta )
 
     provided( "javax.enterprise:cdi-api:1.1-PFD" )
 

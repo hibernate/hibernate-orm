@@ -7,7 +7,6 @@
 dependencies {
     compile project( ':hibernate-core' )
     compile( libraries.ehcache )
-    provided( libraries.jta )
 
     testCompile project( ':hibernate-testing' )
 }

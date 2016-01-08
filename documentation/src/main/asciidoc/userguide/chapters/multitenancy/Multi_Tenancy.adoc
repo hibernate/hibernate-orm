@@ -36,7 +36,7 @@ Each tenant's data is kept in a physically separate database instance.
 JDBC Connections would point specifically to each database, so any
 pooling would be per-tenant. A general application approach here would
 be to define a JDBC Connection pool per-tenant and to select the pool to
-use based on the ``tenant identifier'' associated with the currently
+use based on the _tenant identifier_ associated with the currently
 logged in user.
 
 === Separate schema
@@ -53,14 +53,14 @@ driver supports naming the default schema in the connection URL or if
 the pooling mechanism supports naming a schema to use for its
 Connections. Using this approach, we would have a distinct JDBC
 Connection pool per-tenant where the pool to use would be selected based
-on the ``tenant identifier'' associated with the currently logged in
+on the "tenant identifier" associated with the currently logged in
 user.
 * Connections could point to the database itself (using some default
 schema) but the Connections would be altered using the SQL `SET SCHEMA`
 (or similar) command. Using this approach, we would have a single JDBC
 Connection pool for use to service all tenants, but before using the
 Connection it would be altered to reference the schema named by the
-``tenant identifier'' associated with the currently logged in user.
+"tenant identifier" associated with the currently logged in user.
 
 === Partitioned (discriminator) data
 
@@ -72,7 +72,7 @@ complexity of this discriminator might range from a simple column value
 to a complex SQL formula. Again, this approach would use a single
 Connection pool to service all tenants. However, in this approach the
 application needs to alter each and every SQL statement sent to the
-database to reference the ``tenant identifier'' discriminator.
+database to reference the "tenant identifier" discriminator.
 
 === Multi-tenancy in Hibernate
 

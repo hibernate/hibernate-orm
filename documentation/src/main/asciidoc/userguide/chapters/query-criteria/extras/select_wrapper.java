@@ -1,15 +1,15 @@
 public class PersonWrapper {
 
-	private final Long id;
+    private final Long id;
 
-	private final Integer age;
+    private final Integer age;
 
-	public PersonWrapper( Long id, Integer age ) {
-		this.id = id;
-		this.age = age;
-	}
+    public PersonWrapper(Long id, Integer age) {
+        this.id = id;
+        this.age = age;
+    }
 
-	...
+    ...
 }
 
 ...

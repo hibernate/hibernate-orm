@@ -1187,11 +1187,10 @@ This partition contains the most interesting audit data and is the new
 [[envers-links]]
 === Envers links
 
-1.  http://hibernate.org[Hibernate main page]
-2.  http://community.jboss.org/en/envers?view=discussions[Forum]
-3.  http://opensource.atlassian.com/projects/hibernate/browse/HHH[JIRA
-issue tracker] (when adding issues concerning Envers, be sure to select
-the "envers" component!)
-4.  irc://irc.freenode.net:6667/envers[IRC channel]
-5.  http://www.jboss.org/feeds/view/envers[Envers Blog]
-6.  https://community.jboss.org/wiki/EnversFAQ[FAQ]
+.  http://hibernate.org[Hibernate main page]
+.  http://community.jboss.org/en/envers?view=discussions[Forum]
+.  http://opensource.atlassian.com/projects/hibernate/browse/HHH[JIRA issue tracker] (when adding issues concerning Envers, be sure to select the "envers" component!)
+.  irc://irc.freenode.net:6667/envers[IRC channel]
+.  http://www.jboss.org/feeds/view/envers[Envers Blog]
+.  https://community.jboss.org/wiki/EnversFAQ[FAQ]
+

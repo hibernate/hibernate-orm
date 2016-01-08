@@ -16,7 +16,7 @@ This information is copied as-is from the older Hibernate documentation.
 Hibernate features an intuitive, extensible criteria query API.
 
 [[querycriteria-creating]]
-== Creating a `Criteria` instance
+=== Creating a `Criteria` instance
 
 The interface `org.hibernate.Criteria` represents a query against a
 particular persistent class. The `Session` is a factory for `Criteria`
@@ -30,7 +30,7 @@ List cats = crit.list();
 ----
 
 [[querycriteria-narrowing]]
-== Narrowing the result set
+=== Narrowing the result set
 
 An individual query criterion is an instance of the interface
 `org.hibernate.criterion.Criterion`. The class
@@ -103,7 +103,7 @@ List cats = sess.createCriteria(Cat.class)
 ----
 
 [[querycriteria-ordering]]
-== Ordering the results
+=== Ordering the results
 
 You can order the results using `org.hibernate.criterion.Order`.
 
@@ -128,7 +128,7 @@ List cats = sess.createCriteria(Cat.class)
 ----
 
 [[querycriteria-associations]]
-== Associations
+=== Associations
 
 By navigating associations using `createCriteria()` you can specify
 constraints upon related entities:
@@ -204,7 +204,7 @@ started with "good" sorted by the mates age.
 Thirdly, in memory; the lists would need to be joined manually.
 
 [[querycriteria-dynamicfetching]]
-== Dynamic association fetching
+=== Dynamic association fetching
 
 You can specify association fetching semantics at runtime using
 `setFetchMode()`.
@@ -221,7 +221,7 @@ List cats = sess.createCriteria(Cat.class)
 This query will fetch both `mate` and `kittens` by outer join.
 
 [[querycriteria-components]]
-== Components
+=== Components
 
 To add a restriction against a property of an embedded component, the
 component property name should be prepended to the property name when
@@ -241,7 +241,7 @@ Note: this does not apply when querying collections of components, for
 that see below <<querycriteria-collections>>
 
 [[querycriteria-collections]]
-== Collections
+=== Collections
 
 When using criteria against collections, there are two distinct cases.
 One is if the collection contains entities (eg. `<one-to-many/>` or
@@ -267,7 +267,7 @@ List cats = session.createCriteria(Cat.class)
 ----
 
 [[querycriteria-examples]]
-== Example queries
+=== Example queries
 
 The class `org.hibernate.criterion.Example` allows you to construct a
 query criterion from a given instance.
@@ -311,7 +311,7 @@ List results = session.createCriteria(Cat.class)
 ----
 
 [[querycriteria-projection]]
-== Projections, aggregation and grouping
+=== Projections, aggregation and grouping
 
 The class `org.hibernate.criterion.Projections` is a factory for
 `Projection` instances. You can apply a projection to a query by calling
@@ -417,7 +417,7 @@ List results = session.createCriteria(Cat.class)
 ----
 
 [[querycriteria-detachedqueries]]
-== Detached queries and subqueries
+=== Detached queries and subqueries
 
 The `DetachedCriteria` class allows you to create a query outside the
 scope of a session and then execute it using an arbitrary `Session`.
@@ -481,7 +481,7 @@ session.createCriteria( Woman.class )
 ----
 
 [[query-criteria-naturalid]]
-== Queries by natural identifier
+=== Queries by natural identifier
 
 For most queries, including criteria queries, the query cache is not
 efficient because query cache invalidation occurs too frequently.

@@ -1,29 +1,19 @@
 [[appendix-legacy-bootstrap]]
 == Legacy Bootstrapping
 
-The legacy way to bootstrap a SessionFactory is via the
-`org.hibernate.cfg.Configuration` object. Configuration represents,
-essentially, a single point for specifying all aspects of building the
-SessionFactory: everything from settings, to mappings, to strategies,
-etc. I like to think of Configuration as a big pot to which we add a
-bunch of stuff (mappings, settings, etc) and from which we eventually
-get a SessionFactory.
+The legacy way to bootstrap a SessionFactory is via the `org.hibernate.cfg.Configuration` object.
+`Configuration` represents, essentially, a single point for specifying all aspects of building the `SessionFactory`: everything from settings, to mappings, to strategies, etc.
+I like to think of `Configuration` as a big pot to which we add a bunch of stuff (mappings, settings, etc) and from which we eventually get a `SessionFactory.`
 
 [NOTE]
 ====
-There are some significant draw backs to this approach which led to its
-deprecation and the development of the new approach, which is discussed
-in link:#bootstrap-native[???]. Configuration is semi-deprecated but
-still available for use, in a limited form that eliminates these draw
-backs. "Under the covers", Configuration uses the new bootstrapping
-code, so the things available there as also available here in terms of
-auto-discovery.
+There are some significant draw backs to this approach which led to its deprecation and the development of the new approach, which is discussed in  <<chapters/bootstrap/Bootstrap.adoc#bootstrap-native,Native Bootstrapping>>.
+`Configuration` is semi-deprecated but still available for use, in a limited form that eliminates these drawbacks.
+"Under the covers", `Configuration` uses the new bootstrapping code, so the things available there as also available here in terms of auto-discovery.
 ====
 
-You can obtain the Configuration by instantiating it directly. You then
-specify mapping metadata (XML mapping documents, annotated classes) that
-describe your applications object model and its mapping to a SQL
-database.
+You can obtain the `Configuration` by instantiating it directly.
+You then specify mapping metadata (XML mapping documents, annotated classes) that describe your applications object model and its mapping to a SQL database.
 
 [source,java]
 ----
@@ -48,66 +38,41 @@ Configuration cfg = new Configuration()
 
 There are other ways to specify Configuration information, including:
 
-* Place a file named hibernate.properties in a root directory of the
-classpath
-* Pass an instance of java.util.Properties to
-Configuration#setProperties
-* Via a Hibernate cfg.xml file
+* Place a file named hibernate.properties in a root directory of the classpath
+* Pass an instance of java.util.Properties to `Configuration#setProperties`
+* Via a `hibernate.cfg.xml` file
 * System properties using java `-Dproperty=value`
 
 == Migration
 
-Mapping Configuration methods to the corresponding methods in the new
-APIs..
+Mapping Configuration methods to the corresponding methods in the new APIs..
 
-Configuration#addFile::
-  MetadataSources#addFile
-Configuration#add(XmlDocument)::
-  No replacement
-Configuration#addXML::
-  No replacement
-Configuration#addCacheableFile::
-  MetadataSources#addCacheableFile
-Configuration#addURL::
-  MetadataSources#addURL
-Configuration#addInputStream::
-  MetadataSources#addInputStream
-Configuration#addResource::
-  MetadataSources#addResource
-Configuration#addClass::
-  MetadataSources#addClass
-Configuration#addAnnotatedClass::
-  MetadataSources#addAnnotatedClass
-Configuration#addPackage::
-  MetadataSources#addPackage
-Configuration#addJar::
-  MetadataSources#addJar
-Configuration#addDirectory::
-  MetadataSources#addDirectory
-Configuration#registerTypeContributor::
-  MetadataBuilder#applyTypes
-Configuration#registerTypeOverride::
-  MetadataBuilder#applyBasicType
+|===
+|`Configuration#addFile`|`Configuration#addFile`
+|`Configuration#add(XmlDocument)`|`Configuration#add(XmlDocument)`
+|`Configuration#addXML`|`Configuration#addXML`
+|`Configuration#addCacheableFile`|`Configuration#addCacheableFile`
+|`Configuration#addURL`|`Configuration#addURL`
+|`Configuration#addInputStream`|`Configuration#addInputStream`
+|`Configuration#addResource`|`Configuration#addResource`
+|`Configuration#addClass`|`Configuration#addClass`
+|`Configuration#addAnnotatedClass`|`Configuration#addAnnotatedClass`
+|`Configuration#addPackage`|`Configuration#addPackage`
+|`Configuration#addJar`|`Configuration#addJar`
+|`Configuration#addDirectory`|`Configuration#addDirectory`
+|`Configuration#registerTypeContributor`|`Configuration#registerTypeContributor`
+|`Configuration#registerTypeOverride`|`Configuration#registerTypeOverride`
+|`Configuration#setProperty`|`Configuration#setProperty`
+|`Configuration#setProperties`|`Configuration#setProperties`
+|`Configuration#addProperties`|`Configuration#addProperties`
+|`Configuration#setNamingStrategy`|`Configuration#setNamingStrategy`
+|`Configuration#setImplicitNamingStrategy`|`Configuration#setImplicitNamingStrategy`
+|`Configuration#setPhysicalNamingStrategy`|`Configuration#setPhysicalNamingStrategy`
+|`Configuration#configure`|`Configuration#configure`
+|`Configuration#setInterceptor`|`Configuration#setInterceptor`
+|`Configuration#setEntityNotFoundDelegate`|`Configuration#setEntityNotFoundDelegate`
+|`Configuration#setSessionFactoryObserver`|`Configuration#setSessionFactoryObserver`
+|`Configuration#setCurrentTenantIdentifierResolver`|`Configuration#setCurrentTenantIdentifierResolver`
+|===
 
-Configuration#setProperty::
-  StandardServiceRegistryBuilder#applySetting
-Configuration#setProperties::
-  No replacement
-Configuration#addProperties::
-  StandardServiceRegistryBuilder#applySettings
-Configuration#setNamingStrategy::
-  No replacement. NamingStrategy split into implicit/physical strategies
-Configuration#setImplicitNamingStrategy::
-  MetadataBuilder#setImplicitNamingStrategy
-Configuration#setPhysicalNamingStrategy::
-  MetadataBuilder#setPhysicalNamingStrategy
-Configuration#configure::
-  StandardServiceRegistryBuilder#configure
-Configuration#setInterceptor::
-  SessionFactoryBuilder#applyInterceptor
-Configuration#setEntityNotFoundDelegate::
-  SessionFactoryBuilder#applyEntityNotFoundDelegate
-Configuration#setSessionFactoryObserver::
-  SessionFactoryBuilder#addSessionFactoryObservers
-Configuration#setCurrentTenantIdentifierResolver::
-  SessionFactoryBuilder#applyCurrentTenantIdentifierResolver
+  

@@ -17,23 +17,34 @@ import org.hibernate.service.ServiceRegistry;
  * @author Steve Ebersole
  */
 public interface JdbcSessionContext {
-	public boolean isScrollableResultSetsEnabled();
-	public boolean isGetGeneratedKeysEnabled();
-	public int getFetchSize();
+	boolean isScrollableResultSetsEnabled();
+	boolean isGetGeneratedKeysEnabled();
+	int getFetchSize();
 
-	public ConnectionReleaseMode getConnectionReleaseMode();
-	public ConnectionAcquisitionMode getConnectionAcquisitionMode();
+	PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode();
 
-	public StatementInspector getStatementInspector();
+	/**
+	 * @deprecated Use {@link #getPhysicalConnectionHandlingMode} instead
+	 */
+	@Deprecated
+	ConnectionReleaseMode getConnectionReleaseMode();
 
-	public JdbcObserver getObserver();
+	/**
+	 * @deprecated Use {@link #getPhysicalConnectionHandlingMode} instead
+	 */
+	@Deprecated
+	ConnectionAcquisitionMode getConnectionAcquisitionMode();
+
+	StatementInspector getStatementInspector();
+
+	JdbcObserver getObserver();
 
 	/**
 	* Retrieve the session factory for this environment.
 	*
 	* @return The session factory
 	*/
-	public SessionFactoryImplementor getSessionFactory();
+	SessionFactoryImplementor getSessionFactory();
 
-	public ServiceRegistry getServiceRegistry();
+	ServiceRegistry getServiceRegistry();
 }

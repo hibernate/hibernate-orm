@@ -8,6 +8,7 @@ package org.hibernate.boot.spi;
 
 import java.util.Map;
 
+import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityMode;
@@ -26,6 +27,7 @@ import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
@@ -151,7 +153,13 @@ public interface SessionFactoryOptions {
 
 	public Integer getJdbcFetchSize();
 
-	public ConnectionReleaseMode getConnectionReleaseMode();
+	PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode();
+
+	/**
+	 * @deprecated Use {@link #getPhysicalConnectionHandlingMode()} instead
+	 */
+	@Deprecated
+	ConnectionReleaseMode getConnectionReleaseMode();
 
 	public boolean isCommentsEnabled();
 

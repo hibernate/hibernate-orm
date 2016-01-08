@@ -26,6 +26,7 @@ import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
@@ -34,6 +35,7 @@ import org.hibernate.tuple.entity.EntityTuplizerFactory;
  *
  * @author Steve Ebersole
  */
+@SuppressWarnings("unused")
 public abstract class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOptions {
 	private final SessionFactoryOptions delegate;
 
@@ -272,6 +274,12 @@ public abstract class AbstractDelegatingSessionFactoryOptions implements Session
 	}
 
 	@Override
+	public PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode() {
+		return delegate.getPhysicalConnectionHandlingMode();
+	}
+
+	@Override
+	@SuppressWarnings("deprecation")
 	public ConnectionReleaseMode getConnectionReleaseMode() {
 		return delegate.getConnectionReleaseMode();
 	}

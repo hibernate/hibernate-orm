@@ -8,6 +8,7 @@ package org.hibernate.boot.internal;
 
 import java.util.Map;
 
+import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityMode;
@@ -27,6 +28,7 @@ import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
@@ -108,7 +110,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private final Integer jdbcFetchSize;
 	private final boolean scrollableResultSetsEnabled;
 	private final boolean commentsEnabled;
-	private final ConnectionReleaseMode connectionReleaseMode;
+	private final PhysicalConnectionHandlingMode physicalConnectionHandlingMode;
 	private final boolean wrapResultSetsEnabled;
 
 	private final Map<String, SQLFunction> sqlFunctions;
@@ -168,7 +170,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.autoEvictCollectionCache = state.isAutoEvictCollectionCache();
 
 		this.schemaAutoTooling = state.getSchemaAutoTooling();
-		this.connectionReleaseMode = state.getConnectionReleaseMode();
+		this.physicalConnectionHandlingMode = state.getPhysicalConnectionHandlingMode();
 		this.getGeneratedKeysEnabled = state.isGetGeneratedKeysEnabled();
 		this.jdbcBatchSize = state.getJdbcBatchSize();
 		this.jdbcBatchVersionedData = state.isJdbcBatchVersionedData();
@@ -409,8 +411,13 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	}
 
 	@Override
+	public PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode() {
+		return physicalConnectionHandlingMode;
+	}
+
+	@Override
 	public ConnectionReleaseMode getConnectionReleaseMode() {
-		return connectionReleaseMode;
+		return physicalConnectionHandlingMode.getReleaseMode();
 	}
 
 	@Override

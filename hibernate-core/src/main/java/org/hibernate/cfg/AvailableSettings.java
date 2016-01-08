@@ -513,7 +513,20 @@ public interface AvailableSettings {
 	String FLUSH_BEFORE_COMPLETION = "hibernate.transaction.flush_before_completion";
 
 	/**
-	 * Specifies how Hibernate should release JDBC connections.
+	 * Specifies how Hibernate should acquire JDBC connections.  Should generally only configure
+	 * this or {@link #RELEASE_CONNECTIONS}, not both
+	 *
+	 * @see org.hibernate.ConnectionAcquisitionMode
+	 *
+	 * @since 5.1
+	 */
+	String ACQUIRE_CONNECTIONS = "hibernate.connection.acquisition_mode";
+
+	/**
+	 * Specifies how Hibernate should release JDBC connections.  Should generally only configure
+	 * this or {@link #ACQUIRE_CONNECTIONS}, not both
+	 *
+	 * @see org.hibernate.ConnectionReleaseMode
 	 */
 	String RELEASE_CONNECTIONS = "hibernate.connection.release_mode";
 

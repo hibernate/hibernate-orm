@@ -23,6 +23,7 @@ import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
@@ -623,6 +624,20 @@ public interface SessionFactoryBuilder {
 	public SessionFactoryBuilder applyJdbcFetchSize(int size);
 
 	/**
+	 * Apply the specified handling mode for JDBC connections
+	 *
+	 * @param connectionHandlingMode The handling mode to apply
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#ACQUIRE_CONNECTIONS
+	 * @see org.hibernate.cfg.AvailableSettings#RELEASE_CONNECTIONS
+	 * @see org.hibernate.ConnectionAcquisitionMode
+	 * @see ConnectionReleaseMode
+	 */
+	SessionFactoryBuilder applyConnectionHandlingMode(PhysicalConnectionHandlingMode connectionHandlingMode);
+
+	/**
 	 * Apply a ConnectionReleaseMode.
 	 *
 	 * @param connectionReleaseMode The ConnectionReleaseMode to use.
@@ -630,8 +645,11 @@ public interface SessionFactoryBuilder {
 	 * @return {@code this}, for method chaining
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#RELEASE_CONNECTIONS
+	 *
+	 * @deprecated Use {@link #applyConnectionHandlingMode} instead
 	 */
-	public SessionFactoryBuilder applyConnectionReleaseMode(ConnectionReleaseMode connectionReleaseMode);
+	@Deprecated
+	SessionFactoryBuilder applyConnectionReleaseMode(ConnectionReleaseMode connectionReleaseMode);
 
 	/**
 	 * Should Hibernate apply comments to SQL it generates?

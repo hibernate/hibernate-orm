@@ -21,7 +21,7 @@ public interface TransactionCoordinatorBuilder extends Service {
 	/**
 	 * Access to options to are specific to each TransactionCoordinator instance
 	 */
-	public static interface TransactionCoordinatorOptions {
+	static interface TransactionCoordinatorOptions {
 		/**
 		 * Indicates whether an active transaction should be automatically joined.  Only relevant
 		 * for JTA-based TransactionCoordinator instances.
@@ -29,14 +29,14 @@ public interface TransactionCoordinatorBuilder extends Service {
 		 * @return {@code true} indicates the active transaction should be auto joined; {@code false}
 		 * indicates it should not (until {@link TransactionCoordinator#explicitJoin} is called).
 		 */
-		public boolean shouldAutoJoinTransaction();
+		boolean shouldAutoJoinTransaction();
 	}
 
-	public TransactionCoordinator buildTransactionCoordinator(TransactionCoordinatorOwner owner, TransactionCoordinatorOptions options);
+	TransactionCoordinator buildTransactionCoordinator(TransactionCoordinatorOwner owner, TransactionCoordinatorOptions options);
 
-	public boolean isJta();
+	boolean isJta();
 
-	public ConnectionReleaseMode getDefaultConnectionReleaseMode();
+	ConnectionReleaseMode getDefaultConnectionReleaseMode();
 
-	public ConnectionAcquisitionMode getDefaultConnectionAcquisitionMode();
+	ConnectionAcquisitionMode getDefaultConnectionAcquisitionMode();
 }

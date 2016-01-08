@@ -36,7 +36,7 @@ image:images/domain/naming/implicit_naming_strategy_diagram.svg[Implicit Naming 
 ====
 You can switch to the any of these implementations by setting the `hibernate.implicit_naming_strategy` configuration properties to one of the following values:
 
-`default`:: for org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl
+`default`:: for `org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl`
 
 `jpa`:: for `org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl` (the JPA 2.0 compliant naming strategy)
 

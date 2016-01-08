@@ -1,12 +1,15 @@
 /**
- * Simplisitc implementation for illustration purposes supporting 2 hard coded providers ( pools ) and leveraging
- * the support class {@link org.hibernate.service.jdbc.connections.spi.AbstractMultiTenantConnectionProvider}
+ * Simplisitc implementation for illustration purposes supporting
+ * 2 hard coded providers ( pools ) and leveraging the support class
+ * {@link org.hibernate.service.jdbc.connections.spi.AbstractMultiTenantConnectionProvider}
  */
 public class MultiTenantConnectionProviderImpl extends AbstractMultiTenantConnectionProvider {
 
-    private final ConnectionProvider acmeProvider = ConnectionProviderUtils.buildConnectionProvider( "acme" );
+    private final ConnectionProvider acmeProvider =
+        ConnectionProviderUtils.buildConnectionProvider( "acme" );
 
-    private final ConnectionProvider jbossProvider = ConnectionProviderUtils.buildConnectionProvider( "jboss" );
+    private final ConnectionProvider jbossProvider =
+        ConnectionProviderUtils.buildConnectionProvider( "jboss" );
 
     @Override
     protected ConnectionProvider getAnyConnectionProvider() {

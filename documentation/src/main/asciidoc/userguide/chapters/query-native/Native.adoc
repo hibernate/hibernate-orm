@@ -3,19 +3,15 @@
 :sourcedir: extras
 
 You may also express queries in the native SQL dialect of your database.
-This is useful if you want to utilize database specific features such as
-query hints or the CONNECT BY option in Oracle. It also provides a clean
-migration path from a direct SQL/JDBC based application to
-Hibernate/JPA. Hibernate also allows you to specify handwritten SQL
-(including stored procedures) for all create, update, delete, and load
-operations.
+This is useful if you want to utilize database specific features such as query hints or the `CONNECT BY` option in Oracle.
+It also provides a clean migration path from a direct SQL/JDBC based application to Hibernate/JPA.
+Hibernate also allows you to specify handwritten SQL (including stored procedures) for all create, update, delete, and load operations.
 
 [[querynative-creating]]
 === Using a `SQLQuery`
 
-Execution of native SQL queries is controlled via the `SQLQuery`
-interface, which is obtained by calling `Session.createSQLQuery()`. The
-following sections describe how to use this API for querying.
+Execution of native SQL queries is controlled via the `SQLQuery` interface, which is obtained by calling `Session.createSQLQuery()`.
+The following sections describe how to use this API for querying.
 
 === Scalar queries
 
@@ -23,75 +19,67 @@ The most basic SQL query is to get a list of scalars (values).
 
 [source,java]
 ----
-sess.createSQLQuery("SELECT * FROM CATS").list();
-sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE FROM CATS").list();
+session
+    .createSQLQuery( "SELECT * FROM CATS" )
+    .list();
+
+session
+    .createSQLQuery( "SELECT ID, NAME, BIRTHDATE FROM CATS" )
+    .list();
 ----
 
-These will return a List of Object arrays (Object[]) with scalar values
-for each column in the CATS table. Hibernate will use ResultSetMetadata
-to deduce the actual order and types of the returned scalar values.
+These will return a List of Object arrays ( `Object[]` ) with scalar values for each column in the `CATS` table.
+Hibernate will use `ResultSetMetadata` to deduce the actual order and types of the returned scalar values.
 
-To avoid the overhead of using `ResultSetMetadata`, or simply to be more
-explicit in what is returned, one can use `addScalar()`:
+To avoid the overhead of using `ResultSetMetadata`, or simply to be more explicit in what is returned, one can use `addScalar()`:
 
 [source,java]
 ----
-sess.createSQLQuery("SELECT * FROM CATS")
- .addScalar("ID", Hibernate.LONG)
- .addScalar("NAME", Hibernate.STRING)
- .addScalar("BIRTHDATE", Hibernate.DATE)
+session
+    .createSQLQuery("SELECT * FROM CATS" )
+    .addScalar( "ID", Hibernate.LONG )
+    .addScalar( "NAME", Hibernate.STRING )
+    .addScalar( "BIRTHDATE", Hibernate.DATE )
 ----
-
-sess.createSQLQuery("SELECT * FROM CATS") .addScalar("ID",
-Hibernate.LONG) .addScalar("NAME", Hibernate.STRING)
-.addScalar("BIRTHDATE", Hibernate.DATE) </programlisting>
 
 This query specified:
 
 * the SQL query string
 * the columns and types to return
 
-This will return Object arrays, but now it will not use
-`ResultSetMetadata` but will instead explicitly get the ID, NAME and
-BIRTHDATE column as respectively a Long, String and a Short from the
-underlying resultset. This also means that only these three columns will
-be returned, even though the query is using `*` and could return more
-than the three listed columns.
+Although it still returns an Object arrays, this query will not use the `ResultSetMetadata` anymore since it explicitly get the `ID`, `NAME` and `BIRTHDATE` columns as respectively a `Long`, `String `and a `Short` from the underlying `ResultSet`.
+This also means that only these three columns will be returned, even though the query is using `*` and the `ResultSet` contains more than the three listed columns.
 
-It is possible to leave out the type information for all or some of the
-scalars.
+It is possible to leave out the type information for all or some of the scalars.
 
 [source,java]
 ----
-sess.createSQLQuery("SELECT * FROM CATS")
- .addScalar("ID", Hibernate.LONG)
- .addScalar("NAME")
- .addScalar("BIRTHDATE")
+session
+    .createSQLQuery( "SELECT * FROM CATS" )
+    .addScalar( "ID", Hibernate.LONG )
+    .addScalar( "NAME" )
+    .addScalar( "BIRTHDATE" )
 ----
 
-sess.createSQLQuery("SELECT * FROM CATS") .addScalar("ID",
-Hibernate.LONG) .addScalar("NAME") .addScalar("BIRTHDATE")
-</programlisting>
+This is essentially the same query as before, but now `ResultSetMetaData` is used to determine the type of `NAME` and `BIRTHDATE`, where as the type of `ID` is explicitly specified.
 
-This is essentially the same query as before, but now
-`ResultSetMetaData` is used to determine the type of NAME and BIRTHDATE,
-where as the type of ID is explicitly specified.
-
-How the java.sql.Types returned from ResultSetMetaData is mapped to
-Hibernate types is controlled by the Dialect. If a specific type is not
-mapped, or does not result in the expected type, it is possible to
-customize it via calls to `registerHibernateType` in the Dialect.
+How the `java.sql.Types` returned from `ResultSetMetaData` is mapped to Hibernate types is controlled by the Dialect.
+If a specific type is not mapped, or does not result in the expected type, it is possible to customize it via calls to `registerHibernateType` in the Dialect.
 
 === Entity queries
 
-The above queries were all about returning scalar values, basically
-returning the "raw" values from the resultset. The following shows how
-to get entity objects from a native sql query via `addEntity()`.
+The above queries were all about returning scalar values, basically returning the "raw" values from the `ResultSet`.
+The following shows how to get entity objects from a native sql query via `addEntity()`.
 
 [source,java]
 ----
-sess.createSQLQuery("SELECT * FROM CATS").addEntity(Cat.class);
-sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE FROM CATS").addEntity(Cat.class);
+session
+    .createSQLQuery( "SELECT * FROM CATS" )
+    .addEntity( Cat.class );
+
+session
+    .createSQLQuery( "SELECT ID, NAME, BIRTHDATE FROM CATS" )
+    .addEntity( Cat.class );
 ----
 
 This query specified:
@@ -99,126 +87,111 @@ This query specified:
 * the SQL query string
 * the entity returned by the query
 
-Assuming that Cat is mapped as a class with the columns ID, NAME and
-BIRTHDATE the above queries will both return a List where each element
-is a Cat entity.
+Assuming that `Cat` is mapped as a class with the columns `ID`, `NAME` and `BIRTHDATE` the above queries will both return a `List` where each element is a `Cat` entity.
 
-If the entity is mapped with a `many-to-one` to another entity it is
-required to also return this when performing the native query, otherwise
-a database specific "column not found" error will occur. The additional
-columns will automatically be returned when using the * notation, but we
-prefer to be explicit as in the following example for a `many-to-one` to
-a `Dog`:
+If the entity is mapped with a `many-to-one` to another entity it is required to also return this when performing the native query, otherwise a database specific "column not found" error will occur.
+The additional columns will automatically be returned when using the * notation, but we prefer to be explicit as in the following example for a `many-to-one` to a `Dog`:
 
 [source,java]
 ----
-sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE, DOG_ID FROM CATS").addEntity(Cat.class);
+session
+    .createSQLQuery( "SELECT ID, NAME, BIRTHDATE, DOG_ID FROM CATS" )
+    .addEntity( Cat.class );
 ----
 
-This will allow cat.getDog() to function properly.
+This will allow `cat.getDog()` to function properly.
 
 === Handling associations and collections
 
-It is possible to eagerly join in the `Dog` to avoid the possible extra
-roundtrip for initializing the proxy. This is done via the `addJoin()`
-method, which allows you to join in an association or collection.
+It is possible to eagerly join in the `Dog` to avoid the possible extra roundtrip for initializing the proxy.
+This is done via the `addJoin()` method, which allows you to join in an association or collection.
 
 [source,java]
 ----
-sess.createSQLQuery("SELECT c.ID, NAME, BIRTHDATE, DOG_ID, D_ID, D_NAME FROM CATS c, DOGS d WHERE c.DOG_ID = d.D_ID")
- .addEntity("cat", Cat.class)
- .addJoin("cat.dog");
+session
+    .createSQLQuery( "SELECT c.ID, NAME, BIRTHDATE, DOG_ID, D_ID, D_NAME FROM CATS c, DOGS d WHERE c.DOG_ID = d.D_ID" )
+    .addEntity( "cat", Cat.class )
+    .addJoin( "cat.dog" );
 ----
 
-In this example, the returned `Cat`'s will have their `dog` property
-fully initialized without any extra roundtrip to the database. Notice
-that you added an alias name ("cat") to be able to specify the target
-property path of the join. It is possible to do the same eager joining
-for collections, e.g. if the `Cat` had a one-to-many to `Dog` instead.
+In this example, the returned `Cat`s will have their `dog` property fully initialized without any extra roundtrip to the database.
+Notice that you added an alias name _"cat"_ to be able to specify the target property path of the join.
+It is possible to do the same eager joining for collections (e.g. if the `Cat` had a `one-to-many` to `Dog` instead).
 
 [source,java]
 ----
-sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE, D_ID, D_NAME, CAT_ID FROM CATS c, DOGS d WHERE c.ID = d.CAT_ID")
- .addEntity("cat", Cat.class)
- .addJoin("cat.dogs");
+session
+    .createSQLQuery( "SELECT ID, NAME, BIRTHDATE, D_ID, D_NAME, CAT_ID FROM CATS c, DOGS d WHERE c.ID = d.CAT_ID" )
+    .addEntity( "cat", Cat.class )
+    .addJoin( "cat.dogs" );
 ----
 
-At this stage you are reaching the limits of what is possible with
-native queries, without starting to enhance the sql queries to make them
-usable in Hibernate. Problems can arise when returning multiple entities
-of the same type or when the default alias/column names are not enough.
+At this stage you are reaching the limits of what is possible with native queries, without starting to enhance the sql queries to make them usable in Hibernate.
+Problems can arise when returning multiple entities of the same type or when the default alias/column names are not enough.
 
 === Returning multiple entities
 
-Until now, the result set column names are assumed to be the same as the
-column names specified in the mapping document. This can be problematic
-for SQL queries that join multiple tables, since the same column names
-can appear in more than one table.
+Until now, the result set column names are assumed to be the same as the column names specified in the mapping document.
+This can be problematic for SQL queries that join multiple tables, since the same column names can appear in more than one table.
 
-Column alias injection is needed in the following query (which most
-likely will fail):
+Column alias injection is needed in the following query (which most likely will fail):
 
 [source,java]
 ----
-sess.createSQLQuery("SELECT c.*, m.*  FROM CATS c, CATS m WHERE c.MOTHER_ID = c.ID")
- .addEntity("cat", Cat.class)
- .addEntity("mother", Cat.class)
+session
+    .createSQLQuery( "SELECT c.*, m.*  FROM CATS c, CATS m WHERE c.MOTHER_ID = c.ID" )
+    .addEntity( "cat", Cat.class)
+    .addEntity( "mother", Cat.class)
 ----
 
-The query was intended to return two Cat instances per row: a cat and
-its mother. The query will, however, fail because there is a conflict of
-names; the instances are mapped to the same column names. Also, on some
-databases the returned column aliases will most likely be on the form
-"c.ID", "c.NAME", etc. which are not equal to the columns specified in
-the mappings ("ID" and "NAME").
+The query was intended to return two Cat instances per row: a cat and its mother.
+The query will, however, fail because there is a conflict of names since the instances are mapped to the same column names.
+Also, on some databases the returned column aliases will most likely be on the form `c.ID`, `c.NAME`, etc.
+which are not equal to the columns specified in the mappings (`ID` and `NAME`).
 
 The following form is not vulnerable to column name duplication:
 
 [source,java]
 ----
-sess.createSQLQuery("SELECT {cat.*}, {m.*}  FROM CATS c, CATS m WHERE c.MOTHER_ID = m.ID")
- .addEntity("cat", Cat.class)
- .addEntity("mother", Cat.class)
+session
+    .createSQLQuery( "SELECT {cat.*}, {m.*}  FROM CATS c, CATS m WHERE c.MOTHER_ID = m.ID" )
+    .addEntity( "cat", Cat.class )
+    .addEntity( "mother", Cat.class )
 ----
 
 This query specified:
 
-* the SQL query string, with placeholders for Hibernate to inject column
-aliases
+* the SQL query string, with placeholders for Hibernate to inject column aliases
 * the entities returned by the query
 
-The \{cat.*} and \{mother.*} notation used above is a shorthand for "all
-properties". Alternatively, you can list the columns explicitly, but
-even in this case Hibernate injects the SQL column aliases for each
-property. The placeholder for a column alias is just the property name
-qualified by the table alias. In the following example, you retrieve
-Cats and their mothers from a different table (cat_log) to the one
-declared in the mapping metadata. You can even use the property aliases
-in the where clause.
+The `{cat.*}` and `{mother.*}` notation used above is a shorthand for "all properties".
+Alternatively, you can list the columns explicitly, but even in this case Hibernate injects the SQL column aliases for each property.
+The placeholder for a column alias is just the property name qualified by the table alias.
+In the following example, you retrieve `Cats` and their mothers from a different table (cat_log) to the one declared in the mapping metadata.
+You can even use the property aliases in the where clause.
 
 [source,java]
 ----
-String sql = "SELECT ID as {c.id}, NAME as {c.name}, " +
-         "BIRTHDATE as {c.birthDate}, MOTHER_ID as {c.mother}, {mother.*} " +
-         "FROM CAT_LOG c, CAT_LOG m WHERE {c.mother} = c.ID";
+String sql =
+    "SELECT ID as {c.id}, NAME as {c.name}, " +
+    "BIRTHDATE as {c.birthDate}, MOTHER_ID as {c.mother}, {mother.*} " +
+    "FROM CAT_LOG c, CAT_LOG m WHERE {c.mother} = c.ID";
 
-List loggedCats = sess.createSQLQuery(sql)
-        .addEntity("cat", Cat.class)
-        .addEntity("mother", Cat.class).list()
+List loggedCats = session
+    .createSQLQuery( sql )
+    .addEntity( "cat", Cat.class )
+    .addEntity( "mother", Cat.class )
+    .list()
 ----
 
 [[querysql-aliasreferences]]
 === Alias and property references
 
-In most cases the above alias injection is needed. For queries relating
-to more complex mappings, like composite properties, inheritance
-discriminators, collections etc., you can use specific aliases that
-allow Hibernate to inject the proper aliases.
+In most cases the above alias injection is needed.
+For queries relating to more complex mappings, like composite properties, inheritance discriminators, collections etc., you can use specific aliases that allow Hibernate to inject the proper aliases.
 
-The following table shows the different ways you can use the alias
-injection. Please note that the alias names in the result are simply
-examples; each alias will have a unique and probably different name when
-used.
+The following table shows the different ways you can use the alias injection.
+Please note that the alias names in the result are simply examples, each alias will have a unique and probably different name when used.
 
 .Alias injection names
 [width="100%",cols="23%,22%,55%",options="header",]
@@ -228,8 +201,7 @@ used.
 |`A_NAME as {item.name}`
 
 |A composite property |`{[aliasname].[componentname].[propertyname]}`
-|`CURRENCY as {item.amount.currency}, VALUE as
-                {item.amount.value}`
+|`CURRENCY as {item.amount.currency}, VALUE as {item.amount.value}`
 
 |Discriminator of an entity |`{[aliasname].class}`
 |`DISC as {item.class}`
@@ -254,13 +226,13 @@ used.
 
 === Returning non-managed entities
 
-It is possible to apply a ResultTransformer to native SQL queries,
-allowing it to return non-managed entities.
+It is possible to apply a ResultTransformer to native SQL queries, allowing it to return non-managed entities.
 
 [source,java]
 ----
-sess.createSQLQuery("SELECT NAME, BIRTHDATE FROM CATS")
-        .setResultTransformer(Transformers.aliasToBean(CatDTO.class))
+session
+    .createSQLQuery( "SELECT NAME, BIRTHDATE FROM CATS" )
+    .setResultTransformer( Transformers.aliasToBean( CatDTO.class ) )
 ----
 
 This query specified:
@@ -268,15 +240,11 @@ This query specified:
 * the SQL query string
 * a result transformer
 
-The above query will return a list of `CatDTO` which has been
-instantiated and injected the values of NAME and BIRTHNAME into its
-corresponding properties or fields.
+The above query will return a list of `CatDTO` which has been instantiated and injected the values of `NAME` and `BIRTHNAME` into its corresponding properties or fields.
 
 === Handling inheritance
 
-Native SQL queries which query for entities that are mapped as part of
-an inheritance must include all properties for the baseclass and all its
-subclasses.
+Native SQL queries which query for entities that are mapped as part of an inheritance must include all properties for the base class and all its subclasses.
 
 === Parameters
 
@@ -284,25 +252,34 @@ Native SQL queries support positional as well as named parameters:
 
 [source,java]
 ----
-Query query = sess.createSQLQuery("SELECT * FROM CATS WHERE NAME like ?").addEntity(Cat.class);
-List pusList = query.setString(0, "Pus%").list();
+Query query = session
+    .createSQLQuery( "SELECT * FROM CATS WHERE NAME like ?" )
+    .addEntity( Cat.class );
 
-query = sess.createSQLQuery("SELECT * FROM CATS WHERE NAME like :name").addEntity(Cat.class);
-List pusList = query.setString("name", "Pus%").list();
+List pusList = query
+    .setString( 0, "Pus%" )
+    .list();
+
+query = session
+    .createSQLQuery( "SELECT * FROM CATS WHERE NAME like :name" )
+    .addEntity( Cat.class);
+
+List pusList = query
+    .setString( "name", "Pus%" )
+    .list();
 ----
 
 [[querysql-namedqueries]]
 === Named SQL queries
 
-Named SQL queries can also be defined in the mapping document and called
-in exactly the same way as a named HQL query. In this case, you do _not_
-need to call `addEntity()`.
+Named SQL queries can also be defined in the mapping document and called in exactly the same way as a named HQL query.
+In this case, you do _not_ need to call `addEntity()`.
 
-.Named sql query using the <sql-query> mapingelement
+.Named sql query using the `<sql-query>` mapping element
 ====
 [source,xml]
 ----
-<sql-query name="persons">
+<sql-query name = "persons">
     <return alias="person" class="eg.Person"/>
     SELECT person.NAME AS {person.name},
            person.AGE AS {person.age},
@@ -317,22 +294,21 @@ need to call `addEntity()`.
 ====
 [source,java]
 ----
-List people = sess.getNamedQuery("persons")
-    .setString("namePattern", namePattern)
-    .setMaxResults(50)
+List people = session
+    .getNamedQuery( "persons" )
+    .setString( "namePattern", namePattern )
+    .setMaxResults( 50 )
     .list();
 ----
 ====
 
-The `<return-join>` element is use to join associations and the
-`<load-collection>` element is used to define queries which initialize
-collections,
+The `<return-join>` element is use to join associations and the `<load-collection>` element is used to define queries which initialize collections.
 
 .Named sql query with association
 ====
 [source,xml]
 ----
-<sql-query name="personsWith">
+<sql-query name = "personsWith">
     <return alias="person" class="eg.Person"/>
     <return-join alias="address" property="person.mailingAddress"/>
     SELECT person.NAME AS {person.name},
@@ -350,16 +326,16 @@ collections,
 ----
 ====
 
-A named SQL query may return a scalar value. You must declare the column
-alias and Hibernate type using the `<return-scalar>` element:
+A named SQL query may return a scalar value.
+You must declare the column alias and Hibernate type using the `<return-scalar>` element:
 
 .Named query returning a scalar
 ====
 [source,xml]
 ----
-<sql-query name="mySqlQuery">
-    <return-scalar column="name" type="string"/>
-    <return-scalar column="age" type="long"/>
+<sql-query name = "mySqlQuery">
+    <return-scalar column = "name" type="string"/>
+    <return-scalar column = "age" type="long"/>
     SELECT p.NAME AS name,
            p.AGE AS age,
     FROM PERSON p WHERE p.NAME LIKE 'Hiber%'
@@ -367,20 +343,18 @@ alias and Hibernate type using the `<return-scalar>` element:
 ----
 ====
 
-You can externalize the resultset mapping information in a `<resultset>`
-element which will allow you to either reuse them across several named
-queries or through the `setResultSetMapping()` API.
+You can externalize the resultset mapping information in a `<resultset>` element which will allow you to either reuse them across several named queries or through the `setResultSetMapping()` API.
 
 .<resultset> mapping used to externalize mappinginformation
 ====
 [source,xml]
 ----
-<resultset name="personAddress">
+<resultset name = "personAddress">
     <return alias="person" class="eg.Person"/>
     <return-join alias="address" property="person.mailingAddress"/>
 </resultset>
 
-<sql-query name="personsWith" resultset-ref="personAddress">
+<sql-query name = "personsWith" resultset-ref="personAddress">
     SELECT person.NAME AS {person.name},
            person.AGE AS {person.age},
            person.SEX AS {person.sex},
@@ -396,90 +370,90 @@ queries or through the `setResultSetMapping()` API.
 ----
 ====
 
-You can, alternatively, use the resultset mapping information in your
-hbm files directly in java code.
+You can, alternatively, use the resultset mapping information in your hbm files directly in java code.
 
 .Programmatically specifying the result mapping information
 ====
 [source,java]
 ----
-List cats = sess.createSQLQuery(
-        "select {cat.*}, {kitten.*} from cats cat, cats kitten where kitten.mother = cat.id"
-    )
+List cats = session
+    .createSQLQuery( "select {cat.*}, {kitten.*} from cats cat, cats kitten where kitten.mother = cat.id" )
     .setResultSetMapping("catAndKitten")
     .list();
 ----
 ====
 
-So far we have only looked at externalizing SQL queries using Hibernate
-mapping files. The same concept is also available with anntations and is
-called named native queries. You can use `@NamedNativeQuery`
-(`@NamedNativeQueries`) in conjunction with `@SqlResultSetMapping`
-(`@SqlResultSetMappings`). Like `@NamedQuery`, `@NamedNativeQuery` and
-`@SqlResultSetMapping` can be defined at class level, but their scope is
-global to the application. Let's look at a view examples.
+So far we have only looked at externalizing SQL queries using Hibernate mapping files.
+The same concept is also available with annotations and is called named native queries.
+You can use `@NamedNativeQuery`/`@NamedNativeQueries in conjunction with `@SqlResultSetMapping`/`@SqlResultSetMappings`.
 
-<<example-named-native-query-annotation-with-result-set-mapping>>
-shows how a `resultSetMapping` parameter is defined in
-`@NamedNativeQuery`. It represents the name of a defined
-`@SqlResultSetMapping`. The resultset mapping declares the entities
-retrieved by this native query. Each field of the entity is bound to an
-SQL alias (or column name). All fields of the entity including the ones
-of subclasses and the foreign key columns of related entities have to be
-present in the SQL query. Field definitions are optional provided that
-they map to the same column name as the one declared on the class
-property. In the example 2 entities, `Night` and `Area`, are returned
-and each property is declared and associated to a column name, actually
-the column name retrieved by the query.
+Like `@NamedQuery`, `@NamedNativeQuery` and `@SqlResultSetMapping` can be defined at class level, but their scope is global to the application.
 
-In <<example-implicit-result-set-mapping>> the result
-set mapping is implicit. We only describe the entity class of the result
-set mapping. The property / column mappings is done using the entity
-mapping values. In this case the model property is bound to the
-model_txt column.
+Let's look at a view examples.
 
-Finally, if the association to a related entity involve a composite
-primary key, a `@FieldResult` element should be used for each foreign
-key column. The `@FieldResult` name is composed of the property name for
-the relationship, followed by a dot ("."), followed by the name or the
-field or property of the primary key. This can be seen in
-<<example-field-result-annotation-with-associations>>.
+<<example-named-native-query-annotation-with-result-set-mapping>> shows how a `resultSetMapping` parameter is defined in `@NamedNativeQuery`.
+It represents the name of a defined `@SqlResultSetMapping`.
 
-.Named SQL query using [class]+@NamedNativeQuery+together with [class]+@SqlResultSetMapping+
+The result set mapping declares the entities retrieved by this native query.
+Each field of the entity is bound to an SQL alias (or column name).
+All fields of the entity including the ones of subclasses and the foreign key columns of related entities have to be present in the SQL query.
+Field definitions are optional provided that they map to the same column name as the one declared on the class property.
+
+In the example two entities, `Night` and `Area`, are returned, and each property is declared and associated to a column name, actually the column name retrieved by the query.
+
+[[example-named-native-query-annotation-with-result-set-mapping>]]
+.Named SQL query using `@NamedNativeQuery` together with `@SqlResultSetMapping`
 ====
 [source,java]
 ----
-@NamedNativeQuery(name="night&area", query="select night.id nid, night.night_duration, "
+@NamedNativeQuery(
+    name = "night&area",
+    query = "select night.id nid, night.night_duration, "
     + " night.night_date, area.id aid, night.area_id, area.name "
     + "from Night night, Area area where night.area_id = area.id",
-                  resultSetMapping="joinMapping")
-@SqlResultSetMapping(name="joinMapping", entities={
-    @EntityResult(entityClass=Night.class, fields = {
-        @FieldResult(name="id", column="nid"),
-        @FieldResult(name="duration", column="night_duration"),
-        @FieldResult(name="date", column="night_date"),
-        @FieldResult(name="area", column="area_id"),
-        discriminatorColumn="disc"
-    }),
-    @EntityResult(entityClass=org.hibernate.test.annotations.query.Area.class, fields = {
-        @FieldResult(name="id", column="aid"),
-        @FieldResult(name="name", column="name")
-    })
+    resultSetMapping="joinMapping")
+@SqlResultSetMapping(
+    name = "joinMapping",
+    entities = {
+        @EntityResult(entityClass=Night.class, fields = {
+            @FieldResult(name = "id", column = "nid"),
+            @FieldResult(name = "duration", column = "night_duration"),
+            @FieldResult(name = "date", column = "night_date"),
+            @FieldResult(name = "area", column = "area_id"),
+            discriminatorColumn="disc"
+        }),
+        @EntityResult(
+            entityClass = Area.class,
+            fields = {
+                @FieldResult(name = "id", column = "aid"),
+                @FieldResult(name = "name", column = "name")
+            }
+        )
     }
 )
 ----
 ====
 
+In <<example-implicit-result-set-mapping>> the result set mapping is implicit.
+We only describe the entity class of the result set mapping.
+The property / column mappings is done using the entity mapping values.
+In this case the model property is bound to the model_txt column.
+
+[[example-implicit-result-set-mapping]]
 .Implicit result set mapping
 ====
 [source,java]
 ----
 @Entity
-@SqlResultSetMapping(name="implicit",
-                     entities=@EntityResult(entityClass=SpaceShip.class))
-@NamedNativeQuery(name="implicitSample",
-                  query="select * from SpaceShip",
-                  resultSetMapping="implicit")
+@SqlResultSetMapping(
+    name = "implicit",
+    entities = @EntityResult(entityClass=SpaceShip.class)
+)
+@NamedNativeQuery(
+    name = "implicitSample",
+    query="select * from SpaceShip",
+    resultSetMapping="implicit"
+)
 public class SpaceShip {
     private String name;
     private String model;
@@ -494,7 +468,7 @@ public class SpaceShip {
         this.name = name;
     }
 
-    @Column(name="model_txt")
+    @Column(name = "model_txt")
     public String getModel() {
         return model;
     }
@@ -514,29 +488,41 @@ public class SpaceShip {
 ----
 ====
 
+Finally, if the association to a related entity involve a composite primary key, a `@FieldResult` element should be used for each foreign key column.
+The `@FieldResult` name is composed of the property name for the relationship, followed by a dot ("."), followed by the name or the field or property of the primary key.
+This can be seen in <<example-field-result-annotation-with-associations>>.
+
+[[example-field-result-annotation-with-associations]]
 .Using dot notation in @FieldResult for specifying associations
 ====
 [source,java]
 ----
 @Entity
-@SqlResultSetMapping(name="compositekey",
-        entities=@EntityResult(entityClass=SpaceShip.class,
-            fields = {
-                    @FieldResult(name="name", column = "name"),
-                    @FieldResult(name="model", column = "model"),
-                    @FieldResult(name="speed", column = "speed"),
-                    @FieldResult(name="captain.firstname", column = "firstn"),
-                    @FieldResult(name="captain.lastname", column = "lastn"),
-                    @FieldResult(name="dimensions.length", column = "length"),
-                    @FieldResult(name="dimensions.width", column = "width")
-                    }),
-        columns = { @ColumnResult(name = "surface"),
-                    @ColumnResult(name = "volume") } )
-
-@NamedNativeQuery(name="compositekey",
-    query="select name, model, speed, lname as lastn, fname as firstn, length, width, length * width as surface from SpaceShip",
-    resultSetMapping="compositekey")
-} )
+@SqlResultSetMapping(
+    name = "compositekey",
+    entities = @EntityResult(
+        entityClass=SpaceShip.class,
+        fields = {
+            @FieldResult(name = "name", column = "name"),
+            @FieldResult(name = "model", column = "model"),
+            @FieldResult(name = "speed", column = "speed"),
+            @FieldResult(name = "captain.firstname", column = "firstn"),
+            @FieldResult(name = "captain.lastname", column = "lastn"),
+            @FieldResult(name = "dimensions.length", column = "length"),
+            @FieldResult(name = "dimensions.width", column = "width")
+            }
+        ),
+        columns = {
+            @ColumnResult(name = "surface"),
+            @ColumnResult(name = "volume")
+        }
+    )
+)
+@NamedNativeQuery(
+    name = "compositekey",
+    query = "select name, model, speed, lname as lastn, fname as firstn, length, width, length * width as surface from SpaceShip",
+    resultSetMapping = "compositekey"
+)
 public class SpaceShip {
     private String name;
     private String model;
@@ -553,11 +539,11 @@ public class SpaceShip {
         this.name = name;
     }
 
-    @ManyToOne(fetch= FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumns( {
-            @JoinColumn(name="fname", referencedColumnName = "firstname"),
-            @JoinColumn(name="lname", referencedColumnName = "lastname")
-            } )
+        @JoinColumn(name = "fname", referencedColumnName = "firstname"),
+        @JoinColumn(name = "lname", referencedColumnName = "lastname")
+    } )
     public Captain getCaptain() {
         return captain;
     }
@@ -620,49 +606,58 @@ public class Captain implements Serializable {
 
 [TIP]
 ====
-If you retrieve a single entity using the default mapping, you can
-specify the `resultClass` attribute instead of `resultSetMapping`:
+If you retrieve a single entity using the default mapping, you can specify the `resultClass` attribute instead of `resultSetMapping`:
 
 [source,java]
 ----
-@NamedNativeQuery(name="implicitSample", query="select * from SpaceShip", resultClass=SpaceShip.class)
+@NamedNativeQuery(
+    name = "implicitSample",
+    query = "select * from SpaceShip",
+    resultClass = SpaceShip.class
+)
 public class SpaceShip {
+    ...
+}
 ----
 ====
 
-In some of your native queries, you'll have to return scalar values, for
-example when building report queries. You can map them in the
-`@SqlResultsetMapping` through `@ColumnResult`. You actually can even
-mix, entities and scalar returns in the same native query (this is
-probably not that common though).
+In some of your native queries, you'll have to return scalar values, for example when building report queries.
+You can map them in the `@SqlResultsetMapping` through `@ColumnResult`.
+You actually can even mix, entities and scalar returns in the same native query (this is probably not that common though).
 
-.Scalar values via [class]+@ColumnResult+
+.Scalar values via `@ColumnResult`
 ====
 [source,java]
 ----
-@SqlResultSetMapping(name="scalar", columns=@ColumnResult(name="dimension"))
-@NamedNativeQuery(name="scalar", query="select length*width as dimension from SpaceShip", resultSetMapping="scalar")
+@SqlResultSetMapping(
+    name = "scalar",
+    columns = @ColumnResult(
+        name = "dimension"
+    )
+)
+@NamedNativeQuery(
+    name = "scalar",
+    query = "select length*width as dimension from SpaceShip",
+    resultSetMapping = "scalar"
+)
 ----
 ====
 
-An other query hint specific to native queries has been introduced:
-`org.hibernate.callable` which can be true or false depending on whether
-the query is a stored procedure or not.
+An other query hint specific to native queries has been introduced: `org.hibernate.callable` which can be true or false depending on whether the query is a stored procedure or not.
 
 [[propertyresults]]
 === Using return-property to explicitly specify column/alias names
 
-You can explicitly tell Hibernate what column aliases to use with
-`<return-property>`, instead of using the `{}`-syntax to let Hibernate
-inject its own aliases.For example:
+You can explicitly tell Hibernate what column aliases to use with `<return-property>`, instead of using the `{}` syntax to let Hibernate inject its own aliases.
+For example:
 
 [source,xml]
 ----
-<sql-query name="mySqlQuery">
-    <return alias="person" class="eg.Person">
-        <return-property name="name" column="myName"/>
-        <return-property name="age" column="myAge"/>
-        <return-property name="sex" column="mySex"/>
+<sql-query name = "mySqlQuery">
+    <return alias = "person" class = "eg.Person">
+        <return-property name = "name" column = "myName"/>
+        <return-property name = "age" column = "myAge"/>
+        <return-property name = "sex" column = "mySex"/>
     </return>
     SELECT person.NAME AS myName,
            person.AGE AS myAge,
@@ -671,19 +666,18 @@ inject its own aliases.For example:
 </sql-query>
 ----
 
-`<return-property>` also works with multiple columns. This solves a
-limitation with the `{}`-syntax which cannot allow fine grained control
-of multi-column properties.
+`<return-property>` also works with multiple columns.
+This solves a limitation with the `{}` syntax which cannot allow fine grained control of multi-column properties.
 
 [source,xml]
 ----
-<sql-query name="organizationCurrentEmployments">
-    <return alias="emp" class="Employment">
-        <return-property name="salary">
-            <return-column name="VALUE"/>
-            <return-column name="CURRENCY"/>
+<sql-query name = "organizationCurrentEmployments">
+    <return alias = "emp" class = "Employment">
+        <return-property name = "salary">
+            <return-column name = "VALUE"/>
+            <return-column name = "CURRENCY"/>
         </return-property>
-        <return-property name="endDate" column="myEndDate"/>
+        <return-property name = "endDate" column = "myEndDate"/>
     </return>
         SELECT EMPLOYEE AS {emp.employee}, EMPLOYER AS {emp.employer},
         STARTDATE AS {emp.startDate}, ENDDATE AS {emp.endDate},
@@ -694,21 +688,18 @@ of multi-column properties.
 </sql-query>
 ----
 
-In this example `<return-property>` was used in combination with the
-`{}`-syntax for injection. This allows users to choose how they want to
-refer column and properties.
+In this example `<return-property>` was used in combination with the `{}` syntax for injection.
+This allows users to choose how they want to refer column and properties.
 
-If your mapping has a discriminator you must use
-`<return-discriminator>` to specify the discriminator column.
+If your mapping has a discriminator you must use `<return-discriminator>` to specify the discriminator column.
 
 [[sp_query]]
 === Using stored procedures for querying
 
-Hibernate provides support for queries via stored procedures and
-functions. Most of the following documentation is equivalent for both.
-The stored procedure/function must return a resultset as the first
-out-parameter to be able to work with Hibernate. An example of such a
-stored function in Oracle 9 and higher is as follows:
+Hibernate provides support for queries via stored procedures and functions.
+Most of the following documentation is equivalent for both.
+The stored procedure/function must return a resultset as the first out-parameter to be able to work with Hibernate.
+An example of such a stored function in Oracle 9 and higher is as follows:
 
 [source,xml]
 ----
@@ -718,29 +709,29 @@ AS
     st_cursor SYS_REFCURSOR;
 BEGIN
     OPEN st_cursor FOR
- SELECT EMPLOYEE, EMPLOYER,
- STARTDATE, ENDDATE,
- REGIONCODE, EID, VALUE, CURRENCY
- FROM EMPLOYMENT;
-      RETURN  st_cursor;
- END;
+        SELECT EMPLOYEE, EMPLOYER,
+        STARTDATE, ENDDATE,
+        REGIONCODE, EID, VALUE, CURRENCY
+        FROM EMPLOYMENT;
+    RETURN  st_cursor;
+END;
 ----
 
 To use this query in Hibernate you need to map it via a named query.
 
 [source,xml]
 ----
-<sql-query name="selectAllEmployees_SP" callable="true">
+<sql-query name = "selectAllEmployees_SP" callable = "true">
     <return alias="emp" class="Employment">
-        <return-property name="employee" column="EMPLOYEE"/>
-        <return-property name="employer" column="EMPLOYER"/>
-        <return-property name="startDate" column="STARTDATE"/>
-        <return-property name="endDate" column="ENDDATE"/>
-        <return-property name="regionCode" column="REGIONCODE"/>
-        <return-property name="id" column="EID"/>
-        <return-property name="salary">
-            <return-column name="VALUE"/>
-            <return-column name="CURRENCY"/>
+        <return-property name = "employee" column = "EMPLOYEE"/>
+        <return-property name = "employer" column = "EMPLOYER"/>
+        <return-property name = "startDate" column = "STARTDATE"/>
+        <return-property name = "endDate" column = "ENDDATE"/>
+        <return-property name = "regionCode" column = "REGIONCODE"/>
+        <return-property name = "id" column = "EID"/>
+        <return-property name = "salary">
+            <return-column name = "VALUE"/>
+            <return-column name = "CURRENCY"/>
         </return-property>
     </return>
     { ? = call selectAllEmployments() }
@@ -753,60 +744,54 @@ Stored procedures currently only return scalars and entities.
 [[querysql-limits-storedprocedures]]
 === Rules/limitations for using stored procedures
 
-You cannot use stored procedures with Hibernate unless you follow some
-procedure/function rules. If they do not follow those rules they are not
-usable with Hibernate. If you still want to use these procedures you
-have to execute them via `session.connection()`. The rules are different
-for each database, since database vendors have different stored
-procedure semantics/syntax.
+You cannot use stored procedures with Hibernate unless you follow some procedure/function rules.
+If they do not follow those rules they are not usable with Hibernate.
+If you still want to use these procedures you have to execute them via `session.doWork()`.
 
-Stored procedure queries cannot be paged with
-`setFirstResult()/setMaxResults()`.
+The rules are different for each database, since database vendors have different stored procedure semantics/syntax.
 
-The recommended call form is standard SQL92: `{ ? = call
-        functionName(<parameters>) }` or `{ ? = call
-        procedureName(<parameters>}`. Native call syntax is not
-supported.
+Stored procedure queries cannot be paged with `setFirstResult()/setMaxResults()`.
+
+The recommended call form is standard SQL92: `{ ? = call functionName(<parameters>) }` or `{ ? = call procedureName(<parameters>}`.
+Native call syntax is not supported.
 
 For Oracle the following rules apply:
 
-* A function must return a result set. The first parameter of a
-procedure must be an `OUT` that returns a result set. This is done by
-using a `SYS_REFCURSOR` type in Oracle 9 or 10. In Oracle you need to
-define a `REF CURSOR` type. See Oracle literature for further
-information.
+* A function must return a result set.
+The first parameter of a procedure must be an `OUT` that returns a result set.
+This is done by using a `SYS_REFCURSOR` type in Oracle 9 or 10.
+In Oracle you need to define a `REF CURSOR` type.
+See Oracle literature for further information.
 
 For Sybase or MS SQL server the following rules apply:
 
-* The procedure must return a result set. Note that since these servers
-can return multiple result sets and update counts, Hibernate will
-iterate the results and take the first result that is a result set as
-its return value. Everything else will be discarded.
-* If you can enable `SET NOCOUNT ON` in your procedure it will probably
-be more efficient, but this is not a requirement.
+* The procedure must return a result set.
+Note that since these servers can return multiple result sets and update counts, Hibernate will iterate the results and take the first result that is a result set as its return value.
+Everything else will be discarded.
+* If you can enable `SET NOCOUNT ON` in your procedure it will probably be more efficient, but this is not a requirement.
 
 [[querysql-cud]]
 === Custom SQL for create, update and delete
 
 Hibernate can use custom SQL for create, update, and delete operations.
-The SQL can be overridden at the statement level or inidividual column
-level. This section describes statement overrides. For columns, see
-link:#mapping-column-read-and-write[???].
-<<example-custom-crdu-via-annotations>> shows how to
-define custom SQL operatons using annotations.
+The SQL can be overridden at the statement level or individual column level.
+This section describes statement overrides.
+For columns, see <<chapters/domain/basic_types.adoc#mapping-column-read-and-write,Column transformers: read and write expressions>>.
+The following example shows how to define custom SQL operations using annotations.
 
+[[example-custom-crdu-via-annotations]]
 .Custom CRUD via annotations
 ====
 [source,java]
 ----
 @Entity
-@Table(name="CHAOS")
-@SQLInsert( sql="INSERT INTO CHAOS(size, name, nickname, id) VALUES(?,upper(?),?,?)")
-@SQLUpdate( sql="UPDATE CHAOS SET size = ?, name = upper(?), nickname = ? WHERE id = ?")
-@SQLDelete( sql="DELETE CHAOS WHERE id = ?")
-@SQLDeleteAll( sql="DELETE CHAOS")
+@Table(name = "CHAOS")
+@SQLInsert( sql = "INSERT INTO CHAOS(size, name, nickname, id) VALUES(?,upper(?),?,?)")
+@SQLUpdate( sql = "UPDATE CHAOS SET size = ?, name = upper(?), nickname = ? WHERE id = ?")
+@SQLDelete( sql = "DELETE CHAOS WHERE id = ?")
+@SQLDeleteAll( sql = "DELETE CHAOS")
 @Loader(namedQuery = "chaos")
-@NamedNativeQuery(name="chaos", query="select id, size, name, lower( nickname ) as nickname from CHAOS where id= ?", resultClass = Chaos.class)
+@NamedNativeQuery(name = "chaos", query="select id, size, name, lower( nickname ) as nickname from CHAOS where id= ?", resultClass = Chaos.class)
 public class Chaos {
     @Id
     private Long id;
@@ -816,21 +801,18 @@ public class Chaos {
 ----
 ====
 
-`@SQLInsert`, `@SQLUpdate`, `@SQLDelete`, `@SQLDeleteAll` respectively
-override the INSERT, UPDATE, DELETE, and DELETE all statement. The same
-can be achieved using Hibernate mapping files and the `<sql-insert>`,
-`<sql-update>` and `<sql-delete>` nodes. This can be seen in
-<<example-custom-crdu-via-xml>>.
+`@SQLInsert`, `@SQLUpdate`, `@SQLDelete`, `@SQLDeleteAll` respectively override the INSERT, UPDATE, DELETE, and DELETE all statement.
+The same can be achieved using Hibernate mapping files and the `<sql-insert>`, `<sql-update>` and `<sql-delete>` nodes.
 
 .Custom CRUD XML
 ====
 [source,xml]
 ----
-<class name="Person">
-    <id name="id">
-        <generator class="increment"/>
+<class name = "Person">
+    <id name = "id">
+        <generator class = "increment"/>
     </id>
-    <property name="name" not-null="true"/>
+    <property name = "name" not-null = "true"/>
     <sql-insert>INSERT INTO PERSON (NAME, ID) VALUES ( UPPER(?), ? )</sql-insert>
     <sql-update>UPDATE PERSON SET NAME=UPPER(?) WHERE ID=?</sql-update>
     <sql-delete>DELETE FROM PERSON WHERE ID=?</sql-delete>
@@ -838,51 +820,42 @@ can be achieved using Hibernate mapping files and the `<sql-insert>`,
 ----
 ====
 
-If you expect to call a store procedure, be sure to set the `callable`
-attribute to `true`. In annotations as well as in xml.
+[NOTE]
+====
+If you expect to call a store procedure, be sure to set the `callable` attribute to `true`, in annotations as well as in xml.
+====
 
-To check that the execution happens correctly, Hibernate allows you to
-define one of those three strategies:
+To check that the execution happens correctly, Hibernate allows you to define one of those three strategies:
 
-* none: no check is performed: the store procedure is expected to fail
-upon issues
+* none: no check is performed: the store procedure is expected to fail upon issues
 * count: use of rowcount to check that the update is successful
-* param: like COUNT but using an output parameter rather that the
-standard mechanism
+* param: like COUNT but using an output parameter rather that the standard mechanism
 
-To define the result check style, use the `check` parameter which is
-again available in annoations as well as in xml.
+To define the result check style, use the `check` parameter which is again available in annotations as well as in xml.
 
-You can use the exact same set of annotations respectively xml nodes to
-override the collection related statements -see
-<<example-overriding-sql-collections-annotations>>.
+You can use the exact same set of annotations respectively xml nodes to override the collection related statements, as you can see in the following example.
 
-.Overriding SQL statements for collections usingannotations
+.Overriding SQL statements for collections using annotations
 ====
 [source,java]
 ----
 @OneToMany
-@JoinColumn(name="chaos_fk")
-@SQLInsert( sql="UPDATE CASIMIR_PARTICULE SET chaos_fk = ? where id = ?")
-@SQLDelete( sql="UPDATE CASIMIR_PARTICULE SET chaos_fk = null where id = ?")
+@JoinColumn(name = "chaos_fk")
+@SQLInsert( sql = "UPDATE CASIMIR_PARTICULE SET chaos_fk = ? where id = ?")
+@SQLDelete( sql = "UPDATE CASIMIR_PARTICULE SET chaos_fk = null where id = ?")
 private Set<CasimirParticle> particles = new HashSet<CasimirParticle>();
 ----
 ====
 
 [TIP]
 ====
-The parameter order is important and is defined by the order Hibernate
-handles properties. You can see the expected order by enabling debug
-logging for the `org.hibernate.persister.entity` level. With this level
-enabled Hibernate will print out the static SQL that is used to create,
-update, delete etc. entities. (To see the expected sequence, remember to
-not include your custom SQL through annotations or mapping files as that
-will override the Hibernate generated static sql)
+The parameter order is important and is defined by the order Hibernate handles properties.
+You can see the expected order by enabling debug logging, so Hibernate can print out the static SQL that is used to create, update, delete etc. entities.
+
+To see the expected sequence, remember to not include your custom SQL through annotations or mapping files as that will override the Hibernate generated static sql.
 ====
 
-Overriding SQL statements for secondary tables is also possible using
-`@org.hibernate.annotations.Table` and either (or all) attributes
-`sqlInsert`, `sqlUpdate`, `sqlDelete`:
+Overriding SQL statements for secondary tables is also possible using `@org.hibernate.annotations.Table` and either (or all) attributes `sqlInsert`, `sqlUpdate`, `sqlDelete`:
 
 .Overriding SQL statements for secondary tables
 ====
@@ -893,29 +866,32 @@ Overriding SQL statements for secondary tables is also possible using
     @SecondaryTable(name = "`Cat nbr1`"),
     @SecondaryTable(name = "Cat2"})
 @org.hibernate.annotations.Tables( {
-    @Table(appliesTo = "Cat", comment = "My cat table" ),
-    @Table(appliesTo = "Cat2", foreignKey = @ForeignKey(name="FK_CAT2_CAT"), fetch = FetchMode.SELECT,
-        sqlInsert=@SQLInsert(sql="insert into Cat2(storyPart2, id) values(upper(?), ?)") )
+    @Table(
+        appliesTo = "Cat",
+        comment = "My cat table"
+    ),
+    @Table(
+        appliesTo = "Cat2",
+        foreignKey = @ForeignKey(name = "FK_CAT2_CAT"), fetch = FetchMode.SELECT,
+        sqlInsert = @SQLInsert(
+            sql = "insert into Cat2(storyPart2, id) values(upper(?), ?)"
+        )
+    )
 } )
 public class Cat implements Serializable {
 ----
 ====
 
-The previous example also shows that you can give a comment to a given
-table (primary or secondary): This comment will be used for DDL
-generation.
+The previous example also shows that you can give a comment to a given table (primary or secondary): This comment will be used for DDL generation.
 
 [TIP]
 ====
-The SQL is directly executed in your database, so you can use any
-dialect you like. This will, however, reduce the portability of your
-mapping if you use database specific SQL.
+The SQL is directly executed in your database, so you can use any dialect you like.
+This will, however, reduce the portability of your mapping if you use database specific SQL.
 ====
 
-Last but not least, stored procedures are in most cases required to
-return the number of rows inserted, updated and deleted. Hibernate
-always registers the first statement parameter as a numeric output
-parameter for the CUD operations:
+Last but not least, stored procedures are in most cases required to return the number of rows inserted, updated and deleted.
+Hibernate always registers the first statement parameter as a numeric output parameter for the CUD operations:
 
 .Stored procedures and their return value
 ====
@@ -941,15 +917,14 @@ END updatePerson;
 === Custom SQL for loading
 
 You can also declare your own SQL (or HQL) queries for entity loading.
-As with inserts, updates, and deletes, this can be done at the
-individual column level as described in
-link:#mapping-column-read-and-write[???] or at the statement level. Here
-is an example of a statement level override:
+As with inserts, updates, and deletes, this can be done at the individual column level as described in
+For columns, see <<chapters/domain/basic_types.adoc#mapping-column-read-and-write,Column transformers: read and write expressions>> or at the statement level.
+Here is an example of a statement level override:
 
 [source,xml]
 ----
-<sql-query name="person">
-    <return alias="pers" class="Person" lock-mode="upgrade"/>
+<sql-query name = "person">
+    <return alias = "pers" class = "Person" lock-mod e= "upgrade"/>
     SELECT NAME AS {pers.name}, ID AS {pers.id}
     FROM PERSON
     WHERE ID=?
@@ -957,17 +932,16 @@ is an example of a statement level override:
 </sql-query>
 ----
 
-This is just a named query declaration, as discussed earlier. You can
-reference this named query in a class mapping:
+This is just a named query declaration, as discussed earlier. You can reference this named query in a class mapping:
 
 [source,xml]
 ----
-<class name="Person">
-    <id name="id">
-        <generator class="increment"/>
+<class name = "Person">
+    <id name = "id">
+        <generator class = "increment"/>
     </id>
-    <property name="name" not-null="true"/>
-    <loader query-ref="person"/>
+    <property name = "name" not-null = "true"/>
+    <loader query-ref = "person"/>
 </class>
 ----
 
@@ -977,17 +951,17 @@ You can even define a query for collection loading:
 
 [source,xml]
 ----
-<set name="employments" inverse="true">
+<set name = "employments" inverse = "true">
     <key/>
-    <one-to-many class="Employment"/>
-    <loader query-ref="employments"/>
+    <one-to-many class = "Employment"/>
+    <loader query-ref = "employments"/>
 </set>
 ----
 
 [source,xml]
 ----
-<sql-query name="employments">
-    <load-collection alias="emp" role="Person.employments"/>
+<sql-query name = "employments">
+    <load-collection alias = "emp" role = "Person.employments"/>
     SELECT {emp.*}
     FROM EMPLOYMENT emp
     WHERE EMPLOYER = :id
@@ -995,14 +969,13 @@ You can even define a query for collection loading:
 </sql-query>
 ----
 
-You can also define an entity loader that loads a collection by join
-fetching:
+You can also define an entity loader that loads a collection by join fetching:
 
 [source,xml]
 ----
-<sql-query name="person">
-    <return alias="pers" class="Person"/>
-    <return-join alias="emp" property="pers.employments"/>
+<sql-query name = "person">
+    <return alias = "pers" class = "Person"/>
+    <return-join alias = "emp" property = "pers.employments"/>
     SELECT NAME AS {pers.*}, {emp.*}
     FROM PERSON pers
     LEFT OUTER JOIN EMPLOYMENT emp
@@ -1011,4 +984,4 @@ fetching:
 </sql-query>
 ----
 
-The annotation equivalent `<loader>` is the @Loader annotation as seen in <<example-custom-crdu-via-annotations>>.
+The annotation equivalent `<loader>` is the `@Loader` annotation as seen in <<example-custom-crdu-via-annotations>>.

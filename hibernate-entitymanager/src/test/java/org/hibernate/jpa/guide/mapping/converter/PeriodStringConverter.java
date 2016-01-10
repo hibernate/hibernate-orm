@@ -6,9 +6,9 @@
  */
 package org.hibernate.jpa.guide.mapping.converter;
 
+import java.time.Period;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
-import java.time.Period;
 
 /**
  * @author Vlad Mihalcea
@@ -16,13 +16,13 @@ import java.time.Period;
 @Converter
 public class PeriodStringConverter implements AttributeConverter<Period, String> {
 
-    @Override
-    public String convertToDatabaseColumn(Period attribute) {
-        return attribute.toString();
-    }
+	@Override
+	public String convertToDatabaseColumn(Period attribute) {
+		return attribute.toString();
+	}
 
-    @Override
-    public Period convertToEntityAttribute(String dbData) {
-        return Period.parse(dbData);
-    }
+	@Override
+	public Period convertToEntityAttribute(String dbData) {
+		return Period.parse( dbData );
+	}
 }

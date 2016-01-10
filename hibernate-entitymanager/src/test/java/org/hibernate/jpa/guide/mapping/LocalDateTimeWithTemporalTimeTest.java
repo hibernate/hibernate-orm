@@ -6,59 +6,61 @@
  */
 package org.hibernate.jpa.guide.mapping;
 
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.junit.Test;
-
+import java.time.LocalDateTime;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import java.time.LocalDateTime;
 
-import static org.hibernate.jpa.test.util.TransactionUtil.*;
+import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+
+import org.junit.Test;
+
+import static org.hibernate.jpa.test.util.TransactionUtil.doInJPA;
 
 /**
  * @author Vlad Mihalcea
  */
 public class LocalDateTimeWithTemporalTimeTest extends BaseEntityManagerFunctionalTestCase {
 
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[] {
-            DateEvent.class
-        };
-    }
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] {
+				DateEvent.class
+		};
+	}
 
-    @Test
-    public void testLifecycle() {
-        doInJPA(this::entityManagerFactory, entityManager -> {
-            DateEvent dateEvent = new DateEvent(LocalDateTime.now());
-            entityManager.persist(dateEvent);
-        });
-    }
+	@Test
+	public void testLifecycle() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			DateEvent dateEvent = new DateEvent( LocalDateTime.now() );
+			entityManager.persist( dateEvent );
+		} );
+	}
 
-    @Entity(name = "DateEvent")
-    public static class DateEvent  {
+	@Entity(name = "DateEvent")
+	public static class DateEvent {
 
-        @Id
-        @GeneratedValue
-        private Long id;
+		@Id
+		@GeneratedValue
+		private Long id;
 
-        //throws org.hibernate.AnnotationException: @Temporal should only be set on a java.util.Date or java.util.Calendar property
-        //@Temporal(TemporalType.TIME)
-        private LocalDateTime timestamp;
+		//throws org.hibernate.AnnotationException: @Temporal should only be set on a java.util.Date or java.util.Calendar property
+		//@Temporal(TemporalType.TIME)
+		private LocalDateTime timestamp;
 
-        public DateEvent() {}
+		public DateEvent() {
+		}
 
-        public DateEvent(LocalDateTime timestamp) {
-            this.timestamp = timestamp;
-        }
+		public DateEvent(LocalDateTime timestamp) {
+			this.timestamp = timestamp;
+		}
 
-        public Long getId() {
-            return id;
-        }
+		public Long getId() {
+			return id;
+		}
 
-        public LocalDateTime getTimestamp() {
-            return timestamp;
-        }
-    }
+		public LocalDateTime getTimestamp() {
+			return timestamp;
+		}
+	}
 }

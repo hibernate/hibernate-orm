@@ -6,13 +6,22 @@
  */
 package org.hibernate.jpa.guide.collection;
 
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.junit.Test;
-
-import javax.persistence.*;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import javax.persistence.CollectionTable;
+import javax.persistence.Column;
+import javax.persistence.ElementCollection;
+import javax.persistence.Embeddable;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.MapKeyJoinColumn;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+
+import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+
+import org.junit.Test;
 
 import static org.hibernate.jpa.test.util.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
@@ -22,80 +31,79 @@ import static org.junit.Assert.assertEquals;
  */
 public class ElementCollectionMapTest extends BaseEntityManagerFunctionalTestCase {
 
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{
-                Person.class,
-                Phone.class,
-        };
-    }
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] {
+				Person.class,
+				Phone.class,
+		};
+	}
 
-    @Test
-    public void testLifecycle() {
-        doInJPA(this::entityManagerFactory, entityManager -> {
-            Person person = new Person(1L);
-            person.getPhoneRegister().put(new Phone(PhoneType.LAND_LINE, "028-234-9876"), new Date());
-            person.getPhoneRegister().put(new Phone(PhoneType.MOBILE, "072-122-9876"), new Date());
-            entityManager.persist(person);
-        });
-        doInJPA(this::entityManagerFactory, entityManager -> {
-            Person person = entityManager.find(Person.class, 1L);
-            Map<Phone, Date> phones = person.getPhoneRegister();
-            assertEquals(2, phones.size());
-        });
-    }
+	@Test
+	public void testLifecycle() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			Person person = new Person( 1L );
+			person.getPhoneRegister().put( new Phone( PhoneType.LAND_LINE, "028-234-9876" ), new Date() );
+			person.getPhoneRegister().put( new Phone( PhoneType.MOBILE, "072-122-9876" ), new Date() );
+			entityManager.persist( person );
+		} );
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			Person person = entityManager.find( Person.class, 1L );
+			Map<Phone, Date> phones = person.getPhoneRegister();
+			assertEquals( 2, phones.size() );
+		} );
+	}
 
-    @Entity(name = "Person")
-    public static class Person {
+	public enum PhoneType {
+		LAND_LINE,
+		MOBILE
+	}
 
-        @Id
-        private Long id;
+	@Entity(name = "Person")
+	public static class Person {
 
-        public Person() {
-        }
+		@Id
+		private Long id;
+		@Temporal(TemporalType.TIMESTAMP)
+		@ElementCollection
+		@CollectionTable(name = "phone_register")
+		@Column(name = "since")
+		@MapKeyJoinColumn(name = "phone_id", referencedColumnName = "id")
+		private Map<Phone, Date> phoneRegister = new HashMap<>();
 
-        public Person(Long id) {
-            this.id = id;
-        }
+		public Person() {
+		}
 
-        @Temporal(TemporalType.TIMESTAMP)
-        @ElementCollection
-        @CollectionTable(name="phone_register")
-        @Column(name="since")
-        @MapKeyJoinColumn(name = "phone_id", referencedColumnName="id")
-        private Map<Phone, Date> phoneRegister = new HashMap<>();
+		public Person(Long id) {
+			this.id = id;
+		}
 
-        public Map<Phone, Date> getPhoneRegister() {
-            return phoneRegister;
-        }
-    }
+		public Map<Phone, Date> getPhoneRegister() {
+			return phoneRegister;
+		}
+	}
 
-    public enum PhoneType {
-        LAND_LINE,
-        MOBILE
-    }
+	@Embeddable
+	public static class Phone {
 
-    @Embeddable
-    public static class Phone  {
+		private PhoneType type;
 
-        private PhoneType type;
+		private String number;
 
-        private String number;
+		public Phone() {
+		}
 
-        public Phone() {
-        }
+		public Phone(PhoneType type, String number) {
+			this.type = type;
+			this.number = number;
+		}
 
-        public Phone(PhoneType type, String number) {
-            this.type = type;
-            this.number = number;
-        }
+		public PhoneType getType() {
+			return type;
+		}
 
-        public PhoneType getType() {
-            return type;
-        }
-
-        public String getNumber() {
-            return number;
-        }
-    }
+		public String getNumber() {
+			return number;
+		}
+	}
 }

@@ -6,86 +6,92 @@
  */
 package org.hibernate.jpa.guide.association;
 
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.junit.Test;
-
-import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
 
-import static org.hibernate.jpa.test.util.TransactionUtil.*;
+import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+
+import org.junit.Test;
+
+import static org.hibernate.jpa.test.util.TransactionUtil.doInJPA;
 
 /**
  * @author Vlad Mihalcea
  */
 public class UnidirectionalOneToManyTest extends BaseEntityManagerFunctionalTestCase {
 
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[] {
-            Person.class,
-            Phone.class,
-        };
-    }
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] {
+				Person.class,
+				Phone.class,
+		};
+	}
 
-    @Test
-    public void testLifecycle() {
-        doInJPA(this::entityManagerFactory, entityManager -> {
-            Person person = new Person();
-            Phone phone1 = new Phone("123-456-7890");
-            Phone phone2 = new Phone("321-654-0987");
+	@Test
+	public void testLifecycle() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			Person person = new Person();
+			Phone phone1 = new Phone( "123-456-7890" );
+			Phone phone2 = new Phone( "321-654-0987" );
 
-            person.getPhones().add(phone1);
-            person.getPhones().add(phone2);
-            entityManager.persist(person);
-            entityManager.flush();
+			person.getPhones().add( phone1 );
+			person.getPhones().add( phone2 );
+			entityManager.persist( person );
+			entityManager.flush();
 
-            person.getPhones().remove(phone1);
-        });
-    }
+			person.getPhones().remove( phone1 );
+		} );
+	}
 
-    @Entity(name = "Person")
-    public static class Person  {
+	@Entity(name = "Person")
+	public static class Person {
 
-        @Id
-        @GeneratedValue
-        private Long id;
-
-        public Person() {}
-
-        @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-        /*@JoinTable(name = "person_phone",
+		@Id
+		@GeneratedValue
+		private Long id;
+		@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+		/*@JoinTable(name = "person_phone",
             joinColumns = @JoinColumn(name = "person_id", foreignKey = @ForeignKey(name = "PERSON_ID_FK")),
             inverseJoinColumns = @JoinColumn(name = "phone_id", foreignKey = @ForeignKey(name = "PHONE_ID_FK"))
         )*/
-        private List<Phone> phones = new ArrayList<>();
+		private List<Phone> phones = new ArrayList<>();
 
-        public List<Phone> getPhones() {
-            return phones;
-        }
-    }
+		public Person() {
+		}
 
-    @Entity(name = "Phone")
-    public static class Phone  {
+		public List<Phone> getPhones() {
+			return phones;
+		}
+	}
 
-        @Id
-        @GeneratedValue
-        private Long id;
+	@Entity(name = "Phone")
+	public static class Phone {
 
-        private String number;
+		@Id
+		@GeneratedValue
+		private Long id;
 
-        public Phone() {}
+		private String number;
 
-        public Phone(String number) {
-            this.number = number;
-        }
+		public Phone() {
+		}
 
-        public Long getId() {
-            return id;
-        }
+		public Phone(String number) {
+			this.number = number;
+		}
 
-        public String getNumber() {
-            return number;
-        }
-    }
+		public Long getId() {
+			return id;
+		}
+
+		public String getNumber() {
+			return number;
+		}
+	}
 }

@@ -6,56 +6,62 @@
  */
 package org.hibernate.jpa.guide.mapping;
 
+import java.util.Date;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+
 import org.junit.Test;
 
-import javax.persistence.*;
-import java.util.Date;
-
-import static org.hibernate.jpa.test.util.TransactionUtil.*;
+import static org.hibernate.jpa.test.util.TransactionUtil.doInJPA;
 
 /**
  * @author Vlad Mihalcea
  */
 public class DateWithTemporalDateTest extends BaseEntityManagerFunctionalTestCase {
 
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[] {
-            DateEvent.class
-        };
-    }
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] {
+				DateEvent.class
+		};
+	}
 
-    @Test
-    public void testLifecycle() {
-        doInJPA(this::entityManagerFactory, entityManager -> {
-            DateEvent dateEvent = new DateEvent(new Date());
-            entityManager.persist(dateEvent);
-        });
-    }
+	@Test
+	public void testLifecycle() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			DateEvent dateEvent = new DateEvent( new Date() );
+			entityManager.persist( dateEvent );
+		} );
+	}
 
-    @Entity(name = "DateEvent")
-    public static class DateEvent  {
+	@Entity(name = "DateEvent")
+	public static class DateEvent {
 
-        @Id
-        @GeneratedValue
-        private Long id;
+		@Id
+		@GeneratedValue
+		private Long id;
 
-        @Temporal(TemporalType.DATE)
-        private Date timestamp;
+		@Temporal(TemporalType.DATE)
+		private Date timestamp;
 
-        public DateEvent() {}
+		public DateEvent() {
+		}
 
-        public DateEvent(Date timestamp) {
-            this.timestamp = timestamp;
-        }
+		public DateEvent(Date timestamp) {
+			this.timestamp = timestamp;
+		}
 
-        public Long getId() {
-            return id;
-        }
+		public Long getId() {
+			return id;
+		}
 
-        public Date getTimestamp() {
-            return timestamp;
-        }
-    }
+		public Date getTimestamp() {
+			return timestamp;
+		}
+	}
 }

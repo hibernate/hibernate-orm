@@ -6,128 +6,133 @@
  */
 package org.hibernate.jpa.guide.inheritance;
 
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.junit.Test;
-
-import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+import javax.persistence.PrimaryKeyJoinColumn;
 
-import static org.hibernate.jpa.test.util.TransactionUtil.*;
+import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+
+import org.junit.Test;
+
+import static org.hibernate.jpa.test.util.TransactionUtil.doInJPA;
 
 /**
  * @author Vlad Mihalcea
  */
 public class JoinTablePrimaryKeyJoinColumnTest extends BaseEntityManagerFunctionalTestCase {
 
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{
-                DebitAccount.class,
-                CreditAccount.class,
-        };
-    }
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] {
+				DebitAccount.class,
+				CreditAccount.class,
+		};
+	}
 
-    @Test
-    public void test() {
-        doInJPA(this::entityManagerFactory, entityManager -> {
-            DebitAccount debitAccount = new DebitAccount();
-            debitAccount.setId(1L);
-            debitAccount.setOwner("John Doe");
-            debitAccount.setBalance(BigDecimal.valueOf(100));
-            debitAccount.setInterestRate(BigDecimal.valueOf(1.5d));
-            debitAccount.setOverdraftFee(BigDecimal.valueOf(25));
+	@Test
+	public void test() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			DebitAccount debitAccount = new DebitAccount();
+			debitAccount.setId( 1L );
+			debitAccount.setOwner( "John Doe" );
+			debitAccount.setBalance( BigDecimal.valueOf( 100 ) );
+			debitAccount.setInterestRate( BigDecimal.valueOf( 1.5d ) );
+			debitAccount.setOverdraftFee( BigDecimal.valueOf( 25 ) );
 
-            CreditAccount creditAccount = new CreditAccount();
-            creditAccount.setId(2L);
-            creditAccount.setOwner("John Doe");
-            creditAccount.setBalance(BigDecimal.valueOf(1000));
-            creditAccount.setInterestRate(BigDecimal.valueOf(1.9d));
-            creditAccount.setCreditLimit(BigDecimal.valueOf(5000));
+			CreditAccount creditAccount = new CreditAccount();
+			creditAccount.setId( 2L );
+			creditAccount.setOwner( "John Doe" );
+			creditAccount.setBalance( BigDecimal.valueOf( 1000 ) );
+			creditAccount.setInterestRate( BigDecimal.valueOf( 1.9d ) );
+			creditAccount.setCreditLimit( BigDecimal.valueOf( 5000 ) );
 
-            entityManager.persist(debitAccount);
-            entityManager.persist(creditAccount);
-        });
+			entityManager.persist( debitAccount );
+			entityManager.persist( creditAccount );
+		} );
 
-        doInJPA(this::entityManagerFactory, entityManager -> {
-            List<Account> accounts =
-                entityManager.createQuery("select a from Account a").getResultList();
-        });
-    }
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			List<Account> accounts =
+					entityManager.createQuery( "select a from Account a" ).getResultList();
+		} );
+	}
 
-    @Entity(name = "Account")
-    @Inheritance(strategy = InheritanceType.JOINED)
-    public static class Account {
+	@Entity(name = "Account")
+	@Inheritance(strategy = InheritanceType.JOINED)
+	public static class Account {
 
-        @Id
-        private Long id;
+		@Id
+		private Long id;
 
-        private String owner;
+		private String owner;
 
-        private BigDecimal balance;
+		private BigDecimal balance;
 
-        private BigDecimal interestRate;
+		private BigDecimal interestRate;
 
-        public Long getId() {
-            return id;
-        }
+		public Long getId() {
+			return id;
+		}
 
-        public void setId(Long id) {
-            this.id = id;
-        }
+		public void setId(Long id) {
+			this.id = id;
+		}
 
-        public String getOwner() {
-            return owner;
-        }
+		public String getOwner() {
+			return owner;
+		}
 
-        public void setOwner(String owner) {
-            this.owner = owner;
-        }
+		public void setOwner(String owner) {
+			this.owner = owner;
+		}
 
-        public BigDecimal getBalance() {
-            return balance;
-        }
+		public BigDecimal getBalance() {
+			return balance;
+		}
 
-        public void setBalance(BigDecimal balance) {
-            this.balance = balance;
-        }
+		public void setBalance(BigDecimal balance) {
+			this.balance = balance;
+		}
 
-        public BigDecimal getInterestRate() {
-            return interestRate;
-        }
+		public BigDecimal getInterestRate() {
+			return interestRate;
+		}
 
-        public void setInterestRate(BigDecimal interestRate) {
-            this.interestRate = interestRate;
-        }
-    }
+		public void setInterestRate(BigDecimal interestRate) {
+			this.interestRate = interestRate;
+		}
+	}
 
-    @Entity(name = "DebitAccount")
-    @PrimaryKeyJoinColumn(name = "account_id")
-    public static class DebitAccount extends Account {
+	@Entity(name = "DebitAccount")
+	@PrimaryKeyJoinColumn(name = "account_id")
+	public static class DebitAccount extends Account {
 
-        private BigDecimal overdraftFee;
+		private BigDecimal overdraftFee;
 
-        public BigDecimal getOverdraftFee() {
-            return overdraftFee;
-        }
+		public BigDecimal getOverdraftFee() {
+			return overdraftFee;
+		}
 
-        public void setOverdraftFee(BigDecimal overdraftFee) {
-            this.overdraftFee = overdraftFee;
-        }
-    }
+		public void setOverdraftFee(BigDecimal overdraftFee) {
+			this.overdraftFee = overdraftFee;
+		}
+	}
 
-    @Entity(name = "CreditAccount")
-    @PrimaryKeyJoinColumn(name = "account_id")
-    public static class CreditAccount extends Account {
+	@Entity(name = "CreditAccount")
+	@PrimaryKeyJoinColumn(name = "account_id")
+	public static class CreditAccount extends Account {
 
-        private BigDecimal creditLimit;
+		private BigDecimal creditLimit;
 
-        public BigDecimal getCreditLimit() {
-            return creditLimit;
-        }
+		public BigDecimal getCreditLimit() {
+			return creditLimit;
+		}
 
-        public void setCreditLimit(BigDecimal creditLimit) {
-            this.creditLimit = creditLimit;
-        }
-    }
+		public void setCreditLimit(BigDecimal creditLimit) {
+			this.creditLimit = creditLimit;
+		}
+	}
 }

@@ -6,133 +6,137 @@
  */
 package org.hibernate.jpa.guide.collection;
 
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.annotations.NaturalId;
-import org.hibernate.annotations.SortNatural;
-import org.jboss.logging.Logger;
-import org.junit.Test;
-
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
 import java.util.Objects;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
 
+import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.SortNatural;
+import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+
+import org.junit.Test;
+
+import org.jboss.logging.Logger;
+
+import static org.hibernate.jpa.test.util.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
-
-import static org.hibernate.jpa.test.util.TransactionUtil.*;
 
 /**
  * @author Vlad Mihalcea
  */
 public class UnidirectionalSortedSetTest extends BaseEntityManagerFunctionalTestCase {
 
-    private static final Logger log = Logger.getLogger( UnidirectionalSortedSetTest.class );
+	private static final Logger log = Logger.getLogger( UnidirectionalSortedSetTest.class );
 
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{
-                Person.class,
-                Phone.class,
-        };
-    }
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] {
+				Person.class,
+				Phone.class,
+		};
+	}
 
-    @Test
-    public void testLifecycle() {
-        doInJPA(this::entityManagerFactory, entityManager -> {
-            Person person = new Person(1L);
-            person.getPhones().add(new Phone(1L, "landline", "028-234-9876"));
-            person.getPhones().add(new Phone(2L, "mobile", "072-122-9876"));
-            entityManager.persist(person);
-        });
-        doInJPA(this::entityManagerFactory, entityManager -> {
-            Person person = entityManager.find(Person.class, 1L);
-            Set<Phone> phones = person.getPhones();
-            assertEquals(2, phones.size());
-            phones.stream().forEach(phone -> log.infov("Phone number %s", phone.getNumber()));
-            phones.remove(phones.iterator().next());
-            assertEquals(1, phones.size());
-        });
-        doInJPA(this::entityManagerFactory, entityManager -> {
-            Person person = entityManager.find(Person.class, 1L);
-            Set<Phone> phones = person.getPhones();
-            assertEquals(1, phones.size());
-        });
-    }
+	@Test
+	public void testLifecycle() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			Person person = new Person( 1L );
+			person.getPhones().add( new Phone( 1L, "landline", "028-234-9876" ) );
+			person.getPhones().add( new Phone( 2L, "mobile", "072-122-9876" ) );
+			entityManager.persist( person );
+		} );
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			Person person = entityManager.find( Person.class, 1L );
+			Set<Phone> phones = person.getPhones();
+			assertEquals( 2, phones.size() );
+			phones.stream().forEach( phone -> log.infov( "Phone number %s", phone.getNumber() ) );
+			phones.remove( phones.iterator().next() );
+			assertEquals( 1, phones.size() );
+		} );
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			Person person = entityManager.find( Person.class, 1L );
+			Set<Phone> phones = person.getPhones();
+			assertEquals( 1, phones.size() );
+		} );
+	}
 
-    @Entity(name = "Person")
-    public static class Person {
+	@Entity(name = "Person")
+	public static class Person {
 
-        @Id
-        private Long id;
+		@Id
+		private Long id;
+		@OneToMany(cascade = CascadeType.ALL)
+		@SortNatural
+		private SortedSet<Phone> phones = new TreeSet<>();
 
-        public Person() {
-        }
+		public Person() {
+		}
 
-        public Person(Long id) {
-            this.id = id;
-        }
+		public Person(Long id) {
+			this.id = id;
+		}
 
-        @OneToMany(cascade = CascadeType.ALL)
-        @SortNatural
-        private SortedSet<Phone> phones = new TreeSet<>();
+		public Set<Phone> getPhones() {
+			return phones;
+		}
+	}
 
-        public Set<Phone> getPhones() {
-            return phones;
-        }
-    }
+	@Entity(name = "Phone")
+	public static class Phone implements Comparable<Phone> {
 
-    @Entity(name = "Phone")
-    public static class Phone implements Comparable<Phone> {
+		@Id
+		private Long id;
 
-        @Id
-        private Long id;
+		private String type;
 
-        private String type;
+		@NaturalId
+		private String number;
 
-        @NaturalId
-        private String number;
+		public Phone() {
+		}
 
-        public Phone() {
-        }
+		public Phone(Long id, String type, String number) {
+			this.id = id;
+			this.type = type;
+			this.number = number;
+		}
 
-        public Phone(Long id, String type, String number) {
-            this.id = id;
-            this.type = type;
-            this.number = number;
-        }
+		public Long getId() {
+			return id;
+		}
 
-        public Long getId() {
-            return id;
-        }
+		public String getType() {
+			return type;
+		}
 
-        public String getType() {
-            return type;
-        }
+		public String getNumber() {
+			return number;
+		}
 
-        public String getNumber() {
-            return number;
-        }
+		@Override
+		public int compareTo(Phone o) {
+			return number.compareTo( o.getNumber() );
+		}
 
-        @Override
-        public int compareTo(Phone o) {
-            return number.compareTo(o.getNumber());
-        }
+		@Override
+		public boolean equals(Object o) {
+			if ( this == o ) {
+				return true;
+			}
+			if ( o == null || getClass() != o.getClass() ) {
+				return false;
+			}
+			Phone phone = (Phone) o;
+			return Objects.equals( number, phone.number );
+		}
 
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            Phone phone = (Phone) o;
-            return Objects.equals(number, phone.number);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(number);
-        }
-    }
+		@Override
+		public int hashCode() {
+			return Objects.hash( number );
+		}
+	}
 }

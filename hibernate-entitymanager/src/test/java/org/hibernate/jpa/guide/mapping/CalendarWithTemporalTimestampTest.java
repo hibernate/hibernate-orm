@@ -6,63 +6,68 @@
  */
 package org.hibernate.jpa.guide.mapping;
 
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.junit.Test;
-
-import javax.persistence.*;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
+import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+
+import org.junit.Test;
+
+import static org.hibernate.jpa.test.util.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
-
-import static org.hibernate.jpa.test.util.TransactionUtil.*;
 
 /**
  * @author Vlad Mihalcea
  */
 public class CalendarWithTemporalTimestampTest extends BaseEntityManagerFunctionalTestCase {
 
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[] {
-            DateEvent.class
-        };
-    }
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] {
+				DateEvent.class
+		};
+	}
 
-    @Test
-    public void testLifecycle() {
-        final Calendar calendar = new GregorianCalendar();
-        doInJPA(this::entityManagerFactory, entityManager -> {
-            entityManager.persist(new DateEvent(calendar) );
-        });
-        doInJPA(this::entityManagerFactory, entityManager -> {
-            DateEvent dateEvent = entityManager.createQuery("from DateEvent", DateEvent.class).getSingleResult();
-            assertEquals(calendar, dateEvent.getTimestamp());
-        });
-    }
+	@Test
+	public void testLifecycle() {
+		final Calendar calendar = new GregorianCalendar();
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			entityManager.persist( new DateEvent( calendar ) );
+		} );
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			DateEvent dateEvent = entityManager.createQuery( "from DateEvent", DateEvent.class ).getSingleResult();
+			assertEquals( calendar, dateEvent.getTimestamp() );
+		} );
+	}
 
-    @Entity(name = "DateEvent")
-    public static class DateEvent  {
+	@Entity(name = "DateEvent")
+	public static class DateEvent {
 
-        @Id
-        @GeneratedValue
-        private Long id;
+		@Id
+		@GeneratedValue
+		private Long id;
 
-        @Temporal(TemporalType.TIMESTAMP)
-        private Calendar timestamp;
+		@Temporal(TemporalType.TIMESTAMP)
+		private Calendar timestamp;
 
-        public DateEvent() {}
+		public DateEvent() {
+		}
 
-        public DateEvent(Calendar timestamp) {
-            this.timestamp = timestamp;
-        }
+		public DateEvent(Calendar timestamp) {
+			this.timestamp = timestamp;
+		}
 
-        public Long getId() {
-            return id;
-        }
+		public Long getId() {
+			return id;
+		}
 
-        public Calendar getTimestamp() {
-            return timestamp;
-        }
-    }
+		public Calendar getTimestamp() {
+			return timestamp;
+		}
+	}
 }

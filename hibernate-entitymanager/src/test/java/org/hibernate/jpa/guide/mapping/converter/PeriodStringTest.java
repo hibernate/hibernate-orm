@@ -6,65 +6,70 @@
  */
 package org.hibernate.jpa.guide.mapping.converter;
 
+import java.time.Period;
+import javax.persistence.Column;
+import javax.persistence.Convert;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+
 import org.junit.Test;
 
-import javax.persistence.*;
-import java.time.Period;
-
+import static org.hibernate.jpa.test.util.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
-
-import static org.hibernate.jpa.test.util.TransactionUtil.*;
 
 /**
  * @author Vlad Mihalcea
  */
 public class PeriodStringTest extends BaseEntityManagerFunctionalTestCase {
 
-    private Period period = Period.ofYears(1).plusMonths(2).plusDays(3);
+	private Period period = Period.ofYears( 1 ).plusMonths( 2 ).plusDays( 3 );
 
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[] {
-                Event.class
-        };
-    }
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] {
+				Event.class
+		};
+	}
 
-    @Test
-    public void testLifecycle() {
-        doInJPA(this::entityManagerFactory, entityManager -> {
-            Event event = new Event(period);
-            entityManager.persist(event);
-        });
-        doInJPA(this::entityManagerFactory, entityManager -> {
-            Event event = entityManager.createQuery("from Event", Event.class).getSingleResult();
-            assertEquals(period, event.getSpan());
-        });
-    }
+	@Test
+	public void testLifecycle() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			Event event = new Event( period );
+			entityManager.persist( event );
+		} );
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			Event event = entityManager.createQuery( "from Event", Event.class ).getSingleResult();
+			assertEquals( period, event.getSpan() );
+		} );
+	}
 
-    @Entity(name = "Event")
-    public static class Event  {
+	@Entity(name = "Event")
+	public static class Event {
 
-        @Id
-        @GeneratedValue
-        private Long id;
+		@Id
+		@GeneratedValue
+		private Long id;
 
-        @Convert(converter = PeriodStringConverter.class)
-        @Column(columnDefinition = "")
-        private Period span;
+		@Convert(converter = PeriodStringConverter.class)
+		@Column(columnDefinition = "")
+		private Period span;
 
-        public Event() {}
+		public Event() {
+		}
 
-        public Event(Period span) {
-            this.span = span;
-        }
+		public Event(Period span) {
+			this.span = span;
+		}
 
-        public Long getId() {
-            return id;
-        }
+		public Long getId() {
+			return id;
+		}
 
-        public Period getSpan() {
-            return span;
-        }
-    }
+		public Period getSpan() {
+			return span;
+		}
+	}
 }

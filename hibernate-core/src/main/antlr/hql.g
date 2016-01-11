@@ -593,7 +593,7 @@ relationalExpression
 					#l.setText( (n == null) ? "like" : "not like");
 				}
 				concatenation likeEscape)
-			| (MEMBER! (OF!)? p:path! {
+			| (MEMBER! (OF!)? p:memberOfPath! {
 				processMemberOf(n,#p,currentAST);
 			  } ) )
 		)
@@ -610,6 +610,14 @@ inList
 
 betweenList
 	: concatenation AND! concatenation
+	;
+
+memberOfPath
+	// JPA says this is a `collection_valued_path_expression` which is essentially either:
+	// 		1) a treated path followed by a collection-valued attribute reference
+	//		2) a path
+	: { validateSoftKeyword("treat") && LA(2) == OPEN }? i:IDENT! OPEN! p:path AS! a:path! CLOSE! ( DOT^ path )
+	| path
 	;
 
 //level 4 - string concatenation

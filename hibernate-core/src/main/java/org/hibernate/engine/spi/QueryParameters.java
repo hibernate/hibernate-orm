@@ -18,7 +18,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.hql.internal.classic.ParserHelper;
 import org.hibernate.internal.CoreLogging;

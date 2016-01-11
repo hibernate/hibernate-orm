@@ -1,16 +1,13 @@
 [[appendix-legacy-criteria]]
 == Legacy Hibernate Criteria Queries
 
-[NOTE]
+[IMPORTANT]
 ====
-This appendix covers the legacy Hibernate `org.hibernate.Criteria` API,
-which should be considered deprecated. New development should focus on
-the JPA javax.persistence.criteria.CriteriaQuery API. Eventually,
-Hibernate-specific criteria features will be ported as extensions to the
-JPA javax.persistence.criteria.CriteriaQuery. For details on the JPA
-APIs, see <<chapters/query-criteria/Criteria.adoc#criteria, Criteria>>
+This appendix covers the legacy Hibernate `org.hibernate.Criteria` API, which should be considered deprecated.
 
-This information is copied as-is from the older Hibernate documentation.
+New development should focus on the JPA javax.persistence.criteria.CriteriaQuery API.
+Eventually, Hibernate-specific criteria features will be ported as extensions to the JPA `javax.persistence.criteria.CriteriaQuery`.
+For details on the JPA APIs, see <<chapters/query-criteria/Criteria.adoc#criteria, Criteria>>.
 ====
 
 Hibernate features an intuitive, extensible criteria query API.
@@ -18,9 +15,8 @@ Hibernate features an intuitive, extensible criteria query API.
 [[querycriteria-creating]]
 === Creating a `Criteria` instance
 
-The interface `org.hibernate.Criteria` represents a query against a
-particular persistent class. The `Session` is a factory for `Criteria`
-instances.
+The interface `org.hibernate.Criteria` represents a query against a particular persistent class.
+The `Session` is a factory for `Criteria` instances.
 
 [source,java]
 ----
@@ -32,10 +28,8 @@ List cats = crit.list();
 [[querycriteria-narrowing]]
 === Narrowing the result set
 
-An individual query criterion is an instance of the interface
-`org.hibernate.criterion.Criterion`. The class
-`org.hibernate.criterion.Restrictions` defines factory methods for
-obtaining certain built-in `Criterion` types.
+An individual query criterion is an instance of the interface `org.hibernate.criterion.Criterion`.
+The class `org.hibernate.criterion.Restrictions` defines factory methods for obtaining certain built-in `Criterion` types.
 
 [source,java]
 ----
@@ -71,8 +65,8 @@ List cats = sess.createCriteria(Cat.class)
     .list();
 ----
 
-There are a range of built-in criterion types (`Restrictions`
-subclasses). One of the most useful allows you to specify SQL directly.
+There are a range of built-in criterion types (`Restrictions` subclasses).
+One of the most useful `Restrictions` allows you to specify SQL directly.
 
 [source,java]
 ----
@@ -81,11 +75,10 @@ List cats = sess.createCriteria(Cat.class)
     .list();
 ----
 
-The `{alias}` placeholder will be replaced by the row alias of the
-queried entity.
+The `{alias}` placeholder will be replaced by the row alias of the queried entity.
 
-You can also obtain a criterion from a `Property` instance. You can
-create a `Property` by calling `Property.forName()`:
+You can also obtain a criterion from a `Property` instance.
+You can create a `Property` by calling `Property.forName()`:
 
 [source,java]
 ----
@@ -130,8 +123,7 @@ List cats = sess.createCriteria(Cat.class)
 [[querycriteria-associations]]
 === Associations
 
-By navigating associations using `createCriteria()` you can specify
-constraints upon related entities:
+By navigating associations using `createCriteria()` you can specify constraints upon related entities:
 
 [source,java]
 ----
@@ -142,8 +134,7 @@ List cats = sess.createCriteria(Cat.class)
     .list();
 ----
 
-The second `createCriteria()` returns a new instance of `Criteria` that
-refers to the elements of the `kittens` collection.
+The second `createCriteria()` returns a new instance of `Criteria` that refers to the elements of the `kittens` collection.
 
 There is also an alternate form that is useful in certain circumstances:
 
@@ -158,10 +149,8 @@ List cats = sess.createCriteria(Cat.class)
 
 (`createAlias()` does not create a new instance of `Criteria`.)
 
-The kittens collections held by the `Cat` instances returned by the
-previous two queries are _not_ pre-filtered by the criteria. If you want
-to retrieve just the kittens that match the criteria, you must use a
-`ResultTransformer`.
+The kittens collections held by the `Cat` instances returned by the previous two queries are _not_ pre-filtered by the criteria.
+If you want to retrieve just the kittens that match the criteria, you must use a `ResultTransformer`.
 
 [source,java]
 ----
@@ -188,26 +177,20 @@ List cats = session.createCriteria( Cat.class )
    .list();
 ----
 
-This will return all of the `Cat`s with a mate whose name starts with
-"good" ordered by their mate's age, and all cats who do not have a mate.
-This is useful when there is a need to order or limit in the database
-prior to returning complex/large result sets, and removes many instances
-where multiple queries would have to be performed and the results
-unioned by java in memory.
+This will return all of the `Cat`s with a mate whose name starts with "good" ordered by their mate's age, and all cats who do not have a mate.
+This is useful when there is a need to order or limit in the database prior to returning complex/large result sets,
+and removes many instances where multiple queries would have to be performed and the results unioned by java in memory.
 
-Without this feature, first all of the cats without a mate would need to
-be loaded in one query.
+Without this feature, first all of the cats without a mate would need to be loaded in one query.
 
-A second query would need to retreive the cats with mates who's name
-started with "good" sorted by the mates age.
+A second query would need to retrieve the cats with mates who's name started with "good" sorted by the mates age.
 
 Thirdly, in memory; the lists would need to be joined manually.
 
 [[querycriteria-dynamicfetching]]
 === Dynamic association fetching
 
-You can specify association fetching semantics at runtime using
-`setFetchMode()`.
+You can specify association fetching semantics at runtime using `setFetchMode()`.
 
 [source,java]
 ----
@@ -223,12 +206,9 @@ This query will fetch both `mate` and `kittens` by outer join.
 [[querycriteria-components]]
 === Components
 
-To add a restriction against a property of an embedded component, the
-component property name should be prepended to the property name when
-creating the `Restriction`. The criteria object should be created on the
-owning entity, and cannot be created on the component itself. For
-example, suppose the `Cat` has a component property `fullName` with
-sub-properties `firstName` and `lastName`:
+To add a restriction against a property of an embedded component, the component property name should be prepended to the property name when creating the `Restriction`.
+The criteria object should be created on the owning entity, and cannot be created on the component itself.
+For example, suppose the `Cat` has a component property `fullName` with sub-properties `firstName` and `lastName`:
 
 [source]
 ----
@@ -237,26 +217,20 @@ List cats = session.createCriteria(Cat.class)
     .list();
 ----
 
-Note: this does not apply when querying collections of components, for
-that see below <<querycriteria-collections>>
+Note: this does not apply when querying collections of components, for that see below <<querycriteria-collections>>
 
 [[querycriteria-collections]]
 === Collections
 
 When using criteria against collections, there are two distinct cases.
-One is if the collection contains entities (eg. `<one-to-many/>` or
-`<many-to-many/>`) or components (`<composite-element/>` ), and the
-second is if the collection contains scalar values (`<element/>`). In
-the first case, the syntax is as given above in the section
-<<querycriteria-associations>> where we restrict the
-`kittens` collection. Essentially we create a `Criteria` object against
-the collection property and restrict the entity or component properties
-using that instance.
+One is if the collection contains entities (eg. `<one-to-many/>` or `<many-to-many/>`) or components (`<composite-element/>` ),
+and the second is if the collection contains scalar values (`<element/>`).
+In the first case, the syntax is as given above in the section <<querycriteria-associations>> where we restrict the `kittens` collection.
+Essentially we create a `Criteria` object against the collection property and restrict the entity or component properties using that instance.
 
-For queryng a collection of basic values, we still create the `Criteria`
-object against the collection, but to reference the value, we use the
-special property "elements". For an indexed collection, we can also
-reference the index property using the special property "indices".
+For querying a collection of basic values, we still create the `Criteria` object against the collection,
+but to reference the value, we use the special property "elements".
+For an indexed collection, we can also reference the index property using the special property "indices".
 
 [source]
 ----
@@ -269,8 +243,7 @@ List cats = session.createCriteria(Cat.class)
 [[querycriteria-examples]]
 === Example queries
 
-The class `org.hibernate.criterion.Example` allows you to construct a
-query criterion from a given instance.
+The class `org.hibernate.criterion.Example` allows you to construct a query criterion from a given instance.
 
 [source,java]
 ----
@@ -282,8 +255,8 @@ List results = session.createCriteria(Cat.class)
     .list();
 ----
 
-Version properties, identifiers and associations are ignored. By
-default, null valued properties are excluded.
+Version properties, identifiers and associations are ignored.
+By default, null valued properties are excluded.
 
 You can adjust how the `Example` is applied.
 
@@ -313,9 +286,8 @@ List results = session.createCriteria(Cat.class)
 [[querycriteria-projection]]
 === Projections, aggregation and grouping
 
-The class `org.hibernate.criterion.Projections` is a factory for
-`Projection` instances. You can apply a projection to a query by calling
-`setProjection()`.
+The class `org.hibernate.criterion.Projections` is a factory for `Projection` instances.
+You can apply a projection to a query by calling `setProjection()`.
 
 [source,java]
 ----
@@ -337,13 +309,11 @@ List results = session.createCriteria(Cat.class)
     .list();
 ----
 
-There is no explicit "group by" necessary in a criteria query. Certain
-projection types are defined to be __grouping projections__, which also
-appear in the SQL `group by` clause.
+There is no explicit "group by" necessary in a criteria query.
+Certain projection types are defined to be __grouping projections__, which also appear in the SQL `group by` clause.
 
-An alias can be assigned to a projection so that the projected value can
-be referred to in restrictions or orderings. Here are two different ways
-to do this:
+An alias can be assigned to a projection so that the projected value can be referred to in restrictions or orderings.
+Here are two different ways to do this:
 
 [source,java]
 ----
@@ -361,9 +331,8 @@ List results = session.createCriteria(Cat.class)
     .list();
 ----
 
-The `alias()` and `as()` methods simply wrap a projection instance in
-another, aliased, instance of `Projection`. As a shortcut, you can
-assign an alias when you add the projection to a projection list:
+The `alias()` and `as()` methods simply wrap a projection instance in another, aliased, instance of `Projection`.
+As a shortcut, you can assign an alias when you add the projection to a projection list:
 
 [source,java]
 ----
@@ -419,8 +388,7 @@ List results = session.createCriteria(Cat.class)
 [[querycriteria-detachedqueries]]
 === Detached queries and subqueries
 
-The `DetachedCriteria` class allows you to create a query outside the
-scope of a session and then execute it using an arbitrary `Session`.
+The `DetachedCriteria` class allows you to create a query outside the scope of a session and then execute it using an arbitrary `Session`.
 
 [source,java]
 ----
@@ -434,9 +402,8 @@ txn.commit();
 session.close();
 ----
 
-A `DetachedCriteria` can also be used to express a subquery. Criterion
-instances involving subqueries can be obtained via `Subqueries` or
-`Property`.
+A `DetachedCriteria` can also be used to express a subquery.
+`Criterion` instances involving subqueries can be obtained via `Subqueries` or `Property`.
 
 [source,java]
 ----
@@ -483,15 +450,12 @@ session.createCriteria( Woman.class )
 [[query-criteria-naturalid]]
 === Queries by natural identifier
 
-For most queries, including criteria queries, the query cache is not
-efficient because query cache invalidation occurs too frequently.
-However, there is a special kind of query where you can optimize the
-cache invalidation algorithm: lookups by a constant natural key. In some
-applications, this kind of query occurs frequently. The criteria API
-provides special provision for this use case.
+For most queries, including criteria queries, the query cache is not efficient because query cache invalidation occurs too frequently.
+However, there is a special kind of query where you can optimize the cache invalidation algorithm: lookups by a constant natural key.
+In some applications, this kind of query occurs frequently.
+The Criteria API provides special provision for this use case.
 
-First, map the natural key of your entity using `<natural-id>` and
-enable use of the second-level cache.
+First, map the natural key of your entity using `<natural-id>` and enable use of the second-level cache.
 
 [source,xml]
 ----
@@ -508,12 +472,9 @@ enable use of the second-level cache.
 </class>
 ----
 
-This functionality is not intended for use with entities with _mutable_
-natural keys.
+This functionality is not intended for use with entities with _mutable_ natural keys.
 
-Once you have enabled the Hibernate query cache, the
-`Restrictions.naturalId()` allows you to make use of the more efficient
-cache algorithm.
+Once you have enabled the Hibernate query cache, the `Restrictions.naturalId()` allows you to make use of the more efficient cache algorithm.
 
 [source,java]
 ----

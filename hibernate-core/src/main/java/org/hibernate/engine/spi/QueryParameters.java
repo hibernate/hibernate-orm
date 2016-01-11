@@ -38,7 +38,7 @@ public final class QueryParameters {
 	/**
 	 * Symbols used to split SQL string into tokens in {@link #processFilters(String, Map, SessionFactoryImplementor)}.
 	 */
-    private static final String SYMBOLS = ParserHelper.HQL_SEPARATORS.replace( "'", "" );
+	private static final String SYMBOLS = ParserHelper.HQL_SEPARATORS.replace( "'", "" );
 
 	private Type[] positionalParameterTypes;
 	private Object[] positionalParameterValues;

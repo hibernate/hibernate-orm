@@ -2895,11 +2895,12 @@ public class ModelBinder {
 		if ( isTable ) {
 			final TableSource tableSource = (TableSource) tableSpecSource;
 			table.setRowId( tableSource.getRowId() );
-			table.setComment( tableSource.getComment() );
 			if ( StringHelper.isNotEmpty( tableSource.getCheckConstraint() ) ) {
 				table.addCheckConstraint( tableSource.getCheckConstraint() );
 			}
-		}
+		} 
+
+		table.setComment(tableSpecSource.getComment());
 
 		mappingDocument.getMetadataCollector().addTableNameBinding( logicalTableName, table );
 

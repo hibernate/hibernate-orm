@@ -25,4 +25,7 @@ public interface TableSpecificationSource {
 	 * @return The catalog name. If {@code null}, the binder will apply the default.
 	 */
 	public String getExplicitCatalogName();
+
+	public String getComment();
+
 }

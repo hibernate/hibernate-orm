@@ -1,0 +1,12 @@
+[[flushing]]
+== Flushing
+
+* <<chapters/pc/PersistenceContext.adoc#pc,Persistence Contexts>>
+* <<chapters/query-hql/HQL.adoc#hql,HQL and JPQL>>
+* link:#criteria[???]
+* link:#querynative[???]
+
+Flushing is the process of synchronizing the state of the persistence
+context to the database.
+
+TODO

@@ -1,0 +1,4 @@
+@Entity
+public class Simple {
+    ...
+}

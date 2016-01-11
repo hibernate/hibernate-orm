@@ -31,7 +31,7 @@ initial revision as well as the updated revision.  A revision refers to a histor
 
 
 [[hibernate-gsg-tutorial-envers-test-api]]
-.Using the org.hibernate.envers.AuditReader
+.Using the `org.hibernate.envers.AuditReader`
 ====
 [source, JAVA]
 ----

@@ -1,0 +1,81 @@
+[[caching]]
+== Caching
+
+[[caching-config]]
+=== Configuring second-level caching
+
+Hibernate defines the ability to integrate with pluggable providers for the purpose of caching data outside the context of a particular `Session`.
+This section defines the settings which control that behavior.
+
+[[caching-config-provider]]
+=== RegionFactory
+
+`org.hibernate.cache.spi.RegionFactory` defines the integration between Hibernate and a pluggable caching provider.
+`hibernate.cache.region.factory_class` is used to declare the provider to use. Hibernate comes with support for 2 popular caching libraries: Ehcache and Infinispan.
+
+[[caching-config-provider-ehcache]]
+=== Ehcache
+
+[IMPORTANT]
+====
+Use of the build-in integration for Ehcache requires that the hibernate-ehcache module jar (and all of its dependencies) are on the classpath.
+====
+
+The hibernate-ehcache module defines 2 specific region factories: `EhCacheRegionFactory` and `SingletonEhCacheRegionFactory`.
+
+[[caching-config-provider-ehcache-region-factory]]
+==== `EhCacheRegionFactory`
+
+TODO
+
+[[caching-config-provider-ehcache-singleton-region-factory]]
+==== `SingletonEhCacheRegionFactory`
+
+TODO
+
+[[caching-config-provider-infinispan]]
+=== Infinispan
+
+[IMPORTANT]
+====
+Use of the build-in integration for Infinispan requires that the hibernate-infinispan module jar (and all of its dependencies) are on the classpath.
+====
+
+The hibernate-infinispan module defines 2 specific providers: `infinispan` and  `infinispan-jndi`.
+
+TODO
+
+[[caching-config-behavior]]
+=== Caching behavior
+
+Besides specific provider configuration, there are a number of configurations options on the Hibernate side of the integration that control various caching behavior:
+
+`hibernate.cache.use_second_level_cache`:: Enable or disable second level caching overall. Default is true, although the default region factory is `NoCachingRegionFactory`.
+`hibernate.cache.use_query_cache`:: Enable or disable second level caching of query results. Default is false.
+`hibernate.cache.query_cache_factory`:: Query result caching is handled by a special contract that deals with staleness-based invalidation of the results.
+The default implementation does not allow stale results at all. Use this for applications that would like to relax that.
+Names an implementation of `org.hibernate.cache.spi.QueryCacheFactory`
+`hibernate.cache.use_minimal_puts`:: Optimizes second-level cache operations to minimize writes, at the cost of more frequent reads. Providers typically set this appropriately.
+`hibernate.cache.region_prefix`:: Defines a name to be used as a prefix to all second-level cache region names.
+`hibernate.cache.default_cache_concurrency_strategy`:: In Hibernate second-level caching, all regions can be configured differently including the concurrency strategy to use when accessing the region.
+This setting allows to define a default strategy to be used.
+This setting is very rarely required as the pluggable providers do specify the default strategy to use.
+Valid values include:
+* read-only,
+* read-write,
+* nonstrict-read-write,
+* transactional
+hibernate.cache.use_structured_entries:: If `true`, forces Hibernate to store data in the second-level cache in a more human-friendly format.
+Can be useful if you'd like to be able to "browse" the data directly in your cache, but does have a performance impact.
+* hibernate.cache.auto_evict_collection_cache:: Enables or disables the automatic eviction of a bidirectional association's collection cache entry when the association is changed just from the owning side.
+This is disabled by default, as it has a performance impact to track this state.
+However if your application does not manage both sides of bidirectional association where the collection side is cached, the alternative is to have stale data in that collection cache.
+
+[[caching-management]]
+=== Managing the Cached Data
+
+At runtime Hibernate handles moving data into and out of the second-level cache in response to the operations performed by the `Session`.
+
+The `org.hibernate.Cache` interface (or the `javax.persistence.Cache` interface if using JPA) allow to clear data from the second-level cache.
+
+TODO

@@ -1,0 +1,1 @@
+Query query = session.getNamedQuery( "my-predefined-named-query" );

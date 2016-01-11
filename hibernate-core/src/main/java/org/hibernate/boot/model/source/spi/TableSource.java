@@ -21,7 +21,5 @@ public interface TableSource extends TableSpecificationSource {
 
 	String getRowId();
 
-	String getComment();
-
 	String getCheckConstraint();
 }

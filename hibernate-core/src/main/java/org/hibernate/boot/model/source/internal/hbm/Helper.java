@@ -233,7 +233,8 @@ public class Helper {
 							: tableInformationContainer.getSubselect(),
 					tableInformationContainer.getTable() == null
 							? inLineViewNameInferrer.inferInLineViewName()
-							: tableInformationContainer.getTable()
+							: tableInformationContainer.getTable(),
+					comment
 			);
 		}
 	}

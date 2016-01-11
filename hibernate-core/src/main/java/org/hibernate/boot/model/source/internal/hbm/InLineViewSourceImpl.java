@@ -18,17 +18,21 @@ public class InLineViewSourceImpl
 	private final String catalogName;
 	private final String selectStatement;
 	private final String logicalName;
+	private final String comment;
 
 	public InLineViewSourceImpl(
 			MappingDocument mappingDocument,
 			String schemaName,
 			String catalogName,
-			String selectStatement, String logicalName) {
+			String selectStatement, 
+			String logicalName,
+			String comment) {
 		super( mappingDocument );
 		this.schemaName = schemaName;
 		this.catalogName = catalogName;
 		this.selectStatement = selectStatement;
 		this.logicalName = logicalName;
+		this.comment = comment;
 	}
 
 	@Override
@@ -49,5 +53,10 @@ public class InLineViewSourceImpl
 	@Override
 	public String getLogicalName() {
 		return logicalName;
+	}
+	
+	@Override
+	public String getComment() {
+		return comment;
 	}
 }

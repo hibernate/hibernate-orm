@@ -119,7 +119,7 @@ public class CompositeIdAssociationTest extends BaseEntityManagerFunctionalTestC
 	}
 
 	@Entity(name = "Person")
-	public static class Person {
+	public static class Person implements Serializable {
 
 		@Id
 		@GeneratedValue
@@ -158,7 +158,7 @@ public class CompositeIdAssociationTest extends BaseEntityManagerFunctionalTestC
 	}
 
 	@Entity(name = "Address")
-	public static class Address {
+	public static class Address implements Serializable {
 
 		@Id
 		@GeneratedValue

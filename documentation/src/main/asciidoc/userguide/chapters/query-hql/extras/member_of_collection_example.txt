@@ -1,0 +1,8 @@
+select p
+from Person p
+where 'John' member of p.nickNames
+
+select p
+from Person p
+where p.name.first = 'Joseph'
+  and 'Joey' not member of p.nickNames

@@ -145,7 +145,7 @@ start-up of an application and closed at the end of the application lifecycle.
 
 
 [[hibernate-gsg-tutorial-basic-test-setUp]]
-.Obtaining the org.hibernate.SessionFactory
+.Obtaining the `org.hibernate.SessionFactory`
 ====
 [source, JAVA]
 ----

@@ -54,7 +54,7 @@ See the User Guide for additional details.
     with `org.hibernate.type.descriptor.sql.SqlTypeDescriptorRegistry`.  Applications using custom SqlTypeDescriptor
     implementations extending the built-in ones and relying on that behavior should be updated to call
     `SqlTypeDescriptorRegistry#addDescriptor` themselves.
-* The JDBC type for "big_integer" (org.hibernate.type.BigIntegerType) properties has changed from
+* The JDBC type for "big_integer" (`org.hibernate.type.BigIntegerType`) properties has changed from
     java.sql.Types,NUMERIC to java.sql.Types.BIGINT.
 * For ids defined as UUID with generation, for some databases it is required to explicitly set the `@Column( length=16 )`
     in order to generate BINARY(16) so that comparisons properly work.

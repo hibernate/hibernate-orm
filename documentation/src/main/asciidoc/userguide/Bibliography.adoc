@@ -1,0 +1,6 @@
+== References
+
+[bibliography]
+- [[[PoEAA]]] Martin Fowler. Patterns of Enterprise Application Architecture.
+  Addison-Wesley Publishing Company. 2003.
+- [[[JPwH]]] Christian Bauer & Gavin King. http://www.manning.com/bauer2[Java Persistence with Hibernate]. Manning Publications Co. 2007.

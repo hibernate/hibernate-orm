@@ -1,0 +1,4 @@
+select new list(mother, offspr, mate.name)
+from DomesticCat as mother
+    inner join mother.mate as mate
+    left outer join mother.kittens as offspr

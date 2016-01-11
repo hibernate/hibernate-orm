@@ -1,0 +1,10 @@
+// legal because p.name is implicitly part of p
+select p
+from Person p
+order by p.name
+
+select c.id, sum( o.total ) as t
+from Order o
+    inner join o.customer c
+group by c.id
+order by t

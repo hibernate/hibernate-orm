@@ -1,0 +1,1 @@
+DELETE FROM Phone WHERE id = 1

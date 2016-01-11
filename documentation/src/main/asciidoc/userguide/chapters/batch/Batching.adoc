@@ -1,0 +1,233 @@
+[[batch]]
+== Batching
+:sourcedir: extras
+
+[[batch-jdbcbatch]]
+=== JDBC batching
+
+JDBC offers support for batching together SQL statements that can be represented as a single PreparedStatement.
+Implementation wise this generally means that drivers will send the batched operation to the server in one call,
+which can save on network calls to the database. Hibernate can leverage JDBC batching.
+The following settings control this behavior.
+
+`hibernate.jdbc.batch_size`:: Controls the maximum number of statements Hibernate will batch together before asking the driver to execute the batch.
+Zero or a negative number disables this feature.
+
+`hibernate.jdbc.batch_versioned_data`:: Some JDBC drivers return incorrect row counts when a batch is executed.
+If your JDBC driver falls into this category this setting should be set to `false`.
+Otherwise it is safe to enable this which will allow Hibernate to still batch the DML for versioned entities and still use the returned row counts for optimistic lock checks.
+Currently defaults to false to be safe.
+
+`hibernate.jdbc.batch.builder`:: Names the implementation class used to manage batching capabilities.
+It is almost never a good idea to switch from Hibernate's default implementation.
+But if you wish to, this setting would name the `org.hibernate.engine.jdbc.batch.spi.BatchBuilder` implementation to use.
+
+`hibernate.order_update`:: Forces Hibernate to order SQL updates by the entity type and the primary key value of the items being updated.
+This allows for more batching to be used. It will also result in fewer transaction deadlocks in highly concurrent systems.
+Comes with a performance hit, so benchmark before and after to see if this actually helps or hurts your application.
+
+`hibernate.order_inserts`:: Forces Hibernate to order inserts to allow for more batching to be used.
+Comes with a performance hit, so benchmark before and after to see if this actually helps or hurts your application.
+
+[[batch-session-batch]]
+=== Session batching
+
+The following example shows an anti-pattern for batch inserts.
+
+.Naive way to insert 100000 lines with Hibernate
+====
+[source,java]
+----
+include::{sourcedir}/batch_insert.java[]
+----
+====
+
+This fails with an `OutOfMemoryException` after around 50000 rows on most systems.
+The reason is that Hibernate caches all the newly inserted `Customer` instances in the session-level cache.
+
+There are several ways to avoid this problem.
+Before batch processing, enable JDBC batching. To enable JDBC batching, set the property `hibernate.jdbc.batch_size` to an integer between 10 and 50.
+
+[NOTE]
+====
+Hibernate disables insert batching at the JDBC level transparently if you use an identity identifier generator.
+====
+
+If the above approach is not appropriate, you can disable the second-level cache, by setting `hibernate.cache.use_second_level_cache` to `false`.
+
+==== Batch inserts
+
+When you make new objects persistent, employ methods `flush()` and `clear()` to the session regularly, to control the size of the first-level cache.
+
+.Flushing and clearing the `Session`
+====
+[source,java]
+----
+include::{sourcedir}/flush_and_clear_session.java[]
+----
+====
+
+==== Batch updates
+
+When you retrieve and update data, `flush()` and `clear()` the session regularly.
+In addition, use method `scroll()` to take advantage of server-side cursors for queries that return many rows of data.
+
+.Using `scroll()`
+====
+[source,java]
+----
+include::{sourcedir}/using_scroll.java[]
+----
+====
+
+==== StatelessSession
+
+`StatelessSession` is a command-oriented API provided by Hibernate.
+Use it to stream data to and from the database in the form of detached objects.
+A `StatelessSession` has no persistence context associated with it and does not provide many of the higher-level life cycle semantics.
+
+Some of the things not provided by a `StatelessSession` include:
+
+* a first-level cache
+* interaction with any second-level or query cache
+* transactional write-behind or automatic dirty checking
+
+Limitations of `StatelessSession`:
+
+* Operations performed using a stateless session never cascade to associated instances.
+* Collections are ignored by a stateless session.
+* Operations performed via a stateless session bypass Hibernate's event model and interceptors.
+* Due to the lack of a first-level cache, Stateless sessions are vulnerable to data aliasing effects.
+* A stateless session is a lower-level abstraction that is much closer to the underlying JDBC.
+
+.Using a  `StatelessSession`
+====
+[source,java]
+----
+include::{sourcedir}/using_a_StatelessSession.java[]
+----
+====
+
+The `Customer` instances returned by the query are immediately detached.
+They are never associated with any persistence context.
+
+The `insert()`, `update()`, and `delete()` operations defined by the `StatelessSession` interface operate directly on database rows.
+They cause the corresponding SQL operations to be executed immediately.
+They have different semantics from the `save()`, `saveOrUpdate()`, and `delete()` operations defined by the `Session` interface.
+
+[[batch-bulk-hql]]
+=== Hibernate Query Language for DML
+
+DML, or Data Manipulation Language, refers to SQL statements such as `INSERT`, `UPDATE`, and `DELETE`.
+Hibernate provides methods for bulk SQL-style DML statement execution, in the form of Hibernate Query Language (HQL).
+
+==== HQL for UPDATE and DELETE
+
+.Psuedo-syntax for UPDATE and DELETE statements using HQL
+====
+[source,java]
+----
+UPDATE FROM EntityName e WHERE e.name = ?
+
+DELETE FROM EntityName e WHERE e.name = ?
+----
+====
+
+[NOTE]
+====
+The `FROM` and `WHERE` clauses are each optional.
+====
+
+The `FROM` clause can only refer to a single entity, which can be aliased.
+If the entity name is aliased, any property references must be qualified using that alias.
+If the entity name is not aliased, then it is illegal for any property references to be qualified.
+
+Joins, either implicit or explicit, are prohibited in a bulk HQL query.
+You can use sub-queries in the `WHERE` clause, and the sub-queries themselves can contain joins.
+
+.Executing an HQL UPDATE, using the `Query.executeUpdate()`
+====
+[source,java]
+----
+include::{sourcedir}/executeUpdate.java[]
+----
+====
+
+In keeping with the EJB3 specification, HQL UPDATE statements, by default, do not effect the version or the timestamp property values for the affected entities.
+You can use a versioned update to force Hibernate to reset the version or timestamp property values, by adding the `VERSIONED` keyword after the `UPDATE` keyword.
+
+.Updating the version of timestamp
+====
+[source,java]
+----
+include::{sourcedir}/updating_version.java[]
+----
+====
+
+[NOTE]
+====
+If you use the `VERSIONED` statement, you cannot use custom version types, which use class `org.hibernate.usertype.UserVersionType`.
+====
+
+.An HQL `DELETE` statement
+====
+[source,java]
+----
+include::{sourcedir}/hql_delete.java[]
+----
+====
+
+Method `Query.executeUpdate()` returns an `int` value, which indicates the number of entities effected by the operation.
+This may or may not correlate to the number of rows effected in the database.
+An HQL bulk operation might result in multiple SQL statements being executed, such as for joined-subclass.
+In the example of joined-subclass, a `DELETE` against one of the subclasses may actually result in deletes in the tables underlying the join, or further down the inheritance hierarchy.
+
+==== HQL syntax for INSERT
+
+.Pseudo-syntax for INSERT statements
+====
+[source,java]
+----
+INSERT INTO EntityName properties_list SELECT properties_list FROM ...
+----
+====
+
+Only the `INSERT INTO ... SELECT ...` form is supported.
+You cannot specify explicit values to insert.
+
+The `properties_list` is analogous to the column specification in the `SQL` `INSERT` statement.
+For entities involved in mapped inheritance, you can only use properties directly defined on that given class-level in the `properties_list`.
+Superclass properties are not allowed and subclass properties are irrelevant.
+In other words, `INSERT` statements are inherently non-polymorphic.
+
+The SELECT statement can be any valid HQL select query, but the return types must match the types expected by the INSERT.
+Hibernate verifies the return types during query compilation, instead of expecting the database to check it.
+Problems might result from Hibernate types which are equivalent, rather than equal.
+One such example is a mismatch between a property defined as an `org.hibernate.type.DateType` and a property defined as an `org.hibernate.type.TimestampType`,
+even though the database may not make a distinction, or may be capable of handling the conversion.
+
+If id property is not specified in the `properties_list`,
+Hibernate generates a value automatically.
+Automatic generation is only available if you use ID generators which operate on the database.
+Otherwise, Hibernate throws an exception during parsing.
+Available in-database generators are `org.hibernate.id.SequenceGenerator` and its subclasses, and objects which implement `org.hibernate.id.PostInsertIdentifierGenerator`.
+The most notable exception is `org.hibernate.id.TableHiLoGenerator`, which does not expose a selectable way to get its values.
+
+For properties mapped as either version or timestamp, the insert statement gives you two options.
+You can either specify the property in the properties_list, in which case its value is taken from the corresponding select expressions, or omit it from the properties_list,
+in which case the seed value defined by the org.hibernate.type.VersionType is used.
+
+.HQL INSERT statement
+====
+[source,java]
+----
+include::{sourcedir}/hql_insert.java[]
+----
+====
+
+This section is only a brief overview of HQL. For more information, see <<chapters/query-hql/HQL.adoc#hql,HQL>>.
+
+[[batch-bulk-jpql]]
+=== Java Persistence Query Language for DML
+
+TODO

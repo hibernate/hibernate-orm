@@ -1,0 +1,2 @@
+root_entity_reference ::=
+    entity_name [AS] identification_variable

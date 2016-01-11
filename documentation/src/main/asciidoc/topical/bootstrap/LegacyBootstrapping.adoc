@@ -31,7 +31,7 @@ Configuration cfg = new Configuration()
     .addResource("Bid.hbm.xml")
 
     // calls addResource using "/org/hibernate/auction/User.hbm.xml"
-    .addClass(org.hibernate.auction.User.class)
+    .addClass(`org.hibernate.auction.User.class`)
 
 	// parses Address class for mapping annotations
 	.addAnnotatedClass( Address.class )

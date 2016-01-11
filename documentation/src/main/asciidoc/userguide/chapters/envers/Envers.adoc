@@ -4,170 +4,109 @@
 
 === Basics
 
-To audit changes that are performed on an entity, you only need two
-things: the `hibernate-envers` jar on the classpath and an `@Audited`
-annotation on the entity.
+To audit changes that are performed on an entity, you only need two things:
+
+* the `hibernate-envers` jar on the classpath,
+* an `@Audited` annotation on the entity.
 
 [IMPORTANT]
 ====
-Unlike in previous versions, you no longer need to specify listeners in
-the Hibernate configuration file. Just putting the Envers jar on the
-classpath is enough - listeners will be registered automatically.
+Unlike in previous versions, you no longer need to specify listeners in the Hibernate configuration file.
+Just putting the Envers jar on the classpath is enough because listeners will be registered automatically.
 ====
 
-And that's all - you can create, modify and delete the entities as
-always. If you look at the generated schema for your entities, or at the
-data persisted by Hibernate, you will notice that there are no changes.
-However, for each audited entity, a new table is introduced -
-`entity_table_AUD`, which stores the historical data, whenever you
-commit a transaction. Envers automatically creates audit tables if
-`hibernate.hbm2ddl.auto` option is set to `create`, `create-drop` or
-`update`. Otherwise, to export complete database schema programatically,
-use `org.hibernate.envers.tools.hbm2ddl.EnversSchemaGenerator`.
-Appropriate DDL statements can be also generated with Ant task described
-later in this manual.
+And that's all.
+You can create, modify and delete the entities as always.
 
-Instead of annotating the whole class and auditing all properties, you
-can annotate only some persistent properties with `@Audited`. This will
-cause only these properties to be audited.
+If you look at the generated schema for your entities, or at the data persisted by Hibernate, you will notice that there are no changes.
+However, for each audited entity, a new table is introduced - `entity_table_AUD`, which stores the historical data, whenever you commit a transaction.
 
-The audit (history) of an entity can be accessed using the `AuditReader`
-interface, which can be obtained having an open `EntityManager` or
-`Session` via the `AuditReaderFactory`. See the javadocs for these
-classes for details on the functionality offered.
+[NOTE]
+====
+Envers automatically creates audit tables if `hibernate.hbm2ddl.auto` option is set to `create`, `create-drop` or `update`.
+Otherwise, to export complete database schema programmatically, use `org.hibernate.envers.tools.hbm2ddl.EnversSchemaGenerator`.
+Appropriate DDL statements can be also generated with Ant task described later in this manual.
+====
+
+Instead of annotating the whole class and auditing all properties, you can annotate only some persistent properties with `@Audited`.
+This will cause only these properties to be audited.
+
+The audit (history) of an entity can be accessed using the `AuditReader` interface, which can be obtained having an open `EntityManager` or `Session` via the `AuditReaderFactory`.
+See the [Javadocs](https://docs.jboss.org/hibernate/stable/orm/javadocs/org/hibernate/envers/AuditReaderFactory.html) for these classes for details on the functionality offered.
 
 [[envers-configuration]]
 === Configuration
 
-It is possible to configure various aspects of Hibernate Envers
-behavior, such as table names, etc.
+It is possible to configure various aspects of Hibernate Envers behavior, such as table names, etc.
 
 .Envers Configuration Properties
 [width="100%",cols="34%,33%,33%",options="header",]
 |=======================================================================
 |Property name |Default value |Description
-|org.hibernate.envers.audit_table_prefix | |String that will be
-prepended to the name of an audited entity to create the name of the
-entity, that will hold audit information.
+|`org.hibernate.envers.audit_table_prefix` | |String that will be prepended to the name of an audited entity to create the name of the entity and that will hold audit information.
 
-|org.hibernate.envers.audit_table_suffix |_AUD |String that will be
-appended to the name of an audited entity to create the name of the
-entity, that will hold audit information. If you audit an entity with a
-table name Person, in the default setting Envers will generate a
-`Person_AUD` table to store historical data.
+|`org.hibernate.envers.audit_table_suffix` |`_AUD` |String that will be appended to the name of an audited entity to create the name of the entity and that will hold audit information.
+  If you audit an entity with a table name Person, in the default setting Envers will generate a `Person_AUD` table to store historical data.
 
-|org.hibernate.envers.revision_field_name |REV |Name of a field in the
-audit entity that will hold the revision number.
+|`org.hibernate.envers.revision_field_name` |`REV` |Name of a field in the audit entity that will hold the revision number.
 
-|org.hibernate.envers.revision_type_field_name |REVTYPE |Name of a field
-in the audit entity that will hold the type of the revision (currently,
-this can be: add, mod, del).
+|`org.hibernate.envers.revision_type_field_name` |`REVTYPE` |Name of a field in the audit entity that will hold the type of the revision (currently, this can be: `add`, `mod`, `del`).
 
-|org.hibernate.envers.revision_on_collection_change |true |Should a
-revision be generated when a not-owned relation field changes (this can
-be either a collection in a one-to-many relation, or the field using
-"mappedBy" attribute in a one-to-one relation).
+|`org.hibernate.envers.revision_on_collection_change` |`true` |Should a revision be generated when a not-owned relation field changes (this can be either a collection in a one-to-many relation, or the field using `mappedBy` attribute in a one-to-one relation).
 
-|org.hibernate.envers.do_not_audit_optimistic_locking_field |true |When
-true, properties to be used for optimistic locking, annotated with
-`@Version`, will be automatically not audited (their history won't be
-stored; it normally doesn't make sense to store it).
+|`org.hibernate.envers.do_not_audit_optimistic_locking_field` |`true` |When true, properties to be used for optimistic locking, annotated with `@Version`, will not be automatically audited (their history won't be stored; it normally doesn't make sense to store it).
 
-|org.hibernate.envers.store_data_at_delete |false |Should the entity
-data be stored in the revision when the entity is deleted (instead of
-only storing the id and all other properties as null). This is not
-normally needed, as the data is present in the last-but-one revision.
-Sometimes, however, it is easier and more efficient to access it in the
-last revision (then the data that the entity contained before deletion
-is stored twice).
+|`org.hibernate.envers.store_data_at_delete` |`false` |Should the entity data be stored in the revision when the entity is deleted (instead of only storing the id and all other properties as null).
+  This is not normally needed, as the data is present in the last-but-one revision.
+  Sometimes, however, it is easier and more efficient to access it in the last revision (then the data that the entity contained before deletion is stored twice).
 
-|org.hibernate.envers.default_schema |null (same schema as table being
-audited) |The default schema name that should be used for audit tables.
-Can be overridden using the `@AuditTable(schema="...")` annotation. If
-not present, the schema will be the same as the schema of the table
-being audited.
+|`org.hibernate.envers.default_schema` |`null` (same schema as table being audited) |The default schema name that should be used for audit tables.
+  Can be overridden using the `@AuditTable(schema="...")` annotation.
+  If not present, the schema will be the same as the schema of the table being audited.
 
-|org.hibernate.envers.default_catalog |null (same catalog as table being
-audited) |The default catalog name that should be used for audit tables.
-Can be overridden using the `@AuditTable(catalog="...")` annotation. If
-not present, the catalog will be the same as the catalog of the normal
-tables.
+|`org.hibernate.envers.default_catalog` |`null` (same catalog as table being audited) |The default catalog name that should be used for audit tables.
+  Can be overridden using the `@AuditTable(catalog="...")` annotation. If not present, the catalog will be the same as the catalog of the normal tables.
 
-|org.hibernate.envers.audit_strategy
-|org.hibernate.envers.strategy.DefaultAuditStrategy |The audit strategy
-that should be used when persisting audit data. The default stores only
-the revision, at which an entity was modified. An alternative, the
-`org.hibernate.envers.strategy.ValidityAuditStrategy` stores both the
-start revision and the end revision. Together these define when an audit
-row was valid, hence the name ValidityAuditStrategy.
+|`org.hibernate.envers.audit_strategy`|`org.hibernate.envers.strategy.DefaultAuditStrategy` |The audit strategy that should be used when persisting audit data.
+  The default stores only the revision, at which an entity was modified.
+  An alternative, the `org.hibernate.envers.strategy.ValidityAuditStrategy` stores both the start revision and the end revision.
+  Together these define when an audit row was valid, hence the name ValidityAuditStrategy.
 
-|org.hibernate.envers.audit_strategy_validity_end_rev_field_name |REVEND
-|The column name that will hold the end revision number in audit
-entities. This property is only valid if the validity audit strategy is
-used.
+|`org.hibernate.envers.audit_strategy_validity_end_rev_field_name` |`REVEND`|The column name that will hold the end revision number in audit entities.
+  This property is only valid if the validity audit strategy is used.
 
-|org.hibernate.envers.audit_strategy_validity_store_revend_timestamp
-|false |Should the timestamp of the end revision be stored, until which
-the data was valid, in addition to the end revision itself. This is
-useful to be able to purge old Audit records out of a relational
-database by using table partitioning. Partitioning requires a column
-that exists within the table. This property is only evaluated if the
-ValidityAuditStrategy is used.
+|`org.hibernate.envers.audit_strategy_validity_store_revend_timestamp`|`false` |Should the timestamp of the end revision be stored, until which the data was valid, in addition to the end revision itself.
+  This is useful to be able to purge old Audit records out of a relational database by using table partitioning.
+  Partitioning requires a column that exists within the table.
+  This property is only evaluated if the `ValidityAuditStrategy` is used.
 
-|org.hibernate.envers.audit_strategy_validity_revend_timestamp_field_name
-|REVEND_TSTMP |Column name of the timestamp of the end revision until
-which the data was valid. Only used if the ValidityAuditStrategy is
-used, and
-`org.hibernate.envers.audit_strategy_validity_store_revend_timestamp`
-evaluates to true
+|`org.hibernate.envers.audit_strategy_validity_revend_timestamp_field_name`|`REVEND_TSTMP` |Column name of the timestamp of the end revision until which the data was valid.
+  Only used if the 1ValidityAuditStrategy1 is used, and `org.hibernate.envers.audit_strategy_validity_store_revend_timestamp` evaluates to true
 
-|org.hibernate.envers.use_revision_entity_with_native_id |true a|
-Boolean flag that determines the strategy of revision number generation.
-Default implementation of revision entity uses native identifier
-generator. If current database engine does not support identity columns,
-users are advised to set this property to false. In this case revision
-numbers are created by preconfigured
-`org.hibernate.id.enhanced.SequenceStyleGenerator`. See:
+|`org.hibernate.envers.use_revision_entity_with_native_id` |`true` | Boolean flag that determines the strategy of revision number generation.
+  Default implementation of revision entity uses native identifier generator.
+  If current database engine does not support identity columns, users are advised to set this property to false.
+  In this case revision numbers are created by preconfigured `org.hibernate.id.enhanced.SequenceStyleGenerator`.
+  See: `org.hibernate.envers.DefaultRevisionEntity` and `org.hibernate.envers.enhanced.SequenceIdRevisionEntity`.
 
-1.  `org.hibernate.envers.DefaultRevisionEntity`
-2.  `org.hibernate.envers.enhanced.SequenceIdRevisionEntity`
+|`org.hibernate.envers.track_entities_changed_in_revision` |`false` |Should entity types, that have been modified during each revision, be tracked.
+  The default implementation creates `REVCHANGES` table that stores entity names of modified persistent objects.
+  Single record encapsulates the revision identifier (foreign key to `REVINFO` table) and a string value.
+  For more information refer to <<envers-tracking-modified-entities-revchanges>> and <<envers-tracking-modified-entities-queries>>.
 
-|org.hibernate.envers.track_entities_changed_in_revision |false |Should
-entity types, that have been modified during each revision, be tracked.
-The default implementation creates `REVCHANGES` table that stores entity
-names of modified persistent objects. Single record encapsulates the
-revision identifier (foreign key to `REVINFO` table) and a string value.
-For more information refer to
-<<envers-tracking-modified-entities-revchanges>> and
-<<envers-tracking-modified-entities-queries>>.
+|`org.hibernate.envers.global_with_modified_flag` |`false`, can be individually overridden with `@Audited(withModifiedFlag=true)` |Should property modification flags be stored for all audited entities and all properties.
+  When set to true, for all properties an additional boolean column in the audit tables will be created, filled with information if the given property changed in the given revision.
+  When set to false, such column can be added to selected entities or properties using the `@Audited` annotation.
+  For more information refer to <<envers-tracking-properties-changes>> and <<envers-tracking-properties-changes-queries>>.
 
-|org.hibernate.envers.global_with_modified_flag |false, can be
-individually overriden with `@Audited(withModifiedFlag=true)` |Should
-property modification flags be stored for all audited entities and all
-properties. When set to true, for all properties an additional boolean
-column in the audit tables will be created, filled with information if
-the given property changed in the given revision. When set to false,
-such column can be added to selected entities or properties using the
-`@Audited` annotation. For more information refer to
-<<envers-tracking-properties-changes>> and
-<<envers-tracking-properties-changes-queries>>.
+|`org.hibernate.envers.modified_flag_suffix` |`_MOD` |The suffix for columns storing "Modified Flags".
+  For example: a property called "age", will by default get modified flag with column name "age_MOD".
 
-|org.hibernate.envers.modified_flag_suffix |_MOD |The suffix for columns
-storing "Modified Flags". For example: a property called "age", will by
-default get modified flag with column name "age_MOD".
+|`org.hibernate.envers.embeddable_set_ordinal_field_name` |`SETORDINAL` |Name of column used for storing ordinal of the change in sets of embeddable elements.
 
-|org.hibernate.envers.embeddable_set_ordinal_field_name |SETORDINAL
-|Name of column used for storing ordinal of the change in sets of
-embeddable elements.
+|`org.hibernate.envers.cascade_delete_revision` |`false` |While deleting revision entry, remove data of associated audited entities. Requires database support for cascade row removal.
 
-|org.hibernate.envers.cascade_delete_revision |false |While deleting
-revision entry, remove data of associated audited entities. Requires
-database support for cascade row removal.
-
-|org.hibernate.envers.allow_identifier_reuse |false |Guarantees proper
-validity audit strategy behavior when application reuses identifiers of
-deleted entities. Exactly one row with `null` end date exists for each
-identifier.
+|`org.hibernate.envers.allow_identifier_reuse` |`false` |Guarantees proper validity audit strategy behavior when application reuses identifiers of deleted entities. Exactly one row with `null` end date exists for each identifier.
 |=======================================================================
 
 [IMPORTANT]
@@ -175,129 +114,93 @@ identifier.
 The following configuration options have been added recently and should
 be regarded as experimental:
 
-1.  `org.hibernate.envers.track_entities_changed_in_revision`
-2.  `org.hibernate.envers.using_modified_flag`
-3.  `org.hibernate.envers.modified_flag_suffix`
+.  `org.hibernate.envers.track_entities_changed_in_revision`
+.  `org.hibernate.envers.using_modified_flag`
+.  `org.hibernate.envers.modified_flag_suffix`
 ====
 
 === Additional mapping annotations
 
-The name of the audit table can be set on a per-entity basis, using the
-`@AuditTable` annotation. It may be tedious to add this annotation to
-every audited entity, so if possible, it's better to use a
-prefix/suffix.
+The name of the audit table can be set on a per-entity basis, using the `@AuditTable` annotation.
+It may be tedious to add this annotation to every audited entity, so if possible, it's better to use a prefix/suffix.
 
-If you have a mapping with secondary tables, audit tables for them will
-be generated in the same way (by adding the prefix and suffix). If you
-wish to overwrite this behaviour, you can use the `@SecondaryAuditTable`
-and `@SecondaryAuditTables` annotations.
+If you have a mapping with secondary tables, audit tables for them will be generated in the same way (by adding the prefix and suffix).
+If you wish to overwrite this behaviour, you can use the `@SecondaryAuditTable` and `@SecondaryAuditTables` annotations.
 
-If you'd like to override auditing behaviour of some fields/properties
-inherited from @Mappedsuperclass or in an embedded component, you can
-apply the `@AuditOverride(s)` annotation on the subtype or usage site of
-the component.
+If you'd like to override auditing behaviour of some fields/properties inherited from `@MappedSuperclass` or in an embedded component,
+you can apply the `@AuditOverride(s)` annotation on the subtype or usage site of the component.
 
-If you want to audit a relation mapped with `@OneToMany+@JoinColumn`,
-please see <<envers-mappingexceptions>> for a
-description of the additional `@AuditJoinTable` annotation that you'll
-probably want to use.
+If you want to audit a relation mapped with `@OneToMany` and `@JoinColumn`,
+please see <<envers-mappingexceptions>> for a description of the additional `@AuditJoinTable` annotation that you'll probably want to use.
 
-If you want to audit a relation, where the target entity is not audited
-(that is the case for example with dictionary-like entities, which don't
-change and don't have to be audited), just annotate it with
-`@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)`. Then,
-while reading historic versions of your entity, the relation will always
-point to the "current" related entity. By default Envers throws
-`javax.persistence.EntityNotFoundException` when "current" entity does
-not exist in the database. Apply
-`@NotFound(action = NotFoundAction.IGNORE)` annotation to silence the
-exception and assign null value instead. Hereby solution causes implicit
-eager loading of to-one relations.
+If you want to audit a relation, where the target entity is not audited (that is the case for example with dictionary-like entities, which don't change and don't have to be audited),
+just annotate it with `@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)`.
+Then, while reading historic versions of your entity, the relation will always point to the "current" related entity.
+By default Envers throws `javax.persistence.EntityNotFoundException` when "current" entity does not exist in the database.
+Apply `@NotFound(action = NotFoundAction.IGNORE)` annotation to silence the exception and assign null value instead.
+Hereby solution causes implicit eager loading of to-one relations.
 
-If you'd like to audit properties of a superclass of an entity, which
-are not explicitly audited (which don't have the `@Audited` annotation
-on any properties or on the class), you can list the superclasses in the
-`auditParents` attribute of the @Audited annotation. Please note that
-`auditParents` feature has been deprecated. Use
-`@AuditOverride(forClass = SomeEntity.class, isAudited = true/false)`
-instead.
+If you'd like to audit properties of a superclass of an entity, which are not explicitly audited (they don't have the `@Audited` annotation on any properties or on the class),
+you can set the `@AuditOverride(forClass = SomeEntity.class, isAudited = true/false)` annotation.
+
+[NOTE]
+====
+The `@Audited` annotation also features an `auditParents` attribute but it's now deprecated in favor of `@AuditOverride`,
+====
 
 === Choosing an audit strategy
 
-After the basic configuration it is important to choose the audit
-strategy that will be used to persist and retrieve audit information.
-There is a trade-off between the performance of persisting and the
-performance of querying the audit information. Currently there two audit
-strategies.
+After the basic configuration, it is important to choose the audit strategy that will be used to persist and retrieve audit information.
+There is a trade-off between the performance of persisting and the performance of querying the audit information.
+Currently there are two audit strategies.
 
-1.  The default audit strategy persists the audit data together with a
-start revision. For each row inserted, updated or deleted in an audited
-table, one or more rows are inserted in the audit tables, together with
-the start revision of its validity. Rows in the audit tables are never
-updated after insertion. Queries of audit information use subqueries to
-select the applicable rows in the audit tables. These subqueries are
-notoriously slow and difficult to index.
-2.  The alternative is a validity audit strategy. This strategy stores
-the start-revision and the end-revision of audit information. For each
-row inserted, updated or deleted in an audited table, one or more rows
-are inserted in the audit tables, together with the start revision of
-its validity. But at the same time the end-revision field of the
-previous audit rows (if available) are set to this revision. Queries on
-the audit information can then use 'between start and end revision'
-instead of subqueries as used by the default audit strategy.
+. The default audit strategy persists the audit data together with a start revision.
+  For each row inserted, updated or deleted in an audited table, one or more rows are inserted in the audit tables, together with the start revision of its validity.
+  Rows in the audit tables are never updated after insertion.
+  Queries of audit information use subqueries to select the applicable rows in the audit tables.
 +
-The consequence of this strategy is that persisting audit information
-will be a bit slower, because of the extra updates involved, but
-retrieving audit information will be a lot faster. This can be improved
-by adding extra indexes.
+IMPORTANT: These subqueries are notoriously slow and difficult to index.
+
+. The alternative is a validity audit strategy.
+  This strategy stores the start-revision and the end-revision of audit information.
+  For each row inserted, updated or deleted in an audited table, one or more rows are inserted in the audit tables, together with the start revision of its validity.
+  But at the same time the end-revision field of the previous audit rows (if available) are set to this revision.
+  Queries on the audit information can then use 'between start and end revision' instead of subqueries as used by the default audit strategy.
++
+  The consequence of this strategy is that persisting audit information will be a bit slower because of the extra updates involved,
+  but retrieving audit information will be a lot faster.
+  This can be improved even further by adding extra indexes.
 
 [[envers-revisionlog]]
 === Revision Log
 
-Logging data for revisions
+When Envers starts a new revision, it creates a new revision entity which stores information about the revision.
+By default, that includes just:
 
-When Envers starts a new revision, it creates a new revision entity
-which stores information about the revision. By default, that includes
-just
+revision number:: An integral value (`int/Integer` or `long/Long`). Essentially the primary key of the revision
 
-1.  revision number - An integral value (`int/Integer` or `long/Long`).
-Essentially the primary key of the revision
-2.  revision timestamp - either a `long/Long` or `java.util.Date` value
-representing the instant at which the revision was made. When using a
-`java.util.Date`, instead of a `long/Long` for the revision timestamp,
-take care not to store it to a column data type which will loose
-precision.
+revision timestamp:: either a `long/Long` or `java.util.Date` value representing the instant at which the revision was made.
+   When using a `java.util.Date`, instead of a `long/Long` for the revision timestamp, take care not to store it to a column data type which will loose precision.
 
-Envers handles this information as an entity. By default it uses its own
-internal class to act as the entity, mapped to the `REVINFO` table. You
-can, however, supply your own approach to collecting this information
-which might be useful to capture additional details such as who made a
-change or the ip address from which the request came. There are 2 things
-you need to make this work.
+Envers handles this information as an entity.
+By default it uses its own internal class to act as the entity, mapped to the `REVINFO` table.
+You can, however, supply your own approach to collecting this information which might be useful to capture additional details such as who made a change or the ip address from which the request came.
+There are two things you need to make this work:
 
-1.  First, you will need to tell Envers about the entity you wish to
-use. Your entity must use the @org.hibernate.envers.RevisionEntity
-annotation. It must define the 2 attributes described above annotated
-with @org.hibernate.envers.RevisionNumber and
-@org.hibernate.envers.RevisionTimestamp, respectively. You can extend
-from `org.hibernate.envers.DefaultRevisionEntity`, if you wish, to
-inherit all these required behaviors.
+. First, you will need to tell Envers about the entity you wish to use.
+  Your entity must use the `@org.hibernate.envers.RevisionEntity` annotation.
+  It must define the two attributes described above annotated with `@org.hibernate.envers.RevisionNumber` and `@org.hibernate.envers.RevisionTimestamp`, respectively.
+  You can extend from `org.hibernate.envers.DefaultRevisionEntity`, if you wish, to inherit all these required behaviors.
 +
-Simply add the custom revision entity as you do your normal entities.
-Envers will "find it". Note that it is an error for there to be multiple
-entities marked as @org.hibernate.envers.RevisionEntity
-2.  Second, you need to tell Envers how to create instances of your
-revision entity which is handled by the newRevision method of the
-org.jboss.envers.RevisionListener interface.
+  Simply add the custom revision entity as you do your normal entities and Envers will _find it_.
 +
-You tell Envers your custom `org.hibernate.envers.RevisionListener`
-implementation to use by specifying it on the
-@org.hibernate.envers.RevisionEntity annotation, using the value
-attribute. If your RevisionListener class is inaccessible from
-@RevisionEntity (e.g. exists in a different module), set
-`org.hibernate.envers.revision_listener` property to it's fully qualified
-name. Class name defined by the configuration parameter overrides
-revision entity's value attribute.
+NOTE: It is an error for there to be multiple entities marked as `@org.hibernate.envers.RevisionEntity`
+
+. Second, you need to tell Envers how to create instances of your revision entity which is handled by the https://docs.jboss.org/hibernate/stable/orm/javadocs/org/hibernate/envers/RevisionListener.html#newRevision-java.lang.Object-[`newRevision(Object revisionEntity)`] method of the `org.hibernate.envers.RevisionListener` interface.
++
+  You tell Envers your custom `org.hibernate.envers.RevisionListener` implementation to use by specifying it on the `@org.hibernate.envers.RevisionEntity` annotation, using the value attribute.
+  If your `RevisionListener` class is inaccessible from `@RevisionEntity` (e.g. it exists in a different module), set `org.hibernate.envers.revision_listener` property to its fully qualified class name.
+  Class name defined by the configuration parameter overrides revision entity's value attribute.
 
 [source,java]
 ----
@@ -307,23 +210,11 @@ public class MyCustomRevisionEntity {
 }
 
 public class MyCustomRevisionListener implements RevisionListener {
-    public void newRevision(Object revisionEntity) {
-        ( (MyCustomRevisionEntity) revisionEntity )...;
+    public void newRevision( Object revisionEntity ) {
+        MyCustomRevisionEntity customRevisionEntity = ( MyCustomRevisionEntity ) revisionEntity;
     }
 }
 ----
-
-An alternative method to using the `org.hibernate.envers.RevisionListener`
-is to instead call the getCurrentRevision method of the
-`org.hibernate.envers.AuditReader` interface to obtain the current
-revision, and fill it with desired information. The method accepts a
-`persist` parameter indicating whether the revision entity should be
-persisted prior to returning from this method. `true` ensures that the
-returned entity has access to its identifier value (revision number),
-but the revision entity will be persisted regardless of whether there
-are any audited entities changed. `false` means that the revision number
-will be `null`, but the revision entity will be persisted only if some
-audited entities have changed.
 
 .ExampleRevEntity.java
 ====
@@ -337,12 +228,12 @@ import `org.hibernate.envers.DefaultRevisionEntity;`
 import javax.persistence.Entity;
 
 @Entity
-@RevisionEntity(ExampleListener.class)
+@RevisionEntity( ExampleListener.class )
 public class ExampleRevEntity extends DefaultRevisionEntity {
     private String username;
 
     public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
+    public void setUsername( String username ) { this.username = username; }
 }
 ----
 ====
@@ -358,51 +249,51 @@ import org.jboss.seam.security.Identity;
 import org.jboss.seam.Component;
 
 public class ExampleListener implements RevisionListener {
-    public void newRevision(Object revisionEntity) {
-        ExampleRevEntity exampleRevEntity = (ExampleRevEntity) revisionEntity;
-        Identity identity =
-            (Identity) Component.getInstance("org.jboss.seam.security.identity");
 
-        exampleRevEntity.setUsername(identity.getUsername());
+    public void newRevision( Object revisionEntity ) {
+        ExampleRevEntity exampleRevEntity = ( ExampleRevEntity ) revisionEntity;
+        Identity identity =
+            (Identity) Component.getInstance( "org.jboss.seam.security.identity" );
+
+        exampleRevEntity.setUsername( identity.getUsername() );
     }
 }
 ----
 ====
 
+[NOTE]
+====
+An alternative method to using the `org.hibernate.envers.RevisionListener` is to instead call the https://docs.jboss.org/hibernate/stable/orm/javadocs/org/hibernate/envers/AuditReader.html#getCurrentRevision-java.lang.Class-boolean-[`getCurrentRevision(Class<T> revisionEntityClass, boolean persist)`] method of the `org.hibernate.envers.AuditReader` interface to obtain the current revision, and fill it with desired information.
+The method accepts a `persist` parameter indicating whether the revision entity should be persisted prior to returning from this method:
+
+`true`:: ensures that the returned entity has access to its identifier value (revision number), but the revision entity will be persisted regardless of whether there are any audited entities changed.
+`false`:: means that the revision number will be `null`, but the revision entity will be persisted only if some audited entities have changed.
+====
+
 [[envers-tracking-modified-entities-revchanges]]
 === Tracking entity names modified during revisions
 
-By default entity types that have been changed in each revision are not
-being tracked. This implies the necessity to query all tables storing
-audited data in order to retrieve changes made during specified
-revision. Envers provides a simple mechanism that creates `REVCHANGES`
-table which stores entity names of modified persistent objects. Single
-record encapsulates the revision identifier (foreign key to `REVINFO`
-table) and a string value.
+By default entity types that have been changed in each revision are not being tracked.
+This implies the necessity to query all tables storing audited data in order to retrieve changes made during specified revision.
+Envers provides a simple mechanism that creates `REVCHANGES` table which stores entity names of modified persistent objects.
+Single record encapsulates the revision identifier (foreign key to `REVINFO` table) and a string value.
 
-Tracking of modified entity names can be enabled in three different
-ways:
+Tracking of modified entity names can be enabled in three different ways:
 
-1.  Set `org.hibernate.envers.track_entities_changed_in_revision`
-parameter to `true`. In this case
-`org.hibernate.envers.DefaultTrackingModifiedEntitiesRevisionEntity`
-will be implicitly used as the revision log entity.
-2.  Create a custom revision entity that extends
-`org.hibernate.envers.DefaultTrackingModifiedEntitiesRevisionEntity`
-class.
+. Set `org.hibernate.envers.track_entities_changed_in_revision` parameter to `true`.
+  In this case `org.hibernate.envers.DefaultTrackingModifiedEntitiesRevisionEntity` will be implicitly used as the revision log entity.
+. Create a custom revision entity that extends `org.hibernate.envers.DefaultTrackingModifiedEntitiesRevisionEntity` class.
 +
 [source,java]
 ----
 @RevisionEntity
-public class ExtendedRevisionEntity
-             extends DefaultTrackingModifiedEntitiesRevisionEntity {
-    ...
+public class ExtendedRevisionEntity extends DefaultTrackingModifiedEntitiesRevisionEntity {
+	...
 }
 ----
 +
-3.  Mark an appropriate field of a custom revision entity with
-@org.hibernate.envers.ModifiedEntityNames annotation. The property is
-required to be of `Set<String>` type.
+. Mark an appropriate field of a custom revision entity with `@org.hibernate.envers.ModifiedEntityNames` annotation.
+  The property is required to be of `Set<String>` type.
 +
 [source,java]
 ----
@@ -411,8 +302,8 @@ public class AnnotatedTrackingRevisionEntity {
     ...
 
     @ElementCollection
-    @JoinTable(name = "REVCHANGES", joinColumns = @JoinColumn(name = "REV"))
-    @Column(name = "ENTITYNAME")
+    @JoinTable( name = "REVCHANGES", joinColumns = @JoinColumn( name = "REV" ) )
+    @Column( name = "ENTITYNAME" )
     @ModifiedEntityNames
     private Set<String> modifiedEntityNames;
 
@@ -421,34 +312,29 @@ public class AnnotatedTrackingRevisionEntity {
 ----
 +
 
-Users, that have chosen one of the approaches listed above, can retrieve
-all entities modified in a specified revision by utilizing API described
-in <<envers-tracking-modified-entities-queries>>.
+Users, that have chosen one of the approaches listed above,
+can retrieve all entities modified in a specified revision by utilizing API described in <<envers-tracking-modified-entities-queries>>.
 
-Users are also allowed to implement custom mechanism of tracking
-modified entity types. In this case, they shall pass their own
-implementation of `org.hibernate.envers.EntityTrackingRevisionListener`
-interface as the value of @org.hibernate.envers.RevisionEntity
-annotation. EntityTrackingRevisionListener interface exposes one method
-that notifies whenever audited entity instance has been added, modified
-or removed within current revision boundaries.
+Users are also allowed to implement custom mechanism of tracking modified entity types.
+In this case, they shall pass their own implementation of `org.hibernate.envers.EntityTrackingRevisionListener` interface as the value of `@org.hibernate.envers.RevisionEntity` annotation.
+`EntityTrackingRevisionListener` interface exposes one method that notifies whenever audited entity instance has been added, modified or removed within current revision boundaries.
 
 .CustomEntityTrackingRevisionListener.java
 ====
 [source,java]
 ----
-public class CustomEntityTrackingRevisionListener
-             implements EntityTrackingRevisionListener {
+public class CustomEntityTrackingRevisionListener implements EntityTrackingRevisionListener {
+
     @Override
-    public void entityChanged(Class entityClass, String entityName,
-                              Serializable entityId, RevisionType revisionType,
-                              Object revisionEntity) {
+    public void entityChanged( Class entityClass, String entityName,
+                               Serializable entityId, RevisionType revisionType,
+                               Object revisionEntity ) {
         String type = entityClass.getName();
-        ((CustomTrackingRevisionEntity)revisionEntity).addModifiedEntityType(type);
+        ( ( CustomTrackingRevisionEntity ) revisionEntity ).addModifiedEntityType( type );
     }
 
     @Override
-    public void newRevision(Object revisionEntity) {
+    public void newRevision( Object revisionEntity ) {
     }
 }
 ----
@@ -459,8 +345,9 @@ public class CustomEntityTrackingRevisionListener
 [source,java]
 ----
 @Entity
-@RevisionEntity(CustomEntityTrackingRevisionListener.class)
+@RevisionEntity( CustomEntityTrackingRevisionListener.class )
 public class CustomTrackingRevisionEntity {
+
     @Id
     @GeneratedValue
     @RevisionNumber
@@ -469,12 +356,11 @@ public class CustomTrackingRevisionEntity {
     @RevisionTimestamp
     private long customTimestamp;
 
-    @OneToMany(mappedBy="revision", cascade={CascadeType.PERSIST, CascadeType.REMOVE})
-    private Set<ModifiedEntityTypeEntity> modifiedEntityTypes =
-                                              new HashSet<ModifiedEntityTypeEntity>();
+    @OneToMany( mappedBy="revision", cascade={ CascadeType.PERSIST, CascadeType.REMOVE } )
+    private Set<ModifiedEntityTypeEntity> modifiedEntityTypes = new HashSet<ModifiedEntityTypeEntity>();
 
-    public void addModifiedEntityType(String entityClassName) {
-        modifiedEntityTypes.add(new ModifiedEntityTypeEntity(this, entityClassName));
+    public void addModifiedEntityType( String entityClassName ) {
+        modifiedEntityTypes.add( new ModifiedEntityTypeEntity( this, entityClassName ) );
     }
 
     ...
@@ -488,6 +374,7 @@ public class CustomTrackingRevisionEntity {
 ----
 @Entity
 public class ModifiedEntityTypeEntity {
+
     @Id
     @GeneratedValue
     private Integer id;
@@ -506,6 +393,7 @@ public class ModifiedEntityTypeEntity {
 ----
 CustomTrackingRevisionEntity revEntity =
     getAuditReader().findRevision(CustomTrackingRevisionEntity.class, revisionNumber);
+    
 Set<ModifiedEntityTypeEntity> modifiedEntityTypes = revEntity.getModifiedEntityTypes();
 ----
 

@@ -145,6 +145,20 @@ karafFeatures {
 				include = false
 			}
 			bundle {
+				match {
+					group = 'org.hibernate.javax.persistence'
+					module = 'hibernate-jpa-2.1-api'
+				}
+				dependency = true
+			}
+			bundle {
+				match {
+					group = 'org.apache.geronimo.specs'
+					module = 'geronimo-jta_1.1_spec'
+				}
+				dependency = true
+			}
+			bundle {
 				match group: 'antlr', module: 'antlr'
 				remap group: 'org.apache.servicemix.bundles', module: 'org.apache.servicemix.bundles.antlr', version: '2.7.7_5'
 			}
@@ -214,6 +228,20 @@ karafFeatures {
 				match group: 'org.jboss.spec.javax.transaction', module: 'jboss-transaction-api_1.1_spec'
 				include = false
 			}
+			bundle {
+				match {
+					group = 'org.infinispan'
+					module = 'infinispan-commons'
+				}
+				dependency = true
+			}
+			bundle {
+				match {
+					group = 'org.jgroups'
+					module = 'jgroups'
+				}
+				dependency = true
+			}
 		}
 		hibernateEhcache {
 			name = 'hibernate-ehcache'
@@ -239,6 +267,13 @@ karafFeatures {
 			bundle {
 				match group: 'org.jboss.logging', module: 'jboss-logging-processor'
 				include = false
+			}
+			bundle {
+				match {
+					group = 'net.sf.ehcache'
+					module = 'ehcache'
+				}
+				dependency = true
 			}
 		}
 	}

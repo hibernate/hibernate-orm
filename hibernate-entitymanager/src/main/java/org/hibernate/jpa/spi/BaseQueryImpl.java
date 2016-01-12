@@ -29,6 +29,7 @@ import org.hibernate.QueryParameterException;
 import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.QueryHints;
+import org.hibernate.jpa.TypedParameterValue;
 import org.hibernate.jpa.graph.internal.EntityGraphImpl;
 import org.hibernate.jpa.internal.EntityManagerMessageLogger;
 import org.hibernate.jpa.internal.util.CacheModeHelper;
@@ -874,6 +875,10 @@ public abstract class BaseQueryImpl implements Query {
 		if ( bind == null || parameterType == null ) {
 			// nothing we can check
 			return;
+		}
+
+		if ( bind instanceof TypedParameterValue  ) {
+			bind = ( (TypedParameterValue ) bind ).getValue();
 		}
 
 		if ( Collection.class.isInstance( bind ) && ! Collection.class.isAssignableFrom( parameterType ) ) {

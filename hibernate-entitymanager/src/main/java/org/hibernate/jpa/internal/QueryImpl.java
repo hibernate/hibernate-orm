@@ -36,13 +36,13 @@ import org.hibernate.hql.internal.QueryExecutionRequestException;
 import org.hibernate.internal.SQLQueryImpl;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.HibernateQuery;
+import org.hibernate.jpa.TypedParameterValue;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.jpa.spi.AbstractEntityManagerImpl;
 import org.hibernate.jpa.spi.AbstractQueryImpl;
 import org.hibernate.jpa.spi.NullTypeBindableParameterRegistration;
 import org.hibernate.jpa.spi.ParameterBind;
-import org.hibernate.jpa.spi.ParameterRegistration;
 import org.hibernate.type.CompositeCustomType;
 import org.hibernate.type.Type;
 
@@ -230,11 +230,17 @@ public class QueryImpl<X> extends AbstractQueryImpl<X>
 		}
 
 		@Override
+		@SuppressWarnings("unchecked")
 		public void bindValue(T value) {
 			validateBinding( getParameterType(), value, null );
 
 			if ( name != null ) {
-				if ( value instanceof Collection ) {
+				if ( value instanceof TypedParameterValue  ) {
+					final TypedParameterValue  typedValueWrapper = (TypedParameterValue ) value;
+					nativeQuery.setParameter( name, typedValueWrapper.getValue(), typedValueWrapper.getType() );
+					value = (T) typedValueWrapper.getValue();
+				}
+				else if ( value instanceof Collection ) {
 					nativeQuery.setParameterList( name, (Collection) value );
 				}
 				else {
@@ -242,7 +248,14 @@ public class QueryImpl<X> extends AbstractQueryImpl<X>
 				}
 			}
 			else {
-				nativeQuery.setParameter( position - 1, value );
+				if ( value instanceof TypedParameterValue  ) {
+					final TypedParameterValue  typedValueWrapper = (TypedParameterValue ) value;
+					nativeQuery.setParameter( position, typedValueWrapper.getValue(), typedValueWrapper.getType() );
+					value = (T) typedValueWrapper.getValue();
+				}
+				else {
+					nativeQuery.setParameter( position - 1, value );
+				}
 			}
 
 			bind = new ParameterBindImpl<T>( value, null );

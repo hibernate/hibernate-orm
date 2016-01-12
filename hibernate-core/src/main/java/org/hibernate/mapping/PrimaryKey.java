@@ -35,7 +35,7 @@ public class PrimaryKey extends Constraint {
 				log.debugf(
 						"Forcing column [%s] to be non-null as it is part of the primary key for table [%s]",
 						column.getCanonicalName(),
-						getTable().getNameIdentifier().getCanonicalName()
+						getTableNameForLogging( column )
 				);
 			}
 		}
@@ -44,7 +44,12 @@ public class PrimaryKey extends Constraint {
 
 	protected String getTableNameForLogging(Column column) {
 		if ( getTable() != null ) {
-			return getTable().getNameIdentifier().getCanonicalName();
+			if ( getTable().getNameIdentifier() != null ) {
+				return getTable().getNameIdentifier().getCanonicalName();
+			}
+			else {
+				return "<unknown>";
+			}
 		}
 		else if ( column.getValue() != null && column.getValue().getTable() != null ) {
 			return column.getValue().getTable().getNameIdentifier().getCanonicalName();

@@ -7,12 +7,16 @@
 package org.hibernate.boot.archive.internal;
 
 import java.io.File;
+import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 
 import org.hibernate.boot.archive.spi.ArchiveDescriptor;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
+import org.hibernate.boot.archive.spi.JarFileEntryUrlAdjuster;
 import org.hibernate.internal.util.StringHelper;
+
+import org.jboss.logging.Logger;
 
 /**
  * Standard implementation of ArchiveDescriptorFactory
@@ -20,7 +24,9 @@ import org.hibernate.internal.util.StringHelper;
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
-public class StandardArchiveDescriptorFactory implements ArchiveDescriptorFactory {
+public class StandardArchiveDescriptorFactory implements ArchiveDescriptorFactory, JarFileEntryUrlAdjuster {
+	private static final Logger log = Logger.getLogger( StandardArchiveDescriptorFactory.class );
+
 	/**
 	 * Singleton access
 	 */
@@ -41,33 +47,7 @@ public class StandardArchiveDescriptorFactory implements ArchiveDescriptorFactor
 				|| "file".equals( protocol )
 				|| "vfszip".equals( protocol )
 				|| "vfsfile".equals( protocol ) ) {
-			final File file;
-			try {
-				final String filePart = url.getFile();
-				if ( filePart != null && filePart.indexOf( ' ' ) != -1 ) {
-					//unescaped (from the container), keep as is
-					file = new File( url.getFile() );
-				}
-				else {
-					file = new File( url.toURI().getSchemeSpecificPart() );
-				}
-
-				if ( ! file.exists() ) {
-					throw new IllegalArgumentException(
-							String.format(
-									"File [%s] referenced by given URL [%s] does not exist",
-									filePart,
-									url.toExternalForm()
-							)
-					);
-				}
-			}
-			catch (URISyntaxException e) {
-				throw new IllegalArgumentException(
-						"Unable to visit JAR " + url + ". Cause: " + e.getMessage(), e
-				);
-			}
-
+			final File file = new File( extractLocalFilePath( url ) );
 			if ( file.isDirectory() ) {
 				return new ExplodedArchiveDescriptor( this, url, entry );
 			}
@@ -81,6 +61,24 @@ public class StandardArchiveDescriptorFactory implements ArchiveDescriptorFactor
 		}
 	}
 
+	protected String extractLocalFilePath(URL url) {
+		final String filePart = url.getFile();
+		if ( filePart != null && filePart.indexOf( ' ' ) != -1 ) {
+			//unescaped (from the container), keep as is
+			return filePart;
+		}
+		else {
+			try {
+				return url.toURI().getSchemeSpecificPart();
+			}
+			catch (URISyntaxException e) {
+				throw new IllegalArgumentException(
+						"Unable to visit JAR " + url + ". Cause: " + e.getMessage(), e
+				);
+			}
+		}
+	}
+
 	@Override
 	public URL getJarURLFromURLEntry(URL url, String entry) throws IllegalArgumentException {
 		return ArchiveHelper.getJarURLFromURLEntry( url, entry );
@@ -89,5 +87,58 @@ public class StandardArchiveDescriptorFactory implements ArchiveDescriptorFactor
 	@Override
 	public URL getURLFromPath(String jarPath) {
 		return ArchiveHelper.getURLFromPath( jarPath );
+	}
+
+	@Override
+	public URL adjustJarFileEntryUrl(URL url, URL rootUrl) {
+		final String protocol = url.getProtocol();
+		final boolean check = StringHelper.isEmpty( protocol )
+				|| "file".equals( protocol )
+				|| "vfszip".equals( protocol )
+				|| "vfsfile".equals( protocol );
+		if ( !check ) {
+			return url;
+		}
+
+		final String filePart = extractLocalFilePath( url );
+		if ( filePart.startsWith( "/" ) ) {
+			// the URL is already an absolute form
+			return url;
+		}
+		else {
+			// prefer to resolve the relative URL relative to the root PU URL per
+			// JPA 2.0 clarification.
+			final File rootUrlFile = new File( extractLocalFilePath( rootUrl ) );
+			try {
+				if ( rootUrlFile.isDirectory() ) {
+					// The PU root is a directory (exploded).  Here we can just build
+					// the relative File reference and use the Filesystem API to convert
+					// to URI and then a URL
+					final File combined = new File( rootUrlFile, filePart );
+					// make sure it exists..
+					if ( combined.exists() ) {
+						return combined.toURI().toURL();
+					}
+				}
+				else {
+					// The PU root is an archive.  Here we have to build a JAR URL to properly
+					// handle the nested entry reference (the !/ part).
+					return new URL(
+							"jar:" + protocol + "://" + rootUrlFile.getAbsolutePath() + "!/" + filePart
+					);
+				}
+			}
+			catch (MalformedURLException e) {
+				// allow to pass through to return the original URL
+				log.debugf(
+						e,
+						"Unable to adjust relative <jar-file/> URL [%s] relative to root URL [%s]",
+						filePart,
+						rootUrlFile.getAbsolutePath()
+				);
+			}
+
+			return url;
+		}
 	}
 }

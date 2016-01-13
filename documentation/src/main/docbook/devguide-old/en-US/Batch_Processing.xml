@@ -163,7 +163,7 @@
       </para>
       <example>
         <title>Executing an HQL UPDATE, using the <methodname>Query.executeUpdate()</methodname> method</title>
-        <programlisting language="Java" role="JAVA"><xi:include href="extras/executeUpdate.java" parse="text" /></programlisting>
+        <programlisting language="Java" role="JAVA"><xi:include href="extras/hql_update.java" parse="text" /></programlisting>
       </example>
       <para>
         In keeping with the EJB3 specification, HQL UPDATE statements, by default, do not effect the version or the
@@ -238,7 +238,7 @@
       </para>
       <example>
         <title>HQL INSERT statement</title>
-        <programlisting language="Java" role="JAVA"><xi:include href="extras/hql-insert.java" parse="text" /></programlisting>
+        <programlisting language="Java" role="JAVA"><xi:include href="extras/hql_insert.java" parse="text" /></programlisting>
       </example>
     </section>
     <section>

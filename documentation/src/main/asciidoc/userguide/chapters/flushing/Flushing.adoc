@@ -1,12 +1,37 @@
 [[flushing]]
 == Flushing
 
-* <<chapters/pc/PersistenceContext.adoc#pc,Persistence Contexts>>
-* <<chapters/query-hql/HQL.adoc#hql,HQL and JPQL>>
-* link:#criteria[???]
-* link:#querynative[???]
+Flushing is the process of synchronizing the state of the persistence context to the database.
+The `EntityManager` and the Hibernate `Session` expose a set of methods, through which the application developer can change the persistent state of an entity.
 
-Flushing is the process of synchronizing the state of the persistence
-context to the database.
+The persistence context acts as a transactional write-behind cache, queuing any entity state changes:
 
-TODO
+* entity insertion
+* entity update
+* entity delete
+
+Like any write-behind cache, changes are first applied in-memory and synchronized with the database during flushing.
+The flush operation takes every entity state change and translates it to an `INSERT`, `UPDATE` or `DELETE` statement.
+
+[NOTE]
+====
+Because DML statements are grouped together, Hibernate can apply batching transparently.
+See the <<chapters/batch/Batching.adoc#batch,Batching chapter>> for more information.
+====
+
+The flushing strategy is given by the [`flushMode`](http://docs.jboss.org/hibernate/stable/orm/javadocs/org/hibernate/Session.html#getFlushMode--) of the current running Hibernate `Session`.
+Although JPA defines only two flushing strategies ([`AUTO`](https://docs.oracle.com/javaee/7/api/javax/persistence/FlushModeType.html#AUTO) and [`COMMIT`](https://docs.oracle.com/javaee/7/api/javax/persistence/FlushModeType.html#COMMIT)),
+Hibernate has a much broader spectrum of flush types:
+
+ALWAYS:: Flushes the Session before every query.
+AUTO:: Flushes the Session only if necessary (to ensure that queries never return stale state).
+COMMIT:: Flushes the when the current `Transaction` is committed.
+MANUAL:: The Session flushing is delegated to the application, which must call `Session.flush()` explicitly in order to trigger a persistence context flushing.
+
+By default, Hibernate uses the `AUTO` flush mode which triggers a flush in the following circumstances:
+
+* prior to committing a `Transaction`
+* prior to executing a JPQL/HQL query that overlaps with the queued entity actions
+* before executing any native SQL query that has no registered synchronization
+
+TODO: add examples for all these three cases

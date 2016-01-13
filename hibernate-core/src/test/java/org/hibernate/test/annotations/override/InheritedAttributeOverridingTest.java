@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.annotations.override;
 
-import javax.persistence.AttributeOverride;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;

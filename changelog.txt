@@ -3,6 +3,42 @@ Hibernate 5.0 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.0.7.Final (January 13, 2015)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/22051
+
+** Bug
+    * [HHH-4161] - persistence.xml <jar-file> not following JSR220 spec
+    * [HHH-9342] - HQL "x member of treat(y as Type).collections" fails to parse
+    * [HHH-9356] - jpa converter only applied to high value of cb.between
+    * [HHH-9357] - Incorrect SQL generated for Polymorpic Queries involving TYPE() with @Inheritance(strategy=InheritanceType.JOINED)
+    * [HHH-9371] - Exception ''Invalid filter-parameter name format" from LoadQueryInfluencers when hql contains colon and filter is enabled.
+    * [HHH-10191] - InformationExtractorJdbcDatabaseMetaDataImpl can't handle Oracle function indexes
+    * [HHH-10307] - JTA no longer transitively provided (HHH-10178) causes problems for apps not using JTA
+    * [HHH-10383] - IN parameter is not enclosed in parentheses
+    * [HHH-10384] - PooledThreadLocalLoOptimizer fails to give uniqe id's for different threads
+    * [HHH-10385] - In a @OneToMany association the @JoinColumn foreignKey is not taken into consideration when generating the association database schema
+    * [HHH-10386] - In a @ManyToMany assoctiation the @JoinColumn foreignKey is not taken into considertion when generating the association database schema
+    * [HHH-10395] - ServiceBootstrappingTest fails if tests are run with hibernate.show_sql=true
+    * [HHH-10396] - In a @OneToMany association with @JoinColum the @ForeignKey is not taken into consideration when generating the association database schema
+    * [HHH-10405] - <return> elements of <sql-query> are not handled properly when building metadata
+    * [HHH-10420] - SchemaExport creates foreign keys too early if across schema
+    * [HHH-10421] - Change "native" ID generator for Oracle12cDialect to SequenceStyleGenerator
+    * [HHH-10422] - Backport HHH-9983 to fix identity IDs using Oracle12cDialect in 5.0
+    * [HHH-10425] - SchemaMigration creates foreign keys too early if across schema
+    * [HHH-10432] - hibernate 5.0.6 does not work with Aries JPA 2.3.0
+    * [HHH-10437] - NPE in PrimaryKey#addColumn(Column column) when getTable().getNameIdentifier() is null
+    * [HHH-10443] - SchemaUpdate and SchemaMigration do not release jdbc connection
+
+** Improvement
+    * [HHH-9474] - Perfomance issue with ElementCollection
+    * [HHH-10317] - Allow to bind custom types that implement the Collection interface through JPA APIs
+    * [HHH-10415] - org.hibernate.cache.infinispan.InfinispanRegionFactory should default the "immutable-entity" to the "entity" cache settings
+    * [HHH-10416] - Drop superfluous immutable-entity cache configuration
+    * [HHH-10439] - Log  a message which prints the name of the import script being imported
+
+
+
 Changes in 5.0.6.Final (December 16, 2015)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/22050

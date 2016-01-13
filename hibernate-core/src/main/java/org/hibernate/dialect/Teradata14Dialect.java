@@ -6,6 +6,13 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.CallableStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Iterator;
+import java.util.Map;
+
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.Metadata;
@@ -23,13 +30,6 @@ import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.tool.schema.internal.StandardIndexExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.StandardBasicTypes;
-
-import java.sql.CallableStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Iterator;
-import java.util.Map;
 
 /**
  * A dialect for the Teradata database
@@ -55,11 +55,6 @@ public class Teradata14Dialect extends TeradataDialect {
 		registerFunction( "current_date", new SQLFunctionTemplate( StandardBasicTypes.DATE, "current_date" ) );
 
 		TeraIndexExporter =  new TeradataIndexExporter( this );
-	}
-
-	@Override
-	public boolean supportsIdentityColumns() {
-		return true;
 	}
 
 	@Override

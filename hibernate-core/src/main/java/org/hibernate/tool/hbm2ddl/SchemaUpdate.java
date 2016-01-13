@@ -130,7 +130,12 @@ public class SchemaUpdate {
 			);
 		}
 
-		schemaMigrator.doMigration( metadata, databaseInformation, true, toolTargets );
+		try {
+			schemaMigrator.doMigration( metadata, databaseInformation, true, toolTargets );
+		}
+		finally {
+			databaseInformation.cleanup();
+		}
 	}
 
 	private List<org.hibernate.tool.schema.spi.Target> buildToolTargets(Target target) {

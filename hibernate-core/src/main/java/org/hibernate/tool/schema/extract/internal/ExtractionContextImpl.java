@@ -96,6 +96,7 @@ public class ExtractionContextImpl implements ExtractionContext {
 		return registeredTableAccess;
 	}
 
+	@Override
 	public void cleanup() {
 		if ( jdbcDatabaseMetaData != null ) {
 			jdbcDatabaseMetaData = null;

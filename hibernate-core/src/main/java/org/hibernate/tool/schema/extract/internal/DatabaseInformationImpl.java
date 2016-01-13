@@ -152,4 +152,9 @@ public class DatabaseInformationImpl implements DatabaseInformation, ExtractionC
 
 		return sequenceInformationMap.get( sequenceName );
 	}
+
+	@Override
+	public void cleanup() {
+		extractionContext.cleanup();
+	}
 }

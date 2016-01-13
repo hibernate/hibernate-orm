@@ -1,5 +1,4 @@
 import org.asciidoctor.gradle.AsciidoctorTask
-
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -53,15 +52,19 @@ dependencies {
     jdocbookXsl "org.jboss.pressgang:pressgang-xslt-ns:${pressgangVersion}"
     jdocbookXsl "org.jboss.pressgang:pressgang-fonts:${pressgangVersion}"
     jdocbookStyles "org.jboss.pressgang:pressgang-jdocbook-style:${pressgangVersion}"
-}
 
+	testCompile( project(':hibernate-core') )
+	testCompile( project(':hibernate-entitymanager') )
+
+	testCompile( project(':hibernate-testing') )
+	testCompile( project(path: ':hibernate-entitymanager', configuration: 'tests') )
+	testRuntime( libraries.h2 )
+}
 
 task buildDocs {
     group 'Documentation'
     description 'Grouping task for performing all documentation building tasks'
 }
-
-
 
 // aggregated JavaDoc ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

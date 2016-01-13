@@ -101,4 +101,6 @@ public interface DatabaseInformation {
 	 * @return {@code true} indicates a catalog with the given name already exists
 	 */
 	boolean catalogExists(Identifier catalog);
+
+	void cleanup();
 }

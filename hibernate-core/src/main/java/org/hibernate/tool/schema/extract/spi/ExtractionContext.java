@@ -40,4 +40,6 @@ public interface ExtractionContext {
 	}
 
 	DatabaseObjectAccess getDatabaseObjectAccess();
+
+	void cleanup();
 }

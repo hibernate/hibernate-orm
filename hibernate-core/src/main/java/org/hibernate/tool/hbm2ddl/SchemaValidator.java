@@ -86,9 +86,13 @@ public class SchemaValidator {
 					"Error creating DatabaseInformation for schema validation"
 			);
 		}
-
-		serviceRegistry.getService( SchemaManagementTool.class ).getSchemaValidator( cfgService.getSettings() )
-				.doValidation( metadata, databaseInformation );
+		try {
+			serviceRegistry.getService( SchemaManagementTool.class ).getSchemaValidator( cfgService.getSettings() )
+					.doValidation( metadata, databaseInformation );
+		}
+		finally {
+			databaseInformation.cleanup();
+		}
 	}
 
 	public static void main(String[] args) {

@@ -41,6 +41,6 @@ public class JtaTransactionCoordinatorBuilderImpl implements TransactionCoordina
 
 	@Override
 	public ConnectionAcquisitionMode getDefaultConnectionAcquisitionMode() {
-		return ConnectionAcquisitionMode.DEFAULT;
+		return ConnectionAcquisitionMode.AS_NEEDED;
 	}
 }

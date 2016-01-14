@@ -683,9 +683,19 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		// the param would have to be bound twice.  Until we eventually add "parameter bind points" concepts to the
 		// AST in ORM 5+, handling this type of condition is either extremely difficult or impossible.  Forcing
 		// recreation isn't ideal, but not really any other option in ORM 4.
-		if ( persister.getElementType() instanceof CompositeType ) {
-			CompositeType componentType = (CompositeType) persister.getElementType();
-			return !componentType.hasNotNullProperty();
+		// Selecting a type used in where part of update statement
+		// (must match condidion in org.hibernate.persister.collection.BasicCollectionPersister.doUpdateRows).
+		// See HHH-9474
+		Type whereType;
+		if ( persister.hasIndex() ) {
+			whereType = persister.getIndexType();
+		}
+		else {
+			whereType = persister.getElementType();
+		}
+		if ( whereType instanceof CompositeType ) {
+			CompositeType componentIndexType = (CompositeType) whereType;
+			return !componentIndexType.hasNotNullProperty();
 		}
 		return false;
 	}

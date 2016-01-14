@@ -23,7 +23,7 @@ public interface IdentityColumnSupport {
 	 *
 	 * @return True if IDENTITY columns are supported; false otherwise.
 	 */
-	public boolean supportsIdentityColumns();
+	boolean supportsIdentityColumns();
 
 	/**
 	 * Does the dialect support some form of inserting and selecting
@@ -32,7 +32,7 @@ public interface IdentityColumnSupport {
 	 * @return True if the dialect supports selecting the just
 	 * generated IDENTITY in the insert statement.
 	 */
-	public boolean supportsInsertSelectIdentity();
+	boolean supportsInsertSelectIdentity();
 
 	/**
 	 * Whether this dialect have an Identity clause added to the data type or a
@@ -40,7 +40,7 @@ public interface IdentityColumnSupport {
 	 *
 	 * @return boolean
 	 */
-	public boolean hasDataTypeInIdentityColumn();
+	boolean hasDataTypeInIdentityColumn();
 
 	/**
 	 * Provided we {@link #supportsInsertSelectIdentity}, then attach the
@@ -54,7 +54,7 @@ public interface IdentityColumnSupport {
 	 * @return The insert command with any necessary identity select
 	 * clause attached.
 	 */
-	public String appendIdentitySelectToInsert(String insertString);
+	String appendIdentitySelectToInsert(String insertString);
 
 	/**
 	 * Get the select command to use to retrieve the last generated IDENTITY
@@ -68,7 +68,7 @@ public interface IdentityColumnSupport {
 	 *
 	 * @throws MappingException If IDENTITY generation is not supported.
 	 */
-	public String getIdentitySelectString(String table, String column, int type) throws MappingException;
+	String getIdentitySelectString(String table, String column, int type) throws MappingException;
 
 
 	/**
@@ -81,7 +81,7 @@ public interface IdentityColumnSupport {
 	 *
 	 * @throws MappingException If IDENTITY generation is not supported.
 	 */
-	public String getIdentityColumnString(int type) throws MappingException;
+	String getIdentityColumnString(int type) throws MappingException;
 
 
 	/**
@@ -90,7 +90,7 @@ public interface IdentityColumnSupport {
 	 *
 	 * @return The appropriate keyword.
 	 */
-	public String getIdentityInsertString();
+	String getIdentityInsertString();
 
 	/**
 	 * The Delegate for dealing with IDENTITY columns using JDBC3 getGeneratedKeys
@@ -100,7 +100,7 @@ public interface IdentityColumnSupport {
 	 *
 	 * @return the dialect specific GetGeneratedKeys delegate
 	 */
-	public GetGeneratedKeysDelegate buildGetGeneratedKeysDelegate(
+	GetGeneratedKeysDelegate buildGetGeneratedKeysDelegate(
 			PostInsertIdentityPersister persister,
 			Dialect dialect);
 }

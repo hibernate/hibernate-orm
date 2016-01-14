@@ -18,7 +18,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.hql.internal.classic.ParserHelper;
 import org.hibernate.internal.CoreLogging;
@@ -35,6 +34,11 @@ import org.jboss.logging.Logger;
  */
 public final class QueryParameters {
 	private static final Logger LOG = CoreLogging.logger( QueryParameters.class );
+
+	/**
+	 * Symbols used to split SQL string into tokens in {@link #processFilters(String, Map, SessionFactoryImplementor)}.
+	 */
+	private static final String SYMBOLS = ParserHelper.HQL_SEPARATORS.replace( "'", "" );
 
 	private Type[] positionalParameterTypes;
 	private Object[] positionalParameterValues;
@@ -473,10 +477,7 @@ public final class QueryParameters {
 			processedSQL = sql;
 		}
 		else {
-			final Dialect dialect = factory.getDialect();
-			final String symbols = ParserHelper.HQL_SEPARATORS + dialect.openQuote() + dialect.closeQuote();
-			final StringTokenizer tokens = new StringTokenizer( sql, symbols, true );
-
+			final StringTokenizer tokens = new StringTokenizer( sql, SYMBOLS, true );
 			StringBuilder result = new StringBuilder();
 			List parameters = new ArrayList();
 			List parameterTypes = new ArrayList();

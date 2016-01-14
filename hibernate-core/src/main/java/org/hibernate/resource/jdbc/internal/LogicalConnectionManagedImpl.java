@@ -12,8 +12,6 @@ import java.io.ObjectOutputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.ResourceClosedException;
@@ -24,6 +22,9 @@ import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.resource.jdbc.spi.JdbcObserver;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
+
+import org.jboss.logging.Logger;
 
 /**
  * Represents a LogicalConnection where we manage obtaining and releasing the Connection as needed.
@@ -36,7 +37,8 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	private final transient JdbcConnectionAccess jdbcConnectionAccess;
 	private final transient JdbcObserver observer;
 	private final transient SqlExceptionHelper sqlExceptionHelper;
-	private final transient ConnectionReleaseMode connectionReleaseMode;
+
+	private final transient PhysicalConnectionHandlingMode physicalConnectionHandlingMode;
 
 	private transient Connection physicalConnection;
 	private boolean closed;
@@ -57,15 +59,10 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 		this.sqlExceptionHelper = jdbcSessionContext.getServiceRegistry()
 				.getService( JdbcServices.class )
 				.getSqlExceptionHelper();
-		this.connectionReleaseMode = jdbcSessionContext.getConnectionReleaseMode();
+		this.physicalConnectionHandlingMode = jdbcSessionContext.getPhysicalConnectionHandlingMode();
 		this.resourceRegistry = resourceRegistry;
 
-		if ( jdbcSessionContext.getConnectionAcquisitionMode() == ConnectionAcquisitionMode.IMMEDIATELY ) {
-			if ( jdbcSessionContext.getConnectionReleaseMode() != ConnectionReleaseMode.ON_CLOSE ) {
-				throw new IllegalStateException(
-						"Illegal combination of ConnectionAcquisitionMode#IMMEDIATELY with !ConnectionReleaseMode.ON_CLOSE"
-				);
-			}
+		if ( physicalConnectionHandlingMode.getAcquisitionMode() == ConnectionAcquisitionMode.IMMEDIATELY ) {
 			acquireConnectionIfNeeded();
 		}
 	}
@@ -116,7 +113,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	public void afterStatement() {
 		super.afterStatement();
 
-		if ( connectionReleaseMode == ConnectionReleaseMode.AFTER_STATEMENT ) {
+		if ( physicalConnectionHandlingMode.getReleaseMode() == ConnectionReleaseMode.AFTER_STATEMENT ) {
 			if ( getResourceRegistry().hasRegisteredResources() ) {
 				log.debug( "Skipping aggressive release of JDBC Connection after-statement due to held resources" );
 			}
@@ -131,7 +128,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	public void afterTransaction() {
 		super.afterTransaction();
 
-		if ( connectionReleaseMode != ConnectionReleaseMode.ON_CLOSE ) {
+		if ( physicalConnectionHandlingMode.getReleaseMode() != ConnectionReleaseMode.ON_CLOSE ) {
 			// NOTE : we check for !ON_CLOSE here (rather than AFTER_TRANSACTION) to also catch AFTER_STATEMENT cases
 			// that were circumvented due to held resources
 			log.debug( "Initiating JDBC connection release from afterTransaction" );

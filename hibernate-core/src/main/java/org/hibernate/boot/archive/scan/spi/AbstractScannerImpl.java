@@ -16,6 +16,7 @@ import org.hibernate.boot.archive.spi.ArchiveDescriptor;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.archive.spi.ArchiveEntry;
 import org.hibernate.boot.archive.spi.ArchiveEntryHandler;
+import org.hibernate.boot.archive.spi.JarFileEntryUrlAdjuster;
 
 /**
  * @author Steve Ebersole
@@ -35,14 +36,14 @@ public abstract class AbstractScannerImpl implements Scanner {
 		if ( environment.getNonRootUrls() != null ) {
 			final ArchiveContext context = new ArchiveContextImpl( false, collector );
 			for ( URL url : environment.getNonRootUrls() ) {
-				final ArchiveDescriptor descriptor = buildArchiveDescriptor( url, false );
+				final ArchiveDescriptor descriptor = buildArchiveDescriptor( url, environment, false );
 				descriptor.visitArchive( context );
 			}
 		}
 
 		if ( environment.getRootUrl() != null ) {
 			final ArchiveContext context = new ArchiveContextImpl( true, collector );
-			final ArchiveDescriptor descriptor = buildArchiveDescriptor( environment.getRootUrl(), true );
+			final ArchiveDescriptor descriptor = buildArchiveDescriptor( environment.getRootUrl(), environment, true );
 			descriptor.visitArchive( context );
 		}
 
@@ -50,10 +51,16 @@ public abstract class AbstractScannerImpl implements Scanner {
 	}
 
 
-	private ArchiveDescriptor buildArchiveDescriptor(URL url, boolean isRootUrl) {
+	private ArchiveDescriptor buildArchiveDescriptor(
+			URL url,
+			ScanEnvironment environment,
+			boolean isRootUrl) {
 		final ArchiveDescriptor descriptor;
 		final ArchiveDescriptorInfo descriptorInfo = archiveDescriptorCache.get( url );
 		if ( descriptorInfo == null ) {
+			if ( !isRootUrl && archiveDescriptorFactory instanceof JarFileEntryUrlAdjuster ) {
+				url = ( (JarFileEntryUrlAdjuster) archiveDescriptorFactory ).adjustJarFileEntryUrl( url, environment.getRootUrl() );
+			}
 			descriptor = archiveDescriptorFactory.buildArchiveDescriptor( url );
 			archiveDescriptorCache.put(
 					url,
@@ -65,6 +72,17 @@ public abstract class AbstractScannerImpl implements Scanner {
 			descriptor = descriptorInfo.archiveDescriptor;
 		}
 		return descriptor;
+	}
+
+	/**
+	 * Handle <jar-file/> references from a persistence.xml file.
+	 *
+	 * JPA allows for  to be specific
+	 * @param url
+	 * @return
+	 */
+	protected URL resolveNonRootUrl(URL url) {
+		return null;
 	}
 
 	// This needs to be protected and attributes/constructor visible in case

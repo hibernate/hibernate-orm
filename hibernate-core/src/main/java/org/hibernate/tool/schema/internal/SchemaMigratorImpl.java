@@ -183,7 +183,6 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 
 				applyIndexes( table, tableInformation, metadata, targets );
 				applyUniqueKeys( table, tableInformation, metadata, targets );
-				applyForeignKeys( table, tableInformation, metadata, targets );
 			}
 
 			for ( Sequence sequence : namespace.getSequences() ) {
@@ -202,6 +201,17 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 						targets,
 						false
 				);
+			}
+		}
+
+		//NOTE : Foreign keys must be created *after* all tables of all namespaces for cross namespace fks. see HHH-10420
+		for ( Namespace namespace : database.getNamespaces() ) {
+			for ( Table table : namespace.getTables() ) {
+				final TableInformation tableInformation = existingDatabase.getTableInformation( table.getQualifiedTableName() );
+				if ( tableInformation != null && !tableInformation.isPhysicalTable() ) {
+					continue;
+				}
+				applyForeignKeys( table, tableInformation, metadata, targets );
 			}
 		}
 

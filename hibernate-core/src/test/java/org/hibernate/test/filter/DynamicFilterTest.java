@@ -33,7 +33,9 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;
 
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -456,6 +458,15 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		session.close();
 		testData.release();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-5932" )
+	public void testHqlQueryWithColons() {
+		final Session session = openSession();
+		session.enableFilter( "region" ).setParameter( "region", "PACA" );
+		session.createQuery( "from Salesperson p where p.name = ':hibernate'" ).list();
+		session.close();
 	}
 
 	@Test

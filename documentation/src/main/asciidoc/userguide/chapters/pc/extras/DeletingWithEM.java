@@ -1,0 +1,1 @@
+entityManager.remove( fritz );

@@ -105,18 +105,17 @@ public class TeradataDialect extends Dialect implements IdTableSupport {
 	 *
 	 * @return empty string ... Teradata does not support <tt>FOR UPDATE<tt> syntax
 	 */
+	@Override
 	public String getForUpdateString() {
 		return "";
 	}
 
-	public boolean supportsIdentityColumns() {
-		return false;
-	}
-
+	@Override
 	public boolean supportsSequences() {
 		return false;
 	}
 
+	@Override
 	public String getAddColumnString() {
 		return "Add Column";
 	}
@@ -171,22 +170,27 @@ public class TeradataDialect extends Dialect implements IdTableSupport {
 		return super.getTypeName( code, length, p, s );
 	}
 
+	@Override
 	public boolean supportsCascadeDelete() {
 		return false;
 	}
 
+	@Override
 	public boolean supportsCircularCascadeDeleteConstraints() {
 		return false;
 	}
 
+	@Override
 	public boolean areStringComparisonsCaseInsensitive() {
 		return true;
 	}
 
+	@Override
 	public boolean supportsEmptyInList() {
 		return false;
 	}
 
+	@Override
 	public String getSelectClauseNullString(int sqlType) {
 		String v = "null";
 
@@ -232,29 +236,31 @@ public class TeradataDialect extends Dialect implements IdTableSupport {
 		return v;
 	}
 
+	@Override
 	public String getCreateMultisetTableString() {
 		return "create multiset table ";
 	}
 
+	@Override
 	public boolean supportsLobValueChangePropogation() {
 		return false;
 	}
 
+	@Override
 	public boolean doesReadCommittedCauseWritersToBlockReaders() {
 		return true;
 	}
 
+	@Override
 	public boolean doesRepeatableReadCauseReadersToBlockWriters() {
 		return true;
 	}
 
+	@Override
 	public boolean supportsBindAsCallableArgument() {
 		return false;
 	}
 
-	/* (non-Javadoc)
-		 * @see org.hibernate.dialect.Dialect#getInExpressionCountLimit()
-		 */
 	@Override
 	public int getInExpressionCountLimit() {
 		return PARAM_LIST_SIZE_LIMIT;

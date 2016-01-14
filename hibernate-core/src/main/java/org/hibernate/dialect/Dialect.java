@@ -25,8 +25,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -105,6 +103,8 @@ import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+
+import org.jboss.logging.Logger;
 
 /**
  * Represents a dialect of SQL implemented by a particular RDBMS.  Subclasses implement Hibernate compatibility
@@ -749,108 +749,6 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public IdentityColumnSupport getIdentityColumnSupport(){
 		return new IdentityColumnSupportImpl();
-	}
-
-	/**
-	 * Does this dialect support identity column key generation?
-	 *
-	 * @return True if IDENTITY columns are supported; false otherwise.
-	 *
-	 * @deprecated use {@link IdentityColumnSupport} method instead
-	 */
-	@Deprecated
-	public boolean supportsIdentityColumns() {
-		return getIdentityColumnSupport().supportsIdentityColumns();
-	}
-
-	/**
-	 * Does the dialect support some form of inserting and selecting
-	 * the generated IDENTITY value all in the same statement.
-	 *
-	 * @return True if the dialect supports selecting the just
-	 * generated IDENTITY in the insert statement.
-	 *
-	 * @deprecated use {@link IdentityColumnSupport} method instead
-	 */
-	@Deprecated
-	public boolean supportsInsertSelectIdentity() {
-		return getIdentityColumnSupport().supportsInsertSelectIdentity();
-	}
-
-	/**
-	 * Whether this dialect have an Identity clause added to the data type or a
-	 * completely separate identity data type
-	 *
-	 * @return boolean
-	 *
-	 * @deprecated use {@link IdentityColumnSupport} method instead
-	 */
-	@Deprecated
-	public boolean hasDataTypeInIdentityColumn() {
-		return getIdentityColumnSupport().hasDataTypeInIdentityColumn();
-	}
-
-	/**
-	 * Provided we {@link #supportsInsertSelectIdentity}, then attach the
-	 * "select identity" clause to the  insert statement.
-	 *  <p/>
-	 * Note, if {@link #supportsInsertSelectIdentity} == false then
-	 * the insert-string should be returned without modification.
-	 *
-	 * @param insertString The insert command
-	 * @return The insert command with any necessary identity select
-	 * clause attached.
-	 *
-	 * @deprecated use {@link IdentityColumnSupport} method instead
-	 */
-	@Deprecated
-	public String appendIdentitySelectToInsert(String insertString) {
-		return getIdentityColumnSupport().appendIdentitySelectToInsert( insertString );
-	}
-
-	/**
-	 * Get the select command to use to retrieve the last generated IDENTITY
-	 * value for a particular table
-	 *
-	 * @param table The table into which the insert was done
-	 * @param column The PK column.
-	 * @param type The {@link java.sql.Types} type code.
-	 * @return The appropriate select command
-	 * @throws MappingException If IDENTITY generation is not supported.
-	 *
-	 * @deprecated use {@link IdentityColumnSupport} method instead
-	 */
-	@Deprecated
-	public String getIdentitySelectString(String table, String column, int type) throws MappingException {
-		return getIdentityColumnSupport().getIdentitySelectString( table, column, type );
-	}
-
-	/**
-	 * The syntax used during DDL to define a column as being an IDENTITY of
-	 * a particular type.
-	 *
-	 * @param type The {@link java.sql.Types} type code.
-	 * @return The appropriate DDL fragment.
-	 * @throws MappingException If IDENTITY generation is not supported.
-	 *
-	 * @deprecated use {@link IdentityColumnSupport} method instead
-	 */
-	@Deprecated
-	public String getIdentityColumnString(int type) throws MappingException {
-		return getIdentityColumnSupport().getIdentityColumnString( type );
-	}
-
-	/**
-	 * The keyword used to insert a generated value into an identity column (or null).
-	 * Need if the dialect does not support inserts that specify no column values.
-	 *
-	 * @return The appropriate keyword.
-	 *
-	 * @deprecated use {@link IdentityColumnSupport} method instead
-	 */
-	@Deprecated
-	public String getIdentityInsertString() {
-		return getIdentityColumnSupport().getIdentityInsertString();
 	}
 
 	// SEQUENCE support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

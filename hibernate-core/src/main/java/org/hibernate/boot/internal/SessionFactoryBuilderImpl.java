@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EmptyInterceptor;
@@ -48,6 +49,7 @@ import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -55,6 +57,7 @@ import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 import org.jboss.logging.Logger;
 
+import static org.hibernate.cfg.AvailableSettings.ACQUIRE_CONNECTIONS;
 import static org.hibernate.cfg.AvailableSettings.AUTO_CLOSE_SESSION;
 import static org.hibernate.cfg.AvailableSettings.AUTO_EVICT_COLLECTION_CACHE;
 import static org.hibernate.cfg.AvailableSettings.AUTO_SESSION_EVENTS_LISTENER;
@@ -412,8 +415,25 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
+	public SessionFactoryBuilder applyConnectionHandlingMode(PhysicalConnectionHandlingMode connectionHandlingMode) {
+		this.options.connectionHandlingMode = connectionHandlingMode;
+		return this;
+	}
+
+	@Override
 	public SessionFactoryBuilder applyConnectionReleaseMode(ConnectionReleaseMode connectionReleaseMode) {
-		this.options.connectionReleaseMode = connectionReleaseMode;
+		if ( this.options.connectionHandlingMode == null ) {
+			this.options.connectionHandlingMode = PhysicalConnectionHandlingMode.interpret(
+					ConnectionAcquisitionMode.AS_NEEDED,
+					connectionReleaseMode
+			);
+		}
+		else {
+			this.options.connectionHandlingMode = PhysicalConnectionHandlingMode.interpret(
+					this.options.connectionHandlingMode.getAcquisitionMode(),
+					connectionReleaseMode
+			);
+		}
 		return this;
 	}
 
@@ -526,7 +546,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		private Integer jdbcFetchSize;
 		private boolean scrollableResultSetsEnabled;
 		private boolean commentsEnabled;
-		private ConnectionReleaseMode connectionReleaseMode;
+		private PhysicalConnectionHandlingMode connectionHandlingMode;
 		private boolean wrapResultSetsEnabled;
 
 		private Map<String, SQLFunction> sqlFunctions;
@@ -684,14 +704,30 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 			);
 			this.jdbcFetchSize = ConfigurationHelper.getInteger( STATEMENT_FETCH_SIZE, configurationSettings );
 
+			final ConnectionAcquisitionMode connectionAcquisitionMode = ConnectionAcquisitionMode.interpret(
+					ConfigurationHelper.getString(
+							ACQUIRE_CONNECTIONS,
+							configurationSettings,
+							ConnectionAcquisitionMode.AS_NEEDED.name()
+					)
+			);
+
+			final ConnectionReleaseMode connectionReleaseMode;
 			final String releaseModeName = ConfigurationHelper.getString( RELEASE_CONNECTIONS, configurationSettings, "auto" );
 			if ( "auto".equals( releaseModeName ) ) {
-				this.connectionReleaseMode = serviceRegistry.getService( TransactionCoordinatorBuilder.class )
-						.getDefaultConnectionReleaseMode();
+				// nothing was specified (or someone happened to configure the "magic" value)
+				if ( connectionAcquisitionMode == ConnectionAcquisitionMode.IMMEDIATELY ) {
+					connectionReleaseMode = ConnectionReleaseMode.ON_CLOSE;
+				}
+				else {
+					connectionReleaseMode = serviceRegistry.getService( TransactionCoordinatorBuilder.class )
+							.getDefaultConnectionReleaseMode();
+				}
 			}
 			else {
 				connectionReleaseMode = ConnectionReleaseMode.parse( releaseModeName );
 			}
+			this.connectionHandlingMode = PhysicalConnectionHandlingMode.interpret( connectionAcquisitionMode, connectionReleaseMode );
 
 			this.commentsEnabled = ConfigurationHelper.getBoolean( USE_SQL_COMMENTS, configurationSettings );
 
@@ -929,8 +965,13 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		}
 
 		@Override
+		public PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode() {
+			return connectionHandlingMode;
+		}
+
+		@Override
 		public ConnectionReleaseMode getConnectionReleaseMode() {
-			return connectionReleaseMode;
+			return getPhysicalConnectionHandlingMode().getReleaseMode();
 		}
 
 		@Override
@@ -1195,8 +1236,13 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
+	public PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode() {
+		return options.getPhysicalConnectionHandlingMode();
+	}
+
+	@Override
 	public ConnectionReleaseMode getConnectionReleaseMode() {
-		return options.getConnectionReleaseMode();
+		return getPhysicalConnectionHandlingMode().getReleaseMode();
 	}
 
 	@Override

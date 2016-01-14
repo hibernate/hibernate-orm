@@ -1729,4 +1729,9 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = INFO)
 	@Message(value = "Cannot locate column information using identifier [%s]; ignoring index [%s]", id = 475 )
 	void logCannotLocateIndexColumnInformation(String columnIdentifierText, String indexIdentifierText);
+
+	@LogMessage(level = INFO)
+	@Message(value = "Executing import script '%s'", id = 476)
+	void executingImportScript(String scriptName);
+
 }

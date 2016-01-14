@@ -52,6 +52,7 @@ import org.hibernate.procedure.internal.ProcedureCallImpl;
 import org.hibernate.resource.jdbc.spi.JdbcObserver;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.TransactionCoordinatorBuilder.TransactionCoordinatorOptions;
@@ -456,12 +457,15 @@ public abstract class AbstractSessionImpl
 	public class JdbcSessionContextImpl implements JdbcSessionContext {
 		private final SessionFactoryImpl sessionFactory;
 		private final StatementInspector inspector;
+		private final PhysicalConnectionHandlingMode connectionHandlingMode;
+
 		private final transient ServiceRegistry serviceRegistry;
 		private final transient JdbcObserver jdbcObserver;
 
 		public JdbcSessionContextImpl(SessionFactoryImpl sessionFactory, StatementInspector inspector) {
 			this.sessionFactory = sessionFactory;
 			this.inspector = inspector;
+			this.connectionHandlingMode = settings().getPhysicalConnectionHandlingMode();
 			this.serviceRegistry = sessionFactory.getServiceRegistry();
 			this.jdbcObserver = new JdbcObserverImpl();
 
@@ -486,13 +490,18 @@ public abstract class AbstractSessionImpl
 		}
 
 		@Override
+		public PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode() {
+			return connectionHandlingMode;
+		}
+
+		@Override
 		public ConnectionReleaseMode getConnectionReleaseMode() {
-			return settings().getConnectionReleaseMode();
+			return connectionHandlingMode.getReleaseMode();
 		}
 
 		@Override
 		public ConnectionAcquisitionMode getConnectionAcquisitionMode() {
-			return ConnectionAcquisitionMode.DEFAULT;
+			return connectionHandlingMode.getAcquisitionMode();
 		}
 
 		@Override

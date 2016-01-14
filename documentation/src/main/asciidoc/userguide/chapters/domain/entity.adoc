@@ -1,0 +1,303 @@
+[[entity]]
+=== Entity types
+:sourcedir: extras
+
+.Usage of the word _entity_
+[NOTE]
+====
+The entity type describes the mapping between the actual persistable domain model object and a database table row.
+To avoid any confusion with the annotation that marks a given entity type, the annotation will be further referred as `@Entity`.
+
+Throughout this chapter and thereafter, entity types will be simply referred as _entity_.
+====
+
+[[entity-pojo]]
+==== POJO Models
+
+Section _2.1 The Entity Class_ of the _JPA 2.1 specification_ defines its requirements for an entity class.
+Applications that wish to remain portable across JPA providers should adhere to these requirements.
+
+* The entity class must be annotated with the `javax.persistence.Entity` annotation (or be denoted as such in XML mapping)
+* The entity class must have a public or protected no-argument constructor. It may define additional constructors as well.
+* The entity class must be a top-level class.
+* An enum or interface may not be designated as an entity.
+* The entity class must not be final. No methods or persistent instance variables of the entity class may be final.
+* If an entity instance is to be used remotely as a detached object, the entity class must implement the `Serializable` interface.
+* Both abstract and concrete classes can be entities. Entities may extend non-entity classes as well as entity classes, and non-entity classes may extend entity classes.
+* The persistent state of an entity is represented by instance variables, which may correspond to JavaBean-style properties.
+An instance variable must be directly accessed only from within the methods of the entity by the entity instance itself.
+The state of the entity is available to clients only through the entity’s accessor methods (getter/setter methods) or other business methods.
+
+Hibernate, however, is not as strict in its requirements. The differences from the list above include:
+
+* The entity class must have a no-argument constructor, which may be public, protected or package visibility. It may define additional constructors as well.
+* The entity class _need not_ be a top-level class.
+* Technically Hibernate can persist final classes or classes with final persistent state accessor (getter/setter) methods.
+However, it is generally not a good idea as doing so will stop Hibernate from being able to generate proxies for lazy-loading the entity.
+* Hibernate does not restrict the application developer from exposing instance variables and reference them from outside the entity class itself.
+The validity of such a paradigm, however, is debatable at best.
+
+Let's look at each requirement in detail.
+
+[[entity-pojo-final]]
+==== Prefer non-final classes
+
+A central feature of Hibernate is the ability to load lazily certain entity instance variables (attributes) via runtime proxies.
+This feature depends upon the entity class being non-final or else implementing an interface that declares all the attribute getters/setters.
+You can still persist final classes that do not implement such an interface with Hibernate,
+but you will not be able to use proxies for fetching lazy associations, therefore limiting your options for performance tuning.
+For the very same reason, you should also avoid declaring persistent attribute getters and setters as final.
+
+[NOTE]
+====
+Starting in 5.0 Hibernate offers a more robust version of bytecode enhancement as another means for handling lazy loading.
+Hibernate had some bytecode re-writing capabilities prior to 5.0 but they were very rudimentary.
+See the <chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,BytecodeEnhancement>> for additional information on fetching and on bytecode enhancement.
+====
+
+[[entity-pojo-constructor]]
+==== Implement a no-argument constructor
+
+The entity class should have a no-argument constructor. Both Hibernate and JPA require this.
+
+JPA requires that this constructor be defined as public or protected.
+Hibernate, for the most part, does not care about the constructor visibility, as long as the system SecurityManager allows overriding the visibility setting.
+That said, the constructor should be defined with at least package visibility if you wish to leverage runtime proxy generation.
+
+[[entity-pojo-accessors]]
+==== Declare getters and setters for persistent attributes
+
+The JPA specification requires this, otherwise the model would prevent accessing the entity persistent state fields directly from outside the entity itself.
+
+Although Hibernate does not require it, it is recommended to follow the JavaBean conventions and define getters and setters for entity persistent attributes.
+Nevertheless, you can still tell Hibernate to directly access the entity fields.
+
+Attributes (whether fields or getters/setters) need not be declared public.
+Hibernate can deal with attributes declared with public, protected, package or private visibility.
+Again, if wanting to use runtime proxy generation for lazy loading, the getter/setter should grant access to at least package visibility.
+
+[[entity-pojo-identifier]]
+==== Provide identifier attribute(s)
+
+[IMPORTANT]
+====
+Historically this was considered optional.
+However, not defining identifier attribute(s) on the entity should be considered a deprecated feature that will be removed in an upcoming release.
+====
+
+The identifier attribute does not necessarily need to be mapped to the column(s) that physically define the primary key.
+However, it should map to column(s) that can uniquely identify each row.
+
+[NOTE]
+====
+We recommend that you declare consistently-named identifier attributes on persistent classes and that you use a nullable (i.e., non-primitive) type.
+====
+
+The placement of the `@Id` annotation marks the <<chapters/domain/access.adoc#access,persistence state access strategy>>.
+
+.Identifier
+====
+[source,java]
+----
+include::{sourcedir}/entity/Identifier.java[]
+----
+====
+
+Hibernate offers multiple identifier generation strategies, see the <<chapters/domain/identifiers.adoc#identifiers,Identifier Generators>> chapter for more about this topic.
+
+[[entity-pojo-mapping]]
+==== Mapping the entity
+
+The main piece in mapping the entity is the `javax.persistence.Entity` annotation.
+The `@Entity` annotation defines just one attribute `name` which is used to give a specific entity name for use in JPQL queries.
+By default, the entity name represents the unqualified name of the entity class itself.
+
+.Simple `@Entity`
+====
+[source,java]
+----
+include::{sourcedir}/entity/SimpleEntity.java[]
+----
+====
+
+An entity models a database table.
+The identifier uniquely identifies each row in that table.
+By default, the name of the table is assumed to be the same as the name of the entity.
+To explicitly give the name of the table or to specify other information about the table, we would use the `javax.persistence.Table` annotation.
+
+.Simple `@Entity` with `@Table`
+====
+[source,java]
+----
+include::{sourcedir}/entity/SimpleEntityWithTable.java[]
+----
+====
+
+[[mapping-model-pojo-equalshashcode]]
+==== Implementing `equals()` and `hashCode()`
+
+[NOTE]
+====
+Much of the discussion in this section deals with the relation of an entity to a Hibernate Session, whether the entity is managed, transient or detached.
+If you are unfamiliar with these topics, they are explained in the <<chapters/pc/PersistenceContext.adoc#pc,Persistence Context>> chapter.
+====
+
+Whether to implement `equals()` and `hashCode()` methods in your domain model, let alone how to implement them, is a surprisingly tricky discussion when it comes to ORM.
+
+There is really just one absolute case: a class that acts as an identifier must implement equals/hashCode based on the id value(s).
+Generally this is pertinent for user-defined classes used as composite identifiers.
+Beyond this one very specific use case and few others we will discuss below, you may want to consider not implementing equals/hashCode altogether.
+
+So what's all the fuss? Normally, most Java objects provide a built-in `equals()` and `hashCode()` based on the object's identity, so each new object will be different from all others.
+This is generally what you want in ordinary Java programming.
+Conceptually however this starts to break down when you start to think about the possibility of multiple instances of a class representing the same data.
+
+This is, in fact, exactly the case when dealing with data coming from a database.
+Every time we load a specific `Person` from the database we would naturally get a unique instance.
+Hibernate, however, works hard to make sure that does not happen within a given `Session`.
+In fact Hibernate guarantees equivalence of persistent identity (database row) and Java identity inside a particular session scope.
+So if we ask a Hibernate `Session` to load that specific Person multiple times we will actually get back the same __instance__:
+
+.Scope of identity
+====
+[source,java]
+----
+include::{sourcedir}/entity/listing1.java[]
+----
+====
+
+Consider another example using a persistent `java.util.Set`:
+
+.Set usage with Session-scoped identity
+====
+[source,java]
+----
+include::{sourcedir}/entity/listing3.java[]
+----
+====
+
+However, the semantic changes when we mix instances loaded from different Sessions:
+
+.Mixed Sessions
+====
+[source,java]
+----
+include::{sourcedir}/entity/listing2.java[]
+----
+
+[source,java]
+----
+include::{sourcedir}/entity/listing4.java[]
+----
+====
+
+Specifically the outcome in this last example will depend on whether the `Person` class implemented equals/hashCode, and, if so, how.
+
+Consider yet another case:
+
+.Sets with transient entities
+====
+[source,java]
+----
+include::{sourcedir}/entity/listing5.java[]
+----
+====
+
+In cases where you will be dealing with entities outside of a Session (whether they be transient or detached), especially in cases where you will be using them in Java collections,
+you should consider implementing equals/hashCode.
+
+A common initial approach is to use the entity's identifier attribute as the basis for equals/hashCode calculations:
+
+.Naive equals/hashCode implementation
+====
+[source,java]
+----
+include::{sourcedir}/entity/listing6.java[]
+----
+====
+
+It turns out that this still breaks when adding transient instance of `Person` to a set as we saw in the last example:
+
+.Still trouble
+====
+[source,java]
+----
+include::{sourcedir}/entity/listing7.java[]
+----
+====
+
+The issue here is a conflict between _the use of generated identifier_, _the contract of `Set`_ and _the equals/hashCode implementations_.
+`Set` says that the equals/hashCode value for an object should not change while the object is part of the Set.
+But that is exactly what happened here because the equals/hasCode are based on the (generated) id, which was not set until the `session.getTransaction().commit()` call.
+
+Note that this is just a concern when using generated identifiers.
+If you are using assigned identifiers this will not be a problem, assuming the identifier value is assigned prior to adding to the `Set`.
+
+Another option is to force the identifier to be generated and set prior to adding to the `Set`:
+
+.Forcing identifier generation
+====
+[source,java]
+----
+include::{sourcedir}/entity/listing8.java[]
+----
+====
+
+But this is often not feasible.
+
+The final approach is to use a "better" equals/hashCode implementation, making use of a natural-id or business-key.
+
+.Better equals/hashCode with natural-id
+====
+[source,java]
+----
+include::{sourcedir}/entity/listing9.java[]
+----
+====
+
+As you can see the question of equals/hashCode is not trivial, nor is there a one-size-fits-all solution.
+
+For details on mapping the identifier, see the <<chapters/domain/identifiers.adoc#identiifers,Identifiers>> chapter.
+
+[[entity-pojo-optlock]]
+==== Mapping optimistic locking
+
+JPA defines support for optimistic locking based on either a version (sequential numeric) or timestamp strategy.
+To enable this style of optimistic locking simply add the `javax.persistence.Version` to the persistent attribute that defines the optimistic locking value.
+According to JPA, the valid types for these attributes are limited to:
+
+* `int` or `Integer`
+* `short` or `Short`
+* `long` or `Long`
+* `java.sql.Timestamp`
+
+.Version
+====
+[source,java]
+----
+include::{sourcedir}/entity/Version.java[]
+----
+
+[source,java]
+----
+include::{sourcedir}/entity/Timestamp.java[]
+----
+
+[source,java]
+----
+include::{sourcedir}/entity/Instant.java[]
+----
+====
+
+Hibernate supports a form of optimistic locking that does not require a dedicated "version attribute".
+This is intended mainly for use with modeling legacy schemas.
+The idea is that you can get Hibernate to perform "version checks" using either all of the entity's attributes, or just the attributes that have changed.
+This is achieved through the use of the `org.hibernate.annotations.OptimisticLocking` annotation which defines a single attribute of type `org.hibernate.annotations.OptimisticLockType`.
+There are 4 available OptimisticLockTypes:
+
+`NONE`:: optimistic locking is disabled even if there is a `@Version` annotation present
+`VERSION` (the default)::  performs optimistic locking based on a `@Version` as described above
+`ALL`:: performs optimistic locking based on _all_ fields as part of an expanded WHERE clause restriction for the UPDATE/DELETE SQL statements
+`DIRTY`:: performs optimistic locking based on _dirty_ fields as part of an expanded WHERE clause restriction for the UPDATE/DELETE SQL statements.
+
+

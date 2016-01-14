@@ -50,6 +50,6 @@ public class JdbcResourceLocalTransactionCoordinatorBuilderImpl implements Trans
 
 	@Override
 	public ConnectionAcquisitionMode getDefaultConnectionAcquisitionMode() {
-		return ConnectionAcquisitionMode.DEFAULT;
+		return ConnectionAcquisitionMode.AS_NEEDED;
 	}
 }

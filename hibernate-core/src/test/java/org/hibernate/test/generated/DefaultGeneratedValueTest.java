@@ -24,10 +24,10 @@ import org.hibernate.annotations.GeneratorType;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.testing.SkipForDialects;
 import org.hibernate.tuple.ValueGenerator;
 
 import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.SkipForDialects;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -120,7 +120,10 @@ public class DefaultGeneratedValueTest extends BaseCoreFunctionalTestCase {
 
 		theEntity = (TheEntity) s.get( TheEntity.class, 1 );
 		theEntity.lastName = "Smith";
-
+		try {
+			Thread.sleep( 1 );
+		}
+		catch (InterruptedException ignore) {}
 		s.getTransaction().commit();
 		s.close();
 

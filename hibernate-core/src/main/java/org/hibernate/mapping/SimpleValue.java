@@ -313,8 +313,7 @@ public class SimpleValue implements KeyValue {
 	
 	public boolean isIdentityColumn(IdentifierGeneratorFactory identifierGeneratorFactory, Dialect dialect) {
 		identifierGeneratorFactory.setDialect( dialect );
-		return identifierGeneratorFactory.getIdentifierGeneratorClass( identifierGeneratorStrategy )
-				.equals( IdentityGenerator.class );
+		return IdentityGenerator.class.isAssignableFrom(identifierGeneratorFactory.getIdentifierGeneratorClass( identifierGeneratorStrategy ));
 	}
 
 	/**

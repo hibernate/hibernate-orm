@@ -1761,8 +1761,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		for ( FkSecondPass sp : dependencies ) {
 			String dependentTable = sp.getValue().getTable().getQualifiedTableName().render();
 			if ( dependentTable.compareTo( startTable ) == 0 ) {
-				String sb = "Foreign key circularity dependency involving the following tables: ";
-				throw new AnnotationException( sb );
+				throw new AnnotationException( "Foreign key circularity dependency involving the following tables: " + startTable + ", " + dependentTable );
 			}
 			buildRecursiveOrderedFkSecondPasses( orderedFkSecondPasses, isADependencyOf, startTable, dependentTable );
 			if ( !orderedFkSecondPasses.contains( sp ) ) {

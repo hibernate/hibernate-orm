@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
@@ -33,6 +35,31 @@ public class AutoFlushTest extends BaseEntityManagerFunctionalTestCase {
 			Person.class,
 			Phone.class,
 		};
+	}
+
+	@Test
+	public void testFlushAutoCommit() {
+		EntityManager entityManager = null;
+		EntityTransaction txn = null;
+		try {
+			//tag::auto-flush-commit[]
+			entityManager = entityManagerFactory().createEntityManager();
+			txn = entityManager.getTransaction();
+			txn.begin();
+
+			Person person = new Person( "Vlad" );
+			log.info( "Entity is in persisted state" );
+
+			txn.commit();
+			//end::auto-flush-commit[]
+		} catch (RuntimeException e) {
+			if ( txn != null && txn.isActive()) txn.rollback();
+			throw e;
+		} finally {
+			if (entityManager != null) {
+				entityManager.close();
+			}
+		}
 	}
 
 	@Test

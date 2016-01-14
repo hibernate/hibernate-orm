@@ -1,5 +1,6 @@
 [[flushing]]
 == Flushing
+:sourcedir: ../../../../../test/java/org/hibernate/jpa/test/userguide/flush
 
 Flushing is the process of synchronizing the state of the persistence context to the database.
 The `EntityManager` and the Hibernate `Session` expose a set of methods, through which the application developer can change the persistent state of an entity.
@@ -34,4 +35,12 @@ By default, Hibernate uses the `AUTO` flush mode which triggers a flush in the f
 * prior to executing a JPQL/HQL query that overlaps with the queued entity actions
 * before executing any native SQL query that has no registered synchronization
 
-TODO: add examples for all these three cases
+[[auto-flush-commit]]
+.Automatic flushing on commit
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/AutoFlushTest.java[tags=auto-flush-commit]
+----
+====
+

@@ -13,6 +13,7 @@ import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.util.OffsetDateTimeComparator;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.type.descriptor.java.OffsetDateTimeJavaDescriptor;
 import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
@@ -53,7 +54,7 @@ public class OffsetDateTimeType
 	@Override
 	@SuppressWarnings("unchecked")
 	public Comparator<OffsetDateTime> getComparator() {
-		return ComparableComparator.INSTANCE;
+		return OffsetDateTimeComparator.INSTANCE;
 	}
 
 	@Override

@@ -9,10 +9,9 @@ package org.hibernate.cache.infinispan.access;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.impl.BaseRegion;
 import org.hibernate.cache.infinispan.util.Caches;
+import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.infinispan.AdvancedCache;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 
 /**
  *
@@ -21,7 +20,7 @@ import org.infinispan.util.logging.LogFactory;
  * @since 3.5
  */
 public abstract class InvalidationCacheAccessDelegate implements AccessDelegate {
-	protected static final Log log = LogFactory.getLog( InvalidationCacheAccessDelegate.class );
+	protected static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog( InvalidationCacheAccessDelegate.class );
 	protected static final boolean TRACE_ENABLED = log.isTraceEnabled();
 	protected final AdvancedCache cache;
 	protected final BaseRegion region;
@@ -124,9 +123,7 @@ public abstract class InvalidationCacheAccessDelegate implements AccessDelegate 
 	@Override
 	public void remove(SessionImplementor session, Object key) throws CacheException {
 		if ( !putValidator.beginInvalidatingKey(session, key)) {
-			throw new CacheException(
-					"Failed to invalidate pending putFromLoad calls for key " + key + " from region " + region.getName()
-			);
+			throw log.failedInvalidatePendingPut(key, region.getName());
 		}
 		putValidator.setCurrentSession(session);
 		try {
@@ -144,7 +141,7 @@ public abstract class InvalidationCacheAccessDelegate implements AccessDelegate 
 	public void removeAll() throws CacheException {
 		try {
 			if (!putValidator.beginInvalidatingRegion()) {
-				throw new CacheException("Failed to invalidate pending putFromLoad calls for region " + region.getName());
+				log.failedInvalidateRegion(region.getName());
 			}
 			Caches.removeAll(cache);
 		}
@@ -162,7 +159,7 @@ public abstract class InvalidationCacheAccessDelegate implements AccessDelegate 
 	public void evictAll() throws CacheException {
 		try {
 			if (!putValidator.beginInvalidatingRegion()) {
-				throw new CacheException("Failed to invalidate pending putFromLoad calls for region " + region.getName());
+				log.failedInvalidateRegion(region.getName());
 			}
 
 			// Invalidate the local region and then go remote
@@ -177,9 +174,7 @@ public abstract class InvalidationCacheAccessDelegate implements AccessDelegate 
 	@Override
 	public void unlockItem(SessionImplementor session, Object key) throws CacheException {
 		if ( !putValidator.endInvalidatingKey(session, key) ) {
-			// TODO: localization
-			log.warn("Failed to end invalidating pending putFromLoad calls for key " + key + " from region "
-					+ region.getName() + "; the key won't be cached until invalidation expires.");
+			log.failedEndInvalidating(key, region.getName());
 		}
 	}
 }

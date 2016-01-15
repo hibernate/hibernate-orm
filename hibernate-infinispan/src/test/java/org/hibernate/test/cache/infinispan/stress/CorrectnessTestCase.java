@@ -22,6 +22,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.cache.infinispan.access.InvalidationCacheAccessDelegate;
+import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.RegionAccessStrategy;
 import org.hibernate.cfg.Environment;
@@ -54,7 +55,6 @@ import org.infinispan.configuration.cache.InterceptorConfiguration;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.interceptors.base.BaseCustomInterceptor;
 import org.infinispan.remoting.RemoteException;
-import org.infinispan.util.logging.LogFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -89,7 +89,7 @@ import java.util.stream.Collectors;
  */
 @RunWith(CustomParameterized.class)
 public abstract class CorrectnessTestCase {
-   static final org.infinispan.util.logging.Log log = LogFactory.getLog(CorrectnessTestCase.class);
+   static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog(CorrectnessTestCase.class);
    static final long EXECUTION_TIME = TimeUnit.MINUTES.toMillis(10);
    static final int NUM_NODES = 4;
    static final int NUM_THREADS_PER_NODE = 4;

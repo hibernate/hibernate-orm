@@ -9,10 +9,9 @@ package org.hibernate.test.cache.infinispan.functional.cluster;
 import java.util.Iterator;
 import java.util.List;
 
+import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.test.cache.infinispan.functional.entities.Account;
 import org.hibernate.test.cache.infinispan.functional.entities.AccountHolder;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
@@ -24,7 +23,7 @@ import static org.hibernate.test.cache.infinispan.util.TxUtil.withTxSessionApply
  * @author Brian Stansberry
  */
 public class AccountDAO {
-	private static final Log log = LogFactory.getLog(AccountDAO.class);
+	private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog(AccountDAO.class);
 
 	private final boolean useJta;
 	private final SessionFactory sessionFactory;

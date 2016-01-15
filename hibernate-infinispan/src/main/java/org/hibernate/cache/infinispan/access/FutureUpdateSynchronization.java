@@ -7,11 +7,10 @@
 package org.hibernate.cache.infinispan.access;
 
 import org.hibernate.cache.infinispan.util.FutureUpdate;
+import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.cache.infinispan.util.InvocationAfterCompletion;
 import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.infinispan.AdvancedCache;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 
 import java.util.UUID;
 
@@ -19,7 +18,7 @@ import java.util.UUID;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class FutureUpdateSynchronization extends InvocationAfterCompletion {
-	private static final Log log = LogFactory.getLog( FutureUpdateSynchronization.class );
+	private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog( FutureUpdateSynchronization.class );
 
 	private final UUID uuid = UUID.randomUUID();
 	private final Object key;
@@ -45,7 +44,7 @@ public class FutureUpdateSynchronization extends InvocationAfterCompletion {
 				return;
 			}
 			catch (Exception e) {
-				log.error("Failure updating cache in afterCompletion, will retry", e);
+				log.failureInAfterCompletion(e);
 			}
 		}
 	}

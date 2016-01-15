@@ -17,8 +17,7 @@ import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
+import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 
 /**
  * Variant of SimpleJtaTransactionManagerImpl that doesn't use a VM-singleton, but rather a set of
@@ -30,7 +29,7 @@ import org.infinispan.util.logging.LogFactory;
  */
 public class DualNodeJtaTransactionManagerImpl implements TransactionManager {
 
-   private static final Log log = LogFactory.getLog(DualNodeJtaTransactionManagerImpl.class);
+   private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog(DualNodeJtaTransactionManagerImpl.class);
 
    private static final Hashtable INSTANCES = new Hashtable();
 

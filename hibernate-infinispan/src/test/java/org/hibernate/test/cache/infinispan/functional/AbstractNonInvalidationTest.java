@@ -4,17 +4,14 @@ import org.hibernate.PessimisticLockException;
 import org.hibernate.StaleStateException;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
-import org.hibernate.cache.infinispan.util.Caches;
+import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.cache.spi.Region;
-import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.test.cache.infinispan.functional.entities.Item;
 import org.hibernate.test.cache.infinispan.util.TestInfinispanRegionFactory;
 import org.hibernate.test.cache.infinispan.util.TestTimeService;
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.infinispan.AdvancedCache;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 import org.junit.After;
 import org.junit.Before;
 
@@ -43,7 +40,7 @@ public abstract class AbstractNonInvalidationTest extends SingleNodeTest {
 
    protected long TIMEOUT;
    protected ExecutorService executor;
-   protected Log log = LogFactory.getLog(getClass());
+   protected InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog(getClass());
    protected AdvancedCache entityCache;
    protected long itemId;
    protected Region region;

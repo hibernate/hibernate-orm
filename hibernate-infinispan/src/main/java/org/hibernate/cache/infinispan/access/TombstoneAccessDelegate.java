@@ -10,6 +10,7 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.infinispan.util.FutureUpdate;
+import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.cache.infinispan.util.TombstoneUpdate;
 import org.hibernate.cache.infinispan.util.Tombstone;
 import org.hibernate.cache.spi.access.SoftLock;
@@ -18,8 +19,6 @@ import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.infinispan.AdvancedCache;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.context.Flag;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 
 import java.util.concurrent.TimeUnit;
 
@@ -27,7 +26,7 @@ import java.util.concurrent.TimeUnit;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class TombstoneAccessDelegate implements AccessDelegate {
-	private static final Log log = LogFactory.getLog( TombstoneAccessDelegate.class );
+	private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog( TombstoneAccessDelegate.class );
 
 	protected final BaseTransactionalDataRegion region;
 	protected final AdvancedCache cache;

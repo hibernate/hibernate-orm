@@ -24,8 +24,7 @@ import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
+import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 
 /**
  * XaResourceCapableTransactionImpl.
@@ -34,7 +33,7 @@ import org.infinispan.util.logging.LogFactory;
  * @since 3.5
  */
 public class XaTransactionImpl implements Transaction {
-   private static final Log log = LogFactory.getLog(XaTransactionImpl.class);
+   private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog(XaTransactionImpl.class);
 
    private int status;
    private LinkedList synchronizations;

@@ -20,6 +20,7 @@ import javax.naming.StringRefAddr;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.JndiInfinispanRegionFactory;
+import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -33,8 +34,6 @@ import org.infinispan.Cache;
 import org.infinispan.lifecycle.ComponentStatus;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 
 import org.jboss.util.naming.NonSerializableFactory;
 
@@ -47,7 +46,7 @@ import static org.junit.Assert.assertEquals;
  * @author Galder Zamarreño
  */
 public class JndiRegionFactoryTest extends SingleNodeTest {
-	private static final Log log = LogFactory.getLog( JndiRegionFactoryTest.class );
+	private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog( JndiRegionFactoryTest.class );
 	private static final String JNDI_NAME = "java:CacheManager";
 	private Main namingMain;
 	private SingletonNamingServer namingServer;

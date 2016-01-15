@@ -6,6 +6,7 @@
  */
 package org.hibernate.cache.infinispan.access;
 
+import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.infinispan.commands.AbstractVisitor;
 import org.infinispan.commands.CommandsFactory;
 import org.infinispan.commands.FlagAffectedCommand;
@@ -34,8 +35,6 @@ import org.infinispan.jmx.annotations.ManagedAttribute;
 import org.infinispan.jmx.annotations.ManagedOperation;
 import org.infinispan.jmx.annotations.MeasurementType;
 import org.infinispan.jmx.annotations.Parameter;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -64,12 +63,7 @@ public class TxInvalidationInterceptor extends BaseRpcInterceptor implements Jmx
 	private CommandsFactory commandsFactory;
 	private boolean statisticsEnabled;
 
-	private static final Log log = LogFactory.getLog( TxInvalidationInterceptor.class );
-
-	@Override
-	protected Log getLog() {
-		return log;
-	}
+	private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog( TxInvalidationInterceptor.class );
 
 	@Inject
 	public void injectDependencies(CommandsFactory commandsFactory) {
@@ -181,9 +175,9 @@ public class TxInvalidationInterceptor extends BaseRpcInterceptor implements Jmx
 					invalidateAcrossCluster( defaultSynchronous, filterVisitor.result.toArray(), ctx );
 				}
 				catch (Throwable t) {
-					log.unableToRollbackEvictionsDuringPrepare( t );
+					log.unableToRollbackInvalidationsDuringPrepare( t );
 					if ( t instanceof RuntimeException ) {
-						throw (RuntimeException) t;
+						throw t;
 					}
 					else {
 						throw new RuntimeException( "Unable to broadcast invalidation messages", t );

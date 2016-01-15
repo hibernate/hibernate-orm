@@ -8,11 +8,11 @@ package org.hibernate.test.cache.infinispan.functional;
 
 import java.util.List;
 import java.util.Map;
+
+import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
 import org.hibernate.test.cache.infinispan.functional.entities.Item;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -25,7 +25,7 @@ import static org.junit.Assert.assertEquals;
  * @since 4.1
  */
 public class ReadOnlyTest extends SingleNodeTest {
-	static final Log log = LogFactory.getLog(ReadOnlyTest.class);
+	static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog(ReadOnlyTest.class);
 
 	@Override
 	public List<Object[]> getParameters() {

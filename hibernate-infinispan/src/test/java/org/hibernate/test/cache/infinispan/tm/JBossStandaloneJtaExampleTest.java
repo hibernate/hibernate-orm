@@ -22,6 +22,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
 import org.hibernate.mapping.Collection;
@@ -43,8 +44,6 @@ import org.junit.Test;
 
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.transaction.lookup.JBossStandaloneJTAManagerLookup;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 
 import org.jboss.util.naming.NonSerializableFactory;
 
@@ -66,7 +65,7 @@ import static org.junit.Assert.assertNull;
  * @since 3.5
  */
 public class JBossStandaloneJtaExampleTest {
-	private static final Log log = LogFactory.getLog(JBossStandaloneJtaExampleTest.class);
+	private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog(JBossStandaloneJtaExampleTest.class);
 	private static final JBossStandaloneJTAManagerLookup lookup = new JBossStandaloneJTAManagerLookup();
 	Context ctx;
 	Main jndiServer;

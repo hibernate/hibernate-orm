@@ -24,6 +24,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
@@ -34,9 +35,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 
 import static org.infinispan.test.TestingUtil.withTx;
 import static org.junit.Assert.assertFalse;
@@ -50,7 +48,7 @@ import static org.junit.Assert.assertFalse;
 @Ignore
 public class PutFromLoadStressTestCase {
 
-   static final Log log = LogFactory.getLog(PutFromLoadStressTestCase.class);
+   static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog(PutFromLoadStressTestCase.class);
    static final boolean isTrace = log.isTraceEnabled();
    static final int NUM_THREADS = 100;
    static final int WARMUP_TIME_SECS = 10;

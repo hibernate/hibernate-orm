@@ -15,13 +15,12 @@ import javax.transaction.TransactionManager;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.util.Caches;
+import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.cache.spi.Region;
 
 import org.hibernate.cache.spi.access.AccessType;
 import org.infinispan.AdvancedCache;
 import org.infinispan.context.Flag;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 
 /**
  * Support for Infinispan {@link Region}s. Handles common "utility" methods for an underlying named
@@ -34,7 +33,7 @@ import org.infinispan.util.logging.LogFactory;
  */
 public abstract class BaseRegion implements Region {
 
-	private static final Log log = LogFactory.getLog( BaseRegion.class );
+	private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog( BaseRegion.class );
 
 	protected final String name;
 	protected final AdvancedCache cache;
@@ -152,7 +151,7 @@ public abstract class BaseRegion implements Region {
 			}
 		}
 		catch (SystemException se) {
-			throw new CacheException( "Could not suspend transaction", se );
+			throw log.cannotSuspendTx(se);
 		}
 		return tx;
 	}
@@ -169,7 +168,7 @@ public abstract class BaseRegion implements Region {
 			}
 		}
 		catch (Exception e) {
-			throw new CacheException( "Could not resume transaction", e );
+			throw log.cannotResumeTx( e );
 		}
 	}
 
@@ -224,16 +223,16 @@ public abstract class BaseRegion implements Region {
 			return tm != null ? tm.getTransaction() : null;
 		}
 		catch (SystemException e) {
-			throw new CacheException("Unable to get current transaction", e);
+			throw log.cannotGetCurrentTx(e);
 		}
 	}
 
 	protected void checkAccessType(AccessType accessType) {
 		if (accessType == AccessType.TRANSACTIONAL && !cache.getCacheConfiguration().transaction().transactionMode().isTransactional()) {
-			log.warn("Requesting TRANSACTIONAL cache concurrency strategy but the cache is not configured as transactional.");
+			log.transactionalStrategyNonTransactionalCache();
 		}
 		else if (accessType == AccessType.READ_WRITE && cache.getCacheConfiguration().transaction().transactionMode().isTransactional()) {
-			log.warn("Requesting READ_WRITE cache concurrency strategy but the cache was configured as transactional.");
+			log.readWriteStrategyTransactionalCache();
 		}
 	}
 

@@ -7,6 +7,7 @@
 package org.hibernate.cache.infinispan.access;
 
 import org.hibernate.cache.infinispan.util.CacheCommandInitializer;
+import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.infinispan.commands.CommandsFactory;
 import org.infinispan.commands.FlagAffectedCommand;
 import org.infinispan.commands.write.ClearCommand;
@@ -30,8 +31,6 @@ import org.infinispan.jmx.annotations.ManagedAttribute;
 import org.infinispan.jmx.annotations.ManagedOperation;
 import org.infinispan.jmx.annotations.MeasurementType;
 import org.infinispan.jmx.annotations.Parameter;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -53,15 +52,10 @@ public class NonTxInvalidationInterceptor extends BaseRpcInterceptor implements 
 	private CacheCommandInitializer commandInitializer;
 	private boolean statisticsEnabled;
 
-	private static final Log log = LogFactory.getLog(InvalidationInterceptor.class);
+	private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog(InvalidationInterceptor.class);
 
 	public NonTxInvalidationInterceptor(PutFromLoadValidator putFromLoadValidator) {
 		this.putFromLoadValidator = putFromLoadValidator;
-	}
-
-	@Override
-	protected Log getLog() {
-		return log;
 	}
 
 	@Inject

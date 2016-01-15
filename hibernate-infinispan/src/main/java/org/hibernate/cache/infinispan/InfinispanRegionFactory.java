@@ -30,6 +30,7 @@ import org.hibernate.cache.infinispan.timestamp.TimestampsRegionImpl;
 import org.hibernate.cache.infinispan.tm.HibernateTransactionManagerLookup;
 import org.hibernate.cache.infinispan.util.CacheCommandFactory;
 import org.hibernate.cache.infinispan.util.Caches;
+import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.internal.SimpleCacheKeysFactory;
 import org.hibernate.cache.spi.CacheDataDescription;
@@ -51,7 +52,6 @@ import org.infinispan.commons.util.FileLookupFactory;
 import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
-import org.infinispan.configuration.cache.ExpirationConfiguration;
 import org.infinispan.configuration.cache.TransactionConfiguration;
 import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.configuration.parsing.ParserRegistry;
@@ -60,8 +60,6 @@ import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.transaction.lookup.GenericTransactionManagerLookup;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 
 import javax.transaction.TransactionManager;
 
@@ -74,7 +72,7 @@ import javax.transaction.TransactionManager;
  * @since 3.5
  */
 public class InfinispanRegionFactory implements RegionFactory {
-	private static final Log log = LogFactory.getLog( InfinispanRegionFactory.class );
+	private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog( InfinispanRegionFactory.class );
 
 	private static final String PREFIX = "hibernate.cache.infinispan.";
 
@@ -129,24 +127,26 @@ public class InfinispanRegionFactory implements RegionFactory {
 		COLLECTION("collection", DEF_ENTITY_RESOURCE, NO_VALIDATION),
 		IMMUTABLE_ENTITY("immutable-entity", DEF_ENTITY_RESOURCE, NO_VALIDATION),
 		TIMESTAMPS("timestamps", DEF_TIMESTAMPS_RESOURCE, c -> {
+			if ( c.clustering().cacheMode().isInvalidation() ) {
+				throw log.timestampsMustNotUseInvalidation();
+			}
 			if (c.eviction().strategy() != EvictionStrategy.NONE) {
-				throw new CacheException("Timestamps cache must not use eviction!");
+				throw log.timestampsMustNotUseEviction();
 			}
 		}),
 		QUERY("query", DEF_QUERY_RESOURCE, NO_VALIDATION),
 		PENDING_PUTS("pending-puts", DEF_PENDING_PUTS_RESOURCE, c -> {
+			if (!c.isTemplate()) {
+				log.pendingPutsShouldBeTemplate();
+			}
 			if (c.clustering().cacheMode().isClustered()) {
-				throw new CacheException("Pending-puts cache must not be clustered!");
+				throw log.pendingPutsMustNotBeClustered();
 			}
 			if (c.transaction().transactionMode().isTransactional()) {
-				throw new CacheException("Pending-puts cache must not be transactional!");
+				throw log.pendingPutsMustNotBeTransactional();
 			}
-			if (!c.isTemplate()) {
-				log.warn("Pending-puts cache configuration should be a template.");
-			}
-			ExpirationConfiguration expiration = c.expiration();
-			if (expiration.maxIdle() <= 0 && expiration.lifespan() <= 0) {
-				log.warn("Pending-puts cache should expire old entries");
+			if (c.expiration().maxIdle() <= 0) {
+				throw log.pendingPutsMustHaveMaxIdle();
 			}
 		});
 
@@ -445,7 +445,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 			throw ce;
 		}
 		catch (Throwable t) {
-			throw new CacheException( "Unable to start region factory", t );
+			throw log.unableToStart(t);
 		}
 	}
 
@@ -453,7 +453,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 	/* In WF, the global configuration setting is ignored */
 	protected EmbeddedCacheManager createCacheManager(Properties properties, ServiceRegistry serviceRegistry) {
 		if (properties.containsKey(INFINISPAN_USE_SYNCHRONIZATION_PROP)) {
-			log.warn("Property '" + INFINISPAN_USE_SYNCHRONIZATION_PROP + "' is deprecated; 2LC with transactional cache must always use synchronizations.");
+			log.propertyUseSynchronizationDeprecated();
 		}
 		ConfigurationBuilderHolder cfgHolder;
 		String configFile = ConfigurationHelper.extractPropertyValue(INFINISPAN_CONFIG_RESOURCE_PROP, properties);
@@ -528,7 +528,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 							return holder;
 						}
 						catch (IOException e) {
-							throw new CacheException( "Unable to create default cache manager", e );
+							throw log.unableToCreateCacheManager(e);
 						}
 						finally {
 							Util.close( is );
@@ -617,7 +617,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 			if (configuration == null) {
 				log.debugf("Cache configuration not found for %s", type);
 				if (!cacheName.equals(type.defaultCacheName)) {
-					log.warnf("Custom cache configuration '%s' was requested for type %s but it was not found!", cacheName, type);
+					log.customConfigForTypeNotFound(cacheName, type.key);
 				}
 				builder = defaultConfiguration.getNamedConfigurationBuilders().get(type.defaultCacheName);
 				if (builder == null) {
@@ -645,8 +645,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 			if (templateCacheName != null) {
 				configuration = manager.getCacheConfiguration(templateCacheName);
 				if (configuration == null) {
-					log.errorf("Region '%s' should use cache '%s' but its configuration is not defined - using configuration by type (%s).",
-							regionName, templateCacheName, type.key);
+					log.customConfigForRegionNotFound(templateCacheName, regionName, type.key);
 				}
 				else {
 					log.debugf("Region '%s' will use cache template '%s'", regionName, templateCacheName);
@@ -678,9 +677,6 @@ public class InfinispanRegionFactory implements RegionFactory {
 			if (globalStats != null) {
 				builder.jmxStatistics().enabled(globalStats).available(globalStats);
 			}
-			if (manager.getCacheConfiguration(regionName) != null) {
-				log.warnf("Cache configuration for region '%s' was already defined! Cache exists? %s", regionName, manager.cacheExists(regionName));
-			}
 			configuration = builder.build();
 			type.validate(configuration);
 			manager.defineConfiguration(regionName, configuration);
@@ -705,11 +701,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 			}
 		}
 
-		throw new CacheException(
-				"Infinispan custom cache command factory not " +
-						"installed (possibly because the classloader where Infinispan " +
-						"lives couldn't find the Hibernate Infinispan cache provider)"
-		);
+		throw log.cannotInstallCommandFactory();
 	}
 
 	protected AdvancedCache createCacheWrapper(AdvancedCache cache) {

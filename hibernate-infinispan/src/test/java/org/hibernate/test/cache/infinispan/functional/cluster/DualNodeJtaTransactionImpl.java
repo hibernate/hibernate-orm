@@ -24,8 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
+import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 
 /**
  * SimpleJtaTransactionImpl variant that works with DualNodeTransactionManagerImpl.
@@ -35,7 +34,7 @@ import org.infinispan.util.logging.LogFactory;
  * @author Brian Stansberry
  */
 public class DualNodeJtaTransactionImpl implements Transaction {
-   private static final Log log = LogFactory.getLog(DualNodeJtaTransactionImpl.class);
+   private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog(DualNodeJtaTransactionImpl.class);
 
    private int status;
    private LinkedList synchronizations;

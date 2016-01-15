@@ -13,6 +13,7 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.infinispan.util.Caches;
+import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.cache.infinispan.util.InvocationAfterCompletion;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -21,8 +22,6 @@ import org.infinispan.AdvancedCache;
 import org.infinispan.configuration.cache.TransactionConfiguration;
 import org.infinispan.context.Flag;
 import org.infinispan.transaction.TransactionMode;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,7 +36,7 @@ import java.util.concurrent.ConcurrentMap;
  * @since 3.5
  */
 public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implements QueryResultsRegion {
-	private static final Log log = LogFactory.getLog( QueryResultsRegionImpl.class );
+	private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog( QueryResultsRegionImpl.class );
 
 	private final AdvancedCache evictCache;
 	private final AdvancedCache putCache;
@@ -71,7 +70,7 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
 		// Since we execute the query update explicitly form transaction synchronization, the putCache does not need
 		// to be transactional anymore (it had to be in the past to prevent revealing uncommitted changes).
 		if (transactional) {
-			log.warn("Use non-transactional query caches for best performance!");
+			log.useNonTransactionalQueryCache();
 		}
 
 	}

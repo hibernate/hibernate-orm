@@ -17,6 +17,7 @@ import org.hibernate.cache.infinispan.access.TxInvalidationCacheAccessDelegate;
 import org.hibernate.cache.infinispan.access.VersionedCallInterceptor;
 import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.infinispan.util.FutureUpdate;
+import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.cache.infinispan.util.Tombstone;
 import org.hibernate.cache.infinispan.util.VersionedEntry;
 import org.hibernate.cache.spi.CacheDataDescription;
@@ -32,12 +33,9 @@ import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.filter.KeyValueFilter;
 import org.infinispan.interceptors.CallInterceptor;
 import org.infinispan.interceptors.base.CommandInterceptor;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 
 import javax.transaction.TransactionManager;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -51,7 +49,7 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class BaseTransactionalDataRegion
 		extends BaseRegion implements TransactionalDataRegion {
-	private static final Log log = LogFactory.getLog( BaseTransactionalDataRegion.class );
+	private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog( BaseTransactionalDataRegion.class );
 	private final CacheDataDescription metadata;
 	private final CacheKeysFactory cacheKeysFactory;
 	private final boolean requiresTransaction;
@@ -166,7 +164,7 @@ public abstract class BaseTransactionalDataRegion
 		}
 		Configuration configuration = cache.getCacheConfiguration();
 		if (configuration.eviction().maxEntries() >= 0) {
-			log.warn("Setting eviction on cache using tombstones can introduce inconsistencies!");
+			log.evictionWithTombstones();
 		}
 
 		cache.removeInterceptor(CallInterceptor.class);

@@ -6,13 +6,13 @@
  */
 package org.hibernate.test.cache.infinispan.functional.cluster;
 
-import java.lang.reflect.Constructor;
 import java.util.Hashtable;
 import java.util.Properties;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.EntityRegion;
@@ -22,11 +22,8 @@ import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.access.AccessType;
 
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 
 /**
  * ClusterAwareRegionFactory.
@@ -35,7 +32,7 @@ import org.infinispan.util.logging.LogFactory;
  * @since 3.5
  */
 public class ClusterAwareRegionFactory implements RegionFactory {
-	private static final Log log = LogFactory.getLog(ClusterAwareRegionFactory.class);
+	private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog(ClusterAwareRegionFactory.class);
 	private static final Hashtable<String, EmbeddedCacheManager> cacheManagers = new Hashtable<String, EmbeddedCacheManager>();
 
 	private InfinispanRegionFactory delegate;

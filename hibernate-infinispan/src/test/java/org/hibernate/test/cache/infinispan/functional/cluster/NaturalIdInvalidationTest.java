@@ -12,7 +12,7 @@ import java.util.Set;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.cache.infinispan.util.Caches;
+import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.test.cache.infinispan.functional.entities.Citizen;
 import org.hibernate.test.cache.infinispan.functional.entities.NaturalIdOnManyToOne;
@@ -22,8 +22,6 @@ import org.infinispan.manager.CacheContainer;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryVisited;
 import org.infinispan.notifications.cachelistener.event.CacheEntryVisitedEvent;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 import org.jboss.util.collection.ConcurrentSet;
 import org.junit.Test;
 
@@ -38,7 +36,7 @@ import static org.junit.Assert.fail;
  */
 public class NaturalIdInvalidationTest extends DualNodeTest {
 
-	private static final Log log = LogFactory.getLog(NaturalIdInvalidationTest.class);
+	private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog(NaturalIdInvalidationTest.class);
 
 	private static final long SLEEP_TIME = 50l;
 
@@ -203,7 +201,7 @@ public class NaturalIdInvalidationTest extends DualNodeTest {
 
 	@Listener
 	public static class MyListener {
-		private static final Log log = LogFactory.getLog( MyListener.class );
+		private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog( MyListener.class );
 		private Set<String> visited = new ConcurrentSet<String>();
 		private final String name;
 

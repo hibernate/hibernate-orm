@@ -8,6 +8,7 @@ package org.hibernate.cache.infinispan.access;
 
 import org.hibernate.cache.infinispan.util.CacheCommandInitializer;
 import org.hibernate.cache.infinispan.util.EndInvalidationCommand;
+import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.infinispan.commands.VisitableCommand;
 import org.infinispan.commands.tx.CommitCommand;
 import org.infinispan.commands.tx.PrepareCommand;
@@ -20,8 +21,6 @@ import org.infinispan.factories.annotations.Inject;
 import org.infinispan.interceptors.base.BaseRpcInterceptor;
 import org.infinispan.remoting.inboundhandler.DeliverOrder;
 import org.infinispan.remoting.rpc.RpcManager;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 
 import java.util.Set;
 
@@ -34,7 +33,7 @@ import java.util.Set;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 class TxPutFromLoadInterceptor extends BaseRpcInterceptor {
-	private final static Log log = LogFactory.getLog(TxPutFromLoadInterceptor.class);
+	private final static InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog(TxPutFromLoadInterceptor.class);
 	private PutFromLoadValidator putFromLoadValidator;
 	private final String cacheName;
 	private RpcManager rpcManager;

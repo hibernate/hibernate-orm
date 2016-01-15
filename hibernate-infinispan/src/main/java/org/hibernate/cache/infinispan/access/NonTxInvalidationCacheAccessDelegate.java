@@ -38,9 +38,7 @@ public class NonTxInvalidationCacheAccessDelegate extends InvalidationCacheAcces
 		// (or any other invalidation), naked put that was started after the eviction ended but before this insert
 		// ended could insert the stale entry into the cache (since the entry was removed by eviction).
 		if ( !putValidator.beginInvalidatingWithPFER(session, key, value)) {
-			throw new CacheException(
-					"Failed to invalidate pending putFromLoad calls for key " + key + " from region " + region.getName()
-			);
+			throw log.failedInvalidatePendingPut(key, region.getName());
 		}
 		putValidator.setCurrentSession(session);
 		try {
@@ -64,9 +62,7 @@ public class NonTxInvalidationCacheAccessDelegate extends InvalidationCacheAcces
 		// (or any other invalidation), naked put that was started after the eviction ended but before this update
 		// ended could insert the stale entry into the cache (since the entry was removed by eviction).
 		if ( !putValidator.beginInvalidatingWithPFER(session, key, value)) {
-			throw new CacheException(
-					"Failed to invalidate pending putFromLoad calls for key " + key + " from region " + region.getName()
-			);
+			throw log.failedInvalidatePendingPut(key, region.getName());
 		}
 		putValidator.setCurrentSession(session);
 		try {
@@ -108,18 +104,14 @@ public class NonTxInvalidationCacheAccessDelegate extends InvalidationCacheAcces
 	@Override
 	public void unlockItem(SessionImplementor session, Object key) throws CacheException {
 		if ( !putValidator.endInvalidatingKey(session, key, isCommitted(session)) ) {
-			// TODO: localization
-			log.warn("Failed to end invalidating pending putFromLoad calls for key " + key + " from region "
-					+ region.getName() + "; the key won't be cached until invalidation expires.");
+			log.failedEndInvalidating(key, region.getName());
 		}
 	}
 
 	@Override
 	public boolean afterInsert(SessionImplementor session, Object key, Object value, Object version) {
 		if ( !putValidator.endInvalidatingKey(session, key, isCommitted(session)) ) {
-			// TODO: localization
-			log.warn("Failed to end invalidating pending putFromLoad calls for key " + key + " from region "
-					+ region.getName() + "; the key won't be cached until invalidation expires.");
+			log.failedEndInvalidating(key, region.getName());
 		}
 		return false;
 	}
@@ -127,9 +119,7 @@ public class NonTxInvalidationCacheAccessDelegate extends InvalidationCacheAcces
 	@Override
 	public boolean afterUpdate(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock) {
 		if ( !putValidator.endInvalidatingKey(session, key, isCommitted(session)) ) {
-			// TODO: localization
-			log.warn("Failed to end invalidating pending putFromLoad calls for key " + key + " from region "
-					+ region.getName() + "; the key won't be cached until invalidation expires.");
+			log.failedEndInvalidating(key, region.getName());
 		}
 		return false;
 	}

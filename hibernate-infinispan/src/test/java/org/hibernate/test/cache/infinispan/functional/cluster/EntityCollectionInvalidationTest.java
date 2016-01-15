@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.test.cache.infinispan.functional.entities.Contact;
 import org.hibernate.test.cache.infinispan.functional.entities.Customer;
 import org.hibernate.test.cache.infinispan.util.TestInfinispanRegionFactory;
@@ -33,8 +34,6 @@ import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryVisited;
 import org.infinispan.notifications.cachelistener.event.CacheEntryVisitedEvent;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 import org.jboss.util.collection.ConcurrentSet;
 import org.junit.Test;
 
@@ -49,7 +48,7 @@ import static org.junit.Assert.assertTrue;
  * @since 3.5
  */
 public class EntityCollectionInvalidationTest extends DualNodeTest {
-	private static final Log log = LogFactory.getLog( EntityCollectionInvalidationTest.class );
+	private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog( EntityCollectionInvalidationTest.class );
 
 	private static final long SLEEP_TIME = 50l;
 	private static final Integer CUSTOMER_ID = new Integer( 1 );
@@ -392,7 +391,7 @@ public class EntityCollectionInvalidationTest extends DualNodeTest {
 
 	@Listener
 	public static class MyListener {
-		private static final Log log = LogFactory.getLog( MyListener.class );
+		private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog( MyListener.class );
 		private Set<String> visited = new ConcurrentSet<String>();
 		private final String name;
 

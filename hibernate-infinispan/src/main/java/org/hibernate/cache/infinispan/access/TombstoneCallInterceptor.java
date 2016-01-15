@@ -21,8 +21,6 @@ import org.infinispan.factories.annotations.Inject;
 import org.infinispan.interceptors.CallInterceptor;
 import org.infinispan.metadata.EmbeddedMetadata;
 import org.infinispan.metadata.Metadata;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 
 import java.util.Map;
 import java.util.Set;
@@ -38,7 +36,6 @@ import java.util.concurrent.TimeUnit;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class TombstoneCallInterceptor extends CallInterceptor {
-	private static final Log log = LogFactory.getLog( TombstoneCallInterceptor.class );
 	private static final UUID ZERO = new UUID(0, 0);
 
 	private AdvancedCache cache;

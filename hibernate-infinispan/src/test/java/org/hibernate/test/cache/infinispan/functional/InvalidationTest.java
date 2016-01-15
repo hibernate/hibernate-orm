@@ -3,6 +3,7 @@ package org.hibernate.test.cache.infinispan.functional;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
+import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.test.cache.infinispan.functional.entities.Item;
 import org.hibernate.test.cache.infinispan.util.TestInfinispanRegionFactory;
@@ -11,8 +12,6 @@ import org.infinispan.AdvancedCache;
 import org.infinispan.commands.read.GetKeyValueCommand;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.interceptors.base.BaseCustomInterceptor;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -33,7 +32,7 @@ import static org.junit.Assert.assertNull;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class InvalidationTest extends SingleNodeTest {
-   static final Log log = LogFactory.getLog(ReadOnlyTest.class);
+   static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog(ReadOnlyTest.class);
 
    @Override
    public List<Object[]> getParameters() {

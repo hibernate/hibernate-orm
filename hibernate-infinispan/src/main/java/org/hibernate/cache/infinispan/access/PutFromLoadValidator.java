@@ -20,6 +20,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.util.CacheCommandInitializer;
+import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.resource.transaction.TransactionCoordinator;
@@ -31,8 +32,6 @@ import org.infinispan.interceptors.EntryWrappingInterceptor;
 import org.infinispan.interceptors.InvalidationInterceptor;
 import org.infinispan.interceptors.base.CommandInterceptor;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 
 /**
  * Encapsulates logic to allow a {@link InvalidationCacheAccessDelegate} to determine
@@ -84,7 +83,7 @@ import org.infinispan.util.logging.LogFactory;
  * @version $Revision: $
  */
 public class PutFromLoadValidator {
-	private static final Log log = LogFactory.getLog(PutFromLoadValidator.class);
+	private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog(PutFromLoadValidator.class);
 	private static final boolean trace = log.isTraceEnabled();
 
 	/**
@@ -152,7 +151,7 @@ public class PutFromLoadValidator {
 			this.expirationPeriod = pendingPutsConfiguration.expiration().maxIdle();
 		}
 		else {
-			throw new IllegalArgumentException("Pending puts cache needs to have maxIdle expiration set!");
+			throw log.pendingPutsMustHaveMaxIdle();
 		}
 		CacheMode cacheMode = cache.getCacheConfiguration().clustering().cacheMode();
 		// Since we need to intercept both invalidations of entries that are in the cache and those

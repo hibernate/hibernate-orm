@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
+import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
@@ -33,8 +34,6 @@ import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.test.CacheManagerCallable;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -55,7 +54,7 @@ import static org.junit.Assert.*;
  */
 public class PutFromLoadValidatorUnitTest {
 
-	private static final Log log = LogFactory.getLog(
+	private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog(
 			PutFromLoadValidatorUnitTest.class);
 
 	@Rule

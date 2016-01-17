@@ -48,9 +48,9 @@ This section describes some of the basics developers and contributors new to Gra
 need to know to get productive quickly.  The Gradle documentation is very well done; 2 in 
 particular that are indispensable:
 
-* [Gradle User Guide](http://gradle.org/docs/current/userguide/userguide_single.html) is a typical user guide in that
+* [Gradle User Guide](https://docs.gradle.org/current/userguide/userguide_single.html) is a typical user guide in that
 it follows a topical approach to describing all of the capabilities of Gradle.
-* [Gradle DSL Guide](http://gradle.org/docs/current/dsl/index.html) is quite unique and excellent in quickyl
+* [Gradle DSL Guide](https://docs.gradle.org/current/dsl/index.html) is quite unique and excellent in quickly
 getting up to speed on certain aspects of Gradle.
 
 

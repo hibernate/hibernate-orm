@@ -10,7 +10,7 @@ GitHub there are a few pre-requisite steps.
 * Make sure you have signed a [Contributor License Agreement](https://cla.jboss.org) (CLA) for the Hibernate project
 * Make sure you have a [Hibernate JIRA account](https://hibernate.atlassian.net)
 * Make sure you have a [GitHub account](https://github.com/signup/free)
-* [Fork](http://help.github.com/fork-a-repo) the Hibernate repository.  As discussed in
+* [Fork](https://help.github.com/articles/fork-a-repo) the Hibernate repository.  As discussed in
 the linked page, this also includes:
     * [Set](https://help.github.com/articles/set-up-git) up your local git install
     * Clone your fork

@@ -96,6 +96,7 @@ Limitations of `StatelessSession`:
 
 * Operations performed using a stateless session never cascade to associated instances.
 * Collections are ignored by a stateless session.
+* Lazy loading of associations is not supported.
 * Operations performed via a stateless session bypass Hibernate's event model and interceptors.
 * Due to the lack of a first-level cache, Stateless sessions are vulnerable to data aliasing effects.
 * A stateless session is a lower-level abstraction that is much closer to the underlying JDBC.

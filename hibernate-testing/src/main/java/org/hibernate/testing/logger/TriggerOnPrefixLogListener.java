@@ -7,6 +7,7 @@
 package org.hibernate.testing.logger;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.jboss.logging.Logger.Level;
 
@@ -14,6 +15,7 @@ final class TriggerOnPrefixLogListener implements LogListener, Triggerable {
 
 	private final String expectedPrefix;
 	private final AtomicBoolean triggered = new AtomicBoolean( false );
+	private final AtomicReference<String> triggerMessage = new AtomicReference<String>( null );
 
 	public TriggerOnPrefixLogListener(String expectedPrefix) {
 		this.expectedPrefix = expectedPrefix;
@@ -23,7 +25,13 @@ final class TriggerOnPrefixLogListener implements LogListener, Triggerable {
 	public void loggedEvent(Level level, String renderedMessage, Throwable thrown) {
 		if ( renderedMessage != null && renderedMessage.startsWith( expectedPrefix ) ) {
 			triggered.set( true );
+			triggerMessage.set(renderedMessage);
 		}
+	}
+
+	@Override
+	public String triggerMessage() {
+		return triggerMessage.get();
 	}
 
 	@Override
@@ -34,6 +42,6 @@ final class TriggerOnPrefixLogListener implements LogListener, Triggerable {
 	@Override
 	public void reset() {
 		triggered.set( false );
+		triggerMessage.set(null);
 	}
-
 }

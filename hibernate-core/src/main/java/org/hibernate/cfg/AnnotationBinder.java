@@ -1240,7 +1240,7 @@ public final class AnnotationBinder {
 		else {
 			if ( clazzToProcess.isAnnotationPresent( PrimaryKeyJoinColumns.class )
 					|| clazzToProcess.isAnnotationPresent( PrimaryKeyJoinColumn.class ) ) {
-				LOG.invalidPrimaryKeyJoinColumnAnnotation();
+				LOG.invalidPrimaryKeyJoinColumnAnnotation( clazzToProcess.getName() );
 			}
 		}
 		return inheritanceJoinedColumns;

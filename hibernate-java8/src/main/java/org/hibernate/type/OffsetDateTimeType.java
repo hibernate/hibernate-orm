@@ -16,6 +16,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.type.descriptor.java.OffsetDateTimeJavaDescriptor;
 import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
+import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -29,15 +30,13 @@ public class OffsetDateTimeType
 	 */
 	public static final OffsetDateTimeType INSTANCE = new OffsetDateTimeType();
 
-	public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss.S xxxxx", Locale.ENGLISH );
-
 	public OffsetDateTimeType() {
-		super( TimestampTypeDescriptor.INSTANCE, OffsetDateTimeJavaDescriptor.INSTANCE );
+		super( VarcharTypeDescriptor.INSTANCE, OffsetDateTimeJavaDescriptor.INSTANCE );
 	}
 
 	@Override
 	public String objectToSQLString(OffsetDateTime value, Dialect dialect) throws Exception {
-		return "{ts '" + FORMATTER.format( value ) + "'}";
+		return value.toString();
 	}
 
 	@Override

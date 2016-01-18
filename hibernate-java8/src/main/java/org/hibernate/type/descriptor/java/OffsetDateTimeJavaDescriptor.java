@@ -35,12 +35,12 @@ public class OffsetDateTimeJavaDescriptor extends AbstractTypeDescriptor<OffsetD
 
 	@Override
 	public String toString(OffsetDateTime value) {
-		return OffsetDateTimeType.FORMATTER.format( value );
+		return value.toString();
 	}
 
 	@Override
 	public OffsetDateTime fromString(String string) {
-		return (OffsetDateTime) OffsetDateTimeType.FORMATTER.parse( string );
+		return OffsetDateTime.parse( string );
 	}
 
 	@Override
@@ -78,6 +78,10 @@ public class OffsetDateTimeJavaDescriptor extends AbstractTypeDescriptor<OffsetD
 			return (X) Long.valueOf( offsetDateTime.toInstant().toEpochMilli() );
 		}
 
+		if ( String.class.isAssignableFrom( type ) ) {
+			return (X) offsetDateTime.toString();
+		}
+
 		throw unknownUnwrap( type );
 	}
 
@@ -108,6 +112,10 @@ public class OffsetDateTimeJavaDescriptor extends AbstractTypeDescriptor<OffsetD
 		if ( Calendar.class.isInstance( value ) ) {
 			final Calendar calendar = (Calendar) value;
 			return OffsetDateTime.ofInstant( calendar.toInstant(), calendar.getTimeZone().toZoneId() );
+		}
+
+		if ( String.class.isInstance( value ) ) {
+			return OffsetDateTime.parse( (String) value );
 		}
 
 		throw unknownWrap( value.getClass() );

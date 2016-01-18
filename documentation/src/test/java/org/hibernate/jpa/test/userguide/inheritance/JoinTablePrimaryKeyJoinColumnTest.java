@@ -60,6 +60,7 @@ public class JoinTablePrimaryKeyJoinColumnTest extends BaseEntityManagerFunction
 		} );
 	}
 
+	//tag::entity-inheritance-joined-table-primary-key-join-column-example[]
 	@Entity(name = "Account")
 	@Inheritance(strategy = InheritanceType.JOINED)
 	public static class Account {
@@ -135,4 +136,5 @@ public class JoinTablePrimaryKeyJoinColumnTest extends BaseEntityManagerFunction
 			this.creditLimit = creditLimit;
 		}
 	}
+	//end::entity-inheritance-joined-table-primary-key-join-column-example[]
 }

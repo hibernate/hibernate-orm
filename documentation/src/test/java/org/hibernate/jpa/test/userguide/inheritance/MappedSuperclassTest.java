@@ -52,6 +52,7 @@ public class MappedSuperclassTest extends BaseEntityManagerFunctionalTestCase {
 		} );
 	}
 
+	//tag::entity-inheritance-mapped-superclass-example[]
 	@MappedSuperclass
 	public static class Account {
 
@@ -124,4 +125,5 @@ public class MappedSuperclassTest extends BaseEntityManagerFunctionalTestCase {
 			this.creditLimit = creditLimit;
 		}
 	}
+	//end::entity-inheritance-mapped-superclass-example[]
 }

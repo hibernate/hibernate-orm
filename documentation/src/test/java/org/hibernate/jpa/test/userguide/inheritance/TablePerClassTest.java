@@ -54,11 +54,15 @@ public class TablePerClassTest extends BaseEntityManagerFunctionalTestCase {
 		} );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			List<Account> accounts =
-					entityManager.createQuery( "select a from Account a" ).getResultList();
+			//tag::entity-inheritance-table-per-class-query-example[]
+			List<Account> accounts = entityManager
+				.createQuery( "select a from Account a" )
+				.getResultList();
+			//end::entity-inheritance-table-per-class-query-example[]
 		} );
 	}
 
+	//tag::entity-inheritance-table-per-class-example[]
 	@Entity(name = "Account")
 	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 	public static class Account {
@@ -132,4 +136,5 @@ public class TablePerClassTest extends BaseEntityManagerFunctionalTestCase {
 			this.creditLimit = creditLimit;
 		}
 	}
+	//end::entity-inheritance-table-per-class-example[]
 }

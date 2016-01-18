@@ -66,17 +66,18 @@ public class SingleTableDiscriminatorFormulaTest extends BaseEntityManagerFuncti
 		} );
 	}
 
+	//tag::entity-inheritance-single-table-discriminator-formula-example[]
 	@Entity(name = "Account")
 	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 	@DiscriminatorFormula(
-			"case when debitKey is not null " +
-					"then 'Debit' " +
-					"else ( " +
-					"   case when creditKey is not null " +
-					"   then 'Credit' " +
-					"   else 'Unknown' " +
-					"   end ) " +
-					"end "
+		"case when debitKey is not null " +
+		"then 'Debit' " +
+		"else ( " +
+		"   case when creditKey is not null " +
+		"   then 'Credit' " +
+		"   else 'Unknown' " +
+		"   end ) " +
+		"end "
 	)
 	public static class Account {
 
@@ -177,4 +178,5 @@ public class SingleTableDiscriminatorFormulaTest extends BaseEntityManagerFuncti
 			this.creditLimit = creditLimit;
 		}
 	}
+	//end::entity-inheritance-single-table-discriminator-formula-example[]
 }

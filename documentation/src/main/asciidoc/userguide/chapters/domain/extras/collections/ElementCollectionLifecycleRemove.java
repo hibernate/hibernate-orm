@@ -1,1 +1,0 @@
-person.getPhones().remove( 0 );

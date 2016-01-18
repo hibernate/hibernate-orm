@@ -1,6 +1,6 @@
 [[entity-inheritance]]
 === Inheritance
-:sourcedir: extras
+:sourcedir: ../../../../../test/java/org/hibernate/jpa/test/userguide/inheritance
 
 Although relational database systems don't provide support for inheritance, Hibernate provides several strategies to leverage this object-oriented trait onto domain model entities:
 
@@ -18,16 +18,17 @@ image:images/domain/inheritance/inheritance_class_diagram.svg[Inheritance class 
 
 When using `MappedSuperclass`, the inheritance is visible in the domain model only and ach database table contains both the base class and the subclass properties.
 
+[[entity-inheritance-mapped-superclass-example]]
 .`@MappedSuperclass` inheritance
 ====
 [source,java]
 ----
-include::{sourcedir}/inheritance/MappedSuperclass.java[]
+include::{sourcedir}/MappedSuperclassTest.java[tags=entity-inheritance-mapped-superclass-example,indent=0]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/inheritance/MappedSuperclass.sql[]
+include::{sourcedir}/entity-inheritance-mapped-superclass-example.sql[]
 ----
 ====
 
@@ -49,32 +50,34 @@ Version and id properties are assumed to be inherited from the root class.
 When omitting an explicit inheritance strategy (e.g. `@Inheritance`), JPA will choose the `SINGLE_TABLE` strategy by default.
 ====
 
+[[entity-inheritance-single-table-example]]
 .Single Table inheritance
 ====
 [source,java]
 ----
-include::{sourcedir}/inheritance/SingleTable.java[]
+include::{sourcedir}/SingleTableTest.java[tags=entity-inheritance-single-table-example,indent=0]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/inheritance/SingleTable.sql[]
+include::{sourcedir}/entity-inheritance-single-table-example.sql[]
 ----
 ====
 
 Each subclass in a hierarchy must define a unique discriminator value, which is used to differentiate between rows belonging to separate subclass types.
 If this is not specified, the `DTYPE` column is used as a discriminator, storing the associated subclass name.
 
+[[entity-inheritance-single-table-persist-example]]
 .Single Table inheritance discriminator column
 ====
 [source,java]
 ----
-include::{sourcedir}/inheritance/SingleTablePersist.java[]
+include::{sourcedir}/SingleTableTest.java[tags=entity-inheritance-single-table-persist-example,indent=0]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/inheritance/SingleTablePersist.sql[]
+include::{sourcedir}/entity-inheritance-single-table-persist-example.sql[]
 ----
 ====
 
@@ -111,16 +114,17 @@ There used to be `@org.hibernate.annotations.ForceDiscriminator` annotation whic
 Assuming a legacy database schema where the discriminator is based on inspecting a certain column,
 we can take advantage of the Hibernate specific `@DiscriminatorFormula` annotation and map the inheritance model as follows:
 
+[[entity-inheritance-single-table-discriminator-formula-example]]
 .Single Table discriminator formula
 ====
 [source,java]
 ----
-include::{sourcedir}/inheritance/SingleTableDiscriminatorFormula.java[]
+include::{sourcedir}/SingleTableDiscriminatorFormulaTest.java[tags=entity-inheritance-single-table-discriminator-formula-example,indent=0]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/inheritance/SingleTableDiscriminatorFormula.sql[]
+include::{sourcedir}/entity-inheritance-single-table-discriminator-formula-example.sql[]
 ----
 ====
 
@@ -135,16 +139,17 @@ Because all subclass columns are stored in a single table, it's not possible to 
 
 When using polymorphic queries, only a single table is required to be scanned to fetch all associated subclass instances.
 
+[[entity-inheritance-single-table-query-example]]
 .Single Table polymorphic query
 ====
 [source,java]
 ----
-include::{sourcedir}/inheritance/SingleTableQuery.java[]
+include::{sourcedir}/SingleTableTest.java[tags=entity-inheritance-single-table-query-example,indent=0]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/inheritance/SingleTableQuery.sql[]
+include::{sourcedir}/entity-inheritance-single-table-query-example.sql[]
 ----
 ====
 
@@ -158,16 +163,17 @@ An inherited state is retrieved by joining with the table of the superclass.
 A discriminator column is not required for this mapping strategy.
 Each subclass must, however, declare a table column holding the object identifier.
 
+[[entity-inheritance-joined-table-example]]
 .Join Table
 ====
 [source,java]
 ----
-include::{sourcedir}/inheritance/JoinTable.java[]
+include::{sourcedir}/JoinTableTest.java[tags=entity-inheritance-joined-table-example,indent=0]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/inheritance/JoinTable.sql[]
+include::{sourcedir}/entity-inheritance-joined-table-example.sql[]
 ----
 ====
 
@@ -179,31 +185,33 @@ The table name still defaults to the non qualified class name.
 Also if `@PrimaryKeyJoinColumn` is not set, the primary key / foreign key columns are assumed to have the same names as the primary key columns of the primary table of the superclass.
 ====
 
+[[entity-inheritance-joined-table-primary-key-join-column-example]]
 .Join Table with `@PrimaryKeyJoinColumn`
 ====
 [source,java]
 ----
-include::{sourcedir}/inheritance/JoinTablePrimaryKeyJoinColumn.java[]
+include::{sourcedir}/JoinTablePrimaryKeyJoinColumnTest.java[tags=entity-inheritance-joined-table-primary-key-join-column-example,indent=0]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/inheritance/JoinTablePrimaryKeyJoinColumn.sql[]
+include::{sourcedir}/entity-inheritance-joined-table-primary-key-join-column-example.sql[]
 ----
 ====
 
 When using polymorphic queries, the base class table must be joined with all subclass tables to fetch every associated subclass instance.
 
+[[entity-inheritance-joined-table-query-example]]
 .Join Table polymorphic query
 ====
 [source,java]
 ----
-include::{sourcedir}/inheritance/JoinTableQuery.java[]
+include::{sourcedir}/JoinTableTest.java[tags=entity-inheritance-joined-table-query-example,indent=0]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/inheritance/JoinTableQuery.sql[]
+include::{sourcedir}/entity-inheritance-joined-table-query-example.sql[]
 ----
 ====
 
@@ -223,16 +231,17 @@ In Hibernate, it is not necessary to explicitly map such inheritance hierarchies
 You can map each class as a separate entity root.
 However, if you wish use polymorphic associations (e.g. an association to the superclass of your hierarchy), you need to use the union subclass mapping.
 
+[[entity-inheritance-table-per-class-example]]
 .Table per class
 ====
 [source,java]
 ----
-include::{sourcedir}/inheritance/TablePerClass.java[]
+include::{sourcedir}/TablePerClassTest.java[tags=entity-inheritance-table-per-class-example,indent=0]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/inheritance/TablePerClass.sql[]
+include::{sourcedir}/entity-inheritance-table-per-class-example.sql[]
 ----
 ====
 
@@ -242,12 +251,12 @@ When using polymorphic queries, a UNION is required to fetch the the base class 
 ====
 [source,java]
 ----
-include::{sourcedir}/inheritance/TablePerClassQuery.java[]
+include::{sourcedir}/TablePerClassTest.java[tags=entity-inheritance-table-per-class-query-example,indent=0]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/inheritance/TablePerClassQuery.sql[]
+include::{sourcedir}/entity-inheritance-table-per-class-query-example.sql[]
 ----
 ====
 

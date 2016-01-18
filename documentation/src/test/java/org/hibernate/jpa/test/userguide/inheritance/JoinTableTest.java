@@ -54,11 +54,15 @@ public class JoinTableTest extends BaseEntityManagerFunctionalTestCase {
 		} );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			List<Account> accounts =
-					entityManager.createQuery( "select a from Account a" ).getResultList();
+			//tag::entity-inheritance-joined-table-query-example[]
+			List<Account> accounts = entityManager
+				.createQuery( "select a from Account a" )
+				.getResultList();
+			//end::entity-inheritance-joined-table-query-example[]
 		} );
 	}
 
+	//tag::entity-inheritance-joined-table-example[]
 	@Entity(name = "Account")
 	@Inheritance(strategy = InheritanceType.JOINED)
 	public static class Account {
@@ -132,4 +136,5 @@ public class JoinTableTest extends BaseEntityManagerFunctionalTestCase {
 			this.creditLimit = creditLimit;
 		}
 	}
+	//end::entity-inheritance-joined-table-example[]
 }

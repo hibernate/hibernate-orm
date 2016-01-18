@@ -1,6 +1,6 @@
 [[associations]]
 === Associations
-:sourcedir: extras
+:sourcedir: ../../../../../test/java/org/hibernate/jpa/test/userguide/associations
 
 Associations describe how two or more entities form a relationship based on a database joining semantics.
 
@@ -10,31 +10,33 @@ Associations describe how two or more entities form a relationship based on a da
 `@ManyToOne` is the most common association, having a direct equivalent in the relational database as well (e.g. foreign key),
 and so it establishes a relationship between a child entity and a parent.
 
+[[associations-many-to-one-example]]
 .`@ManyToOne` association
 ====
 [source,java]
 ----
-include::{sourcedir}/associations/ManyToOne.java[]
+include::{sourcedir}/ManyToOneTest.java[tags=associations-many-to-one-example,indent=0]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/associations/ManyToOne.sql[]
+include::{sourcedir}/associations-many-to-one-example.sql[]
 ----
 ====
 
 Each entity has a lifecycle of its own. Once the `@ManyToOne` association is set, Hibernate will set the associated database foreign key column.
 
+[[associations-many-to-one-lifecycle-example]]
 .`@ManyToOne` association lifecycle
 ====
 [source,java]
 ----
-include::{sourcedir}/associations/ManyToOneLifecycle.java[]
+include::{sourcedir}/ManyToOneTest.java[tags=associations-many-to-one-lifecycle-example,indent=0]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/associations/ManyToOneLifecycle.sql[]
+include::{sourcedir}/associations-many-to-one-lifecycle-example.sql[]
 ----
 ====
 
@@ -50,16 +52,17 @@ If there is a `@ManyToOne` association on the child side, the `@OneToMany` assoc
 
 When using a unidirectional `@OneToMany` association, Hibernate resorts to using a link table between the two joining entities.
 
+[[associations-one-to-many-unidirectional-example]]
 .Unidirectional `@OneToMany` association
 ====
 [source,java]
 ----
-include::{sourcedir}/associations/UnidirectionalOneToMany.java[]
+include::{sourcedir}/OneToManyUnidirectionalTest.java[tags=associations-one-to-many-unidirectional-example,indent=0]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/associations/UnidirectionalOneToMany.sql[]
+include::{sourcedir}/associations-one-to-many-unidirectional-example.sql[]
 ----
 ====
 
@@ -69,16 +72,17 @@ The `@OneToMany` association is by definition a parent association, even if it's
 Only the parent side of an association makes sense to cascade its entity state transitions to children.
 ====
 
+[[associations-one-to-many-unidirectional-lifecycle-example]]
 .Cascading `@OneToMany` association
 ====
 [source,java]
 ----
-include::{sourcedir}/associations/UnidirectionalOneToManyLifecycle.java[]
+include::{sourcedir}/OneToManyUnidirectionalTest.java[tags=associations-one-to-many-unidirectional-lifecycle-example,indent=0]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/associations/UnidirectionalOneToManyLifecycle.sql[]
+include::{sourcedir}/associations-one-to-many-unidirectional-lifecycle-example.sql[]
 ----
 ====
 
@@ -101,16 +105,17 @@ Although the Domain Model exposes two sides to navigate this association, behind
 
 Every bidirectional association must have one owning side only (the child side), the other one being referred to as the _inverse_ (or the `mappedBy`) side.
 
+[[associations-one-to-many-bidirectional-example]]
 .`@OneToMany` association mappedBy the `@ManyToOne` side
 ====
 [source,java]
 ----
-include::{sourcedir}/associations/BidirectionalOneToMany.java[]
+include::{sourcedir}/OneToManyBidirectionalTest.java[tags=associations-one-to-many-bidirectional-example,indent=0]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/associations/BidirectionalOneToMany.sql[]
+include::{sourcedir}/associations-one-to-many-bidirectional-example.sql[]
 ----
 ====
 
@@ -123,16 +128,17 @@ The `addPhone()` and `removePhone()` are utilities methods that synchronize both
 Because the `Phone` class has a `@NaturalId` column (the phone number being unique),
 the `equals()` and the `hashCode()` can make use of this property, and so the `removePhone()` logic is reduced to the `remove()` Java `Collection` method.
 
+[[associations-one-to-many-bidirectional-lifecycle-example]]
 .Bidirectional `@OneToMany` with an owner `@ManyToOne` side lifecycle
 ====
 [source,java]
 ----
-include::{sourcedir}/associations/BidirectionalOneToManyLifecycle.java[]
+include::{sourcedir}/OneToManyBidirectionalTest.java[tags=associations-one-to-many-bidirectional-lifecycle-example,indent=0]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/associations/BidirectionalOneToManyLifecycle.sql[]
+include::{sourcedir}/associations-one-to-many-bidirectional-lifecycle-example.sql[]
 ----
 ====
 
@@ -151,16 +157,17 @@ A bidirectional association features a `mappedBy` `@OneToOne` parent side too.
 [[associations-one-to-one-unidirectional]]
 ===== Unidirectional `@OneToOne`
 
+[[associations-one-to-one-unidirectional-example]]
 .Unidirectional `@OneToOne`
 ====
 [source,java]
 ----
-include::{sourcedir}/associations/UnidirectionalOneToOne.java[]
+include::{sourcedir}/OneToOneUnidirectionalTest.java[tags=associations-one-to-one-unidirectional-example,indent=0]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/associations/UnidirectionalOneToOne.sql[]
+include::{sourcedir}/associations-one-to-one-unidirectional-example.sql[]
 ----
 ====
 
@@ -174,42 +181,46 @@ This mapping requires a bidirectional `@OneToOne` association as you can see in 
 [[associations-one-to-one-bidirectional]]
 ===== Bidirectional `@OneToOne`
 
+[[associations-one-to-one-bidirectional-example]]
 .Bidirectional `@OneToOne`
 ====
 [source,java]
 ----
-include::{sourcedir}/associations/BidirectionalOneToOne.java[]
+include::{sourcedir}/OneToOneBidirectionalTest.java[tags=associations-one-to-one-bidirectional-example,indent=0]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/associations/BidirectionalOneToOne.sql[]
+include::{sourcedir}/associations-one-to-one-bidirectional-example.sql[]
 ----
 ====
 
 This time, the `PhoneDetails` owns the association, and, like any bidirectional association, the parent-side can propagate its lifecycle to the child-side through cascading.
 
+[[associations-one-to-one-bidirectional-lifecycle-example]]
 .Bidirectional `@OneToOne` lifecycle
 ====
 [source,java]
 ----
-include::{sourcedir}/associations/BidirectionalOneToOneLifecycle.java[]
+include::{sourcedir}/OneToOneBidirectionalTest.java[tags=associations-one-to-one-bidirectional-lifecycle-example,indent=0]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/associations/BidirectionalOneToOneLifecycle.sql[]
+include::{sourcedir}/associations-one-to-one-bidirectional-lifecycle-example.sql[]
 ----
 ====
 
 When using a bidirectional `@OneToOne` association, Hibernate enforces the unique constraint upon fetching the child-side.
 If there are more than one children associated to the same parent, Hibernate will throw a constraint violation exception.
+Continuing the previous example, when adding another `PhoneDetails`, Hibernate validates the uniqueness constraint when reloading the `Phone` object.
 
+[[associations-one-to-one-bidirectional-constraint-example]]
 .Bidirectional `@OneToOne` unique constraint
 ====
 [source,java]
 ----
-include::{sourcedir}/associations/BidirectionalOneToOneConstraint.java[]
+include::{sourcedir}/OneToOneBidirectionalTest.java[tags=associations-one-to-one-bidirectional-constraint-example,indent=0]
 ----
 ====
 
@@ -222,16 +233,17 @@ Like the `@OneToMany` association, `@ManyToMany` can be a either unidirectional 
 [[associations-many-to-many-unidirectional]]
 ===== Unidirectional `@ManyToMany`
 
+[[associations-many-to-many-unidirectional-example]]
 .Unidirectional `@ManyToMany`
 ====
 [source,java]
 ----
-include::{sourcedir}/associations/UnidirectionalManyToMany.java[]
+include::{sourcedir}/ManyToManyUnidirectionalTest.java[tags=associations-many-to-many-unidirectional-example,indent=0]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/associations/UnidirectionalManyToMany.sql[]
+include::{sourcedir}/associations-many-to-many-unidirectional-example.sql[]
 ----
 ====
 
@@ -240,16 +252,17 @@ Just like with unidirectional `@OneToMany` associations, the link table is contr
 When an entity is removed from the `@ManyToMany` collection, Hibernate simply deletes the joining record in the link table.
 Unfortunately, this operation requires removing all entries associated to a given parent and recreating the ones that are listed in the current running persistent context.
 
+[[associations-many-to-many-unidirectional-lifecycle-example]]
 .Unidirectional `@ManyToMany` lifecycle
 ====
 [source,java]
 ----
-include::{sourcedir}/associations/UnidirectionalManyToManyLifecycle.java[]
+include::{sourcedir}/ManyToManyUnidirectionalTest.java[tags=associations-many-to-many-unidirectional-lifecycle-example,indent=0]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/associations/UnidirectionalManyToManyLifecycle.sql[]
+include::{sourcedir}/associations-many-to-many-unidirectional-lifecycle-example.sql[]
 ----
 ====
 
@@ -274,16 +287,17 @@ Caused by: java.sql.SQLIntegrityConstraintViolationException: integrity constrai
 
 By simply removing the parent-side, Hibernate can safely remove the associated link records as you can see in the following example:
 
+[[associations-many-to-many-unidirectional-remove-example]]
 .Unidirectional `@ManyToMany` entity removal
 ====
 [source,java]
 ----
-include::{sourcedir}/associations/UnidirectionalManyToManyRemove.java[]
+include::{sourcedir}/ManyToManyUnidirectionalTest.java[tags=associations-many-to-many-unidirectional-remove-example,indent=0]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/associations/UnidirectionalManyToManyRemove.sql[]
+include::{sourcedir}/associations-many-to-many-unidirectional-remove-example.sql[]
 ----
 ====
 
@@ -293,31 +307,33 @@ include::{sourcedir}/associations/UnidirectionalManyToManyRemove.sql[]
 A bidirectional `@ManyToMany` association has an owning and a `mappedBy` side.
 To preserve synchronicity between both sides, it's good practice to provide helper methods for adding or removing child entities.
 
+[[associations-many-to-many-bidirectional-example]]
 .Bidirectional `@ManyToMany`
 ====
 [source,java]
 ----
-include::{sourcedir}/associations/BidirectionalManyToMany.java[]
+include::{sourcedir}/ManyToManyBidirectionalTest.java[tags=associations-many-to-many-bidirectional-example,indent=0]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/associations/BidirectionalManyToMany.sql[]
+include::{sourcedir}/associations-many-to-many-bidirectional-example.sql[]
 ----
 ====
 
 With the helper methods in place, the synchronicity management can be simplified, as you can see in the following example:
 
+[[associations-many-to-many-bidirectional-lifecycle-example]]
 .Bidirectional `@ManyToMany` lifecycle
 ====
 [source,java]
 ----
-include::{sourcedir}/associations/BidirectionalManyToManyLifecycle.java[]
+include::{sourcedir}/ManyToManyBidirectionalTest.java[tags=associations-many-to-many-bidirectional-lifecycle-example,indent=0]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/associations/BidirectionalManyToManyLifecycle.sql[]
+include::{sourcedir}/associations-many-to-many-bidirectional-lifecycle-example.sql[]
 ----
 ====
 
@@ -331,16 +347,17 @@ To overcome this limitation, the the link table must be directly exposed and the
 To most natural `@ManyToMany` association follows the same logic employed by the database schema,
 and the link table has an associated entity which controls the relationship for both sides that need to be joined.
 
+[[associations-many-to-many-bidirectional-with-link-entity-example]]
 .Bidirectional many-to-many with link entity
 ====
 [source,java]
 ----
-include::{sourcedir}/associations/BidirectionalManyToManyWithLinkEntity.java[]
+include::{sourcedir}/ManyToManyBidirectionalWithLinkEntityTest.java[tags=associations-many-to-many-bidirectional-with-link-entity-example,indent=0]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/associations/BidirectionalManyToManyWithLinkEntity.sql[]
+include::{sourcedir}/associations-many-to-many-bidirectional-with-link-entity-example.sql[]
 ----
 ====
 
@@ -355,16 +372,17 @@ For more details, see the <<chapters/domain/identifiers.adoc#identifiers-composi
 
 The entity state transitions are better managed than in the previous bidirectional `@ManyToMany` case.
 
+[[associations-many-to-many-bidirectional-with-link-entity-lifecycle-example]]
 .Bidirectional many-to-many with link entity lifecycle
 ====
 [source,java]
 ----
-include::{sourcedir}/associations/BidirectionalManyToManyWithLinkEntityLifecycle.java[]
+include::{sourcedir}/ManyToManyBidirectionalWithLinkEntityTest.java[tags=associations-many-to-many-bidirectional-with-link-entity-lifecycle-example,indent=0]
 ----
 
 [source,sql]
 ----
-include::{sourcedir}/associations/BidirectionalManyToManyWithLinkEntityLifecycle.sql[]
+include::{sourcedir}/associations-many-to-many-bidirectional-with-link-entity-lifecycle-example.sql[]
 ----
 ====
 

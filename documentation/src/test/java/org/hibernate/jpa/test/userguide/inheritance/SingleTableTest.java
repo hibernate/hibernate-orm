@@ -35,6 +35,7 @@ public class SingleTableTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void test() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::entity-inheritance-single-table-persist-example[]
 			DebitAccount debitAccount = new DebitAccount();
 			debitAccount.setId( 1L );
 			debitAccount.setOwner( "John Doe" );
@@ -51,15 +52,19 @@ public class SingleTableTest extends BaseEntityManagerFunctionalTestCase {
 
 			entityManager.persist( debitAccount );
 			entityManager.persist( creditAccount );
+			//end::entity-inheritance-single-table-persist-example[]
 		} );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::entity-inheritance-single-table-query-example[]
 			List<Account> accounts = entityManager
-					.createQuery( "select a from Account a" )
-					.getResultList();
+				.createQuery( "select a from Account a" )
+				.getResultList();
+			//end::entity-inheritance-single-table-query-example[]
 		} );
 	}
 
+	//tag::entity-inheritance-single-table-example[]
 	@Entity(name = "Account")
 	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 	public static class Account {
@@ -133,4 +138,5 @@ public class SingleTableTest extends BaseEntityManagerFunctionalTestCase {
 			this.creditLimit = creditLimit;
 		}
 	}
+	//end::entity-inheritance-single-table-example[]
 }

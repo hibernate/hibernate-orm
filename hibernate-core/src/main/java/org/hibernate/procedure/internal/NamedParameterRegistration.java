@@ -20,8 +20,9 @@ public class NamedParameterRegistration<T> extends AbstractParameterRegistration
 			ProcedureCallImpl procedureCall,
 			String name,
 			ParameterMode mode,
-			Class<T> type) {
-		super( procedureCall, name, mode, type );
+			Class<T> type,
+			boolean initialPassNullsSetting) {
+		super( procedureCall, name, mode, type, initialPassNullsSetting );
 	}
 
 	NamedParameterRegistration(
@@ -29,7 +30,8 @@ public class NamedParameterRegistration<T> extends AbstractParameterRegistration
 			String name,
 			ParameterMode mode,
 			Class<T> type,
-			Type hibernateType) {
-		super( procedureCall, name, mode, type, hibernateType );
+			Type hibernateType,
+			boolean initialPassNullsSetting) {
+		super( procedureCall, name, mode, type, hibernateType, initialPassNullsSetting );
 	}
 }

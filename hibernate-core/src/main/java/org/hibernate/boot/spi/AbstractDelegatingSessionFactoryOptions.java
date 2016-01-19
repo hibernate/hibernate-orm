@@ -199,6 +199,11 @@ public abstract class AbstractDelegatingSessionFactoryOptions implements Session
 	}
 
 	@Override
+	public boolean isProcedureParameterNullPassingEnabled() {
+		return delegate.isProcedureParameterNullPassingEnabled();
+	}
+
+	@Override
 	public boolean isSecondLevelCacheEnabled() {
 		return delegate.isSecondLevelCacheEnabled();
 	}

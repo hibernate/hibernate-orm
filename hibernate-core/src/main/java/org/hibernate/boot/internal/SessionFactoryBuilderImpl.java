@@ -81,6 +81,7 @@ import static org.hibernate.cfg.AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLV
 import static org.hibernate.cfg.AvailableSettings.ORDER_INSERTS;
 import static org.hibernate.cfg.AvailableSettings.ORDER_UPDATES;
 import static org.hibernate.cfg.AvailableSettings.PREFER_USER_TRANSACTION;
+import static org.hibernate.cfg.AvailableSettings.PROCEDURE_NULL_PARAM_PASSING;
 import static org.hibernate.cfg.AvailableSettings.QUERY_CACHE_FACTORY;
 import static org.hibernate.cfg.AvailableSettings.QUERY_STARTUP_CHECKING;
 import static org.hibernate.cfg.AvailableSettings.QUERY_SUBSTITUTIONS;
@@ -525,6 +526,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		private Map querySubstitutions;
 		private boolean strictJpaQueryLanguageCompliance;
 		private boolean namedQueryStartupCheckingEnabled;
+		private final boolean procedureParameterNullPassingEnabled;
 
 		// Caching
 		private boolean secondLevelCacheEnabled;
@@ -640,6 +642,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 			this.querySubstitutions = ConfigurationHelper.toMap( QUERY_SUBSTITUTIONS, " ,=;:\n\t\r\f", configurationSettings );
 			this.strictJpaQueryLanguageCompliance = cfgService.getSetting( JPAQL_STRICT_COMPLIANCE, BOOLEAN, false );
 			this.namedQueryStartupCheckingEnabled = cfgService.getSetting( QUERY_STARTUP_CHECKING, BOOLEAN, true );
+			this.procedureParameterNullPassingEnabled = cfgService.getSetting( PROCEDURE_NULL_PARAM_PASSING, BOOLEAN, false );
 
 			this.secondLevelCacheEnabled = cfgService.getSetting( USE_SECOND_LEVEL_CACHE, BOOLEAN, true );
 			this.queryCacheEnabled = cfgService.getSetting( USE_QUERY_CACHE, BOOLEAN, false );
@@ -887,6 +890,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		@Override
 		public boolean isNamedQueryStartupCheckingEnabled() {
 			return namedQueryStartupCheckingEnabled;
+		}
+
+		@Override
+		public boolean isProcedureParameterNullPassingEnabled() {
+			return procedureParameterNullPassingEnabled;
 		}
 
 		@Override
@@ -1158,6 +1166,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public boolean isNamedQueryStartupCheckingEnabled() {
 		return options.isNamedQueryStartupCheckingEnabled();
+	}
+
+	@Override
+	public boolean isProcedureParameterNullPassingEnabled() {
+		return options.isProcedureParameterNullPassingEnabled();
 	}
 
 	@Override

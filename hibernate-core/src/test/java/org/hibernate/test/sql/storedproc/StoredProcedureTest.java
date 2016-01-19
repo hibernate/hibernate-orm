@@ -7,7 +7,13 @@
 package org.hibernate.test.sql.storedproc;
 
 import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.NamedStoredProcedureQueries;
+import javax.persistence.NamedStoredProcedureQuery;
 import javax.persistence.ParameterMode;
+import javax.persistence.QueryHint;
+import javax.persistence.StoredProcedureParameter;
 
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
@@ -34,6 +40,11 @@ import static org.junit.Assert.fail;
  */
 @RequiresDialect( H2Dialect.class )
 public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { MyEntity.class };
+	}
+
 	@Override
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
@@ -327,5 +338,110 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 
 		session.getTransaction().commit();
 		session.close();
+	}
+
+	@Test
+	public void testInParametersNotSetPass() {
+		Session session = openSession();
+		session.beginTransaction();
+
+		// unlike #testInParametersNotSet here we are asking that the NULL be passed
+		// so these executions should succeed
+
+
+		ProcedureCall query = session.createStoredProcedureCall( "findUserRange" );
+		query.registerParameter( 1, Integer.class, ParameterMode.IN ).enablePassingNulls( true );
+		query.registerParameter( 2, Integer.class, ParameterMode.IN ).bindValue( 2 );
+		query.getOutputs();
+
+// H2 does not support named parameters
+//		{
+//			ProcedureCall query = session.createStoredProcedureCall( "findUserRange" );
+//			query.registerParameter( "start", Integer.class, ParameterMode.IN );
+//			query.registerParameter( "end", Integer.class, ParameterMode.IN ).bindValue( 2 );
+//			try {
+//				query.getOutputs();
+//				fail( "Expecting failure due to missing parameter bind" );
+//			}
+//			catch (JDBCException expected) {
+//			}
+//		}
+
+		session.getTransaction().commit();
+		session.close();
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void testInParametersNullnessPassingInNamedQueriesViaHints() {
+		Session session = openSession();
+		session.beginTransaction();
+
+		// similar to #testInParametersNotSet and #testInParametersNotSetPass in terms of testing
+		// support for specifying whether to pass NULL argument values or not.  This version tests
+		// named procedure support via hints.
+
+		// first a fixture - this execution should fail
+		{
+			ProcedureCall query = session.getNamedProcedureCall( "findUserRangeNoNullPassing" );
+			query.getParameterRegistration( 2 ).bindValue( 2 );
+			try {
+				query.getOutputs();
+				fail( "Expecting failure due to missing parameter bind" );
+			}
+			catch (JDBCException ignore) {
+			}
+		}
+
+		// here we enable NULL passing via hint through a named parameter
+		{
+			ProcedureCall query = session.getNamedProcedureCall( "findUserRangeNamedNullPassing" );
+			query.getParameterRegistration( "secondArg" ).bindValue( 2 );
+			query.getOutputs();
+		}
+
+		// here we enable NULL passing via hint through a named parameter
+		{
+			ProcedureCall query = session.getNamedProcedureCall( "findUserRangeOrdinalNullPassing" );
+			query.getParameterRegistration( 2 ).bindValue( 2 );
+			query.getOutputs();
+		}
+
+		session.getTransaction().commit();
+		session.close();
+	}
+
+	@Entity
+	@NamedStoredProcedureQueries( {
+			@NamedStoredProcedureQuery(
+					name = "findUserRangeNoNullPassing",
+					procedureName = "findUserRange",
+					parameters = {
+							@StoredProcedureParameter( type = Integer.class ),
+							@StoredProcedureParameter( type = Integer.class ),
+					}
+			),
+			@NamedStoredProcedureQuery(
+					name = "findUserRangeNamedNullPassing",
+					procedureName = "findUserRange",
+					hints = @QueryHint( name = "hibernate.proc.param_null_passing.firstArg", value = "true" ),
+					parameters = {
+							@StoredProcedureParameter( name = "firstArg", type = Integer.class ),
+							@StoredProcedureParameter( name = "secondArg", type = Integer.class ),
+					}
+			),
+			@NamedStoredProcedureQuery(
+					name = "findUserRangeOrdinalNullPassing",
+					procedureName = "findUserRange",
+					hints = @QueryHint( name = "hibernate.proc.param_null_passing.1", value = "true" ),
+					parameters = {
+							@StoredProcedureParameter( type = Integer.class ),
+							@StoredProcedureParameter( type = Integer.class ),
+					}
+			)
+	} )
+	public static class MyEntity {
+		@Id
+		public Integer id;
 	}
 }

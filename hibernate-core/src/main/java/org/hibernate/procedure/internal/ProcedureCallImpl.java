@@ -61,6 +61,8 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 	private final String procedureName;
 	private final NativeSQLQueryReturn[] queryReturns;
 
+	private final boolean globalParameterPassNullsSetting;
+
 	private ParameterStrategy parameterStrategy = ParameterStrategy.UNKNOWN;
 	private List<ParameterRegistrationImplementor<?>> registeredParameters = new ArrayList<ParameterRegistrationImplementor<?>>();
 
@@ -77,6 +79,8 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 	public ProcedureCallImpl(SessionImplementor session, String procedureName) {
 		super( session );
 		this.procedureName = procedureName;
+		this.globalParameterPassNullsSetting = session.getFactory().getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();
+
 		this.queryReturns = NO_RETURNS;
 	}
 
@@ -90,6 +94,7 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 	public ProcedureCallImpl(final SessionImplementor session, String procedureName, Class... resultClasses) {
 		super( session );
 		this.procedureName = procedureName;
+		this.globalParameterPassNullsSetting = session.getFactory().getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();
 
 		final List<NativeSQLQueryReturn> collectedQueryReturns = new ArrayList<NativeSQLQueryReturn>();
 		final Set<String> collectedQuerySpaces = new HashSet<String>();
@@ -128,6 +133,7 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 	public ProcedureCallImpl(final SessionImplementor session, String procedureName, String... resultSetMappings) {
 		super( session );
 		this.procedureName = procedureName;
+		this.globalParameterPassNullsSetting = session.getFactory().getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();
 
 		final List<NativeSQLQueryReturn> collectedQueryReturns = new ArrayList<NativeSQLQueryReturn>();
 		final Set<String> collectedQuerySpaces = new HashSet<String>();
@@ -171,6 +177,7 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 	ProcedureCallImpl(SessionImplementor session, ProcedureCallMementoImpl memento) {
 		super( session );
 		this.procedureName = memento.getProcedureName();
+		this.globalParameterPassNullsSetting = session.getFactory().getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();
 
 		this.queryReturns = memento.getQueryReturns();
 		this.synchronizedQuerySpaces = Util.copy( memento.getSynchronizedQuerySpaces() );
@@ -207,7 +214,8 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 						storedRegistration.getName(),
 						storedRegistration.getMode(),
 						storedRegistration.getType(),
-						storedRegistration.getHibernateType()
+						storedRegistration.getHibernateType(),
+						storedRegistration.isPassNullsEnabled()
 				);
 			}
 			else {
@@ -221,7 +229,8 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 						storedRegistration.getPosition(),
 						storedRegistration.getMode(),
 						storedRegistration.getType(),
-						storedRegistration.getHibernateType()
+						storedRegistration.getHibernateType(),
+						storedRegistration.isPassNullsEnabled()
 				);
 			}
 			parameterRegistrations.add( registration );
@@ -257,7 +266,7 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 	@SuppressWarnings("unchecked")
 	public <T> ParameterRegistration<T> registerParameter(int position, Class<T> type, ParameterMode mode) {
 		final PositionalParameterRegistration parameterRegistration =
-				new PositionalParameterRegistration( this, position, mode, type );
+				new PositionalParameterRegistration( this, position, mode, type, globalParameterPassNullsSetting );
 		registerParameter( parameterRegistration );
 		return parameterRegistration;
 	}
@@ -326,7 +335,7 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> ParameterRegistration<T> registerParameter(String name, Class<T> type, ParameterMode mode) {
-		final NamedParameterRegistration parameterRegistration = new NamedParameterRegistration( this, name, mode, type );
+		final NamedParameterRegistration parameterRegistration = new NamedParameterRegistration( this, name, mode, type, globalParameterPassNullsSetting );
 		registerParameter( parameterRegistration );
 		return parameterRegistration;
 	}

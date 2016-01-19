@@ -42,11 +42,11 @@ public interface SessionFactoryOptions {
 	 *
 	 * @return The service registry to use.
 	 */
-	public StandardServiceRegistry getServiceRegistry();
+	StandardServiceRegistry getServiceRegistry();
 
-	public Object getBeanManagerReference();
+	Object getBeanManagerReference();
 
-	public Object getValidatorFactoryReference();
+	Object getValidatorFactoryReference();
 
 	/**
 	 * The name to be used for the SessionFactory.  This is use both in:<ul>
@@ -56,7 +56,7 @@ public interface SessionFactoryOptions {
 	 *
 	 * @return The SessionFactory name
 	 */
-	public String getSessionFactoryName();
+	String getSessionFactoryName();
 
 	/**
 	 * Is the {@link #getSessionFactoryName SesssionFactory name} also a JNDI name, indicating we
@@ -64,94 +64,94 @@ public interface SessionFactoryOptions {
 	 *
 	 * @return {@code true} if the SessionFactory name is also a JNDI name; {@code false} otherwise.
 	 */
-	public boolean isSessionFactoryNameAlsoJndiName();
+	boolean isSessionFactoryNameAlsoJndiName();
 
-	public boolean isFlushBeforeCompletionEnabled();
+	boolean isFlushBeforeCompletionEnabled();
 
-	public boolean isAutoCloseSessionEnabled();
+	boolean isAutoCloseSessionEnabled();
 
-	public boolean isStatisticsEnabled();
+	boolean isStatisticsEnabled();
 
 	/**
 	 * Get the interceptor to use by default for all sessions opened from this factory.
 	 *
 	 * @return The interceptor to use factory wide.  May be {@code null}
 	 */
-	public Interceptor getInterceptor();
+	Interceptor getInterceptor();
 
-	public StatementInspector getStatementInspector();
+	StatementInspector getStatementInspector();
 
-	public SessionFactoryObserver[] getSessionFactoryObservers();
+	SessionFactoryObserver[] getSessionFactoryObservers();
 
-	public BaselineSessionEventsListenerBuilder getBaselineSessionEventsListenerBuilder();
+	BaselineSessionEventsListenerBuilder getBaselineSessionEventsListenerBuilder();
 
-	public boolean isIdentifierRollbackEnabled();
+	boolean isIdentifierRollbackEnabled();
 
-	public EntityMode getDefaultEntityMode();
+	EntityMode getDefaultEntityMode();
 
-	public EntityTuplizerFactory getEntityTuplizerFactory();
+	EntityTuplizerFactory getEntityTuplizerFactory();
 
-	public boolean isCheckNullability();
+	boolean isCheckNullability();
 
-	public boolean isInitializeLazyStateOutsideTransactionsEnabled();
+	boolean isInitializeLazyStateOutsideTransactionsEnabled();
 
-	public MultiTableBulkIdStrategy getMultiTableBulkIdStrategy();
+	MultiTableBulkIdStrategy getMultiTableBulkIdStrategy();
 
-	public TempTableDdlTransactionHandling getTempTableDdlTransactionHandling();
+	TempTableDdlTransactionHandling getTempTableDdlTransactionHandling();
 
-	public BatchFetchStyle getBatchFetchStyle();
+	BatchFetchStyle getBatchFetchStyle();
 
-	public int getDefaultBatchFetchSize();
+	int getDefaultBatchFetchSize();
 
-	public Integer getMaximumFetchDepth();
+	Integer getMaximumFetchDepth();
 
-	public NullPrecedence getDefaultNullPrecedence();
+	NullPrecedence getDefaultNullPrecedence();
 
-	public boolean isOrderUpdatesEnabled();
+	boolean isOrderUpdatesEnabled();
 
-	public boolean isOrderInsertsEnabled();
+	boolean isOrderInsertsEnabled();
 
-	public MultiTenancyStrategy getMultiTenancyStrategy();
+	MultiTenancyStrategy getMultiTenancyStrategy();
 
-	public CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver();
+	CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver();
 
-	public boolean isJtaTrackByThread();
+	boolean isJtaTrackByThread();
 
-	public Map getQuerySubstitutions();
+	Map getQuerySubstitutions();
 
-	public boolean isStrictJpaQueryLanguageCompliance();
+	boolean isStrictJpaQueryLanguageCompliance();
 
-	public boolean isNamedQueryStartupCheckingEnabled();
+	boolean isNamedQueryStartupCheckingEnabled();
 
-	public boolean isSecondLevelCacheEnabled();
+	boolean isSecondLevelCacheEnabled();
 
-	public boolean isQueryCacheEnabled();
+	boolean isQueryCacheEnabled();
 
-	public QueryCacheFactory getQueryCacheFactory();
+	QueryCacheFactory getQueryCacheFactory();
 
-	public String getCacheRegionPrefix();
+	String getCacheRegionPrefix();
 
-	public boolean isMinimalPutsEnabled();
+	boolean isMinimalPutsEnabled();
 
-	public boolean isStructuredCacheEntriesEnabled();
+	boolean isStructuredCacheEntriesEnabled();
 
-	public boolean isDirectReferenceCacheEntriesEnabled();
+	boolean isDirectReferenceCacheEntriesEnabled();
 
-	public boolean isAutoEvictCollectionCache();
+	boolean isAutoEvictCollectionCache();
 
-	public SchemaAutoTooling getSchemaAutoTooling();
+	SchemaAutoTooling getSchemaAutoTooling();
 
-	public int getJdbcBatchSize();
+	int getJdbcBatchSize();
 
-	public boolean isJdbcBatchVersionedData();
+	boolean isJdbcBatchVersionedData();
 
-	public boolean isScrollableResultSetsEnabled();
+	boolean isScrollableResultSetsEnabled();
 
-	public boolean isWrapResultSetsEnabled();
+	boolean isWrapResultSetsEnabled();
 
-	public boolean isGetGeneratedKeysEnabled();
+	boolean isGetGeneratedKeysEnabled();
 
-	public Integer getJdbcFetchSize();
+	Integer getJdbcFetchSize();
 
 	PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode();
 
@@ -161,22 +161,24 @@ public interface SessionFactoryOptions {
 	@Deprecated
 	ConnectionReleaseMode getConnectionReleaseMode();
 
-	public boolean isCommentsEnabled();
+	boolean isCommentsEnabled();
 
 
-	public CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy();
-	public EntityNameResolver[] getEntityNameResolvers();
+	CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy();
+	EntityNameResolver[] getEntityNameResolvers();
 
 	/**
 	 * Get the delegate for handling entity-not-found exception conditions.
 	 *
 	 * @return The specific EntityNotFoundDelegate to use,  May be {@code null}
 	 */
-	public EntityNotFoundDelegate getEntityNotFoundDelegate();
+	EntityNotFoundDelegate getEntityNotFoundDelegate();
 
-	public Map<String, SQLFunction> getCustomSqlFunctionMap();
+	Map<String, SQLFunction> getCustomSqlFunctionMap();
 
 	void setCheckNullability(boolean enabled);
 
-	public boolean isPreferUserTransaction();
+	boolean isPreferUserTransaction();
+
+	boolean isProcedureParameterNullPassingEnabled();
 }

@@ -89,6 +89,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private final Map querySubstitutions;
 	private final boolean strictJpaQueryLanguageCompliance;
 	private final boolean namedQueryStartupCheckingEnabled;
+	private final boolean procedureParameterNullPassingEnabled;
 
 	// Caching
 	private final boolean secondLevelCacheEnabled;
@@ -159,6 +160,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.querySubstitutions = state.getQuerySubstitutions();
 		this.strictJpaQueryLanguageCompliance = state.isStrictJpaQueryLanguageCompliance();
 		this.namedQueryStartupCheckingEnabled = state.isNamedQueryStartupCheckingEnabled();
+		this.procedureParameterNullPassingEnabled = state.isProcedureParameterNullPassingEnabled();
 
 		this.secondLevelCacheEnabled = state.isSecondLevelCacheEnabled();
 		this.queryCacheEnabled = state.isQueryCacheEnabled();
@@ -334,6 +336,11 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public boolean isNamedQueryStartupCheckingEnabled() {
 		return namedQueryStartupCheckingEnabled;
+	}
+
+	@Override
+	public boolean isProcedureParameterNullPassingEnabled() {
+		return procedureParameterNullPassingEnabled;
 	}
 
 	@Override

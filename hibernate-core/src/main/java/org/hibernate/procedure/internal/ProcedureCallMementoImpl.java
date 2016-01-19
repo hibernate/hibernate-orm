@@ -105,6 +105,7 @@ public class ProcedureCallMementoImpl implements ProcedureCallMemento {
 		private final ParameterMode mode;
 		private final Class type;
 		private final Type hibernateType;
+		private final boolean passNulls;
 
 		/**
 		 * Create the memento
@@ -114,13 +115,21 @@ public class ProcedureCallMementoImpl implements ProcedureCallMemento {
 		 * @param mode The parameter mode
 		 * @param type The Java type of the parameter
 		 * @param hibernateType The Hibernate Type.
+		 * @param passNulls Should NULL values to passed to the database?
 		 */
-		public ParameterMemento(int position, String name, ParameterMode mode, Class type, Type hibernateType) {
+		public ParameterMemento(
+				int position,
+				String name,
+				ParameterMode mode,
+				Class type,
+				Type hibernateType,
+				boolean passNulls) {
 			this.position = position;
 			this.name = name;
 			this.mode = mode;
 			this.type = type;
 			this.hibernateType = hibernateType;
+			this.passNulls = passNulls;
 		}
 
 		public Integer getPosition() {
@@ -143,6 +152,10 @@ public class ProcedureCallMementoImpl implements ProcedureCallMemento {
 			return hibernateType;
 		}
 
+		public boolean isPassNullsEnabled() {
+			return passNulls;
+		}
+
 		/**
 		 * Build a ParameterMemento from the given parameter registration
 		 *
@@ -156,7 +169,8 @@ public class ProcedureCallMementoImpl implements ProcedureCallMemento {
 					registration.getName(),
 					registration.getMode(),
 					registration.getType(),
-					registration.getHibernateType()
+					registration.getHibernateType(),
+					registration.isPassNullsEnabled()
 			);
 		}
 

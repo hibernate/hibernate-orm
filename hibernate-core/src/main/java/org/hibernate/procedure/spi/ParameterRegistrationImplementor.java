@@ -26,21 +26,23 @@ public interface ParameterRegistrationImplementor<T> extends ParameterRegistrati
 	 *
 	 * @throws SQLException Indicates a problem accessing the statement object
 	 */
-	public void prepare(CallableStatement statement, int i) throws SQLException;
+	void prepare(CallableStatement statement, int i) throws SQLException;
 
 	/**
 	 * Access to the Hibernate type for this parameter registration
 	 *
 	 * @return The Hibernate Type
 	 */
-	public Type getHibernateType();
+	Type getHibernateType();
+
+	boolean isPassNullsEnabled();
 
 	/**
 	 * Access to the SQL type(s) for this parameter
 	 *
 	 * @return The SQL types (JDBC type codes)
 	 */
-	public int[] getSqlTypes();
+	int[] getSqlTypes();
 
 	/**
 	 * Extract value from the statement after execution (used for OUT/INOUT parameters).
@@ -49,6 +51,6 @@ public interface ParameterRegistrationImplementor<T> extends ParameterRegistrati
 	 *
 	 * @return The extracted value
 	 */
-	public T extract(CallableStatement statement);
+	T extract(CallableStatement statement);
 
 }

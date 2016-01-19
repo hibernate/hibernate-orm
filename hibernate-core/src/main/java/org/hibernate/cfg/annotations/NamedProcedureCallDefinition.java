@@ -17,6 +17,7 @@ import javax.persistence.ParameterMode;
 import javax.persistence.StoredProcedureParameter;
 
 import org.hibernate.MappingException;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -48,10 +49,11 @@ public class NamedProcedureCallDefinition {
 	NamedProcedureCallDefinition(NamedStoredProcedureQuery annotation) {
 		this.registeredName = annotation.name();
 		this.procedureName = annotation.procedureName();
+		this.hints = new QueryHintDefinition( annotation.hints() ).getHintsMap();
 		this.resultClasses = annotation.resultClasses();
 		this.resultSetMappings = annotation.resultSetMappings();
-		this.parameterDefinitions = new ParameterDefinitions( annotation.parameters() );
-		this.hints = new QueryHintDefinition( annotation.hints() ).getHintsMap();
+
+		this.parameterDefinitions = new ParameterDefinitions( annotation.parameters(), hints );
 
 		final boolean specifiesResultClasses = resultClasses != null && resultClasses.length > 0;
 		final boolean specifiesResultSetMappings = resultSetMappings != null && resultSetMappings.length > 0;
@@ -145,7 +147,7 @@ public class NamedProcedureCallDefinition {
 		private final ParameterStrategy parameterStrategy;
 		private final ParameterDefinition[] parameterDefinitions;
 
-		ParameterDefinitions(StoredProcedureParameter[] parameters) {
+		ParameterDefinitions(StoredProcedureParameter[] parameters, Map<String, Object> queryHintMap) {
 			if ( parameters == null || parameters.length == 0 ) {
 				parameterStrategy = ParameterStrategy.POSITIONAL;
 				parameterDefinitions = new ParameterDefinition[0];
@@ -155,9 +157,15 @@ public class NamedProcedureCallDefinition {
 						? ParameterStrategy.NAMED
 						: ParameterStrategy.POSITIONAL;
 				parameterDefinitions = new ParameterDefinition[ parameters.length ];
+
 				for ( int i = 0; i < parameters.length; i++ ) {
-					// i+1 for the position because the apis say the numbers are 1-based, not zero
-					parameterDefinitions[i] = new ParameterDefinition( i+1, parameters[i] );
+					parameterDefinitions[i] = ParameterDefinition.from(
+							parameterStrategy,
+							parameters[i],
+							// i+1 for the position because the apis say the numbers are 1-based, not zero
+							i+1,
+							queryHintMap
+					);
 				}
 			}
 		}
@@ -180,21 +188,62 @@ public class NamedProcedureCallDefinition {
 		private final String name;
 		private final ParameterMode parameterMode;
 		private final Class type;
+		private final Boolean explicitPassNullSetting;
 
-		ParameterDefinition(int position, StoredProcedureParameter annotation) {
+		static ParameterDefinition from(
+				ParameterStrategy parameterStrategy,
+				StoredProcedureParameter parameterAnnotation,
+				int adjustedPosition,
+				Map<String, Object> queryHintMap) {
+			// see if there was an explicit hint for this parameter in regards to NULL passing
+			final Object explicitNullPassingHint;
+			if ( parameterStrategy == ParameterStrategy.NAMED ) {
+				explicitNullPassingHint = queryHintMap.get( AvailableSettings.PROCEDURE_NULL_PARAM_PASSING + '.' + parameterAnnotation.name() );
+			}
+			else {
+				explicitNullPassingHint = queryHintMap.get( AvailableSettings.PROCEDURE_NULL_PARAM_PASSING + '.' + adjustedPosition );
+			}
+
+			return new ParameterDefinition(
+					adjustedPosition,
+					parameterAnnotation,
+					interpretBoolean( explicitNullPassingHint )
+			);
+		}
+
+		private static Boolean interpretBoolean(Object value) {
+			if ( value == null ) {
+				return null;
+			}
+
+			if ( value instanceof Boolean ) {
+				return (Boolean) value;
+			}
+
+			return Boolean.valueOf( value.toString() );
+		}
+
+		ParameterDefinition(int position, StoredProcedureParameter annotation, Boolean explicitPassNullSetting) {
 			this.position = position;
 			this.name = normalize( annotation.name() );
 			this.parameterMode = annotation.mode();
 			this.type = annotation.type();
+			this.explicitPassNullSetting = explicitPassNullSetting;
 		}
 
+		@SuppressWarnings("UnnecessaryUnboxing")
 		public ParameterMemento toMemento(SessionFactoryImpl sessionFactory) {
+			final boolean initialPassNullSetting = explicitPassNullSetting != null
+					? explicitPassNullSetting.booleanValue()
+					: sessionFactory.getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();
+
 			return new ParameterMemento(
 					position,
 					name,
 					parameterMode,
 					type,
-					sessionFactory.getTypeResolver().heuristicType( type.getName() )
+					sessionFactory.getTypeResolver().heuristicType( type.getName() ),
+					initialPassNullSetting
 			);
 		}
 	}

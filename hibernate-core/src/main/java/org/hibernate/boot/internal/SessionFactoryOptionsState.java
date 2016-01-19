@@ -37,97 +37,99 @@ import org.hibernate.tuple.entity.EntityTuplizerFactory;
  * @author Steve Ebersole
  */
 public interface SessionFactoryOptionsState {
-	public StandardServiceRegistry getServiceRegistry();
+	StandardServiceRegistry getServiceRegistry();
 
-	public Object getBeanManagerReference();
+	Object getBeanManagerReference();
 
-	public Object getValidatorFactoryReference();
+	Object getValidatorFactoryReference();
 
-	public String getSessionFactoryName();
+	String getSessionFactoryName();
 
-	public boolean isSessionFactoryNameAlsoJndiName();
+	boolean isSessionFactoryNameAlsoJndiName();
 
-	public boolean isFlushBeforeCompletionEnabled();
+	boolean isFlushBeforeCompletionEnabled();
 
-	public boolean isAutoCloseSessionEnabled();
+	boolean isAutoCloseSessionEnabled();
 
-	public boolean isStatisticsEnabled();
+	boolean isStatisticsEnabled();
 
-	public Interceptor getInterceptor();
+	Interceptor getInterceptor();
 
-	public StatementInspector getStatementInspector();
+	StatementInspector getStatementInspector();
 
-	public SessionFactoryObserver[] getSessionFactoryObservers();
+	SessionFactoryObserver[] getSessionFactoryObservers();
 
-	public BaselineSessionEventsListenerBuilder getBaselineSessionEventsListenerBuilder();
+	BaselineSessionEventsListenerBuilder getBaselineSessionEventsListenerBuilder();
 
-	public boolean isIdentifierRollbackEnabled();
+	boolean isIdentifierRollbackEnabled();
 
-	public EntityMode getDefaultEntityMode();
+	EntityMode getDefaultEntityMode();
 
-	public EntityTuplizerFactory getEntityTuplizerFactory();
+	EntityTuplizerFactory getEntityTuplizerFactory();
 
-	public boolean isCheckNullability();
+	boolean isCheckNullability();
 
-	public boolean isInitializeLazyStateOutsideTransactionsEnabled();
+	boolean isInitializeLazyStateOutsideTransactionsEnabled();
 
-	public MultiTableBulkIdStrategy getMultiTableBulkIdStrategy();
+	MultiTableBulkIdStrategy getMultiTableBulkIdStrategy();
 
-	public TempTableDdlTransactionHandling getTempTableDdlTransactionHandling();
+	TempTableDdlTransactionHandling getTempTableDdlTransactionHandling();
 
-	public BatchFetchStyle getBatchFetchStyle();
+	BatchFetchStyle getBatchFetchStyle();
 
-	public int getDefaultBatchFetchSize();
+	int getDefaultBatchFetchSize();
 
-	public Integer getMaximumFetchDepth();
+	Integer getMaximumFetchDepth();
 
-	public NullPrecedence getDefaultNullPrecedence();
+	NullPrecedence getDefaultNullPrecedence();
 
-	public boolean isOrderUpdatesEnabled();
+	boolean isOrderUpdatesEnabled();
 
-	public boolean isOrderInsertsEnabled();
+	boolean isOrderInsertsEnabled();
 
-	public MultiTenancyStrategy getMultiTenancyStrategy();
+	MultiTenancyStrategy getMultiTenancyStrategy();
 
-	public CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver();
+	CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver();
 
-	public boolean isJtaTrackByThread();
+	boolean isJtaTrackByThread();
 
-	public Map getQuerySubstitutions();
+	Map getQuerySubstitutions();
 
-	public boolean isStrictJpaQueryLanguageCompliance();
+	boolean isStrictJpaQueryLanguageCompliance();
 
-	public boolean isNamedQueryStartupCheckingEnabled();
+	boolean isNamedQueryStartupCheckingEnabled();
 
-	public boolean isSecondLevelCacheEnabled();
+	boolean isProcedureParameterNullPassingEnabled();
 
-	public boolean isQueryCacheEnabled();
+	boolean isSecondLevelCacheEnabled();
 
-	public QueryCacheFactory getQueryCacheFactory();
+	boolean isQueryCacheEnabled();
 
-	public String getCacheRegionPrefix();
+	QueryCacheFactory getQueryCacheFactory();
 
-	public boolean isMinimalPutsEnabled();
+	String getCacheRegionPrefix();
 
-	public boolean isStructuredCacheEntriesEnabled();
+	boolean isMinimalPutsEnabled();
 
-	public boolean isDirectReferenceCacheEntriesEnabled();
+	boolean isStructuredCacheEntriesEnabled();
 
-	public boolean isAutoEvictCollectionCache();
+	boolean isDirectReferenceCacheEntriesEnabled();
 
-	public SchemaAutoTooling getSchemaAutoTooling();
+	boolean isAutoEvictCollectionCache();
 
-	public int getJdbcBatchSize();
+	SchemaAutoTooling getSchemaAutoTooling();
 
-	public boolean isJdbcBatchVersionedData();
+	int getJdbcBatchSize();
 
-	public boolean isScrollableResultSetsEnabled();
+	boolean isJdbcBatchVersionedData();
 
-	public boolean isWrapResultSetsEnabled();
+	boolean isScrollableResultSetsEnabled();
 
-	public boolean isGetGeneratedKeysEnabled();
+	boolean isWrapResultSetsEnabled();
 
-	public Integer getJdbcFetchSize();
+	boolean isGetGeneratedKeysEnabled();
+
+	Integer getJdbcFetchSize();
 
 	PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode();
 
@@ -137,15 +139,16 @@ public interface SessionFactoryOptionsState {
 	@Deprecated
 	ConnectionReleaseMode getConnectionReleaseMode();
 
-	public boolean isCommentsEnabled();
+	boolean isCommentsEnabled();
 
-	public CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy();
+	CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy();
 
-	public EntityNameResolver[] getEntityNameResolvers();
+	EntityNameResolver[] getEntityNameResolvers();
 
-	public EntityNotFoundDelegate getEntityNotFoundDelegate();
+	EntityNotFoundDelegate getEntityNotFoundDelegate();
 
-	public Map<String, SQLFunction> getCustomSqlFunctionMap();
+	Map<String, SQLFunction> getCustomSqlFunctionMap();
 
-	public boolean isPreferUserTransaction();
+	boolean isPreferUserTransaction();
+
 }

@@ -20,8 +20,9 @@ public class PositionalParameterRegistration<T> extends AbstractParameterRegistr
 			ProcedureCallImpl procedureCall,
 			Integer position,
 			ParameterMode mode,
-			Class<T> type) {
-		super( procedureCall, position, mode, type );
+			Class<T> type,
+			boolean initialPassNullsSetting) {
+		super( procedureCall, position, mode, type, initialPassNullsSetting );
 	}
 
 	PositionalParameterRegistration(
@@ -29,7 +30,8 @@ public class PositionalParameterRegistration<T> extends AbstractParameterRegistr
 			Integer position,
 			ParameterMode mode,
 			Class<T> type,
-			Type hibernateType) {
-		super( procedureCall, position, mode, type, hibernateType );
+			Type hibernateType,
+			boolean initialPassNullsSetting) {
+		super( procedureCall, position, mode, type, hibernateType, initialPassNullsSetting );
 	}
 }

@@ -25,8 +25,8 @@ public class UserConfEntity implements Serializable{
 	@Id
 	@ManyToOne
 	@JoinColumns({
-			@JoinColumn(name="cnf_key", referencedColumnName="confKey"),
-			@JoinColumn(name="cnf_value", referencedColumnName="confValue")})
+			@JoinColumn(name="cnf_key", referencedColumnName="confKey", nullable = false),
+			@JoinColumn(name="cnf_value", referencedColumnName="confValue", nullable = false)})
 	private ConfEntity conf;
 
 	public ConfEntity getConf() {

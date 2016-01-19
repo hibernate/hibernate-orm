@@ -51,11 +51,11 @@ class DatabaseAllocator {
 
     public static def SUPPORTED_DB_NAMES = [
             "oracle9i", "oracle10g", "oracle11gR1", "oracle11gR2", "oracle11gR2RAC", "oracle11gR1RAC", "oracle12c",
-            "postgresql82", "postgresql83", "postgresql84", "postgresql91", "postgresql92", 
-            "postgresplus92",
-            "mysql50", "mysql51","mysql55",
-            "db2-91", "db2-97", "db2-10",
-            "mssql2005", "mssql2008R1", "mssql2008R2", "mssql2012", 
+            "postgresql82", "postgresql83", "postgresql84", "postgresql91", "postgresql92",  "postgresql93",
+            "postgresplus92", "postgresplus93",
+            "mysql50", "mysql51","mysql55","mysql57",
+            "db2-91", "db2-97", "db2-10", "db2-101", "db2-105",
+            "mssql2005", "mssql2008R1", "mssql2008R2", "mssql2012", "mssql2014",
             "sybase155", "sybase157"
     ];
 

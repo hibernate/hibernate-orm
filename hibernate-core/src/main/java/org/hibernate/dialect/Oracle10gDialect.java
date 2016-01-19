@@ -6,6 +6,10 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.CallableStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 import org.hibernate.LockOptions;
 import org.hibernate.sql.ANSIJoinFragment;
 import org.hibernate.sql.JoinFragment;
@@ -54,5 +58,10 @@ public class Oracle10gDialect extends Oracle9iDialect {
 	@Override
 	public String getForUpdateSkipLockedString(String aliases) {
 		return getForUpdateString() + " of " + aliases + " skip locked";
+	}
+
+	@Override
+	public ResultSet getResultSet(CallableStatement statement, int position) throws SQLException {
+		return (ResultSet) statement.getObject( position );
 	}
 }

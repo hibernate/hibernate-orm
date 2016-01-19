@@ -19,8 +19,8 @@ public class Dependent {
 	
 	@Id
 	@JoinColumns({
-			@JoinColumn(name = "FK1", referencedColumnName = "firstName"),
-			@JoinColumn(name = "FK2", referencedColumnName = "lastName")
+			@JoinColumn(name = "FK1", referencedColumnName = "firstName", nullable = false),
+			@JoinColumn(name = "FK2", referencedColumnName = "lastName", nullable = false)
 	})
 	@ManyToOne
 	Employee emp;

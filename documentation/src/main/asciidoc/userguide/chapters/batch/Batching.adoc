@@ -122,7 +122,9 @@ They have different semantics from the `save()`, `saveOrUpdate()`, and `delete()
 DML, or Data Manipulation Language, refers to SQL statements such as `INSERT`, `UPDATE`, and `DELETE`.
 Hibernate provides methods for bulk SQL-style DML statement execution, in the form of Hibernate Query Language (HQL).
 
-==== HQL for UPDATE and DELETE
+==== HQL/JPQL for UPDATE and DELETE
+
+Both the Hibernate native Query Language and JPQL (Java Persistence Query Language) provide support for bulk UPDATE and DELETE.
 
 .Psuedo-syntax for UPDATE and DELETE statements using HQL
 ====
@@ -146,15 +148,23 @@ If the entity name is not aliased, then it is illegal for any property reference
 Joins, either implicit or explicit, are prohibited in a bulk HQL query.
 You can use sub-queries in the `WHERE` clause, and the sub-queries themselves can contain joins.
 
-.Executing an HQL UPDATE, using the `Query.executeUpdate()`
+.Executing a JPQL `UPDATE`, using the `Query.executeUpdate()`
 ====
 [source,java]
 ----
-include::{sourcedir}/executeUpdate.java[]
+include::{sourcedir}/jpql_update.java[]
 ----
 ====
 
-In keeping with the EJB3 specification, HQL UPDATE statements, by default, do not effect the version or the timestamp property values for the affected entities.
+.Executing an HQL `UPDATE`, using the `Query.executeUpdate()`
+====
+[source,java]
+----
+include::{sourcedir}/hql_update.java[]
+----
+====
+
+In keeping with the EJB3 specification, HQL `UPDATE` statements, by default, do not effect the version or the timestamp property values for the affected entities.
 You can use a versioned update to force Hibernate to reset the version or timestamp property values, by adding the `VERSIONED` keyword after the `UPDATE` keyword.
 
 .Updating the version of timestamp
@@ -168,6 +178,16 @@ include::{sourcedir}/updating_version.java[]
 [NOTE]
 ====
 If you use the `VERSIONED` statement, you cannot use custom version types, which use class `org.hibernate.usertype.UserVersionType`.
+
+This feature is only available in HQL since it's not standardized by JPA.
+====
+
+.A JPQL `DELETE` statement
+====
+[source,java]
+----
+include::{sourcedir}/jpql_delete.java[]
+----
 ====
 
 .An HQL `DELETE` statement
@@ -180,7 +200,7 @@ include::{sourcedir}/hql_delete.java[]
 
 Method `Query.executeUpdate()` returns an `int` value, which indicates the number of entities effected by the operation.
 This may or may not correlate to the number of rows effected in the database.
-An HQL bulk operation might result in multiple SQL statements being executed, such as for joined-subclass.
+An JPQL/HQL bulk operation might result in multiple SQL statements being executed, such as for joined-subclass.
 In the example of joined-subclass, a `DELETE` against one of the subclasses may actually result in deletes in the tables underlying the join, or further down the inheritance hierarchy.
 
 ==== HQL syntax for INSERT
@@ -227,8 +247,3 @@ include::{sourcedir}/hql_insert.java[]
 ====
 
 This section is only a brief overview of HQL. For more information, see <<chapters/query-hql/HQL.adoc#hql,HQL>>.
-
-[[batch-bulk-jpql]]
-=== Java Persistence Query Language for DML
-
-TODO

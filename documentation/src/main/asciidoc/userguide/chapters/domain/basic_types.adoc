@@ -524,8 +524,8 @@ Note that this can cause difficulty as the driver chooses to map many different 
 
 ==== UUID as identifier
 
-Hibernate supports using UUID values as identifiers, and they can even be generated on user'sbehalf.
-For details see the discussion of generators in <<chapters/domain/identifiers.adoc#identifiers,_Identifier generators_>>
+Hibernate supports using UUID values as identifiers, and they can even be generated on user's behalf.
+For details, see the discussion of generators in <<chapters/domain/identifiers.adoc#identifiers,_Identifier generators_>>.
 
 [[basic-datetime]]
 ==== Mapping Date/Time Values

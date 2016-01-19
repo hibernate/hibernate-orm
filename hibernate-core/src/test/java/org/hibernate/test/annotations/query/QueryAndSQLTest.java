@@ -29,6 +29,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 
+import org.hibernate.dialect.SybaseDialect;
 import org.junit.Test;
 
 import org.hibernate.MappingException;
@@ -117,7 +118,8 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 			value = {
 					@SkipForDialect(value = Oracle8iDialect.class, jiraKey = "HHH-10161", comment = "Cannot convert untyped null (assumed to be BINARY type) to NUMBER"),
 					@SkipForDialect(value = PostgreSQL82Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint"),
-					@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
+					@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint"),
+					@SkipForDialect(value = SybaseDialect.class, jiraKey = "HHH-10161", comment = "Sybase considers null==null")
 			}
        )
 	public void testQueryWithNullParameter(){
@@ -160,6 +162,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-10161")
+	@SkipForDialect(value = SybaseDialect.class, jiraKey = "HHH-10161", comment = "Sybase considers null==null")
 	public void testQueryWithNullParameterTyped(){
 		Chaos c0 = new Chaos();
 		c0.setId( 0L );
@@ -204,7 +207,8 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 			value = {
 					@SkipForDialect(value = Oracle8iDialect.class, jiraKey = "HHH-10161", comment = "Cannot convert untyped null (assumed to be BINARY type) to NUMBER"),
 					@SkipForDialect(value = PostgreSQL82Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint"),
-					@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
+					@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint"),
+					@SkipForDialect(value = SybaseDialect.class, jiraKey = "HHH-10161", comment = "Sybase considers null==null")
 			}
 	)
 	public void testNativeQueryWithNullParameter(){
@@ -247,6 +251,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-10161")
+	@SkipForDialect(value = SybaseDialect.class, jiraKey = "HHH-10161", comment = "Sybase considers null==null")
 	public void testNativeQueryWithNullParameterTyped(){
 		Chaos c0 = new Chaos();
 		c0.setId( 0L );

@@ -9,8 +9,8 @@ public class Dependent {
 	DependentId id;
 
 	@JoinColumns({
-			@JoinColumn(name = "FIRSTNAME", referencedColumnName = "FIRSTNAME"),
-			@JoinColumn(name = "LASTNAME", referencedColumnName = "lastName")
+			@JoinColumn(name = "FIRSTNAME", referencedColumnName = "FIRSTNAME", nullable = false),
+			@JoinColumn(name = "LASTNAME", referencedColumnName = "lastName", nullable = false)
 	})
 	@MapsId("empPK")
 	@ManyToOne

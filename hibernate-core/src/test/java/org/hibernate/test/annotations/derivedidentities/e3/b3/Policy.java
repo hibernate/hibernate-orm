@@ -8,9 +8,9 @@ public class Policy {
 	PolicyId id;
 
 	@JoinColumns({
-			@JoinColumn(name = "FIRSTNAME", referencedColumnName = "FIRSTNAME"),
-			@JoinColumn(name = "LASTNAME", referencedColumnName = "lastName"),
-			@JoinColumn(name = "NAME", referencedColumnName = "Name")
+			@JoinColumn(name = "FIRSTNAME", referencedColumnName = "FIRSTNAME", nullable = false),
+			@JoinColumn(name = "LASTNAME", referencedColumnName = "lastName", nullable = false),
+			@JoinColumn(name = "NAME", referencedColumnName = "Name", nullable = false)
 	})
 	@MapsId("depPK")
 	@ManyToOne

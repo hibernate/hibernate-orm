@@ -21,8 +21,8 @@ public class Dependent {
 
 	@MapsId("empPK")
 	@JoinColumns({
-			@JoinColumn(name = "FK1", referencedColumnName = "FIRSTNAME"),
-			@JoinColumn(name = "FK2", referencedColumnName = "lastName")
+			@JoinColumn(name = "FK1", referencedColumnName = "FIRSTNAME", nullable = false),
+			@JoinColumn(name = "FK2", referencedColumnName = "lastName", nullable = false)
 	})
 	@ManyToOne
 	Employee emp;

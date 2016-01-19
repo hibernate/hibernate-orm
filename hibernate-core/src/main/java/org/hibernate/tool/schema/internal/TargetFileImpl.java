@@ -8,29 +8,48 @@ package org.hibernate.tool.schema.internal;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
+import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
-import org.hibernate.tool.schema.spi.Target;
 
 /**
  * @author Steve Ebersole
  */
-public class TargetFileImpl implements Target {
-	final private FileWriter fileWriter;
-	final private String delimiter;
-	final private Formatter formatter;
+public class TargetFileImpl extends TargetBase {
+	private final String outputFile;
+	private final String delimiter;
+	private final Formatter formatter;
+	private FileWriter fileWriter;
 
 	public TargetFileImpl(String outputFile, String delimiter) {
-		this( outputFile, delimiter, FormatStyle.NONE.getFormatter());
+		this( outputFile, delimiter, FormatStyle.DDL.getFormatter() );
 	}
-	
+
 	public TargetFileImpl(String outputFile, String delimiter, Formatter formatter) {
-		try {
+		this( Collections.<Exception>emptyList(), false, new SqlStatementLogger(), formatter, outputFile, delimiter );
+	}
+
+	public TargetFileImpl(List<Exception> exceptionCollector, boolean haltOnError, SqlStatementLogger sqlStatementLogger, Formatter formatter, String outputFile, String delimiter) {
+		super( exceptionCollector, haltOnError, sqlStatementLogger, formatter );
+
 			this.delimiter = delimiter;
-			this.fileWriter = new FileWriter( outputFile );
+			this.outputFile = outputFile;
 			this.formatter = formatter;
+	}
+
+	@Override
+	public boolean acceptsImportScriptActions() {
+		return false;
+	}
+
+	@Override
+	public void prepare() {
+		try {
+			this.fileWriter = new FileWriter( outputFile, true );
 		}
 		catch (IOException e) {
 			throw new SchemaManagementException( "Unable to open FileWriter [" + outputFile + "]", e );
@@ -38,16 +57,7 @@ public class TargetFileImpl implements Target {
 	}
 
 	@Override
-	public boolean acceptsImportScriptActions() {
-		return true;
-	}
-
-	@Override
-	public void prepare() {
-	}
-
-	@Override
-	public void accept(String action) {
+	public void doAccept(String action) {
 		try {
 			if (formatter != null) {
 				action = formatter.format(action);

@@ -14,17 +14,17 @@ import java.util.Map;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Session;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Stoppable;
-import org.hibernate.tool.hbm2ddl.SchemaExport;
-
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
+import org.hibernate.tool.hbm2ddl.SchemaExport;
 
 /**
  * Implementation of SuppliedConnectionTest.
@@ -138,5 +138,10 @@ public class SuppliedConnectionTest extends ConnectionManagementTestCase {
 		}
 
 		super.cleanupTest();
+	}
+
+	@Override
+	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
+		ssrb.addService( ConnectionProvider.class, cp );
 	}
 }

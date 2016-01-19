@@ -9,21 +9,33 @@ package org.hibernate.tool.schema.internal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
+import org.hibernate.engine.jdbc.internal.FormatStyle;
+import org.hibernate.engine.jdbc.internal.Formatter;
+import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
-import org.hibernate.tool.schema.spi.Target;
 
 /**
  * @author Steve Ebersole
  */
-public class TargetDatabaseImpl implements Target {
+public class TargetDatabaseImpl extends TargetBase {
 	private final JdbcConnectionAccess connectionAccess;
 
 	private Connection connection;
 	private Statement statement;
 
+	/**
+	 * For testing
+	 */
 	public TargetDatabaseImpl(JdbcConnectionAccess connectionAccess) {
+		this( new ArrayList<Exception>(), true, new SqlStatementLogger(), FormatStyle.DDL.getFormatter(), connectionAccess );
+	}
+
+	public TargetDatabaseImpl(List<Exception> exceptions, boolean haltOnError, SqlStatementLogger sqlStatementLogger, Formatter formatter, JdbcConnectionAccess connectionAccess) {
+		super( exceptions, haltOnError, sqlStatementLogger, formatter );
 		this.connectionAccess = connectionAccess;
 	}
 
@@ -51,7 +63,7 @@ public class TargetDatabaseImpl implements Target {
 	}
 
 	@Override
-	public void accept(String action) {
+	public void doAccept(String action) {
 		try {
 			statement.executeUpdate( action );
 		}

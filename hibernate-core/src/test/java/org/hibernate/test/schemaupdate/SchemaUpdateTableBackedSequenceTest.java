@@ -6,6 +6,9 @@
  */
 package org.hibernate.test.schemaupdate;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -20,20 +23,16 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.id.enhanced.TableStructure;
 import org.hibernate.mapping.Table;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.tool.schema.extract.internal.DatabaseInformationImpl;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.internal.TargetDatabaseImpl;
 import org.hibernate.tool.schema.internal.TargetStdoutImpl;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.Target;
-
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
@@ -99,15 +98,15 @@ public class SchemaUpdateTableBackedSequenceTest extends BaseUnitTestCase {
 				metadata,
 				dbInfo,
 				true,
-				Arrays.asList( target, new TargetDatabaseImpl( ssr.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess() ) )
+				Arrays.<Target>asList( target, new TargetDatabaseImpl( ssr.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess() ) )
 		);
 
 		assertTrue( target.found );
-		
+
 		ssr.getService( SchemaManagementTool.class ).getSchemaDropper( null ).doDrop(
 				metadata,
 				false,
-				Arrays.asList( target, new TargetDatabaseImpl( ssr.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess() ) )
+				Arrays.<Target>asList( target, new TargetDatabaseImpl( ssr.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess() ) )
 		);
 	}
 }

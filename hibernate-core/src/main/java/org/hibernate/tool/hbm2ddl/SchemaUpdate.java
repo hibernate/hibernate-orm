@@ -8,6 +8,7 @@ package org.hibernate.tool.hbm2ddl;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +31,7 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
@@ -39,6 +41,7 @@ import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.internal.TargetDatabaseImpl;
 import org.hibernate.tool.schema.internal.TargetFileImpl;
 import org.hibernate.tool.schema.internal.TargetStdoutImpl;
+import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.SchemaMigrator;
 
@@ -54,11 +57,13 @@ public class SchemaUpdate {
 	private final MetadataImplementor metadata;
 	private final ServiceRegistry serviceRegistry;
 
+	private final SqlStatementLogger sqlStatementLogger;
 	private final JdbcConnectionAccess jdbcConnectionAccess;
 	private final List<Exception> exceptions = new ArrayList<Exception>();
 	private String outputFile;
 	private String delimiter;
 	private Formatter formatter;
+
 
 	/**
 	 * Creates a SchemaUpdate object.  This form is intended for use from tooling
@@ -90,6 +95,8 @@ public class SchemaUpdate {
 		this.metadata = metadata;
 		this.serviceRegistry = serviceRegistry;
 		this.jdbcConnectionAccess = serviceRegistry.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess();
+		this.sqlStatementLogger = serviceRegistry.getService( JdbcServices.class ).getSqlStatementLogger();
+		this.formatter = ( sqlStatementLogger.isFormat() ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
 	}
 
 	/**
@@ -142,16 +149,19 @@ public class SchemaUpdate {
 		List<org.hibernate.tool.schema.spi.Target> toolTargets = new ArrayList<org.hibernate.tool.schema.spi.Target>();
 
 		if ( target.doScript() ) {
-			toolTargets.add( new TargetStdoutImpl( delimiter, formatter ) );
+			toolTargets.add( new TargetStdoutImpl( exceptions, true, sqlStatementLogger, formatter, delimiter ) );
 		}
 
 		if ( target.doExport() ) {
-			toolTargets.add( new TargetDatabaseImpl( jdbcConnectionAccess ) );
+			toolTargets.add( new TargetDatabaseImpl( exceptions, true, sqlStatementLogger, formatter, jdbcConnectionAccess ) );
 		}
 
 		if ( outputFile != null ) {
+			// truncating the output file here once so that the targets can use it in append mode
+			truncateOutputFile();
 			LOG.writingGeneratedSchemaToFile( outputFile );
-			toolTargets.add( new TargetFileImpl( outputFile, delimiter, formatter ) );
+
+			toolTargets.add( new TargetFileImpl( exceptions, true, sqlStatementLogger, formatter, outputFile, delimiter ) );
 		}
 
 		return toolTargets;
@@ -260,6 +270,17 @@ public class SchemaUpdate {
 		}
 
 		return (MetadataImplementor) metadataBuilder.build();
+	}
+
+	private void truncateOutputFile() {
+		try {
+			FileOutputStream fos = new FileOutputStream( outputFile );
+			fos.getChannel().truncate( 0 );
+			fos.close();
+		}
+		catch(Exception e) {
+			throw new SchemaManagementException( "Couldn't truncate output file " + outputFile, e );
+		}
 	}
 
 	private static class CommandLineArgs {

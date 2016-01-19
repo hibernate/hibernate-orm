@@ -6,33 +6,45 @@
  */
 package org.hibernate.tool.schema.internal;
 
+import java.util.Collections;
+import java.util.List;
+
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
-import org.hibernate.tool.schema.spi.Target;
+import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 
 /**
  * @author Steve Ebersole
  */
-public class TargetStdoutImpl implements Target {
+public class TargetStdoutImpl extends TargetBase {
 	final private String delimiter;
 	final private Formatter formatter;
 
 	public TargetStdoutImpl() {
 		this( null );
 	}
-	
+
 	public TargetStdoutImpl(String delimiter) {
-		this( delimiter, FormatStyle.NONE.getFormatter());
+		this( delimiter, FormatStyle.NONE.getFormatter() );
 	}
 
+	/**
+	 * For testing
+	 */
 	public TargetStdoutImpl(String delimiter, Formatter formatter) {
+		this( Collections.<Exception>emptyList(), false, new SqlStatementLogger(), formatter, delimiter );
+	}
+
+	public TargetStdoutImpl(List<Exception> exceptionCollector, boolean haltOnError, SqlStatementLogger sqlStatementLogger, Formatter formatter, String delimiter) {
+		super( exceptionCollector, haltOnError, sqlStatementLogger, formatter );
+
 		this.formatter = formatter;
 		this.delimiter = delimiter;
 	}
 
 	@Override
 	public boolean acceptsImportScriptActions() {
-		return true;
+		return false;
 	}
 
 	@Override
@@ -40,7 +52,7 @@ public class TargetStdoutImpl implements Target {
 	}
 
 	@Override
-	public void accept(String action) {
+	public void doAccept(String action) {
 		if (formatter != null) {
 			action = formatter.format(action);
 		}

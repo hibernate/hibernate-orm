@@ -13,6 +13,7 @@ import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.util.ZonedDateTimeComparator;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.type.descriptor.java.ZonedDateTimeJavaDescriptor;
 import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
@@ -53,7 +54,7 @@ public class ZonedDateTimeType
 	@Override
 	@SuppressWarnings("unchecked")
 	public Comparator<ZonedDateTime> getComparator() {
-		return ComparableComparator.INSTANCE;
+		return ZonedDateTimeComparator.INSTANCE;
 	}
 
 	@Override

@@ -63,7 +63,7 @@ public class SchemaUpdate {
 	private String outputFile;
 	private String delimiter;
 	private Formatter formatter;
-
+	private boolean haltOnError;
 
 	/**
 	 * Creates a SchemaUpdate object.  This form is intended for use from tooling
@@ -149,11 +149,11 @@ public class SchemaUpdate {
 		List<org.hibernate.tool.schema.spi.Target> toolTargets = new ArrayList<org.hibernate.tool.schema.spi.Target>();
 
 		if ( target.doScript() ) {
-			toolTargets.add( new TargetStdoutImpl( exceptions, true, sqlStatementLogger, formatter, delimiter ) );
+			toolTargets.add( new TargetStdoutImpl( exceptions, haltOnError, sqlStatementLogger, formatter, delimiter ) );
 		}
 
 		if ( target.doExport() ) {
-			toolTargets.add( new TargetDatabaseImpl( exceptions, true, sqlStatementLogger, formatter, jdbcConnectionAccess ) );
+			toolTargets.add( new TargetDatabaseImpl( exceptions, haltOnError, sqlStatementLogger, formatter, jdbcConnectionAccess ) );
 		}
 
 		if ( outputFile != null ) {
@@ -161,7 +161,7 @@ public class SchemaUpdate {
 			truncateOutputFile();
 			LOG.writingGeneratedSchemaToFile( outputFile );
 
-			toolTargets.add( new TargetFileImpl( exceptions, true, sqlStatementLogger, formatter, outputFile, delimiter ) );
+			toolTargets.add( new TargetFileImpl( exceptions, haltOnError, sqlStatementLogger, formatter, outputFile, delimiter ) );
 		}
 
 		return toolTargets;
@@ -177,6 +177,7 @@ public class SchemaUpdate {
 	}
 
 	public void setHaltOnError(boolean haltOnError) {
+		this.haltOnError = haltOnError;
 	}
 
 	public void setFormat(boolean format) {

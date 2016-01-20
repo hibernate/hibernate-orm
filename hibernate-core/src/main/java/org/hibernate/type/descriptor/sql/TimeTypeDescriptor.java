@@ -53,6 +53,18 @@ public class TimeTypeDescriptor implements SqlTypeDescriptor {
 					st.setTime( index, time );
 				}
 			}
+
+			@Override
+			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+					throws SQLException {
+				final Time time = javaTypeDescriptor.unwrap( value, Time.class, options );
+				if ( value instanceof Calendar ) {
+					st.setTime( name, time, (Calendar) value );
+				}
+				else {
+					st.setTime( name, time );
+				}
+			}
 		};
 	}
 

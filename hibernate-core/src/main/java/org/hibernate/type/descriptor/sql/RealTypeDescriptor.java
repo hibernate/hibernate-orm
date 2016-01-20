@@ -45,6 +45,12 @@ public class RealTypeDescriptor implements SqlTypeDescriptor {
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
 				st.setFloat( index, javaTypeDescriptor.unwrap( value, Float.class, options ) );
 			}
+
+			@Override
+			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+					throws SQLException {
+				st.setFloat( name, javaTypeDescriptor.unwrap( value, Float.class, options ) );
+			}
 		};
 	}
 

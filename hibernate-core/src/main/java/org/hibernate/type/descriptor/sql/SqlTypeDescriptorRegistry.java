@@ -140,6 +140,12 @@ public class SqlTypeDescriptorRegistry {
 						throws SQLException {
 					st.setObject( index, value, jdbcTypeCode );
 				}
+
+				@Override
+				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+						throws SQLException {
+					st.setObject( name, value, jdbcTypeCode );
+				}
 			};
 		}
 

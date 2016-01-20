@@ -64,4 +64,15 @@ public class Oracle10gDialect extends Oracle9iDialect {
 	public ResultSet getResultSet(CallableStatement statement, int position) throws SQLException {
 		return (ResultSet) statement.getObject( position );
 	}
+
+	@Override
+	public int registerResultSetOutParameter(CallableStatement statement, String name) throws SQLException {
+		statement.registerOutParameter( name, OracleTypesHelper.INSTANCE.getOracleCursorTypeSqlType() );
+		return 1;
+	}
+
+	@Override
+	public ResultSet getResultSet(CallableStatement statement, String name) throws SQLException {
+		return (ResultSet) statement.getObject( name );
+	}
 }

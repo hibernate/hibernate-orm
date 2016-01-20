@@ -54,7 +54,7 @@ public class CoalesceStatementTest extends BaseCoreFunctionalTestCase {
 
     // Add your tests, using standard JUnit.
     @Test
-    public void hhh123TestCoalesce() throws Exception {
+    public void HHH_10463_TestCoalesce() throws Exception {
         // BaseCoreFunctionalTestCase automatically creates the SessionFactory and provides the Session.
         Session s = openSession();
 
@@ -69,7 +69,7 @@ public class CoalesceStatementTest extends BaseCoreFunctionalTestCase {
 
     }
     @Test
-    public void hhh123TestNullInCoalesce() throws Exception {
+    public void HHH_10463_NullInCoalesce() throws Exception {
         // BaseCoreFunctionalTestCase automatically creates the SessionFactory and provides the Session.
         Session s = openSession();
 

@@ -45,6 +45,12 @@ public class IntegerTypeDescriptor implements SqlTypeDescriptor {
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
 				st.setInt( index, javaTypeDescriptor.unwrap( value, Integer.class, options ) );
 			}
+
+			@Override
+			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+					throws SQLException {
+				st.setInt( name, javaTypeDescriptor.unwrap( value, Integer.class, options ) );
+			}
 		};
 	}
 

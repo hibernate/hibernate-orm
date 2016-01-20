@@ -67,6 +67,15 @@ public class PGGeometryTypeDescriptor implements SqlTypeDescriptor {
 				st.setBytes( index, bytes );
 			}
 
+			@Override
+			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+					throws SQLException {
+				final WkbEncoder encoder = Wkb.newEncoder( Wkb.Dialect.POSTGIS_EWKB_1 );
+				final Geometry geometry = getJavaDescriptor().unwrap( value, Geometry.class, options );
+				final byte[] bytes = encoder.encode( geometry, ByteOrder.NDR ).toByteArray();
+				st.setBytes( name, bytes );
+			}
+
 		};
 	}
 

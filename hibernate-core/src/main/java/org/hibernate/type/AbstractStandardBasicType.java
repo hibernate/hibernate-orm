@@ -34,7 +34,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  * @author Brett Meyer
  */
 public abstract class AbstractStandardBasicType<T>
-		implements BasicType, StringRepresentableType<T>, ProcedureParameterExtractionAware<T> {
+		implements BasicType, StringRepresentableType<T>, ProcedureParameterExtractionAware<T>, ProcedureParameterNamedBinder {
 
 	private static final Size DEFAULT_SIZE = new Size( 19, 2, 255, Size.LobMultiplier.NONE ); // to match legacy behavior
 	private final Size dictatedSize = new Size();
@@ -357,5 +357,20 @@ public abstract class AbstractStandardBasicType<T>
 		}
 
 		return new WrapperOptionsImpl( session );
+	}
+
+	@Override
+	public void nullSafeSet(
+			CallableStatement st, Object value, String name, SessionImplementor session) throws SQLException {
+		nullSafeSet( st, value, name, getOptions( session ) );
+	}
+
+	protected final void nullSafeSet(CallableStatement st, Object value, String name, WrapperOptions options) throws SQLException {
+		remapSqlTypeDescriptor( options ).getBinder( javaTypeDescriptor ).bind( st, ( T ) value, name, options );
+	}
+
+	@Override
+	public boolean canDoSetting() {
+		return true;
 	}
 }

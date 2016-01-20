@@ -14,6 +14,8 @@ import javax.persistence.ParameterMode;
 import javax.persistence.TemporalType;
 
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
+import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.procedure.ParameterBind;
 import org.hibernate.procedure.ParameterMisuseException;
@@ -23,6 +25,7 @@ import org.hibernate.type.CalendarDateType;
 import org.hibernate.type.CalendarTimeType;
 import org.hibernate.type.CalendarType;
 import org.hibernate.type.ProcedureParameterExtractionAware;
+import org.hibernate.type.ProcedureParameterNamedBinder;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -290,7 +293,17 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 								procedureCall.getProcedureName(),
 								this
 						);
-						typeToUse.nullSafeSet( statement, null, startIndex, session() );
+						if ( this.procedureCall.getParameterStrategy() == ParameterStrategy.NAMED && canDoNameParameterBinding() ) {
+							((ProcedureParameterNamedBinder) typeToUse).nullSafeSet(
+									statement,
+									null,
+									this.getName(),
+									session()
+							);
+						}
+						else {
+							typeToUse.nullSafeSet( statement, null, startIndex, session() );
+						}
 					}
 					else {
 						log.debugf(
@@ -301,7 +314,17 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 					}
 				}
 				else {
-					typeToUse.nullSafeSet( statement, bind.getValue(), startIndex, session() );
+					if ( this.procedureCall.getParameterStrategy() == ParameterStrategy.NAMED && canDoNameParameterBinding()) {
+						((ProcedureParameterNamedBinder) typeToUse).nullSafeSet(
+								statement,
+								bind.getValue(),
+								this.getName(),
+								session()
+						);
+					}
+					else {
+						typeToUse.nullSafeSet( statement, bind.getValue(), startIndex, session() );
+					}
 				}
 			}
 		}
@@ -318,6 +341,19 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 						.registerRefCursorParameter( statement, startIndex );
 			}
 		}
+	}
+
+	private boolean canDoNameParameterBinding() {
+		final ExtractedDatabaseMetaData databaseMetaData = session()
+				.getJdbcCoordinator()
+				.getJdbcSessionOwner()
+				.getJdbcSessionContext()
+				.getServiceRegistry().getService( JdbcEnvironment.class )
+				.getExtractedDatabaseMetaData();
+		return
+				databaseMetaData.supportsNamedParameters() &&
+				ProcedureParameterNamedBinder.class.isInstance( hibernateType )
+						&& ((ProcedureParameterNamedBinder) hibernateType).canDoSetting();
 	}
 
 	public int[] getSqlTypes() {

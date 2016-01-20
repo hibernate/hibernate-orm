@@ -53,6 +53,18 @@ public class TimestampTypeDescriptor implements SqlTypeDescriptor {
 					st.setTimestamp( index, timestamp );
 				}
 			}
+
+			@Override
+			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+					throws SQLException {
+				final Timestamp timestamp = javaTypeDescriptor.unwrap( value, Timestamp.class, options );
+				if ( value instanceof Calendar ) {
+					st.setTimestamp( name, timestamp, (Calendar) value );
+				}
+				else {
+					st.setTimestamp( name, timestamp );
+				}
+			}
 		};
 	}
 

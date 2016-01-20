@@ -80,6 +80,17 @@ public abstract class ClobTypeDescriptor implements SqlTypeDescriptor {
 						CLOB_BINDING.getClobBinder( javaTypeDescriptor ).doBind( st, value, index, options );
 					}
 				}
+
+				@Override
+				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+						throws SQLException {
+					if ( options.useStreamForLobBinding() ) {
+						STREAM_BINDING.getClobBinder( javaTypeDescriptor ).doBind( st, value, name, options );
+					}
+					else {
+						CLOB_BINDING.getClobBinder( javaTypeDescriptor ).doBind( st, value, name, options );
+					}
+				}
 			};
 		}
 	};
@@ -92,6 +103,12 @@ public abstract class ClobTypeDescriptor implements SqlTypeDescriptor {
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
 					st.setClob( index, javaTypeDescriptor.unwrap( value, Clob.class, options ) );
+				}
+
+				@Override
+				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+						throws SQLException {
+					st.setClob( name, javaTypeDescriptor.unwrap( value, Clob.class, options ) );
 				}
 			};
 		}
@@ -111,6 +128,17 @@ public abstract class ClobTypeDescriptor implements SqlTypeDescriptor {
 					);
 					st.setCharacterStream( index, characterStream.asReader(), characterStream.getLength() );
 				}
+
+				@Override
+				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+						throws SQLException {
+					final CharacterStream characterStream = javaTypeDescriptor.unwrap(
+							value,
+							CharacterStream.class,
+							options
+					);
+					st.setCharacterStream( name, characterStream.asReader(), characterStream.getLength() );
+				}
 			};
 		}
 	};
@@ -128,6 +156,17 @@ public abstract class ClobTypeDescriptor implements SqlTypeDescriptor {
 							options
 					);
 					st.setCharacterStream( index, characterStream.asReader(), characterStream.getLength() );
+				}
+
+				@Override
+				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+						throws SQLException {
+					final CharacterStream characterStream = javaTypeDescriptor.unwrap(
+							value,
+							CharacterStream.class,
+							options
+					);
+					st.setCharacterStream( name, characterStream.asReader(), characterStream.getLength() );
 				}
 			};
 		}

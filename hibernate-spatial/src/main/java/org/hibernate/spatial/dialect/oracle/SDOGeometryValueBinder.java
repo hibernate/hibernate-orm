@@ -7,6 +7,7 @@
 
 package org.hibernate.spatial.dialect.oracle;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -51,6 +52,19 @@ class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 			final Geometry geometry = javaTypeDescriptor.unwrap( value, Geometry.class, options );
 			final Object dbGeom = toNative( geometry, st.getConnection() );
 			st.setObject( index, dbGeom );
+		}
+	}
+
+	@Override
+	public void bind(
+			CallableStatement st, J value, String name, WrapperOptions options) throws SQLException {
+		if ( value == null ) {
+			st.setNull( name, Types.STRUCT, SQL_TYPE_NAME );
+		}
+		else {
+			final Geometry geometry = javaTypeDescriptor.unwrap( value, Geometry.class, options );
+			final Object dbGeom = toNative( geometry, st.getConnection() );
+			st.setObject( name, dbGeom );
 		}
 	}
 

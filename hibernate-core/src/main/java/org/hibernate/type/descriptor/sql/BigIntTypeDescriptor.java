@@ -45,6 +45,13 @@ public class BigIntTypeDescriptor implements SqlTypeDescriptor {
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
 				st.setLong( index, javaTypeDescriptor.unwrap( value, Long.class, options ) );
 			}
+
+			@Override
+			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+					throws SQLException {
+				st.setLong( name, javaTypeDescriptor.unwrap( value, Long.class, options ) );
+
+			}
 		};
 	}
 

@@ -15,6 +15,20 @@ It may or may not physically exist in the database yet.
 
 Much of the `org.hibernate.Session` and `javax.persistence.EntityManager` methods deal with moving entities between these states.
 
+=== Accessing Hibernate APIs from JPA
+
+JPA defines an incredibly useful method to allow applications access to the APIs of the underlying provider.
+
+.Accessing Hibernate APIs from JPA
+====
+[source,java]
+----
+include::{sourcedir}/UnwrapWithEM.java[]
+----
+====
+
+include::BytecodeEnhancement.adoc[]
+
 === Making entities persistent
 
 Once you've created a new entity instance (using the standard `new` operator) it is in `new` state.
@@ -291,16 +305,48 @@ include::{sourcedir}/CheckingLazinessWithJPA2.java[]
 ----
 ====
 
-=== Accessing Hibernate APIs from JPA
+=== Evicting entities
 
-JPA defines an incredibly useful method to allow applications access to the APIs of the underlying provider.
+When the `flush()` method is called, the state of the entity is synchronized with the database.
+If you do not want this synchronization to occur, or if you are processing a huge number of objects and need to manage memory efficiently,
+the `evict()` method can be used to remove the object and its collections from the first-level cache.
 
-.Accessing Hibernate APIs from JPA
+[[caching-management-jpa-detach-example]]
+.Detaching an entity from the `EntityManager`
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/UnwrapWithEM.java[]
+include::{sourcedir}/../../../../../../test/java/org/hibernate/jpa/test/userguide/caching/FirstLevelCacheTest.java[tags=caching-management-jpa-detach-example]
 ----
 ====
 
-include::BytecodeEnhancement.adoc[]
+[[caching-management-native-evict-example]]
+.Evicting an entity from the Hibernate `Session`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/../../../../../../test/java/org/hibernate/jpa/test/userguide/caching/FirstLevelCacheTest.java[tags=caching-management-native-evict-example]
+----
+====
+
+To detach all entities from the current persistence context, both the `EntityManager` and the Hibernate `Session` define a `clear()` method.
+
+[[caching-management-clear-example]]
+.Clearing the persistence context
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/../../../../../../test/java/org/hibernate/jpa/test/userguide/caching/FirstLevelCacheTest.java[tags=caching-management-clear-example]
+----
+====
+
+To verify if an entity instance is currently attached to the running persistence context, both the `EntityManager` and the Hibernate `Session` define a `contains(Object entity)` method.
+
+[[caching-management-contains-example]]
+.Verify if an entity is contained in a persistence context
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/../../../../../../test/java/org/hibernate/jpa/test/userguide/caching/FirstLevelCacheTest.java[tags=caching-management-contains-example]
+----
+====

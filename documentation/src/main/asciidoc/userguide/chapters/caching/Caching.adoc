@@ -1,81 +1,571 @@
 [[caching]]
 == Caching
+:sourcedir: ../../../../../test/java/org/hibernate/jpa/test/userguide/caching
+
+At runtime, Hibernate handles moving data into and out of the second-level cache in response to the operations performed by the `Session`, which acts as a transaction-level cache of persistent data.
+Once an entity becomes managed, that object is added to the internal cache of the current persistence context (`EntityManager` or `Session`).
+The persistence context is also called the first-level cache, and it's enabled by default.
+
+It is possible to configure a JVM-level (`SessionFactory`-level) or even a cluster cache on a class-by-class and collection-by-collection basis.
+
+[NOTE]
+====
+Be aware that caches are not aware of changes made to the persistent store by another applications.
+They can, however, be configured to regularly expire cached data.
+====
 
 [[caching-config]]
 === Configuring second-level caching
 
-Hibernate defines the ability to integrate with pluggable providers for the purpose of caching data outside the context of a particular `Session`.
-This section defines the settings which control that behavior.
+Hibernate can integrate with various caching providers for the purpose of caching data outside the context of a particular `Session`.
+This section defines the settings which control this behavior.
 
 [[caching-config-provider]]
-=== RegionFactory
+==== RegionFactory
 
 `org.hibernate.cache.spi.RegionFactory` defines the integration between Hibernate and a pluggable caching provider.
-`hibernate.cache.region.factory_class` is used to declare the provider to use. Hibernate comes with support for 2 popular caching libraries: Ehcache and Infinispan.
+`hibernate.cache.region.factory_class` is used to declare the provider to use.
+Hibernate comes with built-in support for two popular caching libraries: http://www.ehcache.org/[Ehcache] and http://infinispan.org/[Infinispan].
 
 [[caching-config-provider-ehcache]]
-=== Ehcache
+===== Ehcache
 
-[IMPORTANT]
+[NOTE]
 ====
-Use of the build-in integration for Ehcache requires that the hibernate-ehcache module jar (and all of its dependencies) are on the classpath.
+Use of the build-in integration for Ehcache requires that the `hibernate-ehcache` module jar (and all of its dependencies) are on the classpath.
 ====
 
-The hibernate-ehcache module defines 2 specific region factories: `EhCacheRegionFactory` and `SingletonEhCacheRegionFactory`.
+The hibernate-ehcache module defines two specific region factories: `EhCacheRegionFactory` and `SingletonEhCacheRegionFactory`.
 
 [[caching-config-provider-ehcache-region-factory]]
-==== `EhCacheRegionFactory`
+====== `EhCacheRegionFactory`
 
-TODO
+To use the `EhCacheRegionFactory`, you need to specify the following configuration property:
+
+[[caching-config-provider-ehcache-region-factory-example]]
+.`EhCacheRegionFactory` configuration
+====
+[source, XML, indent=0]
+----
+<property
+    name="hibernate.cache.region.factory_class"
+    value="org.hibernate.cache.ehcache.EhCacheRegionFactory"/>
+----
+====
+
+The `EhCacheRegionFactory` configures a `net.sf.ehcache.CacheManager` for each `SessionFactory`,
+so the `CacheManager` is not shared among multiple `SessionFactory` instances in the same JVM.
 
 [[caching-config-provider-ehcache-singleton-region-factory]]
-==== `SingletonEhCacheRegionFactory`
+====== `SingletonEhCacheRegionFactory`
 
-TODO
+To use the `SingletonEhCacheRegionFactory`, you need to specify the following configuration property:
+
+[[caching-config-provider-ehcache-singleton-region-factory-example]]
+.`SingletonEhCacheRegionFactory` configuration
+====
+[source, XML, indent=0]
+----
+<property
+    name="hibernate.cache.region.factory_class"
+    value="org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory"/>
+----
+====
+
+The `SingletonEhCacheRegionFactory` configures a singleton `net.sf.ehcache.CacheManager` (see http://www.ehcache.org/apidocs/2.8.4/net/sf/ehcache/CacheManager.html#create%28%29[CacheManager#create()]),
+shared among multiple `SessionFactory` instances in the same JVM.
+
+[NOTE]
+====
+http://www.ehcache.org/documentation/2.8/integrations/hibernate#optional[Ehcache documentation] recommends using multiple non-singleton `CacheManager(s)` when there are multiple Hibernate `SessionFactory` instances running in the same JVM.
+====
 
 [[caching-config-provider-infinispan]]
-=== Infinispan
+===== Infinispan
 
-[IMPORTANT]
+[NOTE]
 ====
-Use of the build-in integration for Infinispan requires that the hibernate-infinispan module jar (and all of its dependencies) are on the classpath.
+Use of the build-in integration for Infinispan requires that the `hibernate-infinispan module` jar (and all of its dependencies) are on the classpath.
 ====
 
-The hibernate-infinispan module defines 2 specific providers: `infinispan` and  `infinispan-jndi`.
+The hibernate-infinispan module defines two specific providers: `infinispan` and  `infinispan-jndi`.
 
-TODO
+[[caching-config-provider-infinispan-region-factory]]
+===== `InfinispanRegionFactory`
 
-[[caching-config-behavior]]
-=== Caching behavior
+If Hibernate and Infinispan are running in a standalone environment, the `InfinispanRegionFactory` should be configured as follows:
 
-Besides specific provider configuration, there are a number of configurations options on the Hibernate side of the integration that control various caching behavior:
+[[caching-config-provider-infinispan-region-factory-example]]
+.`InfinispanRegionFactory` configuration
+====
+[source, XML, indent=0]
+----
+<property
+    name="hibernate.cache.region.factory_class"
+    value="org.hibernate.cache.infinispan.InfinispanRegionFactory" />
+----
+====
 
-`hibernate.cache.use_second_level_cache`:: Enable or disable second level caching overall. Default is true, although the default region factory is `NoCachingRegionFactory`.
-`hibernate.cache.use_query_cache`:: Enable or disable second level caching of query results. Default is false.
-`hibernate.cache.query_cache_factory`:: Query result caching is handled by a special contract that deals with staleness-based invalidation of the results.
-The default implementation does not allow stale results at all. Use this for applications that would like to relax that.
-Names an implementation of `org.hibernate.cache.spi.QueryCacheFactory`
-`hibernate.cache.use_minimal_puts`:: Optimizes second-level cache operations to minimize writes, at the cost of more frequent reads. Providers typically set this appropriately.
-`hibernate.cache.region_prefix`:: Defines a name to be used as a prefix to all second-level cache region names.
-`hibernate.cache.default_cache_concurrency_strategy`:: In Hibernate second-level caching, all regions can be configured differently including the concurrency strategy to use when accessing the region.
-This setting allows to define a default strategy to be used.
-This setting is very rarely required as the pluggable providers do specify the default strategy to use.
-Valid values include:
+[[caching-config-provider-infinispan-jndi-region-factory]]
+===== `JndiInfinispanRegionFactory`
+
+If the Infinispan `CacheManager` is bound to JNDI, then the `JndiInfinispanRegionFactory` should be used as a region factory:
+
+[[caching-config-provider-infinispan-jndi-region-factory-example]]
+.`JndiInfinispanRegionFactory` configuration
+====
+[source, XML, indent=0]
+----
+<property
+    name="hibernate.cache.region.factory_class"
+    value="org.hibernate.cache.infinispan.JndiInfinispanRegionFactory" />
+
+<property
+    name="hibernate.cache.infinispan.cachemanager"
+    value="java:CacheManager" />
+----
+====
+
+For more information about Infinispan, see the http://infinispan.org/docs/8.0.x/user_guide/user_guide.html#_using_infinispan_as_jpa_hibernate_second_level_cache_provider[reference documentation].
+
+[[caching-config-properties]]
+==== Caching configuration properties
+
+Besides specific provider configuration, there are a number of configurations options on the Hibernate side of the integration that control various caching behaviors:
+
+`hibernate.cache.use_second_level_cache`::
+	Enable or disable second level caching overall. Default is true, although the default region factory is `NoCachingRegionFactory`.
+`hibernate.cache.use_query_cache`::
+	Enable or disable second level caching of query results. Default is false.
+`hibernate.cache.query_cache_factory`::
+	Query result caching is handled by a special contract that deals with staleness-based invalidation of the results.
+	The default implementation does not allow stale results at all. Use this for applications that would like to relax that.
+	Names an implementation of `org.hibernate.cache.spi.QueryCacheFactory`
+`hibernate.cache.use_minimal_puts`::
+	Optimizes second-level cache operations to minimize writes, at the cost of more frequent reads. Providers typically set this appropriately.
+`hibernate.cache.region_prefix`::
+	Defines a name to be used as a prefix to all second-level cache region names.
+`hibernate.cache.default_cache_concurrency_strategy`::
+	In Hibernate second-level caching, all regions can be configured differently including the concurrency strategy to use when accessing that particular region.
+	This setting allows to define a default strategy to be used.
+	This setting is very rarely required as the pluggable providers do specify the default strategy to use.
+	Valid values include:
 * read-only,
 * read-write,
 * nonstrict-read-write,
 * transactional
-hibernate.cache.use_structured_entries:: If `true`, forces Hibernate to store data in the second-level cache in a more human-friendly format.
-Can be useful if you'd like to be able to "browse" the data directly in your cache, but does have a performance impact.
-* hibernate.cache.auto_evict_collection_cache:: Enables or disables the automatic eviction of a bidirectional association's collection cache entry when the association is changed just from the owning side.
-This is disabled by default, as it has a performance impact to track this state.
-However if your application does not manage both sides of bidirectional association where the collection side is cached, the alternative is to have stale data in that collection cache.
+`hibernate.cache.use_structured_entries`::
+	If `true`, forces Hibernate to store data in the second-level cache in a more human-friendly format.
+	Can be useful if you'd like to be able to "browse" the data directly in your cache, but does have a performance impact.
+`hibernate.cache.auto_evict_collection_cache`::
+	Enables or disables the automatic eviction of a bidirectional association's collection cache entry when the association is changed just from the owning side.
+	This is disabled by default, as it has a performance impact to track this state.
+	However if your application does not manage both sides of bidirectional association where the collection side is cached,
+	the alternative is to have stale data in that collection cache.
+`hibernate.cache.use_reference_entries`::
+	Enable direct storage of entity references into the second level cache for read-only or immutable entities.
+
+[[caching-mappings]]
+=== Configuring second-level cache mappings
+
+The cache mappings can be configured via JPA annotations or XML descriptors or using the Hibernate-specific mapping files.
+
+By default, entities are not part of the second level cache and we recommend you to stick to this setting.
+However, you can override this by setting the `shared-cache-mode` element in your `persistence.xml` file
+or by using the `javax.persistence.sharedCache.mode` property in your configuration file.
+The following values are possible:
+
+`ENABLE_SELECTIVE` (Default and recommended value)::
+	Entities are not cached unless explicitly marked as cacheable (with the https://docs.oracle.com/javaee/7/api/javax/persistence/Cacheable.html[`@Cacheable`] annotation).
+`DISABLE_SELECTIVE`:
+	Entities are cached unless explicitly marked as not cacheable.
+`ALL`:
+	Entities are always cached even if marked as non cacheable.
+`NONE`:
+	No entity is cached even if marked as cacheable.
+	This option can make sense to disable second-level cache altogether.
+
+The cache concurrency strategy used by default can be set globally via the `hibernate.cache.default_cache_concurrency_strategy` configuration property.
+The values for this property are:
+
+read-only::
+	If your application needs to read, but not modify, instances of a persistent class, a read-only cache is the best choice.
+	This is the simplest and optimal performing strategy.
+	It is even safe for use in a cluster.
+read-write::
+	If the application needs to update data, a read-write cache might be appropriate.
+	This cache strategy should never be used if serializable transaction isolation level is required.
+	If the cache is used in a JTA environment, you must specify the `hibernate.transaction.jta.platform` property.
+	In other environments, you should ensure that the transaction is completed when `Session.close()` or `Session.disconnect()` is called.
+	If you want to use this strategy in a cluster, you should ensure that the underlying cache implementation supports locking.
+nonstrict-read-write::
+	If the application only occasionally needs to update data
+	(e.g. if it is extremely unlikely that two transactions would try to update the same item simultaneously)
+	and strict transaction isolation is not required, a nonstrict-read-write cache might be appropriate.
+	If the cache is used in a JTA environment, you must specify the `hibernate.transaction.jta.platform` property.
+	In other environments, you should ensure that the transaction is completed when `Session.close()` or `Session.disconnect()` is called.
+transactional::
+	The transactional cache strategy provides support for fully transactional cache providers (e.g. Ehcache, Infinispan).
+	Such a cache can only be used in a JTA environment and you must specify `hibernate.transaction.jta.platform`.
+
+[NOTE]
+====
+Rather than using a global cache concurrency strategy, it is recommended to define this setting on a per entity basis.
+Use the https://docs.jboss.org/hibernate/stable/orm/javadocs/org/hibernate/annotations/Cache.html[`@org.hibernate.annotations.Cache`] annotation for that.
+====
+
+The `@Cache` annotation define three attributes:
+
+usage::
+	Defines the `CacheConcurrencyStrategy`
+region::
+	Defines a cache region where entries will be stored
+include::
+	If lazy properties should be included in the second level cache.
+	Default value is "all", so lazy properties are cacheable.
+	The other possible value is "non-lazy", so lazy properties are not cacheable.
+
+[[caching-query]]
+=== Entity cache
+
+[[caching-entity-mapping-example]]
+.Entity cache mapping
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/NonStrictReadWriteCacheTest.java[tags=caching-entity-mapping-example]
+----
+====
+
+Hibernate stores cached entities in a dehydrated forms, which is similar to the database representation.
+Aside from the foreign key column values of the `@ManyToOne` or `@OneToOne` child-side associations,
+entity relationships are not stored in the cache,
+
+Once an entity is stored in the second-level cache, you can avoid a database hit and load the entity from the cache alone:
+
+[[caching-entity-jpa-example]]
+.Loading entity using JPA
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-entity-jpa-example]
+----
+====
+
+[[caching-entity-native-example]]
+.Loading entity using Hibernate native API
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-entity-native-example]
+----
+====
+
+The Hibernate second-level cache can also load entities by their <<chapters/domain/natural_id.adoc#naturalid,natural id>>:
+
+[[caching-entity-natural-id-mapping-example]]
+.Hibernate natural id entity mapping
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-entity-natural-id-mapping-example]
+----
+====
+
+[[caching-entity-natural-id-example]]
+.Loading entity using Hibernate native natural id API
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-entity-natural-id-example]
+----
+====
+
+[[caching-collection]]
+=== Collection cache
+
+Hibernate can also cache collections, and the `@Cache` annotation must be on added to the collection property.
+
+If the collection is made of value types (basic or embeddables mapped with `@ElementCollection`),
+the collection is stored as such.
+If the collection contains other entities (`@OneToMany` or `@ManyToMany`),
+the collection cache entry will store the entity identifiers only.
+
+[[caching-collection-mapping-example]]
+.Collection cache mapping
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/NonStrictReadWriteCacheTest.java[tags=caching-collection-mapping-example]
+----
+====
+
+Collections are read-through, meaning they are cached upon being accessed for the first time:
+
+[[caching-collection-example]]
+.Collection cache usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/NonStrictReadWriteCacheTest.java[tags=caching-collection-example]
+----
+====
+
+Subsequent collection retrievals will use the cache instead of going to the database.
+
+[NOTE]
+====
+The collection cache is not write-through, so any modification will trigger a collection cache entry invalidation.
+On a subsequent access, the collection will be loaded from the database and re-cached.
+====
+
+[[caching-query]]
+=== Query cache
+
+Aside from caching entities and collections, Hibernate offers a query cache too.
+This is useful for frequently executed queries with fixed parameter values.
+
+[NOTE]
+====
+Caching of query results introduces some overhead in terms of your applications normal transactional processing.
+For example, if you cache results of a query against `Person`,
+Hibernate will need to keep track of when those results should be invalidated because changes have been committed against any `Person` entity.
+
+That, coupled with the fact that most applications simply gain no benefit from caching query results,
+leads Hibernate to disable caching of query results by default.
+====
+
+To use query caching, you will first need to enable it with the following configuration property:
+
+[[caching-query-configuration]]
+.Enabling query cache
+====
+[source, XML, indent=0]
+----
+<property
+    name="hibernate.cache.use_query_cache"
+    value="true" />
+----
+====
+
+As mentioned above, most queries do not benefit from caching or their results.
+So by default, individual queries are not cached even after enabling query caching.
+Each particular query that needs to be cached must be manually set as cacheable.
+This way, the query looks for existing cache results or adds the query results to the cache when being executed.
+
+[[caching-query-jpa-example]]
+.Caching query using JPA
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-query-jpa-example]
+----
+====
+
+[[caching-query-native-example]]
+.Caching query using Hibernate native API
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-query-native-example]
+----
+====
+
+[NOTE]
+====
+The query cache does not cache the state of the actual entities in the cache;
+it caches only identifier values and results of value type.
+
+Just as with collection caching, the query cache should always be used in conjunction with the second-level cache for those entities expected to be cached as part of a query result cache.
+====
+
+[[caching-query-region]]
+==== Query cache regions
+
+This setting creates two new cache regions:
+
+`org.hibernate.cache.internal.StandardQueryCache`::
+	Holding the cached query results
+`org.hibernate.cache.spi.UpdateTimestampsCache`::
+	Holding timestamps of the most recent updates to queryable tables.
+	These are used to validate the results as they are served from the query cache.
+
+[IMPORTANT]
+====
+If you configure your underlying cache implementation to use expiry or timeouts,
+it's very important that the cache timeout of the underlying cache region for the `UpdateTimestampsCache` be set to a higher value than the timeouts of any of the query caches.
+
+In fact, we recommend that the `UpdateTimestampsCache` region not be configured for expiry at all.
+Note that an LRU (Least Recently Used) cache expiry policy is never appropriate for this particular cache region.
+====
+
+If you require fine-grained control over query cache expiration policies,
+you can specify a named cache region for a particular query.
+
+[[caching-query-region-jpa-example]]
+.Caching query in custom region using JPA
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-query-region-jpa-example]
+----
+====
+
+[[caching-query-region-native-example]]
+.Caching query in custom region using Hibernate native API
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-query-region-native-example]
+----
+====
+
+If you want to force the query cache to refresh one of its regions (disregarding any cached results it finds there),
+you can use custom cache modes.
+
+[[caching-query-region-store-mode-jpa-example]]
+.Using custom query cache mode with JPA
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-query-region-store-mode-jpa-example]
+----
+====
+
+[[caching-query-region-native-example]]
+.Using custom query cache mode with Hibernate native API
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-query-region-store-mode-native-example]
+----
+====
+
+[NOTE]
+====
+When using http://docs.oracle.com/javaee/7/api/javax/persistence/CacheStoreMode.html#REFRESH[`CacheStoreMode.REFRESH`] or https://docs.jboss.org/hibernate/stable/orm/javadocs/org/hibernate/CacheMode.html#REFRESH[`CacheMode.REFRESH`] in conjunction with the region you have defined for the given query,
+Hibernate will selectively force the results cached in that particular region to be refreshed.
+
+This is particularly useful in cases where underlying data may have been updated via a separate process
+and is a far more efficient alternative to bulk eviction of the region via `SessionFactory` eviction which looks as follows:
+
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-query-region-native-evict-example]
+----
+
+====
 
 [[caching-management]]
-=== Managing the Cached Data
+=== Managing the cached data
 
-At runtime Hibernate handles moving data into and out of the second-level cache in response to the operations performed by the `Session`.
+Traditionally, Hibernate defined the https://docs.jboss.org/hibernate/stable/orm/javadocs/org/hibernate/CacheMode.html[`CacheMode`] enumeration to describe
+the ways of interactions with the cached data.
+JPA split cache modes by storage (http://docs.oracle.com/javaee/7/api/javax/persistence/CacheStoreMode.html[`CacheStoreMode`])
+and retrieval (http://docs.oracle.com/javaee/7/api/javax/persistence/CacheRetrieveMode.html[`CacheRetrieveMode`]).
 
-The `org.hibernate.Cache` interface (or the `javax.persistence.Cache` interface if using JPA) allow to clear data from the second-level cache.
+The relationship between Hibernate and JPA cache modes can be seen in the following table:
 
-TODO
+.Cache modes relationships
+[cols=",,,",options="header",]
+|======================================
+|Hibernate 			 | JPA | Description
+|`CacheMode.NORMAL`  |`CacheStoreMode.USE` and `CacheRetrieveMode.USE` | Default. Reads/writes data from/into cache
+|`CacheMode.REFRESH` |`CacheStoreMode.REFRESH` and `CacheRetrieveMode.BYPASS` | Doesn't read from cache, but writes to the cache upon loading from the database
+|`CacheMode.PUT`     |`CacheStoreMode.USE` and `CacheRetrieveMode.BYPASS` | Doesn't read from cache, but writes to the cache as it reads from the database
+|`CacheMode.GET`     |`CacheStoreMode.BYPASS` and `CacheRetrieveMode.USE` | Read from the cache, but doesn't write to cache
+|`CacheMode.IGNORE`  |`CacheStoreMode.BYPASS` and `CacheRetrieveMode.BYPASS` | Doesn't read/write data from/into cache
+|======================================
+
+Setting the cache mode can be done wither when loading entities directly or when executing a query.
+
+[[caching-management-cache-mode-entity-jpa-example]]
+.Using custom cache modes with JPA
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-management-cache-mode-entity-jpa-example]
+----
+====
+
+[[caching-management-cache-mode-entity-native-example]]
+.Using custom cache modes wit Hibernate native API
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-management-cache-mode-entity-native-example]
+----
+====
+
+The custom cache modes can be set for queries as well:
+
+[[caching-management-cache-mode-query-jpa-example]]
+.Using custom cache modes for queries with JPA
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-management-cache-mode-query-jpa-example]
+----
+====
+
+[[caching-management-cache-mode-query-native-example]]
+.Using custom cache modes for queries with Hibernate native API
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-management-cache-mode-query-native-example]
+----
+====
+
+[[caching-management-evict]]
+==== Evicting cache entries
+
+Because the second level cache is bound to the `EntityManagerFactory` or the `SessionFactory`,
+cache eviction must be done through these two interfaces.
+
+JPA only supports entity eviction through the https://docs.oracle.com/javaee/7/api/javax/persistence/Cache.html[`javax.persistence.Cache`] interface:
+
+[[caching-management-evict-jpa-example]]
+.Evicting entities with JPA
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-management-evict-jpa-example]
+----
+====
+
+Hibernate is much more flexible in this regard as it offers a fine-grained control over what needs to be evicted.
+The https://docs.jboss.org/hibernate/stable/orm/javadocs/org/hibernate/Cache.html[`org.hibernate.Cache`] interface defines various evicting strategies:
+
+- entities (by their class or region)
+- entities stored using the natural-id (by their class or region)
+- collections (by the region, and it might take the collection owner identifier as well)
+- queries (by region)
+
+[[caching-management-evict-native-example]]
+.Evicting entities with Hibernate native API
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-management-evict-native-example]
+----
+====
+
+[[caching-statistics]]
+=== Caching statistics
+
+If you enable the `hibernate.generate_statistics` configuration property,
+Hibernate will expose a number of metrics via `SessionFactory.getStatistics()`.
+Hibernate can even be configured to expose these statistics via JMX.
+
+This way, you can get access to the https://docs.jboss.org/hibernate/stable/orm/javadocs/org/hibernate/stat/Statistics.html[`Statistics`] class which comprises all sort of
+second-level cache metrics.
+
+[[caching-statistics-example]]
+.Caching statistics
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-statistics-example]
+----
+====

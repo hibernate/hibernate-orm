@@ -59,6 +59,7 @@ dependencies {
 
 	testCompile( project(':hibernate-testing') )
 	testCompile( project(path: ':hibernate-entitymanager', configuration: 'tests') )
+	testCompile( 'org.apache.commons:commons-lang3:3.4' )
 	testRuntime( libraries.h2 )
 }
 

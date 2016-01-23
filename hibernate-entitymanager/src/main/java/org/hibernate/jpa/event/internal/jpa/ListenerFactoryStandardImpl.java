@@ -13,19 +13,17 @@ import org.hibernate.jpa.event.spi.jpa.Listener;
 import org.hibernate.jpa.event.spi.jpa.ListenerFactory;
 
 /**
- * Standard implementation of the ListenerFactory contract using simple instantiation.  Listener instances
- * are kept in a map keyed by Class to achieve singleton-ness.
+ * Standard implementation of the ListenerFactory contract using simple instantiation.
  *
  * @author Steve Ebersole
  */
 public class ListenerFactoryStandardImpl implements ListenerFactory {
-
-	private final ConcurrentHashMap<Class,Listener> listenerInstances = new ConcurrentHashMap<Class,Listener>();
+	private final ConcurrentHashMap<Class,ListenerImpl> listenerInstances = new ConcurrentHashMap<Class,ListenerImpl>();
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> Listener<T> buildListener(Class<T> listenerClass) {
-		Listener listenerImpl = listenerInstances.get( listenerClass );
+		ListenerImpl listenerImpl = listenerInstances.get( listenerClass );
 		if ( listenerImpl == null ) {
 			try {
 				T listenerInstance = listenerClass.newInstance();
@@ -37,7 +35,7 @@ public class ListenerFactoryStandardImpl implements ListenerFactory {
 						e
 				);
 			}
-			Listener existing = listenerInstances.putIfAbsent(
+			ListenerImpl existing = listenerInstances.putIfAbsent(
 					listenerClass,
 					listenerImpl
 			);

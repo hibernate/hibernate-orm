@@ -33,6 +33,10 @@ dependencies {
     testCompile( libraries.validation )
     testCompile( "org.jboss.weld:weld-core:2.0.0.Beta6" )
     testCompile( "org.jboss.weld.arquillian.container:arquillian-weld-ee-embedded-1.1:1.1.2.Final" )
+    testCompile( "javax.enterprise:cdi-api:1.1-PFD" ) {
+        // we need to force it to make sure we influence the one coming from arquillian
+        force=true
+    }
     testCompile( libraries.mockito )
 
     testRuntime( libraries.validator )

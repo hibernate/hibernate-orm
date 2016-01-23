@@ -11,8 +11,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
 import java.sql.SQLException;
-import javax.sql.rowset.RowSetProvider;
 
 import org.hibernate.engine.jdbc.env.spi.AnsiSqlKeywords;
 import org.hibernate.internal.util.StringHelper;
@@ -298,7 +298,7 @@ public class JdbcMocks {
 			}
 
 			if ( "getTypeInfo".equals( methodName ) ) {
-				return RowSetProvider.newFactory().createCachedRowSet();
+				return EmptyResultSetHandler.makeProxy();
 			}
 
 			if ( "storesLowerCaseIdentifiers".equals( methodName ) ) {
@@ -334,5 +334,31 @@ public class JdbcMocks {
 			}
 		}
 		return false;
+	}
+
+	public static class EmptyResultSetHandler implements InvocationHandler {
+		public static ResultSet makeProxy() {
+			final EmptyResultSetHandler handler = new EmptyResultSetHandler();
+			return (ResultSet) Proxy.newProxyInstance(
+					ClassLoader.getSystemClassLoader(),
+					new Class[] {ResultSet.class},
+					handler
+			);
+
+		}
+
+		@Override
+		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+			if ( method.getName().equals( "next" ) ) {
+				return Boolean.FALSE;
+			}
+
+			if ( canThrowSQLException( method ) ) {
+				throw new SQLException();
+			}
+			else {
+				throw new UnsupportedOperationException();
+			}
+		}
 	}
 }

@@ -6,9 +6,6 @@
  */
 package org.hibernate.jpa.test.cdi;
 
-import javax.enterprise.context.spi.CreationalContext;
-import javax.enterprise.inject.spi.AnnotatedType;
-import javax.enterprise.inject.spi.InjectionTarget;
 import javax.inject.Inject;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
@@ -28,7 +25,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
-public class BasicCDITest extends BaseCDIIntegrationTest {
+public class BasicCdiTest extends BaseCdiIntegrationTest {
 	private static int count;
 
 	@Override

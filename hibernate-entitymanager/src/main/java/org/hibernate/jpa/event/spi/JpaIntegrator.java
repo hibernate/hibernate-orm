@@ -46,6 +46,7 @@ import org.hibernate.jpa.event.internal.jpa.CallbackRegistryImpl;
 import org.hibernate.jpa.event.internal.jpa.ListenerFactoryStandardImpl;
 import org.hibernate.jpa.event.spi.jpa.EntityCallbackBuilder;
 import org.hibernate.jpa.event.spi.jpa.ListenerFactory;
+import org.hibernate.jpa.event.spi.jpa.ListenerFactoryBuilder;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
@@ -126,12 +127,8 @@ public class JpaIntegrator implements Integrator {
 				.getReflectionManager();
 
 		this.callbackRegistry = new CallbackRegistryImpl();
-		final Object beanManagerRef = sessionFactory.getSessionFactoryOptions().getBeanManagerReference();
-		this.jpaListenerFactory = beanManagerRef == null
-				? new ListenerFactoryStandardImpl()
-				: buildBeanManagerListenerFactory( beanManagerRef );
+		this.jpaListenerFactory = ListenerFactoryBuilder.buildListenerFactory( sessionFactory.getSessionFactoryOptions() );
 		this.entityCallbackBuilder = new EntityCallbackBuilderLegacyImpl( jpaListenerFactory, reflectionManager );
-
 		for ( PersistentClass persistentClass : metadata.getEntityBindings() ) {
 			if ( persistentClass.getClassName() == null ) {
 				// we can have non java class persisted by hibernate
@@ -147,42 +144,6 @@ public class JpaIntegrator implements Integrator {
 					( (CallbackRegistryConsumer) listener ).injectCallbackRegistry( callbackRegistry );
 				}
 			}
-		}
-	}
-
-	private static final String CDI_LISTENER_FACTORY_CLASS = "org.hibernate.jpa.event.internal.jpa.ListenerFactoryBeanManagerImpl";
-
-	private ListenerFactory buildBeanManagerListenerFactory(Object beanManagerRef) {
-		try {
-			// specifically using our classloader here...
-			final Class beanManagerListenerFactoryClass = getClass().getClassLoader()
-					.loadClass( CDI_LISTENER_FACTORY_CLASS );
-			final Method beanManagerListenerFactoryBuilderMethod = beanManagerListenerFactoryClass.getMethod(
-					"fromBeanManagerReference",
-					Object.class
-			);
-
-			try {
-				return (ListenerFactory) beanManagerListenerFactoryBuilderMethod.invoke( null, beanManagerRef );
-			}
-			catch (InvocationTargetException e) {
-				throw e.getTargetException();
-			}
-		}
-		catch (ClassNotFoundException e) {
-			throw new HibernateException(
-					"Could not locate BeanManagerListenerFactory class to handle CDI extensions",
-					e
-			);
-		}
-		catch (HibernateException e) {
-			throw e;
-		}
-		catch (Throwable e) {
-			throw new HibernateException(
-					"Could not access BeanManagerListenerFactory class to handle CDI extensions",
-					e
-			);
 		}
 	}
 

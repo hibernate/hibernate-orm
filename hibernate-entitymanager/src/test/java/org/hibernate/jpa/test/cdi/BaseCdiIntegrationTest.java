@@ -18,8 +18,12 @@ import org.jboss.weld.bootstrap.api.Environments;
 /**
  * @author Steve Ebersole
  */
-public abstract class BaseCDIIntegrationTest extends BaseEntityManagerFunctionalTestCase {
+public abstract class BaseCdiIntegrationTest extends BaseEntityManagerFunctionalTestCase {
 	private TestContainer testContainer;
+
+	public TestContainer getTestContainer() {
+		return testContainer;
+	}
 
 	@Override
 	@SuppressWarnings("unchecked")

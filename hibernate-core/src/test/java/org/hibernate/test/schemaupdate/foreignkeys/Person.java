@@ -33,5 +33,5 @@ public class Person {
 			joinColumns = @JoinColumn(name = "PERSON_ID", foreignKey = @ForeignKey(name = "PERSON_ID_FK")),
 			inverseJoinColumns = @JoinColumn(name = "PHONE_ID", foreignKey = @ForeignKey(name = "PHONE_ID_FK"))
 	)
-	private List<Phone> phones = new ArrayList<>();
+	private List<Phone> phones = new ArrayList<Phone>();
 }

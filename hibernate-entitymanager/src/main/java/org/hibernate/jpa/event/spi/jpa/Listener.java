@@ -7,11 +7,11 @@
 package org.hibernate.jpa.event.spi.jpa;
 
 /**
- * Factory for building instances of callback listener classes.
+ * Encapsulates access to the listener instance for listener callbacks
+ * ({@link javax.persistence.EntityListeners}).
  *
  * @author Steve Ebersole
  */
-public interface ListenerFactory {
-	<T> Listener<T> buildListener(Class<T>  listenerClass);
-	void release();
+public interface Listener<T> {
+	T getListener();
 }

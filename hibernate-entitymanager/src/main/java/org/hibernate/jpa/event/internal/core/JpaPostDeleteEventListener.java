@@ -8,8 +8,9 @@ package org.hibernate.jpa.event.internal.core;
 
 import org.hibernate.event.spi.PostDeleteEvent;
 import org.hibernate.event.spi.PostDeleteEventListener;
-import org.hibernate.jpa.event.internal.jpa.CallbackRegistryConsumer;
+import org.hibernate.jpa.event.spi.jpa.CallbackRegistryConsumer;
 import org.hibernate.jpa.event.spi.jpa.CallbackRegistry;
+import org.hibernate.jpa.event.spi.jpa.CallbackType;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -37,6 +38,6 @@ public class JpaPostDeleteEventListener implements PostDeleteEventListener, Call
 
 	@Override
 	public boolean requiresPostCommitHanding(EntityPersister persister) {
-		return callbackRegistry.hasPostRemoveCallbacks( persister.getMappedClass() );
+		return callbackRegistry.hasRegisteredCallbacks( persister.getMappedClass(), CallbackType.POST_REMOVE );
 	}
 }

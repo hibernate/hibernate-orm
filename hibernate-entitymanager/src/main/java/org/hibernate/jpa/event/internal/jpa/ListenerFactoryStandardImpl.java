@@ -9,6 +9,7 @@ package org.hibernate.jpa.event.internal.jpa;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.persistence.PersistenceException;
 
+import org.hibernate.jpa.event.spi.jpa.Listener;
 import org.hibernate.jpa.event.spi.jpa.ListenerFactory;
 
 /**
@@ -17,17 +18,18 @@ import org.hibernate.jpa.event.spi.jpa.ListenerFactory;
  *
  * @author Steve Ebersole
  */
-public class StandardListenerFactory implements ListenerFactory {
+public class ListenerFactoryStandardImpl implements ListenerFactory {
 
-	private final ConcurrentHashMap listenerInstances = new ConcurrentHashMap();
+	private final ConcurrentHashMap<Class,Listener> listenerInstances = new ConcurrentHashMap<Class,Listener>();
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> T buildListener(Class<T> listenerClass) {
-		Object listenerInstance = listenerInstances.get( listenerClass );
-		if ( listenerInstance == null ) {
+	public <T> Listener<T> buildListener(Class<T> listenerClass) {
+		Listener listenerImpl = listenerInstances.get( listenerClass );
+		if ( listenerImpl == null ) {
 			try {
-				listenerInstance = listenerClass.newInstance();
+				T listenerInstance = listenerClass.newInstance();
+				listenerImpl = new ListenerImpl( listenerInstance );
 			}
 			catch (Exception e) {
 				throw new PersistenceException(
@@ -35,16 +37,32 @@ public class StandardListenerFactory implements ListenerFactory {
 						e
 				);
 			}
-			Object existing = listenerInstances.putIfAbsent( listenerClass, listenerInstance );
+			Listener existing = listenerInstances.putIfAbsent(
+					listenerClass,
+					listenerImpl
+			);
 			if ( existing != null ) {
-				listenerInstance = existing;
+				listenerImpl = existing;
 			}
 		}
-		return (T) listenerInstance;
+		return (Listener<T>) listenerImpl;
 	}
 
 	@Override
 	public void release() {
 		listenerInstances.clear();
+	}
+
+	private static class ListenerImpl<T> implements Listener<T> {
+		private final T listenerInstance;
+
+		public ListenerImpl(T listenerInstance) {
+			this.listenerInstance = listenerInstance;
+		}
+
+		@Override
+		public T getListener() {
+			return listenerInstance;
+		}
 	}
 }

@@ -17,8 +17,9 @@ import org.hibernate.event.spi.PostCollectionUpdateEvent;
 import org.hibernate.event.spi.PostCollectionUpdateEventListener;
 import org.hibernate.event.spi.PostUpdateEvent;
 import org.hibernate.event.spi.PostUpdateEventListener;
-import org.hibernate.jpa.event.internal.jpa.CallbackRegistryConsumer;
+import org.hibernate.jpa.event.spi.jpa.CallbackRegistryConsumer;
 import org.hibernate.jpa.event.spi.jpa.CallbackRegistry;
+import org.hibernate.jpa.event.spi.jpa.CallbackType;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -62,7 +63,7 @@ public class JpaPostUpdateEventListener
 
 	@Override
 	public boolean requiresPostCommitHanding(EntityPersister persister) {
-		return callbackRegistry.hasPostUpdateCallbacks( persister.getMappedClass() );
+		return callbackRegistry.hasRegisteredCallbacks( persister.getMappedClass(), CallbackType.POST_UPDATE );
 	}
 
 	@Override

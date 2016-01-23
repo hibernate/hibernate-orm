@@ -10,7 +10,7 @@ import java.io.Serializable;
 
 import org.hibernate.event.internal.DefaultSaveOrUpdateEventListener;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.jpa.event.internal.jpa.CallbackRegistryConsumer;
+import org.hibernate.jpa.event.spi.jpa.CallbackRegistryConsumer;
 import org.hibernate.jpa.event.spi.jpa.CallbackRegistry;
 
 /**

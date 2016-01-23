@@ -15,7 +15,7 @@ import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.event.internal.DefaultPersistEventListener;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.jpa.event.internal.jpa.CallbackRegistryConsumer;
+import org.hibernate.jpa.event.spi.jpa.CallbackRegistryConsumer;
 import org.hibernate.jpa.event.spi.jpa.CallbackRegistry;
 import org.hibernate.type.CollectionType;
 

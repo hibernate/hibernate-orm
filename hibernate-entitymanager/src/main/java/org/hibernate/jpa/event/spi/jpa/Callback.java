@@ -9,12 +9,29 @@ package org.hibernate.jpa.event.spi.jpa;
 import java.io.Serializable;
 
 /**
- * Represents a JPA event callback.
+ * Represents a JPA event callback (the method).
+ * <p/>
+ * Generally there are 2 flavors of this; either an annotated method on the entity itself
+ * or an annotated method on a separate "listener" class.  This contract unifies both of
+ * these cases.
  *
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
  * @author Steve Ebersole
  */
 public interface Callback extends Serializable {
+	/**
+	 * Is this callback active (will it do anything)?
+	 *
+	 * @return {@code true} if the callback is active, {@code false} otherwise.
+	 *
+	 * @deprecated I can actually find no usages of this method and have no idea
+	 * why it is here :)
+	 */
+	@Deprecated
+	boolean isActive();
+
+	CallbackType getCallbackType();
+
 	/**
 	 * Contract for performing the callback
 	 *
@@ -22,12 +39,5 @@ public interface Callback extends Serializable {
 	 *
 	 * @return Did a callback actually happen?
 	 */
-	public boolean performCallback(Object entity);
-
-	/**
-	 * Is this callback active (will it do anything)?
-	 *
-	 * @return
-	 */
-	public boolean isActive();
+	boolean performCallback(Object entity);
 }

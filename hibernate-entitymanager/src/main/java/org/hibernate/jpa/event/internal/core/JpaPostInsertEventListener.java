@@ -8,8 +8,9 @@ package org.hibernate.jpa.event.internal.core;
 
 import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
-import org.hibernate.jpa.event.internal.jpa.CallbackRegistryConsumer;
+import org.hibernate.jpa.event.spi.jpa.CallbackRegistryConsumer;
 import org.hibernate.jpa.event.spi.jpa.CallbackRegistry;
+import org.hibernate.jpa.event.spi.jpa.CallbackType;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -40,6 +41,6 @@ public class JpaPostInsertEventListener implements PostInsertEventListener, Call
 
 	@Override
 	public boolean requiresPostCommitHanding(EntityPersister persister) {
-		return callbackRegistry.hasPostCreateCallbacks( persister.getMappedClass() );
+		return callbackRegistry.hasRegisteredCallbacks( persister.getMappedClass(), CallbackType.POST_PERSIST );
 	}
 }

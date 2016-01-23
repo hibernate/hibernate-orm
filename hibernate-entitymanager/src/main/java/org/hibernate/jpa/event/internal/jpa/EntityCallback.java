@@ -10,6 +10,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import org.hibernate.jpa.event.spi.jpa.Callback;
+import org.hibernate.jpa.event.spi.jpa.CallbackType;
 
 /**
  * Represents a JPA callback on the entity itself
@@ -17,10 +18,11 @@ import org.hibernate.jpa.event.spi.jpa.Callback;
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
  * @author Steve Ebersole
  */
-public class EntityCallback implements Callback {
-	private Method callbackMethod;
+public class EntityCallback extends AbstractCallback implements Callback {
+	private final Method callbackMethod;
 
-	public EntityCallback(Method callbackMethod) {
+	public EntityCallback(Method callbackMethod, CallbackType callbackType) {
+		super( callbackType );
 		this.callbackMethod = callbackMethod;
 	}
 
@@ -42,10 +44,5 @@ public class EntityCallback implements Callback {
 		catch (Exception e) {
 			throw new RuntimeException( e );
 		}
-	}
-
-	@Override
-	public boolean isActive() {
-		return true;
 	}
 }

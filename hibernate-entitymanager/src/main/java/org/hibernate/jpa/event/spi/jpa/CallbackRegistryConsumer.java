@@ -4,10 +4,9 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.event.internal.jpa;
+package org.hibernate.jpa.event.spi.jpa;
 
 import org.hibernate.jpa.event.internal.core.HibernateEntityManagerEventListener;
-import org.hibernate.jpa.event.spi.jpa.CallbackRegistry;
 
 /**
  * Contract for injecting the registry of Callbacks into event listeners.
@@ -21,5 +20,5 @@ public interface CallbackRegistryConsumer extends HibernateEntityManagerEventLis
 	 *
 	 * @param callbackRegistry The CallbackRegistry
 	 */
-	public void injectCallbackRegistry(CallbackRegistry callbackRegistry);
+	void injectCallbackRegistry(CallbackRegistry callbackRegistry);
 }

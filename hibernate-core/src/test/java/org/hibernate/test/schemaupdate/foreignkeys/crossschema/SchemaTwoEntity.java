@@ -26,5 +26,5 @@ public class SchemaTwoEntity {
 
 	@OneToMany
 	@JoinColumn
-	private Set<SchemaOneEntity> schemaOneEntities = new HashSet<>();
+	private Set<SchemaOneEntity> schemaOneEntities = new HashSet<SchemaOneEntity>();
 }

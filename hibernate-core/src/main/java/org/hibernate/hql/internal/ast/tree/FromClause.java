@@ -103,7 +103,7 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 	}
 
 	/**
-	 * Retreives the from-element represented by the given alias.
+	 * Retrieve the from-element represented by the given alias.
 	 *
 	 * @param aliasOrClassName The alias by which to locate the from-element.
 	 *

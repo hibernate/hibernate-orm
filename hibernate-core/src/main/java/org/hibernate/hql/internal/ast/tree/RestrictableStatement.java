@@ -15,7 +15,7 @@ import antlr.collections.AST;
  */
 public interface RestrictableStatement extends Statement {
 	/**
-	 * Retreives the from-clause in effect for this statement.
+	 * Retrieve the from-clause in effect for this statement.
 	 *
 	 * @return The from-clause for this statement; could be null if the from-clause
 	 * has not yet been parsed/generated.
@@ -31,7 +31,7 @@ public interface RestrictableStatement extends Statement {
 	public boolean hasWhereClause();
 
 	/**
-	 * Retreives the where-clause defining the restriction(s) in effect for
+	 * Retrieve the where-clause defining the restriction(s) in effect for
 	 * this statement.
 	 * <p/>
 	 * Note that this will generate a where-clause if one was not found, so caution

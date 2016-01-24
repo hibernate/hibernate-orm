@@ -37,7 +37,7 @@ The change is noted here because it might affect your bootstrap configuration.  
 specify `hibernate.transaction.factory_class` and refer to a `org.hibernate.engine.transaction.spi.TransactionFactory` FQN,
 with 5.0 the new contract is `org.hibernate.resource.transaction.TransactionCoordinatorBuilder` and is specified using the
 `hibernate.transaction.coordinator_class` setting.  See `org.hibernate.cfg.AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY`
-JavaDocs for additional details.
+javadoc for additional details.
 
 The following short-names are recognized:
 `jdbc`::(the default) says to use JDBC-based transactions (`org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl`)
@@ -75,9 +75,9 @@ into a physical name (e.g. following corporate naming guidelines)
 == Changed setting defaults
 
 * Default value for `hibernate.id.new_generator_mappings` setting changed to true for 5.0.  See
-    `org.hibernate.cfg.AvailableSettings#USE_NEW_ID_GENERATOR_MAPPINGS` javadocs.
+    `org.hibernate.cfg.AvailableSettings#USE_NEW_ID_GENERATOR_MAPPINGS` javadoc.
 * The default ImplicitNamingStrategy (`hibernate.implicit_naming_strategy`) has changed to the JPA-compliant one.  See
-    `org.hibernate.cfg.AvailableSettings.IMPLICIT_NAMING_STRATEGY` javadocs for details.  If you experience problems
+    `org.hibernate.cfg.AvailableSettings.IMPLICIT_NAMING_STRATEGY` javadoc for details.  If you experience problems
     migrating dues to implicit table or column names you may want to specify the legacy strategy
     (`legacy-hbm` \ `org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyHbmImpl`).
 * `hibernate.jdbc.batch_versioned_data` default value is now true; Oracle dialects set this property to false,

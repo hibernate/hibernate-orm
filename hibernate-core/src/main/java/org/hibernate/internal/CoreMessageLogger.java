@@ -1239,7 +1239,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToResolveMappingFile(String xmlFile);
 
 	@LogMessage(level = INFO)
-	@Message(value = "Unable to retreive cache from JNDI [%s]: %s", id = 361)
+	@Message(value = "Unable to retrieve cache from JNDI [%s]: %s", id = 361)
 	void unableToRetrieveCache(
 			String namespace,
 			String message);

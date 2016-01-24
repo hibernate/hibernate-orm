@@ -334,7 +334,7 @@ public abstract class AbstractQueryImpl implements Query {
 	}
 
 	/**
-	 * Retreive the value map for any named parameter lists (i.e., for
+	 * Retrieve the value map for any named parameter lists (i.e., for
 	 * auto-expansion) bound to this query.
 	 *
 	 * @return The parameter list value map.
@@ -344,7 +344,7 @@ public abstract class AbstractQueryImpl implements Query {
 	}
 
 	/**
-	 * Retreives the list of parameter values bound to this query for
+	 * Retrieve the list of parameter values bound to this query for
 	 * ordinal parameters.
 	 *
 	 * @return The ordinal parameter values.
@@ -354,7 +354,7 @@ public abstract class AbstractQueryImpl implements Query {
 	}
 
 	/**
-	 * Retreives the list of parameter {@link Type type}s bound to this query for
+	 * Retrieve the list of parameter {@link Type type}s bound to this query for
 	 * ordinal parameters.
 	 *
 	 * @return The ordinal parameter types.

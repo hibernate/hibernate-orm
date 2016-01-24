@@ -32,7 +32,7 @@ Instead of annotating the whole class and auditing all properties, you can annot
 This will cause only these properties to be audited.
 
 The audit (history) of an entity can be accessed using the `AuditReader` interface, which can be obtained having an open `EntityManager` or `Session` via the `AuditReaderFactory`.
-See the [Javadocs](https://docs.jboss.org/hibernate/stable/orm/javadocs/org/hibernate/envers/AuditReaderFactory.html) for these classes for details on the functionality offered.
+See the [Javadoc](https://docs.jboss.org/hibernate/stable/orm/javadocs/org/hibernate/envers/AuditReaderFactory.html) for these classes for details on the functionality offered.
 
 [[envers-configuration]]
 === Configuration

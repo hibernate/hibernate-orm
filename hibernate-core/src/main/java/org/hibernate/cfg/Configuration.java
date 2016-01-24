@@ -766,7 +766,7 @@ public class Configuration {
 
 	/**
 	 * Adds the AttributeConverter instance to this Configuration.  This form is mainly intended for developers
-	 * to programatically add their own AttributeConverter instance.  HEM, instead, uses the
+	 * to programmatically add their own AttributeConverter instance.  HEM, instead, uses the
 	 * {@link #addAttributeConverter(Class, boolean)} form
 	 *
 	 * @param attributeConverter The AttributeConverter instance.
@@ -777,7 +777,7 @@ public class Configuration {
 
 	/**
 	 * Adds the AttributeConverter instance to this Configuration.  This form is mainly intended for developers
-	 * to programatically add their own AttributeConverter instance.  HEM, instead, uses the
+	 * to programmatically add their own AttributeConverter instance.  HEM, instead, uses the
 	 * {@link #addAttributeConverter(Class, boolean)} form
 	 *
 	 * @param attributeConverter The AttributeConverter instance.

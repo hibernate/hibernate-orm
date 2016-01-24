@@ -223,7 +223,7 @@
             <para>
                 Identification variables are often referred to as aliases.  References to object model classes
                 in the FROM clause can be associated with an identification variable that can then be used to
-                refer to that type thoughout the rest of the query.
+                refer to that type throughout the rest of the query.
             </para>
             <para>
                 In most cases declaring an identification variable is optional, though it is usually good practice to
@@ -1494,7 +1494,7 @@
             </example>
 
             <para>
-                For complete details, see the Query javadocs.
+                For complete details, see the Query javadoc.
             </para>
 
             <important>
@@ -1515,7 +1515,7 @@
 
             <para>
                 Hibernate also allows an application to hook into the process of building the query results via the
-                <interfacename>org.hibernate.transform.ResultTransformer</interfacename> contract.  See its javadocs
+                <interfacename>org.hibernate.transform.ResultTransformer</interfacename> contract.  See its javadoc
                 as well as the Hibernate-provided implementations for additional details.
             </para>
 
@@ -1587,7 +1587,7 @@
                 <methodname>Query#scroll</methodname> works in tandem with the JDBC notion of a scrollable
                 ResultSet.  The <methodname>scroll</methodname> method is overloaded.  Then main form accepts a single
                 argument of type <interfacename>org.hibernate.ScrollMode</interfacename> which indicates the type of
-                scrolling to be used.  See the javadocs for ScrollMode for the details on each.  The second form accepts
+                scrolling to be used.  See the javadoc for ScrollMode for the details on each.  The second form accepts
                 no argument and will use the ScrollMode indicated by
                 <methodname>Dialect#defaultScrollMode</methodname>.  <methodname>Query#scroll</methodname> returns
                 a <interfacename>org.hibernate.ScrollableResults</interfacename> which wraps the underlying JDBC
@@ -1658,7 +1658,7 @@
             </example>
 
             <para>
-                For complete details, see the Query javadocs.  Many of the settings controlling the execution of the
+                For complete details, see the Query javadoc.  Many of the settings controlling the execution of the
                 query are defined as hints.  JPA defines some standard hints (like timeout in the example), but most
                 are provider specific.  Relying on provider specific hints limits your applications portability to some
                 degree.

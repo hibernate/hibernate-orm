@@ -641,7 +641,7 @@ catch (RuntimeException e) {
                 <literal>JDBCException</literal> subclass using the <literal>SQLExceptionConverter</literal> 
                 attached to the <literal>SessionFactory</literal>. By default, the 
                 <literal>SQLExceptionConverter</literal> is defined by the configured dialect.  However, it is
-                also possible to plug in a custom implementation. See the javadocs for the
+                also possible to plug in a custom implementation. See the javadoc for the
                 <literal>SQLExceptionConverterFactory</literal> class for details.  The standard 
                 <literal>JDBCException</literal> subtypes are:
             </para>

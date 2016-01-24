@@ -31,7 +31,7 @@ public void doSomeWork() {
 		if ( session.getTransaction().getStatus() == ACTIVE
 				|| session.getTransaction().getStatus() == MARKED_ROLLBACK ) {
 			// calls TM/UT commit method, assuming we are initiator;
-			// otherwise marks the JTA trsnaction for rollback only
+			// otherwise marks the JTA transaction for rollback only
 			session.getTransaction().rollback();
 		}
 		// handle the underlying error

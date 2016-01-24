@@ -35,7 +35,7 @@ one of the following values:
     * log4j
     * slf4j
 
-. Next, JBoss Logging will look for a JDK service (see javadocs for +java.util.ServiceLoader+ for details) for its
+. Next, JBoss Logging will look for a JDK service (see javadoc for +java.util.ServiceLoader+ for details) for its
 "provider" contract (+org.jboss.logging.Provider+).  If multiple are available, it will use the first one returned by
 the ClassLoader.
 

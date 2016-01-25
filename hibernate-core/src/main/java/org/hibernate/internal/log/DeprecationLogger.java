@@ -208,5 +208,13 @@ public interface DeprecationLogger extends BasicLogger {
 //	)
 //	void logDeprecatedBytecodeEnhancement();
 
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000020,
+			value = "You are using the deprecated legacy bytecode enhancement Ant-task.  This task is left in place for a short-time to " +
+					"aid migrations to 5.1 and the new (vastly improved) bytecode enhancement support.  This task (%s) now delegates to the" +
+					"new Ant-task (%s) leveraging that new bytecode enhancement.  You should update your build to use the new task explicitly."
+	)
+	void logDeprecatedInstrumentTask(Class taskClass, Class newTaskClass);
 
 }

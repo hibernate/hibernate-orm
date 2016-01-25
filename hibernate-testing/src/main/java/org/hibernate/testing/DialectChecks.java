@@ -111,6 +111,12 @@ abstract public class DialectChecks {
 		}
 	}
 
+	public static class SupportsRowValueConstructorSyntaxCheck implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect.supportsRowValueConstructorSyntax();
+		}
+	}
+
 	public static class SupportsRowValueConstructorSyntaxInInListCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
 			return dialect.supportsRowValueConstructorSyntaxInInList();

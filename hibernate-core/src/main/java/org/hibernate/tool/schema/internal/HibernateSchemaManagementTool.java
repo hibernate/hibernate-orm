@@ -17,7 +17,6 @@ import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.schema.spi.SchemaCreator;
 import org.hibernate.tool.schema.spi.SchemaDropper;
-import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaFilterProvider;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.SchemaMigrator;
@@ -53,12 +52,14 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 	}
 	
 	private SchemaFilterProvider getSchemaFilterProvider(Map options) {
-		return serviceRegistry.getService( StrategySelector.class )
-				.resolveDefaultableStrategy( 
-						SchemaFilterProvider.class, 
-						options.get( AvailableSettings.SCHEMA_FILTER_PROVIDER ), 
-						DefaultSchemaFilterProvider.INSTANCE 
-				);
+		final Object configuredOption = (options == null)
+				? null
+				: options.get( AvailableSettings.SCHEMA_FILTER_PROVIDER );
+		return serviceRegistry.getService( StrategySelector.class ).resolveDefaultableStrategy(
+				SchemaFilterProvider.class,
+				configuredOption,
+				DefaultSchemaFilterProvider.INSTANCE
+		);
 	}
 	
 	@Override

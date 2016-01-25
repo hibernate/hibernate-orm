@@ -12,8 +12,8 @@ import org.hibernate.tool.schema.spi.Target;
 
 class RecordingTarget implements Target {
 	
-	private final Map<String,Pattern> patterns = new HashMap<>();
-	private final Map<String,Set<String>> actionsByCategory = new HashMap<>();
+	private final Map<String,Pattern> patterns = new HashMap<String, Pattern>();
+	private final Map<String,Set<String>> actionsByCategory = new HashMap<String, Set<String>>();
 	
 	public RecordingTarget() {
 		patterns.put( "schema.create", Pattern.compile( "create schema (.*)" ) );
@@ -25,7 +25,7 @@ class RecordingTarget implements Target {
 	public Set<String> getActions( String category ) {
 		Set<String> result = actionsByCategory.get( category );
 		if ( result == null ) {
-			result = new HashSet<>();
+			result = new HashSet<String>();
 			actionsByCategory.put( category, result );
 		}
 		return result;

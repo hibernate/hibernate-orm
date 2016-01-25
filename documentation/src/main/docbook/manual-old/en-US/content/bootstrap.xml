@@ -29,7 +29,7 @@
         <interfacename>org.hibernate.cfg.AvailableSettings</interfacename> interface.  Most of the available
         settings for JPA bootstrapping (beyond the native ones) are exposed as constants on the
         <interfacename>org.hibernate.jpa.AvailableSettings</interfacename> interface.  Each setting
-        is explained individually in detail in the javadoc.  Those javadocs are the authoritative source for the
+        is explained individually in detail in the javadoc.  Those javadoc are the authoritative source for the
         discussion of each individual setting.  The focus of this chapter is more about groupings of settings and
         values to achieve certain goals.
     </para>

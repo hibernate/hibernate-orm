@@ -73,10 +73,10 @@ task buildDocs {
 final File javadocDir = mkdir( new File( (File) project.buildDir, 'javadocs' ) );
 
 /**
- * Builds the JavaDocs aggregated (unified) across all the sub-projects
+ * Builds the Javadoc aggregated (unified) across all the sub-projects
  */
 task aggregateJavadocs(type: Javadoc) {
-    description = 'Builds the aggregated (unified) JavaDocs across all sub-projects'
+    description = 'Builds the aggregated (unified) javadoc across all sub-projects'
 
     final int copyrightYear = new GregorianCalendar().get( Calendar.YEAR );
 
@@ -129,8 +129,8 @@ task aggregateJavadocs(type: Javadoc) {
     configure( options ) {
         overview = rootProject.file( 'shared/javadoc/overview.html' )
         stylesheetFile = rootProject.file( 'shared/javadoc/stylesheet.css' )
-        windowTitle = 'Hibernate JavaDocs'
-        docTitle = "Hibernate JavaDoc ($project.version)"
+        windowTitle = 'Hibernate Javadoc'
+        docTitle = "Hibernate Javadoc ($project.version)"
         bottom = "Copyright &copy; 2001-$copyrightYear <a href=\"http://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
         use = true
         options.encoding = 'UTF-8'

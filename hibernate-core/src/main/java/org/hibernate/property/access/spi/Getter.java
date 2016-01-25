@@ -34,7 +34,7 @@ public interface Getter extends Serializable {
 	/**
 	 * Get the property value from the given owner instance.
 	 *
-	 * @param owner The instance containing the value to be retreived.
+	 * @param owner The instance containing the value to be retrieved.
 	 * @param mergeMap a map of merged persistent instances to detached instances
 	 * @param session The session from which this request originated.
 	 *

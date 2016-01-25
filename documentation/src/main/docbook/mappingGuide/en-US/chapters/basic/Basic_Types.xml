@@ -502,7 +502,7 @@
         </para>
 
         <para>
-            The <literal>@Column</literal> annotation defines other mapping information as well.  See its javadocs
+            The <literal>@Column</literal> annotation defines other mapping information as well.  See its javadoc
             for details.
         </para>
     </section>

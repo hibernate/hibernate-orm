@@ -23,7 +23,7 @@ import org.hibernate.tuple.Tuplizer;
  */
 public interface ComponentTuplizer extends Tuplizer, Serializable {
 	/**
-	 * Retreive the current value of the parent property.
+	 * Retrieve the current value of the parent property.
 	 *
 	 * @param component The component instance from which to extract the parent
 	 * property value.

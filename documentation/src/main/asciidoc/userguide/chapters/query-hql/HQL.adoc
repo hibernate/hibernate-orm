@@ -9,7 +9,7 @@ A JPQL query is always a valid HQL query, the reverse is not true however.
 Both HQL and JPQL are non-type-safe ways to perform query operations.
 Criteria queries offer a type-safe approach to querying.  See <<chapters/query-criteria/Criteria.adoc#criteria,Criteria>> for more information.
 
-=== Case Sensitivity
+=== Case sensitivity
 
 With the exception of names of Java classes and properties, queries are case-insensitive.
 So `SeLeCT` is the same as `sELEct` is the same as `SELECT`, but `org.hibernate.eg.FOO` and `org.hibernate.eg.Foo` are different, as are `foo.barSet` and `foo.BARSET`.
@@ -1155,7 +1155,7 @@ include::{sourcedir}/api/hibernate/BasicQueryUsage.java[]
 ----
 ====
 
-For complete details, see the http://docs.jboss.org/hibernate/stable/core/javadocs/org/hibernate/Query.html[Query] Javadocs.
+For complete details, see the http://docs.jboss.org/hibernate/stable/core/javadocs/org/hibernate/Query.html[Query] Javadoc.
 
 [IMPORTANT]
 ====
@@ -1171,7 +1171,7 @@ Locking is covered in detail in <<chapters/locking/Locking.adoc#locking,Locking>
 The concept of read-only state is covered in <<chapters/pc/PersistenceContext.adoc#pc,Persistence Contexts>>.
 
 Hibernate also allows an application to hook into the process of building the query results via the `org.hibernate.transform.ResultTransformer` contract.
-See its http://docs.jboss.org/hibernate/stable/core/javadocs/org/hibernate/transform/ResultTransformer.html[Javadocs] as well as the Hibernate-provided implementations for additional details.
+See its http://docs.jboss.org/hibernate/stable/core/javadocs/org/hibernate/transform/ResultTransformer.html[Javadoc] as well as the Hibernate-provided implementations for additional details.
 
 The last thing that needs to happen before we can execute the query is to bind the values for any parameters defined in the query.
 Query defines many overloaded methods for this purpose.
@@ -1235,7 +1235,7 @@ Hibernate offers 2 additional, specialized methods for performing the query and 
 The `scroll` method is overloaded.
 
 * Then main form accepts a single argument of type `org.hibernate.ScrollMode` which indicates the type of scrolling to be used.
-See the http://docs.jboss.org/hibernate/stable/core/javadocs/org/hibernate/ScrollMode.html[Javadocs] for the details on each.
+See the http://docs.jboss.org/hibernate/stable/core/javadocs/org/hibernate/ScrollMode.html[Javadoc] for the details on each.
 * The second form takes no argument and will use the `ScrollMode` indicated by `Dialect#defaultScrollMode`.
 `Query#scroll` returns a `org.hibernate.ScrollableResults` which wraps the underlying JDBC (scrollable) `ResultSet` and provides access to the results.
 Since this form holds the JDBC `ResultSet` open, the application should indicate when it is done with the `ScrollableResults` by calling its `close()` method (as inherited from `java.io.Closeable`, so that `ScrollableResults` will work with try-with-resources blocks!).
@@ -1297,7 +1297,7 @@ include::{sourcedir}/api/jpa/BasicQueryUsage.java[]
 ----
 ====
 
-For complete details, see the `Query` http://docs.oracle.com/javaee/7/api/javax/persistence/Query.html[Javadocs].
+For complete details, see the `Query` http://docs.oracle.com/javaee/7/api/javax/persistence/Query.html[Javadoc].
 Many of the settings controlling the execution of the query are defined as hints.
 JPA defines some standard hints (like timeout in the example), but most are provider specific.
 Relying on provider specific hints limits your applications portability to some degree.

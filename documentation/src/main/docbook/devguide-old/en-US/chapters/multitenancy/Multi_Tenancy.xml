@@ -222,7 +222,7 @@
                         <classname>DataSourceBasedMultiTenantConnectionProviderImpl</classname>
                         implementation which works on a number of pretty reasonable assumptions when running inside of
                         an app server and using one <interfacename>javax.sql.DataSource</interfacename> per tenant.
-                        See its javadocs for more details.
+                        See its javadoc for more details.
                     </para>
                 </listitem>
             </itemizedlist>

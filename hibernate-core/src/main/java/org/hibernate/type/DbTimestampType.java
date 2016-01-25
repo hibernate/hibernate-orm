@@ -84,7 +84,7 @@ public class DbTimestampType extends TimestampType {
 			Timestamp ts = rs.getTimestamp( 1 );
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
-						"Current timestamp retreived from db : {0} (nanos={1}, time={2})",
+						"Current timestamp retrieved from db : {0} (nanos={1}, time={2})",
 						ts,
 						ts.getNanos(),
 						ts.getTime()
@@ -119,7 +119,7 @@ public class DbTimestampType extends TimestampType {
 			Timestamp ts = cs.getTimestamp( 1 );
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
-						"Current timestamp retreived from db : {0} (nanos={1}, time={2})",
+						"Current timestamp retrieved from db : {0} (nanos={1}, time={2})",
 						ts,
 						ts.getNanos(),
 						ts.getTime()

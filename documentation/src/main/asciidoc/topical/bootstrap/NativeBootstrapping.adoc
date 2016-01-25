@@ -92,7 +92,7 @@ one of 2 ways:
 The second form will create a `BootstrapServiceRegistry` on the fly with default behavior.
 
 A `StandardServiceRegistry` is also highly configurable via the `StandardServiceRegistryBuilder` API.  See the
-`StandardServiceRegistryBuilder` javadocs for full details.  Some specific methods of interest:
+`StandardServiceRegistryBuilder` javadoc for full details.  Some specific methods of interest:
 
 [[standard-registry-builder-example3]]
 .Configuring StandardServiceRegistryBuilder
@@ -154,7 +154,7 @@ the purpose of `org.hibernate.boot.MetadataSources`.
 ----
 ====
 
-`MetadataSources` has many other methods as well; explore its API and javadocs for more information.  Also,
+`MetadataSources` has many other methods as well; explore its API and javadoc for more information.  Also,
 all methods on `MetadataSources` allow for chaining should you prefer that style.
 
 [[MetadataSources-chaining-example]]
@@ -181,7 +181,7 @@ same `StandardServiceRegistry`.
 
 However, if you wish to adjust the process of building `Metadata` from `MetadataSources` you will need to use
 the `MetadataBuilder` as obtained via `MetadataSources#getMetadataBuilder`.  `MetadataBuilder` allows a lot of control
-over the `Metadata` building process.  See its javadocs for full details.
+over the `Metadata` building process.  See its javadoc for full details.
 
 [[MetadataBuilder-example]]
 .Building Metadata via MetadataBuilder
@@ -205,7 +205,7 @@ over the `Metadata` building process.  See its javadocs for full details.
 Much like we've discussed above, if you are ok with the default behavior of building a `SessionFactory`
 from a `Metadata` reference, you can simply call `Metadata#buildSessionFactory`.  However, if you would like to
 adjust that building process you will need to use `SessionFactoryBuilder` as obtained via
-`Metadata#getSessionFactoryBuilder`.  See the `SessionFactoryBuilder` javadocs for details of the control it allows
+`Metadata#getSessionFactoryBuilder`.  See the `SessionFactoryBuilder` javadoc for details of the control it allows
 over the `SessionFactory` building process.
 
 [[SessionFactoryBuilder-example]]

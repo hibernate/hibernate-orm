@@ -407,7 +407,7 @@ List pusList = query.setString("name", "Pus%").list();          </programlisting
     <literal>addEntity()</literal>.</para>
 
     <example>
-      <title>Named sql query using the &lt;sql-query&gt; maping
+      <title>Named sql query using the &lt;sql-query&gt; mapping
       element</title>
 
       <programlisting role="XML">&lt;sql-query name="persons"&gt;
@@ -514,7 +514,7 @@ List pusList = query.setString("name", "Pus%").list();          </programlisting
 
     <para>So far we have only looked at externalizing SQL queries using
     Hibernate mapping files. The same concept is also available with
-    anntations and is called named native queries. You can use
+    annotations and is called named native queries. You can use
     <classname>@NamedNativeQuery</classname>
     (<classname>@NamedNativeQueries</classname>) in conjunction with
     <literal>@SqlResultSetMapping</literal>
@@ -906,10 +906,10 @@ BEGIN
 
     <para>Hibernate can use custom SQL for create, update, and delete
     operations. The SQL can be overridden at the statement level or
-    inidividual column level. This section describes statement overrides. For
+    individual column level. This section describes statement overrides. For
     columns, see <xref linkend="mapping-column-read-and-write" />. <xref
     linkend="example-custom-crdu-via-annotations" /> shows how to define
-    custom SQL operatons using annotations.</para>
+    custom SQL operations using annotations.</para>
 
     <example xml:id="example-custom-crdu-via-annotations">
       <title>Custom CRUD via annotations</title>
@@ -978,7 +978,7 @@ public class Chaos {
     </itemizedlist>
 
     <para>To define the result check style, use the <literal>check</literal>
-    parameter which is again available in annoations as well as in xml.</para>
+    parameter which is again available in annotations as well as in xml.</para>
 
     <para>You can use the exact same set of annotations respectively xml nodes
     to override the collection related statements -see <xref

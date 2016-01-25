@@ -101,7 +101,7 @@
 
             <para>
                 A StandardServiceRegistry is also highly configurable via the StandardServiceRegistryBuilder API.
-                See the StandardServiceRegistryBuilder javadocs for full details.  Some specific methods of interest:
+                See the StandardServiceRegistryBuilder javadoc for full details.  Some specific methods of interest:
             </para>
 
             <example>
@@ -126,7 +126,7 @@
             </example>
 
             <para>
-                MetadataSources has many other methods as well; explore its API and javadocs for more information.
+                MetadataSources has many other methods as well; explore its API and javadoc for more information.
                 Also, all methods on MetadataSources allow for chaining should you prefer that style:
             </para>
 
@@ -153,7 +153,7 @@
             <para>
                 However, if you wish to adjust the process of building Metadata from MetadataSources you will need
                 to use the MetadataBuilder as obtained via MetadataSources#getMetadataBuilder.  MetadataBuilder
-                allows a lot of control over the Metadata building process.  See its javadocs for full details.
+                allows a lot of control over the Metadata building process.  See its javadoc for full details.
             </para>
 
             <example>
@@ -173,7 +173,7 @@
             <para>
                 However, if you would like to adjust that building process you will need to use
                 SessionFactoryBuilder as obtained via Metadata#getSessionFactoryBuilder.   Again, see its
-                javadocs for full details.
+                javadoc for full details.
             </para>
 
             <example>

@@ -201,7 +201,7 @@
             <para>
                 Identification variables are often referred to as aliases.  References to object model classes
                 in the FROM clause can be associated with an identification variable that can then be used to
-                refer to that type thoughout the rest of the query.
+                refer to that type throughout the rest of the query.
             </para>
             <para>
                 In most cases declaring an identification variable is optional, though it is usually good practice to

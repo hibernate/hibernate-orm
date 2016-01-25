@@ -270,7 +270,7 @@
         <para>
             In the CMT case we really could have omitted all of the Transaction calls.  But the point of
             the examples was to show that the Transaction API really does insulate your code from the underlying
-            transaction mechanism.  In fact if you strip away the comments and the single configruation
+            transaction mechanism.  In fact if you strip away the comments and the single configuration
             setting supplied at bootstrap, the code is exactly the same in all 3 examples.  In other words,
             we could develop that code and drop it, as-is, in any of the 3 transaction environments.
         </para>

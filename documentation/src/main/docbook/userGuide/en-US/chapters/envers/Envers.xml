@@ -46,7 +46,7 @@
             which stores the historical data, whenever you commit a transaction. Envers automatically creates audit
             tables if <literal>hibernate.hbm2ddl.auto</literal> option is set to <literal>create</literal>,
             <literal>create-drop</literal> or <literal>update</literal>. Otherwise, to export complete database schema
-            programatically, use <literal>org.hibernate.envers.tools.hbm2ddl.EnversSchemaGenerator</literal>. Appropriate DDL
+            programmatically, use <literal>org.hibernate.envers.tools.hbm2ddl.EnversSchemaGenerator</literal>. Appropriate DDL
             statements can be also generated with Ant task described later in this manual.
         </para>
 
@@ -59,7 +59,7 @@
         <para>
             The audit (history) of an entity can be accessed using the <literal>AuditReader</literal> interface, which
             can be obtained having an open <literal>EntityManager</literal> or <literal>Session</literal> via
-            the <literal>AuditReaderFactory</literal>. See the javadocs for these classes for details on the
+            the <literal>AuditReaderFactory</literal>. See the javadoc for these classes for details on the
             functionality offered.
         </para>
     </section>
@@ -842,7 +842,7 @@ Set<ModifiedEntityTypeEntity> modifiedEntityTypes = revEntity.getModifiedEntityT
             <programlisting><![CDATA[query.add(AuditEntity.property("name").eq("John"));]]></programlisting>
 
             <para>
-                And to select only entites that are related to a given entity:
+                And to select only entities that are related to a given entity:
             </para>
 
             <programlisting><![CDATA[query.add(AuditEntity.property("address").eq(relatedEntityInstance));

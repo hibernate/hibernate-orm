@@ -147,7 +147,7 @@ public class AuditQueryCreator {
 	 * Additional conditions that the results must satisfy may be specified.
 	 *
 	 * @param c Class of the entities for which to query.
-	 * @param selectEntitiesOnly If true, instead of a list of three-element arrays, a list of entites will be
+	 * @param selectEntitiesOnly If true, instead of a list of three-element arrays, a list of entities will be
 	 * returned as a result of executing this query.
 	 * @param selectDeletedEntities If true, also revisions where entities were deleted will be returned. The additional
 	 * entities will have revision type "delete", and contain no data (all fields null), except for the id field.
@@ -181,7 +181,7 @@ public class AuditQueryCreator {
 	 *
 	 * @param c Class of the entities for which to query.
 	 * @param entityName Name of the entity (if can't be guessed basing on the {@code c}).
-	 * @param selectEntitiesOnly If true, instead of a list of three-element arrays, a list of entites will be
+	 * @param selectEntitiesOnly If true, instead of a list of three-element arrays, a list of entities will be
 	 * returned as a result of executing this query.
 	 * @param selectDeletedEntities If true, also revisions where entities were deleted will be returned. The additional
 	 * entities will have revision type "delete", and contain no data (all fields null), except for the id field.

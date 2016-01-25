@@ -200,7 +200,7 @@ while ( iter.hasNext() ) {
 		Without this feature, first all of the cats without a mate would need to be loaded in one query. 
 	</para>
 	<para>
-		A second query would need to retreive the cats with mates who's name started with "good" sorted by the mates age.
+		A second query would need to retrieve the cats with mates who's name started with "good" sorted by the mates age.
 	</para>
 	<para>
 		Thirdly, in memory; the lists would need to be joined manually.

@@ -103,7 +103,7 @@
             have been added to allow pluggability of the scope and context of defining current sessions.
         </para>
         <para>
-            See the Javadocs for the <literal>org.hibernate.context.spi.CurrentSessionContext</literal>
+            See the javadoc for the <literal>org.hibernate.context.spi.CurrentSessionContext</literal>
             interface for a detailed discussion of its contract.  It defines a single method,
             <literal>currentSession()</literal>, by which the implementation is responsible for
             tracking the current contextual session.  Out-of-the-box, Hibernate comes with three
@@ -115,14 +115,14 @@
                 <para>
                     <literal>org.hibernate.context.internal.JTASessionContext</literal>: current sessions
                     are tracked and scoped by a <literal>JTA</literal> transaction.  The processing
-                    here is exactly the same as in the older JTA-only approach.  See the Javadocs
+                    here is exactly the same as in the older JTA-only approach.  See the javadoc
                     for details.
                 </para>
             </listitem>
             <listitem>
                 <para>
                     <literal>org.hibernate.context.internal.ThreadLocalSessionContext</literal>:current
-                    sessions are tracked by thread of execution. See the Javadocs for details.
+                    sessions are tracked by thread of execution. See the javadoc for details.
                 </para>
             </listitem>
             <listitem>

@@ -74,7 +74,7 @@
             which will be processed ahead of the built-in Hibernate ones.  This might be useful in a number of
             different situations: it allows easy integration for auto-detection of dialects beyond those
             shipped with HIbernate itself; it allows you to specify to use a custom dialect when a particular
-            database is recognized; etc.  To register one or more resolvers, simply specify them (seperated by
+            database is recognized; etc.  To register one or more resolvers, simply specify them (separated by
             commas, tabs or spaces) using the 'hibernate.dialect_resolvers' configuration setting (see the
             <constant>DIALECT_RESOLVERS</constant> constant on
             <classname>org.hibernate.cfg.Environment</classname>).
@@ -86,17 +86,17 @@
 
         <para>
             When considering portability between databases, another important decision is selecting the
-            identifier generation stratagy you want to use.  Originally Hibernate provided the
+            identifier generation strategy you want to use.  Originally Hibernate provided the
             <emphasis>native</emphasis> generator for this purpose, which was intended to select between
             a <emphasis>sequence</emphasis>, <emphasis>identity</emphasis>, or <emphasis>table</emphasis>
             strategy depending on the capability of the underlying database.  However, an insidious implication
-            of this approach comes about when targtetting some databases which support <emphasis>identity</emphasis>
+            of this approach comes about when targeting some databases which support <emphasis>identity</emphasis>
             generation and some which do not.  <emphasis>identity</emphasis> generation relies on the SQL
             definition of an IDENTITY (or auto-increment) column to manage the identifier value; it is what is
-            known as a post-insert generation strategy becauase the insert must actually happen before we can
+            known as a post-insert generation strategy because the insert must actually happen before we can
             know the identifier value.  Because Hibernate relies on this identifier value to uniquely reference
             entities within a persistence context it must then issue the insert
-            immediately when the users requests the entitiy be associated with the session (like via
+            immediately when the users requests the entity be associated with the session (like via
             save() e.g.) regardless of current transactional semantics.
 
             <note>
@@ -106,13 +106,13 @@
                 </para>
             </note>
 
-            The underlying issue is that the actual semanctics of the application itself changes in these cases.
+            The underlying issue is that the actual semantics of the application itself changes in these cases.
         </para>
 
         <para>
             Starting with version 3.2.3, Hibernate comes with a set of
             <link xlink:href="http://in.relation.to/2082.lace">enhanced</link>
-            identifier generators targetting
+            identifier generators targeting
             portability in a much different way.
             <note>
                 <para>
@@ -131,7 +131,7 @@
                     </itemizedlist>
                 </para>
             </note>
-            The idea behind these generators is to port the actual semantics of the identifer value
+            The idea behind these generators is to port the actual semantics of the identifier value
             generation to the different databases.  For example, the
             <classname>org.hibernate.id.enhanced.SequenceStyleGenerator</classname> mimics the behavior of
             a sequence on databases which do not support sequences by using a table.
@@ -163,7 +163,7 @@
                     as of yet.
                 </para>
                 <para>
-                    It is sort of implemented such that users can programatically register functions
+                    It is sort of implemented such that users can programmatically register functions
                     with the <classname>org.hibernate.cfg.Configuration</classname> and those functions
                     will be recognized for HQL.
                 </para>

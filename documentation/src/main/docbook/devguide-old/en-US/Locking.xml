@@ -196,7 +196,7 @@
               <row>
                 <entry>column</entry>
                 <entry><para>The name of the column which holds the timestamp. Optional, defaults to the property
-                namel</para></entry>
+                name</para></entry>
               </row>
               <row>
                 <entry>name</entry>

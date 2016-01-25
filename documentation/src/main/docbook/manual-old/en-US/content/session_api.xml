@@ -479,7 +479,7 @@ public class MyDao {
 ] ]&gt;&lt;/query&gt;</programlisting>
         </example>
 
-        <para>Parameter binding and executing is done programatically as seen
+        <para>Parameter binding and executing is done programmatically as seen
         in <xref linkend="example-parameter-binding-named-query" />.</para>
 
         <example xml:id="example-parameter-binding-named-query">

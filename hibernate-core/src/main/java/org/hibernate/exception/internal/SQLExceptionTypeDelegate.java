@@ -66,7 +66,7 @@ public class SQLExceptionTypeDelegate extends AbstractSQLExceptionConversionDele
 			return new QueryTimeoutException( message, sqlException, sql );
 		}
 		else if ( SQLTransactionRollbackException.class.isInstance( sqlException ) ) {
-			// Not 100% sure this is completely accurate.  The JavaDocs for SQLTransactionRollbackException state that
+			// Not 100% sure this is completely accurate.  The javadoc for SQLTransactionRollbackException state that
 			// it indicates sql states starting with '40' and that those usually indicate that:
 			//		<quote>
 			//			the current statement was automatically rolled back by the database because of deadlock or

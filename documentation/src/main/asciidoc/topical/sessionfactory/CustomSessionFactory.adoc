@@ -15,14 +15,14 @@ to the API contract name.  For `SessionFactory` and `Session` that is `SessionFa
 `SessionImplementor` respectively.  These SPI contracts extra information and functionality needed by internal
 components as well as other SPI components.  Therefore, custom `SessionFactory` and `Session` should additionally
 implement `org.hibernate.engine.spi.SessionFactoryImplementor` and `org.hibernate.engine.spi.SessionImplementor`.
-See all pertinent JavaDocs for discussions of implementation details.
+See all pertinent javadoc for discussions of implementation details.
 
 
 == Integration hooks
 
 `org.hibernate.boot.SessionFactoryBuilder` is part of the Hibernate native bootstrap API where we want to configure
 the `SessionFactory` to be built.  Third parties can hook into this process by supplying a
-`org.hibernate.boot.spi.SessionFactoryBuilderFactory` via the Java ServiceLoader mechanism (see JavaDocs for
+`org.hibernate.boot.spi.SessionFactoryBuilderFactory` via the Java ServiceLoader mechanism (see javadoc for
 `java.util.ServiceLoader` if you are unfamiliar with this service discovery mechanism).  As you might guess from their
 names, a `SessionFactoryBuilderFactory` is responsible for creating `SessionFactoryBuilder` instances and a
 `SessionFactoryBuilder` is in turn responsible for creating `SessionFactory` instances.

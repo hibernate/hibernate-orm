@@ -114,7 +114,7 @@ session
     .addJoin( "cat.dog" );
 ----
 
-In this example, the returned `Cat`s will have their `dog` property fully initialized without any extra roundtrip to the database.
+In this example, the returned `Cat`s will have their `dog` property fully initialized without any extra round trip to the database.
 Notice that you added an alias name _"cat"_ to be able to specify the target property path of the join.
 It is possible to do the same eager joining for collections (e.g. if the `Cat` had a `one-to-many` to `Dog` instead).
 

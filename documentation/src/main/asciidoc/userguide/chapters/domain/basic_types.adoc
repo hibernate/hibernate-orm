@@ -159,7 +159,7 @@ include::{sourcedir}/basic/ExplicitColumnNaming.java[]
 
 Here we use `@Column` to explicitly map the `description` attribute to the `NOTES` column, as opposed to the implicit column name `description`.
 
-The `@Column` annotation defines other mapping information as well. See its javadocs for details.
+The `@Column` annotation defines other mapping information as well. See its javadoc for details.
 
 [[basic-registry]]
 ==== BasicTypeRegistry

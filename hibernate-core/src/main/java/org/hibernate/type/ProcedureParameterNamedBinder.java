@@ -18,7 +18,7 @@ import org.hibernate.engine.spi.SessionImplementor;
  *
  * @author Andrea Boriero
  */
-public interface ProcedureParameterNamedBinder extends Type {
+public interface ProcedureParameterNamedBinder {
 
 	/**
 	 * Can the given instance of this type actually set the parameter value by name
@@ -27,11 +27,9 @@ public interface ProcedureParameterNamedBinder extends Type {
 	 */
 	public boolean canDoSetting();
 
-
 	/**
-	 * Bind a value represented by an instance of the {@link #getReturnedClass() mapped class} to the JDBC prepared
-	 * statement, ignoring some columns as dictated by the 'settable' parameter.  Implementors should handle the
-	 * possibility of null values.
+	 * Bind a value to the JDBC prepared statement, ignoring some columns as dictated by the 'settable' parameter.
+	 * Implementors should handle the possibility of null values.
 	 * Does not support multi-column type
 	 *
 	 * @param statement The CallableStatement to which to bind

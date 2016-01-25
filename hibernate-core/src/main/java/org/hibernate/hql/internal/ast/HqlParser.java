@@ -131,7 +131,7 @@ public final class HqlParser extends HqlBaseParser {
 		// If the token can tell us if it could be an identifier...
 		if ( token instanceof HqlToken ) {
 			HqlToken hqlToken = (HqlToken) token;
-			// ... and the token could be an identifer and the error is
+			// ... and the token could be an identifier and the error is
 			// a mismatched token error ...
 			if ( hqlToken.isPossibleID() && ( ex instanceof MismatchedTokenException ) ) {
 				MismatchedTokenException mte = (MismatchedTokenException) ex;

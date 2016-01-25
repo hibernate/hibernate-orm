@@ -356,7 +356,7 @@ hibernate.default_batch_fetch_size 8
 
 ## rollback generated identifier values of deleted entities to default values
 
-#hibernate.use_identifer_rollback true
+#hibernate.use_identifier_rollback true
 
 
 ## enable bytecode reflection optimizer (disabled by default)

@@ -8,6 +8,8 @@ package org.hibernate.tool.schema.internal;
 
 import java.util.Map;
 
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.ServiceRegistry;
@@ -15,6 +17,8 @@ import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.schema.spi.SchemaCreator;
 import org.hibernate.tool.schema.spi.SchemaDropper;
+import org.hibernate.tool.schema.spi.SchemaFilter;
+import org.hibernate.tool.schema.spi.SchemaFilterProvider;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.SchemaMigrator;
 import org.hibernate.tool.schema.spi.SchemaValidator;
@@ -29,25 +33,34 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 	
 	@Override
 	public SchemaCreator getSchemaCreator(Map options) {
-		return new SchemaCreatorImpl();
+		return new SchemaCreatorImpl( getSchemaFilterProvider( options ).getCreateFilter() );
 	}
 
 	@Override
 	public SchemaDropper getSchemaDropper(Map options) {
-		return new SchemaDropperImpl();
+		return new SchemaDropperImpl( getSchemaFilterProvider( options ).getDropFilter() );
 	}
 
 	@Override
 	public SchemaMigrator getSchemaMigrator(Map options) {
-		return new SchemaMigratorImpl();
+		return new SchemaMigratorImpl( getSchemaFilterProvider( options ).getMigrateFilter() );
 	}
 
 	@Override
 	public SchemaValidator getSchemaValidator(Map options) {
 		final Dialect dialect = serviceRegistry.getService( JdbcServices.class ).getDialect();
-		return new SchemaValidatorImpl(dialect);
+		return new SchemaValidatorImpl( getSchemaFilterProvider( options ).getValidateFilter(), dialect );
 	}
-
+	
+	private SchemaFilterProvider getSchemaFilterProvider(Map options) {
+		return serviceRegistry.getService( StrategySelector.class )
+				.resolveDefaultableStrategy( 
+						SchemaFilterProvider.class, 
+						options.get( AvailableSettings.SCHEMA_FILTER_PROVIDER ), 
+						DefaultSchemaFilterProvider.INSTANCE 
+				);
+	}
+	
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
 		this.serviceRegistry = serviceRegistry;

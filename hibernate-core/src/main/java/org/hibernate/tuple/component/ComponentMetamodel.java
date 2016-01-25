@@ -14,6 +14,9 @@ import java.util.Map;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.cfg.Environment;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.tuple.PropertyFactory;
@@ -39,6 +42,7 @@ public class ComponentMetamodel implements Serializable {
 	// cached for efficiency...
 	private final int propertySpan;
 	private final Map propertyIndexes = new HashMap();
+	private final boolean createEmptyCompositesEnabled;
 
 //	public ComponentMetamodel(Component component, SessionFactoryImplementor sessionFactory) {
 	public ComponentMetamodel(Component component, MetadataBuildingOptions metadataBuildingOptions) {
@@ -65,6 +69,15 @@ public class ComponentMetamodel implements Serializable {
 				entityMode,
 				component
 		) : componentTuplizerFactory.constructTuplizer( tuplizerClassName, component );
+
+		final ConfigurationService cs = component.getMetadata().getMetadataBuildingOptions().getServiceRegistry()
+				.getService(ConfigurationService.class);
+
+		this.createEmptyCompositesEnabled = ConfigurationHelper.getBoolean(
+				Environment.CREATE_EMPTY_COMPOSITES_ENABLED,
+				cs.getSettings(),
+				false
+		);
 	}
 
 	public boolean isKey() {
@@ -104,6 +117,10 @@ public class ComponentMetamodel implements Serializable {
 
 	public ComponentTuplizer getComponentTuplizer() {
 		return componentTuplizer;
+	}
+
+	public boolean isCreateEmptyCompositesEnabled() {
+		return createEmptyCompositesEnabled;
 	}
 
 }

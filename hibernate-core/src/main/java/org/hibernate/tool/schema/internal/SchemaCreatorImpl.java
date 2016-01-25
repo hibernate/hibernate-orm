@@ -27,6 +27,7 @@ import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.tool.schema.spi.SchemaCreator;
+import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.Target;
 
@@ -37,6 +38,16 @@ import org.hibernate.tool.schema.spi.Target;
  * @author Steve Ebersole
  */
 public class SchemaCreatorImpl implements SchemaCreator {
+
+	private final SchemaFilter filter;
+	
+	public SchemaCreatorImpl( SchemaFilter filter ) {
+		this.filter = filter;
+	}
+	
+	public SchemaCreatorImpl() {
+		this( DefaultSchemaFilter.INSTANCE );
+	}
 
 	@Override
 	public void doCreation(Metadata metadata, boolean createNamespaces, List<Target> targets) throws SchemaManagementException {
@@ -161,6 +172,10 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			Set<Identifier> exportedCatalogs = new HashSet<Identifier>();
 			for ( Namespace namespace : database.getNamespaces() ) {
 
+				if ( !filter.includeNamespace( namespace ) ) {
+					continue;
+				}
+
 				if ( tryToCreateCatalogs ) {
 					final Identifier catalogLogicalName = namespace.getName().getCatalog();
 					final Identifier catalogPhysicalName = namespace.getPhysicalName().getCatalog();
@@ -206,8 +221,15 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		// then, create all schema objects (tables, sequences, constraints, etc) in each schema
 		for ( Namespace namespace : database.getNamespaces() ) {
 
+			if ( !filter.includeNamespace( namespace ) ) {
+				continue;
+			}
+
 			// sequences
 			for ( Sequence sequence : namespace.getSequences() ) {
+				if ( !filter.includeSequence( sequence ) ) {
+					continue;
+				}
 				checkExportIdentifier( sequence, exportIdentifiers );
 				applySqlStrings(
 						targets,
@@ -221,7 +243,10 @@ public class SchemaCreatorImpl implements SchemaCreator {
 
 			// tables
 			for ( Table table : namespace.getTables() ) {
-				if( !table.isPhysicalTable() ){
+				if ( !table.isPhysicalTable() ){
+					continue;
+				}
+				if ( !filter.includeTable( table ) ) {
 					continue;
 				}
 				checkExportIdentifier( table, exportIdentifiers );

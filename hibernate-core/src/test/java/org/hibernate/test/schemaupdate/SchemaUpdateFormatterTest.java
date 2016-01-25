@@ -12,6 +12,8 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.Target;
@@ -22,6 +24,7 @@ import org.junit.Test;
  * @author Koen Aers
  */
 @TestForIssue(jiraKey = "HHH-10158")
+@RequiresDialect(H2Dialect.class)
 public class SchemaUpdateFormatterTest {
 	
 	private static final String AFTER_FORMAT = 

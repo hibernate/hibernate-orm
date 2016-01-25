@@ -145,16 +145,26 @@ public class StandardTableExporter implements Exporter<Table> {
 		List<String> sqlStrings = new ArrayList<String>();
 		sqlStrings.add( buf.toString() );
 
-		applyComments( table, sqlStrings );
+		applyComments( table, tableName, sqlStrings );
 
 		applyInitCommands( table, sqlStrings );
 
 		return sqlStrings.toArray( new String[ sqlStrings.size() ] );
 	}
 
-	protected void applyComments(Table table, List<String> sqlStrings) {
-		if ( table.getComment() != null ) {
-			sqlStrings.add( dialect.getTableComment( table.getComment() ) );
+	protected void applyComments(Table table, QualifiedName tableName, List<String> sqlStrings) {
+		if ( dialect.supportsCommentOn() ) {
+			if ( table.getComment() != null ) {
+				sqlStrings.add( "comment on table " + tableName + " is '" + table.getComment() + "'" );
+			}
+			final Iterator iter = table.getColumnIterator();
+			while ( iter.hasNext() ) {
+				Column column = (Column) iter.next();
+				String columnComment = column.getComment();
+				if ( columnComment != null ) {
+					sqlStrings.add( "comment on column " + tableName + column.getQuotedName( dialect ) + " is '" + columnComment + "'" );
+				}
+			}
 		}
 	}
 

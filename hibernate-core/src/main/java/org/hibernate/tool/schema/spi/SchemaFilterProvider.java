@@ -8,13 +8,31 @@ package org.hibernate.tool.schema.spi;
  * @since 5.1
  */
 public interface SchemaFilterProvider {
-
+	/**
+	 * Get the filter to be applied to {@link SchemaCreator} processing
+	 *
+	 * @return The {@link SchemaCreator} filter
+	 */
 	SchemaFilter getCreateFilter();
-	
+
+	/**
+	 * Get the filter to be applied to {@link SchemaDropper} processing
+	 *
+	 * @return The {@link SchemaDropper} filter
+	 */
 	SchemaFilter getDropFilter();
-	
+
+	/**
+	 * Get the filter to be applied to {@link SchemaMigrator} processing
+	 *
+	 * @return The {@link SchemaMigrator} filter
+	 */
 	SchemaFilter getMigrateFilter();
-	
+
+	/**
+	 * Get the filter to be applied to {@link SchemaValidator} processing
+	 *
+	 * @return The {@link SchemaValidator} filter
+	 */
 	SchemaFilter getValidateFilter();
-    
 }

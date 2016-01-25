@@ -9,6 +9,7 @@ package org.hibernate.test.schemaupdate;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
@@ -72,19 +73,6 @@ public class SchemaUpdateTableBackedSequenceTest extends BaseUnitTestCase {
 		Table table = database.getDefaultNamespace().getTables().iterator().next();
 		assertEquals( 1, table.getInitCommands().size() );
 
-
-		class TargetImpl extends TargetStdoutImpl {
-			boolean found = false;
-			@Override
-			public void accept(String action) {
-				super.accept( action );
-				if ( action.startsWith( "insert into test_seq" ) ) {
-					found = true;
-				}
-
-			}
-		}
-
 		TargetImpl target = new TargetImpl();
 
 		DatabaseInformation dbInfo = new DatabaseInformationImpl(
@@ -99,15 +87,31 @@ public class SchemaUpdateTableBackedSequenceTest extends BaseUnitTestCase {
 				metadata,
 				dbInfo,
 				true,
-				Arrays.asList( target, new TargetDatabaseImpl( ssr.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess() ) )
+				buildTargets( target )
 		);
 
 		assertTrue( target.found );
-		
-		ssr.getService( SchemaManagementTool.class ).getSchemaDropper( null ).doDrop(
+
+		ssr.getService( SchemaManagementTool.class ).getSchemaDropper( Collections.emptyMap() ).doDrop(
 				metadata,
 				false,
-				Arrays.asList( target, new TargetDatabaseImpl( ssr.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess() ) )
+				buildTargets( target )
 		);
+	}
+
+	public List<Target> buildTargets(TargetImpl target) {
+		return Arrays.asList( target, new TargetDatabaseImpl( ssr.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess() ) );
+	}
+
+	class TargetImpl extends TargetStdoutImpl {
+		boolean found = false;
+		@Override
+		public void accept(String action) {
+			super.accept( action );
+			if ( action.startsWith( "insert into test_seq" ) ) {
+				found = true;
+			}
+
+		}
 	}
 }

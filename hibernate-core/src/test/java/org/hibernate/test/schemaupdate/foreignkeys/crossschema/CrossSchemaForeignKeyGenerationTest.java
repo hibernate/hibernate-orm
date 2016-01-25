@@ -25,13 +25,13 @@ import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.internal.TargetDatabaseImpl;
 import org.hibernate.tool.schema.internal.TargetStdoutImpl;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.tool.schema.spi.Target;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -43,7 +43,6 @@ import static org.junit.Assert.assertThat;
 public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 	private File output;
 	private StandardServiceRegistry ssr;
-	private MetadataImplementor metadata;
 
 	@Before
 	public void setUp() throws IOException {
@@ -60,12 +59,11 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-10420")
 	public void testSchemaExportForeignKeysAreGeneratedAfterAllTheTablesAreCreated() throws Exception {
-
 		final MetadataSources metadataSources = new MetadataSources( ssr );
-
 		metadataSources.addAnnotatedClass( SchemaOneEntity.class );
 		metadataSources.addAnnotatedClass( SchemaTwoEntity.class );
-		metadata = (MetadataImplementor) metadataSources.buildMetadata();
+
+		MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
 		metadata.validate();
 		final SchemaExport schemaExport = new SchemaExport( metadata )
 				.setHaltOnError( true )
@@ -84,15 +82,15 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-10420")
 	public void testSchemaMigrationForeignKeysAreGeneratedAfterAllTheTablesAreCreated() throws Exception {
-
 		final MetadataSources metadataSources = new MetadataSources( ssr );
-
 		metadataSources.addAnnotatedClass( SchemaOneEntity.class );
 		metadataSources.addAnnotatedClass( SchemaTwoEntity.class );
-		metadata = (MetadataImplementor) metadataSources.buildMetadata();
+
+		MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
 		metadata.validate();
 
 		final Database database = metadata.getDatabase();
+		final SchemaManagementTool tool = ssr.getService( SchemaManagementTool.class );
 
 		DatabaseInformation dbInfo = new DatabaseInformationImpl(
 				ssr,
@@ -102,26 +100,29 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 				database.getDefaultNamespace().getPhysicalName().getSchema()
 		);
 
-		ssr.getService( SchemaManagementTool.class ).getSchemaMigrator( Collections.emptyMap() ).doMigration(
+
+		tool.getSchemaMigrator( Collections.emptyMap() ).doMigration(
 				metadata,
 				dbInfo,
 				true,
-				Arrays.asList(
-						new TargetStdoutImpl(),
-						new TargetDatabaseImpl( ssr.getService( JdbcServices.class )
-														.getBootstrapJdbcConnectionAccess() )
-				)
+				buildTargets()
 		);
 
-		ssr.getService( SchemaManagementTool.class ).getSchemaDropper( null ).doDrop(
+		tool.getSchemaDropper( Collections.emptyMap() ).doDrop(
 				metadata,
 				false,
-				Arrays.asList(
-						new TargetStdoutImpl(),
-						new TargetDatabaseImpl( ssr.getService( JdbcServices.class )
-														.getBootstrapJdbcConnectionAccess() )
+				buildTargets()
+		);
+	}
+
+	public List<Target> buildTargets() {
+		return Arrays.asList(
+				new TargetStdoutImpl(),
+				new TargetDatabaseImpl(
+						ssr.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess()
 				)
 		);
 	}
+
 
 }

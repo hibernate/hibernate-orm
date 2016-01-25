@@ -3,8 +3,8 @@ package org.hibernate.jpa.test;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.H2Dialect;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
@@ -13,12 +13,8 @@ import static org.junit.Assert.assertThat;
 import static org.hamcrest.core.Is.is;
 
 @TestForIssue( jiraKey = "HHH-9029")
+@RequiresDialectFeature(DialectChecks.SupportsRowValueConstructorSyntaxCheck.class)
 public class CompositeIdRowValueTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Dialect getDialect() {
-		return new RowValueConstructorDialect();
-	}
 
     @Test
     public void testTupleAfterSubQuery() {
@@ -37,10 +33,4 @@ public class CompositeIdRowValueTest extends BaseEntityManagerFunctionalTestCase
         return new Class[] {EntityWithCompositeId.class, CompositeId.class};
     }
 
-    public static class RowValueConstructorDialect extends H2Dialect {
-		@Override
-		public boolean supportsRowValueConstructorSyntax() {
-			return true;
-		}
-    }
 }

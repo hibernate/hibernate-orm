@@ -18,6 +18,8 @@ import org.hibernate.jpa.event.spi.jpa.ExtendedBeanManager;
 import org.hibernate.jpa.event.spi.jpa.Listener;
 import org.hibernate.jpa.event.spi.jpa.ListenerFactory;
 
+import org.jboss.logging.Logger;
+
 /**
  * CDI-based implementation of the ListenerFactory contract.  Further, this
  * implementation leverages the ExtendedBeanManager contract to delay CDI calls.
@@ -25,7 +27,9 @@ import org.hibernate.jpa.event.spi.jpa.ListenerFactory;
  * @author Steve Ebersole
  */
 @SuppressWarnings("unused")
-public class ListenerFactoryBeanManagerLazyImpl implements ListenerFactory, ExtendedBeanManager.LifecycleListener {
+public class ListenerFactoryBeanManagerExtendedImpl implements ListenerFactory, ExtendedBeanManager.LifecycleListener {
+	private static final Logger log = Logger.getLogger( ListenerFactoryBeanManagerExtendedImpl.class );
+
 	private final Map<Class,ListenerImpl> listenerMap = new ConcurrentHashMap<Class, ListenerImpl>();
 
 	/**
@@ -37,11 +41,11 @@ public class ListenerFactoryBeanManagerLazyImpl implements ListenerFactory, Exte
 	 * @return A instantiated ListenerFactoryBeanManagerImpl
 	 */
 	@SuppressWarnings("unused")
-	public static ListenerFactoryBeanManagerLazyImpl fromBeanManagerReference(Object reference) {
-		return new ListenerFactoryBeanManagerLazyImpl( (BeanManager) reference );
+	public static ListenerFactoryBeanManagerExtendedImpl fromBeanManagerReference(Object reference) {
+		return new ListenerFactoryBeanManagerExtendedImpl( (BeanManager) reference );
 	}
 
-	public ListenerFactoryBeanManagerLazyImpl(BeanManager beanManager) {
+	public ListenerFactoryBeanManagerExtendedImpl(BeanManager beanManager) {
 		if ( !ExtendedBeanManager.class.isInstance( beanManager ) ) {
 			throw new IllegalArgumentException(
 					"Expecting BeanManager reference that implements optional ExtendedBeanManager contract : " +
@@ -49,6 +53,7 @@ public class ListenerFactoryBeanManagerLazyImpl implements ListenerFactory, Exte
 			);
 		}
 		( (ExtendedBeanManager) beanManager ).registerLifecycleListener( this );
+		log.debugf( "ExtendedBeanManager access requested to CDI BeanManager : " + beanManager );
 	}
 
 	@Override

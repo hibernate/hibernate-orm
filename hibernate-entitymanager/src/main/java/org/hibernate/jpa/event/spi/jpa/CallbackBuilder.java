@@ -11,7 +11,7 @@ package org.hibernate.jpa.event.spi.jpa;
  *
  * @author Steve Ebersole
  */
-public interface EntityCallbackBuilder {
+public interface CallbackBuilder {
 	/**
 	 * Represents the target of JPA callback registrations as part the EntityCallbackBuilder
 	 */

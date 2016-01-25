@@ -6,8 +6,6 @@
  */
 package org.hibernate.jpa.event.spi;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
@@ -40,11 +38,10 @@ import org.hibernate.jpa.event.internal.core.JpaPostLoadEventListener;
 import org.hibernate.jpa.event.internal.core.JpaPostUpdateEventListener;
 import org.hibernate.jpa.event.internal.core.JpaSaveEventListener;
 import org.hibernate.jpa.event.internal.core.JpaSaveOrUpdateEventListener;
-import org.hibernate.jpa.event.internal.jpa.EntityCallbackBuilderLegacyImpl;
+import org.hibernate.jpa.event.internal.jpa.CallbackBuilderLegacyImpl;
 import org.hibernate.jpa.event.spi.jpa.CallbackRegistryConsumer;
 import org.hibernate.jpa.event.internal.jpa.CallbackRegistryImpl;
-import org.hibernate.jpa.event.internal.jpa.ListenerFactoryStandardImpl;
-import org.hibernate.jpa.event.spi.jpa.EntityCallbackBuilder;
+import org.hibernate.jpa.event.spi.jpa.CallbackBuilder;
 import org.hibernate.jpa.event.spi.jpa.ListenerFactory;
 import org.hibernate.jpa.event.spi.jpa.ListenerFactoryBuilder;
 import org.hibernate.mapping.PersistentClass;
@@ -58,7 +55,7 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
  */
 public class JpaIntegrator implements Integrator {
 	private ListenerFactory jpaListenerFactory;
-	private EntityCallbackBuilder entityCallbackBuilder;
+	private CallbackBuilder callbackBuilder;
 	private CallbackRegistryImpl callbackRegistry;
 
 	private static final DuplicationStrategy JPA_DUPLICATION_STRATEGY = new JPADuplicationStrategy();
@@ -128,13 +125,13 @@ public class JpaIntegrator implements Integrator {
 
 		this.callbackRegistry = new CallbackRegistryImpl();
 		this.jpaListenerFactory = ListenerFactoryBuilder.buildListenerFactory( sessionFactory.getSessionFactoryOptions() );
-		this.entityCallbackBuilder = new EntityCallbackBuilderLegacyImpl( jpaListenerFactory, reflectionManager );
+		this.callbackBuilder = new CallbackBuilderLegacyImpl( jpaListenerFactory, reflectionManager );
 		for ( PersistentClass persistentClass : metadata.getEntityBindings() ) {
 			if ( persistentClass.getClassName() == null ) {
 				// we can have non java class persisted by hibernate
 				continue;
 			}
-			entityCallbackBuilder.buildCallbacksForEntity( persistentClass.getClassName(), callbackRegistry );
+			callbackBuilder.buildCallbacksForEntity( persistentClass.getClassName(), callbackRegistry );
 		}
 
 		for ( EventType eventType : EventType.values() ) {
@@ -152,8 +149,8 @@ public class JpaIntegrator implements Integrator {
 		if ( callbackRegistry != null ) {
 			callbackRegistry.release();
 		}
-		if ( entityCallbackBuilder != null ) {
-			entityCallbackBuilder.release();
+		if ( callbackBuilder != null ) {
+			callbackBuilder.release();
 		}
 		if ( jpaListenerFactory != null ) {
 			jpaListenerFactory.release();

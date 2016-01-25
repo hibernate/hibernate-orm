@@ -12,7 +12,7 @@ import javax.persistence.PersistenceException;
 import org.hibernate.jpa.event.spi.jpa.Callback;
 import org.hibernate.jpa.event.spi.jpa.CallbackRegistry;
 import org.hibernate.jpa.event.spi.jpa.CallbackType;
-import org.hibernate.jpa.event.spi.jpa.EntityCallbackBuilder;
+import org.hibernate.jpa.event.spi.jpa.CallbackBuilder;
 
 /**
  * Keep track of all lifecycle callbacks and listeners for a given persistence unit
@@ -21,7 +21,7 @@ import org.hibernate.jpa.event.spi.jpa.EntityCallbackBuilder;
  * @author Steve Ebersole
  */
 @SuppressWarnings({"unchecked", "serial"})
-public class CallbackRegistryImpl implements CallbackRegistry, EntityCallbackBuilder.CallbackRegistrar {
+public class CallbackRegistryImpl implements CallbackRegistry, CallbackBuilder.CallbackRegistrar {
 	private HashMap<Class, Callback[]> preCreates = new HashMap<Class, Callback[]>();
 	private HashMap<Class, Callback[]> postCreates = new HashMap<Class, Callback[]>();
 	private HashMap<Class, Callback[]> preRemoves = new HashMap<Class, Callback[]>();

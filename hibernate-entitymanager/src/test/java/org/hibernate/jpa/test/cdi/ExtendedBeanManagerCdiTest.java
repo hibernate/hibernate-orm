@@ -52,7 +52,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
-public class LazyCdiTest extends BaseCdiIntegrationTest {
+public class ExtendedBeanManagerCdiTest extends BaseCdiIntegrationTest {
 	ExtendedBeanManagerImpl extendedBeanManager = new ExtendedBeanManagerImpl();
 
 	private static int count;

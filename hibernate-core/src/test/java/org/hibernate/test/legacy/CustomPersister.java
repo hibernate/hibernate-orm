@@ -7,10 +7,11 @@
 package org.hibernate.test.legacy;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -43,6 +44,7 @@ import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.MultiLoadOptions;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
@@ -302,6 +304,11 @@ public class CustomPersister implements EntityPersister {
 		SessionImplementor session
 	) throws HibernateException {
 		return load(id, optionalObject, lockOptions.getLockMode(), session);
+	}
+
+	@Override
+	public List multiLoad(Serializable[] ids, SessionImplementor session, MultiLoadOptions loadOptions) {
+		return Collections.emptyList();
 	}
 
 	/**

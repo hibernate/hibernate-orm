@@ -140,6 +140,11 @@ public class StandardTableExporter implements Exporter<Table> {
 		applyTableCheck( table, buf );
 
 		buf.append( ')' );
+
+		if ( table.getComment() != null ) {
+			buf.append( dialect.getTableComment( table.getComment() ) );
+		}
+
 		applyTableTypeString( buf );
 
 		List<String> sqlStrings = new ArrayList<String>();

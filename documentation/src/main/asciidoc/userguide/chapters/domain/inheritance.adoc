@@ -1,6 +1,7 @@
 [[entity-inheritance]]
 === Inheritance
-:sourcedir: ../../../../../test/java/org/hibernate/jpa/test/userguide/inheritance
+:sourcedir: ../../../../../test/java/org/hibernate/userguide/inheritance
+:extrasdir: extras/inheritance
 
 Although relational database systems don't provide support for inheritance, Hibernate provides several strategies to leverage this object-oriented trait onto domain model entities:
 
@@ -28,7 +29,7 @@ include::{sourcedir}/MappedSuperclassTest.java[tags=entity-inheritance-mapped-su
 
 [source,sql]
 ----
-include::{sourcedir}/entity-inheritance-mapped-superclass-example.sql[]
+include::{extrasdir}/entity-inheritance-mapped-superclass-example.sql[]
 ----
 ====
 
@@ -60,7 +61,7 @@ include::{sourcedir}/SingleTableTest.java[tags=entity-inheritance-single-table-e
 
 [source,sql]
 ----
-include::{sourcedir}/entity-inheritance-single-table-example.sql[]
+include::{extrasdir}/entity-inheritance-single-table-example.sql[]
 ----
 ====
 
@@ -77,7 +78,7 @@ include::{sourcedir}/SingleTableTest.java[tags=entity-inheritance-single-table-p
 
 [source,sql]
 ----
-include::{sourcedir}/entity-inheritance-single-table-persist-example.sql[]
+include::{extrasdir}/entity-inheritance-single-table-persist-example.sql[]
 ----
 ====
 
@@ -124,7 +125,7 @@ include::{sourcedir}/SingleTableDiscriminatorFormulaTest.java[tags=entity-inheri
 
 [source,sql]
 ----
-include::{sourcedir}/entity-inheritance-single-table-discriminator-formula-example.sql[]
+include::{extrasdir}/entity-inheritance-single-table-discriminator-formula-example.sql[]
 ----
 ====
 
@@ -149,7 +150,7 @@ include::{sourcedir}/SingleTableTest.java[tags=entity-inheritance-single-table-q
 
 [source,sql]
 ----
-include::{sourcedir}/entity-inheritance-single-table-query-example.sql[]
+include::{extrasdir}/entity-inheritance-single-table-query-example.sql[]
 ----
 ====
 
@@ -173,7 +174,7 @@ include::{sourcedir}/JoinTableTest.java[tags=entity-inheritance-joined-table-exa
 
 [source,sql]
 ----
-include::{sourcedir}/entity-inheritance-joined-table-example.sql[]
+include::{extrasdir}/entity-inheritance-joined-table-example.sql[]
 ----
 ====
 
@@ -195,7 +196,7 @@ include::{sourcedir}/JoinTablePrimaryKeyJoinColumnTest.java[tags=entity-inherita
 
 [source,sql]
 ----
-include::{sourcedir}/entity-inheritance-joined-table-primary-key-join-column-example.sql[]
+include::{extrasdir}/entity-inheritance-joined-table-primary-key-join-column-example.sql[]
 ----
 ====
 
@@ -211,7 +212,7 @@ include::{sourcedir}/JoinTableTest.java[tags=entity-inheritance-joined-table-que
 
 [source,sql]
 ----
-include::{sourcedir}/entity-inheritance-joined-table-query-example.sql[]
+include::{extrasdir}/entity-inheritance-joined-table-query-example.sql[]
 ----
 ====
 
@@ -241,7 +242,7 @@ include::{sourcedir}/TablePerClassTest.java[tags=entity-inheritance-table-per-cl
 
 [source,sql]
 ----
-include::{sourcedir}/entity-inheritance-table-per-class-example.sql[]
+include::{extrasdir}/entity-inheritance-table-per-class-example.sql[]
 ----
 ====
 
@@ -256,7 +257,7 @@ include::{sourcedir}/TablePerClassTest.java[tags=entity-inheritance-table-per-cl
 
 [source,sql]
 ----
-include::{sourcedir}/entity-inheritance-table-per-class-query-example.sql[]
+include::{extrasdir}/entity-inheritance-table-per-class-query-example.sql[]
 ----
 ====
 

@@ -1,6 +1,7 @@
 [[associations]]
 === Associations
-:sourcedir: ../../../../../test/java/org/hibernate/jpa/test/userguide/associations
+:sourcedir: ../../../../../test/java/org/hibernate/userguide/associations
+:extrasdir: extras/associations
 
 Associations describe how two or more entities form a relationship based on a database joining semantics.
 
@@ -20,7 +21,7 @@ include::{sourcedir}/ManyToOneTest.java[tags=associations-many-to-one-example,in
 
 [source,sql]
 ----
-include::{sourcedir}/associations-many-to-one-example.sql[]
+include::{extrasdir}/associations-many-to-one-example.sql[]
 ----
 ====
 
@@ -36,7 +37,7 @@ include::{sourcedir}/ManyToOneTest.java[tags=associations-many-to-one-lifecycle-
 
 [source,sql]
 ----
-include::{sourcedir}/associations-many-to-one-lifecycle-example.sql[]
+include::{extrasdir}/associations-many-to-one-lifecycle-example.sql[]
 ----
 ====
 
@@ -62,7 +63,7 @@ include::{sourcedir}/OneToManyUnidirectionalTest.java[tags=associations-one-to-m
 
 [source,sql]
 ----
-include::{sourcedir}/associations-one-to-many-unidirectional-example.sql[]
+include::{extrasdir}/associations-one-to-many-unidirectional-example.sql[]
 ----
 ====
 
@@ -82,7 +83,7 @@ include::{sourcedir}/OneToManyUnidirectionalTest.java[tags=associations-one-to-m
 
 [source,sql]
 ----
-include::{sourcedir}/associations-one-to-many-unidirectional-lifecycle-example.sql[]
+include::{extrasdir}/associations-one-to-many-unidirectional-lifecycle-example.sql[]
 ----
 ====
 
@@ -115,7 +116,7 @@ include::{sourcedir}/OneToManyBidirectionalTest.java[tags=associations-one-to-ma
 
 [source,sql]
 ----
-include::{sourcedir}/associations-one-to-many-bidirectional-example.sql[]
+include::{extrasdir}/associations-one-to-many-bidirectional-example.sql[]
 ----
 ====
 
@@ -138,7 +139,7 @@ include::{sourcedir}/OneToManyBidirectionalTest.java[tags=associations-one-to-ma
 
 [source,sql]
 ----
-include::{sourcedir}/associations-one-to-many-bidirectional-lifecycle-example.sql[]
+include::{extrasdir}/associations-one-to-many-bidirectional-lifecycle-example.sql[]
 ----
 ====
 
@@ -167,7 +168,7 @@ include::{sourcedir}/OneToOneUnidirectionalTest.java[tags=associations-one-to-on
 
 [source,sql]
 ----
-include::{sourcedir}/associations-one-to-one-unidirectional-example.sql[]
+include::{extrasdir}/associations-one-to-one-unidirectional-example.sql[]
 ----
 ====
 
@@ -191,7 +192,7 @@ include::{sourcedir}/OneToOneBidirectionalTest.java[tags=associations-one-to-one
 
 [source,sql]
 ----
-include::{sourcedir}/associations-one-to-one-bidirectional-example.sql[]
+include::{extrasdir}/associations-one-to-one-bidirectional-example.sql[]
 ----
 ====
 
@@ -207,7 +208,7 @@ include::{sourcedir}/OneToOneBidirectionalTest.java[tags=associations-one-to-one
 
 [source,sql]
 ----
-include::{sourcedir}/associations-one-to-one-bidirectional-lifecycle-example.sql[]
+include::{extrasdir}/associations-one-to-one-bidirectional-lifecycle-example.sql[]
 ----
 ====
 
@@ -243,7 +244,7 @@ include::{sourcedir}/ManyToManyUnidirectionalTest.java[tags=associations-many-to
 
 [source,sql]
 ----
-include::{sourcedir}/associations-many-to-many-unidirectional-example.sql[]
+include::{extrasdir}/associations-many-to-many-unidirectional-example.sql[]
 ----
 ====
 
@@ -262,7 +263,7 @@ include::{sourcedir}/ManyToManyUnidirectionalTest.java[tags=associations-many-to
 
 [source,sql]
 ----
-include::{sourcedir}/associations-many-to-many-unidirectional-lifecycle-example.sql[]
+include::{extrasdir}/associations-many-to-many-unidirectional-lifecycle-example.sql[]
 ----
 ====
 
@@ -297,7 +298,7 @@ include::{sourcedir}/ManyToManyUnidirectionalTest.java[tags=associations-many-to
 
 [source,sql]
 ----
-include::{sourcedir}/associations-many-to-many-unidirectional-remove-example.sql[]
+include::{extrasdir}/associations-many-to-many-unidirectional-remove-example.sql[]
 ----
 ====
 
@@ -317,7 +318,7 @@ include::{sourcedir}/ManyToManyBidirectionalTest.java[tags=associations-many-to-
 
 [source,sql]
 ----
-include::{sourcedir}/associations-many-to-many-bidirectional-example.sql[]
+include::{extrasdir}/associations-many-to-many-bidirectional-example.sql[]
 ----
 ====
 
@@ -333,7 +334,7 @@ include::{sourcedir}/ManyToManyBidirectionalTest.java[tags=associations-many-to-
 
 [source,sql]
 ----
-include::{sourcedir}/associations-many-to-many-bidirectional-lifecycle-example.sql[]
+include::{extrasdir}/associations-many-to-many-bidirectional-lifecycle-example.sql[]
 ----
 ====
 
@@ -357,7 +358,7 @@ include::{sourcedir}/ManyToManyBidirectionalWithLinkEntityTest.java[tags=associa
 
 [source,sql]
 ----
-include::{sourcedir}/associations-many-to-many-bidirectional-with-link-entity-example.sql[]
+include::{extrasdir}/associations-many-to-many-bidirectional-with-link-entity-example.sql[]
 ----
 ====
 
@@ -382,7 +383,7 @@ include::{sourcedir}/ManyToManyBidirectionalWithLinkEntityTest.java[tags=associa
 
 [source,sql]
 ----
-include::{sourcedir}/associations-many-to-many-bidirectional-with-link-entity-lifecycle-example.sql[]
+include::{extrasdir}/associations-many-to-many-bidirectional-with-link-entity-lifecycle-example.sql[]
 ----
 ====
 

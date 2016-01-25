@@ -1,6 +1,6 @@
 [[naming]]
 === Naming strategies
-:sourcedir: ../../../../../test/java/org/hibernate/jpa/test/userguide/naming
+:sourcedir: ../../../../../test/java/org/hibernate/userguide/naming
 
 Part of the mapping of an object model to the relational database is
 mapping names from the object model to the corresponding database names.

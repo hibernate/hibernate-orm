@@ -1,6 +1,7 @@
 [[flushing]]
 == Flushing
-:sourcedir: ../../../../../test/java/org/hibernate/jpa/test/userguide/flush
+:sourcedir: ../../../../../test/java/org/hibernate/userguide/flush
+:extrasdir: extras
 
 Flushing is the process of synchronizing the state of the persistence context with the underlying database.
 The `EntityManager` and the Hibernate `Session` expose a set of methods, through which the application developer can change the persistent state of an entity.
@@ -47,7 +48,7 @@ include::{sourcedir}/AutoFlushTest.java[tags=flushing-auto-flush-commit-example]
 
 [source, SQL, indent=0]
 ----
-include::{sourcedir}/flushing-auto-flush-commit-example.sql[]
+include::{extrasdir}/flushing-auto-flush-commit-example.sql[]
 ----
 ====
 
@@ -74,7 +75,7 @@ include::{sourcedir}/AutoFlushTest.java[tags=flushing-auto-flush-jpql-example]
 
 [source, SQL, indent=0]
 ----
-include::{sourcedir}/flushing-auto-flush-jpql-example.sql[]
+include::{extrasdir}/flushing-auto-flush-jpql-example.sql[]
 ----
 ====
 
@@ -101,7 +102,7 @@ include::{sourcedir}/AutoFlushTest.java[tags=flushing-auto-flush-jpql-overlap-ex
 
 [source, SQL, indent=0]
 ----
-include::{sourcedir}/flushing-auto-flush-jpql-overlap-example.sql[]
+include::{extrasdir}/flushing-auto-flush-jpql-overlap-example.sql[]
 ----
 ====
 
@@ -164,7 +165,7 @@ include::{sourcedir}/CommitFlushTest.java[tags=flushing-commit-flush-jpql-exampl
 
 [source, SQL, indent=0]
 ----
-include::{sourcedir}/flushing-commit-flush-jpql-example.sql[]
+include::{extrasdir}/flushing-commit-flush-jpql-example.sql[]
 ----
 ====
 
@@ -180,7 +181,7 @@ include::{sourcedir}/CommitFlushTest.java[tags=flushing-commit-flush-sql-example
 
 [source, SQL, indent=0]
 ----
-include::{sourcedir}/flushing-commit-flush-sql-example.sql[]
+include::{extrasdir}/flushing-commit-flush-sql-example.sql[]
 ----
 ====
 
@@ -204,7 +205,7 @@ include::{sourcedir}/AlwaysFlushTest.java[tags=flushing-always-flush-sql-example
 
 [source, SQL, indent=0]
 ----
-include::{sourcedir}/flushing-always-flush-sql-example.sql[]
+include::{extrasdir}/flushing-always-flush-sql-example.sql[]
 ----
 ====
 
@@ -224,7 +225,7 @@ include::{sourcedir}/ManualFlushTest.java[tags=flushing-manual-flush-example]
 
 [source, SQL, indent=0]
 ----
-include::{sourcedir}/flushing-manual-flush-example.sql[]
+include::{extrasdir}/flushing-manual-flush-example.sql[]
 ----
 ====
 

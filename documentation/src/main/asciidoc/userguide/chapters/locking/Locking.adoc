@@ -1,6 +1,7 @@
 [[locking]]
 == Locking
 :sourcedir: extras
+:extrasdir: extras
 
 In a relational database, locking refers to actions taken to prevent data from changing between the time it is read and the time is used.
 
@@ -184,12 +185,12 @@ The scope can either be `NORMAL` (default value) or `EXTENDED`. The `EXTENDED` s
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/../../../../../../test/java/org/hibernate/jpa/test/userguide/locking/ExplicitLockingTest.java[tags=locking-jpa-query-hints-timeout-example]
+include::{sourcedir}/../../../../../../test/java/org/hibernate/userguide/locking/ExplicitLockingTest.java[tags=locking-jpa-query-hints-timeout-example]
 ----
 
 [source, SQL, indent=0]
 ----
-include::{sourcedir}/../../../../../../test/java/org/hibernate/jpa/test/userguide/locking/locking-jpa-query-hints-timeout-example.sql[]
+include::{extrasdir}/locking-jpa-query-hints-timeout-example.sql[]
 ----
 ====
 
@@ -217,11 +218,11 @@ The following example shows how to obtain shared database lock without waiting f
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/../../../../../../test/java/org/hibernate/jpa/test/userguide/locking/ExplicitLockingTest.java[tags=locking-buildLockRequest-example]
+include::{sourcedir}/../../../../../../test/java/org/hibernate/userguide/locking/ExplicitLockingTest.java[tags=locking-buildLockRequest-example]
 ----
 
 [source, SQL, indent=0]
 ----
-include::{sourcedir}/../../../../../../test/java/org/hibernate/jpa/test/userguide/locking/locking-buildLockRequest-example.sql[]
+include::{extrasdir}/locking-buildLockRequest-example.sql[]
 ----
 ====

@@ -8,7 +8,9 @@ package org.hibernate.jpa.test.ejb3configuration;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceException;
@@ -40,6 +42,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.MultiLoadOptions;
 import org.hibernate.persister.internal.PersisterClassResolverInitiator;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
@@ -301,6 +304,11 @@ public class PersisterClassProviderTest {
 		@Override
 		public Object load(Serializable id, Object optionalObject, LockOptions lockOptions, SessionImplementor session) {
 			return null;
+		}
+
+		@Override
+		public List multiLoad(Serializable[] ids, SessionImplementor session, MultiLoadOptions loadOptions) {
+			return Collections.emptyList();
 		}
 
 		@Override

@@ -38,6 +38,9 @@ public interface MultiIdentifierLoadAccess<T> {
 	 * to use a batch sizing strategy defined by the Dialect in use.  Any greater-than-one
 	 * value here will override that default behavior.  If giving an explicit value here,
 	 * care should be taken to not exceed the capabilities of of the underlying database.
+	 * <p/>
+	 * Note that overall a batch-size is considered a hint.  How the underlying loading
+	 * mechanism interprets that is completely up to that underlying loading mechanism.
 	 *
 	 * @param batchSize The batch size
 	 *

@@ -79,6 +79,7 @@ import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterHelper;
+import org.hibernate.internal.SessionImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
@@ -86,6 +87,7 @@ import org.hibernate.jdbc.Expectations;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
 import org.hibernate.loader.entity.BatchingEntityLoaderBuilder;
 import org.hibernate.loader.entity.CascadeEntityLoader;
+import org.hibernate.loader.entity.DynamicBatchingEntityLoaderBuilder;
 import org.hibernate.loader.entity.EntityLoader;
 import org.hibernate.loader.entity.UniqueEntityLoader;
 import org.hibernate.mapping.Column;
@@ -3987,6 +3989,16 @@ public abstract class AbstractEntityPersister
 
 		final UniqueEntityLoader loader = getAppropriateLoader( lockOptions, session );
 		return loader.load( id, optionalObject, session, lockOptions );
+	}
+
+	@Override
+	public List multiLoad(Serializable[] ids, SessionImplementor session, MultiLoadOptions loadOptions) {
+		return DynamicBatchingEntityLoaderBuilder.INSTANCE.multiLoad(
+				this,
+				ids,
+				session,
+				loadOptions
+		);
 	}
 
 	public void registerAffectingFetchProfile(String fetchProfileName) {

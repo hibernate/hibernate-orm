@@ -133,6 +133,7 @@ import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.loader.entity.DynamicBatchingEntityLoaderBuilder;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.MultiLoadOptions;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.procedure.ProcedureCall;
@@ -2771,7 +2772,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 	}
 
-	private class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T> {
+	private class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, MultiLoadOptions {
 		private final EntityPersister entityPersister;
 		private LockOptions lockOptions;
 		private CacheMode cacheMode;
@@ -2780,6 +2781,11 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 		public MultiIdentifierLoadAccessImpl(EntityPersister entityPersister) {
 			this.entityPersister = entityPersister;
+		}
+
+		@Override
+		public LockOptions getLockOptions() {
+			return lockOptions;
 		}
 
 		@Override
@@ -2795,6 +2801,11 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 
 		@Override
+		public Integer getBatchSize() {
+			return batchSize;
+		}
+
+		@Override
 		public MultiIdentifierLoadAccess<T> withBatchSize(int batchSize) {
 			if ( batchSize < 1 ) {
 				this.batchSize = null;
@@ -2806,12 +2817,18 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 
 		@Override
+		public boolean isSessionCheckingEnabled() {
+			return sessionCheckingEnabled;
+		}
+
+		@Override
 		public MultiIdentifierLoadAccess<T> enableSessionCheck(boolean enabled) {
 			this.sessionCheckingEnabled = enabled;
 			return this;
 		}
 
 		@Override
+		@SuppressWarnings("unchecked")
 		public <K extends Serializable> List<T> multiLoad(K... ids) {
 			CacheMode sessionCacheMode = getCacheMode();
 			boolean cacheModeChanged = false;
@@ -2825,14 +2842,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			}
 
 			try {
-				return DynamicBatchingEntityLoaderBuilder.INSTANCE.multiLoad(
-						(OuterJoinLoadable) entityPersister,
-						ids,
-						lockOptions,
-						batchSize,
-						sessionCheckingEnabled,
-						SessionImpl.this
-				);
+				return entityPersister.multiLoad( ids, SessionImpl.this, this );
 			}
 			finally {
 				if ( cacheModeChanged ) {
@@ -2843,6 +2853,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 
 		@Override
+		@SuppressWarnings("unchecked")
 		public <K extends Serializable> List<T> multiLoad(List<K> ids) {
 			CacheMode sessionCacheMode = getCacheMode();
 			boolean cacheModeChanged = false;
@@ -2856,14 +2867,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			}
 
 			try {
-				return DynamicBatchingEntityLoaderBuilder.INSTANCE.multiLoad(
-						(OuterJoinLoadable) entityPersister,
-						ids.toArray( new Serializable[ ids.size() ] ),
-						lockOptions,
-						batchSize,
-						sessionCheckingEnabled,
-						SessionImpl.this
-				);
+				return entityPersister.multiLoad( ids.toArray( new Serializable[ ids.size() ] ), SessionImpl.this, this );
 			}
 			finally {
 				if ( cacheModeChanged ) {

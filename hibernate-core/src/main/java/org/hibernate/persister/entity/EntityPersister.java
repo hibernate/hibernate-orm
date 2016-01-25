@@ -7,8 +7,8 @@
 package org.hibernate.persister.entity;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -363,6 +363,17 @@ public interface EntityPersister extends OptimisticCacheSource, EntityDefinition
 	 */
 	public Object load(Serializable id, Object optionalObject, LockOptions lockOptions, SessionImplementor session)
 	throws HibernateException;
+
+	/**
+	 * Performs a load of multiple entities (of this type) by identifier simultaneously.
+	 *
+	 * @param ids The identifiers to load
+	 * @param session The originating Sesison
+	 * @param loadOptions The options for loading
+	 *
+	 * @return The loaded, matching entities
+	 */
+	List multiLoad(Serializable[] ids, SessionImplementor session, MultiLoadOptions loadOptions);
 
 	/**
 	 * Do a version check (optional operation)

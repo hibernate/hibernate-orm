@@ -6,6 +6,9 @@
  */
 package org.hibernate.test.schemaupdate.foreignkeys.crossschema;
 
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -19,22 +22,18 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.extract.internal.DatabaseInformationImpl;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.internal.TargetDatabaseImpl;
 import org.hibernate.tool.schema.internal.TargetStdoutImpl;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
-
+import org.hibernate.tool.schema.spi.Target;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Andrea Boriero
@@ -106,7 +105,7 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 				metadata,
 				dbInfo,
 				true,
-				Arrays.asList(
+				Arrays.<Target>asList(
 						new TargetStdoutImpl(),
 						new TargetDatabaseImpl( ssr.getService( JdbcServices.class )
 														.getBootstrapJdbcConnectionAccess() )
@@ -116,7 +115,7 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 		ssr.getService( SchemaManagementTool.class ).getSchemaDropper( null ).doDrop(
 				metadata,
 				false,
-				Arrays.asList(
+				Arrays.<Target>asList(
 						new TargetStdoutImpl(),
 						new TargetDatabaseImpl( ssr.getService( JdbcServices.class )
 														.getBootstrapJdbcConnectionAccess() )

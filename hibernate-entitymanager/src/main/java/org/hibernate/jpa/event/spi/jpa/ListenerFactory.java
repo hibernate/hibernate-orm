@@ -7,12 +7,16 @@
 package org.hibernate.jpa.event.spi.jpa;
 
 /**
- * Factory for building instances user-specified event listeners.
+ * Contract for building instances of JPA callback listener classes.
+ * <p/>
+ * Listener instances should be uniqued by Class such that the same instance is
+ * returned for any calls to {@link #buildListener} with the same class.
+ *
+ * @see javax.persistence.EntityListeners
  *
  * @author Steve Ebersole
  */
 public interface ListenerFactory {
-	public <T> T buildListener(Class<T>  listenerClass);
-
-	public void release();
+	<T> Listener<T> buildListener(Class<T>  listenerClass);
+	void release();
 }

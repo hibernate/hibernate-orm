@@ -19,19 +19,14 @@ import org.hibernate.jpa.event.spi.jpa.ListenerFactory;
 import org.jboss.logging.Logger;
 
 /**
- * CDI-based implementation of the ListenerFactory contract.  This CDI-based
- * implementation works in the JPA standard prescribed manner.
- * <p/>
- * See {@link ListenerFactoryBeanManagerExtendedImpl} for an alt implementation that
- * is still JPA compliant, but that works based on delayed CDI calls.  Works
- * on a non-CDI-defined CDI extension; we plan to propose this extension to the
- * CDI expert group for the next CDI iteration
+ * CDI-based implementation of the ListenerFactory contract.  This implementation
+ * delayes access to the CDI BeanManager until first need.
  *
  * @author Steve Ebersole
  */
 @SuppressWarnings("unused")
-public class ListenerFactoryBeanManagerStandardImpl implements ListenerFactory {
-	private static final Logger log = Logger.getLogger( ListenerFactoryBeanManagerStandardImpl.class );
+public class ListenerFactoryBeanManagerDelayedImpl implements ListenerFactory {
+	private static final Logger log = Logger.getLogger( ListenerFactoryBeanManagerDelayedImpl.class );
 
 	private final BeanManager beanManager;
 	private final Map<Class,ListenerImpl> listenerMap = new ConcurrentHashMap<Class, ListenerImpl>();
@@ -45,13 +40,13 @@ public class ListenerFactoryBeanManagerStandardImpl implements ListenerFactory {
 	 * @return A instantiated ListenerFactoryBeanManagerImpl
 	 */
 	@SuppressWarnings("unused")
-	public static ListenerFactoryBeanManagerStandardImpl fromBeanManagerReference(Object reference) {
-		return new ListenerFactoryBeanManagerStandardImpl( (BeanManager) reference );
+	public static ListenerFactoryBeanManagerDelayedImpl fromBeanManagerReference(Object reference) {
+		return new ListenerFactoryBeanManagerDelayedImpl( (BeanManager) reference );
 	}
 
-	public ListenerFactoryBeanManagerStandardImpl(BeanManager beanManager) {
+	public ListenerFactoryBeanManagerDelayedImpl(BeanManager beanManager) {
 		this.beanManager = beanManager;
-		log.debugf( "Standard access requested to CDI BeanManager : " + beanManager );
+		log.debugf( "Delayed access requested to CDI BeanManager : " + beanManager );
 	}
 
 	@Override
@@ -74,11 +69,21 @@ public class ListenerFactoryBeanManagerStandardImpl implements ListenerFactory {
 	}
 
 	private class ListenerImpl<T> implements Listener<T> {
-		private final InjectionTarget<T> injectionTarget;
-		private final CreationalContext<T> creationalContext;
-		private final T listenerInstance;
+		private final Class<T> listenerClass;
+
+		private boolean initialized = false;
+
+		private InjectionTarget<T> injectionTarget;
+		private CreationalContext<T> creationalContext;
+		private T listenerInstance;
 
 		private ListenerImpl(Class<T> listenerClass) {
+			this.listenerClass = listenerClass;
+			log.debugf( "Delayed CDI listener built : " + listenerClass );
+		}
+
+		public void initialize() {
+			log.debug( "Initializing delayed CDI listener on first use : " + listenerClass );
 			AnnotatedType<T> annotatedType = beanManager.createAnnotatedType( listenerClass );
 			this.injectionTarget = beanManager.createInjectionTarget( annotatedType );
 			this.creationalContext = beanManager.createCreationalContext( null );
@@ -87,14 +92,26 @@ public class ListenerFactoryBeanManagerStandardImpl implements ListenerFactory {
 			injectionTarget.inject( this.listenerInstance, creationalContext );
 
 			injectionTarget.postConstruct( this.listenerInstance );
+
+			this.initialized = true;
 		}
 
 		@Override
 		public T getListener() {
+			if ( !initialized ) {
+				initialize();
+			}
 			return listenerInstance;
 		}
 
 		public void release() {
+			if ( !initialized ) {
+				log.debug( "Skipping release for CDI listener [" + listenerClass + "] as it was not initialized" );
+				return;
+			}
+
+			log.debug( "Releasing CDI listener : " + listenerClass );
+
 			injectionTarget.preDestroy( listenerInstance );
 			injectionTarget.dispose( listenerInstance );
 			creationalContext.release();

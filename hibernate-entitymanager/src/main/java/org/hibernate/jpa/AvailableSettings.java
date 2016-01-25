@@ -555,4 +555,12 @@ public interface AvailableSettings {
 	 * Used to pass along the name of the persistence unit.
 	 */
 	String PERSISTENCE_UNIT_NAME = "hibernate.ejb.persistenceUnitName";
+
+	/**
+	 * Defines delayed access to CDI BeanManager.  Starting in 5.1 the preferred means for CDI
+	 * bootstrapping is through org.hibernate.jpa.event.spi.jpa.ExtendedBeanManager
+	 *
+	 * @since 5.0.8
+	 */
+	String DELAY_CDI_ACCESS = "hibernate.delay_cdi_access";
 }

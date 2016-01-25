@@ -26,7 +26,7 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XMethod;
 import org.hibernate.jpa.event.spi.jpa.Callback;
 import org.hibernate.jpa.event.spi.jpa.CallbackType;
-import org.hibernate.jpa.event.spi.jpa.EntityCallbackBuilder;
+import org.hibernate.jpa.event.spi.jpa.CallbackBuilder;
 import org.hibernate.jpa.event.spi.jpa.ListenerFactory;
 
 import org.jboss.logging.Logger;
@@ -37,13 +37,13 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class EntityCallbackBuilderLegacyImpl implements EntityCallbackBuilder {
-	private static final Logger log = Logger.getLogger( EntityCallbackBuilderLegacyImpl.class );
+public class CallbackBuilderLegacyImpl implements CallbackBuilder {
+	private static final Logger log = Logger.getLogger( CallbackBuilderLegacyImpl.class );
 
 	private final ListenerFactory jpaListenerFactory;
 	private final ReflectionManager reflectionManager;
 
-	public EntityCallbackBuilderLegacyImpl(ListenerFactory jpaListenerFactory, ReflectionManager reflectionManager) {
+	public CallbackBuilderLegacyImpl(ListenerFactory jpaListenerFactory, ReflectionManager reflectionManager) {
 		this.jpaListenerFactory = jpaListenerFactory;
 		this.reflectionManager = reflectionManager;
 	}

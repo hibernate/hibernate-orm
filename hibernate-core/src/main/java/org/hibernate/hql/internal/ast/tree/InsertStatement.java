@@ -45,7 +45,7 @@ public class InsertStatement extends AbstractStatement {
 	}
 
 	/**
-	 * Retreive this insert statement's select-clause.
+	 * Retrieve this insert statement's select-clause.
 	 *
 	 * @return The select-clause.
 	 */

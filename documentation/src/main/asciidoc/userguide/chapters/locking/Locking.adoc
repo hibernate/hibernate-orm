@@ -149,7 +149,7 @@ The `LockMode` class defines the different lock levels that Hibernate can acquir
 |LockMode.WRITE |acquired automatically when Hibernate updates or inserts a row.
 |LockMode.UPGRADE |acquired upon explicit user request using `SELECT ... FOR UPDATE` on databases which support that syntax.
 |LockMode.UPGRADE_NOWAIT |acquired upon explicit user request using a `SELECT ... FOR UPDATE NOWAIT` in Oracle.
-|LockMode.UPGRADE_SKIPLOCKED |acquired upon explicit user request using a `SELECT ... FOR UPDATE SKIP LOCKED` in Oracle, or `SELECT ... with (rowlock,updlock,readpast) in SQL Server`.
+|LockMode.UPGRADE_SKIPLOCKED |acquired upon explicit user request using a `SELECT ... FOR UPDATE SKIP LOCKED` in Oracle, or `SELECT ... with (rowlock, updlock, readpast) in SQL Server`.
 |LockMode.READ |acquired automatically when Hibernate reads data under Repeatable Read or Serializable isolation level. It can be re-acquired by explicit user request.
 |LockMode.NONE |The absence of a lock. All objects switch to this lock mode at the end of a Transaction. Objects associated with the session via a call to update() or saveOrUpdate() also start out in this lock mode.
 |=======================================================================

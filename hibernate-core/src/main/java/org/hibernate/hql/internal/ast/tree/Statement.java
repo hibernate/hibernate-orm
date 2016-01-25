@@ -15,7 +15,7 @@ import org.hibernate.hql.internal.ast.HqlSqlWalker;
 public interface Statement {
 
 	/**
-	 * Retreive the "phase 2" walker which generated this statement tree.
+	 * Retrieve the "phase 2" walker which generated this statement tree.
 	 *
 	 * @return The HqlSqlWalker instance which generated this statement tree.
 	 */

@@ -178,7 +178,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	}
 
 	/**
-	 * Retreives the defined entity-name for the tuplized entity.
+	 * Retrieves the defined entity-name for the tuplized entity.
 	 *
 	 * @return The entity-name.
 	 */

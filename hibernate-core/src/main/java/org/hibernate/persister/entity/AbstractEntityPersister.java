@@ -1215,7 +1215,7 @@ public abstract class AbstractEntityPersister
 
 	public String[] getIdentifierAliases(String suffix) {
 		// NOTE: this assumes something about how propertySelectFragment is implemented by the subclass!
-		// was toUnqotedAliasStrings( getIdentiferColumnNames() ) before - now tried
+		// was toUnqotedAliasStrings( getIdentifierColumnNames() ) before - now tried
 		// to remove that unqoting and missing aliases..
 		return new Alias( suffix ).toAliasStrings( getIdentifierAliases() );
 	}

@@ -25,108 +25,8 @@ This section defines the settings which control this behavior.
 
 `org.hibernate.cache.spi.RegionFactory` defines the integration between Hibernate and a pluggable caching provider.
 `hibernate.cache.region.factory_class` is used to declare the provider to use.
-Hibernate comes with built-in support for two popular caching libraries: http://www.ehcache.org/[Ehcache] and http://infinispan.org/[Infinispan].
-
-[[caching-config-provider-ehcache]]
-===== Ehcache
-
-[NOTE]
-====
-Use of the build-in integration for Ehcache requires that the `hibernate-ehcache` module jar (and all of its dependencies) are on the classpath.
-====
-
-The hibernate-ehcache module defines two specific region factories: `EhCacheRegionFactory` and `SingletonEhCacheRegionFactory`.
-
-[[caching-config-provider-ehcache-region-factory]]
-====== `EhCacheRegionFactory`
-
-To use the `EhCacheRegionFactory`, you need to specify the following configuration property:
-
-[[caching-config-provider-ehcache-region-factory-example]]
-.`EhCacheRegionFactory` configuration
-====
-[source, XML, indent=0]
-----
-<property
-    name="hibernate.cache.region.factory_class"
-    value="org.hibernate.cache.ehcache.EhCacheRegionFactory"/>
-----
-====
-
-The `EhCacheRegionFactory` configures a `net.sf.ehcache.CacheManager` for each `SessionFactory`,
-so the `CacheManager` is not shared among multiple `SessionFactory` instances in the same JVM.
-
-[[caching-config-provider-ehcache-singleton-region-factory]]
-====== `SingletonEhCacheRegionFactory`
-
-To use the `SingletonEhCacheRegionFactory`, you need to specify the following configuration property:
-
-[[caching-config-provider-ehcache-singleton-region-factory-example]]
-.`SingletonEhCacheRegionFactory` configuration
-====
-[source, XML, indent=0]
-----
-<property
-    name="hibernate.cache.region.factory_class"
-    value="org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory"/>
-----
-====
-
-The `SingletonEhCacheRegionFactory` configures a singleton `net.sf.ehcache.CacheManager` (see http://www.ehcache.org/apidocs/2.8.4/net/sf/ehcache/CacheManager.html#create%28%29[CacheManager#create()]),
-shared among multiple `SessionFactory` instances in the same JVM.
-
-[NOTE]
-====
-http://www.ehcache.org/documentation/2.8/integrations/hibernate#optional[Ehcache documentation] recommends using multiple non-singleton `CacheManager(s)` when there are multiple Hibernate `SessionFactory` instances running in the same JVM.
-====
-
-[[caching-config-provider-infinispan]]
-===== Infinispan
-
-[NOTE]
-====
-Use of the build-in integration for Infinispan requires that the `hibernate-infinispan module` jar (and all of its dependencies) are on the classpath.
-====
-
-The hibernate-infinispan module defines two specific providers: `infinispan` and  `infinispan-jndi`.
-
-[[caching-config-provider-infinispan-region-factory]]
-===== `InfinispanRegionFactory`
-
-If Hibernate and Infinispan are running in a standalone environment, the `InfinispanRegionFactory` should be configured as follows:
-
-[[caching-config-provider-infinispan-region-factory-example]]
-.`InfinispanRegionFactory` configuration
-====
-[source, XML, indent=0]
-----
-<property
-    name="hibernate.cache.region.factory_class"
-    value="org.hibernate.cache.infinispan.InfinispanRegionFactory" />
-----
-====
-
-[[caching-config-provider-infinispan-jndi-region-factory]]
-===== `JndiInfinispanRegionFactory`
-
-If the Infinispan `CacheManager` is bound to JNDI, then the `JndiInfinispanRegionFactory` should be used as a region factory:
-
-[[caching-config-provider-infinispan-jndi-region-factory-example]]
-.`JndiInfinispanRegionFactory` configuration
-====
-[source, XML, indent=0]
-----
-<property
-    name="hibernate.cache.region.factory_class"
-    value="org.hibernate.cache.infinispan.JndiInfinispanRegionFactory" />
-
-<property
-    name="hibernate.cache.infinispan.cachemanager"
-    value="java:CacheManager" />
-----
-====
-
-For more information about Infinispan, see the http://infinispan.org/docs/8.0.x/user_guide/user_guide.html#_using_infinispan_as_jpa_hibernate_second_level_cache_provider[reference documentation].
+Hibernate comes with built-in support for two popular caching libraries: <<caching-provider-ehcache,Ehcache>> and <<caching-provider-infinispan,Infinispan>>.
+Detailed information is provided later in this chapter.
 
 [[caching-config-properties]]
 ==== Caching configuration properties
@@ -177,11 +77,11 @@ The following values are possible:
 
 `ENABLE_SELECTIVE` (Default and recommended value)::
 	Entities are not cached unless explicitly marked as cacheable (with the https://docs.oracle.com/javaee/7/api/javax/persistence/Cacheable.html[`@Cacheable`] annotation).
-`DISABLE_SELECTIVE`:
+`DISABLE_SELECTIVE`::
 	Entities are cached unless explicitly marked as not cacheable.
-`ALL`:
+`ALL`::
 	Entities are always cached even if marked as non cacheable.
-`NONE`:
+`NONE`::
 	No entity is cached even if marked as cacheable.
 	This option can make sense to disable second-level cache altogether.
 
@@ -190,23 +90,16 @@ The values for this property are:
 
 read-only::
 	If your application needs to read, but not modify, instances of a persistent class, a read-only cache is the best choice.
-	This is the simplest and optimal performing strategy.
-	It is even safe for use in a cluster.
+	Application can still delete entities and these changes should be reflected in second-level cache, so that the cache
+	does not provide stale entities.
+	Implementations may use performance optimizations based on the immutability of entities.
 read-write::
 	If the application needs to update data, a read-write cache might be appropriate.
-	This cache strategy should never be used if serializable transaction isolation level is required.
-	If the cache is used in a JTA environment, you must specify the `hibernate.transaction.jta.platform` property.
-	In other environments, you should ensure that the transaction is completed when `Session.close()` or `Session.disconnect()` is called.
-	If you want to use this strategy in a cluster, you should ensure that the underlying cache implementation supports locking.
+	This strategy provides consistent access to single entity, but not a serializable transaction isolation level; e.g. when TX1 reads looks up an entity and does not find it, TX2 inserts the entity into cache and TX1 looks it up again, the new entity can be read in TX1.
 nonstrict-read-write::
-	If the application only occasionally needs to update data
-	(e.g. if it is extremely unlikely that two transactions would try to update the same item simultaneously)
-	and strict transaction isolation is not required, a nonstrict-read-write cache might be appropriate.
-	If the cache is used in a JTA environment, you must specify the `hibernate.transaction.jta.platform` property.
-	In other environments, you should ensure that the transaction is completed when `Session.close()` or `Session.disconnect()` is called.
+    Similar to read-write strategy but there might be occasional stale reads upon concurrent access to an entity. The choice of this strategy might be appropriate if the application rarely updates the same data simultaneously and strict transaction isolation is not required. Implementation may use performance optimizations that make of use the relaxed consistency.
 transactional::
-	The transactional cache strategy provides support for fully transactional cache providers (e.g. Ehcache, Infinispan).
-	Such a cache can only be used in a JTA environment and you must specify `hibernate.transaction.jta.platform`.
+    Provides serializable transaction isolation level.
 
 [NOTE]
 ====
@@ -392,11 +285,10 @@ This setting creates two new cache regions:
 
 [IMPORTANT]
 ====
-If you configure your underlying cache implementation to use expiry or timeouts,
-it's very important that the cache timeout of the underlying cache region for the `UpdateTimestampsCache` be set to a higher value than the timeouts of any of the query caches.
+If you configure your underlying cache implementation to use expiration, it's very important that the timeout of the underlying cache region for the `UpdateTimestampsCache` is set to a higher value than the timeouts of any of the query caches.
 
-In fact, we recommend that the `UpdateTimestampsCache` region not be configured for expiry at all.
-Note that an LRU (Least Recently Used) cache expiry policy is never appropriate for this particular cache region.
+In fact, we recommend that the `UpdateTimestampsCache` region is not configured for expiration (time-based) or eviction (size/memory-based) at all.
+Note that an LRU (Least Recently Used) cache eviction policy is never appropriate for this particular cache region.
 ====
 
 If you require fine-grained control over query cache expiration policies,
@@ -489,7 +381,7 @@ include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-management-cache-mod
 ====
 
 [[caching-management-cache-mode-entity-native-example]]
-.Using custom cache modes wit Hibernate native API
+.Using custom cache modes with Hibernate native API
 ====
 [source, JAVA, indent=0]
 ----
@@ -569,3 +461,251 @@ second-level cache metrics.
 include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-statistics-example]
 ----
 ====
+
+
+[[caching-provider-ehcache]]
+=== Ehcache
+
+[NOTE]
+====
+Use of the build-in integration for http://www.ehcache.org/[Ehcache] requires that the `hibernate-ehcache` module jar (and all of its dependencies) are on the classpath.
+====
+
+[[caching-provider-ehcache-region-factory]]
+==== RegionFactory
+
+The hibernate-ehcache module defines two specific region factories: `EhCacheRegionFactory` and `SingletonEhCacheRegionFactory`.
+
+[[caching-provider-ehcache-region-factory-shared]]
+===== `EhCacheRegionFactory`
+
+To use the `EhCacheRegionFactory`, you need to specify the following configuration property:
+
+[[caching-provider-ehcache-region-factory-shared-example]]
+.`EhCacheRegionFactory` configuration
+====
+[source, XML, indent=0]
+----
+<property
+    name="hibernate.cache.region.factory_class"
+    value="org.hibernate.cache.ehcache.EhCacheRegionFactory"/>
+----
+====
+
+The `EhCacheRegionFactory` configures a `net.sf.ehcache.CacheManager` for each `SessionFactory`,
+so the `CacheManager` is not shared among multiple `SessionFactory` instances in the same JVM.
+
+[[caching-provider-ehcache-region-factory-singleton]]
+===== `SingletonEhCacheRegionFactory`
+
+To use the `SingletonEhCacheRegionFactory`, you need to specify the following configuration property:
+
+[[caching-provider-ehcache-region-factory-singleton-example]]
+.`SingletonEhCacheRegionFactory` configuration
+====
+[source, XML, indent=0]
+----
+<property
+    name="hibernate.cache.region.factory_class"
+    value="org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory"/>
+----
+====
+
+The `SingletonEhCacheRegionFactory` configures a singleton `net.sf.ehcache.CacheManager` (see http://www.ehcache.org/apidocs/2.8.4/net/sf/ehcache/CacheManager.html#create%28%29[CacheManager#create()]),
+shared among multiple `SessionFactory` instances in the same JVM.
+
+[NOTE]
+====
+http://www.ehcache.org/documentation/2.8/integrations/hibernate#optional[Ehcache documentation] recommends using multiple non-singleton `CacheManager(s)` when there are multiple Hibernate `SessionFactory` instances running in the same JVM.
+====
+
+[[caching-provider-infinispan]]
+=== Infinispan
+
+[NOTE]
+====
+Use of the build-in integration for http://infinispan.org/[Infinispan] requires that the `hibernate-infinispan module` jar (and all of its dependencies) are on the classpath.
+====
+
+Infinispan currently supports all cache concurrency modes, although not all combinations of configurations are compatible.
+
+Traditionally the `transactional` and `read-only` strategy was supported on _transactional invalidation_ caches. In version 5.0, further modes have been added:
+
+* _non-transactional invalidation_ caches are supported as well with `read-write` strategy. The actual setting of cache concurrency mode (`read-write` vs. `transactional`) is not honored, the appropriate strategy is selected based on the cache configuration (_non-transactional_ vs. _transactional_).
+* `read-write` mode is supported on _non-transactional distributed/replicated_ caches, however, eviction should not be used in this configuration. Use of eviction can lead to consistency issues. Expiration (with reasonably long max-idle times) can be used.
+* `nonstrict-read-write` mode is supported on _non-transactional distributed/replicated_ caches, but the eviction should be turned off as well. In addition to that, the entities must use versioning. This mode mildly relaxes the consistency - between DB commit and end of transaction commit a stale read (see <<cache-provider-infinispan-stale-read-example,example>>) may occur in another transaction. However this strategy uses less RPCs and can be more performant than the other ones.
+* `read-only` mode is supported on both _transactional_ and _non-transactional_ _invalidation_ caches and _non-transactional distributed/replicated_ caches, but use of this mode currently does not bring any performance gains.
+
+The available combinations are summarized in table below
+[[cache-provider-infinispan-compatibility-table]]
+.Cache concurrency strategy/cache mode compatibility table
+[options="header"]
+|===
+|Concurrency strategy|Cache transactions|Cache mode             |Eviction
+|transactional       |transactional     |invalidation           |yes
+|read-write          |non-transactional |invalidation           |yes
+|read-write          |non-transactional |distributed/replicated |no
+|nonstrict-read-write|non-transactional |distributed/replicated |no
+|===
+
+If your second level cache is not clustered, it is possible to use local cache instead of the clustered caches in all modes as described above.
+
+[[caching-provider-infinispan-stale-read-example]]
+.Stale read with `nonstrict-read-write` strategy
+====
+[source, indent=0]
+----
+A=0 (non-cached), B=0 (cached in 2LC)
+TX1: write A = 1, write B = 1
+TX1: start commit
+TX1: commit A, B in DB
+TX2: read A = 1 (from DB), read B = 0 (from 2LC) // breaks transactional atomicity
+TX1: update A, B in 2LC
+TX1: end commit
+Tx3: read A = 1, B = 1 // reads after TX1 commit completes are consistent again
+----
+====
+
+[[caching-provider-infinispan-region-factory]]
+==== RegionFactory
+
+The hibernate-infinispan module defines two specific providers: `infinispan` and  `infinispan-jndi`.
+
+[[caching-provider-infinispan-region-factory-basic]]
+===== `InfinispanRegionFactory`
+
+If Hibernate and Infinispan are running in a standalone environment, the `InfinispanRegionFactory` should be configured as follows:
+
+[[caching-provider-infinispan-region-factory-basic-example]]
+.`InfinispanRegionFactory` configuration
+====
+[source, XML, indent=0]
+----
+<property
+    name="hibernate.cache.region.factory_class"
+    value="org.hibernate.cache.infinispan.InfinispanRegionFactory" />
+----
+====
+
+[[caching-provider-infinispan-region-factory-jndi]]
+===== `JndiInfinispanRegionFactory`
+
+If the Infinispan `CacheManager` is bound to JNDI, then the `JndiInfinispanRegionFactory` should be used as a region factory:
+
+[[caching-provider-infinispan-region-factory-jndi-example]]
+.`JndiInfinispanRegionFactory` configuration
+====
+[source, XML, indent=0]
+----
+<property
+    name="hibernate.cache.region.factory_class"
+    value="org.hibernate.cache.infinispan.JndiInfinispanRegionFactory" />
+
+<property
+    name="hibernate.cache.infinispan.cachemanager"
+    value="java:CacheManager" />
+----
+====
+
+===== Infinispan in JBoss AS/WildFly
+
+When using JPA in WildFly, region factory is automatically set upon configuring `hibernate.cache.use_second_level_cache=true` (by default second-level cache is not used).
+For more information please consult https://docs.jboss.org/author/display/WFLY9/JPA+Reference+Guide#JPAReferenceGuide-UsingtheInfinispansecondlevelcache[WildFly documentation].
+
+[[caching-provider-infinispan-config]]
+==== Configuration properties
+
+Hibernate-infinispan module comes with default configuration in `infinispan-config.xml` that is suited for clustered use. If there's only single instance accessing the DB, you can use more performant `infinispan-config-local.xml` by setting the `hibernate.cache.infinispan.cfg` property. If you require further tuning of the cache, you can provide your own configuration. Caches that are not specified in the provided configuration will default to `infinispan-config.xml` (if the provided configuration uses clustering) or `infinispan-config-local.xml`. It is not possible to specify the configuration this way in WildFly.
+
+[[caching-provider-infinispan-config-example]]
+.Use custom Infinispan configuration
+====
+[source, XML, indent=0]
+----
+<property
+    name="hibernate.cache.infinispan.cfg"
+    value="my-infinispan-configuration.xml" />
+====
+
+[NOTE]
+====
+If the cache is configured as transactional, InfinispanRegionFactory automatically sets transaction manager so that the TM used by Infinispan is the same as TM used by Hibernate.
+====
+
+
+Cache configuration can differ for each type of data stored in the cache. In order to override the cache configuration template, use property `hibernate.cache.infinispan._data-type_.cfg` where `_data-type_` can be one of:
+
+`entity`:: Entities indexed by `@Id` or `@EmbeddedId` attribute.
+`immutable-entity`:: Entities tagged with `@Immutable` annotation or set as `mutable=false` in mapping file.
+`naturalid`:: Entities indexed by their `@NaturalId` attribute.
+`collection`:: All collections.
+`timestamps`:: Mapping _entity type_ -> _last modification timestamp_. Used for query caching.
+`query`:: Mapping _query_ -> _query result_.
+`pending-puts`:: Auxiliary caches for regions using invalidation mode caches.
+
+For specifying cache template for specific region, use region name instead of the `_data-type_`:
+
+[[caching-provider-infinispan-config-cache-example]]
+.Use custom cache template
+====
+[source, XML, indent=0]
+----
+<property
+    name="hibernate.cache.infinispan.entities.cfg"
+    value="custom-entities" />
+<property
+    name="hibernate.cache.infinispan.query.cfg"
+    value="custom-query-cache" />
+<property
+    name="hibernate.cache.infinispan.com.example.MyEntity.cfg"
+    value="my-entities" />
+<property
+    name="hibernate.cache.infinispan.com.example.MyEntity.someCollection.cfg"
+    value="my-entities-some-collection" />
+====
+
+[IMPORTANT]
+====
+Cache configurations are used only as a template for the cache created for given region (usually each entity hierarchy or collection has its own region). It is not possible to use the same cache for different regions.
+====
+
+Some options in the cache configuration can also be overridden directly through properties. These are:
+
+`hibernate.cache.infinispan._something_.eviction.strategy`:: Available options are `NONE`, `LRU` and `LIRS`.
+`hibernate.cache.infinispan._something_.eviction.max_entries`:: Maximum number of entries in the cache.
+`hibernate.cache.infinispan._something_.expiration.lifespan`:: Lifespan of entry from insert into cache (in milliseconds)
+`hibernate.cache.infinispan._something_.expiration.max_idle`:: Lifespan of entry from last read/modification (in milliseconds)
+`hibernate.cache.infinispan._something_.expiration.wake_up_interval`:: Period of thread checking expired entries.
+`hibernate.cache.infinispan.statistics`:: Globally enables/disable Infinispan statistics collection, and their exposure via JMX.
+
+[NOTE]
+====
+In versions prior to 5.1, `hibernate.cache.infinispan._something_.expiration.wake_up_interval` was called `hibernate.cache.infinispan._something_.eviction.wake_up_interval`. Eviction settings are checked upon each cache insert, it is expiration that needs to be triggered periodically. Old property still works, but its use is deprecated.
+====
+
+[NOTE]
+====
+Property `hibernate.cache.infinispan.use_synchronization` that allowed to register Infinispan as XA resource in the transaction has been deprecated in 5.0 and is not honored anymore. Infinispan 2LC must register as synchronizations on transactional caches. Also, non-transactional cache modes hook into the current JTA/JDBC transaction as synchronizations.
+====
+
+[[caching-provider-infinispan-config-query-timestamps]]
+===== Configuring Query and Timestamps caches
+
+Since version 5.0 it is possible to configure query caches as _non-transactional_. Consistency guarantees are not changed and writes to the query cache should be faster.
+
+The query cache is configured so that queries are only cached locally . Alternatively, you can configure query caching to use replication by selecting the "replicated-query" as query cache name. However, replication for query cache only makes sense if, and only if, all of this conditions are true:
+
+* Performing the query is quite expensive.
+* The same query is very likely to be repeatedly executed on different cluster nodes.
+* The query is unlikely to be invalidated out of the cache
+
+[NOTE]
+====
+Hibernate must aggressively invalidate query results from the cache any time any instance of one of the entity types is modified. All cached query results referencing given entity type are invalidated, even if the change made to the specific entity instance would not have affected the query result.
+The timestamps cache plays here an important role - it contains last modification timestamp for each entity type. After a cached query results is loaded, its timestamp is compared to all timestamps of the entity types that are referenced in the query and if any of these is higher, the cached query result is discarded and the query is executed against DB.
+====
+
+In default configuration, timestamps cache is asynchronously replicated. This means that a cached query on remote node can provide stale results for a brief time window before the remote timestamps cache is updated. However, requiring synchronous RPC would result in severe performance degradation.
+
+Further, but possibly outdated information can be found in http://infinispan.org/docs/8.0.x/user_guide/user_guide.html#_using_infinispan_as_jpa_hibernate_second_level_cache_provider[Infinispan documentation].
+

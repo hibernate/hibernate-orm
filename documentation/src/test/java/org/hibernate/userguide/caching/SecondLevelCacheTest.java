@@ -24,6 +24,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.cache.ehcache.EhCacheRegionFactory;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
@@ -134,8 +135,8 @@ public class SecondLevelCacheTest extends BaseEntityManagerFunctionalTestCase {
 					"from Person p " +
 					"where p.id > :id", Person.class)
 					.setParameter( "id", 0L)
-					.setHint( "org.hibernate.cacheable", "true")
-					.setHint( "org.hibernate.cacheRegion", "query.cache.person" )
+					.setHint( QueryHints.HINT_CACHEABLE, "true")
+					.setHint( QueryHints.HINT_CACHE_REGION, "query.cache.person" )
 					.getResultList();
 			//end::caching-query-region-jpa-example[]
 		});
@@ -162,8 +163,8 @@ public class SecondLevelCacheTest extends BaseEntityManagerFunctionalTestCase {
 				"from Person p " +
 				"where p.id > :id", Person.class)
 			.setParameter( "id", 0L)
-			.setHint( "org.hibernate.cacheable", "true")
-			.setHint( "org.hibernate.cacheRegion", "query.cache.person" )
+			.setHint( QueryHints.HINT_CACHEABLE, "true")
+			.setHint( QueryHints.HINT_CACHE_REGION, "query.cache.person" )
 			.setHint( "javax.persistence.cache.storeMode", CacheStoreMode.REFRESH )
 			.getResultList();
 			//end::caching-query-region-store-mode-jpa-example[]
@@ -226,7 +227,7 @@ public class SecondLevelCacheTest extends BaseEntityManagerFunctionalTestCase {
 			//tag::caching-management-cache-mode-query-jpa-example[]
 			List<Person> persons = entityManager.createQuery(
 				"select p from Person p", Person.class)
-			.setHint( "org.hibernate.cacheable", "true")
+			.setHint( QueryHints.HINT_CACHEABLE, "true")
 			.setHint( "javax.persistence.cache.retrieveMode " , CacheRetrieveMode.USE )
 			.setHint( "javax.persistence.cache.storeMode" , CacheStoreMode.REFRESH )
 			.getResultList();

@@ -1,6 +1,7 @@
 [[collections]]
 === Collections
-:sourcedir: ../../../../../test/java/org/hibernate/jpa/test/userguide/collections
+:sourcedir: ../../../../../test/java/org/hibernate/userguide/collections
+:extrasdir: extras/collections
 
 Naturally Hibernate also allows to persist collections. 
 These persistent collections can contain almost any other Hibernate type, including: basic types, custom types, components and references to other entities. 
@@ -76,7 +77,7 @@ include::{sourcedir}/BasicTypeElementCollectionTest.java[tags=collections-value-
 
 [source,sql]
 ----
-include::{sourcedir}/collections-value-type-collection-lifecycle-example.sql[]
+include::{extrasdir}/collections-value-type-collection-lifecycle-example.sql[]
 ----
 ====
 
@@ -92,7 +93,7 @@ include::{sourcedir}/BasicTypeElementCollectionTest.java[tags=collections-value-
 
 [source,sql]
 ----
-include::{sourcedir}/collections-value-type-collection-remove-example.sql[]
+include::{extrasdir}/collections-value-type-collection-remove-example.sql[]
 ----
 ====
 
@@ -111,7 +112,7 @@ include::{sourcedir}/BasicTypeOrderColumnElementCollectionTest.java[tags=collect
 
 [source,sql]
 ----
-include::{sourcedir}/collections-value-type-collection-order-column-remove-example.sql[]
+include::{extrasdir}/collections-value-type-collection-order-column-remove-example.sql[]
 ----
 ====
 
@@ -136,7 +137,7 @@ include::{sourcedir}/EmbeddableTypeElementCollectionTest.java[tags=collections-e
 
 [source,sql]
 ----
-include::{sourcedir}/collections-embeddable-type-collection-lifecycle-example.sql[]
+include::{extrasdir}/collections-embeddable-type-collection-lifecycle-example.sql[]
 ----
 ====
 
@@ -187,7 +188,7 @@ include::{sourcedir}/UnidirectionalBagTest.java[tags=collections-unidirectional-
 
 [source,sql]
 ----
-include::{sourcedir}/collections-unidirectional-bag-example.sql[]
+include::{extrasdir}/collections-unidirectional-bag-example.sql[]
 ----
 ====
 
@@ -209,7 +210,7 @@ include::{sourcedir}/UnidirectionalBagTest.java[tags=collections-unidirectional-
 
 [source,sql]
 ----
-include::{sourcedir}/collections-unidirectional-bag-lifecycle-example.sql[]
+include::{extrasdir}/collections-unidirectional-bag-lifecycle-example.sql[]
 ----
 ====
 
@@ -237,7 +238,7 @@ include::{sourcedir}/BidirectionalBagTest.java[tags=collections-bidirectional-ba
 
 [source,sql]
 ----
-include::{sourcedir}/collections-bidirectional-bag-example.sql[]
+include::{extrasdir}/collections-bidirectional-bag-example.sql[]
 ----
 ====
 
@@ -251,7 +252,7 @@ include::{sourcedir}/BidirectionalBagTest.java[tags=collections-bidirectional-ba
 
 [source,sql]
 ----
-include::{sourcedir}/collections-bidirectional-bag-lifecycle-example.sql[]
+include::{extrasdir}/collections-bidirectional-bag-lifecycle-example.sql[]
 ----
 ====
 
@@ -265,7 +266,7 @@ include::{sourcedir}/BidirectionalBagOrphanRemovalTest.java[tags=collections-bid
 
 [source,sql]
 ----
-include::{sourcedir}/collections-bidirectional-bag-orphan-removal-example.sql[]
+include::{extrasdir}/collections-bidirectional-bag-orphan-removal-example.sql[]
 ----
 ====
 
@@ -302,7 +303,7 @@ Upon fetching the collection, Hibernate generates the following select statement
 ====
 [source,sql]
 ----
-include::{sourcedir}/collections-unidirectional-ordered-list-order-by-select-example.sql[]
+include::{extrasdir}/collections-unidirectional-ordered-list-order-by-select-example.sql[]
 ----
 ====
 
@@ -327,7 +328,7 @@ include::{sourcedir}/UnidirectionalOrderColumnListTest.java[tags=collections-uni
 
 [source,sql]
 ----
-include::{sourcedir}/collections-unidirectional-ordered-list-order-column-example.sql[]
+include::{extrasdir}/collections-unidirectional-ordered-list-order-column-example.sql[]
 ----
 ====
 
@@ -339,7 +340,7 @@ When fetching the list, the following select query is executed:
 ====
 [source,sql]
 ----
-include::{sourcedir}/collections-unidirectional-ordered-list-order-column-select-example.sql[]
+include::{extrasdir}/collections-unidirectional-ordered-list-order-column-select-example.sql[]
 ----
 ====
 
@@ -373,7 +374,7 @@ include::{sourcedir}/BidirectionalOrderColumnListTest.java[tags=collections-bidi
 
 [source,sql]
 ----
-include::{sourcedir}/collections-bidirectional-ordered-list-order-column-example.sql[]
+include::{extrasdir}/collections-bidirectional-ordered-list-order-column-example.sql[]
 ----
 ====
 
@@ -499,7 +500,7 @@ include::{sourcedir}/ElementCollectionMapTest.java[tags=collections-map-value-ty
 
 [source,sql]
 ----
-include::{sourcedir}/collections-map-value-type-entity-key-example.sql[]
+include::{extrasdir}/collections-map-value-type-entity-key-example.sql[]
 ----
 ====
 
@@ -515,7 +516,7 @@ include::{sourcedir}/ElementCollectionMapTest.java[tags=collections-map-value-ty
 
 [source,sql]
 ----
-include::{sourcedir}/collections-map-value-type-entity-key-add-example.sql[]
+include::{extrasdir}/collections-map-value-type-entity-key-add-example.sql[]
 ----
 ====
 
@@ -536,7 +537,7 @@ include::{sourcedir}/UnidirectionalMapTest.java[tags=collections-map-unidirectio
 
 [source,sql]
 ----
-include::{sourcedir}/collections-map-unidirectional-example.sql[]
+include::{extrasdir}/collections-map-unidirectional-example.sql[]
 ----
 ====
 
@@ -556,7 +557,7 @@ include::{sourcedir}/BidirectionalMapTest.java[tags=collections-map-bidirectiona
 
 [source,sql]
 ----
-include::{sourcedir}/collections-map-bidirectional-example.sql[]
+include::{extrasdir}/collections-map-bidirectional-example.sql[]
 ----
 ====
 
@@ -582,7 +583,7 @@ include::{sourcedir}/ArrayTest.java[tags=collections-array-binary-example,indent
 
 [source,sql]
 ----
-include::{sourcedir}/collections-array-binary-example.sql[]
+include::{extrasdir}/collections-array-binary-example.sql[]
 ----
 ====
 
@@ -620,7 +621,7 @@ include::{sourcedir}/BasicTypeCollectionTest.java[tags=collections-comma-delimit
 
 [source,sql]
 ----
-include::{sourcedir}/collections-comma-delimited-collection-lifecycle-example.sql[]
+include::{extrasdir}/collections-comma-delimited-collection-lifecycle-example.sql[]
 ----
 ====
 

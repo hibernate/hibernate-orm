@@ -316,7 +316,7 @@ the `evict()` method can be used to remove the object and its collections from t
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/../../../../../../test/java/org/hibernate/jpa/test/userguide/caching/FirstLevelCacheTest.java[tags=caching-management-jpa-detach-example]
+include::{sourcedir}/../../../../../../test/java/org/hibernate/userguide/caching/FirstLevelCacheTest.java[tags=caching-management-jpa-detach-example]
 ----
 ====
 
@@ -325,7 +325,7 @@ include::{sourcedir}/../../../../../../test/java/org/hibernate/jpa/test/userguid
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/../../../../../../test/java/org/hibernate/jpa/test/userguide/caching/FirstLevelCacheTest.java[tags=caching-management-native-evict-example]
+include::{sourcedir}/../../../../../../test/java/org/hibernate/userguide/caching/FirstLevelCacheTest.java[tags=caching-management-native-evict-example]
 ----
 ====
 
@@ -336,7 +336,7 @@ To detach all entities from the current persistence context, both the `EntityMan
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/../../../../../../test/java/org/hibernate/jpa/test/userguide/caching/FirstLevelCacheTest.java[tags=caching-management-clear-example]
+include::{sourcedir}/../../../../../../test/java/org/hibernate/userguide/caching/FirstLevelCacheTest.java[tags=caching-management-clear-example]
 ----
 ====
 
@@ -347,6 +347,6 @@ To verify if an entity instance is currently attached to the running persistence
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/../../../../../../test/java/org/hibernate/jpa/test/userguide/caching/FirstLevelCacheTest.java[tags=caching-management-contains-example]
+include::{sourcedir}/../../../../../../test/java/org/hibernate/userguide/caching/FirstLevelCacheTest.java[tags=caching-management-contains-example]
 ----
 ====

@@ -42,17 +42,17 @@ public class ListenerFactoryBeanManagerExtendedImpl implements ListenerFactory, 
 	 */
 	@SuppressWarnings("unused")
 	public static ListenerFactoryBeanManagerExtendedImpl fromBeanManagerReference(Object reference) {
-		return new ListenerFactoryBeanManagerExtendedImpl( (BeanManager) reference );
-	}
-
-	public ListenerFactoryBeanManagerExtendedImpl(BeanManager beanManager) {
-		if ( !ExtendedBeanManager.class.isInstance( beanManager ) ) {
+		if ( !ExtendedBeanManager.class.isInstance( reference ) ) {
 			throw new IllegalArgumentException(
 					"Expecting BeanManager reference that implements optional ExtendedBeanManager contract : " +
-							beanManager
+							reference
 			);
 		}
-		( (ExtendedBeanManager) beanManager ).registerLifecycleListener( this );
+		return new ListenerFactoryBeanManagerExtendedImpl( (ExtendedBeanManager) reference );
+	}
+
+	public ListenerFactoryBeanManagerExtendedImpl(ExtendedBeanManager beanManager) {
+		beanManager.registerLifecycleListener( this );
 		log.debugf( "ExtendedBeanManager access requested to CDI BeanManager : " + beanManager );
 	}
 

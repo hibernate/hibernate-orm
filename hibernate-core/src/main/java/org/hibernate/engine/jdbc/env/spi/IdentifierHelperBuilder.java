@@ -34,6 +34,7 @@ public class IdentifierHelperBuilder {
 
 	private Set<String> reservedWords = new TreeSet<String>( String.CASE_INSENSITIVE_ORDER );
 	private boolean globallyQuoteIdentifiers = false;
+	private boolean skipGlobalQuotingForColumnDefinitions = false;
 	private boolean autoQuoteKeywords = true;
 	private IdentifierCaseStrategy unquotedCaseStrategy = IdentifierCaseStrategy.MIXED;
 	private IdentifierCaseStrategy quotedCaseStrategy = IdentifierCaseStrategy.MIXED;
@@ -136,6 +137,14 @@ public class IdentifierHelperBuilder {
 		this.globallyQuoteIdentifiers = globallyQuoteIdentifiers;
 	}
 
+	public boolean isSkipGlobalQuotingForColumnDefinitions() {
+		return skipGlobalQuotingForColumnDefinitions;
+	}
+
+	public void setSkipGlobalQuotingForColumnDefinitions(boolean skipGlobalQuotingForColumnDefinitions) {
+		this.skipGlobalQuotingForColumnDefinitions = skipGlobalQuotingForColumnDefinitions;
+	}
+
 	public void setAutoQuoteKeywords(boolean autoQuoteKeywords) {
 		this.autoQuoteKeywords = autoQuoteKeywords;
 	}
@@ -191,6 +200,7 @@ public class IdentifierHelperBuilder {
 				jdbcEnvironment,
 				nameQualifierSupport,
 				globallyQuoteIdentifiers,
+				skipGlobalQuotingForColumnDefinitions,
 				autoQuoteKeywords,
 				reservedWords,
 				unquotedCaseStrategy,

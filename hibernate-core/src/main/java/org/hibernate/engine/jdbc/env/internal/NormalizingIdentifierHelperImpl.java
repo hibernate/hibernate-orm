@@ -29,6 +29,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 
 	private final NameQualifierSupport nameQualifierSupport;
 	private final boolean globallyQuoteIdentifiers;
+	private final boolean globallyQuoteIdentifiersSkipColumnDefinitions;
 	private final boolean autoQuoteKeywords;
 	private final Set<String> reservedWords = new TreeSet<String>( String.CASE_INSENSITIVE_ORDER );
 	private final IdentifierCaseStrategy unquotedCaseStrategy;
@@ -38,6 +39,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 			JdbcEnvironment jdbcEnvironment,
 			NameQualifierSupport nameQualifierSupport,
 			boolean globallyQuoteIdentifiers,
+			boolean globallyQuoteIdentifiersSkipColumnDefinitions,
 			boolean autoQuoteKeywords,
 			Set<String> reservedWords,
 			IdentifierCaseStrategy unquotedCaseStrategy,
@@ -45,6 +47,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 		this.jdbcEnvironment = jdbcEnvironment;
 		this.nameQualifierSupport = nameQualifierSupport;
 		this.globallyQuoteIdentifiers = globallyQuoteIdentifiers;
+		this.globallyQuoteIdentifiersSkipColumnDefinitions = globallyQuoteIdentifiersSkipColumnDefinitions;
 		this.autoQuoteKeywords = autoQuoteKeywords;
 		if ( reservedWords != null ) {
 			this.reservedWords.addAll( reservedWords );
@@ -90,7 +93,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 
 	@Override
 	public Identifier applyGlobalQuoting(String text) {
-		return Identifier.toIdentifier( text, globallyQuoteIdentifiers );
+		return Identifier.toIdentifier( text, globallyQuoteIdentifiers && globallyQuoteIdentifiersSkipColumnDefinitions );
 	}
 
 	@Override

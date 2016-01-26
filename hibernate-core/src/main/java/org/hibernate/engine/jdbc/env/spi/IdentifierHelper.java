@@ -7,6 +7,7 @@
 package org.hibernate.engine.jdbc.env.spi;
 
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.cfg.AvailableSettings;
 
 /**
  * Helper for handling {@link Identifier} instances.
@@ -53,13 +54,22 @@ public interface IdentifierHelper {
 	Identifier toIdentifier(String text, boolean quoted);
 
 	/**
-	 * Needed to account for certain fields ({@link javax.persistence.Column#columnDefinition()} comes to mind)
-	 * that need to be quoted id global identifier quoting is requested, but only for spec compliance.  TBH, I can
-	 * not think of a argument why column-definitions should ever be *globally* quoted, but the spec is the spec.
+	 * Intended only for use in handling quoting requirements for {@code column-definition}
+	 * as defined by {@link javax.persistence.Column#columnDefinition()},
+	 * {@link javax.persistence.JoinColumn#columnDefinition}, etc.  This method should not
+	 * be called in any other scenario.
+	 * <p/>
+	 * This method is needed to account for that fact that the JPA spec says that {@code column-definition}
+	 * should be quoted of global-identifier-quoting is requested.  Again, this is needed for spec
+	 * compliance.  TBH, I can not think of a argument why column-definitions should ever be *globally* quoted,
+	 * but the spec is the spec.  In fact the default implementation allows applications to opt-out of
+	 * global-identifier-quoting affecting column-definitions.
 	 *
 	 * @param text The text to be (possibly) quoted
 	 *
 	 * @return The identifier form
+	 *
+	 * @see AvailableSettings#GLOBALLY_QUOTED_IDENTIFIERS_SKIP_COLUMN_DEFINITIONS
 	 */
 	Identifier applyGlobalQuoting(String text);
 

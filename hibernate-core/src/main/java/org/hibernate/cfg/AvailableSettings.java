@@ -784,9 +784,21 @@ public interface AvailableSettings {
     String DEFAULT_ENTITY_MODE = "hibernate.default_entity_mode";
 
 	/**
-	 * Should all database identifiers be quoted.
+	 * Should all database identifiers be quoted.  A {@code true}/{@code false} option.
 	 */
 	String GLOBALLY_QUOTED_IDENTIFIERS = "hibernate.globally_quoted_identifiers";
+
+	/**
+	 * Assuming {@link #GLOBALLY_QUOTED_IDENTIFIERS}, this allows such global quoting
+	 * to skip column-definitions as defined by {@link javax.persistence.Column#columnDefinition()},
+	 * {@link javax.persistence.JoinColumn#columnDefinition}, etc.
+	 * <p/>
+	 * JPA states that column-definitions are subject to global quoting, so by default this setting
+	 * is {@code false} for JPA compliance.  Set to {@code true} to avoid column-definitions
+	 * being quoted due to global quoting (they will still be quoted if explicitly quoted in the
+	 * annotation/xml).
+	 */
+	String GLOBALLY_QUOTED_IDENTIFIERS_SKIP_COLUMN_DEFINITIONS = "hibernate.globally_quoted_identifiers_skip_column_definitions";
 
 	/**
 	 * Enable nullability checking.

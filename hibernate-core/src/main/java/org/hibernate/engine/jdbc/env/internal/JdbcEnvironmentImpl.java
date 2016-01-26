@@ -78,6 +78,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 
 		final IdentifierHelperBuilder identifierHelperBuilder = IdentifierHelperBuilder.from( this );
 		identifierHelperBuilder.setGloballyQuoteIdentifiers( globalQuoting( cfgService ) );
+		identifierHelperBuilder.setSkipGlobalQuotingForColumnDefinitions( globalQuotingSkippedForColumnDefinitions( cfgService ) );
 		identifierHelperBuilder.setAutoQuoteKeywords( autoKeywordQuoting( cfgService ) );
 		identifierHelperBuilder.setNameQualifierSupport( nameQualifierSupport );
 
@@ -111,6 +112,15 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 				AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS,
 				StandardConverters.BOOLEAN,
 				false
+		);
+	}
+
+	private boolean globalQuotingSkippedForColumnDefinitions(ConfigurationService cfgService) {
+		return cfgService.getSetting(
+				AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS_SKIP_COLUMN_DEFINITIONS,
+				StandardConverters.BOOLEAN,
+				// default is true for JPA compliance - DO NOT CHANGE!
+				true
 		);
 	}
 
@@ -218,6 +228,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 
 		final IdentifierHelperBuilder identifierHelperBuilder = IdentifierHelperBuilder.from( this );
 		identifierHelperBuilder.setGloballyQuoteIdentifiers( globalQuoting( cfgService ) );
+		identifierHelperBuilder.setSkipGlobalQuotingForColumnDefinitions( globalQuotingSkippedForColumnDefinitions( cfgService ) );
 		identifierHelperBuilder.setAutoQuoteKeywords( autoKeywordQuoting( cfgService ) );
 		identifierHelperBuilder.setNameQualifierSupport( nameQualifierSupport );
 		IdentifierHelper identifierHelper = null;

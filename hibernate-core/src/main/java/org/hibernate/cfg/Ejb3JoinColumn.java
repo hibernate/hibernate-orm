@@ -299,7 +299,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		else {
 			setImplicit( false );
 			if ( !BinderHelper.isEmptyAnnotationValue( annJoin.columnDefinition() ) ) {
-				setSqlType( annJoin.columnDefinition() );
+				setSqlType( getBuildingContext().getObjectNameNormalizer().applyGlobalQuoting( annJoin.columnDefinition() ) );
 			}
 			if ( !BinderHelper.isEmptyAnnotationValue( annJoin.name() ) ) {
 				setLogicalColumnName( annJoin.name() );

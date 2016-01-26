@@ -93,6 +93,16 @@ public abstract class ObjectNameNormalizer {
 		return logicalName;
 	}
 
+	/**
+	 * Intended only for use in handling quoting requirements for {@code column-definition}
+	 * as defined by {@link javax.persistence.Column#columnDefinition()},
+	 *  {@link javax.persistence.JoinColumn#columnDefinition}, etc.  This method should not
+	 * be called in any other scenario.
+	 *
+	 * @param text The specified column definition
+	 *
+	 * @return The name with global quoting applied
+	 */
 	public String applyGlobalQuoting(String text) {
 		return database().getJdbcEnvironment().getIdentifierHelper().applyGlobalQuoting( text )
 				.render( database().getDialect() );

@@ -1,3 +1,0 @@
-Cat cat = session.get( Cat.class, catId );
-...
-session.refresh( cat );

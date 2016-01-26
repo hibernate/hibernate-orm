@@ -142,3 +142,6 @@ Default behavior is to fail the build, but it can be set so that only a warning 
 include::{sourcedir}/maven-example.pom[]
 ----
 ====
+
+:sourcedir: ../../../../../test/java/org/hibernate/userguide/pc
+

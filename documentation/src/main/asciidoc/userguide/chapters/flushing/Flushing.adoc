@@ -26,7 +26,7 @@ COMMIT:: The `Session` tries to delay the flush until the current `Transaction` 
 MANUAL:: The `Session` flushing is delegated to the application, which must call `Session.flush()` explicitly in order to apply the persistence context changes.
 
 [[flushing-auto]]
-== `AUTO` flush
+=== `AUTO` flush
 
 By default, Hibernate uses the `AUTO` flush mode which triggers a flush in the following circumstances:
 
@@ -34,7 +34,7 @@ By default, Hibernate uses the `AUTO` flush mode which triggers a flush in the f
 * prior to executing a JPQL/HQL query that overlaps with the queued entity actions
 * before executing any native SQL query that has no registered synchronization
 
-=== `AUTO` flush on commit
+==== `AUTO` flush on commit
 
 In the following example, an entity is persisted and then the transaction is committed.
 
@@ -61,7 +61,7 @@ The `IDENTITY` generator must execute the insert right after calling `persist()`
 For details, see the discussion of generators in <<chapters/domain/identifiers.adoc#identifiers,_Identifier generators_>>.
 ====
 
-=== `AUTO` flush on JPQL/HQL query
+==== `AUTO` flush on JPQL/HQL query
 
 A flush may also be triggered when executing an entity query.
 
@@ -108,7 +108,7 @@ include::{extrasdir}/flushing-auto-flush-jpql-overlap-example.sql[]
 
 This time, the flush was triggered by a JPQL query because the pending entity persist action overlaps with the query being executed.
 
-=== `AUTO` flush on native SQL query
+==== `AUTO` flush on native SQL query
 
 When executing a native SQL query, a flush is always triggered when using the `EntityManager` API.
 

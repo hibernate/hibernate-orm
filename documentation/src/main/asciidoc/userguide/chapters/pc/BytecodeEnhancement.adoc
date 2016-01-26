@@ -1,6 +1,6 @@
 [[BytecodeEnhancement]]
 === Bytecode Enhancement
-:sourcedir: extras
+:sourcedir: ../../../../../test/java/org/hibernate/userguide/pc
 
 Hibernate "grew up" not supporting bytecode enhancement at all.
 At that time, Hibernate only supported proxy-based for lazy loading and always used diff-based dirty calculation.
@@ -8,6 +8,7 @@ Hibernate 3.x saw the first attempts at bytecode enhancement support in Hibernat
 We consider those initial attempts (up until 5.0) completely as an incubation.
 The support for bytecode enhancement in 5.0 onward is what we are discussing here.
 
+[[BytecodeEnhancement-capabilities]]
 ==== Capabilities
 
 Hibernate supports the enhancement of an application Java domain model for the purpose of adding various persistence-related capabilities directly into the class.
@@ -25,11 +26,12 @@ By default, all singular attributes are part of a single group, meaning that whe
 Lazy plural attributes, by default, are each a lazy group by themselves.
 This behavior is explicitly controllable through the `@org.hibernate.annotations.LazyGroup` annotation.
 
+[[BytecodeEnhancement-lazy-loading-example]]
 .`@LazyGroup` example
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/LazyGroupExample.java[]
+include::{sourcedir}/BytecodeEnhancementTest.java[tags=BytecodeEnhancement-lazy-loading-example]
 ----
 ====
 
@@ -56,31 +58,44 @@ If your application does not need to care about "internal state changing data-ty
 In this approach Hibernate will manipulate the bytecode of your classes to add "dirty tracking" directly to the entity, allowing the entity itself to keep track of which of its attributes have changed.
 During flush time, Hibernate simply asks your entity what has changed rather that having to perform the state-diff calculations.
 
-===== Bi-directional association management
+[[BytecodeEnhancement-dirty-tracking-bidirectional]]
+===== Bidirectional association management
 
 Hibernate strives to keep your application as close to "normal Java usage" (idiomatic Java) as possible.
-Consider a domain model with a normal Order/LineItem bi-directional association:
+Consider a domain model with a normal `Person`/`Book` bidirectional association:
 
+[[BytecodeEnhancement-dirty-tracking-bidirectional-example]]
+.Bidirectional association
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/BytecodeEnhancementTest.java[tags=BytecodeEnhancement-dirty-tracking-bidirectional-example]
+----
+====
+
+[[BytecodeEnhancement-dirty-tracking-bidirectional-incorrect-usage-example]]
 .Incorrect normal Java usage
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/BiDirManagementNormalJavaIncorrect.java[]
+include::{sourcedir}/BytecodeEnhancementTest.java[tags=BytecodeEnhancement-dirty-tracking-bidirectional-incorrect-usage-example]
 ----
 ====
 
 This blows up in normal Java usage. The correct normal Java usage is:
 
+[[BytecodeEnhancement-dirty-tracking-bidirectional-correct-usage-example]]
 .Correct normal Java usage
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/BiDirManagementNormalJavaCorrect.java[]
+include::{sourcedir}/BytecodeEnhancementTest.java[tags=BytecodeEnhancement-dirty-tracking-bidirectional-correct-usage-example]
 ----
 ====
 
 Bytecode-enhanced bi-directional association management makes that first example work by managing the "other side" of a bi-directional association whenever one side is manipulated.
 
+[[BytecodeEnhancement-dirty-tracking-optimizations]]
 ===== Internal performance optimizations
 
 Additionally we use the enhancement process to add some additional code that allows us to optimized certain performance characteristics of the persistence context.
@@ -111,7 +126,7 @@ To use the plugin a project would first need to apply it:
 ====
 [source,gradle]
 ----
-include::{sourcedir}/gradle-example.gradle[]
+include::extras/gradle-example.gradle[]
 ----
 ====
 
@@ -139,9 +154,7 @@ Default behavior is to fail the build, but it can be set so that only a warning 
 ====
 [source,xml]
 ----
-include::{sourcedir}/maven-example.pom[]
+include::extras/maven-example.pom[]
 ----
 ====
-
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/pc
 

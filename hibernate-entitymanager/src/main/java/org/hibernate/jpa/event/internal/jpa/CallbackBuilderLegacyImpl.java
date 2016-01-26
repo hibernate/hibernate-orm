@@ -25,33 +25,36 @@ import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XMethod;
 import org.hibernate.jpa.event.spi.jpa.Callback;
+import org.hibernate.jpa.event.spi.jpa.CallbackType;
+import org.hibernate.jpa.event.spi.jpa.CallbackBuilder;
 import org.hibernate.jpa.event.spi.jpa.ListenerFactory;
 
 import org.jboss.logging.Logger;
 
 /**
- * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
+ * EntityCallbackBuilder implementation using HCANN ReflectionManager.  "legacy" in that
+ * we want to move to Jandex instead.
+ *
  * @author Steve Ebersole
  */
-public class LegacyCallbackProcessor implements CallbackProcessor {
-	private static final Logger log = Logger.getLogger( LegacyCallbackProcessor.class );
+public class CallbackBuilderLegacyImpl implements CallbackBuilder {
+	private static final Logger log = Logger.getLogger( CallbackBuilderLegacyImpl.class );
 
 	private final ListenerFactory jpaListenerFactory;
 	private final ReflectionManager reflectionManager;
 
-	public LegacyCallbackProcessor(ListenerFactory jpaListenerFactory, ReflectionManager reflectionManager) {
+	public CallbackBuilderLegacyImpl(ListenerFactory jpaListenerFactory, ReflectionManager reflectionManager) {
 		this.jpaListenerFactory = jpaListenerFactory;
 		this.reflectionManager = reflectionManager;
 	}
 
 	@Override
-	public void processCallbacksForEntity(Object entityObject, CallbackRegistryImpl callbackRegistry) {
-		final String entityClassName = (String) entityObject;
+	public void buildCallbacksForEntity(String entityClassName, CallbackRegistrar callbackRegistrar) {
 		try {
 			final XClass entityXClass = reflectionManager.classForName( entityClassName );
 			final Class entityClass = reflectionManager.toClass( entityXClass );
-			for ( Class annotationClass : CALLBACK_ANNOTATION_CLASSES ) {
-				if ( callbackRegistry.hasRegisteredCallbacks( entityClass, annotationClass ) ) {
+			for ( CallbackType callbackType : CallbackType.values() ) {
+				if ( callbackRegistrar.hasRegisteredCallbacks( entityClass, callbackType ) ) {
 					// this most likely means we have a class mapped multiple times using the hbm.xml
 					// "entity name" feature
 					log.debugf(
@@ -59,12 +62,12 @@ public class LegacyCallbackProcessor implements CallbackProcessor {
 									"assuming this means the class was mapped twice " +
 									"(using hbm.xml entity-name support) - skipping subsequent registrations",
 							entityClassName,
-							annotationClass.getSimpleName()
+							callbackType.getCallbackAnnotation().getSimpleName()
 					);
 					continue;
 				}
-				final Callback[] callbacks = resolveCallbacks( entityXClass, annotationClass, reflectionManager );
-				callbackRegistry.addEntityCallbacks( entityClass, annotationClass, callbacks );
+				final Callback[] callbacks = resolveCallbacks( entityXClass, callbackType, reflectionManager );
+				callbackRegistrar.registerCallbacks( entityClass, callbacks );
 			}
 		}
 		catch (ClassLoadingException e) {
@@ -72,7 +75,12 @@ public class LegacyCallbackProcessor implements CallbackProcessor {
 		}
 	}
 
-	public Callback[] resolveCallbacks(XClass beanClass, Class annotation, ReflectionManager reflectionManager) {
+	@Override
+	public void release() {
+		// nothign to do
+	}
+
+	public Callback[] resolveCallbacks(XClass beanClass, CallbackType callbackType, ReflectionManager reflectionManager) {
 		List<Callback> callbacks = new ArrayList<Callback>();
 		List<String> callbacksMethodNames = new ArrayList<String>(); //used to track overridden methods
 		List<Class> orderedListeners = new ArrayList<Class>();
@@ -83,26 +91,26 @@ public class LegacyCallbackProcessor implements CallbackProcessor {
 			Callback callback = null;
 			List<XMethod> methods = currentClazz.getDeclaredMethods();
 			for ( final XMethod xMethod : methods ) {
-				if ( xMethod.isAnnotationPresent( annotation ) ) {
+				if ( xMethod.isAnnotationPresent( callbackType.getCallbackAnnotation() ) ) {
 					Method method = reflectionManager.toMethod( xMethod );
 					final String methodName = method.getName();
 					if ( !callbacksMethodNames.contains( methodName ) ) {
 						//overridden method, remove the superclass overridden method
 						if ( callback == null ) {
-							callback = new EntityCallback( method );
+							callback = new EntityCallback( method, callbackType );
 							Class returnType = method.getReturnType();
 							Class[] args = method.getParameterTypes();
 							if ( returnType != Void.TYPE || args.length != 0 ) {
 								throw new RuntimeException(
-										"Callback methods annotated on the bean class must return void and take no arguments: " + annotation
-												.getName() + " - " + xMethod
+										"Callback methods annotated on the bean class must return void and take no arguments: "
+												+ callbackType.getCallbackAnnotation().getName() + " - " + xMethod
 								);
 							}
 							method.setAccessible( true );
 							log.debugf(
 									"Adding %s as %s callback for entity %s",
 									methodName,
-									annotation.getSimpleName(),
+									callbackType.getCallbackAnnotation().getSimpleName(),
 									beanClass.getName()
 							);
 							callbacks.add( 0, callback ); //superclass first
@@ -111,7 +119,7 @@ public class LegacyCallbackProcessor implements CallbackProcessor {
 						else {
 							throw new PersistenceException(
 									"You can only annotate one callback method with "
-											+ annotation.getName() + " in bean class: " + beanClass.getName()
+											+ callbackType.getCallbackAnnotation().getName() + " in bean class: " + beanClass.getName()
 							);
 						}
 					}
@@ -152,20 +160,24 @@ public class LegacyCallbackProcessor implements CallbackProcessor {
 				callbacksMethodNames = new ArrayList<String>();
 				List<XMethod> methods = xListener.getDeclaredMethods();
 				for ( final XMethod xMethod : methods ) {
-					if ( xMethod.isAnnotationPresent( annotation ) ) {
+					if ( xMethod.isAnnotationPresent( callbackType.getCallbackAnnotation() ) ) {
 						final Method method = reflectionManager.toMethod( xMethod );
 						final String methodName = method.getName();
 						if ( !callbacksMethodNames.contains( methodName ) ) {
 							//overridden method, remove the superclass overridden method
 							if ( callback == null ) {
-								callback = new ListenerCallback( jpaListenerFactory.buildListener( listener ), method );
+								callback = new ListenerCallback(
+										jpaListenerFactory.buildListener( listener ),
+										method,
+										callbackType
+								);
 
 								Class returnType = method.getReturnType();
 								Class[] args = method.getParameterTypes();
 								if ( returnType != Void.TYPE || args.length != 1 ) {
 									throw new PersistenceException(
-											"Callback methods annotated in a listener bean class must return void and take one argument: " + annotation
-													.getName() + " - " + method
+											"Callback methods annotated in a listener bean class must return void and take one argument: "
+													+ callbackType.getCallbackAnnotation().getName() + " - " + method
 									);
 								}
 								if ( !method.isAccessible() ) {
@@ -174,7 +186,7 @@ public class LegacyCallbackProcessor implements CallbackProcessor {
 								log.debugf(
 										"Adding %s as %s callback for entity %s",
 										methodName,
-										annotation.getSimpleName(),
+										callbackType.getCallbackAnnotation().getSimpleName(),
 										beanClass.getName()
 								);
 								callbacks.add( 0, callback ); // listeners first
@@ -182,8 +194,9 @@ public class LegacyCallbackProcessor implements CallbackProcessor {
 							else {
 								throw new PersistenceException(
 										"You can only annotate one callback method with "
-												+ annotation.getName() + " in bean class: " + beanClass.getName() + " and callback listener: "
-												+ listener.getName()
+												+ callbackType.getCallbackAnnotation().getName()
+												+ " in bean class: " + beanClass.getName()
+												+ " and callback listener: " + listener.getName()
 								);
 							}
 						}
@@ -231,10 +244,5 @@ public class LegacyCallbackProcessor implements CallbackProcessor {
 				}
 			}
 		}
-	}
-
-	@Override
-	public void release() {
-		// nothing to do here
 	}
 }

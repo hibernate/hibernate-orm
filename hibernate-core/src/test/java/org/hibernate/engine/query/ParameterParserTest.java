@@ -6,12 +6,13 @@
  */
 package org.hibernate.engine.query;
 
-import org.junit.Test;
-
 import org.hibernate.engine.query.spi.ParamLocationRecognizer;
 import org.hibernate.engine.query.spi.ParameterParser;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -46,6 +47,24 @@ public class ParameterParserTest extends BaseUnitTestCase {
 							  recognizer);
 
 		assertTrue(recognizer.getNamedParameterDescriptionMap().containsKey("param"));
+	}
+
+	@Test
+	public void testDoubleDashInCharLiteral() {
+		ParamLocationRecognizer recognizer = new ParamLocationRecognizer();
+
+		ParameterParser.parse("select coalesce(i.name, '--NONE--') as itname  from Item i where i.intVal=? ",recognizer);
+
+		assertEquals( 1, recognizer.getOrdinalParameterLocationList().size() );
+	}
+
+	@Test
+	public void testSlashStarInCharLiteral() {
+		ParamLocationRecognizer recognizer = new ParamLocationRecognizer();
+
+		ParameterParser.parse("select coalesce(i.name, '/*NONE') as itname  from Item i where i.intVal=? ",recognizer);
+
+		assertEquals( 1, recognizer.getOrdinalParameterLocationList().size() );
 	}
 
 	@Test

@@ -40,12 +40,12 @@ import org.hibernate.jpa.event.internal.core.JpaPostLoadEventListener;
 import org.hibernate.jpa.event.internal.core.JpaPostUpdateEventListener;
 import org.hibernate.jpa.event.internal.core.JpaSaveEventListener;
 import org.hibernate.jpa.event.internal.core.JpaSaveOrUpdateEventListener;
-import org.hibernate.jpa.event.internal.jpa.CallbackProcessor;
-import org.hibernate.jpa.event.internal.jpa.CallbackRegistryConsumer;
 import org.hibernate.jpa.event.internal.jpa.CallbackRegistryImpl;
-import org.hibernate.jpa.event.internal.jpa.LegacyCallbackProcessor;
-import org.hibernate.jpa.event.internal.jpa.StandardListenerFactory;
+import org.hibernate.jpa.event.internal.jpa.CallbackBuilderLegacyImpl;
+import org.hibernate.jpa.event.spi.jpa.CallbackRegistryConsumer;
+import org.hibernate.jpa.event.spi.jpa.CallbackBuilder;
 import org.hibernate.jpa.event.spi.jpa.ListenerFactory;
+import org.hibernate.jpa.event.spi.jpa.ListenerFactoryBuilder;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
@@ -57,7 +57,7 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
  */
 public class JpaIntegrator implements Integrator {
 	private ListenerFactory jpaListenerFactory;
-	private CallbackProcessor callbackProcessor;
+	private CallbackBuilder callbackBuilder;
 	private CallbackRegistryImpl callbackRegistry;
 
 	private static final DuplicationStrategy JPA_DUPLICATION_STRATEGY = new JPADuplicationStrategy();
@@ -126,18 +126,14 @@ public class JpaIntegrator implements Integrator {
 				.getReflectionManager();
 
 		this.callbackRegistry = new CallbackRegistryImpl();
-		final Object beanManagerRef = sessionFactory.getSessionFactoryOptions().getBeanManagerReference();
-		this.jpaListenerFactory = beanManagerRef == null
-				? new StandardListenerFactory()
-				: buildBeanManagerListenerFactory( beanManagerRef );
-		this.callbackProcessor = new LegacyCallbackProcessor( jpaListenerFactory, reflectionManager );
-
+		this.jpaListenerFactory = ListenerFactoryBuilder.buildListenerFactory( sessionFactory.getSessionFactoryOptions() );
+		this.callbackBuilder = new CallbackBuilderLegacyImpl( jpaListenerFactory, reflectionManager );
 		for ( PersistentClass persistentClass : metadata.getEntityBindings() ) {
 			if ( persistentClass.getClassName() == null ) {
 				// we can have non java class persisted by hibernate
 				continue;
 			}
-			callbackProcessor.processCallbacksForEntity( persistentClass.getClassName(), callbackRegistry );
+			callbackBuilder.buildCallbacksForEntity( persistentClass.getClassName(), callbackRegistry );
 		}
 
 		for ( EventType eventType : EventType.values() ) {
@@ -191,8 +187,8 @@ public class JpaIntegrator implements Integrator {
 		if ( callbackRegistry != null ) {
 			callbackRegistry.release();
 		}
-		if ( callbackProcessor != null ) {
-			callbackProcessor.release();
+		if ( callbackBuilder != null ) {
+			callbackBuilder.release();
 		}
 		if ( jpaListenerFactory != null ) {
 			jpaListenerFactory.release();

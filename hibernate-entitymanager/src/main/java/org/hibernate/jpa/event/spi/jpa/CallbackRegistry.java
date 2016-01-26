@@ -12,19 +12,52 @@ import java.io.Serializable;
  * @author Steve Ebersole
  */
 public interface CallbackRegistry extends Serializable {
+	/**
+	 * Do we have any registered callbacks of the given type for the given entity?
+	 *
+	 * @param entityClass The entity Class to check against
+	 * @param callbackType The type of callback to look for
+	 *
+	 * @return {@code true} indicates there are already registered callbacks of
+	 * that type for that class; {@code false} indicates there are not.
+	 */
+	boolean hasRegisteredCallbacks(Class entityClass, CallbackType callbackType);
+
 	void preCreate(Object entity);
-	boolean hasPostCreateCallbacks(Class entityClass);
 	void postCreate(Object entity);
 
 	boolean preUpdate(Object entity);
-	boolean hasPostUpdateCallbacks(Class entityClass);
 	void postUpdate(Object entity);
 
 	void preRemove(Object entity);
-	boolean hasPostRemoveCallbacks(Class entityClass);
 	void postRemove(Object entity);
 
 	boolean postLoad(Object entity);
 
+	/**
+	 * @deprecated Use {@link #hasRegisteredCallbacks(Class, CallbackType)} instead passing
+	 * {@link CallbackType#POST_PERSIST}
+	 */
+	@Deprecated
+	boolean hasPostCreateCallbacks(Class entityClass);
+
+	/**
+	 * @deprecated Use {@link #hasRegisteredCallbacks(Class, CallbackType)} instead passing
+	 * {@link CallbackType#POST_UPDATE}
+	 */
+	@Deprecated
+	boolean hasPostUpdateCallbacks(Class entityClass);
+
+	/**
+	 * @deprecated Use {@link #hasRegisteredCallbacks(Class, CallbackType)} instead passing
+	 * {@link CallbackType#POST_REMOVE}
+	 */
+	@Deprecated
+	boolean hasPostRemoveCallbacks(Class entityClass);
+
+	/**
+	 * @deprecated Use {@link #hasRegisteredCallbacks(Class, CallbackType)} instead.
+	 */
+	@Deprecated
 	boolean hasRegisteredCallbacks(Class entityClass, Class annotationClass);
 }

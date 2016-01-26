@@ -1,6 +1,7 @@
 [[pc]]
 == Persistence Contexts
-:sourcedir: extras
+:sourcedir: ../../../../../test/java/org/hibernate/userguide/pc
+:sourcedir-caching: ../../../../../test/java/org/hibernate/userguide/caching
 
 Both the `org.hibernate.Session` API and `javax.persistence.EntityManager` API represent a context for dealing with persistent data.
 This concept is called a `persistence context`.
@@ -15,35 +16,43 @@ It may or may not physically exist in the database yet.
 
 Much of the `org.hibernate.Session` and `javax.persistence.EntityManager` methods deal with moving entities between these states.
 
+[[pc-unwrap]]
 === Accessing Hibernate APIs from JPA
 
 JPA defines an incredibly useful method to allow applications access to the APIs of the underlying provider.
 
+[[pc-unwrap-example]]
 .Accessing Hibernate APIs from JPA
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/UnwrapWithEM.java[]
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-unwrap-example]
 ----
 ====
 
 include::BytecodeEnhancement.adoc[]
 
+[[pc-persist]]
 === Making entities persistent
 
 Once you've created a new entity instance (using the standard `new` operator) it is in `new` state.
 You can make it persistent by associating it to either a `org.hibernate.Session` or `javax.persistence.EntityManager`.
 
-.Example of making an entity persistent
+[[pc-persist-jpa-example]]
+.Making an entity persistent with JPA
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/MakingPersistentWithSession.java[]
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-persist-jpa-example]
 ----
+====
 
-[source,java]
+[[pc-persist-native-example]]
+.Making an entity persistent with Hibernate API
+====
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/MakingPersistentWithEM.java[]
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-persist-native-example]
 ----
 ====
 
@@ -53,20 +62,26 @@ It is this `org.hibernate.Session` method to which the Hibernate `javax.persiste
 If the `DomesticCat` entity type has a generated identifier, the value is associated to the instance when the save or persist is called.
 If the identifier is not automatically generated, the manually assigned (usually natural) key value has to be set on the instance before the save or persist methods are called.
 
-=== Deleting entities
+[[pc-remove]]
+=== Deleting (removing) entities
 
 Entities can also be deleted.
 
-.Example of deleting an entity
+[[pc-remove-jpa-example]]
+.Deleting an entity with JPA
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/DeletingWithSession.java[]
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-remove-jpa-example]
 ----
+====
 
-[source,java]
+[[pc-remove-native-example]]
+.Deleting an entity with Hibernate API
+====
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/DeletingWithEM.java[]
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-remove-native-example]
 ----
 ====
 
@@ -78,90 +93,160 @@ The implication here is that the entity instance passed to the `org.hibernate.Se
 while the entity instance passed to remove on `javax.persistence.EntityManager` must be in managed state.
 ====
 
+[[pc-get-reference]]
 === Obtain an entity reference without initializing its data
 
 Sometimes referred to as lazy loading, the ability to obtain a reference to an entity without having to load its data is hugely important.
 The most common case being the need to create an association between an entity and another existing entity.
 
-.Example of obtaining an entity reference without initializing its data
+[[pc-get-reference-jpa-example]]
+.Obtaining an entity reference without initializing its data with JPA
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/GetReferenceWithSession.java[]
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-get-reference-jpa-example]
 ----
+====
 
-[source,java]
+[[pc-get-reference-native-example]]
+.Obtaining an entity reference without initializing its data with Hibernate API
+====
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/GetReferenceWithEM.java[]
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-get-reference-native-example]
 ----
 ====
 
 The above works on the assumption that the entity is defined to allow lazy loading, generally through use of runtime proxies.
 In both cases an exception will be thrown later if the given entity does not refer to actual database state when the application attempts to use the returned proxy in any way that requires access to its data.
 
+[[pc-find]]
 === Obtain an entity with its data initialized
 
 It is also quite common to want to obtain an entity along with its data (e.g. like when we need to display it in the UI).
 
-.Example of obtaining an entity reference with its data initialized
+[[pc-find-jpa-example]]
+.Obtaining an entity reference with its data initialized with JPA
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/LoadWithSession.java[]
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-find-jpa-example]
 ----
+====
 
-[source,java]
+[[pc-find-native-example]]
+.Obtaining an entity reference with its data initialized with Hibernate API
+====
+
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/LoadWithSession.java[]
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-find-native-example]
+----
+====
+
+[[pc-find-by-id-native-example]]
+.Obtaining an entity reference with its data initialized using the `byId()` Hibernate API
+====
+
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-find-by-id-native-example]
 ----
 ====
 
 In both cases null is returned if no matching database row was found.
 
+[[pc-find-natural-id]]
 === Obtain an entity by natural-id
 
 In addition to allowing to load by identifier, Hibernate allows applications to load by declared natural identifier.
 
-.Example of simple natural-id access
+[[pc-find-by-natural-id-entity-example]]
+.Natural-id mapping
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/SimpleNaturalIdLoading.java[]
-----
-
-[source,java]
-----
-include::{sourcedir}/NaturalIdLoading.java[]
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-find-by-natural-id-entity-example]
 ----
 ====
 
 We can also opt to fetch the entity or just retrieve a reference to it when using the natural identifier loading methods.
 
+[[pc-find-by-simple-natural-id-example]]
+.Get entity reference by simple natural-id
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-find-by-simple-natural-id-example]
+----
+====
+
+[[pc-find-by-natural-id-example]]
+.Load entity by natural-id
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-find-by-natural-id-example]
+----
+====
+
 Hibernate offer a consistent API for accessing persistent data by identifier or by the natural-id. Each of these defines the same two data access methods:
 
-getReference:: Should be used in cases where the identifier is assumed to exist, where non-existence would be an actual error.
-Should never be used to test existence.
-That is because this method will prefer to create and return a proxy if the data is not already associated with the Session rather than hit the database.
-The quintessential use-case for using this method is to create foreign-key based associations.
-load:: Will return the persistent data associated with the given identifier value or null if that identifier does not exist.
+getReference::
+	Should be used in cases where the identifier is assumed to exist, where non-existence would be an actual error.
+	Should never be used to test existence.
+	That is because this method will prefer to create and return a proxy if the data is not already associated with the Session rather than hit the database.
+	The quintessential use-case for using this method is to create foreign-key based associations.
+load::
+	Will return the persistent data associated with the given identifier value or null if that identifier does not exist.
 
 Each of these two methods define an overloading variant accepting a `org.hibernate.LockOptions` argument.
 Locking is discussed in a separate <<chapters/locking/locking.adoc#locking,chapter>>.
 
+[[pc-managed-state]]
+=== Modifying managed/persistent state
+
+Entities in managed/persistent state may be manipulated by the application and any changes will be automatically detected and persisted when the persistence context is flushed.
+There is no need to call a particular method to make your modifications persistent.
+
+[[pc-managed-state-jpa-example]]
+.Modifying managed state with JPA
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-managed-state-jpa-example]
+----
+====
+
+[[pc-managed-state-native-example]]
+.Modifying managed state with Hibernate API
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-managed-state-native-example]
+----
+====
+
+[[pc-refresh]]
 === Refresh entity state
 
 You can reload an entity instance and its collections at any time.
 
-.Example of refreshing entity state
+[[pc-refresh-jpa-example]]
+.Refreshing entity state with JPA
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/RefreshWithSession.java[]
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-refresh-jpa-example]
 ----
+====
 
-[source,java]
+[[pc-refresh-native-example]]
+.Refreshing entity state with Hibernate API
+====
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/RefreshWithEM.java[]
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-refresh-native-example]
 ----
 ====
 
@@ -177,24 +262,7 @@ However, please note that Hibernate has the capability to handle this automatica
 See the discussion of non-identifier <<chapters/domain/basic_types.adoc#mapping-generated,generated attributes>>.
 ====
 
-=== Modifying managed/persistent state
-
-Entities in managed/persistent state may be manipulated by the application and any changes will be automatically detected and persisted when the persistence context is flushed.
-There is no need to call a particular method to make your modifications persistent.
-
-.Example of modifying managed state
-====
-[source,java]
-----
-include::{sourcedir}/ManagedUpdateWithSession.java[]
-----
-
-[source,java]
-----
-include::{sourcedir}/ManagedUpdateWithEM.java[]
-----
-====
-
+[[pc-detach]]
 === Working with detached data
 
 Detachment is the process of working with data outside the scope of any persistence context.
@@ -206,6 +274,7 @@ And finally, serialization will make the deserialized form be detached (the orig
 
 Detached data can still be manipulated, however the persistence context will no longer automatically know about these modification and the application will need to intervene to make the changes persistent again.
 
+[[pc-detach-reattach]]
 ==== Reattaching detached data
 
 Reattachment is the process of taking an incoming entity instance that is in detached state and re-associating it with the current persistence context.
@@ -215,16 +284,21 @@ Reattachment is the process of taking an incoming entity instance that is in det
 JPA does not provide for this model. This is only available through Hibernate `org.hibernate.Session`.
 ====
 
-.Example of reattaching a detached entity
+[[pc-detach-reattach-lock-example]]
+.Reattaching a detached entity using `lock`
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/ReattachingWithSession1.java[]
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-detach-reattach-lock-example]
 ----
+====
 
-[source,java]
+[[pc-detach-reattach-saveOrUpdate-example]]
+.Reattaching a detached entity using `saveOrUpdate`
+====
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/ReattachingWithSession2.java[]
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-detach-reattach-saveOrUpdate-example]
 ----
 ====
 
@@ -238,70 +312,89 @@ If the entity is mapped with `select-before-update`, Hibernate will pull the cur
 
 Provided the entity is detached, `update` and `saveOrUpdate` operate exactly the same.
 
+[[pc-merge]]
 ==== Merging detached data
 
 Merging is the process of taking an incoming entity instance that is in detached state and copying its data over onto a new managed instance.
 
 Although not exactly per se, the following example is a good visualization of the `merge` operation internals.
 
+[[pc-merge-visualize-example]]
 .Visualizing merge
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/VisualizingMerge.java[]
-----
-====
-
-.Example of merging a detached entity
-====
-[source,java]
-----
-include::{sourcedir}/MergeWithSession.java[]
-----
-
-[source,java]
-----
-include::{sourcedir}/MergeWithEM.java[]
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-merge-visualize-example]
 ----
 ====
 
+[[pc-merge-jpa-example]]
+.Merging a detached entity with JPA
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-merge-jpa-example]
+----
+====
+
+[[pc-merge-native-example]]
+.Merging a detached entity with Hibernate API
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-merge-native-example]
+----
+====
+
+[[pc-contains]]
 === Checking persistent state
 
 An application can verify the state of entities and collections in relation to the persistence context.
 
-.Examples of verifying managed state
+[[pc-contains-jpa-example]]
+.Verifying managed state with JPA
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/ContainsWithSession.java[]
-----
-
-[source,java]
-----
-include::{sourcedir}/ContainsWithEM.java[]
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-contains-jpa-example]
 ----
 ====
 
-.Examples of verifying laziness
+[[pc-contains-native-example]]
+.Verifying managed state with Hibernate API
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/CheckingLazinessWithHibernate.java[]
-----
-
-[source,java]
-----
-include::{sourcedir}/CheckingLazinessWithJPA.java[]
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-contains-native-example]
 ----
 ====
 
-In JPA there is an alternative means to check laziness using the following `javax.persistence.PersistenceUtil` pattern (which is recommended where ever possible).
+[[pc-verify-lazy-jpa-example]]
+.Verifying laziness with JPA
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-verify-lazy-jpa-example]
+----
+====
 
+[[pc-verify-lazy-native-example]]
+.Verifying laziness with Hibernate API
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-verify-lazy-native-example]
+----
+====
+
+In JPA there is an alternative means to check laziness using the following `javax.persistence.PersistenceUtil` pattern (which is recommended wherever possible).
+
+[[pc-verify-lazy-jpa-alternative-example]]
 .Alternative JPA means to verify laziness
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/CheckingLazinessWithJPA2.java[]
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-verify-lazy-jpa-alternative-example]
 ----
 ====
 
@@ -316,7 +409,7 @@ the `evict()` method can be used to remove the object and its collections from t
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/../../../../../../test/java/org/hibernate/userguide/caching/FirstLevelCacheTest.java[tags=caching-management-jpa-detach-example]
+include::{sourcedir-caching}/FirstLevelCacheTest.java[tags=caching-management-jpa-detach-example]
 ----
 ====
 
@@ -325,7 +418,7 @@ include::{sourcedir}/../../../../../../test/java/org/hibernate/userguide/caching
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/../../../../../../test/java/org/hibernate/userguide/caching/FirstLevelCacheTest.java[tags=caching-management-native-evict-example]
+include::{sourcedir-caching}/FirstLevelCacheTest.java[tags=caching-management-native-evict-example]
 ----
 ====
 
@@ -336,7 +429,7 @@ To detach all entities from the current persistence context, both the `EntityMan
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/../../../../../../test/java/org/hibernate/userguide/caching/FirstLevelCacheTest.java[tags=caching-management-clear-example]
+include::{sourcedir-caching}/FirstLevelCacheTest.java[tags=caching-management-clear-example]
 ----
 ====
 
@@ -347,6 +440,6 @@ To verify if an entity instance is currently attached to the running persistence
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/../../../../../../test/java/org/hibernate/userguide/caching/FirstLevelCacheTest.java[tags=caching-management-contains-example]
+include::{sourcedir-caching}/FirstLevelCacheTest.java[tags=caching-management-contains-example]
 ----
 ====

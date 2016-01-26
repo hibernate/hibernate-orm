@@ -1,1 +1,0 @@
-assert session.contains( cat );

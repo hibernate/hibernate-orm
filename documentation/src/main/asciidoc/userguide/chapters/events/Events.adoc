@@ -80,7 +80,7 @@ Hibernate allows certain actions to be authorized via JACC and JAAS.
 This is an optional functionality that is built on top of the event architecture.
 
 First, you must configure the appropriate event listeners, to enable the use of JACC authorization.
-Again, see <<chapters/bootstrap/Bootstrap.adoc#event-listener-registration,Event Listener Registration>> for the details.
+Again, see <<chapters/bootstrap/Bootstrap.adoc#bootstrap-event-listener-registration,Event Listener Registration>> for the details.
 
 Below is an example of an appropriate `org.hibernate.integrator.spi.Integrator` implementation for this purpose.
 

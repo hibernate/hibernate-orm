@@ -226,6 +226,11 @@ To substitute the `persistence.xml` file, Hibernate offers the `PersistenceUnitI
 ====
 [source, JAVA, indent=0]
 ----
+include::{sourcedir}/BootstrapTest.java[tags=bootstrap-native-PersistenceUnitInfoImpl-example]
+----
+
+[source, JAVA, indent=0]
+----
 include::{sourcedir}/BootstrapTest.java[tags=bootstrap-native-EntityManagerFactory-example]
 ----
 ====

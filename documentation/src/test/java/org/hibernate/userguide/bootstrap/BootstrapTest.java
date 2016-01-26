@@ -362,8 +362,7 @@ public class BootstrapTest {
 		}
 	}
 
-	//tag::bootstrap-native-EntityManagerFactory-example[]
-
+	//tag::bootstrap-native-PersistenceUnitInfoImpl-example[]
 	public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 
 		private final String persistenceUnitName;
@@ -486,5 +485,5 @@ public class BootstrapTest {
 			return null;
 		}
 	}
-	//end::bootstrap-native-EntityManagerFactory-example[]
+	//end::bootstrap-native-PersistenceUnitInfoImpl-example[]
 }

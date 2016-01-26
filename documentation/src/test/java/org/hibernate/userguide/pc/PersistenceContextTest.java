@@ -327,8 +327,6 @@ public class PersistenceContextTest extends BaseEntityManagerFunctionalTestCase 
 		//end::pc-merge-visualize-example[]
 	}
 
-
-
 	@Entity(name = "Person")
 	public static class Person {
 

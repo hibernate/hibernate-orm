@@ -14,8 +14,6 @@ import static org.hibernate.userguide.util.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 
 /**
- * <code>BulkTest</code> - Bulk JPQL Test
- *
  * @author Vlad Mihalcea
  */
 public class BulkTest extends BaseEntityManagerFunctionalTestCase {

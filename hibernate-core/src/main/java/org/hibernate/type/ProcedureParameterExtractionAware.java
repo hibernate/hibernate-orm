@@ -17,7 +17,7 @@ import org.hibernate.engine.spi.SessionImplementor;
  *
  * @author Steve Ebersole
  */
-public interface ProcedureParameterExtractionAware<T> extends Type {
+public interface ProcedureParameterExtractionAware<T> {
 	/**
 	 * Can the given instance of this type actually perform the parameter value extractions?
 	 *

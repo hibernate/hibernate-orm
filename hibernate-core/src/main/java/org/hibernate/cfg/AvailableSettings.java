@@ -790,8 +790,8 @@ public interface AvailableSettings {
 
 	/**
 	 * Assuming {@link #GLOBALLY_QUOTED_IDENTIFIERS}, this allows such global quoting
-	 * to skip column-definitions as defined by {@link javax.persistence.Column#columnDefinition()},
-	 * {@link javax.persistence.JoinColumn#columnDefinition}, etc.
+	 * to skip column-definitions as defined by {@link javax.persistence.Column},
+	 * {@link javax.persistence.JoinColumn}, etc.
 	 * <p/>
 	 * JPA states that column-definitions are subject to global quoting, so by default this setting
 	 * is {@code false} for JPA compliance.  Set to {@code true} to avoid column-definitions

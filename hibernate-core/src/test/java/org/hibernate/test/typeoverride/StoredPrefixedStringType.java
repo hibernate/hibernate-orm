@@ -44,6 +44,13 @@ public class StoredPrefixedStringType
 							String stringValue = javaTypeDescriptor.unwrap( value, String.class, options );
 							st.setString( index, PREFIX + stringValue );
 						}
+
+						@Override
+						protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+								throws SQLException {
+							String stringValue = javaTypeDescriptor.unwrap( value, String.class, options );
+							st.setString( name, PREFIX + stringValue );
+						}
 					};
 				}
 

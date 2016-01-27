@@ -6,6 +6,7 @@
  */
 package org.hibernate.type.descriptor.sql;
 
+import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
@@ -74,6 +75,36 @@ public abstract class BasicBinder<J> implements ValueBinder<J> {
 		}
 	}
 
+	@Override
+	public final void bind(CallableStatement st, J value, String name, WrapperOptions options) throws SQLException {
+		final boolean traceEnabled = log.isTraceEnabled();
+		if ( value == null ) {
+			if ( traceEnabled ) {
+				log.trace(
+						String.format(
+								NULL_BIND_MSG_TEMPLATE,
+								name,
+								JdbcTypeNameMapper.getTypeName( getSqlDescriptor().getSqlType() )
+						)
+				);
+			}
+			st.setNull( name, sqlDescriptor.getSqlType() );
+		}
+		else {
+			if ( traceEnabled ) {
+				log.trace(
+						String.format(
+								BIND_MSG_TEMPLATE,
+								name,
+								JdbcTypeNameMapper.getTypeName( sqlDescriptor.getSqlType() ),
+								getJavaDescriptor().extractLoggableRepresentation( value )
+						)
+				);
+			}
+			doBind( st, value, name, options );
+		}
+	}
+
 	/**
 	 * Perform the binding.  Safe to assume that value is not null.
 	 *
@@ -85,5 +116,18 @@ public abstract class BasicBinder<J> implements ValueBinder<J> {
 	 * @throws SQLException Indicates a problem binding to the prepared statement.
 	 */
 	protected abstract void doBind(PreparedStatement st, J value, int index, WrapperOptions options)
+			throws SQLException;
+
+	/**
+	 * Perform the binding.  Safe to assume that value is not null.
+	 *
+	 * @param st The CallableStatement
+	 * @param value The value to bind (not null).
+	 * @param name The name at which to bind
+	 * @param options The binding options
+	 *
+	 * @throws SQLException Indicates a problem binding to the prepared statement.
+	 */
+	protected abstract void doBind(CallableStatement st, J value, String name, WrapperOptions options)
 			throws SQLException;
 }

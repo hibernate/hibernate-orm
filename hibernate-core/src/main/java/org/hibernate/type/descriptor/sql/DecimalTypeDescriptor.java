@@ -46,6 +46,12 @@ public class DecimalTypeDescriptor implements SqlTypeDescriptor {
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
 				st.setBigDecimal( index, javaTypeDescriptor.unwrap( value, BigDecimal.class, options ) );
 			}
+
+			@Override
+			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+					throws SQLException {
+				st.setBigDecimal( name, javaTypeDescriptor.unwrap( value, BigDecimal.class, options ) );
+			}
 		};
 	}
 

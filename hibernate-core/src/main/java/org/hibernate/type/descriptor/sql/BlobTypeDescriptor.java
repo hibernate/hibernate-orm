@@ -85,6 +85,20 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 					}
 					descriptor.getBlobBinder( javaTypeDescriptor ).doBind( st, value, index, options );
 				}
+
+				@Override
+				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+						throws SQLException {
+					BlobTypeDescriptor descriptor = BLOB_BINDING;
+					if ( byte[].class.isInstance( value ) ) {
+						// performance shortcut for binding BLOB data in byte[] format
+						descriptor = PRIMITIVE_ARRAY_BINDING;
+					}
+					else if ( options.useStreamForLobBinding() ) {
+						descriptor = STREAM_BINDING;
+					}
+					descriptor.getBlobBinder( javaTypeDescriptor ).doBind( st, value, name, options );
+				}
 			};
 		}
 	};
@@ -98,6 +112,12 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 						throws SQLException {
 					st.setBytes( index, javaTypeDescriptor.unwrap( value, byte[].class, options ) );
 				}
+
+				@Override
+				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+						throws SQLException {
+					st.setBytes( name, javaTypeDescriptor.unwrap( value, byte[].class, options ) );
+				}
 			};
 		}
 	};
@@ -110,6 +130,12 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
 					st.setBlob( index, javaTypeDescriptor.unwrap( value, Blob.class, options ) );
+				}
+
+				@Override
+				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+						throws SQLException {
+					st.setBlob( name, javaTypeDescriptor.unwrap( value, Blob.class, options ) );
 				}
 			};
 		}
@@ -128,6 +154,17 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 							options
 					);
 					st.setBinaryStream( index, binaryStream.getInputStream(), binaryStream.getLength() );
+				}
+
+				@Override
+				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+						throws SQLException {
+					final BinaryStream binaryStream = javaTypeDescriptor.unwrap(
+							value,
+							BinaryStream.class,
+							options
+					);
+					st.setBinaryStream( name, binaryStream.getInputStream(), binaryStream.getLength() );
 				}
 			};
 		}

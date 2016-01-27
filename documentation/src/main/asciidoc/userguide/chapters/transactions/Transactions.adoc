@@ -1,6 +1,6 @@
 [[transactions]]
 == Transactions and concurrency control
-:sourcedir: extras
+:sourcedir: ../../../../../test/java/org/hibernate/userguide/transactions
 
 It is important to understand that the term transaction has many different yet related meanings in regards to persistence and Object/Relational Mapping.
 In most use-cases these definitions align, but that is not always the case.
@@ -96,27 +96,30 @@ This method checks with the underling transaction system if needed, so care shou
 
 Let's take a look at using the Transaction API in the various environments.
 
+[[transactions-api-jdbc-example]]
 .Using Transaction API in JDBC
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/jdbc.java[]
+include::{sourcedir}/TransactionsTest.java[tags=transactions-api-jdbc-example]
 ----
 ====
 
+[[transactions-api-cmt-example]]
 .Using Transaction API in JTA (CMT)
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/cmt.java[]
+include::{sourcedir}/TransactionsTest.java[tags=transactions-api-cmt-example]
 ----
 ====
 
+[[transactions-api-bmt-example]]
 .Using Transaction API in JTA (BMT)
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/bmt.java[]
+include::{sourcedir}/TransactionsTest.java[tags=transactions-api-bmt-example]
 ----
 ====
 

@@ -27,8 +27,6 @@ import static org.hibernate.userguide.util.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 
 /**
- * <code>BuildLockRequestTest</code> - Build Lock Request Test
- *
  * @author Vlad Mihalcea
  */
 public class ExplicitLockingTest extends BaseEntityManagerFunctionalTestCase {

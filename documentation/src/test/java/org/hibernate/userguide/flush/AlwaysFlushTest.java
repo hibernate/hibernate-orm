@@ -27,8 +27,6 @@ import static org.hibernate.userguide.util.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertTrue;
 
 /**
- * <code>AlwaysFlushTest</code> - Always Flush Test
- *
  * @author Vlad Mihalcea
  */
 public class AlwaysFlushTest extends BaseEntityManagerFunctionalTestCase {

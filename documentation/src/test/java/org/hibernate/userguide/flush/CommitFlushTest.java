@@ -27,8 +27,6 @@ import static org.junit.Assert.assertTrue;
 import static org.hibernate.userguide.util.TransactionUtil.doInJPA;
 
 /**
- * <code>CommitFlushTest</code> - Commit Flush Test
- *
  * @author Vlad Mihalcea
  */
 public class CommitFlushTest extends BaseEntityManagerFunctionalTestCase {

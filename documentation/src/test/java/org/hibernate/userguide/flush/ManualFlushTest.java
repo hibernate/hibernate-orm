@@ -28,8 +28,6 @@ import static org.hibernate.userguide.util.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertTrue;
 
 /**
- * <code>ManualFlushTest</code> - Manual Flush Test
- *
  * @author Vlad Mihalcea
  */
 public class ManualFlushTest extends BaseEntityManagerFunctionalTestCase {

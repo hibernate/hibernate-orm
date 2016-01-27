@@ -315,7 +315,7 @@ msgstr ""
 #: basic_mapping.xml:104
 #, no-c-format
 msgid ""
-"That's pretty much it, the rest is optional. There are however any options "
+"That's pretty much it, the rest is optional. There are however many options "
 "to tweak your entity mapping, let's explore them."
 msgstr ""
 

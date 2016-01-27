@@ -40,7 +40,7 @@ import org.dom4j.Node;
  */
 public class CustomType
 		extends AbstractType
-		implements IdentifierType, DiscriminatorType, VersionType, BasicType, StringRepresentableType, ProcedureParameterNamedBinder {
+		implements IdentifierType, DiscriminatorType, VersionType, BasicType, StringRepresentableType, ProcedureParameterNamedBinder, ProcedureParameterExtractionAware {
 
 	private final UserType userType;
 	private final String name;
@@ -269,6 +269,39 @@ public class CustomType
 		else {
 			throw new UnsupportedOperationException(
 					"Type [" + userType + "] does support parameter binding by name"
+			);
+		}
+	}
+
+	@Override
+	public boolean canDoExtraction() {
+		if ( ProcedureParameterExtractionAware.class.isInstance( userType ) ) {
+			return ((ProcedureParameterExtractionAware) userType).canDoExtraction();
+		}
+		return false;
+	}
+
+	@Override
+	public Object extract(CallableStatement statement, int startIndex, SessionImplementor session) throws SQLException {
+		if ( canDoExtraction() ) {
+			return ((ProcedureParameterExtractionAware) userType).extract( statement, startIndex, session );
+		}
+		else {
+			throw new UnsupportedOperationException(
+					"Type [" + userType + "] does support parameter value extraction"
+			);
+		}
+	}
+
+	@Override
+	public Object extract(CallableStatement statement, String[] paramNames, SessionImplementor session)
+			throws SQLException {
+		if ( canDoExtraction() ) {
+			return ((ProcedureParameterExtractionAware) userType).extract( statement, paramNames, session );
+		}
+		else {
+			throw new UnsupportedOperationException(
+					"Type [" + userType + "] does support parameter value extraction"
 			);
 		}
 	}

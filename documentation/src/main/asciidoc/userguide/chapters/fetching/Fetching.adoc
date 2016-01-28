@@ -121,8 +121,33 @@ include::{sourcedir}/FetchingTest.java[tags=fetching-strategies-dynamic-fetching
 In this example we have an `Employee `and their `Projects` loaded in a single query shown both as an HQL query and a JPA Criteria query.
 In both cases, this resolves to exactly one database query to get all that information.
 
+[[fetching-strategies-dynamic-fetching-entity-graph]]
+=== Dynamic fetching via JPA entity graph
+
+JPA 2.1 introduced entity graphs so the application developer has more control over fetch plans.
+
+[[fetching-strategies-dynamic-fetching-entity-graph-example]]
+.Fetch graph example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/GraphFetchingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-mapping-example]
+----
+
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/GraphFetchingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-example]
+----
+====
+
+[NOTE]
+====
+Entity graphs are the way to override the EAGER fetching associations at runtime.
+With JPQL, if an EAGER association is omitted, Hibernate will issue a secondary select for every association needed to be fetched eagerly.
+====
+
 [[fetching-strategies-dynamic-fetching-profile]]
-=== Dynamic fetching via profiles
+=== Dynamic fetching via Hibernate profiles
 
 Suppose we wanted to leverage loading by natural-id to obtain the `Employee` information in the "projects for and employee" use-case.
 Loading by natural-id uses the statically defined fetching strategies, but does not expose a means to define load-specific fetching.
@@ -133,20 +158,15 @@ So we would leverage a fetch profile.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/FetchingTest.java[tags=fetching-strategies-dynamic-fetching-profile-mapping-example]
+include::{sourcedir}/ProfileFetchingTest.java[tags=fetching-strategies-dynamic-fetching-profile-mapping-example]
 ----
 
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/FetchingTest.java[tags=fetching-strategies-dynamic-fetching-profile-example]
+include::{sourcedir}/ProfileFetchingTest.java[tags=fetching-strategies-dynamic-fetching-profile-example]
 ----
 ====
 
 Here the `Employee `is obtained by natural-id lookup and the Employee's `Project` data is fetched eagerly.
 If the `Employee `data is resolved from cache, the `Project` data is resolved on its own.
 However, if the `Employee` data is not resolved in cache, the `Employee `and `Project` data is resolved in one SQL query via join as we saw above.
-
-[[fetching-strategies-dynamic-fetching-entity-graph]]
-=== Dynamic fetching via JPA entity graph
-
-TODO

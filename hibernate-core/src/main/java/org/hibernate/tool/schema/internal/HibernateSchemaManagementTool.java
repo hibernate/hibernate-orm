@@ -15,6 +15,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -122,6 +123,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 							jdbcContext.getSqlStatementLogger(),
 							needsAutoCommit
 					)
+					, serviceRegistry.getService( JdbcEnvironment.class ).getSqlExceptionHelper()
 			);
 
 		}
@@ -153,7 +155,8 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		}
 
 		if ( targetDescriptor.getTargetTypes().contains( TargetType.DATABASE ) ) {
-			targets[index] = new GenerationTargetToDatabase( connectionContext );
+			targets[index] = new GenerationTargetToDatabase( connectionContext
+					, serviceRegistry.getService( JdbcEnvironment.class ).getSqlExceptionHelper() );
 		}
 
 		return targets;

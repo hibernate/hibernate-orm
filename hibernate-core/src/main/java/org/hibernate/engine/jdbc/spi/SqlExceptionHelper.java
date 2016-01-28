@@ -34,6 +34,7 @@ public class SqlExceptionHelper {
 
 	private static final String DEFAULT_EXCEPTION_MSG = "SQL Exception";
 	private static final String DEFAULT_WARNING_MSG = "SQL Warning";
+	private final boolean logWarnings;
 
 	private static final SQLExceptionConverter DEFAULT_CONVERTER = new SQLStateConverter(
 			new ViolatedConstraintNameExtracter() {
@@ -48,8 +49,8 @@ public class SqlExceptionHelper {
 	/**
 	 * Create an exception helper with a default exception converter.
 	 */
-	public SqlExceptionHelper() {
-		sqlExceptionConverter = DEFAULT_CONVERTER;
+	public SqlExceptionHelper( boolean logWarnings) {
+		this( DEFAULT_CONVERTER, logWarnings );
 	}
 
 	/**
@@ -57,8 +58,9 @@ public class SqlExceptionHelper {
 	 *
 	 * @param sqlExceptionConverter The exception converter to use.
 	 */
-	public SqlExceptionHelper(SQLExceptionConverter sqlExceptionConverter) {
+	public SqlExceptionHelper(SQLExceptionConverter sqlExceptionConverter, boolean logWarnings) {
 		this.sqlExceptionConverter = sqlExceptionConverter;
+		this.logWarnings = logWarnings;
 	}
 
 	/**
@@ -271,7 +273,9 @@ public class SqlExceptionHelper {
 			Connection connection,
 			WarningHandler handler) {
 		try {
-			walkWarnings( connection.getWarnings(), handler );
+			if ( logWarnings ) {
+				walkWarnings( connection.getWarnings(), handler );
+			}
 		}
 		catch (SQLException sqle) {
 			// workaround for WebLogic
@@ -300,7 +304,7 @@ public class SqlExceptionHelper {
 			WarningHandler handler) {
 		// See HHH-9174.  Statement#getWarnings can be an expensive call for many JDBC libs.  Don't do it unless
 		// the log level would actually allow a warning to be logged.
-		if ( LOG.isEnabled( Level.WARN ) ) {
+		if ( logWarnings ) {
 			try {
 				walkWarnings( statement.getWarnings(), handler );
 			}

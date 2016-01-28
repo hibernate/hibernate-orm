@@ -453,6 +453,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 									jdbcContext.getSqlStatementLogger(),
 									true
 							)
+							, serviceRegistry.getService( JdbcEnvironment.class ).getSqlExceptionHelper()
 					)
 			};
 		}
@@ -535,6 +536,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 							serviceRegistry.getService( JdbcServices.class ).getSqlStatementLogger(),
 							true
 					)
+					, serviceRegistry.getService( JdbcEnvironment.class ).getSqlExceptionHelper()
 			);
 			target.prepare();
 			try {

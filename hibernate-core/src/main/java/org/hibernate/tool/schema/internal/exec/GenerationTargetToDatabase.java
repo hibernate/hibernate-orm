@@ -24,13 +24,18 @@ import org.hibernate.tool.schema.spi.SchemaManagementException;
 public class GenerationTargetToDatabase implements GenerationTarget {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( GenerationTargetToDatabase.class );
 
-	private final SqlExceptionHelper sqlExceptionHelper = new SqlExceptionHelper();
+	private final SqlExceptionHelper sqlExceptionHelper;
 	private final JdbcConnectionContext jdbcConnectionContext;
 
 	private Statement jdbcStatement;
 
 	public GenerationTargetToDatabase(JdbcConnectionContext jdbcConnectionContext) {
+		this( jdbcConnectionContext, new SqlExceptionHelper( true ) );
+	}
+
+	public GenerationTargetToDatabase(JdbcConnectionContext jdbcConnectionContext, SqlExceptionHelper sqlExceptionHelper) {
 		this.jdbcConnectionContext = jdbcConnectionContext;
+		this.sqlExceptionHelper = sqlExceptionHelper;
 	}
 
 	@Override

@@ -32,6 +32,7 @@ import org.hibernate.engine.jdbc.spi.TypeInfo;
 import org.hibernate.exception.internal.SQLExceptionTypeDelegate;
 import org.hibernate.exception.internal.SQLStateConversionDelegate;
 import org.hibernate.exception.internal.StandardSQLExceptionConverter;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.jboss.logging.Logger;
@@ -73,7 +74,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		}
 		this.nameQualifierSupport = nameQualifierSupport;
 
-		this.sqlExceptionHelper = buildSqlExceptionHelper( dialect );
+		this.sqlExceptionHelper = buildSqlExceptionHelper( dialect, logWarnings( cfgService ) );
 		this.extractedMetaDataSupport = new ExtractedDatabaseMetaDataImpl.Builder( this ).build();
 
 		final IdentifierHelperBuilder identifierHelperBuilder = IdentifierHelperBuilder.from( this );
@@ -105,6 +106,14 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		this.qualifiedObjectNameFormatter = new QualifiedObjectNameFormatterStandardImpl( nameQualifierSupport );
 
 		this.lobCreatorBuilder = LobCreatorBuilderImpl.makeLobCreatorBuilder();
+	}
+
+	private static boolean logWarnings(ConfigurationService cfgService) {
+		return cfgService.getSetting(
+				AvailableSettings.LOG_JDBC_WARNINGS,
+				StandardConverters.BOOLEAN,
+				false
+		);
 	}
 
 	private static boolean globalQuoting(ConfigurationService cfgService) {
@@ -140,7 +149,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	public JdbcEnvironmentImpl(DatabaseMetaData databaseMetaData, Dialect dialect) throws SQLException {
 		this.dialect = dialect;
 
-		this.sqlExceptionHelper = buildSqlExceptionHelper( dialect );
+		this.sqlExceptionHelper = buildSqlExceptionHelper( dialect, false );
 
 		this.extractedMetaDataSupport = new ExtractedDatabaseMetaDataImpl.Builder( this )
 				.apply( databaseMetaData )
@@ -213,7 +222,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 
 		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
 
-		this.sqlExceptionHelper = buildSqlExceptionHelper( dialect );
+		this.sqlExceptionHelper = buildSqlExceptionHelper( dialect, logWarnings( cfgService ) );
 
 		this.extractedMetaDataSupport = new ExtractedDatabaseMetaDataImpl.Builder( this )
 				.apply( databaseMetaData )
@@ -291,13 +300,13 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	}
 
 	@SuppressWarnings("deprecation")
-	private SqlExceptionHelper buildSqlExceptionHelper(Dialect dialect) {
+	private SqlExceptionHelper buildSqlExceptionHelper(Dialect dialect, boolean logWarnings) {
 		final StandardSQLExceptionConverter sqlExceptionConverter = new StandardSQLExceptionConverter();
 		sqlExceptionConverter.addDelegate( dialect.buildSQLExceptionConversionDelegate() );
 		sqlExceptionConverter.addDelegate( new SQLExceptionTypeDelegate( dialect ) );
 		// todo : vary this based on extractedMetaDataSupport.getSqlStateType()
 		sqlExceptionConverter.addDelegate( new SQLStateConversionDelegate( dialect ) );
-		return new SqlExceptionHelper( sqlExceptionConverter );
+		return new SqlExceptionHelper( sqlExceptionConverter, logWarnings );
 	}
 
 	private Set<String> buildMergedReservedWords(Dialect dialect, DatabaseMetaData dbmd) throws SQLException {

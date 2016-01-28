@@ -103,10 +103,10 @@ public class ExplicitLockingTest extends BaseEntityManagerFunctionalTestCase {
 			Person person = entityManager.find( Person.class, id );
 			Session session = entityManager.unwrap( Session.class );
 			session
-					.buildLockRequest( LockOptions.NONE )
-					.setLockMode( LockMode.PESSIMISTIC_READ )
-					.setTimeOut( LockOptions.NO_WAIT )
-					.lock( person );
+				.buildLockRequest( LockOptions.NONE )
+				.setLockMode( LockMode.PESSIMISTIC_READ )
+				.setTimeOut( LockOptions.NO_WAIT )
+				.lock( person );
 			//end::locking-buildLockRequest-example[]
 		} );
 
@@ -116,11 +116,11 @@ public class ExplicitLockingTest extends BaseEntityManagerFunctionalTestCase {
 			Person person = entityManager.find( Person.class, id );
 			Session session = entityManager.unwrap( Session.class );
 			session
-					.buildLockRequest( LockOptions.NONE )
-					.setLockMode( LockMode.PESSIMISTIC_READ )
-					.setTimeOut( LockOptions.NO_WAIT )
-					.setScope( true )
-					.lock( person );
+				.buildLockRequest( LockOptions.NONE )
+				.setLockMode( LockMode.PESSIMISTIC_READ )
+				.setTimeOut( LockOptions.NO_WAIT )
+				.setScope( true )
+				.lock( person );
 			//end::locking-buildLockRequest-scope-example[]
 		} );
 

@@ -1,6 +1,6 @@
 [[batch]]
 == Batching
-:sourcedir: extras
+:sourcedir: ../../../../../test/java/org/hibernate/userguide/batch
 
 [[batch-jdbcbatch]]
 === JDBC batching
@@ -39,50 +39,61 @@ The following settings control this behavior.
 
 The following example shows an anti-pattern for batch inserts.
 
-.Naive way to insert 100000 lines with Hibernate
+[[batch-session-batch-example]]
+.Naive way to insert 100 000 entities with Hibernate
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/batch_insert.java[]
+include::{sourcedir}/BatchTest.java[tags=batch-session-batch-example]
 ----
 ====
 
-This fails with an `OutOfMemoryException` after around 50000 rows on most systems.
-The reason is that Hibernate caches all the newly inserted `Customer` instances in the session-level cache.
+There are several problems associated to this example:
 
-There are several ways to avoid this problem.
-Before batch processing, enable JDBC batching. To enable JDBC batching, set the property `hibernate.jdbc.batch_size` to an integer between 10 and 50.
+. Hibernate caches all the newly inserted `Customer` instances in the session-level c1ache, so, when the transaction ends, 100 000 entities are managed by the persistence context.
+  If the maximum memory allocated to the JVM is rather low, this example could fails with an `OutOfMemoryException`.
+  The Java 1.8 JVM allocated either 1/4 of available RAM or 1Gb, which can easily accommodate 100 000 objects on the heap.
+. long-running transactions can deplete a connection pool so other transactions don't get a chance to proceed.
+. JDBC batching is not enabled by default, so every insert statement requires a database roundtrip.
+  To enable JDBC batching, set the property `hibernate.jdbc.batch_size` to an integer between 10 and 50.
 
 [NOTE]
 ====
 Hibernate disables insert batching at the JDBC level transparently if you use an identity identifier generator.
 ====
 
-If the above approach is not appropriate, you can disable the second-level cache, by setting `hibernate.cache.use_second_level_cache` to `false`.
-
+[[batch-session-batch-insert]]
 ==== Batch inserts
 
 When you make new objects persistent, employ methods `flush()` and `clear()` to the session regularly, to control the size of the first-level cache.
 
+[[batch-session-batch-insert-example]]
 .Flushing and clearing the `Session`
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/flush_and_clear_session.java[]
+include::{sourcedir}/BatchTest.java[tags=batch-session-batch-insert-example]
 ----
 ====
 
-==== Batch updates
+[[batch-session-scroll]]
+==== Session scroll
 
 When you retrieve and update data, `flush()` and `clear()` the session regularly.
 In addition, use method `scroll()` to take advantage of server-side cursors for queries that return many rows of data.
 
+[[batch-session-scroll-example]]
 .Using `scroll()`
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/using_scroll.java[]
+include::{sourcedir}/BatchTest.java[tags=batch-session-scroll-example]
 ----
+====
+
+[IMPORTANT]
+====
+You should always close the `ScrollableResults`, to deallocate the associated `PreparedStatement` and avoid resource leaking.
 ====
 
 ==== StatelessSession
@@ -106,11 +117,12 @@ Limitations of `StatelessSession`:
 * Due to the lack of a first-level cache, Stateless sessions are vulnerable to data aliasing effects.
 * A stateless session is a lower-level abstraction that is much closer to the underlying JDBC.
 
+[[batch-stateless-session-example]]
 .Using a  `StatelessSession`
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/using_a_StatelessSession.java[]
+include::{sourcedir}/BatchTest.java[tags=batch-stateless-session-example]
 ----
 ====
 
@@ -127,13 +139,15 @@ They have different semantics from the `save()`, `saveOrUpdate()`, and `delete()
 DML, or Data Manipulation Language, refers to SQL statements such as `INSERT`, `UPDATE`, and `DELETE`.
 Hibernate provides methods for bulk SQL-style DML statement execution, in the form of Hibernate Query Language (HQL).
 
+[[batch-bulk-hql-update-delete]]
 ==== HQL/JPQL for UPDATE and DELETE
 
 Both the Hibernate native Query Language and JPQL (Java Persistence Query Language) provide support for bulk UPDATE and DELETE.
 
+[[batch-bulk-hql-update-delete-example]]
 .Psuedo-syntax for UPDATE and DELETE statements using HQL
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
 UPDATE FROM EntityName e WHERE e.name = ?
 
@@ -143,40 +157,46 @@ DELETE FROM EntityName e WHERE e.name = ?
 
 [NOTE]
 ====
-The `FROM` and `WHERE` clauses are each optional.
+The `FROM` and `WHERE` clauses are each optional, but it's good practice to use them.
 ====
 
 The `FROM` clause can only refer to a single entity, which can be aliased.
 If the entity name is aliased, any property references must be qualified using that alias.
 If the entity name is not aliased, then it is illegal for any property references to be qualified.
 
+[NOTE]
+====
 Joins, either implicit or explicit, are prohibited in a bulk HQL query.
 You can use sub-queries in the `WHERE` clause, and the sub-queries themselves can contain joins.
+====
 
+[[batch-bulk-jpql-update-example]]
 .Executing a JPQL `UPDATE`, using the `Query.executeUpdate()`
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/jpql_update.java[]
+include::{sourcedir}/BatchTest.java[tags=batch-bulk-jpql-update-example]
 ----
 ====
 
+[[batch-bulk-hql-update-example]]
 .Executing an HQL `UPDATE`, using the `Query.executeUpdate()`
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/hql_update.java[]
+include::{sourcedir}/BatchTest.java[tags=batch-bulk-hql-update-example]
 ----
 ====
 
 In keeping with the EJB3 specification, HQL `UPDATE` statements, by default, do not effect the version or the timestamp property values for the affected entities.
 You can use a versioned update to force Hibernate to reset the version or timestamp property values, by adding the `VERSIONED` keyword after the `UPDATE` keyword.
 
+[[batch-bulk-hql-update-version-example]]
 .Updating the version of timestamp
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/updating_version.java[]
+include::{sourcedir}/BatchTest.java[tags=batch-bulk-hql-update-version-example]
 ----
 ====
 
@@ -187,19 +207,21 @@ If you use the `VERSIONED` statement, you cannot use custom version types, which
 This feature is only available in HQL since it's not standardized by JPA.
 ====
 
+[[batch-bulk-jpql-delete-example]]
 .A JPQL `DELETE` statement
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/jpql_delete.java[]
+include::{sourcedir}/BatchTest.java[tags=batch-bulk-jpql-delete-example]
 ----
 ====
 
+[[batch-bulk-hql-delete-example]]
 .An HQL `DELETE` statement
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/hql_delete.java[]
+include::{sourcedir}/BatchTest.java[tags=batch-bulk-hql-delete-example]
 ----
 ====
 
@@ -212,9 +234,12 @@ In the example of joined-subclass, a `DELETE` against one of the subclasses may 
 
 .Pseudo-syntax for INSERT statements
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-INSERT INTO EntityName properties_list SELECT properties_list FROM ...
+INSERT INTO EntityName
+	properties_list
+SELECT properties_list
+FROM ...
 ----
 ====
 
@@ -243,11 +268,12 @@ For properties mapped as either version or timestamp, the insert statement gives
 You can either specify the property in the properties_list, in which case its value is taken from the corresponding select expressions, or omit it from the properties_list,
 in which case the seed value defined by the org.hibernate.type.VersionType is used.
 
+[[batch-bulk-hql-insert-example]]
 .HQL INSERT statement
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/hql_insert.java[]
+include::{sourcedir}/BatchTest.java[tags=batch-bulk-hql-insert-example]
 ----
 ====
 

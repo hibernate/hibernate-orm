@@ -27,7 +27,7 @@ import org.hibernate.internal.CoreMessageLogger;
 public class Expectations {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( Expectations.class );
 
-	private static SqlExceptionHelper sqlExceptionHelper = new SqlExceptionHelper();
+	private static SqlExceptionHelper sqlExceptionHelper = new SqlExceptionHelper( false );
 
 	public static final int USUAL_EXPECTED_COUNT = 1;
 	public static final int USUAL_PARAM_POSITION = 1;

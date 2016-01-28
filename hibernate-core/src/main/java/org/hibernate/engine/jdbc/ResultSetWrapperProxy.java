@@ -29,7 +29,7 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
 public class ResultSetWrapperProxy implements InvocationHandler {
 	private static final CoreMessageLogger LOG = messageLogger( ResultSetWrapperProxy.class );
 
-	private static final SqlExceptionHelper SQL_EXCEPTION_HELPER = new SqlExceptionHelper();
+	private static final SqlExceptionHelper SQL_EXCEPTION_HELPER = new SqlExceptionHelper( false );
 
 	private final ResultSet rs;
 	private final ColumnNameCache columnNameCache;

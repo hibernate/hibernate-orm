@@ -12,7 +12,9 @@ import java.util.Properties;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -63,7 +65,12 @@ class ManagedProviderConnectionHelper implements ConnectionHelper {
 	private void releaseConnection() throws SQLException {
 		if ( connection != null ) {
 			try {
-				new SqlExceptionHelper().logAndClearWarnings( connection );
+				final boolean logWarning = ConfigurationHelper.getBoolean(
+						AvailableSettings.LOG_JDBC_WARNINGS,
+						cfgProperties,
+						false
+				);
+				new SqlExceptionHelper( logWarning ).logAndClearWarnings( connection );
 			}
 			finally {
 				try  {

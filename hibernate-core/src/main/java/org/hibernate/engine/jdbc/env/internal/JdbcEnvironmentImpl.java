@@ -74,7 +74,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		}
 		this.nameQualifierSupport = nameQualifierSupport;
 
-		this.sqlExceptionHelper = buildSqlExceptionHelper( dialect, logWarnings( cfgService ) );
+		this.sqlExceptionHelper = buildSqlExceptionHelper( dialect, logWarnings( cfgService, dialect ) );
 		this.extractedMetaDataSupport = new ExtractedDatabaseMetaDataImpl.Builder( this ).build();
 
 		final IdentifierHelperBuilder identifierHelperBuilder = IdentifierHelperBuilder.from( this );
@@ -108,11 +108,11 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		this.lobCreatorBuilder = LobCreatorBuilderImpl.makeLobCreatorBuilder();
 	}
 
-	private static boolean logWarnings(ConfigurationService cfgService) {
+	private static boolean logWarnings(ConfigurationService cfgService, Dialect dialect) {
 		return cfgService.getSetting(
 				AvailableSettings.LOG_JDBC_WARNINGS,
 				StandardConverters.BOOLEAN,
-				false
+				dialect.isJdbcLogWarningsEnabledByDefault()
 		);
 	}
 
@@ -222,7 +222,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 
 		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
 
-		this.sqlExceptionHelper = buildSqlExceptionHelper( dialect, logWarnings( cfgService ) );
+		this.sqlExceptionHelper = buildSqlExceptionHelper( dialect, logWarnings( cfgService, dialect ) );
 
 		this.extractedMetaDataSupport = new ExtractedDatabaseMetaDataImpl.Builder( this )
 				.apply( databaseMetaData )

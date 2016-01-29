@@ -522,4 +522,9 @@ public class MySQLDialect extends Dialect {
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return new MySQLIdentityColumnSupport();
 	}
+
+	@Override
+	public boolean isJdbcLogWarningsEnabledByDefault() {
+		return false;
+	}
 }

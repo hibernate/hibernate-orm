@@ -599,7 +599,7 @@ public interface AvailableSettings {
 	 * Enable fetching JDBC statement warning for logging.
 	 *
 	 * Values are {@code true}  or {@code false} .
-	 * Default value is {@code false}
+	 * Default value is {@link org.hibernate.dialect.Dialect#isJdbcLogWarningsEnabledByDefault()}
 	 *
 	 * @since 5.1
 	 */

@@ -16,6 +16,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 
@@ -65,15 +66,11 @@ class ManagedProviderConnectionHelper implements ConnectionHelper {
 	private void releaseConnection() throws SQLException {
 		if ( connection != null ) {
 			try {
-				final boolean logWarning = ConfigurationHelper.getBoolean(
-						AvailableSettings.LOG_JDBC_WARNINGS,
-						cfgProperties,
-						false
-				);
-				new SqlExceptionHelper( logWarning ).logAndClearWarnings( connection );
+				serviceRegistry.getService( JdbcEnvironment.class ).getSqlExceptionHelper().logAndClearWarnings(
+						connection );
 			}
 			finally {
-				try  {
+				try {
 					serviceRegistry.getService( ConnectionProvider.class ).closeConnection( connection );
 				}
 				finally {

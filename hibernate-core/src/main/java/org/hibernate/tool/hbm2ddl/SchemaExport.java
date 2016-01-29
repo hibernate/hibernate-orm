@@ -282,7 +282,7 @@ public class SchemaExport {
 		this.createSQL = createSql;
 		this.importFiles = "";
 		this.sqlStatementLogger = new SqlStatementLogger( false, true );
-		this.sqlExceptionHelper = new SqlExceptionHelper( false );
+		this.sqlExceptionHelper = new SqlExceptionHelper( true );
 		this.classLoaderService = new ClassLoaderServiceImpl();
 		this.formatter = FormatStyle.DDL.getFormatter();
 	}

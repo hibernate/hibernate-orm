@@ -6,11 +6,21 @@
  */
 package org.hibernate.test.hql;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
+
+import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
 
 /**
  * Isolated test for various usages of parameters
@@ -39,6 +49,60 @@ public class ParameterTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-7705")
+	public void testSetPropertiesMapWithNullValues() throws Exception {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		try {
+			Human human = new Human();
+			human.setNickName( "nick" );
+			s.save( human );
+
+			Map parameters = new HashMap();
+			parameters.put( "nickName", null );
+
+			Query q = s.createQuery(
+					"from Human h where h.nickName = :nickName or (h.nickName is null and :nickName is null)" );
+			q.setProperties( (parameters) );
+			assertThat( q.list().size(), is( 0 ) );
+
+			Human human1 = new Human();
+			human1.setNickName( null );
+			s.save( human1 );
+
+			parameters = new HashMap();
+
+			parameters.put( "nickName", null );
+			q = s.createQuery( "from Human h where h.nickName = :nickName or (h.nickName is null and :nickName is null)" );
+			q.setProperties( (parameters) );
+			assertThat( q.list().size(), is( 1 ) );
+			Human found = (Human) q.list().get( 0 );
+			assertThat( found.getId(), is( human1.getId() ) );
+
+			parameters = new HashMap();
+			parameters.put( "nickName", "nick" );
+
+			q = s.createQuery( "from Human h where h.nickName = :nickName or (h.nickName is null and :nickName is null)" );
+			q.setProperties( (parameters) );
+			assertThat( q.list().size(), is( 1 ) );
+			found = (Human) q.list().get( 0 );
+			assertThat( found.getId(), is( human.getId() ) );
+
+			s.delete( human );
+			s.delete( human1 );
+			t.commit();
+		}
+		catch (Exception e) {
+			if ( session.getTransaction().getStatus() == TransactionStatus.ACTIVE ) {
+				session.getTransaction().rollback();
+			}
+			throw e;
+		}
+		finally {
+			s.close();
+		}
+	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9154" )

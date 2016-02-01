@@ -1,6 +1,6 @@
 [[events]]
 == Interceptors and events
-:sourcedir: extras
+:sourcedir: ../../../../../test/java/org/hibernate/userguide/events
 
 It is useful for the application to react to certain events that occur inside Hibernate.
 This allows for the implementation of generic functionality and the extension of Hibernate functionality.
@@ -12,8 +12,15 @@ The `org.hibernate.Interceptor` interface provides callbacks from the session to
 allowing the application to inspect and/or manipulate properties of a persistent object before it is saved, updated, deleted or loaded.
 
 One possible use for this is to track auditing information.
-The following example shows an `Interceptor` implementation that automatically sets the `createTimestamp` property when an `Auditable` entity is created,
-and it updates the `lastUpdateTimestamp` property when an Auditable entity is updated.
+The following example shows an `Interceptor` implementation that automatically logs when an entity is updated.
+
+[[events-interceptors-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/InterceptorTest.java[tags=events-interceptors-example]
+----
+====
 
 [NOTE]
 ====
@@ -24,10 +31,11 @@ An Interceptor can be either `Session`-scoped or `SessionFactory`-scoped.
 
 A Session-scoped interceptor is specified when a session is opened.
 
+[[events-interceptors-session-scope-example]]
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/SessionScopedExample.java[]
+include::{sourcedir}/InterceptorTest.java[tags=events-interceptors-session-scope-example]
 ----
 ====
 
@@ -36,10 +44,11 @@ Unless a session is opened explicitly specifying the interceptor to use, the `Se
 `SessionFactory`-scoped interceptors must be thread safe.
 Ensure that you do not store session-specific states, since multiple sessions will use this interceptor potentially concurrently.
 
+[[events-interceptors-session-factory-scope-example]]
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/SessionFactoryScopedExample.java[]
+include::{sourcedir}/InterceptorTest.java[tags=events-interceptors-session-factory-scope-example]
 ----
 ====
 
@@ -65,14 +74,16 @@ A custom listener implements the appropriate interface for the event it wants to
 (or even the default event listeners used by Hibernate out-of-the-box as these are declared non-final for this purpose).
 Here is an example of a custom load event listener:
 
+[[events-interceptors-load-listener-example]]
 .Custom LoadListener example
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/LoadListenerExample.java[]
+include::{sourcedir}/ListenerTest.java[tags=events-interceptors-load-listener-example]
 ----
 ====
 
+[[events-declarative-security]]
 === Hibernate declarative security
 
 Usually, declarative security in Hibernate applications is managed in a session facade layer.
@@ -84,16 +95,18 @@ Again, see <<chapters/bootstrap/Bootstrap.adoc#bootstrap-event-listener-registra
 
 Below is an example of an appropriate `org.hibernate.integrator.spi.Integrator` implementation for this purpose.
 
+[[events-declarative-security-jacc-example]]
 .JACC listener registration example
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/jacc-event-reg-example.java[]
+include::{sourcedir}/ListenerTest.java[tags=events-declarative-security-jacc-example]
 ----
 ====
 
 You must also decide how to configure your JACC provider. Consult your JACC provider documentation.
 
+[[events-jpa-callbacks]]
 === JPA Callbacks
 
 JPA also defines a more limited set of callbacks through annotations.
@@ -111,7 +124,7 @@ JPA also defines a more limited set of callbacks through annotations.
 |@PostLoad |Executed after an entity has been loaded into the current persistence context or an entity has been refreshed.
 |=======================================================================
 
-There are 2 available approaches defined for specifying callback handling:
+There are two available approaches defined for specifying callback handling:
 
 * The first approach is to annotate methods on the entity itself to receive notification of particular entity life cycle event(s).
 * The second is to use a separate entity listener class.
@@ -119,11 +132,12 @@ An entity listener is a stateless class with a no-arg constructor.
 The callback annotations are placed on a method of this class instead of the entity class.
 The entity listener class is then associated with the entity using the `javax.persistence.EntityListeners` annotation
 
+[[events-jpa-callbacks-example]]
 .Example of specifying JPA callbacks
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/JpaCallbacksExample.java[]
+include::{sourcedir}/ListenerTest.java[tags=events-jpa-callbacks-example]
 ----
 ====
 

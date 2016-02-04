@@ -1450,7 +1450,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			List<Person> persons = entityManager.createQuery(
 				"select p " +
 				"from Person p " +
-				"where p.createdOn > '2000-01-01' ", Person.class )
+				"where p.createdOn > '1950-01-01' ", Person.class )
 			.getResultList();
 			//end::hql-relational-comparisons-example[]
 			assertEquals(2, persons.size());

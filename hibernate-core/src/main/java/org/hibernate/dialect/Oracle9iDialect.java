@@ -85,6 +85,8 @@ public class Oracle9iDialect extends Oracle8iDialect {
 		registerColumnType( Types.CHAR, "char(1 char)" );
 		registerColumnType( Types.VARCHAR, 4000, "varchar2($l char)" );
 		registerColumnType( Types.VARCHAR, "long" );
+		registerColumnType( Types.NVARCHAR, "nvarchar2($l)" );
+		registerColumnType( Types.LONGNVARCHAR, "nvarchar2($l)" );
 	}
 
 	@Override

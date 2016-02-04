@@ -6,8 +6,13 @@
  */
 package org.hibernate.jpa.test.criteria;
 
+import java.util.Arrays;
 import java.util.List;
+import javax.persistence.Entity;
 import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
@@ -22,6 +27,8 @@ import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+
 /**
  * @author Steve Ebersole
  */
@@ -29,7 +36,10 @@ public class TreatKeywordTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Animal.class, Elephant.class, Human.class, Thing.class, ThingWithQuantity.class };
+		return new Class[] {
+				Animal.class, Elephant.class, Human.class, Thing.class, ThingWithQuantity.class,
+				TreatAnimal.class, Dog.class, Dachshund.class, Greyhound.class
+		};
 	}
 
 	@Test
@@ -213,4 +223,68 @@ public class TreatKeywordTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-9411")
+	public void testTreatWithRestrictionOnAbstractClass() {
+		EntityManager em = getOrCreateEntityManager();
+		EntityTransaction entityTransaction = em.getTransaction();
+		entityTransaction.begin();
+
+		Greyhound greyhound = new Greyhound();
+		Dachshund dachshund = new Dachshund();
+		em.persist( greyhound );
+		em.persist( dachshund );
+
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<TreatAnimal> criteriaQuery = cb.createQuery( TreatAnimal.class );
+
+		Root<TreatAnimal> animal = criteriaQuery.from( TreatAnimal.class );
+
+		Root<Dog> dog = cb.treat( animal, Dog.class );
+
+		// only fast dogs
+		criteriaQuery.where( cb.isTrue( dog.<Boolean>get( "fast" ) ) );
+
+		List<TreatAnimal> results = em.createQuery( criteriaQuery ).getResultList();
+
+		// we should only have a single Greyhound here, not slow long dogs!
+		assertEquals( Arrays.asList( greyhound ), results );
+
+		entityTransaction.commit();
+		em.close();
+	}
+
+	@Entity
+	public static abstract class TreatAnimal {
+		@Id
+		@GeneratedValue
+		private Long id;
+	}
+
+	@Entity
+	public static abstract class Dog extends TreatAnimal {
+		private boolean fast;
+
+		protected Dog(boolean fast) {
+			this.fast = fast;
+		}
+
+		public final boolean isFast() {
+			return fast;
+		}
+	}
+
+	@Entity
+	public static class Dachshund extends Dog {
+		public Dachshund() {
+			super( false );
+		}
+	}
+
+	@Entity
+	public static class Greyhound extends Dog {
+		public Greyhound() {
+			super( true );
+		}
+	}
 }

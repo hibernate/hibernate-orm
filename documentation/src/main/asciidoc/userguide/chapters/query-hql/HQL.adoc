@@ -977,38 +977,135 @@ Applications interested in remaining portable between JPA providers should stick
 
 CONCAT::
   	String concatenation function. Variable argument length of 2 or more string values to be concatenated together.
+
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-concat-function-example]
+----
+====
+
 SUBSTRING::
 	  Extracts a portion of a string value.
 	  The second argument denotes the starting position. The third (optional) argument denotes the length.
+
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-substring-function-example]
+----
+====
+
 UPPER::
   	Upper cases the specified string
+
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-upper-function-example]
+----
+====
+
 LOWER::
   	Lower cases the specified string
+
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-lower-function-example]
+----
+====
+
 TRIM::
   	Follows the semantics of the SQL trim function.
+
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-trim-function-example]
+----
+====
+
 LENGTH::
  	 Returns the length of a string.
+
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-length-function-example]
+----
+====
+
 LOCATE::
 	Locates a string within another string.
 	The third argument (optional) is used to denote a position from which to start looking.
 
+====
 [source, JAVA, indent=0]
 ----
-locate( string_expression, string_expression[, numeric_expression] )
+include::{sourcedir}/HQLTest.java[tags=hql-locate-function-example]
 ----
+====
 
 ABS::
   	Calculates the mathematical absolute value of a numeric value.
+
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-abs-function-example]
+----
+====
+
 MOD::
   	Calculates the remainder of dividing the first argument by the second.
+
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-mod-function-example]
+----
+====
+
 SQRT::
 	Calculates the mathematical square root of a numeric value.
+
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-sqrt-function-example]
+----
+====
+
 CURRENT_DATE::
 	Returns the database current date.
+
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-current-date-function-example]
+----
+====
+
 CURRENT_TIME::
 	Returns the database current time.
+
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-current-time-function-example]
+----
+====
+
 CURRENT_TIMESTAMP::
 	Returns the database current timestamp.
+
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-current-timestamp-function-example]
+----
+====
 
 [[hql-functions]]
 === HQL functions
@@ -1017,27 +1114,68 @@ Beyond the JPQL standardized functions, HQL makes some additional functions avai
 
 BIT_LENGTH::
 	  Returns the length of binary data.
+
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-bit-length-function-example]
+----
+====
+
 CAST::
 	Performs a SQL cast.
 	The cast target should name the Hibernate mapping type to use.
 	See the <<chapters/domain/basic_types.adoc#[basic-provided,data types>> chapter on for more information.
+
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-cast-function-example]
+----
+====
+
 EXTRACT::
 	Performs a SQL extraction on datetime values.
-	An extraction extracts parts of the datetime (the year, for example). See the abbreviated forms below.
-SECOND::
-	Abbreviated extract form for extracting the second.
-MINUTE::
-	Abbreviated extract form for extracting the minute.
-HOUR::
-	Abbreviated extract form for extracting the hour.
-DAY::
-	Abbreviated extract form for extracting the day.
-MONTH::
-	Abbreviated extract form for extracting the month.
+	An extraction extracts parts of the datetime (the year, for example).
+
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-extract-function-example]
+----
+====
+
+See the abbreviated forms below.
+
 YEAR::
-	Abbreviated extract form for extracting the year.
+Abbreviated extract form for extracting the year.
+
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-year-function-example]
+----
+====
+
+MONTH::
+Abbreviated extract form for extracting the month.
+DAY::
+Abbreviated extract form for extracting the day.
+HOUR::
+Abbreviated extract form for extracting the hour.
+MINUTE::
+Abbreviated extract form for extracting the minute.
+SECOND::
+Abbreviated extract form for extracting the second.
 STR::
-	Abbreviated form for casting a value as character data.
+Abbreviated form for casting a value as character data.
+
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-str-function-example]
+----
+====
 
 [[hql-non-standard-functions]]
 === Non-standardized functions

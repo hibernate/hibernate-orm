@@ -29,6 +29,7 @@ import org.junit.Test;
 import static org.hibernate.userguide.util.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -1013,6 +1014,245 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	public void test_hql_concat_function_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-concat-function-example[]
+			List<String> callHistory = entityManager.createQuery(
+				"select concat( p.number, ' : ' ,c.duration ) " +
+				"from Call c " +
+				"join c.phone p", String.class )
+			.getResultList();
+			//end::hql-concat-function-example[]
+			assertEquals(2, callHistory.size());
+		});
+	}
+
+	@Test
+	public void test_hql_substring_function_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-substring-function-example[]
+			List<String> prefixes = entityManager.createQuery(
+				"select substring( p.number, 0, 2 ) " +
+				"from Call c " +
+				"join c.phone p", String.class )
+			.getResultList();
+			//end::hql-substring-function-example[]
+			assertEquals(2, prefixes.size());
+		});
+	}
+
+	@Test
+	public void test_hql_upper_function_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-upper-function-example[]
+			List<String> names = entityManager.createQuery(
+				"select upper( p.name ) " +
+				"from Person p ", String.class )
+			.getResultList();
+			//end::hql-upper-function-example[]
+			assertEquals(3, names.size());
+		});
+	}
+
+	@Test
+	public void test_hql_lower_function_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-lower-function-example[]
+			List<String> names = entityManager.createQuery(
+				"select lower( p.name ) " +
+				"from Person p ", String.class )
+			.getResultList();
+			//end::hql-lower-function-example[]
+			assertEquals(3, names.size());
+		});
+	}
+
+	@Test
+	public void test_hql_trim_function_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-trim-function-example[]
+			List<String> names = entityManager.createQuery(
+				"select trim( p.name ) " +
+				"from Person p ", String.class )
+			.getResultList();
+			//end::hql-trim-function-example[]
+			assertEquals(3, names.size());
+		});
+	}
+
+	@Test
+	public void test_hql_length_function_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-length-function-example[]
+			List<Integer> lengths = entityManager.createQuery(
+				"select length( p.name ) " +
+				"from Person p ", Integer.class )
+			.getResultList();
+			//end::hql-length-function-example[]
+			assertEquals(3, lengths.size());
+		});
+	}
+
+	@Test
+	public void test_hql_locate_function_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-locate-function-example[]
+			List<Integer> sizes = entityManager.createQuery(
+				"select locate( 'John', p.name ) " +
+				"from Person p ", Integer.class )
+			.getResultList();
+			//end::hql-locate-function-example[]
+			assertEquals(3, sizes.size());
+		});
+	}
+
+	@Test
+	public void test_hql_abs_function_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-abs-function-example[]
+			List<Integer> abs = entityManager.createQuery(
+				"select abs( c.duration ) " +
+				"from Call c ", Integer.class )
+			.getResultList();
+			//end::hql-abs-function-example[]
+			assertEquals(2, abs.size());
+		});
+	}
+
+	@Test
+	public void test_hql_mod_function_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-mod-function-example[]
+			List<Integer> mods = entityManager.createQuery(
+				"select mod( c.duration, 10 ) " +
+				"from Call c ", Integer.class )
+			.getResultList();
+			//end::hql-mod-function-example[]
+			assertEquals(2, mods.size());
+		});
+	}
+
+	@Test
+	public void test_hql_sqrt_function_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-sqrt-function-example[]
+			List<Double> sqrts = entityManager.createQuery(
+				"select sqrt( c.duration ) " +
+				"from Call c ", Double.class )
+			.getResultList();
+			//end::hql-sqrt-function-example[]
+			assertEquals(2, sqrts.size());
+		});
+	}
+
+	@Test
+	public void test_hql_current_date_function_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-current-date-function-example[]
+			List<Call> calls = entityManager.createQuery(
+				"select c " +
+				"from Call c " +
+				"where c.timestamp = current_date", Call.class )
+			.getResultList();
+			//end::hql-current-date-function-example[]
+			assertEquals(0, calls.size());
+		});
+	}
+
+	@Test
+	public void test_hql_current_time_function_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-current-time-function-example[]
+			List<Call> calls = entityManager.createQuery(
+				"select c " +
+				"from Call c " +
+				"where c.timestamp = current_time", Call.class )
+			.getResultList();
+			//end::hql-current-time-function-example[]
+			assertEquals(0, calls.size());
+		});
+	}
+
+	@Test
+	public void test_hql_current_timestamp_function_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-current-timestamp-function-example[]
+			List<Call> calls = entityManager.createQuery(
+				"select c " +
+				"from Call c " +
+				"where c.timestamp = current_timestamp", Call.class )
+			.getResultList();
+			//end::hql-current-timestamp-function-example[]
+			assertEquals(0, calls.size());
+		});
+	}
+
+	@Test
+	public void test_hql_bit_length_function_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-bit-length-function-example[]
+			List<Integer> bits = entityManager.createQuery(
+				"select bit_length( c.duration ) " +
+				"from Call c ", Integer.class )
+			.getResultList();
+			//end::hql-bit-length-function-example[]
+			assertEquals(2, bits.size());
+		});
+	}
+
+	@Test
+	public void test_hql_cast_function_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-cast-function-example[]
+			List<String> durations = entityManager.createQuery(
+				"select cast( c.duration as string ) " +
+				"from Call c ", String.class )
+			.getResultList();
+			//end::hql-cast-function-example[]
+			assertEquals(2, durations.size());
+		});
+	}
+
+	@Test
+	public void test_hql_extract_function_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-extract-function-example[]
+			List<Integer> years = entityManager.createQuery(
+				"select extract( YEAR from c.timestamp ) " +
+				"from Call c ", Integer.class )
+			.getResultList();
+			//end::hql-extract-function-example[]
+			assertEquals(2, years.size());
+		});
+	}
+
+	@Test
+	public void test_hql_year_function_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-year-function-example[]
+			List<Integer> years = entityManager.createQuery(
+				"select year( c.timestamp ) " +
+				"from Call c ", Integer.class )
+			.getResultList();
+			//end::hql-year-function-example[]
+			assertEquals(2, years.size());
+		});
+	}
+
+	@Test
+	public void test_hql_str_function_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-str-function-example[]
+			List<String> timestamps = entityManager.createQuery(
+				"select str( c.timestamp ) " +
+				"from Call c ", String.class )
+			.getResultList();
+			//end::hql-str-function-example[]
+			assertEquals(2, timestamps.size());
+		});
+	}
+
+	@Test
 	public void test_hql_collection_expressions_example_1() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Call call = entityManager.createQuery( "select c from Call c", Call.class).getResultList().get( 1 );
@@ -1911,6 +2151,31 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			.getResultList();
 			//end::hql-group-by-example[]
 			assertEquals(1, personTotalCallDurations.size());
+		});
+	}
+
+	@Test
+	public void test_hql_group_by_example_4() {
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+
+			Call call11 = new Call();
+			call11.setDuration( 10 );
+			call11.setTimestamp( Timestamp.from( LocalDateTime.of( 2000, 1, 1, 0, 0, 0 ).toInstant( ZoneOffset.UTC ) ) );
+
+			Phone phone = entityManager.createQuery( "select p from Phone p where p.calls is empty ", Phone.class).getResultList().get( 0 );
+
+			phone.addCall(call11);
+			entityManager.flush();
+			entityManager.clear();
+
+			List<Object[]> personTotalCallDurations = entityManager.createQuery(
+				"select p, sum( c.duration ) " +
+				"from Call c " +
+				"join c.phone p " +
+				"group by p", Object[].class )
+			.getResultList();
+			assertEquals(2, personTotalCallDurations.size());
 		});
 	}
 

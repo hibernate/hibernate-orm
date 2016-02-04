@@ -1,9 +1,0 @@
-select case when c.name.first is not null then c.name.first
-            when c.nickName is not null then c.nickName
-            else '<no first name>' end
-from Customer c
-
-// Again, the abbreviated form coalesce can handle this a
-// little more succinctly
-select coalesce( c.name.first, c.nickName, '<no first name>' )
-from Customer c

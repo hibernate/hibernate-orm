@@ -1,3 +1,0 @@
-select c
-from Customer c
-    left join fetch c.orders o

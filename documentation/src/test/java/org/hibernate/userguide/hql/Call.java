@@ -1,0 +1,65 @@
+package org.hibernate.userguide.hql;
+
+import java.util.Date;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+
+/**
+ * @author Vlad Mihalcea
+ */
+//tag::hql-examples-domain-model-example[]
+@Entity(name = "Call")
+public class Call {
+
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    @ManyToOne
+    private Phone phone;
+
+    private Date timestamp;
+
+    private int duration;
+
+    //Getters and setters are omitted for brevity
+
+//end::hql-examples-domain-model-example[]
+    public Call() {}
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Phone getPhone() {
+        return phone;
+    }
+
+    public void setPhone(Phone phone) {
+        this.phone = phone;
+    }
+
+    public Date getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(Date timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public int getDuration() {
+        return duration;
+    }
+
+    public void setDuration(int duration) {
+        this.duration = duration;
+    }
+//tag::hql-examples-domain-model-example[]
+}
+//end::hql-examples-domain-model-example[]

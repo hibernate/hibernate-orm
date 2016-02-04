@@ -1,4 +1,0 @@
-// find any with name starting with "sp_"
-select sp
-from StoredProcedureMetadata sp
-where sp.name like 'sp|_%' escape '|'

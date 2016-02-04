@@ -1,9 +1,0 @@
-select year( current_date() ) - year( c.dateOfBirth )
-from Customer c
-
-select c
-from Customer c
-where year( current_date() ) - year( c.dateOfBirth ) < 30
-
-select o.customer, o.total + ( o.total * :salesTax )
-from Order o

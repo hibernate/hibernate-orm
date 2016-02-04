@@ -1,7 +1,0 @@
-select p
-from Person p
-where p.name like '%Schmidt'
-
-select p
-from Person p
-where p.name not like 'Jingleheimmer%'

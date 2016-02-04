@@ -1,7 +1,0 @@
-select o
-from Order o
-where o.lineItems is empty
-
-select c
-from Customer c
-where c.pastDueBills is not empty

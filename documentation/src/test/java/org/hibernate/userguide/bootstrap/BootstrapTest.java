@@ -61,16 +61,14 @@ import org.junit.Test;
 public class BootstrapTest {
 
 	@Test
-	public void dummy() {}
-
-	{
+	public void test_bootstrap_bootstrap_native_registry_BootstrapServiceRegistry_example() {
 
 		ClassLoader customClassLoader = Thread.currentThread().getContextClassLoader();
 		Integrator customIntegrator = new BeanValidationIntegrator();
 
 		//tag::bootstrap-bootstrap-native-registry-BootstrapServiceRegistry-example[]
 		BootstrapServiceRegistryBuilder bootstrapRegistryBuilder =
-				new BootstrapServiceRegistryBuilder();
+			new BootstrapServiceRegistryBuilder();
 		// add a custom ClassLoader
 		bootstrapRegistryBuilder.applyClassLoader( customClassLoader );
 		// manually add an Integrator
@@ -80,26 +78,30 @@ public class BootstrapTest {
 		//end::bootstrap-bootstrap-native-registry-BootstrapServiceRegistry-example[]
 	}
 
-	{
+	@Test
+	public void test_bootstrap_bootstrap_native_registry_StandardServiceRegistryBuilder_example_1() {
 		//tag::bootstrap-bootstrap-native-registry-StandardServiceRegistryBuilder-example[]
 		// An example using an implicitly built BootstrapServiceRegistry
 		StandardServiceRegistryBuilder standardRegistryBuilder =
-				new StandardServiceRegistryBuilder();
+			new StandardServiceRegistryBuilder();
 		//end::bootstrap-bootstrap-native-registry-StandardServiceRegistryBuilder-example[]
 	}
-	{
+
+	@Test
+	public void test_bootstrap_bootstrap_native_registry_StandardServiceRegistryBuilder_example_2() {
 		//tag::bootstrap-bootstrap-native-registry-StandardServiceRegistryBuilder-example[]
 
 		// An example using an explicitly built BootstrapServiceRegistry
 		BootstrapServiceRegistry bootstrapRegistry =
-				new BootstrapServiceRegistryBuilder().build();
+			new BootstrapServiceRegistryBuilder().build();
 
 		StandardServiceRegistryBuilder standardRegistryBuilder =
-				new StandardServiceRegistryBuilder( bootstrapRegistry );
+			new StandardServiceRegistryBuilder( bootstrapRegistry );
 		//end::bootstrap-bootstrap-native-registry-StandardServiceRegistryBuilder-example[]
 	}
 
-	{
+	@Test
+	public void test_bootstrap_bootstrap_native_registry_MetadataSources_example() {
 
 		try {
 			//tag::bootstrap-bootstrap-native-registry-MetadataSources-example[]
@@ -136,7 +138,8 @@ public class BootstrapTest {
 		}
 	}
 
-	{
+	@Test
+	public void test_bootstrap_bootstrap_native_metadata_source_example() {
 		try {
 			{
 				//tag::bootstrap-native-metadata-source-example[]
@@ -144,17 +147,17 @@ public class BootstrapTest {
 						new StandardServiceRegistryBuilder().build();
 
 				MetadataSources sources = new MetadataSources( standardRegistry )
-						.addAnnotatedClass( MyEntity.class )
-						.addAnnotatedClassName( "org.hibernate.example.Customer" )
-						.addResource( "org/hibernate/example/Order.hbm.xml" )
-						.addResource( "org/hibernate/example/Product.orm.xml" );
+					.addAnnotatedClass( MyEntity.class )
+					.addAnnotatedClassName( "org.hibernate.example.Customer" )
+					.addResource( "org/hibernate/example/Order.hbm.xml" )
+					.addResource( "org/hibernate/example/Product.orm.xml" );
 				//end::bootstrap-native-metadata-source-example[]
 			}
 
 			{
 				//tag::bootstrap-native-metadata-builder-example[]
 				ServiceRegistry standardRegistry =
-						new StandardServiceRegistryBuilder().build();
+					new StandardServiceRegistryBuilder().build();
 
 				MetadataSources sources = new MetadataSources( standardRegistry );
 
@@ -162,7 +165,7 @@ public class BootstrapTest {
 
 				// Use the JPA-compliant implicit naming strategy
 				metadataBuilder.applyImplicitNamingStrategy(
-						ImplicitNamingStrategyJpaCompliantImpl.INSTANCE );
+					ImplicitNamingStrategyJpaCompliantImpl.INSTANCE );
 
 				// specify the schema name to use for tables, etc when none is explicitly specified
 				metadataBuilder.applyImplicitSchemaName( "my_default_schema" );
@@ -176,7 +179,8 @@ public class BootstrapTest {
 		}
 	}
 
-	{
+	@Test
+	public void test_bootstrap_bootstrap_native_SessionFactory_example() {
 		try {
 			{
 				//tag::bootstrap-native-SessionFactory-example[]
@@ -205,13 +209,13 @@ public class BootstrapTest {
 						.build();
 
 				Metadata metadata = new MetadataSources( standardRegistry )
-						.addAnnotatedClass( MyEntity.class )
-						.addAnnotatedClassName( "org.hibernate.example.Customer" )
-						.addResource( "org/hibernate/example/Order.hbm.xml" )
-						.addResource( "org/hibernate/example/Product.orm.xml" )
-						.getMetadataBuilder()
-						.applyImplicitNamingStrategy( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE )
-						.build();
+					.addAnnotatedClass( MyEntity.class )
+					.addAnnotatedClassName( "org.hibernate.example.Customer" )
+					.addResource( "org/hibernate/example/Order.hbm.xml" )
+					.addResource( "org/hibernate/example/Product.orm.xml" )
+					.getMetadataBuilder()
+					.applyImplicitNamingStrategy( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE )
+					.build();
 
 				SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
 
@@ -230,6 +234,50 @@ public class BootstrapTest {
 		}
 		catch (Exception ignore) {
 
+		}
+	}
+
+	@Test
+	public void test_bootstrap_bootstrap_jpa_compliant_EntityManagerFactory_example() {
+		try {
+			//tag::bootstrap-jpa-compliant-EntityManagerFactory-example[]
+			// Create an EMF for our CRM persistence-unit.
+			EntityManagerFactory emf = Persistence.createEntityManagerFactory( "CRM" );
+			//end::bootstrap-jpa-compliant-EntityManagerFactory-example[]
+		} catch (Exception ignore) {}
+	}
+
+	@Test
+	public void test_bootstrap_bootstrap_native_EntityManagerFactory_example() {
+
+		try {
+			//tag::bootstrap-native-EntityManagerFactory-example[]
+			String persistenceUnitName = "CRM";
+			List<String> entityClassNames = new ArrayList<>(  );
+			Properties properties = new Properties(  );
+
+			PersistenceUnitInfoImpl persistenceUnitInfo = new PersistenceUnitInfoImpl(
+				persistenceUnitName,
+				entityClassNames,
+				properties
+			);
+
+			Map<String, Object> integrationSettings = new HashMap<>();
+			integrationSettings.put(
+				AvailableSettings.INTERCEPTOR,
+				new CustomSessionFactoryInterceptor()
+			);
+
+			EntityManagerFactoryBuilderImpl entityManagerFactoryBuilder =
+				new EntityManagerFactoryBuilderImpl(
+					new PersistenceUnitInfoDescriptor( persistenceUnitInfo ),
+					integrationSettings
+				);
+
+			EntityManagerFactory emf = entityManagerFactoryBuilder.build();
+			//end::bootstrap-native-EntityManagerFactory-example[]
+		}
+		catch (Exception ignore) {
 		}
 	}
 
@@ -256,7 +304,7 @@ public class BootstrapTest {
 			// listeners are registered
 			// It is a service so we look it up using the service registry
 			final EventListenerRegistry eventListenerRegistry =
-					serviceRegistry.getService( EventListenerRegistry.class );
+				serviceRegistry.getService( EventListenerRegistry.class );
 
 			// If you wish to have custom determination and handling of "duplicate" listeners,
 			// you would have to add an implementation of the
@@ -319,48 +367,6 @@ public class BootstrapTest {
 	@PersistenceUnit
 	private EntityManagerFactory emf;
 	//end::bootstrap-jpa-compliant-PersistenceUnit-example[]
-
-	{
-		try {
-			//tag::bootstrap-jpa-compliant-EntityManagerFactory-example[]
-			// Create an EMF for our CRM persistence-unit.
-			EntityManagerFactory emf = Persistence.createEntityManagerFactory( "CRM" );
-			//end::bootstrap-jpa-compliant-EntityManagerFactory-example[]
-		} catch (Exception ignore) {}
-	}
-
-	{
-
-		try {
-			//tag::bootstrap-native-EntityManagerFactory-example[]
-			String persistenceUnitName = "CRM";
-			List<String> entityClassNames = new ArrayList<>(  );
-			Properties properties = new Properties(  );
-
-			PersistenceUnitInfoImpl persistenceUnitInfo = new PersistenceUnitInfoImpl(
-					persistenceUnitName,
-					entityClassNames,
-					properties
-			);
-
-			Map<String, Object> integrationSettings = new HashMap<>();
-			integrationSettings.put(
-					AvailableSettings.INTERCEPTOR,
-					new CustomSessionFactoryInterceptor()
-			);
-
-			EntityManagerFactoryBuilderImpl entityManagerFactoryBuilder =
-					new EntityManagerFactoryBuilderImpl(
-							new PersistenceUnitInfoDescriptor( persistenceUnitInfo ),
-							integrationSettings
-					);
-
-			EntityManagerFactory emf = entityManagerFactoryBuilder.build();
-			//end::bootstrap-native-EntityManagerFactory-example[]
-		}
-		catch (Exception ignore) {
-		}
-	}
 
 	//tag::bootstrap-native-PersistenceUnitInfoImpl-example[]
 	public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {

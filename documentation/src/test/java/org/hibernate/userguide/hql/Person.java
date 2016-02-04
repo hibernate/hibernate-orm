@@ -18,6 +18,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Version;
 
 /**
  * @author Vlad Mihalcea
@@ -54,6 +55,9 @@ public class Person {
     @ElementCollection
     @MapKeyEnumerated(EnumType.STRING)
     private Map<AddressType, String> addresses = new HashMap<>();
+
+    @Version
+    private int version;
 
     //Getters and setters are omitted for brevity
 

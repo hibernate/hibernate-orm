@@ -11,14 +11,17 @@ import javax.persistence.DiscriminatorType;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.Session;
+import org.hibernate.Transaction;
 
 import org.junit.Test;
 
@@ -38,7 +41,8 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 		return new Class[] {
 				JoinedEntity.class, JoinedEntitySubclass.class, JoinedEntitySubSubclass.class,
 				JoinedEntitySubclass2.class, JoinedEntitySubSubclass2.class,
-				DiscriminatorEntity.class, DiscriminatorEntitySubclass.class, DiscriminatorEntitySubSubclass.class
+				DiscriminatorEntity.class, DiscriminatorEntitySubclass.class, DiscriminatorEntitySubSubclass.class,
+				Animal.class, Dog.class, Dachshund.class, Greyhound.class
 		};
 	}
 
@@ -181,6 +185,25 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 		s.delete( child2 );
 		s.delete( root );
 		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-9411")
+	public void testTreatWithRestrictionOnAbstractClass() {
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+
+		Greyhound greyhound = new Greyhound();
+		Dachshund dachshund = new Dachshund();
+		s.save( greyhound );
+		s.save( dachshund );
+
+		List results = s.createQuery( "select treat (a as Dog) from Animal a where a.fast = TRUE" ).list();
+
+		assertEquals( Arrays.asList( greyhound ), results );
+
+		tx.commit();
 		s.close();
 	}
 
@@ -332,6 +355,40 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 				String name,
 				DiscriminatorEntity other) {
 			super( id, name, other );
+		}
+	}
+
+	@Entity(name = "Animal")
+	public static abstract class Animal {
+		@Id
+		@GeneratedValue
+		private Long id;
+	}
+
+	@Entity(name = "Dog")
+	public static abstract class Dog extends Animal {
+		private boolean fast;
+
+		protected Dog(boolean fast) {
+			this.fast = fast;
+		}
+
+		public final boolean isFast() {
+			return fast;
+		}
+	}
+
+	@Entity(name = "Dachshund")
+	public static class Dachshund extends Dog {
+		public Dachshund() {
+			super( false );
+		}
+	}
+
+	@Entity(name = "Greyhound")
+	public static class Greyhound extends Dog {
+		public Greyhound() {
+			super( true );
 		}
 	}
 }

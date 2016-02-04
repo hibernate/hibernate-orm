@@ -13,6 +13,36 @@ Criteria queries offer a type-safe approach to querying.  See <<chapters/query-c
 [[query-api]]
 === Query API
 
+[[hql-examples-domain-model]]
+=== Examples domain model
+
+To better understand the further HQL and JPQL examples, it's time to familiarize the domain model entities that are used in all the examples features in this chapter.
+
+[[hql-examples-domain-model-example]]
+.Examples domain model
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/Person.java[tags=hql-examples-domain-model-example]
+
+include::{sourcedir}/AddressType.java[tags=hql-examples-domain-model-example]
+
+include::{sourcedir}/Partner.java[tags=hql-examples-domain-model-example]
+
+include::{sourcedir}/Phone.java[tags=hql-examples-domain-model-example]
+
+include::{sourcedir}/PhoneType.java[tags=hql-examples-domain-model-example]
+
+include::{sourcedir}/Call.java[tags=hql-examples-domain-model-example]
+
+include::{sourcedir}/Payment.java[tags=hql-examples-domain-model-example]
+
+include::{sourcedir}/CreditCardPayment.java[tags=hql-examples-domain-model-example]
+
+include::{sourcedir}/WireTransferPayment.java[tags=hql-examples-domain-model-example]
+----
+====
+
 [[jpql-api]]
 === JPA Query API
 
@@ -309,34 +339,6 @@ In cases where many of the entities do not exist in the second-level cache, this
 The `Iterator` returned from `Query#iterate` is actually a specially typed Iterator: `org.hibernate.engine.HibernateIterator`.
 It is specialized to expose a `close()` method (again, inherited from `java.io.Closeable`).
 When you are done with this `Iterator` you should close it, either by casting to `HibernateIterator` or `Closeable`, or by calling http://docs.jboss.org/hibernate/stable/core/javadocs/org/hibernate/Hibernate.html#close%28java.util.Iterator%29[`Hibernate.html#close(java.util.Iterator)`].
-
-[[hql-examples-domain-model]]
-=== Examples domain model
-
-To better understand the further HQL and JPQL examples, it's time to familiarize the domain model entities that are used in all the examples features in this chapter.
-
-[[hql-examples-domain-model-example]]
-.Examples domain model
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/Person.java[tags=hql-examples-domain-model-example]
-
-include::{sourcedir}/AddressType.java[tags=hql-examples-domain-model-example]
-
-include::{sourcedir}/Phone.java[tags=hql-examples-domain-model-example]
-
-include::{sourcedir}/PhoneType.java[tags=hql-examples-domain-model-example]
-
-include::{sourcedir}/Call.java[tags=hql-examples-domain-model-example]
-
-include::{sourcedir}/Payment.java[tags=hql-examples-domain-model-example]
-
-include::{sourcedir}/CreditCardPayment.java[tags=hql-examples-domain-model-example]
-
-include::{sourcedir}/WireTransferPayment.java[tags=hql-examples-domain-model-example]
-----
-====
 
 [[hql-case-sensitivity]]
 === Case Sensitivity
@@ -990,12 +992,10 @@ LOCATE::
 	Locates a string within another string.
 	The third argument (optional) is used to denote a position from which to start looking.
 
-
 [source, JAVA, indent=0]
 ----
 locate( string_expression, string_expression[, numeric_expression] )
 ----
-====
 
 ABS::
   	Calculates the mathematical absolute value of a numeric value.

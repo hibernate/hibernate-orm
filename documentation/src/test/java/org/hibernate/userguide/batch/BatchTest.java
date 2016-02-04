@@ -6,12 +6,8 @@
  */
 package org.hibernate.userguide.batch;
 
-import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Version;
 
 import org.hibernate.CacheMode;
 import org.hibernate.ScrollMode;
@@ -22,6 +18,10 @@ import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
+import org.hibernate.userguide.hql.Call;
+import org.hibernate.userguide.hql.Partner;
+import org.hibernate.userguide.hql.Person;
+import org.hibernate.userguide.hql.Phone;
 
 import org.junit.Test;
 
@@ -40,7 +40,9 @@ public class BatchTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
-			Customer.class,
+			Person.class,
+			Phone.class,
+			Call.class,
 			Partner.class
 		};
 	}
@@ -58,17 +60,17 @@ public class BatchTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testBulk() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			entityManager.persist( new Customer( "Vlad" ) );
-			entityManager.persist( new Customer( "Mihalcea" ) );
+			entityManager.persist( new Person( "Vlad" ) );
+			entityManager.persist( new Person( "Mihalcea" ) );
 		} );
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			String oldName = "Vlad";
 			String newName = "Alexandru";
 			//tag::batch-bulk-jpql-update-example[]
 			int updatedEntities = entityManager.createQuery(
-				"update Customer c " +
-				"set c.name = :newName " +
-				"where c.name = :oldName" )
+				"update Person p " +
+				"set p.name = :newName " +
+				"where p.name = :oldName" )
 			.setParameter( "oldName", oldName )
 			.setParameter( "newName", newName )
 			.executeUpdate();
@@ -83,7 +85,7 @@ public class BatchTest extends BaseEntityManagerFunctionalTestCase {
 			Session session = entityManager.unwrap( Session.class );
 			//tag::batch-bulk-hql-update-example[]
 			int updatedEntities = session.createQuery(
-				"update Customer " +
+				"update Person " +
 				"set name = :newName " +
 				"where name = :oldName" )
 			.setParameter( "oldName", oldName )
@@ -100,7 +102,7 @@ public class BatchTest extends BaseEntityManagerFunctionalTestCase {
 			Session session = entityManager.unwrap( Session.class );
 			//tag::batch-bulk-hql-update-version-example[]
 			int updatedEntities = session.createQuery(
-				"update versioned Customer " +
+				"update versioned Person " +
 				"set name = :newName " +
 				"where name = :oldName" )
 			.setParameter( "oldName", oldName )
@@ -115,8 +117,8 @@ public class BatchTest extends BaseEntityManagerFunctionalTestCase {
 
 			//tag::batch-bulk-jpql-delete-example[]
 			int deletedEntities = entityManager.createQuery(
-				"delete Customer c " +
-				"where c.name = :name" )
+				"delete Person p " +
+				"where p.name = :name" )
 			.setParameter( "name", name )
 			.executeUpdate();
 			//end::batch-bulk-jpql-delete-example[]
@@ -124,16 +126,13 @@ public class BatchTest extends BaseEntityManagerFunctionalTestCase {
 		} );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			String name = "Mihalcea";
 
 			Session session = entityManager.unwrap( Session.class );
 			//tag::batch-bulk-hql-insert-example[]
 			int insertedEntities = session.createQuery(
 				"insert into Partner (id, name) " +
-				"select c.id, c.name " +
-				"from Customer c " +
-				"where name = :name" )
-			.setParameter( "name", name )
+				"select p.id, p.name " +
+				"from Person p ")
 			.executeUpdate();
 			//end::batch-bulk-hql-insert-example[]
 			assertEquals(1, insertedEntities);
@@ -145,7 +144,7 @@ public class BatchTest extends BaseEntityManagerFunctionalTestCase {
 			Session session = entityManager.unwrap( Session.class );
 			//tag::batch-bulk-hql-delete-example[]
 			int deletedEntities = session.createQuery(
-				"delete Customer " +
+				"delete Person " +
 				"where name = :name" )
 			.setParameter( "name", name )
 			.executeUpdate();
@@ -165,8 +164,8 @@ public class BatchTest extends BaseEntityManagerFunctionalTestCase {
 			txn.begin();
 
 			for ( int i = 0; i < 100_000; i++ ) {
-				Customer customer = new Customer( String.format( "Customer %d", i ) );
-				entityManager.persist( customer );
+				Person Person = new Person( String.format( "Person %d", i ) );
+				entityManager.persist( Person );
 			}
 
 			txn.commit();
@@ -195,8 +194,8 @@ public class BatchTest extends BaseEntityManagerFunctionalTestCase {
 			int batchSize = 25;
 
 			for ( int i = 0; i < entityCount; ++i ) {
-				Customer customer = new Customer( String.format( "Customer %d", i ) );
-				entityManager.persist( customer );
+				Person Person = new Person( String.format( "Person %d", i ) );
+				entityManager.persist( Person );
 
 				if ( i % batchSize == 0 ) {
 					//flush a batch of inserts and release memory
@@ -235,14 +234,14 @@ public class BatchTest extends BaseEntityManagerFunctionalTestCase {
 			Session session = entityManager.unwrap( Session.class );
 
 			scrollableResults = session
-				.createQuery( "select c from Customer c" )
+				.createQuery( "select p from Person p" )
 				.setCacheMode( CacheMode.IGNORE )
 				.scroll( ScrollMode.FORWARD_ONLY );
 
 			int count = 0;
 			while ( scrollableResults.next() ) {
-				Customer customer = (Customer) scrollableResults.get( 0 );
-				processCustomer(customer);
+				Person Person = (Person) scrollableResults.get( 0 );
+				processPerson(Person);
 				if ( ++count % batchSize == 0 ) {
 					//flush a batch of updates and release memory:
 					entityManager.flush();
@@ -280,13 +279,13 @@ public class BatchTest extends BaseEntityManagerFunctionalTestCase {
 			txn.begin();
 
 			scrollableResults = statelessSession
-				.createQuery( "select c from Customer c" )
+				.createQuery( "select p from Person p" )
 				.scroll(ScrollMode.FORWARD_ONLY);
 
 			while ( scrollableResults.next() ) {
-				Customer customer = (Customer) scrollableResults.get( 0 );
-				processCustomer(customer);
-				statelessSession.update( customer );
+				Person Person = (Person) scrollableResults.get( 0 );
+				processPerson(Person);
+				statelessSession.update( Person );
 			}
 
 			txn.commit();
@@ -304,63 +303,10 @@ public class BatchTest extends BaseEntityManagerFunctionalTestCase {
 		//end::batch-stateless-session-example[]
 	}
 
-	private void processCustomer(Customer customer) {
-		if ( customer.getId() % 1000 == 0 ) {
-			log.infof( "Processing [%s]", customer.getName());
+	private void processPerson(Person Person) {
+		if ( Person.getId() % 1000 == 0 ) {
+			log.infof( "Processing [%s]", Person.getName());
 		}
 	}
 
-	@Entity(name = "Customer")
-	public static class Customer {
-
-		@Id
-		@GeneratedValue
-		private Long id;
-
-		@Version
-		private int version;
-
-		private String name;
-
-		public Customer() {}
-
-		public Customer(String name) {
-			this.name = name;
-		}
-
-		public Long getId() {
-			return id;
-		}
-
-		public String getName() {
-			return name;
-		}
-	}
-
-	@Entity(name = "Partner")
-	public static class Partner {
-
-		@Id
-		@GeneratedValue
-		private Long id;
-
-		@Version
-		private int version;
-
-		private String name;
-
-		public Partner() {}
-
-		public Partner(String name) {
-			this.name = name;
-		}
-
-		public Long getId() {
-			return id;
-		}
-
-		public String getName() {
-			return name;
-		}
-	}
 }

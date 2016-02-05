@@ -29,12 +29,23 @@ import org.hibernate.tool.schema.extract.spi.TableInformation;
  * @author Steve Ebersole
  */
 public class DatabaseInformationImpl implements DatabaseInformation, ExtractionContext.DatabaseObjectAccess {
-	private final InformationExtractor extractor;
-	private final ExtractionContext extractionContext;
-
 	private final JdbcEnvironment jdbcEnvironment;
+	private final ExtractionContext extractionContext;
+	private final InformationExtractor extractor;
 
 	private final Map<QualifiedSequenceName,SequenceInformation> sequenceInformationMap = new HashMap<QualifiedSequenceName, SequenceInformation>();
+
+	public DatabaseInformationImpl(
+			JdbcEnvironment jdbcEnvironment,
+			InformationExtractor extractor,
+			ExtractionContext extractionContext) throws SQLException {
+		this.jdbcEnvironment = jdbcEnvironment;
+		this.extractionContext = extractionContext;
+		this.extractor = extractor;
+
+		// legacy code did initialize sequences...
+		initializeSequences();
+	}
 
 	public DatabaseInformationImpl(
 			ServiceRegistry serviceRegistry,
@@ -107,10 +118,6 @@ public class DatabaseInformationImpl implements DatabaseInformation, ExtractionC
 				qualifiedTableName.getSchemaName(),
 				qualifiedTableName.getTableName()
 		);
-	}
-
-	@Override
-	public void registerTable(TableInformation tableInformation) {
 	}
 
 	@Override

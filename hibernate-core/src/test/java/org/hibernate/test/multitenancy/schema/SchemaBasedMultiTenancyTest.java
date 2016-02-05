@@ -21,17 +21,21 @@ import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionPro
 import org.hibernate.engine.jdbc.connections.spi.AbstractMultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.tool.schema.internal.TargetDatabaseImpl;
-import org.hibernate.tool.schema.spi.SchemaManagementTool;
+import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
+import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
+import org.hibernate.tool.schema.internal.SchemaDropperImpl;
+import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
+import org.hibernate.tool.schema.internal.exec.JdbcConnectionContextNonSharedImpl;
 
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.boot.JdbcConnectionAccessImpl;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.boot.JdbcConnectionAccessImpl;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -70,18 +74,37 @@ public class SchemaBasedMultiTenancyTest extends BaseUnitTestCase {
 		Metadata metadata = ms.buildMetadata();
 		( (RootClass) metadata.getEntityBinding( Customer.class.getName() ) ).setCacheConcurrencyStrategy( "read-write" );
 
-		final TargetDatabaseImpl acmeTarget = new TargetDatabaseImpl( new JdbcConnectionAccessImpl( acmeProvider ) );
-		final TargetDatabaseImpl jbossTarget = new TargetDatabaseImpl( new JdbcConnectionAccessImpl( jbossProvider ) );
+		HibernateSchemaManagementTool tool = new HibernateSchemaManagementTool();
+		tool.injectServices( serviceRegistry );
 
-		serviceRegistry.getService( SchemaManagementTool.class ).getSchemaDropper( settings ).doDrop(
+		final GenerationTargetToDatabase acmeTarget =  new GenerationTargetToDatabase(
+				new JdbcConnectionContextNonSharedImpl(
+						new JdbcConnectionAccessImpl( acmeProvider ),
+						new SqlStatementLogger( false, true ),
+						true
+				)
+		);
+		final GenerationTargetToDatabase jbossTarget = new GenerationTargetToDatabase(
+				new JdbcConnectionContextNonSharedImpl(
+						new JdbcConnectionAccessImpl( jbossProvider ),
+						new SqlStatementLogger( false, true ),
+						true
+				)
+		);
+
+		new SchemaDropperImpl( serviceRegistry ).doDrop(
 				metadata,
+				serviceRegistry,
+				settings,
 				true,
 				acmeTarget,
 				jbossTarget
 		);
 
-		serviceRegistry.getService( SchemaManagementTool.class ).getSchemaCreator( settings ).doCreation(
+		new SchemaCreatorImpl( serviceRegistry ).doCreation(
 				metadata,
+				serviceRegistry,
+				settings,
 				true,
 				acmeTarget,
 				jbossTarget

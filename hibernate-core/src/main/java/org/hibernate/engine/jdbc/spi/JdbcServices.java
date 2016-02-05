@@ -22,33 +22,35 @@ import org.hibernate.service.Service;
 public interface JdbcServices extends Service {
 	/**
 	 * Obtain the JdbcEnvironment backing this JdbcServices instance.
-	 *
-	 * @return
 	 */
-	public JdbcEnvironment getJdbcEnvironment();
+	JdbcEnvironment getJdbcEnvironment();
 
-	public JdbcConnectionAccess getBootstrapJdbcConnectionAccess();
+	/**
+	 * Obtain a JdbcConnectionAccess usable from bootstrap actions
+	 * (hbm2ddl.auto, Dialect resolution, etc).
+	 */
+	JdbcConnectionAccess getBootstrapJdbcConnectionAccess();
 
 	/**
 	 * Obtain the dialect of the database.
 	 *
 	 * @return The database dialect.
 	 */
-	public Dialect getDialect();
+	Dialect getDialect();
 
 	/**
 	 * Obtain service for logging SQL statements.
 	 *
 	 * @return The SQL statement logger.
 	 */
-	public SqlStatementLogger getSqlStatementLogger();
+	SqlStatementLogger getSqlStatementLogger();
 
 	/**
 	 * Obtain service for dealing with exceptions.
 	 *
 	 * @return The exception helper service.
 	 */
-	public SqlExceptionHelper getSqlExceptionHelper();
+	SqlExceptionHelper getSqlExceptionHelper();
 
 	/**
 	 * Obtain information about supported behavior reported by the JDBC driver.
@@ -57,7 +59,7 @@ public interface JdbcServices extends Service {
 	 * 
 	 * @return The extracted database metadata, oddly enough :)
 	 */
-	public ExtractedDatabaseMetaData getExtractedMetaDataSupport();
+	ExtractedDatabaseMetaData getExtractedMetaDataSupport();
 
 	/**
 	 * Create an instance of a {@link LobCreator} appropriate for the current environment, mainly meant to account for
@@ -66,11 +68,11 @@ public interface JdbcServices extends Service {
 	 * @param lobCreationContext The context in which the LOB is being created
 	 * @return The LOB creator.
 	 */
-	public LobCreator getLobCreator(LobCreationContext lobCreationContext);
+	LobCreator getLobCreator(LobCreationContext lobCreationContext);
 
 	/**
 	 * Obtain service for wrapping a {@link java.sql.ResultSet} in a "column name cache" wrapper.
 	 * @return The ResultSet wrapper.
 	 */
-	public ResultSetWrapper getResultSetWrapper();
+	ResultSetWrapper getResultSetWrapper();
 }

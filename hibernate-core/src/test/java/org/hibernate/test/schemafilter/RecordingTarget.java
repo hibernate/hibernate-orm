@@ -1,28 +1,34 @@
 package org.hibernate.test.schemafilter;
 
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.HashSet;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.hibernate.tool.schema.spi.Target;
+import org.hibernate.tool.schema.internal.exec.GenerationTarget;
 
-class RecordingTarget implements Target {
-	
-	private final Map<String,Pattern> patterns = new HashMap<String, Pattern>();
-	private final Map<String,Set<String>> actionsByCategory = new HashMap<String, Set<String>>();
-	
-	public RecordingTarget() {
-		patterns.put( "schema.create", Pattern.compile( "create schema (.*)" ) );
-		patterns.put( "schema.drop", Pattern.compile( "drop schema (.*)" ) );
-		patterns.put( "table.create", Pattern.compile( "create table (\\S+) .*" ) );
-		patterns.put( "table.drop", Pattern.compile( "drop table (.*)" ) );
+class RecordingTarget implements GenerationTarget {
+	public enum Category {
+		SCHEMA_CREATE( Pattern.compile( "create schema (.*)" ) ),
+		SCHEMA_DROP( Pattern.compile( "drop schema (.*)" ) ),
+		TABLE_CREATE( Pattern.compile( "create table (\\S+) .*" ) ),
+		TABLE_DROP( Pattern.compile( "drop table (.*)" ) );
+
+		private final Pattern pattern;
+
+		Category(Pattern pattern) {
+			this.pattern = pattern;
+		}
+
+		public Pattern getPattern() {
+			return pattern;
+		}
 	}
-	
-	public Set<String> getActions( String category ) {
+
+	private final EnumMap<Category, Set<String>> actionsByCategory = new EnumMap<Category, Set<String>>( Category.class );
+
+	public Set<String> getActions(Category category) {
 		Set<String> result = actionsByCategory.get( category );
 		if ( result == null ) {
 			result = new HashSet<String>();
@@ -30,26 +36,18 @@ class RecordingTarget implements Target {
 		}
 		return result;
 	}
-	
+
 	@Override
-	public void accept( String action ) {
+	public void accept(String action) {
 		action = action.toLowerCase();
-		
-		for ( Entry<String,Pattern> entry : patterns.entrySet() ) {
-			String category = entry.getKey();
-			Pattern pattern = entry.getValue();
-			
-			Matcher matcher = pattern.matcher( action );
+
+		for ( Category category : Category.values() ) {
+			final Matcher matcher = category.getPattern().matcher( action );
 			if ( matcher.matches() ) {
 				getActions( category ).add( matcher.group( 1 ) );
 				return;
 			}
 		}
-	}
-
-	@Override
-	public boolean acceptsImportScriptActions() {
-		return false;
 	}
 
 	@Override

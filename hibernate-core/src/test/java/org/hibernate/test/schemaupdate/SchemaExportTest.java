@@ -6,13 +6,15 @@
  */
 package org.hibernate.test.schemaupdate;
 
+import java.util.EnumSet;
+
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.hibernate.tool.hbm2ddl.Target;
+import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -26,10 +28,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gail Badner
  */
-public abstract class SchemaExportTest extends BaseUnitTestCase {
-
-    protected abstract SchemaExport createSchemaExport(MetadataImplementor metadata, ServiceRegistry serviceRegistry);
-
+public class SchemaExportTest extends BaseUnitTestCase {
     private boolean doesDialectSupportDropTableIfExist() {
         return Dialect.getDialect().supportsIfExistsAfterTableName() || Dialect.getDialect()
                 .supportsIfExistsBeforeTableName();
@@ -46,8 +45,7 @@ public abstract class SchemaExportTest extends BaseUnitTestCase {
                 .buildMetadata();
         metadata.validate();
 
-		SchemaExport schemaExport = createSchemaExport( metadata, serviceRegistry );
-		schemaExport.drop( true, true );
+		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ), metadata );
 	}
 
 	@After
@@ -58,27 +56,27 @@ public abstract class SchemaExportTest extends BaseUnitTestCase {
 
     @Test
     public void testCreateAndDropOnlyType() {
-        final SchemaExport schemaExport = createSchemaExport( metadata, serviceRegistry );
+		final SchemaExport schemaExport = new SchemaExport();
 
         // create w/o dropping first; (OK because tables don't exist yet
-        schemaExport.execute( Target.EXPORT, SchemaExport.Type.CREATE );
+        schemaExport.execute( EnumSet.of( TargetType.DATABASE ), SchemaExport.Action.CREATE, metadata );
         assertEquals( 0, schemaExport.getExceptions().size() );
 
         // create w/o dropping again; should cause an exception because the tables exist already
-        schemaExport.execute( Target.EXPORT, SchemaExport.Type.CREATE );
+		schemaExport.execute( EnumSet.of( TargetType.DATABASE ), SchemaExport.Action.CREATE, metadata );
         assertEquals( 1, schemaExport.getExceptions().size() );
 
         // drop tables only
-        schemaExport.execute( Target.EXPORT, SchemaExport.Type.DROP );
+		schemaExport.execute( EnumSet.of( TargetType.DATABASE ), SchemaExport.Action.DROP, metadata );
         assertEquals( 0, schemaExport.getExceptions().size() );
     }
 
     @Test
     public void testBothType() {
-        final SchemaExport schemaExport = createSchemaExport( metadata, serviceRegistry );
+		final SchemaExport schemaExport = new SchemaExport();
 
         // drop before create (nothing to drop yeT)
-        schemaExport.execute( false, true, false, false );
+        schemaExport.execute( EnumSet.of( TargetType.DATABASE ), SchemaExport.Action.DROP, metadata );
         if ( doesDialectSupportDropTableIfExist() ) {
             assertEquals( 0, schemaExport.getExceptions().size() );
         }
@@ -86,24 +84,24 @@ public abstract class SchemaExportTest extends BaseUnitTestCase {
             assertEquals( 1, schemaExport.getExceptions().size() );
         }
 
-        // drop before crete again (this time drops the tables before re-creating)
-        schemaExport.execute( false, true, false, false );
+        // drop before create again (this time drops the tables before re-creating)
+		schemaExport.execute( EnumSet.of( TargetType.DATABASE ), SchemaExport.Action.BOTH, metadata );
         assertEquals( 0, schemaExport.getExceptions().size() );
 
         // drop tables
-        schemaExport.execute( false, true, true, false );
+		schemaExport.execute( EnumSet.of( TargetType.DATABASE ), SchemaExport.Action.DROP, metadata );
         assertEquals( 0, schemaExport.getExceptions().size() );
     }
 
     @Test
     public void testGenerateDdlToFile() {
-        final SchemaExport schemaExport = createSchemaExport( metadata, serviceRegistry );
+		final SchemaExport schemaExport = new SchemaExport();
 
         java.io.File outFile = new java.io.File("schema.ddl");
         schemaExport.setOutputFile( outFile.getPath() );
 
         // do not script to console or export to database
-        schemaExport.execute( false, false, false, true );
+        schemaExport.execute( EnumSet.of( TargetType.SCRIPT ), SchemaExport.Action.DROP, metadata );
         if ( doesDialectSupportDropTableIfExist() && schemaExport.getExceptions().size() > 0 ) {
             assertEquals( 2, schemaExport.getExceptions().size() );
         }
@@ -116,10 +114,10 @@ public abstract class SchemaExportTest extends BaseUnitTestCase {
 
     @Test
     public void testCreateAndDrop() {
-        final SchemaExport schemaExport = createSchemaExport( metadata, serviceRegistry );
+		final SchemaExport schemaExport = new SchemaExport();
 
         // should drop before creating, but tables don't exist yet
-        schemaExport.create( true, true );
+        schemaExport.create( EnumSet.of( TargetType.DATABASE ), metadata );
 		if ( doesDialectSupportDropTableIfExist() ) {
 			assertEquals( 0, schemaExport.getExceptions().size() );
 		}
@@ -127,10 +125,10 @@ public abstract class SchemaExportTest extends BaseUnitTestCase {
 			assertEquals( 1, schemaExport.getExceptions().size() );
 		}
         // call create again; it should drop tables before re-creating
-        schemaExport.create( true, true );
+		schemaExport.create( EnumSet.of( TargetType.DATABASE ), metadata );
         assertEquals( 0, schemaExport.getExceptions().size() );
         // drop the tables
-        schemaExport.drop( true, true );
+		schemaExport.drop( EnumSet.of( TargetType.DATABASE ), metadata );
         assertEquals( 0, schemaExport.getExceptions().size() );
     }
 }

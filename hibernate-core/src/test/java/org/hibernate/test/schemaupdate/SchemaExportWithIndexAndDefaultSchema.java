@@ -6,12 +6,11 @@
  */
 package org.hibernate.test.schemaupdate;
 
+import java.util.EnumSet;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.Table;
-import java.sql.SQLException;
-import java.util.List;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -20,15 +19,15 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.CustomRunner;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -45,11 +44,9 @@ public class SchemaExportWithIndexAndDefaultSchema {
 
 	@Test
 	public void shouldCreateIndex() {
-		SchemaExport schemaExport = new SchemaExport( serviceRegistry, metadata );
-		schemaExport.create( true, true );
-
-		List<SQLException> exceptions = schemaExport.getExceptions();
-		assertThat( exceptions.size(), is( 0 ) );
+		SchemaExport schemaExport = new SchemaExport();
+		schemaExport.create( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ), metadata );
+		assertThat( schemaExport.getExceptions().size(), is( 0 ) );
 	}
 
 	@Before
@@ -63,8 +60,7 @@ public class SchemaExportWithIndexAndDefaultSchema {
 				.buildMetadata();
 
 		System.out.println( "********* Starting SchemaExport for START-UP *************************" );
-		SchemaExport schemaExport = new SchemaExport( serviceRegistry, metadata );
-		schemaExport.create( true, true );
+		new SchemaExport().create( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ), metadata );
 		System.out.println( "********* Completed SchemaExport for START-UP *************************" );
 	}
 
@@ -72,8 +68,7 @@ public class SchemaExportWithIndexAndDefaultSchema {
 	@After
 	public void tearDown() {
 		System.out.println( "********* Starting SchemaExport (drop) for TEAR-DOWN *************************" );
-		SchemaExport schemaExport = new SchemaExport( serviceRegistry, metadata );
-		schemaExport.drop( true, true );
+		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ), metadata );
 		System.out.println( "********* Completed SchemaExport (drop) for TEAR-DOWN *************************" );
 
 		StandardServiceRegistryBuilder.destroy( serviceRegistry );

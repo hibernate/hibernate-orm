@@ -6,6 +6,8 @@
  */
 package org.hibernate.internal.log;
 
+import org.hibernate.tool.schema.Action;
+
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.LogMessage;
@@ -216,5 +218,4 @@ public interface DeprecationLogger extends BasicLogger {
 					"new Ant-task (%s) leveraging that new bytecode enhancement.  You should update your build to use the new task explicitly."
 	)
 	void logDeprecatedInstrumentTask(Class taskClass, Class newTaskClass);
-
 }

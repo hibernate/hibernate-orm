@@ -175,154 +175,70 @@ public interface AvailableSettings {
 	String CDI_BEAN_MANAGER = "javax.persistence.bean.manager";
 
 	/**
-	 * Specifies whether schema generation commands for schema creation are to be determine based on object/relational
-	 * mapping metadata, DDL scripts, or a combination of the two.  See {@link SchemaGenSource} for valid set of values.
-	 * If no value is specified, a default is assumed as follows:<ul>
-	 *     <li>
-	 *         if source scripts are specified (per {@value #SCHEMA_GEN_CREATE_SCRIPT_SOURCE}),then "scripts" is assumed
-	 *     </li>
-	 *     <li>
-	 *         otherwise, "metadata" is assumed
-	 *     </li>
-	 * </ul>
-	 *
-	 * @see SchemaGenSource
+	 * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_CREATE_SOURCE
 	 */
-	String SCHEMA_GEN_CREATE_SOURCE = "javax.persistence.schema-generation.create-source";
+	String SCHEMA_GEN_CREATE_SOURCE = org.hibernate.cfg.AvailableSettings.HBM2DDL_CREATE_SOURCE;
 
 	/**
-	 * Specifies whether schema generation commands for schema dropping are to be determine based on object/relational
-	 * mapping metadata, DDL scripts, or a combination of the two.  See {@link SchemaGenSource} for valid set of values.
-	 * If no value is specified, a default is assumed as follows:<ul>
-	 *     <li>
-	 *         if source scripts are specified (per {@value #SCHEMA_GEN_DROP_SCRIPT_SOURCE}),then "scripts" is assumed
-	 *     </li>
-	 *     <li>
-	 *         otherwise, "metadata" is assumed
-	 *     </li>
-	 * </ul>
-	 *
-	 * @see SchemaGenSource
+	 * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_DROP_SOURCE
 	 */
-	String SCHEMA_GEN_DROP_SOURCE = "javax.persistence.schema-generation.drop-source";
+	String SCHEMA_GEN_DROP_SOURCE = org.hibernate.cfg.AvailableSettings.HBM2DDL_DROP_SOURCE;
 
 	/**
-	 * Specifies the CREATE script file as either a {@link java.io.Reader} configured for reading of the DDL script
-	 * file or a string designating a file {@link java.net.URL} for the DDL script.
-	 *
-	 * @see #SCHEMA_GEN_CREATE_SOURCE
-	 * @see #SCHEMA_GEN_DROP_SCRIPT_SOURCE
+	 * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_CREATE_SCRIPT_SOURCE
 	 */
-	String SCHEMA_GEN_CREATE_SCRIPT_SOURCE = "javax.persistence.schema-generation.create-script-source";
+	String SCHEMA_GEN_CREATE_SCRIPT_SOURCE = org.hibernate.cfg.AvailableSettings.HBM2DDL_CREATE_SCRIPT_SOURCE;
 
 	/**
-	 * Specifies the DROP script file as either a {@link java.io.Reader} configured for reading of the DDL script
-	 * file or a string designating a file {@link java.net.URL} for the DDL script.
-	 *
-	 * @see #SCHEMA_GEN_DROP_SOURCE
-	 * @see #SCHEMA_GEN_CREATE_SCRIPT_SOURCE
+	 * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_DROP_SCRIPT_SOURCE
 	 */
-	String SCHEMA_GEN_DROP_SCRIPT_SOURCE = "javax.persistence.schema-generation.drop-script-source";
+	String SCHEMA_GEN_DROP_SCRIPT_SOURCE = org.hibernate.cfg.AvailableSettings.HBM2DDL_DROP_SCRIPT_SOURCE;
 
 	/**
-	 * Specifies the type of schema generation action to be taken by the persistence provider in regards to sending
-	 * commands directly to the database via JDBC.  See {@link SchemaGenAction} for the set of possible values.
-	 * <p/>
-	 * If no value is specified, the default is "none".
-	 *
-	 * @see SchemaGenAction
+	 * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_DATABASE_ACTION
 	 */
-	String SCHEMA_GEN_DATABASE_ACTION = "javax.persistence.schema-generation.database.action";
+	String SCHEMA_GEN_DATABASE_ACTION = org.hibernate.cfg.AvailableSettings.HBM2DDL_DATABASE_ACTION;
 
 	/**
-	 * Specifies the type of schema generation action to be taken by the persistence provider in regards to writing
-	 * commands to DDL script files.  See {@link SchemaGenAction} for the set of possible values.
-	 * <p/>
-	 * If no value is specified, the default is "none".
-	 *
-	 * @see SchemaGenAction
+	 * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_SCRIPTS_ACTION
 	 */
-	String SCHEMA_GEN_SCRIPTS_ACTION = "javax.persistence.schema-generation.scripts.action";
+	String SCHEMA_GEN_SCRIPTS_ACTION = org.hibernate.cfg.AvailableSettings.HBM2DDL_SCRIPTS_ACTION;
 
 	/**
-	 * For cases where the {@value #SCHEMA_GEN_SCRIPTS_ACTION} value indicates that schema creation commands should
-	 * be written to DDL script file, {@value #SCHEMA_GEN_SCRIPTS_CREATE_TARGET} specifies either a
-	 * {@link java.io.Writer} configured for output of the DDL script or a string specifying the file URL for the DDL
-	 * script.
-	 *
-	 * @see #SCHEMA_GEN_SCRIPTS_ACTION
+	 * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_SCRIPTS_CREATE_TARGET
 	 */
-	@SuppressWarnings("JavaDoc")
-	String SCHEMA_GEN_SCRIPTS_CREATE_TARGET = "javax.persistence.schema-generation.scripts.create-target";
+	String SCHEMA_GEN_SCRIPTS_CREATE_TARGET = org.hibernate.cfg.AvailableSettings.HBM2DDL_SCRIPTS_CREATE_TARGET;
 
 	/**
-	 * For cases where the {@value #SCHEMA_GEN_SCRIPTS_ACTION} value indicates that schema drop commands should
-	 * be written to DDL script file, {@value #SCHEMA_GEN_SCRIPTS_DROP_TARGET} specifies either a
-	 * {@link java.io.Writer} configured for output of the DDL script or a string specifying the file URL for the DDL
-	 * script.
-	 *
-	 * @see #SCHEMA_GEN_SCRIPTS_ACTION
+	 * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_SCRIPTS_DROP_TARGET
 	 */
-	@SuppressWarnings("JavaDoc")
-	String SCHEMA_GEN_SCRIPTS_DROP_TARGET = "javax.persistence.schema-generation.scripts.drop-target";
+	String SCHEMA_GEN_SCRIPTS_DROP_TARGET = org.hibernate.cfg.AvailableSettings.HBM2DDL_SCRIPTS_DROP_TARGET;
 
 	/**
-	 * Specifies whether the persistence provider is to create the database schema(s) in addition to creating
-	 * database objects (tables, sequences, constraints, etc).  The value of this boolean property should be set
-	 * to {@code true} if the persistence provider is to create schemas in the database or to generate DDL that
-	 * contains "CREATE SCHEMA" commands.  If this property is not supplied (or is explicitly {@code false}), the
-	 * provider should not attempt to create database schemas.
+	 * @see org.hibernate.cfg.AvailableSettings#HBM2DLL_CREATE_NAMESPACES
+	 * @see org.hibernate.cfg.AvailableSettings#HBM2DLL_CREATE_SCHEMAS
 	 */
-	String SCHEMA_GEN_CREATE_SCHEMAS = "javax.persistence.create-database-schemas";
+	String SCHEMA_GEN_CREATE_SCHEMAS = org.hibernate.cfg.AvailableSettings.HBM2DLL_CREATE_SCHEMAS;
 
 	/**
-	 * Allows passing the specific {@link java.sql.Connection} instance to be used for performing schema generation
-	 * where the target is "database".
-	 * <p/>
-	 * May also be used to determine the values for {@value #SCHEMA_GEN_DB_NAME},
-	 * {@value #SCHEMA_GEN_DB_MAJOR_VERSION} and {@value #SCHEMA_GEN_DB_MINOR_VERSION}.
+	 * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_CONNECTION
 	 */
-	String SCHEMA_GEN_CONNECTION = "javax.persistence.schema-generation-connection";
+	String SCHEMA_GEN_CONNECTION = org.hibernate.cfg.AvailableSettings.HBM2DDL_CONNECTION;
 
 	/**
-	 * Specifies the name of the database provider in cases where a Connection to the underlying database is
-	 * not available (aka, mainly in generating scripts).  In such cases, a value for
-	 * {@value #SCHEMA_GEN_DB_NAME} *must* be specified.
-	 * <p/>
-	 * The value of this setting is expected to match the value returned by
-	 * {@link java.sql.DatabaseMetaData#getDatabaseProductName()} for the target database.
-	 * <p/>
-	 * Additionally specifying {@value #SCHEMA_GEN_DB_MAJOR_VERSION} and/or {@value #SCHEMA_GEN_DB_MINOR_VERSION}
-	 * may be required to understand exactly how to generate the required schema commands.
-	 *
-	 * @see #SCHEMA_GEN_DB_MAJOR_VERSION
-	 * @see #SCHEMA_GEN_DB_MINOR_VERSION
+	 * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_DB_NAME
 	 */
-	@SuppressWarnings("JavaDoc")
-	String SCHEMA_GEN_DB_NAME = "javax.persistence.database-product-name";
+	String SCHEMA_GEN_DB_NAME = org.hibernate.cfg.AvailableSettings.HBM2DDL_DB_NAME;
 
 	/**
-	 * Specifies the major version of the underlying database, as would be returned by
-	 * {@link java.sql.DatabaseMetaData#getDatabaseMajorVersion} for the target database.  This value is used to
-	 * help more precisely determine how to perform schema generation tasks for the underlying database in cases
-	 * where {@value #SCHEMA_GEN_DB_NAME} does not provide enough distinction.
-
-	 * @see #SCHEMA_GEN_DB_NAME
-	 * @see #SCHEMA_GEN_DB_MINOR_VERSION
+	 * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_DB_MAJOR_VERSION
 	 */
-	String SCHEMA_GEN_DB_MAJOR_VERSION = "javax.persistence.database-major-version";
+	String SCHEMA_GEN_DB_MAJOR_VERSION = org.hibernate.cfg.AvailableSettings.HBM2DDL_DB_MAJOR_VERSION;
 
 	/**
-	 * Specifies the minor version of the underlying database, as would be returned by
-	 * {@link java.sql.DatabaseMetaData#getDatabaseMinorVersion} for the target database.  This value is used to
-	 * help more precisely determine how to perform schema generation tasks for the underlying database in cases
-	 * where te combination of {@value #SCHEMA_GEN_DB_NAME} and {@value #SCHEMA_GEN_DB_MAJOR_VERSION} does not provide
-	 * enough distinction.
-	 *
-	 * @see #SCHEMA_GEN_DB_NAME
-	 * @see #SCHEMA_GEN_DB_MAJOR_VERSION
+	 * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_DB_MINOR_VERSION
 	 */
-	String SCHEMA_GEN_DB_MINOR_VERSION = "javax.persistence.database-minor-version";
+	String SCHEMA_GEN_DB_MINOR_VERSION = org.hibernate.cfg.AvailableSettings.HBM2DDL_DB_MINOR_VERSION;
 
 	/**
 	 * Specifies a {@link java.io.Reader} configured for reading of the SQL load script or a string designating the

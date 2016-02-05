@@ -6,8 +6,7 @@
  */
 package org.hibernate.tool.schema.extract.spi;
 
-import java.util.Collection;
-
+import org.hibernate.Incubating;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.tool.schema.extract.internal.TableInformationImpl;
 
@@ -21,6 +20,7 @@ import org.hibernate.tool.schema.extract.internal.TableInformationImpl;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface InformationExtractor {
 
 	/**
@@ -53,7 +53,7 @@ public interface InformationExtractor {
 	 *
 	 * @return table info for the matching table
 	 */
-	public TableInformation getTable(Identifier catalog, Identifier schema, Identifier tableName);
+	TableInformation getTable(Identifier catalog, Identifier schema, Identifier tableName);
 
 	/**
 	 * Return information about column for the given table.  Typically called from the TableInformation itself
@@ -64,7 +64,7 @@ public interface InformationExtractor {
 	 *
 	 * @return The extracted column information
 	 */
-	public ColumnInformation getColumn(TableInformation tableInformation, Identifier columnIdentifier);
+	ColumnInformation getColumn(TableInformation tableInformation, Identifier columnIdentifier);
 
 	/**
 	 * Extract information about the given table's primary key.
@@ -73,7 +73,7 @@ public interface InformationExtractor {
 	 *
 	 * @return The extracted primary key information
 	 */
-	public PrimaryKeyInformation getPrimaryKey(TableInformationImpl tableInformation);
+	PrimaryKeyInformation getPrimaryKey(TableInformationImpl tableInformation);
 
 	/**
 	 * Extract information about indexes defined against the given table.  Typically called from the TableInformation
@@ -83,7 +83,7 @@ public interface InformationExtractor {
 	 *
 	 * @return The extracted index information
 	 */
-	public Iterable<IndexInformation> getIndexes(TableInformation tableInformation);
+	Iterable<IndexInformation> getIndexes(TableInformation tableInformation);
 
 	/**
 	 * Extract information about foreign keys defined on the given table (targeting or point-at other tables).
@@ -93,5 +93,5 @@ public interface InformationExtractor {
 	 *
 	 * @return The extracted foreign-key information
 	 */
-	public Iterable<ForeignKeyInformation> getForeignKeys(TableInformation tableInformation);
+	Iterable<ForeignKeyInformation> getForeignKeys(TableInformation tableInformation);
 }

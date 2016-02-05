@@ -9,17 +9,15 @@ package org.hibernate.test.hbm.index;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.tool.schema.spi.Target;
+import org.hibernate.tool.schema.internal.exec.GenerationTarget;
 
 /**
  * @author Steve Ebersole
  */
-public class JournalingSchemaToolingTarget implements Target {
+public class JournalingSchemaToolingTarget implements GenerationTarget {
 	private List<String> actions = new ArrayList<String>();
 
-	@Override
-	public boolean acceptsImportScriptActions() {
-		return false;
+	public JournalingSchemaToolingTarget() {
 	}
 
 	@Override

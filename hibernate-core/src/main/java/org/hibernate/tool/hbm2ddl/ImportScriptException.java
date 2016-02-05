@@ -10,7 +10,11 @@ import org.hibernate.HibernateException;
 
 /**
  * @author Steve Ebersole
+ *
+ * @deprecated Everything in this package has been replaced with
+ * {@link org.hibernate.tool.schema.spi.SchemaManagementTool} and friends.
  */
+@Deprecated
 public class ImportScriptException extends HibernateException {
 	public ImportScriptException(String s) {
 		super( s );

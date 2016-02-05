@@ -13,7 +13,11 @@ import java.util.List;
 /**
  * JDBC index metadata
  * @author Christoph Sturm
+ *
+ * @deprecated Everything in this package has been replaced with
+ * {@link org.hibernate.tool.schema.spi.SchemaManagementTool} and friends.
  */
+@Deprecated
 public class IndexMetadata {
 	private final String name;
 	private final List columns = new ArrayList();

@@ -6,11 +6,6 @@
  */
 package org.hibernate.test.quote;
 
-import static org.junit.Assert.fail;
-
-import java.util.Collections;
-import java.util.Map;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -22,19 +17,24 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.boot.JdbcConnectionAccessImpl;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
-import org.hibernate.tool.schema.internal.TargetDatabaseImpl;
-import org.hibernate.tool.schema.spi.SchemaManagementTool;
-import org.hibernate.tool.schema.spi.Target;
+import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
+import org.hibernate.tool.schema.internal.SchemaDropperImpl;
+import org.hibernate.tool.schema.internal.exec.GenerationTarget;
+import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
+import org.hibernate.tool.schema.internal.exec.JdbcConnectionContextNonSharedImpl;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.junit.Assert.fail;
 
 /**
  * @author Steve Ebersole
@@ -62,20 +62,24 @@ public class TableGeneratorQuotingTest extends BaseUnitTestCase {
 		final Metadata metadata = new MetadataSources( serviceRegistry ).addAnnotatedClass( TestEntity.class ).buildMetadata();
 
 		final ConnectionProvider connectionProvider = serviceRegistry.getService( ConnectionProvider.class );
-		final Target target = new TargetDatabaseImpl( new JdbcConnectionAccessImpl( connectionProvider ) );
-		final SchemaManagementTool tool = serviceRegistry.getService( SchemaManagementTool.class );
+		final GenerationTarget target = new GenerationTargetToDatabase(
+				new JdbcConnectionContextNonSharedImpl(
+						new JdbcEnvironmentInitiator.ConnectionProviderJdbcConnectionAccess( connectionProvider ),
+						serviceRegistry.getService( JdbcServices.class ).getSqlStatementLogger(),
+						true
+				)
+		);
 
-		Map options = Collections.emptyMap();
-		tool.getSchemaCreator( options ).doCreation( metadata, false, target );
+		new SchemaCreatorImpl( serviceRegistry ).doCreation( metadata, false, target );
 
 		try {
-			new SchemaValidator( serviceRegistry, (MetadataImplementor) metadata ).validate();
+			new SchemaValidator().validate( metadata );
 		}
 		catch (HibernateException e) {
 			fail( "The identifier generator table should have validated.  " + e.getMessage() );
 		}
 		finally {
-			tool.getSchemaDropper( options ).doDrop( metadata, false, target );
+			new SchemaDropperImpl( serviceRegistry ).doDrop( metadata, false, target );
 		}
 	}
 

@@ -47,9 +47,8 @@ public class SynonymValidationTest extends BaseNonConfigCoreFunctionalTestCase {
 		Configuration cfg = new Configuration();
 		cfg.addAnnotatedClass( TestEntityWithSynonym.class );
 		cfg.setProperty( AvailableSettings.ENABLE_SYNONYMS, "true" );
-		
-		SchemaValidator schemaValidator = new SchemaValidator( metadata() );
-		schemaValidator.validate();
+
+		new SchemaValidator().validate( metadata() );
 		
 		s = openSession();
 		s.getTransaction().begin();

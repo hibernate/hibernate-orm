@@ -16,7 +16,11 @@ import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
  * connection.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Everything in this package has been replaced with
+ * {@link org.hibernate.tool.schema.spi.SchemaManagementTool} and friends.
  */
+@Deprecated
 class SuppliedConnectionHelper implements ConnectionHelper {
 	private Connection connection;
 	private boolean toggleAutoCommit;

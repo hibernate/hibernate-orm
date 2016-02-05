@@ -11,7 +11,11 @@ import java.io.IOException;
 
 /**
  * @author Steve Ebersole
+ *
+ * @deprecated Everything in this package has been replaced with
+ * {@link org.hibernate.tool.schema.spi.SchemaManagementTool} and friends.
  */
+@Deprecated
 class FileExporter implements Exporter {
 	private final FileWriter writer;
 

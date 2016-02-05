@@ -2,7 +2,7 @@ package org.hibernate.test.schemaupdate;
 
 import java.io.File;
 import java.nio.file.Files;
-
+import java.util.EnumSet;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -12,13 +12,13 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.Dialect;
+
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.testing.SkipLog;
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
-import org.hibernate.tool.hbm2ddl.Target;
+import org.hibernate.tool.schema.TargetType;
+
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -26,6 +26,7 @@ import org.junit.Test;
  * @author Koen Aers
  */
 @TestForIssue(jiraKey = "HHH-10158")
+@RequiresDialect( H2Dialect.class )
 public class SchemaUpdateFormatterTest {
 	
 	private static final String AFTER_FORMAT = 
@@ -41,14 +42,6 @@ public class SchemaUpdateFormatterTest {
 		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
 				.applySetting( Environment.HBM2DDL_AUTO, "none" )
 				.build();
-		final Dialect dialect = ssr.getService( JdbcServices.class ).getDialect();
-		if ( ! H2Dialect.class.isInstance( dialect ) ) {
-			SkipLog.reportSkip(
-					"Test should only run when using H2Dialect due to dialect-specific script; skip because dialect is "
-							+ dialect.getClass().getName()
-			);
-			return;
-		}
 		try {
 			File output = File.createTempFile( "update_script", ".sql" );
 			output.deleteOnExit();
@@ -58,16 +51,17 @@ public class SchemaUpdateFormatterTest {
 					.buildMetadata();
 			metadata.validate();
 
-			SchemaUpdate su = new SchemaUpdate( ssr, metadata );
-			su.setHaltOnError( true );
-			su.setOutputFile( output.getAbsolutePath() );
-			su.setDelimiter( DELIMITER );
-			su.setFormat( true );
-			su.execute( Target.SCRIPT );
+			new SchemaUpdate()
+					.setHaltOnError( true )
+					.setOutputFile( output.getAbsolutePath() )
+					.setDelimiter( DELIMITER )
+					.setFormat( true )
+					.execute( EnumSet.of( TargetType.SCRIPT ), metadata );
 
 			Assert.assertEquals(
 					AFTER_FORMAT, 
-					new String(Files.readAllBytes(output.toPath())));
+					new String(Files.readAllBytes(output.toPath()))
+			);
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );

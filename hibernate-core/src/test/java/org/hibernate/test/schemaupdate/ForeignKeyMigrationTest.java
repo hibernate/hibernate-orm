@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.schemaupdate;
 
+import java.util.EnumSet;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -18,11 +19,9 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
-import org.hibernate.tool.hbm2ddl.Target;
+import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.DialectCheck;
 import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -46,13 +45,16 @@ public class ForeignKeyMigrationTest extends BaseUnitTestCase {
 			metadata.validate();
 
 			// first create the schema...
-			new SchemaExport( metadata ).create( Target.EXPORT );
+			new SchemaExport().create( EnumSet.of( TargetType.DATABASE ), metadata );
 
-			// try to update the just created schema
-			new SchemaUpdate( metadata ).execute( Target.EXPORT );
-
-			// clean up
-			new SchemaExport( metadata ).drop( Target.EXPORT );
+			try {
+				// try to update the just created schema
+				new SchemaUpdate().execute( EnumSet.of( TargetType.DATABASE ), metadata );
+			}
+			finally {
+				// clean up
+				new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), metadata );
+			}
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );

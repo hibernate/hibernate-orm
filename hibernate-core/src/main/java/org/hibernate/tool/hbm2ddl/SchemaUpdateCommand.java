@@ -12,7 +12,11 @@ package org.hibernate.tool.hbm2ddl;
  *
  * @author Brett Meyer
  * @author Steve Ebersole
+ *
+ * @deprecated Everything in this package has been replaced with
+ * {@link org.hibernate.tool.schema.spi.SchemaManagementTool} and friends.
  */
+@Deprecated
 public class SchemaUpdateCommand {
 	private final String sql;
 	private final boolean quiet;

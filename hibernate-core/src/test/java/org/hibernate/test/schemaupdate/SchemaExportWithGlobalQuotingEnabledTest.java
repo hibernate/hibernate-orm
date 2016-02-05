@@ -23,13 +23,14 @@
  */
 package org.hibernate.test.schemaupdate;
 
+import java.sql.SQLException;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.Set;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -38,15 +39,15 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.CustomRunner;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertThat;
@@ -63,9 +64,8 @@ public class SchemaExportWithGlobalQuotingEnabledTest {
 
 	@Test
 	public void testSchemaExport() throws Exception {
-
-		SchemaExport schemaExport = new SchemaExport( serviceRegistry, metadata );
-		schemaExport.create( true, true );
+		SchemaExport schemaExport = new SchemaExport();
+		schemaExport.create( EnumSet.of( TargetType.STDOUT, TargetType.DATABASE ), metadata );
 
 		List<SQLException> exceptions = schemaExport.getExceptions();
 		for ( SQLException exception : exceptions ) {
@@ -85,16 +85,14 @@ public class SchemaExportWithGlobalQuotingEnabledTest {
 				.buildMetadata();
 
 		System.out.println( "********* Starting SchemaExport for START-UP *************************" );
-		SchemaExport schemaExport = new SchemaExport( serviceRegistry, metadata );
-		schemaExport.create( true, true );
+		new SchemaExport().create( EnumSet.of( TargetType.STDOUT, TargetType.DATABASE ), metadata );
 		System.out.println( "********* Completed SchemaExport for START-UP *************************" );
 	}
 
 	@After
 	public void tearDown() {
 		System.out.println( "********* Starting SchemaExport (drop) for TEAR-DOWN *************************" );
-		SchemaExport schemaExport = new SchemaExport( serviceRegistry, metadata );
-		schemaExport.drop( true, true );
+		new SchemaExport().drop( EnumSet.of( TargetType.STDOUT, TargetType.DATABASE ), metadata );
 		System.out.println( "********* Completed SchemaExport (drop) for TEAR-DOWN *************************" );
 
 		StandardServiceRegistryBuilder.destroy( serviceRegistry );

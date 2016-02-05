@@ -7,9 +7,9 @@
 package org.hibernate.test.schemaupdate;
 
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
+import java.util.EnumSet;
+import java.util.Map;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
@@ -18,15 +18,19 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.id.enhanced.TableStructure;
 import org.hibernate.mapping.Table;
-import org.hibernate.tool.schema.extract.internal.DatabaseInformationImpl;
-import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
-import org.hibernate.tool.schema.internal.TargetDatabaseImpl;
-import org.hibernate.tool.schema.internal.TargetStdoutImpl;
+import org.hibernate.tool.hbm2ddl.SchemaExport;
+import org.hibernate.tool.schema.TargetType;
+import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
+import org.hibernate.tool.schema.internal.exec.ScriptTargetOutputToStdout;
+import org.hibernate.tool.schema.spi.ExceptionHandler;
+import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
-import org.hibernate.tool.schema.spi.Target;
+import org.hibernate.tool.schema.spi.ScriptTargetOutput;
+import org.hibernate.tool.schema.spi.TargetDescriptor;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
@@ -44,7 +48,9 @@ public class SchemaUpdateTableBackedSequenceTest extends BaseUnitTestCase {
 
 	@Before
 	public void before() {
-		ssr = new StandardServiceRegistryBuilder().build();
+		ssr = new StandardServiceRegistryBuilder()
+				.applySetting( AvailableSettings.FORMAT_SQL, false )
+				.build();
 	}
 
 	@After
@@ -73,45 +79,53 @@ public class SchemaUpdateTableBackedSequenceTest extends BaseUnitTestCase {
 		Table table = database.getDefaultNamespace().getTables().iterator().next();
 		assertEquals( 1, table.getInitCommands().size() );
 
-		TargetImpl target = new TargetImpl();
-
-		DatabaseInformation dbInfo = new DatabaseInformationImpl(
-				ssr,
-				database.getJdbcEnvironment(),
-				ssr.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess(),
-				database.getDefaultNamespace().getPhysicalName().getCatalog(),
-				database.getDefaultNamespace().getPhysicalName().getSchema()
-		);
+		final TargetImpl target = new TargetImpl();
 
 		ssr.getService( SchemaManagementTool.class ).getSchemaMigrator( Collections.emptyMap() ).doMigration(
 				metadata,
-				dbInfo,
-				true,
-				buildTargets( target )
+				new ExecutionOptions() {
+					@Override
+					public boolean shouldManageNamespaces() {
+						return true;
+					}
+
+					@Override
+					public Map getConfigurationValues() {
+						return ssr.getService( ConfigurationService.class ).getSettings();
+					}
+
+					@Override
+					public ExceptionHandler getExceptionHandler() {
+						return ExceptionHandlerLoggedImpl.INSTANCE;
+					}
+				},
+				new TargetDescriptor() {
+					@Override
+					public EnumSet<TargetType> getTargetTypes() {
+						return EnumSet.of( TargetType.SCRIPT, TargetType.DATABASE );
+					}
+
+					@Override
+					public ScriptTargetOutput getScriptTargetOutput() {
+						return target;
+					}
+				}
 		);
 
 		assertTrue( target.found );
 
-		ssr.getService( SchemaManagementTool.class ).getSchemaDropper( Collections.emptyMap() ).doDrop(
-				metadata,
-				false,
-				buildTargets( target )
-		);
+		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), metadata );
 	}
 
-	public List<Target> buildTargets(TargetImpl target) {
-		return Arrays.asList( target, new TargetDatabaseImpl( ssr.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess() ) );
-	}
-
-	class TargetImpl extends TargetStdoutImpl {
+	class TargetImpl extends ScriptTargetOutputToStdout {
 		boolean found = false;
+
 		@Override
 		public void accept(String action) {
 			super.accept( action );
 			if ( action.startsWith( "insert into test_seq" ) ) {
 				found = true;
 			}
-
 		}
 	}
 }

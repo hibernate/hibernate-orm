@@ -6,6 +6,8 @@
  */
 package org.hibernate.tool.schema.spi;
 
+import org.hibernate.Incubating;
+
 /**
  * Used to specify the {@link org.hibernate.tool.schema.spi.SchemaFilter}s to be used by create, drop, migrate and validate
  * operations on the database schema. These filters can be used to limit the scope of operations to specific namespaces, 
@@ -13,6 +15,7 @@ package org.hibernate.tool.schema.spi;
  * 
  * @since 5.1
  */
+@Incubating
 public interface SchemaFilterProvider {
 	/**
 	 * Get the filter to be applied to {@link SchemaCreator} processing

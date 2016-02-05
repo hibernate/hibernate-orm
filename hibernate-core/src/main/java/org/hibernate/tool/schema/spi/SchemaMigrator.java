@@ -6,30 +6,22 @@
  */
 package org.hibernate.tool.schema.spi;
 
-import java.util.List;
-
+import org.hibernate.Incubating;
 import org.hibernate.boot.Metadata;
-import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 
 /**
  * Service delegate for handling schema migration.
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface SchemaMigrator {
 	/**
-	 * Perform a migration to the specified targets.
+	 * Perform a schema migration (alteration) from the indicated source(s) to the indicated target(s).
 	 *
-	 * @param metadata The "compiled" mapping metadata.
-	 * @param existingDatabase Access to the information about the existing database.
-	 * @param createNamespaces Should the schema(s)/catalog(s) actually be created?
-	 * @param targets The migration targets
-	 *
-	 * @throws SchemaManagementException
+	 * @param metadata Represents the schema to be altered.
+	 * @param options Options for executing the alteration
+	 * @param targetDescriptor description of the target(s) for the alteration commands
 	 */
-	public void doMigration(
-			Metadata metadata,
-			DatabaseInformation existingDatabase,
-			boolean createNamespaces,
-			List<Target> targets) throws SchemaManagementException;
+	void doMigration(Metadata metadata, ExecutionOptions options, TargetDescriptor targetDescriptor);
 }

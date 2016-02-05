@@ -6,20 +6,21 @@
  */
 package org.hibernate.test.schemaupdate;
 
+import java.util.EnumSet;
+
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
-import org.hibernate.tool.hbm2ddl.Target;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * @author Andrea Boriero
@@ -31,13 +32,11 @@ public class QuotedTableNameWithForeignKeysSchemaUpdateTest extends BaseUnitTest
 	public void setUp() {
 		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
 		try {
-
 			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addResource( "org/hibernate/test/schemaupdate/UserGroup.hbm.xml" )
 					.buildMetadata();
 			metadata.validate();
-			new SchemaUpdate( metadata ).execute( Target.EXPORT );
-
+			new SchemaUpdate().execute( EnumSet.of( TargetType.DATABASE ), metadata );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -48,12 +47,10 @@ public class QuotedTableNameWithForeignKeysSchemaUpdateTest extends BaseUnitTest
 	public void testUpdateExistingSchema() {
 		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
 		try {
-
 			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addResource( "org/hibernate/test/schemaupdate/UserGroup.hbm.xml" )
 					.buildMetadata();
-			new SchemaUpdate( metadata ).execute( Target.EXPORT );
-
+			new SchemaUpdate().execute( EnumSet.of( TargetType.DATABASE ), metadata );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -68,8 +65,7 @@ public class QuotedTableNameWithForeignKeysSchemaUpdateTest extends BaseUnitTest
 			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addResource( "org/hibernate/test/schemaupdate/UserGroup.hbm.xml" )
 					.buildMetadata();
-			new SchemaUpdate( metadata ).execute( true, false );
-
+			new SchemaUpdate().execute( EnumSet.of( TargetType.STDOUT ), metadata );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -84,8 +80,7 @@ public class QuotedTableNameWithForeignKeysSchemaUpdateTest extends BaseUnitTest
 			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addResource( "org/hibernate/test/schemaupdate/UserGroup.hbm.xml" )
 					.buildMetadata();
-			SchemaExport schemaExport = new SchemaExport( ssr, metadata );
-			schemaExport.drop( true, true );
+			new SchemaExport().drop( EnumSet.of( TargetType.STDOUT, TargetType.DATABASE ), metadata );
 
 		}
 		finally {

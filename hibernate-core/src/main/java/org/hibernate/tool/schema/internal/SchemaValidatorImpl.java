@@ -21,26 +21,66 @@ import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
+import org.hibernate.tool.schema.internal.exec.JdbcConnectionContextNonSharedImpl;
+import org.hibernate.tool.schema.internal.exec.JdbcContext;
+import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.SchemaValidator;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 
+import org.jboss.logging.Logger;
+
 /**
  * @author Steve Ebersole
  */
 public class SchemaValidatorImpl implements SchemaValidator {
-	
+	private static final Logger log = Logger.getLogger( SchemaValidatorImpl.class );
+
+	private final HibernateSchemaManagementTool tool;
 	private final SchemaFilter schemaFilter;
-	private final Dialect dialect;
-	
-	public SchemaValidatorImpl(SchemaFilter schemaFilter, Dialect dialect) {
-		this.schemaFilter = schemaFilter;
-		this.dialect = dialect;
+
+	public SchemaValidatorImpl(HibernateSchemaManagementTool tool) {
+		this( tool, DefaultSchemaFilter.INSTANCE );
 	}
-	
+
+	public SchemaValidatorImpl(HibernateSchemaManagementTool tool, SchemaFilter schemaFilter) {
+		this.tool = tool;
+		this.schemaFilter = schemaFilter;
+	}
+
 	@Override
-	public void doValidation(Metadata metadata, DatabaseInformation databaseInformation) {
+	public void doValidation(Metadata metadata, ExecutionOptions options) {
+		final JdbcContext jdbcContext = tool.resolveJdbcContext( options.getConfigurationValues() );
+
+		final DatabaseInformation databaseInformation = Helper.buildDatabaseInformation(
+				tool.getServiceRegistry(),
+				new JdbcConnectionContextNonSharedImpl(
+						jdbcContext.getJdbcConnectionAccess(),
+						jdbcContext.getSqlStatementLogger(),
+						false
+				),
+				metadata.getDatabase().getDefaultNamespace().getName()
+		);
+
+		try {
+			performValidation( metadata, databaseInformation, options, jdbcContext.getDialect() );
+		}
+		finally {
+			try {
+				databaseInformation.cleanup();
+			}
+			catch (Exception e) {
+				log.debug( "Problem releasing DatabaseInformation : " + e.getMessage() );
+			}
+		}
+	}
+
+	public void performValidation(
+			Metadata metadata,
+			DatabaseInformation databaseInformation,
+			ExecutionOptions options,
+			Dialect dialect) {
 		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
 			if ( !schemaFilter.includeNamespace( namespace )) {
 				continue;
@@ -57,7 +97,7 @@ public class SchemaValidatorImpl implements SchemaValidator {
 				final TableInformation tableInformation = databaseInformation.getTableInformation(
 						table.getQualifiedTableName()
 				);
-				validateTable( table, tableInformation, metadata );
+				validateTable( table, tableInformation, metadata, options, dialect );
 			}
 		}
 
@@ -79,7 +119,12 @@ public class SchemaValidatorImpl implements SchemaValidator {
 		}
 	}
 
-	protected void validateTable(Table table, TableInformation tableInformation, Metadata metadata) {
+	protected void validateTable(
+			Table table,
+			TableInformation tableInformation,
+			Metadata metadata,
+			ExecutionOptions options,
+			Dialect dialect) {
 		if ( tableInformation == null ) {
 			throw new SchemaManagementException(
 					String.format(
@@ -107,7 +152,7 @@ public class SchemaValidatorImpl implements SchemaValidator {
 						)
 				);
 			}
-			validateColumnType( table, column, existingColumn, metadata );
+			validateColumnType( table, column, existingColumn, metadata, options, dialect );
 		}
 	}
 
@@ -115,7 +160,9 @@ public class SchemaValidatorImpl implements SchemaValidator {
 			Table table,
 			Column column,
 			ColumnInformation columnInformation,
-			Metadata metadata) {
+			Metadata metadata,
+			ExecutionOptions options,
+			Dialect dialect) {
 		boolean typesMatch = column.getSqlTypeCode( metadata ) == columnInformation.getTypeCode()
 				|| column.getSqlType( dialect, metadata ).toLowerCase(Locale.ROOT).startsWith( columnInformation.getTypeName().toLowerCase(Locale.ROOT) );
 		if ( !typesMatch ) {

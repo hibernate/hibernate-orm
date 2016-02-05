@@ -7,12 +7,10 @@
 package org.hibernate.tool.hbm2ddl;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.hibernate.HibernateException;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
@@ -23,8 +21,13 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.tool.schema.Action;
+import org.hibernate.tool.schema.spi.DelayedDropRegistryNotAvailableImpl;
+import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
@@ -53,7 +56,6 @@ import org.apache.tools.ant.types.FileSet;
  * &lt;/schemaexport&gt;
  * </pre>
  *
- * @see SchemaExport
  * @author Rong C Ou
  */
 public class SchemaExportTask extends MatchingTask {
@@ -181,20 +183,94 @@ public class SchemaExportTask extends MatchingTask {
 	@Override
 	public void execute() throws BuildException {
 		try {
-			buildSchemaExport().execute( !quiet, !text, drop, create );
+			doExecution();
 		}
-		catch (HibernateException e) {
-			throw new BuildException("Schema text failed: " + e.getMessage(), e);
-		}
-		catch (FileNotFoundException e) {
-			throw new BuildException("File not found: " + e.getMessage(), e);
-		}
-		catch (IOException e) {
-			throw new BuildException("IOException : " + e.getMessage(), e);
+		catch (BuildException e) {
+			throw e;
 		}
 		catch (Exception e) {
-			throw new BuildException(e);
+			throw new BuildException( "Error performing export : " + e.getMessage(), e );
 		}
+	}
+
+	private void doExecution() throws Exception {
+		final BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
+		final StandardServiceRegistryBuilder ssrBuilder = new StandardServiceRegistryBuilder( bsr );
+
+		final MetadataSources metadataSources = new MetadataSources( bsr );
+
+		if ( configurationFile != null ) {
+			ssrBuilder.configure( configurationFile );
+		}
+		if ( propertiesFile != null ) {
+			ssrBuilder.loadProperties( propertiesFile );
+		}
+		ssrBuilder.applySettings( getProject().getProperties() );
+
+		for ( String fileName : getFiles() ) {
+			if ( fileName.endsWith(".jar") ) {
+				metadataSources.addJar( new File( fileName ) );
+			}
+			else {
+				metadataSources.addFile( fileName );
+			}
+		}
+
+		ssrBuilder.applySetting( AvailableSettings.HBM2DDL_DELIMITER, delimiter );
+
+		ExportType exportType = ExportType.interpret( drop, create );
+		Target output = Target.interpret( !quiet, !text );
+
+		if ( output.doScript() ) {
+			ssrBuilder.applySetting( AvailableSettings.HBM2DDL_SCRIPTS_ACTION, exportType.getAction() );
+
+			final Object scriptTarget;
+			if ( outputFile == null ) {
+				scriptTarget = new OutputStreamWriter( System.out );
+			}
+			else {
+				scriptTarget = outputFile;
+			}
+
+			if ( exportType.doCreate() ) {
+				ssrBuilder.applySetting( AvailableSettings.HBM2DDL_SCRIPTS_CREATE_TARGET, scriptTarget );
+			}
+			if ( exportType.doDrop() ) {
+				ssrBuilder.applySetting( AvailableSettings.HBM2DDL_SCRIPTS_DROP_TARGET, scriptTarget );
+			}
+		}
+
+		if ( output.doExport() ) {
+			ssrBuilder.applySetting( AvailableSettings.HBM2DDL_DATABASE_ACTION, exportType.getAction() );
+		}
+
+
+		final StandardServiceRegistryImpl ssr = (StandardServiceRegistryImpl) ssrBuilder.build();
+
+
+		final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder( ssr );
+
+		ClassLoaderService classLoaderService = bsr.getService( ClassLoaderService.class );
+		if ( implicitNamingStrategy != null ) {
+			metadataBuilder.applyImplicitNamingStrategy(
+					(ImplicitNamingStrategy) classLoaderService.classForName( implicitNamingStrategy ).newInstance()
+			);
+		}
+		if ( physicalNamingStrategy != null ) {
+			metadataBuilder.applyPhysicalNamingStrategy(
+					(PhysicalNamingStrategy) classLoaderService.classForName( physicalNamingStrategy ).newInstance()
+			);
+		}
+
+		final MetadataImplementor metadata = (MetadataImplementor) metadataBuilder.build();
+		metadata.validate();
+
+		SchemaManagementToolCoordinator.process(
+				metadata,
+				ssr,
+				ssr.getService( ConfigurationService.class ).getSettings(),
+				DelayedDropRegistryNotAvailableImpl.INSTANCE
+		);
 	}
 
 	private String[] getFiles() {
@@ -215,49 +291,41 @@ public class SchemaExportTask extends MatchingTask {
 		return ArrayHelper.toStringArray(files);
 	}
 
-	private SchemaExport buildSchemaExport() throws Exception {
-		final BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
+	public enum ExportType {
+		CREATE( Action.CREATE_ONLY ),
+		DROP( Action.DROP ),
+		NONE( Action.NONE ),
+		BOTH( Action.CREATE );
 
-		final MetadataSources metadataSources = new MetadataSources( bsr );
-		final StandardServiceRegistryBuilder ssrBuilder = new StandardServiceRegistryBuilder( bsr );
+		private final Action action;
 
-		if ( configurationFile != null ) {
-			ssrBuilder.configure( configurationFile );
+		ExportType(Action action) {
+			this.action = action;
 		}
-		if ( propertiesFile != null ) {
-			ssrBuilder.loadProperties( propertiesFile );
-		}
-		ssrBuilder.applySettings( getProject().getProperties() );
 
-		for ( String fileName : getFiles() ) {
-			if ( fileName.endsWith(".jar") ) {
-				metadataSources.addJar( new File( fileName ) );
+		public boolean doCreate() {
+			return this == BOTH || this == CREATE;
+		}
+
+		public boolean doDrop() {
+			return this == BOTH || this == DROP;
+		}
+
+		public Action getAction() {
+			return action;
+		}
+
+		public static ExportType interpret(boolean justDrop, boolean justCreate) {
+			if ( justDrop ) {
+				return ExportType.DROP;
+			}
+			else if ( justCreate ) {
+				return ExportType.CREATE;
 			}
 			else {
-				metadataSources.addFile( fileName );
+				return ExportType.BOTH;
 			}
 		}
-
-
-		final StandardServiceRegistryImpl ssr = (StandardServiceRegistryImpl) ssrBuilder.build();
-		final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder( ssr );
-
-		ClassLoaderService classLoaderService = bsr.getService( ClassLoaderService.class );
-		if ( implicitNamingStrategy != null ) {
-			metadataBuilder.applyImplicitNamingStrategy(
-					(ImplicitNamingStrategy) classLoaderService.classForName( implicitNamingStrategy ).newInstance()
-			);
-		}
-		if ( physicalNamingStrategy != null ) {
-			metadataBuilder.applyPhysicalNamingStrategy(
-					(PhysicalNamingStrategy) classLoaderService.classForName( physicalNamingStrategy ).newInstance()
-			);
-		}
-
-		return new SchemaExport( (MetadataImplementor) metadataBuilder.build() )
-				.setHaltOnError( haltOnError )
-				.setOutputFile( outputFile.getPath() )
-				.setDelimiter( delimiter );
 	}
 
 }

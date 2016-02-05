@@ -6,24 +6,21 @@
  */
 package org.hibernate.tool.schema.spi;
 
+import org.hibernate.Incubating;
 import org.hibernate.boot.Metadata;
-import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 
 /**
  * Service delegate for handling schema validations
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface SchemaValidator {
 	/**
-	 * Handle schema validation requests
+	 * Perform the validation of the schema described by Metadata
 	 *
-	 * @param metadata The "compiled" mapping metadata.
-	 * @param databaseInformation Access to the existing database information.
-	 *
-	 * @throws SchemaManagementException
+	 * @param metadata Represents the schema to be validated
+	 * @param options Options for executing the validation
 	 */
-	public void doValidation(
-			Metadata metadata,
-			DatabaseInformation databaseInformation) throws SchemaManagementException;
+	void doValidation(Metadata metadata, ExecutionOptions options);
 }

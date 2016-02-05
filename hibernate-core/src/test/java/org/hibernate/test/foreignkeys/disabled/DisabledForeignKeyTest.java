@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.foreignkeys.disabled;
 
+import java.util.EnumSet;
 import java.util.Map;
 
 import org.hibernate.boot.MetadataSources;
@@ -17,6 +18,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Table.ForeignKeyKey;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
+import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -44,7 +46,11 @@ public class DisabledForeignKeyTest extends BaseUnitTestCase {
 			final MetadataImplementor metadata = (MetadataImplementor) sources.buildMetadata();
 			metadata.validate();
 
-			new SchemaExport( metadata ).execute( true, false, false, true );
+			new SchemaExport().execute(
+					EnumSet.of( TargetType.STDOUT ),
+					SchemaExport.Action.CREATE,
+					metadata
+			);
 
 			int fkCount = 0;
 			for ( Table table : metadata.collectTableMappings() ) {
@@ -81,15 +87,23 @@ public class DisabledForeignKeyTest extends BaseUnitTestCase {
 			metadata.validate();
 
 			// export the schema
-			new SchemaExport( metadata ).execute( false, true, false, false );
+			new SchemaExport().execute(
+					EnumSet.of( TargetType.DATABASE ),
+					SchemaExport.Action.BOTH,
+					metadata
+			);
 
 			try {
 				// update the schema
-				new SchemaUpdate( metadata ).execute( false, true );
+				new SchemaUpdate().execute( EnumSet.of( TargetType.DATABASE ), metadata );
 			}
 			finally {
 				// drop the schema
-				new SchemaExport( metadata ).execute( false, true, false, false );
+				new SchemaExport().execute(
+						EnumSet.of( TargetType.DATABASE ),
+						SchemaExport.Action.DROP,
+						metadata
+				);
 			}
 		}
 		finally {

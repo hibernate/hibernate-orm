@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.util.EnumSet;
 import java.util.List;
 
 import org.hibernate.boot.MetadataSources;
@@ -17,13 +18,14 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.tool.hbm2ddl.TargetTypeHelper;
+import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -146,11 +148,11 @@ public class ForeignKeyGenerationTest extends BaseUnitTestCase {
 		}
 		metadata = (MetadataImplementor) metadataSources.buildMetadata();
 		metadata.validate();
-		final SchemaExport schemaExport = new SchemaExport( metadata )
+		new SchemaExport()
 				.setHaltOnError( true )
 				.setOutputFile( output.getAbsolutePath() )
-				.setFormat( false );
-		schemaExport.create( true, false );
+				.setFormat( false )
+				.create( EnumSet.of( TargetType.SCRIPT ), metadata );
 	}
 
 	private void checkAlterTableStatement(AlterTableStatement alterTableStatement)

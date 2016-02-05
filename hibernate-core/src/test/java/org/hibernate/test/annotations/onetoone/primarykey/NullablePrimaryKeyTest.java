@@ -8,7 +8,6 @@
 //$Id: A320.java 14736 2008-06-04 14:23:42Z hardy.ferentschik $
 package org.hibernate.test.annotations.onetoone.primarykey;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,11 +17,8 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tool.schema.spi.SchemaCreator;
-import org.hibernate.tool.schema.spi.SchemaManagementTool;
-import org.hibernate.tool.schema.spi.Target;
+import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.junit.Assert;
@@ -38,7 +34,9 @@ import org.jboss.logging.Logger;
  */
 public class NullablePrimaryKeyTest {
 	private static final Logger log = Logger.getLogger( NullablePrimaryKeyTest.class );
-    @Test
+
+	@Test
+	@SuppressWarnings("unchecked")
 	public void testGeneratedSql() {
 
 		Map settings = new HashMap();
@@ -53,36 +51,7 @@ public class NullablePrimaryKeyTest {
 			ms.addAnnotatedClass(Person.class);
 
 			final Metadata metadata = ms.buildMetadata();
-
-			final SchemaCreator schemaCreator = serviceRegistry.getService( SchemaManagementTool.class )
-					.getSchemaCreator( serviceRegistry.getService( ConfigurationService.class ).getSettings() );
-
-			final List<String> commands = new ArrayList<String>();
-
-			schemaCreator.doCreation(
-					metadata,
-					false,
-					new Target() {
-						@Override
-						public boolean acceptsImportScriptActions() {
-							return false;
-						}
-
-						@Override
-						public void prepare() {
-						}
-
-						@Override
-						public void accept(String action) {
-							commands.add( action );
-						}
-
-						@Override
-						public void release() {
-						}
-					}
-			);
-
+			final List<String> commands = new SchemaCreatorImpl( serviceRegistry ).generateCreationCommands( metadata, false );
 			for (String s : commands) {
                 log.debug( s );
 			}

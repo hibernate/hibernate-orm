@@ -8,11 +8,13 @@ package org.hibernate.tool.hbm2ddl;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
@@ -24,17 +26,14 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tool.schema.extract.internal.DatabaseInformationImpl;
-import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
+import org.hibernate.tool.schema.internal.ExceptionHandlerHaltImpl;
+import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
-
-import org.jboss.logging.Logger;
+import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 
 /**
  * A commandline tool to update a database schema. May also be called from
@@ -43,56 +42,27 @@ import org.jboss.logging.Logger;
  * @author Christoph Sturm
  */
 public class SchemaValidator {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			SchemaValidator.class.getName()
-	);
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SchemaValidator.class );
 
-	private final ServiceRegistry serviceRegistry;
-	private final MetadataImplementor metadata;
-	private final JdbcConnectionAccess jdbcConnectionAccess;
-
-	public SchemaValidator(MetadataImplementor metadata) {
-		this( metadata.getMetadataBuildingOptions().getServiceRegistry(), metadata );
+	public void validate(Metadata metadata) {
+		validate( metadata, ( (MetadataImplementor) metadata ).getMetadataBuildingOptions().getServiceRegistry() );
 	}
 
-	public SchemaValidator(ServiceRegistry serviceRegistry, MetadataImplementor metadata) {
-		this.serviceRegistry = serviceRegistry;
-		this.metadata = metadata;
-		this.jdbcConnectionAccess = serviceRegistry.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess();
-	}
-
-	/**
-	 * Perform the validations.
-	 */
-	public void validate() {
+	@SuppressWarnings("unchecked")
+	public void validate(Metadata metadata, ServiceRegistry serviceRegistry) {
 		LOG.runningSchemaValidator();
 
-		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
-		final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
-		final DatabaseInformation databaseInformation;
-		try {
-			databaseInformation = new DatabaseInformationImpl(
-					serviceRegistry,
-					serviceRegistry.getService( JdbcEnvironment.class ),
-					jdbcConnectionAccess,
-					metadata.getDatabase().getDefaultNamespace().getPhysicalName().getCatalog(),
-					metadata.getDatabase().getDefaultNamespace().getPhysicalName().getSchema()
-			);
-		}
-		catch (SQLException e) {
-			throw jdbcServices.getSqlExceptionHelper().convert(
-					e,
-					"Error creating DatabaseInformation for schema validation"
-			);
-		}
-		try {
-			serviceRegistry.getService( SchemaManagementTool.class ).getSchemaValidator( cfgService.getSettings() )
-					.doValidation( metadata, databaseInformation );
-		}
-		finally {
-			databaseInformation.cleanup();
-		}
+		Map config = new HashMap();
+		config.putAll( serviceRegistry.getService( ConfigurationService.class ).getSettings() );
+
+		final SchemaManagementTool tool = serviceRegistry.getService( SchemaManagementTool.class );
+
+		final ExecutionOptions executionOptions = SchemaManagementToolCoordinator.buildExecutionOptions(
+				config,
+				ExceptionHandlerHaltImpl.INSTANCE
+		);
+
+		tool.getSchemaValidator( config ).doValidation( metadata, executionOptions );
 	}
 
 	public static void main(String[] args) {
@@ -102,7 +72,7 @@ public class SchemaValidator {
 
 			try {
 				final MetadataImplementor metadata = buildMetadata( parsedArgs, serviceRegistry );
-				new SchemaValidator( serviceRegistry, metadata ).validate();
+				new SchemaValidator().validate( metadata, serviceRegistry );
 			}
 			finally {
 				StandardServiceRegistryBuilder.destroy( serviceRegistry );

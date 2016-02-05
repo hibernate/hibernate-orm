@@ -19,8 +19,6 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.internal.DefaultSchemaFilter;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
-import org.hibernate.tool.schema.spi.SchemaCreator;
-import org.hibernate.tool.schema.spi.SchemaDropper;
 import org.hibernate.tool.schema.spi.SchemaFilter;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
@@ -31,6 +29,11 @@ import org.junit.Test;
 
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
+
+import static org.hibernate.test.schemafilter.RecordingTarget.Category.SCHEMA_CREATE;
+import static org.hibernate.test.schemafilter.RecordingTarget.Category.SCHEMA_DROP;
+import static org.hibernate.test.schemafilter.RecordingTarget.Category.TABLE_CREATE;
+import static org.hibernate.test.schemafilter.RecordingTarget.Category.TABLE_DROP;
 
 @TestForIssue(jiraKey = "HHH-9876")
 @SuppressWarnings({"rawtypes", "unchecked"})
@@ -43,6 +46,7 @@ public class SchemaFilterTest extends BaseUnitTestCase {
 		Map settings = new HashMap();
 		settings.putAll( Environment.getProperties() );
 		settings.put( AvailableSettings.DIALECT, SQLServerDialect.class.getName() );
+		settings.put( AvailableSettings.FORMAT_SQL, false );
 
 		this.serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( settings );
 
@@ -59,8 +63,8 @@ public class SchemaFilterTest extends BaseUnitTestCase {
 	public void createSchema_unfiltered() {
 		RecordingTarget target = doCreation( new DefaultSchemaFilter() );
 
-		Assert.assertThat( target.getActions( "schema.create" ), containsExactly( "the_schema_1", "the_schema_2" ) );
-		Assert.assertThat( target.getActions( "table.create" ), containsExactly(
+		Assert.assertThat( target.getActions( SCHEMA_CREATE ), containsExactly( "the_schema_1", "the_schema_2" ) );
+		Assert.assertThat( target.getActions( TABLE_CREATE ), containsExactly(
 				"the_entity_0",
 				"the_schema_1.the_entity_1",
 				"the_schema_1.the_entity_2",
@@ -73,9 +77,9 @@ public class SchemaFilterTest extends BaseUnitTestCase {
 	public void createSchema_filtered() {
 		RecordingTarget target = doCreation( new TestSchemaFilter() );
 
-		Assert.assertThat( target.getActions( "schema.create" ), containsExactly( "the_schema_1" ) );
+		Assert.assertThat( target.getActions( SCHEMA_CREATE ), containsExactly( "the_schema_1" ) );
 		Assert.assertThat(
-				target.getActions( "table.create" ),
+				target.getActions( TABLE_CREATE ),
 				containsExactly( "the_entity_0", "the_schema_1.the_entity_1" )
 		);
 	}
@@ -84,8 +88,8 @@ public class SchemaFilterTest extends BaseUnitTestCase {
 	public void dropSchema_unfiltered() {
 		RecordingTarget target = doDrop( new DefaultSchemaFilter() );
 
-		Assert.assertThat( target.getActions( "schema.drop" ), containsExactly( "the_schema_1", "the_schema_2" ) );
-		Assert.assertThat( target.getActions( "table.drop" ), containsExactly(
+		Assert.assertThat( target.getActions( SCHEMA_DROP ), containsExactly( "the_schema_1", "the_schema_2" ) );
+		Assert.assertThat( target.getActions( TABLE_DROP ), containsExactly(
 				"the_entity_0",
 				"the_schema_1.the_entity_1",
 				"the_schema_1.the_entity_2",
@@ -98,24 +102,22 @@ public class SchemaFilterTest extends BaseUnitTestCase {
 	public void dropSchema_filtered() {
 		RecordingTarget target = doDrop( new TestSchemaFilter() );
 
-		Assert.assertThat( target.getActions( "schema.drop" ), containsExactly( "the_schema_1" ) );
+		Assert.assertThat( target.getActions( SCHEMA_DROP ), containsExactly( "the_schema_1" ) );
 		Assert.assertThat(
-				target.getActions( "table.drop" ),
+				target.getActions( TABLE_DROP ),
 				containsExactly( "the_entity_0", "the_schema_1.the_entity_1" )
 		);
 	}
 
 	private RecordingTarget doCreation(SchemaFilter filter) {
 		RecordingTarget target = new RecordingTarget();
-		SchemaCreator creator = new SchemaCreatorImpl( filter );
-		creator.doCreation( metadata, true, target );
+		new SchemaCreatorImpl( serviceRegistry, filter ).doCreation( metadata, true, target );
 		return target;
 	}
 
 	private RecordingTarget doDrop(SchemaFilter filter) {
 		RecordingTarget target = new RecordingTarget();
-		SchemaDropper dropper = new SchemaDropperImpl( filter );
-		dropper.doDrop( metadata, true, target );
+		new SchemaDropperImpl( serviceRegistry, filter ).doDrop( metadata, true, target );
 		return target;
 	}
 

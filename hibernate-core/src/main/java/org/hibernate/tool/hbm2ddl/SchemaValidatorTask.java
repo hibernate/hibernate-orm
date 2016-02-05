@@ -128,7 +128,7 @@ public class SchemaValidatorTask extends MatchingTask {
 
 				final MetadataImplementor metadata = (MetadataImplementor) metadataBuilder.build();
 
-				new SchemaValidator( ssr, metadata ).validate();
+				new SchemaValidator().validate( metadata, ssr );
 			}
 			finally {
 				StandardServiceRegistryBuilder.destroy( ssr );

@@ -7,6 +7,7 @@
 package org.hibernate.jpa;
 
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.tool.schema.Action;
 
 /**
  * Describes the allowable values of the {@value AvailableSettings#SCHEMA_GEN_DATABASE_ACTION} and
@@ -15,8 +16,11 @@ import org.hibernate.internal.util.StringHelper;
  * @see AvailableSettings#SCHEMA_GEN_DATABASE_ACTION
  * @see AvailableSettings#SCHEMA_GEN_SCRIPTS_ACTION
  *
+ * @deprecated Use {@link org.hibernate.tool.schema.Action} instead
+ *
  * @author Steve Ebersole
  */
+@Deprecated
 public enum SchemaGenAction {
 	/**
 	 * "none" - no actions will be performed (aka, generation is disabled).

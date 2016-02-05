@@ -15,8 +15,11 @@ import org.hibernate.internal.util.StringHelper;
  * @see AvailableSettings#SCHEMA_GEN_CREATE_SOURCE
  * @see AvailableSettings#SCHEMA_GEN_DROP_SOURCE
  *
+ * @deprecated Use {@link org.hibernate.tool.schema.SourceType} instead.
+ *
  * @author Steve Ebersole
  */
+@Deprecated
 public enum SchemaGenSource {
 	/**
 	 * "metadata" - The O/RM metadata is used as the exclusive source for generation

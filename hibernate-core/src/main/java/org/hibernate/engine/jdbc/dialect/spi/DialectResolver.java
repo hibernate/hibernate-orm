@@ -24,5 +24,5 @@ public interface DialectResolver extends Service {
 	 *
 	 * @return The dialect to use, or null.
 	 */
-	public Dialect resolveDialect(DialectResolutionInfo info);
+	Dialect resolveDialect(DialectResolutionInfo info);
 }

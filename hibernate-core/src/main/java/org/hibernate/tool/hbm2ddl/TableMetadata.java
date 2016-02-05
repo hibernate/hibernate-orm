@@ -23,7 +23,11 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  *
  * @author Christoph Sturm
  * @author Max Rydahl Andersen
+ *
+ * @deprecated Everything in this package has been replaced with
+ * {@link org.hibernate.tool.schema.spi.SchemaManagementTool} and friends.
  */
+@Deprecated
 public class TableMetadata {
 	private static final CoreMessageLogger LOG = messageLogger( TableMetadata.class );
 

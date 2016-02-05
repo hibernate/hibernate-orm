@@ -11,6 +11,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -188,6 +190,145 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 						"SELECT * FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
 				dialect.getLimitHandler().processSql( query, toRowSelection( 1, 3 ) )
 		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-9635")
+	public void testAppendLockHintReadPastLocking() {
+		final String expectedLockHint = "tab1 with (updlock, rowlock, readpast)";
+
+		LockOptions lockOptions = new LockOptions( LockMode.UPGRADE_SKIPLOCKED );
+		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
+
+		assertEquals( expectedLockHint, lockHint );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-9635")
+	public void testAppendLockHintReadPastLockingNoTimeOut() {
+		final String expectedLockHint = "tab1 with (updlock, rowlock, readpast, nowait)";
+
+		LockOptions lockOptions = new LockOptions( LockMode.UPGRADE_SKIPLOCKED );
+		lockOptions.setTimeOut( LockOptions.NO_WAIT );
+		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
+
+		assertEquals( expectedLockHint, lockHint );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-9635")
+	public void testAppendLockHintPessimisticRead() {
+		final String expectedLockHint = "tab1 with (holdlock, rowlock)";
+
+		LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_READ );
+		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
+
+		assertEquals( expectedLockHint, lockHint );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-9635")
+	public void testAppendLockHintPessimisticReadNoTimeOut() {
+		final String expectedLockHint = "tab1 with (holdlock, rowlock, nowait)";
+
+		LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_READ );
+		lockOptions.setTimeOut( LockOptions.NO_WAIT );
+		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
+
+		assertEquals( expectedLockHint, lockHint );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-9635")
+	public void testAppendLockHintWrite() {
+		final String expectedLockHint = "tab1 with (updlock, rowlock)";
+
+		LockOptions lockOptions = new LockOptions( LockMode.WRITE );
+		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
+
+		assertEquals( expectedLockHint, lockHint );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-9635")
+	public void testAppendLockHintWriteWithNoTimeOut() {
+		final String expectedLockHint = "tab1 with (updlock, rowlock, nowait)";
+
+		LockOptions lockOptions = new LockOptions( LockMode.WRITE );
+		lockOptions.setTimeOut( LockOptions.NO_WAIT );
+
+		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
+
+		assertEquals( expectedLockHint, lockHint );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-9635")
+	public void testAppendLockHintUpgradeNoWait() {
+		final String expectedLockHint = "tab1 with (updlock, rowlock, nowait)";
+
+		LockOptions lockOptions = new LockOptions( LockMode.UPGRADE_NOWAIT );
+		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
+
+		assertEquals( expectedLockHint, lockHint );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-9635")
+	public void testAppendLockHintUpgradeNoWaitNoTimeout() {
+		final String expectedLockHint = "tab1 with (updlock, rowlock, nowait)";
+
+		LockOptions lockOptions = new LockOptions( LockMode.UPGRADE_NOWAIT );
+		lockOptions.setTimeOut( LockOptions.NO_WAIT );
+		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
+
+		assertEquals( expectedLockHint, lockHint );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-9635")
+	public void testAppendLockHintUpgrade() {
+		final String expectedLockHint = "tab1 with (updlock, rowlock)";
+
+		LockOptions lockOptions = new LockOptions( LockMode.UPGRADE );
+		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
+
+		assertEquals( expectedLockHint, lockHint );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-9635")
+	public void testAppendLockHintUpgradeNoTimeout() {
+		final String expectedLockHint = "tab1 with (updlock, rowlock, nowait)";
+
+		LockOptions lockOptions = new LockOptions( LockMode.UPGRADE );
+		lockOptions.setTimeOut( LockOptions.NO_WAIT );
+		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
+
+		assertEquals( expectedLockHint, lockHint );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-9635")
+	public void testAppendLockHintPessimisticWrite() {
+		final String expectedLockHint = "tab1 with (updlock, rowlock)";
+
+		LockOptions lockOptions = new LockOptions( LockMode.UPGRADE );
+		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
+
+		assertEquals( expectedLockHint, lockHint );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-9635")
+	public void testAppendLockHintPessimisticWriteNoTimeOut() {
+		final String expectedLockHint = "tab1 with (updlock, rowlock, nowait)";
+
+		LockOptions lockOptions = new LockOptions( LockMode.UPGRADE );
+		lockOptions.setTimeOut( LockOptions.NO_WAIT );
+		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
+
+		assertEquals( expectedLockHint, lockHint );
 	}
 
 	private RowSelection toRowSelection(int firstRow, int maxRows) {

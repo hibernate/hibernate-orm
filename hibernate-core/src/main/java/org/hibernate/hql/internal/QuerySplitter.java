@@ -90,6 +90,18 @@ public final class QuerySplitter {
 				templateQuery.append( token );
 				continue;
 			}
+			else if ( isTokenStartWithAQuoteCharacter( token ) ) {
+				if ( !isTokenEndWithAQuoteCharacter( token ) ) {
+					inQuote = true;
+				}
+				templateQuery.append( token );
+				continue;
+			}
+			else if ( isTokenEndWithAQuoteCharacter( token ) ) {
+				inQuote = false;
+				templateQuery.append( token );
+				continue;
+			}
 			else if ( inQuote ) {
 				templateQuery.append( token );
 				continue;
@@ -129,6 +141,14 @@ public final class QuerySplitter {
 
 	private static boolean isQuoteCharacter(String token) {
 		return "'".equals( token ) || "\"".equals( token );
+	}
+
+	private static boolean isTokenStartWithAQuoteCharacter(String token) {
+		return token.startsWith( "'" ) || token.startsWith( "\"" );
+	}
+
+	private static boolean isTokenEndWithAQuoteCharacter(String token) {
+		return token.endsWith( "'" ) || token.endsWith( "\"" );
 	}
 
 	private static String nextNonWhite(String[] tokens, int start) {

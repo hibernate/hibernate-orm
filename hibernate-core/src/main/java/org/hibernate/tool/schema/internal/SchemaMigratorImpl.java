@@ -8,7 +8,6 @@ package org.hibernate.tool.schema.internal;
 
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 import org.hibernate.boot.Metadata;
@@ -19,11 +18,11 @@ import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.internal.FormatStyle;
+import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.ForeignKey;
@@ -31,62 +30,136 @@ import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.tool.hbm2ddl.UniqueConstraintSchemaUpdateStrategy;
+import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.ForeignKeyInformation;
 import org.hibernate.tool.schema.extract.spi.IndexInformation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
+import org.hibernate.tool.schema.internal.exec.GenerationTarget;
+import org.hibernate.tool.schema.internal.exec.JdbcConnectionContextSharedImpl;
+import org.hibernate.tool.schema.internal.exec.JdbcContext;
+import org.hibernate.tool.schema.spi.CommandAcceptanceException;
+import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.SchemaMigrator;
-import org.hibernate.tool.schema.spi.Target;
+import org.hibernate.tool.schema.spi.TargetDescriptor;
+
+import org.jboss.logging.Logger;
+
+import static org.hibernate.cfg.AvailableSettings.UNIQUE_CONSTRAINT_SCHEMA_UPDATE_STRATEGY;
 
 
 /**
  * @author Steve Ebersole
  */
 public class SchemaMigratorImpl implements SchemaMigrator {
-	
-	private final SchemaFilter filter;
+	private static final Logger log = Logger.getLogger( SchemaMigratorImpl.class );
 
-	public SchemaMigratorImpl( SchemaFilter filter ) {
-		this.filter = filter;
+	private final HibernateSchemaManagementTool tool;
+	private final SchemaFilter schemaFilter;
+
+	private UniqueConstraintSchemaUpdateStrategy uniqueConstraintStrategy;
+
+	public SchemaMigratorImpl(HibernateSchemaManagementTool tool) {
+		this( tool, DefaultSchemaFilter.INSTANCE );
 	}
-	
-	public SchemaMigratorImpl() {
-		this( DefaultSchemaFilter.INSTANCE );
+
+	public SchemaMigratorImpl(HibernateSchemaManagementTool tool, SchemaFilter schemaFilter) {
+		this.tool = tool;
+		this.schemaFilter = schemaFilter;
+	}
+
+	/**
+	 * For testing...
+	 */
+	public void setUniqueConstraintStrategy(UniqueConstraintSchemaUpdateStrategy uniqueConstraintStrategy) {
+		this.uniqueConstraintStrategy = uniqueConstraintStrategy;
 	}
 
 	@Override
-	public void doMigration(
-			Metadata metadata,
-			DatabaseInformation existingDatabase,
-			boolean createNamespaces,
-			List<Target> targets) throws SchemaManagementException {
-
-		for ( Target target : targets ) {
-			target.prepare();
+	public void doMigration(Metadata metadata, ExecutionOptions options, TargetDescriptor targetDescriptor) {
+		if ( targetDescriptor.getTargetTypes().isEmpty() ) {
+			return;
 		}
 
-		doMigrationToTargets( metadata, existingDatabase, createNamespaces, targets );
+		final JdbcContext jdbcContext = tool.resolveJdbcContext( options.getConfigurationValues() );
 
-		for ( Target target : targets ) {
-			target.release();
+		final JdbcConnectionContextSharedImpl connectionContext = new JdbcConnectionContextSharedImpl(
+				jdbcContext.getJdbcConnectionAccess(),
+				jdbcContext.getSqlStatementLogger(),
+				targetDescriptor.getTargetTypes().contains( TargetType.DATABASE )
+		);
+
+		try {
+			final DatabaseInformation databaseInformation = Helper.buildDatabaseInformation(
+					tool.getServiceRegistry(),
+					connectionContext,
+					metadata.getDatabase().getDefaultNamespace().getName()
+			);
+
+			final GenerationTarget[] targets = tool.buildGenerationTargets(
+					targetDescriptor,
+					connectionContext,
+					options.getConfigurationValues()
+			);
+
+			try {
+				doMigration( metadata, databaseInformation, options, jdbcContext.getDialect(), targets );
+			}
+			finally {
+				try {
+					databaseInformation.cleanup();
+				}
+				catch (Exception e) {
+					log.debug( "Problem releasing DatabaseInformation : " + e.getMessage() );
+				}
+			}
+		}
+		finally {
+			connectionContext.reallyRelease();
 		}
 	}
 
-
-	protected void doMigrationToTargets(
+	public void doMigration(
 			Metadata metadata,
 			DatabaseInformation existingDatabase,
-			boolean createNamespaces,
-			List<Target> targets) {
+			ExecutionOptions options,
+			Dialect dialect,
+			GenerationTarget... targets) {
+		for ( GenerationTarget target : targets ) {
+			target.prepare();
+		}
+
+		try {
+			performMigration( metadata, existingDatabase, options, dialect, targets );
+		}
+		finally {
+			for ( GenerationTarget target : targets ) {
+				try {
+					target.release();
+				}
+				catch (Exception e) {
+					log.debugf( "Problem releasing GenerationTarget [%s] : %s", target, e.getMessage() );
+				}
+			}
+		}
+	}
+
+	private void performMigration(
+			Metadata metadata,
+			DatabaseInformation existingDatabase,
+			ExecutionOptions options,
+			Dialect dialect,
+			GenerationTarget... targets) {
+		final boolean format = Helper.interpretFormattingEnabled( options.getConfigurationValues() );
+		final Formatter formatter = format ? FormatStyle.DDL.getFormatter() : FormatStyle.NONE.getFormatter();
+
 		final Set<String> exportIdentifiers = new HashSet<String>( 50 );
 
 		final Database database = metadata.getDatabase();
-		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
-		final Dialect dialect = jdbcEnvironment.getDialect();
 
 		// Drop all AuxiliaryDatabaseObjects
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
@@ -95,9 +168,11 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 			}
 
 			applySqlStrings(
+					true,
 					dialect.getAuxiliaryDatabaseObjectExporter().getSqlDropStrings( auxiliaryDatabaseObject, metadata ),
-					targets,
-					true
+					formatter,
+					options,
+					targets
 			);
 		}
 
@@ -111,27 +186,28 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 			}
 
 			applySqlStrings(
-					auxiliaryDatabaseObject.sqlCreateStrings( jdbcEnvironment.getDialect() ),
-					targets,
-					true
+					true,
+					auxiliaryDatabaseObject.sqlCreateStrings( dialect ),
+					formatter,
+					options,
+					targets
 			);
 		}
 
 		boolean tryToCreateCatalogs = false;
 		boolean tryToCreateSchemas = false;
-
-		if ( createNamespaces ) {
-			if ( database.getJdbcEnvironment().getDialect().canCreateSchema() ) {
+		if ( options.shouldManageNamespaces() ) {
+			if ( dialect.canCreateSchema() ) {
 				tryToCreateSchemas = true;
 			}
-			if ( database.getJdbcEnvironment().getDialect().canCreateCatalog() ) {
+			if ( dialect.canCreateCatalog() ) {
 				tryToCreateCatalogs = true;
 			}
 		}
 
 		Set<Identifier> exportedCatalogs = new HashSet<Identifier>();
 		for ( Namespace namespace : database.getNamespaces() ) {
-			if ( !filter.includeNamespace( namespace ) ) {
+			if ( !schemaFilter.includeNamespace( namespace ) ) {
 				continue;
 			}
 			if ( tryToCreateCatalogs || tryToCreateSchemas ) {
@@ -139,16 +215,14 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 					final Identifier catalogLogicalName = namespace.getName().getCatalog();
 					final Identifier catalogPhysicalName = namespace.getPhysicalName().getCatalog();
 
-					if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName ) && !existingDatabase
-							.catalogExists( catalogLogicalName ) ) {
+					if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName )
+							&& !existingDatabase.catalogExists( catalogLogicalName ) ) {
 						applySqlStrings(
-								database.getJdbcEnvironment().getDialect().getCreateCatalogCommand(
-										catalogPhysicalName.render(
-												database.getJdbcEnvironment().getDialect()
-										)
-								),
-								targets,
-								false
+								false,
+								dialect.getCreateCatalogCommand( catalogPhysicalName.render( dialect ) ),
+								formatter,
+								options,
+								targets
 						);
 						exportedCatalogs.add( catalogLogicalName );
 					}
@@ -158,13 +232,11 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 						&& namespace.getPhysicalName().getSchema() != null
 						&& !existingDatabase.schemaExists( namespace.getName() ) ) {
 					applySqlStrings(
-							database.getJdbcEnvironment().getDialect().getCreateSchemaCommand(
-									namespace.getPhysicalName()
-											.getSchema()
-											.render( database.getJdbcEnvironment().getDialect() )
-							),
-							targets,
-							false
+							false,
+							dialect.getCreateSchemaCommand( namespace.getPhysicalName().getSchema().render( dialect ) ),
+							formatter,
+							options,
+							targets
 					);
 				}
 			}
@@ -173,7 +245,7 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 				if ( !table.isPhysicalTable() ) {
 					continue;
 				}
-				if ( !filter.includeTable( table ) ) {
+				if ( !schemaFilter.includeTable( table ) ) {
 					continue;
 				}
 				checkExportIdentifier( table, exportIdentifiers );
@@ -182,10 +254,10 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 					continue;
 				}
 				if ( tableInformation == null ) {
-					createTable( table, metadata, targets );
+					createTable( table, dialect, metadata, formatter, options, targets );
 				}
 				else {
-					migrateTable( table, tableInformation, targets, metadata );
+					migrateTable( table, tableInformation, dialect, metadata, formatter, options, targets );
 				}
 			}
 
@@ -193,7 +265,7 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 				if ( !table.isPhysicalTable() ) {
 					continue;
 				}
-				if ( !filter.includeTable( table ) ) {
+				if ( !schemaFilter.includeTable( table ) ) {
 					continue;
 				}
 
@@ -202,8 +274,8 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 					continue;
 				}
 
-				applyIndexes( table, tableInformation, metadata, targets );
-				applyUniqueKeys( table, tableInformation, metadata, targets );
+				applyIndexes( table, tableInformation, dialect, metadata, formatter, options, targets );
+				applyUniqueKeys( table, tableInformation, dialect, metadata, formatter, options, targets );
 			}
 
 			for ( Sequence sequence : namespace.getSequences() ) {
@@ -215,12 +287,14 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 				}
 
 				applySqlStrings(
-						database.getJdbcEnvironment().getDialect().getSequenceExporter().getSqlCreateStrings(
+						false,
+						dialect.getSequenceExporter().getSqlCreateStrings(
 								sequence,
 								metadata
 						),
-						targets,
-						false
+						formatter,
+						options,
+						targets
 				);
 			}
 		}
@@ -232,7 +306,7 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 				if ( tableInformation != null && !tableInformation.isPhysicalTable() ) {
 					continue;
 				}
-				applyForeignKeys( table, tableInformation, metadata, targets );
+				applyForeignKeys( table, tableInformation, dialect, metadata, formatter, options, targets );
 			}
 		}
 
@@ -246,46 +320,66 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 			}
 
 			applySqlStrings(
-					auxiliaryDatabaseObject.sqlCreateStrings( jdbcEnvironment.getDialect() ),
-					targets,
-					true
+					true,
+					auxiliaryDatabaseObject.sqlCreateStrings( dialect ),
+					formatter,
+					options,
+					targets
 			);
 		}
 	}
 
-	private void createTable(Table table, Metadata metadata, List<Target> targets) {
+	private void createTable(
+			Table table,
+			Dialect dialect,
+			Metadata metadata,
+			Formatter formatter,
+			ExecutionOptions options,
+			GenerationTarget... targets) {
 		applySqlStrings(
-				metadata.getDatabase().getDialect().getTableExporter().getSqlCreateStrings( table, metadata ),
-				targets,
-				false
+				false,
+				dialect.getTableExporter().getSqlCreateStrings( table, metadata ),
+				formatter,
+				options,
+				targets
 		);
 	}
 
 	private void migrateTable(
 			Table table,
 			TableInformation tableInformation,
-			List<Target> targets,
-			Metadata metadata) {
+			Dialect dialect,
+			Metadata metadata,
+			Formatter formatter,
+			ExecutionOptions options,
+			GenerationTarget... targets) {
 		final Database database = metadata.getDatabase();
-		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
-		final Dialect dialect = jdbcEnvironment.getDialect();
 
 		//noinspection unchecked
 		applySqlStrings(
+				false,
 				table.sqlAlterStrings(
 						dialect,
 						metadata,
 						tableInformation,
-						getDefaultCatalogName( database ),
-						getDefaultSchemaName( database )
+						getDefaultCatalogName( database, dialect ),
+						getDefaultSchemaName( database, dialect )
 				),
-				targets,
-				false
+				formatter,
+				options,
+				targets
 		);
 	}
 
-	private void applyIndexes(Table table, TableInformation tableInformation, Metadata metadata, List<Target> targets) {
-		final Exporter<Index> exporter = metadata.getDatabase().getJdbcEnvironment().getDialect().getIndexExporter();
+	private void applyIndexes(
+			Table table,
+			TableInformation tableInformation,
+			Dialect dialect,
+			Metadata metadata,
+			Formatter formatter,
+			ExecutionOptions options,
+			GenerationTarget... targets) {
+		final Exporter<Index> exporter = dialect.getIndexExporter();
 
 		final Iterator<Index> indexItr = table.getIndexIterator();
 		while ( indexItr.hasNext() ) {
@@ -302,9 +396,11 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 			}
 
 			applySqlStrings(
+					false,
 					exporter.getSqlCreateStrings( index, metadata ),
-					targets,
-					false
+					formatter,
+					options,
+					targets
 			);
 		}
 	}
@@ -313,9 +409,14 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 		return tableInformation.getIndex( Identifier.toIdentifier( index.getName() ) );
 	}
 
-	private UniqueConstraintSchemaUpdateStrategy uniqueConstraintStrategy;
-
-	private void applyUniqueKeys(Table table, TableInformation tableInfo, Metadata metadata, List<Target> targets) {
+	private void applyUniqueKeys(
+			Table table,
+			TableInformation tableInfo,
+			Dialect dialect,
+			Metadata metadata,
+			Formatter formatter,
+			ExecutionOptions options,
+			GenerationTarget... targets) {
 		if ( uniqueConstraintStrategy == null ) {
 			uniqueConstraintStrategy = determineUniqueConstraintSchemaUpdateStrategy( metadata );
 		}
@@ -324,7 +425,6 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 			return;
 		}
 
-		final Dialect dialect = metadata.getDatabase().getJdbcEnvironment().getDialect();
 		final Exporter<Constraint> exporter = dialect.getUniqueKeyExporter();
 
 		final Iterator ukItr = table.getUniqueKeyIterator();
@@ -342,16 +442,20 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 
 			if ( uniqueConstraintStrategy == UniqueConstraintSchemaUpdateStrategy.DROP_RECREATE_QUIETLY ) {
 				applySqlStrings(
+						true,
 						exporter.getSqlDropStrings( uniqueKey, metadata ),
-						targets,
-						true
+						formatter,
+						options,
+						targets
 				);
 			}
 
 			applySqlStrings(
+					true,
 					exporter.getSqlCreateStrings( uniqueKey, metadata ),
-					targets,
-					true
+					formatter,
+					options,
+					targets
 			);
 		}
 	}
@@ -362,19 +466,18 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 				.getService( ConfigurationService.class );
 
 		return UniqueConstraintSchemaUpdateStrategy.interpret(
-				cfgService.getSetting(
-						AvailableSettings.UNIQUE_CONSTRAINT_SCHEMA_UPDATE_STRATEGY,
-						StandardConverters.STRING
-				)
+				cfgService.getSetting( UNIQUE_CONSTRAINT_SCHEMA_UPDATE_STRATEGY, StandardConverters.STRING )
 		);
 	}
 
 	private void applyForeignKeys(
 			Table table,
 			TableInformation tableInformation,
+			Dialect dialect,
 			Metadata metadata,
-			List<Target> targets) {
-		final Dialect dialect = metadata.getDatabase().getJdbcEnvironment().getDialect();
+			Formatter formatter,
+			ExecutionOptions options,
+			GenerationTarget... targets) {
 		if ( !dialect.hasAlterTable() ) {
 			return;
 		}
@@ -405,9 +508,11 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 
 			// in old SchemaUpdate code, this was the trigger to "create"
 			applySqlStrings(
+					false,
 					exporter.getSqlCreateStrings( foreignKey, metadata ),
-					targets,
-					false
+					formatter,
+					options,
+					targets
 			);
 		}
 	}
@@ -432,52 +537,67 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 		exportIdentifiers.add( exportIdentifier );
 	}
 
-	private static void applySqlStrings(String[] sqlStrings, List<Target> targets, boolean quiet) {
+	private static void applySqlStrings(
+			boolean quiet,
+			String[] sqlStrings,
+			Formatter formatter,
+			ExecutionOptions options,
+			GenerationTarget... targets) {
 		if ( sqlStrings == null ) {
 			return;
 		}
 
 		for ( String sqlString : sqlStrings ) {
-			applySqlString( sqlString, targets, quiet );
+			applySqlString( quiet, sqlString, formatter, options, targets );
 		}
 	}
 
-	private static void applySqlString(String sqlString, List<Target> targets, boolean quiet) {
-		if ( sqlString == null ) {
+	private static void applySqlString(
+			boolean quiet,
+			String sqlString,
+			Formatter formatter,
+			ExecutionOptions options,
+			GenerationTarget... targets) {
+		if ( StringHelper.isEmpty( sqlString ) ) {
 			return;
 		}
 
-		for ( Target target : targets ) {
+		for ( GenerationTarget target : targets ) {
 			try {
-				target.accept( sqlString );
+				target.accept( formatter.format( sqlString ) );
 			}
-			catch (SchemaManagementException e) {
+			catch (CommandAcceptanceException e) {
 				if ( !quiet ) {
-					throw e;
+					options.getExceptionHandler().handleException( e );
 				}
 				// otherwise ignore the exception
 			}
 		}
 	}
 
-	private static void applySqlStrings(Iterator<String> sqlStrings, List<Target> targets, boolean quiet) {
+	private static void applySqlStrings(
+			boolean quiet,
+			Iterator<String> sqlStrings,
+			Formatter formatter,
+			ExecutionOptions options,
+			GenerationTarget... targets) {
 		if ( sqlStrings == null ) {
 			return;
 		}
 
 		while ( sqlStrings.hasNext() ) {
 			final String sqlString = sqlStrings.next();
-			applySqlString( sqlString, targets, quiet );
+			applySqlString( quiet, sqlString, formatter, options, targets );
 		}
 	}
 
-	private String getDefaultCatalogName(Database database) {
+	private String getDefaultCatalogName(Database database, Dialect dialect) {
 		final Identifier identifier = database.getDefaultNamespace().getPhysicalName().getCatalog();
-		return identifier == null ? null : identifier.render( database.getJdbcEnvironment().getDialect() );
+		return identifier == null ? null : identifier.render( dialect );
 	}
 
-	private String getDefaultSchemaName(Database database) {
+	private String getDefaultSchemaName(Database database, Dialect dialect) {
 		final Identifier identifier = database.getDefaultNamespace().getPhysicalName().getSchema();
-		return identifier == null ? null : identifier.render( database.getJdbcEnvironment().getDialect() );
+		return identifier == null ? null : identifier.render( dialect );
 	}
 }

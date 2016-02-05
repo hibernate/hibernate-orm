@@ -12,24 +12,24 @@ import org.hibernate.boot.model.relational.Exportable;
 
 /**
  * Defines a contract for exporting of database objects (tables, sequences, etc) for use in SQL {@code CREATE} and
- * {@code DROP} scripts
+ * {@code DROP} scripts.
  *
  * @author Steve Ebersole
  */
 public interface Exporter<T extends Exportable> {
-	public static final String[] NO_COMMANDS = new String[0];
+	String[] NO_COMMANDS = new String[0];
 
 	/**
 	 * Get the commands needed for creation.
 	 *
 	 * @return The commands needed for creation scripting.
 	 */
-	public String[] getSqlCreateStrings(T exportable, Metadata metadata);
+	String[] getSqlCreateStrings(T exportable, Metadata metadata);
 
 	/**
 	 * Get the commands needed for dropping.
 	 *
 	 * @return The commands needed for drop scripting.
 	 */
-	public String[] getSqlDropStrings(T exportable, Metadata metadata);
+	String[] getSqlDropStrings(T exportable, Metadata metadata);
 }

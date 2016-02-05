@@ -1357,8 +1357,12 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Unsuccessful: %s", id = 388)
 	void unsuccessful(String sql);
 
+	/**
+	 * @deprecated Use {@link #unsuccessfulSchemaManagementCommand} instead
+	 */
 	@LogMessage(level = ERROR)
 	@Message(value = "Unsuccessful: %s", id = 389)
+	@Deprecated
 	void unsuccessfulCreate(String string);
 
 	@LogMessage(level = WARN)
@@ -1734,4 +1738,11 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Executing import script '%s'", id = 476)
 	void executingImportScript(String scriptName);
 
+	@LogMessage(level = INFO)
+	@Message(value = "Starting delayed drop of schema as part of SessionFactory shut-down'", id = 477)
+	void startingDelayedSchemaDrop();
+
+	@LogMessage(level = ERROR)
+	@Message(value = "Unsuccessful: %s", id = 478)
+	void unsuccessfulSchemaManagementCommand(String command);
 }

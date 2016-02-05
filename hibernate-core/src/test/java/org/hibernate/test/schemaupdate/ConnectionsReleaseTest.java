@@ -6,12 +6,13 @@
  */
 package org.hibernate.test.schemaupdate;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.EnumSet;
+import java.util.Properties;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Properties;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -22,14 +23,13 @@ import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionPro
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
-import org.hibernate.tool.hbm2ddl.Target;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -74,17 +74,13 @@ public class ConnectionsReleaseTest extends BaseUnitTestCase {
 
 	@Test
 	public void testSchemaUpdateReleasesAllConnections() throws SQLException {
-
-		new SchemaUpdate( ssr, metadata ).execute( Target.EXPORT );
-
+		new SchemaUpdate().execute( EnumSet.of( TargetType.DATABASE ), metadata );
 		assertThat( connectionProvider.getOpenConnection(), is( 0 ) );
 	}
 
 	@Test
 	public void testSchemaValidatorReleasesAllConnections() throws SQLException {
-
-		new SchemaValidator( ssr, metadata ).validate();
-
+		new SchemaValidator().validate( metadata );
 		assertThat( connectionProvider.getOpenConnection(), is( 0 ) );
 	}
 

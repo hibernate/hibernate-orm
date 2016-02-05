@@ -51,11 +51,10 @@ public class LocaleTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-8765")
 	public void testMetadataWithLocale() {
-		SchemaValidator sv = new SchemaValidator( metadata() );
 		try {
 			// Rather than building TableMetadata and checking for ascii values in table/column names, simply
 			// attempt to validate.
-			sv.validate();
+			new SchemaValidator().validate( metadata() );
 		}
 		catch (HibernateException e) {
 			fail("Failed with the Turkish locale, most likely due to the use of String#toLowerCase() within hbm2ddl.  "

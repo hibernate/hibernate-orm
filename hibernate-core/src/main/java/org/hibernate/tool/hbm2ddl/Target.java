@@ -7,12 +7,26 @@
 package org.hibernate.tool.hbm2ddl;
 
 /**
+ * Describes the types of targets for create, drop and update actions
+ *
  * @author Steve Ebersole
  */
 public enum Target {
+	/**
+	 * Export to the database.
+	 */
 	EXPORT,
+	/**
+	 * Write to a script file.
+	 */
 	SCRIPT,
+	/**
+	 * export nowhere
+	 */
 	NONE,
+	/**
+	 * Do both {@link #EXPORT} and {@link #SCRIPT}
+	 */
 	BOTH;
 
 	public boolean doExport() {

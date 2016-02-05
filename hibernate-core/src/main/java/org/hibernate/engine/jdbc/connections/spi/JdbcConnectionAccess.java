@@ -24,7 +24,7 @@ public interface JdbcConnectionAccess extends Serializable {
 	 *
 	 * @throws SQLException Indicates a problem getting the connection
 	 */
-	public Connection obtainConnection() throws SQLException;
+	Connection obtainConnection() throws SQLException;
 
 	/**
 	 * Release a previously obtained connection
@@ -33,7 +33,7 @@ public interface JdbcConnectionAccess extends Serializable {
 	 *
 	 * @throws SQLException Indicates a problem releasing the connection
 	 */
-	public void releaseConnection(Connection connection) throws SQLException;
+	void releaseConnection(Connection connection) throws SQLException;
 
 	/**
 	 * Does the underlying provider of connections support aggressive releasing of connections (and re-acquisition
@@ -44,5 +44,5 @@ public interface JdbcConnectionAccess extends Serializable {
 	 * @see org.hibernate.engine.jdbc.connections.spi.ConnectionProvider#supportsAggressiveRelease()
 	 * @see org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider#supportsAggressiveRelease()
 	 */
-	public boolean supportsAggressiveRelease();
+	boolean supportsAggressiveRelease();
 }

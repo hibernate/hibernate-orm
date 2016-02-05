@@ -12,7 +12,11 @@ import java.util.StringTokenizer;
 /**
  * JDBC column metadata
  * @author Christoph Sturm
+ *
+ * @deprecated Use {@link org.hibernate.tool.schema.extract.spi.ColumnInformation} or
+ * {@link org.hibernate.tool.schema.extract.internal.ColumnInformationImpl} instead
  */
+@Deprecated
 public class ColumnMetadata {
 	private final String name;
 	private final String typeName;

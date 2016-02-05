@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.schemaupdate;
 
+import java.util.EnumSet;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -18,11 +19,10 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
-import org.hibernate.tool.hbm2ddl.Target;
+import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
@@ -49,12 +49,12 @@ public class SequenceReadingTest {
 
 			try {
 				// try to update the schema
-				new SchemaUpdate( metadata ).execute( Target.EXPORT );
+				new SchemaUpdate().execute( EnumSet.of( TargetType.DATABASE ), metadata );
 			}
 			finally {
 				try {
 					// clean up
-					new SchemaExport( metadata ).drop( Target.EXPORT );
+					new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), metadata );
 				}
 				catch (Exception ignore) {
 				}

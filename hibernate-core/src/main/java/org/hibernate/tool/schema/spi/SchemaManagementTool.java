@@ -8,6 +8,7 @@ package org.hibernate.tool.schema.spi;
 
 import java.util.Map;
 
+import org.hibernate.Incubating;
 import org.hibernate.service.Service;
 
 /**
@@ -15,9 +16,10 @@ import org.hibernate.service.Service;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface SchemaManagementTool extends Service {
-	public SchemaCreator getSchemaCreator(Map options);
-	public SchemaDropper getSchemaDropper(Map options);
-	public SchemaMigrator getSchemaMigrator(Map options);
-	public SchemaValidator getSchemaValidator(Map options);
+	SchemaCreator getSchemaCreator(Map options);
+	SchemaDropper getSchemaDropper(Map options);
+	SchemaMigrator getSchemaMigrator(Map options);
+	SchemaValidator getSchemaValidator(Map options);
 }

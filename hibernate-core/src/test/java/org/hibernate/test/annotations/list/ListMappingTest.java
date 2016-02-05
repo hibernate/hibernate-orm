@@ -7,7 +7,6 @@
 package org.hibernate.test.annotations.list;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -21,11 +20,11 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
-import org.hibernate.tool.schema.internal.TargetStdoutImpl;
-import org.hibernate.tool.schema.spi.SchemaManagementTool;
-import org.hibernate.tool.schema.spi.Target;
+import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
+import org.hibernate.tool.schema.internal.exec.GenerationTargetToStdout;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
@@ -49,6 +48,7 @@ public class ListMappingTest extends BaseUnitTestCase {
 	@Before
 	public void before() {
 		ssr = new StandardServiceRegistryBuilder()
+				.applySetting( AvailableSettings.FORMAT_SQL, false )
 				.build();
 	}
 
@@ -79,7 +79,7 @@ public class ListMappingTest extends BaseUnitTestCase {
 		// make sure the OrderColumn is part of the collection table
 		assertTrue( asList.getCollectionTable().containsColumn( positionColumn ) );
 
-		class TargetImpl extends TargetStdoutImpl {
+		class TargetImpl extends GenerationTargetToStdout {
 			boolean found = false;
 			@Override
 			public void accept(String action) {
@@ -94,10 +94,10 @@ public class ListMappingTest extends BaseUnitTestCase {
 
 		TargetImpl target = new TargetImpl();
 
-		ssr.getService( SchemaManagementTool.class ).getSchemaCreator( Collections.emptyMap() ).doCreation(
+		new SchemaCreatorImpl( ssr ).doCreation(
 				metadata,
 				true,
-				Collections.<Target>singletonList( target )
+				target
 		);
 
 		assertTrue( target.found );

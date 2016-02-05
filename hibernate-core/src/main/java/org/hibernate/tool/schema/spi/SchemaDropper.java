@@ -6,57 +6,35 @@
  */
 package org.hibernate.tool.schema.spi;
 
-import java.util.List;
-
+import org.hibernate.Incubating;
 import org.hibernate.boot.Metadata;
-import org.hibernate.dialect.Dialect;
 
 /**
  * Service delegate for handling schema dropping.
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface SchemaDropper {
 	/**
-	 * Perform the drop to the specified targets
+	 * Perform a schema drop from the indicated source(s) to the indicated target(s).
 	 *
-	 * @param metadata The "compiled" mapping metadata.
-	 * @param dropNamespaces Should the schema(s)/catalog(s) actually be dropped also ({@code DROP SCHEMA})?
-	 * @param targets The targets for drop
-	 *
-	 * @throws SchemaManagementException Indicates a problem processing the creation
+	 * @param metadata Represents the schema to be dropped.
+	 * @param options Options for executing the drop
+	 * @param sourceDescriptor description of the source(s) of drop commands
+	 * @param targetDescriptor description of the target(s) for the drop commands
 	 */
-	public void doDrop(Metadata metadata, boolean dropNamespaces, Target... targets) throws SchemaManagementException;
-	/**
-	 * Perform the drop to the specified targets
-	 *
-	 * @param metadata The "compiled" mapping metadata.
-	 * @param dropNamespaces Should the schema(s)/catalog(s) actually be dropped also ({@code DROP SCHEMA})?
-	 * @param targets The targets for drop
-	 *
-	 * @throws SchemaManagementException Indicates a problem processing the creation
-	 */
-	public void doDrop(Metadata metadata, boolean dropNamespaces, Dialect dialect, Target... targets) throws SchemaManagementException;
+	void doDrop(Metadata metadata, ExecutionOptions options, SourceDescriptor sourceDescriptor, TargetDescriptor targetDescriptor);
 
 	/**
-	 * Perform the drop to the specified targets
+	 * Build a delayed Runnable for performing schema dropping.  This implicitly
+	 * targets the underlying data-store.
 	 *
-	 * @param metadata The "compiled" mapping metadata.
-	 * @param dropNamespaces Should the schema(s)/catalog(s) actually be dropped also ({@code DROP SCHEMA})?
-	 * @param targets The targets for drop
+	 * @param metadata The metadata to drop
+	 * @param options The drop options
+	 * @param sourceDescriptor For access to the {@link SourceDescriptor#getScriptSourceInput()}
 	 *
-	 * @throws SchemaManagementException Indicates a problem processing the creation
+	 * @return The Runnable
 	 */
-	public void doDrop(Metadata metadata, boolean dropNamespaces, List<Target> targets) throws SchemaManagementException;
-
-	/**
-	 * Perform the drop to the specified targets
-	 *
-	 * @param metadata The "compiled" mapping metadata.
-	 * @param dropNamespaces Should the schema(s)/catalog(s) actually be dropped also ({@code DROP SCHEMA})?
-	 * @param targets The targets for drop
-	 *
-	 * @throws SchemaManagementException Indicates a problem processing the creation
-	 */
-	public void doDrop(Metadata metadata, boolean dropNamespaces, Dialect dialect, List<Target> targets) throws SchemaManagementException;
+	DelayedDropAction buildDelayedAction(Metadata metadata, ExecutionOptions options, SourceDescriptor sourceDescriptor);
 }

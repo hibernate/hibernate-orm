@@ -13,7 +13,11 @@ import java.sql.SQLException;
  * hbm2ddl tools.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Everything in this package has been replaced with
+ * {@link org.hibernate.tool.schema.spi.SchemaManagementTool} and friends.
  */
+@Deprecated
 public interface ConnectionHelper {
 	/**
 	 * Prepare the helper for use.

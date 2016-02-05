@@ -67,7 +67,6 @@ import org.hibernate.jpa.boot.spi.TypeContributorList;
 import org.hibernate.jpa.event.spi.JpaIntegrator;
 import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 import org.hibernate.jpa.internal.EntityManagerMessageLogger;
-import org.hibernate.jpa.internal.schemagen.JpaSchemaGenerator;
 import org.hibernate.jpa.internal.util.LogHelper;
 import org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper;
 import org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider;
@@ -78,6 +77,8 @@ import org.hibernate.secure.spi.GrantedPermission;
 import org.hibernate.secure.spi.JaccPermissionDeclarations;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.tool.schema.spi.DelayedDropRegistryNotAvailableImpl;
+import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 
 import org.jboss.jandex.Index;
 
@@ -858,12 +859,13 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			populate( sfBuilder, standardServiceRegistry );
 			sfBuilder.build();
 
-			JpaSchemaGenerator.performGeneration( metadata(), configurationValues, standardServiceRegistry );
+			SchemaManagementToolCoordinator.process(
+					metadata, standardServiceRegistry, configurationValues, DelayedDropRegistryNotAvailableImpl.INSTANCE
+			);
 		}
 		catch (Exception e) {
-			throw persistenceException( "Unable to build Hibernate SessionFactory", e );
+			throw persistenceException( "Error performing schema management", e );
 		}
-
 
 		// release this builder
 		cancel();
@@ -881,8 +883,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		catch (Exception e) {
 			throw persistenceException( "Unable to build Hibernate SessionFactory", e );
 		}
-
-		JpaSchemaGenerator.performGeneration( metadata(), configurationValues, standardServiceRegistry );
 
 		return new EntityManagerFactoryImpl(
 				persistenceUnit.getName(),

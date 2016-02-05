@@ -2,7 +2,7 @@ package org.hibernate.test.schemaupdate;
 
 import java.io.File;
 import java.nio.file.Files;
-
+import java.util.EnumSet;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -12,9 +12,10 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
-import org.hibernate.tool.hbm2ddl.Target;
+import org.hibernate.tool.schema.TargetType;
+
+import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -46,16 +47,17 @@ public class SchemaUpdateFormatterTest {
 					.buildMetadata();
 			metadata.validate();
 
-			SchemaUpdate su = new SchemaUpdate( ssr, metadata );
-			su.setHaltOnError( true );
-			su.setOutputFile( output.getAbsolutePath() );
-			su.setDelimiter( DELIMITER );
-			su.setFormat( true );
-			su.execute( Target.SCRIPT );
+			new SchemaUpdate()
+					.setHaltOnError( true )
+					.setOutputFile( output.getAbsolutePath() )
+					.setDelimiter( DELIMITER )
+					.setFormat( true )
+					.execute( EnumSet.of( TargetType.SCRIPT ), metadata );
 
 			Assert.assertEquals(
 					AFTER_FORMAT, 
-					new String(Files.readAllBytes(output.toPath())));
+					new String(Files.readAllBytes(output.toPath()))
+			);
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );

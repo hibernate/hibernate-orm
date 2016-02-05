@@ -22,7 +22,11 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
  * built and managed {@link ConnectionProvider}.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Everything in this package has been replaced with
+ * {@link org.hibernate.tool.schema.spi.SchemaManagementTool} and friends.
  */
+@Deprecated
 class ManagedProviderConnectionHelper implements ConnectionHelper {
 	private Properties cfgProperties;
 	private StandardServiceRegistryImpl serviceRegistry;

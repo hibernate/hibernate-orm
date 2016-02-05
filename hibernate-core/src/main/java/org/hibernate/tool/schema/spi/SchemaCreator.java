@@ -6,74 +6,27 @@
  */
 package org.hibernate.tool.schema.spi;
 
-import java.util.List;
-
+import org.hibernate.Incubating;
 import org.hibernate.boot.Metadata;
-import org.hibernate.dialect.Dialect;
 
 /**
  * Service delegate for handling schema creation.
+ * <p/>
+ * The actual contract here is kind of convoluted with the design
+ * idea of allowing this to work in ORM (JDBC) as well as in non-JDBC
+ * environments (OGM, e.g.) simultaneously.  ExecutionContext allows
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface SchemaCreator {
 	/**
-	 * Perform the creation to the specified targets
+	 * Perform a schema creation from the indicated source(s) to the indicated target(s).
 	 *
-	 * @param metadata The "compiled" mapping metadata.
-	 * @param createNamespaces Should the schema(s)/catalog(s) actually be created as well ({@code CREATE SCHEMA})?
-	 * @param targets The targets for creation
-	 *
-	 * @throws SchemaManagementException Indicates a problem processing the creation
+	 * @param metadata Represents the schema to be created.
+	 * @param options Options for executing the creation
+	 * @param sourceDescriptor description of the source(s) of creation commands
+	 * @param targetDescriptor description of the target(s) for the creation commands
 	 */
-	public void doCreation(
-			Metadata metadata,
-			boolean createNamespaces,
-			Target... targets) throws SchemaManagementException;
-
-	/**
-	 * Perform the creation to the specified targets
-	 *
-	 * @param metadata The "compiled" mapping metadata.
-	 * @param createNamespaces Should the schema(s)/catalog(s) actually be created as well ({@code CREATE SCHEMA})?
-	 * @param dialect Allow explicitly passing the Dialect to use.
-	 * @param targets The targets for creation
-	 *
-	 * @throws SchemaManagementException Indicates a problem processing the creation
-	 */
-	public void doCreation(
-			Metadata metadata,
-			boolean createNamespaces,
-			Dialect dialect,
-			Target... targets) throws SchemaManagementException;
-
-	/**
-	 * Perform the creation to the specified targets
-	 *
-	 * @param metadata The "compiled" mapping metadata.
-	 * @param createNamespaces Should the schema(s) actually be created as well ({@code CREATE SCHEMA})?
-	 * @param targets The targets for creation
-	 *
-	 * @throws SchemaManagementException Indicates a problem processing the creation
-	 */
-	public void doCreation(
-			Metadata metadata,
-			boolean createNamespaces,
-			List<Target> targets) throws SchemaManagementException;
-
-	/**
-	 * Perform the creation to the specified targets
-	 *
-	 * @param metadata The "compiled" mapping metadata.
-	 * @param createNamespaces Should the schema(s)/catalog(s) actually be created as well ({@code CREATE SCHEMA})?
-	 * @param dialect Allow explicitly passing the Dialect to use.
-	 * @param targets The targets for creation
-	 *
-	 * @throws SchemaManagementException Indicates a problem processing the creation
-	 */
-	public void doCreation(
-			Metadata metadata,
-			boolean createNamespaces,
-			Dialect dialect,
-			List<Target> targets) throws SchemaManagementException;
+	void doCreation(Metadata metadata, ExecutionOptions options, SourceDescriptor sourceDescriptor, TargetDescriptor targetDescriptor);
 }

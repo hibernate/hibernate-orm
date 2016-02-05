@@ -7,6 +7,7 @@
 package org.hibernate.cfg;
 
 import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.tool.schema.SourceType;
 
 /**
  * @author Steve Ebersole
@@ -561,12 +562,6 @@ public interface AvailableSettings {
 	String QUERY_STARTUP_CHECKING = "hibernate.query.startup_check";
 
 	/**
-	 * Auto export/update schema using hbm2ddl tool. Valid values are <tt>update</tt>,
-	 * <tt>create</tt>, <tt>create-drop</tt> and <tt>validate</tt>.
-	 */
-	String HBM2DDL_AUTO = "hibernate.hbm2ddl.auto";
-
-	/**
 	 * The {@link org.hibernate.exception.spi.SQLExceptionConverter} to use for converting SQLExceptions
 	 * to Hibernate's JDBCException hierarchy.  The default is to use the configured
 	 * {@link org.hibernate.dialect.Dialect}'s preferred SQLExceptionConverter.
@@ -738,46 +733,6 @@ public interface AvailableSettings {
 
 	// Still to categorize
 
-
-	/**
-	 * Comma-separated names of the optional files containing SQL DML statements executed
-	 * during the SessionFactory creation.
-	 * File order matters, the statements of a give file are executed before the statements of the
-	 * following files.
-	 *
-	 * These statements are only executed if the schema is created ie if <tt>hibernate.hbm2ddl.auto</tt>
-	 * is set to <tt>create</tt> or <tt>create-drop</tt>.
-	 *
-	 * The default value is <tt>/import.sql</tt>
-	 */
-	String HBM2DDL_IMPORT_FILES = "hibernate.hbm2ddl.import_files";
-
-	/**
-	 * {@link String} reference to {@link org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor} implementation class.
-	 * Referenced implementation is required to provide non-argument constructor.
-	 *
-	 * The default value is <tt>org.hibernate.tool.hbm2ddl.SingleLineSqlCommandExtractor</tt>.
-	 */
-	String HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR = "hibernate.hbm2ddl.import_files_sql_extractor";
-
-	/**
-	 * Specifies whether to automatically create also the database schema/catalog.
-	 * The default is false.
-	 *
-	 * @since 5.0
-	 */
-	String HBM2DLL_CREATE_NAMESPACES = "hibernate.hbm2dll.create_namespaces";
-
-	/**
-	 * Used to specify the {@link org.hibernate.tool.schema.spi.SchemaFilterProvider} to be used by
-	 * create, drop, migrate and validate operations on the database schema.  SchemaFilterProvider
-	 * provides filters that can be used to limit the scope of these operations to specific namespaces,
-	 * tables and sequences. All objects are included by default.
-	 * 
-	 * @since 5.1
-	 */
-	String SCHEMA_FILTER_PROVIDER = "hibernate.schema.filter.provider";
-
 	/**
 	 * The EntityMode in which set the Session opened from the SessionFactory.
 	 */
@@ -867,6 +822,240 @@ public interface AvailableSettings {
 	String NON_CONTEXTUAL_LOB_CREATION = "hibernate.jdbc.lob.non_contextual_creation";
 
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// SchemaManagementTool settings
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * Setting to perform SchemaManagementTool actions automatically as part of
+	 * the SessionFactory lifecycle.  Valid options are defined by the
+	 * {@link org.hibernate.tool.schema.Action} enum.
+	 * <p/>
+	 * Interpreted in combination with {@link #HBM2DDL_DATABASE_ACTION} and
+	 * {@link #HBM2DDL_SCRIPTS_ACTION}.  If no value is specified, the default
+	 * is "none" ({@link org.hibernate.tool.schema.Action#NONE}).
+	 *
+	 * @see org.hibernate.tool.schema.Action
+	 */
+	String HBM2DDL_AUTO = "hibernate.hbm2ddl.auto";
+
+	/**
+	 * Setting to perform SchemaManagementTool actions against the database directly via JDBC
+	 * automatically as part of the SessionFactory lifecycle.  Valid options are defined by the
+	 * {@link org.hibernate.tool.schema.Action} enum.
+	 * <p/>
+	 * Interpreted in combination with {@link #HBM2DDL_AUTO}.  If no value is specified, the default
+	 * is "none" ({@link org.hibernate.tool.schema.Action#NONE}).
+	 *
+	 * @see org.hibernate.tool.schema.Action
+	 */
+	String HBM2DDL_DATABASE_ACTION = "javax.persistence.schema-generation.database.action";
+
+	/**
+	 * Setting to perform SchemaManagementTool actions writing the commands into a DDL script file.
+	 * Valid options are defined by the {@link org.hibernate.tool.schema.Action} enum.
+	 * <p/>
+	 * Interpreted in combination with {@link #HBM2DDL_AUTO}.  If no value is specified, the default
+	 * is "none" ({@link org.hibernate.tool.schema.Action#NONE}).
+	 *
+	 * @see org.hibernate.tool.schema.Action
+	 */
+	String HBM2DDL_SCRIPTS_ACTION = "javax.persistence.schema-generation.scripts.action";
+
+	/**
+	 * Allows passing a specific {@link java.sql.Connection} instance to be used by SchemaManagementTool.
+	 * <p/>
+	 * May also be used to determine the values for {@value #HBM2DDL_DB_NAME},
+	 * {@value #HBM2DDL_DB_MAJOR_VERSION} and {@value #HBM2DDL_DB_MINOR_VERSION}.
+	 */
+	String HBM2DDL_CONNECTION = "javax.persistence.schema-generation-connection";
+
+	/**
+	 * Specifies the name of the database provider in cases where a Connection to the underlying database is
+	 * not available (aka, mainly in generating scripts).  In such cases, a value for this setting
+	 * *must* be specified.
+	 * <p/>
+	 * The value of this setting is expected to match the value returned by
+	 * {@link java.sql.DatabaseMetaData#getDatabaseProductName()} for the target database.
+	 * <p/>
+	 * Additionally specifying {@value #HBM2DDL_DB_MAJOR_VERSION} and/or {@value #HBM2DDL_DB_MINOR_VERSION}
+	 * may be required to understand exactly how to generate the required schema commands.
+	 *
+	 * @see #HBM2DDL_DB_MAJOR_VERSION
+	 * @see #HBM2DDL_DB_MINOR_VERSION
+	 */
+	@SuppressWarnings("JavaDoc")
+	String HBM2DDL_DB_NAME = "javax.persistence.database-product-name";
+
+	/**
+	 * Specifies the major version of the underlying database, as would be returned by
+	 * {@link java.sql.DatabaseMetaData#getDatabaseMajorVersion} for the target database.  This value is used to
+	 * help more precisely determine how to perform schema generation tasks for the underlying database in cases
+	 * where {@value #HBM2DDL_DB_NAME} does not provide enough distinction.
+
+	 * @see #HBM2DDL_DB_NAME
+	 * @see #HBM2DDL_DB_MINOR_VERSION
+	 */
+	String HBM2DDL_DB_MAJOR_VERSION = "javax.persistence.database-major-version";
+
+	/**
+	 * Specifies the minor version of the underlying database, as would be returned by
+	 * {@link java.sql.DatabaseMetaData#getDatabaseMinorVersion} for the target database.  This value is used to
+	 * help more precisely determine how to perform schema generation tasks for the underlying database in cases
+	 * where the combination of {@value #HBM2DDL_DB_NAME} and {@value #HBM2DDL_DB_MAJOR_VERSION} does not provide
+	 * enough distinction.
+	 *
+	 * @see #HBM2DDL_DB_NAME
+	 * @see #HBM2DDL_DB_MAJOR_VERSION
+	 */
+	String HBM2DDL_DB_MINOR_VERSION = "javax.persistence.database-minor-version";
+
+	/**
+	 * Specifies whether schema generation commands for schema creation are to be determine based on object/relational
+	 * mapping metadata, DDL scripts, or a combination of the two.  See {@link SourceType} for valid set of values.
+	 * If no value is specified, a default is assumed as follows:<ul>
+	 *     <li>
+	 *         if source scripts are specified (per {@value #HBM2DDL_CREATE_SCRIPT_SOURCE}),then "scripts" is assumed
+	 *     </li>
+	 *     <li>
+	 *         otherwise, "metadata" is assumed
+	 *     </li>
+	 * </ul>
+	 *
+	 * @see SourceType
+	 */
+	String HBM2DDL_CREATE_SOURCE = "javax.persistence.schema-generation.create-source";
+
+	/**
+	 * Specifies whether schema generation commands for schema dropping are to be determine based on object/relational
+	 * mapping metadata, DDL scripts, or a combination of the two.  See {@link SourceType} for valid set of values.
+	 * If no value is specified, a default is assumed as follows:<ul>
+	 *     <li>
+	 *         if source scripts are specified (per {@value #HBM2DDL_DROP_SCRIPT_SOURCE}),then "scripts" is assumed
+	 *     </li>
+	 *     <li>
+	 *         otherwise, "metadata" is assumed
+	 *     </li>
+	 * </ul>
+	 *
+	 * @see SourceType
+	 */
+	String HBM2DDL_DROP_SOURCE = "javax.persistence.schema-generation.drop-source";
+
+	/**
+	 * Specifies the CREATE script file as either a {@link java.io.Reader} configured for reading of the DDL script
+	 * file or a string designating a file {@link java.net.URL} for the DDL script.
+	 * <p/>
+	 * Hibernate historically also accepted {@link #HBM2DDL_IMPORT_FILES} for a similar purpose.  This setting
+	 * should be preferred over {@link #HBM2DDL_IMPORT_FILES} moving forward
+	 *
+	 * @see #HBM2DDL_CREATE_SOURCE
+	 * @see #HBM2DDL_IMPORT_FILES
+	 */
+	String HBM2DDL_CREATE_SCRIPT_SOURCE = "javax.persistence.schema-generation.create-script-source";
+
+	/**
+	 * Specifies the DROP script file as either a {@link java.io.Reader} configured for reading of the DDL script
+	 * file or a string designating a file {@link java.net.URL} for the DDL script.
+	 *
+	 * @see #HBM2DDL_DROP_SOURCE
+	 */
+	String HBM2DDL_DROP_SCRIPT_SOURCE = "javax.persistence.schema-generation.drop-script-source";
+
+	/**
+	 * For cases where the {@value #HBM2DDL_SCRIPTS_ACTION} value indicates that schema creation commands should
+	 * be written to DDL script file, {@value #HBM2DDL_SCRIPTS_CREATE_TARGET} specifies either a
+	 * {@link java.io.Writer} configured for output of the DDL script or a string specifying the file URL for the DDL
+	 * script.
+	 *
+	 * @see #HBM2DDL_SCRIPTS_ACTION
+	 */
+	@SuppressWarnings("JavaDoc")
+	String HBM2DDL_SCRIPTS_CREATE_TARGET = "javax.persistence.schema-generation.scripts.create-target";
+
+	/**
+	 * For cases where the {@value #HBM2DDL_SCRIPTS_ACTION} value indicates that schema drop commands should
+	 * be written to DDL script file, {@value #HBM2DDL_SCRIPTS_DROP_TARGET} specifies either a
+	 * {@link java.io.Writer} configured for output of the DDL script or a string specifying the file URL for the DDL
+	 * script.
+	 *
+	 * @see #HBM2DDL_SCRIPTS_ACTION
+	 */
+	@SuppressWarnings("JavaDoc")
+	String HBM2DDL_SCRIPTS_DROP_TARGET = "javax.persistence.schema-generation.scripts.drop-target";
+
+	/**
+	 * Comma-separated names of the optional files containing SQL DML statements executed
+	 * during the SessionFactory creation.
+	 * File order matters, the statements of a give file are executed before the statements of the
+	 * following files.
+	 * <p/>
+	 * These statements are only executed if the schema is created ie if <tt>hibernate.hbm2ddl.auto</tt>
+	 * is set to <tt>create</tt> or <tt>create-drop</tt>.
+	 * <p/>
+	 * The default value is <tt>/import.sql</tt>
+	 * <p/>
+	 * {@link #HBM2DDL_CREATE_SCRIPT_SOURCE} / {@link #HBM2DDL_DROP_SCRIPT_SOURCE} should be preferred
+	 * moving forward
+	 */
+	String HBM2DDL_IMPORT_FILES = "hibernate.hbm2ddl.import_files";
+
+	/**
+	 * JPA variant of {@link #HBM2DDL_IMPORT_FILES}
+	 * <p/>
+	 * Specifies a {@link java.io.Reader} configured for reading of the SQL load script or a string designating the
+	 * file {@link java.net.URL} for the SQL load script.
+	 * <p/>
+	 * A "SQL load script" is a script that performs some database initialization (INSERT, etc).
+	 */
+	String HBM2DDL_LOAD_SCRIPT_SOURCE = "javax.persistence.sql-load-script-source";
+
+	/**
+	 * Reference to the {@link org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor} implementation class
+	 * to use for parsing source/import files as defined by {@link #HBM2DDL_CREATE_SCRIPT_SOURCE},
+	 * {@link #HBM2DDL_DROP_SCRIPT_SOURCE} or {@link #HBM2DDL_IMPORT_FILES}.
+	 * <p/>
+	 * Reference may refer to an instance, a Class implementing ImportSqlCommandExtractor of the FQN
+	 * of the ImportSqlCommandExtractor implementation.  If the FQN is given, the implementation
+	 * must provide a no-arg constructor.
+	 * <p/>
+	 * The default value is {@link org.hibernate.tool.hbm2ddl.SingleLineSqlCommandExtractor}.
+	 */
+	String HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR = "hibernate.hbm2ddl.import_files_sql_extractor";
+
+	/**
+	 * Specifies whether to automatically create also the database schema/catalog.
+	 * The default is false.
+	 *
+	 * @since 5.0
+	 */
+	String HBM2DLL_CREATE_NAMESPACES = "hibernate.hbm2dll.create_namespaces";
+
+	/**
+	 * The JPA variant of {@link #HBM2DLL_CREATE_NAMESPACES}
+	 * <p/>
+	 * Specifies whether the persistence provider is to create the database schema(s) in addition to creating
+	 * database objects (tables, sequences, constraints, etc).  The value of this boolean property should be set
+	 * to {@code true} if the persistence provider is to create schemas in the database or to generate DDL that
+	 * contains "CREATE SCHEMA" commands.  If this property is not supplied (or is explicitly {@code false}), the
+	 * provider should not attempt to create database schemas.
+	 */
+	String HBM2DLL_CREATE_SCHEMAS = "javax.persistence.create-database-schemas";
+
+	/**
+	 * Used to specify the {@link org.hibernate.tool.schema.spi.SchemaFilterProvider} to be used by
+	 * create, drop, migrate and validate operations on the database schema.  SchemaFilterProvider
+	 * provides filters that can be used to limit the scope of these operations to specific namespaces,
+	 * tables and sequences. All objects are included by default.
+	 *
+	 * @since 5.1
+	 */
+	String HBM2DDL_FILTER_PROVIDER = "hibernate.hbm2ddl.schema_filter_provider";
+
+	/**
+	 * Identifies the delimiter to use to separate schema management statements in script outputs
+	 */
+	String HBM2DDL_DELIMITER = "hibernate.hbm2ddl.delimiter";
 
 
 	String JMX_ENABLED = "hibernate.jmx.enabled";

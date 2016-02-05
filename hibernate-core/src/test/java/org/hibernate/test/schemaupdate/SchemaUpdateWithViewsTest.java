@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.schemaupdate;
 
+import java.util.EnumSet;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Index;
@@ -22,14 +23,14 @@ import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * @author Andrea Boriero
@@ -42,8 +43,7 @@ public class SchemaUpdateWithViewsTest extends BaseNonConfigCoreFunctionalTestCa
 
 	@Test
 	public void testUpdateSchema() {
-		SchemaUpdate schemaUpdate = new SchemaUpdate( serviceRegistry, metadata );
-		schemaUpdate.execute( true, true );
+		new SchemaUpdate().execute( EnumSet.of( TargetType.SCRIPT, TargetType.DATABASE ), metadata );
 	}
 
 	@Before
@@ -71,8 +71,7 @@ public class SchemaUpdateWithViewsTest extends BaseNonConfigCoreFunctionalTestCa
 	public void tearDown() {
 		dropView();
 		System.out.println( "********* Starting SchemaExport (drop) for TEAR-DOWN *************************" );
-		SchemaExport schemaExport = new SchemaExport( serviceRegistry, metadata );
-		schemaExport.drop( true, true );
+		new SchemaExport().drop( EnumSet.of( TargetType.STDOUT, TargetType.DATABASE ), metadata );
 		System.out.println( "********* Completed SchemaExport (drop) for TEAR-DOWN *************************" );
 
 		StandardServiceRegistryBuilder.destroy( serviceRegistry );

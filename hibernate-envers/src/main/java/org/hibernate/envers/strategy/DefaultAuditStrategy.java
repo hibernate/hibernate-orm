@@ -75,7 +75,7 @@ public class DefaultAuditStrategy implements AuditStrategy {
 		// create a subquery builder
 		// SELECT max(e.revision) FROM versionsReferencedEntity e2
 		QueryBuilder maxERevQb = rootQueryBuilder.newSubQueryBuilder( idData.getAuditEntityName(), alias2 );
-		maxERevQb.addProjection( "max", revisionPropertyPath, false );
+		maxERevQb.addProjection( "max", alias2, revisionPropertyPath, false );
 		// WHERE
 		Parameters maxERevQbParameters = maxERevQb.getRootParameters();
 		// e2.revision <= :revision
@@ -110,7 +110,7 @@ public class DefaultAuditStrategy implements AuditStrategy {
 				versionsMiddleEntityName,
 				MIDDLE_ENTITY_ALIAS_DEF_AUD_STR
 		);
-		maxEeRevQb.addProjection( "max", revisionPropertyPath, false );
+		maxEeRevQb.addProjection( "max", MIDDLE_ENTITY_ALIAS_DEF_AUD_STR, revisionPropertyPath, false );
 		// WHERE
 		Parameters maxEeRevQbParameters = maxEeRevQb.getRootParameters();
 		// ee2.revision <= :revision

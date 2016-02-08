@@ -26,8 +26,9 @@ public class NotAuditExpression implements AuditCriterion {
 			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			String entityName,
+			String alias,
 			QueryBuilder qb,
 			Parameters parameters) {
-		criterion.addToQuery( enversService, versionsReader, entityName, qb, parameters.addNegatedParameters() );
+		criterion.addToQuery( enversService, versionsReader, entityName, alias, qb, parameters.addNegatedParameters() );
 	}
 }

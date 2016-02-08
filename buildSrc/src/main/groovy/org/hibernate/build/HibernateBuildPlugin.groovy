@@ -12,6 +12,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
+import org.gradle.api.artifacts.DependencySet
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.tasks.testing.Test
@@ -71,6 +72,8 @@ class HibernateBuildPlugin implements Plugin<Project> {
 	def applyPublishing(MavenPublishingExtension publishingExtension, Project project) {
 		PublishingExtension gradlePublishingExtension = project.extensions.getByType( PublishingExtension )
 
+		def DependencySet dependencies = project.configurations.compile.allDependencies;
+
 		// repos
 		if ( gradlePublishingExtension.repositories.empty ) {
 			if ( project.version.endsWith( 'SNAPSHOT' ) ) {
@@ -92,6 +95,16 @@ class HibernateBuildPlugin implements Plugin<Project> {
 			final boolean applyExtensionValues = publishingExtension.publications == null || publishingExtension.publications.length == 0 || pub in publishingExtension.publications;
 
 			pom.withXml {
+				if ( !dependencies.empty ) {
+					Node dependenciesNode = asNode().appendNode( 'dependencies' )
+					dependencies.each {
+						Node dependencyNode = dependenciesNode.appendNode( 'dependency' );
+						dependencyNode.appendNode( 'groupId', it.group )
+						dependencyNode.appendNode( 'artifactId', it.name )
+						dependencyNode.appendNode( 'version', it.version )
+						dependencyNode.appendNode( 'scope', 'compile' )
+					}
+				}
 				if ( applyExtensionValues ) {
 					asNode().appendNode( 'name', publishingExtension.name )
 					asNode().appendNode( 'description', publishingExtension.description )
@@ -130,14 +143,6 @@ class HibernateBuildPlugin implements Plugin<Project> {
 							organization 'Hibernate.org'
 							organizationUrl 'http://hibernate.org'
 						}
-					}
-				}
-
-				// TEMPORARY : currently Gradle Publishing feature is exporting dependencies as 'runtime' scope,
-				//      rather than 'compile'; fix that.
-				if ( asNode().dependencies != null && asNode().dependencies.size() > 0 ) {
-					asNode().dependencies[0].dependency.each {
-						it.scope[0].value = 'compile'
 					}
 				}
 			}

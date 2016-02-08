@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.internal.JoinSequence;
 import org.hibernate.engine.internal.ParameterBinder;
@@ -34,6 +33,7 @@ import org.hibernate.hql.internal.ast.tree.CollectionFunction;
 import org.hibernate.hql.internal.ast.tree.ConstructorNode;
 import org.hibernate.hql.internal.ast.tree.DeleteStatement;
 import org.hibernate.hql.internal.ast.tree.DotNode;
+import org.hibernate.hql.internal.ast.tree.EntityJoinFromElement;
 import org.hibernate.hql.internal.ast.tree.FromClause;
 import org.hibernate.hql.internal.ast.tree.FromElement;
 import org.hibernate.hql.internal.ast.tree.FromElementFactory;
@@ -74,10 +74,10 @@ import org.hibernate.param.ParameterSpecification;
 import org.hibernate.param.PositionalParameterSpecification;
 import org.hibernate.param.VersionTypeSeedParameterSpecification;
 import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.AssociationType;
-import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.DbTimestampType;
 import org.hibernate.type.Type;
@@ -363,50 +363,121 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		if ( fetch && isSubQuery() ) {
 			throw new QueryException( "fetch not allowed in subquery from-elements" );
 		}
-		// The path AST should be a DotNode, and it should have been evaluated already.
-		if ( path.getType() != SqlTokenTypes.DOT ) {
-			throw new SemanticException( "Path expected for join!" );
-		}
-		DotNode dot = (DotNode) path;
-		JoinType hibernateJoinType = JoinProcessor.toHibernateJoinType( joinType );
-		dot.setJoinType( hibernateJoinType );    // Tell the dot node about the join type.
-		dot.setFetch( fetch );
-		// Generate an explicit join for the root dot node.   The implied joins will be collected and passed up
-		// to the root dot node.
-		dot.resolve( true, false, alias == null ? null : alias.getText() );
 
-		final FromElement fromElement;
-		if ( dot.getDataType() != null && dot.getDataType().isComponentType() ) {
-			if ( dot.getDataType().isAnyType() ) {
-				throw new SemanticException( "An AnyType attribute cannot be join fetched" );
-				// ^^ because the discriminator (aka, the "meta columns") must be known to the SQL in
-				// 		a non-parameterized way.
-			}
-			FromElementFactory factory = new FromElementFactory(
-					getCurrentFromClause(),
-					dot.getLhs().getFromElement(),
-					dot.getPropertyPath(),
-					alias == null ? null : alias.getText(),
-					null,
-					false
+
+		// the incoming "path" can be either:
+		//		1) an implicit join path (join p.address.city)
+		// 		2) an entity-join (join com.acme.User)
+		//
+		// so make the proper interpretation here...
+
+		final EntityPersister entityJoinReferencedPersister = resolveEntityJoinReferencedPersister( path );
+		if ( entityJoinReferencedPersister != null ) {
+			// `path` referenced an entity
+			final EntityJoinFromElement join = createEntityJoin(
+					entityJoinReferencedPersister,
+					alias,
+					joinType,
+					propertyFetch,
+					with
 			);
-			fromElement = factory.createComponentJoin( (CompositeType) dot.getDataType() );
+
+			( (FromReferenceNode) path ).setFromElement( join );
 		}
 		else {
-			fromElement = dot.getImpliedJoin();
-			fromElement.setAllPropertyFetch( propertyFetch != null );
+			if ( path.getType() != SqlTokenTypes.DOT ) {
+				throw new SemanticException( "Path expected for join!" );
+			}
 
-			if ( with != null ) {
-				if ( fetch ) {
-					throw new SemanticException( "with-clause not allowed on fetched associations; use filters" );
+			DotNode dot = (DotNode) path;
+			JoinType hibernateJoinType = JoinProcessor.toHibernateJoinType( joinType );
+			dot.setJoinType( hibernateJoinType );    // Tell the dot node about the join type.
+			dot.setFetch( fetch );
+			// Generate an explicit join for the root dot node.   The implied joins will be collected and passed up
+			// to the root dot node.
+			dot.resolve( true, false, alias == null ? null : alias.getText() );
+
+			final FromElement fromElement;
+			if ( dot.getDataType() != null && dot.getDataType().isComponentType() ) {
+				if ( dot.getDataType().isAnyType() ) {
+					throw new SemanticException( "An AnyType attribute cannot be join fetched" );
+					// ^^ because the discriminator (aka, the "meta columns") must be known to the SQL in
+					// 		a non-parameterized way.
 				}
-				handleWithFragment( fromElement, with );
+				FromElementFactory factory = new FromElementFactory(
+						getCurrentFromClause(),
+						dot.getLhs().getFromElement(),
+						dot.getPropertyPath(),
+						alias == null ? null : alias.getText(),
+						null,
+						false
+				);
+				fromElement = factory.createComponentJoin( (CompositeType) dot.getDataType() );
+			}
+			else {
+				fromElement = dot.getImpliedJoin();
+				fromElement.setAllPropertyFetch( propertyFetch != null );
+
+				if ( with != null ) {
+					if ( fetch ) {
+						throw new SemanticException( "with-clause not allowed on fetched associations; use filters" );
+					}
+					handleWithFragment( fromElement, with );
+				}
+			}
+
+			if ( LOG.isDebugEnabled() ) {
+				LOG.debug(
+						"createFromJoinElement() : "
+								+ getASTPrinter().showAsString( fromElement, "-- join tree --" )
+				);
 			}
 		}
+	}
 
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debug( "createFromJoinElement() : " + getASTPrinter().showAsString( fromElement, "-- join tree --" ) );
+	private EntityPersister resolveEntityJoinReferencedPersister(AST path) {
+		if ( path.getType() == IDENT ) {
+			final IdentNode pathIdentNode = (IdentNode) path;
+			String name = path.getText();
+			if ( name == null ) {
+				name = pathIdentNode.getOriginalText();
+			}
+			return sessionFactoryHelper.findEntityPersisterByName( name );
 		}
+		else if ( path.getType() == DOT ) {
+			final String pathText = ASTUtil.getPathText( path );
+			return sessionFactoryHelper.findEntityPersisterByName( pathText );
+		}
+		return null;
+	}
+
+	@Override
+	protected void finishFromClause(AST fromClause) throws SemanticException {
+		( (FromClause) fromClause ).finishInit();
+	}
+
+	private EntityJoinFromElement createEntityJoin(
+			EntityPersister entityPersister,
+			AST aliasNode,
+			int joinType,
+			AST propertyFetch,
+			AST with) throws SemanticException {
+		final String alias = aliasNode == null ? null : aliasNode.getText();
+		LOG.debugf( "Creating entity-join FromElement [%s -> %s]", alias, entityPersister.getEntityName() );
+		EntityJoinFromElement join = new EntityJoinFromElement(
+				this,
+				getCurrentFromClause(),
+				entityPersister,
+				JoinProcessor.toHibernateJoinType( joinType ),
+				propertyFetch != null,
+				alias
+		);
+
+		if ( with != null ) {
+			handleWithFragment( join, with );
+		}
+
+		return join;
 	}
 
 	private void handleWithFragment(FromElement fromElement, AST hqlWithNode) throws SemanticException {
@@ -429,16 +500,16 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			if ( withClauseJoinAlias == null ) {
 				withClauseJoinAlias = fromElement.getCollectionTableAlias();
 			}
-			else {
-				FromElement referencedFromElement = visitor.getReferencedFromElement();
-				if ( referencedFromElement != fromElement ) {
-					LOG.warnf(
-							"with-clause expressions do not reference the from-clause element to which the " +
-									"with-clause was associated.  The query may not work as expected [%s]",
-							queryTranslatorImpl.getQueryString()
-					);
-				}
-			}
+//			else {
+//				FromElement referencedFromElement = visitor.getReferencedFromElement();
+//				if ( referencedFromElement != fromElement ) {
+//					LOG.warnf(
+//							"with-clause expressions do not reference the from-clause element to which the " +
+//									"with-clause was associated.  The query may not work as expected [%s]",
+//							queryTranslatorImpl.getQueryString()
+//					);
+//				}
+//			}
 
 			SqlGenerator sql = new SqlGenerator( getSessionFactoryHelper().getFactory() );
 			sql.whereExpr( hqlSqlWithNode.getFirstChild() );
@@ -483,9 +554,9 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 				DotNode dotNode = (DotNode) node;
 				FromElement fromElement = dotNode.getFromElement();
 				if ( referencedFromElement != null ) {
-					if ( fromElement != referencedFromElement ) {
-						throw new HibernateException( "with-clause referenced two different from-clause elements" );
-					}
+//					if ( fromElement != referencedFromElement ) {
+//						throw new HibernateException( "with-clause referenced two different from-clause elements" );
+//					}
 				}
 				else {
 					referencedFromElement = fromElement;

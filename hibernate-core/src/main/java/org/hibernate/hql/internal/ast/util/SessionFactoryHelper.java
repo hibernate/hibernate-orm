@@ -136,7 +136,7 @@ public class SessionFactoryHelper {
 	 *
 	 * @throws MappingException
 	 */
-	private EntityPersister findEntityPersisterByName(String name) throws MappingException {
+	public EntityPersister findEntityPersisterByName(String name) throws MappingException {
 		// First, try to get the persister using the given name directly.
 		try {
 			return sfi.getEntityPersister( name );

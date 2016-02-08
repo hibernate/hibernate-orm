@@ -305,6 +305,15 @@ public final class ASTUtil {
 		}
 	}
 
+	public static void appendChild(AST parent, AST child) {
+		if ( parent.getFirstChild() == null ) {
+			parent.setFirstChild( child );
+		}
+		else {
+			getLastChild( parent ).setNextSibling( child );
+		}
+	}
+
 	private static ASTArray createAstArray(
 			ASTFactory factory,
 			int size,

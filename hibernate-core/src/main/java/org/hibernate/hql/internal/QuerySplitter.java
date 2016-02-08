@@ -35,6 +35,7 @@ public final class QuerySplitter {
 		BEFORE_CLASS_TOKENS.add( "update" );
 		//beforeClassTokens.add("new"); DEFINITELY DON'T HAVE THIS!!
 		BEFORE_CLASS_TOKENS.add( "," );
+		BEFORE_CLASS_TOKENS.add( "join" );
 		NOT_AFTER_CLASS_TOKENS.add( "in" );
 		//notAfterClassTokens.add(",");
 		NOT_AFTER_CLASS_TOKENS.add( "from" );

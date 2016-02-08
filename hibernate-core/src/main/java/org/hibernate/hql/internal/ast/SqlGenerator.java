@@ -356,7 +356,10 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 			return;
 		}
 
-		if ( right.getRealOrigin() == left ||
+		if ( right.getType() == ENTITY_JOIN ) {
+			out( " " );
+		}
+		else if ( right.getRealOrigin() == left ||
 				( right.getRealOrigin() != null && right.getRealOrigin() == left.getRealOrigin() ) ) {
 			// right represents a joins originating from left; or
 			// both right and left reprersent joins originating from the same FromElement

@@ -126,7 +126,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		initialized = true;
 	}
 
-	private void doInitialize(
+	protected void doInitialize(
 			FromClause fromClause,
 			String tableAlias,
 			String className,
@@ -597,7 +597,9 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 	}
 
 	public boolean isFromOrJoinFragment() {
-		return getType() == SqlTokenTypes.FROM_FRAGMENT || getType() == SqlTokenTypes.JOIN_FRAGMENT;
+		return getType() == SqlTokenTypes.FROM_FRAGMENT
+				|| getType() == SqlTokenTypes.JOIN_FRAGMENT
+				|| getType() == SqlTokenTypes.ENTITY_JOIN;
 	}
 
 	public boolean isAllPropertyFetch() {

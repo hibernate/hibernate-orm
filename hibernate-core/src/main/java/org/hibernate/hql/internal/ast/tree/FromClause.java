@@ -6,6 +6,7 @@
  */
 package org.hibernate.hql.internal.ast.tree;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -60,6 +61,8 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 	 */
 	private List impliedElements = new LinkedList();
 
+	private List<EntityJoinFromElement> entityJoinFromElements;
+
 	/**
 	 * Adds a new from element to the from node.
 	 *
@@ -88,6 +91,25 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 		if ( tableAlias != null ) {
 			fromElementByTableAlias.put( tableAlias, element );
 		}
+
+		if ( element instanceof EntityJoinFromElement ) {
+			if ( entityJoinFromElements == null ) {
+				entityJoinFromElements = new ArrayList<EntityJoinFromElement>();
+			}
+			entityJoinFromElements.add( (EntityJoinFromElement) element );
+		}
+	}
+
+	public void finishInit() {
+		if ( entityJoinFromElements == null ) {
+			return;
+		}
+
+		for ( EntityJoinFromElement entityJoinFromElement : entityJoinFromElements ) {
+			ASTUtil.appendChild( this, entityJoinFromElement );
+		}
+
+		entityJoinFromElements.clear();
 	}
 
 	void addDuplicateAlias(String alias, FromElement element) {

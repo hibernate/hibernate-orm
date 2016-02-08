@@ -28,8 +28,10 @@ public class PropertyAuditExpression implements AuditCriterion {
 	}
 
 	public void addToQuery(
-			EnversService enversService, AuditReaderImplementor versionsReader,
+			EnversService enversService,
+			AuditReaderImplementor versionsReader,
 			String entityName,
+			String alias,
 			QueryBuilder qb,
 			Parameters parameters) {
 		String propertyName = CriteriaTools.determinePropertyName(

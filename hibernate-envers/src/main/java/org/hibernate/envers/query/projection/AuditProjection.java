@@ -7,6 +7,7 @@
 package org.hibernate.envers.query.projection;
 
 import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.tools.Triple;
 
 /**
@@ -19,4 +20,20 @@ public interface AuditProjection {
 	 * @return A triple: (function name - possibly null, property name, add distinct?).
 	 */
 	Triple<String, String, Boolean> getData(EnversService enversService);
+
+	/**
+	 * @param enversService the Envers service
+	 * @param entityInstantiator the entity instantiator
+	 * @param entityName the name of the entity for which the projection has been added
+	 * @param revision the revision
+	 * @param value the value to convert
+	 * @return the converted value
+	 */
+	Object convertQueryResult(
+			final EnversService enversService,
+			final EntityInstantiator entityInstantiator,
+			final String entityName,
+			final Number revision,
+			final Object value
+	);
 }

@@ -30,11 +30,12 @@ public class LogicalAuditExpression implements AuditCriterion {
 			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			String entityName,
+			String alias,
 			QueryBuilder qb,
 			Parameters parameters) {
 		Parameters opParameters = parameters.addSubParameters( op );
 
-		lhs.addToQuery( enversService, versionsReader, entityName, qb, opParameters.addSubParameters( "and" ) );
-		rhs.addToQuery( enversService, versionsReader, entityName, qb, opParameters.addSubParameters( "and" ) );
+		lhs.addToQuery( enversService, versionsReader, entityName, alias, qb, opParameters.addSubParameters( "and" ) );
+		rhs.addToQuery( enversService, versionsReader, entityName, alias, qb, opParameters.addSubParameters( "and" ) );
 	}
 }

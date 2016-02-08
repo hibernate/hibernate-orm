@@ -6,12 +6,12 @@
  */
 package org.hibernate.envers.query.internal.impl;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.Query;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
+import org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.query.criteria.AuditCriterion;
 
@@ -60,20 +60,22 @@ public class EntitiesModifiedAtRevisionQuery extends AbstractAuditQuery {
 
 		// all specified conditions
 		for ( AuditCriterion criterion : criterions ) {
-			criterion.addToQuery( enversService, versionsReader, entityName, qb, qb.getRootParameters() );
+			criterion.addToQuery(
+					enversService,
+					versionsReader,
+					entityName,
+					QueryConstants.REFERENCED_ENTITY_ALIAS,
+					qb,
+					qb.getRootParameters()
+			);
+		}
+
+		for (final AuditAssociationQueryImplementor<?> associationQuery : associationQueries) {
+			associationQuery.addCriterionsToQuery(versionsReader);
 		}
 
 		Query query = buildQuery();
 		List queryResult = query.list();
-
-		if ( hasProjection ) {
-			return queryResult;
-		}
-		else {
-			List result = new ArrayList();
-			entityInstantiator.addInstancesFromVersionsEntities( entityName, result, queryResult, revision );
-
-			return result;
-		}
+		return applyProjections(queryResult, revision);
 	}
 }

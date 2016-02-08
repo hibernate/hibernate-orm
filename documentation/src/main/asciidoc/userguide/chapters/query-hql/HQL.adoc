@@ -1,5 +1,6 @@
 [[hql]]
 == HQL and JPQL
+:modeldir: ../../../../../main/java/org/hibernate/userguide/model
 :sourcedir: ../../../../../test/java/org/hibernate/userguide/hql
 :extrasdir: extras
 
@@ -23,23 +24,23 @@ To better understand the further HQL and JPQL examples, it's time to familiarize
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/Person.java[tags=hql-examples-domain-model-example]
+include::{modeldir}/Person.java[tags=hql-examples-domain-model-example]
 
-include::{sourcedir}/AddressType.java[tags=hql-examples-domain-model-example]
+include::{modeldir}/AddressType.java[tags=hql-examples-domain-model-example]
 
-include::{sourcedir}/Partner.java[tags=hql-examples-domain-model-example]
+include::{modeldir}/Partner.java[tags=hql-examples-domain-model-example]
 
-include::{sourcedir}/Phone.java[tags=hql-examples-domain-model-example]
+include::{modeldir}/Phone.java[tags=hql-examples-domain-model-example]
 
-include::{sourcedir}/PhoneType.java[tags=hql-examples-domain-model-example]
+include::{modeldir}/PhoneType.java[tags=hql-examples-domain-model-example]
 
-include::{sourcedir}/Call.java[tags=hql-examples-domain-model-example]
+include::{modeldir}/Call.java[tags=hql-examples-domain-model-example]
 
-include::{sourcedir}/Payment.java[tags=hql-examples-domain-model-example]
+include::{modeldir}/Payment.java[tags=hql-examples-domain-model-example]
 
-include::{sourcedir}/CreditCardPayment.java[tags=hql-examples-domain-model-example]
+include::{modeldir}/CreditCardPayment.java[tags=hql-examples-domain-model-example]
 
-include::{sourcedir}/WireTransferPayment.java[tags=hql-examples-domain-model-example]
+include::{modeldir}/WireTransferPayment.java[tags=hql-examples-domain-model-example]
 ----
 ====
 
@@ -64,7 +65,7 @@ include::{sourcedir}/HQLTest.java[tags=jpql-api-example]
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/Person.java[tags=jpql-api-named-query-example, indent=0]
+include::{modeldir}/Person.java[tags=jpql-api-named-query-example, indent=0]
 
 include::{sourcedir}/HQLTest.java[tags=jpql-api-named-query-example, indent=0]
 ----
@@ -570,8 +571,8 @@ include::{sourcedir}/HQLTest.java[tags=hql-select-simplest-jpql-fqn-example]
 ----
 ====
 
-We see that the query is defining a root entity reference to the `org.hibernate.userguide.hql.Person` object model type.
-Additionally, it declares an alias of `p` to that `org.hibernate.userguide.hql.Person` reference, which is the identification variable.
+We see that the query is defining a root entity reference to the `org.hibernate.userguide.model.Person` object model type.
+Additionally, it declares an alias of `p` to that `org.hibernate.userguide.model.Person` reference, which is the identification variable.
 
 Usually, the root entity reference represents just the `entity name` rather than the entity class FQN (fully-qualified name).
 By default, the entity name is the unqualified entity class name, here `Person`
@@ -773,7 +774,7 @@ Based on the type of collection, there are also available a set of explicit qual
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/Phone.java[tags=hql-collection-qualification-example, indent=0]
+include::{modeldir}/Phone.java[tags=hql-collection-qualification-example, indent=0]
 
 include::{sourcedir}/HQLTest.java[tags=hql-collection-qualification-example, indent=0]
 ----

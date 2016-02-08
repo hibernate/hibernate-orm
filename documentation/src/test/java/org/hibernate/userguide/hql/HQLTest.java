@@ -23,13 +23,21 @@ import org.hibernate.CacheMode;
 import org.hibernate.Session;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.type.StringType;
+import org.hibernate.userguide.model.AddressType;
+import org.hibernate.userguide.model.Call;
+import org.hibernate.userguide.model.CreditCardPayment;
+import org.hibernate.userguide.model.Payment;
+import org.hibernate.userguide.model.Person;
+import org.hibernate.userguide.model.Phone;
+import org.hibernate.userguide.model.PhoneType;
+import org.hibernate.userguide.model.WireTransferPayment;
 
 import org.junit.Before;
 import org.junit.Test;
+
 import static org.hibernate.userguide.util.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -146,7 +154,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			//tag::hql-select-simplest-jpql-fqn-example[]
 			List<Person> persons = entityManager.createQuery(
 				"select p " +
-				"from org.hibernate.userguide.hql.Person p", Person.class )
+				"from org.hibernate.userguide.model.Person p", Person.class )
 			.getResultList();
 			//end::hql-select-simplest-jpql-fqn-example[]
 		});

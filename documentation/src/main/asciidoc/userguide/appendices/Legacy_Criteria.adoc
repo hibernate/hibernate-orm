@@ -12,7 +12,7 @@ For details on the JPA APIs, see <<chapters/query-criteria/Criteria.adoc#criteri
 
 Hibernate features an intuitive, extensible criteria query API.
 
-[[querycriteria-creating]]
+[[criteria-creating]]
 === Creating a `Criteria` instance
 
 The interface `org.hibernate.Criteria` represents a query against a particular persistent class.
@@ -25,7 +25,7 @@ crit.setMaxResults(50);
 List cats = crit.list();
 ----
 
-[[querycriteria-narrowing]]
+[[criteria-narrowing]]
 === Narrowing the result set
 
 An individual query criterion is an instance of the interface `org.hibernate.criterion.Criterion`.
@@ -95,7 +95,7 @@ List cats = sess.createCriteria(Cat.class)
     .list();
 ----
 
-[[querycriteria-ordering]]
+[[criteria-ordering]]
 === Ordering the results
 
 You can order the results using `org.hibernate.criterion.Order`.
@@ -120,7 +120,7 @@ List cats = sess.createCriteria(Cat.class)
     .list();
 ----
 
-[[querycriteria-associations]]
+[[criteria-associations]]
 === Associations
 
 By navigating associations using `createCriteria()` you can specify constraints upon related entities:
@@ -187,7 +187,7 @@ A second query would need to retrieve the cats with mates who's name started wit
 
 Thirdly, in memory; the lists would need to be joined manually.
 
-[[querycriteria-dynamicfetching]]
+[[criteria-dynamicfetching]]
 === Dynamic association fetching
 
 You can specify association fetching semantics at runtime using `setFetchMode()`.
@@ -203,7 +203,7 @@ List cats = sess.createCriteria(Cat.class)
 
 This query will fetch both `mate` and `kittens` by outer join.
 
-[[querycriteria-components]]
+[[criteria-components]]
 === Components
 
 To add a restriction against a property of an embedded component, the component property name should be prepended to the property name when creating the `Restriction`.
@@ -217,15 +217,15 @@ List cats = session.createCriteria(Cat.class)
     .list();
 ----
 
-Note: this does not apply when querying collections of components, for that see below <<querycriteria-collections>>
+Note: this does not apply when querying collections of components, for that see below <<criteria-collections>>
 
-[[querycriteria-collections]]
+[[criteria-collections]]
 === Collections
 
 When using criteria against collections, there are two distinct cases.
 One is if the collection contains entities (eg. `<one-to-many/>` or `<many-to-many/>`) or components (`<composite-element/>` ),
 and the second is if the collection contains scalar values (`<element/>`).
-In the first case, the syntax is as given above in the section <<querycriteria-associations>> where we restrict the `kittens` collection.
+In the first case, the syntax is as given above in the section <<criteria-associations>> where we restrict the `kittens` collection.
 Essentially we create a `Criteria` object against the collection property and restrict the entity or component properties using that instance.
 
 For querying a collection of basic values, we still create the `Criteria` object against the collection,
@@ -240,7 +240,7 @@ List cats = session.createCriteria(Cat.class)
     .list();
 ----
 
-[[querycriteria-examples]]
+[[criteria-examples]]
 === Example queries
 
 The class `org.hibernate.criterion.Example` allows you to construct a query criterion from a given instance.
@@ -283,7 +283,7 @@ List results = session.createCriteria(Cat.class)
     .list();
 ----
 
-[[querycriteria-projection]]
+[[criteria-projection]]
 === Projections, aggregation and grouping
 
 The class `org.hibernate.criterion.Projections` is a factory for `Projection` instances.
@@ -385,7 +385,7 @@ List results = session.createCriteria(Cat.class)
     .list();
 ----
 
-[[querycriteria-detachedqueries]]
+[[criteria-detachedqueries]]
 === Detached queries and subqueries
 
 The `DetachedCriteria` class allows you to create a query outside the scope of a session and then execute it using an arbitrary `Session`.

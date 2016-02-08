@@ -44,14 +44,19 @@ if ( JavaVersion.current().isJava8Compatible() ) {
 }
 
 dependencies {
-    ext.pressgangVersion = '3.0.0'
+	ext.pressgangVersion = '3.0.0'
 
-//	asciidoctor 'org.asciidoctor:asciidoctorj:1.5.2'
-    asciidoclet 'org.asciidoctor:asciidoclet:0.+'
+	//	asciidoctor 'org.asciidoctor:asciidoctorj:1.5.2'
+	asciidoclet 'org.asciidoctor:asciidoclet:0.+'
 
-    jdocbookXsl "org.jboss.pressgang:pressgang-xslt-ns:${pressgangVersion}"
-    jdocbookXsl "org.jboss.pressgang:pressgang-fonts:${pressgangVersion}"
-    jdocbookStyles "org.jboss.pressgang:pressgang-jdocbook-style:${pressgangVersion}"
+	jdocbookXsl "org.jboss.pressgang:pressgang-xslt-ns:${pressgangVersion}"
+	jdocbookXsl "org.jboss.pressgang:pressgang-fonts:${pressgangVersion}"
+	jdocbookStyles "org.jboss.pressgang:pressgang-jdocbook-style:${pressgangVersion}"
+
+	compile( libraries.jpa )
+	compile( project( ':hibernate-jpamodelgen' ) )
+
+	testCompile( 'org.apache.commons:commons-lang3:3.4' )
 
 	testCompile( project(':hibernate-core') )
 	testCompile( project(':hibernate-entitymanager') )
@@ -59,7 +64,7 @@ dependencies {
 
 	testCompile( project(':hibernate-testing') )
 	testCompile( project(path: ':hibernate-entitymanager', configuration: 'tests') )
-	testCompile( 'org.apache.commons:commons-lang3:3.4' )
+
 	testRuntime( libraries.h2 )
 }
 

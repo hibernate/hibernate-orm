@@ -18,10 +18,10 @@ import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
-import org.hibernate.userguide.hql.Call;
-import org.hibernate.userguide.hql.Partner;
-import org.hibernate.userguide.hql.Person;
-import org.hibernate.userguide.hql.Phone;
+import org.hibernate.userguide.model.Call;
+import org.hibernate.userguide.model.Partner;
+import org.hibernate.userguide.model.Person;
+import org.hibernate.userguide.model.Phone;
 
 import org.junit.Test;
 

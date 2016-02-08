@@ -16,11 +16,10 @@ import org.hibernate.annotations.Nationalized;
 import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
-import org.junit.Test;
-
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 /**
  * @author Andrea Boriero
@@ -44,7 +43,7 @@ public class StringNationalizedTest extends BaseCoreFunctionalTestCase {
 			s.save( ne );
 			s.getTransaction().commit();
 		}
-		catch (Exception e) {
+		catch (RuntimeException e) {
 			if ( s.getTransaction().getStatus() == TransactionStatus.ACTIVE ) {
 				s.getTransaction().rollback();
 			}

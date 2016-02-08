@@ -1,4 +1,4 @@
-package org.hibernate.userguide.hql;
+package org.hibernate.userguide.model;
 
 import javax.persistence.Entity;
 

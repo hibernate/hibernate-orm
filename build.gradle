@@ -97,8 +97,8 @@ subprojects { subProject ->
 
     defaultTasks 'build'
 
-    group = 'org.hibernate'
-    version = rootProject.hibernateTargetVersion
+    group = 'org.hibernate.orm'
+	version = rootProject.hibernateTargetVersion
 
     ext.exportPackageVersion = rootProject.osgiExportVersion
 
@@ -409,12 +409,22 @@ subprojects { subProject ->
 	publishing {
 		publications {
 			mavenJava(MavenPublication) {
-				from components.java
 
 				artifact( sourcesJar ) {
 					classifier 'sources'
 				}
 			}
+			relocationPom( MavenPublication ) {
+				groupId 'org.hibernate'
+
+				pom.withXml {
+					def relocation = asNode().appendNode( 'distributionManagement' ).appendNode( 'relocation' )
+					relocation.appendNode( 'groupId', group )
+				}
+			}
+
+
+
 			// http://issues.gradle.org/browse/GRADLE-2966
 			// Once ^^ is resolved:
 			//		1) Move hibernate-testing module into hibernate-core tests

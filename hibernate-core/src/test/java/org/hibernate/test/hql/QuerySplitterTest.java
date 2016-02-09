@@ -12,6 +12,7 @@ import javax.persistence.Table;
 
 import org.hibernate.hql.internal.QuerySplitter;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -29,6 +30,32 @@ public class QuerySplitterTest extends BaseNonConfigCoreFunctionalTestCase {
 		assertEquals( 1, results.length );
 		assertEquals(
 				"select e from org.hibernate.test.hql.QuerySplitterTest$Employee a where e.name = ', Employee Number 1'",
+				results[0]
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-7973" )
+	public void testQueryWithEntityNameAsStringLiteral2() {
+		final String qry = "from Employee where name = 'He is the, Employee Number 1'";
+
+		String[] results = QuerySplitter.concreteQueries( qry, sessionFactory() );
+		assertEquals( 1, results.length );
+		assertEquals(
+				"from org.hibernate.test.hql.QuerySplitterTest$Employee where name = 'He is the, Employee Number 1'",
+				results[0]
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-7973" )
+	public void testQueryWithEntityNameAsStringLiteralAndEscapeQuoteChar() {
+		final String qry = "from Employee where name = '''He is '' the, Employee Number 1'''";
+
+		String[] results = QuerySplitter.concreteQueries( qry, sessionFactory() );
+		assertEquals( 1, results.length );
+		assertEquals(
+				"from org.hibernate.test.hql.QuerySplitterTest$Employee where name = '''He is '' the, Employee Number 1'''",
 				results[0]
 		);
 	}

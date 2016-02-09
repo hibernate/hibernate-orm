@@ -15,16 +15,18 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.TargetType;
-import org.hibernate.tool.schema.internal.ActionGrouping;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
 import org.hibernate.tool.schema.internal.Helper;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_CREATE_SCRIPT_SOURCE;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_CREATE_SOURCE;
+import static org.hibernate.cfg.AvailableSettings.HBM2DDL_DATABASE_ACTION;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_DROP_SCRIPT_SOURCE;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_DROP_SOURCE;
+import static org.hibernate.cfg.AvailableSettings.HBM2DDL_SCRIPTS_ACTION;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_SCRIPTS_CREATE_TARGET;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_SCRIPTS_DROP_TARGET;
 
@@ -438,6 +440,45 @@ public class SchemaManagementToolCoordinator {
 		public Object getScriptTargetSetting(Map configurationValues) {
 			// for now, reuse the CREATE script target setting
 			return configurationValues.get( HBM2DDL_SCRIPTS_CREATE_TARGET );
+		}
+	}
+
+	/**
+	 * For JPA-style schema-gen, database and script target handing are configured
+	 * individually - this tuple allows interpreting the the action for both targets
+	 * simultaneously
+	 */
+	public static class ActionGrouping {
+		private final Action databaseAction;
+		private final Action scriptAction;
+
+		public ActionGrouping(Action databaseAction, Action scriptAction) {
+			this.databaseAction = databaseAction;
+			this.scriptAction = scriptAction;
+		}
+
+		public Action getDatabaseAction() {
+			return databaseAction;
+		}
+
+		public Action getScriptAction() {
+			return scriptAction;
+		}
+
+		public static ActionGrouping interpret(Map configurationValues) {
+			// interpret the JPA settings first
+			Action databaseAction = Action.interpretJpaSetting( configurationValues.get( HBM2DDL_DATABASE_ACTION ) );
+			Action scriptAction = Action.interpretJpaSetting( configurationValues.get( HBM2DDL_SCRIPTS_ACTION ) );
+
+			// if no JPA settings were specified, look at the legacy HBM2DDL_AUTO setting...
+			if ( databaseAction == Action.NONE && scriptAction == Action.NONE ) {
+				final Action hbm2ddlAutoAction = Action.interpretHbm2ddlSetting( configurationValues.get( HBM2DDL_AUTO ) );
+				if ( hbm2ddlAutoAction != Action.NONE ) {
+					databaseAction = hbm2ddlAutoAction;
+				}
+			}
+
+			return new ActionGrouping( databaseAction, scriptAction );
 		}
 	}
 }

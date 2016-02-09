@@ -13,6 +13,8 @@ import org.hibernate.boot.model.relational.Exportable;
 /**
  * Defines a contract for exporting of database objects (tables, sequences, etc) for use in SQL {@code CREATE} and
  * {@code DROP} scripts.
+ * <p/>
+ * This is an ORM-centric contract
  *
  * @author Steve Ebersole
  */

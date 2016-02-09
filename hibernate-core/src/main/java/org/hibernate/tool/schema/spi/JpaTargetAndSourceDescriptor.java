@@ -13,5 +13,5 @@ package org.hibernate.tool.schema.spi;
  *
  * @author Steve Ebersole
  */
-public interface JpaTargetAndSourceDescriptor extends TargetDescriptor, SourceDescriptor {
+public interface JpaTargetAndSourceDescriptor extends SourceDescriptor, TargetDescriptor {
 }

@@ -6,7 +6,6 @@
  */
 package org.hibernate.tool.schema;
 
-import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.StringHelper;
 
 /**
@@ -77,17 +76,15 @@ public enum Action {
 		this.externalHbm2ddlName = externalHbm2ddlName;
 	}
 
-	public boolean isValidJpaAction() {
-		return externalJpaName != null;
-	}
-
 	@Override
 	public String toString() {
 		return getClass().getSimpleName() + "(externalJpaName=" + externalJpaName + ", externalHbm2ddlName=" + externalHbm2ddlName + ")";
 	}
 
 	/**
-	 * Used when processing JPA configuration to interpret the user config values.
+	 * Used when processing JPA configuration to interpret the user config values.  Generally
+	 * this will be a value specified by {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_DATABASE_ACTION}
+	 * or {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_SCRIPTS_ACTION}
 	 *
 	 * @param value The encountered config value
 	 *
@@ -136,7 +133,7 @@ public enum Action {
 	}
 
 	/**
-	 * Used when processing JPA configuration to interpret the user config values.
+	 * Used to interpret the value of {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_AUTO}
 	 *
 	 * @param value The encountered config value
 	 *

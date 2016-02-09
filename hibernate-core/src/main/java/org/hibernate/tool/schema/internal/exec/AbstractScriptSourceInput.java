@@ -15,6 +15,8 @@ import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
 
 /**
+ * Convenience base class for ScriptSourceInput implementations
+ *
  * @author Steve Ebersole
  */
 public abstract class AbstractScriptSourceInput implements ScriptSourceInput {
@@ -22,6 +24,7 @@ public abstract class AbstractScriptSourceInput implements ScriptSourceInput {
 
 	@Override
 	public void prepare() {
+		// by default there is nothing to do
 	}
 
 	@Override
@@ -37,5 +40,6 @@ public abstract class AbstractScriptSourceInput implements ScriptSourceInput {
 
 	@Override
 	public void release() {
+		// by default there is nothing to do
 	}
 }

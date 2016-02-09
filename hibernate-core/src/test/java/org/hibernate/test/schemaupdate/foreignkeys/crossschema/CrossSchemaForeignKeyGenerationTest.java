@@ -8,6 +8,7 @@ package org.hibernate.test.schemaupdate.foreignkeys.crossschema;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collections;
@@ -71,7 +72,7 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 				.setFormat( false );
 		schemaExport.create( true, false );
 
-		final List<String> sqlLines = Files.readAllLines( output.toPath() );
+		final List<String> sqlLines = Files.readAllLines( output.toPath(), Charset.defaultCharset() );
 		assertThat(
 				"Expected alter table SCHEMA1.Child add constraint but is : " + sqlLines.get( 4 ),
 				sqlLines.get( 4 ).startsWith( "alter table " ),

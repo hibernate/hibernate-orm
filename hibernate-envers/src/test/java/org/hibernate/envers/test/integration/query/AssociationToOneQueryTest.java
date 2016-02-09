@@ -1,12 +1,12 @@
-/**
- * 
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.envers.test.integration.query;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.List;
-
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.JoinType;
 
@@ -17,7 +17,10 @@ import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.integration.query.entities.Address;
 import org.hibernate.envers.test.integration.query.entities.Car;
 import org.hibernate.envers.test.integration.query.entities.Person;
+
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Felix Feisst (feisst dot felix at gmail dot com)

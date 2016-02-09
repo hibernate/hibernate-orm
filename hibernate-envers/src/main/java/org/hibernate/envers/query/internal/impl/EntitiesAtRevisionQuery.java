@@ -114,7 +114,7 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
 			);
 		}
 
-		for (final AuditAssociationQueryImplementor<?> associationQuery : associationQueries) {
+		for (final AuditAssociationQueryImpl<?> associationQuery : associationQueries) {
 			associationQuery.addCriterionsToQuery( versionsReader );
 		}
 

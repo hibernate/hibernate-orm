@@ -21,6 +21,13 @@ public class CaseLiteralExpression<T> extends LiteralExpression<T> {
 
 	@Override
 	public String render(RenderingContext renderingContext) {
+		// There's no need to cast a boolean value and it actually breaks on
+		// MySQL and MariaDB because they don't support casting to bit.
+		// Skip the cast for a boolean literal.
+		if ( getJavaType() == Boolean.class && Boolean.class.isInstance( getLiteral() ) ) {
+			return super.render( renderingContext );
+		}
+
 		// wrapping the result in a cast to determine the node type during the antlr hql parsing phase
 		return CastFunction.CAST_NAME + '(' +
 				super.render( renderingContext ) +

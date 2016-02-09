@@ -52,7 +52,7 @@ public enum SourceType {
 
 	private final String externalName;
 
-	private SourceType(String externalName) {
+	SourceType(String externalName) {
 		this.externalName = externalName;
 	}
 

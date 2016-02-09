@@ -33,8 +33,9 @@ public interface TargetDescriptor {
 	 * If {@link #getTargetTypes()} includes scripts, return a representation
 	 * of the script file to write to.  Otherwise, returns {@code null}.
 	 * <p/>
-	 * If {@link #getTargetTypes()} includes scripts, and this method returns
-	 * {@code null} an exception will be thrown interpreting this descriptor
+	 * While it is ultimately up to the actual tooling provider, it is generally an error
+	 * for {@link #getTargetTypes()} to indicate that scripts are a target and for this
+	 * method to return {@code null}.
 	 *
 	 * @return The script output target
 	 */

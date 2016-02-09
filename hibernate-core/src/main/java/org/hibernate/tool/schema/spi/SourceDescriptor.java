@@ -31,7 +31,11 @@ public interface SourceDescriptor {
 
 	/**
 	 * If {@link #getSourceType()} indicates scripts are involved, returns
-	 * a representation of the script file to read.  Otherwise, returns {@code null}
+	 * a representation of the script file to read.  Otherwise, returns {@code null}.
+	 * <p/>
+	 * While it is ultimately up to the actual tooling provider, it is generally an error
+	 * for {@link #getSourceType()} to indicate that scripts are involved and for this
+	 * method to return {@code null}.
 	 *
 	 * @return The script file to read.
 	 */

@@ -19,7 +19,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.internal.exec.ImprovedDatabaseInformationImpl;
 import org.hibernate.tool.schema.internal.exec.JdbcConnectionContext;
@@ -35,32 +34,12 @@ import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.jboss.logging.Logger;
 
 /**
+ * Helper methods.
+ *
  * @author Steve Ebersole
  */
 public class Helper {
 	private static final Logger log = Logger.getLogger( Helper.class );
-
-	public static boolean includesCreate(ActionGrouping actions) {
-		return includesCreate( actions.getDatabaseAction() )
-				|| includesCreate( actions.getScriptAction() );
-	}
-
-	public static boolean includesCreate(Action action) {
-		return action == Action.CREATE_ONLY
-				|| action == Action.CREATE
-				|| action == Action.CREATE_DROP;
-	}
-
-	private static boolean includesDrop(ActionGrouping actions) {
-		return includesDrop( actions.getDatabaseAction() )
-				|| includesDrop( actions.getScriptAction() );
-	}
-
-	public static boolean includesDrop(Action action) {
-		return action == Action.DROP
-				|| action == Action.CREATE
-				|| action == Action.CREATE_DROP;
-	}
 
 	public static ScriptSourceInput interpretScriptSourceSetting(Object scriptSourceSetting, ClassLoaderService classLoaderService) {
 		if ( Reader.class.isInstance( scriptSourceSetting ) ) {
@@ -155,5 +134,4 @@ public class Helper {
 			throw jdbcEnvironment.getSqlExceptionHelper().convert( e, "Unable to build DatabaseInformation" );
 		}
 	}
-
 }

@@ -71,11 +71,11 @@ public class EntitiesModifiedAtRevisionQuery extends AbstractAuditQuery {
 		}
 
 		for (final AuditAssociationQueryImpl<?> associationQuery : associationQueries) {
-			associationQuery.addCriterionsToQuery(versionsReader);
+			associationQuery.addCriterionsToQuery( versionsReader );
 		}
 
 		Query query = buildQuery();
 		List queryResult = query.list();
-		return applyProjections(queryResult, revision);
+		return applyProjections( queryResult, revision );
 	}
 }

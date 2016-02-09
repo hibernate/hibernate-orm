@@ -17,7 +17,7 @@ public interface ParameterBind<T> {
 	 *
 	 * @return The bound value.
 	 */
-	public T getValue();
+	T getValue();
 
 	/**
 	 * If {@code <T>} represents a DATE/TIME type value, JPA usually allows specifying the particular parts of
@@ -25,5 +25,5 @@ public interface ParameterBind<T> {
 	 *
 	 * @return The explicitly supplied TemporalType.
 	 */
-	public TemporalType getExplicitTemporalType();
+	TemporalType getExplicitTemporalType();
 }

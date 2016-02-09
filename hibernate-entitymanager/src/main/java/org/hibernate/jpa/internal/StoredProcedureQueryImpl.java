@@ -28,12 +28,13 @@ import org.hibernate.LockMode;
 import org.hibernate.jpa.spi.BaseQueryImpl;
 import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 import org.hibernate.jpa.spi.ParameterBind;
-import org.hibernate.jpa.spi.ParameterRegistration;
+import org.hibernate.jpa.spi.StoredProcedureQueryParameterRegistration;
 import org.hibernate.procedure.NoSuchParameterException;
 import org.hibernate.procedure.ParameterStrategyException;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.procedure.ProcedureOutputs;
+import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.result.NoMoreReturnsException;
 import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
@@ -62,7 +63,12 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 		super( entityManager );
 		this.procedureCall = memento.makeProcedureCall( entityManager.getSession() );
 		for ( org.hibernate.procedure.ParameterRegistration nativeParamReg : procedureCall.getRegisteredParameters() ) {
-			registerParameter( new ParameterRegistrationImpl( this, nativeParamReg ) );
+			registerParameter(
+					new ParameterRegistrationImpl(
+							this,
+							(ParameterRegistrationImplementor) nativeParamReg
+					)
+			);
 		}
 	}
 
@@ -111,7 +117,7 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 			registerParameter(
 					new ParameterRegistrationImpl(
 							this,
-							procedureCall.registerParameter( position, type, mode )
+							(ParameterRegistrationImplementor) procedureCall.registerParameter( position, type, mode )
 					)
 			);
 		}
@@ -135,7 +141,7 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 			registerParameter(
 					new ParameterRegistrationImpl(
 							this,
-							procedureCall.registerParameter( parameterName, type, mode )
+							(ParameterRegistrationImplementor) procedureCall.registerParameter( parameterName, type, mode )
 					)
 			);
 		}
@@ -453,15 +459,15 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 		return procedureCall;
 	}
 
-	private static class ParameterRegistrationImpl<T> implements ParameterRegistration<T> {
+	private static class ParameterRegistrationImpl<T> implements StoredProcedureQueryParameterRegistration<T> {
 		private final StoredProcedureQueryImpl query;
-		private final org.hibernate.procedure.ParameterRegistration<T> nativeParamRegistration;
+		private final ParameterRegistrationImplementor<T> nativeParamRegistration;
 
 		private ParameterBind<T> bind;
 
 		public ParameterRegistrationImpl(
 				StoredProcedureQueryImpl query,
-				org.hibernate.procedure.ParameterRegistration<T> nativeParamRegistration) {
+				ParameterRegistrationImplementor<T> nativeParamRegistration) {
 			this.query = query;
 			this.nativeParamRegistration = nativeParamRegistration;
 		}
@@ -497,6 +503,16 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 		}
 
 		@Override
+		public boolean isPassNullsEnabled() {
+			return nativeParamRegistration.isPassNullsEnabled();
+		}
+
+		@Override
+		public void enablePassingNulls(boolean enabled) {
+			nativeParamRegistration.enablePassingNulls( enabled );
+		}
+
+		@Override
 		public boolean isBindable() {
 			return getMode() == ParameterMode.IN || getMode() == ParameterMode.INOUT;
 		}
@@ -510,7 +526,7 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 		public void bindValue(T value, TemporalType specifiedTemporalType) {
 			validateBinding( getParameterType(), value, specifiedTemporalType );
 
-			nativeParamRegistration.bindValue( value,specifiedTemporalType );
+			nativeParamRegistration.bindValue( value, specifiedTemporalType );
 
 			if ( bind == null ) {
 				bind = new ParameterBind<T>() {

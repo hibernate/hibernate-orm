@@ -97,7 +97,8 @@ public class EntitiesConfigurations {
 		final EntityConfiguration entCfg;
 		if ( isVersioned( entityName ) ) {
 			entCfg = get( entityName );
-		} else {
+		}
+		else {
 			entCfg = getNotVersionEntityConfiguration( entityName );
 		}
 		final RelationDescription relDesc = entCfg.getRelationDescription( propertyName );

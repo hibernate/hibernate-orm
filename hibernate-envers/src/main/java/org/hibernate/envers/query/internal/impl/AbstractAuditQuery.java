@@ -284,7 +284,8 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 					// qr is the value of the projection itself
 					final Pair<String, AuditProjection> projection = projections.get( 0 );
 					result.add( projection.getSecond().convertQueryResult( enversService, entityInstantiator, projection.getFirst(), revision, qr ) );
-				} else {
+				}
+				else {
 					// qr is an array where each of its components holds the value of corresponding projection
 					Object[] qresults = (Object[]) qr;
 					Object[] tresults = new Object[qresults.length];
@@ -295,7 +296,8 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 					result.add( tresults );
 				}
 			}
-		} else {
+		}
+		else {
 			entityInstantiator.addInstancesFromVersionsEntities( entityName, result, queryResult, revision );
 		}
 		return result;

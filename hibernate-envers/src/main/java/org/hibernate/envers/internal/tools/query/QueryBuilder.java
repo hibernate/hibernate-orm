@@ -158,7 +158,8 @@ public class QueryBuilder {
 		final String effectivePropertyName = propertyName == null ? "" : ".".concat( propertyName );
 		if ( function == null ) {
 			projections.add( (distinct ? "distinct " : "") + alias + effectivePropertyName );
-		} else {
+		}
+		else {
 			projections.add(
 					function + "(" + (distinct ? "distinct " : "") + alias +
 					effectivePropertyName + ")"
@@ -193,7 +194,8 @@ public class QueryBuilder {
 				if (first) {
 					sb.append( " where " );
 					first = false;
-				} else {
+				}
+				else {
 					sb.append( " and " );
 				}
 				params.build( sb, queryParamValues );

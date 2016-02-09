@@ -121,7 +121,8 @@ public class SchemaExport {
 	public SchemaExport(ServiceRegistry serviceRegistry, MetadataImplementor metadata) {
 		this(
 				new SuppliedConnectionProviderConnectionHelper(
-						serviceRegistry.getService( ConnectionProvider.class )
+						serviceRegistry.getService( ConnectionProvider.class ),
+						serviceRegistry.getService( JdbcEnvironment.class ).getSqlExceptionHelper()
 				),
 				serviceRegistry,
 				metadata,
@@ -139,7 +140,8 @@ public class SchemaExport {
 	public SchemaExport(ServiceRegistry serviceRegistry, MetadataImplementor metadata, boolean createNamespaces) {
 		this(
 				new SuppliedConnectionProviderConnectionHelper(
-						serviceRegistry.getService( ConnectionProvider.class )
+						serviceRegistry.getService( ConnectionProvider.class ),
+						serviceRegistry.getService( JdbcEnvironment.class ).getSqlExceptionHelper()
 				),
 				serviceRegistry,
 				metadata,
@@ -226,7 +228,13 @@ public class SchemaExport {
 	 * @throws HibernateException Indicates problem preparing for schema export.
 	 */
 	public SchemaExport(MetadataImplementor metadata, Connection connection) throws HibernateException {
-		this( new SuppliedConnectionHelper( connection ), metadata );
+		this( new SuppliedConnectionHelper(
+				connection,
+				metadata.getMetadataBuildingOptions()
+						.getServiceRegistry()
+						.getService( JdbcEnvironment.class )
+						.getSqlExceptionHelper()
+		), metadata );
 	}
 
 	/**
@@ -274,7 +282,7 @@ public class SchemaExport {
 		this.createSQL = createSql;
 		this.importFiles = "";
 		this.sqlStatementLogger = new SqlStatementLogger( false, true );
-		this.sqlExceptionHelper = new SqlExceptionHelper();
+		this.sqlExceptionHelper = new SqlExceptionHelper( true );
 		this.classLoaderService = new ClassLoaderServiceImpl();
 		this.formatter = FormatStyle.DDL.getFormatter();
 	}

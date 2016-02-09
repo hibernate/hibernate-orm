@@ -2723,4 +2723,15 @@ public abstract class Dialect implements ConversionContext {
 	public BatchLoadSizingStrategy getDefaultBatchLoadSizingStrategy() {
 		return STANDARD_DEFAULT_BATCH_LOAD_SIZING_STRATEGY;
 	}
+
+	/**
+	 * Does the fetching JDBC statement warning for logging is enabled by default
+	 *
+	 * @return boolean
+	 *
+	 * @since 5.1
+	 */
+	public boolean isJdbcLogWarningsEnabledByDefault() {
+		return true;
+	}
 }

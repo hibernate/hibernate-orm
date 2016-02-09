@@ -595,6 +595,16 @@ public interface AvailableSettings {
 	 */
 	String DEFAULT_NULL_ORDERING = "hibernate.order_by.default_null_ordering";
 
+	/**
+	 * Enable fetching JDBC statement warning for logging.
+	 *
+	 * Values are {@code true}  or {@code false} .
+	 * Default value is {@link org.hibernate.dialect.Dialect#isJdbcLogWarningsEnabledByDefault()}
+	 *
+	 * @since 5.1
+	 */
+	String LOG_JDBC_WARNINGS =  "hibernate.jdbc.log.warnings";
+
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

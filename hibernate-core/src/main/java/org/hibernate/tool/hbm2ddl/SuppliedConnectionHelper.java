@@ -20,9 +20,11 @@ import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 class SuppliedConnectionHelper implements ConnectionHelper {
 	private Connection connection;
 	private boolean toggleAutoCommit;
+	private final SqlExceptionHelper sqlExceptionHelper;
 
-	public SuppliedConnectionHelper(Connection connection) {
+	public SuppliedConnectionHelper(Connection connection, SqlExceptionHelper sqlExceptionHelper) {
 		this.connection = connection;
+		this.sqlExceptionHelper = sqlExceptionHelper;
 	}
 
 	public void prepare(boolean needsAutoCommit) throws SQLException {
@@ -43,7 +45,7 @@ class SuppliedConnectionHelper implements ConnectionHelper {
 	}
 
 	public void release() throws SQLException {
-		new SqlExceptionHelper().logAndClearWarnings( connection );
+		sqlExceptionHelper.logAndClearWarnings( connection );
 		if ( toggleAutoCommit ) {
 			connection.setAutoCommit( false );
 		}

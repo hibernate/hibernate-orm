@@ -24,9 +24,11 @@ class SuppliedConnectionProviderConnectionHelper implements ConnectionHelper {
 	private ConnectionProvider provider;
 	private Connection connection;
 	private boolean toggleAutoCommit;
+	private final SqlExceptionHelper sqlExceptionHelper;
 
-	public SuppliedConnectionProviderConnectionHelper(ConnectionProvider provider) {
+	public SuppliedConnectionProviderConnectionHelper(ConnectionProvider provider, SqlExceptionHelper sqlExceptionHelper)  {
 		this.provider = provider;
+		this.sqlExceptionHelper = sqlExceptionHelper;
 	}
 
 	public void prepare(boolean needsAutoCommit) throws SQLException {
@@ -50,7 +52,7 @@ class SuppliedConnectionProviderConnectionHelper implements ConnectionHelper {
 	public void release() throws SQLException {
 		// we only release the connection
 		if ( connection != null ) {
-			new SqlExceptionHelper().logAndClearWarnings( connection );
+			sqlExceptionHelper.logAndClearWarnings( connection );
 			if ( toggleAutoCommit ) {
 				connection.setAutoCommit( false );
 			}

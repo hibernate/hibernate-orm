@@ -164,6 +164,17 @@ public class Parameters {
 		expressions.add( expression.toString() );
 	}
 	
+	// compare properties from two different entities (aliases)
+	public void addWhere(final String aliasLeft, final String left, final String op, final String aliasRight, final String right) {
+		final StringBuilder expression = new StringBuilder();
+
+		expression.append( aliasLeft ).append( '.' ).append( left );
+		expression.append( ' ' ).append( op ).append( ' ' );
+		expression.append( aliasRight ).append( '.' ).append( right );
+
+		expressions.add( expression.toString() );
+	}
+
 	public void addWhereWithFunction(String left, String leftFunction, String op, Object paramValue){
 		final String paramName = generateQueryParam();
 		localQueryParamValues.put( paramName, paramValue );

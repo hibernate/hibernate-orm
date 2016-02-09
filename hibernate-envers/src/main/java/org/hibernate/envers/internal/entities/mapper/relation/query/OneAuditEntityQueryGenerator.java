@@ -70,7 +70,7 @@ public final class OneAuditEntityQueryGenerator extends AbstractRelationQueryGen
 	private QueryBuilder commonQueryPart(String versionsReferencedEntityName) {
 		// SELECT e FROM versionsEntity e
 		final QueryBuilder qb = new QueryBuilder( versionsReferencedEntityName, REFERENCED_ENTITY_ALIAS );
-		qb.addProjection( null, REFERENCED_ENTITY_ALIAS, false, false );
+		qb.addProjection( null, REFERENCED_ENTITY_ALIAS, null, false );
 		// WHERE
 		// e.id_ref_ed = :id_ref_ed
 		referencingIdData.getPrefixedMapper().addNamedIdEqualsToQuery( qb.getRootParameters(), null, true );

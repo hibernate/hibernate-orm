@@ -29,6 +29,7 @@ public class RevisionTypeAuditExpression implements AuditCriterion {
 			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			String entityName,
+			String alias,
 			QueryBuilder qb,
 			Parameters parameters) {
 		parameters.addWhereWithParam( enversService.getAuditEntitiesConfiguration().getRevisionTypePropName(), op, value );

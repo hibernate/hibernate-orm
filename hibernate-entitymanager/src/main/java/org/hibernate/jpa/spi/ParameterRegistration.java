@@ -31,14 +31,14 @@ public interface ParameterRegistration<T> extends Parameter<T> {
 	 * we have either a named parameter ({@link #getName()} would return a non-{@code null} value) or a native
 	 * Hibernate positional parameter.
 	 */
-	public boolean isJpaPositionalParameter();
+	boolean isJpaPositionalParameter();
 
 	/**
 	 * Access to the query that this parameter belongs to.
 	 *
 	 * @return The defining query
 	 */
-	public Query getQuery();
+	Query getQuery();
 
 	/**
 	 * Retrieves the parameter "mode" which describes how the parameter is defined in the actual database procedure
@@ -46,7 +46,7 @@ public interface ParameterRegistration<T> extends Parameter<T> {
 	 *
 	 * @return The parameter mode.
 	 */
-	public ParameterMode getMode();
+	ParameterMode getMode();
 
 	/**
 	 * Can we bind (set) values on this parameter?  Generally this is {@code true}, but would not be in the case
@@ -54,14 +54,14 @@ public interface ParameterRegistration<T> extends Parameter<T> {
 	 *
 	 * @return Whether the parameter is bindable (can set be called).
 	 */
-	public boolean isBindable();
+	boolean isBindable();
 
 	/**
 	 * If bindable, bind the value.
 	 *
 	 * @param value The value to bind.
 	 */
-	public void bindValue(T value);
+	void bindValue(T value);
 
 	/**
 	 * If bindable, bind the value using the specific temporal type.
@@ -69,12 +69,12 @@ public interface ParameterRegistration<T> extends Parameter<T> {
 	 * @param value The value to bind
 	 * @param specifiedTemporalType The temporal type to use in binding
 	 */
-	public void bindValue(T value, TemporalType specifiedTemporalType);
+	void bindValue(T value, TemporalType specifiedTemporalType);
 
 	/**
 	 * If bindable, get the current binding.
 	 *
 	 * @return The current binding
 	 */
-	public ParameterBind<T> getBind();
+	ParameterBind<T> getBind();
 }

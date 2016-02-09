@@ -35,6 +35,16 @@ public interface ParameterRegistrationImplementor<T> extends ParameterRegistrati
 	 */
 	Type getHibernateType();
 
+	/**
+	 * If no value is bound for this parameter registration, is the passing of NULL
+	 * to the JDBC CallableStatement for that parameter enabled?  This effectively controls
+	 * whether default values for the argument as defined in the database are applied or not.
+	 *
+	 * @return {@code true} indicates that NULL will be passed to the JDBC driver, effectively disabling
+	 * the application of the default argument value defined in the database; {@code false} indicates
+	 * that the parameter will simply be ignored, with the assumption that the corresponding argument
+	 * defined a default value.
+	 */
 	boolean isPassNullsEnabled();
 
 	/**

@@ -6,14 +6,12 @@
  */
 package org.hibernate.test.hbm.fk;
 
-import java.util.Collections;
-
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.tool.schema.spi.SchemaCreator;
-import org.hibernate.tool.schema.spi.SchemaManagementTool;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -56,9 +54,14 @@ public class CollectionKeyFkNameTest extends BaseUnitTestCase {
 				.addResource( mappingResource )
 				.buildMetadata();
 
-		final SchemaCreator schemaCreator = ssr.getService( SchemaManagementTool.class ).getSchemaCreator( Collections.emptyMap() );
 		final JournalingSchemaToolingTarget target = new JournalingSchemaToolingTarget();
-		schemaCreator.doCreation( metadata, false, target );
+		new SchemaCreatorImpl( ssr ).doCreation(
+				metadata,
+				ssr,
+				ssr.getService( ConfigurationService.class ).getSettings(),
+				false,
+				target
+		);
 
 		assertTrue(
 				"Expected foreign-key name [" + expectedName + "] not seen in schema creation output",

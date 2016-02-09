@@ -9,23 +9,35 @@ package org.hibernate.test.schemaupdate.foreignkeys.crossschema;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
+import org.hibernate.tool.schema.SourceType;
+import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.extract.internal.DatabaseInformationImpl;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
-import org.hibernate.tool.schema.internal.TargetDatabaseImpl;
-import org.hibernate.tool.schema.internal.TargetStdoutImpl;
+import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
+import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
+import org.hibernate.tool.schema.internal.SchemaDropperImpl;
+import org.hibernate.tool.schema.internal.SchemaMigratorImpl;
+import org.hibernate.test.tool.schema.TargetDatabaseImpl;
+import org.hibernate.tool.schema.internal.exec.GenerationTarget;
+import org.hibernate.tool.schema.internal.exec.GenerationTargetToStdout;
+import org.hibernate.tool.schema.spi.ExceptionHandler;
+import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
-import org.hibernate.tool.schema.spi.Target;
+import org.hibernate.tool.schema.spi.ScriptSourceInput;
+import org.hibernate.tool.schema.spi.SourceDescriptor;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -65,13 +77,15 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 
 		MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
 		metadata.validate();
-		final SchemaExport schemaExport = new SchemaExport( metadata )
-				.setHaltOnError( true )
+
+		new SchemaExport().setHaltOnError( true )
 				.setOutputFile( output.getAbsolutePath() )
-				.setFormat( false );
-		schemaExport.create( true, false );
+				.setFormat( false )
+				.create( EnumSet.of( TargetType.SCRIPT, TargetType.STDOUT ), metadata );
 
 		final List<String> sqlLines = Files.readAllLines( output.toPath() );
+		// 2 drops, 2 creates, one alter
+		assertThat( sqlLines.size(), is( 5 ) );
 		assertThat(
 				"Expected alter table SCHEMA1.Child add constraint but is : " + sqlLines.get( 4 ),
 				sqlLines.get( 4 ).startsWith( "alter table " ),
@@ -90,7 +104,7 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 		metadata.validate();
 
 		final Database database = metadata.getDatabase();
-		final SchemaManagementTool tool = ssr.getService( SchemaManagementTool.class );
+		final HibernateSchemaManagementTool tool = (HibernateSchemaManagementTool) ssr.getService( SchemaManagementTool.class );
 
 		DatabaseInformation dbInfo = new DatabaseInformationImpl(
 				ssr,
@@ -100,28 +114,70 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 				database.getDefaultNamespace().getPhysicalName().getSchema()
 		);
 
+		final Map configurationValues = ssr.getService( ConfigurationService.class ).getSettings();
 
-		tool.getSchemaMigrator( Collections.emptyMap() ).doMigration(
+		new SchemaMigratorImpl( tool ).doMigration(
 				metadata,
 				dbInfo,
-				true,
+				new ExecutionOptions() {
+					@Override
+					public boolean shouldManageNamespaces() {
+						return true;
+					}
+
+					@Override
+					public Map getConfigurationValues() {
+						return configurationValues;
+					}
+
+					@Override
+					public ExceptionHandler getExceptionHandler() {
+						return ExceptionHandlerLoggedImpl.INSTANCE;
+					}
+				},
+				ssr.getService( JdbcEnvironment.class ).getDialect(),
 				buildTargets()
 		);
 
-		tool.getSchemaDropper( Collections.emptyMap() ).doDrop(
+		new SchemaDropperImpl( tool ).doDrop(
 				metadata,
-				false,
+				new ExecutionOptions() {
+					@Override
+					public boolean shouldManageNamespaces() {
+						return true;
+					}
+
+					@Override
+					public Map getConfigurationValues() {
+						return configurationValues;
+					}
+
+					@Override
+					public ExceptionHandler getExceptionHandler() {
+						return ExceptionHandlerLoggedImpl.INSTANCE;
+					}
+				},
+				ssr.getService( JdbcEnvironment.class ).getDialect(),
+				new SourceDescriptor() {
+					@Override
+					public SourceType getSourceType() {
+						return SourceType.METADATA;
+					}
+
+					@Override
+					public ScriptSourceInput getScriptSourceInput() {
+						return null;
+					}
+				},
 				buildTargets()
 		);
 	}
 
-	public List<Target> buildTargets() {
-		return Arrays.asList(
-				new TargetStdoutImpl(),
-				new TargetDatabaseImpl(
-						ssr.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess()
-				)
-		);
+	public GenerationTarget[] buildTargets() {
+		return new GenerationTarget[] {
+				new GenerationTargetToStdout(),
+				new TargetDatabaseImpl( ssr.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess() )
+		};
 	}
 
 

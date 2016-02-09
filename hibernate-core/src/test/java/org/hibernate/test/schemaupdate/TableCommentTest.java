@@ -6,13 +6,14 @@
  */
 package org.hibernate.test.schemaupdate;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.util.EnumSet;
 import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.Id;
 
 import org.hibernate.annotations.Table;
 import org.hibernate.boot.MetadataSources;
@@ -20,14 +21,13 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.hibernate.tool.hbm2ddl.Target;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.core.Is.is;
@@ -48,8 +48,7 @@ public class TableCommentTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@After
 	public void tearDown() {
-		SchemaExport schemaExport = new SchemaExport( serviceRegistry(), metadata() );
-		schemaExport.drop( Target.BOTH );
+		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ), metadata() );
 	}
 
 	@Test
@@ -105,10 +104,10 @@ public class TableCommentTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	private void createSchema(Class[] annotatedClasses) {
-		final SchemaExport schemaExport = new SchemaExport( metadata() )
+		new SchemaExport()
 				.setOutputFile( output.getAbsolutePath() )
-				.setFormat( false );
-		schemaExport.create( true, true );
+				.setFormat( false )
+				.create( EnumSet.of( TargetType.DATABASE, TargetType.SCRIPT ), metadata() );
 	}
 
 	protected void afterMetadataSourcesApplied(MetadataSources metadataSources) {

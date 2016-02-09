@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.schemaupdate;
 
+import java.util.EnumSet;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Index;
@@ -17,7 +18,8 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
-import org.hibernate.tool.hbm2ddl.Target;
+import org.hibernate.tool.hbm2ddl.TargetTypeHelper;
+import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -53,10 +55,14 @@ public class MigrationTest extends BaseUnitTestCase {
 		MetadataImplementor v1metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
 				.addResource( resource1 )
 				.buildMetadata();
-		new SchemaExport( v1metadata ).drop( false, true );
 
-		SchemaUpdate v1schemaUpdate = new SchemaUpdate( serviceRegistry, v1metadata );
-		v1schemaUpdate.execute( true, true );
+		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), v1metadata );
+
+		final SchemaUpdate v1schemaUpdate = new SchemaUpdate();
+		v1schemaUpdate.execute(
+				EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ),
+				v1metadata
+		);
 
 		assertEquals( 0, v1schemaUpdate.getExceptions().size() );
 
@@ -64,11 +70,14 @@ public class MigrationTest extends BaseUnitTestCase {
 				.addResource( resource2 )
 				.buildMetadata();
 
-		SchemaUpdate v2schemaUpdate = new SchemaUpdate( serviceRegistry, v2metadata );
-		v2schemaUpdate.execute( true, true );
+		final SchemaUpdate v2schemaUpdate = new SchemaUpdate();
+		v2schemaUpdate.execute(
+				EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ),
+				v2metadata
+		);
 		assertEquals( 0, v2schemaUpdate.getExceptions().size() );
 		
-		new SchemaExport( serviceRegistry, v2metadata ).drop( false, true );
+		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), v2metadata );
 
 	}
 	
@@ -129,15 +138,15 @@ public class MigrationTest extends BaseUnitTestCase {
 				.buildMetadata();
 
 		// drop and then create the schema
-		new SchemaExport( metadata ).execute( Target.EXPORT, SchemaExport.Type.BOTH );
+		new SchemaExport().execute( EnumSet.of( TargetType.DATABASE ), SchemaExport.Action.BOTH, metadata );
 
 		try {
 			// update the schema
-			new SchemaUpdate( metadata ).execute( Target.EXPORT );
+			new SchemaUpdate().execute( EnumSet.of( TargetType.DATABASE ), metadata );
 		}
 		finally {
 			// drop the schema
-			new SchemaExport( metadata ).execute( Target.EXPORT, SchemaExport.Type.DROP );
+			new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), metadata );
 		}
 	}
 
@@ -158,15 +167,15 @@ public class MigrationTest extends BaseUnitTestCase {
 				.buildMetadata();
 
 		// drop and then create the schema
-		new SchemaExport( metadata, true ).execute( Target.EXPORT, SchemaExport.Type.BOTH );
+		new SchemaExport().execute( EnumSet.of( TargetType.DATABASE ), SchemaExport.Action.BOTH, metadata );
 
 		try {
 			// update the schema
-			new SchemaUpdate( metadata ).execute( Target.EXPORT );
+			new SchemaUpdate().execute( EnumSet.of( TargetType.DATABASE ), metadata );
 		}
 		finally {
 			// drop the schema
-			new SchemaExport( metadata, true ).execute( Target.EXPORT, SchemaExport.Type.DROP );
+			new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), metadata );
 		}
 	}
 

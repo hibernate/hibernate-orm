@@ -6,8 +6,6 @@
  */
 package org.hibernate.internal;
 
-import javax.naming.Reference;
-import javax.naming.StringRefAddr;
 import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
@@ -27,9 +25,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
-import org.hibernate.cache.spi.access.RegionAccessStrategy;
-import org.jboss.logging.Logger;
+import javax.naming.Reference;
+import javax.naming.StringRefAddr;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.Cache;
@@ -69,6 +66,7 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cache.spi.access.RegionAccessStrategy;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
 import org.hibernate.context.internal.JTASessionContext;
@@ -112,7 +110,6 @@ import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.config.ConfigurationException;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
@@ -135,15 +132,15 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
 import org.hibernate.stat.Statistics;
 import org.hibernate.stat.spi.StatisticsImplementor;
-import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
-import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.hibernate.tool.hbm2ddl.SchemaUpdate;
-import org.hibernate.tool.hbm2ddl.SchemaValidator;
+import org.hibernate.tool.schema.spi.DelayedDropAction;
+import org.hibernate.tool.schema.spi.DelayedDropRegistry;
+import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
-import static org.hibernate.cfg.AvailableSettings.HBM2DLL_CREATE_NAMESPACES;
+
+import org.jboss.logging.Logger;
 
 
 /**
@@ -193,7 +190,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient Dialect dialect;
 	private final transient Settings settings;
 	private final transient Properties properties;
-	private transient SchemaExport schemaExport;
 	private final transient CurrentSessionContext currentSessionContext;
 	private final transient SQLFunctionRegistry sqlFunctionRegistry;
 	private final transient SessionFactoryObserverChain observer = new SessionFactoryObserverChain();
@@ -205,6 +201,8 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient TypeHelper typeHelper;
 	private final transient SessionFactoryOptions sessionFactoryOptions;
 	private final transient Map<String, RegionAccessStrategy> cacheAccessStrategiesMap = new HashMap();
+
+	private DelayedDropAction delayedDropAction;
 
 	public SessionFactoryImpl(final MetadataImplementor metadata, SessionFactoryOptions options) {
 		LOG.debug( "Building session factory" );
@@ -457,25 +455,17 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 				sessionFactoryOptions
 		);
 
-
-		boolean createDropNamespaces = ConfigurationHelper.getBoolean( HBM2DLL_CREATE_NAMESPACES, properties, false );
-
-		if ( settings.isAutoCreateSchema() ) {
-
-			new SchemaExport( serviceRegistry, metadata, createDropNamespaces )
-					.setImportSqlCommandExtractor( serviceRegistry.getService( ImportSqlCommandExtractor.class ) )
-					.create( false, true );
-		}
-		if ( settings.isAutoUpdateSchema() ) {
-			new SchemaUpdate( serviceRegistry, metadata ).execute( false, true );
-		}
-		if ( settings.isAutoValidateSchema() ) {
-			new SchemaValidator( serviceRegistry, metadata ).validate();
-		}
-		if ( settings.isAutoDropSchema() ) {
-			schemaExport = new SchemaExport( serviceRegistry, metadata, createDropNamespaces )
-					.setImportSqlCommandExtractor( serviceRegistry.getService( ImportSqlCommandExtractor.class ) );
-		}
+		SchemaManagementToolCoordinator.process(
+				metadata,
+				serviceRegistry,
+				properties,
+				new DelayedDropRegistry() {
+					@Override
+					public void registerOnCloseAction(DelayedDropAction action) {
+						SessionFactoryImpl.this.delayedDropAction = action;
+					}
+				}
+		);
 
 		currentSessionContext = buildCurrentSessionContext();
 
@@ -1080,8 +1070,8 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		queryPlanCache.cleanup();
 
-		if ( settings.isAutoDropSchema() ) {
-			schemaExport.drop( false, true );
+		if ( delayedDropAction != null ) {
+			delayedDropAction.perform( serviceRegistry );
 		}
 
 		SessionFactoryRegistry.INSTANCE.removeSessionFactory(

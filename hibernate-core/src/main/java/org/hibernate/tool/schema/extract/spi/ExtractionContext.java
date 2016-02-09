@@ -9,6 +9,7 @@ package org.hibernate.tool.schema.extract.spi;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 
+import org.hibernate.Incubating;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.QualifiedTableName;
@@ -21,6 +22,7 @@ import org.hibernate.service.ServiceRegistry;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface ExtractionContext {
 	ServiceRegistry getServiceRegistry();
 	JdbcEnvironment getJdbcEnvironment();
@@ -34,6 +36,7 @@ public interface ExtractionContext {
 	 * In conjunction with {@link #getDatabaseObjectAccess()} provides access to
 	 * information about known database objects to the extractor.
 	 */
+	@Incubating
 	interface DatabaseObjectAccess {
 		TableInformation locateTableInformation(QualifiedTableName tableName);
 		SequenceInformation locateSequenceInformation(QualifiedSequenceName sequenceName);

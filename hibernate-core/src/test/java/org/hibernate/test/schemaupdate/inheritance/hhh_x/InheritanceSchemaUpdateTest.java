@@ -6,13 +6,15 @@
  */
 package org.hibernate.test.schemaupdate.inheritance.hhh_x;
 
+import java.util.EnumSet;
+
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
-import org.hibernate.tool.hbm2ddl.Target;
+import org.hibernate.tool.schema.TargetType;
 
 import org.junit.Test;
 
@@ -32,12 +34,14 @@ public class InheritanceSchemaUpdateTest {
 		metadata.validate();
 
 		try {
-			SchemaUpdate su = new SchemaUpdate( ssr, metadata );
-			su.execute( Target.EXPORT );
+			try {
+				new SchemaUpdate().execute( EnumSet.of( TargetType.DATABASE ), metadata );
+			}
+			finally {
+				new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), metadata );
+			}
 		}
 		finally {
-			SchemaExport schemaExport = new SchemaExport( ssr, metadata );
-			schemaExport.drop( Target.EXPORT );
 			StandardServiceRegistryBuilder.destroy( ssr );
 		}
 	}

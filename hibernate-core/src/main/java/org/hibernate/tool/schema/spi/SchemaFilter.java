@@ -6,13 +6,17 @@
  */
 package org.hibernate.tool.schema.spi;
 
+import org.hibernate.Incubating;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.mapping.Table;
 
 /**
  * Defines a filter for Hibernate's schema tooling.
+ *
+ * @since 5.1
  */
+@Incubating
 public interface SchemaFilter {
 	/**
 	 * Should the given namespace (catalog+schema) be included?  If {@code true}, the

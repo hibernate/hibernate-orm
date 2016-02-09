@@ -19,7 +19,11 @@ import java.util.Map;
  * JDBC foreign key metadata
  *
  * @author Christoph Sturm
+ *
+ * @deprecated Everything in this package has been replaced with
+ * {@link org.hibernate.tool.schema.spi.SchemaManagementTool} and friends.
  */
+@Deprecated
 public class ForeignKeyMetadata {
 	private final String name;
 	private final String refTable;

@@ -13,12 +13,18 @@ import java.sql.Statement;
 
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 
 import org.jboss.logging.Logger;
 
 /**
 * @author Steve Ebersole
-*/
+ *
+ *
+ * @deprecated Everything in this package has been replaced with
+ * {@link org.hibernate.tool.schema.spi.SchemaManagementTool} and friends.
+ */
+@Deprecated
 class DatabaseExporter implements Exporter {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, DatabaseExporter.class.getName() );
 

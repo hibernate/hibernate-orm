@@ -6,8 +6,6 @@
  */
 package org.hibernate.test.hbm.uk;
 
-import java.util.Collections;
-
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -20,9 +18,8 @@ import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
-import org.hibernate.tool.schema.spi.SchemaCreator;
-import org.hibernate.tool.schema.spi.SchemaDropper;
-import org.hibernate.tool.schema.spi.SchemaManagementTool;
+import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
+import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -67,15 +64,13 @@ public class UniqueDelegateTest extends BaseUnitTestCase {
 				.buildMetadata();
 
 		final JournalingSchemaToolingTarget target = new JournalingSchemaToolingTarget();
-		final SchemaCreator schemaCreator = ssr.getService( SchemaManagementTool.class ).getSchemaCreator( Collections.emptyMap() );
-		schemaCreator.doCreation( metadata, false, target );
+		new SchemaCreatorImpl( ssr ).doCreation( metadata, false, target );
 
 		assertThat( getAlterTableToAddUniqueKeyCommandCallCount, equalTo( 1 ) );
 		assertThat( getColumnDefinitionUniquenessFragmentCallCount, equalTo( 1 ) );
 		assertThat( getTableCreationUniqueConstraintsFragmentCallCount, equalTo( 1 ) );
 
-		final SchemaDropper schemaDropper = ssr.getService( SchemaManagementTool.class ).getSchemaDropper( Collections.emptyMap() );
-		schemaDropper.doDrop( metadata, false, target );
+		new SchemaDropperImpl( ssr ).doDrop( metadata, false, target );
 
 		// unique keys are not dropped explicitly
 		assertThat( getAlterTableToAddUniqueKeyCommandCallCount, equalTo( 1 ) );

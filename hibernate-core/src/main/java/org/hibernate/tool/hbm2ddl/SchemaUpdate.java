@@ -8,12 +8,14 @@ package org.hibernate.tool.hbm2ddl;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
-import org.hibernate.HibernateException;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
@@ -24,23 +26,18 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.jdbc.internal.FormatStyle;
-import org.hibernate.engine.jdbc.internal.Formatter;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tool.schema.extract.internal.DatabaseInformationImpl;
-import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
-import org.hibernate.tool.schema.internal.TargetDatabaseImpl;
-import org.hibernate.tool.schema.internal.TargetFileImpl;
-import org.hibernate.tool.schema.internal.TargetStdoutImpl;
+import org.hibernate.tool.schema.TargetType;
+import org.hibernate.tool.schema.internal.ExceptionHandlerCollectingImpl;
+import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
-import org.hibernate.tool.schema.spi.SchemaMigrator;
+import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
+import org.hibernate.tool.schema.spi.TargetDescriptor;
 
 /**
  * A commandline tool to update a database schema. May also be called from inside an application.
@@ -51,130 +48,70 @@ import org.hibernate.tool.schema.spi.SchemaMigrator;
 public class SchemaUpdate {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SchemaUpdate.class );
 
-	private final MetadataImplementor metadata;
-	private final ServiceRegistry serviceRegistry;
-
-	private final JdbcConnectionAccess jdbcConnectionAccess;
 	private final List<Exception> exceptions = new ArrayList<Exception>();
+
 	private String outputFile;
 	private String delimiter;
-	private Formatter formatter;
+	private boolean format;
 
-	/**
-	 * Creates a SchemaUpdate object.  This form is intended for use from tooling
-	 *
-	 * @param metadata The metadata defining the schema as it should be after update
-	 *
-	 * @throws HibernateException
-	 */
-	public SchemaUpdate(MetadataImplementor metadata) {
-		this( metadata.getMetadataBuildingOptions().getServiceRegistry(), metadata );
+	public void execute(EnumSet<TargetType> targetTypes, Metadata metadata) {
+		execute( targetTypes, metadata, ( (MetadataImplementor) metadata ).getMetadataBuildingOptions().getServiceRegistry() );
 	}
 
-	/**
-	 * Creates a SchemaUpdate object.  This form is intended for use from
-	 * {@code hibernate.hbm2ddl.auto} handling, generally from within the SessionFactory
-	 * ctor.
-	 * <p/>
-	 * Note that the passed ServiceRegistry is expected to be of type
-	 * {@link org.hibernate.service.spi.SessionFactoryServiceRegistry}, although
-	 * any ServiceRegistry type will work as long as it has access to the
-	 * {@link org.hibernate.engine.jdbc.spi.JdbcServices} service.
-	 *
-	 * @param serviceRegistry The ServiceRegistry to use.
-	 * @param metadata The metadata defining the schema as it should be after update
-	 *
-	 * @throws HibernateException
-	 */
-	public SchemaUpdate(ServiceRegistry serviceRegistry, MetadataImplementor metadata) throws HibernateException {
-		this.metadata = metadata;
-		this.serviceRegistry = serviceRegistry;
-		this.jdbcConnectionAccess = serviceRegistry.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess();
-	}
-
-	/**
-	 * Execute the schema updates
-	 *
-	 * @param script print all DDL to the console
-	 */
-	public void execute(boolean script, boolean doUpdate) {
-		execute( Target.interpret( script, doUpdate ) );
-	}
-
-	public void execute(Target target) {
-		LOG.runningHbm2ddlSchemaUpdate();
+	@SuppressWarnings("unchecked")
+	public void execute(EnumSet<TargetType> targetTypes, Metadata metadata, ServiceRegistry serviceRegistry) {
+		if ( targetTypes.isEmpty() ) {
+			LOG.debug( "Skipping SchemaExport as no targets were specified" );
+			return;
+		}
 
 		exceptions.clear();
+		LOG.runningHbm2ddlSchemaUpdate();
 
-		List<org.hibernate.tool.schema.spi.Target> toolTargets = buildToolTargets( target );
+		Map config = new HashMap();
+		config.putAll( serviceRegistry.getService( ConfigurationService.class ).getSettings() );
+		config.put( AvailableSettings.HBM2DDL_DELIMITER, delimiter );
+		config.put( AvailableSettings.FORMAT_SQL, format );
 
-		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
-		final SchemaMigrator schemaMigrator = serviceRegistry.getService( SchemaManagementTool.class )
-				.getSchemaMigrator( cfgService.getSettings() );
+		final SchemaManagementTool tool = serviceRegistry.getService( SchemaManagementTool.class );
 
-		final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
-		final DatabaseInformation databaseInformation;
-		try {
-			databaseInformation = new DatabaseInformationImpl(
-					serviceRegistry,
-					serviceRegistry.getService( JdbcEnvironment.class ),
-					jdbcConnectionAccess,
-					metadata.getDatabase().getDefaultNamespace().getPhysicalName().getCatalog(),
-					metadata.getDatabase().getDefaultNamespace().getPhysicalName().getSchema()
-			);
-		}
-		catch (SQLException e) {
-			throw jdbcServices.getSqlExceptionHelper().convert(
-					e,
-					"Error creating DatabaseInformation for schema migration"
-			);
-		}
+		final ExceptionHandlerCollectingImpl exceptionHandler = new ExceptionHandlerCollectingImpl();
+		final ExecutionOptions executionOptions = SchemaManagementToolCoordinator.buildExecutionOptions(
+				config,
+				exceptionHandler
+		);
+
+		final TargetDescriptor targetDescriptor = SchemaExport.buildTargetDescriptor( targetTypes, outputFile, serviceRegistry );
 
 		try {
-			schemaMigrator.doMigration( metadata, databaseInformation, true, toolTargets );
+			tool.getSchemaMigrator( config ).doMigration( metadata, executionOptions, targetDescriptor );
 		}
 		finally {
-			databaseInformation.cleanup();
+			exceptions.addAll( exceptionHandler.getExceptions() );
 		}
-	}
-
-	private List<org.hibernate.tool.schema.spi.Target> buildToolTargets(Target target) {
-		List<org.hibernate.tool.schema.spi.Target> toolTargets = new ArrayList<org.hibernate.tool.schema.spi.Target>();
-
-		if ( target.doScript() ) {
-			toolTargets.add( new TargetStdoutImpl( delimiter, formatter ) );
-		}
-
-		if ( target.doExport() ) {
-			toolTargets.add( new TargetDatabaseImpl( jdbcConnectionAccess ) );
-		}
-
-		if ( outputFile != null ) {
-			LOG.writingGeneratedSchemaToFile( outputFile );
-			toolTargets.add( new TargetFileImpl( outputFile, delimiter, formatter ) );
-		}
-
-		return toolTargets;
 	}
 
 	/**
 	 * Returns a List of all Exceptions which occured during the export.
 	 *
-	 * @return A List containig the Exceptions occured during the export
+	 * @return A List containing the Exceptions occured during the export
 	 */
 	public List getExceptions() {
 		return exceptions;
 	}
 
-	public void setHaltOnError(boolean haltOnError) {
+	public SchemaUpdate setHaltOnError(boolean haltOnError) {
+		return this;
 	}
 
-	public void setFormat(boolean format) {
-		formatter = (format ? FormatStyle.DDL : FormatStyle.NONE).getFormatter();
+	public SchemaUpdate setFormat(boolean format) {
+		this.format = format;
+		return this;
 	}
 
-	public void setOutputFile(String outputFile) {
+	public SchemaUpdate setOutputFile(String outputFile) {
 		this.outputFile = outputFile;
+		return this;
 	}
 
 	/**
@@ -183,8 +120,9 @@ public class SchemaUpdate {
 	 * @param delimiter The delimiter
 	 *
 	 */
-	public void setDelimiter(String delimiter) {
+	public SchemaUpdate setDelimiter(String delimiter) {
 		this.delimiter = delimiter;
+		return this;
 	}
 
 	public static void main(String[] args) {
@@ -195,10 +133,10 @@ public class SchemaUpdate {
 			try {
 				final MetadataImplementor metadata = buildMetadata( parsedArgs, serviceRegistry );
 
-				final SchemaUpdate schemaUpdate = new SchemaUpdate( metadata );
-				schemaUpdate.setOutputFile( parsedArgs.outFile );
-				schemaUpdate.setDelimiter( parsedArgs.delimiter );
-				schemaUpdate.execute( parsedArgs.script, parsedArgs.doUpdate );
+				new SchemaUpdate()
+						.setOutputFile( parsedArgs.outputFile )
+						.setDelimiter( parsedArgs.delimiter )
+						.execute( parsedArgs.targetTypes, metadata, serviceRegistry );
 			}
 			finally {
 				StandardServiceRegistryBuilder.destroy( serviceRegistry );
@@ -263,13 +201,11 @@ public class SchemaUpdate {
 	}
 
 	private static class CommandLineArgs {
-		boolean script = true;
-		// If true then execute db updates, otherwise just generate and display updates
-		boolean doUpdate = true;
+		EnumSet<TargetType> targetTypes;
 
 		String propertiesFile = null;
 		String cfgXmlFile = null;
-		String outFile = null;
+		String outputFile = null;
 		String delimiter = null;
 
 		String implicitNamingStrategyImplName = null;
@@ -281,10 +217,20 @@ public class SchemaUpdate {
 		public static CommandLineArgs parseCommandLineArgs(String[] args) {
 			final CommandLineArgs parsedArgs = new CommandLineArgs();
 
+			String targetText = null;
+			boolean script = true;
+			boolean doUpdate = true;
+
 			for ( String arg : args ) {
 				if ( arg.startsWith( "--" ) ) {
 					if ( arg.equals( "--quiet" ) ) {
-						parsedArgs.script = false;
+						script = false;
+					}
+					else if ( arg.startsWith( "--text" ) ) {
+						doUpdate = false;
+					}
+					else if ( arg.startsWith( "--target=" ) ) {
+						targetText = arg.substring( 9 );
 					}
 					else if ( arg.startsWith( "--properties=" ) ) {
 						parsedArgs.propertiesFile = arg.substring( 13 );
@@ -292,11 +238,8 @@ public class SchemaUpdate {
 					else if ( arg.startsWith( "--config=" ) ) {
 						parsedArgs.cfgXmlFile = arg.substring( 9 );
 					}
-					else if ( arg.startsWith( "--text" ) ) {
-						parsedArgs.doUpdate = false;
-					}
 					else if ( arg.startsWith( "--output=" ) ) {
-						parsedArgs.outFile = arg.substring( 9 );
+						parsedArgs.outputFile = arg.substring( 9 );
 					}
 					else if ( arg.startsWith( "--naming=" ) ) {
 						DeprecationLogger.DEPRECATION_LOGGER.logDeprecatedNamingStrategyArgument();
@@ -319,6 +262,16 @@ public class SchemaUpdate {
 						parsedArgs.hbmXmlFiles.add( arg );
 					}
 				}
+			}
+
+			if ( targetText == null ) {
+				parsedArgs.targetTypes = TargetTypeHelper.parseLegacyCommandLineOptions( script, doUpdate, parsedArgs.outputFile );
+			}
+			else {
+				if ( !script || !doUpdate ) {
+					LOG.warn( "--text or --quiet was used; prefer --target=none|(stdout|database|script)*" );
+				}
+				parsedArgs.targetTypes = TargetTypeHelper.parseCommandLineOptions( targetText );
 			}
 
 			return parsedArgs;

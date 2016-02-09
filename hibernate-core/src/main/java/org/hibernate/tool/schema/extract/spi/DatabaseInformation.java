@@ -6,6 +6,7 @@
  */
 package org.hibernate.tool.schema.extract.spi;
 
+import org.hibernate.Incubating;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
@@ -18,6 +19,7 @@ import org.hibernate.boot.model.relational.QualifiedTableName;
  * @author Teodor Danciu
  * @author Steve Ebersole
  */
+@Incubating
 public interface DatabaseInformation {
 	/**
 	 * Check to see if the given schema already exists.
@@ -37,7 +39,7 @@ public interface DatabaseInformation {
 	 *
 	 * @return The table information.  May return {@code null} if not found.
 	 */
-	public TableInformation getTableInformation(Identifier catalogName, Identifier schemaName, Identifier tableName);
+	TableInformation getTableInformation(Identifier catalogName, Identifier schemaName, Identifier tableName);
 
 	/**
 	 * Obtain reference to the named TableInformation
@@ -47,7 +49,7 @@ public interface DatabaseInformation {
 	 *
 	 * @return The table information.  May return {@code null} if not found.
 	 */
-	public TableInformation getTableInformation(Namespace.Name schemaName, Identifier tableName);
+	TableInformation getTableInformation(Namespace.Name schemaName, Identifier tableName);
 
 	/**
 	 * Obtain reference to the named TableInformation
@@ -56,9 +58,7 @@ public interface DatabaseInformation {
 	 *
 	 * @return The table information.  May return {@code null} if not found.
 	 */
-	public TableInformation getTableInformation(QualifiedTableName tableName);
-
-	public void registerTable(TableInformation tableInformation);
+	TableInformation getTableInformation(QualifiedTableName tableName);
 
 	/**
 	 * Obtain reference to the named SequenceInformation
@@ -69,7 +69,7 @@ public interface DatabaseInformation {
 	 *
 	 * @return The sequence information.  May return {@code null} if not found.
 	 */
-	public SequenceInformation getSequenceInformation(
+	SequenceInformation getSequenceInformation(
 			Identifier catalogName,
 			Identifier schemaName,
 			Identifier sequenceName);
@@ -82,7 +82,7 @@ public interface DatabaseInformation {
 	 *
 	 * @return The sequence information.  May return {@code null} if not found.
 	 */
-	public SequenceInformation getSequenceInformation(Namespace.Name schemaName, Identifier sequenceName);
+	SequenceInformation getSequenceInformation(Namespace.Name schemaName, Identifier sequenceName);
 
 	/**
 	 * Obtain reference to the named SequenceInformation
@@ -91,7 +91,7 @@ public interface DatabaseInformation {
 	 *
 	 * @return The sequence information.  May return {@code null} if not found.
 	 */
-	public SequenceInformation getSequenceInformation(QualifiedSequenceName sequenceName);
+	SequenceInformation getSequenceInformation(QualifiedSequenceName sequenceName);
 
 	/**
 	 * Check to see if the given catalog already exists.

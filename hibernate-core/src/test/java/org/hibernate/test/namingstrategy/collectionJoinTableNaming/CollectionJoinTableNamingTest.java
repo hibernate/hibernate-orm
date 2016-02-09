@@ -24,6 +24,7 @@
 package org.hibernate.test.namingstrategy.collectionJoinTableNaming;
 
 import java.io.Serializable;
+import java.util.EnumSet;
 import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -41,10 +42,10 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyHbmImpl;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
+import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -131,7 +132,7 @@ public class CollectionJoinTableNamingTest extends BaseUnitTestCase {
 		assertSame( inputs1Mapping.getCollectionTable(), inputs2Mapping.getCollectionTable() );
 
 		// NOTE : here so that tester can more easily see the produced table. It is only dumped to stdout
-		new SchemaExport( (MetadataImplementor) metadata ).create( true, false );
+		new SchemaExport().create( EnumSet.of( TargetType.STDOUT ), metadata );
 
 		for ( int i = 0; i < inputs1Mapping.getCollectionTable().getColumnSpan(); i++ ) {
 			final Column column = inputs1Mapping.getCollectionTable().getColumn( i );

@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.schemaupdate;
 
+import java.util.EnumSet;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -36,15 +37,15 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.CustomRunner;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /**
  * @author Andrea Boriero
@@ -58,11 +59,7 @@ public class MixedFieldPropertyAnnotationTest {
 
 	@Test
 	public void testUpdateSchema() throws Exception {
-
-
-		new SchemaUpdate(
-				metadata
-		).execute( true, true );
+		new SchemaUpdate().execute( EnumSet.of( TargetType.STDOUT, TargetType.DATABASE ), metadata );
 	}
 
 	@Entity
@@ -97,16 +94,14 @@ public class MixedFieldPropertyAnnotationTest {
 				.buildMetadata();
 
 		System.out.println( "********* Starting SchemaExport for START-UP *************************" );
-		SchemaExport schemaExport = new SchemaExport( serviceRegistry, metadata );
-		schemaExport.create( true, true );
+		new SchemaExport().create( EnumSet.of( TargetType.STDOUT, TargetType.DATABASE ), metadata );
 		System.out.println( "********* Completed SchemaExport for START-UP *************************" );
 	}
 
 	@After
 	public void tearDown() {
 		System.out.println( "********* Starting SchemaExport (drop) for TEAR-DOWN *************************" );
-		SchemaExport schemaExport = new SchemaExport( serviceRegistry, metadata );
-		schemaExport.drop( true, true );
+		new SchemaExport().drop( EnumSet.of( TargetType.STDOUT, TargetType.DATABASE ), metadata );
 		System.out.println( "********* Completed SchemaExport (drop) for TEAR-DOWN *************************" );
 
 		StandardServiceRegistryBuilder.destroy( serviceRegistry );

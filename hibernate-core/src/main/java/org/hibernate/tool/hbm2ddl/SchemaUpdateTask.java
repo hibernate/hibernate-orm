@@ -182,11 +182,11 @@ public class SchemaUpdateTask extends MatchingTask {
 
 			final MetadataImplementor metadata = (MetadataImplementor) metadataBuilder.build();
 
-			final SchemaUpdate su = new SchemaUpdate( metadata );
-			su.setOutputFile( outputFile.getPath() );
-			su.setDelimiter( delimiter );
-			su.setHaltOnError( haltOnError );
-			su.execute( !quiet, !text );
+			new SchemaUpdate()
+					.setOutputFile( outputFile.getPath() )
+					.setDelimiter( delimiter )
+					.setHaltOnError( haltOnError )
+					.execute( TargetTypeHelper.parseLegacyCommandLineOptions( !quiet, !text, outputFile.getPath() ), metadata );
 		}
 		catch (HibernateException e) {
 			throw new BuildException( "Schema text failed: " + e.getMessage(), e );

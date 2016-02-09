@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.schemaupdate;
 
+import java.util.EnumSet;
 import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -20,6 +21,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
+import org.hibernate.tool.schema.TargetType;
 
 import org.junit.After;
 import org.junit.Before;
@@ -41,16 +43,14 @@ public class TestFkUpdating {
 				.buildMetadata();
 
 		System.out.println( "********* Starting SchemaExport for START-UP *************************" );
-		SchemaExport schemaExport = new SchemaExport( serviceRegistry, metadata );
-		schemaExport.create( true, true );
+		new SchemaExport().create( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ), metadata );
 		System.out.println( "********* Completed SchemaExport for START-UP *************************" );
 	}
 
 	@After
 	public void tearDown() {
 		System.out.println( "********* Starting SchemaExport (drop) for TEAR-DOWN *************************" );
-		SchemaExport schemaExport = new SchemaExport( serviceRegistry, metadata );
-		schemaExport.drop( true, true );
+		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ), metadata );
 		System.out.println( "********* Completed SchemaExport (drop) for TEAR-DOWN *************************" );
 
 
@@ -61,8 +61,7 @@ public class TestFkUpdating {
 	@Test
 	public void testUpdate() {
 		System.out.println( "********* Starting SchemaUpdate for TEST *************************" );
-		SchemaUpdate schemaUpdate = new SchemaUpdate( serviceRegistry, metadata );
-		schemaUpdate.execute( true, true );
+		new SchemaUpdate().execute( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ), metadata );
 		System.out.println( "********* Completed SchemaUpdate for TEST *************************" );
 	}
 

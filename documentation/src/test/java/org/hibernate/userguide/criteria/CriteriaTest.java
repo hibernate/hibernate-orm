@@ -19,12 +19,15 @@ import javax.persistence.criteria.Fetch;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.userguide.model.AddressType;
 import org.hibernate.userguide.model.Call;
 import org.hibernate.userguide.model.CreditCardPayment;
+import org.hibernate.userguide.model.Partner;
+import org.hibernate.userguide.model.Partner_;
 import org.hibernate.userguide.model.Person;
 import org.hibernate.userguide.model.Person_;
 import org.hibernate.userguide.model.Phone;
@@ -47,6 +50,7 @@ public class CriteriaTest extends BaseEntityManagerFunctionalTestCase {
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 			Person.class,
+			Partner.class,
             Phone.class,
 			Call.class,
 			CreditCardPayment.class,
@@ -114,6 +118,9 @@ public class CriteriaTest extends BaseEntityManagerFunctionalTestCase {
 
 			entityManager.persist( creditCardPayment );
 			entityManager.persist( wireTransferPayment );
+
+			Partner partner = new Partner( "John Doe" );
+			entityManager.persist( partner );
 		});
 	}
 
@@ -239,6 +246,12 @@ public class CriteriaTest extends BaseEntityManagerFunctionalTestCase {
 			List<Tuple> tuples = entityManager.createQuery( criteria ).getResultList();
 
 			for ( Tuple tuple : tuples ) {
+				Long id = tuple.get( idPath );
+				String nickName = tuple.get( nickNamePath );
+			}
+
+			//or using indices
+			for ( Tuple tuple : tuples ) {
 				Long id = (Long) tuple.get( 0 );
 				String nickName = (String) tuple.get( 1 );
 			}
@@ -257,6 +270,37 @@ public class CriteriaTest extends BaseEntityManagerFunctionalTestCase {
 			CriteriaQuery<Person> criteria = builder.createQuery( Person.class );
 			Root<Person> root = criteria.from( Person.class );
 			//end::criteria-from-root-example[]
+		});
+	}
+
+	@Test
+	public void test_criteria_from_multiple_root_example() {
+
+        doInJPA( this::entityManagerFactory, entityManager -> {
+			String address = "Earth";
+			String prefix = "J%";
+			//tag::criteria-from-multiple-root-example[]
+			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+
+			CriteriaQuery<Tuple> criteria = builder.createQuery( Tuple.class );
+
+			Root<Person> personRoot = criteria.from( Person.class );
+			Root<Partner> partnerRoot = criteria.from( Partner.class );
+			criteria.multiselect( personRoot, partnerRoot );
+
+			Predicate personRestriction = builder.and(
+				builder.equal( personRoot.get( Person_.address ), address ),
+				builder.isNotEmpty( personRoot.get( Person_.phones ) )
+			);
+			Predicate partnerRestriction = builder.and(
+				builder.like( partnerRoot.get( Partner_.name ), prefix ),
+				builder.equal( partnerRoot.get( Partner_.version ), 0 )
+			);
+			criteria.where( builder.and( personRestriction, partnerRestriction ) );
+
+			List<Tuple> tuples = entityManager.createQuery( criteria ).getResultList();
+			//end::criteria-from-multiple-root-example[]
+			assertEquals(2, tuples.size());
 		});
 	}
 

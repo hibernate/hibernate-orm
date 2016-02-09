@@ -64,12 +64,12 @@ The example uses `createQuery()` passing in the `Person` class reference as the 
 
 [NOTE]
 ====
-The call to the `CriteriaQuery#select` method in this example is unnecessary because _personRoot_ will be the implied selection since we have only a single query root.
+The call to the `CriteriaQuery#select` method in this example is unnecessary because _root_ will be the implied selection since we have only a single query root.
 It was done here only for completeness of an example.
 
-The `Person_.eyeColor` reference is an example of the static form of JPA Metamodel reference.
+The `Person_.name` reference is an example of the static form of JPA Metamodel reference.
 We will use that form exclusively in this chapter.
-See the documentation for the Hibernate JPA Metamodel Generator for additional details on the JPA static Metamodel.
+See the documentation for the https://docs.jboss.org/hibernate/orm/5.0/topical/html/metamodelgen/MetamodelGenerator.html[Hibernate JPA Metamodel Generator] for additional details on the JPA static Metamodel.
 ====
 
 [[criteria-typedquery-expression]]
@@ -87,7 +87,7 @@ include::{sourcedir}/CriteriaTest.java[tags=criteria-typedquery-expression-examp
 ----
 ====
 
-In this example, the query is typed as `java.lang.Integer` because that is the anticipated type of the results (the type of the `Person#age` attribute is `java.lang.Integer`).
+In this example, the query is typed as `java.lang.String` because that is the anticipated type of the results (the type of the `Person#nickName` attribute is `java.lang.String`).
 Because a query might contain multiple references to the `Person` entity, attribute references always need to be qualified.
 This is accomplished by the `Root#get` method call.
 
@@ -130,7 +130,7 @@ but in this case it says to select and return an __Object[]__.
 === Selecting a wrapper
 
 Another alternative to <<criteria-typedquery-multiselect>> is to instead select an object that will "wrap" the multiple values.
-Going back to the example query there, rather than returning an array of _[Person#id, Person#age]_, instead declare a class that holds these values and use that as a return object.
+Going back to the example query there, rather than returning an array of _[Person#id, Person#nickName]_, instead declare a class that holds these values and use that as a return object.
 
 [[criteria-typedquery-wrapper-example]]
 .Selecting a wrapper
@@ -175,7 +175,7 @@ The difference here is that the type of the `javax.persistence.criteria.Criteria
 The javax.persistence.Tuple contract provides three forms of access to the underlying elements:
 
 typed::
-  The <<criteria-tuple-example>> example illustrates this form of access in the `tuple.get( idPath )` and `tuple.get( agePath )` calls.
+  The <<criteria-tuple-example>> example illustrates this form of access in the `tuple.get( idPath )` and `tuple.get( nickNamePath )` calls.
   This allows typed access to the underlying tuple values based on the `javax.persistence.TupleElement` expressions used to build the criteria.
 positional::
   Allows access to the underlying tuple values based on the position.
@@ -229,7 +229,16 @@ include::{sourcedir}/CriteriaTest.java[tags=criteria-from-root-example]
 ====
 
 Criteria queries may define multiple roots, the effect of which is to create a cartesian product between the newly added root and the others.
-Here is an example matching all single men and all single women:
+Here is an example of cross joining `Person` and `Partner` entities;
+
+[[criteria-from-multiple-root-example]]
+.Adding a root example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CriteriaTest.java[tags=criteria-from-multiple-root-example]
+----
+====
 
 [[criteria-from-join]]
 === Joins
@@ -264,7 +273,7 @@ include::{sourcedir}/CriteriaTest.java[tags=criteria-from-fetch-example]
 [NOTE]
 ====
 Technically speaking, embedded attributes are always fetched with their owner.
-However in order to define the fetching of _Phone#addresses_ we needed a `javax.persistence.criteria.Fetch`, because element collections are `LAZY` by default.
+However in order to define the fetching of _Phone#addresses_ we needed a `javax.persistence.criteria.Fetch` because element collections are `LAZY` by default.
 ====
 
 [[criteria-path]]

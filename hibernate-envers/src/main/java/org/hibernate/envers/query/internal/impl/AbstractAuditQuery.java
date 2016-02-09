@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.criteria.JoinType;
@@ -54,8 +53,8 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 	protected final EnversService enversService;
 	protected final AuditReaderImplementor versionsReader;
 
-	protected final List<AuditAssociationQueryImplementor<?>> associationQueries = new ArrayList<AuditAssociationQueryImplementor<?>>();
-	protected final Map<String, AuditAssociationQueryImplementor<AuditQueryImplementor>> associationQueryMap = new HashMap<String, AuditAssociationQueryImplementor<AuditQueryImplementor>>();
+	protected final List<AuditAssociationQueryImpl<?>> associationQueries = new ArrayList<AuditAssociationQueryImpl<?>>();
+	protected final Map<String, AuditAssociationQueryImpl<AuditQueryImplementor>> associationQueryMap = new HashMap<String, AuditAssociationQueryImpl<AuditQueryImplementor>>();
 	protected final List<Pair<String, AuditProjection>> projections = new ArrayList<Pair<String,AuditProjection>>();
 
 	protected AbstractAuditQuery(
@@ -159,9 +158,9 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 
 	@Override
 	public AuditAssociationQuery<? extends AuditQuery> traverseRelation(String associationName, JoinType joinType) {
-		AuditAssociationQueryImplementor<AuditQueryImplementor> result = associationQueryMap.get( associationName );
+		AuditAssociationQueryImpl<AuditQueryImplementor> result = associationQueryMap.get( associationName );
 		if (result == null) {
-			result = new AuditAssociationQueryImplementor<AuditQueryImplementor>( enversService, versionsReader, this, qb, entityName, associationName, joinType, REFERENCED_ENTITY_ALIAS );
+			result = new AuditAssociationQueryImpl<AuditQueryImplementor>( enversService, versionsReader, this, qb, entityName, associationName, joinType, REFERENCED_ENTITY_ALIAS );
 			associationQueries.add( result );
 			associationQueryMap.put( associationName, result );
 		}

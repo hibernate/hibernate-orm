@@ -1,5 +1,8 @@
-/**
- * 
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.envers.query.internal.impl;
 
@@ -7,13 +10,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.criteria.JoinType;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
@@ -35,7 +38,9 @@ import org.hibernate.envers.tools.Pair;
 /**
  * @author Felix Feisst (feisst dot felix at gmail dot com)
  */
-public class AuditAssociationQueryImplementor<Q extends AuditQueryImplementor> implements AuditAssociationQuery<Q>, AuditQueryImplementor {
+@Incubating
+public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
+		implements AuditAssociationQuery<Q>, AuditQueryImplementor {
 
 	private final EnversService enversService;
 	private final AuditReaderImplementor auditReader;
@@ -48,20 +53,31 @@ public class AuditAssociationQueryImplementor<Q extends AuditQueryImplementor> i
 	private final String alias;
 	private final List<AuditCriterion> criterions = new ArrayList<AuditCriterion>();
 	private final Parameters parameters;
-	private final List<AuditAssociationQueryImplementor<?>> associationQueries = new ArrayList<AuditAssociationQueryImplementor<?>>();
-	private final Map<String, AuditAssociationQueryImplementor<AuditAssociationQueryImplementor<Q>>> associationQueryMap = new HashMap<String, AuditAssociationQueryImplementor<AuditAssociationQueryImplementor<Q>>>();
+	private final List<AuditAssociationQueryImpl<?>> associationQueries = new ArrayList<AuditAssociationQueryImpl<?>>();
+	private final Map<String, AuditAssociationQueryImpl<AuditAssociationQueryImpl<Q>>> associationQueryMap = new HashMap<String, AuditAssociationQueryImpl<AuditAssociationQueryImpl<Q>>>();
 	private boolean hasProjections;
 	private boolean hasOrders;
 
-	public AuditAssociationQueryImplementor(final EnversService enversService, final AuditReaderImplementor auditReader, final Q parent,
-			final QueryBuilder queryBuilder, final String ownerEntityName, final String propertyName, final JoinType joinType, final String ownerAlias) {
+	public AuditAssociationQueryImpl(
+			final EnversService enversService,
+			final AuditReaderImplementor auditReader,
+			final Q parent,
+			final QueryBuilder queryBuilder,
+			final String ownerEntityName,
+			final String propertyName,
+			final JoinType joinType,
+			final String ownerAlias) {
 		this.enversService = enversService;
 		this.auditReader = auditReader;
 		this.parent = parent;
 		this.queryBuilder = queryBuilder;
 		this.joinType = joinType;
 
-		final RelationDescription relationDescription = CriteriaTools.getRelatedEntity( enversService, ownerEntityName, propertyName );
+		final RelationDescription relationDescription = CriteriaTools.getRelatedEntity(
+				enversService,
+				ownerEntityName,
+				propertyName
+		);
 		if ( relationDescription == null ) {
 			throw new IllegalArgumentException( "Property " + propertyName + " of entity " + ownerEntityName + " is not a valid association for queries" );
 		}
@@ -83,92 +99,112 @@ public class AuditAssociationQueryImplementor<Q extends AuditQueryImplementor> i
 	}
 
 	@Override
-	public AuditAssociationQueryImplementor<AuditAssociationQueryImplementor<Q>> traverseRelation(String associationName, JoinType joinType) {
-		AuditAssociationQueryImplementor<AuditAssociationQueryImplementor<Q>> result = associationQueryMap.get( associationName );
-		if (result == null) {
-				result = new AuditAssociationQueryImplementor<AuditAssociationQueryImplementor<Q>>(
-							enversService, auditReader, this, queryBuilder, entityName, associationName, joinType, alias );
-				associationQueries.add( result );
-				associationQueryMap.put( associationName, result );
+	public AuditAssociationQueryImpl<AuditAssociationQueryImpl<Q>> traverseRelation(
+			String associationName,
+			JoinType joinType) {
+		AuditAssociationQueryImpl<AuditAssociationQueryImpl<Q>> result = associationQueryMap.get( associationName );
+		if ( result == null ) {
+			result = new AuditAssociationQueryImpl<AuditAssociationQueryImpl<Q>>(
+					enversService,
+					auditReader,
+					this,
+					queryBuilder,
+					entityName,
+					associationName,
+					joinType,
+					alias
+			);
+			associationQueries.add( result );
+			associationQueryMap.put( associationName, result );
 		}
 		return result;
 	}
 
 	@Override
-	public AuditAssociationQueryImplementor<Q> add(AuditCriterion criterion) {
+	public AuditAssociationQueryImpl<Q> add(AuditCriterion criterion) {
 		criterions.add( criterion );
 		return this;
 	}
 
 	@Override
-	public AuditAssociationQueryImplementor<Q> addProjection(AuditProjection projection) {
+	public AuditAssociationQueryImpl<Q> addProjection(AuditProjection projection) {
 		hasProjections = true;
 		Triple<String, String, Boolean> projectionData = projection.getData( enversService );
-		String propertyName = CriteriaTools.determinePropertyName( enversService, auditReader, entityName, projectionData.getSecond() );
+		String propertyName = CriteriaTools.determinePropertyName(
+				enversService,
+				auditReader,
+				entityName,
+				projectionData.getSecond()
+		);
 		queryBuilder.addProjection( projectionData.getFirst(), alias, propertyName, projectionData.getThird() );
 		registerProjection( entityName, projection );
 		return this;
 	}
 
 	@Override
-	public AuditAssociationQueryImplementor<Q> addOrder(AuditOrder order) {
+	public AuditAssociationQueryImpl<Q> addOrder(AuditOrder order) {
 		hasOrders = true;
 		Pair<String, Boolean> orderData = order.getData( enversService );
-		String propertyName = CriteriaTools.determinePropertyName( enversService, auditReader, entityName, orderData.getFirst() );
+		String propertyName = CriteriaTools.determinePropertyName(
+				enversService,
+				auditReader,
+				entityName,
+				orderData.getFirst()
+		);
 		queryBuilder.addOrder( alias, propertyName, orderData.getSecond() );
 		return this;
 	}
 
 	@Override
-	public AuditAssociationQueryImplementor<Q> setMaxResults(int maxResults) {
+	public AuditAssociationQueryImpl<Q> setMaxResults(int maxResults) {
 		parent.setMaxResults( maxResults );
 		return this;
 	}
 
 	@Override
-	public AuditAssociationQueryImplementor<Q> setFirstResult(int firstResult) {
+	public AuditAssociationQueryImpl<Q> setFirstResult(int firstResult) {
 		parent.setFirstResult( firstResult );
 		return this;
 	}
 
 	@Override
-	public AuditAssociationQueryImplementor<Q> setCacheable(boolean cacheable) {
+	public AuditAssociationQueryImpl<Q> setCacheable(boolean cacheable) {
 		parent.setCacheable( cacheable );
 		return this;
 	}
 
 	@Override
-	public AuditAssociationQueryImplementor<Q> setCacheRegion(String cacheRegion) {
+	public AuditAssociationQueryImpl<Q> setCacheRegion(String cacheRegion) {
 		parent.setCacheRegion( cacheRegion );
 		return this;
 	}
 
 	@Override
-	public AuditAssociationQueryImplementor<Q> setComment(String comment) {
+	public AuditAssociationQueryImpl<Q> setComment(String comment) {
 		parent.setComment( comment );
 		return this;
 	}
 
 	@Override
-	public AuditAssociationQueryImplementor<Q> setFlushMode(FlushMode flushMode) {
+	public AuditAssociationQueryImpl<Q> setFlushMode(FlushMode flushMode) {
 		parent.setFlushMode( flushMode );
 		return this;
 	}
 
 	@Override
-	public AuditAssociationQueryImplementor<Q> setCacheMode(CacheMode cacheMode) {
+	public AuditAssociationQueryImpl<Q> setCacheMode(CacheMode cacheMode) {
 		parent.setCacheMode( cacheMode );
 		return this;
 	}
 
 	@Override
-	public AuditAssociationQueryImplementor<Q> setTimeout(int timeout) {
+	public AuditAssociationQueryImpl<Q> setTimeout(int timeout) {
 		parent.setTimeout( timeout );
 		return this;
 	}
 
 	@Override
-	public AuditAssociationQueryImplementor<Q> setLockMode(LockMode lockMode) {
+	public AuditAssociationQueryImpl<Q> setLockMode(LockMode lockMode) {
 		parent.setLockMode( lockMode );
 		return this;
 	}
@@ -180,7 +216,7 @@ public class AuditAssociationQueryImplementor<Q extends AuditQueryImplementor> i
 	protected boolean hasCriterions() {
 		boolean result = !criterions.isEmpty();
 		if ( !result ) {
-			for ( final AuditAssociationQueryImplementor<?> sub : associationQueries ) {
+			for ( final AuditAssociationQueryImpl<?> sub : associationQueries ) {
 				if ( sub.hasCriterions() ) {
 					result = true;
 					break;
@@ -193,7 +229,7 @@ public class AuditAssociationQueryImplementor<Q extends AuditQueryImplementor> i
 	protected boolean hasOrders() {
 		boolean result = hasOrders;
 		if ( !result ) {
-			for ( final AuditAssociationQueryImplementor<?> sub : associationQueries ) {
+			for ( final AuditAssociationQueryImpl<?> sub : associationQueries ) {
 				if ( sub.hasOrders() ) {
 					result = true;
 					break;
@@ -206,7 +242,7 @@ public class AuditAssociationQueryImplementor<Q extends AuditQueryImplementor> i
 	protected boolean hasProjections() {
 		boolean result = hasProjections;
 		if ( !result ) {
-			for ( final AuditAssociationQueryImplementor<?> sub : associationQueries ) {
+			for ( final AuditAssociationQueryImpl<?> sub : associationQueries ) {
 				if ( sub.hasProjections() ) {
 					result = true;
 					break;
@@ -227,28 +263,56 @@ public class AuditAssociationQueryImplementor<Q extends AuditQueryImplementor> i
 				String originalIdPropertyName = verEntCfg.getOriginalIdPropName();
 				IdMapper idMapperTarget = enversService.getEntitiesConfigurations().get( entityName ).getIdMapper();
 				final String prefix = alias.concat( "." ).concat( originalIdPropertyName );
-				ownerAssociationIdMapper.addIdsEqualToQuery( queryBuilder.getRootParameters(), ownerAlias, idMapperTarget, prefix );
+				ownerAssociationIdMapper.addIdsEqualToQuery(
+						queryBuilder.getRootParameters(),
+						ownerAlias,
+						idMapperTarget,
+						prefix
+				);
 
 				// filter reference of target entity
 				String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
-				MiddleIdData referencedIdData = new MiddleIdData( verEntCfg, enversService.getEntitiesConfigurations().get( entityName ).getIdMappingData(), null, entityName,
-						enversService.getEntitiesConfigurations().isVersioned( entityName ) );
-				enversService.getAuditStrategy().addEntityAtRevisionRestriction( enversService.getGlobalConfiguration(), queryBuilder, parameters, revisionPropertyPath,
-						verEntCfg.getRevisionEndFieldName(), true, referencedIdData, revisionPropertyPath, originalIdPropertyName, alias,
-						queryBuilder.generateAlias(), true );
+				MiddleIdData referencedIdData = new MiddleIdData(
+						verEntCfg,
+						enversService.getEntitiesConfigurations().get( entityName ).getIdMappingData(),
+						null,
+						entityName,
+						enversService.getEntitiesConfigurations().isVersioned( entityName )
+				);
+				enversService.getAuditStrategy().addEntityAtRevisionRestriction(
+						enversService.getGlobalConfiguration(),
+						queryBuilder,
+						parameters,
+						revisionPropertyPath,
+						verEntCfg.getRevisionEndFieldName(),
+						true,
+						referencedIdData,
+						revisionPropertyPath,
+						originalIdPropertyName,
+						alias,
+						queryBuilder.generateAlias(),
+						true
+				);
 			}
 			else {
 				queryBuilder.addFrom( entityName, alias, false );
 				// owner.reference_id = target.id
-				IdMapper idMapperTarget = enversService.getEntitiesConfigurations().getNotVersionEntityConfiguration( entityName ).getIdMapper();
-				ownerAssociationIdMapper.addIdsEqualToQuery( queryBuilder.getRootParameters(), ownerAlias, idMapperTarget, alias );
+				final IdMapper idMapperTarget = enversService.getEntitiesConfigurations()
+						.getNotVersionEntityConfiguration( entityName )
+						.getIdMapper();
+				ownerAssociationIdMapper.addIdsEqualToQuery(
+						queryBuilder.getRootParameters(),
+						ownerAlias,
+						idMapperTarget,
+						alias
+				);
 			}
 
 			for ( AuditCriterion criterion : criterions ) {
 				criterion.addToQuery( enversService, versionsReader, entityName, alias, queryBuilder, parameters );
 			}
 
-			for ( final AuditAssociationQueryImplementor<?> sub : associationQueries ) {
+			for ( final AuditAssociationQueryImpl<?> sub : associationQueries ) {
 				sub.addCriterionsToQuery( versionsReader );
 			}
 		}

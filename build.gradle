@@ -410,6 +410,7 @@ subprojects { subProject ->
 		publications {
 			mavenJava(MavenPublication) {
 
+				artifact jar
 				artifact( sourcesJar ) {
 					classifier 'sources'
 				}

@@ -30,6 +30,7 @@ include::chapters/portability/Portability.adoc[]
 include::appendices/Legacy_Bootstrap.adoc[]
 include::appendices/Legacy_DomainModel.adoc[]
 include::appendices/Legacy_Criteria.adoc[]
+include::appendices/Legacy_Native_Queries.adoc[]
 
 include::Bibliography.adoc[]
 

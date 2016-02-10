@@ -175,9 +175,9 @@ jdocbook {
     }
 
     // book-specific config
-    userGuide {
+    /*userGuide {
         masterSourceDocumentName = 'Hibernate_User_Guide.xml'
-    }
+    }*/
     integrationsGuide {
         masterSourceDocumentName = 'Hibernate_Integrations_Guide.xml'
     }
@@ -186,7 +186,7 @@ jdocbook {
     }
 }
 
-[ 'integrationsGuide', 'userGuide', 'mappingGuide'].each { bookName ->
+[ 'integrationsGuide', /*'userGuide',*/ 'mappingGuide'].each { bookName ->
     task "stageLocalStyles_$bookName"(type: Copy) {
         into project.file( "target/docbook/stage/$bookName" )
         from project.file( 'src/main/style' )
@@ -227,8 +227,6 @@ task renderTopicalGuides(type: AsciidoctorTask, group: 'Documentation') {
 
 buildDocs.dependsOn renderTopicalGuides
 
-
-
 // Getting Started Guides (quick starts) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 task renderGettingStartedGuides(type: AsciidoctorTask, group: 'Documentation') {
@@ -240,6 +238,8 @@ task renderGettingStartedGuides(type: AsciidoctorTask, group: 'Documentation') {
 	options logDocuments: true
 	attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify'
 }
+
+buildDocs.dependsOn renderGettingStartedGuides
 
 // Mapping Guides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -264,26 +264,21 @@ task renderMappingGuide(type: AsciidoctorTask, group: 'Documentation') {
 
 task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {
     description = 'Renders the User Guides in HTML format using Asciidoctor.'
-    sourceDir = file( 'src/main/asciidoc/userguide' )
-    outputDir = new File("$buildDir/asciidoc/userguide/html")
+    sourceDir = file( 'src/main/asciidoc/userGuide' )
+    outputDir = new File("$buildDir/asciidoc/userGuide/html")
     backends "html5"
     separateOutputDirs false
     options logDocuments: true
     //attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true, stylesheet: "css/hibernate.css"
     attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true
     resources {
-        from('src/main/asciidoc/') {
-            include 'images/**'
-            include 'css/**'
-        }
-        from('src/main/asciidoc/userguide/') {
+        from('src/main/asciidoc/userGuide/') {
             include 'images/**'
         }
     }
 }
 
-
-buildDocs.dependsOn renderGettingStartedGuides
+buildDocs.dependsOn renderUserGuide
 
 task buildTutorialZip(type: Zip) {
 	from 'src/main/asciidoc/quickstart/tutorials'

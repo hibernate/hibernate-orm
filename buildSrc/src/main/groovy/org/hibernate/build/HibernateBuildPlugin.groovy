@@ -95,7 +95,14 @@ class HibernateBuildPlugin implements Plugin<Project> {
 			final boolean applyExtensionValues = publishingExtension.publications == null || publishingExtension.publications.length == 0 || pub in publishingExtension.publications;
 
 			pom.withXml {
-				if ( !dependencies.empty ) {
+				def addDependencies = true
+				// do not add dependencies if it is a relocation pom
+				if ( !asNode().get( "distributionManagement" )?.isEmpty() ) {
+					if ( !asNode().get( "distributionManagement" ).get( 0 ).get( "relocation" )?.isEmpty() ) {
+						addDependencies = false
+					}
+				}
+				if ( addDependencies && !dependencies.empty ) {
 					Node dependenciesNode = asNode().appendNode( 'dependencies' )
 					dependencies.each {
 						Node dependencyNode = dependenciesNode.appendNode( 'dependency' );

@@ -3,7 +3,90 @@ Hibernate 5.0 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
-Changes in 5.0.7.Final (January 13, 2015)
+Changes in 5.1.0.Final (February 10, 2016)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/19355
+https://hibernate.atlassian.net/issues/?jql=project%20=%2010031%20AND%20fixVersion%20=%2019355%20ORDER%20BY%20priority%20DESC,%20key%20ASC
+
+** Bug
+    * [HHH-7705] - Query.setProperties(Map) silently ignores null values provided in the Map
+    * [HHH-7973] - String literals in an HQL query can get mangled
+    * [HHH-8657] - Case Insensitive Equality Criterion NVARCHAR field yields bad SQL
+    * [HHH-9074] - HQL Query with boolean and @Convert
+    * [HHH-9286] - Extended Stored procedure support does not work with Oracle
+    * [HHH-9635] - SQLServer2005Dialect (and above) does not support read past locking
+    * [HHH-9735] - EntityGraph and isMember functions generates illegal sql
+    * [HHH-9983] - Error saving entity with identity id on Oracle 12c
+    * [HHH-10172] - Throw MappingException when entity/component class defines multiple matching getters by stem name
+    * [HHH-10185] - In nonstrict-read-write mode the remove may be not applied
+    * [HHH-10345] - Map byte[]/Byte[] to BLOB rather than LONG RAW in Oracle
+    * [HHH-10372] - OffsetDateTime value changes after fetching the row from the database
+    * [HHH-10401] - Missing table names on foreign key circularity error message
+    * [HHH-10430] - Comment for class is ignored when using subselect in hibernate mapping
+    * [HHH-10443] - SchemaUpdate and SchemaMigration do not release jdbc connection
+    * [HHH-10446] - Comment delimiters not "escaped" within (VAR)CHAR literals within native queries
+    * [HHH-10451] - Can not export table comment statement
+    * [HHH-10495] - Oracle10gDialect generate nvarchar when using @Nationalized
+    * [HHH-10507] - Hibernate core test removing usage of Java 8 introduced methods
+
+** New Feature
+    * [HHH-16] - Explicit joins on unrelated classes
+    * [HHH-3555] - Extend the Envers query system with the ability to traverse associations
+    * [HHH-6225] - Add support to find entities by date in one single query
+    * [HHH-7572] - Develop API for load-by-multiple-ids
+    * [HHH-9876] - Ability to filter objects from Database for schema tooling
+    * [HHH-10267] - Support defining lazy attribute fetch groups
+    * [HHH-10484] - Add hibernate.jdbc.log.warnings configuration property
+
+** Task
+    * [HHH-10124] - Upgrade Ehcache to 2.10.1
+    * [HHH-10171] - Update Javassist
+    * [HHH-10215] - Upgrade to Infinispan 8
+    * [HHH-10280] - Remove legacy bytecode enhancement artifacts
+    * [HHH-10303] - Reinstate legacy bytecode-enhancement Ant task
+    * [HHH-10335] - Upgrade to Hibernate Commons Annotations 5.0.1.Final
+    * [HHH-10336] - Upgrade to Jandex 2.0.0.Final
+    * [HHH-10438] - Upgrade the Gradle wrapper to use Gradle version 2.10
+    * [HHH-10449] - Upgrade to Infinispan 8.1.0.Final
+    * [HHH-10479] - Document that hibernate.jdbc.batch_versioned_data default value is true in 5.0
+
+** Improvement
+    * [HHH-5184] - Create a ConnectionAcquisitionMode as corollary to ConnectionReleaseMode
+    * [HHH-7321] - HQL: Combining a CROSS JOIN with a LEFT JOIN which requires a  WITH clause triggers an exception.
+    * [HHH-7610] - Option for injecting empty (non-null) embedded when all columns are NULL
+    * [HHH-8706] - Delay registering of the entity listener class as long as possible
+    * [HHH-9474] - Perfomance issue with ElementCollection
+    * [HHH-9491] - Add support to opt columnDefinitions out of globally-quoted-identifiers
+    * [HHH-9548] - Allow propagation of NULL for stored-procedure argument parameters to database
+    * [HHH-9615] - Allow AttributeConverter on attributes marked as Lob
+    * [HHH-9780] - Unique instance for both CacheKey and EntityKey contracts
+    * [HHH-9791] - Add varargs to Restrictions.in(...)
+    * [HHH-9807] - Better error message when @Formula and @Id are combined
+    * [HHH-9839] - The hibernate-infinispan cache module should use a JBoss Logger interface to allow internationalization of error messages
+    * [HHH-9993] - IsolationDelegate: add method to execute code without obtaining a connection
+    * [HHH-10002] - Hibernate @Synchronize annotation values should be processed by NamingStrategy
+    * [HHH-10050] - AttributeConverter should supports ParameterizedType if autoApply is true
+    * [HHH-10083] - Support replicated and distributed caches
+    * [HHH-10084] - Refactor Identity Column support methods into IdentityColumnSupport interface
+    * [HHH-10088] - Add link to Eclipse setting in README file (Mustafa Ulu)
+    * [HHH-10097] - Expose the UUID from SessionFactoryImplementor
+    * [HHH-10136] - Upgrade HikariCP to latest version
+    * [HHH-10301] - HQLQueryPlan allocates a new ArrayList every time even if it is not required
+    * [HHH-10302] - Lots of allocations of LoadEvent and PostLoadEvent
+    * [HHH-10314] - In some cases BatchFetchQueue is created just to try and remove a key
+    * [HHH-10358] - EntityLoader is contended when calling AbstractLoadPlanBasedLoader.wrapResultSetIfEnabled
+    * [HHH-10366] - Improve performance and reduce CPU load when fetching reference cached objects
+    * [HHH-10379] - Remove dependency to rhq-pluginAnnotations
+    * [HHH-10419] - Better error report upon JPA AttributeConverter instantiation error
+    * [HHH-10439] - Log  a message which prints the name of the import script being imported
+    * [HHH-10450] - Refactor the way configuration is read
+    * [HHH-10458] - Better encapsulate SchemaManagementTool (OGM) - unify JPA schema generation and hbm2ddl capabilities
+    * [HHH-10477] - Setting to allow delayed access to CDI
+    * [HHH-10487] - Add @Incubating annotation
+
+
+
+Changes in 5.0.7.Final (January 13, 2016)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/22051
 

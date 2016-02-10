@@ -22,18 +22,17 @@ import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.dialect.Oracle12cDialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.Oracle9iDialect;
-import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.BinaryType;
 import org.hibernate.type.BlobType;
 import org.hibernate.type.CharArrayType;
 import org.hibernate.type.ClobType;
 import org.hibernate.type.MaterializedBlobType;
-import org.hibernate.type.MaterializedClobType;
 import org.hibernate.type.PrimitiveCharacterArrayClobType;
 import org.hibernate.type.Type;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import org.junit.Test;
@@ -69,10 +68,19 @@ public class OracleLongLobTypeTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-10345" )
 	public void testOracle12() {
-		check( Oracle12cDialect.class, Primitives.class, BinaryType.class, CharArrayType.class );
+		check( Oracle12cDialect.class, Primitives.class, MaterializedBlobType.class, CharArrayType.class );
 		check( Oracle12cDialect.class, LobPrimitives.class, MaterializedBlobType.class, PrimitiveCharacterArrayClobType.class );
 		check( Oracle12cDialect.class, LobLocators.class, BlobType.class, ClobType.class );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-10345" )
+	public void testOracle12PreferLongRaw() {
+		check( Oracle12cDialect.class, Primitives.class, BinaryType.class, CharArrayType.class, true );
+		check( Oracle12cDialect.class, LobPrimitives.class, MaterializedBlobType.class, PrimitiveCharacterArrayClobType.class, true );
+		check( Oracle12cDialect.class, LobLocators.class, BlobType.class, ClobType.class, true );
 	}
 
 	private void check(
@@ -80,8 +88,18 @@ public class OracleLongLobTypeTest extends BaseUnitTestCase {
 			Class entityClass,
 			Class<? extends Type> binaryTypeClass,
 			Class<? extends Type> charTypeClass) {
+		check( dialectClass, entityClass, binaryTypeClass, charTypeClass, false );
+	}
+
+	private void check(
+			Class<? extends Dialect> dialectClass,
+			Class entityClass,
+			Class<? extends Type> binaryTypeClass,
+			Class<? extends Type> charTypeClass,
+			boolean preferLongRaw) {
 		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, dialectClass.getName() )
+				.applySetting( Oracle12cDialect.PREFER_LONG_RAW, Boolean.toString( preferLongRaw ) )
 				.applySetting( "hibernate.temp.use_jdbc_metadata_defaults", false )
 				.build();
 

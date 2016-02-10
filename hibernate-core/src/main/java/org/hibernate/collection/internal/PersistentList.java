@@ -571,7 +571,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 		@Override
 		@SuppressWarnings("unchecked")
 		public void operate() {
-			 list.remove( getIndex() );
+			list.remove( getIndex() );
 		}
 	}
 

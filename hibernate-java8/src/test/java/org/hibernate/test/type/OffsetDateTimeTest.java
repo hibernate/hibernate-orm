@@ -26,6 +26,7 @@ import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 /**
  * @author Andrea Boriero
@@ -144,7 +145,7 @@ public class OffsetDateTimeTest extends BaseNonConfigCoreFunctionalTestCase {
 			if ( s.getTransaction() != null && s.getTransaction().getStatus() == TransactionStatus.ACTIVE ) {
 				s.getTransaction().rollback();
 			}
-			throw e;
+			fail( e.getMessage() );
 		}
 		finally {
 			s.close();

@@ -16,6 +16,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 /**
  * @author Andrea Boriero
@@ -57,6 +58,7 @@ public class SetSubselectTest extends BaseCoreFunctionalTestCase {
 			if ( s.getTransaction().getStatus() == TransactionStatus.ACTIVE ) {
 				s.getTransaction().rollback();
 			}
+			fail( e.getMessage() );
 		}
 		finally {
 			s.close();

@@ -68,12 +68,24 @@ dependencies {
 	testRuntime( libraries.h2 )
 }
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// grouping tasks - declaration, see below for task dependency definitions
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 task buildDocs {
-    group 'Documentation'
-    description 'Grouping task for performing all documentation building tasks'
+	group 'Documentation'
+	description 'Grouping task for performing all documentation building tasks'
 }
 
-// aggregated JavaDoc ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+task buildDocsForPublishing {
+	group 'Documentation'
+	description 'Grouping task for building all documentation for publishing (release)'
+}
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// aggregated JavaDoc
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 final File javadocDir = mkdir( new File( (File) project.buildDir, 'javadocs' ) );
 
@@ -158,8 +170,6 @@ task aggregateJavadocs(type: Javadoc) {
     }
 }
 
-buildDocs.dependsOn aggregateJavadocs
-
 
 // jDocBook ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -218,15 +228,12 @@ asciidoctor {
 task renderTopicalGuides(type: AsciidoctorTask, group: 'Documentation') {
     description = 'Renders the  Topical Guides in HTML format using Asciidoctor.'
     sourceDir = file( 'src/main/asciidoc/topical' )
-    outputDir = new File("$buildDir/asciidoc/topical/html")
+    outputDir = new File("$buildDir/asciidoc/topical/html_single")
 	backends "html5"
 	separateOutputDirs false
 	options logDocuments: true
 	attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify'
 }
-
-buildDocs.dependsOn renderTopicalGuides
-
 
 
 // Getting Started Guides (quick starts) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -234,12 +241,29 @@ buildDocs.dependsOn renderTopicalGuides
 task renderGettingStartedGuides(type: AsciidoctorTask, group: 'Documentation') {
     description = 'Renders the Getting Started Guides (quick starts) in HTML format using Asciidoctor.'
     sourceDir = file( 'src/main/asciidoc/quickstart/guides' )
-    outputDir = new File("$buildDir/asciidoc/quickstart/html")
+    outputDir = new File("$buildDir/asciidoc/quickstart/html_single")
 	backends "html5"
 	separateOutputDirs false
 	options logDocuments: true
 	attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify'
 }
+
+
+task buildTutorialZip(type: Zip) {
+	from 'src/main/asciidoc/quickstart/tutorials'
+	destinationDir = tasks.renderGettingStartedGuides.outputDir
+	archiveName = 'hibernate-tutorials.zip'
+	expand(
+			version: project.version,
+			slf4j: "1.7.5",
+			junit: parent.junitVersion,
+			h2: parent.h2Version
+	)
+}
+
+renderGettingStartedGuides.dependsOn buildTutorialZip
+
+
 
 // Mapping Guides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -265,7 +289,7 @@ task renderMappingGuide(type: AsciidoctorTask, group: 'Documentation') {
 task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {
     description = 'Renders the User Guides in HTML format using Asciidoctor.'
     sourceDir = file( 'src/main/asciidoc/userguide' )
-    outputDir = new File("$buildDir/asciidoc/userguide/html")
+    outputDir = new File("$buildDir/asciidoc/userguide/html_single")
     backends "html5"
     separateOutputDirs false
     options logDocuments: true
@@ -283,19 +307,21 @@ task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {
 }
 
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// grouping tasks
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+buildDocs.dependsOn aggregateJavadocs
+buildDocs.dependsOn renderTopicalGuides
 buildDocs.dependsOn renderGettingStartedGuides
+buildDocs.dependsOn renderUserGuide
+// the jDocBook plugin already adds its main task as a dependency of the buildDocs task
 
-task buildTutorialZip(type: Zip) {
-	from 'src/main/asciidoc/quickstart/tutorials'
-	destinationDir = tasks.renderGettingStartedGuides.outputDir
-	archiveName = 'hibernate-tutorials.zip'
-    expand(
-            version: project.version,
-            slf4j: "1.7.5",
-            junit: parent.junitVersion,
-            h2: parent.h2Version
-    )
-}
 
-renderGettingStartedGuides.dependsOn buildTutorialZip
-
+buildDocsForPublishing.dependsOn aggregateJavadocs
+buildDocsForPublishing.dependsOn renderTopicalGuides
+buildDocsForPublishing.dependsOn renderGettingStartedGuides
+buildDocsForPublishing.dependsOn renderUserGuide
+// only html-single to match what Asciidoctor currently offers
+//buildDocsForPublishing.dependsOn 'renderDocBook_integrationsGuide_en-US_html_single '
+buildDocsForPublishing.dependsOn renderDocBook_integrationsGuide

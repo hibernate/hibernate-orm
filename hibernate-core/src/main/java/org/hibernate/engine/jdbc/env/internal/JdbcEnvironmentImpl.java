@@ -74,7 +74,6 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		this.nameQualifierSupport = nameQualifierSupport;
 
 		this.sqlExceptionHelper = buildSqlExceptionHelper( dialect );
-		this.extractedMetaDataSupport = new ExtractedDatabaseMetaDataImpl.Builder( this ).build();
 
 		final IdentifierHelperBuilder identifierHelperBuilder = IdentifierHelperBuilder.from( this );
 		identifierHelperBuilder.setGloballyQuoteIdentifiers( globalQuoting( cfgService ) );
@@ -82,8 +81,10 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		identifierHelperBuilder.setNameQualifierSupport( nameQualifierSupport );
 
 		IdentifierHelper identifierHelper = null;
+		ExtractedDatabaseMetaDataImpl.Builder dbMetaDataBuilder = new ExtractedDatabaseMetaDataImpl.Builder( this );
 		try {
 			identifierHelper = dialect.buildIdentifierHelper( identifierHelperBuilder, null );
+			dbMetaDataBuilder.setSupportsNamedParameters( dialect.supportsNamedParameters( null ) );
 		}
 		catch (SQLException sqle) {
 			// should never ever happen
@@ -93,6 +94,8 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 			identifierHelper = identifierHelperBuilder.build();
 		}
 		this.identifierHelper = identifierHelper;
+
+		this.extractedMetaDataSupport = dbMetaDataBuilder.build();
 
 		this.currentCatalog = identifierHelper.toIdentifier(
 				cfgService.getSetting( AvailableSettings.DEFAULT_CATALOG, StandardConverters.STRING )
@@ -134,6 +137,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 
 		this.extractedMetaDataSupport = new ExtractedDatabaseMetaDataImpl.Builder( this )
 				.apply( databaseMetaData )
+				.setSupportsNamedParameters( databaseMetaData.supportsNamedParameters() )
 				.build();
 
 		NameQualifierSupport nameQualifierSupport = dialect.getNameQualifierSupport();
@@ -208,6 +212,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		this.extractedMetaDataSupport = new ExtractedDatabaseMetaDataImpl.Builder( this )
 				.apply( databaseMetaData )
 				.setConnectionSchemaName( determineCurrentSchemaName( databaseMetaData, serviceRegistry, dialect ) )
+				.setSupportsNamedParameters(dialect.supportsNamedParameters(databaseMetaData))
 				.build();
 
 		NameQualifierSupport nameQualifierSupport = dialect.getNameQualifierSupport();

@@ -192,7 +192,6 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 			lobLocatorUpdateCopy = databaseMetaData.locatorsUpdateCopy();
 			typeInfoSet = new LinkedHashSet<TypeInfo>();
 			typeInfoSet.addAll( TypeInfo.extractTypeInfo( databaseMetaData ) );
-
 			return this;
 		}
 

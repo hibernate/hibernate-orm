@@ -9,6 +9,7 @@ idea.module {
 
 
 final String[] versionComponents = version.split( '\\.' );
+final String majorVersion = versionComponents[0];
 final String majorMinorVersion = versionComponents[0] + '.' + versionComponents[1];
 
 final File documentationDir = mkdir( "${project.buildDir}/documentation" );

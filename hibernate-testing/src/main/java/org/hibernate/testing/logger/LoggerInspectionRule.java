@@ -6,6 +6,8 @@
  */
 package org.hibernate.testing.logger;
 
+import java.util.Set;
+
 import org.junit.rules.ExternalResource;
 
 import org.jboss.logging.BasicLogger;
@@ -34,6 +36,12 @@ public final class LoggerInspectionRule extends ExternalResource {
 
 	public Triggerable watchForLogMessages(String prefix) {
 		TriggerOnPrefixLogListener listener = new TriggerOnPrefixLogListener( prefix );
+		registerListener( listener );
+		return listener;
+	}
+
+	public Triggerable watchForLogMessages(Set<String> prefixes) {
+		TriggerOnPrefixLogListener listener = new TriggerOnPrefixLogListener( prefixes );
 		registerListener( listener );
 		return listener;
 	}

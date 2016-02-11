@@ -2745,4 +2745,15 @@ public abstract class Dialect implements ConversionContext {
 	public boolean isJdbcLogWarningsEnabledByDefault() {
 		return true;
 	}
+
+	/**
+	 * Override the DatabaseMetaData#supportsNamedParameters()
+	 *
+	 * @return boolean
+	 *
+	 * @throws SQLException Accessing the DatabaseMetaData can throw it.  Just re-throw and Hibernate will handle.
+	 */
+	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) throws SQLException {
+		return databaseMetaData != null && databaseMetaData.supportsNamedParameters();
+	}
 }

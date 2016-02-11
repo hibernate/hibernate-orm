@@ -45,6 +45,7 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.type.StandardBasicTypes;
 import org.jboss.logging.Logger;
+import java.sql.DatabaseMetaData;
 
 import java.io.Serializable;
 import java.sql.SQLException;
@@ -666,5 +667,10 @@ public class HSQLDialect extends Dialect {
 	@Override
 	public NameQualifierSupport getNameQualifierSupport() {
 		return NameQualifierSupport.SCHEMA;
+	}
+
+	@Override
+	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) throws SQLException {
+		return false;
 	}
 }

@@ -18,15 +18,12 @@ idea.module {
 }
 
 
-final File documentationDir = mkdir( "${project.buildDir}/documentation" );
-
 final String[] versionComponents = version.split( '\\.' );
-final String majorVersion = versionComponents[0];
 final String majorMinorVersion = versionComponents[0] + '.' + versionComponents[1];
 
-final File stagingDir = mkdir( "${project.buildDir}/staging" );
-final File documentationUploadStagingDir = mkdir( new File( stagingDir, "docs" ) );
-final File versionedDocumentationDir = mkdir( new File( new File( documentationUploadStagingDir, "orm" ), majorMinorVersion ) );
+final File documentationDir = mkdir( "${project.buildDir}/documentation" );
+final File ormDocumentationDir = mkdir( new File( documentationDir, "orm" ) )
+final File versionedDocumentationDir = mkdir( new File( ormDocumentationDir, majorMinorVersion ) );
 
 /**
  * Assembles all documentation into the {buildDir}/documentation directory.
@@ -42,43 +39,15 @@ task assembleDocumentation(type: Task, dependsOn: [rootProject.project( 'documen
 		//		* it is also used as a base to build a staged directory for documentation upload
         copy {
             from "${rootProject.project( 'documentation' ).buildDir}/docbook/publish"
-            into documentationDir
+            into versionedDocumentationDir
         }
         copy {
             from "${rootProject.project( 'documentation' ).buildDir}/asciidoc"
-            into documentationDir
+            into versionedDocumentationDir
         }
         copy {
             from "${rootProject.project( 'documentation' ).buildDir}/javadocs"
-            into "${documentationDir}/javadocs"
-        }
-    }
-}
-
-/**
- * Stages the documentation into a version specific directory in  preparation for uploading them to the JBoss
- * doc server.  Essentially copies the output from the {buildDir}/documentation directory (output of the
- * assembleDocumentation task) into a version-specific directory
- */
-task stageDocumentationForUpload(type: Copy, dependsOn: assembleDocumentation) {
-    description = 'Stages the documentation in preparation for uploading to the JBoss doc server'
-
-    from documentationDir
-    into versionedDocumentationDir
-
-    doLast {
-        if ( ! version.endsWith( 'SNAPSHOT' ) ) {
-            final File currentSymLinkContainerDir = new File( documentationUploadStagingDir, 'stable' )
-            currentSymLinkContainerDir.mkdirs();
-            ant.symlink(
-                    action: 'delete',
-                    link: "${currentSymLinkContainerDir.absolutePath}/orm"
-            )
-            ant.symlink(
-                    action: 'single',
-                    link: "${currentSymLinkContainerDir.absolutePath}/orm",
-                    resource: "../orm/${majorMinorVersion}"
-            )
+            into "${versionedDocumentationDir}/javadocs"
         }
     }
 }
@@ -86,13 +55,13 @@ task stageDocumentationForUpload(type: Copy, dependsOn: assembleDocumentation) {
 /**
  * Upload the documentation to the JBoss doc server
  */
-task uploadDocumentation(type:Exec, dependsOn: stageDocumentationForUpload) {
+task uploadDocumentation(type:Exec, dependsOn: assembleDocumentation) {
     description = "Uploads documentation to the JBoss doc server"
 
     final String url = 'filemgmt.jboss.org:/docs_htdocs/hibernate/';
 
     executable 'rsync'
-    args '-avz', '--links', '--protocol=28', "${documentationUploadStagingDir.absolutePath}/", url
+    args '-avz', '--links', '--protocol=28', "${ormDocumentationDir.absolutePath}/", url
 
     doFirst {
         if ( version.endsWith( "SNAPSHOT" ) ) {

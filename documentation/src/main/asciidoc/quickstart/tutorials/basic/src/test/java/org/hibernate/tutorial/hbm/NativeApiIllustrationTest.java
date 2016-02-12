@@ -77,12 +77,12 @@ public class NativeApiIllustrationTest extends TestCase {
 
 		// now lets pull events from the database and list them
 		session = sessionFactory.openSession();
-        session.beginTransaction();
-        List result = session.createQuery( "from Event" ).list();
+		session.beginTransaction();
+		List result = session.createQuery( "from Event" ).list();
 		for ( Event event : (List<Event>) result ) {
 			System.out.println( "Event (" + event.getDate() + ") : " + event.getTitle() );
 		}
-        session.getTransaction().commit();
-        session.close();
+		session.getTransaction().commit();
+		session.close();
 	}
 }

@@ -152,6 +152,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 
 		this.extractedMetaDataSupport = new ExtractedDatabaseMetaDataImpl.Builder( this )
 				.apply( databaseMetaData )
+				.setSupportsNamedParameters( databaseMetaData.supportsNamedParameters() )
 				.build();
 
 		NameQualifierSupport nameQualifierSupport = dialect.getNameQualifierSupport();
@@ -226,6 +227,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		this.extractedMetaDataSupport = new ExtractedDatabaseMetaDataImpl.Builder( this )
 				.apply( databaseMetaData )
 				.setConnectionSchemaName( determineCurrentSchemaName( databaseMetaData, serviceRegistry, dialect ) )
+				.setSupportsNamedParameters(dialect.supportsNamedParameters(databaseMetaData))
 				.build();
 
 		NameQualifierSupport nameQualifierSupport = dialect.getNameQualifierSupport();

@@ -100,7 +100,7 @@ throughout Hibernate documentation.
 The `<id/>` element here names the EVENT_ID column as the primary key of the EVENTS table. It also identifies the
 `id` property of the `Event` class as the property containing the identifier value.
 
-The `generator element informs Hibernate about which strategy is used to generated primary key values for this entity.
+The `generator` element informs Hibernate about which strategy is used to generated primary key values for this entity.
 This example uses a simple incrementing count.
 
 [[hibernate-gsg-tutorial-basic-mapping-property]]

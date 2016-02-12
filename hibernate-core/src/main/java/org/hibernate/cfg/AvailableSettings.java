@@ -562,6 +562,15 @@ public interface AvailableSettings {
 	String QUERY_STARTUP_CHECKING = "hibernate.query.startup_check";
 
 	/**
+	 * The database supports callable statements named parameters.
+	 *
+	 * The default value is {@link java.sql.DatabaseMetaData#supportsNamedParameters()}
+	 *
+	 * @since 5.1.1
+	 */
+	String SUPPORTS_NAMED_PARAMETERS = "hibernate.jdbc.callable_statement_supports_named_parameters";
+
+	/**
 	 * The {@link org.hibernate.exception.spi.SQLExceptionConverter} to use for converting SQLExceptions
 	 * to Hibernate's JDBCException hierarchy.  The default is to use the configured
 	 * {@link org.hibernate.dialect.Dialect}'s preferred SQLExceptionConverter.

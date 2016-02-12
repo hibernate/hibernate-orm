@@ -13,6 +13,9 @@ import java.util.Date;
 import javax.persistence.ParameterMode;
 import javax.persistence.TemporalType;
 
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -344,16 +347,22 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 	}
 
 	private boolean canDoNameParameterBinding() {
+		boolean supports = supportsNamedParameters();
+		return supportsNamedParameters() && ProcedureParameterNamedBinder.class.isInstance( hibernateType )
+				&& ((ProcedureParameterNamedBinder) hibernateType).canDoSetting();
+	}
+
+	private Boolean supportsNamedParameters() {
 		final ExtractedDatabaseMetaData databaseMetaData = session()
-				.getJdbcCoordinator()
-				.getJdbcSessionOwner()
-				.getJdbcSessionContext()
+				.getFactory()
 				.getServiceRegistry().getService( JdbcEnvironment.class )
 				.getExtractedDatabaseMetaData();
-		return
-				databaseMetaData.supportsNamedParameters() &&
-				ProcedureParameterNamedBinder.class.isInstance( hibernateType )
-						&& ((ProcedureParameterNamedBinder) hibernateType).canDoSetting();
+		return session().getFactory().getServiceRegistry()
+				.getService( ConfigurationService.class ).getSetting(
+						AvailableSettings.SUPPORTS_NAMED_PARAMETERS,
+						StandardConverters.BOOLEAN,
+						databaseMetaData.supportsNamedParameters()
+				);
 	}
 
 	public int[] getSqlTypes() {

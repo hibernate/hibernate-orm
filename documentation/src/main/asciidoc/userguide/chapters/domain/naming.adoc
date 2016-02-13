@@ -30,7 +30,7 @@ in favor of ImplicitNamingStrategy and PhysicalNamingStrategy.
 ====
 
 At the core, the idea behind each naming strategy is to minimize the amount of
-repetitive information a developer must provider for mapping a domain model.
+repetitive information a developer must provide for mapping a domain model.
 
 
 [NOTE]
@@ -52,7 +52,7 @@ is important, applications should prefer to not specify a PhysicalNamingStrategy
 When an entity does not explicitly name the database table that it maps to, we need
 to implicitly determine that table name.  Or when a particular attribute does not explicitly name
 the database column that it maps to, we need to implicitly determine that column name.  There are
-examples of the role of the `org.hibernate.boot.model.naming.ImplicitNamingStrategy` contract : to
+examples of the role of the `org.hibernate.boot.model.naming.ImplicitNamingStrategy` contract to
 determine a logical name when the mapping did not provide an explicit name.
 
 image:images/domain/naming/implicit_naming_strategy_diagram.svg[Implicit Naming Strategy Diagram]

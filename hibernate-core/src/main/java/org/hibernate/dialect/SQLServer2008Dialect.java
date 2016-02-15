@@ -18,6 +18,8 @@ import org.hibernate.type.StandardBasicTypes;
  * @author Gavin King
  */
 public class SQLServer2008Dialect extends SQLServer2005Dialect {
+
+	private static final int NVARCHAR_MAX_LENGTH = 4000;
 	/**
 	 * Constructs a SQLServer2008Dialect
 	 */
@@ -25,6 +27,8 @@ public class SQLServer2008Dialect extends SQLServer2005Dialect {
 		registerColumnType( Types.DATE, "date" );
 		registerColumnType( Types.TIME, "time" );
 		registerColumnType( Types.TIMESTAMP, "datetime2" );
+		registerColumnType( Types.NVARCHAR, NVARCHAR_MAX_LENGTH, "nvarchar($l)" );
+		registerColumnType( Types.NVARCHAR, "nvarchar(MAX)" );
 
 		registerFunction(
 				"current_timestamp", new NoArgSQLFunction( "current_timestamp", StandardBasicTypes.TIMESTAMP, false )

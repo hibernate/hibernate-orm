@@ -5,18 +5,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.jboss.logging.Logger;
 
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
-import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
@@ -29,11 +25,7 @@ import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.internal.synchronization.SessionCacheCleaner;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
-import org.hibernate.event.service.spi.EventListenerRegistry;
-import org.hibernate.event.spi.AutoFlushEvent;
-import org.hibernate.event.spi.AutoFlushEventListener;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.EventType;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
@@ -246,10 +238,22 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		);
 		final String revisionFieldName = auditCfg.getAuditEntCfg().getRevisionFieldName();
 		final String revisionTypePropName = auditCfg.getAuditEntCfg().getRevisionTypePropName();
-
-		// Adding a parameter for each id component, except the rev number and type.
-		for ( Map.Entry<String, Object> originalIdEntry : originalId.entrySet() ) {
-			if ( !revisionFieldName.equals( originalIdEntry.getKey() ) && !revisionTypePropName.equals( originalIdEntry.getKey() ) ) {
+		final String embeddableSetOrdinalPropertyName = auditCfg.getAuditEntCfg().getEmbeddableSetOrdinalPropertyName();
+		boolean isCollectionOfComponents = false; 
+		
+		final SessionFactoryImplementor sessionFactory = ( (SessionImplementor) session ).getFactory();
+		final Type propertyType = sessionFactory.getEntityPersister( entityName ).getPropertyType( propertyName );
+		if ( propertyType.isCollectionType() ) {
+			CollectionType collectionPropertyType = (CollectionType) propertyType;
+			if ( collectionPropertyType.getElementType( sessionFactory ) instanceof ComponentType ) {
+				isCollectionOfComponents=true;
+			}
+		}
+		
+		// Adding a parameter for each id component, except the rev number, type and SETORDINAL.
+		for (Map.Entry<String, Object> originalIdEntry : originalId.entrySet()) {
+			if ( !revisionFieldName.equals( originalIdEntry.getKey() ) && !revisionTypePropName.equals( originalIdEntry.getKey() )
+					&& !( isCollectionOfComponents && embeddableSetOrdinalPropertyName.equals( originalIdEntry.getKey() ) ) ) {
 				qb.getRootParameters().addWhereWithParam(
 						originalIdPropName + "." + originalIdEntry.getKey(),
 						true, "=", originalIdEntry.getValue()
@@ -257,17 +261,11 @@ public class ValidityAuditStrategy implements AuditStrategy {
 			}
 		}
 
-		final SessionFactoryImplementor sessionFactory = ((SessionImplementor) session).getFactory();
-		final Type propertyType = sessionFactory.getEntityPersister( entityName ).getPropertyType( propertyName );
-		if ( propertyType.isCollectionType() ) {
-			CollectionType collectionPropertyType = (CollectionType) propertyType;
-			// Handling collection of components.
-			if ( collectionPropertyType.getElementType( sessionFactory ) instanceof ComponentType ) {
-				// Adding restrictions to compare data outside of primary key.
-				for ( Map.Entry<String, Object> dataEntry : persistentCollectionChangeData.getData().entrySet() ) {
-					if ( !originalIdPropName.equals( dataEntry.getKey() ) ) {
-						qb.getRootParameters().addWhereWithParam( dataEntry.getKey(), true, "=", dataEntry.getValue() );
-					}
+		if(isCollectionOfComponents){
+			// Handling collection of components. Adding restrictions to compare data outside of primary key.
+			for ( Map.Entry<String, Object> dataEntry : persistentCollectionChangeData.getData().entrySet() ) {
+				if ( !originalIdPropName.equals( dataEntry.getKey() ) ) {
+					qb.getRootParameters().addWhereWithParam( dataEntry.getKey(), true, "=", dataEntry.getValue() );
 				}
 			}
 		}

@@ -93,13 +93,13 @@ public class EmbeddableSet extends BaseEnversJPAFunctionalTestCase {
 		// Revision 3 (ese1: removing one existing element)
 		em.getTransaction().begin();
 		ese1 = em.find( EmbeddableSetEntity.class, ese1.getId() );
-		ese1.getComponentSet().remove( c3_2 );
+		ese1.getComponentSet().remove( c3_3 );
 		em.getTransaction().commit();
 
 		// Revision 4 (ese1: adding two elements)
 		em.getTransaction().begin();
 		ese1 = em.find( EmbeddableSetEntity.class, ese1.getId() );
-		ese1.getComponentSet().add( c3_2 );
+		ese1.getComponentSet().add( c3_3 );
 		ese1.getComponentSet().add( c3_4 );
 		em.getTransaction().commit();
 
@@ -152,7 +152,7 @@ public class EmbeddableSet extends BaseEnversJPAFunctionalTestCase {
 
 		assertEquals( TestTools.makeSet( c3_1, c3_3 ), rev1.getComponentSet() );
 		assertEquals( TestTools.makeSet( c3_1, c3_2, c3_3 ), rev2.getComponentSet() );
-		assertEquals( TestTools.makeSet( c3_1, c3_3 ), rev3.getComponentSet() );
+		assertEquals( TestTools.makeSet( c3_1, c3_2 ), rev3.getComponentSet() );
 		assertEquals( TestTools.makeSet( c3_1, c3_2, c3_3, c3_4 ), rev4.getComponentSet() );
 		assertEquals( TestTools.makeSet( c3_1, c3_3 ), rev5.getComponentSet() );
 		assertEquals( TestTools.makeSet( c3_2, c3_4 ), rev6.getComponentSet() );

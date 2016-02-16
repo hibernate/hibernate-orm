@@ -641,82 +641,146 @@ include::{sourcedir}/SQLTest.java[tags=sql-hibernate-composite-key-entity-associ
 ----
 ====
 
-[[sp_query]]
+[[sql-sp]]
 === Using stored procedures for querying
 
 Hibernate provides support for queries via stored procedures and functions.
-Most of the following documentation is equivalent for both.
-The stored procedure/function must return a resultset as the first out-parameter to be able to work with Hibernate.
-An example of such a stored function in Oracle 9 and higher is as follows:
+A stored procedure arguments are declared using the `IN` parameter type, and the result can be either marked with an `OUT`
+parameter type, a `REF_CURSOR` or it could just return the result like a function.
 
-[source,xml]
+[[sql-sp-out-mysql-example]]
+.MySQL stored procedure with `OUT` parameter type
+====
+[source, JAVA, indent=0]
 ----
-CREATE OR REPLACE FUNCTION selectAllEmployments
-    RETURN SYS_REFCURSOR
-AS
-    st_cursor SYS_REFCURSOR;
-BEGIN
-    OPEN st_cursor FOR
-        SELECT EMPLOYEE, EMPLOYER,
-        STARTDATE, ENDDATE,
-        REGIONCODE, EID, VALUE, CURRENCY
-        FROM EMPLOYMENT;
-    RETURN  st_cursor;
-END;
+include::{sourcedir}/MySQLStoredProcedureTest.java[tags=sql-sp-out-mysql-example]
 ----
+====
 
-To use this query in Hibernate you need to map it via a named query.
+To use this stored procedure, you can execute the following JPA 2.1 query:
 
-[source,xml]
+[[sql-jpa-call-sp-out-mysql-example]]
+.Calling a MySQL stored procedure with `OUT` parameter type using JPA
+====
+[source, JAVA, indent=0]
 ----
-<sql-query name = "selectAllEmployees_SP" callable = "true">
-    <return alias="emp" class="Employment">
-        <return-property name = "employee" column = "EMPLOYEE"/>
-        <return-property name = "employer" column = "EMPLOYER"/>
-        <return-property name = "startDate" column = "STARTDATE"/>
-        <return-property name = "endDate" column = "ENDDATE"/>
-        <return-property name = "regionCode" column = "REGIONCODE"/>
-        <return-property name = "id" column = "EID"/>
-        <return-property name = "salary">
-            <return-column name = "VALUE"/>
-            <return-column name = "CURRENCY"/>
-        </return-property>
-    </return>
-    { ? = call selectAllEmployments() }
-</sql-query>
+include::{sourcedir}/MySQLStoredProcedureTest.java[tags=sql-jpa-call-sp-out-mysql-example]
 ----
+====
 
-Stored procedures currently only return scalars and entities.
-`<return-join>` and `<load-collection>` are not supported.
+[[sql-hibernate-call-sp-out-mysql-example]]
+.Calling a MySQL stored procedure with `OUT` parameter type using Hibernate
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/MySQLStoredProcedureTest.java[tags=sql-hibernate-call-sp-out-mysql-example]
+----
+====
 
-[[sql-limits-storedprocedures]]
-=== Rules/limitations for using stored procedures
+If the stored procedure outputs the result directly without an `OUT` parameter type:
 
-You cannot use stored procedures with Hibernate unless you follow some procedure/function rules.
-If they do not follow those rules they are not usable with Hibernate.
-If you still want to use these procedures you have to execute them via `session.doWork()`.
+[[sql-sp-mysql-return-no-out-example]]
+.MySQL stored procedure without an `OUT` parameter type
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/MySQLStoredProcedureTest.java[tags=sql-sp-no-out-mysql-example]
+----
+====
 
-The rules are different for each database, since database vendors have different stored procedure semantics/syntax.
+You can retrieve the results of the aforementioned MySQL stored procedure as follows:
 
+[[sql-jpa-call-sp-no-out-mysql-example]]
+.Calling a MySQL stored procedure and fetching the result set without an `OUT` parameter type using JPA
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/MySQLStoredProcedureTest.java[tags=sql-jpa-call-sp-no-out-mysql-example]
+----
+====
+
+[[sql-hibernate-call-sp-no-out-mysql-example]]
+.Calling a MySQL stored procedure and fetching the result set without an `OUT` parameter type using Hibernate
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/MySQLStoredProcedureTest.java[tags=sql-hibernate-call-sp-no-out-mysql-example]
+----
+====
+
+For a `REF_CURSOR` result sets, we'll consider the following Oracle stored procedure:
+
+[[sql-sp-ref-cursor-oracle-example]]
+.Oracle `REF_CURSOR` stored procedure
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/OracleStoredProcedureTest.java[tags=sql-sp-ref-cursor-oracle-example]
+----
+====
+
+[IMPORTANT]
+====
+`REF_CURSOR` result sets are only supported by Oracle and PostgreSQL because other database systems JDBC drivers don't support this feature.
+====
+
+This function can be called using the standard Java Persistence API:
+
+[[sql-jpa-call-sp-ref-cursor-oracle-example]]
+.Calling an Oracle `REF_CURSOR` stored procedure using JPA
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/OracleStoredProcedureTest.java[tags=sql-jpa-call-sp-ref-cursor-oracle-example]
+----
+====
+
+[[sql-hibernate-call-sp-ref-cursor-oracle-example]]
+.Calling an Oracle `REF_CURSOR` stored procedure using Hibernate
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/OracleStoredProcedureTest.java[tags=sql-hibernate-call-sp-ref-cursor-oracle-example]
+----
+====
+
+If the database defines an SQL function:
+
+[[sql-function-mysql-example]]
+.MySQL function
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/MySQLStoredProcedureTest.java[tags=sql-function-mysql-example]
+----
+====
+
+Because the current `StoredProcedureQuery` implementation doesn't yet support SQL functions,
+we need to use the JDBC syntax.
+
+[NOTE]
+====
+This limitation is acknowledged and it will be addressed by the https://hibernate.atlassian.net/browse/HHH-10530[HHH-10530] issue.
+====
+
+[[sql-call-function-mysql-example]]
+.Calling a MySQL function
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/MySQLStoredProcedureTest.java[tags=sql-call-function-mysql-example]
+----
+====
+
+[NOTE]
+====
 Stored procedure queries cannot be paged with `setFirstResult()/setMaxResults()`.
 
-The recommended call form is standard SQL92: `{ ? = call functionName(<parameters>) }` or `{ ? = call procedureName(<parameters>}`.
-Native call syntax is not supported.
+Since these servers can return multiple result sets and update counts,
+Hibernate will iterate the results and take the first result that is a result set as its return value, so everything else will be discarded.
 
-For Oracle the following rules apply:
-
-* A function must return a result set.
-The first parameter of a procedure must be an `OUT` that returns a result set.
-This is done by using a `SYS_REFCURSOR` type in Oracle 9 or 10.
-In Oracle you need to define a `REF CURSOR` type.
-See Oracle literature for further information.
-
-For Sybase or MS SQL server the following rules apply:
-
-* The procedure must return a result set.
-Note that since these servers can return multiple result sets and update counts, Hibernate will iterate the results and take the first result that is a result set as its return value.
-Everything else will be discarded.
-* If you can enable `SET NOCOUNT ON` in your procedure it will probably be more efficient, but this is not a requirement.
+For SQL Server, if you can enable `SET NOCOUNT ON` in your procedure it will probably be more efficient, but this is not a requirement.
+====
 
 [[sql-cud]]
 === Custom SQL for create, update and delete

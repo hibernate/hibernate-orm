@@ -583,44 +583,44 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 //			jandexView = (IndexView) configService.getSettings().get( AvailableSettings.JANDEX_INDEX );
 
-			scanOptions = new StandardScanOptions(
+			this.scanOptions = new StandardScanOptions(
 					(String) configService.getSettings().get( AvailableSettings.SCANNER_DISCOVERY ),
 					false
 			);
 			// ScanEnvironment must be set explicitly
-			scannerSetting = configService.getSettings().get( AvailableSettings.SCANNER );
-			if ( scannerSetting == null ) {
-				scannerSetting = configService.getSettings().get( AvailableSettings.SCANNER_DEPRECATED );
-				if ( scannerSetting != null ) {
+			this.scannerSetting = configService.getSettings().get( AvailableSettings.SCANNER );
+			if ( this.scannerSetting == null ) {
+				this.scannerSetting = configService.getSettings().get( AvailableSettings.SCANNER_DEPRECATED );
+				if ( this.scannerSetting != null ) {
 					DEPRECATION_LOGGER.logDeprecatedScannerSetting();
 				}
 			}
-			archiveDescriptorFactory = strategySelector.resolveStrategy(
+			this.archiveDescriptorFactory = strategySelector.resolveStrategy(
 					ArchiveDescriptorFactory.class,
 					configService.getSettings().get( AvailableSettings.SCANNER_ARCHIVE_INTERPRETER )
 			);
 
-			multiTenancyStrategy =  MultiTenancyStrategy.determineMultiTenancyStrategy( configService.getSettings() );
+			this.multiTenancyStrategy =  MultiTenancyStrategy.determineMultiTenancyStrategy( configService.getSettings() );
 
-			implicitDiscriminatorsForJoinedInheritanceSupported = configService.getSetting(
+			this.implicitDiscriminatorsForJoinedInheritanceSupported = configService.getSetting(
 					AvailableSettings.IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS,
 					StandardConverters.BOOLEAN,
 					false
 			);
 
-			explicitDiscriminatorsForJoinedInheritanceSupported = !configService.getSetting(
+			this.explicitDiscriminatorsForJoinedInheritanceSupported = !configService.getSetting(
 					AvailableSettings.IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS,
 					StandardConverters.BOOLEAN,
 					false
 			);
 
-			implicitlyForceDiscriminatorInSelect = configService.getSetting(
+			this.implicitlyForceDiscriminatorInSelect = configService.getSetting(
 					AvailableSettings.FORCE_DISCRIMINATOR_IN_SELECTS_BY_DEFAULT,
 					StandardConverters.BOOLEAN,
 					false
 			);
 
-			sharedCacheMode = configService.getSetting(
+			this.sharedCacheMode = configService.getSetting(
 					"javax.persistence.sharedCache.mode",
 					new ConfigurationService.Converter<SharedCacheMode>() {
 						@Override
@@ -639,7 +639,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					SharedCacheMode.UNSPECIFIED
 			);
 
-			defaultCacheAccessType = configService.getSetting(
+			this.defaultCacheAccessType = configService.getSetting(
 					AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY,
 					new ConfigurationService.Converter<AccessType>() {
 						@Override
@@ -665,13 +665,13 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 							: serviceRegistry.getService( RegionFactory.class ).getDefaultAccessType()
 			);
 
-			specjProprietarySyntaxEnabled = configService.getSetting(
+			this.specjProprietarySyntaxEnabled = configService.getSetting(
 					"hibernate.enable_specj_proprietary_syntax",
 					StandardConverters.BOOLEAN,
 					false
 			);
 
-			implicitNamingStrategy = strategySelector.resolveDefaultableStrategy(
+			this.implicitNamingStrategy = strategySelector.resolveDefaultableStrategy(
 					ImplicitNamingStrategy.class,
 					configService.getSettings().get( AvailableSettings.IMPLICIT_NAMING_STRATEGY ),
 					new Callable<ImplicitNamingStrategy>() {
@@ -686,13 +686,13 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					}
 			);
 
-			physicalNamingStrategy = strategySelector.resolveDefaultableStrategy(
+			this.physicalNamingStrategy = strategySelector.resolveDefaultableStrategy(
 					PhysicalNamingStrategy.class,
 					configService.getSettings().get( AvailableSettings.PHYSICAL_NAMING_STRATEGY ),
 					PhysicalNamingStrategyStandardImpl.INSTANCE
 			);
 
-			sourceProcessOrdering = resolveInitialSourceProcessOrdering( configService );
+			this.sourceProcessOrdering = resolveInitialSourceProcessOrdering( configService );
 
 			final boolean useNewIdentifierGenerators = configService.getSetting(
 					AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS,
@@ -700,13 +700,19 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					true
 			);
 			if ( useNewIdentifierGenerators ) {
-				idGenerationTypeInterpreter.disableLegacyFallback();
+				this.idGenerationTypeInterpreter.disableLegacyFallback();
 			}
 			else {
-				idGenerationTypeInterpreter.enableLegacyFallback();
+				this.idGenerationTypeInterpreter.enableLegacyFallback();
 			}
 
-			reflectionManager = generateDefaultReflectionManager();
+			this.useNationalizedCharacterData = configService.getSetting(
+					AvailableSettings.USE_NATIONALIZED_CHARACTER_DATA,
+					StandardConverters.BOOLEAN,
+					false
+			);
+
+			this.reflectionManager = generateDefaultReflectionManager();
 		}
 
 		private ArrayList<MetadataSourceType> resolveInitialSourceProcessOrdering(ConfigurationService configService) {

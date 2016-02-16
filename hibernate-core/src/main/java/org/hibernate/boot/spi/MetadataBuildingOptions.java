@@ -192,7 +192,7 @@ public interface MetadataBuildingOptions {
 	 *
 	 * @return {@code true} if nationalized character data should be used by default; {@code false} otherwise.
 	 */
-	public boolean useNationalizedCharacterData();
+	boolean useNationalizedCharacterData();
 
 	boolean isSpecjProprietarySyntaxEnabled();
 

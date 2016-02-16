@@ -10,7 +10,6 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import java.util.EnumSet;
 
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.boot.MetadataSources;
@@ -19,7 +18,6 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.hibernate.tool.schema.TargetType;
 
 import org.junit.After;
 import org.junit.Before;
@@ -47,13 +45,13 @@ public class SQLServer2008NVarCharTypeTest extends BaseUnitTestCase {
 
 	@After
 	public void tearDown() {
-		schemaExport.drop( EnumSet.of( TargetType.DATABASE ), metadata );
+		schemaExport.drop( true, true );
 		StandardServiceRegistryBuilder.destroy( ssr );
 	}
 
 	@Test
 	public void testSchemaIsCreatedWithoutExceptions() {
-		schemaExport.createOnly( EnumSet.of( TargetType.DATABASE ), metadata );
+		schemaExport.create( true, false );
 	}
 
 	private SchemaExport createSchemaExport(Class[] annotatedClasses) {
@@ -64,8 +62,8 @@ public class SQLServer2008NVarCharTypeTest extends BaseUnitTestCase {
 		}
 		metadata = (MetadataImplementor) metadataSources.buildMetadata();
 		metadata.validate();
-		SchemaExport schemaExport = new SchemaExport();
-		schemaExport.setHaltOnError( true )
+		SchemaExport schemaExport = new SchemaExport( metadata );
+		schemaExport.setHaltOnError( false )
 				.setFormat( false );
 
 		return schemaExport;

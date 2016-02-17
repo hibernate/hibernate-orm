@@ -78,7 +78,11 @@ public interface TableInformation {
 	public Iterable<IndexInformation> getIndexes();
 
 	/**
-	 * Obtain an iterable over all the table's defined indexes
+	 * Retrieve the named IndexInformation
+	 * 
+	 * @param indexName The index identifier (simple name)
+	 * 
+	 * @return The matching index information.  May return {@code null}
 	 */
 	public IndexInformation getIndex(Identifier indexName);
 }

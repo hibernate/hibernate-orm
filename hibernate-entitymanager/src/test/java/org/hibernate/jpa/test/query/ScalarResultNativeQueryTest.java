@@ -10,6 +10,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
+import javax.persistence.Column;
 import javax.persistence.ColumnResult;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
@@ -29,7 +30,7 @@ import org.junit.Test;
 public class ScalarResultNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Entity(name="Person")
-	@Table(name="PERSON")
+	@Table(name="person")
 	@NamedNativeQuery(name = "personAge", query = "select p.age from person p", resultSetMapping = "ageStringMapping")
 	@SqlResultSetMapping(name = "ageStringMapping", columns = { @ColumnResult(name = "age", type = String.class) })
 	public static class Person {
@@ -38,6 +39,7 @@ public class ScalarResultNativeQueryTest extends BaseEntityManagerFunctionalTest
 		private Integer id;
 
 		@SuppressWarnings("unused")
+		@Column(name = "age")
 		private int age;
 
 		public Person() {

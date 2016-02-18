@@ -107,6 +107,7 @@ public class OptimisticLockingTest extends BaseEntityManagerFunctionalTestCase {
 		@GeneratedValue
 		private Long id;
 
+		@Column(name = "`number`")
 		private String number;
 
 		@ManyToOne

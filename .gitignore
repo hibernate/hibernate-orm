@@ -42,3 +42,8 @@ ObjectStore
 *.jps
 *.hprof
 /.nb-gradle/
+
+# Additional databases used in local envs
+databases/mysql/matrix.gradle
+databases/mysql/resources/hibernate.properties
+

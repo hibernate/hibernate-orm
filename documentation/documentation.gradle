@@ -26,6 +26,8 @@ apply plugin: "java"
 apply plugin: "jdocbook"
 apply plugin: 'org.asciidoctor.convert'
 
+apply plugin: 'hibernate-matrix-testing'
+
 apply from: "${rootProject.projectDir}/utilities.gradle"
 
 defaultTasks 'buildDocs'

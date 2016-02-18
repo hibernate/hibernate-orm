@@ -7,6 +7,7 @@
 package org.hibernate.userguide.mapping;
 
 import java.time.LocalDateTime;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -46,6 +47,7 @@ public class LocalDateTimeWithTemporalTimeTest extends BaseEntityManagerFunction
 
 		//throws org.hibernate.AnnotationException: @Temporal should only be set on a java.util.Date or java.util.Calendar property
 		//@Temporal(TemporalType.TIME)
+		@Column(name = "`timestamp`")
 		private LocalDateTime timestamp;
 
 		public DateEvent() {

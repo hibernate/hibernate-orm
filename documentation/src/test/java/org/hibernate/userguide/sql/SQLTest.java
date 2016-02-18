@@ -16,6 +16,10 @@ import javax.persistence.PersistenceException;
 
 import org.hibernate.Criteria;
 import org.hibernate.Session;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.MySQL5Dialect;
+import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.loader.custom.NonUniqueDiscoveredSqlAliasException;
 import org.hibernate.transform.Transformers;
@@ -31,6 +35,8 @@ import org.hibernate.userguide.model.Phone;
 import org.hibernate.userguide.model.PhoneType;
 import org.hibernate.userguide.model.WireTransferPayment;
 
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.RequiresDialects;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -166,7 +172,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 			.getResultList();
 
 			for(Object[] person : persons) {
-				BigInteger id = (BigInteger) person[0];
+				Number id = (Number) person[0];
 				String name = (String) person[1];
 			}
 			//end::sql-jpa-custom-column-selection-scalar-query-example[]
@@ -198,7 +204,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 			.list();
 
 			for(Object[] person : persons) {
-				BigInteger id = (BigInteger) person[0];
+				Number id = (Number) person[0];
 				String name = (String) person[1];
 			}
 			//end::sql-hibernate-custom-column-selection-scalar-query-example[]
@@ -306,7 +312,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
         doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::sql-jpa-entity-associations-query-many-to-one-example[]
 			List<Phone> phones = entityManager.createNativeQuery(
-				"SELECT id, number, type, person_id " +
+				"SELECT id, phone_number, phone_type, person_id " +
 				"FROM phone", Phone.class )
 			.getResultList();
 			//end::sql-jpa-entity-associations-query-many-to-one-example[]
@@ -320,7 +326,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 			Session session = entityManager.unwrap( Session.class );
 			//tag::sql-hibernate-entity-associations-query-many-to-one-example[]
 			List<Phone> phones = session.createSQLQuery(
-				"SELECT id, number, type, person_id " +
+				"SELECT id, phone_number, phone_type, person_id " +
 				"FROM phone" )
 			.addEntity( Phone.class )
 			.list();
@@ -392,13 +398,14 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@RequiresDialects({@RequiresDialect(H2Dialect.class), @RequiresDialect(Oracle8iDialect.class), @RequiresDialect(PostgreSQL82Dialect.class)})
 	public void test_sql_jpa_entity_associations_query_one_to_many_join_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::sql-jpa-entity-associations-query-one-to-many-join-example[]
 			List<Phone> phones = entityManager.createNativeQuery(
 				"SELECT * " +
 				"FROM phone ph " +
-				"JOIN call c ON c.phone_id = ph.id", Phone.class )
+				"JOIN phone_call c ON c.phone_id = ph.id", Phone.class )
 			.getResultList();
 
 			for(Phone phone : phones) {
@@ -417,7 +424,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 				List<Phone> phones = session.createSQLQuery(
 					"SELECT * " +
 					"FROM phone ph " +
-					"JOIN call c ON c.phone_id = ph.id" )
+					"JOIN phone_call c ON c.phone_id = ph.id" )
 				.addEntity("phone", Phone.class )
 				.addJoin( "c", "phone.calls")
 				.setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY )
@@ -436,6 +443,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@RequiresDialects({@RequiresDialect(H2Dialect.class), @RequiresDialect(Oracle8iDialect.class), @RequiresDialect(PostgreSQL82Dialect.class)})
 	public void test_sql_hibernate_entity_associations_query_one_to_many_join_example_2() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap( Session.class );
@@ -443,7 +451,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 			List<Object[]> tuples = session.createSQLQuery(
 				"SELECT * " +
 				"FROM phone ph " +
-				"JOIN call c ON c.phone_id = ph.id" )
+				"JOIN phone_call c ON c.phone_id = ph.id" )
 			.addEntity("phone", Phone.class )
 			.addJoin( "c", "phone.calls")
 			.list();
@@ -686,6 +694,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@RequiresDialects({@RequiresDialect(H2Dialect.class), @RequiresDialect(Oracle8iDialect.class), @RequiresDialect(PostgreSQL82Dialect.class)})
 	public void test_sql_jpa_entity_associations_named_query_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::sql-jpa-entity-associations_named-query-example[]
@@ -704,6 +713,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@RequiresDialects({@RequiresDialect(H2Dialect.class), @RequiresDialect(Oracle8iDialect.class), @RequiresDialect(PostgreSQL82Dialect.class)})
 	public void test_sql_hibernate_entity_associations_named_query_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap( Session.class );
@@ -732,8 +742,8 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 
 			for(Object[] tuple : tuples) {
 				SpaceShip spaceShip = (SpaceShip) tuple[0];
-				Integer surface = (Integer) tuple[1];
-				Integer volume = (Integer) tuple[2];
+				Number surface = (Number) tuple[1];
+				Number volume = (Number) tuple[2];
 			}
 			//end::sql-jpa-composite-key-entity-associations_named-query-example[]
 			assertEquals(1, tuples.size());
@@ -751,8 +761,8 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 
 			for(Object[] tuple : tuples) {
 				SpaceShip spaceShip = (SpaceShip) tuple[0];
-				Integer surface = (Integer) tuple[1];
-				Integer volume = (Integer) tuple[2];
+				Number surface = (Number) tuple[1];
+				Number volume = (Number) tuple[2];
 			}
 			//end::sql-hibernate-composite-key-entity-associations_named-query-example[]
 			assertEquals(1, tuples.size());

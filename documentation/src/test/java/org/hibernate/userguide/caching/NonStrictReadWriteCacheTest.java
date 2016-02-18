@@ -81,7 +81,7 @@ public class NonStrictReadWriteCacheTest extends BaseEntityManagerFunctionalTest
     }
 
 
-    @Entity
+    @Entity(name = "Person")
 	@Cacheable
     @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     public static class Person {
@@ -130,7 +130,7 @@ public class NonStrictReadWriteCacheTest extends BaseEntityManagerFunctionalTest
 	}
 
 	//tag::caching-entity-mapping-example[]
-	@Entity
+	@Entity(name = "Phone")
 	@Cacheable
 	@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 	public static class Phone {

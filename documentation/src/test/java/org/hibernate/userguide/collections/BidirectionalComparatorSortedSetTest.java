@@ -113,7 +113,7 @@ public class BidirectionalComparatorSortedSetTest extends BaseEntityManagerFunct
 
 		private String type;
 
-		@Column(unique = true)
+		@Column(name = "`number`", unique = true)
 		@NaturalId
 		private String number;
 

@@ -94,7 +94,7 @@ public class BidirectionalOrderByListTest extends BaseEntityManagerFunctionalTes
 
 		private String type;
 
-		@Column(unique = true)
+		@Column(name = "`number`", unique = true)
 		@NaturalId
 		private String number;
 

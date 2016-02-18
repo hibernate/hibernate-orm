@@ -9,6 +9,7 @@ package org.hibernate.userguide.flush;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FlushModeType;
 import javax.persistence.GeneratedValue;
@@ -127,6 +128,7 @@ public class CommitFlushTest extends BaseEntityManagerFunctionalTestCase {
         @ManyToOne
         private Person person;
 
+        @Column(name = "`number`")
         private String number;
 
         public Phone() {

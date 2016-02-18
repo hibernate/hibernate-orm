@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
@@ -246,6 +247,7 @@ public class BidirectionalTwoOneToManyMapsIdTest extends BaseEntityManagerFuncti
 
 		private String street;
 
+		@Column(name = "`number`")
 		private String number;
 
 		private String postalCode;

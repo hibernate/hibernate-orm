@@ -6,6 +6,7 @@
  */
 package org.hibernate.userguide.associations;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
@@ -68,6 +69,7 @@ public class ManyToOneTest extends BaseEntityManagerFunctionalTestCase {
 		@GeneratedValue
 		private Long id;
 
+		@Column(name = "`number`")
 		private String number;
 
 		@ManyToOne

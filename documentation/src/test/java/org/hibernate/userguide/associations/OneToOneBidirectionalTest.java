@@ -7,6 +7,7 @@
 package org.hibernate.userguide.associations;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -92,6 +93,7 @@ public class OneToOneBidirectionalTest extends BaseEntityManagerFunctionalTestCa
 		@GeneratedValue
 		private Long id;
 
+		@Column(name = "`number`")
 		private String number;
 
 		@OneToOne(mappedBy = "phone", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)

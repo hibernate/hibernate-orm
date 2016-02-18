@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -37,9 +38,11 @@ public class Phone {
     @ManyToOne(fetch = FetchType.LAZY)
     private Person person;
 
+    @Column(name = "phone_number")
     private String number;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "phone_type")
     private PhoneType type;
 
     @OneToMany(mappedBy = "phone", cascade = CascadeType.ALL, orphanRemoval = true)

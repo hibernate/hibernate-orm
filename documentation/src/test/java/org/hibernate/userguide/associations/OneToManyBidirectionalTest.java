@@ -95,7 +95,7 @@ public class OneToManyBidirectionalTest extends BaseEntityManagerFunctionalTestC
 		private Long id;
 
 		@NaturalId
-		@Column(unique = true)
+		@Column(name = "`number`", unique = true)
 		private String number;
 
 		@ManyToOne

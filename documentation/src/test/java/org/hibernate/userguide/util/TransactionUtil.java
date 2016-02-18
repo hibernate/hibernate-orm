@@ -6,16 +6,16 @@
  */
 package org.hibernate.userguide.util;
 
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
+
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 
 /**
  * @author Vlad Mihalcea
@@ -122,7 +122,7 @@ public class TransactionUtil {
             txn.begin();
             result = function.apply(entityManager);
             txn.commit();
-        } catch (RuntimeException e) {
+        } catch (Throwable e) {
             if ( txn != null && txn.isActive()) txn.rollback();
             throw e;
         } finally {
@@ -149,7 +149,7 @@ public class TransactionUtil {
             txn.begin();
             function.accept(entityManager);
             txn.commit();
-        } catch (RuntimeException e) {
+        } catch (Throwable e) {
             if ( txn != null && txn.isActive()) txn.rollback();
             throw e;
         } finally {
@@ -178,7 +178,7 @@ public class TransactionUtil {
 
             result = function.apply(session);
             txn.commit();
-        } catch (RuntimeException e) {
+        } catch (Throwable e) {
             if ( txn != null ) txn.rollback();
             throw e;
         } finally {
@@ -205,7 +205,7 @@ public class TransactionUtil {
 
             function.accept(session);
             txn.commit();
-        } catch (RuntimeException e) {
+        } catch (Throwable e) {
             if ( txn != null ) txn.rollback();
             throw e;
         } finally {

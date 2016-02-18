@@ -7,6 +7,7 @@
 package org.hibernate.userguide.mapping;
 
 import java.util.Date;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -46,6 +47,7 @@ public class DateWithTemporalDateTest extends BaseEntityManagerFunctionalTestCas
 		@GeneratedValue
 		private Long id;
 
+		@Column(name = "`timestamp`")
 		@Temporal(TemporalType.DATE)
 		private Date timestamp;
 

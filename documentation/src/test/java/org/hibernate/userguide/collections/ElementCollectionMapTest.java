@@ -95,6 +95,7 @@ public class ElementCollectionMapTest extends BaseEntityManagerFunctionalTestCas
 
 		private PhoneType type;
 
+		@Column(name = "`number`")
 		private String number;
 
 		public Phone() {

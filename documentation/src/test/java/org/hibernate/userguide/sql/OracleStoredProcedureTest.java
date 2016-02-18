@@ -1,6 +1,7 @@
 package org.hibernate.userguide.sql;
 
 import java.math.BigDecimal;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -23,6 +24,7 @@ import org.hibernate.userguide.model.Phone;
 import org.hibernate.userguide.model.PhoneType;
 
 import org.hibernate.testing.RequiresDialect;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -53,26 +55,26 @@ public class OracleStoredProcedureTest extends BaseEntityManagerFunctionalTestCa
             session.doWork( connection -> {
                 try(Statement statement = connection.createStatement()) {
                     statement.executeUpdate(
-                        "CREATE OR REPLACE PROCEDURE count_phones (  " +
+                        "CREATE OR REPLACE PROCEDURE sp_count_phones (  " +
                         "   personId IN NUMBER,  " +
                         "   phoneCount OUT NUMBER )  " +
                         "AS  " +
                         "BEGIN  " +
                         "    SELECT COUNT(*) INTO phoneCount  " +
-                        "    FROM person_phone  " +
+                        "    FROM phone  " +
                         "    WHERE person_id = personId; " +
                         "END;"
                     );
                     //tag::sql-sp-ref-cursor-oracle-example[]
                     statement.executeUpdate(
-                        "CREATE OR REPLACE PROCEDURE person_phones ( " +
+                        "CREATE OR REPLACE PROCEDURE sp_person_phones ( " +
                         "   personId IN NUMBER, " +
                         "   personPhones OUT SYS_REFCURSOR ) " +
                         "AS  " +
                         "BEGIN " +
                         "    OPEN personPhones FOR " +
                         "    SELECT *" +
-                        "    FROM person_phone " +
+                        "    FROM phone " +
                         "    WHERE person_id = personId; " +
                         "END;"
                     );
@@ -85,7 +87,7 @@ public class OracleStoredProcedureTest extends BaseEntityManagerFunctionalTestCa
                         "    phoneCount NUMBER; " +
                         "BEGIN " +
                         "    SELECT COUNT(*) INTO phoneCount " +
-                        "    FROM person_phone " +
+                        "    FROM phone " +
                         "    WHERE person_id = personId; " +
                         "    RETURN( phoneCount ); " +
                         "END;"
@@ -117,17 +119,51 @@ public class OracleStoredProcedureTest extends BaseEntityManagerFunctionalTestCa
         });
     }
 
+    @After
+    public void destroy() {
+        doInJPA( this::entityManagerFactory, entityManager -> {
+            Session session = entityManager.unwrap( Session.class );
+            session.doWork( connection -> {
+                try(Statement statement = connection.createStatement()) {
+                    statement.executeUpdate("DROP PROCEDURE sp_count_phones");
+                }
+                catch (SQLException ignore) {
+                }
+            } );
+        });
+        doInJPA( this::entityManagerFactory, entityManager -> {
+            Session session = entityManager.unwrap( Session.class );
+            session.doWork( connection -> {
+                try(Statement statement = connection.createStatement()) {
+                    statement.executeUpdate("DROP PROCEDURE sp_person_phones");
+                }
+                catch (SQLException ignore) {
+                }
+            } );
+        });
+        doInJPA( this::entityManagerFactory, entityManager -> {
+            Session session = entityManager.unwrap( Session.class );
+            session.doWork( connection -> {
+                try(Statement statement = connection.createStatement()) {
+                    statement.executeUpdate("DROP FUNCTION fn_count_phones");
+                }
+                catch (SQLException ignore) {
+                }
+            } );
+        });
+    }
+
     @Test
     public void testStoredProcedureOutParameter() {
         doInJPA( this::entityManagerFactory, entityManager -> {
-            StoredProcedureQuery query = entityManager.createStoredProcedureQuery("count_phones");
-            query.registerStoredProcedureParameter("personId", Long.class, ParameterMode.IN);
-            query.registerStoredProcedureParameter("phoneCount", Long.class, ParameterMode.OUT);
+            StoredProcedureQuery query = entityManager.createStoredProcedureQuery("sp_count_phones");
+            query.registerStoredProcedureParameter(1, Long.class, ParameterMode.IN);
+            query.registerStoredProcedureParameter(2, Long.class, ParameterMode.OUT);
 
-            query.setParameter("person_id", 1L);
+            query.setParameter(1, 1L);
 
             query.execute();
-            Long phoneCount = (Long) query.getOutputParameterValue("phoneCount");
+            Long phoneCount = (Long) query.getOutputParameterValue(2);
             assertEquals(Long.valueOf(2), phoneCount);
         });
     }
@@ -136,7 +172,7 @@ public class OracleStoredProcedureTest extends BaseEntityManagerFunctionalTestCa
     public void testStoredProcedureRefCursor() {
         doInJPA( this::entityManagerFactory, entityManager -> {
             //tag::sql-jpa-call-sp-ref-cursor-oracle-example[]
-            StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "personPhones" );
+            StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_person_phones" );
             query.registerStoredProcedureParameter( 1, Long.class, ParameterMode.IN );
             query.registerStoredProcedureParameter( 2, Class.class, ParameterMode.REF_CURSOR );
             query.setParameter( 1, 1L );
@@ -154,7 +190,7 @@ public class OracleStoredProcedureTest extends BaseEntityManagerFunctionalTestCa
             //tag::sql-hibernate-call-sp-ref-cursor-oracle-example[]
             Session session = entityManager.unwrap(Session.class);
             
-            ProcedureCall call = session.createStoredProcedureCall( "personPhones");
+            ProcedureCall call = session.createStoredProcedureCall( "sp_person_phones");
             call.registerParameter(1, Long.class, ParameterMode.IN).bindValue(1L);
             call.registerParameter(2, Class.class, ParameterMode.REF_CURSOR);
 
@@ -167,12 +203,17 @@ public class OracleStoredProcedureTest extends BaseEntityManagerFunctionalTestCa
 
     @Test
     public void testStoredProcedureReturnValue() {
-        doInJPA( this::entityManagerFactory, entityManager -> {
-            BigDecimal phoneCount = (BigDecimal) entityManager
-                    .createNativeQuery("SELECT fn_count_phones(:personId) FROM DUAL")
-                    .setParameter("personId", 1L)
-                    .getSingleResult();
-            assertEquals(BigDecimal.valueOf(2), phoneCount);
-        });
+        try {
+            doInJPA( this::entityManagerFactory, entityManager -> {
+				BigDecimal phoneCount = (BigDecimal) entityManager
+						.createNativeQuery("SELECT fn_count_phones(:personId) FROM DUAL")
+						.setParameter("personId", 1)
+						.getSingleResult();
+				assertEquals(BigDecimal.valueOf(2), phoneCount);
+			});
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

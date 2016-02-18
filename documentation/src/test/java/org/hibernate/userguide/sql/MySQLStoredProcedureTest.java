@@ -27,6 +27,7 @@ import org.hibernate.userguide.model.Phone;
 import org.hibernate.userguide.model.PhoneType;
 
 import org.hibernate.testing.RequiresDialect;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -52,75 +53,46 @@ public class MySQLStoredProcedureTest extends BaseEntityManagerFunctionalTestCas
 
     @Before
     public void init() {
-        doInJPA( this::entityManagerFactory, entityManager -> {
-            Session session = entityManager.unwrap( Session.class );
-            session.doWork( connection -> {
-                try(Statement statement = connection.createStatement()) {
-                    statement.executeUpdate("DROP PROCEDURE IF EXISTS count_phones");
-                }
-                catch (SQLException ignore) {
-                }
-            } );
-        });
-        doInJPA( this::entityManagerFactory, entityManager -> {
-            Session session = entityManager.unwrap( Session.class );
-            session.doWork( connection -> {
-                try(Statement statement = connection.createStatement()) {
-                    statement.executeUpdate("DROP PROCEDURE IF EXISTS person_phones");
-                }
-                catch (SQLException ignore) {
-                }
-            } );
-        });
-        doInJPA( this::entityManagerFactory, entityManager -> {
-            Session session = entityManager.unwrap( Session.class );
-            session.doWork( connection -> {
-                try(Statement statement = connection.createStatement()) {
-                    statement.executeUpdate("DROP FUNCTION IF EXISTS fn_count_comments");
-                }
-                catch (SQLException ignore) {
-                }
-            } );
-        });
+        destroy();
         doInJPA( this::entityManagerFactory, entityManager -> {
             Session session = entityManager.unwrap( Session.class );
             session.doWork( connection -> {
                 try(Statement statement = connection.createStatement()) {
                     //tag::sql-sp-out-mysql-example[]
                     statement.executeUpdate(
-                        "CREATE PROCEDURE count_phones (" +
+                        "CREATE PROCEDURE sp_count_phones (" +
                         "   IN personId INT, " +
                         "   OUT phoneCount INT " +
                         ") " +
                         "BEGIN " +
                         "    SELECT COUNT(*) INTO phoneCount " +
-                        "    FROM person_phone  " +
-                        "    WHERE person_phone.person_id = personId; " +
+                        "    FROM phone  " +
+                        "    WHERE phone.person_id = personId; " +
                         "END"
                     );
                     //end::sql-sp-out-mysql-example[]
                     //tag::sql-sp-no-out-mysql-example[]
                     statement.executeUpdate(
-                        "CREATE PROCEDURE person_phones(IN personId INT) " +
+                        "CREATE PROCEDURE sp_phones(IN personId INT) " +
                         "BEGIN " +
                         "    SELECT *  " +
-                        "    FROM person_phone   " +
+                        "    FROM phone   " +
                         "    WHERE person_id = personId;  " +
                         "END"
                     );
                     //end::sql-sp-no-out-mysql-example[]
                     //tag::sql-function-mysql-example[]
                     statement.executeUpdate(
-                        "CREATE FUNCTION fn_count_comments(postId integer)  " +
+                        "CREATE FUNCTION fn_count_phones(personId integer)  " +
                         "RETURNS integer " +
                         "DETERMINISTIC " +
                         "READS SQL DATA " +
                         "BEGIN " +
-                        "    DECLARE commentCount integer; " +
-                        "    SELECT COUNT(*) INTO commentCount " +
-                        "    FROM post_comment  " +
-                        "    WHERE post_comment.post_id = postId; " +
-                        "    RETURN commentCount; " +
+                        "    DECLARE phoneCount integer; " +
+                        "    SELECT COUNT(*) INTO phoneCount " +
+                        "    FROM phone  " +
+                        "    WHERE phone.person_id = personId; " +
+                        "    RETURN phoneCount; " +
                         "END"
                     );
                     //end::sql-function-mysql-example[]
@@ -151,11 +123,45 @@ public class MySQLStoredProcedureTest extends BaseEntityManagerFunctionalTestCas
         });
     }
 
+    @After
+    public void destroy() {
+        doInJPA( this::entityManagerFactory, entityManager -> {
+            Session session = entityManager.unwrap( Session.class );
+            session.doWork( connection -> {
+                try(Statement statement = connection.createStatement()) {
+                    statement.executeUpdate("DROP PROCEDURE IF EXISTS sp_count_phones");
+                }
+                catch (SQLException ignore) {
+                }
+            } );
+        });
+        doInJPA( this::entityManagerFactory, entityManager -> {
+            Session session = entityManager.unwrap( Session.class );
+            session.doWork( connection -> {
+                try(Statement statement = connection.createStatement()) {
+                    statement.executeUpdate("DROP PROCEDURE IF EXISTS sp_phones");
+                }
+                catch (SQLException ignore) {
+                }
+            } );
+        });
+        doInJPA( this::entityManagerFactory, entityManager -> {
+            Session session = entityManager.unwrap( Session.class );
+            session.doWork( connection -> {
+                try(Statement statement = connection.createStatement()) {
+                    statement.executeUpdate("DROP FUNCTION IF EXISTS fn_count_phones");
+                }
+                catch (SQLException ignore) {
+                }
+            } );
+        });
+    }
+
     @Test
     public void testStoredProcedureOutParameter() {
         doInJPA( this::entityManagerFactory, entityManager -> {
             //tag::sql-jpa-call-sp-out-mysql-example[]
-            StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "count_phones");
+            StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_count_phones");
             query.registerStoredProcedureParameter( "personId", Long.class, ParameterMode.IN);
             query.registerStoredProcedureParameter( "phoneCount", Long.class, ParameterMode.OUT);
 
@@ -174,7 +180,7 @@ public class MySQLStoredProcedureTest extends BaseEntityManagerFunctionalTestCas
             //tag::sql-hibernate-call-sp-out-mysql-example[]
             Session session = entityManager.unwrap( Session.class );
 
-            ProcedureCall call = session.createStoredProcedureCall( "count_phones" );
+            ProcedureCall call = session.createStoredProcedureCall( "sp_count_phones" );
             call.registerParameter( "personId", Long.class, ParameterMode.IN ).bindValue( 1L );
             call.registerParameter( "phoneCount", Long.class, ParameterMode.OUT );
 
@@ -188,7 +194,7 @@ public class MySQLStoredProcedureTest extends BaseEntityManagerFunctionalTestCas
     public void testStoredProcedureRefCursor() {
         try {
             doInJPA( this::entityManagerFactory, entityManager -> {
-                StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "person_phones");
+                StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_phones");
                 query.registerStoredProcedureParameter( 1, void.class, ParameterMode.REF_CURSOR);
                 query.registerStoredProcedureParameter( 2, Long.class, ParameterMode.IN);
 
@@ -206,7 +212,7 @@ public class MySQLStoredProcedureTest extends BaseEntityManagerFunctionalTestCas
     public void testStoredProcedureReturnValue() {
         doInJPA( this::entityManagerFactory, entityManager -> {
             //tag::sql-jpa-call-sp-no-out-mysql-example[]
-            StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "person_phones");
+            StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_phones");
             query.registerStoredProcedureParameter( 1, Long.class, ParameterMode.IN);
 
             query.setParameter(1, 1L);
@@ -223,7 +229,7 @@ public class MySQLStoredProcedureTest extends BaseEntityManagerFunctionalTestCas
             //tag::sql-hibernate-call-sp-no-out-mysql-example[]
             Session session = entityManager.unwrap( Session.class );
 
-            ProcedureCall call = session.createStoredProcedureCall( "post_comments" );
+            ProcedureCall call = session.createStoredProcedureCall( "sp_phones" );
             call.registerParameter( 1, Long.class, ParameterMode.IN ).bindValue( 1L );
 
             Output output = call.getOutputs().getCurrent();
@@ -238,19 +244,19 @@ public class MySQLStoredProcedureTest extends BaseEntityManagerFunctionalTestCas
     public void testFunctionWithJDBC() {
         doInJPA( this::entityManagerFactory, entityManager -> {
             //tag::sql-call-function-mysql-example[]
-            final AtomicReference<Integer> commentCount = new AtomicReference<>();
+            final AtomicReference<Integer> phoneCount = new AtomicReference<>();
             Session session = entityManager.unwrap( Session.class );
             session.doWork( connection -> {
                 try (CallableStatement function = connection.prepareCall(
-                        "{ ? = call fn_count_comments(?) }" )) {
+                        "{ ? = call fn_count_phones(?) }" )) {
                     function.registerOutParameter( 1, Types.INTEGER );
                     function.setInt( 2, 1 );
                     function.execute();
-                    commentCount.set( function.getInt( 1 ) );
+                    phoneCount.set( function.getInt( 1 ) );
                 }
             } );
             //end::sql-call-function-mysql-example[]
-            assertEquals(Integer.valueOf(2), commentCount.get());
+            assertEquals(Integer.valueOf(2), phoneCount.get());
         });
     }
 }

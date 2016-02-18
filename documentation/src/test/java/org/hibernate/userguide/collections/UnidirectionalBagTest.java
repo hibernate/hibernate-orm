@@ -9,6 +9,7 @@ package org.hibernate.userguide.collections;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
@@ -77,6 +78,7 @@ public class UnidirectionalBagTest extends BaseEntityManagerFunctionalTestCase {
 
 		private String type;
 
+		@Column(name = "`number`")
 		private String number;
 
 		public Phone() {

@@ -89,7 +89,7 @@ public class BidirectionalBagTest extends BaseEntityManagerFunctionalTestCase {
 
 		private String type;
 
-		@Column(unique = true)
+		@Column(name = "`number`", unique = true)
 		@NaturalId
 		private String number;
 

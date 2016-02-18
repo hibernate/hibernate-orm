@@ -25,8 +25,10 @@ import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfile;
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.RequiresDialect;
 import org.junit.Test;
 
 import org.jboss.logging.Logger;
@@ -38,6 +40,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Vlad Mihalcea
  */
+@RequiresDialect(H2Dialect.class)
 public class FetchingTest extends BaseEntityManagerFunctionalTestCase {
 
 	private static final Logger log = Logger.getLogger( FetchingTest.class );

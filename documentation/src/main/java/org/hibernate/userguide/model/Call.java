@@ -7,16 +7,19 @@
 package org.hibernate.userguide.model;
 
 import java.util.Date;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 /**
  * @author Vlad Mihalcea
  */
 //tag::hql-examples-domain-model-example[]
 @Entity
+@Table(name = "phone_call")
 public class Call {
 
     @Id
@@ -26,6 +29,7 @@ public class Call {
     @ManyToOne
     private Phone phone;
 
+    @Column(name = "call_timestamp")
     private Date timestamp;
 
     private int duration;

@@ -6,23 +6,21 @@
  */
 package org.hibernate.userguide.sql;
 
-import java.math.BigInteger;
-
 /**
  * @author Vlad Mihalcea
  */
 //tag::sql-hibernate-dto-query-example[]
 public class PersonSummaryDTO {
 
-    private BigInteger id;
+    private Number id;
 
     private String name;
 
-    public BigInteger getId() {
+    public Number getId() {
         return id;
     }
 
-    public void setId(BigInteger id) {
+    public void setId(Number id) {
         this.id = id;
     }
 

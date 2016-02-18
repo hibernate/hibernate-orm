@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
@@ -95,6 +96,7 @@ public class UnidirectionalSortedSetTest extends BaseEntityManagerFunctionalTest
 		private String type;
 
 		@NaturalId
+		@Column(name = "`number`")
 		private String number;
 
 		public Phone() {

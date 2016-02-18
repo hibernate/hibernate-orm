@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
@@ -87,6 +88,7 @@ public class UnidirectionalSetTest extends BaseEntityManagerFunctionalTestCase {
 		private String type;
 
 		@NaturalId
+		@Column(name = "`number`")
 		private String number;
 
 		public Phone() {

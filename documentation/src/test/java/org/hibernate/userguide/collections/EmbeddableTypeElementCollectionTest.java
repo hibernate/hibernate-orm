@@ -8,6 +8,7 @@ package org.hibernate.userguide.collections;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
@@ -64,6 +65,7 @@ public class EmbeddableTypeElementCollectionTest extends BaseEntityManagerFuncti
 
 		private String type;
 
+		@Column(name = "`number`")
 		private String number;
 
 		public Phone() {

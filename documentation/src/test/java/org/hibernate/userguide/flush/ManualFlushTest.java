@@ -9,6 +9,7 @@ package org.hibernate.userguide.flush;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -115,6 +116,7 @@ public class ManualFlushTest extends BaseEntityManagerFunctionalTestCase {
         @ManyToOne
         private Person person;
 
+        @Column(name = "`number`")
         private String number;
 
         public Phone() {

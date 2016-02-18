@@ -21,6 +21,10 @@ import javax.persistence.TypedQuery;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Session;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.MySQL5Dialect;
+import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.type.StringType;
 import org.hibernate.userguide.model.AddressType;
@@ -32,6 +36,8 @@ import org.hibernate.userguide.model.Phone;
 import org.hibernate.userguide.model.PhoneType;
 import org.hibernate.userguide.model.WireTransferPayment;
 
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.RequiresDialects;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -1167,7 +1173,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		});
 	}
 
-	@Test
+	@Test @RequiresDialect(H2Dialect.class)
 	public void test_hql_current_time_function_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-current-time-function-example[]
@@ -1196,12 +1202,13 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@RequiresDialects({@RequiresDialect(H2Dialect.class), @RequiresDialect(Oracle8iDialect.class), @RequiresDialect(MySQL5Dialect.class)})
 	public void test_hql_bit_length_function_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-bit-length-function-example[]
-			List<Integer> bits = entityManager.createQuery(
+			List<Number> bits = entityManager.createQuery(
 				"select bit_length( c.duration ) " +
-				"from Call c ", Integer.class )
+				"from Call c ", Number.class )
 			.getResultList();
 			//end::hql-bit-length-function-example[]
 			assertEquals(2, bits.size());
@@ -1648,7 +1655,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 				"	avg(c.duration) as averageDuration " +
 				")  " +
 				"from Call c " +
-				"join c.phone p ", Map.class )
+				"join c.phone p " +
+				"group by p.number ", Map.class )
 			.getResultList();
 			//end::hql-select-clause-dynamic-map-instantiation-example[]
 			assertNotNull(phoneCallTotalDurations);
@@ -1689,6 +1697,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@RequiresDialects({@RequiresDialect(H2Dialect.class), @RequiresDialect(PostgreSQL81Dialect.class), @RequiresDialect(MySQL5Dialect.class)})
 	public void test_hql_relational_comparisons_example_3() {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
@@ -1891,6 +1900,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@RequiresDialects({@RequiresDialect(H2Dialect.class), @RequiresDialect(PostgreSQL81Dialect.class), @RequiresDialect(MySQL5Dialect.class)})
 	public void test_hql_between_predicate_example_2() {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
@@ -2144,6 +2154,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@RequiresDialects({@RequiresDialect(H2Dialect.class), @RequiresDialect(PostgreSQL81Dialect.class), @RequiresDialect(MySQL5Dialect.class)})
 	public void test_hql_group_by_example_3() {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
@@ -2163,6 +2174,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@RequiresDialects({@RequiresDialect(H2Dialect.class), @RequiresDialect(PostgreSQL81Dialect.class), @RequiresDialect(MySQL5Dialect.class)})
 	public void test_hql_group_by_example_4() {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {

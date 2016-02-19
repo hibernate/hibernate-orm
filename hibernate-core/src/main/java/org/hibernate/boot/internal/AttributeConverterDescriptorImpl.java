@@ -171,7 +171,7 @@ public class AttributeConverterDescriptorImpl implements AttributeConverterDescr
 	}
 
 	private boolean typesMatch(ResolvedType converterDefinedType, ResolvedType checkType) {
-		if ( !checkType.getErasedType().isAssignableFrom( converterDefinedType.getErasedType() ) ) {
+		if ( !converterDefinedType.getErasedType().isAssignableFrom( checkType.getErasedType() ) ) {
 			return false;
 		}
 

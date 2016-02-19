@@ -495,8 +495,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 
 	protected void stopCacheRegions() {
 		log.debug( "Clear region references" );
-		getCacheCommandFactory( manager.getCache().getAdvancedCache() )
-				.clearRegions( regionNames );
+		getCacheCommandFactory().clearRegions( regionNames );
 		regionNames.clear();
 	}
 
@@ -557,7 +556,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 
 	private void startRegion(BaseRegion region, String regionName) {
 		regionNames.add( regionName );
-		getCacheCommandFactory( region.getCache() ).addRegion( regionName, region );
+		getCacheCommandFactory().addRegion( regionName, region );
 	}
 
 	private void parseProperty(int prefixLoc, String key, String value) {
@@ -689,8 +688,8 @@ public class InfinispanRegionFactory implements RegionFactory {
 		return createCacheWrapper( cache );
 	}
 
-	private CacheCommandFactory getCacheCommandFactory(AdvancedCache cache) {
-		final GlobalComponentRegistry globalCr = cache.getComponentRegistry().getGlobalComponentRegistry();
+	private CacheCommandFactory getCacheCommandFactory() {
+		final GlobalComponentRegistry globalCr = manager.getGlobalComponentRegistry();
 
 		final Map<Byte, ModuleCommandFactory> factories =
 				(Map<Byte, ModuleCommandFactory>) globalCr.getComponent( "org.infinispan.modules.command.factories" );

@@ -34,7 +34,6 @@ import org.hibernate.cache.infinispan.timestamp.TimestampsRegionImpl;
 import org.hibernate.cache.infinispan.tm.HibernateTransactionManagerLookup;
 import org.hibernate.cache.infinispan.util.CacheCommandFactory;
 import org.hibernate.cache.infinispan.util.Caches;
-import org.hibernate.cache.infinispan.util.Externalizers;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.internal.SimpleCacheKeysFactory;
 import org.hibernate.cache.spi.CacheDataDescription;
@@ -431,8 +430,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 
 	protected void stopCacheRegions() {
 		log.debug( "Clear region references" );
-		getCacheCommandFactory( manager.getCache().getAdvancedCache() )
-				.clearRegions( regionNames );
+		getCacheCommandFactory().clearRegions( regionNames );
 		regionNames.clear();
 	}
 
@@ -532,7 +530,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 
 	private void startRegion(BaseRegion region, String regionName) {
 		regionNames.add( regionName );
-		getCacheCommandFactory( region.getCache() ).addRegion( regionName, region );
+		getCacheCommandFactory().addRegion( regionName, region );
 	}
 
 	private Map<String, TypeOverrides> initGenericDataTypeOverrides() {
@@ -684,8 +682,8 @@ public class InfinispanRegionFactory implements RegionFactory {
 		}
 	}
 
-	private CacheCommandFactory getCacheCommandFactory(AdvancedCache cache) {
-		final GlobalComponentRegistry globalCr = cache.getComponentRegistry().getGlobalComponentRegistry();
+	private CacheCommandFactory getCacheCommandFactory() {
+		final GlobalComponentRegistry globalCr = manager.getGlobalComponentRegistry();
 
 		final Map<Byte, ModuleCommandFactory> factories =
 				(Map<Byte, ModuleCommandFactory>) globalCr.getComponent( "org.infinispan.modules.command.factories" );

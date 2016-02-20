@@ -19,6 +19,8 @@ public class GenerationTimingConverter {
 	}
 
 	public static String toXml(GenerationTiming generationTiming) {
-		return generationTiming.name().toLowerCase( Locale.ENGLISH );
+		return ( null == generationTiming ) ?
+				null :
+				generationTiming.name().toLowerCase( Locale.ENGLISH );
 	}
 }

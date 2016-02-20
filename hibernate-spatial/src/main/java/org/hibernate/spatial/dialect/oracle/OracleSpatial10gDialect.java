@@ -12,18 +12,22 @@ import java.sql.Types;
 import java.util.List;
 
 import org.geolatte.geom.codec.db.oracle.ConnectionFinder;
-import org.geolatte.geom.codec.db.oracle.DefaultConnectionFinder;
 import org.geolatte.geom.codec.db.oracle.OracleJDBCTypeFactory;
+
+import org.jboss.logging.Logger;
 
 import org.hibernate.QueryException;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.GeolatteGeometryType;
-import org.hibernate.spatial.HibernateSpatialConfiguration;
+import org.hibernate.spatial.HSMessageLogger;
+import org.hibernate.spatial.HibernateSpatialConfigurationSettings;
 import org.hibernate.spatial.JTSGeometryType;
 import org.hibernate.spatial.SpatialAnalysis;
 import org.hibernate.spatial.SpatialDialect;
@@ -41,27 +45,19 @@ import org.hibernate.type.Type;
 public class OracleSpatial10gDialect extends Oracle10gDialect implements SpatialDialect, Serializable {
 
 	private final boolean isOgcStrict;
-	private final ConnectionFinder connectionFinder;
 
-
-	/**
-	 * Constructs the dialect with a default configuration
-	 */
-	public OracleSpatial10gDialect() {
-		this( new HibernateSpatialConfiguration() );
-	}
+	private static final HSMessageLogger log = Logger.getMessageLogger(
+			HSMessageLogger.class,
+			OracleSpatial10gDialect.class.getName()
+	);
 
 	/**
 	 * Constructs the dialect with the specified configuration
 	 *
-	 * @param config the {@code HibernateSpatialConfiguration} that configures this dialect.
 	 */
-	public OracleSpatial10gDialect(HibernateSpatialConfiguration config) {
+	public OracleSpatial10gDialect() {
 		super();
-		this.isOgcStrict = config.isOgcStrictMode();
-		final ConnectionFinder finder = config.getConnectionFinder();
-		this.connectionFinder = finder == null ? new DefaultConnectionFinder() : finder;
-
+		this.isOgcStrict = true;
 
 		// register geometry type
 		registerColumnType( Types.STRUCT, "MDSYS.SDO_GEOMETRY" );
@@ -158,14 +154,25 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements Spatial
 				serviceRegistry
 		);
 
+		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
+		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
+
+		final ConnectionFinder connectionFinder = strategySelector.resolveStrategy(
+				ConnectionFinder.class,
+				cfgService.getSetting( HibernateSpatialConfigurationSettings.CONNECTION_FINDER, String.class, "org.geolatte.geom.codec.db.oracle.DefaultConnectionFinder" )
+		);
+
+		log.connectionFinder( connectionFinder.getClass().getCanonicalName() );
+
 		final SDOGeometryTypeDescriptor sdoGeometryTypeDescriptor = new SDOGeometryTypeDescriptor(
 				new OracleJDBCTypeFactory(
-						this.connectionFinder
+						connectionFinder
 				)
 		);
 
 		typeContributions.contributeType( new GeolatteGeometryType( sdoGeometryTypeDescriptor ) );
 		typeContributions.contributeType( new JTSGeometryType( sdoGeometryTypeDescriptor ) );
+
 
 	}
 
@@ -418,16 +425,6 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements Spatial
 		return isOgcStrict;
 	}
 
-	/**
-	 * Reports the ConnectionFinder used by this Dialect (or rather its associated TypeDescriptor).
-	 * <p/>
-	 * This method is mainly used for testing purposes.
-	 *
-	 * @return the ConnectionFinder in use
-	 */
-	public ConnectionFinder getConnectionFinder() {
-		return connectionFinder;
-	}
 
 	@Override
 	public boolean supportsFiltering() {

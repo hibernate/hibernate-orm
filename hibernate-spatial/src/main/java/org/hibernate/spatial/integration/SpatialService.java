@@ -11,6 +11,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.Service;
 import org.hibernate.spatial.HSMessageLogger;
 
+
 import org.jboss.logging.Logger;
 
 /**
@@ -39,11 +40,11 @@ public class SpatialService implements Service {
 				serviceRegistryBuilder.getSettings(),
 				true
 		);
-
 		log.spatialEnabled( integrationEnabled );
 	}
 
 	public boolean isEnabled() {
 		return integrationEnabled;
 	}
+
 }

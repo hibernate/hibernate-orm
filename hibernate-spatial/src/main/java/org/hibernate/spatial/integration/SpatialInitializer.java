@@ -21,12 +21,6 @@ public class SpatialInitializer implements ServiceContributor {
 	public void contribute(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 		final SpatialService spatialService = new SpatialService( serviceRegistryBuilder );
 		serviceRegistryBuilder.addService( SpatialService.class, spatialService );
-
-		if ( !spatialService.isEnabled() ) {
-			return;
-		}
-
-		serviceRegistryBuilder.addInitiator( SpatialDialectFactoryInitiator.INSTANCE );
 	}
 
 }

@@ -43,7 +43,6 @@ public class InheritedAttributeOverridingTest extends BaseUnitTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9485" )
-	@FailureExpected( jiraKey = "HHH-9485" )
 	public void testInheritedAttributeOverridingMappedsuperclass() {
 		Metadata metadata = new MetadataSources( standardServiceRegistry )
 				.addAnnotatedClass( A.class )
@@ -55,7 +54,6 @@ public class InheritedAttributeOverridingTest extends BaseUnitTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9485" )
-	@FailureExpected( jiraKey = "HHH-9485" )
 	public void testInheritedAttributeOverridingEntity() {
 		Metadata metadata = new MetadataSources( standardServiceRegistry )
 				.addAnnotatedClass( C.class )

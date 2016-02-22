@@ -1497,8 +1497,17 @@ public final class AnnotationBinder {
 	private static int addProperty(
 			PropertyContainer propertyContainer,
 			XProperty property,
-			List<PropertyData> annElts,
+			List<PropertyData> inFlightPropertyDataList,
 			MetadataBuildingContext context) {
+		// see if inFlightPropertyDataList already contains a PropertyData for this name,
+		// and if so, skip it..
+		for ( PropertyData propertyData : inFlightPropertyDataList ) {
+			if ( propertyData.getPropertyName().equals( property.getName() ) ) {
+				// EARLY EXIT!!!
+				return 0;
+			}
+		}
+
 		final XClass declaringClass = propertyContainer.getDeclaringClass();
 		final XClass entity = propertyContainer.getEntityAtStake();
 		int idPropertyCounter = 0;
@@ -1515,7 +1524,7 @@ public final class AnnotationBinder {
 		 */
 		final XAnnotatedElement element = propertyAnnotatedElement.getProperty();
 		if ( element.isAnnotationPresent( Id.class ) || element.isAnnotationPresent( EmbeddedId.class ) ) {
-			annElts.add( 0, propertyAnnotatedElement );
+			inFlightPropertyDataList.add( 0, propertyAnnotatedElement );
 			/**
 			 * The property must be put in hibernate.properties as it's a system wide property. Fixable?
 			 * TODO support true/false/default on the property instead of present / not present
@@ -1573,7 +1582,7 @@ public final class AnnotationBinder {
 			idPropertyCounter++;
 		}
 		else {
-			annElts.add( propertyAnnotatedElement );
+			inFlightPropertyDataList.add( propertyAnnotatedElement );
 		}
 		if ( element.isAnnotationPresent( MapsId.class ) ) {
 			context.getMetadataCollector().addPropertyAnnotatedWithMapsId( entity, propertyAnnotatedElement );
@@ -1597,6 +1606,16 @@ public final class AnnotationBinder {
 			boolean inSecondPass,
 			MetadataBuildingContext context,
 			Map<XClass, InheritanceState> inheritanceStatePerClass) throws MappingException {
+
+		if ( entityBinder.isPropertyDefinedInSuperHierarchy( inferredData.getPropertyName() ) ) {
+			LOG.debugf(
+					"Skipping attribute [%s : %s] as it was already processed as part of super hierarchy",
+					inferredData.getClassOrElementName(),
+					inferredData.getPropertyName()
+			);
+			return;
+		}
+
 		/**
 		 * inSecondPass can only be used to apply right away the second pass of a composite-element
 		 * Because it's a value type, there is no bidirectional association, hence second pass

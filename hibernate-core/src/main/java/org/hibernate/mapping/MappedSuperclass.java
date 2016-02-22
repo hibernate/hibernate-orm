@@ -163,4 +163,51 @@ public class MappedSuperclass {
 	public void setDeclaredIdentifierMapper(Component identifierMapper) {
 		this.identifierMapper = identifierMapper;
 	}
+
+	/**
+	 * Check to see if this MappedSuperclass defines a property with the given name.
+	 *
+	 * @param name The property name to check
+	 *
+	 * @return {@code true} if a property with that name exists; {@code false} if not
+	 */
+	@SuppressWarnings("WeakerAccess")
+	public boolean hasProperty(String name) {
+		final Iterator itr = getDeclaredPropertyIterator();
+		while ( itr.hasNext() ) {
+			final Property property = (Property) itr.next();
+			if ( property.getName().equals( name ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Check to see if a property with the given name exists in this MappedSuperclass
+	 * or in any of its super hierarchy.
+	 *
+	 * @param name The property name to check
+	 *
+	 * @return {@code true} if a property with that name exists; {@code false} if not
+	 */
+	@SuppressWarnings({"WeakerAccess", "RedundantIfStatement"})
+	public boolean isPropertyDefinedInHierarchy(String name) {
+		if ( hasProperty( name ) ) {
+			return true;
+		}
+
+		if ( getSuperMappedSuperclass() != null
+				&& getSuperMappedSuperclass().isPropertyDefinedInHierarchy( name ) ) {
+			return true;
+		}
+
+		if ( getSuperPersistentClass() != null
+				&& getSuperPersistentClass().isPropertyDefinedInHierarchy( name ) ) {
+			return true;
+		}
+
+		return false;
+	}
 }

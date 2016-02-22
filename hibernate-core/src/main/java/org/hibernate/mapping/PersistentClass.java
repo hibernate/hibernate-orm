@@ -22,7 +22,6 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.FilterConfiguration;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.EmptyIterator;
 import org.hibernate.internal.util.collections.JoinedIterator;
@@ -496,6 +495,73 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		else {
 			return getProperty( propertyName, iter );
 		}
+	}
+
+	/**
+	 * Check to see if this PersistentClass defines a property with the given name.
+	 *
+	 * @param name The property name to check
+	 *
+	 * @return {@code true} if a property with that name exists; {@code false} if not
+	 */
+	@SuppressWarnings("WeakerAccess")
+	public boolean hasProperty(String name) {
+		final Property identifierProperty = getIdentifierProperty();
+		if ( identifierProperty != null && identifierProperty.getName().equals( name ) ) {
+			return true;
+		}
+
+		final Iterator itr = getPropertyClosureIterator();
+		while ( itr.hasNext() ) {
+			final Property property = (Property) itr.next();
+			if ( property.getName().equals( name ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Check to see if a property with the given name exists in the super hierarchy
+	 * of this PersistentClass.  Does not check this PersistentClass, just up the
+	 * hierarchy
+	 *
+	 * @param name The property name to check
+	 *
+	 * @return {@code true} if a property with that name exists; {@code false} if not
+	 */
+	public boolean isPropertyDefinedInSuperHierarchy(String name) {
+		return getSuperclass() != null && getSuperclass().isPropertyDefinedInHierarchy( name );
+
+	}
+
+	/**
+	 * Check to see if a property with the given name exists in this PersistentClass
+	 * or in any of its super hierarchy.  Unlike {@link #isPropertyDefinedInSuperHierarchy},
+	 * this method does check this PersistentClass
+	 *
+	 * @param name The property name to check
+	 *
+	 * @return {@code true} if a property with that name exists; {@code false} if not
+	 */
+	@SuppressWarnings({"WeakerAccess", "RedundantIfStatement"})
+	public boolean isPropertyDefinedInHierarchy(String name) {
+		if ( hasProperty( name ) ) {
+			return true;
+		}
+
+		if ( getSuperMappedSuperclass() != null
+				&& getSuperMappedSuperclass().isPropertyDefinedInHierarchy( name ) ) {
+			return true;
+		}
+
+		if ( getSuperclass() != null
+				&& getSuperclass().isPropertyDefinedInHierarchy( name ) ) {
+			return true;
+		}
+
+		return false;
 	}
 
 	/**

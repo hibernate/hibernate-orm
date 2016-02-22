@@ -80,7 +80,9 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.Join;
+import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SingleTableSubclass;
@@ -159,6 +161,24 @@ public class EntityBinder {
 		bindHibernateAnnotation( hibAnn );
 	}
 
+	/**
+	 * For the most part, this is a simple delegation to {@link PersistentClass#isPropertyDefinedInHierarchy},
+	 * after verifying that PersistentClass is indeed set here.
+	 *
+	 * @param name The name of the property to check
+	 *
+	 * @return {@code true} if a property by that given name does already exist in the super hierarchy.
+	 */
+	@SuppressWarnings("SimplifiableIfStatement")
+	public boolean isPropertyDefinedInSuperHierarchy(String name) {
+		// Yes, yes... persistentClass can be null because EntityBinder can be used
+		// to bind components as well, of course...
+		if ( persistentClass == null ) {
+			return false;
+		}
+
+		return persistentClass.isPropertyDefinedInSuperHierarchy( name );
+	}
 
 	@SuppressWarnings("SimplifiableConditionalExpression")
 	private void bindHibernateAnnotation(org.hibernate.annotations.Entity hibAnn) {

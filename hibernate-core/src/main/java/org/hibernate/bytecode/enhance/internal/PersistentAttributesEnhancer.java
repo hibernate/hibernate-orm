@@ -448,7 +448,7 @@ public class PersistentAttributesEnhancer extends Enhancer {
 		// trigger track changes
 		fieldWriter.insertAfter(
 				String.format(
-								"((%2$s) %1$s).%4$s(\"%1$s\", (%3$s) this);%n" +
+								"if (%1$s != null) { ((%2$s) %1$s).%4$s(\"%1$s\", (%3$s) this); }%n" +
 								"%5$s(\"%1$s\");",
 						persistentField.getName(),
 						CompositeTracker.class.getName(),

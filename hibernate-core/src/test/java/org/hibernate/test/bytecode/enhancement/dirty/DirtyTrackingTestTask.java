@@ -84,6 +84,9 @@ public class DirtyTrackingTestTask extends AbstractEnhancerTestTask {
 		country.setName( "Norway" );
 		EnhancerTestUtils.checkDirtyTracking( entity, "address", "address.country" );
 
+		address.setCountry( null );
+		entity.setAddress( null );
+
 	}
 
 	protected void cleanup() {

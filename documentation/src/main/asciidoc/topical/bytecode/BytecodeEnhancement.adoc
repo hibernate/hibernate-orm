@@ -39,7 +39,6 @@ normal build cycle of that domain model.  Gradle, Ant and Maven are all supporte
 of this approach is that the enhanced classes are what gets added to the jar and can then be used on both
 sides of serialization.
 
-
 === Gradle Plugin
 
 Hibernate provides a Gradle plugin that is capable of providing build-time enhancement of the domain model as they are
@@ -50,20 +49,23 @@ compiled as part of a Gradle build.  To use the plugin a project would first nee
 ====
 [source, GROOVY]
 ----
-ext {
-  hibernateVersion = 'hibernate-version-you-want'
-}
 buildscript {
-  dependencies {
-    classpath "org.hibernate:hibernate-gradle-plugin:$hibernateVersion"
-  }
+	repositories {
+		mavenLocal()
+		mavenCentral()
+	}
+	dependencies {
+		classpath "org.hibernate:hibernate-gradle-plugin:5.1.0.Final"
+	}
 }
+
+apply plugin: 'org.hibernate.orm'
 ----
 ====
 
-At the moment there is not much to configure with regard to the Enhancer, but what is configurable is exposed
-through a DSL extension registered.  By default enhancement will not be done (in preparation for when this
-Gradle plugin offers additional capabilities).  To enable it you must configure the following DSL extension:
+At the moment there is not much to configure with regard to the Enhancer, but what is configurable is exposed through a DSL extension registered.
+By default, enhancement will not be done (in preparation for when this Gradle plugin offers additional capabilities).
+To enable it you must configure the following DSL extension:
 
 [[gradle-plugin-apply-example]]
 .Apply the plugin
@@ -71,9 +73,12 @@ Gradle plugin offers additional capabilities).  To enable it you must configure 
 [source, GROOVY]
 ----
 hibernate {
-  enhance {
-    // any configuration goes here
-  }
+	enhance {
+		enableLazyInitialization= true
+		enableDirtyTracking = true
+		enableAssociationManagement = true
+		enableExtendedEnhancement = false
+	}
 }
 ----
 ====
@@ -88,10 +93,6 @@ Currently the "enhance" extension supports 4 properties:
 Once enhancement overall is enabled, the default for the first 3 properties is `true`. Field access is not enhanced by
 default, as it can potentially trigger enhancement of code outside the entities, and also because it assumes that all
 the target entities are enhanced, which may not always be the case.
-
-
-=== Ant Task
-
 
 === Maven Plugin
 
@@ -146,5 +147,8 @@ already in use. The XML snippet below is an example of how to declare and config
 </build>
 ----
 ====
+
+=== Ant Task
+
 
 

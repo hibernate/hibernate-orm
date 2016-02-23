@@ -13,22 +13,19 @@ import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.spi.Configurable;
-
-import org.jboss.logging.Logger;
+import org.hibernate.service.spi.Manageable;
 
 /**
  * A builder for {@link Batch} instances.
  *
  * @author Steve Ebersole
  */
-public class BatchBuilderImpl implements BatchBuilder, Configurable {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			BatchBuilderImpl.class.getName()
-	);
+public class BatchBuilderImpl implements BatchBuilder, Configurable, Manageable, BatchBuilderMXBean {
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BatchBuilderImpl.class );
 
 	private int size;
 
@@ -52,7 +49,12 @@ public class BatchBuilderImpl implements BatchBuilder, Configurable {
 		size = ConfigurationHelper.getInt( Environment.STATEMENT_BATCH_SIZE, configurationValues, size );
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
+	@Override
+	public int getJdbcBatchSize() {
+		return size;
+	}
+
+	@Override
 	public void setJdbcBatchSize(int size) {
 		this.size = size;
 	}

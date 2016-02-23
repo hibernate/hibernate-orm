@@ -21,12 +21,12 @@ public interface BatchKey {
 	 *
 	 * @return The number of statements.
 	 */
-	public int getBatchedStatementCount();
+	int getBatchedStatementCount();
 
 	/**
 	 * Get the expectation pertaining to the outcome of the {@link Batch} associated with this key.
 	 *
 	 * @return The expectations
 	 */
-	public Expectation getExpectation();
+	Expectation getExpectation();
 }

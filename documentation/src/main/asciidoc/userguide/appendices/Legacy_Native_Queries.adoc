@@ -371,5 +371,3 @@ You can also define an entity loader that loads a collection by join fetching:
     WHERE ID=?
 </sql-query>
 ----
-
-The annotation equivalent `<loader>` is the `@Loader` annotation as seen in <<example-custom-crdu-via-annotations>>.

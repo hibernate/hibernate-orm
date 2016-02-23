@@ -782,82 +782,48 @@ Hibernate will iterate the results and take the first result that is a result se
 For SQL Server, if you can enable `SET NOCOUNT ON` in your procedure it will probably be more efficient, but this is not a requirement.
 ====
 
-[[sql-cud]]
-=== Custom SQL for create, update and delete
+[[sql-crud]]
+=== Custom SQL for create, update, and delete
 
 Hibernate can use custom SQL for create, update, and delete operations.
 The SQL can be overridden at the statement level or individual column level.
 This section describes statement overrides.
 For columns, see <<chapters/domain/basic_types.adoc#mapping-column-read-and-write,Column transformers: read and write expressions>>.
-The following example shows how to define custom SQL operations using annotations.
 
-[[example-custom-crdu-via-annotations]]
-.Custom CRUD via annotations
+The following example shows how to define custom SQL operations using annotations.
+`@SQLInsert`, `@SQLUpdate` and `@SQLDelete` override the INSERT, UPDATE, DELETE statements of a given entity.
+For the SELECT clause, a `@Loader` must be defined along with a `@NamedNativeQuery` used for loading the underlying table record.
+
+For collections, Hibernate allows defining a custom `@SQLDeleteAll` which is used for removing all child records associated to a given parent entity.
+To filter collections, the `@Where` annotation allows customizing the underlying SQL WHERE clause.
+
+[[sql-custom-crud-example]]
+.Custom CRUD
 ====
 [source, JAVA, indent=0]
 ----
-@Entity
-@Table(name = "CHAOS")
-@SQLInsert( sql = "INSERT INTO CHAOS(size, name, nickname, id) VALUES(?,upper(?),?,?)")
-@SQLUpdate( sql = "UPDATE CHAOS SET size = ?, name = upper(?), nickname = ? WHERE id = ?")
-@SQLDelete( sql = "DELETE CHAOS WHERE id = ?")
-@SQLDeleteAll( sql = "DELETE CHAOS")
-@Loader(namedQuery = "chaos")
-@NamedNativeQuery(name = "chaos", query="select id, size, name, lower( nickname ) as nickname from CHAOS where id= ?", resultClass = Chaos.class)
-public class Chaos {
-    @Id
-    private Long id;
-    private Long size;
-    private String name;
-    private String nickname;
+include::{sourcedir}/CustomSQLTest.java[tags=sql-custom-crud-example]
 ----
 ====
 
-`@SQLInsert`, `@SQLUpdate`, `@SQLDelete`, `@SQLDeleteAll` respectively override the INSERT, UPDATE, DELETE, and DELETE all statement.
-The same can be achieved using Hibernate mapping files and the `<sql-insert>`, `<sql-update>` and `<sql-delete>` nodes.
+In the example above, the entity is mapped so that entries are soft-deleted (the records are not removed from the database, but instead, a flag marks the row validity).
+The `Person` entity benefits from custom INSERT, UPDATE, and DELETE statements which update the `valid` column accordingly.
+The custom `@Loader` is used to retrieve only `Person` rows that are valid.
 
-.Custom CRUD XML
-====
-[source,xml]
-----
-<class name = "Person">
-    <id name = "id">
-        <generator class = "increment"/>
-    </id>
-    <property name = "name" not-null = "true"/>
-    <sql-insert>INSERT INTO PERSON (NAME, ID) VALUES ( UPPER(?), ? )</sql-insert>
-    <sql-update>UPDATE PERSON SET NAME=UPPER(?) WHERE ID=?</sql-update>
-    <sql-delete>DELETE FROM PERSON WHERE ID=?</sql-delete>
-</class>
-----
-====
+The same is done for the `phones` collection. The `@SQLDeleteAll` and the `SQLInsert` queries are used whenever the collection is modified.
 
 [NOTE]
 ====
-If you expect to call a store procedure, be sure to set the `callable` attribute to `true`, in annotations as well as in xml.
+You also call a store procedure using the custom CRUD statements; the only requirement is to set the `callable` attribute to `true`.
 ====
 
 To check that the execution happens correctly, Hibernate allows you to define one of those three strategies:
 
-* none: no check is performed: the store procedure is expected to fail upon issues
-* count: use of rowcount to check that the update is successful
-* param: like COUNT but using an output parameter rather that the standard mechanism
+* none: no check is performed; the store procedure is expected to fail upon constraint violations
+* count: use of row-count returned by the `executeUpdate()` method call to check that the update was successful
+* param: like count but using a `CallableStatement` output parameter.
 
-To define the result check style, use the `check` parameter which is again available in annotations as well as in xml.
-
-You can use the exact same set of annotations respectively xml nodes to override the collection related statements, as you can see in the following example.
-
-.Overriding SQL statements for collections using annotations
-====
-[source, JAVA, indent=0]
-----
-@OneToMany
-@JoinColumn(name = "chaos_fk")
-@SQLInsert( sql = "UPDATE CASIMIR_PARTICULE SET chaos_fk = ? where id = ?")
-@SQLDelete( sql = "UPDATE CASIMIR_PARTICULE SET chaos_fk = null where id = ?")
-private Set<CasimirParticle> particles = new HashSet<CasimirParticle>();
-----
-====
+To define the result check style, use the `check` parameter.
 
 [TIP]
 ====
@@ -867,34 +833,16 @@ You can see the expected order by enabling debug logging, so Hibernate can print
 To see the expected sequence, remember to not include your custom SQL through annotations or mapping files as that will override the Hibernate generated static sql.
 ====
 
-Overriding SQL statements for secondary tables is also possible using `@org.hibernate.annotations.Table` and either (or all) attributes `sqlInsert`, `sqlUpdate`, `sqlDelete`:
+Overriding SQL statements for secondary tables is also possible using `@org.hibernate.annotations.Table` and the `sqlInsert`, `sqlUpdate`, `sqlDelete` attributes.
 
+[[sql-custom-crud-secondary-table-example]]
 .Overriding SQL statements for secondary tables
 ====
 [source, JAVA, indent=0]
 ----
-@Entity
-@SecondaryTables({
-    @SecondaryTable(name = "`Cat nbr1`"),
-    @SecondaryTable(name = "Cat2"})
-@org.hibernate.annotations.Tables( {
-    @Table(
-        appliesTo = "Cat",
-        comment = "My cat table"
-    ),
-    @Table(
-        appliesTo = "Cat2",
-        foreignKey = @ForeignKey(name = "FK_CAT2_CAT"), fetch = FetchMode.SELECT,
-        sqlInsert = @SQLInsert(
-            sql = "insert into Cat2(storyPart2, id) values(upper(?), ?)"
-        )
-    )
-} )
-public class Cat implements Serializable {
+include::{sourcedir}/CustomSQLSecondaryTableTest.java[tags=sql-custom-crud-secondary-table-example]
 ----
 ====
-
-The previous example also shows that you can give a comment to a given table (primary or secondary): This comment will be used for DDL generation.
 
 [TIP]
 ====
@@ -902,98 +850,31 @@ The SQL is directly executed in your database, so you can use any dialect you li
 This will, however, reduce the portability of your mapping if you use database specific SQL.
 ====
 
-Last but not least, stored procedures are in most cases required to return the number of rows inserted, updated and deleted.
-Hibernate always registers the first statement parameter as a numeric output parameter for the CUD operations:
+You can also use stored procedures for customizing the CRUD statements.
 
-.Stored procedures and their return value
+Assuming the following stored procedure:
+
+[[sql-sp-soft-delete-example]]
+.Oracle stored procedure to soft-delete a given entity
 ====
-[source]
+[source, JAVA, indent=0]
 ----
-CREATE OR REPLACE FUNCTION updatePerson (uid IN NUMBER, uname IN VARCHAR2)
-    RETURN NUMBER IS
-BEGIN
-
-    update PERSON
-    set
-        NAME = uname,
-    where
-        ID = uid;
-
-    return SQL%ROWCOUNT;
-
-END updatePerson;
+include::{sourcedir}/OracleCustomSQLWithStoredProcedureTest.java[tags=sql-sp-soft-delete-example]
 ----
 ====
 
-[[sql-load]]
-=== Custom SQL for loading
+The entity can use this stored procedure to soft-delete the entity in question:
 
-You can also declare your own SQL (or HQL) queries for entity loading.
-As with inserts, updates, and deletes, this can be done at the individual column level as described in
-For columns, see <<chapters/domain/basic_types.adoc#mapping-column-read-and-write,Column transformers: read and write expressions>> or at the statement level.
-Here is an example of a statement level override:
-
-[source,xml]
+[[sql-sp-custom-crud-example]]
+.Customizing the entity delete statement to use the Oracle stored procedure= instead
+====
+[source, JAVA, indent=0]
 ----
-<sql-query name = "person">
-    <return alias = "pers" class = "Person" lock-mod e= "upgrade"/>
-    SELECT NAME AS {pers.name}, ID AS {pers.id}
-    FROM PERSON
-    WHERE ID=?
-    FOR UPDATE
-</sql-query>
+include::{sourcedir}/OracleCustomSQLWithStoredProcedureTest.java[tags=sql-sp-custom-crud-example]
 ----
+====
 
-This is just a named query declaration, as discussed earlier. You can reference this named query in a class mapping:
-
-[source,xml]
-----
-<class name = "Person">
-    <id name = "id">
-        <generator class = "increment"/>
-    </id>
-    <property name = "name" not-null = "true"/>
-    <loader query-ref = "person"/>
-</class>
-----
-
-This even works with stored procedures.
-
-You can even define a query for collection loading:
-
-[source,xml]
-----
-<set name = "employments" inverse = "true">
-    <key/>
-    <one-to-many class = "Employment"/>
-    <loader query-ref = "employments"/>
-</set>
-----
-
-[source,xml]
-----
-<sql-query name = "employments">
-    <load-collection alias = "emp" role = "Person.employments"/>
-    SELECT {emp.*}
-    FROM EMPLOYMENT emp
-    WHERE EMPLOYER = :id
-    ORDER BY STARTDATE ASC, EMPLOYEE ASC
-</sql-query>
-----
-
-You can also define an entity loader that loads a collection by join fetching:
-
-[source,xml]
-----
-<sql-query name = "person">
-    <return alias = "pers" class = "Person"/>
-    <return-join alias = "emp" property = "pers.employments"/>
-    SELECT NAME AS {pers.*}, {emp.*}
-    FROM PERSON pers
-    LEFT OUTER JOIN EMPLOYMENT emp
-        ON pers.ID = emp.PERSON_ID
-    WHERE ID=?
-</sql-query>
-----
-
-The annotation equivalent `<loader>` is the `@Loader` annotation as seen in <<example-custom-crdu-via-annotations>>.
+[NOTE]
+====
+You need to set the `callable` attribute when using a stored procedure instead of an SQL statement.
+====

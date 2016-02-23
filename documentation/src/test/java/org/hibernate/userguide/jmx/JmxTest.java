@@ -7,22 +7,19 @@
 package org.hibernate.userguide.jmx;
 
 import java.util.Map;
-import javax.management.NotCompliantMBeanException;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 import org.jboss.logging.Logger;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
-
 import static org.hibernate.userguide.util.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Vlad Mihalcea
@@ -46,19 +43,14 @@ public class JmxTest extends BaseEntityManagerFunctionalTestCase {
         return properties;
     }
 
-    @Test @TestForIssue( jiraKey = "HHH-7405" )
+    @Test
+    @TestForIssue( jiraKey = "HHH-7405" )
     public void test() {
-        try {
-            doInJPA( this::entityManagerFactory, entityManager -> {
-				Person person = new Person();
-				person.id = 1L;
-				entityManager.persist(person);
-			});
-        }
-        catch (Exception e) {
-            log.error( "HHH-7405", e );
-            assertTrue(ExceptionUtils.getRootCause(e) instanceof NotCompliantMBeanException);
-        }
+        doInJPA( this::entityManagerFactory, entityManager -> {
+            Person person = new Person();
+            person.id = 1L;
+            entityManager.persist(person);
+        });
     }
 
     @Entity(name = "Person")

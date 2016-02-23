@@ -22,14 +22,14 @@ public interface Batch {
 	 *
 	 * @return The batch key.
 	 */
-	public BatchKey getKey();
+	BatchKey getKey();
 
 	/**
 	 * Adds an observer to this batch.
 	 *
 	 * @param observer The batch observer.
 	 */
-	public void addObserver(BatchObserver observer);
+	void addObserver(BatchObserver observer);
 
 	/**
 	 * Get a statement which is part of the batch, creating if necessary (and storing for next time).
@@ -39,21 +39,21 @@ public interface Batch {
 	 *
 	 * @return The prepared statement instance, representing the SQL statement.
 	 */
-	public PreparedStatement getBatchStatement(String sql, boolean callable);
+	PreparedStatement getBatchStatement(String sql, boolean callable);
 
 	/**
 	 * Indicates completion of the current part of the batch.
 	 */
-	public void addToBatch();
+	void addToBatch();
 
 	/**
 	 * Execute this batch.
 	 */
-	public void execute();
+	void execute();
 
 	/**
 	 * Used to indicate that the batch instance is no longer needed and that, therefore, it can release its
 	 * resources.
 	 */
-	public void release();
+	void release();
 }

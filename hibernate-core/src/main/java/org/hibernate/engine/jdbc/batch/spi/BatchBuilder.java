@@ -8,14 +8,13 @@ package org.hibernate.engine.jdbc.batch.spi;
 
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.service.Service;
-import org.hibernate.service.spi.Manageable;
 
 /**
  * A builder for {@link Batch} instances
  *
  * @author Steve Ebersole
  */
-public interface BatchBuilder extends Service, Manageable {
+public interface BatchBuilder extends Service {
 	/**
 	 * Build a batch.
 	 *
@@ -24,5 +23,5 @@ public interface BatchBuilder extends Service, Manageable {
 	 *
 	 * @return The built batch
 	 */
-	public Batch buildBatch(BatchKey key, JdbcCoordinator jdbcCoordinator);
+	Batch buildBatch(BatchKey key, JdbcCoordinator jdbcCoordinator);
 }

@@ -1,7 +1,7 @@
 [[sql]]
 == Native SQL Queries
-:modeldir: ../../../../../main/java/org/hibernate/userguide/model
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/sql
+:modeldir: ../../../../../../main/java/org/hibernate/userguide/model
+:sourcedir: ../../../../../../test/java/org/hibernate/userguide/sql
 :extrasdir: extras
 
 You may also express queries in the native SQL dialect of your database.

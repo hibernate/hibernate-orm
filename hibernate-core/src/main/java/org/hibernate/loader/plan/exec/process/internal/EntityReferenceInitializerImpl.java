@@ -201,25 +201,23 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 		// Otherwise, we need to load it from the ResultSet...
 
 		// determine which entity instance to use.  Either the supplied one, or instantiate one
-		Object optionalEntityInstance = null;
-		if ( isReturn && context.shouldUseOptionalEntityInformation() ) {
+		Object entityInstance = null;
+		if ( isReturn &&
+				context.shouldUseOptionalEntityInformation() &&
+				context.getQueryParameters().getOptionalObject() != null ) {
 			final EntityKey optionalEntityKey = ResultSetProcessorHelper.getOptionalObjectKey(
 					context.getQueryParameters(),
 					context.getSession()
 			);
-			if ( optionalEntityKey != null ) {
-				if ( optionalEntityKey.equals( entityKey ) ) {
-					optionalEntityInstance = context.getQueryParameters().getOptionalObject();
-				}
+			if ( optionalEntityKey != null && optionalEntityKey.equals( entityKey ) ) {
+				entityInstance = context.getQueryParameters().getOptionalObject();
 			}
 		}
 
 		final String concreteEntityTypeName = getConcreteEntityTypeName( resultSet, context, entityKey );
-
-		final Object entityInstance = optionalEntityInstance != null
-				? optionalEntityInstance
-				: context.getSession().instantiate( concreteEntityTypeName, entityKey.getIdentifier() );
-
+		if ( entityInstance == null ) {
+			entityInstance = context.getSession().instantiate( concreteEntityTypeName, entityKey.getIdentifier() );
+		}
 		processingState.registerEntityInstance( entityInstance );
 
 		// need to hydrate it.

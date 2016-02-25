@@ -7,12 +7,16 @@
 package org.hibernate.test.annotations.derivedidentities.bidirectional;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -42,7 +46,37 @@ public class OneToOneWithDerivedIdentityTest extends BaseCoreFunctionalTestCase 
 		s.getTransaction().rollback();
 		s.close();
 	}
-	
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-10476")
+	public void testInsertFooAndBarWithDerivedIdPC() {
+		Session s = openSession();
+		s.beginTransaction();
+		Bar bar = new Bar();
+		bar.setDetails( "Some details" );
+		Foo foo = new Foo();
+		foo.setBar( bar );
+		bar.setFoo( foo );
+		s.persist( foo );
+		s.flush();
+		assertNotNull( foo.getId() );
+		assertEquals( foo.getId(), bar.getFoo().getId() );
+
+		s.clear();
+		Bar barWithFoo = new Bar();
+		barWithFoo.setFoo( foo );
+		barWithFoo.setDetails( "wrong details" );
+		bar = (Bar) s.get( Bar.class, barWithFoo );
+		assertSame( bar, barWithFoo );
+		assertEquals( "Some details", bar.getDetails() );
+		SessionImplementor si = (SessionImplementor) s;
+		assertTrue( si.getPersistenceContext().isEntryFor( bar ) );
+		assertFalse( si.getPersistenceContext().isEntryFor( bar.getFoo() ) );
+
+		s.getTransaction().rollback();
+		s.close();
+	}
+
 	@Test
 	@TestForIssue(jiraKey = "HHH-6813")
 	public void testSelectWithDerivedId() {

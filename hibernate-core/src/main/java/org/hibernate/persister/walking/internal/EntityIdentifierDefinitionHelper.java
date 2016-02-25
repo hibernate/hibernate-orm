@@ -79,7 +79,9 @@ public final class EntityIdentifierDefinitionHelper {
 
 			@Override
 			public Class getSeparateIdentifierMappingClass() {
-				return entityPersister.getEntityMetamodel().getIdentifierProperty().getType().getReturnedClass();
+				return entityPersister.getEntityMetamodel().getIdentifierProperty().hasIdentifierMapper() ?
+						entityPersister.getEntityMetamodel().getIdentifierProperty().getType().getReturnedClass() :
+						null;
 			}
 
 			@Override

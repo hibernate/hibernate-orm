@@ -9,6 +9,7 @@ package org.hibernate.test.annotations.cid;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Test;
 
@@ -18,10 +19,16 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  * test some composite id functionalities
@@ -94,6 +101,49 @@ public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 		//		assertEquals(p.id.getFirstName(), c.id.parent.id.getFirstName());
 		s.delete( c );
 		s.delete( c.id.parent );
+		tx.commit();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-10476")
+	public void testManyToOneInCompositePkInPC() throws Exception {
+		Session s;
+		Transaction tx;
+		s = openSession();
+		tx = s.beginTransaction();
+		ParentPk ppk = new ParentPk();
+		ppk.setFirstName( "Emmanuel" );
+		ppk.setLastName( "Bernard" );
+		Parent p = new Parent();
+		p.id = ppk;
+		s.persist( p );
+		ChildPk cpk = new ChildPk();
+		cpk.parent = p;
+		cpk.nthChild = 1;
+		Child c = new Child();
+		c.id = cpk;
+		s.persist( c );
+		tx.commit();
+		s.close();
+
+		s = openSession();
+		tx = s.beginTransaction();
+		p = (Parent) s.get( Parent.class, ppk);
+		// p.id should be ppk.
+		assertSame( ppk, p.id );
+		tx.commit();
+		s.close();
+
+		s = openSession();
+		tx = s.beginTransaction();
+		c = (Child) s.get( Child.class, cpk );
+		// c.id should be cpk
+		assertSame( cpk, c.id );
+		// only Child should be in PC (c.id.parent should not be in PC)
+		SessionImplementor sessionImplementor = (SessionImplementor) s;
+		assertTrue( sessionImplementor.getPersistenceContext().isEntryFor( c ) );
+		assertFalse( sessionImplementor.getPersistenceContext().isEntryFor( c.id.parent ) );
 		tx.commit();
 		s.close();
 	}
@@ -196,6 +246,109 @@ public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 		assertNotNull( orderLine.product );
 		assertEquals( product.name, orderLine.product.name );
 
+		tx.rollback();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-10476")
+	public void testManyToOneInCompositeIdClassInPC() throws Exception {
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		Order order = new Order();
+		s.persist( order );
+		Product product = new Product();
+		product.name = "small car";
+		s.persist( product );
+		OrderLine orderLine = new OrderLine();
+		orderLine.order = order;
+		orderLine.product = product;
+		s.persist( orderLine );
+		s.flush();
+		s.clear();
+
+		s.clear();
+		OrderLinePk orderLinePK = new OrderLinePk();
+		orderLinePK.order = orderLine.order;
+		orderLinePK.product = orderLine.product;
+		orderLine = (OrderLine) s.get( OrderLine.class, orderLinePK );
+		assertTrue( orderLine.order != orderLinePK.order );
+		assertTrue( orderLine.product != orderLinePK.product );
+		SessionImplementor sessionImplementor = (SessionImplementor) s;
+		assertTrue( sessionImplementor.getPersistenceContext().isEntryFor( orderLine ) );
+		assertTrue( sessionImplementor.getPersistenceContext().isEntryFor( orderLine.order ) );
+		assertTrue( sessionImplementor.getPersistenceContext().isEntryFor( orderLine.product ) );
+		assertFalse( sessionImplementor.getPersistenceContext().isEntryFor( orderLinePK.order ) );
+		assertFalse( sessionImplementor.getPersistenceContext().isEntryFor( orderLinePK.product ) );
+		tx.rollback();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-10476")
+	public void testGetWithUpdatedDetachedEntityInCompositeID() throws Exception {
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		Channel channel = new Channel();
+		Presenter presenter = new Presenter();
+		presenter.name = "Jane";
+		TvMagazin tvMagazin = new TvMagazin();
+		tvMagazin.id = new TvMagazinPk();
+		tvMagazin.id.channel = channel;
+		tvMagazin.id.presenter = presenter;
+		s.persist( channel );
+		s.persist( presenter );
+		s.persist( tvMagazin );
+		s.flush();
+
+		s.clear();
+		// update channel
+		channel.name = "chnl";
+		TvMagazinPk pkNew = new TvMagazinPk();
+		// set pkNew.channel to the unmerged copy.
+		pkNew.channel = channel;
+		pkNew.presenter = presenter;
+		// the following fails because there is already a managed channel
+		tvMagazin = s.get( TvMagazin.class, pkNew );
+		channel = s.get( Channel.class, channel.id );
+		assertNull( channel.name );
+		s.flush();
+		s.clear();
+
+		// make sure that channel.name is still null
+		channel = s.get( Channel.class, channel.id );
+		assertNull( channel.name );
+
+		tx.rollback();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-10476")
+	public void testGetWithDetachedEntityInCompositeIDWithManagedCopy() throws Exception {
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		Channel channel = new Channel();
+		Presenter presenter = new Presenter();
+		presenter.name = "Jane";
+		TvMagazin tvMagazin = new TvMagazin();
+		tvMagazin.id = new TvMagazinPk();
+		tvMagazin.id.channel = channel;
+		tvMagazin.id.presenter = presenter;
+		s.persist( channel );
+		s.persist( presenter );
+		s.persist( tvMagazin );
+		s.flush();
+
+		s.clear();
+		// merge channel to put channel back in PersistenceContext
+		s.merge( channel );
+		TvMagazinPk pkNew = new TvMagazinPk();
+		// set pkNew.channel to the unmerged copy.
+		pkNew.channel = channel;
+		pkNew.presenter = presenter;
+		// the following fails because there is already a managed channel
+		tvMagazin = s.get( TvMagazin.class, pkNew );
 		tx.rollback();
 		s.close();
 	}

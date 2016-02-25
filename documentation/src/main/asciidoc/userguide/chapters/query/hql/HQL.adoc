@@ -1,7 +1,7 @@
 [[hql]]
 == HQL and JPQL
-:modeldir: ../../../../../main/java/org/hibernate/userguide/model
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/hql
+:modeldir: ../../../../../../main/java/org/hibernate/userguide/model
+:sourcedir: ../../../../../../test/java/org/hibernate/userguide/hql
 :extrasdir: extras
 
 The Hibernate Query Language (HQL) and Java Persistence Query Language (JPQL) are both object model focused query languages similar in nature to SQL.
@@ -9,7 +9,7 @@ JPQL is a heavily-inspired-by subset of HQL.
 A JPQL query is always a valid HQL query, the reverse is not true however.
 
 Both HQL and JPQL are non-type-safe ways to perform query operations.
-Criteria queries offer a type-safe approach to querying.  See <<chapters/query-criteria/Criteria.adoc#criteria,Criteria>> for more information.
+Criteria queries offer a type-safe approach to querying.  See <<chapters/query/criteria/Criteria.adoc#criteria,Criteria>> for more information.
 
 [[query-api]]
 === Query API

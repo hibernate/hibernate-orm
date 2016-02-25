@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import javax.persistence.AttributeConverter;
 import javax.persistence.Entity;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Id;
@@ -155,6 +156,17 @@ public class BootstrapTest {
 			}
 
 			{
+				AttributeConverter myAttributeConverter = new AttributeConverter() {
+					@Override
+					public Object convertToDatabaseColumn(Object attribute) {
+						return null;
+					}
+
+					@Override
+					public Object convertToEntityAttribute(Object dbData) {
+						return null;
+					}
+				} ;
 				//tag::bootstrap-native-metadata-builder-example[]
 				ServiceRegistry standardRegistry =
 					new StandardServiceRegistryBuilder().build();
@@ -169,6 +181,9 @@ public class BootstrapTest {
 
 				// specify the schema name to use for tables, etc when none is explicitly specified
 				metadataBuilder.applyImplicitSchemaName( "my_default_schema" );
+
+				// specify a custom Attribute Converter
+				metadataBuilder.applyAttributeConverter( myAttributeConverter );
 
 				Metadata metadata = metadataBuilder.build();
 				//end::bootstrap-native-metadata-builder-example[]

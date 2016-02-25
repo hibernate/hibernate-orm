@@ -1,6 +1,6 @@
 [[criteria]]
 == Criteria
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/criteria
+:sourcedir: ../../../../../../test/java/org/hibernate/userguide/criteria
 
 Criteria queries offer a type-safe alternative to HQL, JPQL and native SQL queries.
 

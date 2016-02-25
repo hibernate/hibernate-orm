@@ -23,13 +23,12 @@ import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-
-import org.jboss.logging.Logger;
 
 /**
  * Instantiates and configures an appropriate {@link ConnectionProvider}.
@@ -39,10 +38,7 @@ import org.jboss.logging.Logger;
  * @author Brett Meyer
  */
 public class ConnectionProviderInitiator implements StandardServiceInitiator<ConnectionProvider> {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			ConnectionProviderInitiator.class.getName()
-	);
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ConnectionProviderInitiator.class );
 
 	/**
 	 * Singleton access
@@ -104,15 +100,41 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		}
 
 		final StrategySelector strategySelector = registry.getService( StrategySelector.class );
+		final Object explicitSetting = configurationValues.get( AvailableSettings.CONNECTION_PROVIDER );
+		if ( explicitSetting != null ) {
+			// if we are explicitly supplied a ConnectionProvider to use (in some form) -> use it..
+			if ( explicitSetting instanceof ConnectionProvider ) {
+				return (ConnectionProvider) explicitSetting;
+			}
+			else if ( explicitSetting instanceof Class ) {
+				final Class providerClass = (Class) explicitSetting;
+				LOG.instantiatingExplicitConnectionProvider( providerClass.getName() );
+				return instantiateExplicitConnectionProvider( providerClass );
+			}
+			else {
+				String providerName = explicitSetting.toString();
+				if ( LEGACY_CONNECTION_PROVIDER_MAPPING.containsKey( providerName ) ) {
+					final String actualProviderName = LEGACY_CONNECTION_PROVIDER_MAPPING.get( providerName );
+					DeprecationLogger.DEPRECATION_LOGGER.connectionProviderClassDeprecated( providerName, actualProviderName );
+					providerName = actualProviderName;
+				}
+
+				LOG.instantiatingExplicitConnectionProvider( providerName );
+				final Class providerClass = strategySelector.selectStrategyImplementor( ConnectionProvider.class, providerName );
+				try {
+					return instantiateExplicitConnectionProvider( providerClass );
+				}
+				catch (Exception e) {
+					throw new HibernateException( "Could not instantiate connection provider [" + providerName + "]", e );
+				}
+			}
+		}
+
+		if ( configurationValues.get( AvailableSettings.DATASOURCE ) != null ) {
+			return new DatasourceConnectionProviderImpl();
+		}
 
 		ConnectionProvider connectionProvider = null;
-		final String providerName = getConfiguredConnectionProviderName( configurationValues );
-		if ( providerName != null ) {
-			connectionProvider = instantiateExplicitConnectionProvider( providerName, strategySelector );
-		}
-		else if ( configurationValues.get( AvailableSettings.DATASOURCE ) != null ) {
-			connectionProvider = new DatasourceConnectionProviderImpl();
-		}
 
 		if ( connectionProvider == null ) {
 			if ( c3p0ConfigDefined( configurationValues ) ) {
@@ -170,29 +192,13 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		return connectionProvider;
 	}
 
-	private String getConfiguredConnectionProviderName( Map configurationValues ) {
-		String providerName = (String) configurationValues.get( AvailableSettings.CONNECTION_PROVIDER );
-		if ( LEGACY_CONNECTION_PROVIDER_MAPPING.containsKey( providerName ) ) {
-			final String actualProviderName = LEGACY_CONNECTION_PROVIDER_MAPPING.get( providerName );
-			DeprecationLogger.DEPRECATION_LOGGER.connectionProviderClassDeprecated( providerName, actualProviderName );
-			providerName = actualProviderName;
-		}
-		return providerName;
-	}
-
-	private ConnectionProvider instantiateExplicitConnectionProvider(
-			String providerName,
-			StrategySelector strategySelector) {
-		try {
-			LOG.instantiatingExplicitConnectionProvider( providerName );
-            // This relies on selectStrategyImplementor trying
-            // classLoaderService.classForName( name ).
-            // TODO: Maybe we shouldn't rely on that here and do it manually?
-			return strategySelector.selectStrategyImplementor( ConnectionProvider.class, providerName ).newInstance();
-		}
-		catch ( Exception e ) {
-			throw new HibernateException( "Could not instantiate connection provider [" + providerName + "]", e );
-		}
+	private ConnectionProvider instantiateExplicitConnectionProvider(Class providerClass) {
+			try {
+				return (ConnectionProvider) providerClass.newInstance();
+			}
+			catch (Exception e) {
+				throw new HibernateException( "Could not instantiate connection provider [" + providerClass.getName() + "]", e );
+			}
 	}
 
 	private static boolean c3p0ConfigDefined(Map configValues) {

@@ -83,7 +83,7 @@ public class InExpression implements Criterion {
 		}
 		else {
 			for ( Object value : values ) {
-				list.add( new TypedValue( type, value ) );
+				list.add( criteriaQuery.getTypedValue( criteria, propertyName, value ) );
 			}
 		}
 

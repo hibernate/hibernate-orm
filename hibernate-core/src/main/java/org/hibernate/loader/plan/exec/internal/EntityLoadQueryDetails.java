@@ -219,38 +219,14 @@ public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 			// if the entity reference we are hydrating is a Return, it is possible that its EntityKey is
 			// supplied by the QueryParameter optional entity information
 			if ( context.shouldUseOptionalEntityInformation() && context.getQueryParameters().getOptionalId() != null ) {
-				EntityKey entityKey = ResultSetProcessorHelper.getOptionalObjectKey(
-						context.getQueryParameters(),
-						context.getSession()
+				final EntityKey entityKey = context.getSession().generateEntityKey(
+						context.getQueryParameters().getOptionalId(),
+						processingState.getEntityReference().getEntityPersister()
 				);
 				processingState.registerIdentifierHydratedForm( entityKey.getIdentifier() );
 				processingState.registerEntityKey( entityKey );
-				final EntityPersister entityPersister = processingState.getEntityReference().getEntityPersister();
-				if ( entityPersister.getIdentifierType().isComponentType()  ) {
-					final CompositeType identifierType = (CompositeType) entityPersister.getIdentifierType();
-					if ( !identifierType.isEmbedded() ) {
-						addKeyManyToOnesToSession(
-								context,
-								identifierType,
-								entityKey.getIdentifier()
-						);
-					}
-				}
 			}
 			return super.readRow( resultSet, context );
-		}
-
-		private void addKeyManyToOnesToSession(ResultSetProcessingContextImpl context, CompositeType componentType, Object component ) {
-			for ( int i = 0 ; i < componentType.getSubtypes().length ; i++ ) {
-				final Type subType = componentType.getSubtypes()[ i ];
-				final Object subValue = componentType.getPropertyValue( component, i, context.getSession() );
-				if ( subType.isEntityType() ) {
-					( (Session) context.getSession() ).buildLockRequest( LockOptions.NONE ).lock( subValue );
-				}
-				else if ( subType.isComponentType() ) {
-					addKeyManyToOnesToSession( context, (CompositeType) subType, subValue  );
-				}
-			}
 		}
 
 		@Override

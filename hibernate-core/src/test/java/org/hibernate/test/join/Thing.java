@@ -43,6 +43,7 @@ public class Thing {
 
 	Long id;
 	String name;
+	String nameUpper;
 
 	/**
 	 * @return Returns the ID.
@@ -68,4 +69,12 @@ public class Thing {
 	public void setName(String name) {
 		this.name = name;
 	}
+
+	public String getNameUpper() {
+		return nameUpper;
+	}
+	public void setNameUpper(String nameUpper) {
+		this.nameUpper = nameUpper;
+	}
+
 }

@@ -70,7 +70,7 @@ include::{sourcedir}/BootstrapTest.java[tags=bootstrap-bootstrap-native-registry
 ====
 
 A `StandardServiceRegistry` is also highly configurable via the StandardServiceRegistryBuilder API.
-See the `StandardServiceRegistryBuilder` https://docs.jboss.org/hibernate/stable/orm/javadocs/org/hibernate/boot/registry/StandardServiceRegistryBuilder.html[Javadocs] for more details.
+See the `StandardServiceRegistryBuilder` https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/registry/StandardServiceRegistryBuilder.html[Javadocs] for more details.
 
 Some specific methods of interest:
 
@@ -105,7 +105,7 @@ The second step in native bootstrapping is the building of a `org.hibernate.boot
 The first thing we obviously need to build a parsed representation is the source information to be parsed (annotated classes, `hbm.xml` files, `orm.xml` files).
 This is the purpose of `org.hibernate.boot.MetadataSources`:
 
-`MetadataSources` has many other methods as well, explore its API and https://docs.jboss.org/hibernate/stable/orm/javadocs/org/hibernate/boot/MetadataSources.html[Javadocs] for more information.
+`MetadataSources` has many other methods as well, explore its API and https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/MetadataSources.html[Javadocs] for more information.
 Also, all methods on `MetadataSources` offer fluent-style call chaining::
 
 [[bootstrap-native-metadata-source-example]]
@@ -118,7 +118,7 @@ include::{sourcedir}/BootstrapTest.java[tags=bootstrap-native-metadata-source-ex
 ====
 
 Once we have the sources of mapping information defined, we need to build the `Metadata` object.
-If you are ok with the default behavior in building the Metadata then you can simply call the https://docs.jboss.org/hibernate/stable/orm/javadocs/org/hibernate/boot/MetadataSources.html#buildMetadata--[1buildMetadata`] method of the `MetadataSources`.
+If you are ok with the default behavior in building the Metadata then you can simply call the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/MetadataSources.html#buildMetadata--[`buildMetadata`] method of the `MetadataSources`.
 
 [NOTE]
 ====
@@ -130,7 +130,7 @@ From there, `MetadataBuilder`, `Metadata`, `SessionFactoryBuilder` and `SessionF
 However, if you wish to adjust the process of building `Metadata` from `MetadataSources`,
 you will need to use the `MetadataBuilder` as obtained via `MetadataSources#getMetadataBuilder`.
 `MetadataBuilder` allows a lot of control over the `Metadata` building process.
-See its https://docs.jboss.org/hibernate/stable/orm/javadocs/org/hibernate/boot/MetadataBuilder.html[Javadocs] for full details.
+See its https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/MetadataBuilder.html[Javadocs] for full details.
 
 [[bootstrap-native-metadata-builder-example]]
 .Building Metadata via `MetadataBuilder`
@@ -145,9 +145,9 @@ include::{sourcedir}/BootstrapTest.java[tags=bootstrap-native-metadata-builder-e
 ==== Building the SessionFactory
 
 The final step in native bootstrapping is to build the `SessionFactory` itself.
-Much like discussed above, if you are ok with the default behavior of building a `SessionFactory` from a `Metadata` reference, you can simply call the https://docs.jboss.org/hibernate/stable/orm/javadocs/org/hibernate/boot/Metadata.html#buildSessionFactory--[`buildSessionFactory`] method on the `Metadata` object.
+Much like discussed above, if you are ok with the default behavior of building a `SessionFactory` from a `Metadata` reference, you can simply call the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/Metadata.html#buildSessionFactory--[`buildSessionFactory`] method on the `Metadata` object.
 
-However, if you would like to adjust that building process you will need to use `SessionFactoryBuilder` as obtained via [`Metadata#getSessionFactoryBuilder`. Again, see its https://docs.jboss.org/hibernate/stable/orm/javadocs/org/hibernate/boot/Metadata.html#getSessionFactoryBuilder--[Javadocs] for more details.
+However, if you would like to adjust that building process you will need to use `SessionFactoryBuilder` as obtained via [`Metadata#getSessionFactoryBuilder`. Again, see its https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/Metadata.html#getSessionFactoryBuilder--[Javadocs] for more details.
 
 [[bootstrap-native-SessionFactory-example]]
 .Native Bootstrapping - Putting it all together
@@ -217,7 +217,7 @@ include::{sourcedir}/BootstrapTest.java[tags=bootstrap-jpa-compliant-EntityManag
 [[bootstrap-jpa-hibernate]]
 ==== Proprietary JPA bootstrapping
 
-Hibernate defines a proprietary https://docs.jboss.org/hibernate/stable/orm/javadocs/org/hibernate/jpa/boot/internal/EntityManagerFactoryBuilderImpl.html[`EntityManagerFactoryBuilderImpl`]
+Hibernate defines a proprietary https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/boot/internal/EntityManagerFactoryBuilderImpl.html[`EntityManagerFactoryBuilderImpl`]
 utility, which allows bootstrapping the JPA environment without even in the absence of the `persistence.xml` configuration file.
 To substitute the `persistence.xml` file, Hibernate offers the `PersistenceUnitInfoDescriptor` utility, which can take configuration that's available in the standard XML configuration file.
 

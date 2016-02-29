@@ -32,7 +32,7 @@ Instead of annotating the whole class and auditing all properties, you can annot
 This will cause only these properties to be audited.
 
 The audit (history) of an entity can be accessed using the `AuditReader` interface, which can be obtained having an open `EntityManager` or `Session` via the `AuditReaderFactory`.
-See the [Javadocs](https://docs.jboss.org/hibernate/stable/orm/javadocs/org/hibernate/envers/AuditReaderFactory.html) for these classes for details on the functionality offered.
+See the [Javadocs](https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/envers/AuditReaderFactory.html) for these classes for details on the functionality offered.
 
 [[envers-configuration]]
 === Configuration
@@ -196,7 +196,7 @@ There are two things you need to make this work:
 +
 NOTE: It is an error for there to be multiple entities marked as `@org.hibernate.envers.RevisionEntity`
 
-. Second, you need to tell Envers how to create instances of your revision entity which is handled by the https://docs.jboss.org/hibernate/stable/orm/javadocs/org/hibernate/envers/RevisionListener.html#newRevision-java.lang.Object-[`newRevision( Object revisionEntity )`] method of the `org.hibernate.envers.RevisionListener` interface.
+. Second, you need to tell Envers how to create instances of your revision entity which is handled by the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/envers/RevisionListener.html#newRevision-java.lang.Object-[`newRevision( Object revisionEntity )`] method of the `org.hibernate.envers.RevisionListener` interface.
 +
   You tell Envers your custom `org.hibernate.envers.RevisionListener` implementation to use by specifying it on the `@org.hibernate.envers.RevisionEntity` annotation, using the value attribute.
   If your `RevisionListener` class is inaccessible from `@RevisionEntity` (e.g. it exists in a different module), set `org.hibernate.envers.revision_listener` property to its fully qualified class name.
@@ -263,7 +263,7 @@ public class ExampleListener implements RevisionListener {
 
 [NOTE]
 ====
-An alternative method to using the `org.hibernate.envers.RevisionListener` is to instead call the https://docs.jboss.org/hibernate/stable/orm/javadocs/org/hibernate/envers/AuditReader.html#getCurrentRevision-java.lang.Class-boolean-[`getCurrentRevision( Class<T> revisionEntityClass, boolean persist )`] method of the `org.hibernate.envers.AuditReader` interface to obtain the current revision, and fill it with desired information.
+An alternative method to using the `org.hibernate.envers.RevisionListener` is to instead call the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/envers/AuditReader.html#getCurrentRevision-java.lang.Class-boolean-[`getCurrentRevision( Class<T> revisionEntityClass, boolean persist )`] method of the `org.hibernate.envers.AuditReader` interface to obtain the current revision, and fill it with desired information.
 The method accepts a `persist` parameter indicating whether the revision entity should be persisted prior to returning from this method:
 
 `true`:: ensures that the returned entity has access to its identifier value (revision number), but the revision entity will be persisted regardless of whether there are any audited entities changed.

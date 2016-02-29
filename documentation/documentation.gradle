@@ -289,6 +289,9 @@ task renderMappingGuide(type: AsciidoctorTask, group: 'Documentation') {
 
 // User Guides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+final String[] versionComponents = version.split( '\\.' );
+final String majorMinorVersion = versionComponents[0] + '.' + versionComponents[1];
+
 task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {
     description = 'Renders the User Guides in HTML format using Asciidoctor.'
     sourceDir = file( 'src/main/asciidoc/userguide' )
@@ -297,7 +300,7 @@ task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {
     separateOutputDirs false
     options logDocuments: true
     //attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true, stylesheet: "css/hibernate.css"
-    attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true
+    attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true, majorMinorVersion: majorMinorVersion
     resources {
         from('src/main/asciidoc/') {
             include 'images/**'

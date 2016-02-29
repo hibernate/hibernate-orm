@@ -299,16 +299,17 @@ task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {
     backends "html5"
     separateOutputDirs false
     options logDocuments: true
-    //attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true, stylesheet: "css/hibernate.css"
-    attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true, majorMinorVersion: majorMinorVersion
+    attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true, stylesheet: "css/hibernate.css", majorMinorVersion: majorMinorVersion
     resources {
-        from('src/main/asciidoc/') {
+        from('src/main/style/') {
             include 'images/**'
-            include 'css/**'
         }
         from('src/main/asciidoc/userguide/') {
             include 'images/**'
         }
+		from('src/main/style/asciidoctor') {
+			include 'css/**'
+		}
     }
 }
 

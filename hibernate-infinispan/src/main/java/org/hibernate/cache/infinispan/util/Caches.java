@@ -306,10 +306,6 @@ public class Caches {
 	}
 
 	public static <K, V> CollectableCloseableIterable<K> keys(AdvancedCache<K, V> cache, KeyValueFilter<K, V> filter) {
-		if (cache.getCacheConfiguration().transaction().transactionMode().isTransactional()) {
-			// Dummy read to enlist the LocalTransaction as workaround for ISPN-5676
-			cache.containsKey(false);
-		}
 		// HHH-10023: we can't use keySet()
 		final CloseableIterable<CacheEntry<K, Void>> entryIterable = cache
 				.filterEntries( filter )
@@ -322,20 +318,12 @@ public class Caches {
 	}
 
 	public static <K, V> CollectableCloseableIterable<V> values(AdvancedCache<K, V> cache, KeyValueFilter<K, V> filter) {
-		if (cache.getCacheConfiguration().transaction().transactionMode().isTransactional()) {
-			// Dummy read to enlist the LocalTransaction as workaround for ISPN-5676
-			cache.containsKey(false);
-		}
 		// HHH-10023: we can't use values()
 		final CloseableIterable<CacheEntry<K, V>> entryIterable = cache.filterEntries(filter);
 		return new CollectableCloseableIterableImpl<K, V, V>(entryIterable, Selector.VALUE);
 	}
 
 	public static <K, V, T> CollectableCloseableIterable<T> values(AdvancedCache<K, V> cache, KeyValueFilter<K, V> filter, Converter<K, V, T> converter) {
-		if (cache.getCacheConfiguration().transaction().transactionMode().isTransactional()) {
-			// Dummy read to enlist the LocalTransaction as workaround for ISPN-5676
-			cache.containsKey(false);
-		}
 		// HHH-10023: we can't use values()
 		final CloseableIterable<CacheEntry<K, T>> entryIterable = cache.filterEntries(filter).converter(converter);
 		return new CollectableCloseableIterableImpl<K, T, T>(entryIterable, Selector.VALUE);
@@ -347,20 +335,12 @@ public class Caches {
 	}
 
 	public static <K, V> MapCollectableCloseableIterable<K, V> entrySet(AdvancedCache<K, V> cache, KeyValueFilter<K, V> filter) {
-		if (cache.getCacheConfiguration().transaction().transactionMode().isTransactional()) {
-			// Dummy read to enlist the LocalTransaction as workaround for ISPN-5676
-			cache.containsKey(false);
-		}
 		// HHH-10023: we can't use values()
 		final CloseableIterable<CacheEntry<K, V>> entryIterable = cache.filterEntries(filter);
 		return new MapCollectableCloseableIterableImpl<K, V>(entryIterable);
 	}
 
 	public static <K, V, T> MapCollectableCloseableIterable<K, T> entrySet(AdvancedCache<K, V> cache, KeyValueFilter<K, V> filter, Converter<K, V, T> converter) {
-		if (cache.getCacheConfiguration().transaction().transactionMode().isTransactional()) {
-			// Dummy read to enlist the LocalTransaction as workaround for ISPN-5676
-			cache.containsKey(false);
-		}
 		// HHH-10023: we can't use values()
 		final CloseableIterable<CacheEntry<K, T>> entryIterable = cache.filterEntries(filter).converter(converter);
 		return new MapCollectableCloseableIterableImpl<K, T>(entryIterable);

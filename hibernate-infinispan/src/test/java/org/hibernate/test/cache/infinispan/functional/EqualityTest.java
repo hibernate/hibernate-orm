@@ -3,6 +3,7 @@ package org.hibernate.test.cache.infinispan.functional;
 import org.hibernate.stat.Statistics;
 import org.hibernate.test.cache.infinispan.functional.entities.Name;
 import org.hibernate.test.cache.infinispan.functional.entities.Person;
+import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 import java.util.List;
@@ -63,4 +64,13 @@ public class EqualityTest extends SingleNodeTest {
 		  assertEquals(expected.getName().getLastName(), person.getName().getLastName());
 		  assertEquals(expected.getAge(), person.getAge());
 	 }
+
+
+	@TestForIssue(jiraKey = "HHH-10329")
+	@Test
+	public void testInvalidationWithEmbeddedId() throws Exception {
+		Person person = new Person("John", "Brown", 33);
+		withTxSession(s -> s.persist(person));
+		withTx(() -> { cleanupCache(); return 0; });
+	}
 }

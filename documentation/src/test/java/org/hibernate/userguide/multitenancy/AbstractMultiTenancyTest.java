@@ -124,7 +124,7 @@ public abstract class AbstractMultiTenancyTest extends BaseUnitTestCase {
     protected SessionFactory sessionFactory(Map<String, Object> settings) {
 
         ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
-            .applySettings( settings() )
+            .applySettings( settings )
             .build();
 
         MetadataSources metadataSources = new MetadataSources( serviceRegistry );

@@ -1,6 +1,7 @@
 [[basic]]
 === Basic Types
-:sourcedir: extras
+:sourcedir: ../../../../../test/java/org/hibernate/userguide/mapping
+:extrasdir: extras
 
 Basic value types usually map a single database column, to a single, non-aggregated Java type.
 Hibernate provides a number of built-in basic types, which follow the natural mappings recommended by the JDBC specifications.
@@ -96,7 +97,7 @@ Both of the following examples are ultimately the same.
 ====
 [source,java]
 ----
-include::{sourcedir}/basic/ex1.java[]
+include::{extrasdir}/basic/ex1.java[]
 ----
 ====
 
@@ -104,7 +105,7 @@ include::{sourcedir}/basic/ex1.java[]
 ====
 [source,java]
 ----
-include::{sourcedir}/basic/ex2.java[]
+include::{extrasdir}/basic/ex2.java[]
 ----
 ====
 
@@ -153,7 +154,7 @@ If that implicit naming rule does not meet your requirements, you can explicitly
 ====
 [source,java]
 ----
-include::{sourcedir}/basic/ExplicitColumnNaming.java[]
+include::{extrasdir}/basic/ExplicitColumnNaming.java[]
 ----
 ====
 
@@ -204,7 +205,7 @@ In these cases you must explicitly tell Hibernate the `BasicType` to use, via th
 ====
 [source,java]
 ----
-include::{sourcedir}/basic/explicitType.java[]
+include::{extrasdir}/basic/explicitType.java[]
 ----
 ====
 
@@ -235,12 +236,12 @@ The first approach is to directly implement the BasicType interface.
 ====
 [source,java]
 ----
-include::{sourcedir}/basic/FizzywigType1.java[]
+include::{extrasdir}/basic/FizzywigType1.java[]
 ----
 
 [source,java]
 ----
-include::{sourcedir}/basic/FizzywigType1_reg.java[]
+include::{extrasdir}/basic/FizzywigType1_reg.java[]
 ----
 ====
 
@@ -250,12 +251,12 @@ The second approach is to implement the UserType interface.
 ====
 [source,java]
 ----
-include::{sourcedir}/basic/FizzywigType2.java[]
+include::{extrasdir}/basic/FizzywigType2.java[]
 ----
 
 [source,java]
 ----
-include::{sourcedir}/basic/FizzywigType2_reg.java[]
+include::{extrasdir}/basic/FizzywigType2_reg.java[]
 ----
 ====
 
@@ -277,7 +278,7 @@ The original JPA-compliant way to map enums was via the `@Enumerated` and `@MapK
 ====
 [source,java]
 ----
-include::{sourcedir}/basic/EnumeratedOrdinal.java[]
+include::{extrasdir}/basic/EnumeratedOrdinal.java[]
 ----
 ====
 
@@ -291,7 +292,7 @@ In the ORDINAL example, the gender column is defined as an (nullable) INTEGER ty
 ====
 [source,java]
 ----
-include::{sourcedir}/basic/EnumeratedString.java[]
+include::{extrasdir}/basic/EnumeratedString.java[]
 ----
 ====
 
@@ -311,7 +312,7 @@ Let's revisit the Gender enum example, but instead we want to store the more sta
 ====
 [source,java]
 ----
-include::{sourcedir}/basic/EnumAttributeConverter.java[]
+include::{extrasdir}/basic/EnumAttributeConverter.java[]
 ----
 ====
 
@@ -335,7 +336,7 @@ Let's again revisit the Gender enum example, this time using a custom Type to st
 ====
 [source,java]
 ----
-include::{sourcedir}/basic/EnumCustomType.java[]
+include::{extrasdir}/basic/EnumCustomType.java[]
 ----
 ====
 
@@ -376,7 +377,7 @@ For a first look, let's assume we have a CLOB column that we would like to map (
 ====
 [source,sql]
 ----
-include::{sourcedir}/basic/Clob.sql[]
+include::{extrasdir}/basic/Clob.sql[]
 ----
 ====
 
@@ -386,7 +387,7 @@ Let's first map this using the JDBC locator.
 ====
 [source,java]
 ----
-include::{sourcedir}/basic/ClobLocator.java[]
+include::{extrasdir}/basic/ClobLocator.java[]
 ----
 ====
 
@@ -396,7 +397,7 @@ We could also map a materialized form.
 ====
 [source,java]
 ----
-include::{sourcedir}/basic/ClobMaterialized.java[]
+include::{extrasdir}/basic/ClobMaterialized.java[]
 ----
 ====
 
@@ -414,7 +415,7 @@ We might even want the materialized data as a char array (for some crazy reason)
 ====
 [source,java]
 ----
-include::{sourcedir}/basic/ClobMaterializedCharArray.java[]
+include::{extrasdir}/basic/ClobMaterializedCharArray.java[]
 ----
 ====
 
@@ -424,7 +425,7 @@ We'd map BLOB data in a similar fashion.
 ====
 [source,sql]
 ----
-include::{sourcedir}/basic/Blob.sql[]
+include::{extrasdir}/basic/Blob.sql[]
 ----
 ====
 
@@ -434,7 +435,7 @@ Let's first map this using the JDBC locator.
 ====
 [source,java]
 ----
-include::{sourcedir}/basic/BlobLocator.java[]
+include::{extrasdir}/basic/BlobLocator.java[]
 ----
 ====
 
@@ -444,7 +445,7 @@ We could also map a materialized BLOB form.
 ====
 [source,java]
 ----
-include::{sourcedir}/basic/BlobMaterialized.java[]
+include::{extrasdir}/basic/BlobMaterialized.java[]
 ----
 ====
 
@@ -465,7 +466,7 @@ To map a specific attribute to a nationalized variant data type, Hibernate defin
 ====
 [source,java]
 ----
-include::{sourcedir}/basic/NVARCHAR.java[]
+include::{extrasdir}/basic/NVARCHAR.java[]
 ----
 ====
 
@@ -473,7 +474,7 @@ include::{sourcedir}/basic/NVARCHAR.java[]
 ====
 [source,java]
 ----
-include::{sourcedir}/basic/NCLOB_locator.java[]
+include::{extrasdir}/basic/NCLOB_locator.java[]
 ----
 ====
 
@@ -481,7 +482,7 @@ include::{sourcedir}/basic/NCLOB_locator.java[]
 ====
 [source,java]
 ----
-include::{sourcedir}/basic/NCLOB_materialized.java[]
+include::{extrasdir}/basic/NCLOB_materialized.java[]
 ----
 ====
 
@@ -552,7 +553,7 @@ Considering the following entity:
 ====
 [source,java]
 ----
-include::{sourcedir}/basic/DateTemporal.java[]
+include::{extrasdir}/basic/DateTemporal.java[]
 ----
 ====
 
@@ -675,7 +676,7 @@ In the following example, the `java.util.Period` is going to be mapped to a `VAR
 ====
 [source,java]
 ----
-include::{sourcedir}/basic/PeriodStringConverter.java[]
+include::{extrasdir}/basic/PeriodStringConverter.java[]
 ----
 ====
 
@@ -685,7 +686,7 @@ To make use of this custom converter, the `@Convert` annotation must decorate th
 ====
 [source,java]
 ----
-include::{sourcedir}/basic/PeriodStringConvert.java[]
+include::{extrasdir}/basic/PeriodStringConvert.java[]
 ----
 ====
 
@@ -695,7 +696,7 @@ When persisting such entity, Hibernate will do the type conversion based on the 
 ====
 [source,sql]
 ----
-include::{sourcedir}/basic/PeriodStringConvert.sql[]
+include::{extrasdir}/basic/PeriodStringConvert.sql[]
 ----
 ====
 
@@ -739,6 +740,68 @@ Only `@Version` and `@Basic` types can be marked as generated.
 `always`:: the property value is generated both on insert and on update.
 
 To mark a property as generated, use The Hibernate specific `@Generated` annotation.
+
+[[mapping-generated-ValueGenerationType]]
+===== @ValueGenerationType meta-annotation
+
+Hibernate 4.3 introduced the `@ValueGenerationType` meta-annotation, which is a new approach to declaring generated attributes or customizing generators.
+
+`@Generated` has been retrofitted to use the `@ValueGenerationType` meta-annotation.
+But `@ValueGenerationType` exposes more features than what `@Generated` currently supports, and,
+to leverage some of those features, you'd simply wire up a new generator annotation.
+
+As you'll see in the following examples, the `@ValueGenerationType` meta-annotation is used when declaring the custom annotation used to mark the entity properties that need a specific generation strategy.
+The actual generation logic must be implemented in class that implements the `AnnotationValueGeneration` interface.
+
+[[mapping-database-generated-value]]
+====== Database-generated values
+
+For example, let's say we want the timestamps to be generated by calls to the standard ANSI SQL function `current_timestamp` (rather than triggers or DEFAULT values):
+
+[[mapping-database-generated-value-example]]
+.A `ValueGenerationType` mapping for database generation
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/generated/DatabaseValueGenerationTest.java[tags=mapping-database-generated-value-example]
+----
+====
+
+When persisting an `Event` entity, Hibernate generates the following SQL statement:
+
+====
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-database-generated-value-example.sql[]
+----
+====
+
+As you can see, the `current_timestamp` value was used for assigning the `timestamp` column value.
+
+[[mapping-in-memory-generated-value]]
+====== In-memory-generated values
+
+If the timestamp value needs to be generated in-memory, the following mapping must be used instead:
+
+[[mapping-in-memory-generated-value-example]]
+.A `ValueGenerationType` mapping for in-memory value generation
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/generated/InMemoryValueGenerationTest.java[tags=mapping-in-memory-generated-value-example]
+----
+====
+
+When persisting an `Event` entity, Hibernate generates the following SQL statement:
+
+====
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-in-memory-generated-value-example.sql[]
+----
+====
+
+As you can see, the `new Date()` object value was used for assigning the `timestamp` column value.
 
 [[mapping-column-read-and-write]]
 ==== Column transformers: read and write expressions

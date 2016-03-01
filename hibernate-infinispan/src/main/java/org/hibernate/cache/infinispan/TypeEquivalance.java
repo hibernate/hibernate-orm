@@ -21,12 +21,23 @@ public class TypeEquivalance implements Equivalence<Object> {
 
 	@Override
 	public int hashCode(Object o) {
-		return type.getHashCode(o);
+		if (type.getReturnedClass().isInstance(o)) {
+			return type.getHashCode(o);
+		}
+		else {
+			return o != null ? o.hashCode() : 0;
+		}
 	}
 
 	@Override
 	public boolean equals(Object x, Object y) {
-		return type.isEqual(x, y);
+		Class<?> typeClass = type.getReturnedClass();
+		if (typeClass.isInstance(x) && typeClass.isInstance(y)) {
+			return type.isEqual(x, y);
+		}
+		else {
+			return (x == y) || (x != null && x.equals(y));
+		}
 	}
 
 	@Override
@@ -41,6 +52,12 @@ public class TypeEquivalance implements Equivalence<Object> {
 
 	@Override
 	public int compare(Object x, Object y) {
-		return type.compare(x, y);
+		Class<?> typeClass = type.getReturnedClass();
+		if (typeClass.isInstance(x) && typeClass.isInstance(y)) {
+			return type.compare(x, y);
+		}
+		else {
+			return 0;
+		}
 	}
 }

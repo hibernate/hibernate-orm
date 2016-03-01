@@ -73,7 +73,7 @@
         <version name="version" column="VERS" type="long" />
 
         <property name="name"/>
-        <set name="transports" inverse="false" lazy="true" cascade="merge,refresh">
+        <set name="transports" inverse="true" lazy="true" cascade="merge,refresh">
            <key column="vehicleID"/>
            <one-to-many class="Transport" not-found="exception"/>
        </set>

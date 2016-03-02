@@ -322,13 +322,14 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 		final Map<String, int[]> namedParameterLocMap =
 				ResultSetProcessorHelper.buildNamedParameterLocMap( queryParameters, namedParameterContext );
 
+		final String subselectQueryString = SubselectFetch.createSubselectFetchQueryFragment( queryParameters );
 		for ( Map.Entry<EntityPersister, Set<EntityKey>> entry : subselectLoadableEntityKeyMap.entrySet() ) {
 			if ( ! entry.getKey().hasSubselectLoadableCollections() ) {
 				continue;
 			}
 
 			SubselectFetch subselectFetch = new SubselectFetch(
-					//getSQLString(),
+					subselectQueryString,
 					null, // aliases[i],
 					(Loadable) entry.getKey(),
 					queryParameters,
@@ -339,7 +340,6 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 			for ( EntityKey key : entry.getValue() ) {
 				session.getPersistenceContext().getBatchFetchQueue().addSubselect( key, subselectFetch );
 			}
-
 		}
 	}
 

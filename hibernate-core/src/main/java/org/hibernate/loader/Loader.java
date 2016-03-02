@@ -63,7 +63,6 @@ import org.hibernate.dialect.pagination.NoopLimitHandler;
 import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.jdbc.ColumnNameCache;
-import org.hibernate.engine.jdbc.spi.ResultSetWrapper;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
@@ -1014,6 +1013,9 @@ public abstract class Loader {
 
 			final Loadable[] loadables = getEntityPersisters();
 			final String[] aliases = getAliases();
+			final String subselectQueryString = SubselectFetch.createSubselectFetchQueryFragment(
+					queryParameters
+			);
 			final Iterator iter = keys.iterator();
 			while ( iter.hasNext() ) {
 
@@ -1023,7 +1025,7 @@ public abstract class Loader {
 					if ( rowKeys[i]!=null && loadables[i].hasSubselectLoadableCollections() ) {
 
 						SubselectFetch subselectFetch = new SubselectFetch(
-								//getSQLString(),
+								subselectQueryString,
 								aliases[i],
 								loadables[i],
 								queryParameters,

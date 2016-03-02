@@ -1,6 +1,7 @@
-[[mapping_types]]
+[[mapping-types]]
 === Mapping types
-:sourcedir: extras
+:sourcedir: ../../../../../test/java/org/hibernate/userguide/mapping
+:extrasdir: extras/types
 
 Hibernate understands both the Java and JDBC representations of application data.
 The ability to read/write this data from/to the database is the function of a Hibernate _type_.
@@ -10,7 +11,6 @@ This Hibernate type also describes various aspects of behavior of the Java type 
 .Usage of the word _type_
 [NOTE]
 ====
-
 The Hibernate type is neither a Java type nor a SQL data type.
 It provides information about both of these as well as understanding marshalling between.
 
@@ -19,16 +19,17 @@ When you encounter the term type in discussions of Hibernate, it may refer to th
 
 To help understand the type categorizations, let's look at a simple table and domain model that we wish to map.
 
+[[mapping-types-basic-example]]
 .Simple table and domain model
 ====
-[source,sql]
+[source, SQL, indent=0]
 ----
-include::{sourcedir}/mapping_types/Contact.sql[]
+include::{extrasdir}/mapping-types-basic-example.sql[]
 ----
 
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/mapping_types/Contact.java[]
+include::{sourcedir}/basic/TypeCategoryTest.java[tags=mapping-types-basic-example]
 ----
 ====
 

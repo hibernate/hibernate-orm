@@ -53,6 +53,8 @@ import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
+import org.hibernate.userguide.mapping.basic.BitSetType;
+import org.hibernate.userguide.mapping.basic.BitSetUserType;
 
 import org.junit.Test;
 
@@ -507,4 +509,42 @@ public class BootstrapTest {
 		}
 	}
 	//end::bootstrap-native-PersistenceUnitInfoImpl-example[]
+
+	@Test
+	public void test_basic_custom_type_register_BasicType_example() {
+		try {
+			//tag::basic-custom-type-register-BasicType-example[]
+			ServiceRegistry standardRegistry =
+				new StandardServiceRegistryBuilder().build();
+
+			MetadataSources sources = new MetadataSources( standardRegistry );
+
+			MetadataBuilder metadataBuilder = sources.getMetadataBuilder();
+
+			metadataBuilder.applyBasicType( BitSetType.INSTANCE );
+			//end::basic-custom-type-register-BasicType-example[]
+		}
+		catch (Exception ignore) {
+
+		}
+	}
+
+	@Test
+	public void test_basic_custom_type_register_UserType_example() {
+		try {
+			//tag::basic-custom-type-register-UserType-example[]
+			ServiceRegistry standardRegistry =
+				new StandardServiceRegistryBuilder().build();
+
+			MetadataSources sources = new MetadataSources( standardRegistry );
+
+			MetadataBuilder metadataBuilder = sources.getMetadataBuilder();
+
+			metadataBuilder.applyBasicType( BitSetUserType.INSTANCE, "bitset" );
+			//end::basic-custom-type-register-UserType-example[]
+		}
+		catch (Exception ignore) {
+
+		}
+	}
 }

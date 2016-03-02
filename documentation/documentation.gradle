@@ -301,12 +301,12 @@ task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {
     options logDocuments: true
     attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true, stylesheet: "css/hibernate.css", majorMinorVersion: majorMinorVersion
     resources {
-        from('src/main/style/') {
-            include 'images/**'
-        }
         from('src/main/asciidoc/userguide/') {
             include 'images/**'
         }
+		from('src/main/style/asciidoctor') {
+			include 'images/**'
+		}
 		from('src/main/style/asciidoctor') {
 			include 'css/**'
 		}

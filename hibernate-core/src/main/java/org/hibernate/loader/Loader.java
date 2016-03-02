@@ -1036,6 +1036,7 @@ public abstract class Loader {
 
 			final Loadable[] loadables = getEntityPersisters();
 			final String[] aliases = getAliases();
+			final String subselectQueryString = SubselectFetch.createSubselectFetchQueryFragment( queryParameters );
 			for ( Object key : keys ) {
 				final EntityKey[] rowKeys = (EntityKey[]) key;
 				for ( int i = 0; i < rowKeys.length; i++ ) {
@@ -1043,7 +1044,7 @@ public abstract class Loader {
 					if ( rowKeys[i] != null && loadables[i].hasSubselectLoadableCollections() ) {
 
 						SubselectFetch subselectFetch = new SubselectFetch(
-								//getSQLString(),
+								subselectQueryString,
 								aliases[i],
 								loadables[i],
 								queryParameters,

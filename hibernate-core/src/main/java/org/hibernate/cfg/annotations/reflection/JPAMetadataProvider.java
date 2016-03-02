@@ -88,6 +88,7 @@ public class JPAMetadataProvider implements MetadataProvider, Serializable {
 			defaults.put( "schema", xmlDefaults.getSchema() );
 			defaults.put( "catalog", xmlDefaults.getCatalog() );
 			defaults.put( "delimited-identifier", xmlDefaults.getDelimitedIdentifier() );
+			defaults.put( "cascade-persist", xmlDefaults.getCascadePersist() );
 			List<Class> entityListeners = new ArrayList<Class>();
 			for ( String className : xmlContext.getDefaultEntityListeners() ) {
 				try {

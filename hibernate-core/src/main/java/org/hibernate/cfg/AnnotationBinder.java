@@ -1770,6 +1770,7 @@ public final class AnnotationBinder {
 		else {
 			final boolean forcePersist = property.isAnnotationPresent( MapsId.class )
 					|| property.isAnnotationPresent( Id.class );
+			final String defaultCascade = mappings.getDefaultCascade();
 			if ( property.isAnnotationPresent( ManyToOne.class ) ) {
 				ManyToOne ann = property.getAnnotation( ManyToOne.class );
 
@@ -1796,7 +1797,7 @@ public final class AnnotationBinder {
 				}
 				final boolean mandatory = !ann.optional() || forcePersist;
 				bindManyToOne(
-						getCascadeStrategy( ann.cascade(), hibernateCascade, false, forcePersist ),
+						getCascadeStrategy( ann.cascade(), hibernateCascade, false, forcePersist, defaultCascade ),
 						joinColumns,
 						!mandatory,
 						ignoreNotFound, onDeleteCascade,
@@ -1837,7 +1838,7 @@ public final class AnnotationBinder {
 				//@OneToOne with @PKJC can still be optional
 				final boolean mandatory = !ann.optional() || forcePersist;
 				bindOneToOne(
-						getCascadeStrategy( ann.cascade(), hibernateCascade, ann.orphanRemoval(), forcePersist ),
+						getCascadeStrategy( ann.cascade(), hibernateCascade, ann.orphanRemoval(), forcePersist, defaultCascade ),
 						joinColumns,
 						!mandatory,
 						getFetchMode( ann.fetch() ),
@@ -1875,7 +1876,7 @@ public final class AnnotationBinder {
 					}
 				}
 				bindAny(
-						getCascadeStrategy( null, hibernateCascade, false, forcePersist ),
+						getCascadeStrategy( null, hibernateCascade, false, forcePersist, defaultCascade ),
 						//@Any has not cascade attribute
 						joinColumns,
 						onDeleteCascade,
@@ -2095,7 +2096,7 @@ public final class AnnotationBinder {
 					);
 					collectionBinder.setCascadeStrategy(
 							getCascadeStrategy(
-									oneToManyAnn.cascade(), hibernateCascade, oneToManyAnn.orphanRemoval(), false
+									oneToManyAnn.cascade(), hibernateCascade, oneToManyAnn.orphanRemoval(), forcePersist, defaultCascade
 							)
 					);
 					collectionBinder.setOneToMany( true );
@@ -2122,7 +2123,7 @@ public final class AnnotationBinder {
 					);
 					collectionBinder.setCascadeStrategy(
 							getCascadeStrategy(
-									manyToManyAnn.cascade(), hibernateCascade, false, false
+									manyToManyAnn.cascade(), hibernateCascade, false, false, defaultCascade
 							)
 					);
 					collectionBinder.setOneToMany( false );
@@ -2132,7 +2133,7 @@ public final class AnnotationBinder {
 					collectionBinder.setTargetEntity(
 							mappings.getReflectionManager().toXClass( void.class )
 					);
-					collectionBinder.setCascadeStrategy( getCascadeStrategy( null, hibernateCascade, false, false ) );
+					collectionBinder.setCascadeStrategy( getCascadeStrategy( null, hibernateCascade, false, false, defaultCascade ) );
 					collectionBinder.setOneToMany( false );
 				}
 				collectionBinder.setMappedBy( mappedBy );
@@ -3152,11 +3153,36 @@ public final class AnnotationBinder {
 		return hibernateCascadeSet;
 	}
 
+	private static EnumSet<CascadeType> convertToHibernateCascadeType(String defaultCascade) {
+		EnumSet<CascadeType> hibernateCascadeSet = EnumSet.noneOf( CascadeType.class );
+		if( defaultCascade != null && !defaultCascade.isEmpty() ) {
+			for( String cascade : defaultCascade.split("\\s+") ) {
+				cascade = cascade.toUpperCase();
+				if( "ALL".equals(cascade) ) {
+					hibernateCascadeSet.add( CascadeType.ALL );
+				} else if( "PERSIST".equals(cascade) ) {
+					hibernateCascadeSet.add( CascadeType.PERSIST );
+				} else if( "MERGE".equals(cascade) ) {
+					hibernateCascadeSet.add( CascadeType.MERGE );
+				} else if( "REMOVE".equals(cascade) ) {
+					hibernateCascadeSet.add( CascadeType.REMOVE );
+				} else if( "REFRESH".equals(cascade) ) {
+					hibernateCascadeSet.add( CascadeType.REFRESH );
+				} else if( "DETACH".equals(cascade) ) {
+					hibernateCascadeSet.add( CascadeType.DETACH );
+				}
+			}
+		}
+
+		return hibernateCascadeSet;
+	}
+
 	private static String getCascadeStrategy(
 			javax.persistence.CascadeType[] ejbCascades,
 			Cascade hibernateCascadeAnnotation,
 			boolean orphanRemoval,
-			boolean forcePersist) {
+			boolean forcePersist,
+			String defaultCascade ) {
 		EnumSet<CascadeType> hibernateCascadeSet = convertToHibernateCascadeType( ejbCascades );
 		CascadeType[] hibernateCascades = hibernateCascadeAnnotation == null ?
 				null :
@@ -3173,6 +3199,8 @@ public final class AnnotationBinder {
 		if ( forcePersist ) {
 			hibernateCascadeSet.add( CascadeType.PERSIST );
 		}
+
+		hibernateCascadeSet.addAll(convertToHibernateCascadeType(defaultCascade));
 
 		StringBuilder cascade = new StringBuilder();
 		for ( CascadeType aHibernateCascadeSet : hibernateCascadeSet ) {

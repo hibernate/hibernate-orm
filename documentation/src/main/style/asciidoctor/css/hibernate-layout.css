@@ -97,7 +97,6 @@ h4,h5,h6{
     border-radius: 1em !important;
     width: 100% !important;
     padding: 2em 0em 2em 0em !important;
-    overflow: scroll !important;
     margin: 2em 2em 2em 2em !important;
 }
 td.icon {

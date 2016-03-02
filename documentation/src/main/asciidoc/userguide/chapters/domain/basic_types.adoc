@@ -93,19 +93,21 @@ Strictly speaking, a basic type is denoted with with the `javax.persistence.Basi
 Generally speaking the `@Basic` annotation can be ignored, as it is assumed by default.
 Both of the following examples are ultimately the same.
 
-.With `@Basic`
+[[basic-annotation-explicit-example]]
+.`@Basic` declared explicitly
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{extrasdir}/basic/ex1.java[]
+include::{sourcedir}/basic/ExplicitBasicTypeTest.java[tags=basic-annotation-explicit-example]
 ----
 ====
 
-.Without `@Basic`
+[[basic-annotation-implicit-example]]
+.`@Basic` being implicitly implied
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{extrasdir}/basic/ex2.java[]
+include::{sourcedir}/basic/ImplicitBasicTypeTest.java[tags=basic-annotation-implicit-example]
 ----
 ====
 
@@ -142,6 +144,7 @@ JPA says that EAGER is a requirement to the provider (Hibernate) that the value 
 Hibernate ignores this setting for basic types unless you are using bytecode enhancement.
 See the <chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,BytecodeEnhancement>> for additional information on fetching and on bytecode enhancement.
 
+[[basic-column-annotation]]
 ==== The `@Column` annotation
 
 JPA defines rules for implicitly determining the name of tables and columns.
@@ -150,11 +153,12 @@ For a detailed discussion of implicit naming see <<naming.adoc#naming,Naming>>.
 For basic type attributes, the implicit naming rule is that the column name is the same as the attribute name.
 If that implicit naming rule does not meet your requirements, you can explicitly tell Hibernate (and other providers) the column name to use.
 
+[[basic-annotation-explicit-column-example]]
 .Explicit column naming
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{extrasdir}/basic/ExplicitColumnNaming.java[]
+include::{sourcedir}/basic/ExplicitColumnNamingTest.java[tags=basic-annotation-explicit-column-example]
 ----
 ====
 
@@ -172,7 +176,7 @@ or its `org.hibernate.type.IntegerType` for mapping `java.lang.Integer` attribut
 
 The answer lies in a service inside Hibernate called the `org.hibernate.type.BasicTypeRegistry`, which essentially maintains a map of `org.hibernate.type.BasicType` (a `org.hibernate.type.Type` specialization) instances keyed by a name.
 
-We will see later, in the <<basic-explicit>> section, that we can explicitly tell Hibernate which BasicType to use for a particular attribute.
+We will see later, in the <<basic-type-annotation>> section, that we can explicitly tell Hibernate which BasicType to use for a particular attribute.
 But first let's explore how implicit resolution works and how applications can adjust implicit resolution.
 
 [NOTE]
@@ -191,9 +195,9 @@ So that is the baseline mapping within `BasicTypeRegistry` for Strings.
 
 Applications can also extend (add new `BasicType` registrations) or override (replace an exiting `BasicType` registration) using one of the
 `MetadataBuilder#applyBasicType` methods or the `MetadataBuilder#applyTypes` method during bootstrap.
-For more details, see <<basic-custom>> section.
+For more details, see <<basic-custom-type>> section.
 
-[[basic-explicit]]
+[[basic-type-annotation]]
 ==== Explicit BasicTypes
 
 Sometimes you want a particular attribute to be handled differently.
@@ -201,11 +205,12 @@ Occasionally Hibernate will implicitly pick a `BasicType` that you do not want (
 
 In these cases you must explicitly tell Hibernate the `BasicType` to use, via the `org.hibernate.annotations.Type` annotation.
 
+[[basic-type-annotation-example]]
 .Using `@org.hibernate.annotations.Type`
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{extrasdir}/basic/explicitType.java[]
+include::{sourcedir}/basic/ExplicitTypeTest.java[tags=basic-type-annotation-example]
 ----
 ====
 
@@ -218,49 +223,176 @@ The `org.hibernate.annotations.Type#type` attribute can name any of the followin
 
 * Fully qualified name of any `org.hibernate.type.Type` implementation
 * Any key registered with `BasicTypeRegistry`
-* The name of any known "type definitions"
+* The name of any known _type definitions_
 
-[[basic-custom]]
+[[basic-custom-type]]
 ==== Custom BasicTypes
 
 Hibernate makes it relatively easy for developers to create their own basic type mappings type.
-For example, you might want to persist properties of type `java.lang.BigInteger` to `VARCHAR` columns, or support completely new types.
+For example, you might want to persist properties of type `java.util.BigInteger` to `VARCHAR` columns, or support completely new types.
 
-There are two approaches to developing a custom BasicType.
-As a means of illustrating the different approaches, let's consider a use case where we need to support a class called `Fizzywig` from a third party library.
-Let's assume that Fizzywig naturally stores as a VARCHAR.
+There are two approaches to developing a custom type:
 
-The first approach is to directly implement the BasicType interface.
+- implementing a `BasicType` and registering it
+- implement a `UserType` which doesn't require type registration
 
-.Custom BasicType implementation
+As a means of illustrating the different approaches, let's consider a use case where we need to support a `java.util.BitSet` mapping that's stored as a VARCHAR.
+
+[[basic-custom-type-BasicType]]
+===== Implementing a `BasicType`
+
+The first approach is to directly implement the `BasicType` interface.
+
+[NOTE]
 ====
-[source,java]
-----
-include::{extrasdir}/basic/FizzywigType1.java[]
-----
-
-[source,java]
-----
-include::{extrasdir}/basic/FizzywigType1_reg.java[]
-----
+Because the `BasicType` interface has a lot of methods to implement, it's much more convenient to extend the `AbstractStandardBasicType`,
+or the `AbstractSingleColumnStandardBasicType` if the value is stored in a single database column.
 ====
 
-The second approach is to implement the UserType interface.
+First, we need to extend the `AbstractSingleColumnStandardBasicType` like this:
 
-.Custom UserType implementation
+[[basic-custom-type-BitSetType-example]]
+.Custom `BasicType` implementation
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
-include::{extrasdir}/basic/FizzywigType2.java[]
-----
-
-[source,java]
-----
-include::{extrasdir}/basic/FizzywigType2_reg.java[]
+include::{sourcedir}/basic/BitSetType.java[tags=basic-custom-type-BitSetType-example]
 ----
 ====
 
-For additional information on developing and registering custom types, see the Hibernate Integration Guide.
+The `AbstractSingleColumnStandardBasicType` requires an `sqlTypeDescriptor` and a `javaTypeDescriptor`.
+The `sqlTypeDescriptor` is `VarcharTypeDescriptor.INSTANCE` because the database column is a VARCHAR.
+On the Java side, we need to use a `BitSetTypeDescriptor` instance which can be implemented like this:
+
+[[basic-custom-type-BitSetTypeDescriptor-example]]
+.Custom `AbstractTypeDescriptor` implementation
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/BitSetTypeDescriptor.java[tags=basic-custom-type-BitSetTypeDescriptor-example]
+----
+====
+
+The `unwrap` method is used when passing a `BitSet` as a `PreparedStatement` bind parameter, while the `wrap` method is used to transform the JDBC column value object (e.g. `String` in our case) to the actual mapping object type (e.g. `BitSet` in this example).
+
+The `BasicType` must be registered, and this can be done at bootstrapping time:
+
+[[basic-custom-type-register-BasicType-example]]
+.Register a Custom `BasicType` implementation
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/BitSetTypeTest.java[tags=basic-custom-type-register-BasicType-example]
+----
+
+or using the `MetadataBuilder`
+
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/../bootstrap/BootstrapTest.java[tags=basic-custom-type-register-BasicType-example]
+----
+====
+
+With the new `BitSetType` being registered as `bitset`, the entity mapping looks like this:
+
+[[basic-custom-type-BitSetType-mapping-example]]
+.Custom `BasicType` mapping
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/BitSetTypeTest.java[tags=basic-custom-type-BitSetType-mapping-example]
+----
+====
+
+To validate this new `BasicType` implementation, we can test it as follows:
+
+[[basic-custom-type-BitSetType-persistence-example]]
+.Persisting the custom `BasicType`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/BitSetTypeTest.java[tags=basic-custom-type-BitSetType-persistence-example]
+----
+====
+
+When executing this unit test, Hibernate generates the following SQL statements:
+
+[[basic-custom-type-BitSetType-persistence-sql-example]]
+.Persisting the custom `BasicType`
+====
+[source, JAVA, indent=0]
+----
+include::{extrasdir}/basic/basic-custom-type-BitSetType-persistence-sql-example.sql[]
+----
+====
+
+As you can see, the `BitSetType` takes care of the _Java-to-SQL_ and _SQL-to-Java_ type conversion.
+
+[[basic-custom-type-UserType]]
+===== Implementing a `UserType`
+
+The second approach is to implement the `UserType` interface.
+
+[[basic-custom-type-BitSetUserType-example]]
+.Custom `UserType` implementation
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/BitSetUserType.java[tags=basic-custom-type-BitSetUserType-example]
+----
+====
+
+The entity mapping looks as follows:
+
+[[basic-custom-type-BitSetUserType-mapping-example]]
+.Custom `UserType` mapping
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/BitSetUserTypeTest.java[tags=basic-custom-type-BitSetUserType-mapping-example]
+----
+====
+
+In this example, the `UserType` is registered under the `bitset` name, and this is done like this:
+
+[[basic-custom-type-register-UserType-example]]
+.Register a Custom `UserType` implementation
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/BitSetUserTypeTest.java[tags=basic-custom-type-register-UserType-example]
+----
+
+or using the `MetadataBuilder`
+
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/../bootstrap/BootstrapTest.java[tags=basic-custom-type-register-UserType-example]
+----
+====
+
+[NOTE]
+====
+Like `BasicType`, you can also register the `UserType` using a simple name.
+
+Without registration, the `UserType` mapping requires the fully-classified name:
+
+[source, JAVA, indent=0]
+----
+@Type( type = "org.hibernate.userguide.mapping.basic.BitSetUserType" )
+----
+====
+
+When running the previous test case against the `BitSetUserType` entity mapping, Hibernate executed the following SQL statements:
+
+[[basic-custom-type-BitSetUserType-persistence-sql-example]]
+.Persisting the custom `BasicType`
+====
+[source, JAVA, indent=0]
+----
+include::{extrasdir}/basic/basic-custom-type-BitSetUserType-persistence-sql-example.sql[]
+----
+====
 
 [[basic-enums]]
 ==== Mapping enums
@@ -276,7 +408,7 @@ The original JPA-compliant way to map enums was via the `@Enumerated` and `@MapK
 
 .`@Enumerated(ORDINAL)` example
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
 include::{extrasdir}/basic/EnumeratedOrdinal.java[]
 ----
@@ -290,7 +422,7 @@ In the ORDINAL example, the gender column is defined as an (nullable) INTEGER ty
 
 .`@Enumerated(STRING)` example
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
 include::{extrasdir}/basic/EnumeratedString.java[]
 ----
@@ -310,7 +442,7 @@ Let's revisit the Gender enum example, but instead we want to store the more sta
 
 .Enum mapping with AttributeConverter example
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
 include::{extrasdir}/basic/EnumAttributeConverter.java[]
 ----
@@ -334,7 +466,7 @@ Let's again revisit the Gender enum example, this time using a custom Type to st
 
 .Enum mapping with custom Type example
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
 include::{extrasdir}/basic/EnumCustomType.java[]
 ----
@@ -346,7 +478,7 @@ Again, the gender column is defined as a CHAR type and would hold:
 * `'M'` - MALE
 * `'F'` - FEMALE
 
-For additional details on using custom types, see <<basic-custom>> section..
+For additional details on using custom types, see <<basic-custom-type>> section..
 
 [[basic-lob]]
 ==== Mapping LOBs
@@ -385,7 +517,7 @@ Let's first map this using the JDBC locator.
 
 .CLOB - locator mapping
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
 include::{extrasdir}/basic/ClobLocator.java[]
 ----
@@ -395,7 +527,7 @@ We could also map a materialized form.
 
 .CLOB - materialized mapping
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
 include::{extrasdir}/basic/ClobMaterialized.java[]
 ----
@@ -413,7 +545,7 @@ We might even want the materialized data as a char array (for some crazy reason)
 
 .CLOB - materialized char[] mapping
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
 include::{extrasdir}/basic/ClobMaterializedCharArray.java[]
 ----
@@ -433,7 +565,7 @@ Let's first map this using the JDBC locator.
 
 .BLOB - locator mapping
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
 include::{extrasdir}/basic/BlobLocator.java[]
 ----
@@ -443,7 +575,7 @@ We could also map a materialized BLOB form.
 
 .BLOB - materialized mapping
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
 include::{extrasdir}/basic/BlobMaterialized.java[]
 ----
@@ -464,7 +596,7 @@ To map a specific attribute to a nationalized variant data type, Hibernate defin
 
 .NVARCHAR mapping
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
 include::{extrasdir}/basic/NVARCHAR.java[]
 ----
@@ -472,7 +604,7 @@ include::{extrasdir}/basic/NVARCHAR.java[]
 
 .NCLOB (locator) mapping
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
 include::{extrasdir}/basic/NCLOB_locator.java[]
 ----
@@ -480,7 +612,7 @@ include::{extrasdir}/basic/NCLOB_locator.java[]
 
 .NCLOB (materialized) mapping
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
 include::{extrasdir}/basic/NCLOB_materialized.java[]
 ----
@@ -551,7 +683,7 @@ Considering the following entity:
 
 .`java.util.Date` mapping
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
 include::{extrasdir}/basic/DateTemporal.java[]
 ----
@@ -560,7 +692,7 @@ include::{extrasdir}/basic/DateTemporal.java[]
 When persisting such entity:
 
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
 DateEvent dateEvent = new DateEvent(new Date());
 entityManager.persist(dateEvent);
@@ -583,7 +715,7 @@ Only the year, month and the day field were saved into the the database.
 If we change the `@Temporal` type to TIME:
 
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
 @Temporal(TemporalType.TIME)
 private Date timestamp;
@@ -604,7 +736,7 @@ VALUES ( '16:51:58', 1 )
 When the the `@Temporal` type is set to TIMESTAMP:
 
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
 @Temporal(TemporalType.TIMESTAMP)
 private Date timestamp;
@@ -665,7 +797,7 @@ org.hibernate.AnnotationException: @Temporal should only be set on a java.util.D
 [[basic-jpa-convert]]
 ==== JPA 2.1 AttributeConverters
 
-Although Hibernate has long been offering <<basic-custom,custom types>>, as a JPA 2.1 provider,
+Although Hibernate has long been offering <<basic-custom-type,custom types>>, as a JPA 2.1 provider,
 it also supports `AttributeConverter`s as well.
 
 With a custom `AttributeConverter`, the application developer can map a given JDBC type to an entity basic type.
@@ -674,7 +806,7 @@ In the following example, the `java.util.Period` is going to be mapped to a `VAR
 
 .`java.util.Period` custom `AttributeConverter`
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
 include::{extrasdir}/basic/PeriodStringConverter.java[]
 ----
@@ -684,7 +816,7 @@ To make use of this custom converter, the `@Convert` annotation must decorate th
 
 .Entity using the custom `AttributeConverter`
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
 include::{extrasdir}/basic/PeriodStringConvert.java[]
 ----
@@ -709,7 +841,7 @@ This is usually double quotes, but the SQL Server uses brackets and MySQL uses b
 
 .Quoting column names
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
 @Entity @Table(name="`Line Item`")
 class LineItem {
@@ -811,7 +943,7 @@ For example, if your database provides a set of data encryption functions, you c
 
 .`@ColumnTransformer` example
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
 @Entity
 class CreditCard {
@@ -838,7 +970,7 @@ If a property uses more than one column, you must use the `forColumn` attribute 
 
 .`@ColumnTransformer` `forColumn` attribute usage
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
 @Entity
 class User {
@@ -877,7 +1009,7 @@ You can use a SQL fragment (aka formula) instead of mapping a property into a co
 
 .`@Formula` mapping usage
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
 @Formula("obj_length * obj_height * obj_width")
 private long objectVolume;
@@ -911,7 +1043,7 @@ You must specify the mapping from values of the metaType to class names.
 
 .`@Any` mapping usage
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
 @Any(
     metaColumn = @Column( name = "property_type" ),
@@ -934,7 +1066,7 @@ Note that `@AnyDef` can be mutualized and reused. It is recommended to place it 
 
 .`@AnyMetaDef` mapping usage
 ====
-[source,java]
+[source, JAVA, indent=0]
 ----
 //on a package
 @AnyMetaDef( name="property"

@@ -16,7 +16,7 @@ With the coming of JPA, most of this information is now defined in a way that is
 This chapter will focus on JPA mapping where possible.
 For Hibernate mapping features not supported by JPA we will prefer Hibernate extension annotations.
 
-include::mapping_types.adoc[]
+include::types.adoc[]
 include::naming.adoc[]
 include::basic_types.adoc[]
 include::embeddables.adoc[]

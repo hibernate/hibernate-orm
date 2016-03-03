@@ -811,13 +811,13 @@ To switch the default mapping, simply call `MetadataBuilder.applyBasicType( UUID
 ==== UUID as binary
 
 As mentioned, the default mapping for UUID attributes.
-Maps the UUID to a `byte[]` using `java.util.UUID#getMostSignificantBits` and `java.util.UUID#getLeastSignificantBits` and stores that as BINARY data.
+Maps the UUID to a `byte[]` using `java.util.UUID#getMostSignificantBits` and `java.util.UUID#getLeastSignificantBits` and stores that as `BINARY` data.
 
 Chosen as the default simply because it is generally more efficient from storage perspective.
 
 ==== UUID as (var)char
 
-Maps the UUID to a String using `java.util.UUID#toString` and `java.util.UUID#fromString` and stores that as CHAR or VARCHAR data.
+Maps the UUID to a String using `java.util.UUID#toString` and `java.util.UUID#fromString` and stores that as `CHAR` or `VARCHAR` data.
 
 ==== PostgeSQL-specific UUID
 
@@ -828,7 +828,7 @@ When using one of the PostgreSQL Dialects, this becomes the default UUID mapping
 
 Maps the UUID using PostgreSQL's specific UUID data type.
 The PostgreSQL JDBC driver chooses to map its UUID type to the `OTHER` code.
-Note that this can cause difficulty as the driver chooses to map many different data types to OTHER.
+Note that this can cause difficulty as the driver chooses to map many different data types to `OTHER`.
 
 ==== UUID as identifier
 
@@ -856,21 +856,23 @@ This way, a `java.util.Date` or a `java.util.Calendar` cn be mapped to either an
 
 Considering the following entity:
 
-.`java.util.Date` mapping
+[[basic-datetime-temporal-date-example]]
+.`java.util.Date` mapped as `DATE`
 ====
 [source, JAVA, indent=0]
 ----
-include::{extrasdir}/basic/DateTemporal.java[]
+include::{sourcedir}/basic/DateWithTemporalDateTest.java[tags=basic-datetime-temporal-date-example]
 ----
 ====
 
 When persisting such entity:
 
+[[basic-datetime-temporal-date-persist-example]]
+.Persisting a `java.util.Date` mapping
 ====
 [source, JAVA, indent=0]
 ----
-DateEvent dateEvent = new DateEvent(new Date());
-entityManager.persist(dateEvent);
+include::{sourcedir}/basic/DateWithTemporalDateTest.java[tags=basic-datetime-temporal-date-persist-example]
 ----
 ====
 
@@ -879,21 +881,20 @@ Hibernate generates the following INSERT statement:
 ====
 [source, sql, indent=0]
 ----
-INSERT INTO DateEvent
-       ( timestamp, id )
-VALUES ( '2015-12-29', 1 )
+include::{extrasdir}/basic/basic-datetime-temporal-date-persist-example.sql[]
 ----
 ====
 
 Only the year, month and the day field were saved into the the database.
 
-If we change the `@Temporal` type to TIME:
+If we change the `@Temporal` type to `TIME`:
 
+[[basic-datetime-temporal-time-example]]
+.`java.util.Date` mapped as `TIME`
 ====
 [source, JAVA, indent=0]
 ----
-@Temporal(TemporalType.TIME)
-private Date timestamp;
+include::{sourcedir}/basic/DateWithTemporalTimeTest.java[tags=basic-datetime-temporal-time-example]
 ----
 ====
 
@@ -902,30 +903,27 @@ Hibernate will issue an INSERT statement containing the hour, minutes and second
 ====
 [source, sql, indent=0]
 ----
-INSERT INTO DateEvent
-       ( timestamp, id )
-VALUES ( '16:51:58', 1 )
+include::{extrasdir}/basic/basic-datetime-temporal-time-persist-example.sql[]
 ----
 ====
 
-When the the `@Temporal` type is set to TIMESTAMP:
+When the the `@Temporal` type is set to `TIMESTAMP`:
 
+[[basic-datetime-temporal-timestamp-example]]
+.`java.util.Date` mapped as `TIMESTAMP`
 ====
 [source, JAVA, indent=0]
 ----
-@Temporal(TemporalType.TIMESTAMP)
-private Date timestamp;
+include::{sourcedir}/basic/DateWithTemporalTimestampTest.java[tags=basic-datetime-temporal-timestamp-example]
 ----
 ====
 
-Hibernate will include both the DATE, the TIME and the nanoseconds in the INSERT statement:
+Hibernate will include both the `DATE`, the `TIME` and the nanoseconds in the INSERT statement:
 
 ====
 [source, sql, indent=0]
 ----
-INSERT INTO DateEvent
-       ( timestamp, id )
-VALUES ( '2015-12-29 16:54:04.544', 1 )
+include::{extrasdir}/basic/basic-datetime-temporal-timestamp-persist-example.sql[]
 ----
 ====
 
@@ -979,31 +977,34 @@ With a custom `AttributeConverter`, the application developer can map a given JD
 
 In the following example, the `java.util.Period` is going to be mapped to a `VARCHAR` database column.
 
+[[basic-jpa-convert-period-string-converter-example]]
 .`java.util.Period` custom `AttributeConverter`
 ====
 [source, JAVA, indent=0]
 ----
-include::{extrasdir}/basic/PeriodStringConverter.java[]
+include::{sourcedir}/converter/PeriodStringConverter.java[tags=basic-jpa-convert-period-string-converter-example]
 ----
 ====
 
 To make use of this custom converter, the `@Convert` annotation must decorate the entity attribute.
 
-.Entity using the custom `AttributeConverter`
+[[basic-jpa-convert-period-string-converter-mapping-example]]
+.Entity using the custom `java.util.Period` `AttributeConverter` mapping
 ====
 [source, JAVA, indent=0]
 ----
-include::{extrasdir}/basic/PeriodStringConvert.java[]
+include::{sourcedir}/converter/PeriodStringTest.java[tags=basic-jpa-convert-period-string-converter-mapping-example]
 ----
 ====
 
 When persisting such entity, Hibernate will do the type conversion based on the `AttributeConverter` logic:
 
+[[basic-jpa-convert-period-string-converter-sql-example]]
 .Persisting entity using the custom `AttributeConverter`
 ====
 [source, sql, indent=0]
 ----
-include::{extrasdir}/basic/PeriodStringConvert.sql[]
+include::{extrasdir}/basic/basic-jpa-convert-period-string-converter-sql-example.sql[]
 ----
 ====
 

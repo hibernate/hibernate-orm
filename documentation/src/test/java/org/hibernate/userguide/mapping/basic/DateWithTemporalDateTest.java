@@ -4,10 +4,9 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.userguide.mapping;
+package org.hibernate.userguide.mapping.basic;
 
-import java.util.Calendar;
-import java.util.GregorianCalendar;
+import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -17,7 +16,6 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import static org.hibernate.userguide.util.TransactionUtil.doInJPA;
@@ -25,7 +23,7 @@ import static org.hibernate.userguide.util.TransactionUtil.doInJPA;
 /**
  * @author Vlad Mihalcea
  */
-public class CalendarWithTemporalTimestampTest extends BaseEntityManagerFunctionalTestCase {
+public class DateWithTemporalDateTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -36,16 +34,15 @@ public class CalendarWithTemporalTimestampTest extends BaseEntityManagerFunction
 
 	@Test
 	public void testLifecycle() {
-		final Calendar calendar = new GregorianCalendar();
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			entityManager.persist( new DateEvent( calendar ) );
-		} );
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			DateEvent dateEvent = entityManager.createQuery( "from DateEvent", DateEvent.class ).getSingleResult();
-			//Assert.assertEquals( calendar, dateEvent.getTimestamp() );
+			//tag::basic-datetime-temporal-date-persist-example[]
+			DateEvent dateEvent = new DateEvent( new Date() );
+			entityManager.persist( dateEvent );
+			//end::basic-datetime-temporal-date-persist-example[]
 		} );
 	}
 
+	//tag::basic-datetime-temporal-date-example[]
 	@Entity(name = "DateEvent")
 	public static class DateEvent {
 
@@ -53,14 +50,17 @@ public class CalendarWithTemporalTimestampTest extends BaseEntityManagerFunction
 		@GeneratedValue
 		private Long id;
 
-		@Temporal(TemporalType.TIMESTAMP)
 		@Column(name = "`timestamp`")
-		private Calendar timestamp;
+		@Temporal(TemporalType.DATE)
+		private Date timestamp;
 
+		//Getters and setters are omitted for brevity
+
+	//end::basic-datetime-temporal-date-example[]
 		public DateEvent() {
 		}
 
-		public DateEvent(Calendar timestamp) {
+		public DateEvent(Date timestamp) {
 			this.timestamp = timestamp;
 		}
 
@@ -68,8 +68,10 @@ public class CalendarWithTemporalTimestampTest extends BaseEntityManagerFunction
 			return id;
 		}
 
-		public Calendar getTimestamp() {
+		public Date getTimestamp() {
 			return timestamp;
 		}
+	//tag::basic-datetime-temporal-date-example[]
 	}
+	//end::basic-datetime-temporal-date-example[]
 }

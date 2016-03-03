@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.userguide.mapping;
+package org.hibernate.userguide.mapping.basic;
 
 import java.util.Date;
 import javax.persistence.Column;
@@ -47,9 +47,11 @@ public class DateWithTemporalTimeTest extends BaseEntityManagerFunctionalTestCas
 		@GeneratedValue
 		private Long id;
 
+		//tag::basic-datetime-temporal-time-example[]
 		@Column(name = "`timestamp`")
 		@Temporal(TemporalType.TIME)
 		private Date timestamp;
+		//end::basic-datetime-temporal-time-example[]
 
 		public DateEvent() {
 		}

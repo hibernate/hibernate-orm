@@ -4,9 +4,10 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.userguide.mapping;
+package org.hibernate.userguide.mapping.basic;
 
-import java.util.Date;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -16,6 +17,7 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import static org.hibernate.userguide.util.TransactionUtil.doInJPA;
@@ -23,7 +25,7 @@ import static org.hibernate.userguide.util.TransactionUtil.doInJPA;
 /**
  * @author Vlad Mihalcea
  */
-public class DateWithTemporalTimestampTest extends BaseEntityManagerFunctionalTestCase {
+public class CalendarWithTemporalTimestampTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -34,9 +36,13 @@ public class DateWithTemporalTimestampTest extends BaseEntityManagerFunctionalTe
 
 	@Test
 	public void testLifecycle() {
+		final Calendar calendar = new GregorianCalendar();
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			DateEvent dateEvent = new DateEvent( new Date() );
-			entityManager.persist( dateEvent );
+			entityManager.persist( new DateEvent( calendar ) );
+		} );
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			DateEvent dateEvent = entityManager.createQuery( "from DateEvent", DateEvent.class ).getSingleResult();
+			//Assert.assertEquals( calendar, dateEvent.getTimestamp() );
 		} );
 	}
 
@@ -47,14 +53,14 @@ public class DateWithTemporalTimestampTest extends BaseEntityManagerFunctionalTe
 		@GeneratedValue
 		private Long id;
 
-		@Column(name = "`timestamp`")
 		@Temporal(TemporalType.TIMESTAMP)
-		private Date timestamp;
+		@Column(name = "`timestamp`")
+		private Calendar timestamp;
 
 		public DateEvent() {
 		}
 
-		public DateEvent(Date timestamp) {
+		public DateEvent(Calendar timestamp) {
 			this.timestamp = timestamp;
 		}
 
@@ -62,7 +68,7 @@ public class DateWithTemporalTimestampTest extends BaseEntityManagerFunctionalTe
 			return id;
 		}
 
-		public Date getTimestamp() {
+		public Calendar getTimestamp() {
 			return timestamp;
 		}
 	}

@@ -42,8 +42,10 @@ compileTestJava {
 
 jar {
 	manifest {
-		attributes 'Implementation-Title'     : '${project.name}', 
-		           'Implementation-Version'   : '${project.version}'
+		attributes 'Implementation-Title'     : name,
+		           'Implementation-Version'   : version,
+		           'Specification-Title'      : name,
+		           'Specification-Version'    : version
 	}
 }
 

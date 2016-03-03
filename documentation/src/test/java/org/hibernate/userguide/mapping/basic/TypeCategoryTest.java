@@ -53,7 +53,7 @@ public class TypeCategoryTest extends BaseEntityManagerFunctionalTestCase {
 
 		private boolean starred;
 
-		// getters and setters omitted
+		//Getters and setters are omitted for brevity
 	}
 
 	@Embeddable

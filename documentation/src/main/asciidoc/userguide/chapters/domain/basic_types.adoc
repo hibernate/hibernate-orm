@@ -1,5 +1,6 @@
 [[basic]]
 === Basic Types
+:modeldir: ../../../../../main/java/org/hibernate/userguide/model
 :sourcedir: ../../../../../test/java/org/hibernate/userguide/mapping
 :extrasdir: extras
 
@@ -399,86 +400,146 @@ include::{extrasdir}/basic/basic-custom-type-BitSetUserType-persistence-sql-exam
 
 Hibernate supports the mapping of Java enums as basic value types in a number of different ways.
 
-==== @Enumerated
+[[basic-enums-Enumerated]]
+===== @Enumerated
 
 The original JPA-compliant way to map enums was via the `@Enumerated` and `@MapKeyEnumerated` for map keys annotations which works on the principle that the enum values are stored according to one of 2 strategies indicated by `javax.persistence.EnumType`:
 
-* `ORDINAL` - stored according to the enum value's ordinal position within the enum class, as indicated by java.lang.Enum#ordinal
-* `STRING` - stored according to the enum value's name, as indicated by java.lang.Enum#name
+`ORDINAL`:: - stored according to the enum value's ordinal position within the enum class, as indicated by java.lang.Enum#ordinal
+`STRING`:: - stored according to the enum value's name, as indicated by java.lang.Enum#name
 
+Assuming the following enumeration:
+
+.`PhoneType` enumeration
+====
+[source, JAVA, indent=0]
+----
+include::{modeldir}/PhoneType.java[tags=hql-examples-domain-model-example]
+----
+====
+
+In the ORDINAL example, the `phone_type` column is defined as an (nullable) INTEGER type and would hold:
+
+`NULL`:: For null values
+`0`:: For the `LAND_LINE` enum
+`1`:: For the `MOBILE` enum
+
+[[basic-enums-Enumerated-ordinal-example]]
 .`@Enumerated(ORDINAL)` example
 ====
 [source, JAVA, indent=0]
 ----
-include::{extrasdir}/basic/EnumeratedOrdinal.java[]
+include::{sourcedir}/basic/PhoneTypeEnumeratedOrdinalTest.java[tags=basic-enums-Enumerated-ordinal-example]
 ----
 ====
 
-In the ORDINAL example, the gender column is defined as an (nullable) INTEGER type and would hold:
+When persisting this entity, Hibernate generates the following SQL statement:
 
-* `NULL` - null
-* `0` - MALE
-* `1` - FEMALE
+[[basic-enums-Enumerated-ordinal-persistence-example]]
+.Persisting an entity with an `@Enumerated(ORDINAL)` mapping
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/PhoneTypeEnumeratedOrdinalTest.java[tags=basic-enums-Enumerated-ordinal-persistence-example]
+----
 
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/basic-enums-Enumerated-ordinal-persistence-example.sql[]
+----
+====
+
+In the STRING example, the `phone_type` column is defined as an (nullable) VARCHAR type and would hold:
+
+`NULL`:: For null values
+`LAND_LINE`:: For the `LAND_LINE` enum
+`MOBILE`:: For the `MOBILE` enum
+
+[[basic-enums-Enumerated-string-example]]
 .`@Enumerated(STRING)` example
 ====
 [source, JAVA, indent=0]
 ----
-include::{extrasdir}/basic/EnumeratedString.java[]
+include::{sourcedir}/basic/PhoneTypeEnumeratedStringTest.java[tags=basic-enums-Enumerated-string-example]
 ----
 ====
 
-In the STRING example, the gender column is defined as an (nullable) VARCHAR type and would hold:
+Persisting the same entity like in the `@Enumerated(ORDINAL)` example, Hibernate generates the following SQL statement:
 
-* `NULL` - null
-* `MALE` - MALE
-* `FEMALE` - FEMALE
+[[basic-enums-Enumerated-string-persistence-example]]
+.Persisting an entity with an `@Enumerated(STRING)` mapping
+====
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/basic-enums-Enumerated-string-persistence-example.sql[]
+----
+====
 
-[[basic-attribute-converter]]
-==== AttributeConverter
+[[basic-enums-attribute-converter]]
+===== AttributeConverter
 
-You can also map enums in a JPA compliant way using a JPA 2.1 AttributeConverter.
-Let's revisit the Gender enum example, but instead we want to store the more standardized `'M'` and `'F'` codes.
+Let's consider the following `Gender` enum which stores its values using the `'M'` and `'F'` codes.
 
-.Enum mapping with AttributeConverter example
+[[basic-enums-converter-example]]
+.Enum with custom constructor
 ====
 [source, JAVA, indent=0]
 ----
-include::{extrasdir}/basic/EnumAttributeConverter.java[]
+include::{sourcedir}/basic/Gender.java[tags=basic-enums-converter-example]
+----
+====
+
+You can map enums in a JPA compliant way using a JPA 2.1 AttributeConverter.
+
+[[basic-enums-attribute-converter-example]]
+.Enum mapping with `AttributeConverter` example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/EnumerationConverterTest.java[tags=basic-enums-attribute-converter-example]
 ----
 ====
 
 Here, the gender column is defined as a CHAR type and would hold:
 
-* `NULL` - null
-* `'M'` - MALE
-* `'F'` - FEMALE
+`NULL`:: For null values
+`'M'`:: For the `MALE` enum
+`'F'`:: For the `FEMALE` enum
 
 For additional details on using AttributeConverters, see <<basic-jpa-convert>> section.
 
-Note that JPA explicitly disallows the use of an AttributeConverter with an attribute marked as `@Enumerated`.
+[NOTE]
+====
+JPA explicitly disallows the use of an AttributeConverter with an attribute marked as `@Enumerated`.
 So if using the AttributeConverter approach, be sure to not mark the attribute as `@Enumerated`.
+====
 
-==== Custom type
+[[basic-enums-custom-type]]
+===== Custom type
 
 You can also map enums using a Hibernate custom type mapping.
 Let's again revisit the Gender enum example, this time using a custom Type to store the more standardized `'M'` and `'F'` codes.
 
+[[basic-enums-custom-type-example]]
 .Enum mapping with custom Type example
 ====
 [source, JAVA, indent=0]
 ----
-include::{extrasdir}/basic/EnumCustomType.java[]
+include::{sourcedir}/basic/EnumerationCustomTypeTest.java[tags=basic-enums-custom-type-example, indent=0]
+
+include::{sourcedir}/basic/GenderType.java[tags=basic-enums-custom-type-example, indent=0]
+
+include::{sourcedir}/basic/GenderJavaTypeDescriptor.java[tags=basic-enums-custom-type-example, indent=0]
 ----
 ====
 
 Again, the gender column is defined as a CHAR type and would hold:
 
-* `NULL` - null
-* `'M'` - MALE
-* `'F'` - FEMALE
+`NULL`:: For null values
+`'M'`:: For the `MALE` enum
+`'F'`:: For the `FEMALE` enum
 
-For additional details on using custom types, see <<basic-custom-type>> section..
+For additional details on using custom types, see <<basic-custom-type>> section.
 
 [[basic-lob]]
 ==== Mapping LOBs
@@ -500,84 +561,135 @@ The JDBC LOB locator types include:
 * `java.sql.Clob`
 * `java.sql.NClob`
 
-Mapping materialized forms of these LOB values would use more familiar Java types such as String, char[], byte[], etc.
-The trade off for "more familiar" is usually performance.
+Mapping materialized forms of these LOB values would use more familiar Java types such as `String`, `char[]`, `byte[]`, etc.
+The trade off for _more familiar_ is usually performance.
 
-For a first look, let's assume we have a CLOB column that we would like to map (NCLOB character LOB data will be covered in <<basic-nationalized>> section.
+For a first look, let's assume we have a `CLOB` column that we would like to map (`NCLOB` character `LOB` data will be covered in <<basic-nationalized>> section).
 
+[[basic-clob-sql-example]]
 .CLOB - SQL
 ====
-[source,sql]
+[source, sql, indent=0]
 ----
-include::{extrasdir}/basic/Clob.sql[]
-----
-====
-
-Let's first map this using the JDBC locator.
-
-.CLOB - locator mapping
-====
-[source, JAVA, indent=0]
-----
-include::{extrasdir}/basic/ClobLocator.java[]
+include::{extrasdir}/basic/basic-clob-sql-example.sql[]
 ----
 ====
 
-We could also map a materialized form.
+Let's first map this using the `@Lob` JPA annotation and the `java.sql.Clob` type:
 
-.CLOB - materialized mapping
+[[basic-clob-example]]
+.`CLOB` mapped to `java.sql.Clob`
 ====
 [source, JAVA, indent=0]
 ----
-include::{extrasdir}/basic/ClobMaterialized.java[]
+include::{sourcedir}/basic/ClobTest.java[tags=basic-clob-example]
+----
+====
+
+To persist such an entity, you have to create a `Clob` using plain JDBC:
+
+[[basic-clob-persist-example]]
+.Persisting a `java.sql.Clob` entity
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/ClobTest.java[tags=basic-clob-persist-example]
+----
+====
+
+To retrieve the `Clob` content, you need to transform the underlying `java.io.Reader`:
+
+[[basic-clob-find-example]]
+.Returning a `java.sql.Clob` entity
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/ClobTest.java[tags=basic-clob-find-example]
+----
+====
+
+We could also map the CLOB in a materialized form. This way, we can either use a `String` or a `char[]`.
+
+[[basic-clob-string-example]]
+.`CLOB` mapped to `String`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/ClobStringTest.java[tags=basic-clob-string-example]
 ----
 ====
 
 [NOTE]
 ====
-How JDBC deals with LOB data varies from driver to driver.
-Hibernate tries to handle all these variances for you.
-However some drivers do not allow Hibernate to always do that in an automatic fashion (looking directly at you PostgreSQL JDBC drivers).
-In such cases you may have to do some extra to get LOBs working. Such discussions are beyond the scope of this guide however.
+How JDBC deals with `LOB` data varies from driver to driver, and Hibernate tries to handle all these variances on your behalf.
+
+However, some drivers are trickier (e.g. PostgreSQL JDBC drivers), and, in such cases, you may have to do some extra to get LOBs working.
+Such discussions are beyond the scope of this guide.
 ====
 
 We might even want the materialized data as a char array (for some crazy reason).
 
-.CLOB - materialized char[] mapping
+[[basic-clob-char-array-example]]
+.CLOB - materialized `char[]` mapping
 ====
 [source, JAVA, indent=0]
 ----
-include::{extrasdir}/basic/ClobMaterializedCharArray.java[]
+include::{sourcedir}/basic/ClobCharArrayTest.java[tags=basic-clob-char-array-example]
 ----
 ====
 
-We'd map BLOB data in a similar fashion.
+`BLOB` data is mapped in a similar fashion.
 
+[[basic-blob-sql-example]]
 .BLOB - SQL
 ====
-[source,sql]
+[source, sql, indent=0]
 ----
-include::{extrasdir}/basic/Blob.sql[]
-----
-====
-
-Let's first map this using the JDBC locator.
-
-.BLOB - locator mapping
-====
-[source, JAVA, indent=0]
-----
-include::{extrasdir}/basic/BlobLocator.java[]
+include::{extrasdir}/basic/basic-blob-sql-example.sql[]
 ----
 ====
 
-We could also map a materialized BLOB form.
+Let's first map this using the JDBC `java.sql.Blob` type.
 
-.BLOB - materialized mapping
+[[basic-blob-example]]
+.`BLOB` mapped to `java.sql.Blob`
 ====
 [source, JAVA, indent=0]
 ----
-include::{extrasdir}/basic/BlobMaterialized.java[]
+include::{sourcedir}/basic/BlobTest.java[tags=basic-blob-example]
+----
+====
+
+To persist such an entity, you have to create a `Blob` using plain JDBC:
+
+[[basic-blob-persist-example]]
+.Persisting a `java.sql.Blob` entity
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/BlobTest.java[tags=basic-blob-persist-example]
+----
+====
+
+To retrieve the `Blob` content, you need to transform the underlying `java.io.Reader`:
+
+[[basic-blob-find-example]]
+.Returning a `java.sql.Blob` entity
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/BlobTest.java[tags=basic-blob-find-example]
+----
+====
+
+We could also map the BLOB in a materialized form (e.g. `byte[]`).
+
+[[basic-blob-byte-array-example]]
+.`BLOB` mapped to `byte[]`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/BlobByteArrayTest.java[tags=basic-blob-byte-array-example]
 ----
 ====
 
@@ -592,34 +704,97 @@ To this end it added specific nationalized character data types.
 * `LONGNVARCHAR`
 * `NCLOB`
 
+[[basic-nationalized-sql-example]]
+.`NVARCHAR` - SQL
+====
+[source, JAVA, indent=0]
+----
+include::{extrasdir}/basic/basic-nationalized-sql-example.sql[]
+----
+====
+
 To map a specific attribute to a nationalized variant data type, Hibernate defines the `@Nationalized` annotation.
 
-.NVARCHAR mapping
+[[basic-nationalized-example]]
+.`NVARCHAR` mapping
 ====
 [source, JAVA, indent=0]
 ----
-include::{extrasdir}/basic/NVARCHAR.java[]
+include::{sourcedir}/basic/NationalizedTest.java[tags=basic-nationalized-example]
 ----
 ====
 
-.NCLOB (locator) mapping
+Just like with `CLOB`, Hibernate can also deal with `NCLOB` SQL data types:
+
+[[basic-nclob-sql-example]]
+.`NCLOB` - SQL
 ====
 [source, JAVA, indent=0]
 ----
-include::{extrasdir}/basic/NCLOB_locator.java[]
+include::{extrasdir}/basic/basic-nclob-sql-example.sql[]
 ----
 ====
 
-.NCLOB (materialized) mapping
+Hibernate can map the `NCLOB` to a `java.sql.NClob`
+
+[[basic-nclob-example]]
+.`NCLOB` mapped to `java.sql.NClob`
 ====
 [source, JAVA, indent=0]
 ----
-include::{extrasdir}/basic/NCLOB_materialized.java[]
+include::{sourcedir}/basic/NClobTest.java[tags=basic-nclob-example]
 ----
 ====
 
+To persist such an entity, you have to create a `NClob` using plain JDBC:
+
+[[basic-nclob-persist-example]]
+.Persisting a `java.sql.NClob` entity
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/NClobTest.java[tags=basic-nclob-persist-example]
+----
+====
+
+To retrieve the `NClob` content, you need to transform the underlying `java.io.Reader`:
+
+[[basic-nclob-find-example]]
+.Returning a `java.sql.NClob` entity
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/NClobTest.java[tags=basic-nclob-find-example]
+----
+====
+
+We could also map the `NCLOB` in a materialized form. This way, we can either use a `String` or a `char[]`.
+
+[[basic-nclob-string-example]]
+.`NCLOB` mapped to `String`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/NClobStringTest.java[tags=basic-nclob-string-example]
+----
+====
+
+We might even want the materialized data as a char array.
+
+[[basic-nclob-char-array-example]]
+.NCLOB - materialized `char[]` mapping
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/NClobCharArrayTest.java[tags=basic-nclob-char-array-example]
+----
+====
+
+[NOTE]
+====
 If you application and database are entirely nationalized you may instead want to enable nationalized character data as the default.
 You can do this via the `hibernate.use_nationalized_character_data` setting or by calling `MetadataBuilder#enableGlobalNationalizedCharacterDataSupport` during bootstrap.
+====
 
 [[basic-uuid]]
 ==== Mapping UUID Values
@@ -702,7 +877,7 @@ entityManager.persist(dateEvent);
 Hibernate generates the following INSERT statement:
 
 ====
-[source,sql]
+[source, sql, indent=0]
 ----
 INSERT INTO DateEvent
        ( timestamp, id )
@@ -725,7 +900,7 @@ private Date timestamp;
 Hibernate will issue an INSERT statement containing the hour, minutes and seconds.
 
 ====
-[source,sql]
+[source, sql, indent=0]
 ----
 INSERT INTO DateEvent
        ( timestamp, id )
@@ -746,7 +921,7 @@ private Date timestamp;
 Hibernate will include both the DATE, the TIME and the nanoseconds in the INSERT statement:
 
 ====
-[source,sql]
+[source, sql, indent=0]
 ----
 INSERT INTO DateEvent
        ( timestamp, id )
@@ -826,7 +1001,7 @@ When persisting such entity, Hibernate will do the type conversion based on the 
 
 .Persisting entity using the custom `AttributeConverter`
 ====
-[source,sql]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/basic/PeriodStringConvert.sql[]
 ----

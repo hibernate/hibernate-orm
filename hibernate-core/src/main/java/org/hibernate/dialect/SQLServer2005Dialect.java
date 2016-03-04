@@ -76,11 +76,12 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 			case UPGRADE:
 			case PESSIMISTIC_WRITE:
 			case WRITE: {
-				return tableName + " with (updlock, rowlock" + noWaitStr + " )";
+				return tableName + " with (updlock, rowlock" + noWaitStr + ")";
 			}
 			case PESSIMISTIC_READ: {
-				return tableName + " with (holdlock, rowlock" + noWaitStr + " )";
-			}
+				return tableName + " with (holdlock, rowlock" + noWaitStr + ")";
+			}case UPGRADE_SKIPLOCKED:
+				return tableName + " with (updlock, rowlock, readpast" + noWaitStr + ")";
 			default: {
 				return tableName;
 			}

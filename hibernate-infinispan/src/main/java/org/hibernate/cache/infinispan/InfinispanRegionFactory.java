@@ -34,7 +34,6 @@ import org.hibernate.cache.infinispan.timestamp.TimestampsRegionImpl;
 import org.hibernate.cache.infinispan.tm.HibernateTransactionManagerLookup;
 import org.hibernate.cache.infinispan.util.CacheCommandFactory;
 import org.hibernate.cache.infinispan.util.Caches;
-import org.hibernate.cache.infinispan.util.Externalizers;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.internal.SimpleCacheKeysFactory;
 import org.hibernate.cache.spi.CacheDataDescription;
@@ -239,7 +238,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 	private org.infinispan.transaction.lookup.TransactionManagerLookup transactionManagerlookup;
 	private TransactionManager transactionManager;
 
-	private List<String> regionNames = new ArrayList<String>();
+	private List<BaseRegion> regions = new ArrayList<BaseRegion>();
 	private SessionFactoryOptions settings;
 
 	/**
@@ -267,7 +266,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 		}
 		final AdvancedCache cache = getCache( regionName, COLLECTION_KEY, properties, metadata);
 		final CollectionRegionImpl region = new CollectionRegionImpl( cache, regionName, transactionManager, metadata, this, buildCacheKeysFactory() );
-		startRegion( region, regionName );
+		startRegion( region );
 		return region;
 	}
 
@@ -284,7 +283,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 		}
 		final AdvancedCache cache = getCache( regionName, metadata.isMutable() ? ENTITY_KEY : IMMUTABLE_ENTITY_KEY, properties, metadata );
 		final EntityRegionImpl region = new EntityRegionImpl( cache, regionName, transactionManager, metadata, this, buildCacheKeysFactory() );
-		startRegion( region, regionName );
+		startRegion( region );
 		return region;
 	}
 
@@ -296,7 +295,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 		}
 		final AdvancedCache cache = getCache( regionName, NATURAL_ID_KEY, properties, metadata);
 		final NaturalIdRegionImpl region = new NaturalIdRegionImpl( cache, regionName, transactionManager, metadata, this, buildCacheKeysFactory());
-		startRegion( region, regionName );
+		startRegion( region );
 		return region;
 	}
 
@@ -314,7 +313,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 
 		final AdvancedCache cache = getCache( cacheName, QUERY_KEY, properties, null);
 		final QueryResultsRegionImpl region = new QueryResultsRegionImpl( cache, regionName, transactionManager, this );
-		startRegion( region, regionName );
+		startRegion( region );
 		return region;
 	}
 
@@ -326,7 +325,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 		}
 		final AdvancedCache cache = getCache( regionName, TIMESTAMPS_KEY, properties, null);
 		final TimestampsRegionImpl region = createTimestampsRegion( cache, regionName );
-		startRegion( region, regionName );
+		startRegion( region );
 		return region;
 	}
 
@@ -431,9 +430,12 @@ public class InfinispanRegionFactory implements RegionFactory {
 
 	protected void stopCacheRegions() {
 		log.debug( "Clear region references" );
-		getCacheCommandFactory( manager.getCache().getAdvancedCache() )
-				.clearRegions( regionNames );
-		regionNames.clear();
+		getCacheCommandFactory().clearRegions( regions );
+		// Ensure we cleanup any caches we created
+		for ( BaseRegion region : regions ) {
+			region.getCache().stop();
+		}
+		regions.clear();
 	}
 
 	protected void stopCacheManager() {
@@ -530,9 +532,9 @@ public class InfinispanRegionFactory implements RegionFactory {
 		return new DefaultCacheManager( holder, true );
 	}
 
-	private void startRegion(BaseRegion region, String regionName) {
-		regionNames.add( regionName );
-		getCacheCommandFactory( region.getCache() ).addRegion( regionName, region );
+	private void startRegion(BaseRegion region) {
+		regions.add( region );
+		getCacheCommandFactory().addRegion( region );
 	}
 
 	private Map<String, TypeOverrides> initGenericDataTypeOverrides() {
@@ -684,8 +686,8 @@ public class InfinispanRegionFactory implements RegionFactory {
 		}
 	}
 
-	private CacheCommandFactory getCacheCommandFactory(AdvancedCache cache) {
-		final GlobalComponentRegistry globalCr = cache.getComponentRegistry().getGlobalComponentRegistry();
+	private CacheCommandFactory getCacheCommandFactory() {
+		final GlobalComponentRegistry globalCr = manager.getGlobalComponentRegistry();
 
 		final Map<Byte, ModuleCommandFactory> factories =
 				(Map<Byte, ModuleCommandFactory>) globalCr.getComponent( "org.infinispan.modules.command.factories" );

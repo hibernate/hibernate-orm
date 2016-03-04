@@ -234,7 +234,9 @@ public class SchemaCreatorImpl implements SchemaCreator {
 
 
 			for ( Table table : namespace.getTables() ) {
-
+				if( !table.isPhysicalTable() ){
+					continue;
+				}
 				// indexes
 				final Iterator indexItr = table.getIndexIterator();
 				while ( indexItr.hasNext() ) {

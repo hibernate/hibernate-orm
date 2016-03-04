@@ -22,6 +22,7 @@ import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.tree.FromClause;
 import org.hibernate.hql.internal.ast.tree.FromElement;
 import org.hibernate.hql.internal.ast.tree.FromElementFactory;
+import org.hibernate.hql.internal.ast.tree.ImpliedFromElement;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.CollectionType;
@@ -47,7 +48,7 @@ public class EntityGraphQueryHint {
 		Map<String, FromElement> explicitFetches = new HashMap<String, FromElement>();
 		for ( Object o : fromClause.getFromElements() ) {
 			final FromElement fromElement = (FromElement) o;
-			if ( fromElement.getRole() != null ) {
+			if ( fromElement.getRole() != null  && ! (fromElement instanceof ImpliedFromElement) ) {
 				explicitFetches.put( fromElement.getRole(), fromElement );
 			}
 		}

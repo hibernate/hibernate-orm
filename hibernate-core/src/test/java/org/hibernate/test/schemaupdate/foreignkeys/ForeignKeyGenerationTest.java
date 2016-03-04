@@ -8,6 +8,7 @@ package org.hibernate.test.schemaupdate.foreignkeys;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.List;
 
@@ -155,7 +156,7 @@ public class ForeignKeyGenerationTest extends BaseUnitTestCase {
 	private void checkAlterTableStatement(AlterTableStatement alterTableStatement)
 			throws Exception {
 		final String expectedAlterTableStatement = alterTableStatement.toSQL();
-		final List<String> sqlLines = Files.readAllLines( output.toPath() );
+		final List<String> sqlLines = Files.readAllLines( output.toPath(), Charset.defaultCharset() );
 		boolean found = false;
 		for ( String line : sqlLines ) {
 			if ( line.contains( expectedAlterTableStatement ) ) {

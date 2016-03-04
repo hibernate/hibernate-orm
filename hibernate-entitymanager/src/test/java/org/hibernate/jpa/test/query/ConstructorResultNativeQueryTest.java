@@ -22,6 +22,7 @@ import javax.persistence.NamedNativeQueries;
 import javax.persistence.NamedNativeQuery;
 import javax.persistence.SqlResultSetMapping;
 import javax.persistence.SqlResultSetMappings;
+import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
@@ -104,8 +105,10 @@ public class ConstructorResultNativeQueryTest extends BaseEntityManagerFunctiona
 				)
 			}
 	)
+	@Table(name = "person")
 	public static class Person {
 		@Id
+		@Column(name = "id")
 		private Integer id;
 		@Column( name = "p_name" )
 		private String name;

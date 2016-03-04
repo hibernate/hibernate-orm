@@ -32,6 +32,11 @@ import org.hibernate.persister.collection.CollectionPersister;
  * @author Steve Ebersole
  */
 public class MapKeyHelpers {
+	/**
+	 * Disallow instantiation
+	 */
+	private MapKeyHelpers() {
+	}
 
 	/**
 	 * Models a path to a map key.  This is the actual return used from {@link javax.persistence.criteria.MapJoin#key}
@@ -166,12 +171,11 @@ public class MapKeyHelpers {
 			return mapJoin.getPathIdentifier();
 		}
 
-	}
+		@Override
+		public void prepareAlias(RenderingContext renderingContext) {
+			mapJoin.prepareAlias( renderingContext );
+		}
 
-	/**
-	 * Disallow instantiation
-	 */
-	private MapKeyHelpers() {
 	}
 
 	/**

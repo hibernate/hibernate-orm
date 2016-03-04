@@ -46,10 +46,13 @@ dependencies {
         // for test runtime
         transitive = true
     }
+
+    testRuntime( libraries.expression_language_api )
+    testRuntime( libraries.expression_language_impl )
+
     testRuntime('jaxen:jaxen:1.1')
     testRuntime(libraries.javassist)
 
-//    matrixRuntime( 'jaxen:jaxen:1.1' )
 }
 
 sourceSets.test.resources {

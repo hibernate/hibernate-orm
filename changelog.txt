@@ -3,8 +3,46 @@ Hibernate 5.0 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.0.8.Final (February 17, 2016)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/22250
 
-Changes in 5.0.7.Final (January 13, 2015)
+** Bug
+     * [HHH-5855] - The method "merge" from the EntityManager causes a duplicated "insert" of a child entity.
+     * [HHH-7705] - Query.setProperties(Map) silently ignores null values provided in the Map
+     * [HHH-7973] - String literals in an HQL query can get mangled
+     * [HHH-8657] - Case Insensitive Equality Criterion NVARCHAR field yields bad SQL
+     * [HHH-9286] - Extended Stored procedure support does not work with Oracle
+     * [HHH-9635] - SQLServer2005Dialect (and above) does not support read past locking
+     * [HHH-9735] - EntityGraph and isMember functions generates illegal sql
+     * [HHH-10261] - Creating an entity sub graph on inherited attribute fails
+     * [HHH-10345] - Map byte[]/Byte[] to BLOB rather than LONG RAW in Oracle
+     * [HHH-10372] - OffsetDateTime value changes after fetching the row from the database
+     * [HHH-10401] - Missing table names on foreign key circularity error message
+     * [HHH-10412] - case/when in criteria always casts resulting object which fails on mysql with boolean
+     * [HHH-10443] - SchemaUpdate and SchemaMigration do not release jdbc connection
+     * [HHH-10446] - Comment delimiters not "escaped" within (VAR)CHAR literals within native queries
+     * [HHH-10451] - Can not export table comment statement
+     * [HHH-10473] - Test NationalizedLobFieldTest.testNationalization fails on some databases that don't support nclob type
+     * [HHH-10474] - SchemaUpdateFormatterTest.testSetFormat fails on some database due to hardcoded expected result that doesn't count with DB differences
+     * [HHH-10475] - CompositeIdRowValueTest fails on databases that don't support row value constructor syntax
+     * [HHH-10495] - Oracle10gDialect generate nvarchar when using @Nationalized
+     * [HHH-10507] - Hibernate core test removing usage of Java 8 introduced methods
+     * [HHH-10528] - use_nationalized_character_data global property is ignored
+     * [HHH-10529] - SQLServer2008Dialect generate incorrect length of nvarchar
+
+** Task
+     * [HHH-10512] - Fix symlink handling for documentation tasks
+     * [HHH-10521] - Fix Java 6 not compliant tests
+
+** Improvement
+     * [HHH-10477] - Setting to allow delayed access to CDI
+
+** Patch
+     * [HHH-10538] - Fix the javadoc of TableInformation.getIndex(Identifier indexName)
+
+
+Changes in 5.0.7.Final (January 13, 2016)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/22051
 

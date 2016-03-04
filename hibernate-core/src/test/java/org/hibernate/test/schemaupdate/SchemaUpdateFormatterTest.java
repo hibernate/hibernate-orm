@@ -12,6 +12,10 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.Target;
@@ -37,6 +41,14 @@ public class SchemaUpdateFormatterTest {
 		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
 				.applySetting( Environment.HBM2DDL_AUTO, "none" )
 				.build();
+		final Dialect dialect = ssr.getService( JdbcServices.class ).getDialect();
+		if ( ! H2Dialect.class.isInstance( dialect ) ) {
+			SkipLog.reportSkip(
+					"Test should only run when using H2Dialect due to dialect-specific script; skip because dialect is "
+							+ dialect.getClass().getName()
+			);
+			return;
+		}
 		try {
 			File output = File.createTempFile( "update_script", ".sql" );
 			output.deleteOnExit();

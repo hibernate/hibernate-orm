@@ -10,6 +10,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import java.io.File;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.List;
 
@@ -57,7 +58,7 @@ public class SchemaUpdateDelimiterTest {
 			su.setFormat( false );
 			su.execute( Target.SCRIPT );
 
-			List<String> sqlLines = Files.readAllLines( output.toPath() );
+			List<String> sqlLines = Files.readAllLines( output.toPath(), Charset.defaultCharset() );
 			for ( String line : sqlLines ) {
 				assertThat(
 						"The expected delimiter is not applied " + line,

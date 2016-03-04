@@ -45,7 +45,7 @@ allprojects {
 
 ext {
     expectedGradleVersion = '2.7'
-    hibernateTargetVersion = '5.0.8-SNAPSHOT'
+    hibernateTargetVersion = '5.0.9-SNAPSHOT'
 
     osgiExportVersion = hibernateTargetVersion.replaceAll( '-SNAPSHOT', '.SNAPSHOT' )
 }
@@ -176,6 +176,10 @@ subprojects { subProject ->
 			instruction 'Implementation-Version', version
 			instruction 'Implementation-Vendor', 'Hibernate.org'
 			instruction 'Implementation-Vendor-Id', 'org.hibernate'
+			instruction 'Implementation-Title', name
+			instruction 'Specification-Title', name
+			instruction 'Specification-Version', version
+			instruction 'Specification-Vendor', 'Hibernate.org'
 		}
 	}
 
@@ -307,6 +311,10 @@ subprojects { subProject ->
 	task sourcesJar(type: Jar, dependsOn: compileJava) {
 		from sourceSets.main.allSource
 		classifier = 'sources'
+	}
+
+	sourcesJar {
+		manifest = jar.manifest
 	}
 }
 

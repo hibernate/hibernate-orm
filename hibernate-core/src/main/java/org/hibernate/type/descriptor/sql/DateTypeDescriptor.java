@@ -53,6 +53,18 @@ public class DateTypeDescriptor implements SqlTypeDescriptor {
 					st.setDate( index, date );
 				}
 			}
+
+			@Override
+			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+					throws SQLException {
+				final Date date = javaTypeDescriptor.unwrap( value, Date.class, options );
+				if ( value instanceof Calendar ) {
+					st.setDate( name, date, (Calendar) value );
+				}
+				else {
+					st.setDate( name, date );
+				}
+			}
 		};
 	}
 

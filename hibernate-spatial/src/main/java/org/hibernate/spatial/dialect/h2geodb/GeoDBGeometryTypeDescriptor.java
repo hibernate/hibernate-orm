@@ -54,6 +54,13 @@ public class GeoDBGeometryTypeDescriptor implements SqlTypeDescriptor {
 				final Geometry geometry = getJavaDescriptor().unwrap( value, Geometry.class, options );
 				st.setBytes( index, GeoDbWkb.to( geometry ) );
 			}
+
+			@Override
+			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+					throws SQLException {
+				final Geometry geometry = getJavaDescriptor().unwrap( value, Geometry.class, options );
+				st.setBytes( name, GeoDbWkb.to( geometry ) );
+			}
 		};
 	}
 

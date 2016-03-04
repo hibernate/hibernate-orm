@@ -24,6 +24,7 @@
 		<join table="thing_name" optional="true">
 			<key column="thing_id"/>
 			<property name="name"/>
+			<property name="nameUpper" formula="upper(name)"/>
 		</join>
 	</class>
 

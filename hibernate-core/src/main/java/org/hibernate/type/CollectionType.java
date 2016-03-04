@@ -24,6 +24,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.collection.internal.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.CollectionEntry;
@@ -46,9 +47,6 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
 import org.jboss.logging.Logger;
-
-import org.dom4j.Element;
-import org.dom4j.Node;
 
 /**
  * A type that handles Hibernate <tt>PersistentCollection</tt>s (including arrays).
@@ -135,7 +133,7 @@ public abstract class CollectionType extends AbstractType implements Association
 
 	@Override
 	public Object nullSafeGet(ResultSet rs, String name, SessionImplementor session, Object owner) throws SQLException {
-		return nullSafeGet( rs, new String[] {name}, session, owner );
+		return nullSafeGet( rs, new String[] { name }, session, owner );
 	}
 
 	@Override
@@ -649,6 +647,10 @@ public abstract class CollectionType extends AbstractType implements Association
 			return null;
 		}
 		if ( !Hibernate.isInitialized( original ) ) {
+			if ( ( (PersistentCollection) original ).hasQueuedOperations() ) {
+				final AbstractPersistentCollection pc = (AbstractPersistentCollection) original;
+				pc.replaceQueuedOperationValues( getPersister( session ), copyCache );
+			}
 			return target;
 		}
 

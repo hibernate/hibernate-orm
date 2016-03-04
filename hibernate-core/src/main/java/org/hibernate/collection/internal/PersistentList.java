@@ -14,7 +14,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -511,131 +510,81 @@ public class PersistentList extends AbstractPersistentCollection implements List
 		}
 	}
 
-	final class SimpleAdd implements DelayedOperation {
-		private Object value;
+	final class SimpleAdd extends AbstractValueDelayedOperation {
 
-		public SimpleAdd(Object value) {
-			this.value = value;
+		public SimpleAdd(Object addedValue) {
+			super( addedValue, null );
 		}
 
 		@Override
 		@SuppressWarnings("unchecked")
 		public void operate() {
-			list.add( value );
-		}
-
-		@Override
-		public Object getAddedInstance() {
-			return value;
-		}
-
-		@Override
-		public Object getOrphan() {
-			return null;
+			list.add( getAddedInstance() );
 		}
 	}
 
-	final class Add implements DelayedOperation {
+	abstract class AbstractListValueDelayedOperation extends AbstractValueDelayedOperation {
 		private int index;
-		private Object value;
 
-		public Add(int index, Object value) {
+		AbstractListValueDelayedOperation(Integer index, Object addedValue, Object orphan) {
+			super( addedValue, orphan );
 			this.index = index;
-			this.value = value;
 		}
 
-		@Override
-		@SuppressWarnings("unchecked")
-		public void operate() {
-			list.add( index, value );
-		}
-
-		@Override
-		public Object getAddedInstance() {
-			return value;
-		}
-
-		@Override
-		public Object getOrphan() {
-			return null;
+		protected final int getIndex() {
+			return index;
 		}
 	}
 
-	final class Set implements DelayedOperation {
-		private int index;
-		private Object value;
-		private Object old;
+	final class Add extends AbstractListValueDelayedOperation {
 
-		public Set(int index, Object value, Object old) {
-			this.index = index;
-			this.value = value;
-			this.old = old;
+		public Add(int index, Object addedValue) {
+			super( index, addedValue, null );
 		}
 
 		@Override
 		@SuppressWarnings("unchecked")
 		public void operate() {
-			list.set( index, value );
-		}
-
-		@Override
-		public Object getAddedInstance() {
-			return value;
-		}
-
-		@Override
-		public Object getOrphan() {
-			return old;
+			list.add( getIndex(), getAddedInstance() );
 		}
 	}
 
-	final class Remove implements DelayedOperation {
-		private int index;
-		private Object old;
+	final class Set extends AbstractListValueDelayedOperation {
 
-		public Remove(int index, Object old) {
-			this.index = index;
-			this.old = old;
+		public Set(int index, Object addedValue, Object orphan) {
+			super( index, addedValue, orphan );
 		}
 
 		@Override
 		@SuppressWarnings("unchecked")
 		public void operate() {
-			list.remove( index );
-		}
-
-		@Override
-		public Object getAddedInstance() {
-			return null;
-		}
-
-		@Override
-		public Object getOrphan() {
-			return old;
+			list.set( getIndex(), getAddedInstance() );
 		}
 	}
 
-	final class SimpleRemove implements DelayedOperation {
-		private Object value;
+	final class Remove extends AbstractListValueDelayedOperation {
 
-		public SimpleRemove(Object value) {
-			this.value = value;
+		public Remove(int index, Object orphan) {
+			super( index, null, orphan );
 		}
 
 		@Override
 		@SuppressWarnings("unchecked")
 		public void operate() {
-			list.remove( value );
+			list.remove( getIndex() );
+		}
+	}
+
+	final class SimpleRemove extends AbstractValueDelayedOperation {
+
+		public SimpleRemove(Object orphan) {
+			super( null, orphan );
 		}
 
 		@Override
-		public Object getAddedInstance() {
-			return null;
-		}
-
-		@Override
-		public Object getOrphan() {
-			return value;
+		@SuppressWarnings("unchecked")
+		public void operate() {
+			list.remove( getOrphan() );
 		}
 	}
 }

@@ -771,8 +771,12 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		boolean notNull = false;
 		for ( int i = 0; i < propertySpan; i++ ) {
 			// we know this cast is safe from canDoExtraction
-			final ProcedureParameterExtractionAware propertyType = (ProcedureParameterExtractionAware) propertyTypes[i];
-			final Object value = propertyType.extract( statement, currentIndex, session );
+			final Type propertyType = propertyTypes[i];
+			final Object value = ((ProcedureParameterExtractionAware) propertyType).extract(
+					statement,
+					currentIndex,
+					session
+			);
 			if ( value == null ) {
 				if ( isKey ) {
 					return null; //different nullability rules for pk/fk

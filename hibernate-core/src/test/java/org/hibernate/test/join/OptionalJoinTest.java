@@ -44,9 +44,10 @@ public class OptionalJoinTest extends BaseCoreFunctionalTestCase {
 		assertEquals(1, things.size());
 		thing = (Thing)things.get(0);
 		assertEquals("one", thing.getName());
+		assertEquals( "ONE", thing.getNameUpper() );
 		// give it a new non-null name and save it
 		thing.setName("one_changed");
-		s.update(thing);
+		s.update( thing );
 		t.commit();
 		s.close();
 
@@ -56,6 +57,7 @@ public class OptionalJoinTest extends BaseCoreFunctionalTestCase {
 		assertEquals(1, things.size());
 		thing = (Thing)things.get(0);
 		assertEquals("one_changed", thing.getName());
+		assertEquals("ONE_CHANGED", thing.getNameUpper());
 		s.delete(thing);
 		t.commit();
 		s.close();
@@ -79,6 +81,7 @@ public class OptionalJoinTest extends BaseCoreFunctionalTestCase {
 		assertEquals(1, things.size());
 		thing = (Thing)things.get(0);
 		assertEquals("one", thing.getName());
+		assertEquals("ONE", thing.getNameUpper());
 		t.commit();
 		s.close();
 				
@@ -97,6 +100,7 @@ public class OptionalJoinTest extends BaseCoreFunctionalTestCase {
 		assertEquals(1, things.size());
 		thing = (Thing)things.get(0);
 		assertEquals("one_changed", thing.getName());
+		assertEquals("ONE_CHANGED", thing.getNameUpper());
 		s.delete(thing);
 		t.commit();
 		s.close();
@@ -120,6 +124,7 @@ public class OptionalJoinTest extends BaseCoreFunctionalTestCase {
 		assertEquals(1, things.size());
 		thing = (Thing)things.get(0);
 		assertEquals("one", thing.getName());
+		assertEquals("ONE", thing.getNameUpper());
 		t.commit();
 		s.close();
 
@@ -138,6 +143,7 @@ public class OptionalJoinTest extends BaseCoreFunctionalTestCase {
 		assertEquals(1, things.size());
 		thing = (Thing)things.get(0);
 		assertEquals("one_changed", thing.getName());
+		assertEquals("ONE_CHANGED", thing.getNameUpper());
 		s.delete(thing);
 		t.commit();
 		s.close();
@@ -161,9 +167,10 @@ public class OptionalJoinTest extends BaseCoreFunctionalTestCase {
 		assertEquals(1, things.size());
 		thing = (Thing)things.get(0);
 		assertEquals("one", thing.getName());
+		assertEquals("ONE", thing.getNameUpper());
 		// give it a null name and save it
 		thing.setName(null);
-		s.update(thing);
+		s.update( thing );
 		t.commit();
 		s.close();
 
@@ -173,6 +180,7 @@ public class OptionalJoinTest extends BaseCoreFunctionalTestCase {
 		assertEquals(1, things.size());
 		thing = (Thing)things.get(0);
 		assertNull(thing.getName());
+		assertNull(thing.getNameUpper());
 		s.delete(thing);
 		t.commit();
 		s.close();
@@ -196,6 +204,7 @@ public class OptionalJoinTest extends BaseCoreFunctionalTestCase {
 		assertEquals(1, things.size());
 		thing = (Thing)things.get(0);
 		assertEquals("one", thing.getName());
+		assertEquals("ONE", thing.getNameUpper());
 		t.commit();
 		s.close();
 
@@ -214,6 +223,7 @@ public class OptionalJoinTest extends BaseCoreFunctionalTestCase {
 		assertEquals(1, things.size());
 		thing = (Thing)things.get(0);
 		assertNull(thing.getName());
+		assertNull(thing.getNameUpper());
 		s.delete(thing);
 		t.commit();
 		s.close();
@@ -237,6 +247,7 @@ public class OptionalJoinTest extends BaseCoreFunctionalTestCase {
 		assertEquals(1, things.size());
 		thing = (Thing)things.get(0);
 		assertEquals("one", thing.getName());
+		assertEquals("ONE", thing.getNameUpper());
 		t.commit();
 		s.close();
 
@@ -255,6 +266,7 @@ public class OptionalJoinTest extends BaseCoreFunctionalTestCase {
 		assertEquals(1, things.size());
 		thing = (Thing)things.get(0);
 		assertNull(thing.getName());
+		assertNull(thing.getNameUpper());
 		s.delete(thing);
 		t.commit();
 		s.close();
@@ -279,7 +291,7 @@ public class OptionalJoinTest extends BaseCoreFunctionalTestCase {
 		assertNull(thing.getName());
 		// change name to a non-null value
 		thing.setName("two");
-		s.update(thing);
+		s.update( thing );
 		t.commit();
 		s.close();
 
@@ -289,6 +301,7 @@ public class OptionalJoinTest extends BaseCoreFunctionalTestCase {
 		assertEquals(1, things.size());
 		thing = ((Thing) things.get(0));
 		assertEquals("two", thing.getName());
+		assertEquals("TWO", thing.getNameUpper());
 		s.delete(thing);
 		t.commit();
 		s.close();
@@ -311,6 +324,7 @@ public class OptionalJoinTest extends BaseCoreFunctionalTestCase {
 		assertEquals(1, things.size());
 		thing = (Thing)things.get(0);
 		assertNull(thing.getName());
+		assertNull(thing.getNameUpper());
 		t.commit();
 		s.close();
 
@@ -329,6 +343,7 @@ public class OptionalJoinTest extends BaseCoreFunctionalTestCase {
 		assertEquals(1, things.size());
 		thing = ((Thing) things.get(0));
 		assertEquals("two", thing.getName());
+		assertEquals("TWO", thing.getNameUpper());
 		s.delete(thing);
 		t.commit();
 		s.close();
@@ -351,6 +366,7 @@ public class OptionalJoinTest extends BaseCoreFunctionalTestCase {
 		assertEquals(1, things.size());
 		thing = (Thing)things.get(0);
 		assertNull(thing.getName());
+		assertNull(thing.getNameUpper());
 		t.commit();
 		s.close();
 
@@ -369,6 +385,7 @@ public class OptionalJoinTest extends BaseCoreFunctionalTestCase {
 		assertEquals(1, things.size());
 		thing = ((Thing) things.get(0));
 		assertEquals("two", thing.getName());
+		assertEquals("TWO", thing.getNameUpper());
 		s.delete(thing);
 		t.commit();
 		s.close();

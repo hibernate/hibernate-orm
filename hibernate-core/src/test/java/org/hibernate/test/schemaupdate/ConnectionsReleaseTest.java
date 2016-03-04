@@ -18,6 +18,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
@@ -60,6 +61,7 @@ public class ConnectionsReleaseTest extends BaseUnitTestCase {
 
 		ssr = new StandardServiceRegistryBuilder()
 				.addService( ConnectionProvider.class, connectionProvider )
+				.applySetting(Environment.DIALECT, H2Dialect.class.getName())
 				.build();
 		metadata = (MetadataImplementor) new MetadataSources( ssr )
 				.addAnnotatedClass( Thing.class )

@@ -23,8 +23,10 @@
  */
 package org.hibernate.test.hql;
 
-import org.hibernate.Session;
+import java.util.Arrays;
+import java.util.List;
 
+import org.hibernate.Session;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -68,6 +70,19 @@ public class ParameterTest extends BaseCoreFunctionalTestCase {
 		s.createQuery( "from Human h where :OBJECT = h.name" ).setParameter( "OBJECT", new Name() ).list();
 		s.createQuery( "from Human h where :OBJECT <> h.name" ).setParameter( "OBJECT", new Name() ).list();
 
+		s.getTransaction().commit();
+		s.close();
+	}
+	
+	@Test
+	@TestForIssue( jiraKey = "HHH-7407" )
+	public void testListAsParameter() {
+		Session s = openSession();
+		s.beginTransaction();
+		
+		List<Long> ids = Arrays.asList( 1L, 2L, 3L );
+		s.createQuery( "FROM Human m WHERE 1 = 1 OR (1 = 1 AND m.id IN :ids)" ).setParameterList( "ids", ids ).list();
+		
 		s.getTransaction().commit();
 		s.close();
 	}

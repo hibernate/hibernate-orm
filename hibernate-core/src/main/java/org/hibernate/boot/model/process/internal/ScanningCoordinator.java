@@ -65,7 +65,8 @@ public class ScanningCoordinator {
 
 		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService( ClassLoaderService.class );
 		final ClassLoaderAccess classLoaderAccess = new ClassLoaderAccessImpl(
-				options.getTempClassLoader(),
+				//options.getTempClassLoader(), //https://hibernate.atlassian.net/browse/HHH-10591
+				null,
 				classLoaderService
 		);
 

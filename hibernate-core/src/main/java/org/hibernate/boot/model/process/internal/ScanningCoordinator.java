@@ -65,7 +65,7 @@ public class ScanningCoordinator {
 
 		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService( ClassLoaderService.class );
 		final ClassLoaderAccess classLoaderAccess = new ClassLoaderAccessImpl(
-				options.getTempClassLoader(),
+				null,
 				classLoaderService
 		);
 

@@ -112,7 +112,8 @@ public class CollectionCacheInvalidator
 				}
 				// this is the property this OneToMany relation is mapped by
 				String mappedBy = collectionPersister.getMappedByProperty();
-				if ( mappedBy != null && !mappedBy.isEmpty() ) {
+				if ( !collectionPersister.isManyToMany() &&
+						mappedBy != null && !mappedBy.isEmpty() ) {
 					int i = persister.getEntityMetamodel().getPropertyIndex( mappedBy );
 					Serializable oldId = null;
 					if ( oldState != null ) {

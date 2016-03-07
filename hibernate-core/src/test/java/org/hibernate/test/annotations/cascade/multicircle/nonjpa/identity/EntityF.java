@@ -10,7 +10,7 @@ package org.hibernate.test.annotations.cascade.multicircle.nonjpa.identity;
  * No Documentation
  */
 @javax.persistence.Entity
-public class F extends AbstractEntity {
+public class EntityF extends AbstractEntity {
     private static final long serialVersionUID = 1471534025L;
 
     /**
@@ -23,33 +23,33 @@ public class F extends AbstractEntity {
 			org.hibernate.annotations.CascadeType.MERGE,
 			org.hibernate.annotations.CascadeType.REFRESH
 	})
-    private java.util.Set<E> eCollection = new java.util.HashSet<E>();
+    private java.util.Set<EntityE> eCollection = new java.util.HashSet<EntityE>();
 
 	@javax.persistence.ManyToOne(optional = false)
-	private D d;
+	private EntityD d;
 
 	@javax.persistence.ManyToOne(optional = false)
-	private G g;
+	private EntityG g;
 
-    public java.util.Set<E> getECollection() {
+    public java.util.Set<EntityE> getECollection() {
         return eCollection;
     }
     public void setECollection(
-        java.util.Set<E> parameter) {
+        java.util.Set<EntityE> parameter) {
         this.eCollection = parameter;
     }
 
-    public D getD() {
+    public EntityD getD() {
         return d;
     }
-    public void setD(D parameter) {
+    public void setD(EntityD parameter) {
         this.d = parameter;
     }
 
-	public G getG() {
+	public EntityG getG() {
 		return g;
 	}
-	public void setG(G parameter) {
+	public void setG(EntityG parameter) {
 		this.g = parameter;
 	}
 

@@ -10,7 +10,7 @@ package org.hibernate.test.annotations.cascade.multicircle.jpa.identity;
  * No Documentation
  */
 @javax.persistence.Entity
-public class B extends AbstractEntity {
+public class EntityB extends AbstractEntity {
     private static final long serialVersionUID = 325417243L;
 
     /**
@@ -19,7 +19,7 @@ public class B extends AbstractEntity {
     @javax.persistence.OneToMany(cascade =  {
         javax.persistence.CascadeType.MERGE, javax.persistence.CascadeType.PERSIST, javax.persistence.CascadeType.REFRESH}
     , mappedBy = "b")
-    private java.util.Set<G> gCollection = new java.util.HashSet<G>();
+    private java.util.Set<EntityG> gCollection = new java.util.HashSet<EntityG>();
 
 
 	/**
@@ -28,7 +28,7 @@ public class B extends AbstractEntity {
 	@javax.persistence.ManyToOne(cascade =  {
 		javax.persistence.CascadeType.MERGE, javax.persistence.CascadeType.PERSIST, javax.persistence.CascadeType.REFRESH}
 	, optional = false)
-	private C c;
+	private EntityC c;
 
 
 
@@ -38,30 +38,30 @@ public class B extends AbstractEntity {
     @javax.persistence.ManyToOne(cascade =  {
         javax.persistence.CascadeType.MERGE, javax.persistence.CascadeType.PERSIST, javax.persistence.CascadeType.REFRESH}
     , optional = false)
-    private D d;
+    private EntityD d;
 
-    public java.util.Set<G> getGCollection() {
+    public java.util.Set<EntityG> getGCollection() {
         return gCollection;
     }
 
     public void setGCollection(
-        java.util.Set<G> parameter) {
+        java.util.Set<EntityG> parameter) {
         this.gCollection = parameter;
     }
 
-    public C getC() {
+    public EntityC getC() {
         return c;
     }
 
-    public void setC(C parameter) {
+    public void setC(EntityC parameter) {
         this.c = parameter;
     }
 
-	public D getD() {
+	public EntityD getD() {
 		return d;
 	}
 
-	public void setD(D parameter) {
+	public void setD(EntityD parameter) {
 		this.d = parameter;
 	}
 

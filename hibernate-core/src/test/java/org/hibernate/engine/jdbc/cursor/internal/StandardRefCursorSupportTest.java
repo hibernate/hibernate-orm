@@ -1,5 +1,6 @@
 package org.hibernate.engine.jdbc.cursor.internal;
 
+import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -15,6 +16,7 @@ import static org.junit.Assert.assertThat;
  *
  * @author Daniel Heinrich
  */
+@TestForIssue(jiraKey = "OGM-986")
 public class StandardRefCursorSupportTest {
 
     interface TestDatabaseMetaData extends DatabaseMetaData {

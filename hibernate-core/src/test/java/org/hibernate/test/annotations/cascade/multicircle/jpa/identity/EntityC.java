@@ -12,30 +12,30 @@ import java.util.Set;
  * No Documentation
  */
 @javax.persistence.Entity
-public class C extends AbstractEntity {
+public class EntityC extends AbstractEntity {
     private static final long serialVersionUID = 1226955752L;
 
 	@javax.persistence.OneToMany(mappedBy = "c")
-	private Set<B> bCollection = new java.util.HashSet<org.hibernate.test.annotations.cascade.multicircle.jpa.identity.B>();
+	private Set<EntityB> bCollection = new java.util.HashSet<EntityB>();
 
 	@javax.persistence.OneToMany(cascade =  {
 		javax.persistence.CascadeType.MERGE, javax.persistence.CascadeType.PERSIST, javax.persistence.CascadeType.REFRESH}
 	, mappedBy = "c")
-	private Set<D> dCollection = new java.util.HashSet<D>();
+	private Set<EntityD> dCollection = new java.util.HashSet<EntityD>();
 
-	public Set<B> getBCollection() {
+	public Set<EntityB> getBCollection() {
 		return bCollection;
 	}
 
-	public void setBCollection(Set<B> bCollection) {
+	public void setBCollection(Set<EntityB> bCollection) {
 		this.bCollection = bCollection;
 	}
 
-	public Set<D> getDCollection() {
+	public Set<EntityD> getDCollection() {
 		return dCollection;
 	}
 
-	public void setDCollection(Set<D> dCollection) {
+	public void setDCollection(Set<EntityD> dCollection) {
 		this.dCollection = dCollection;
 	}
 

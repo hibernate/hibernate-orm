@@ -18,7 +18,7 @@ import javax.persistence.Table;
 @Entity
 @Inheritance( strategy = InheritanceType.JOINED )
 @org.hibernate.annotations.Proxy( proxyClass = A.class )
-@Table( name = "A" )
+@Table( name = "ENTITYA" )
 public class AImpl implements A {
 	private static final long serialVersionUID = 1L;
 

@@ -37,6 +37,7 @@
         </drop>
         <dialect-scope name="org.hibernate.dialect.Oracle9iDialect"/>
         <dialect-scope name="org.hibernate.dialect.Oracle10gDialect"/>
+        <dialect-scope name="org.hibernate.dialect.Oracle12cDialect"/>
     </database-object>
 
 </hibernate-mapping>

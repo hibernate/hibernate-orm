@@ -23,10 +23,8 @@ public class StandardRefCursorSupportTest {
 
     @Test
     public void testSupportsRefCursorsAboveJava8() throws Exception {
-        DatabaseMetaData metaMock = Mockito.mock(TestDatabaseMetaData.class);
-
-        Method refCursors = DatabaseMetaData.class.getMethod("supportsRefCursors");
-        Mockito.when(refCursors.invoke(metaMock)).thenReturn(true);
+        TestDatabaseMetaData metaMock = Mockito.mock(TestDatabaseMetaData.class);
+        Mockito.when(metaMock.supportsRefCursors()).thenReturn(true);
 
         boolean result = StandardRefCursorSupport.supportsRefCursors(metaMock);
         assertThat(result, is(true));

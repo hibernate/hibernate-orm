@@ -9,6 +9,9 @@ package org.hibernate.engine.spi;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.logging.Logger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.PropertyMapping;
@@ -17,6 +20,11 @@ import org.hibernate.persister.entity.PropertyMapping;
  * @author Gavin King
  */
 public class SubselectFetch {
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			SubselectFetch.class.getName()
+	);
+
 	private static final String FROM_STRING = " from ";
 
 	private final Set resultingEntityKeys;
@@ -46,6 +54,9 @@ public class SubselectFetch {
 		this.queryString = orderByIndex > 0
 				? queryString.substring( fromIndex, orderByIndex )
 				: queryString.substring( fromIndex );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracef( "Generated SubselectFetch query: %s", queryString );
+		}
 	}
 
 	private static int getFromIndex(String queryString) {

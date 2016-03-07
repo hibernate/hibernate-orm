@@ -1015,20 +1015,27 @@ You can force Hibernate to quote an identifier in the generated SQL by enclosing
 Hibernate will use the correct quotation style for the SQL `Dialect`.
 This is usually double quotes, but the SQL Server uses brackets and MySQL uses backticks.
 
+[[basic-quoting-example]]
 .Quoting column names
 ====
 [source, JAVA, indent=0]
 ----
-@Entity @Table(name="`Line Item`")
-class LineItem {
+include::{sourcedir}/basic/QuotingTest.java[tags=basic-quoting-example]
+----
+====
 
-   @Id
-   @Column(name="`Item Id`")
-   private Integer id;
+Because `name` and `number` are reserved words, the `Product` entity mapping uses backtricks to quote these column names.
 
-   @Column(name="`Item #`")
-   private Integer itemNumber
-}
+When saving teh following `Product entity`, Hibernate generates the following SQL insert statement:
+
+[[basic-quoting-persistence-example]]
+.Persisting a quoted column name
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/QuotingTest.java[tags=basic-quoting-persistence-example, indent=0]
+
+include::{extrasdir}/basic/basic-quoting-persistence-example.sql[indent=0]
 ----
 ====
 
@@ -1115,25 +1122,14 @@ As you can see, the `new Date()` object value was used for assigning the `timest
 ==== Column transformers: read and write expressions
 
 Hibernate allows you to customize the SQL it uses to read and write the values of columns mapped to `@Basic` types.
-For example, if your database provides a set of data encryption functions, you can invoke them for individual columns like this:
+For example, if your database provides a set of data encryption functions, you can invoke them for individual columns like in the following example.
 
+[[mapping-column-read-and-write-example]]
 .`@ColumnTransformer` example
 ====
 [source, JAVA, indent=0]
 ----
-@Entity
-class CreditCard {
-
-    @Id
-    private Integer id;
-
-    @Column(name="credit_card_num")
-    @ColumnTransformer(
-        read="decrypt(credit_card_num)",
-        write="encrypt(?)"
-    )
-    private String creditCardNumber;
-}
+include::{sourcedir}/../fetching/FetchingTest.java[tags=mapping-column-read-and-write-example]
 ----
 ====
 
@@ -1144,28 +1140,12 @@ You can use the plural form `@ColumnTransformers` if more than one columns need 
 
 If a property uses more than one column, you must use the `forColumn` attribute to specify which column, the expressions are targeting.
 
+[[mapping-column-read-and-write-composite-type-example]]
 .`@ColumnTransformer` `forColumn` attribute usage
 ====
 [source, JAVA, indent=0]
 ----
-@Entity
-class User {
-
-    @Id
-    private Integer id;
-
-    @Type(type="com.acme.type.CreditCardType")
-    @Columns( {
-        @Column(name="credit_card_num"),
-        @Column(name="exp_date")
-    })
-    @ColumnTransformer(
-        forColumn="credit_card_num",
-        read="decrypt(credit_card_num)",
-        write="encrypt(?)"
-    )
-    private CreditCard creditCard;
-}
+include::{sourcedir}/basic/ColumnTransformerTest.java[tags=mapping-column-read-and-write-composite-type-example]
 ----
 ====
 
@@ -1177,18 +1157,48 @@ This functionality is similar to a derived-property <<mapping-column-formula>> w
 
 The `write` expression, if specified, must contain exactly one '?' placeholder for the value.
 
+[[mapping-column-read-and-write-composite-type-persistence-example]]
+.Persisting an entity with a `@ColumnTransformer` and a composite type
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/ColumnTransformerTest.java[tags=mapping-column-read-and-write-composite-type-persistence-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-column-read-and-write-composite-type-persistence-example.sql[]
+----
+====
+
 [[mapping-column-formula]]
 ==== Formula
 
 Sometimes, you want the Database to do some computation for you rather than in the JVM, you might also create some kind of virtual column.
 You can use a SQL fragment (aka formula) instead of mapping a property into a column. This kind of property is read only (its value is calculated by your formula fragment)
 
+[[mapping-column-formula-example]]
 .`@Formula` mapping usage
 ====
 [source, JAVA, indent=0]
 ----
-@Formula("obj_length * obj_height * obj_width")
-private long objectVolume;
+include::{sourcedir}/basic/FormulaTest.java[tags=mapping-column-formula-example]
+----
+====
+
+When loading the `Account` entity, Hibernate is going to calculate the `interest` property using the configured `@Formula`:
+
+[[mapping-column-formula-persistence-example]]
+.Persisting an entity with a `@Formula` mapping
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/FormulaTest.java[tags=mapping-column-formula-persistence-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-column-formula-persistence-example.sql[]
 ----
 ====
 
@@ -1198,7 +1208,7 @@ The SQL fragment can be as complex as you want and even include subselects.
 ====
 
 [[mapping-column-any]]
-==== Any
+==== @Any mapping
 
 There is one more type of property mapping.
 The `@Any` mapping defines a polymorphic association to classes from multiple tables.
@@ -1215,54 +1225,116 @@ This is not the usual way of mapping polymorphic associations and you should use
 The `@Any` annotation describes the column holding the metadata information.
 To link the value of the metadata information and an actual entity type, the `@AnyDef` and `@AnyDefs` annotations are used.
 The `metaType` attribute allows the application to specify a custom type that maps database column values to persistent classes that have identifier properties of the type specified by `idType`.
-You must specify the mapping from values of the metaType to class names.
+You must specify the mapping from values of the `metaType` to class names.
 
+For the next examples, consider the following `Property` class hierarchy:
+
+[[mapping-column-any-property-example]]
+.`Property` class hierarchy
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/any/Property.java[tags=mapping-column-any-property-example]
+
+include::{sourcedir}/basic/any/IntegerProperty.java[tags=mapping-column-any-property-example]
+
+include::{sourcedir}/basic/any/StringProperty.java[tags=mapping-column-any-property-example]
+----
+====
+
+A `PropertyHolder` can reference any such property, and, because each `Property` belongs to a separate table, the `@Any` annotation is, therefore, required.
+
+[[mapping-column-any-example]]
 .`@Any` mapping usage
 ====
 [source, JAVA, indent=0]
 ----
-@Any(
-    metaColumn = @Column( name = "property_type" ),
-    fetch=FetchType.EAGER
-)
-@AnyMetaDef(
-    idType = "integer",
-    metaType = "string",
-    metaValues = {
-        @MetaValue( value = "S", targetEntity = StringProperty.class ),
-        @MetaValue( value = "I", targetEntity = IntegerProperty.class )
-    }
-)
-@JoinColumn( name = "property_id" )
-private Property mainProperty;
+include::{sourcedir}/basic/any/PropertyHolder.java[tags=mapping-column-any-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-column-any-example.sql[]
 ----
 ====
 
-Note that `@AnyDef` can be mutualized and reused. It is recommended to place it as a package metadata in this case.
+As you can see, there are two columns used to reference a `Property` instance: `property_id` and `property_type`.
+The `property_id` is used to match the `id` column of either the `string_property` or `integer_property` tables,
+while the `property_type` is used to match the `string_property` or the  `integer_property` table.
 
-.`@AnyMetaDef` mapping usage
+The table resolving mapping is defined by the `metaDef` attribute which references an `@AnyMetaDef` mapping.
+Although the `@AnyMetaDef` mapping could be set right next to the `@Any` annotation,
+it's good practice to reuse it, therefore it makes sense to configure it on a class or package-level basis.
+
+The `package-info.java` contains the `@AnyMetaDef` mapping:
+
+[[mapping-column-any-meta-def-example]]
+.`@Any` mapping usage
 ====
 [source, JAVA, indent=0]
 ----
-//on a package
-@AnyMetaDef( name="property"
-    idType = "integer",
-    metaType = "string",
-    metaValues = {
-        @MetaValue( value = "S", targetEntity = StringProperty.class ),
-        @MetaValue( value = "I", targetEntity = IntegerProperty.class )
-    }
-)
-package org.hibernate.test.annotations.any;
+include::{sourcedir}/basic/any/package-info.java[tags=mapping-column-any-meta-def-example]
+----
+====
 
-//in a class
-@Any(
-    metaDef="property",
-    metaColumn = @Column( name = "property_type" ),
-    fetch=FetchType.EAGER
-)
-@JoinColumn( name = "property_id" )
-private Property mainProperty;
+[NOTE]
+====
+It is recommended to place the `@AnyMetaDef` mapping as a package metadata.
+====
+
+To see how the `@Any` annotation in action, consider the following example:
+
+[[mapping-column-any-persistence-example]]
+.`@Any` mapping usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/any/AnyTest.java[tags=mapping-column-any-persistence-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-column-any-persistence-example.sql[]
+----
+====
+
+[[mapping-column-many-to-any]]
+===== `@ManyToAny` mapping
+
+The `@Any` mapping is useful to emulate a `@ManyToOne` association when there can be multiple target entities.
+To emulate a `@OneToMany` association, the `@ManyToAny` annotation must be used.
+
+In the following example, the `PropertyRepository` entity has a collection of `Property` entities.
+The `repository_properties` link table holds the associations between `PropertyRepository` and `Property` entities.
+
+[[mapping-column-many-to-any-example]]
+.`@ManyToAny` mapping usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/any/PropertyRepository.java[tags=mapping-column-many-to-any-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-column-many-to-any-example.sql[]
+----
+====
+
+
+To see how the `@ManyToAny` annotation works, consider the following example:
+
+[[mapping-column-many-to-any-persistence-example]]
+.`@Any` mapping usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/any/ManyToAnyTest.java[tags=mapping-column-many-to-any-persistence-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-column-many-to-any-persistence-example.sql[]
 ----
 ====
 

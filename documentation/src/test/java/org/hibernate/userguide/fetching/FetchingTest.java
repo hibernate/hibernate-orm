@@ -168,6 +168,7 @@ public class FetchingTest extends BaseEntityManagerFunctionalTestCase {
 		//Getters and setters omitted for brevity
 	}
 
+	//tag::mapping-column-read-and-write-example[]
 	@Entity(name = "Employee")
 	public static class Employee {
 
@@ -194,6 +195,7 @@ public class FetchingTest extends BaseEntityManagerFunctionalTestCase {
 
 		//Getters and setters omitted for brevity
 	}
+	//end::mapping-column-read-and-write-example[]
 
 	@Entity(name = "Project")
 	public class Project {

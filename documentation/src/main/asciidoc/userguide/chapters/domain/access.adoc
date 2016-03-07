@@ -7,6 +7,12 @@ By default, the placement of the `@Id` annotation gives the default access strat
 When placed on a field, Hibernate will assume field-based access.
 Place on the identifier getter, Hibernate will use property-based access.
 
+[IMPORTANT]
+====
+You should pay attention to https://docs.oracle.com/javase/7/docs/api/java/beans/Introspector.html#decapitalize(java.lang.String)[Java Beans specification] in regard to naming properties to avoid
+issues such as https://hibernate.atlassian.net/browse/HCANN-63[Property name beginning with at least two uppercase characters has odd functionality in HQL]!
+====
+
 Embeddable types inherit the access strategy from their parent entities.
 
 [[field-based-access]]

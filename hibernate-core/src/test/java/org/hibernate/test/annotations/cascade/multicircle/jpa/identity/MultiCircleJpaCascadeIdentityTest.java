@@ -66,21 +66,21 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  */
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
 public class MultiCircleJpaCascadeIdentityTest extends BaseCoreFunctionalTestCase {
-	private B b;
-	private C c;
-	private D d;
-	private E e;
-	private F f;
-	private G g;
+	private EntityB b;
+	private EntityC c;
+	private EntityD d;
+	private EntityE e;
+	private EntityF f;
+	private EntityG g;
 
 	@Before
 	public void setup() {
-		b = new B();
-		c = new C();
-		d = new D();
-		e = new E();
-		f = new F();
-		g = new G();
+		b = new EntityB();
+		c = new EntityC();
+		d = new EntityD();
+		e = new EntityE();
+		f = new EntityF();
+		g = new EntityG();
 
 		b.getGCollection().add( g );
 		b.setC( c );
@@ -131,12 +131,12 @@ public class MultiCircleJpaCascadeIdentityTest extends BaseCoreFunctionalTestCas
 
 		Session s = openSession();
 		s.getTransaction().begin();
-		b = ( B ) s.merge( b );
-		c = ( C ) s.merge( c );
-		d = ( D ) s.merge( d );
-		e = ( E ) s.merge( e );
-		f = ( F ) s.merge( f );
-		g = ( G ) s.merge( g );
+		b = (EntityB) s.merge( b );
+		c = (EntityC) s.merge( c );
+		d = (EntityD) s.merge( d );
+		e = (EntityE) s.merge( e );
+		f = (EntityF) s.merge( f );
+		g = (EntityG) s.merge( g );
 		s.delete( f );
 		s.delete( g );
 		s.delete( b );
@@ -161,7 +161,7 @@ public class MultiCircleJpaCascadeIdentityTest extends BaseCoreFunctionalTestCas
 	public void testMerge() {
 		Session s = openSession();
 		s.getTransaction().begin();
-		b = (B) s.merge( b );
+		b = (EntityB) s.merge( b );
 		c = b.getC();
 		d = b.getD();
 		e = d.getE();
@@ -176,14 +176,14 @@ public class MultiCircleJpaCascadeIdentityTest extends BaseCoreFunctionalTestCas
 	private void check() {
 		Session s = openSession();
 		s.getTransaction().begin();
-		B bRead = (B) s.get( B.class, b.getId() );
+		EntityB bRead = (EntityB) s.get( EntityB.class, b.getId() );
 		Assert.assertEquals( b, bRead );
 
-		G gRead = bRead.getGCollection().iterator().next();
+		EntityG gRead = bRead.getGCollection().iterator().next();
 		Assert.assertEquals( g, gRead );
-		C cRead = bRead.getC();
+		EntityC cRead = bRead.getC();
 		Assert.assertEquals( c, cRead );
-		D dRead = bRead.getD();
+		EntityD dRead = bRead.getD();
 		Assert.assertEquals( d, dRead );
 
 		Assert.assertSame( bRead, cRead.getBCollection().iterator().next() );
@@ -191,9 +191,9 @@ public class MultiCircleJpaCascadeIdentityTest extends BaseCoreFunctionalTestCas
 
 		Assert.assertSame( bRead, dRead.getBCollection().iterator().next() );
 		Assert.assertEquals( cRead, dRead.getC() );
-		E eRead = dRead.getE();
+		EntityE eRead = dRead.getE();
 		Assert.assertEquals( e, eRead );
-		F fRead = dRead.getFCollection().iterator().next();
+		EntityF fRead = dRead.getFCollection().iterator().next();
 		Assert.assertEquals( f, fRead );
 
 		Assert.assertSame( dRead, eRead.getDCollection().iterator().next() );
@@ -213,12 +213,12 @@ public class MultiCircleJpaCascadeIdentityTest extends BaseCoreFunctionalTestCas
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
-				B.class,
-				C.class,
-				D.class,
-				E.class,
-				F.class,
-				G.class
+				EntityB.class,
+				EntityC.class,
+				EntityD.class,
+				EntityE.class,
+				EntityF.class,
+				EntityG.class
 		};
 	}
 

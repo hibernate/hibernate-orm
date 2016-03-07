@@ -21,7 +21,7 @@ import javax.persistence.Table;
 @Entity
 @Inheritance( strategy = InheritanceType.JOINED )
 @org.hibernate.annotations.Proxy( proxyClass = Z.class )
-@Table( name = "Z" )
+@Table( name = "ENTITYZ" )
 public class ZImpl implements Z {
 	private static final long serialVersionUID = 1L;
 

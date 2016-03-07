@@ -10,17 +10,17 @@ package org.hibernate.test.annotations.cascade.multicircle.nonjpa.identity;
  * No Documentation
  */
 @javax.persistence.Entity
-public class D extends AbstractEntity {
+public class EntityD extends AbstractEntity {
     private static final long serialVersionUID = 2417176961L;
 
 	@javax.persistence.OneToMany(mappedBy = "d")
-	private java.util.Set<B> bCollection = new java.util.HashSet<B>();
+	private java.util.Set<EntityB> bCollection = new java.util.HashSet<EntityB>();
 
 	@javax.persistence.ManyToOne(optional = false)
-	private C c;
+	private EntityC c;
 
 	@javax.persistence.ManyToOne(optional = false)
-	private E e;
+	private EntityE e;
 
     @javax.persistence.OneToMany(mappedBy = "d")
 	@org.hibernate.annotations.Cascade({
@@ -29,35 +29,35 @@ public class D extends AbstractEntity {
 			org.hibernate.annotations.CascadeType.MERGE,
 			org.hibernate.annotations.CascadeType.REFRESH
 	})
-    private java.util.Set<F> fCollection = new java.util.HashSet<F>();
+    private java.util.Set<EntityF> fCollection = new java.util.HashSet<EntityF>();
 
-	public java.util.Set<B> getBCollection() {
+	public java.util.Set<EntityB> getBCollection() {
 		return bCollection;
 	}
 	public void setBCollection(
-			java.util.Set<B> parameter) {
+			java.util.Set<EntityB> parameter) {
 		this.bCollection = parameter;
 	}
 
-	public C getC() {
+	public EntityC getC() {
 		return c;
 	}
-	public void setC(C c) {
+	public void setC(EntityC c) {
 		this.c = c;
 	}
 
-	public E getE() {
+	public EntityE getE() {
 		return e;
 	}
-	public void setE(E e) {
+	public void setE(EntityE e) {
 		this.e = e;
 	}
 
-    public java.util.Set<F> getFCollection() {
+    public java.util.Set<EntityF> getFCollection() {
         return fCollection;
     }
     public void setFCollection(
-			java.util.Set<F> parameter) {
+			java.util.Set<EntityF> parameter) {
         this.fCollection = parameter;
     }
 

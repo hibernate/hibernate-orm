@@ -63,11 +63,12 @@ public class TransactionImpl implements EntityTransaction {
 		catch (Exception e) {
 			Throwable wrappedException;
 			if ( e instanceof PersistenceException ) {
-				if ( e.getCause() instanceof HibernateException ) {
-					wrappedException = entityManager.convert( (HibernateException) e.getCause() );
+				Throwable cause = e.getCause() == null ? e : e.getCause();
+				if ( cause instanceof HibernateException ) {
+					wrappedException = entityManager.convert( (HibernateException) cause );
 				}
 				else {
-					wrappedException = e.getCause();
+					wrappedException = cause;
 				}
 			}
 			else if ( e instanceof HibernateException ) {

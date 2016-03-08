@@ -6,15 +6,17 @@
  */
 package org.hibernate.test.criteria;
 
-import static org.junit.Assert.assertEquals;
-
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Dragan Bozanovic (draganb)
@@ -37,7 +39,7 @@ public class InTest extends BaseCoreFunctionalTestCase {
 		session = openSession();
 		tx = session.beginTransaction();
 		List persons = session.createCriteria( Person.class ).add(
-				Restrictions.in( "class", Woman.class ) ).list();
+				Restrictions.in( "class", Collections.singleton( Woman.class ) ) ).list();
 		assertEquals( 1, persons.size() );
 		tx.rollback();
 		session.close();

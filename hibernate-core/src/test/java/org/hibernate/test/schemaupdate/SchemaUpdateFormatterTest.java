@@ -29,12 +29,11 @@ import org.junit.Test;
 @RequiresDialect( H2Dialect.class )
 public class SchemaUpdateFormatterTest {
 	
-	private static final String AFTER_FORMAT = 
-			System.lineSeparator() +
-			"    create table test_entity (" + System.lineSeparator() +
-			"        field varchar(255) not null," + System.lineSeparator() +
-			"        primary key (field)" + System.lineSeparator() +
-			"    );" + System.lineSeparator();
+	private static final String AFTER_FORMAT =
+			"\n    create table test_entity (\n" +
+			"        field varchar(255) not null,\n" +
+			"        primary key (field)\n" +
+			"    );\n";
 	private static final String DELIMITER = ";";
 
 	@Test
@@ -58,10 +57,13 @@ public class SchemaUpdateFormatterTest {
 					.setFormat( true )
 					.execute( EnumSet.of( TargetType.SCRIPT ), metadata );
 
-			Assert.assertEquals(
-					AFTER_FORMAT, 
-					new String(Files.readAllBytes(output.toPath()))
-			);
+			String outputContent = new String(Files.readAllBytes(output.toPath()));
+			//Old Macs use \r as a new line delimiter
+			outputContent = outputContent.replaceAll( "\r", "\n");
+			//On Windows, \r\n would become \n\n, so we eliminate duplicates
+			outputContent = outputContent.replaceAll( "\n\n", "\n");
+
+			Assert.assertEquals( AFTER_FORMAT, outputContent );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );

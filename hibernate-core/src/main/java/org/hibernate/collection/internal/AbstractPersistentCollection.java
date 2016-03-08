@@ -59,6 +59,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractPersistentCollection.class );
 
 	private transient SessionImplementor session;
+	private boolean isTempSession = false;
 	private boolean initialized;
 	private transient List<DelayedOperation> operationQueue;
 	private transient boolean directlyAccessible;
@@ -193,14 +194,11 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	}
 
 	private <T> T withTemporarySessionIfNeeded(LazyInitializationWork<T> lazyInitializationWork) {
-		SessionImplementor originalSession = null;
-		boolean isTempSession = false;
-		boolean isJTA = false;
+		SessionImplementor tempSession = null;
 
 		if ( session == null ) {
 			if ( allowLoadOutsideTransaction ) {
-				session = openTemporarySessionForLoading();
-				isTempSession = true;
+				tempSession = openTemporarySessionForLoading();
 			}
 			else {
 				throwLazyInitializationException( "could not initialize proxy - no Session" );
@@ -208,9 +206,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		}
 		else if ( !session.isOpen() ) {
 			if ( allowLoadOutsideTransaction ) {
-				originalSession = session;
-				session = openTemporarySessionForLoading();
-				isTempSession = true;
+				tempSession = openTemporarySessionForLoading();
 			}
 			else {
 				throwLazyInitializationException( "could not initialize proxy - the owning Session was closed" );
@@ -218,16 +214,23 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		}
 		else if ( !session.isConnected() ) {
 			if ( allowLoadOutsideTransaction ) {
-				originalSession = session;
-				session = openTemporarySessionForLoading();
-				isTempSession = true;
+				tempSession = openTemporarySessionForLoading();
 			}
 			else {
 				throwLazyInitializationException( "could not initialize proxy - the owning Session is disconnected" );
 			}
 		}
 
-		if ( isTempSession ) {
+
+		SessionImplementor originalSession = null;
+		boolean isJTA = false;
+
+		if ( tempSession != null ) {
+			isTempSession = true;
+			originalSession = session;
+			session = tempSession;
+
+
 			isJTA = session.getTransactionCoordinator().getTransactionCoordinatorBuilder().isJta();
 			
 			if ( !isJTA ) {
@@ -249,18 +252,20 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			return lazyInitializationWork.doWork();
 		}
 		finally {
-			if ( isTempSession ) {
+			if ( tempSession != null ) {
 				// make sure the just opened temp session gets closed!
+				isTempSession = false;
+				session = originalSession;
+
 				try {
 					if ( !isJTA ) {
-						( (Session) session ).getTransaction().commit();
+						( (Session) tempSession ).getTransaction().commit();
 					}
-					( (Session) session ).close();
+					( (Session) tempSession ).close();
 				}
 				catch (Exception e) {
 					LOG.warn( "Unable to close temporary session used to load lazy collection associated to no session" );
 				}
-				session = originalSession;
 			}
 		}
 	}
@@ -604,7 +609,9 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	public final boolean unsetSession(SessionImplementor currentSession) {
 		prepareForPossibleLoadingOutsideTransaction();
 		if ( currentSession == this.session ) {
-			this.session = null;
+			if ( !isTempSession ) {
+				this.session = null;
+			}
 			return true;
 		}
 		else {

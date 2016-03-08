@@ -731,25 +731,30 @@ public abstract class CollectionType extends AbstractType implements Association
 			collection = persistenceContext.useUnownedCollection( new CollectionKey(persister, key, entityMode) );
 			
 			if ( collection == null ) {
-				// create a new collection wrapper, to be initialized later
-				collection = instantiate( session, persister, key );
-				
-				collection.setOwner(owner);
-	
-				persistenceContext.addUninitializedCollection( persister, collection, key );
-	
-				// some collections are not lazy:
-				if ( initializeImmediately() ) {
-					session.initializeCollection( collection, false );
+
+				collection = persistenceContext.getCollection( new CollectionKey(persister, key, entityMode) );
+
+				if ( collection == null ) {
+					// create a new collection wrapper, to be initialized later
+					collection = instantiate( session, persister, key );
+
+					collection.setOwner( owner );
+
+					persistenceContext.addUninitializedCollection( persister, collection, key );
+
+					// some collections are not lazy:
+					if ( initializeImmediately() ) {
+						session.initializeCollection( collection, false );
+					}
+					else if ( !persister.isLazy() ) {
+						persistenceContext.addNonLazyCollection( collection );
+					}
+
+					if ( hasHolder() ) {
+						session.getPersistenceContext().addCollectionHolder( collection );
+					}
 				}
-				else if ( !persister.isLazy() ) {
-					persistenceContext.addNonLazyCollection( collection );
-				}
-	
-				if ( hasHolder() ) {
-					session.getPersistenceContext().addCollectionHolder( collection );
-				}
-				
+
 			}
 			
 			if ( LOG.isTraceEnabled() ) {

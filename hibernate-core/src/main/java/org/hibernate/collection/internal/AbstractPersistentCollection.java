@@ -736,13 +736,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			if ( initializing ) {
 				throw new AssertionFailure( "force initialize loading collection" );
 			}
-			if ( session == null ) {
-				throw new HibernateException( "collection is not associated with any session" );
-			}
-			if ( !session.isConnected() ) {
-				throw new HibernateException( "disconnected session" );
-			}
-			session.initializeCollection( this, false );
+			initialize( false );
 		}
 	}
 

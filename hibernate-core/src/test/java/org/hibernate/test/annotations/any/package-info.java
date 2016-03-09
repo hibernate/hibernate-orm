@@ -4,22 +4,16 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
+
+// $Id$
 @AnyMetaDefs(
-	@AnyMetaDef(
-		name = "PropertyMetaDef",
-		idType = "integer",
-		metaType = "string",
-		metaValues = {
-			@MetaValue(
-				value = "S",
-				targetEntity = StringProperty.class
-			),
-			@MetaValue(
-				value = "I",
-				targetEntity = IntegerProperty.class
-			)
-		}
-	)
+		@AnyMetaDef( name= "Property", metaType = "string", idType = "integer",
+			metaValues = {
+					@MetaValue(value = "C", targetEntity = CharProperty.class),
+					@MetaValue(value = "I", targetEntity = IntegerProperty.class),
+					@MetaValue(value = "S", targetEntity = StringProperty.class),
+					@MetaValue(value = "L", targetEntity = LongProperty.class)
+					})
 )
 
 package org.hibernate.test.annotations.any;

@@ -14,8 +14,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.JoinTable;
-import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToMany;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -34,70 +32,41 @@ import static org.junit.Assert.assertEquals;
  * @author Janario Oliveira
  * @author Gail Badner
  */
-public class SuperclassCollectionTest extends BaseEntityManagerFunctionalTestCase {
+public class EntitySuperclassCollectionTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {
-				PersonBase.class, Person.class, OtherPerson.class, Address.class,
-				OtherSubclass.class
+				PersonBase.class, Person.class, Address.class
 		};
-	}
-
-	@Test
-	public void testPerson() {
-		String address = "super-address";
-		String localAddress = "local-address";
-
-		PersonBase person = createPerson( new Person(), address, localAddress );
-
-		assertAddress( person, address, localAddress );
-	}
-
-	@Test
-	public void testOtherSubclass() {
-		String address = "other-super-address";
-		String localAddress = "other-local-address";
-		PersonBase person = createPerson( new OtherSubclass(), address, localAddress );
-
-		assertAddress( person, address, localAddress );
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-10556")
 	@FailureExpected( jiraKey = "HHH-10556")
-	public void testOtherPerson() {
-		String address = "other-person-super-address";
-		String localAddress = "other-person-local-address";
+	public void testPerson() {
+		String address = "super-address";
 
-		PersonBase person = createPerson( new OtherPerson(), address, localAddress );
+		PersonBase person = createPerson( new Person(), address );
 
-		assertAddress( person, address, localAddress );
+		assertAddress( person, address );
 	}
 
-	private void assertAddress(PersonBase person, String address, String localAddress) {
+	private void assertAddress(PersonBase person, String address) {
 		List<Object> results = find( person.getClass(), person.id, "addresses" );
 		assertEquals( 1, results.size() );
 
 		assertEquals( person.addresses.get( 0 ).id, ( (Address) results.get( 0 ) ).id );
 		assertEquals( address, ( (Address) results.get( 0 ) ).name );
 
-
-		results = find( person.getClass(), person.id, "localAddresses" );
-		assertEquals( 1, results.size() );
-
-		assertEquals( person.getLocalAddresses().get( 0 ).id, ( (Address) results.get( 0 ) ).id );
-		assertEquals( localAddress, ( (Address) results.get( 0 ) ).name );
-
 		getOrCreateEntityManager().close();
 	}
 
-	private PersonBase createPerson(PersonBase person, String address, String localAddress) {
+	private PersonBase createPerson(PersonBase person, String address) {
 		EntityManager em = createEntityManager();
 		EntityTransaction tx = em.getTransaction();
 		tx.begin();
 
 		person.addresses.add( new Address( address ) );
-		person.getLocalAddresses().add( new Address( localAddress ) );
 		person = em.merge( person );
 		tx.commit();
 		return person;
@@ -131,42 +100,16 @@ public class SuperclassCollectionTest extends BaseEntityManagerFunctionalTestCas
 		}
 	}
 
-	@MappedSuperclass
+	@Entity
 	public abstract static class PersonBase {
 		@Id
 		@GeneratedValue
 		Integer id;
 		@OneToMany(cascade = CascadeType.ALL)
 		List<Address> addresses = new ArrayList<Address>();
-
-		protected abstract List<Address> getLocalAddresses();
 	}
 
 	@Entity(name="Person")
 	public static class Person extends PersonBase {
-		@OneToMany(cascade = CascadeType.ALL)
-		@JoinTable(name = "person_localaddress")
-		List<Address> localAddresses = new ArrayList<Address>();
-
-		@Override
-		public List<Address> getLocalAddresses() {
-			return localAddresses;
-		}
-	}
-
-	@Entity(name="OtherPerson")
-	public static class OtherPerson extends Person {
-	}
-
-	@Entity(name="OtherSubclass")
-	public static class OtherSubclass extends PersonBase {
-		@OneToMany(cascade = CascadeType.ALL)
-		@JoinTable(name = "other_person_localaddress")
-		List<Address> localAddresses = new ArrayList<Address>();
-
-		@Override
-		public List<Address> getLocalAddresses() {
-			return localAddresses;
-		}
 	}
 }

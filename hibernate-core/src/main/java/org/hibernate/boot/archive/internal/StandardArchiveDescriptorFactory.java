@@ -101,7 +101,7 @@ public class StandardArchiveDescriptorFactory implements ArchiveDescriptorFactor
 		}
 
 		final String filePart = extractLocalFilePath( url );
-		if ( filePart.startsWith( "/" ) ) {
+		if ( filePart.startsWith( "/" ) || new File(url.getFile()).isAbsolute() ) {
 			// the URL is already an absolute form
 			return url;
 		}

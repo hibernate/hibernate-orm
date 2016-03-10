@@ -11,10 +11,12 @@ import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Comparator;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
+import org.hibernate.internal.util.compare.ArrayComparator;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
@@ -69,6 +71,11 @@ public class ByteArrayTypeDescriptor extends AbstractTypeDescriptor<Byte[]> {
 			bytes[i] = (byte) ( Integer.parseInt( hexStr, 16 ) + Byte.MIN_VALUE );
 		}
 		return bytes;
+	}
+
+	@Override
+	public Comparator<Byte[]> getComparator() {
+		return ArrayComparator.BYTE_ARRAY_COMPARATOR;
 	}
 
 	@SuppressWarnings({ "unchecked" })

@@ -10,9 +10,11 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.sql.Clob;
 import java.util.Arrays;
+import java.util.Comparator;
 
 import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
+import org.hibernate.internal.util.compare.ArrayComparator;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
@@ -49,6 +51,11 @@ public class CharacterArrayTypeDescriptor extends AbstractTypeDescriptor<Charact
 			hashCode = 31 * hashCode + aChar;
 		}
 		return hashCode;
+	}
+
+	@Override
+	public Comparator<Character[]> getComparator() {
+		return ArrayComparator.CHARACTER_ARRAY_COMPARATOR;
 	}
 
 	@SuppressWarnings({ "unchecked" })

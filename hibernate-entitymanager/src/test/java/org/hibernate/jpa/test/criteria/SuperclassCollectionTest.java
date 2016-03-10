@@ -23,7 +23,6 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 
 import org.junit.Test;
@@ -38,7 +37,7 @@ public class SuperclassCollectionTest extends BaseEntityManagerFunctionalTestCas
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {
-				PersonBase.class, Person.class, OtherPerson.class, Address.class,
+				PersonBaseBase.class, Person.class, OtherPerson.class, Address.class,
 				OtherSubclass.class
 		};
 	}
@@ -48,7 +47,7 @@ public class SuperclassCollectionTest extends BaseEntityManagerFunctionalTestCas
 		String address = "super-address";
 		String localAddress = "local-address";
 
-		PersonBase person = createPerson( new Person(), address, localAddress );
+		PersonBaseBase person = createPerson( new Person(), address, localAddress );
 
 		assertAddress( person, address, localAddress );
 	}
@@ -57,24 +56,23 @@ public class SuperclassCollectionTest extends BaseEntityManagerFunctionalTestCas
 	public void testOtherSubclass() {
 		String address = "other-super-address";
 		String localAddress = "other-local-address";
-		PersonBase person = createPerson( new OtherSubclass(), address, localAddress );
+		PersonBaseBase person = createPerson( new OtherSubclass(), address, localAddress );
 
 		assertAddress( person, address, localAddress );
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-10556")
-	@FailureExpected( jiraKey = "HHH-10556")
 	public void testOtherPerson() {
 		String address = "other-person-super-address";
 		String localAddress = "other-person-local-address";
 
-		PersonBase person = createPerson( new OtherPerson(), address, localAddress );
+		PersonBaseBase person = createPerson( new OtherPerson(), address, localAddress );
 
 		assertAddress( person, address, localAddress );
 	}
 
-	private void assertAddress(PersonBase person, String address, String localAddress) {
+	private void assertAddress(PersonBaseBase person, String address, String localAddress) {
 		List<Object> results = find( person.getClass(), person.id, "addresses" );
 		assertEquals( 1, results.size() );
 
@@ -91,7 +89,7 @@ public class SuperclassCollectionTest extends BaseEntityManagerFunctionalTestCas
 		getOrCreateEntityManager().close();
 	}
 
-	private PersonBase createPerson(PersonBase person, String address, String localAddress) {
+	private PersonBaseBase createPerson(PersonBaseBase person, String address, String localAddress) {
 		EntityManager em = createEntityManager();
 		EntityTransaction tx = em.getTransaction();
 		tx.begin();
@@ -132,7 +130,7 @@ public class SuperclassCollectionTest extends BaseEntityManagerFunctionalTestCas
 	}
 
 	@MappedSuperclass
-	public abstract static class PersonBase {
+	public abstract static class PersonBaseBase {
 		@Id
 		@GeneratedValue
 		Integer id;
@@ -140,6 +138,10 @@ public class SuperclassCollectionTest extends BaseEntityManagerFunctionalTestCas
 		List<Address> addresses = new ArrayList<Address>();
 
 		protected abstract List<Address> getLocalAddresses();
+	}
+
+	@MappedSuperclass
+	public abstract static class PersonBase extends PersonBaseBase {
 	}
 
 	@Entity(name="Person")
@@ -154,12 +156,16 @@ public class SuperclassCollectionTest extends BaseEntityManagerFunctionalTestCas
 		}
 	}
 
+	@MappedSuperclass
+	public static class OtherPersonBase extends Person {
+	}
+
 	@Entity(name="OtherPerson")
-	public static class OtherPerson extends Person {
+	public static class OtherPerson extends OtherPersonBase {
 	}
 
 	@Entity(name="OtherSubclass")
-	public static class OtherSubclass extends PersonBase {
+	public static class OtherSubclass extends PersonBaseBase {
 		@OneToMany(cascade = CascadeType.ALL)
 		@JoinTable(name = "other_person_localaddress")
 		List<Address> localAddresses = new ArrayList<Address>();

@@ -9,7 +9,10 @@ package org.hibernate.jpa.criteria.path;
 import java.io.Serializable;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Bindable;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.PluralAttribute;
+import javax.persistence.metamodel.Type;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
@@ -41,7 +44,38 @@ public class PluralAttributePath<X> extends AbstractPathImpl<X> implements Seria
 	}
 
 	private String resolveRole(PluralAttribute attribute) {
-		return getPathSource().getJavaType().getName() +
+		Class<?> roleOwnerType = attribute.getDeclaringType().getJavaType();
+		if ( attribute.getDeclaringType().getPersistenceType() == Type.PersistenceType.MAPPED_SUPERCLASS ) {
+			// the attribute is declared in a mappedsuperclass
+			if ( getPathSource().getModel().getBindableType() == Bindable.BindableType.ENTITY_TYPE ) {
+				// the role will be assigned to the "nearest" EnityType subclass of the MappedSuperclassType
+				EntityType entityTypeNearestDeclaringType = (EntityType) getPathSource().getModel();
+				IdentifiableType superType = entityTypeNearestDeclaringType.getSupertype();
+				IdentifiableType previousType = entityTypeNearestDeclaringType;
+				while ( superType != attribute.getDeclaringType() ) {
+					if ( superType == null ) {
+						throw new IllegalStateException(
+								String.format(
+									"Cannot determine nearest EntityType extending mapped superclass [%s]; [%s] extends [%s], but supertype of [%s] is null",
+										attribute.getDeclaringType().getJavaType().getName(),
+										( (EntityType) getPathSource().getModel() ).getJavaType().getName(),
+										previousType.getJavaType().getName(),
+										previousType.getJavaType().getName()
+								)
+						);
+					}
+					if ( superType.getPersistenceType() == Type.PersistenceType.ENTITY ) {
+						entityTypeNearestDeclaringType = (EntityType) superType;
+					}
+					previousType = superType;
+					superType = superType.getSupertype();
+				}
+				roleOwnerType = entityTypeNearestDeclaringType.getJavaType();
+			}
+			// else throw an exception?
+		}
+		// TODO: still need to deal with a plural attribute declared in an embeddable (HHH-6562)
+		return roleOwnerType.getName() +
 				'.' + attribute.getName();
 	}
 

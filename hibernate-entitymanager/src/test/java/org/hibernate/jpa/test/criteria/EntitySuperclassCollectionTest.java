@@ -21,7 +21,6 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 
 import org.junit.Test;
@@ -42,7 +41,6 @@ public class EntitySuperclassCollectionTest extends BaseEntityManagerFunctionalT
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-10556")
-	@FailureExpected( jiraKey = "HHH-10556")
 	public void testPerson() {
 		String address = "super-address";
 

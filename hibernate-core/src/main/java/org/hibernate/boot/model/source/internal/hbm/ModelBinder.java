@@ -1882,7 +1882,7 @@ public class ModelBinder {
 				sourceDocument,
 				attributeSource.getRelationalValueSources(),
 				value,
-				true,
+				attributeSource.areValuesNullableByDefault(),
 				new RelationalObjectBinder.ColumnNamingDelegate() {
 					@Override
 					public Identifier determineImplicitName(LocalMetadataBuildingContext context) {

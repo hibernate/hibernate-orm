@@ -216,7 +216,7 @@ class SingularAttributeSourceManyToOneImpl
 
 	@Override
 	public boolean areValuesNullableByDefault() {
-		return true;
+		return getNaturalIdMutability() == NaturalIdMutability.NOT_NATURAL_ID;
 	}
 
 	@Override

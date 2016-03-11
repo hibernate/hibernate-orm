@@ -116,7 +116,8 @@ public class H2Dialect extends Dialect {
 		registerColumnType( Types.FLOAT, "float" );
 		registerColumnType( Types.INTEGER, "integer" );
 		registerColumnType( Types.LONGVARBINARY, "longvarbinary" );
-		registerColumnType( Types.LONGVARCHAR, "longvarchar" );
+		// H2 does define "longvarchar", but it is a simple alias to "varchar"
+		registerColumnType( Types.LONGVARCHAR, String.format( "varchar(%d)", Integer.MAX_VALUE ) );
 		registerColumnType( Types.REAL, "real" );
 		registerColumnType( Types.SMALLINT, "smallint" );
 		registerColumnType( Types.TINYINT, "tinyint" );

@@ -2131,6 +2131,11 @@ public abstract class Loader {
 			session.getJdbcCoordinator().afterStatementExecution();
 			throw sqle;
 		}
+		catch (HibernateException he) {
+			session.getJdbcCoordinator().getResourceRegistry().release( st );
+			session.getJdbcCoordinator().afterStatementExecution();
+			throw he;
+		}
 	}
 
 	protected void autoDiscoverTypes(ResultSet rs) {

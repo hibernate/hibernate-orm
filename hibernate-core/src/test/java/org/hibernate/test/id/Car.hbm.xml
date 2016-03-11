@@ -21,7 +21,7 @@
     <class name="Car">
     
     	<id name="id">
-    		<generator class="org.hibernate.id.MultipleHiLoPerTableGenerator">
+    		<generator class="org.hibernate.id".MultipleHiLoPerTableGenerator">
 				<param name="max_lo">0</param>
  			</generator>
     	</id>

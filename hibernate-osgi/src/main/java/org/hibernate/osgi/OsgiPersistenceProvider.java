@@ -91,8 +91,8 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 		);
 
 		osgiClassLoader.addClassLoader( info.getClassLoader() );
-
-		return Bootstrap.getEntityManagerFactoryBuilder( info, settings, osgiClassLoader ).build();
+		
+		return Bootstrap.getEntityManagerFactoryBuilder( info, settings, osgiClassLoader, new OSGiClassLoaderServiceImpl( osgiClassLoader, osgiServiceUtil ) ).build();
 	}
 
 	@SuppressWarnings("unchecked")

@@ -26,8 +26,6 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
-import com.sun.istack.internal.NotNull;
-
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -94,7 +92,6 @@ public class InheritanceManyToManyForeignKeyTest extends BaseNonConfigCoreFuncti
 		@GeneratedValue
 		private Long id;
 
-		@NotNull
 		@Column(name = "START_DATE", nullable = false)
 		private LocalDate startDate;
 	}

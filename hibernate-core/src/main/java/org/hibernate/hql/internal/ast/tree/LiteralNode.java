@@ -13,6 +13,7 @@ import javax.persistence.AttributeConverter;
 import org.hibernate.QueryException;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ColumnHelper;
+import org.hibernate.type.LiteralType;
 import org.hibernate.type.SingleColumnType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
@@ -101,21 +102,12 @@ public class LiteralNode extends AbstractSelectExpression implements HqlSqlToken
 				return converted.toString();
 			}
 		}
-		else if ( getDataType().getReturnedClass().equals( converterTypeAdapter.getJdbcType() ) ) {
-			if ( isCharacterData( converterTypeAdapter.sqlType() ) ) {
-				return "'" + literalValue.toString() + "'";
-			}
-			else {
-				return literalValue.toString();
-			}
-		}
 		else {
 			throw new QueryException(
 					String.format(
 							Locale.ROOT,
-							"AttributeConverter domain-model attribute type [%s] and JDBC type [%s] did not match query literal type [%s]",
+							"AttributeConverter domain-model attribute type [%s] did not match query literal type [%s]",
 							converterTypeAdapter.getModelType().getName(),
-							converterTypeAdapter.getJdbcType().getName(),
 							getDataType().getReturnedClass().getName()
 					)
 			);

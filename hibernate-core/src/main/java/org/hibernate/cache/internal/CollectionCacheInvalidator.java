@@ -119,17 +119,11 @@ public class CollectionCacheInvalidator
 					if ( oldState != null ) {
 						// in case of updating an entity we perhaps have to decache 2 entity collections, this is the
 						// old one
-						oldId = session.getIdentifier( oldState[i] );
+						oldId = getIdentifier( session, oldState[i] );
 					}
 					Object ref = persister.getPropertyValue( entity, i );
-					Serializable id = null;
-					if ( ref != null ) {
-						id = session.getContextEntityIdentifier( ref );
-						if ( id == null ) {
-							id = session.getSessionFactory().getClassMetadata( ref.getClass() )
-									.getIdentifier( ref, session );
-						}
-					}
+					Serializable id = getIdentifier( session, ref );
+
 					// only evict if the related entity has changed
 					if ( id != null && !id.equals( oldId ) ) {
 						evict( id, collectionPersister, session );
@@ -157,6 +151,18 @@ public class CollectionCacheInvalidator
 			// don't let decaching influence other logic
 			LOG.error( "", e );
 		}
+	}
+
+	private Serializable getIdentifier(EventSource session, Object obj) {
+		Serializable id = null;
+		if ( obj != null ) {
+			id = session.getContextEntityIdentifier( obj );
+			if ( id == null ) {
+				id = session.getSessionFactory().getClassMetadata( obj.getClass() )
+						.getIdentifier( obj, session );
+			}
+		}
+		return id;
 	}
 
 	private void evict(Serializable id, CollectionPersister collectionPersister, EventSource session) {

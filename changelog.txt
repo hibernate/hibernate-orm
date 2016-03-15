@@ -3,6 +3,39 @@ Hibernate 5.0 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.0.9.Final (March 14, 2016)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/22651
+
+** Bug
+     * [HHH-9485] - Duplicate Property with AccessType.PROPERTY and MappedSuperclass
+     * [HHH-9693] - H2 : Hibernate cannot validate it's own created schema
+     * [HHH-10269] - JDBC Statement is not closed if exception appeared during query execution
+     * [HHH-10329] - HHH-10023, ISPN-5676 workaround, causes ClassCastException on runtime with Infinispan 8.0.1.Final
+     * [HHH-10455] - MapJoin results in NPE when using key()
+     * [HHH-10499] - Can't set ConnectionProvider instance, regression
+     * [HHH-10505] - jboss logging only auto detects slf4j if it is using logback
+     * [HHH-10510] - Root cause not properly extracted when transaction commit fails
+     * [HHH-10517] - ClassCastException using Restrictions.in with Child classes in Criteria based on Parent class
+     * [HHH-10544] - MySQL failing tests
+     * [HHH-10545] - InfinispanRegionFactory inadvertently starts the default cache during stop()
+     * [HHH-10553] - ORM tries to create a unique constraint on a non existing table
+     * [HHH-10554] - NullPointerException in @Embeddable dirty tracking writer
+     * [HHH-10556] - Failure getting a PluralAttributePath for collection declared in a superclass marked @Entity
+     * [HHH-10563] - Significant String use/duplication associated with subselect fetch
+     * [HHH-10567] - Wrong table for formula if its property is mapped on a secondary table
+     * [HHH-10576] - Correct association in CascadeMergeToChildBeforeParentTest
+     * [HHH-10593] - Avoid NullPointerException with auto_evict_collection_cache and many-to-many
+     * [HHH-10602] - Retrieve cached value with enable_lazy_load_no_trans throws an exception
+
+** Task
+     * [HHH-10542] - Update 5.0 migration guide
+     * [HHH-10579] - Add missing Manifest data
+
+** Improvement
+     * [HHH-10546] - InfinispanRegionFactory should stop any caches it starts
+
+
 Changes in 5.0.8.Final (February 17, 2016)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/22250

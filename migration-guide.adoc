@@ -4,6 +4,11 @@
 This guide discusses migration from Hibernate ORM version 4.3 to version 5.0.  For migration from
 earlier versions, see any other pertinent migration guides as well.
 
+Several updates have been added to this document for changes that took affect after
+5.0.0.Final was released. See <<migration-updates, Migration Updates>> for details
+migrating to later 5.0 releases.
+
+
 == Re-purposing of Configuration
 
 Configuration, historically, allowed users to iteratively add settings and mappings in any order and to query the
@@ -55,7 +60,8 @@ See the User Guide for additional details.
     implementations extending the built-in ones and relying on that behavior should be updated to call
     `SqlTypeDescriptorRegistry#addDescriptor` themselves.
 * The JDBC type for "big_integer" (org.hibernate.type.BigIntegerType) properties has changed from
-    java.sql.Types,NUMERIC to java.sql.Types.BIGINT.
+    java.sql.Types,NUMERIC to java.sql.Types.BIGINT. This change was reverted in 5.0.1.Final.
+    See <<migration-updates, Migration Updates>> for details.
 * For ids defined as UUID with generation, for some databases it is required to explicitly set the `@Column( length=16 )`
     in order to generate BINARY(16) so that comparisons properly work.
 * For EnumType mappings defined in hbm.xml where the user wants name-mapping (`javax.persistence.EnumType#STRING`)
@@ -116,3 +122,45 @@ except for Oracle12cDialect
 * Introduction of `org.hibernate.boot.model.relational.ExportableProducer` which will effect any
 	`org.hibernate.id.PersistentIdentifierGenerator` implementations
 * Changed to signature of `org.hibernate.id.Configurable` to accept `ServiceRegistry` rather than just `Dialect`
+
+
+[[migration-updates]]
+=== Migration from 5.0.0.Final to 5.0.1.Final
+
+As of 5.0.1.Final, the JDBC type for "big_integer" (`org.hibernate.type.BigIntegerType`)
+properties has been changed back from `java.sql.Types.BIGINT` to `java.sql.Types.NUMERIC`.
+This is consistent with earlier versions (pre-5.0.0.Final).
+See https://hibernate.atlassian.net/browse/HHH-10053[HHH-10053] for details.
+
+
+=== Migration from 5.0.1.Final to 5.0.2.Final
+
+As of 5.0.2.Final, usage of JPQL KEY() for an `Map` key that is an entity results in the
+addition of an inner join with the entity table. Earlier versions only referenced the
+entity ID and did not add an inner join.
+See https://hibernate.atlassian.net/browse/HHH-10537[HHH-10537] for details.
+
+
+=== Migration from 5.0.2.Final to 5.0.3.Final
+
+As of 5.0.3.Final, when using an `AttributeConverter` for an enum, queries must refer
+to the enum value (e.g., MyEnum.TYPE1). Queries that refer to a literal that is
+the "converted" value (e.g., returned by AttributeConverter#convertToDatabaseColumn)
+will cause a failure.
+See https://hibernate.atlassian.net/browse/HHH-10282[HHH-10282] for details.
+
+
+=== Migration from 5.0.3.Final to 5.0.8.Final
+
+As of 5.0.8.Final, Oracle12cDialect maps byte[] and Byte[] to BLOB.
+
+Previous versions of Hibernate have mapped `byte[]` and `Byte[]` to Oracle's `LONG RAW` data type (via the JDBC
+`LONGVARBINARY` type).  Oracle has deprecated the `LONG RAW` data type for many releases - possibly as far back
+as 8i.  Therefore it was decided to start having Hibernate map `byte[]` and `Byte[]` to `BLOB` for Oracle.
+
+However, in the interest of backwards compatibility and not breaking existing applications it was also decided to
+limit this change to just the Oracle12cDialect.  So starting in 5.0.8.Final applications using Oracle12cDialect and
+implicitly mapping `byte[]` and `Byte[]` values will start seeing those handled as `BLOB` data rather than `LONG RAW`
+data.  For existing applications that want to continue to use Oracle12cDialect and still continue to implicitly map
+`byte[]` and `Byte[]` attributes to `LONG RAW`, there is a new configuration setting you can use to enable that:
+`hibernate.dialect.oracle.prefer_longvarbinary`, which is false by default (map to `BLOB`).

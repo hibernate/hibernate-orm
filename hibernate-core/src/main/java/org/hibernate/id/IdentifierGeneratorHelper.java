@@ -14,6 +14,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.CustomType;
@@ -134,6 +135,9 @@ public final class IdentifierGeneratorHelper {
 			}
 		}
 		else {
+			// HHH-9271 fix
+			identifier = Identifier.toIdentifier(identifier).getText();
+
 			if ( clazz == Long.class ) {
 				return rs.getLong( identifier );
 			}

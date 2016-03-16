@@ -86,6 +86,7 @@ ext {
 			hsqldb:          "org.hsqldb:hsqldb:2.3.2",
             derby:           "org.apache.derby:derby:10.11.1.1",
 			postgresql:      'org.postgresql:postgresql:9.4-1202-jdbc41',
+			mysql:			 'mysql:mysql-connector-java:5.1.38',
             jboss_jta:       "org.jboss.jbossts:jbossjta:4.16.4.Final",
             xapool:          "com.experlog:xapool:1.5.0",
             mockito:         'org.mockito:mockito-core:1.9.0',

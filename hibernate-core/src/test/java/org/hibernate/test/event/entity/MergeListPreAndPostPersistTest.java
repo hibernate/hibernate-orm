@@ -14,8 +14,6 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
@@ -24,8 +22,10 @@ import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.event.spi.PreInsertEvent;
 import org.hibernate.event.spi.PreInsertEventListener;
 import org.hibernate.persister.entity.EntityPersister;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
@@ -68,7 +68,7 @@ public class MergeListPreAndPostPersistTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
-	@Entity
+	@Entity(name = "Order")
 	private static class Order {
 		@Id
 		public Long id;
@@ -100,7 +100,7 @@ public class MergeListPreAndPostPersistTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Item")
 	private static class Item {
 		@Id
 		public Long id;

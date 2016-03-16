@@ -11,9 +11,11 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.CustomType;
@@ -99,9 +101,11 @@ public final class IdentifierGeneratorHelper {
 				return ( (ResultSetIdentifierConsumer) customType.getUserType() ).consumeIdentifier( rs );
 			}
 		}
+		ResultSetMetaData resultSetMetaData = null;
 		int columnCount = 1;
 		try {
-			columnCount = rs.getMetaData().getColumnCount();
+			resultSetMetaData = rs.getMetaData();
+			columnCount = resultSetMetaData.getColumnCount();
 		}
 		catch (Exception e) {
 			//Oracle driver will throw NPE
@@ -134,29 +138,42 @@ public final class IdentifierGeneratorHelper {
 			}
 		}
 		else {
-			if ( clazz == Long.class ) {
-				return rs.getLong( identifier );
+			try {
+				return extractIdentifier( rs, identifier, type, clazz );
 			}
-			else if ( clazz == Integer.class ) {
-				return rs.getInt( identifier );
+			catch (SQLException e) {
+				if(Identifier.isQuoted( identifier )) {
+					return extractIdentifier( rs, Identifier.toIdentifier( identifier).getText(), type, clazz );
+				}
+				throw e;
 			}
-			else if ( clazz == Short.class ) {
-				return rs.getShort( identifier );
-			}
-			else if ( clazz == String.class ) {
-				return rs.getString( identifier );
-			}
-			else if ( clazz == BigInteger.class ) {
-				return rs.getBigDecimal( identifier ).setScale( 0, BigDecimal.ROUND_UNNECESSARY ).toBigInteger();
-			}
-			else if ( clazz == BigDecimal.class ) {
-				return rs.getBigDecimal( identifier ).setScale( 0, BigDecimal.ROUND_UNNECESSARY );
-			}
-			else {
-				throw new IdentifierGenerationException(
-						"unrecognized id type : " + type.getName() + " -> " + clazz.getName()
-				);
-			}
+		}
+	}
+
+	private static Serializable extractIdentifier(ResultSet rs, String identifier, Type type, Class clazz)
+			throws SQLException {
+		if ( clazz == Long.class ) {
+			return rs.getLong( identifier );
+		}
+		else if ( clazz == Integer.class ) {
+			return rs.getInt( identifier );
+		}
+		else if ( clazz == Short.class ) {
+			return rs.getShort( identifier );
+		}
+		else if ( clazz == String.class ) {
+			return rs.getString( identifier );
+		}
+		else if ( clazz == BigInteger.class ) {
+			return rs.getBigDecimal( identifier ).setScale( 0, BigDecimal.ROUND_UNNECESSARY ).toBigInteger();
+		}
+		else if ( clazz == BigDecimal.class ) {
+			return rs.getBigDecimal( identifier ).setScale( 0, BigDecimal.ROUND_UNNECESSARY );
+		}
+		else {
+			throw new IdentifierGenerationException(
+					"unrecognized id type : " + type.getName() + " -> " + clazz.getName()
+			);
 		}
 	}
 

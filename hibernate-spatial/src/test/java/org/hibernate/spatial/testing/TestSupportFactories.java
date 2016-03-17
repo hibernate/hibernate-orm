@@ -72,7 +72,8 @@ public class TestSupportFactories {
 				"org.hibernate.spatial.dialect.mysql.MySQL56InnoDBSpatialDialect".equals( canonicalName ) ) {
 			return MySQL56TestSupport.class;
 		}
-		if ( "org.hibernate.spatial.dialect.oracle.OracleSpatial10gDialect".equals( canonicalName ) ) {
+		if ( "org.hibernate.spatial.dialect.oracle.OracleSpatial10gDialect".equals( canonicalName ) ||
+				"org.hibernate.spatial.dialect.oracle.OracleSpatialSDO10gDialect".equals( canonicalName )) {
 			return OracleSDOTestSupport.class;
 		}
 		throw new IllegalArgumentException( "Dialect not known in test suite" );

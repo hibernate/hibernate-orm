@@ -46,5 +46,4 @@ public class SpatialService implements Service {
 	public boolean isEnabled() {
 		return integrationEnabled;
 	}
-
 }

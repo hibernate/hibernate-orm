@@ -6,35 +6,26 @@
  */
 package org.hibernate.spatial.dialect.oracle;
 
-
 import java.io.Serializable;
 import java.sql.Types;
 import java.util.Map;
 
-import org.geolatte.geom.codec.db.oracle.ConnectionFinder;
-import org.geolatte.geom.codec.db.oracle.OracleJDBCTypeFactory;
-
 import org.jboss.logging.Logger;
 
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.spatial.GeolatteGeometryType;
 import org.hibernate.spatial.HSMessageLogger;
-import org.hibernate.spatial.HibernateSpatialConfigurationSettings;
-import org.hibernate.spatial.JTSGeometryType;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 
 /**
- * Spatial Dialect for Oracle10g databases.
- *
- * @author Karel Maesen
+ * A Spatial Dialect for Oracle 10g/11g that uses the "native" SDO spatial operators.
+ * <p>
+ * Created by Karel Maesen, Geovise BVBA on 11/02/17.
  */
-public class OracleSpatial10gDialect extends Oracle10gDialect implements SpatialDialect, Serializable {
+public class OracleSpatialSDO10gDialect extends Oracle10gDialect implements SpatialDialect, Serializable {
 
 	private static final HSMessageLogger log = Logger.getMessageLogger(
 			HSMessageLogger.class,
@@ -42,12 +33,12 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements Spatial
 	);
 
 
-	transient private OracleSDOSupport sdoSupport = new OracleSDOSupport( true );
+	transient private OracleSDOSupport sdoSupport = new OracleSDOSupport( false );
 
 	/**
-	 * Constructs the dialect with
+	 * Constructs the dialect
 	 */
-	public OracleSpatial10gDialect() {
+	public OracleSpatialSDO10gDialect() {
 		super();
 
 		// register geometry type
@@ -76,7 +67,7 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements Spatial
 
 	@Override
 	public String getSpatialRelateSQL(String columnName, int spatialRelation) {
-		return sdoSupport.getSpatialRelateSQL( columnName, spatialRelation );
+		return sdoSupport.getSDOSpatialRelateSQL( columnName, spatialRelation );
 	}
 
 	@Override
@@ -106,7 +97,7 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements Spatial
 
 	@Override
 	public boolean supports(SpatialFunction function) {
-		return (getFunctions().get( function.toString() ) != null);
+		return !function.equals( SpatialFunction.crosses ) && (getFunctions().get( function.toString() ) != null);
 	}
 
 

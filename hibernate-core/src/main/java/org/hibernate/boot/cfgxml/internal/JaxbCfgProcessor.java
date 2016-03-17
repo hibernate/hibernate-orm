@@ -48,7 +48,7 @@ import java.util.List;
 public class JaxbCfgProcessor {
 	private static final Logger log = Logger.getLogger( JaxbCfgProcessor.class );
 
-	public static final String HIBERNATE_CONFIGURATION_URI = "http://hibernate.org/xsd/hibernate-configuration/";
+	public static final String HIBERNATE_CONFIGURATION_URI = "http://hibernate.org/xsd/hibernate-configuration/k";
 
 	private final ClassLoaderService classLoaderService;
 	private final LocalXmlResourceResolver xmlResourceResolver;

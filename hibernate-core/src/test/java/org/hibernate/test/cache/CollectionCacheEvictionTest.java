@@ -253,7 +253,6 @@ public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		s = openSession();
-		s.beginTransaction();
 
 		company2 = (Company) s.get( Company.class, 2 );
 

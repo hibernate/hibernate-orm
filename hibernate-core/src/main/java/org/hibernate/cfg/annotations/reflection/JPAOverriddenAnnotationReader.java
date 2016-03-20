@@ -1899,9 +1899,11 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			bindNamedAttributeNodes( subElement, ann );
 
 			List<Element> subgraphNodes = subElement.elements( "subgraph" );
-			bindNamedSubgraph( defaults, ann, subgraphNodes, classLoaderAccess );
 			List<Element> subclassSubgraphNodes = subElement.elements( "subclass-subgraph" );
-			bindNamedSubgraph( defaults, ann, subclassSubgraphNodes, classLoaderAccess );
+			if(!subclassSubgraphNodes.isEmpty()) {
+				subgraphNodes.addAll( subclassSubgraphNodes );
+			}
+			bindNamedSubgraph( defaults, ann, subgraphNodes, classLoaderAccess );
 			namedEntityGraphList.add( (NamedEntityGraph) AnnotationFactory.create( ann ) );
 		}
 		//TODO
@@ -1931,6 +1933,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			bindNamedAttributeNodes(subgraphNode, annSubgraphNode);
 			annSubgraphNodes.add( (NamedSubgraph) AnnotationFactory.create( annSubgraphNode ) );
 		}
+
 		ann.setValue( "subgraphs", annSubgraphNodes.toArray( new NamedSubgraph[annSubgraphNodes.size()] ) );
 	}
 

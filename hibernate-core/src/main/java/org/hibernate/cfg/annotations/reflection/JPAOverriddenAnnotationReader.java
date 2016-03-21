@@ -1931,7 +1931,17 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			bindNamedAttributeNodes(subgraphNode, annSubgraphNode);
 			annSubgraphNodes.add( (NamedSubgraph) AnnotationFactory.create( annSubgraphNode ) );
 		}
-		ann.setValue( "subgraphs", annSubgraphNodes.toArray( new NamedSubgraph[annSubgraphNodes.size()] ) );
+		NamedSubgraph[] old = (NamedSubgraph[]) ann.valueOf( "subgraphs" );
+		NamedSubgraph[] temp;
+		if ( old != null ) {
+			temp = annSubgraphNodes.toArray( new NamedSubgraph[annSubgraphNodes.size() + old.length] );
+			System.arraycopy( old, 0, temp, annSubgraphNodes.size(), old.length );
+		}
+		else {
+			temp = annSubgraphNodes.toArray( new NamedSubgraph[annSubgraphNodes.size()] );
+		}
+
+		ann.setValue( "subgraphs", temp );
 	}
 
 	private static void bindNamedAttributeNodes(Element subElement, AnnotationDescriptor ann) {

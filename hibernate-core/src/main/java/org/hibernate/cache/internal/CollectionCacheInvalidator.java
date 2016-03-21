@@ -125,8 +125,10 @@ public class CollectionCacheInvalidator
 					Serializable id = getIdentifier( session, ref );
 
 					// only evict if the related entity has changed
-					if ( id != null && !id.equals( oldId ) ) {
-						evict( id, collectionPersister, session );
+					if ( id != null && !id.equals( oldId ) || oldId != null && !oldId.equals( id ) ) {
+						if ( id != null ) {
+							evict( id, collectionPersister, session );
+						}
 						if ( oldId != null ) {
 							evict( oldId, collectionPersister, session );
 						}

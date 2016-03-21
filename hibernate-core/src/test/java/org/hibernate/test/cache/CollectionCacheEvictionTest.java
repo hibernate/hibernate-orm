@@ -246,6 +246,17 @@ public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 			fail( "Cached element not found" );
 		}
 
+		user = (User) s.get( User.class, 1 );
+		user.setCompany( null );
+
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+
+		company2 = (Company) s.get( Company.class, 2 );
+
+		assertEquals( 0, company2.getUsers().size() );
 		s.close();
 	}
 

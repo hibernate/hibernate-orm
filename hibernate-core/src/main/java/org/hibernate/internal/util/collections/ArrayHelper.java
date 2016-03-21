@@ -407,8 +407,13 @@ public final class ArrayHelper {
 	}
 
 	public static String[] reverse(String[] source) {
-		Collections.reverse( Arrays.asList( source ) );
-		return source;
+		final int length = source.length;
+		final String[] destination = new String[length];
+		for ( int i = 0; i < length; i++ ) {
+			final int x = length - i - 1;
+			destination[x] = source[i];
+		}
+		return destination;
 	}
 
 	public static void main(String... args) {

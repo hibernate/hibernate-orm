@@ -6,8 +6,8 @@ import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.jpamodelgen.test.util.TestForIssue;
 
+import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
 import org.junit.Test;
 

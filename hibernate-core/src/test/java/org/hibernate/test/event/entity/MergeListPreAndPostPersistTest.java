@@ -68,7 +68,7 @@ public class MergeListPreAndPostPersistTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
-	@Entity(name = "Order")
+	@Entity(name = "`Order`")
 	private static class Order {
 		@Id
 		public Long id;

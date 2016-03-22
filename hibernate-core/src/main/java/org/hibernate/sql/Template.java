@@ -143,6 +143,7 @@ public final class Template {
 		boolean beforeTable = false;
 		boolean inFromClause = false;
 		boolean afterFromTable = false;
+		boolean inCast =  false;
 
 		boolean hasMore = tokens.hasMoreTokens();
 		String nextToken = hasMore ? tokens.nextToken() : null;
@@ -202,6 +203,40 @@ public final class Template {
 				hasMore = tokens.hasMoreTokens();
 				nextToken = hasMore ? tokens.nextToken() : null;
 
+				continue;
+			}
+
+			// Special processing for type casting
+			if ( inCast && "as".equals( lcToken ) ) {
+				result.append( " as " );
+				//to manage cases like cast(field as numeric(10,4))
+				int openBrackets = 0;
+
+				hasMore = tokens.hasMoreTokens();
+				nextToken = hasMore ? tokens.nextToken() : null;
+
+				while ( hasMore && inCast ) {
+					if ( ")".equals( nextToken ) ) {
+						if ( openBrackets == 0 ) {
+							inCast = false;
+						}
+						else {
+							openBrackets--;
+						}
+					}
+					if ( "(".equals( nextToken ) ) {
+						openBrackets++;
+					}
+					result.append( nextToken.toLowerCase( Locale.ROOT ) );
+					hasMore = tokens.hasMoreTokens();
+					nextToken = hasMore ? tokens.nextToken() : null;
+				}
+				continue;
+			}
+
+			if ( "cast".equals( lcToken ) ) {
+				result.append( lcToken );
+				inCast = true;
 				continue;
 			}
 
@@ -317,6 +352,7 @@ public final class Template {
 					&& !BEFORE_TABLE_KEYWORDS.contains( lcToken ) ) {
 				inFromClause = false;
 			}
+
 		}
 
 		return result.toString();

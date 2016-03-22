@@ -8,6 +8,7 @@ package org.hibernate.test.bytecode.enhancement.dirty;
 
 import java.util.List;
 import java.util.Set;
+import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -35,6 +36,9 @@ public class SimpleEntity {
 
 	@Embedded
 	private Address address;
+
+	@Embedded
+	private Address address2;
 
 	public Long getId() {
 		return id;

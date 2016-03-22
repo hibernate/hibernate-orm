@@ -1,3 +1,4 @@
+import org.apache.tools.ant.filters.ReplaceTokens
 import org.asciidoctor.gradle.AsciidoctorTask
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
@@ -69,7 +70,26 @@ dependencies {
 	testCompile( project(path: ':hibernate-entitymanager', configuration: 'tests') )
 
 	testRuntime( libraries.h2 )
+	testRuntime( libraries.hsqldb )
+	testRuntime( libraries.postgresql )
+	testRuntime( libraries.mysql )
 }
+
+processTestResources.doLast( {
+	copy {
+		from( sourceSets.test.java.srcDirs ) {
+			include '**/*.properties'
+			include '**/*.xml'
+		}
+		into sourceSets.test.output.classesDir
+	}
+	copy {
+		ext.targetDir = file( "${buildDir}/resources/test" )
+		from file('src/test/resources')
+		into targetDir
+		filter( ReplaceTokens, tokens: dbBundle[db] );
+	}
+} )
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // grouping tasks - declaration, see below for task dependency definitions

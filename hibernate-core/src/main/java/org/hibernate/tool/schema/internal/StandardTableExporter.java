@@ -167,7 +167,7 @@ public class StandardTableExporter implements Exporter<Table> {
 				Column column = (Column) iter.next();
 				String columnComment = column.getComment();
 				if ( columnComment != null ) {
-					sqlStrings.add( "comment on column " + tableName + column.getQuotedName( dialect ) + " is '" + columnComment + "'" );
+					sqlStrings.add( "comment on column " + tableName + '.' + column.getQuotedName( dialect ) + " is '" + columnComment + "'" );
 				}
 			}
 		}

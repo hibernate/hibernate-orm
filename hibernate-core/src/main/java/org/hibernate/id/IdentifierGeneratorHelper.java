@@ -15,9 +15,10 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.Type;
 
@@ -61,18 +62,19 @@ public final class IdentifierGeneratorHelper {
 	 * @param rs The result set from which to extract the the generated identity.
 	 * @param identifier The name of the identifier column
 	 * @param type The expected type mapping for the identity value.
+	 * @param dialect The current database dialect.
 	 *
 	 * @return The generated identity value
 	 *
 	 * @throws SQLException Can be thrown while accessing the result set
 	 * @throws HibernateException Indicates a problem reading back a generated identity value.
 	 */
-	public static Serializable getGeneratedIdentity(ResultSet rs, String identifier, Type type)
+	public static Serializable getGeneratedIdentity(ResultSet rs, String identifier, Type type, Dialect dialect)
 			throws SQLException, HibernateException {
 		if ( !rs.next() ) {
 			throw new HibernateException( "The database returned no natively generated identity value" );
 		}
-		final Serializable id = get( rs, identifier, type );
+		final Serializable id = get( rs, identifier, type, dialect );
 		LOG.debugf( "Natively generated identity: %s", id );
 		return id;
 	}
@@ -84,13 +86,14 @@ public final class IdentifierGeneratorHelper {
 	 * @param rs The result set from which to extract the value.
 	 * @param identifier The name of the identifier column
 	 * @param type The expected type of the value.
+	 * @param dialect The current database dialect.
 	 *
 	 * @return The extracted value.
 	 *
 	 * @throws SQLException Indicates problems access the result set
 	 * @throws IdentifierGenerationException Indicates an unknown type.
 	 */
-	public static Serializable get(ResultSet rs, String identifier, Type type)
+	public static Serializable get(ResultSet rs, String identifier, Type type, Dialect dialect)
 			throws SQLException, IdentifierGenerationException {
 		if ( ResultSetIdentifierConsumer.class.isInstance( type ) ) {
 			return ( (ResultSetIdentifierConsumer) type ).consumeIdentifier( rs );
@@ -142,8 +145,8 @@ public final class IdentifierGeneratorHelper {
 				return extractIdentifier( rs, identifier, type, clazz );
 			}
 			catch (SQLException e) {
-				if(Identifier.isQuoted( identifier )) {
-					return extractIdentifier( rs, Identifier.toIdentifier( identifier).getText(), type, clazz );
+				if ( StringHelper.isQuoted( identifier, dialect ) ) {
+					return extractIdentifier( rs, StringHelper.unquote( identifier, dialect ), type, clazz );
 				}
 				throw e;
 			}

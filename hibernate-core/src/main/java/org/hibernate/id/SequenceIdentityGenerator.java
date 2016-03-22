@@ -100,7 +100,8 @@ public class SequenceIdentityGenerator
 			return IdentifierGeneratorHelper.getGeneratedIdentity(
 					insert.getGeneratedKeys(),
 					getPersister().getRootTableKeyColumnNames()[0],
-					getPersister().getIdentifierType()
+					getPersister().getIdentifierType(),
+					session.getFactory().getDialect()
 			);
 		}
 	}

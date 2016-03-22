@@ -89,7 +89,8 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 				return IdentifierGeneratorHelper.getGeneratedIdentity(
 						rs,
 						persister.getRootTableKeyColumnNames()[0],
-						persister.getIdentifierType()
+						persister.getIdentifierType(),
+						session.getFactory().getDialect()
 				);
 			}
 			finally {
@@ -138,7 +139,8 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 			return IdentifierGeneratorHelper.getGeneratedIdentity(
 					rs,
 					persister.getRootTableKeyColumnNames()[0],
-					persister.getIdentifierType()
+					persister.getIdentifierType(),
+					session.getFactory().getDialect()
 			);
 		}
 	}

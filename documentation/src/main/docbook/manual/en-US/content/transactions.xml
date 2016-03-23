@@ -1090,7 +1090,7 @@ session.close();]]></programlisting>
                     <literal>auto</literal> (the default): this choice delegates to the release mode
                     returned by the <literal>org.hibernate.transaction.TransactionFactory.getDefaultReleaseMode()</literal>
                     method.  For JTATransactionFactory, this returns ConnectionReleaseMode.AFTER_STATEMENT; for
-                    JDBCTransactionFactory, this returns ConnectionReleaseMode.AFTER_TRANSACTION.  Do not
+                    JDBCTransactionFactory, this returns ConnectionReleaseMode.ON_CLOSE.  Do not
                     change this default behavior as failures due to the value of this setting
                     tend to indicate bugs and/or invalid assumptions in user code.
                 </para>

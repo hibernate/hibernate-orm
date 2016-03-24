@@ -62,7 +62,7 @@ public class LongVarcharValidationTest extends BaseUnitTestCase {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Translation")
 	public static class Translation {
 		@Id
 		public Integer id;

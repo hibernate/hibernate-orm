@@ -28,7 +28,6 @@ import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.SourceDescriptor;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
@@ -138,7 +137,7 @@ public class LongVarcharValidationTest extends BaseUnitTestCase implements Execu
 		);
 	}
 
-	@Entity
+	@Entity(name = "Translation")
 	public static class Translation {
 		@Id
 		public Integer id;

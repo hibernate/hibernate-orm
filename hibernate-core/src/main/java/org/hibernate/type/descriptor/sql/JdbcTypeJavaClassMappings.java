@@ -85,6 +85,7 @@ public class JdbcTypeJavaClassMappings {
 		jdbcJavaClassMappings.put( String.class, Types.VARCHAR );
 		jdbcJavaClassMappings.put( BigDecimal.class, Types.NUMERIC );
 		jdbcJavaClassMappings.put( Boolean.class, Types.BIT );
+		jdbcJavaClassMappings.put( Byte.class, Types.TINYINT );
 		jdbcJavaClassMappings.put( Integer.class, Types.INTEGER );
 		jdbcJavaClassMappings.put( Long.class, Types.BIGINT );
 		jdbcJavaClassMappings.put( Float.class, Types.REAL );

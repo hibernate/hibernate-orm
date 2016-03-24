@@ -8,14 +8,7 @@ package org.hibernate.jpa.test.criteria;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.TypedQuery;
+import javax.persistence.*;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
@@ -98,7 +91,7 @@ public class EntitySuperclassCollectionTest extends BaseEntityManagerFunctionalT
 		}
 	}
 
-	@Entity
+	@Entity(name = "PersonBase")
 	public abstract static class PersonBase {
 		@Id
 		@GeneratedValue

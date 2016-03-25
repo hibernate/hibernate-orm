@@ -857,7 +857,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		try {
 			SessionFactoryBuilder sfBuilder = metadata().getSessionFactoryBuilder();
 			populate( sfBuilder, standardServiceRegistry );
-			sfBuilder.build();
 
 			SchemaManagementToolCoordinator.process(
 					metadata, standardServiceRegistry, configurationValues, DelayedDropRegistryNotAvailableImpl.INSTANCE

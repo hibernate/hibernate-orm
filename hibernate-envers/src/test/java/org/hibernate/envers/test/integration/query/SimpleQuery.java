@@ -31,6 +31,7 @@ import org.junit.Test;
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 @SuppressWarnings({"unchecked"})
 public class SimpleQuery extends BaseEnversJPAFunctionalTestCase {
@@ -221,7 +222,33 @@ public class SimpleQuery extends BaseEnversJPAFunctionalTestCase {
 		assert result.get( 0 ).equals( new StrIntTestEntity( "a", 10, id1 ) );
 		assert result.get( 1 ).equals( new StrIntTestEntity( "aBc", 10, id1 ) );
 	}
+	
+	@Test
+	public void testSelectEntitiesWithDefaultOrderQuery() {
+		// this should mirror testSelectEntiesQuery because the default order
+		// is being set; effectively being the same query and result set but
+		// testing backward compatibility.
+		List result = getAuditReader().createQuery()
+				.forRevisionsOfEntity( StrIntTestEntity.class, true, false, true )
+				.add( AuditEntity.id().eq( id1 ) )
+				.getResultList();
+		
+		assert result.size() == 2;
+		
+		assert result.get( 0 ).equals( new StrIntTestEntity( "a", 10, id1 ) );
+		assert result.get( 1 ).equals( new StrIntTestEntity( "aBc", 10, id1 ) );
+	}
 
+	@Test
+	public void testSelectEntitiesWithNoDefaultOrderQuery() {
+		List result = getAuditReader().createQuery()
+				.forRevisionsOfEntity( StrIntTestEntity.class, true, false, false )
+				.add( AuditEntity.id().eq( id1 ) )
+				.getResultList();
+		// simply expect 2 results, order is indeterminate.
+		assert result.size() == 2;		
+	}
+	
 	@Test
 	public void testSelectEntitiesAndRevisionsQuery() {
 		List result = getAuditReader().createQuery()

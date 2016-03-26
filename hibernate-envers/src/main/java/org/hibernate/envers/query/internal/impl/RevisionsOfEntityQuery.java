@@ -30,17 +30,20 @@ import org.hibernate.proxy.HibernateProxy;
 public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 	private final boolean selectEntitiesOnly;
 	private final boolean selectDeletedEntities;
-
+	private final boolean useDefaultOrdering;
+	
 	public RevisionsOfEntityQuery(
 			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			Class<?> cls,
 			boolean selectEntitiesOnly,
-			boolean selectDeletedEntities) {
+			boolean selectDeletedEntities,
+			boolean useDefaultOrdering) {
 		super( enversService, versionsReader, cls );
 
 		this.selectEntitiesOnly = selectEntitiesOnly;
 		this.selectDeletedEntities = selectDeletedEntities;
+		this.useDefaultOrdering = useDefaultOrdering;
 	}
 
 	public RevisionsOfEntityQuery(
@@ -48,11 +51,13 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 			AuditReaderImplementor versionsReader,
 			Class<?> cls, String entityName,
 			boolean selectEntitiesOnly,
-			boolean selectDeletedEntities) {
+			boolean selectDeletedEntities,
+			boolean useDefaultOrdering) {
 		super( enversService, versionsReader, cls, entityName );
 
 		this.selectEntitiesOnly = selectEntitiesOnly;
 		this.selectDeletedEntities = selectDeletedEntities;
+		this.useDefaultOrdering = useDefaultOrdering;
 	}
 
 	private Number getRevisionNumber(Map versionsEntity) {
@@ -82,7 +87,7 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
           e.revision_type != DEL (if selectDeletedEntities == false) AND
           e.revision = r.revision AND
           (all specified conditions, transformed, on the "e" entity)
-          ORDER BY e.revision ASC (unless another order or projection is specified)
+          ORDER BY e.revision ASC (unless another order or projection is specified or default ordering disabled)
          */
 		if ( !selectDeletedEntities ) {
 			// e.revision_type != DEL AND
@@ -101,7 +106,7 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 			);
 		}
 
-		if ( !hasProjection() && !hasOrder ) {
+		if ( !hasProjection() && !hasOrder && useDefaultOrdering ) {
 			String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
 			qb.addOrder( QueryConstants.REFERENCED_ENTITY_ALIAS, revisionPropertyPath, true );
 		}

@@ -20,6 +20,7 @@ import static org.hibernate.envers.internal.tools.EntityTools.getTargetClassIfPr
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public class AuditQueryCreator {
 	private final EnversService enversService;
@@ -158,13 +159,43 @@ public class AuditQueryCreator {
 	 *         unless an order or projection is added.
 	 */
 	public AuditQuery forRevisionsOfEntity(Class<?> c, boolean selectEntitiesOnly, boolean selectDeletedEntities) {
+		return forRevisionsOfEntity( c, selectEntitiesOnly, selectDeletedEntities, true );		
+	}
+	
+	/**
+	 * Creates a query, which selects the revisions, at which the given entity was modified.
+	 * Unless an explicit projection is set, the result will be a list of three-element arrays, containing:
+	 * <ol>
+	 * <li>the entity instance</li>
+	 * <li>revision entity, corresponding to the revision at which the entity was modified. If no custom
+	 * revision entity is used, this will be an instance of {@link org.hibernate.envers.DefaultRevisionEntity}</li>
+	 * <li>type of the revision (an enum instance of class {@link org.hibernate.envers.RevisionType})</li>.
+	 * </ol>
+	 * Additional conditions that the results must satisfy may be specified.
+	 *
+	 * @param c Class of the entities for which to query.
+	 * @param selectEntitiesOnly If true, instead of a list of three-element arrays, a list of entities will be
+	 * returned as a result of executing this query.
+	 * @param selectDeletedEntities If true, also revisions where entities were deleted will be returned. The additional
+	 * entities will have revision type "delete", and contain no data (all fields null), except for the id field.
+	 * @param useDefaultOrdering If false, the query's default ordering by revision id will be disabled and the results
+	 * order will be indeterminate.  This will only work should the query have no projections nor an explicit order.  If
+	 * true, the default order behavior will be used.
+	 * 
+	 * @return A query for revisions at which instances of the given entity were modified, to which
+	 *         conditions can be added (for example - a specific id of an entity of class <code>c</code>), and which
+	 *         can then be executed. The results of the query will be sorted in ascending order by the revision number,
+	 *         unless an order or projection is added.
+	 */
+	public AuditQuery forRevisionsOfEntity(Class<?> c, boolean selectEntitiesOnly, boolean selectDeletedEntities, boolean useDefaultOrdering) {
 		c = getTargetClassIfProxied( c );
 		return new RevisionsOfEntityQuery(
 				enversService,
 				auditReaderImplementor,
 				c,
 				selectEntitiesOnly,
-				selectDeletedEntities
+				selectDeletedEntities,
+				useDefaultOrdering
 		);
 	}
 
@@ -196,6 +227,41 @@ public class AuditQueryCreator {
 			String entityName,
 			boolean selectEntitiesOnly,
 			boolean selectDeletedEntities) {
+		return forRevisionsOfEntity( c, entityName, selectEntitiesOnly, selectDeletedEntities, true );		
+	}
+	
+	/**
+	 * Creates a query, which selects the revisions, at which the given entity was modified and with a given entityName.
+	 * Unless an explicit projection is set, the result will be a list of three-element arrays, containing:
+	 * <ol>
+	 * <li>the entity instance</li>
+	 * <li>revision entity, corresponding to the revision at which the entity was modified. If no custom
+	 * revision entity is used, this will be an instance of {@link org.hibernate.envers.DefaultRevisionEntity}</li>
+	 * <li>type of the revision (an enum instance of class {@link org.hibernate.envers.RevisionType})</li>.
+	 * </ol>
+	 * Additional conditions that the results must satisfy may be specified.
+	 *
+	 * @param c Class of the entities for which to query.
+	 * @param entityName Name of the entity (if can't be guessed basing on the {@code c}).
+	 * @param selectEntitiesOnly If true, instead of a list of three-element arrays, a list of entities will be
+	 * returned as a result of executing this query.
+	 * @param selectDeletedEntities If true, also revisions where entities were deleted will be returned. The additional
+	 * entities will have revision type "delete", and contain no data (all fields null), except for the id field.
+	 * @param useDefaultOrdering If false, the query's default ordering by revision id will be disabled and the results
+	 * order will be indeterminate.  This will only work should the query have no projections nor an explicit order.  If
+	 * true, the default order behavior will be used.
+	 * 
+	 * @return A query for revisions at which instances of the given entity were modified, to which
+	 *         conditions can be added (for example - a specific id of an entity of class <code>c</code>), and which
+	 *         can then be executed. The results of the query will be sorted in ascending order by the revision number,
+	 *         unless an order or projection is added.
+	 */
+	public AuditQuery forRevisionsOfEntity(
+			Class<?> c,
+			String entityName,
+			boolean selectEntitiesOnly,
+			boolean selectDeletedEntities,
+			boolean useDefaultOrdering) {
 		c = getTargetClassIfProxied( c );
 		return new RevisionsOfEntityQuery(
 				enversService,
@@ -203,7 +269,8 @@ public class AuditQueryCreator {
 				c,
 				entityName,
 				selectEntitiesOnly,
-				selectDeletedEntities
+				selectDeletedEntities,
+				useDefaultOrdering
 		);
 	}
 }

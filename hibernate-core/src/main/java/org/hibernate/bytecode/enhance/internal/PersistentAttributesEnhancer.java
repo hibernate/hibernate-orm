@@ -512,12 +512,12 @@ public class PersistentAttributesEnhancer extends Enhancer {
 
 					if ( op == Opcode.GETFIELD ) {
 						final int methodIndex = MethodWriter.addMethod( constPool, attributeMethods.getReader() );
-						itr.writeByte( Opcode.INVOKESPECIAL, index );
+						itr.writeByte( Opcode.INVOKEVIRTUAL, index );
 						itr.write16bit( methodIndex, index + 1 );
 					}
 					else {
 						final int methodIndex = MethodWriter.addMethod( constPool, attributeMethods.getWriter() );
-						itr.writeByte( Opcode.INVOKESPECIAL, index );
+						itr.writeByte( Opcode.INVOKEVIRTUAL, index );
 						itr.write16bit( methodIndex, index + 1 );
 					}
 				}

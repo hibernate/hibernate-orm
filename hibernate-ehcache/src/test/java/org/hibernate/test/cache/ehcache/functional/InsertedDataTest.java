@@ -4,23 +4,25 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.cache;
+package org.hibernate.test.cache.ehcache.functional;
 
 import java.util.Map;
-
-import org.junit.Test;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 
 import org.hibernate.Session;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.persister.entity.Lockable;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Tests for handling of data just inserted during a transaction being read from the database
@@ -29,17 +31,25 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Steve Ebersole
  */
-public class InsertedDataTest extends BaseCoreFunctionalTestCase {
+public class InsertedDataTest extends BaseNonConfigCoreFunctionalTestCase {
+
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { CacheableItem.class };
+		return new Class[] {CacheableItem.class};
 	}
 
 	@Override
-	protected void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( Environment.CACHE_REGION_PREFIX, "" );
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
+	@SuppressWarnings("unchecked")
+	protected void addSettings(Map settings) {
+		super.addSettings( settings );
+		settings.put( AvailableSettings.CACHE_REGION_PREFIX, "" );
+		settings.put( AvailableSettings.GENERATE_STATISTICS, "true" );
+	}
+
+	@Override
+	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
+		super.configureStandardServiceRegistryBuilder( ssrb );
+		ssrb.configure( "hibernate-config/hibernate.cfg.xml" );
 	}
 
 	@Test
@@ -170,7 +180,7 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 		Map cacheMap = sessionFactory().getStatistics().getSecondLevelCacheStatistics( "item" ).getEntries();
 		assertEquals( 1, cacheMap.size() );
 		Object lock = cacheMap.values().iterator().next();
-		assertEquals( "org.hibernate.testing.cache.AbstractReadWriteAccessStrategy$Lock", lock.getClass().getName() );
+		assertEquals( "org.hibernate.cache.ehcache.internal.strategy.AbstractReadWriteEhcacheAccessStrategy$Lock", lock.getClass().getName() );
 
 		s = openSession();
 		s.beginTransaction();
@@ -230,5 +240,38 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		assertNull( "it should be null", item );
+	}
+
+	@Entity(name = "CacheableItem")
+	@Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "item")
+	public static class CacheableItem {
+		private Long id;
+		private String name;
+
+		public CacheableItem() {
+		}
+
+		public CacheableItem(String name) {
+			this.name = name;
+		}
+
+		@Id
+		@GeneratedValue(generator = "increment")
+		@GenericGenerator(name = "increment", strategy = "increment")
+		public Long getId() {
+			return id;
+		}
+
+		public void setId(Long id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
 	}
 }

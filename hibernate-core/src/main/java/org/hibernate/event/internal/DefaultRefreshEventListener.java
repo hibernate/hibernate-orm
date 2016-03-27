@@ -13,18 +13,22 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.UnresolvableObjectException;
+import org.hibernate.action.spi.AfterTransactionCompletionProcess;
+import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.RefreshEvent;
 import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.CollectionType;
@@ -136,17 +140,31 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		}
 
 		if ( persister.hasCache() ) {
+			Object previousVersion = null;
+			if ( persister.isVersionPropertyGenerated() ) {
+				// we need to grab the version value from the entity, otherwise
+				// we have issues with generated-version entities that may have
+				// multiple actions queued during the same flush
+				previousVersion = persister.getVersion( object );
+			}
 			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
-			Object ck = cache.generateCacheKey(
+			final Object ck = cache.generateCacheKey(
 					id,
 					persister,
 					source.getFactory(),
 					source.getTenantIdentifier()
 			);
-			cache.evict( ck );
+			final SoftLock lock = cache.lockItem( source, ck, previousVersion );
+			source.getActionQueue().registerProcess( new AfterTransactionCompletionProcess() {
+				@Override
+				public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
+					cache.unlockItem( session, ck, lock );
+				}
+			} );
+			cache.remove( source, ck );
 		}
 
-		evictCachedCollections( persister, id, source.getFactory() );
+		evictCachedCollections( persister, id, source );
 
 		String previousFetchProfile = source.getLoadQueryInfluencers().getInternalFetchProfile();
 		source.getLoadQueryInfluencers().setInternalFetchProfile( "refresh" );
@@ -168,19 +186,36 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 
 	}
 
-	private void evictCachedCollections(EntityPersister persister, Serializable id, SessionFactoryImplementor factory) {
-		evictCachedCollections( persister.getPropertyTypes(), id, factory );
+	private void evictCachedCollections(EntityPersister persister, Serializable id, EventSource source) {
+		evictCachedCollections( persister.getPropertyTypes(), id, source );
 	}
 
-	private void evictCachedCollections(Type[] types, Serializable id, SessionFactoryImplementor factory)
+	private void evictCachedCollections(Type[] types, Serializable id, EventSource source)
 			throws HibernateException {
 		for ( Type type : types ) {
 			if ( type.isCollectionType() ) {
-				factory.getCache().evictCollection( ( (CollectionType) type ).getRole(), id );
+				CollectionPersister collectionPersister = source.getFactory().getCollectionPersister( ( (CollectionType) type ).getRole() );
+				if ( collectionPersister.hasCache() ) {
+					final CollectionRegionAccessStrategy cache = collectionPersister.getCacheAccessStrategy();
+					final Object ck = cache.generateCacheKey(
+						id,
+						collectionPersister,
+						source.getFactory(),
+						source.getTenantIdentifier()
+					);
+					final SoftLock lock = cache.lockItem( source, ck, null );
+					source.getActionQueue().registerProcess( new AfterTransactionCompletionProcess() {
+						@Override
+						public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
+							cache.unlockItem( session, ck, lock );
+						}
+					} );
+					cache.remove( source, ck );
+				}
 			}
 			else if ( type.isComponentType() ) {
 				CompositeType actype = (CompositeType) type;
-				evictCachedCollections( actype.getSubtypes(), id, factory );
+				evictCachedCollections( actype.getSubtypes(), id, source );
 			}
 		}
 	}

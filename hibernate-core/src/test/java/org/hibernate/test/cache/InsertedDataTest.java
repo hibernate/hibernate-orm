@@ -164,7 +164,7 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		Map cacheMap = sessionFactory().getStatistics().getSecondLevelCacheStatistics( "item" ).getEntries();
-		assertEquals( 0, cacheMap.size() );
+		assertEquals( 1, cacheMap.size() );
 
 		s = openSession();
 		s.beginTransaction();

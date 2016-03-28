@@ -13,6 +13,11 @@ Those will be covered in each specific more-relevant chapters later on.
 Instead we focus here on the API calls needed to perform the bootstrapping.
 ====
 
+[TIP]
+====
+During the bootstrap process, you might want to customize Hibernate behavior so make sure you check the <<appendices/Configurations.adoc#configurations,Configurations>> section as well.
+====
+
 [[bootstrap-native]]
 === Native Bootstrapping
 

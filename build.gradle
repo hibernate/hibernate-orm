@@ -142,6 +142,7 @@ subprojects { subProject ->
 		testRuntime( libraries.hsqldb )
 		testRuntime( libraries.postgresql )
 		testRuntime( libraries.mysql )
+		testRuntime( libraries.mariadb )
 		testRuntime( libraries.woodstox )
 
 		// 6.6 gave me some NPE problems from within checkstyle...

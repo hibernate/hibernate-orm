@@ -31,7 +31,11 @@ public enum SchemaAutoTooling {
 	/**
 	 * Validate the schema on SessionFactory startup.
 	 */
-	VALIDATE( "validate" );
+	VALIDATE( "validate" ),
+	/**
+	 * Do not attempt to update nor validate the schema.
+	 */
+	NONE( "none" );
 
 	private final String externalForm;
 
@@ -40,7 +44,7 @@ public enum SchemaAutoTooling {
 	}
 
 	public static SchemaAutoTooling interpret(String configurationValue) {
-		if ( StringHelper.isEmpty( configurationValue ) ) {
+		if ( StringHelper.isEmpty( configurationValue ) || NONE.externalForm.equals( configurationValue ) ) {
 			return null;
 		}
 		else if ( VALIDATE.externalForm.equals( configurationValue ) ) {
@@ -58,7 +62,7 @@ public enum SchemaAutoTooling {
 		else {
 			throw new HibernateException(
 					"Unrecognized hbm2ddl_auto value : " + configurationValue
-							+ ".  Supported values include create, create-drop, update, and validate."
+							+ ".  Supported values include 'create', 'create-drop', 'update', 'none' and 'validate'."
 			);
 		}
 	}

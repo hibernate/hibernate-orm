@@ -87,9 +87,11 @@ ext {
             derby:           "org.apache.derby:derby:10.11.1.1",
 			postgresql:      'org.postgresql:postgresql:9.4-1202-jdbc41',
 			mysql:			 'mysql:mysql-connector-java:5.1.38',
+            mariadb:         'org.mariadb.jdbc:mariadb-java-client:1.1.7',
             jboss_jta:       "org.jboss.jbossts:jbossjta:4.16.4.Final",
             xapool:          "com.experlog:xapool:1.5.0",
             mockito:         'org.mockito:mockito-core:1.9.0',
+
 
             validator:       'org.hibernate:hibernate-validator:5.2.0.CR1',
             // EL required by Hibernate Validator at test runtime

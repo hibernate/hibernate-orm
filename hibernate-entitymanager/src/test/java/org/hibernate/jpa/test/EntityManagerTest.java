@@ -28,6 +28,7 @@ import org.junit.Test;
 
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
+import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.HibernateEntityManager;
@@ -461,4 +462,19 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 		}
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-10635")
+	public void testEntityManagerIsClosedAfterClosingTheUnwrappedSession() {
+		EntityManager em = getOrCreateEntityManager();
+		Session session = em.unwrap( Session.class );
+		session.close();
+		assertEquals( false, em.isOpen() );
+		try {
+			em.close();
+			fail( "The EntityManager should be closed" );
+		}
+		catch (Exception e) {
+			assertTrue( e instanceof IllegalStateException );
+		}
+	}
 }

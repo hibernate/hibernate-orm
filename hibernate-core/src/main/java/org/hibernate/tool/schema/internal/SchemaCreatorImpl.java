@@ -355,7 +355,14 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		for ( Namespace namespace : database.getNamespaces() ) {
 			// NOTE : Foreign keys must be created *after* unique keys for numerous DBs.  See HHH-8390
 
+			if ( !schemaFilter.includeNamespace( namespace ) ) {
+				continue;
+			}
+
 			for ( Table table : namespace.getTables() ) {
+				if ( !schemaFilter.includeTable( table ) ) {
+					continue;
+				}
 				// foreign keys
 				final Iterator fkItr = table.getForeignKeyIterator();
 				while ( fkItr.hasNext() ) {

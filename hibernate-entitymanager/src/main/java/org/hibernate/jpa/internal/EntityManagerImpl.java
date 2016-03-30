@@ -154,7 +154,7 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl implements Sess
 		checkEntityManagerFactory();
 		try {
 			if ( open ) {
-				internalGetSession().isOpen(); //to force enlistment in tx
+				open = internalGetSession().isOpen(); //to force enlistment in tx
 			}
 			return open;
 		}

@@ -11,13 +11,13 @@ In most use-cases these definitions align, but that is not always the case.
 
 [NOTE]
 ====
-This documentation largely treats the physical and logic notions of transaction as one-in-the-same.
+This documentation largely treats the physical and logic notions of a transaction as one-in-the-same.
 ====
 
 [[transactions-physical]]
 === Physical Transactions
 
-Hibernate uses the JDBC API for persistence. In the world of Java there are 2 well defined mechanism for dealing with transactions in JDBC: JDBC itself and JTA.
+Hibernate uses the JDBC API for persistence. In the world of Java there are two well-defined mechanism for dealing with transactions in JDBC: JDBC itself and JTA.
 Hibernate supports both mechanisms for integrating with transactions and allowing applications to manage physical transactions.
 
 Transaction handling per `Session` is handled by the `org.hibernate.resource.transaction.TransactionCoordinator` contract, which are built by the `org.hibernate.resource.transaction.TransactionCoordinatorBuilder` service.
@@ -53,18 +53,18 @@ and `javax.transaction.UserTransaction` for that system as well as exposing the 
 
 [NOTE]
 ====
-Generally `JtaPlatfor`m will need access to JNDI to resolve the JTA `TransactionManager`, `UserTransaction`, etc.
+Generally, `JtaPlatform` will need access to JNDI to resolve the JTA `TransactionManager`, `UserTransaction`, etc.
 See <<chapters/jndi/JNDI.adoc#jndi,JNDI chapter>> for details on configuring access to JNDI.
 ====
 
 Hibernate tries to discover the `JtaPlatform` it should use through the use of another service named `org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformResolver`.
 If that resolution does not work, or if you wish to provide a custom implementation you will need to specify the `hibernate.transaction.jta.platform` setting.
-Hibernate provides many implementations of the `JtaPlatform` contract, all with short-names:
+Hibernate provides many implementations of the `JtaPlatform` contract, all with short names:
 
 `Borland`:: `JtaPlatform` for the Borland Enterprise Server.
 `Bitronix`:: `JtaPlatform` for Bitronix.
-`JBossAS`:: `JtaPlatform` for Arjuna/JBossTransactions/Narnya when used within the JBoss/WildFly Application Server.
-`JBossTS`:: `JtaPlatform` for Arjuna/JBossTransactions/Narnya when used standalone.
+`JBossAS`:: `JtaPlatform` for Arjuna/JBossTransactions/Narayana when used within the JBoss/WildFly Application Server.
+`JBossTS`:: `JtaPlatform` for Arjuna/JBossTransactions/Narayana when used standalone.
 `JOnAS`:: `JtaPlatform` for JOTM when used within JOnAS.
 `JOTM`:: `JtaPlatform` for JOTM when used standalone.
 `JRun4`:: `JtaPlatform` for the JRun 4 Application Server.
@@ -92,7 +92,7 @@ In fact in both JTA and JDBC environments, these `Synchronizations` are kept loc
 In JTA environments, Hibernate will only ever register one single `Synchronization` with the `TransactionManager` to avoid ordering problems.
 
 Additionally, it exposes a getStatus method that returns an `org.hibernate.resource.transaction.spi.TransactionStatus` enum.
-This method checks with the underling transaction system if needed, so care should be taken to minimize its use; it can have a big performance impact in certain JTA set ups.
+This method checks with the underlying transaction system if needed, so care should be taken to minimize its use; it can have a big performance impact in certain JTA set ups.
 
 Let's take a look at using the Transaction API in the various environments.
 
@@ -182,7 +182,7 @@ In the same way, do not auto-commit after every SQL statement in your applicatio
 Hibernate disables, or expects the application server to disable, auto-commit mode immediately.
 Database transactions are never optional.
 All communication with a database must be encapsulated by a transaction.
-Avoid auto-commit behavior for reading data, because many small transactions are unlikely to perform better than one clearly-defined unit of work, and are more difficult to maintain and extend.
+Avoid auto-commit behavior for reading data because many small transactions are unlikely to perform better than one clearly-defined unit of work, and are more difficult to maintain and extend.
 
 [NOTE]
 ====
@@ -247,7 +247,7 @@ Even though we have multiple databases access here, from the point of view of th
 There are many ways to implement this in your application.
 
 A first naive implementation might keep the `Session` and database transaction open while the user is editing, using database-level locks to prevent other users from modifying the same data and to guarantee isolation and atomicity.
-This is an anti-pattern, because lock contention is a bottleneck which will prevent scalability in the future.
+This is an anti-pattern because lock contention is a bottleneck which will prevent scalability in the future.
 
 Several database transactions are used to implement the conversation.
 In this case, maintaining isolation of business processes becomes the partial responsibility of the application tier.
@@ -285,7 +285,7 @@ An exception thrown by Hibernate means you have to rollback your database transa
 If your `Session` is bound to the application, you have to stop the application. 
 Rolling back the database transaction does not put your business objects back into the state they were at the start of the transaction. 
 This means that the database state and the business objects will be out of sync. 
-Usually this is not a problem, because exceptions are not recoverable and you will have to start over after rollback anyway.
+Usually, this is not a problem because exceptions are not recoverable and you will have to start over after rollback anyway.
 
 The `Session` caches every object that is in a persistent state (watched and checked for dirty state by Hibernate).
 If you keep it open for a long time or simply load too much data, it will grow endlessly until you get an `OutOfMemoryException`.

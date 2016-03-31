@@ -42,7 +42,7 @@ include::{sourcedir}/InterceptorTest.java[tags=events-interceptors-session-scope
 A `SessionFactory`-scoped interceptor is registered with the `Configuration` object prior to building the `SessionFactory`.
 Unless a session is opened explicitly specifying the interceptor to use, the `SessionFactory`-scoped interceptor will be applied to all sessions opened from that `SessionFactory`.
 `SessionFactory`-scoped interceptors must be thread safe.
-Ensure that you do not store session-specific states, since multiple sessions will use this interceptor potentially concurrently.
+Ensure that you do not store session-specific states since multiple sessions will use this interceptor potentially concurrently.
 
 [[events-interceptors-session-factory-scope-example]]
 ====

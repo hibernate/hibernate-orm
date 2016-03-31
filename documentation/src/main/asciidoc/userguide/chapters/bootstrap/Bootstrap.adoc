@@ -10,7 +10,7 @@ The process is very different for each.
 ====
 This chapter will not focus on all the possibilities of bootstrapping.
 Those will be covered in each specific more-relevant chapters later on.
-Instead we focus here on the API calls needed to perform the bootstrapping.
+Instead, we focus here on the API calls needed to perform the bootstrapping.
 ====
 
 [TIP]
@@ -30,13 +30,13 @@ For a discussion of the legacy bootstrapping API, see <<appendices/Legacy_Bootst
 
 The first step in native bootstrapping is the building of a `ServiceRegistry` holding the services Hibernate will need during bootstrapping and at run time.
 
-Actually we are concerned with building 2 different ServiceRegistries.
+Actually, we are concerned with building 2 different ServiceRegistries.
 First is the `org.hibernate.boot.registry.BootstrapServiceRegistry`.
 The `BootstrapServiceRegistry` is intended to hold services that Hibernate needs at both bootstrap and run time.
 This boils down to 3 services:
 
 `org.hibernate.boot.registry.classloading.spi.ClassLoaderService`:: which controls how Hibernate interacts with `ClassLoader`s
-`org.hibernate.integrator.spi.IntegratorService`:: which controls the management ands discovery of `org.hibernate.integrator.spi.Integrator` instances.
+`org.hibernate.integrator.spi.IntegratorService`:: which controls the management and discovery of `org.hibernate.integrator.spi.Integrator` instances.
 `org.hibernate.boot.registry.selector.spi.StrategySelector`:: which control how Hibernate resolves implementations of various strategy contracts.
 This is a very powerful service, but a full discussion of it is beyond the scope of this guide.
 
@@ -106,7 +106,7 @@ include::{sourcedir}/BootstrapTest.java[tags=bootstrap-event-listener-registrati
 [[bootstrap-native-metadata]]
 ==== Building the Metadata
 
-The second step in native bootstrapping is the building of a `org.hibernate.boot.Metadata` object containing the parsed representations of an application's domain model and its mapping to a database.
+The second step in native bootstrapping is the building of a `org.hibernate.boot.Metadata` object containing the parsed representations of an application domain model and its mapping to a database.
 The first thing we obviously need to build a parsed representation is the source information to be parsed (annotated classes, `hbm.xml` files, `orm.xml` files).
 This is the purpose of `org.hibernate.boot.MetadataSources`:
 
@@ -240,4 +240,4 @@ include::{sourcedir}/BootstrapTest.java[tags=bootstrap-native-EntityManagerFacto
 ----
 ====
 
-The `integrationSettings` allows the application develoepr to customize the bootstrapping process by specifying different `hibernate.integrator_provider` or `hibernate.strategy_registration_provider` integration providers.
+The `integrationSettings` allows the application developer to customize the bootstrapping process by specifying different `hibernate.integrator_provider` or `hibernate.strategy_registration_provider` integration providers.

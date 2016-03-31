@@ -43,7 +43,7 @@ This is represented by the `org.hibernate.NaturalIdLoadAccess` contract obtained
 
 [NOTE]
 ====
-If the entity does not define a natural id, trying to load an entity by its natural id will thrown an exception.
+If the entity does not define a natural id, trying to load an entity by its natural id will throw an exception.
 ====
 
 .Using NaturalIdLoadAccess

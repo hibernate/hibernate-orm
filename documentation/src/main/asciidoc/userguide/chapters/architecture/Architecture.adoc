@@ -25,7 +25,7 @@ Session (`org.hibernate.Session`):: A single-threaded, short-lived object concep
 In JPA nomenclature, the `Session` is represented by an `EntityManager`.
 +
 Behind the scenes, the Hibernate `Session` wraps a JDBC `java.sql.Connection` and acts as a factory for `org.hibernate.Transaction` instances.
-It maintains a generally "repeatable read" persistence context (first level cache) of the application's domain model.
+It maintains a generally "repeatable read" persistence context (first level cache) of the application domain model.
 
 Transaction (`org.hibernate.Transaction`):: A single-threaded, short-lived object used by the application to demarcate individual physical transaction boundaries.
-`EntityTransaction` is the JPA equivalent and both act as an abstraction API to isolate the application from the underling transaction system in use (JDBC or JTA).
+`EntityTransaction` is the JPA equivalent and both act as an abstraction API to isolate the application from the underlying transaction system in use (JDBC or JTA).

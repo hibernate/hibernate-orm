@@ -92,12 +92,12 @@ It is possible to configure various aspects of Hibernate Envers behavior, such a
 |`org.hibernate.envers.track_entities_changed_in_revision` |`false` |Should entity types, that have been modified during each revision, be tracked.
   The default implementation creates `REVCHANGES` table that stores entity names of modified persistent objects.
   Single record encapsulates the revision identifier (foreign key to `REVINFO` table) and a string value.
-  For more information refer to <<envers-tracking-modified-entities-revchanges>> and <<envers-tracking-modified-entities-queries>>.
+  For more information, refer to <<envers-tracking-modified-entities-revchanges>> and <<envers-tracking-modified-entities-queries>>.
 
 |`org.hibernate.envers.global_with_modified_flag` |`false`, can be individually overridden with `@Audited( withModifiedFlag=true )` |Should property modification flags be stored for all audited entities and all properties.
   When set to true, for all properties an additional boolean column in the audit tables will be created, filled with information if the given property changed in the given revision.
   When set to false, such column can be added to selected entities or properties using the `@Audited` annotation.
-  For more information refer to <<envers-tracking-properties-changes>> and <<envers-tracking-properties-changes-queries>>.
+  For more information, refer to <<envers-tracking-properties-changes>> and <<envers-tracking-properties-changes-queries>>.
 
 |`org.hibernate.envers.modified_flag_suffix` |`_MOD` |The suffix for columns storing "Modified Flags".
   For example: a property called "age", will by default get modified flag with column name "age_MOD".
@@ -125,9 +125,9 @@ The name of the audit table can be set on a per-entity basis, using the `@AuditT
 It may be tedious to add this annotation to every audited entity, so if possible, it's better to use a prefix/suffix.
 
 If you have a mapping with secondary tables, audit tables for them will be generated in the same way (by adding the prefix and suffix).
-If you wish to overwrite this behaviour, you can use the `@SecondaryAuditTable` and `@SecondaryAuditTables` annotations.
+If you wish to overwrite this behavior, you can use the `@SecondaryAuditTable` and `@SecondaryAuditTables` annotations.
 
-If you'd like to override auditing behaviour of some fields/properties inherited from `@MappedSuperclass` or in an embedded component,
+If you'd like to override auditing behavior of some fields/properties inherited from `@MappedSuperclass` or in an embedded component,
 you can apply the `@AuditOverride( s )` annotation on the subtype or usage site of the component.
 
 If you want to audit a relation mapped with `@OneToMany` and `@JoinColumn`,
@@ -138,7 +138,7 @@ just annotate it with `@Audited( targetAuditMode = RelationTargetAuditMode.NOT_A
 Then, while reading historic versions of your entity, the relation will always point to the "current" related entity.
 By default Envers throws `javax.persistence.EntityNotFoundException` when "current" entity does not exist in the database.
 Apply `@NotFound( action = NotFoundAction.IGNORE )` annotation to silence the exception and assign null value instead.
-Hereby solution causes implicit eager loading of to-one relations.
+The hereby solution causes implicit eager loading of to-one relations.
 
 If you'd like to audit properties of a superclass of an entity, which are not explicitly audited (they don't have the `@Audited` annotation on any properties or on the class),
 you can set the `@AuditOverride( forClass = SomeEntity.class, isAudited = true/false )` annotation.
@@ -152,7 +152,7 @@ The `@Audited` annotation also features an `auditParents` attribute but it's now
 
 After the basic configuration, it is important to choose the audit strategy that will be used to persist and retrieve audit information.
 There is a trade-off between the performance of persisting and the performance of querying the audit information.
-Currently there are two audit strategies.
+Currently, there are two audit strategies.
 
 . The default audit strategy persists the audit data together with a start revision.
   For each row inserted, updated or deleted in an audited table, one or more rows are inserted in the audit tables, together with the start revision of its validity.
@@ -782,7 +782,7 @@ Bags are not supported because they can contain non-unique elements.
 Persisting, a bag of `String`s violates the relational database principle that each table is a set of tuples.
 
 In case of bags, however (which require a join table), if there is a duplicate element, the two tuples corresponding to the elements will be the same.
-Hibernate allows this, however Envers (or more precisely: the database connector) will throw an exception when trying to persist two identical elements, because of a unique constraint violation.
+Hibernate allows this, however Envers (or more precisely: the database connector) will throw an exception when trying to persist two identical elements because of a unique constraint violation.
 
 There are at least two ways out if you need bag semantics:
 
@@ -796,12 +796,12 @@ There are at least two ways out if you need bag semantics:
 === `@OneToMany` with `@JoinColumn`
 
 When a collection is mapped using these two annotations, Hibernate doesn't generate a join table.
-Envers, however, has to do this, so that when you read the revisions in which the related entity has changed, you don't get false results.
+Envers, however, has to do this so that when you read the revisions in which the related entity has changed, you don't get false results.
 
 To be able to name the additional join table, there is a special annotation: `@AuditJoinTable`, which has similar semantics to JPA `@JoinTable`.
 
 One special case are relations mapped with `@OneToMany` with `@JoinColumn` on the one side, and `@ManyToOne` and `@JoinColumn( insertable=false, updatable=false`) on the many side.
-Such relations are in fact bidirectional, but the owning side is the collection.
+Such relations are, in fact, bidirectional, but the owning side is the collection.
 
 To properly audit such relations with Envers, you can use the `@AuditMappedBy` annotation.
 It enables you to specify the reverse property (using the `mappedBy` element).
@@ -825,7 +825,7 @@ SQL table partitioning offers a lot of advantages including, but certainly not l
 [[envers-partitioning-columns]]
 === Suitable columns for audit table partitioning
 
-Generally SQL tables must be partitioned on a column that exists within the table.
+Generally, SQL tables must be partitioned on a column that exists within the table.
 As a rule it makes sense to use either the _end revision_ or the _end revision timestamp_ column for partitioning of audit tables.
 
 [NOTE]
@@ -901,9 +901,9 @@ To partition this data, the 'level of relevancy' must be defined. Consider the f
 . For fiscal year 2006 there is only one revision.
   It has the oldest _revision timestamp_ of all audit rows, but should still be regarded as relevant because it's the latest modification for this fiscal year in the salary table (its _end revision timestamp_ is null).
 +
-  Also note that it would be very unfortunate if in 2011 there would be an update of the salary for fiscal year 2006 (which is possible in until at least 10 years after the fiscal year),
+  Also, note that it would be very unfortunate if in 2011 there would be an update of the salary for fiscal year 2006 (which is possible in until at least 10 years after the fiscal year),
   and the audit information would have been moved to a slow disk (based on the age of the __revision timestamp__).
-  Remember that in this case Envers will have to update the _end revision timestamp_ of the most recent audit row.
+  Remember that, in this case, Envers will have to update the _end revision timestamp_ of the most recent audit row.
 . There are two revisions in the salary of fiscal year 2007 which both have nearly the same _revision timestamp_ and a different __end revision timestamp__.
   On first sight, it is evident that the first revision was a mistake and probably not relevant.
   The only relevant revision for 2007 is the one with _end revision timestamp_ null.

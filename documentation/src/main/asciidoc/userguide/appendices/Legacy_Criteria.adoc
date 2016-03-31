@@ -167,7 +167,7 @@ while ( iter.hasNext() ) {
 }
 ----
 
-Additionally you may manipulate the result set using a left outer join:
+Additionally, you may manipulate the result set using a left outer join:
 
 [source]
 ----

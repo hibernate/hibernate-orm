@@ -176,7 +176,7 @@ From a relational database point of view, the underlying schema is identical to 
 as the client-side controls the relationship based on the foreign key column.
 
 But then, it's unusual to consider the `Phone` as a client-side and the `PhoneDetails` as the parent-side because the details cannot exist without an actual phone.
-A much more natural mapping would be if the `Phone` was the parent-side, therefore pushing the foreign key into the `PhoneDetails` table.
+A much more natural mapping would be if the `Phone` were the parent-side, therefore pushing the foreign key into the `PhoneDetails` table.
 This mapping requires a bidirectional `@OneToOne` association as you can see in the following example:
 
 [[associations-one-to-one-bidirectional]]
@@ -213,7 +213,7 @@ include::{extrasdir}/associations-one-to-one-bidirectional-lifecycle-example.sql
 ====
 
 When using a bidirectional `@OneToOne` association, Hibernate enforces the unique constraint upon fetching the child-side.
-If there are more than one children associated to the same parent, Hibernate will throw a constraint violation exception.
+If there are more than one children associated with the same parent, Hibernate will throw a constraint violation exception.
 Continuing the previous example, when adding another `PhoneDetails`, Hibernate validates the uniqueness constraint when reloading the `Phone` object.
 
 [[associations-one-to-one-bidirectional-constraint-example]]
@@ -251,7 +251,7 @@ include::{extrasdir}/associations-many-to-many-unidirectional-example.sql[]
 Just like with unidirectional `@OneToMany` associations, the link table is controlled by the owning side.
 
 When an entity is removed from the `@ManyToMany` collection, Hibernate simply deletes the joining record in the link table.
-Unfortunately, this operation requires removing all entries associated to a given parent and recreating the ones that are listed in the current running persistent context.
+Unfortunately, this operation requires removing all entries associated with a given parent and recreating the ones that are listed in the current running persistent context.
 
 [[associations-many-to-many-unidirectional-lifecycle-example]]
 .Unidirectional `@ManyToMany` lifecycle
@@ -273,7 +273,7 @@ For `@ManyToMany` associations, the `REMOVE` entity state transition doesn't mak
 Since the other side might be referenced by other entities on the parent-side, the automatic removal might end up in a `ConstraintViolationException`.
 
 For example, if `@ManyToMany(cascade = CascadeType.ALL)` was defined and the first person would be deleted,
-Hibernate would throw an exception because another person is still associated to the address that's being deleted.
+Hibernate would throw an exception because another person is still associated with the address that's being deleted.
 
 [source,java]
 ----
@@ -340,7 +340,7 @@ include::{extrasdir}/associations-many-to-many-bidirectional-lifecycle-example.s
 
 If a bidirectional `@OneToMany` association performs better when removing or changing the order of child elements,
 the `@ManyToMany` relationship cannot benefit from such an optimization because the foreign key side is not in control.
-To overcome this limitation, the the link table must be directly exposed and the `@ManyToMany` association split into two bidirectional `@OneToMany` relationships.
+To overcome this limitation, the link table must be directly exposed and the `@ManyToMany` association split into two bidirectional `@OneToMany` relationships.
 
 [[associations-many-to-many-bidirectional-with-link-entity]]
 ===== Bidirectional many-to-many with a link entity

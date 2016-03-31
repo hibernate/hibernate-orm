@@ -7,7 +7,7 @@ Tuning how an application does fetching is one of the biggest factors in determi
 Fetching too much data, in terms of width (values/columns) and/or depth (results/rows),
 adds unnecessary overhead in terms of both JDBC communication and ResultSet processing.
 Fetching too little data might cause additional fetching to be needed.
-Tuning how an application fetches data presents a great opportunity to influence the application's overall performance.
+Tuning how an application fetches data presents a great opportunity to influence the application overall performance.
 
 [[fetching-basics]]
 === The basics
@@ -68,7 +68,7 @@ Hibernate, as a JPA provider, honors that default.
 [[fetching-strategies-no-fetching]]
 === No fetching
 
-For the first use case, consider the application's login process for an `Employee`. 
+For the first use case, consider the application login process for an `Employee`.
 Let's assume that login only requires access to the `Employee` information, not `Project` nor `Department` information.
 
 [[fetching-strategies-no-fetching-example]]

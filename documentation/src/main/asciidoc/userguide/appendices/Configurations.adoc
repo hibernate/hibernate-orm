@@ -109,7 +109,7 @@ Should generally only configure this or `hibernate.connection.acquisition_mode`,
 |`hibernate.c3p0.max_statements` | 5 | Maximum size of C3P0 statement cache. Refers to http://www.mchange.com/projects/c3p0/#maxStatements[c3p0 `maxStatements` setting].
 |`hibernate.c3p0.acquire_increment` | 2 | Number of connections acquired at a time when there's no connection available in the pool. Refers to http://www.mchange.com/projects/c3p0/#acquireIncrement[c3p0 `acquireIncrement` setting].
 |`hibernate.c3p0.idle_test_period` | 5 | Idle time before a C3P0 pooled connection is validated. Refers to http://www.mchange.com/projects/c3p0/#idleConnectionTestPeriod[c3p0 `idleConnectionTestPeriod` setting].
-|`hibernate.c3p0` | | A setting prefix used to indicate additional c3p0 properties that need to be passed ot the underlying c3p0 connection pool.
+|`hibernate.c3p0` | | A setting prefix used to indicate additional c3p0 properties that need to be passed to the underlying c3p0 connection pool.
 |===================================================================================================================================================================================================================================
 
 [[configurations-mapping]]
@@ -155,7 +155,7 @@ However, some JPA providers do need the discriminator for handling joined inheri
 However, we want to make sure that legacy applications continue to work as well, which puts us in a bind in terms of how to handle _implicit_ discriminator mappings.
 The solution is to assume that the absence of discriminator metadata means to follow the legacy behavior _unless_ this setting is enabled.
 
-With this setting enabled, Hibernate will interpret the absence of discriminator metadata as an indication to use the JPA defined defaults for these absent annotations.
+With this setting enabled, Hibernate will interpret the absence of discriminator metadata as an indication to use the JPA-defined defaults for these absent annotations.
 
 See Hibernate Jira issue https://hibernate.atlassian.net/browse/HHH-6911[HHH-6911] for additional background info.
 
@@ -173,7 +173,7 @@ See Hibernate Jira issue https://hibernate.atlassian.net/browse/HHH-6911[HHH-691
 |`hibernate.implicit_naming_strategy` |`default` (default value), `jpa`, `legacy-jpa`, `legacy-hbm`, `component-path` a|
 
 Used to specify the `org.hibernate.boot.model.naming.ImplicitNamingStrategy` class to use.
-The following short-names are defined for this setting:
+The following short names are defined for this setting:
 
 `default`:: Uses the `org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl`
 `jpa`:: Uses the `org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl`
@@ -272,7 +272,7 @@ The maximum number of entries including:
 
 maintained by `org.hibernate.engine.query.spi.QueryPlanCache`.
 
-|`hibernate.query.plan_parameter_metadata_max_size` | `128` (default value) | The maximum number of strong references associated to `ParameterMetadata` maintained by `org.hibernate.engine.query.spi.QueryPlanCache`.
+|`hibernate.query.plan_parameter_metadata_max_size` | `128` (default value) | The maximum number of strong references associated with `ParameterMetadata` maintained by `org.hibernate.engine.query.spi.QueryPlanCache`.
 |`hibernate.order_by.default_null_ordering` |`none`, `first` or `last` |Defines precedence of null values in `ORDER BY` clause. Defaults to `none` which varies between RDBMS implementation.
 |`hibernate.discriminator.force_in_select` |`true` or `false` (default value) | For entities which do not explicitly say, should we force discriminators into SQL selects?
 |`hibernate.query.substitutions` | `true=1,false=0` |A comma-separated list of token substitutions to use when translating a Hibernate query to SQL.
@@ -371,7 +371,7 @@ In reality, you shouldn't probably enable this setting anyway.
 
 A setting to control whether to `org.hibernate.engine.internal
 .StatisticalLoggingSessionEventListener` is enabled on all `Sessions` (unless explicitly disabled for a given `Session`).
-The default value of this setting is determined by the value for `hibernate.generate_statistics`, meaning that if collection of statistics is enabled logging of Session metrics is enabled by default too.
+The default value of this setting is determined by the value for `hibernate.generate_statistics`, meaning that if statistics are enabled, then logging of Session metrics is enabled by default too.
 
 |===================================================================================================================================================================================================================================
 
@@ -507,7 +507,7 @@ In such cases, a value for this setting _must_ be specified.
 
 The value of this setting is expected to match the value returned by `java.sql.DatabaseMetaData#getDatabaseProductName()` for the target database.
 
-Additionally specifying `javax.persistence.database-major-version` and/or `javax.persistence.database-minor-version` may be required to understand exactly how to generate the required schema commands.
+Additionally, specifying `javax.persistence.database-major-version` and/or `javax.persistence.database-minor-version` may be required to understand exactly how to generate the required schema commands.
 
 |`javax.persistence.database-major-version` | |
 

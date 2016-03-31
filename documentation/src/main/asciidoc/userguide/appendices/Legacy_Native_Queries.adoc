@@ -218,7 +218,7 @@ You cannot use stored procedures with Hibernate unless you follow some procedure
 If they do not follow those rules they are not usable with Hibernate.
 If you still want to use these procedures you have to execute them via `session.doWork()`.
 
-The rules are different for each database, since database vendors have different stored procedure semantics/syntax.
+The rules are different for each database since database vendors have different stored procedure semantics/syntax.
 
 Stored procedure queries cannot be paged with `setFirstResult()/setMaxResults()`.
 

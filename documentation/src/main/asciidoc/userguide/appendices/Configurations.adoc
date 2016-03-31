@@ -47,10 +47,10 @@ Note that for backwards compatibility, if a `org.hibernate.context.spi.CurrentSe
 [width="100%",cols="20%,20%,60%",]
 |===================================================================================================================================================================================================================================
 |Property |Example |Purpose
-|`hibernate.connection.driver_class` | `org.postgresql.Driver` | Names the JDBC `Driver` class name.
-|`hibernate.connection.url` | `jdbc:postgresql:hibernate_orm_test` | Names the JDBC connection URL.
-|`hibernate.connection.username` | | Names the JDBC connection user name.
-|`hibernate.connection.password` | | Names the JDBC connection password.
+|`hibernate.connection.driver_class` or `javax.persistence.jdbc.driver` | `org.postgresql.Driver` | Names the JDBC `Driver` class name.
+|`hibernate.connection.url` or `javax.persistence.jdbc.url` | `jdbc:postgresql:hibernate_orm_test` | Names the JDBC connection URL.
+|`hibernate.connection.username` or `javax.persistence.jdbc.user` | | Names the JDBC connection user name.
+|`hibernate.connection.password` or `javax.persistence.jdbc.password` | | Names the JDBC connection password.
 |`hibernate.connection.isolation` | `REPEATABLE_READ` or
 `Connection.TRANSACTION_REPEATABLE_READ` | Names the JDBC connection transaction isolation level.
 |`hibernate.connection.autocommit` | `true` or `false` (default value) | Names the JDBC connection autocommit mode.
@@ -229,17 +229,31 @@ Default is `hbm,class"` which indicates to process `hbm.xml` files followed by a
 |`hibernate.use_nationalized_character_data` |`true` or `false` (default value) |Enable nationalized character support on all string / clob based attribute ( string, char, clob, text etc ).
 |`hibernate.jdbc.lob.non_contextual_creation` |`true` or `false` (default value) |Should we not use contextual LOB creation (aka based on `java.sql.Connection#createBlob()` et al)? The default value for HANA, H2, and PostgreSQL is `true`.
 
-3+|Misc options
+3+|Bean Validation options
+|`javax.persistence.validation.factory` |`javax.validation.ValidationFactory` implementation | Specify the  `javax.validation.ValidationFactory` implementation to use for Bean Validation.
 |`hibernate.check_nullability` |`true` or `false` |
 
 Enable nullability checking. Raises an exception if a property marked as not-null is null.
 
 Default to `false` if Bean Validation is present in the classpath and Hibernate Annotations is used, `true` otherwise.
 
-|`hibernate.bytecode.provider` |`javassist` (default value) | The `org.hibernate.bytecode.spi.BytecodeProvider` built-in implementation flavor. Currently, only `javassist` is supported.
+3+|Misc options
 |`hibernate.create_empty_composites.enabled` |`true` or `false` (default value) | Enable instantiation of composite/embeddable objects when all of its attribute values are `null`. The default (and historical) behavior is that a `null` reference will be used to represent the composite when all of its attributes are `null`.
 |`hibernate.entity_dirtiness_strategy` | fully-qualified class name or an actual `CustomEntityDirtinessStrategy` instance | Setting to identify a `org.hibernate.CustomEntityDirtinessStrategy` to use.
 |`hibernate.default_entity_mode` |`pojo` (default value) or `dynamic-map` |Default `EntityMode` for entity representation for all sessions opened from this `SessionFactory`, defaults to `pojo`.
+|===================================================================================================================================================================================================================================
+
+[[configurations-bytecode-enhancement]]
+=== Bytecode Enhancement Properties
+
+[width="100%",cols="20%,20%,60%",]
+|===================================================================================================================================================================================================================================
+|Property |Example |Purpose
+|`hibernate.enhancer.enableDirtyTracking`| `true` or `false` (default value) | Enable dirty tracking feature in runtime bytecode enhancement.
+|`hibernate.enhancer.enableLazyInitialization`| `true` or `false` (default value) | Enable lazy loading feature in runtime bytecode enhancement. This way, even basic types (e.g. `@Basic(fetch = FetchType.LAZY`)) can be fetched lazily.
+|`hibernate.enhancer.enableAssociationManagement`| `true` or `false` (default value) | Enable association management feature in runtime bytecode enhancement which automatically synchronizes a bidirectional association when only one side is changed.
+|`hibernate.bytecode.provider` |`javassist` (default value) | The `org.hibernate.bytecode.spi.BytecodeProvider` built-in implementation flavor. Currently, only `javassist` is supported.
+|`hibernate.bytecode.use_reflection_optimizer`| `true` or `false` (default value) | Should we use reflection optimization? The reflection optimizer implements the `org.hibernate.bytecode.spi.ReflectionOptimizer` interface and improves entity instantiation and property getter/setter calls.
 |===================================================================================================================================================================================================================================
 
 [[configurations-query]]
@@ -355,7 +369,8 @@ In reality, you shouldn't probably enable this setting anyway.
 |`hibernate.generate_statistics` |`true` or `false` |Causes Hibernate to collect statistics for performance tuning.
 |`hibernate.session.events.log` |`true` or `false` |
 
-A setting to control whether to `org.hibernate.engine.internal.StatisticalLoggingSessionEventListener` is enabled on all `Sessions` (unless explicitly disabled for a given `Session`).
+A setting to control whether to `org.hibernate.engine.internal
+.StatisticalLoggingSessionEventListener` is enabled on all `Sessions` (unless explicitly disabled for a given `Session`).
 The default value of this setting is determined by the value for `hibernate.generate_statistics`, meaning that if collection of statistics is enabled logging of Session metrics is enabled by default too.
 
 |===================================================================================================================================================================================================================================
@@ -381,6 +396,10 @@ Setting used to give the name of the default `org.hibernate.annotations.CacheCon
 |`hibernate.cache.use_structured_entries` |`true` or `false` (default value) |Forces Hibernate to store data in the second-level cache in a more human-readable format.
 |`hibernate.cache.auto_evict_collection_cache` |`true` or `false` (default: false) |Enables the automatic eviction of a bi-directional association's collection cache when an element in the `ManyToOne` collection is added/updated/removed without properly managing the change on the `OneToMany` side.
 |`hibernate.cache.use_reference_entries` |`true` or `false` |Optimizes second-level cache operation to store immutable entities (aka "reference") which do not have associations into cache directly, this case, lots of disasseble and deep copy operations can be avoid. Default value of this property is `false`.
+|`hibernate.ejb.classcache`| `hibernate.ejb.classcache
+.org.hibernate.ejb.test.Item` = `read-write` |	Sets the associated entity class cache concurrency strategy for the designated region. Caching configuration should follow the following pattern `hibernate.ejb.classcache.<fully.qualified.Classname>` usage[, region] where usage is the cache strategy used and region the cache region name.
+|`hibernate.ejb.collectioncache`| `hibernate.ejb.collectioncache
+.org.hibernate.ejb.test.Item.distributors` = `read-write, RegionName`/> | Sets the associated collection cache concurrency strategy for the designated region. Caching configuration should follow the following pattern `hibernate.ejb.collectioncache.<fully.qualified.Classname>.<role>` usage[, region] where usage is the cache strategy used and region the cache region name
 |==================================================================================================================================================================================================================================================================================================================
 
 [[configurations-transactions]]
@@ -604,7 +623,7 @@ Therefore, the `org.hibernate.tool.hbm2ddl.UniqueConstraintSchemaUpdateStrategy`
 |===========================================================================================================================
 |Property |Example |Purpose
 |`hibernate.session.events.auto` | | Fully qualified class name implementing the `SessionEventListener` interface.
-|`hibernate.session_factory.interceptor` | `org.hibernate.EmptyInterceptor` (default value)  a|
+|`hibernate.session_factory.interceptor` or `hibernate.ejb.interceptor` | `org.hibernate.EmptyInterceptor` (default value)  a|
 
 Names a `org.hibernate.Interceptor` implementation to be applied to every `Session` created by the current `org.hibernate.SessionFactory`
 
@@ -613,6 +632,14 @@ Can reference:
 * `Interceptor` instance
 * `Interceptor` implementation `Class` object reference
 * `Interceptor` implementation class name
+
+|`hibernate.ejb.interceptor.session_scoped` | fully-qualified class name or class reference | An optional Hibernate interceptor.
+
+The interceptor instance is specific to a given Session instance (and hence is not thread-safe) has to implement `org.hibernate.Interceptor` and have a no-arg constructor.
+
+This property can not be combined with `hibernate.ejb.interceptor`.
+|`hibernate.ejb.session_factory_observer` | fully-qualified class name or class reference | Specifies a `SessionFactoryObserver` to be applied to the SessionFactory. The class must have a no-arg constructor.
+|`hibernate.ejb.event` | `hibernate.ejb.event.pre-load` = `com.acme.SecurityListener,com.acme.AuditListener` | Event listener list for a given event type. The list of event listeners is a comma separated fully qualified class name list.
 |===========================================================================================================================
 
 [[configurations-jmx]]
@@ -667,11 +694,29 @@ Naming the `SessionFactory` allows for it to be properly serialized across JVMs 
 
 If `hibernate.session_factory_name_is_jndi` is set to `true`, this is also the name under which the `SessionFactory` is bound into JNDI on startup and from which it can be obtained from JNDI.
 
-|`hibernate.session_factory_name_is_jndi` |`true` (default value) |
+|`hibernate.session_factory_name_is_jndi` |`true` (default value) or `false` |
 
 Does the value defined by `hibernate.session_factory_name` represent a JNDI namespace into which the `org.hibernate.SessionFactory` should be bound and made accessible?
 
 Defaults to `true` for backwards compatibility. Set this to `false` if naming a SessionFactory is needed for serialization purposes, but no writable JNDI context exists in the runtime environment or if the user simply does not want JNDI to be used.
 
-|`hibernate.bytecode.use_reflection_optimizer`| `true` or `false` (default value) | Should we use reflection optimization? The reflection optimizer implements the `org.hibernate.bytecode.spi.ReflectionOptimizer` interface and improves entity instantiation and property getter/setter calls.
+|`hibernate.ejb.entitymanager_factory_name`| By default, the persistence unit name is used, otherwise a randomly generated UUID | Internally, Hibernate keeps track of all `EntityManagerFactory` instances using the `EntityManagerFactoryRegistry`. The name is used as a key to identify a given `EntityManagerFactory` reference.
+|`hibernate.ejb.cfgfile`| `hibernate.cfg.xml` (default value) | XML configuration file to use to configure Hibernate.
+|`hibernate.ejb.discard_pc_on_close`| `true` or `false` (default value) |
+
+If true, the persistence context will be discarded (think `clear()` when the method is called.
+Otherwise, the persistence context will stay alive till the transaction completion: all objects will remain managed, and any change will be synchronized with the database (default to false, ie wait for transaction completion).
+
+|`hibernate.ejb.metamodel.population`| `enabled` or `disabled`, or `ignoreUnsupported` (default value) a|
+
+Setting that controls whether we seek out JPA _static metamodel_ classes and populate them.
+
+Accepts three values:
+
+enabled:: Do the population
+disabled:: Do not do the population
+ignoreUnsupported:: Do the population, but ignore any non-JPA features that would otherwise result in the population failing (e.g. `@Any` annotation).
+
+|`hibernate.delay_cdi_access`| `true` or `false` (default value) | Defines delayed access to CDI `BeanManager`. Starting in 5.1 the preferred means for CDI bootstrapping is through `org.hibernate.jpa.event.spi.jpa.ExtendedBeanManager`.
 |=====================================================================================================================================================================================================================================================
+

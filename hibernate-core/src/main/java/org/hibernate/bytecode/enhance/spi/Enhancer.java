@@ -21,7 +21,6 @@ import org.hibernate.bytecode.enhance.internal.CompositeEnhancer;
 import org.hibernate.bytecode.enhance.internal.EntityEnhancer;
 import org.hibernate.bytecode.enhance.internal.FieldWriter;
 import org.hibernate.bytecode.enhance.internal.PersistentAttributesEnhancer;
-import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedComposite;
 import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
@@ -39,13 +38,7 @@ public class Enhancer {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( Enhancer.class );
 
 	protected final EnhancementContext enhancementContext;
-
-	protected final ClassPool classPool;
-	protected final CtClass managedEntityCtClass;
-	protected final CtClass managedCompositeCtClass;
-	protected final CtClass attributeInterceptorCtClass;
-	protected final CtClass attributeInterceptableCtClass;
-	protected final CtClass entityEntryCtClass;
+	private final ClassPool classPool;
 
 	/**
 	 * Constructs the Enhancer, using the given context.
@@ -54,20 +47,8 @@ public class Enhancer {
 	 * to contextual/environmental information.
 	 */
 	public Enhancer(EnhancementContext enhancementContext) {
-		try {
-			this.enhancementContext = enhancementContext;
-			this.classPool = buildClassPool( enhancementContext );
-
-			// pre-load some of the interfaces that are used
-			this.managedEntityCtClass = loadCtClassFromClass( classPool, ManagedEntity.class );
-			this.managedCompositeCtClass = loadCtClassFromClass( classPool, ManagedComposite.class );
-			this.attributeInterceptableCtClass = loadCtClassFromClass( classPool, PersistentAttributeInterceptable.class );
-			this.attributeInterceptorCtClass = loadCtClassFromClass( classPool, PersistentAttributeInterceptor.class );
-			this.entityEntryCtClass = loadCtClassFromClass( classPool, EntityEntry.class );
-		}
-		catch (IOException e) {
-			throw new EnhancementException( "Could not prepare Javassist ClassPool", e );
-		}
+		this.enhancementContext = enhancementContext;
+		this.classPool = buildClassPool( enhancementContext );
 	}
 
 	/**
@@ -108,11 +89,14 @@ public class Enhancer {
 		return classPool;
 	}
 
-	private CtClass loadCtClassFromClass(ClassPool cp, Class<?> aClass) throws IOException {
+	protected CtClass loadCtClassFromClass(Class<?> aClass) {
 		String resourceName = aClass.getName().replace( '.', '/' ) + ".class";
 		InputStream resourceAsStream = aClass.getClassLoader().getResourceAsStream( resourceName );
 		try {
-			return cp.makeClass( resourceAsStream );
+			return classPool.makeClass( resourceAsStream );
+		}
+		catch (IOException e) {
+			throw new EnhancementException( "Could not prepare Javassist ClassPool", e );
 		}
 		finally {
 			try {
@@ -182,9 +166,9 @@ public class Enhancer {
 		}
 		log.debugf( "Weaving in PersistentAttributeInterceptable implementation on [%s]", managedCtClass.getName() );
 
-		managedCtClass.addInterface( attributeInterceptableCtClass );
+		managedCtClass.addInterface( loadCtClassFromClass( PersistentAttributeInterceptable.class ) );
 
-		FieldWriter.addFieldWithGetterAndSetter( managedCtClass, attributeInterceptorCtClass,
+		FieldWriter.addFieldWithGetterAndSetter( managedCtClass, loadCtClassFromClass( PersistentAttributeInterceptor.class ),
 				EnhancerConstants.INTERCEPTOR_FIELD_NAME,
 				EnhancerConstants.INTERCEPTOR_GETTER_NAME,
 				EnhancerConstants.INTERCEPTOR_SETTER_NAME );

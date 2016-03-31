@@ -28,7 +28,7 @@ Hibernate produces and releases its own `features.xml` that defines a core `hibe
 This is included in the binary distribution, as well as deployed to the JBoss Nexus repository (using the `org.hibernate` groupId and `hibernate-osgi` with the `karaf.xml` classifier).
 
 Note that our features are versioned using the same ORM artifact versions they wrap.
-Also note that the features are heavily tested against Karaf 3.0.3 as a part of our PaxExam-based integration tests.
+Also, note that the features are heavily tested against Karaf 3.0.3 as a part of our PaxExam-based integration tests.
 However, they'll likely work on other versions as well.
 
 hibernate-osgi, theoretically, supports a variety of OSGi containers, such as Equinox.
@@ -162,12 +162,12 @@ Your bundle's manifest will need to import, at a minimum,
 
 === Obtaining an SessionFactory
 
-`hibernate-osgi` registers an OSGi service, using the `SessionFactory` interface name, that bootstraps and creates an `SessionFactory` specific for OSGi environments.
+`hibernate-osgi` registers an OSGi service, using the `SessionFactory` interface name, that bootstraps and creates a `SessionFactory` specific for OSGi environments.
 
 [IMPORTANT]
 ====
 It is VITAL that your `SessionFactory` be obtained through the service, rather than creating it manually. The service handles the OSGi `ClassLoader`, discovered extension points, scanning, etc.
-Manually creating an `SessionFactory` is guaranteed to NOT work during runtime!
+Manually creating a `SessionFactory` is guaranteed to NOT work during runtime!
 ====
 
 .Discover/Use `SessionFactory`

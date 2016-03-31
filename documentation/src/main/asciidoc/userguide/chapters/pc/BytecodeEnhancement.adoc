@@ -98,7 +98,7 @@ Bytecode-enhanced bi-directional association management makes that first example
 [[BytecodeEnhancement-dirty-tracking-optimizations]]
 ===== Internal performance optimizations
 
-Additionally we use the enhancement process to add some additional code that allows us to optimized certain performance characteristics of the persistence context.
+Additionally, we use the enhancement process to add some additional code that allows us to optimized certain performance characteristics of the persistence context.
 These are hard to discuss without diving into a discussion of Hibernate internals.
 
 [[BytecodeEnhancement-enhancement]]
@@ -107,7 +107,7 @@ These are hard to discuss without diving into a discussion of Hibernate internal
 [[BytecodeEnhancement-enhancement-runtime]]
 ===== Run-time enhancement
 
-Currently run-time enhancement of the domain model is only supported in managed JPA environments following the JPA defined SPI for performing class transformations.
+Currently, run-time enhancement of the domain model is only supported in managed JPA environments following the JPA-defined SPI for performing class transformations.
 Even then, this support is disabled by default.
 To enable run-time enhancement, specify `hibernate.ejb.use_class_enhancer`=`true` as a persistent unit property.
 
@@ -147,7 +147,7 @@ Enhancement is disabled by default in preparation for additions capabilities (hb
 Hibernate provides a Maven plugin capable of providing build-time enhancement of the domain model as they are compiled as part of a Maven build.
 See the section on the <<BytecodeEnhancement-enhancement-gradle>> for details on the configuration settings. Again, the default for those 3 is `true`.
 
-The Maven plugin supports one additional configuration settings: failOnError, which controls what happens in case of an error.
+The Maven plugin supports one additional configuration settings: failOnError, which controls what happens in case of error.
 Default behavior is to fail the build, but it can be set so that only a warning is issued.
 
 .Apply the Maven plugin

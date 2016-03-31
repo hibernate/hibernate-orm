@@ -55,7 +55,7 @@ All data is kept in a single database schema.
 The data for each tenant is partitioned by the use of partition value or discriminator.
 The complexity of this discriminator might range from a simple column value to a complex SQL formula.
 Again, this approach would use a single Connection pool to service all tenants.
-However, in this approach the application needs to alter each and every SQL statement sent to the database to reference the "tenant identifier" discriminator.
+However, in this approach, the application needs to alter each and every SQL statement sent to the database to reference the "tenant identifier" discriminator.
 
 [[multitenacy-hibernate]]
 === Multitenancy in Hibernate
@@ -161,7 +161,7 @@ There are two situations where CurrentTenantIdentifierResolver is used:
 In the case of the current-session feature, Hibernate will need to open a session if it cannot find an existing one in scope.
 However, when a session is opened in a multitenant environment, the tenant identifier has to be specified.
 This is where the `CurrentTenantIdentifierResolver` comes into play; Hibernate will consult the implementation you provide to determine the tenant identifier to use when opening the session.
-In this case, it is required that a `CurrentTenantIdentifierResolver` be supplied.
+In this case, it is required that a `CurrentTenantIdentifierResolver` is supplied.
 * The other situation is when you do not want to have to explicitly specify the tenant identifier all the time.
 If a `CurrentTenantIdentifierResolver` has been specified, Hibernate will use it to determine the default tenant identifier to use when opening the session.
 

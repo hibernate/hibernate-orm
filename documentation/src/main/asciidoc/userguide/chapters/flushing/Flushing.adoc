@@ -213,7 +213,7 @@ include::{extrasdir}/flushing-always-flush-sql-example.sql[]
 === `MANUAL` flush
 
 Both the `EntityManager` and the Hibernate `Session` define a `flush()` method that, when called, triggers a manual flush.
-Hibernate also defines a `MANUAL` flush mode, so the persistence context can only be flushed manually.
+Hibernate also defines a `MANUAL` flush mode so the persistence context can only be flushed manually.
 
 [[flushing-manual-flush-example]]
 .`MANUAL` flushing

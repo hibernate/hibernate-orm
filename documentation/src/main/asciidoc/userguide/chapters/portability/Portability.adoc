@@ -21,7 +21,7 @@ If you find that your particular database is not among them, it is not terribly 
 === Dialect resolution
 
 Originally, Hibernate would always require that users specify which dialect to use. In the case of users looking to simultaneously target multiple databases with their build that was problematic.
-Generally this required their users to configure the Hibernate dialect or defining their own method of setting that value.
+Generally, this required their users to configure the Hibernate dialect or defining their own method of setting that value.
 
 Starting with version 3.2, Hibernate introduced the notion of automatically detecting the dialect to use based on the `java.sql.DatabaseMetaData` obtained from a `java.sql.Connection` to that database.
 This was much better, expect that this resolution was limited to databases Hibernate know about ahead of time and was in no way configurable or overrideable.

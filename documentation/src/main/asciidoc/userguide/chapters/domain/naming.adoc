@@ -21,7 +21,7 @@ Historically Hibernate defined just a single `org.hibernate.cfg.NamingStrategy`.
 NamingStrategy contract actually combined the separate concerns that are now modeled individually
 as ImplicitNamingStrategy and PhysicalNamingStrategy.
 
-Also the NamingStrategy contract was often not flexible enough to properly apply a given naming
+Also, the NamingStrategy contract was often not flexible enough to properly apply a given naming
 "rule", either because the API lacked the information to decide or because the API was honestly
 not well defined as it grew.
 
@@ -37,12 +37,12 @@ repetitive information a developer must provide for mapping a domain model.
 .JPA Compatibility
 ====
 JPA defines inherent rules about implicit logical name determination.  If JPA provider
-portability is a major concern, or if you really just like the JPA defined implicit
+portability is a major concern, or if you really just like the JPA-defined implicit
 naming rules, be sure to stick with ImplicitNamingStrategyJpaCompliantImpl (the default)
 
 Also, JPA defines no separation between logical and physical name.  Following the JPA
 specification, the logical name *is* the physical name.  If JPA provider portability
-is important, applications should prefer to not specify a PhysicalNamingStrategy.
+is important, applications should prefer not to specify a PhysicalNamingStrategy.
 ====
 
 
@@ -71,10 +71,10 @@ the implementation using the `hibernate.implicit_naming_strategy` configuration 
 `legacy-jpa`:: for `org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl` - compliant with the legacy NamingStrategy developed for JPA 1.0, which was unfortunately unclear in many respects regarding implicit naming rules.
 `component-path`:: for `org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl` - mostly follows `ImplicitNamingStrategyJpaCompliantImpl` rules, except that it uses the full composite paths, as opposed to just the ending property part
 +
-* reference to a Class that implements the the `org.hibernate.boot.model.naming.ImplicitNamingStrategy` contract
-* FQN of a class that implements the the `org.hibernate.boot.model.naming.ImplicitNamingStrategy` contract
+* reference to a Class that implements the `org.hibernate.boot.model.naming.ImplicitNamingStrategy` contract
+* FQN of a class that implements the `org.hibernate.boot.model.naming.ImplicitNamingStrategy` contract
 
-Secondly applications and integrations can leverage `org.hibernate.boot.MetadataBuilder#applyImplicitNamingStrategy`
+Secondly, applications and integrations can leverage `org.hibernate.boot.MetadataBuilder#applyImplicitNamingStrategy`
 to specify the ImplicitNamingStrategy to use.  See
 <<chapters/bootstrap/Bootstrap.adoc#Bootstrap,Bootstrap>> for additional details on bootstrapping.
 
@@ -119,10 +119,10 @@ include::{sourcedir}/AcmeCorpPhysicalNamingStrategy.java[]
 There are multiple ways to specify the PhysicalNamingStrategy to use.  First, applications can specify
 the implementation using the `hibernate.physical_naming_strategy` configuration setting which accepts:
 
-* reference to a Class that implements the the `org.hibernate.boot.model.naming.PhysicalNamingStrategy` contract
-* FQN of a class that implements the the `org.hibernate.boot.model.naming.PhysicalNamingStrategy` contract
+* reference to a Class that implements the `org.hibernate.boot.model.naming.PhysicalNamingStrategy` contract
+* FQN of a class that implements the `org.hibernate.boot.model.naming.PhysicalNamingStrategy` contract
 
-Secondly applications and integrations can leverage `org.hibernate.boot.MetadataBuilder#applyPhysicalNamingStrategy`.
+Secondly, applications and integrations can leverage `org.hibernate.boot.MetadataBuilder#applyPhysicalNamingStrategy`.
 See <<chapters/bootstrap/Bootstrap.adoc#Bootstrap,Bootstrap>> for additional details on bootstrapping.
 
 

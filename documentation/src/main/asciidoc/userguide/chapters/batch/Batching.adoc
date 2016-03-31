@@ -17,7 +17,7 @@ The following settings control this behavior.
 `hibernate.jdbc.batch_versioned_data`::
 	Some JDBC drivers return incorrect row counts when a batch is executed.
 	If your JDBC driver falls into this category this setting should be set to `false`.
-	Otherwise it is safe to enable this which will allow Hibernate to still batch the DML for versioned entities and still use the returned row counts for optimistic lock checks.
+	Otherwise, it is safe to enable this which will allow Hibernate to still batch the DML for versioned entities and still use the returned row counts for optimistic lock checks.
 	Since 5.0, it defaults to true. Previously (versions 3.x and 4.x), it used to be false.
 
 `hibernate.jdbc.batch.builder`::
@@ -48,14 +48,14 @@ include::{sourcedir}/BatchTest.java[tags=batch-session-batch-example]
 ----
 ====
 
-There are several problems associated to this example:
+There are several problems associated with this example:
 
 . Hibernate caches all the newly inserted `Customer` instances in the session-level c1ache, so, when the transaction ends, 100 000 entities are managed by the persistence context.
   If the maximum memory allocated to the JVM is rather low, this example could fails with an `OutOfMemoryException`.
   The Java 1.8 JVM allocated either 1/4 of available RAM or 1Gb, which can easily accommodate 100 000 objects on the heap.
 . long-running transactions can deplete a connection pool so other transactions don't get a chance to proceed.
 . JDBC batching is not enabled by default, so every insert statement requires a database roundtrip.
-  To enable JDBC batching, set the property `hibernate.jdbc.batch_size` to an integer between 10 and 50.
+  To enable JDBC batching, set the `hibernate.jdbc.batch_size` property to an integer between 10 and 50.
 
 [NOTE]
 ====

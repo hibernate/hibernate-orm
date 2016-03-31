@@ -146,7 +146,7 @@ The dialects `MySQLSpatial56Dialect` and `MySQLSpatial5InnoDBDialect` use these 
 
 These dialects may therefore produce results that differ from that of the other spatial dialects.
 
-For more information see this page in the MySQL reference guide (esp. the section https://dev.mysql.com/doc/refman/5.7/en/spatial-relation-functions.html[Functions That Test Spatial Relations Between Geometry Objects])
+For more information, see this page in the MySQL reference guide (esp. the section https://dev.mysql.com/doc/refman/5.7/en/spatial-relation-functions.html[Functions That Test Spatial Relations Between Geometry Objects])
 ====
 [[spatial-configuration-dialect-oracle]]
 Oracle10g/11g::
@@ -180,7 +180,8 @@ Note that implementations must be thread-safe and have a default no-args constru
 [NOTE]
 ====
 The Oracle Spatial dialect can be configured to run in either OGC strict or non-strict mode.
-In OGC strict mode, the Open Geospatial compliant functions of Oracle Spatial are used in spatial operations (they exists in Oracle 10g, but are not documented). In non-strict mode the usual Oracle Spatial functions are used directly, and mimic the OGC semantics.The default is OGC strict mode.
+In OGC strict mode, the Open Geospatial compliant functions of Oracle Spatial are used in spatial operations (they exists in Oracle 10g, but are not documented).
+In non-strict mode, the usual Oracle Spatial functions are used directly, and mimic the OGC semantics.The default is OGC strict mode.
 You can change this to non-strict mode by setting the hibernate.spatial.ogc_strict property to false.
 
 Note that changing from strict to non-strict mode changes the semantics of the spatial operation.
@@ -211,7 +212,7 @@ Hibernate Spatial comes with the following types:
 jts_geometry::
 	Handled by `org.hibernate.spatial.JTSGeometryType` it maps a database geometry column type to a `com.vividsolutions.jts.geom.Geometry` entity property type.
 geolatte_geometry::
-	Handled by `org.hibernate.spatial.GeolatteGeometryType`, it maps a database geometry column type to a `org.geolatte.geom.Geometry` entity property type.
+	Handled by `org.hibernate.spatial.GeolatteGeometryType`, it maps a database geometry column type to an `org.geolatte.geom.Geometry` entity property type.
 
 The following entity uses the `jts_geometry` to map the PostgreSQL geometry type to a `com.vividsolutions.jts.geom.Point`.
 

@@ -10,7 +10,7 @@ It is possible to configure a JVM-level (`SessionFactory`-level) or even a clust
 
 [NOTE]
 ====
-Be aware that caches are not aware of changes made to the persistent store by another applications.
+Be aware that caches are not aware of changes made to the persistent store by other applications.
 They can, however, be configured to regularly expire cached data.
 ====
 
@@ -78,9 +78,9 @@ The following values are possible:
 `ENABLE_SELECTIVE` (Default and recommended value)::
 	Entities are not cached unless explicitly marked as cacheable (with the https://docs.oracle.com/javaee/7/api/javax/persistence/Cacheable.html[`@Cacheable`] annotation).
 `DISABLE_SELECTIVE`::
-	Entities are cached unless explicitly marked as not cacheable.
+	Entities are cached unless explicitly marked as non-cacheable.
 `ALL`::
-	Entities are always cached even if marked as non cacheable.
+	Entities are always cached even if marked as non-cacheable.
 `NONE`::
 	No entity is cached even if marked as cacheable.
 	This option can make sense to disable second-level cache altogether.
@@ -90,14 +90,14 @@ The values for this property are:
 
 read-only::
 	If your application needs to read, but not modify, instances of a persistent class, a read-only cache is the best choice.
-	Application can still delete entities and these changes should be reflected in second-level cache, so that the cache
+	Application can still delete entities and these changes should be reflected in second-level cache so that the cache
 	does not provide stale entities.
 	Implementations may use performance optimizations based on the immutability of entities.
 read-write::
 	If the application needs to update data, a read-write cache might be appropriate.
 	This strategy provides consistent access to single entity, but not a serializable transaction isolation level; e.g. when TX1 reads looks up an entity and does not find it, TX2 inserts the entity into cache and TX1 looks it up again, the new entity can be read in TX1.
 nonstrict-read-write::
-    Similar to read-write strategy but there might be occasional stale reads upon concurrent access to an entity. The choice of this strategy might be appropriate if the application rarely updates the same data simultaneously and strict transaction isolation is not required. Implementation may use performance optimizations that make of use the relaxed consistency.
+    Similar to read-write strategy but there might be occasional stale reads upon concurrent access to an entity. The choice of this strategy might be appropriate if the application rarely updates the same data simultaneously and strict transaction isolation is not required. Implementations may use performance optimizations that make use of the relaxed consistency guarantee.
 transactional::
     Provides serializable transaction isolation level.
 
@@ -115,8 +115,8 @@ region::
 	Defines a cache region where entries will be stored
 include::
 	If lazy properties should be included in the second level cache.
-	Default value is "all", so lazy properties are cacheable.
-	The other possible value is "non-lazy", so lazy properties are not cacheable.
+	The default value is `all` so lazy properties are cacheable.
+	The other possible value is `non-lazy` so lazy properties are not cacheable.
 
 [[caching-query]]
 === Entity cache
@@ -130,7 +130,7 @@ include::{sourcedir}/NonStrictReadWriteCacheTest.java[tags=caching-entity-mappin
 ----
 ====
 
-Hibernate stores cached entities in a dehydrated forms, which is similar to the database representation.
+Hibernate stores cached entities in a dehydrated form, which is similar to the database representation.
 Aside from the foreign key column values of the `@ManyToOne` or `@OneToOne` child-side associations,
 entity relationships are not stored in the cache,
 
@@ -208,7 +208,7 @@ Subsequent collection retrievals will use the cache instead of going to the data
 
 [NOTE]
 ====
-The collection cache is not write-through, so any modification will trigger a collection cache entry invalidation.
+The collection cache is not write-through so any modification will trigger a collection cache entry invalidation.
 On a subsequent access, the collection will be loaded from the database and re-cached.
 ====
 
@@ -369,7 +369,7 @@ The relationship between Hibernate and JPA cache modes can be seen in the follow
 |`CacheMode.IGNORE`  |`CacheStoreMode.BYPASS` and `CacheRetrieveMode.BYPASS` | Doesn't read/write data from/into cache
 |======================================
 
-Setting the cache mode can be done wither when loading entities directly or when executing a query.
+Setting the cache mode can be done either when loading entities directly or when executing a query.
 
 [[caching-management-cache-mode-entity-jpa-example]]
 .Using custom cache modes with JPA
@@ -426,7 +426,7 @@ include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-management-evict-jpa
 ----
 ====
 
-Hibernate is much more flexible in this regard as it offers a fine-grained control over what needs to be evicted.
+Hibernate is much more flexible in this regard as it offers fine-grained control over what needs to be evicted.
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Cache.html[`org.hibernate.Cache`] interface defines various evicting strategies:
 
 - entities (by their class or region)
@@ -610,7 +610,7 @@ If the Infinispan `CacheManager` is bound to JNDI, then the `JndiInfinispanRegio
 ===== Infinispan in JBoss AS/WildFly
 
 When using JPA in WildFly, region factory is automatically set upon configuring `hibernate.cache.use_second_level_cache=true` (by default second-level cache is not used).
-For more information please consult https://docs.jboss.org/author/display/WFLY9/JPA+Reference+Guide#JPAReferenceGuide-UsingtheInfinispansecondlevelcache[WildFly documentation].
+For more information, please consult https://docs.jboss.org/author/display/WFLY9/JPA+Reference+Guide#JPAReferenceGuide-UsingtheInfinispansecondlevelcache[WildFly documentation].
 
 [[caching-provider-infinispan-config]]
 ==== Configuration properties
@@ -680,7 +680,9 @@ Some options in the cache configuration can also be overridden directly through 
 
 [NOTE]
 ====
-In versions prior to 5.1, `hibernate.cache.infinispan._something_.expiration.wake_up_interval` was called `hibernate.cache.infinispan._something_.eviction.wake_up_interval`. Eviction settings are checked upon each cache insert, it is expiration that needs to be triggered periodically. Old property still works, but its use is deprecated.
+In versions prior to 5.1, `hibernate.cache.infinispan._something_.expiration.wake_up_interval` was called `hibernate.cache.infinispan._something_.eviction.wake_up_interval`.
+Eviction settings are checked upon each cache insert, it is expiration that needs to be triggered periodically.
+The old property still works, but its use is deprecated.
 ====
 
 [NOTE]

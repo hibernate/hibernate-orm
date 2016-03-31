@@ -17,7 +17,7 @@ In the following domain model class hierarchy, a 'DebitAccount' and a 'CreditAcc
 
 image:images/domain/inheritance/inheritance_class_diagram.svg[Inheritance class diagram]
 
-When using `MappedSuperclass`, the inheritance is visible in the domain model only and ach database table contains both the base class and the subclass properties.
+When using `MappedSuperclass`, the inheritance is visible in the domain model only and each database table contains both the base class and the subclass properties.
 
 [[entity-inheritance-mapped-superclass-example]]
 .`@MappedSuperclass` inheritance
@@ -104,7 +104,7 @@ This could for example occur when working with a legacy database.
 If `force` is set to true Hibernate will specify the allowed discriminator values in the SELECT query, even when retrieving all instances of the root class.
 
 The second option, `insert`, tells Hibernate whether or not to include the discriminator column in SQL INSERTs.
-Usually the column should be part of the INSERT statement, but if your discriminator column is also part of a mapped composite identifier you have to set this option to false.
+Usually, the column should be part of the INSERT statement, but if your discriminator column is also part of a mapped composite identifier you have to set this option to false.
 ====
 
 [IMPORTANT]
@@ -182,8 +182,8 @@ include::{extrasdir}/entity-inheritance-joined-table-example.sql[]
 ====
 The primary key of this table is also a foreign key to the superclass table and described by the `@PrimaryKeyJoinColumns`.
 
-The table name still defaults to the non qualified class name.
-Also if `@PrimaryKeyJoinColumn` is not set, the primary key / foreign key columns are assumed to have the same names as the primary key columns of the primary table of the superclass.
+The table name still defaults to the non-qualified class name.
+Also, if `@PrimaryKeyJoinColumn` is not set, the primary key / foreign key columns are assumed to have the same names as the primary key columns of the primary table of the superclass.
 ====
 
 [[entity-inheritance-joined-table-primary-key-join-column-example]]
@@ -218,7 +218,7 @@ include::{extrasdir}/entity-inheritance-joined-table-query-example.sql[]
 
 [IMPORTANT]
 ====
-Polymorphic queries can create cartesian products, so caution is advised.
+Polymorphic queries can create Cartesian Products, so caution is advised.
 ====
 
 [[entity-inheritance-table-per-class]]
@@ -246,7 +246,7 @@ include::{extrasdir}/entity-inheritance-table-per-class-example.sql[]
 ----
 ====
 
-When using polymorphic queries, a UNION is required to fetch the the base class table along with all subclass tables as well.
+When using polymorphic queries, a UNION is required to fetch the base class table along with all subclass tables as well.
 
 .Table per class polymorphic query
 ====

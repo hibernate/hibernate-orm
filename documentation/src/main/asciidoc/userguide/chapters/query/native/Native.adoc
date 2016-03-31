@@ -254,7 +254,7 @@ Problems can arise when returning multiple entities of the same type or when the
 === Returning multiple entities
 
 Until now, the result set column names are assumed to be the same as the column names specified in the mapping document.
-This can be problematic for SQL queries that join multiple tables, since the same column names can appear in more than one table.
+This can be problematic for SQL queries that join multiple tables since the same column names can appear in more than one table.
 
 Column alias injection is needed in the following query which otherwise throws `NonUniqueDiscoveredSqlAliasException`.
 
@@ -297,7 +297,7 @@ include::{sourcedir}/SQLTest.java[tags=sql-hibernate-multi-entity-query-alias-ex
 There's no such equivalent in JPA because the `Query` interface doesn't define an `addEntity` method equivalent.
 ====
 
-The `{pr.*}` and `{pt.*}` notation used above is a shorthand for "all properties".
+The `{pr.*}` and `{pt.*}` notation used above is shorthand for "all properties".
 Alternatively, you can list the columns explicitly, but even in this case Hibernate injects the SQL column aliases for each property.
 The placeholder for a column alias is just the property name qualified by the table alias.
 
@@ -760,7 +760,7 @@ we need to use the JDBC syntax.
 
 [NOTE]
 ====
-This limitation is acknowledged and it will be addressed by the https://hibernate.atlassian.net/browse/HHH-10530[HHH-10530] issue.
+This limitation is acknowledged and will be addressed by the https://hibernate.atlassian.net/browse/HHH-10530[HHH-10530] issue.
 ====
 
 [[sql-call-function-mysql-example]]
@@ -794,7 +794,7 @@ The following example shows how to define custom SQL operations using annotation
 `@SQLInsert`, `@SQLUpdate` and `@SQLDelete` override the INSERT, UPDATE, DELETE statements of a given entity.
 For the SELECT clause, a `@Loader` must be defined along with a `@NamedNativeQuery` used for loading the underlying table record.
 
-For collections, Hibernate allows defining a custom `@SQLDeleteAll` which is used for removing all child records associated to a given parent entity.
+For collections, Hibernate allows defining a custom `@SQLDeleteAll` which is used for removing all child records associated with a given parent entity.
 To filter collections, the `@Where` annotation allows customizing the underlying SQL WHERE clause.
 
 [[sql-custom-crud-example]]

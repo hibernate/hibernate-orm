@@ -141,7 +141,7 @@ include::{sourcedir}/HQLTest.java[tags=jpql-api-positional-parameter-example]
 
 [NOTE]
 ====
-It's good practice to not mix forms in a given query.
+It's good practice not to mix forms in a given query.
 ====
 
 In terms of execution, JPA `Query` offers 2 different methods for retrieving a result set.
@@ -217,7 +217,7 @@ Query hints here are database query hints.
 They are added directly to the generated SQL according to `Dialect#getQueryHintString`.
 The JPA notion of query hints, on the other hand, refer to hints that target the provider (Hibernate).
 So even though they are called the same, be aware they have a very different purpose.
-Also be aware that Hibernate query hints generally make the application non-portable across databases unless the code adding them first checks the Dialect.
+Also, be aware that Hibernate query hints generally make the application non-portable across databases unless the code adding them first checks the Dialect.
 ====
 
 Flushing is covered in detail in <<chapters/flushing/Flushing.adoc#flushing,Flushing>>.
@@ -241,7 +241,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-api-parameter-example]
 ====
 
 Hibernate generally understands the expected type of the parameter given its context in the query.
-In the previous example, since we are using the parameter in a `LIKE` comparison against a String-typed attribute Hibernate would automatically infer the type; so the above could be simplified.
+In the previous example since we are using the parameter in a `LIKE` comparison against a String-typed attribute Hibernate would automatically infer the type; so the above could be simplified.
 
 [[hql-api-parameter-inferred-type-example]]
 .Hibernate name parameter binding (inferred type)
@@ -318,7 +318,7 @@ The `scroll` method is overloaded.
 See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/ScrollMode.html[Javadocs] for the details on each.
 * The second form takes no argument and will use the `ScrollMode` indicated by `Dialect#defaultScrollMode`.
 `Query#scroll` returns a `org.hibernate.ScrollableResults` which wraps the underlying JDBC (scrollable) `ResultSet` and provides access to the results.
-Since this form holds the JDBC `ResultSet` open, the application should indicate when it is done with the `ScrollableResults` by calling its `close()` method (as inherited from `java.io.Closeable`, so that `ScrollableResults` will work with try-with-resources blocks!).
+Since this form holds the JDBC `ResultSet` open, the application should indicate when it is done with the `ScrollableResults` by calling its `close()` method (as inherited from `java.io.Closeable` so that `ScrollableResults` will work with try-with-resources blocks!).
 If left unclosed by the application, Hibernate will automatically close the `ScrollableResults` when the current transaction completes.
 
 [NOTE]
@@ -658,7 +658,7 @@ as opposed to the other queries in this section where the HQL/JPQL conditions ar
 ====
 
 The distinction in this specific example is probably not that significant.
-The `with clause` is sometimes necessary in more complicated queries.
+The `with clause` is sometimes necessary for more complicated queries.
 
 Explicit joins may reference association or component/embedded attributes.
 In the case of component/embedded attributes, the join is simply logical and does not correlate to a physical (SQL) join.
@@ -687,7 +687,7 @@ In the example, using an inner join instead would have resulted in customers wit
 Fetch joins are not valid in sub-queries.
 
 Care should be taken when fetch joining a collection-valued association which is in any way further restricted (the fetched collection will be restricted too).
-For this reason it is usually considered best practice to not assign an identification variable to fetched joins except for the purpose of specifying nested fetch joins.
+For this reason, it is usually considered best practice not to assign an identification variable to fetched joins except for the purpose of specifying nested fetch joins.
 
 Fetch joins should not be used in paged queries (e.g. `setFirstResult()` or `setMaxResults()`), nor should they be used with the `scroll()` or `iterate()` features.
 ====
@@ -695,7 +695,7 @@ Fetch joins should not be used in paged queries (e.g. `setFirstResult()` or `set
 [[hql-implicit-join]]
 === Implicit joins (path expressions)
 
-Another means of adding to the scope of object model types available to the query is through the use of implicit joins, or path expressions.
+Another means of adding to the scope of object model types available to the query is through the use of implicit joins or path expressions.
 
 [[hql-implicit-join-example]]
 .Simple implicit join example
@@ -757,7 +757,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-collection-valued-associations]
 ----
 ====
 
-In the example, the identification variable `ph` actually refers to the object model type `Phone` which is the type of the elements of the `Person#phones` association.
+In the example, the identification variable `ph` actually refers to the object model type `Phone`, which is the type of the elements of the `Person#phones` association.
 
 The example also shows the alternate syntax for specifying collection association joins using the `IN` syntax.
 Both forms are equivalent.
@@ -790,7 +790,7 @@ INDEX::
   JPQL however, reserves this for use in the `List` case and adds `KEY` for the `Map` case.
   Applications interested in JPA provider portability should be aware of this distinction.
 KEY::
-  Valid only for `Maps`. Refers to the map's key. If the key is itself an entity, can be further navigated.
+  Valid only for `Maps`. Refers to the map's key. If the key is itself an entity, it can be further navigated.
 ENTRY::
   Only valid for `Maps`. Refers to the map's logical `java.util.Map.Entry` tuple (the combination of its key and value).
   `ENTRY` is only valid as a terminal path and it's applicable to the `SELECT` clause only.
@@ -812,8 +812,8 @@ include::{sourcedir}/HQLTest.java[tags=hql-polymorphism-example, indent=0]
 
 This query names the `Payment` entity explicitly.
 However, all subclasses of `Payment` are also available to the query.
-So if the `CreditCardPayment` entity and `WireTransferPayment` entity each extend from `Payment` all three types would be available to the query.
-And the query would return instances of all three.
+So if the `CreditCardPayment` and `WireTransferPayment` entities extend the `Payment` class, all three types would be available to the entity query,
+and the query would return instances of all three.
 
 [NOTE]
 ====
@@ -840,8 +840,8 @@ Again, see <<hql-from-clause>>.
 [[hql-literals]]
 === Literals
 
-String literals are enclosed in single-quotes.
-To escape a single-quote within a string literal, use double single-quotes.
+String literals are enclosed in single quotes.
+To escape a single quote within a string literal, use double single quotes.
 
 [[hql-string-literals-example]]
 .String literals examples
@@ -973,7 +973,7 @@ HQL can also understand additional functions defined by the Dialect as well as t
 [[jpql-standardized-functions]]
 === JPQL standardized functions
 
-Here are the list of functions defined as supported by JPQL.
+Here is the list of functions defined as supported by JPQL.
 Applications interested in remaining portable between JPA providers should stick to these functions.
 
 CONCAT::
@@ -1194,7 +1194,7 @@ Such function declarations are made by using the `addSqlFunction()` method of `o
 === Collection-related expressions
 
 There are a few specialized expressions for working with collection-valued associations.
-Generally these are just abbreviated forms or other expressions for the sake of conciseness.
+Generally, these are just abbreviated forms or other expressions for the sake of conciseness.
 
 SIZE::
   Calculate the size of a collection. Equates to a subquery!
@@ -1246,7 +1246,7 @@ We can also refer to the type of an entity as an expression.
 This is mainly useful when dealing with entity inheritance hierarchies.
 The type can expressed using a `TYPE` function used to refer to the type of an identification variable representing an entity.
 The name of the entity also serves as a way to refer to an entity type.
-Additionally the entity type can be parametrized, in which case the entity's Java Class reference would be bound as the parameter value.
+Additionally, the entity type can be parameterized, in which case the entity's Java Class reference would be bound as the parameter value.
 
 [[hql-entity-type-exp-example]]
 .Entity type expression examples
@@ -1489,8 +1489,8 @@ include::{sourcedir}/HQLTest.java[tags=hql-like-predicate-escape-example]
 [[hql-between-predicate]]
 === Between predicate
 
-Analogous to the SQL between expression.
-Perform a evaluation that a value is within the range of 2 other values.
+Analogous to the SQL `BETWEEN` expression,
+it checks if the value is within boundaries.
 All the operands should have comparable types.
 
 [[hql-between-predicate-example]]
@@ -1589,20 +1589,20 @@ If the predicate is true, NOT resolves to false. If the predicate is unknown (e.
 
 The `AND` operator is used to combine 2 predicate expressions.
 The result of the AND expression is true if and only if both predicates resolve to true.
-If either predicate resolves to unknown, the AND expression resolves to unknown as well. Otherwise, the result is false.
+If either predicates resolves to unknown, the AND expression resolves to unknown as well. Otherwise, the result is false.
 
 [[hql-or-predicate]]
 === OR predicate operator
 
 The `OR` operator is used to combine 2 predicate expressions.
-The result of the OR expression is true if either predicate resolves to true.
+The result of the OR expression is true if one predicate resolves to true.
 If both predicates resolve to unknown, the OR expression resolves to unknown.
 Otherwise, the result is false.
 
 [[hql-where-clause]]
 === The `WHERE` clause
 
-The `WHERE` clause of a query is made up of predicates which assert whether values in each potential row match the predicated checks.
+The `WHERE` clause of a query is made up of predicates which assert whether values in each potential row match the current filtering criteria.
 Thus, the where clause restricts the results returned from a select query and limits the scope of update and delete queries.
 
 [[hql-group-by]]
@@ -1622,7 +1622,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-group-by-example]
 The first query retrieves the complete total of all orders.
 The second retrieves the total for each customer, grouped by each customer.
 
-In a grouped query, the where clause applies to the non aggregated values (essentially it determines whether rows will make it into the aggregation).
+In a grouped query, the where clause applies to the non-aggregated values (essentially it determines whether rows will make it into the aggregation).
 The `HAVING` clause also restricts results, but it operates on the aggregated values.
 In the <<hql-group-by-example>>, we retrieved `Call` duration totals for all persons.
 If that ended up being too much data to deal with, we might want to restrict the results to focus only on customers with a summed total of more than 1000:
@@ -1655,7 +1655,7 @@ Additionally, JPQL says that all values referenced in the `ORDER BY` clause must
 HQL does not mandate that restriction, but applications desiring database portability should be aware that not all databases support referencing values in the `ORDER BY` clause that are not referenced in the select clause.
 
 Individual expressions in the order-by can be qualified with either `ASC` (ascending) or `DESC` (descending) to indicated the desired ordering direction.
-Null values can be placed in front or at the end of sorted set using `NULLS FIRST` or `NULLS LAST` clause respectively.
+Null values can be placed in front or at the end of the sorted set using `NULLS FIRST` or `NULLS LAST` clause respectively.
 
 [[hql-order-by-example]]
 .Order by example

@@ -38,7 +38,7 @@ hide the power of SQL from you and guarantees that your investment in
 relational technology and knowledge is as valid as always.
 
 Hibernate may not be the best solution for data-centric applications
-that only use stored-procedures to implement the business logic in the
+that only use stored procedures to implement the business logic in the
 database, it is most useful with object-oriented domain models and
 business logic in the Java-based middle-tier. However, Hibernate can
 certainly help you to remove or encapsulate vendor-specific SQL code and

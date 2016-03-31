@@ -145,7 +145,7 @@ If you are unfamiliar with these topics, they are explained in the <<chapters/pc
 Whether to implement `equals()` and `hashCode()` methods in your domain model, let alone how to implement them, is a surprisingly tricky discussion when it comes to ORM.
 
 There is really just one absolute case: a class that acts as an identifier must implement equals/hashCode based on the id value(s).
-Generally this is pertinent for user-defined classes used as composite identifiers.
+Generally, this is pertinent for user-defined classes used as composite identifiers.
 Beyond this one very specific use case and few others we will discuss below, you may want to consider not implementing equals/hashCode altogether.
 
 So what's all the fuss? Normally, most Java objects provide a built-in `equals()` and `hashCode()` based on the object's identity, so each new object will be different from all others.
@@ -155,7 +155,7 @@ Conceptually however this starts to break down when you start to think about the
 This is, in fact, exactly the case when dealing with data coming from a database.
 Every time we load a specific `Person` from the database we would naturally get a unique instance.
 Hibernate, however, works hard to make sure that does not happen within a given `Session`.
-In fact Hibernate guarantees equivalence of persistent identity (database row) and Java identity inside a particular session scope.
+In fact, Hibernate guarantees equivalence of persistent identity (database row) and Java identity inside a particular session scope.
 So if we ask a Hibernate `Session` to load that specific Person multiple times we will actually get back the same __instance__:
 
 .Scope of identity

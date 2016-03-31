@@ -124,7 +124,7 @@ include::{sourcedir}/CriteriaTest.java[tags=criteria-typedquery-multiselect-arra
 Just as we saw in <<criteria-typedquery-multiselect-array-explicit-example>> we have a typed criteria query returning an `Object` array.
 Both queries are functionally equivalent.
 This second example uses the `multiselect()` method which behaves slightly differently based on the type given when the criteria query was first built,
-but in this case it says to select and return an __Object[]__.
+but, in this case, it says to select and return an __Object[]__.
 
 [[criteria-typedquery-wrapper]]
 === Selecting a wrapper
@@ -143,7 +143,7 @@ include::{sourcedir}/CriteriaTest.java[tags=criteria-typedquery-wrapper-example,
 ----
 ====
 
-First we see the simple definition of the wrapper object we will be using to wrap our result values.
+First, we see the simple definition of the wrapper object we will be using to wrap our result values.
 Specifically, notice the constructor and its argument types.
 Since we will be returning `PersonWrapper` objects, we use `PersonWrapper` as the type of our criteria query.
 
@@ -170,7 +170,7 @@ The example uses the explicit `createTupleQuery()` of `javax.persistence.criteri
 An alternate approach is to use `createQuery( Tuple.class )`.
 
 Again we see the use of the `multiselect()` method, just like in <<criteria-typedquery-multiselect-array-implicit-example>>.
-The difference here is that the type of the `javax.persistence.criteria.CriteriaQuery` was defined as `javax.persistence.Tuple` so the compound selections in this case are interpreted to be the tuple elements.
+The difference here is that the type of the `javax.persistence.criteria.CriteriaQuery` was defined as `javax.persistence.Tuple` so the compound selections, in this case, are interpreted to be the tuple elements.
 
 The javax.persistence.Tuple contract provides three forms of access to the underlying elements:
 
@@ -228,8 +228,8 @@ include::{sourcedir}/CriteriaTest.java[tags=criteria-from-root-example]
 ----
 ====
 
-Criteria queries may define multiple roots, the effect of which is to create a cartesian product between the newly added root and the others.
-Here is an example defining a cartesian product betweem `Person` and `Partner` entities:
+Criteria queries may define multiple roots, the effect of which is to create a Cartesian Product between the newly added root and the others.
+Here is an example defining a Cartesian Product between `Person` and `Partner` entities:
 
 [[criteria-from-multiple-root-example]]
 .Adding multiple roots example

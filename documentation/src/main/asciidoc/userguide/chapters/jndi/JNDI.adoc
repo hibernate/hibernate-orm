@@ -2,8 +2,8 @@
 == JNDI
 :sourcedir: extras
 
-Hibernate does optionally interact with JNDI on the applications behalf.
-Generally it does this when the application:
+Hibernate does optionally interact with JNDI on the application's behalf.
+Generally, it does this when the application:
 
 * has asked the SessionFactory be bound to JNDI
 * has specified a DataSource to use by JNDI name

@@ -21,7 +21,7 @@ Hibernate provides mechanisms for implementing both types of locking in your app
 === Optimistic
 
 When your application uses long transactions or conversations that span several database transactions,
-you can store versioning data, so that if the same entity is updated by two conversations, the last to commit changes is informed of the conflict,
+you can store versioning data so that if the same entity is updated by two conversations, the last to commit changes is informed of the conflict,
 and does not override the other conversation's work.
 This approach guarantees some isolation, but scales well and works particularly well in _read-often-write-sometimes_ situations.
 

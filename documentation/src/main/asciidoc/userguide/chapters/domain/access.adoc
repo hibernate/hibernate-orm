@@ -33,7 +33,7 @@ To exclude a field from being part of the entity persistent state, the field mus
 ====
 Another advantage of using field-based access is that some entity attributes can be hidden from outside the entity.
 An example of such attribute is the entity `@Version` field, which must not be manipulated by the data access layer.
-With field-based access, we can simply omit the the getter and the setter for this version field, and Hibernate can still leverage the optimistic concurrency control mechanism.
+With field-based access, we can simply omit the getter and the setter for this version field, and Hibernate can still leverage the optimistic concurrency control mechanism.
 ====
 
 [[property-based-access]]

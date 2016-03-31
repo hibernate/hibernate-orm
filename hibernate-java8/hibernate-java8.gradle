@@ -9,10 +9,6 @@ dependencies {
     testCompile( project(':hibernate-testing') )
 }
 
-javaTarget {
-    version = '1.8'
-}
-
 mavenPom {
     name = 'Java8-specific Hibernate O/RM functionality'
     description = 'Support for Java8-specific features - mainly Java8 Date/Time (JSR 310)'

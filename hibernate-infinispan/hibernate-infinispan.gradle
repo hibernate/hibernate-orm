@@ -15,8 +15,6 @@ if ( project.hasProperty( 'overrideInfinispanVersionForTesting' ) ) {
 
 apply plugin: 'java'
 
-project.javaTarget.version '1.8'
-
 dependencies {
     compile project( ':hibernate-core' )
     compile( libraries.infinispan )

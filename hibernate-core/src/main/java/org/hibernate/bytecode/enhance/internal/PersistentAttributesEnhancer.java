@@ -18,6 +18,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
 import javassist.CannotCompileException;
+import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtField;
 import javassist.CtMethod;
@@ -476,6 +477,7 @@ public class PersistentAttributesEnhancer extends Enhancer {
 			CtClass managedCtClass,
 			IdentityHashMap<String, PersistentAttributeAccessMethods> attributeDescriptorMap) {
 		final ConstPool constPool = managedCtClass.getClassFile().getConstPool();
+		final ClassPool classPool = managedCtClass.getClassPool();
 
 		for ( Object oMethod : managedCtClass.getClassFile().getMethods() ) {
 			final MethodInfo methodInfo = (MethodInfo) oMethod;
@@ -561,6 +563,7 @@ public class PersistentAttributesEnhancer extends Enhancer {
 	 */
 	public void extendedEnhancement(CtClass aCtClass) {
 		final ConstPool constPool = aCtClass.getClassFile().getConstPool();
+		final ClassPool classPool = aCtClass.getClassPool();
 
 		for ( Object oMethod : aCtClass.getClassFile().getMethods() ) {
 			final MethodInfo methodInfo = (MethodInfo) oMethod;
@@ -581,7 +584,7 @@ public class PersistentAttributesEnhancer extends Enhancer {
 					}
 					String fieldName = constPool.getFieldrefName( itr.u16bitAt( index + 1 ) );
 					String fieldClassName = constPool.getClassInfo( constPool.getFieldrefClass( itr.u16bitAt( index + 1 ) ) );
-					CtClass targetCtClass = this.classPool.getCtClass( fieldClassName );
+					CtClass targetCtClass = classPool.getCtClass( fieldClassName );
 
 					if ( !enhancementContext.isEntityClass( targetCtClass ) && !enhancementContext.isCompositeClass( targetCtClass ) ) {
 						continue;

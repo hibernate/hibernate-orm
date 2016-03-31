@@ -8,13 +8,13 @@ package org.hibernate.bytecode.enhance.internal;
 
 import javassist.CannotCompileException;
 import javassist.CtClass;
-import javassist.NotFoundException;
 import org.hibernate.bytecode.enhance.internal.tracker.CompositeOwnerTracker;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.engine.spi.CompositeOwner;
 import org.hibernate.engine.spi.CompositeTracker;
+import org.hibernate.engine.spi.ManagedComposite;
 
 /**
  * enhancer for composite (embeddable) entities
@@ -29,7 +29,7 @@ public class CompositeEnhancer extends Enhancer {
 
 	public void enhance(CtClass managedCtClass) {
 		// add the ManagedComposite interface
-		managedCtClass.addInterface( managedCompositeCtClass );
+		managedCtClass.addInterface( loadCtClassFromClass( ManagedComposite.class ) );
 
 		addInterceptorHandling( managedCtClass );
 
@@ -43,17 +43,12 @@ public class CompositeEnhancer extends Enhancer {
 	/* --- */
 
 	private void addInLineDirtyHandling(CtClass managedCtClass) {
-		try {
-			managedCtClass.addInterface( classPool.get( CompositeTracker.class.getName() ) );
+		managedCtClass.addInterface( loadCtClassFromClass( CompositeTracker.class ) );
 
-			final CtClass compositeCtType = classPool.get( CompositeOwnerTracker.class.getName() );
-			FieldWriter.addField( managedCtClass, compositeCtType, EnhancerConstants.TRACKER_COMPOSITE_FIELD_NAME );
+		final CtClass compositeCtType = loadCtClassFromClass( CompositeOwnerTracker.class );
+		FieldWriter.addField( managedCtClass, compositeCtType, EnhancerConstants.TRACKER_COMPOSITE_FIELD_NAME );
 
-			createCompositeTrackerMethod( managedCtClass );
-		}
-		catch (NotFoundException nfe) {
-			nfe.printStackTrace();
-		}
+		createCompositeTrackerMethod( managedCtClass );
 	}
 
 	private void createCompositeTrackerMethod(CtClass managedCtClass) {

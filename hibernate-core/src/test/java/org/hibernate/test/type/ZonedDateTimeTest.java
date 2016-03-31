@@ -6,22 +6,21 @@
  */
 package org.hibernate.test.type;
 
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.util.List;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.type.ZonedDateTimeType;
 
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;

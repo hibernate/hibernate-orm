@@ -50,6 +50,14 @@ public class JavaTypeDescriptorRegistry {
 		addDescriptorInternal( PrimitiveByteArrayTypeDescriptor.INSTANCE );
 		addDescriptorInternal( PrimitiveCharacterArrayTypeDescriptor.INSTANCE );
 
+		addDescriptorInternal( DurationJavaDescriptor.INSTANCE );
+		addDescriptorInternal( InstantJavaDescriptor.INSTANCE );
+		addDescriptorInternal( LocalDateJavaDescriptor.INSTANCE );
+		addDescriptorInternal( LocalDateTimeJavaDescriptor.INSTANCE );
+		addDescriptorInternal( OffsetDateTimeJavaDescriptor.INSTANCE );
+		addDescriptorInternal( OffsetTimeJavaDescriptor.INSTANCE );
+		addDescriptorInternal( ZonedDateTimeJavaDescriptor.INSTANCE );
+
 		addDescriptorInternal( CalendarTypeDescriptor.INSTANCE );
 		addDescriptorInternal( DateTypeDescriptor.INSTANCE );
 		descriptorsByClass.put( java.sql.Date.class, JdbcDateTypeDescriptor.INSTANCE );

@@ -32,9 +32,9 @@ import org.hibernate.engine.jdbc.spi.TypeInfo;
 import org.hibernate.exception.internal.SQLExceptionTypeDelegate;
 import org.hibernate.exception.internal.SQLStateConversionDelegate;
 import org.hibernate.exception.internal.StandardSQLExceptionConverter;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -128,8 +128,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		return cfgService.getSetting(
 				AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS_SKIP_COLUMN_DEFINITIONS,
 				StandardConverters.BOOLEAN,
-				// default is true for JPA compliance - DO NOT CHANGE!
-				true
+				false
 		);
 	}
 

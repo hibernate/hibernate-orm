@@ -399,7 +399,7 @@ public interface AvailableSettings {
 
 	/**
 	 * Specifies whether to automatically quote any names that are deemed keywords.  Auto-quoting
-	 * is enabled by default.  Set to false to disable.
+	 * is disabled by default. Set to true to enable it.
 	 *
 	 * @since 5.0
 	 */

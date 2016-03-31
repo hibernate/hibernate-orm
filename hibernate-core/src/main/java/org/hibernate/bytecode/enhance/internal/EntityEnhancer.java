@@ -29,6 +29,8 @@ import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
+import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 
@@ -49,7 +51,7 @@ public class EntityEnhancer extends Enhancer {
 
 	public void enhance(CtClass managedCtClass) {
 		// add the ManagedEntity interface
-		managedCtClass.addInterface( managedEntityCtClass );
+		managedCtClass.addInterface( loadCtClassFromClass( ManagedEntity.class ) );
 
 		addEntityInstanceHandling( managedCtClass );
 		addEntityEntryHandling( managedCtClass );
@@ -86,7 +88,7 @@ public class EntityEnhancer extends Enhancer {
 
 	private void addEntityEntryHandling(CtClass managedCtClass) {
 		FieldWriter.addFieldWithGetterAndSetter(
-				managedCtClass, entityEntryCtClass,
+				managedCtClass, loadCtClassFromClass( EntityEntry.class ),
 				EnhancerConstants.ENTITY_ENTRY_FIELD_NAME,
 				EnhancerConstants.ENTITY_ENTRY_GETTER_NAME,
 				EnhancerConstants.ENTITY_ENTRY_SETTER_NAME
@@ -95,7 +97,7 @@ public class EntityEnhancer extends Enhancer {
 
 	private void addLinkedPreviousHandling(CtClass managedCtClass) {
 		FieldWriter.addFieldWithGetterAndSetter(
-				managedCtClass, managedEntityCtClass,
+				managedCtClass, loadCtClassFromClass( ManagedEntity.class ),
 				EnhancerConstants.PREVIOUS_FIELD_NAME,
 				EnhancerConstants.PREVIOUS_GETTER_NAME,
 				EnhancerConstants.PREVIOUS_SETTER_NAME
@@ -104,7 +106,7 @@ public class EntityEnhancer extends Enhancer {
 
 	private void addLinkedNextHandling(CtClass managedCtClass) {
 		FieldWriter.addFieldWithGetterAndSetter(
-				managedCtClass, managedEntityCtClass,
+				managedCtClass, loadCtClassFromClass( ManagedEntity.class ),
 				EnhancerConstants.NEXT_FIELD_NAME,
 				EnhancerConstants.NEXT_GETTER_NAME,
 				EnhancerConstants.NEXT_SETTER_NAME
@@ -112,25 +114,20 @@ public class EntityEnhancer extends Enhancer {
 	}
 
 	private void addInLineDirtyHandling(CtClass managedCtClass) {
-		try {
-			managedCtClass.addInterface( classPool.get( SelfDirtinessTracker.class.getName() ) );
+		managedCtClass.addInterface( loadCtClassFromClass( SelfDirtinessTracker.class ) );
 
-			FieldWriter.addField(
-					managedCtClass,
-					classPool.get( DirtyTracker.class.getName() ),
-					EnhancerConstants.TRACKER_FIELD_NAME
-			);
-			FieldWriter.addField(
-					managedCtClass,
-					classPool.get( CollectionTracker.class.getName() ),
-					EnhancerConstants.TRACKER_COLLECTION_NAME
-			);
+		FieldWriter.addField(
+				managedCtClass,
+				loadCtClassFromClass( DirtyTracker.class ),
+				EnhancerConstants.TRACKER_FIELD_NAME
+		);
+		FieldWriter.addField(
+				managedCtClass,
+				loadCtClassFromClass( CollectionTracker.class ),
+				EnhancerConstants.TRACKER_COLLECTION_NAME
+		);
 
-			createDirtyTrackerMethods( managedCtClass );
-		}
-		catch (NotFoundException nfe) {
-			nfe.printStackTrace();
-		}
+		createDirtyTrackerMethods( managedCtClass );
 	}
 
 	private void createDirtyTrackerMethods(CtClass managedCtClass) {

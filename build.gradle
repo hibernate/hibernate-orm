@@ -54,16 +54,17 @@ allprojects {
 }
 
 ext {
-    expectedGradleVersion = '2.10'
-    hibernateTargetVersion = '5.1.1-SNAPSHOT'
+	hibernateTargetVersion = '5.1.1-SNAPSHOT'
+	expectedGradleVersion = '2.10'
+	baselineJavaVersion = '1.8'
 
     osgiExportVersion = hibernateTargetVersion.replaceAll( '-SNAPSHOT', '.SNAPSHOT' )
 }
 
 idea {
     project {
-		jdkName = '1.6'
-		languageLevel = '1.6'
+		jdkName = baselineJavaVersion
+		languageLevel = baselineJavaVersion
 
 		vcs = 'Git'
     }
@@ -109,6 +110,9 @@ subprojects { subProject ->
 	apply plugin: 'project-report'
 
 	apply plugin: org.hibernate.build.HibernateBuildPlugin
+
+	sourceCompatibility = rootProject.baselineJavaVersion
+	targetCompatibility = rootProject.baselineJavaVersion
 
 	configurations {
 		provided {
@@ -159,6 +163,8 @@ subprojects { subProject ->
 	}
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// compilation
 	task compile
 	compile.dependsOn compileJava, processResources, compileTestJava, processTestResources
 
@@ -167,6 +173,70 @@ subprojects { subProject ->
 		compileClasspath += configurations.jbossLoggingTool
 	}
 
+	subProject.getConvention().findPlugin( JavaPluginConvention.class ).sourceSets.each { sourceSet ->
+		JavaCompile javaCompileTask = project.tasks.findByName( sourceSet.compileJavaTaskName ) as JavaCompile
+
+		// NOTE : this aptDir stuff is needed until we can have IntelliJ run annotation processors for us
+		//		which cannot happen until we can fold hibernate-testing back into hibernate-core/src/test
+		//		which cannot happen until... ugh
+		File aptDir = subProject.file( "${subProject.buildDir}/generated-src/apt/${sourceSet.name}" )
+		sourceSet.allJava.srcDir( aptDir )
+
+		javaCompileTask.options.compilerArgs += [
+				"-nowarn",
+				"-encoding", "UTF-8",
+				"-s", "${aptDir.absolutePath}"
+		]
+		javaCompileTask.doFirst {
+			aptDir.mkdirs()
+		}
+	}
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// testing
+	subProject.tasks.withType( Test.class ).all { task ->
+		task.jvmArgs += [
+				'-XX:+HeapDumpOnOutOfMemoryError',
+				"-XX:HeapDumpPath=${project.file( "${project.buildDir}/OOM-dump.hprof" ).absolutePath}",
+				'-XX:MetaspaceSize=512M'
+		]
+
+		task.maxHeapSize = '2G'
+
+		task.systemProperties['hibernate.test.validatefailureexpected'] = true
+		task.systemProperties += System.properties.findAll { it.key.startsWith( "hibernate.") }
+
+// uncomment to help identify pauses in test executions : where they occur
+//		task.beforeTest { descriptor ->
+//			println "Starting test: " + descriptor
+//		}
+//		task.afterTest { descriptor ->
+//			println "Completed test: " + descriptor
+//		}
+	}
+
+	processTestResources.doLast( {
+		copy {
+			from( sourceSets.test.java.srcDirs ) {
+				include '**/*.properties'
+				include '**/*.xml'
+			}
+			into sourceSets.test.output.classesDir
+		}
+		copy {
+			ext.targetDir = file( "${buildDir}/resources/test" )
+			from file('src/test/resources')
+			into targetDir
+			filter( ReplaceTokens, tokens: dbBundle[db] );
+		}
+	} )
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// artifact
 	jar {
 		manifest = osgiManifest {
 			// GRADLE-1411: Even if we override Imports and Exports
@@ -197,38 +267,23 @@ subprojects { subProject ->
 		}
 	}
 
-	test {
-		systemProperties['hibernate.test.validatefailureexpected'] = true
-		systemProperties += System.properties.findAll { it.key.startsWith( "hibernate.") }
-
-//		beforeTest { descriptor ->
-//			println "Starting test: " + descriptor
-//		}
-
-//		afterTest { descriptor ->
-//			println "Completed test: " + descriptor
-//		}
+	task sourcesJar(type: Jar, dependsOn: compileJava) {
+		from sourceSets.main.allSource
+		classifier = 'sources'
 	}
 
-	processTestResources.doLast( {
-		copy {
-			from( sourceSets.test.java.srcDirs ) {
-				include '**/*.properties'
-				include '**/*.xml'
-			}
-			into sourceSets.test.output.classesDir
-		}
-		copy {
-			ext.targetDir = file( "${buildDir}/resources/test" )
-			from file('src/test/resources')
-			into targetDir
-			filter( ReplaceTokens, tokens: dbBundle[db] );
-		}
-	} )
+	sourcesJar {
+		manifest = jar.manifest
+	}
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// IDE options
 	idea {
 		module {
-			jdkName = javaTarget.version
+			jdkName = subProject.sourceCompatibility
 
 			excludeDirs = [file( ".gradle" )]
 			excludeDirs += file( "$buildDir/classes" )
@@ -249,8 +304,8 @@ subprojects { subProject ->
 
 	eclipse {
 		jdt {
-			sourceCompatibility = javaTarget.version
-			targetCompatibility = javaTarget.version
+			sourceCompatibility = subProject.sourceCompatibility
+			targetCompatibility = subProject.targetCompatibility
 		}
 		classpath {
 			plusConfigurations.add( configurations.provided )
@@ -261,9 +316,11 @@ subprojects { subProject ->
 	// TODO: Eclipse's annotation processor handling is also fairly stupid (and completely lacks in the
 	// Gradle plugin).  For now, just compile first in order to get the logging classes.
 	eclipseClasspath.dependsOn compile
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-	// Report configs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Report configs
 	checkstyle {
 		sourceSets = [ subProject.sourceSets.main ]
 		configFile = rootProject.file( 'shared/config/checkstyle/checkstyle.xml' )
@@ -303,6 +360,8 @@ subprojects { subProject ->
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Publishing
 	publishing {
 		publications {
 			mavenJava(MavenPublication) {
@@ -327,15 +386,8 @@ subprojects { subProject ->
 			destination = file( "$subProject.buildDir/generated-pom.xml" )
 		}
 	}
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	task sourcesJar(type: Jar, dependsOn: compileJava) {
-		from sourceSets.main.allSource
-		classifier = 'sources'
-	}
-
-	sourcesJar {
-		manifest = jar.manifest
-	}
 }
 
 task release(type: Task, dependsOn: 'release:release')

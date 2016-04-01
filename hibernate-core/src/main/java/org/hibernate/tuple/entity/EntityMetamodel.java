@@ -201,7 +201,7 @@ public class EntityMetamodel implements Serializable {
 						sessionFactory,
 						i,
 						prop,
-						instrumentationMetadata.isInstrumented()
+						instrumentationMetadata.isInstrumented() || lazyLoadingBytecodeEnhanced
 				);
 			}
 			else {
@@ -210,7 +210,7 @@ public class EntityMetamodel implements Serializable {
 						sessionFactory,
 						i,
 						prop,
-						instrumentationMetadata.isInstrumented()
+						instrumentationMetadata.isInstrumented() || lazyLoadingBytecodeEnhanced
 				);
 			}
 

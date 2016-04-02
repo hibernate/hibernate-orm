@@ -16,6 +16,9 @@ import javax.persistence.Id;
 import org.hibernate.Session;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.DialectCheck;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.junit.Test;
 
 import org.jboss.logging.Logger;
@@ -112,6 +115,7 @@ public class AutoFlushTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@RequiresDialectFeature(DialectChecks.DoesNotPrefersIdentityOverSequence.class)
 	public void testFlushAutoSQLNativeSession() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			entityManager.createNativeQuery( "delete from Person" ).executeUpdate();;

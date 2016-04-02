@@ -16,6 +16,8 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -23,6 +25,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 /**
  * @author Vlad Mihalcea
  */
+@RequiresDialectFeature( { DialectChecks.SupportsSequences.class, DialectChecks.DoesNotPrefersIdentityOverSequence.class } )
 public class PooledOptimizerTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

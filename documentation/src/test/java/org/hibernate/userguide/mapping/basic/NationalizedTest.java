@@ -11,6 +11,7 @@ import javax.persistence.Id;
 
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.SQLiteDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.SkipForDialect;
@@ -24,7 +25,8 @@ import static org.junit.Assert.assertEquals;
  */
 @SkipForDialect(
 		value = {
-				PostgreSQL81Dialect.class
+			PostgreSQL81Dialect.class,
+			SQLiteDialect.class
 		},
 		comment = "@see https://hibernate.atlassian.net/browse/HHH-10693"
 )

@@ -14,7 +14,12 @@ import org.jboss.logging.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.hibernate.dialect.SQLiteDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
 
 /**
  * @author Emmanuel Bernard
@@ -51,6 +56,7 @@ public class RemoveTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(SQLiteDialect.class)
 	public void testUpdatedAndRemove() throws Exception {
 		Music music = new Music();
 		music.setName( "Classical" );

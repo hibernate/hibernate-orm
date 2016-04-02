@@ -115,7 +115,7 @@ public abstract class ClobTypeDescriptor implements SqlTypeDescriptor {
 	};
 
 
-	public static final ClobTypeDescriptor POSTGRESQL_CLOB_BINDING = new ClobTypeDescriptor() {
+	public static final ClobTypeDescriptor STRING_CLOB_BINDING = new ClobTypeDescriptor() {
 		@Override
 		public <X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor) {
 			return new BasicExtractor<X>( javaTypeDescriptor, this ) {

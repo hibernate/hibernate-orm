@@ -797,6 +797,15 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
+	 * By default, SEQUENCE is preferred over IDENTITY.
+	 *
+	 * @return is IDENTITY preferred
+	 */
+	public boolean prefersIdentityOverSequence() {
+		return false;
+	}
+
+	/**
 	 * Does this dialect support "pooled" sequences.  Not aware of a better
 	 * name for this.  Essentially can we specify the initial and increment values?
 	 *

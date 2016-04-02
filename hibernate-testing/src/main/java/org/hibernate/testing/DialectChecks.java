@@ -229,4 +229,16 @@ abstract public class DialectChecks {
 			return dialect.supportsSkipLocked();
 		}
 	}
+
+	public static class PrefersIdentityOverSequence implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect.prefersIdentityOverSequence();
+		}
+	}
+
+	public static class DoesNotPrefersIdentityOverSequence implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return !dialect.prefersIdentityOverSequence();
+		}
+	}
 }

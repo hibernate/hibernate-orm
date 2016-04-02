@@ -19,9 +19,11 @@ import javax.persistence.criteria.Root;
 
 import org.hibernate.Query;
 import org.hibernate.ScrollableResults;
+import org.hibernate.dialect.SQLiteDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.junit.Test;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 
 import static org.junit.Assert.assertEquals;
@@ -47,6 +49,7 @@ public class CriteriaToScrollableResultsFetchTest extends BaseEntityManagerFunct
 	}
 	
 	@Test
+	@SkipForDialect(SQLiteDialect.class)
 	public void testWithScroll() {
 		// Creates data necessary for test
 		Long facilityId = populate();

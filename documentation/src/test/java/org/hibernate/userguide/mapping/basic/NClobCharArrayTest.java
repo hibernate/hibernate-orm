@@ -13,6 +13,7 @@ import javax.persistence.Lob;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.SQLiteDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.SkipForDialect;
@@ -27,7 +28,8 @@ import static org.junit.Assert.assertArrayEquals;
 @SkipForDialect(
 		value = {
 				PostgreSQL81Dialect.class,
-				MySQL5Dialect.class
+				MySQL5Dialect.class,
+				SQLiteDialect.class
 		},
 		comment = "@see https://hibernate.atlassian.net/browse/HHH-10693 and https://hibernate.atlassian.net/browse/HHH-10695"
 )

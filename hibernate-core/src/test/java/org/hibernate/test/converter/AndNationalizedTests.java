@@ -20,6 +20,7 @@ import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.SQLiteDialect;
 import org.hibernate.mapping.PersistentClass;
 
 import org.hibernate.testing.SkipForDialect;
@@ -45,7 +46,10 @@ public class AndNationalizedTests extends BaseUnitTestCase {
 			( (MetadataImpl) metadata ).validate();
 
 			final PersistentClass entityBinding = metadata.getEntityBinding( TestEntity.class.getName() );
-			if(metadata.getDatabase().getDialect() instanceof PostgreSQL81Dialect){
+			if(
+				metadata.getDatabase().getDialect() instanceof PostgreSQL81Dialect ||
+				metadata.getDatabase().getDialect() instanceof SQLiteDialect
+			){
 				// See issue HHH-10693
 				assertEquals(
 						Types.VARCHAR,

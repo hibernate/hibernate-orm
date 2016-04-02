@@ -30,6 +30,7 @@ import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SQLiteDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.type.StringType;
 import org.hibernate.userguide.model.AddressType;
@@ -861,6 +862,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(SQLiteDialect.class)
 	public void test_hql_api_scroll_open_example() {
 		ScrollableResults scrollableResults = doInJPA( this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap( Session.class );
@@ -1037,6 +1039,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = SQLiteDialect.class, comment = "EXTRACT function is not supported")
 	public void test_hql_numeric_arithmetic_example_2() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-numeric-arithmetic-example[]
@@ -1053,6 +1056,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = SQLiteDialect.class, comment = "EXTRACT function is not supported")
 	public void test_hql_numeric_arithmetic_example_3() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-numeric-arithmetic-example[]
@@ -1348,6 +1352,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = SQLiteDialect.class, comment = "EXTRACT function is not supported")
 	public void test_hql_extract_function_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-extract-function-example[]
@@ -1361,6 +1366,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = SQLiteDialect.class, comment = "EXTRACT function is not supported")
 	public void test_hql_year_function_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-year-function-example[]
@@ -1469,6 +1475,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = SQLiteDialect.class, comment = "SOME operator is not supported")
 	public void test_hql_collection_expressions_example_5() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Call call = entityManager.createQuery( "select c from Call c", Call.class).getResultList().get( 0 );
@@ -1517,6 +1524,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = SQLiteDialect.class, comment = "ALL operator is not supported")
 	public void test_hql_collection_expressions_example_8() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-collection-expressions-example[]
@@ -1934,6 +1942,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = SQLiteDialect.class, comment = "ALL operator is not supported")
 	public void test_hql_all_subquery_comparison_qualifier_example() {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {

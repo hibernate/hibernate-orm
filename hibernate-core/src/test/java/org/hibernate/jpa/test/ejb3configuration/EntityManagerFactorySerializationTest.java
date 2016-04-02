@@ -24,6 +24,8 @@ import org.hibernate.jpa.test.Item;
 import org.hibernate.jpa.test.Kitten;
 import org.hibernate.jpa.test.Wallet;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -33,7 +35,9 @@ import static org.junit.Assert.assertTrue;
  * @author Emmanuel Bernard
  */
 public class EntityManagerFactorySerializationTest extends BaseEntityManagerFunctionalTestCase {
+
 	@Test
+	@RequiresDialectFeature(DialectChecks.DoesNotPrefersIdentityOverSequence.class)
 	public void testSerialization() throws Exception {
 		ByteArrayOutputStream stream = new ByteArrayOutputStream();
 		ObjectOutput out = new ObjectOutputStream( stream );

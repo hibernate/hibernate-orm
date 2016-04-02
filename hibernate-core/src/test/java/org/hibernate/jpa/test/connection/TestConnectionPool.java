@@ -15,9 +15,11 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.SQLiteDialect;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
@@ -25,6 +27,7 @@ import org.junit.Test;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-11257")
+@SkipForDialect(SQLiteDialect.class)
 public class TestConnectionPool
 		extends BaseEntityManagerFunctionalTestCase {
 

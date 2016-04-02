@@ -24,6 +24,8 @@ import org.hibernate.jpa.test.Kitten;
 import org.hibernate.jpa.test.NotSerializableClass;
 import org.hibernate.jpa.test.Wallet;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.junit.Test;
 
 /**
@@ -31,7 +33,9 @@ import org.junit.Test;
  * @author Scott Marlow
  */
 public class EntityManagerSerializationTest extends BaseEntityManagerFunctionalTestCase {
+
 	@Test
+	@RequiresDialectFeature(DialectChecks.DoesNotPrefersIdentityOverSequence.class)
 	public void testSerialization() throws Exception {
 		EntityManager em = entityManagerFactory().createEntityManager();
 		//em.getTransaction().begin();

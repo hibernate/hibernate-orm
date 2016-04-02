@@ -133,6 +133,11 @@ public class DefaultIdentifierGeneratorFactory
 		String resolvedStrategy = "native".equals( strategy ) ?
 				getDialect().getNativeIdentifierGeneratorStrategy() : strategy;
 
+		if( "auto".equals( strategy ) ) {
+			resolvedStrategy = dialect.prefersIdentityOverSequence() ?
+					"identity" : SequenceStyleGenerator.class.getName();
+		}
+
 		Class generatorClass = generatorStrategyToClassNameMap.get( resolvedStrategy );
 		try {
 			if ( generatorClass == null ) {

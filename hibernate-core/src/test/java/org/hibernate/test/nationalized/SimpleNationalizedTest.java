@@ -18,6 +18,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.SQLiteDialect;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.type.CharacterArrayType;
@@ -81,7 +82,10 @@ public class SimpleNationalizedTest extends BaseUnitTestCase {
 			assertNotNull( pc );
 
 			Property prop = pc.getProperty( "nvarcharAtt" );
-			if(metadata.getDatabase().getDialect() instanceof PostgreSQL81Dialect ){
+			if(
+				metadata.getDatabase().getDialect() instanceof PostgreSQL81Dialect ||
+				metadata.getDatabase().getDialect() instanceof SQLiteDialect
+			){
 				// See issue HHH-10693
 				assertSame( StringType.INSTANCE, prop.getType() );
 			}else{
@@ -89,7 +93,10 @@ public class SimpleNationalizedTest extends BaseUnitTestCase {
 			}
 
 			prop = pc.getProperty( "materializedNclobAtt" );
-			if(metadata.getDatabase().getDialect() instanceof PostgreSQL81Dialect ){
+			if(
+				metadata.getDatabase().getDialect() instanceof PostgreSQL81Dialect ||
+				metadata.getDatabase().getDialect() instanceof SQLiteDialect
+			){
 				// See issue HHH-10693
 				assertSame( MaterializedClobType.INSTANCE, prop.getType() );
 			}else {
@@ -102,7 +109,10 @@ public class SimpleNationalizedTest extends BaseUnitTestCase {
 			assertSame( NTextType.INSTANCE, prop.getType() );
 
 			prop = pc.getProperty( "ncharArrAtt" );
-			if(metadata.getDatabase().getDialect() instanceof PostgreSQL81Dialect ){
+			if(
+				metadata.getDatabase().getDialect() instanceof PostgreSQL81Dialect ||
+				metadata.getDatabase().getDialect() instanceof SQLiteDialect
+			){
 				// See issue HHH-10693
 				assertSame( CharacterArrayType.INSTANCE, prop.getType() );
 			}else {
@@ -110,7 +120,10 @@ public class SimpleNationalizedTest extends BaseUnitTestCase {
 			}
 
 			prop = pc.getProperty( "ncharacterAtt" );
-			if ( metadata.getDatabase().getDialect() instanceof PostgreSQL81Dialect ) {
+			if(
+				metadata.getDatabase().getDialect() instanceof PostgreSQL81Dialect ||
+				metadata.getDatabase().getDialect() instanceof SQLiteDialect
+			){
 				// See issue HHH-10693
 				assertSame( CharacterType.INSTANCE, prop.getType() );
 			}

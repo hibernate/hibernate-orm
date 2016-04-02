@@ -13,12 +13,14 @@ import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 
+import org.hibernate.dialect.SQLiteDialect;
 import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.jpa.test.metamodel.Customer;
 import org.hibernate.jpa.test.metamodel.Customer_;
 import org.hibernate.jpa.test.metamodel.Order;
 import org.hibernate.jpa.test.metamodel.Order_;
 
+import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
@@ -68,6 +70,7 @@ public class UncorrelatedSubqueryTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
+	@SkipForDialect(SQLiteDialect.class)
 	public void testEqualAll() {
 		CriteriaBuilder builder = entityManagerFactory().getCriteriaBuilder();
 		EntityManager em = getOrCreateEntityManager();

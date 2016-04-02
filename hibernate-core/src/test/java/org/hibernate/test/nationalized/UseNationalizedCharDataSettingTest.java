@@ -17,6 +17,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.SQLiteDialect;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.type.CharacterNCharType;
@@ -51,7 +52,10 @@ public class UseNationalizedCharDataSettingTest extends BaseUnitTestCase {
 			final Metadata metadata = ms.buildMetadata();
 			final PersistentClass pc = metadata.getEntityBinding( NationalizedBySettingEntity.class.getName() );
 			final Property nameAttribute = pc.getProperty( "name" );
-			if(metadata.getDatabase().getDialect() instanceof PostgreSQL81Dialect ){
+			if(
+				metadata.getDatabase().getDialect() instanceof PostgreSQL81Dialect ||
+				metadata.getDatabase().getDialect() instanceof SQLiteDialect
+			){
 				// See issue HHH-10693
 				assertSame( StringType.INSTANCE, nameAttribute.getType() );
 			}else {

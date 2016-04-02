@@ -20,6 +20,8 @@ import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.junit.Test;
 
 import org.jboss.logging.Logger;
@@ -44,6 +46,7 @@ public class ManualFlushTest extends BaseEntityManagerFunctionalTestCase {
     }
 
     @Test
+    @RequiresDialectFeature(DialectChecks.DoesNotPrefersIdentityOverSequence.class)
     public void testFlushSQL() {
         doInJPA( this::entityManagerFactory, entityManager -> {
             entityManager.createNativeQuery("delete from Person").executeUpdate();

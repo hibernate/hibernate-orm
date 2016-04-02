@@ -54,6 +54,7 @@ import org.hibernate.dialect.PostgreSQL9Dialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.ProgressDialect;
 import org.hibernate.dialect.SAPDBDialect;
+import org.hibernate.dialect.SQLiteDialect;
 import org.hibernate.dialect.SQLServer2005Dialect;
 import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.dialect.SQLServerDialect;
@@ -218,6 +219,7 @@ public class StrategySelectorBuilder {
 		addDialect( strategySelector, PostgreSQL9Dialect.class );
 		addDialect( strategySelector, ProgressDialect.class );
 		addDialect( strategySelector, SAPDBDialect.class );
+		addDialect( strategySelector, SQLiteDialect.class );
 		addDialect( strategySelector, SQLServerDialect.class );
 		addDialect( strategySelector, SQLServer2005Dialect.class );
 		addDialect( strategySelector, SQLServer2008Dialect.class );

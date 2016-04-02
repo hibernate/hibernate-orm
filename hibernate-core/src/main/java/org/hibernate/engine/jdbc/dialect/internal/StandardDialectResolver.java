@@ -34,6 +34,7 @@ import org.hibernate.dialect.PostgreSQL92Dialect;
 import org.hibernate.dialect.PostgreSQL94Dialect;
 import org.hibernate.dialect.PostgreSQL9Dialect;
 import org.hibernate.dialect.PostgresPlusDialect;
+import org.hibernate.dialect.SQLiteDialect;
 import org.hibernate.dialect.SQLServer2005Dialect;
 import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.dialect.SQLServer2012Dialect;
@@ -210,6 +211,10 @@ public class StandardDialectResolver implements DialectResolver {
 
 		if ( databaseName.startsWith( "Firebird" ) ) {
 			return new FirebirdDialect();
+		}
+
+		if ( databaseName.startsWith( "SQLite" ) ) {
+			return new SQLiteDialect();
 		}
 
 		return null;

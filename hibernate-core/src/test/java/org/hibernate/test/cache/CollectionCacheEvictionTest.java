@@ -270,9 +270,9 @@ public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 
-		company2 = (Company) s.get( Company.class, 2 );
+		company1 = (Company) s.get( Company.class, 1 );
 
-		assertEquals( 0, company2.getUsers().size() );
+		assertEquals( 0, company1.getUsers().size() );
 		s.close();
 	}
 

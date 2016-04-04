@@ -1,0 +1,101 @@
+[[access]]
+==== Access strategies
+:sourcedir: extras
+
+As a JPA provider, Hibernate can introspect both the entity attributes (instance fields) or the accessors (instance properties).
+By default, the placement of the `@Id` annotation gives the default access strategy.
+When placed on a field, Hibernate will assume field-based access.
+Place on the identifier getter, Hibernate will use property-based access.
+
+[IMPORTANT]
+====
+You should pay attention to https://docs.oracle.com/javase/7/docs/api/java/beans/Introspector.html#decapitalize(java.lang.String)[Java Beans specification] in regard to naming properties to avoid
+issues such as https://hibernate.atlassian.net/browse/HCANN-63[Property name beginning with at least two uppercase characters has odd functionality in HQL]!
+====
+
+Embeddable types inherit the access strategy from their parent entities.
+
+[[field-based-access]]
+===== Field-based access
+
+.Field-based access
+====
+[source,java]
+----
+include::{sourcedir}/access/SimpleEntityFieldAccess.java[]
+----
+====
+
+When using field-based access, adding other entity-level methods is much more flexible because Hibernate won't consider those part of the persistence state.
+To exclude a field from being part of the entity persistent state, the field must be marked with the `@Transient` annotation.
+
+[NOTE]
+====
+Another advantage of using field-based access is that some entity attributes can be hidden from outside the entity.
+An example of such attribute is the entity `@Version` field, which must not be manipulated by the data access layer.
+With field-based access, we can simply omit the getter and the setter for this version field, and Hibernate can still leverage the optimistic concurrency control mechanism.
+====
+
+[[property-based-access]]
+===== Property-based access
+
+.Property-based access
+====
+[source,java]
+----
+include::{sourcedir}/access/SimpleEntityPropertyAccess.java[]
+----
+====
+
+When using property-based access, Hibernate uses the accessors for both reading and writing the entity state.
+Every other method that will be added to the entity (e.g. helper methods for synchronizing both ends of a bidirectional one-to-many association) will have to be marked with the `@Transient` annotation.
+
+===== Overriding the default access strategy
+
+The default access strategy mechanism can be overridden with the JPA `@Access` annotation.
+In the following example, the `@Version` attribute is accessed by its field and not by its getter, like the rest of entity attributes.
+
+.Overriding access strategy
+====
+[source,java]
+----
+include::{sourcedir}/access/SimpleEntityPropertyAccessOverride.java[]
+----
+====
+
+[[access-embeddable-types]]
+===== Embeddable types and access strategy
+
+Because embeddables are managed by their owning entities, the access strategy is therefore inherited from the entity too.
+This applies to both simple embeddable types as well as for collection of embeddables.
+
+The embeddable types can overrule the default implicit access strategy (inherited from the owning entity).
+In the following example, the embeddable uses property-based access, no matter what access strategy the owning entity is choosing:
+
+.Embeddable with exclusive access strategy
+====
+[source,java]
+----
+include::{sourcedir}/access/EmbeddableAccessType.java[]
+----
+====
+
+The owning entity can use field-based access, while the embeddable uses property-based access as it has chosen explicitly:
+
+.Entity including a single embeddable type
+====
+[source,java]
+----
+include::{sourcedir}/access/EmbeddedAccessType.java[]
+----
+====
+
+This works also for collection of embeddable types:
+
+.Entity including a collection of embeddable types
+====
+[source,java]
+----
+include::{sourcedir}/access/ElementCollectionAccessType.java[]
+----
+====

@@ -1,0 +1,123 @@
+[[portability]]
+== Database Portability Considerations
+:sourcedir: extras
+
+[[portability-basics]]
+=== Portability Basics
+
+One of the selling points of Hibernate (and really Object/Relational Mapping as a whole) is the notion of database portability.
+This could mean an internal IT user migrating from one database vendor to another, or it could mean a framework or deployable application consuming Hibernate to simultaneously target multiple database products by their users.
+Regardless of the exact scenario, the basic idea is that you want Hibernate to help you run against any number of databases without changes to your code, and ideally without any changes to the mapping metadata.
+
+[[portability-dialect]]
+=== Dialect
+
+The first line of portability for Hibernate is the dialect, which is a specialization of the `org.hibernate.dialect.Dialect` contract.
+A dialect encapsulates all the differences in how Hibernate must communicate with a particular database to accomplish some task like getting a sequence value or structuring a SELECT query.
+Hibernate bundles a wide range of dialects for many of the most popular databases.
+If you find that your particular database is not among them, it is not terribly difficult to write your own.
+
+[[portability-dialectresolver]]
+=== Dialect resolution
+
+Originally, Hibernate would always require that users specify which dialect to use. In the case of users looking to simultaneously target multiple databases with their build that was problematic.
+Generally, this required their users to configure the Hibernate dialect or defining their own method of setting that value.
+
+Starting with version 3.2, Hibernate introduced the notion of automatically detecting the dialect to use based on the `java.sql.DatabaseMetaData` obtained from a `java.sql.Connection` to that database.
+This was much better, expect that this resolution was limited to databases Hibernate know about ahead of time and was in no way configurable or overrideable.
+
+Starting with version 3.3, Hibernate has a fare more powerful way to automatically determine which dialect to should be used by relying on a series of delegates which implement the `org.hibernate.dialect.resolver.DialectResolver` which defines only a single method:
+
+[source,java]
+----
+public Dialect resolveDialect(DatabaseMetaData metaData) throws JDBCConnectionException
+----
+
+The basic contract here is that if the resolver 'understands' the given database metadata then it returns the corresponding Dialect; if not it returns null and the process continues to the next resolver.
+The signature also identifies `org.hibernate.exception.JDBCConnectionException` as possibly being thrown.
+A `JDBCConnectionException` here is interpreted to imply a "non transient" (aka non-recoverable) connection problem and is used to indicate an immediate stop to resolution attempts.
+All other exceptions result in a warning and continuing on to the next resolver.
+
+The cool part about these resolvers is that users can also register their own custom resolvers which will be processed ahead of the built-in Hibernate ones.
+This might be useful in a number of different situations:
+
+* it allows easy integration for auto-detection of dialects beyond those shipped with Hibernate itself
+* it allows you to specify to use a custom dialect when a particular database is recognized.
+
+To register one or more resolvers, simply specify them (separated by commas, tabs or spaces) using the 'hibernate.dialect_resolvers' configuration setting (see the `DIALECT_RESOLVERS` constant on `org.hibernate.cfg.Environment`).
+
+[[portability-idgen]]
+=== Identifier generation
+
+When considering portability between databases, another important decision is selecting the identifier generation strategy you want to use.
+Originally Hibernate provided the _native_ generator for this purpose, which was intended to select between a __sequence__, __identity__, or _table_ strategy depending on the capability of the underlying database.
+
+However, an insidious implication of this approach comes about when targeting some databases which support _identity_ generation and some which do not.
+_identity_ generation relies on the SQL definition of an IDENTITY (or auto-increment) column to manage the identifier value.
+It is what is known as a _post-insert_ generation strategy because the insert must actually happen before we can know the identifier value.
+
+Because Hibernate relies on this identifier value to uniquely reference entities within a persistence context,
+it must then issue the insert immediately when the users requests that the entity be associated with the session (e.g. like via `save()` or `persist()`) , regardless of current transactional semantics.
+
+[NOTE]
+====
+Hibernate was changed slightly, once the implications of this were better understood, so now the insert could be delayed in cases where this is feasible.
+
+The underlying issue is that the actual semantics of the application itself changes in these cases.
+====
+
+Starting with version 3.2.3, Hibernate comes with a set of http://in.relation.to/2082.lace[enhanced] identifier generators targeting portability in a much different way.
+
+[NOTE]
+====
+There are specifically 2 bundled __enhanced__generators:
+
+* `org.hibernate.id.enhanced.SequenceStyleGenerator`
+* `org.hibernate.id.enhanced.TableGenerator`
+====
+
+The idea behind these generators is to port the actual semantics of the identifier value generation to the different databases.
+For example, the `org.hibernate.id.enhanced.SequenceStyleGenerator` mimics the behavior of a sequence on databases which do not support sequences by using a table.
+
+[[portability-functions]]
+=== Database functions
+
+[WARNING]
+====
+This is an area in Hibernate in need of improvement.
+In terms of portability concerns, this function handling currently works pretty well in HQL, however, it is quite lacking in all other aspects.
+====
+
+SQL functions can be referenced in many ways by users.
+However, not all databases support the same set of functions.
+Hibernate, provides a means of mapping a _logical_ function name to a delegate which knows how to render that particular function, perhaps even using a totally different physical function call.
+
+[IMPORTANT]
+====
+Technically this function registration is handled through the `org.hibernate.dialect.function.SQLFunctionRegistry` class which is intended to allow users to provide custom function definitions without having to provide a custom dialect.
+This specific behavior is not fully completed as of yet.
+
+It is sort of implemented such that users can programmatically register functions with the `org.hibernate.cfg.Configuration` and those functions will be recognized for HQL.
+====
+
+[[portability-types]]
+=== Type mappings
+
+TODO: document the following as well
+
+[[portability-types-lobs]]
+==== BLOB/CLOB mappings
+
+
+[[portability-types-bool]]
+==== Boolean mappings
+
+JPA portability
+
+* HQL/JPQL differences
+* naming strategies
+* basic types
+* simple id types
+* generated id types
+* composite ids and many-to-one
+* "embedded composite identifiers"

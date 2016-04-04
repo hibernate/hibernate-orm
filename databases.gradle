@@ -1,0 +1,48 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
+
+// build a map of the database settings to use.
+ext {
+        db = 'h2'
+        dbBundle = [
+                h2 : [
+                        'db.dialect' : 'org.hibernate.dialect.H2Dialect',
+                        'jdbc.driver': 'org.h2.Driver',
+                        'jdbc.user'  : 'sa',
+                        'jdbc.pass'  : '',
+                        'jdbc.url'   : 'jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000',
+                ],
+                hsqldb : [
+                        'db.dialect' : 'org.hibernate.dialect.HSQLDialect',
+                        'jdbc.driver': 'org.hsqldb.jdbc.JDBCDriver',
+                        'jdbc.user'  : 'sa',
+                        'jdbc.pass'  : '',
+                        'jdbc.url'   : 'jdbc:hsqldb:mem:test'
+                ],
+                pgsql : [
+                        'db.dialect' : 'org.hibernate.dialect.PostgreSQL94Dialect',
+                        'jdbc.driver': 'org.postgresql.Driver',
+                        'jdbc.user'  : 'hibernate_orm_test',
+                        'jdbc.pass'  : 'hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:postgresql:hibernate_orm_test'
+                ],
+                mysql : [
+                        'db.dialect' : 'org.hibernate.dialect.MySQL57InnoDBDialect',
+                        'jdbc.driver': 'com.mysql.jdbc.Driver',
+                        'jdbc.user'  : 'hibernateormtest',
+                        'jdbc.pass'  : 'hibernateormtest',
+                        'jdbc.url'   : 'jdbc:mysql://localhost/hibernate_orm_test'
+                ],
+                mariadb : [
+                        'db.dialect' : 'org.hibernate.dialect.MySQL57InnoDBDialect',
+                        'jdbc.driver': 'org.mariadb.jdbc.Driver',
+                        'jdbc.user'  : 'hibernate_orm_test',
+                        'jdbc.pass'  : 'hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:mariadb://localhost/hibernate_orm_test'
+                ]
+        ]
+}

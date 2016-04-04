@@ -1,0 +1,39 @@
+= Hibernate ORM {majorMinorVersion} User Guide
+Steve Ebersole, Vlad Mihalcea, Andrea Boriero, Brett Meyer, Radim Vansa
+:toc:
+:toclevels: 3
+
+include::Preface.adoc[]
+
+:numbered:
+
+include::chapters/architecture/Architecture.adoc[]
+include::chapters/domain/DomainModel.adoc[]
+include::chapters/bootstrap/Bootstrap.adoc[]
+include::chapters/pc/PersistenceContext.adoc[]
+include::chapters/flushing/Flushing.adoc[]
+include::chapters/jdbc/Database_Access.adoc[]
+include::chapters/transactions/Transactions.adoc[]
+include::chapters/jndi/JNDI.adoc[]
+include::chapters/locking/Locking.adoc[]
+include::chapters/fetching/Fetching.adoc[]
+include::chapters/batch/Batching.adoc[]
+include::chapters/caching/Caching.adoc[]
+include::chapters/events/Events.adoc[]
+include::chapters/query/hql/HQL.adoc[]
+include::chapters/query/criteria/Criteria.adoc[]
+include::chapters/query/native/Native.adoc[]
+include::chapters/query/spatial/Spatial.adoc[]
+include::chapters/multitenancy/MultiTenancy.adoc[]
+include::chapters/osgi/OSGi.adoc[]
+include::chapters/envers/Envers.adoc[]
+include::chapters/portability/Portability.adoc[]
+
+include::appendices/Configurations.adoc[]
+include::appendices/Legacy_Bootstrap.adoc[]
+include::appendices/Legacy_DomainModel.adoc[]
+include::appendices/Legacy_Criteria.adoc[]
+include::appendices/Legacy_Native_Queries.adoc[]
+
+include::Bibliography.adoc[]
+

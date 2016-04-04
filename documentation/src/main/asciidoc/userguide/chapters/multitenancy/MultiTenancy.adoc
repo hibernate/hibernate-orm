@@ -1,0 +1,182 @@
+[[multitenacy]]
+== Multitenancy
+:sourcedir: ../../../../../test/java/org/hibernate/userguide/multitenancy
+
+[[multitenacy-intro]]
+=== What is multitenancy?
+
+The term multitenancy, in general, is applied to software development to indicate an architecture in which a single running instance of an application simultaneously serves multiple clients (tenants).
+This is highly common in SaaS solutions.
+Isolating information (data, customizations, etc.) pertaining to the various tenants is a particular challenge in these systems.
+This includes the data owned by each tenant stored in the database.
+It is this last piece, sometimes called multitenant data, on which we will focus.
+
+[[multitenacy-approaches]]
+=== Multitenant data approaches
+
+There are three main approaches to isolating information in these multitenant systems which go hand-in-hand with different database schema definitions and JDBC setups.
+
+[NOTE]
+====
+Each approach has pros and cons as well as specific techniques and considerations.
+Such topics are beyond the scope of this documentation.
+Many resources exist which delve into these other topics, like http://msdn.microsoft.com/en-us/library/aa479086.aspx[this one] which does a great job of covering these topics.
+====
+
+[[multitenacy-separate-database]]
+==== Separate database
+
+image:images/multitenancy/multitenacy_database.png[]
+
+Each tenant's data is kept in a physically separate database instance.
+JDBC Connections would point specifically to each database so any pooling would be per-tenant.
+A general application approach, here, would be to define a JDBC Connection pool per-tenant and to select the pool to use based on the _tenant identifier_ associated with the currently logged in user.
+
+[[multitenacy-separate-schema]]
+==== Separate schema
+
+image:images/multitenancy/multitenacy_schema.png[]
+
+Each tenant's data is kept in a distinct database schema on a single database instance.
+There are two different ways to define JDBC Connections here:
+
+* Connections could point specifically to each schema as we saw with the `Separate database` approach.
+This is an option provided that the driver supports naming the default schema in the connection URL or if the pooling mechanism supports naming a schema to use for its Connections.
+Using this approach, we would have a distinct JDBC Connection pool per-tenant where the pool to use would be selected based on the "tenant identifier" associated with the currently logged in user.
+* Connections could point to the database itself (using some default schema) but the Connections would be altered using the SQL `SET SCHEMA` (or similar) command.
+Using this approach, we would have a single JDBC Connection pool for use to service all tenants, but before using the Connection, it would be altered to reference the schema named by the "tenant identifier" associated with the currently logged in user.
+
+[[multitenacy-discriminator]]
+=== Partitioned (discriminator) data
+
+image:images/multitenancy/multitenacy_discriminator.png[]
+
+All data is kept in a single database schema.
+The data for each tenant is partitioned by the use of partition value or discriminator.
+The complexity of this discriminator might range from a simple column value to a complex SQL formula.
+Again, this approach would use a single Connection pool to service all tenants.
+However, in this approach, the application needs to alter each and every SQL statement sent to the database to reference the "tenant identifier" discriminator.
+
+[[multitenacy-hibernate]]
+=== Multitenancy in Hibernate
+
+Using Hibernate with multitenant data comes down to both an API and then integration piece(s).
+As usual, Hibernate strives to keep the API simple and isolated from any underlying integration complexities.
+The API is really just defined by passing the tenant identifier as part of opening any session.
+
+[[multitenacy-hibernate-session-example]]
+.Specifying tenant identifier from `SessionFactory`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/AbstractMultiTenancyTest.java[tags=multitenacy-hibernate-session-example]
+----
+====
+
+Additionally, when specifying the configuration, an `org.hibernate.MultiTenancyStrategy` should be named using the `hibernate.multiTenancy` setting.
+Hibernate will perform validations based on the type of strategy you specify.
+The strategy here correlates to the isolation approach discussed above.
+
+NONE::
+  (the default) No multitenancy is expected.
+  In fact, it is considered an error if a tenant identifier is specified when opening a session using this strategy.
+SCHEMA::
+  Correlates to the separate schema approach.
+  It is an error to attempt to open a session without a tenant identifier using this strategy.
+  Additionally, a `MultiTenantConnectionProvider` must be specified.
+DATABASE::
+  Correlates to the separate database approach.
+  It is an error to attempt to open a session without a tenant identifier using this strategy.
+  Additionally, a `MultiTenantConnectionProvider` must be specified.
+DISCRIMINATOR::
+  Correlates to the partitioned (discriminator) approach.
+  It is an error to attempt to open a session without a tenant identifier using this strategy.
+  This strategy is not yet implemented and you can follow its progress via the https://hibernate.atlassian.net/browse/HHH-6054[HHH-6054 Jira issue].
+
+[[multitenacy-hibernate-MultiTenantConnectionProvider]]
+==== MultiTenantConnectionProvider
+
+When using either the DATABASE or SCHEMA approach, Hibernate needs to be able to obtain Connections in a tenant-specific manner.
+
+That is the role of the `MultiTenantConnectionProvider` contract.
+Application developers will need to provide an implementation of this contract. 
+
+Most of its methods are extremely self-explanatory.
+The only ones which might not be are `getAnyConnection` and `releaseAnyConnection`. 
+It is important to note also that these methods do not accept the tenant identifier. 
+Hibernate uses these methods during startup to perform various configuration, mainly via the `java.sql.DatabaseMetaData` object.
+
+The `MultiTenantConnectionProvider` to use can be specified in a number of ways:
+
+* Use the `hibernate.multi_tenant_connection_provider` setting.
+It could name a `MultiTenantConnectionProvider` instance, a `MultiTenantConnectionProvider` implementation class reference or a `MultiTenantConnectionProvider` implementation class name.
+* Passed directly to the `org.hibernate.boot.registry.StandardServiceRegistryBuilder`.
+* If none of the above options match, but the settings do specify a `hibernate.connection.datasource` value,
+Hibernate will assume it should use the specific `DataSourceBasedMultiTenantConnectionProviderImpl` implementation which works on a number of pretty reasonable assumptions when running inside of an app server and using one `javax.sql.DataSource` per tenant.
+See its https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/connections/spi/DataSourceBasedMultiTenantConnectionProviderImpl.html[Javadocs] for more details.
+
+The following example portrays a `MultiTenantConnectionProvider` implementation that handles multiple `ConnectionProviders`.
+
+[[multitenacy-hibernate-ConfigurableMultiTenantConnectionProvider-example]]
+.A `MultiTenantConnectionProvider` implementation
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/ConfigurableMultiTenantConnectionProvider.java[tags=multitenacy-hibernate-ConfigurableMultiTenantConnectionProvider-example]
+----
+====
+
+The `ConfigurableMultiTenantConnectionProvider` can be set up as follows:
+
+[[multitenacy-hibernate-MultiTenantConnectionProvider-example]]
+.A `MultiTenantConnectionProvider` implementation
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/AbstractMultiTenancyTest.java[tags=multitenacy-hibernate-MultiTenantConnectionProvider-example]
+----
+====
+
+When using multitenancy, it's possible to save an entity with the same identifier across different tenants:
+
+[[multitenacy-hibernate-same-entity-example]]
+.A `MultiTenantConnectionProvider` implementation
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/AbstractMultiTenancyTest.java[tags=multitenacy-multitenacy-hibernate-same-entity-example]
+----
+====
+
+[[multitenacy-hibernate-MultiTenantConnectionProvider]]
+==== CurrentTenantIdentifierResolver
+
+`org.hibernate.context.spi.CurrentTenantIdentifierResolver` is a contract for Hibernate to be able to resolve what the application considers the current tenant identifier.
+The implementation to use is either passed directly to `Configuration` via its `setCurrentTenantIdentifierResolver` method.
+It can also be specified via the `hibernate.tenant_identifier_resolver` setting.
+
+There are two situations where CurrentTenantIdentifierResolver is used:
+
+* The first situation is when the application is using the `org.hibernate.context.spi.CurrentSessionContext` feature in conjunction with multitenancy.
+In the case of the current-session feature, Hibernate will need to open a session if it cannot find an existing one in scope.
+However, when a session is opened in a multitenant environment, the tenant identifier has to be specified.
+This is where the `CurrentTenantIdentifierResolver` comes into play; Hibernate will consult the implementation you provide to determine the tenant identifier to use when opening the session.
+In this case, it is required that a `CurrentTenantIdentifierResolver` is supplied.
+* The other situation is when you do not want to have to explicitly specify the tenant identifier all the time.
+If a `CurrentTenantIdentifierResolver` has been specified, Hibernate will use it to determine the default tenant identifier to use when opening the session.
+
+Additionally, if the `CurrentTenantIdentifierResolver` implementation returns `true` for its `validateExistingCurrentSessions` method, Hibernate will make sure any existing sessions that are found in scope have a matching tenant identifier.
+This capability is only pertinent when the `CurrentTenantIdentifierResolver` is used in current-session settings.
+
+[[multitenacy-hibernate-caching]]
+==== Caching
+
+Multitenancy support in Hibernate works seamlessly with the Hibernate second level cache.
+The key used to cache data encodes the tenant identifier.
+
+[NOTE]
+====
+Currently, schema export will not really work with multitenancy. That may not change.
+
+The JPA expert group is in the process of defining multitenancy support for an upcoming version of the specification.
+====

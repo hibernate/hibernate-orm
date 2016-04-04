@@ -1,0 +1,166 @@
+[[events]]
+== Interceptors and events
+:sourcedir: ../../../../../test/java/org/hibernate/userguide/events
+
+It is useful for the application to react to certain events that occur inside Hibernate.
+This allows for the implementation of generic functionality and the extension of Hibernate functionality.
+
+[[events-interceptors]]
+=== Interceptors
+
+The `org.hibernate.Interceptor` interface provides callbacks from the session to the application,
+allowing the application to inspect and/or manipulate properties of a persistent object before it is saved, updated, deleted or loaded.
+
+One possible use for this is to track auditing information.
+The following example shows an `Interceptor` implementation that automatically logs when an entity is updated.
+
+[[events-interceptors-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/InterceptorTest.java[tags=events-interceptors-example]
+----
+====
+
+[NOTE]
+====
+You can either implement `Interceptor` directly or extend `org.hibernate.EmptyInterceptor`.
+====
+
+An Interceptor can be either `Session`-scoped or `SessionFactory`-scoped.
+
+A Session-scoped interceptor is specified when a session is opened.
+
+[[events-interceptors-session-scope-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/InterceptorTest.java[tags=events-interceptors-session-scope-example]
+----
+====
+
+A `SessionFactory`-scoped interceptor is registered with the `Configuration` object prior to building the `SessionFactory`.
+Unless a session is opened explicitly specifying the interceptor to use, the `SessionFactory`-scoped interceptor will be applied to all sessions opened from that `SessionFactory`.
+`SessionFactory`-scoped interceptors must be thread safe.
+Ensure that you do not store session-specific states since multiple sessions will use this interceptor potentially concurrently.
+
+[[events-interceptors-session-factory-scope-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/InterceptorTest.java[tags=events-interceptors-session-factory-scope-example]
+----
+====
+
+[[events-events]]
+=== Native Event system
+
+If you have to react to particular events in the persistence layer, you can also use the Hibernate _event_ architecture.
+The event system can be used in place of or in addition to interceptors.
+
+Many methods of the `Session` interface correlate to an event type.
+The full range of defined event types is declared as enum values on `org.hibernate.event.spi.EventType`.
+When a request is made of one of these methods, the Session generates an appropriate event and passes it to the configured event listener(s) for that type.
+
+Applications are free to implement a customization of one of the listener interfaces (i.e., the `LoadEvent` is processed by the registered implementation of the `LoadEventListener` interface), in which case their implementation would
+be responsible for processing any `load()` requests made of the `Session`.
+
+[NOTE]
+====
+The listeners should be considered stateless; they are shared between requests, and should not save any state as instance variables.
+====
+
+A custom listener implements the appropriate interface for the event it wants to process and/or extend one of the convenience base classes
+(or even the default event listeners used by Hibernate out-of-the-box as these are declared non-final for this purpose).
+Here is an example of a custom load event listener:
+
+[[events-interceptors-load-listener-example]]
+.Custom LoadListener example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/ListenerTest.java[tags=events-interceptors-load-listener-example]
+----
+====
+
+[[events-declarative-security]]
+=== Hibernate declarative security
+
+Usually, declarative security in Hibernate applications is managed in a session facade layer.
+Hibernate allows certain actions to be authorized via JACC and JAAS.
+This is an optional functionality that is built on top of the event architecture.
+
+First, you must configure the appropriate event listeners, to enable the use of JACC authorization.
+Again, see <<chapters/bootstrap/Bootstrap.adoc#bootstrap-event-listener-registration,Event Listener Registration>> for the details.
+
+Below is an example of an appropriate `org.hibernate.integrator.spi.Integrator` implementation for this purpose.
+
+[[events-declarative-security-jacc-example]]
+.JACC listener registration example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/ListenerTest.java[tags=events-declarative-security-jacc-example]
+----
+====
+
+You must also decide how to configure your JACC provider. Consult your JACC provider documentation.
+
+[[events-jpa-callbacks]]
+=== JPA Callbacks
+
+JPA also defines a more limited set of callbacks through annotations.
+
+.Callback annotations
+[cols=",",options="header",]
+|=======================================================================
+|Type |Description
+|@PrePersist |Executed before the entity manager persist operation is actually executed or cascaded. This call is synchronous with the persist operation.
+|@PreRemove |Executed before the entity manager remove operation is actually executed or cascaded. This call is synchronous with the remove operation.
+|@PostPersist |Executed after the entity manager persist operation is actually executed or cascaded. This call is invoked after the database INSERT is executed.
+|@PostRemove |Executed after the entity manager remove operation is actually executed or cascaded. This call is synchronous with the remove operation.
+|@PreUpdate |Executed before the database UPDATE operation.
+|@PostUpdate |Executed after the database UPDATE operation.
+|@PostLoad |Executed after an entity has been loaded into the current persistence context or an entity has been refreshed.
+|=======================================================================
+
+There are two available approaches defined for specifying callback handling:
+
+* The first approach is to annotate methods on the entity itself to receive notification of particular entity life cycle event(s).
+* The second is to use a separate entity listener class.
+An entity listener is a stateless class with a no-arg constructor.
+The callback annotations are placed on a method of this class instead of the entity class.
+The entity listener class is then associated with the entity using the `javax.persistence.EntityListeners` annotation
+
+[[events-jpa-callbacks-example]]
+.Example of specifying JPA callbacks
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/ListenerTest.java[tags=events-jpa-callbacks-example]
+----
+====
+
+These approaches can be mixed, meaning you can use both together.
+
+Regardless of whether the callback method is defined on the entity or on an entity listener, it must have a void-return signature.
+The name of the method is irrelevant as it is the placement of the callback annotations that makes the method a callback.
+In the case of callback methods defined on the entity class, the method must additionally have a no-argument signature.
+For callback methods defined on an entity listener class, the method must have a single argument signature; the type of that argument can be either `java.lang.Object` (to facilitate attachment to multiple entities) or the specific entity type.
+
+A callback method can throw a `RuntimeException`.
+If the callback method does throw a `RuntimeException`, then the current transaction, if any, must be rolled back.
+
+A callback method must not invoke EntityManager or Query methods!
+
+It is possible that multiple callback methods are defined for a particular lifecycle event.
+When that is the case, the defined order of execution is well defined by the JPA spec (specifically section 3.5.4):
+
+* Any default listeners associated with the entity are invoked first, in the order they were specified in the XML. See the `javax.persistence.ExcludeDefaultListeners` annotation.
+* Next, entity listener class callbacks associated with the entity hierarchy are invoked, in the order they are defined in the `EntityListeners`.
+If multiple classes in the entity hierarchy define entity listeners, the listeners defined for a superclass are invoked before the listeners defined for its subclasses.
+See the `javax.persistence.ExcludeSuperclassListener`s annotation.
+* Lastly, callback methods defined on the entity hierarchy are invoked.
+If a callback type is annotated on both an entity and one or more of its superclasses without method overriding, both would be called, the most general superclass first.
+An entity class is also allowed to override a callback method defined in a superclass in which case the super callback would not get invoked; the overriding method would get invoked provided it is annotated.
+

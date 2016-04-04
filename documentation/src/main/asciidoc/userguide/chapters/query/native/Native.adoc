@@ -1,0 +1,880 @@
+[[sql]]
+== Native SQL Queries
+:modeldir: ../../../../../../main/java/org/hibernate/userguide/model
+:sourcedir: ../../../../../../test/java/org/hibernate/userguide/sql
+:extrasdir: extras
+
+You may also express queries in the native SQL dialect of your database.
+This is useful if you want to utilize database specific features such as window functions, Common Table Expressions (CTE) or the `CONNECT BY` option in Oracle.
+It also provides a clean migration path from a direct SQL/JDBC based application to Hibernate/JPA.
+Hibernate also allows you to specify handwritten SQL (including stored procedures) for all create, update, delete, and retrieve operations.
+
+[[sql-jpa-query]]
+=== Creating a native query using JPA
+
+Execution of native SQL queries is controlled via the `SQLQuery` interface, which is obtained by calling `Session.createSQLQuery()`.
+The following sections describe how to use this API for querying.
+
+[[sql-scalar-query]]
+=== Scalar queries
+
+The most basic SQL query is to get a list of scalars (column) values.
+
+[[sql-jpa-all-columns-scalar-query-example]]
+.JPA native query selecting all columns
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-jpa-all-columns-scalar-query-example]
+----
+====
+
+[[sql-jpa-custom-column-selection-scalar-query-example]]
+.JPA native query with a custom column selection
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-jpa-custom-column-selection-scalar-query-example]
+----
+====
+
+[[sql-hibernate-all-columns-scalar-query-example]]
+.Hibernate native query selecting all columns
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-hibernate-all-columns-scalar-query-example]
+----
+====
+
+[[sql-hibernate-custom-column-selection-scalar-query-example]]
+.Hibernate native query with a custom column selection
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-hibernate-custom-column-selection-scalar-query-example]
+----
+====
+
+These will return a `List` of `Object` arrays ( `Object[]` ) with scalar values for each column in the `PERSON` table.
+Hibernate will use `java.sql.ResultSetMetadata` to deduce the actual order and types of the returned scalar values.
+
+To avoid the overhead of using `ResultSetMetadata`, or simply to be more explicit in what is returned, one can use `addScalar()`:
+
+[[sql-hibernate-scalar-query-explicit-result-set-example]]
+.Hibernate native query with explicit result set selection
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-hibernate-scalar-query-explicit-result-set-example]
+----
+====
+
+Although it still returns an `Object` arrays, this query will not use the `ResultSetMetadata` anymore since it explicitly gets the `id` and `name` columns as respectively a `BigInteger` and a `String` from the underlying `ResultSet`.
+This also means that only these two columns will be returned, even though the query is still using `*` and the `ResultSet` contains more than the three listed columns.
+
+It is possible to leave out the type information for all or some of the scalars.
+
+[[sql-hibernate-scalar-query-partial-explicit-result-set-example]]
+.Hibernate native query with result set selection that's a partially explicit
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-hibernate-scalar-query-partial-explicit-result-set-example]
+----
+====
+
+This is essentially the same query as before, but now `ResultSetMetaData` is used to determine the type of `name`, where as the type of `id` is explicitly specified.
+
+How the `java.sql.Types` returned from `ResultSetMetaData` is mapped to Hibernate types is controlled by the `Dialect`.
+If a specific type is not mapped, or does not result in the expected type, it is possible to customize it via calls to `registerHibernateType` in the Dialect.
+
+[[sql-entity-query]]
+=== Entity queries
+
+The above queries were all about returning scalar values, basically returning the _raw_ values from the `ResultSet`.
+
+[[sql-jpa-entity-query-example]]
+.JPA native query selecting entities
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-jpa-entity-query-example]
+----
+====
+
+[[sql-hibernate-entity-query-example]]
+.Hibernate native query selecting entities
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-hibernate-entity-query-example]
+----
+====
+
+Assuming that `Person` is mapped as a class with the columns `id`, `name`, `nickName`, `address`, `createdOn` and `version`,
+the following query will also return a `List` where each element is a `Person` entity.
+
+[[sql-jpa-entity-query-explicit-result-set-example]]
+.JPA native query selecting entities with explicit result set
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-jpa-entity-query-explicit-result-set-example]
+----
+====
+
+[[sql-hibernate-entity-query-explicit-result-set-example]]
+.Hibernate native query selecting entities with explicit result set
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-hibernate-entity-query-explicit-result-set-example]
+----
+====
+
+[[sql-entity-associations-query]]
+=== Handling associations and collections
+
+If the entity is mapped with a `many-to-one` or a child-side `one-to-one` to another entity, it is required to also return this when performing the native query,
+otherwise a database specific _column not found_ error will occur.
+
+[[sql-jpa-entity-associations-query-many-to-one-example]]
+.JPA native query selecting entities with many-to-one association
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-jpa-entity-associations-query-many-to-one-example]
+----
+====
+
+[[sql-hibernate-entity-associations-query-many-to-one-example]]
+.Hibernate native query selecting entities with many-to-one association
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-hibernate-entity-associations-query-many-to-one-example]
+----
+====
+
+This will allow the `Phone#person` to function properly.
+
+[NOTE]
+====
+The additional columns will automatically be returned when using the `*` notation.
+====
+
+It is possible to eagerly join the `Phone` and the `Person` entities to avoid the possible extra roundtrip for initializing the `many-to-one` association.
+
+[[sql-jpa-entity-associations-query-many-to-one-join-example]]
+.JPA native query selecting entities with joined many-to-one association
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-jpa-entity-associations-query-many-to-one-join-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/sql-jpa-entity-associations-query-many-to-one-join-example.sql[]
+----
+====
+
+[[sql-hibernate-entity-associations-query-many-to-one-join-example]]
+.Hibernate native query selecting entities with joined many-to-one association
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-hibernate-entity-associations-query-many-to-one-join-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/sql-hibernate-entity-associations-query-many-to-one-join-example.sql[]
+----
+====
+
+[NOTE]
+====
+As seen in the associated SQL query, Hibernate manages to construct the entity hierarchy without requiring any extra database roundtrip.
+====
+
+By default, when using the `addJoin()` method, the result set will contain both entities that are joined.
+To construct the entity hierarchy, you need to use a `ROOT_ENTITY` or `DISTINCT_ROOT_ENTITY` `ResultTransformer`.
+
+[[sql-hibernate-entity-associations-query-many-to-one-join-result-transformer-example]]
+.Hibernate native query selecting entities with joined many-to-one association and `ResultTransformer`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-hibernate-entity-associations-query-many-to-one-join-result-transformer-example]
+----
+====
+
+[NOTE]
+====
+Because of the `ROOT_ENTITY` `ResultTransformer`, this query will return the parent-side as root entities.
+====
+
+Notice that you added an alias name _pr_ to be able to specify the target property path of the join.
+It is possible to do the same eager joining for collections (e.g. the `Phone#calls` `one-to-many` association).
+
+[[sql-jpa-entity-associations-query-one-to-many-join-example]]
+.JPA native query selecting entities with joined one-to-many association
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-jpa-entity-associations-query-one-to-many-join-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/sql-jpa-entity-associations-query-one-to-many-join-example.sql[]
+----
+====
+
+[[sql-hibernate-entity-associations-query-one-to-many-join-example]]
+.Hibernate native query selecting entities with joined one-to-many association
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-hibernate-entity-associations-query-one-to-many-join-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/sql-hibernate-entity-associations-query-one-to-many-join-example.sql[]
+----
+====
+
+At this stage you are reaching the limits of what is possible with native queries, without starting to enhance the sql queries to make them usable in Hibernate.
+Problems can arise when returning multiple entities of the same type or when the default alias/column names are not enough.
+
+[[sql-multi-entity-query]]
+=== Returning multiple entities
+
+Until now, the result set column names are assumed to be the same as the column names specified in the mapping document.
+This can be problematic for SQL queries that join multiple tables since the same column names can appear in more than one table.
+
+Column alias injection is needed in the following query which otherwise throws `NonUniqueDiscoveredSqlAliasException`.
+
+[[sql-jpa-multi-entity-query-example]]
+.JPA native query selecting entities with the same column names
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-jpa-multi-entity-query-example]
+----
+====
+
+[[sql-hibernate-multi-entity-query-example]]
+.Hibernate native query selecting entities with the same column names
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-hibernate-multi-entity-query-example]
+----
+====
+
+The query was intended to return all `Person` and `Partner` instances with the same name.
+The query fails because there is a conflict of names since the two entities are mapped to the same column names (e.g. `id`, `name`, `version`).
+Also, on some databases the returned column aliases will most likely be on the form `pr.id`, `pr.name`, etc.
+which are not equal to the columns specified in the mappings (`id` and `name`).
+
+The following form is not vulnerable to column name duplication:
+
+[[sql-hibernate-multi-entity-query-alias-example]]
+.Hibernate native query selecting entities with the same column names and aliases
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-hibernate-multi-entity-query-alias-example]
+----
+====
+
+[NOTE]
+====
+There's no such equivalent in JPA because the `Query` interface doesn't define an `addEntity` method equivalent.
+====
+
+The `{pr.*}` and `{pt.*}` notation used above is shorthand for "all properties".
+Alternatively, you can list the columns explicitly, but even in this case Hibernate injects the SQL column aliases for each property.
+The placeholder for a column alias is just the property name qualified by the table alias.
+
+[[sql-alias-references]]
+=== Alias and property references
+
+In most cases the above alias injection is needed.
+For queries relating to more complex mappings, like composite properties, inheritance discriminators, collections etc., you can use specific aliases that allow Hibernate to inject the proper aliases.
+
+The following table shows the different ways you can use the alias injection.
+Please note that the alias names in the result are simply examples, each alias will have a unique and probably different name when used.
+
+.Alias injection names
+[width="100%",cols="23%,22%,55%",options="header",]
+|=======================================================================
+|Description |Syntax |Example
+|A simple property |`{[aliasname].[propertyname]`
+|`A_NAME as {item.name}`
+
+|A composite property |`{[aliasname].[componentname].[propertyname]}`
+|`CURRENCY as {item.amount.currency}, VALUE as {item.amount.value}`
+
+|Discriminator of an entity |`{[aliasname].class}`
+|`DISC as {item.class}`
+
+|All properties of an entity |`{[aliasname].*}` |`{item.*}`
+
+|A collection key |`{[aliasname].key}` |`ORGID as {coll.key}`
+
+|The id of an collection |`{[aliasname].id}` |`EMPID as {coll.id}`
+
+|The element of an collection |`{[aliasname].element}`
+|`XID as {coll.element}`
+
+|property of the element in the collection
+|`{[aliasname].element.[propertyname]}` |`NAME as {coll.element.name}`
+
+|All properties of the element in the collection
+|`{[aliasname].element.*}` |`{coll.element.*}`
+
+|All properties of the collection |`{[aliasname].*}` |`{coll.*}`
+|=======================================================================
+
+[[sql-dto-query]]
+=== Returning DTOs (Data Transfer Objects)
+
+It is possible to apply a `ResultTransformer` to native SQL queries, allowing it to return non-managed entities.
+
+[[sql-hibernate-dto-query-example]]
+.Hibernate native query selecting DTOs
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/PersonSummaryDTO.java[tags=sql-hibernate-dto-query-example, indent=0]
+
+include::{sourcedir}/SQLTest.java[tags=sql-hibernate-dto-query-example, indent=0]
+----
+====
+
+[NOTE]
+====
+There's no such equivalent in JPA because the `Query` interface doesn't define a `setResultTransformer` method equivalent.
+====
+
+The above query will return a list of `PersonSummaryDTO` which has been instantiated and injected the values of `id` and `name` into its corresponding properties or fields.
+
+[[sql-inheritance-query]]
+=== Handling inheritance
+
+Native SQL queries which query for entities that are mapped as part of an inheritance must include all properties for the base class and all its subclasses.
+
+[[sql-hibernate-inheritance-query-example]]
+.Hibernate native query selecting subclasses
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-hibernate-inheritance-query-example]
+----
+====
+
+[NOTE]
+====
+There's no such equivalent in JPA because the `Query` interface doesn't define an `addEntity` method equivalent.
+====
+
+[[sql-query-parameters]]
+=== Parameters
+
+Native SQL queries support positional as well as named parameters:
+
+[[sql-jpa-query-parameters-example]]
+.JPA native query with parameters
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-jpa-query-parameters-example]
+----
+====
+
+[[sql-hibernate-query-parameters-example]]
+.Hibernate native query with parameters
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-hibernate-query-parameters-example]
+----
+====
+
+[[sql-named-queries]]
+=== Named SQL queries
+
+Named SQL queries can also be defined during mapping and called in exactly the same way as a named HQL query.
+In this case, you do _not_ need to call `addEntity()` anymore.
+
+JPA defines the `javax.persistence.NamedNativeQuery` annotation for this purpose,
+and the Hibernate `org.hibernate.annotations.NamedNativeQuery` annotation extends it and adds the following attributes:
+
+`flushMode()`::
+	The flush mode for the query. By default, it uses the current Persistence Context flush mode.
+`cacheable()`::
+ 	Whether the query (results) is cacheable or not. By default, queries are not cached.
+`cacheRegion()`::
+	If the query results are cacheable, name the query cache region to use.
+`fetchSize()`::
+	The number of rows fetched by the JDBC Driver per database trip. The default value is given by the JDBC driver.
+`timeout()`::
+	The query timeout (in seconds). By default, there's no timeout.
+`callable()`::
+	Does the SQL query represent a call to a procedure/function? Default is false.
+`comment()`::
+	A comment added to the SQL query for tuning the execution plan.
+`cacheMode()`::
+	The cache mode used for this query. This refers to entities/collections returned by the query.
+	The default value is `CacheModeType.NORMAL`.
+`readOnly()`::
+	Whether the results should be read-only. By default, queries are not read-only so entities are stored in the Persistence Context.
+
+[[sql-scalar-named-queries]]
+==== Named SQL queries selecting scalar values
+
+To fetch a single column of given table, the named query looks as follows:
+
+[[sql-scalar-NamedNativeQuery-example]]
+.Single scalar value `NamedNativeQuery`
+====
+[source, JAVA, indent=0]
+----
+include::{modeldir}/Person.java[tags=sql-scalar-NamedNativeQuery-example]
+----
+====
+
+[[sql-jpa-scalar-named-query-example]]
+.JPA named native query selecting a scalar value
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-jpa-scalar-named-query-example]
+----
+====
+
+[[sql-hibernate-scalar-named-query-example]]
+.Hibernate named native query selecting a scalar value
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-hibernate-scalar-named-query-example]
+----
+====
+
+Selecting multiple scalar values is done like this:
+
+[[sql-multiple-scalar-values-NamedNativeQuery-example]]
+.Multiple scalar values `NamedNativeQuery`
+====
+[source, JAVA, indent=0]
+----
+include::{modeldir}/Person.java[tags=sql-multiple-scalar-values-NamedNativeQuery-example]
+----
+====
+
+Without specifying an explicit result type, Hibernate will assume an `Object` array:
+
+[[sql-jpa-multiple-scalar-values-named-query-example]]
+.JPA named native query selecting multiple scalar values
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-jpa-multiple-scalar-values-named-query-example]
+----
+====
+
+[[sql-hibernate-multiple-scalar-values-named-query-example]]
+.Hibernate named native query selecting multiple scalar values
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-hibernate-multiple-scalar-values-named-query-example]
+----
+====
+
+It's possible to use a DTO to store the resulting scalar values:
+
+[[sql-ConstructorResult-dto-example]]
+.DTO to store multiple scalar values
+====
+[source, JAVA, indent=0]
+----
+include::{modeldir}/PersonNames.java[tags=sql-ConstructorResult-dto-example]
+----
+====
+
+[[sql-multiple-scalar-values-dto-NamedNativeQuery-example]]
+.Multiple scalar values `NamedNativeQuery` with `ConstructorResult`
+====
+[source, JAVA, indent=0]
+----
+include::{modeldir}/Person.java[tags=sql-multiple-scalar-values-dto-NamedNativeQuery-example]
+----
+====
+
+[[sql-jpa-multiple-scalar-values-dto-named-query-example]]
+.JPA named native query selecting multiple scalar values into a DTO
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-jpa-multiple-scalar-values-dto-named-query-example]
+----
+====
+
+[[sql-hibernate-multiple-scalar-values-dto-named-query-example]]
+.Hibernate named native query selecting multiple scalar values into a DTO
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-hibernate-multiple-scalar-values-dto-named-query-example]
+----
+====
+
+[[sql-entity-named-queries]]
+==== Named SQL queries selecting entities
+
+Considering the following named query:
+
+[[sql-entity-NamedNativeQuery-example]]
+.Single-entity `NamedNativeQuery`
+====
+[source, JAVA, indent=0]
+----
+include::{modeldir}/Person.java[tags=sql-entity-NamedNativeQuery-example]
+----
+====
+
+The result set mapping declares the entities retrieved by this native query.
+Each field of the entity is bound to an SQL alias (or column name).
+All fields of the entity including the ones of subclasses and the foreign key columns of related entities have to be present in the SQL query.
+Field definitions are optional provided that they map to the same column name as the one declared on the class property.
+
+Executing this named native query can be done as follows:
+
+[[sql-jpa-entity-named-query-example]]
+.JPA named native entity query
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-jpa-entity-named-query-example]
+----
+====
+
+[[sql-hibernate-entity-named-query-example]]
+.Hibernate named native entity query
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-hibernate-entity-named-query-example]
+----
+====
+
+To join multiple entities, you need to use a `SqlResultSetMapping` for each entity the SQL query is going to fetch.
+
+[[sql-entity-associations-NamedNativeQuery-example]]
+.Joined-entities `NamedNativeQuery`
+====
+[source, JAVA, indent=0]
+----
+include::{modeldir}/Person.java[tags=sql-entity-associations-NamedNativeQuery-example]
+----
+====
+
+[[sql-jpa-entity-associations_named-query-example]]
+.JPA named native entity query with joined associations
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-jpa-entity-associations_named-query-example]
+----
+====
+
+[[sql-hibernate-entity-associations_named-query-example]]
+.Hibernate named native entity query with joined associations
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-hibernate-entity-associations_named-query-example]
+----
+====
+
+Finally, if the association to a related entity involve a composite primary key, a `@FieldResult` element should be used for each foreign key column.
+The `@FieldResult` name is composed of the property name for the relationship, followed by a dot ("."), followed by the name or the field or property of the primary key.
+For this example, the following entities are going to be used:
+
+[[sql-composite-key-entity-associations_named-query-example]]
+.Entity associations with composite keys and named native queries
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/Dimensions.java[tags=sql-composite-key-entity-associations_named-query-example, indent=0]
+
+include::{sourcedir}/Identity.java[tags=sql-composite-key-entity-associations_named-query-example, indent=0]
+
+include::{sourcedir}/Captain.java[tags=sql-composite-key-entity-associations_named-query-example, indent=0]
+
+include::{sourcedir}/SpaceShip.java[tags=sql-composite-key-entity-associations_named-query-example, indent=0]
+----
+====
+
+[[sql-jpa-composite-key-entity-associations_named-query-example]]
+.JPA named native entity query with joined associations and composite keys
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-jpa-composite-key-entity-associations_named-query-example]
+----
+====
+
+[[sql-hibernate-composite-key-entity-associations_named-query-example]]
+.Hibernate named native entity query with joined associations and composite keys
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SQLTest.java[tags=sql-hibernate-composite-key-entity-associations_named-query-example]
+----
+====
+
+[[sql-sp]]
+=== Using stored procedures for querying
+
+Hibernate provides support for queries via stored procedures and functions.
+A stored procedure arguments are declared using the `IN` parameter type, and the result can be either marked with an `OUT`
+parameter type, a `REF_CURSOR` or it could just return the result like a function.
+
+[[sql-sp-out-mysql-example]]
+.MySQL stored procedure with `OUT` parameter type
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/MySQLStoredProcedureTest.java[tags=sql-sp-out-mysql-example]
+----
+====
+
+To use this stored procedure, you can execute the following JPA 2.1 query:
+
+[[sql-jpa-call-sp-out-mysql-example]]
+.Calling a MySQL stored procedure with `OUT` parameter type using JPA
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/MySQLStoredProcedureTest.java[tags=sql-jpa-call-sp-out-mysql-example]
+----
+====
+
+[[sql-hibernate-call-sp-out-mysql-example]]
+.Calling a MySQL stored procedure with `OUT` parameter type using Hibernate
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/MySQLStoredProcedureTest.java[tags=sql-hibernate-call-sp-out-mysql-example]
+----
+====
+
+If the stored procedure outputs the result directly without an `OUT` parameter type:
+
+[[sql-sp-mysql-return-no-out-example]]
+.MySQL stored procedure without an `OUT` parameter type
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/MySQLStoredProcedureTest.java[tags=sql-sp-no-out-mysql-example]
+----
+====
+
+You can retrieve the results of the aforementioned MySQL stored procedure as follows:
+
+[[sql-jpa-call-sp-no-out-mysql-example]]
+.Calling a MySQL stored procedure and fetching the result set without an `OUT` parameter type using JPA
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/MySQLStoredProcedureTest.java[tags=sql-jpa-call-sp-no-out-mysql-example]
+----
+====
+
+[[sql-hibernate-call-sp-no-out-mysql-example]]
+.Calling a MySQL stored procedure and fetching the result set without an `OUT` parameter type using Hibernate
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/MySQLStoredProcedureTest.java[tags=sql-hibernate-call-sp-no-out-mysql-example]
+----
+====
+
+For a `REF_CURSOR` result sets, we'll consider the following Oracle stored procedure:
+
+[[sql-sp-ref-cursor-oracle-example]]
+.Oracle `REF_CURSOR` stored procedure
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/OracleStoredProcedureTest.java[tags=sql-sp-ref-cursor-oracle-example]
+----
+====
+
+[IMPORTANT]
+====
+`REF_CURSOR` result sets are only supported by Oracle and PostgreSQL because other database systems JDBC drivers don't support this feature.
+====
+
+This function can be called using the standard Java Persistence API:
+
+[[sql-jpa-call-sp-ref-cursor-oracle-example]]
+.Calling an Oracle `REF_CURSOR` stored procedure using JPA
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/OracleStoredProcedureTest.java[tags=sql-jpa-call-sp-ref-cursor-oracle-example]
+----
+====
+
+[[sql-hibernate-call-sp-ref-cursor-oracle-example]]
+.Calling an Oracle `REF_CURSOR` stored procedure using Hibernate
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/OracleStoredProcedureTest.java[tags=sql-hibernate-call-sp-ref-cursor-oracle-example]
+----
+====
+
+If the database defines an SQL function:
+
+[[sql-function-mysql-example]]
+.MySQL function
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/MySQLStoredProcedureTest.java[tags=sql-function-mysql-example]
+----
+====
+
+Because the current `StoredProcedureQuery` implementation doesn't yet support SQL functions,
+we need to use the JDBC syntax.
+
+[NOTE]
+====
+This limitation is acknowledged and will be addressed by the https://hibernate.atlassian.net/browse/HHH-10530[HHH-10530] issue.
+====
+
+[[sql-call-function-mysql-example]]
+.Calling a MySQL function
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/MySQLStoredProcedureTest.java[tags=sql-call-function-mysql-example]
+----
+====
+
+[NOTE]
+====
+Stored procedure queries cannot be paged with `setFirstResult()/setMaxResults()`.
+
+Since these servers can return multiple result sets and update counts,
+Hibernate will iterate the results and take the first result that is a result set as its return value, so everything else will be discarded.
+
+For SQL Server, if you can enable `SET NOCOUNT ON` in your procedure it will probably be more efficient, but this is not a requirement.
+====
+
+[[sql-crud]]
+=== Custom SQL for create, update, and delete
+
+Hibernate can use custom SQL for create, update, and delete operations.
+The SQL can be overridden at the statement level or individual column level.
+This section describes statement overrides.
+For columns, see <<chapters/domain/basic_types.adoc#mapping-column-read-and-write,Column transformers: read and write expressions>>.
+
+The following example shows how to define custom SQL operations using annotations.
+`@SQLInsert`, `@SQLUpdate` and `@SQLDelete` override the INSERT, UPDATE, DELETE statements of a given entity.
+For the SELECT clause, a `@Loader` must be defined along with a `@NamedNativeQuery` used for loading the underlying table record.
+
+For collections, Hibernate allows defining a custom `@SQLDeleteAll` which is used for removing all child records associated with a given parent entity.
+To filter collections, the `@Where` annotation allows customizing the underlying SQL WHERE clause.
+
+[[sql-custom-crud-example]]
+.Custom CRUD
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CustomSQLTest.java[tags=sql-custom-crud-example]
+----
+====
+
+In the example above, the entity is mapped so that entries are soft-deleted (the records are not removed from the database, but instead, a flag marks the row validity).
+The `Person` entity benefits from custom INSERT, UPDATE, and DELETE statements which update the `valid` column accordingly.
+The custom `@Loader` is used to retrieve only `Person` rows that are valid.
+
+The same is done for the `phones` collection. The `@SQLDeleteAll` and the `SQLInsert` queries are used whenever the collection is modified.
+
+[NOTE]
+====
+You also call a store procedure using the custom CRUD statements; the only requirement is to set the `callable` attribute to `true`.
+====
+
+To check that the execution happens correctly, Hibernate allows you to define one of those three strategies:
+
+* none: no check is performed; the store procedure is expected to fail upon constraint violations
+* count: use of row-count returned by the `executeUpdate()` method call to check that the update was successful
+* param: like count but using a `CallableStatement` output parameter.
+
+To define the result check style, use the `check` parameter.
+
+[TIP]
+====
+The parameter order is important and is defined by the order Hibernate handles properties.
+You can see the expected order by enabling debug logging, so Hibernate can print out the static SQL that is used to create, update, delete etc. entities.
+
+To see the expected sequence, remember to not include your custom SQL through annotations or mapping files as that will override the Hibernate generated static sql.
+====
+
+Overriding SQL statements for secondary tables is also possible using `@org.hibernate.annotations.Table` and the `sqlInsert`, `sqlUpdate`, `sqlDelete` attributes.
+
+[[sql-custom-crud-secondary-table-example]]
+.Overriding SQL statements for secondary tables
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CustomSQLSecondaryTableTest.java[tags=sql-custom-crud-secondary-table-example]
+----
+====
+
+[TIP]
+====
+The SQL is directly executed in your database, so you can use any dialect you like.
+This will, however, reduce the portability of your mapping if you use database specific SQL.
+====
+
+You can also use stored procedures for customizing the CRUD statements.
+
+Assuming the following stored procedure:
+
+[[sql-sp-soft-delete-example]]
+.Oracle stored procedure to soft-delete a given entity
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/OracleCustomSQLWithStoredProcedureTest.java[tags=sql-sp-soft-delete-example]
+----
+====
+
+The entity can use this stored procedure to soft-delete the entity in question:
+
+[[sql-sp-custom-crud-example]]
+.Customizing the entity delete statement to use the Oracle stored procedure= instead
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/OracleCustomSQLWithStoredProcedureTest.java[tags=sql-sp-custom-crud-example]
+----
+====
+
+[NOTE]
+====
+You need to set the `callable` attribute when using a stored procedure instead of an SQL statement.
+====

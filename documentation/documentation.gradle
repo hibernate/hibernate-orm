@@ -1,3 +1,4 @@
+import org.apache.tools.ant.filters.ReplaceTokens
 import org.asciidoctor.gradle.AsciidoctorTask
 
 /*
@@ -27,6 +28,8 @@ apply plugin: "java"
 apply plugin: "jdocbook"
 apply plugin: 'org.asciidoctor.convert'
 
+apply plugin: 'hibernate-matrix-testing'
+
 apply from: "${rootProject.projectDir}/utilities.gradle"
 
 defaultTasks 'buildDocs'
@@ -45,25 +48,66 @@ if ( JavaVersion.current().isJava8Compatible() ) {
 }
 
 dependencies {
-    ext.pressgangVersion = '3.0.0'
+	ext.pressgangVersion = '3.0.0'
 
-//	asciidoctor 'org.asciidoctor:asciidoctorj:1.5.2'
-    asciidoclet 'org.asciidoctor:asciidoclet:0.+'
+	//	asciidoctor 'org.asciidoctor:asciidoctorj:1.5.2'
+	asciidoclet 'org.asciidoctor:asciidoclet:0.+'
 
-    jdocbookXsl "org.jboss.pressgang:pressgang-xslt-ns:${pressgangVersion}"
-    jdocbookXsl "org.jboss.pressgang:pressgang-fonts:${pressgangVersion}"
-    jdocbookStyles "org.jboss.pressgang:pressgang-jdocbook-style:${pressgangVersion}"
+	jdocbookXsl "org.jboss.pressgang:pressgang-xslt-ns:${pressgangVersion}"
+	jdocbookXsl "org.jboss.pressgang:pressgang-fonts:${pressgangVersion}"
+	jdocbookStyles "org.jboss.pressgang:pressgang-jdocbook-style:${pressgangVersion}"
+
+	compile( libraries.jpa )
+	compile( project( ':hibernate-jpamodelgen' ) )
+
+	testCompile( 'org.apache.commons:commons-lang3:3.4' )
+
+	testCompile( project(':hibernate-core') )
+	testCompile( project(':hibernate-entitymanager') )
+	testCompile( project(':hibernate-ehcache') )
+	testCompile( project(':hibernate-spatial') )
+
+	testCompile( project(':hibernate-testing') )
+	testCompile( project(path: ':hibernate-entitymanager', configuration: 'tests') )
+
+	testRuntime( libraries.h2 )
+	testRuntime( libraries.hsqldb )
 }
 
+processTestResources.doLast( {
+	copy {
+		from( sourceSets.test.java.srcDirs ) {
+			include '**/*.properties'
+			include '**/*.xml'
+		}
+		into sourceSets.test.output.classesDir
+	}
+	copy {
+		ext.targetDir = file( "${buildDir}/resources/test" )
+		from file('src/test/resources')
+		into targetDir
+		filter( ReplaceTokens, tokens: dbBundle[db] );
+	}
+} )
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// grouping tasks - declaration, see below for task dependency definitions
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 task buildDocs {
     group 'Documentation'
     description 'Grouping task for performing all documentation building tasks'
 }
 
+task buildDocsForPublishing {
+	group 'Documentation'
+	description 'Grouping task for building all documentation for publishing (release)'
+}
 
 
-// aggregated JavaDoc ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// aggregated JavaDoc
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 final File javadocDir = mkdir( new File( (File) project.buildDir, 'javadocs' ) );
 
@@ -148,8 +192,6 @@ task aggregateJavadocs(type: Javadoc) {
     }
 }
 
-buildDocs.dependsOn aggregateJavadocs
-
 
 // jDocBook ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -215,8 +257,6 @@ task renderTopicalGuides(type: AsciidoctorTask, group: 'Documentation') {
 	attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify'
 }
 
-buildDocs.dependsOn renderTopicalGuides
-
 
 
 // Getting Started Guides (quick starts) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -231,7 +271,6 @@ task renderGettingStartedGuides(type: AsciidoctorTask, group: 'Documentation') {
 	attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify'
 }
 
-buildDocs.dependsOn renderGettingStartedGuides
 
 task buildTutorialZip(type: Zip) {
 	from 'src/main/asciidoc/quickstart/tutorials'
@@ -247,3 +286,69 @@ task buildTutorialZip(type: Zip) {
 
 renderGettingStartedGuides.dependsOn buildTutorialZip
 
+
+
+// Mapping Guides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+task renderMappingGuide(type: AsciidoctorTask, group: 'Documentation') {
+    description = 'Renders the Mapping Guides in HTML format using Asciidoctor.'
+    sourceDir = file( 'src/main/asciidoc/mapping' )
+    outputDir = new File("$buildDir/asciidoc/mapping/html")
+    backends "html5"
+    separateOutputDirs false
+    options logDocuments: true
+    //attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true, stylesheet: "css/hibernate.css"
+    attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true
+    resources {
+        from('src/main/asciidoc/') {
+            include 'images/**'
+            include 'css/**'
+        }
+    }
+}
+
+// User Guides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+final String[] versionComponents = version.split( '\\.' );
+final String majorMinorVersion = versionComponents[0] + '.' + versionComponents[1];
+
+task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {
+    description = 'Renders the User Guides in HTML format using Asciidoctor.'
+    sourceDir = file( 'src/main/asciidoc/userguide' )
+    outputDir = new File("$buildDir/asciidoc/userguide/html_single")
+    backends "html5"
+    separateOutputDirs false
+    options logDocuments: true
+    attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true, stylesheet: "css/hibernate.css", majorMinorVersion: majorMinorVersion
+    resources {
+        from('src/main/asciidoc/userguide/') {
+            include 'images/**'
+        }
+		from('src/main/style/asciidoctor') {
+			include 'images/**'
+		}
+		from('src/main/style/asciidoctor') {
+			include 'css/**'
+		}
+    }
+}
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// grouping tasks
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+buildDocs.dependsOn aggregateJavadocs
+buildDocs.dependsOn renderTopicalGuides
+buildDocs.dependsOn renderGettingStartedGuides
+buildDocs.dependsOn renderUserGuide
+// the jDocBook plugin already adds its main task as a dependency of the buildDocs task
+
+
+buildDocsForPublishing.dependsOn aggregateJavadocs
+buildDocsForPublishing.dependsOn renderTopicalGuides
+buildDocsForPublishing.dependsOn renderGettingStartedGuides
+buildDocsForPublishing.dependsOn renderUserGuide
+// only html-single to match what Asciidoctor currently offers
+//buildDocsForPublishing.dependsOn 'renderDocBook_integrationsGuide_en-US_html_single '
+buildDocsForPublishing.dependsOn renderDocBook_integrationsGuide

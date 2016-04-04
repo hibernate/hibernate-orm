@@ -1,0 +1,31 @@
+[[architecture]]
+== Architecture
+
+[[architecture-overview]]
+=== Overview
+
+image:images/architecture/data_access_layers.svg[Data Access Layers]
+
+Hibernate, as an ORM solution, effectively "sits between" the Java application data access layer and the Relational Database, as can be seen in the diagram above.
+The Java application makes use of the Hibernate APIs to load, store, query, etc its domain data.
+Here we will introduce the essential Hibernate APIs.
+This will be a brief introduction; we will discuss these contracts in detail later.
+
+As a JPA provider, Hibernate implements the Java Persistence API specifications and the association between JPA interfaces and Hibernate specific implementations can be visualized in the following diagram:
+
+image:images/architecture/JPA_Hibernate.svg[image]
+
+SessionFactory (`org.hibernate.SessionFactory`):: A thread-safe (and immutable) representation of the mapping of the application domain model to a database.
+Acts as a factory for `org.hibernate.Session` instances. The `EntityManagerFactory` is the JPA equivalent of a `SessionFactory` and basically those two converge into the same `SessionFactory` implementation.
++
+A `SessionFactory` is very expensive to create, so, for any given database, the application should have only one associated `SessionFactory`.
+The `SessionFactory` maintains services that Hibernate uses across all `Session(s)` such as second level caches, connection pools, transaction system integrations, etc.
+
+Session (`org.hibernate.Session`):: A single-threaded, short-lived object conceptually modeling a "Unit of Work" <<Bibliography.adoc#PoEAA,PoEAA>>.
+In JPA nomenclature, the `Session` is represented by an `EntityManager`.
++
+Behind the scenes, the Hibernate `Session` wraps a JDBC `java.sql.Connection` and acts as a factory for `org.hibernate.Transaction` instances.
+It maintains a generally "repeatable read" persistence context (first level cache) of the application domain model.
+
+Transaction (`org.hibernate.Transaction`):: A single-threaded, short-lived object used by the application to demarcate individual physical transaction boundaries.
+`EntityTransaction` is the JPA equivalent and both act as an abstraction API to isolate the application from the underlying transaction system in use (JDBC or JTA).

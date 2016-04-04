@@ -1,0 +1,270 @@
+[[spatial]]
+== Spatial
+:sourcedir: ../../../../../../test/java/org/hibernate/userguide/spatial
+:extrasdir: extras
+
+[[spatial-overview]]
+=== Overview
+
+Hibernate Spatial was originally developed as a generic extension to Hibernate for handling geographic data.
+Since 5.0, Hibernate Spatial is now part of Hibernate ORM project,
+and it allows you to deal with geographic data in a standardized way.
+
+Hibernate Spatial provides a standardized, cross-database interface to geographic data storage and query functions.
+It supports most of the functions described by the OGC Simple Feature Specification, and the supported databases are: Oracle 10g/11g, PostgreSql/PostGIS, MySQL, Microsoft SQL Server and H2/GeoDB,
+yet, not all databases support all the functions defined by Hibernate Spatial.
+
+Hibernate Spatial uses the Java Topology Suite (JTS) as its geometry model.
+JTS is an implementation of the OpenGIS Simple Features Implementation Specification for SQLv. 1.1 (SFS).
+This specification is implemented in most RDBMS with spatial data support.
+It is also a direct precursor to SQL/MM Part 3: Spatial (ISO/IEC 13249-3).
+
+The SFS specification defines a set of functions on geometries.
+Hibernate Spatial makes a subset of these functions available in HQL and in the Criteria Query API.
+
+[[spatial-configuration]]
+=== Configuration
+
+Hibernate Spatial requires some configuration prior to start using it.
+
+[[spatial-configuration-dependency]]
+==== Dependency
+
+You need to include the `hibernate-spatial` dependency in your build environment.
+For Maven, you need to add the following dependency:
+
+[[spatial-configuration-maven-example]]
+.Maven dependency
+====
+[source,xml]
+----
+<dependency>
+    <groupId>org.hibernate</groupId>
+    <artifactId>hibernate-spatial</artifactId>
+    <version>${hibernate.version}</version>
+</dependency>
+----
+====
+
+[[spatial-configuration-dialect]]
+==== Dialects
+
+Hibernate Spatial extends the Hibernate ORM dialects so that the spatial functions of the database are made available within HQL and JPQL.
+So, for instance, instead of using the `PostgreSQL82Dialect`, we use the Hibernate Spatial extension of that dialect which is the `PostgisDialect`.
+
+[[spatial-configuration-dialect-example]]
+.Specifying a spatial dialect
+====
+[source,xml]
+----
+<property
+    name="hibernate.dialect"
+    value="org.hibernate.spatial.dialect.postgis.PostgisDialect"
+/>
+----
+====
+
+Not all databases support all the functions defined by Hibernate Spatial.
+The table below provides an overview of the functions provided by each database.
+
+:yes: icon:check[role="green"]
+:no: icon:times[role="red"]
+[[spatial-configuration-dialect-features]]
+.Hibernate Spatial dialect function support
+[cols=",,,,,," |options="header",]
+|================================
+|Function | Description | PostgresSQL | Oracle 10g/11g | MySQL | SQLServer | GeoDB (H2)
+|Basic functions on Geometry | | | | | |
+|`int dimension(Geometry)` | SFS §2.1.1.1 | {yes} | {yes} | {yes} | {yes} | {yes}
+|`String geometrytype(Geometry)` | SFS §2.1.1.1 | {yes} | {yes} | {yes} | {yes} | {yes}
+|`int srid(Geometry)` | SFS §2.1.1.1 | {yes} | {yes} | {yes} | {yes} | {yes}
+|`Geometry envelope(Geometry)` | SFS §2.1.1.1 | {yes} | {yes} | {yes} | {yes} | {yes}
+|`String astext(Geometry)` | SFS §2.1.1.1 | {yes} | {yes} | {yes} | {yes} | {yes}
+|`byte[] asbinary(Geometry)` | SFS §2.1.1.1 | {yes} | {yes} | {yes} | {yes} | {yes}
+|`boolean isempty(Geometry)` | SFS §2.1.1.1 | {yes} | {yes} | {yes} | {yes} | {yes}
+|`boolean issimple(Geometry)` | SFS §2.1.1.1 | {yes} | {yes} | {yes} | {yes} | {yes}
+|`Geometry boundary(Geometry)` | SFS §2.1.1.1 | {yes} | {yes} | {no} | {yes} | {yes}
+|Functions for testing Spatial Relations between geometric objects | | | | | |
+|`boolean equals(Geometry, Geometry)` | SFS §2.1.1.2 | {yes} | {yes} | {yes} | {yes} | {yes}
+|`boolean disjoint(Geometry, Geometry)` | SFS §2.1.1.2 | {yes} | {yes} | {yes} | {yes} | {yes}
+|`boolean intersects(Geometry, Geometry)` | SFS §2.1.1.2 | {yes} | {yes} | {yes} | {yes} | {yes}
+|`boolean touches(Geometry, Geometry)` | SFS §2.1.1.2 | {yes} | {yes} | {yes} | {yes} | {yes}
+|`boolean crosses(Geometry, Geometry)` | SFS §2.1.1.2 | {yes} | {yes} | {yes} | {yes} | {yes}
+|`boolean within(Geometry, Geometry)` | SFS §2.1.1.2 | {yes} | {yes} | {yes} | {yes} | {yes}
+|`boolean contains(Geometry, Geometry)` | SFS §2.1.1.2 | {yes} | {yes} | {yes} | {yes} | {yes}
+|`boolean overlaps(Geometry, Geometry)` | SFS §2.1.1.2 | {yes} | {yes} | {yes} | {yes} | {yes}
+|`boolean relate(Geometry, Geometry, String)` | SFS §2.1.1.2 | {yes} | {yes} | {no} | {yes} | {yes}
+|Functions that support Spatial Analysis | | | | | |
+|`double distance(Geometry, Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {no} | {yes} | {yes}
+|`Geometry buffer(Geometry, double)` | SFS §2.1.1.3 | {yes} | {yes} | {no} | {yes} | {yes}
+|`Geometry convexhull(Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {no} | {yes} | {yes}
+|`Geometry intersection(Geometry, Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {no} | {yes} | {yes}
+|`Geometry geomunion(Geometry, Geometry)` | SFS §2.1.1.3 (renamed from union) | {yes} | {yes} | {no} | {yes} | {yes}
+|`Geometry difference(Geometry, Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {no} | {yes} | {yes}
+|`Geometry symdifference(Geometry, Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {no} | {yes} | {yes}
+|Common non-SFS functions | | | | | |
+|`boolean dwithin(Geometry, Geometry, double)` | Returns true if the geometries are within the specified distance of one another | {yes} | {yes} | {no} | {no} | {yes}
+|`Geometry transform(Geometry, int)` | Returns a new geometry with its coordinates transformed to the SRID referenced by the integer parameter | {yes} | {yes} | {no} | {no} | {no}
+|Spatial aggregate Functions | | | | | |
+|`Geometry extent(Geometry)` | Returns a bounding box that bounds the set of returned geometries | {yes} | {yes} | {no} | {no} | {no}
+|================================
+
+[[spatial-configuration-dialect-postgis]]
+Postgis::
+For Postgis from versions 1.3 and later, the best dialect to use is `org.hibernate.spatial.dialect.postgis.PostgisDialect`.
++
+This translates the HQL spatial functions to the Postgis SQL/MM-compliant functions.
+For older, pre v1.3 versions of Postgis, which are not SQL/MM compliant, the dialect `org.hibernate.spatial.dialect.postgis.PostgisNoSQLMM` is provided.
++
+This dialect depends on the JDBC extensions in postgis.jar (see the http://postgis.net/docs/postgis_installation.html#id336398[Postgis documentation]).
+
+[IMPORTANT]
+====
+Beware of classpath problems in a Java EE containers where the JDBC drivers live in a different classpath than the Postgis JDBC extensions and/or Hibernate Spatial.
+For JBoss, some users found https://gist.github.com/bjornharrtell/3054462[this post] helpful.
+====
+[[spatial-configuration-dialect-mysql]]
+MySQL::
+There are several dialects for MySQL:
+
+`MySQLSpatialDialect`:::
+	a spatially-extended version of Hibernate `MySQLDialect`
+`MySQLSpatialInnoDBDialect`:::
+	a spatially-extended version of Hibernate `MySQLInnoDBDialect`
+`MySQLSpatial56Dialect`:::
+	a spatially-extended version of Hibernate `MySQL5DBDialect`.
+`MySQLSpatial5InnoDBDialect`:::
+	the same as `MySQLSpatial56Dialect`, but with support for the InnoDB storage engine.
+
+[NOTE]
+====
+MySQL versions before 5.6.1 had only limited support for spatial operators.
+Most operators only took account of the minimum bounding rectangles (MBR) of the geometries, and not the geometries themselves.
+
+This changed in version 5.6.1 were MySQL introduced `ST_*` spatial operators.
+The dialects `MySQLSpatial56Dialect` and `MySQLSpatial5InnoDBDialect` use these newer, more precise operators.
+
+These dialects may therefore produce results that differ from that of the other spatial dialects.
+
+For more information, see this page in the MySQL reference guide (esp. the section https://dev.mysql.com/doc/refman/5.7/en/spatial-relation-functions.html[Functions That Test Spatial Relations Between Geometry Objects])
+====
+[[spatial-configuration-dialect-oracle]]
+Oracle10g/11g::
+
+There is currently only one Oracle spatial dialect: `OracleSpatial10gDialect` which extends the Hibernate dialect `Oracle10gDialect`.
+This dialect has been tested on both Oracle 10g and Oracle 11g with the `SDO_GEOMETRY` spatial database type.
++
+This dialect is the only dialect that can be configured using these Hibernate properties:
++
+`hibernate.spatial.connection_finder`:::
+the fully-qualified classname for the Connection finder for this Dialect (see below).
+
+.The `ConnectionFinder` interface
+[NOTE]
+====
+The `SDOGeometryType` requires access to an `OracleConnection` object when converting a geometry to SDO_GEOMETRY.
+In some environments, however, the `OracleConnection` is not available (e.g. because a Java EE container or connection pool proxy wraps the connection object in its own `Connection` implementation).
+A `ConnectionFinder` knows how to retrieve the `OracleConnection` from the wrapper or proxy Connection object that is passed into prepared statements.
+
+The default implementation will, when the passed object is not already an `OracleConnection`, attempt to retrieve the `OracleConnection` by recursive reflection.
+It will search for methods that return `Connection` objects, execute these methods and check the result.
+If the result is of type `OracleConnection` the object is returned, otherwise it recurses on it.
+
+In may cases this strategy will suffice.
+If not, you can provide your own implementation of this interface on the class path, and configure it in the `hibernate.spatial.connection_finder` property.
+Note that implementations must be thread-safe and have a default no-args constructor.
+====
+
+`hibernate.spatial.ogc_strict`::: true to use the OGC-compliant functions on SDO_GEOMETRY (see below)
+.OGC Compliance Setting
+[NOTE]
+====
+The Oracle Spatial dialect can be configured to run in either OGC strict or non-strict mode.
+In OGC strict mode, the Open Geospatial compliant functions of Oracle Spatial are used in spatial operations (they exists in Oracle 10g, but are not documented).
+In non-strict mode, the usual Oracle Spatial functions are used directly, and mimic the OGC semantics.The default is OGC strict mode.
+You can change this to non-strict mode by setting the hibernate.spatial.ogc_strict property to false.
+
+Note that changing from strict to non-strict mode changes the semantics of the spatial operation.
+We have attempted to implement the OGC semantics as well we could using the standard Oracle Spatial operators, but this was not possible in all cases.
+On the plus side, non-strict mode should be faster in most cases.
+====
+
+SQL Server::
+The dialect `SqlServer2008Dialect` supports the `GEOMETRY` type in SQL Server 2008 and later.
+
+[NOTE]
+====
+The `GEOGRAPHY` type is not currently supported.
+====
+
+GeoDB (H2)::
+The `GeoDBDialect` supports the GeoDB a spatial extension of the H2 in-memory database.
+[NOTE]
+====
+The dialect has been tested with GeoDB version 0.7
+====
+
+[[spatial-types]]
+=== Types
+
+Hibernate Spatial comes with the following types:
+
+jts_geometry::
+	Handled by `org.hibernate.spatial.JTSGeometryType` it maps a database geometry column type to a `com.vividsolutions.jts.geom.Geometry` entity property type.
+geolatte_geometry::
+	Handled by `org.hibernate.spatial.GeolatteGeometryType`, it maps a database geometry column type to an `org.geolatte.geom.Geometry` entity property type.
+
+The following entity uses the `jts_geometry` to map the PostgreSQL geometry type to a `com.vividsolutions.jts.geom.Point`.
+
+[[spatial-types-mapping-example]]
+.Type mapping
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SpatialTest.java[tags=spatial-types-mapping-example]
+----
+====
+
+When creating such entity:
+
+[[spatial-types-point-creation-example]]
+.Creating a Point
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SpatialTest.java[tags=spatial-types-point-creation-example]
+----
+====
+
+Hibernate generates the following SQL statement:
+
+[[spatial-types-point-creation-example]]
+.Creating a Point
+====
+[source, SQL, indent=0]
+----
+include::{extrasdir}/spatial-types-point-creation-example.sql[]
+----
+====
+
+Hibernate Spatial defines many query functions that are available both in HQL and JPQL queries.
+
+[[spatial-types-query-example]]
+.Querying the geometry
+====
+[source, SQL, indent=0]
+----
+include::{sourcedir}/SpatialTest.java[tags=spatial-types-query-example]
+----
+====
+
+This JPQL query generates the following SQL statement:
+
+[[spatial-types-sql-query-example]]
+.Underlying SQL query
+====
+[source, SQL, indent=0]
+----
+include::{extrasdir}/spatial-types-sql-query-example.sql[]
+----
+====

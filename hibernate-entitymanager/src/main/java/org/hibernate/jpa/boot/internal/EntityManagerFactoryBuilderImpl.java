@@ -937,6 +937,11 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 
 		@Override
+		public void sessionFactoryAboutToClose(SessionFactory factory) {
+			// nothing to do
+		}
+
+		@Override
 		public void sessionFactoryClosed(SessionFactory sessionFactory) {
 			SessionFactoryImplementor sfi = ( (SessionFactoryImplementor) sessionFactory );
 			sfi.getServiceRegistry().destroy();

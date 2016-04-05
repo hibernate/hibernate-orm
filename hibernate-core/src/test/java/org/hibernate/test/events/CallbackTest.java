@@ -84,16 +84,22 @@ public class CallbackTest extends BaseCoreFunctionalTestCase {
 
 		sessionFactory().close();
 
+		assertEquals( "observer not notified of aboutToClose", 1, observer.aboutToCloseCount );
 		assertEquals( "observer not notified of close", 1, observer.closedCount );
 		assertEquals( "listener not notified of close", 1, listener.destoryCount );
 	}
 
 	private static class TestingObserver implements SessionFactoryObserver {
 		private int creationCount = 0;
+		private int aboutToCloseCount = 0;
 		private int closedCount = 0;
 
 		public void sessionFactoryCreated(SessionFactory factory) {
 			creationCount++;
+		}
+
+		public void sessionFactoryAboutToClose(SessionFactory factory) {
+			aboutToCloseCount++;
 		}
 
 		public void sessionFactoryClosed(SessionFactory factory) {

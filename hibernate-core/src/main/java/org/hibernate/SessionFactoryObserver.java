@@ -22,6 +22,14 @@ public interface SessionFactoryObserver extends Serializable {
 	public void sessionFactoryCreated(SessionFactory factory);
 
 	/**
+	 * Callback to indicate that the given factory is about to be closed. This factory is open
+	 * when this method is called.
+	 *
+	 * @param factory The factory closed.
+	 */
+	public void sessionFactoryAboutToClose(SessionFactory factory);
+
+	/**
 	 * Callback to indicate that the given factory has been closed.  Care should be taken
 	 * in how (if at all) the passed factory reference is used since it is closed.
 	 *

@@ -83,17 +83,9 @@ Names a prefix used to define arbitrary JNDI `javax.naming.InitialContext` prope
 
 These properties are passed along to `javax.naming.InitialContext#InitialContext(java.util.Hashtable)`
 
-|`hibernate.connection.acquisition_mode` | `immediate` |
-
-Specifies how Hibernate should acquire JDBC connections. The possible values are given by `org.hibernate.ConnectionAcquisitionMode`.
-
-Should generally only configure this or `hibernate.connection.release_mode`, not both.
-
 |`hibernate.connection.release_mode` | `auto` (default value) |
 
 Specifies how Hibernate should release JDBC connections. The possible values are given by the current transaction mode (`after_transaction` for JDBC transactions and `after_statement` for JTA transactions).
-
-Should generally only configure this or `hibernate.connection.acquisition_mode`, not both.
 
 |===================================================================================================================================================================================================================================
 
@@ -238,7 +230,6 @@ Enable nullability checking. Raises an exception if a property marked as not-nul
 Default to `false` if Bean Validation is present in the classpath and Hibernate Annotations is used, `true` otherwise.
 
 3+|Misc options
-|`hibernate.create_empty_composites.enabled` |`true` or `false` (default value) | Enable instantiation of composite/embeddable objects when all of its attribute values are `null`. The default (and historical) behavior is that a `null` reference will be used to represent the composite when all of its attributes are `null`.
 |`hibernate.entity_dirtiness_strategy` | fully-qualified class name or an actual `CustomEntityDirtinessStrategy` instance | Setting to identify a `org.hibernate.CustomEntityDirtinessStrategy` to use.
 |`hibernate.default_entity_mode` |`pojo` (default value) or `dynamic-map` |Default `EntityMode` for entity representation for all sessions opened from this `SessionFactory`, defaults to `pojo`.
 |===================================================================================================================================================================================================================================
@@ -297,7 +288,6 @@ This defines a global setting, which can then be controlled per parameter via `o
 
 Values are `true` (pass the NULLs) or `false` (do not pass the NULLs).
 
-|`hibernate.jdbc.log.warnings` | `true` or `false` |Enable fetching JDBC statement warning for logging. Default value is given by `org.hibernate.dialect.Dialect#isJdbcLogWarningsEnabledByDefault()`.
 |`hibernate.session_factory.statement_inspector` | A fully-qualified class name, an instance, or a `Class` object reference a|
 
 Names a `org.hibernate.resource.jdbc.spi.StatementInspector` implementation to be applied to every `Session` created by the current `SessionFactory`.
@@ -580,11 +570,6 @@ The JPA variant of `hibernate.hbm2dll.create_namespaces`. Specifies whether the 
 The value of this boolean property should be set to `true` if the persistence provider is to create schemas in the database or to generate DDL that contains "CREATE SCHEMA" commands.
 If this property is not supplied (or is explicitly `false`), the provider should not attempt to create database schemas.
 
-|`hibernate.hbm2ddl.schema_filter_provider` | |
-
-Used to specify the `org.hibernate.tool.schema.spi.SchemaFilterProvider` to be used by `create`, `drop`, `migrate`, and `validate` operations on the database schema.
-`SchemaFilterProvider` provides filters that can be used to limit the scope of these operations to specific namespaces, tables and sequences. All objects are included by default.
-
 |`hibernate.hbm2ddl.delimiter` | `;` |Identifies the delimiter to use to separate schema management statements in script outputs.
 
 |`hibernate.schema_management_tool` |A schema name |Used to specify the `org.hibernate.tool.schema.spi.SchemaManagementTool` to use for performing schema management. The default is to use `org.hibernate.tool.schema.internal.HibernateSchemaManagementTool`
@@ -717,6 +702,6 @@ enabled:: Do the population
 disabled:: Do not do the population
 ignoreUnsupported:: Do the population, but ignore any non-JPA features that would otherwise result in the population failing (e.g. `@Any` annotation).
 
-|`hibernate.delay_cdi_access`| `true` or `false` (default value) | Defines delayed access to CDI `BeanManager`. Starting in 5.1 the preferred means for CDI bootstrapping is through `org.hibernate.jpa.event.spi.jpa.ExtendedBeanManager`.
+|`hibernate.delay_cdi_access`| `true` or `false` (default value) | Defines delayed access to CDI `BeanManager`.
 |=====================================================================================================================================================================================================================================================
 

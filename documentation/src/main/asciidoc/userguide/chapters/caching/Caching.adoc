@@ -675,12 +675,11 @@ Some options in the cache configuration can also be overridden directly through 
 `hibernate.cache.infinispan._something_.eviction.max_entries`:: Maximum number of entries in the cache.
 `hibernate.cache.infinispan._something_.expiration.lifespan`:: Lifespan of entry from insert into cache (in milliseconds)
 `hibernate.cache.infinispan._something_.expiration.max_idle`:: Lifespan of entry from last read/modification (in milliseconds)
-`hibernate.cache.infinispan._something_.expiration.wake_up_interval`:: Period of thread checking expired entries.
+`hibernate.cache.infinispan._something_.eviction.wake_up_interval`:: Period of thread checking expired entries.
 `hibernate.cache.infinispan.statistics`:: Globally enables/disable Infinispan statistics collection, and their exposure via JMX.
 
 [NOTE]
 ====
-In versions prior to 5.1, `hibernate.cache.infinispan._something_.expiration.wake_up_interval` was called `hibernate.cache.infinispan._something_.eviction.wake_up_interval`.
 Eviction settings are checked upon each cache insert, it is expiration that needs to be triggered periodically.
 The old property still works, but its use is deprecated.
 ====

@@ -76,7 +76,7 @@ public class MapJoinTest2 extends BaseEntityManagerFunctionalTestCase {
 				//foreignKey = @ForeignKey,
 				joinColumns = @JoinColumn(name = "batch_id", nullable = false))
 		@MapKeyJoinColumn(name = "node_id")
-		private Map<Node, BatchNodeMetadata> batchNodeMetadata = new HashMap<>();
+		private Map<Node, BatchNodeMetadata> batchNodeMetadata = new HashMap<Node, BatchNodeMetadata>();
 	}
 
 	@Entity

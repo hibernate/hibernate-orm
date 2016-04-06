@@ -162,7 +162,7 @@ public class CacheLazyLoadNoTransTest extends BaseNonConfigCoreFunctionalTestCas
 
 		@ManyToMany(mappedBy = "applications")
 		@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-		private List<Customer> customers = new ArrayList<>();
+		private List<Customer> customers = new ArrayList<Customer>();
 	}
 
 	@Entity
@@ -176,11 +176,11 @@ public class CacheLazyLoadNoTransTest extends BaseNonConfigCoreFunctionalTestCas
 
 		@ManyToMany
 		@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-		private List<Application> applications = new ArrayList<>();
+		private List<Application> applications = new ArrayList<Application>();
 
 		@OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
 		@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-		private List<Item> boughtItems = new ArrayList<>();
+		private List<Item> boughtItems = new ArrayList<Item>();
 	}
 
 	@Entity

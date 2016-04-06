@@ -100,7 +100,7 @@ public class InheritanceManyToManyForeignKeyTest extends BaseNonConfigCoreFuncti
 	public static abstract class AbstractEventsEntityModel {
 
 		@ManyToMany(fetch = FetchType.LAZY )
-		private List<LocalDateEvent> events = new ArrayList<>(  );
+		private List<LocalDateEvent> events = new ArrayList<LocalDateEvent>(  );
 
 		public List<LocalDateEvent> getEvents() {
 			return events;

@@ -263,7 +263,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			}
 
 			@Override
-			public void sessionFactoryAboutToClose(SessionFactory factory) {
+			public void sessionFactoryBeforeClose(SessionFactory factory) {
 			}
 
 			@Override
@@ -1048,7 +1048,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			return;
 		}
 
-		observer.sessionFactoryAboutToClose( this );
+		observer.sessionFactoryBeforeClose( this );
 
 		LOG.closing();
 

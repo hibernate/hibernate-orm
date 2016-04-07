@@ -48,7 +48,7 @@ public class SessionFactoryObserverTest {
 	public static class GoofySessionFactoryObserver implements SessionFactoryObserver {
 		public void sessionFactoryCreated(SessionFactory factory) {
 		}
-		public void sessionFactoryAboutToClose(SessionFactory factory) {
+		public void sessionFactoryBeforeClose(SessionFactory factory) {
 		}
 
 		public void sessionFactoryClosed(SessionFactory factory) {

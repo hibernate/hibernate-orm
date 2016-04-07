@@ -37,13 +37,13 @@ public class SessionFactoryObserverChain implements SessionFactoryObserver {
 	}
 
 	@Override
-	public void sessionFactoryAboutToClose(SessionFactory factory) {
+	public void sessionFactoryBeforeClose(SessionFactory factory) {
 		if ( observers == null ) {
 			return;
 		}
 
 		for ( SessionFactoryObserver observer : observers ) {
-			observer.sessionFactoryAboutToClose( factory );
+			observer.sessionFactoryBeforeClose( factory );
 		}
 	}
 

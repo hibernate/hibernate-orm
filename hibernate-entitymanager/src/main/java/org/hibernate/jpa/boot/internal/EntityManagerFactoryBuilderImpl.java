@@ -937,7 +937,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 
 		@Override
-		public void sessionFactoryAboutToClose(SessionFactory factory) {
+		public void sessionFactoryBeforeClose(SessionFactory factory) {
 			// nothing to do
 		}
 

@@ -350,7 +350,7 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	protected String getDropSequenceString(String sequenceName) {
-		return "drop sequence " + sequenceName;
+		return "drop sequence " + sequenceName + " if exists";
 	}
 
 	@Override

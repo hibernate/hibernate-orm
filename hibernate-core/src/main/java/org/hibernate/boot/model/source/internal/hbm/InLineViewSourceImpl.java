@@ -28,8 +28,8 @@ public class InLineViewSourceImpl
 			String logicalName,
 			String comment) {
 		super( mappingDocument );
-		this.schemaName = schemaName;
-		this.catalogName = catalogName;
+		this.schemaName = determineSchemaName( mappingDocument, schemaName );
+		this.catalogName = determineCatalogName( mappingDocument, catalogName );
 		this.selectStatement = selectStatement;
 		this.logicalName = logicalName;
 		this.comment = comment;
@@ -58,5 +58,13 @@ public class InLineViewSourceImpl
 	@Override
 	public String getComment() {
 		return comment;
+	}
+
+	private String determineCatalogName(MappingDocument mappingDocument, String catalogName) {
+		return catalogName != null ? catalogName : mappingDocument.getDocumentRoot().getCatalog();
+	}
+
+	private String determineSchemaName(MappingDocument mappingDocument, String schemaName) {
+		return schemaName != null ? schemaName : mappingDocument.getDocumentRoot().getSchema();
 	}
 }

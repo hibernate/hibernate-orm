@@ -138,11 +138,13 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testImmutableAttribute(){
 		configuration().addAttributeConverter( ExifConverter.class);
+		configuration().addAttributeConverter( CaptionConverter.class);
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Photo photo = new Photo();
 		photo.setName( "cat.jpg");
 		photo.setMetadata( new Exif(Collections.singletonMap( "fake", "first value")));
+		photo.setCaption( new Caption( "Cat.jpg caption" ) );
 		s.persist(photo);
 		tx.commit();
 		s.close();
@@ -153,6 +155,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		Photo cat = s.get(Photo.class, photo.getId());
 		assertNotNull(cat);
 		cat.getMetadata().getAttributes().put( "fake", "second value");
+		cat.getCaption().setText( "new caption" );
 		s.save(cat);
 		tx.commit();
 		s.close();
@@ -162,7 +165,8 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		tx = s.beginTransaction();
 		cat = s.get(Photo.class, photo.getId());
 		assertNotNull(cat);
-		assertEquals("Attribute should not have changed", "first value", cat.getMetadata().getAttribute( "fake"));
+		assertEquals("Metadata should not have changed", "first value", cat.getMetadata().getAttribute( "fake"));
+		assertEquals("Caption should not have changed", "Cat.jpg caption", cat.getCaption().getText());
 		tx.commit();
 		s.close();
 	}
@@ -170,11 +174,13 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testChangeImmutableAttribute(){
 		configuration().addAttributeConverter( ExifConverter.class);
+		configuration().addAttributeConverter( CaptionConverter.class);
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Photo photo = new Photo();
 		photo.setName( "cat.jpg");
 		photo.setMetadata( new Exif(Collections.singletonMap( "fake", "first value")));
+		photo.setCaption( new Caption( "Cat.jpg caption" ) );
 		s.persist(photo);
 		tx.commit();
 		s.close();
@@ -185,6 +191,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		Photo cat = s.get(Photo.class, photo.getId());
 		assertNotNull(cat);
 		cat.setMetadata( new Exif(Collections.singletonMap( "fake", "second value")));
+		cat.setCaption( new Caption( "new caption" ) );
 		s.save(cat);
 		tx.commit();
 		s.close();
@@ -194,7 +201,8 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		tx = s.beginTransaction();
 		cat = s.get(Photo.class, photo.getId());
 		assertNotNull(cat);
-		assertEquals("Attribute should have changed", "second value", cat.getMetadata().getAttribute( "fake"));
+		assertEquals("Metadata should have changed", "second value", cat.getMetadata().getAttribute( "fake"));
+		assertEquals("Caption should have changed", "new caption", cat.getCaption().getText());
 		tx.commit();
 		s.close();
 	}

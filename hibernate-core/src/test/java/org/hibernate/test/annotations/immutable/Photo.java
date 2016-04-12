@@ -1,6 +1,7 @@
 package org.hibernate.test.annotations.immutable;
 
 import java.io.Serializable;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -18,6 +19,8 @@ public class Photo implements Serializable {
 	private String name;
 
 	private Exif metadata;
+
+	private Caption caption;
 
 	@Id
 	@GeneratedValue
@@ -45,4 +48,12 @@ public class Photo implements Serializable {
 		this.metadata = metadata;
 	}
 
+	@Convert(converter = CaptionConverter.class)
+	public Caption getCaption() {
+		return caption;
+	}
+
+	public void setCaption(Caption caption) {
+		this.caption = caption;
+	}
 }

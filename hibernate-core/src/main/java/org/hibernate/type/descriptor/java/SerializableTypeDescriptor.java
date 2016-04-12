@@ -45,11 +45,11 @@ public class SerializableTypeDescriptor<T extends Serializable> extends Abstract
 	}
 
 	public SerializableTypeDescriptor(Class<T> type) {
-		super( type, createMutabiltyPlan( type ) );
+		super( type, createMutabilityPlan( type ) );
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	private static <T> MutabilityPlan<T> createMutabiltyPlan(Class<T> type) {
+	private static <T> MutabilityPlan<T> createMutabilityPlan(Class<T> type) {
 		if ( type.isAnnotationPresent( Immutable.class ) ) {
 			return ImmutableMutabilityPlan.INSTANCE;
 		}

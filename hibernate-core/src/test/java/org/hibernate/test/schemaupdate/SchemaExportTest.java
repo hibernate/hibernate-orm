@@ -6,6 +6,9 @@
  */
 package org.hibernate.test.schemaupdate;
 
+import java.io.File;
+import java.nio.file.Files;
+
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
@@ -14,13 +17,18 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.Target;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -133,4 +141,24 @@ public abstract class SchemaExportTest extends BaseUnitTestCase {
         schemaExport.drop( true, true );
         assertEquals( 0, schemaExport.getExceptions().size() );
     }
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-10678")
+	@RequiresDialectFeature(value = DialectChecks.SupportSchemaCreation.class)
+	public void testHibernateMappingSchemaPropertyIsNotIgnored() throws Exception {
+		File output = File.createTempFile( "update_script", ".sql" );
+		output.deleteOnExit();
+
+		final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
+				.addResource( "org/hibernate/test/schemaupdate/mapping2.hbm.xml" )
+				.buildMetadata();
+		metadata.validate();
+
+		final SchemaExport schemaExport = createSchemaExport( metadata, serviceRegistry );
+		schemaExport.setOutputFile( output.getAbsolutePath() );
+		schemaExport.execute( Target.SCRIPT, SchemaExport.Type.CREATE );
+
+		String fileContent = new String( Files.readAllBytes( output.toPath() ) );
+		assertThat( fileContent, fileContent.toLowerCase().contains( "create table schema1.version" ), is( true ) );
+	}
 }

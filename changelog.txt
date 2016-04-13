@@ -5,7 +5,16 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
-Changes in version 4.2.21 (2015.12.07)
+Changes in version 4.2.23 (2015.04.12)
+------------------------------------------------------------------------------------------------------------------------
+
+** Bug
+    [HHH-10563] - Significant String use/duplication associated with subselect fetch
+    [BZ-1299734] - Derived identity tests failing with DB2 
+    [BZ-1299842] - Skip tests for HHH-10161 on Sybase 
+    [BZ-1326564] - AliasTest and MappingReorderedAliasTest fail on DB2 
+
+Changes in version 4.2.22 (2015.12.07)
 ------------------------------------------------------------------------------------------------------------------------
 
 ** Bug

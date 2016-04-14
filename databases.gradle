@@ -63,7 +63,7 @@ ext {
                         'jdbc.driver': 'com.microsoft.sqlserver.jdbc.SQLServerDriver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
-                        'jdbc.url'   : 'jdbc:sqlserver://localhost;instance=SQLEXPRESS;databaseName=hibernate_orm_test;user=sa;password=adm1n'
+                        'jdbc.url'   : 'jdbc:sqlserver://localhost;instance=SQLEXPRESS;databaseName=hibernate_orm_test'
                 ]
         ]
 }

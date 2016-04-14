@@ -301,7 +301,13 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 
 		//NOTE : Foreign keys must be created *afterQuery* all tables of all namespaces for cross namespace fks. see HHH-10420
 		for ( Namespace namespace : database.getNamespaces() ) {
+			if ( !schemaFilter.includeNamespace( namespace ) ) {
+				continue;
+			}
 			for ( Table table : namespace.getTables() ) {
+				if ( !schemaFilter.includeTable( table ) ) {
+					continue;
+				}
 				final TableInformation tableInformation = existingDatabase.getTableInformation( table.getQualifiedTableName() );
 				if ( tableInformation != null && !tableInformation.isPhysicalTable() ) {
 					continue;

@@ -61,8 +61,8 @@ public class SchemaManagementToolCoordinator {
 				ExceptionHandlerLoggedImpl.INSTANCE
 		);
 
-		performDatabaseAction( actions.getDatabaseAction(), metadata, tool, serviceRegistry, executionOptions );
 		performScriptAction( actions.getScriptAction(), metadata, tool, serviceRegistry, executionOptions );
+		performDatabaseAction( actions.getDatabaseAction(), metadata, tool, serviceRegistry, executionOptions );
 
 		if ( actions.getDatabaseAction() == Action.CREATE_DROP ) {
 			//noinspection unchecked

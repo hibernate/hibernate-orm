@@ -43,6 +43,13 @@ ext {
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
                         'jdbc.url'   : 'jdbc:mariadb://localhost/hibernate_orm_test'
-                ]
+                ],
+                postgis : [
+                        'db.dialect' : 'org.hibernate.spatial.dialect.postgis.PostgisDialect',
+                        'jdbc.driver': 'org.postgresql.Driver',
+                        'jdbc.user'  : 'hibernate_orm_test',
+                        'jdbc.pass'  : 'hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:postgresql:hibernate_orm_test'
+                ],
         ]
 }

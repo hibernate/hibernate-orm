@@ -9,7 +9,6 @@ package org.hibernate.userguide.spatial;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.hibernate.annotations.Type;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.spatial.dialect.postgis.PostgisDialect;
 
@@ -17,9 +16,12 @@ import org.hibernate.testing.RequiresDialect;
 import org.junit.Test;
 
 import com.vividsolutions.jts.geom.Coordinate;
+//tag::spatial-types-mapping-example[]
 import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.io.ParseException;
-import com.vividsolutions.jts.io.WKTReader;
+
+//end::spatial-types-mapping-example[]
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.Polygon;
 
 import static org.junit.Assert.assertEquals;
 
@@ -31,6 +33,8 @@ import static org.hibernate.userguide.util.TransactionUtil.doInJPA;
 @RequiresDialect(PostgisDialect.class)
 public class SpatialTest extends BaseEntityManagerFunctionalTestCase {
 
+    GeometryFactory geometryFactory = new GeometryFactory();
+
     @Override
     protected Class<?>[] getAnnotatedClasses() {
         return new Class<?>[] {
@@ -41,19 +45,16 @@ public class SpatialTest extends BaseEntityManagerFunctionalTestCase {
     @Test
     public void test() {
         Long addressId = doInJPA( this::entityManagerFactory, entityManager -> {
-            try {
-                //tag::spatial-types-point-creation-example[]
-                Event event = new Event();
-                event.setId( 1L);
-                event.setName( "Hibernate ORM presentation");
-                event.setLocation( (Point) new WKTReader().read( "POINT(10 5)"));
+            //tag::spatial-types-point-creation-example[]
+            Event event = new Event();
+            event.setId( 1L);
+            event.setName( "Hibernate ORM presentation");
+            Point point = geometryFactory.createPoint( new Coordinate( 10, 5 ) );
+            event.setLocation( point );
 
-                entityManager.persist( event );
-                //end::spatial-types-point-creation-example[]
-                return event.getId();
-            } catch (ParseException e) {
-                throw new RuntimeException(e);
-            }
+            entityManager.persist( event );
+            //end::spatial-types-point-creation-example[]
+            return event.getId();
         });
 
         doInJPA( this::entityManagerFactory, entityManager -> {
@@ -64,63 +65,62 @@ public class SpatialTest extends BaseEntityManagerFunctionalTestCase {
         });
 
         doInJPA( this::entityManagerFactory, entityManager -> {
-            try {
-                //tag::spatial-types-query-example[]
-                Event event = entityManager.createQuery(
-					"select e " +
-					"from Event e " +
-					"where within(e.location, :filter) = true", Event.class)
-				.setParameter("filter", new WKTReader().read( "POLYGON((1 1,20 1,20 20,1 20,1 1))"))
-                .getSingleResult();
-                //end::spatial-types-query-example[]
-                Coordinate coordinate = event.getLocation().getCoordinate();
-                assertEquals( 10.0d, coordinate.getOrdinate( Coordinate.X), 0.1);
-                assertEquals( 5.0d, coordinate.getOrdinate( Coordinate.Y), 0.1);
-            }
-            catch (ParseException e) {
-                throw new RuntimeException(e);
-            }
+            Coordinate [] coordinates = new Coordinate[] {
+                new Coordinate(1,1), new Coordinate(20,1), new Coordinate(20,20),
+                new Coordinate(1,20), new Coordinate(1,1)
+            };
+            //tag::spatial-types-query-example[]
+            Polygon window = geometryFactory.createPolygon( coordinates );
+            Event event = entityManager.createQuery(
+                "select e " +
+                "from Event e " +
+                "where within(e.location, :window) = true", Event.class)
+            .setParameter("window", window)
+            .getSingleResult();
+            //end::spatial-types-query-example[]
+            Coordinate coordinate = event.getLocation().getCoordinate();
+            assertEquals( 10.0d, coordinate.getOrdinate( Coordinate.X), 0.1);
+            assertEquals( 5.0d, coordinate.getOrdinate( Coordinate.Y), 0.1);
         });
     }
 
-    //tag::spatial-types-mapping-example[]
-    @Entity(name = "Event")
-    public static class Event {
+//tag::spatial-types-mapping-example[]
+@Entity(name = "Event")
+public static class Event {
 
-        @Id
-        private Long id;
+    @Id
+    private Long id;
 
-        private String name;
+    private String name;
 
-        @Type(type = "jts_geometry")
-        private Point location;
+    private Point location;
 
-        //Getters and setters are omitted for brevity
-    //end::spatial-types-mapping-example[]
-        public Long getId() {
-            return id;
-        }
-
-        public void setId(Long id) {
-            this.id = id;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public Point getLocation() {
-            return location;
-        }
-
-        public void setLocation(Point location) {
-            this.location = location;
-        }
-    //tag::spatial-types-mapping-example[]
+    //Getters and setters are omitted for brevity
+//end::spatial-types-mapping-example[]
+    public Long getId() {
+        return id;
     }
-    //end::spatial-types-mapping-example[]
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Point getLocation() {
+        return location;
+    }
+
+    public void setLocation(Point location) {
+        this.location = location;
+    }
+//tag::spatial-types-mapping-example[]
+}
+//end::spatial-types-mapping-example[]
 }

@@ -1,0 +1,34 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
+package org.hibernate.jpa.internal;
+
+import javax.persistence.spi.PersistenceUnitTransactionType;
+
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.resource.transaction.backend.jta.internal.synchronization.AfterCompletionAction;
+
+/**
+ * @author Steve Ebersole
+ */
+public class AfterCompletionActionLegacyJpaImpl implements AfterCompletionAction {
+	/**
+	 * Singleton access
+	 */
+	public static final AfterCompletionActionLegacyJpaImpl INSTANCE = new AfterCompletionActionLegacyJpaImpl();
+
+	@Override
+	public void doAction(boolean successful, SessionImplementor session) {
+		if ( session.isClosed() ) {
+			EntityManagerImpl.LOG.trace( "Session was closed; nothing to do" );
+			return;
+		}
+
+		if ( !successful && session.getTransactionType() == PersistenceUnitTransactionType.JTA ) {
+			session.clear();
+		}
+	}
+}

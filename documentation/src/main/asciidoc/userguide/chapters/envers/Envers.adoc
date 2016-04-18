@@ -646,6 +646,12 @@ To use customized Envers event listeners, the following steps are needed:
 . For the integrator to be automatically used when Hibernate starts up, you will need to add a `META-INF/services/org.hibernate.integrator.spi.Integrator` file to your jar.
   The file should contain the fully qualified name of the class implementing the interface.
 
+[NOTE]
+====
+The use of `hibernate.listeners.envers.autoRegister` has been deprecated.  A new configuration setting
+`hibernate.envers.autoRegisterListeners` should be used instead.
+====
+
 === Understanding the Envers Schema
 
 For each audited entity (that is, for each entity containing at least one audited field), an audit table is created.

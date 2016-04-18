@@ -183,13 +183,14 @@ public abstract class AbstractServiceRegistryImpl
 		if ( serviceBinding == null ) {
 			throw new UnknownServiceException( serviceRole );
 		}
+		synchronized (this) {
+			R service = serviceBinding.getService();
+			if ( service == null ) {
+				service = initializeService( serviceBinding );
+			}
 
-		R service = serviceBinding.getService();
-		if ( service == null ) {
-			service = initializeService( serviceBinding );
+			return service;
 		}
-
-		return service;
 	}
 
 	protected <R extends Service> void registerService(ServiceBinding<R> serviceBinding, R service) {

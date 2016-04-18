@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -27,7 +26,6 @@ import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Assert;
 import org.junit.Test;
@@ -35,20 +33,17 @@ import org.junit.Test;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 
-import static org.hibernate.test.schemafilter.RecordingTarget.Category.SCHEMA_CREATE;
-import static org.hibernate.test.schemafilter.RecordingTarget.Category.SCHEMA_DROP;
 import static org.hibernate.test.schemafilter.RecordingTarget.Category.TABLE_CREATE;
 import static org.hibernate.test.schemafilter.RecordingTarget.Category.TABLE_DROP;
 
-@TestForIssue(jiraKey = "HHH-9876")
 @SuppressWarnings({"rawtypes", "unchecked"})
-@RequiresDialectFeature( value = {DialectChecks.SupportSchemaCreation.class})
-public class SchemaFilterTest extends BaseUnitTestCase {
+@RequiresDialectFeature( value = {DialectChecks.SupportCatalogCreation.class})
+public class CatalogFilterTest extends BaseUnitTestCase {
 
 	private final ServiceRegistry serviceRegistry;
 	private final Metadata metadata;
 
-	public SchemaFilterTest() {
+	public CatalogFilterTest() {
 		Map settings = new HashMap();
 		settings.putAll( Environment.getProperties() );
 		settings.put( AvailableSettings.DIALECT, SQLServerDialect.class.getName() );
@@ -57,61 +52,57 @@ public class SchemaFilterTest extends BaseUnitTestCase {
 		this.serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( settings );
 
 		MetadataSources ms = new MetadataSources( serviceRegistry );
-		ms.addAnnotatedClass( SchemaNoneEntity0.class );
-		ms.addAnnotatedClass( Schema1Entity1.class );
-		ms.addAnnotatedClass( Schema1Entity2.class );
-		ms.addAnnotatedClass( Schema2Entity3.class );
-		ms.addAnnotatedClass( Schema2Entity4.class );
+		ms.addAnnotatedClass( CatalogNoneEntity0.class );
+		ms.addAnnotatedClass( Catalog1Entity1.class );
+		ms.addAnnotatedClass( Catalog1Entity2.class );
+		ms.addAnnotatedClass( Catalog2Entity3.class );
+		ms.addAnnotatedClass( Catalog2Entity4.class );
 		this.metadata = ms.buildMetadata();
 	}
 
 	@Test
-	public void createSchema_unfiltered() {
+	public void createCatalog_unfiltered() {
 		RecordingTarget target = doCreation( new DefaultSchemaFilter() );
 
-		Assert.assertThat( target.getActions( SCHEMA_CREATE ), containsExactly( "the_schema_1", "the_schema_2" ) );
 		Assert.assertThat( target.getActions( TABLE_CREATE ), containsExactly(
 				"the_entity_0",
-				"the_schema_1.the_entity_1",
-				"the_schema_1.the_entity_2",
-				"the_schema_2.the_entity_3",
-				"the_schema_2.the_entity_4"
+				"the_catalog_1.the_entity_1",
+				"the_catalog_1.the_entity_2",
+				"the_catalog_2.the_entity_3",
+				"the_catalog_2.the_entity_4"
 		) );
 	}
 
 	@Test
-	public void createSchema_filtered() {
+	public void createCatalog_filtered() {
 		RecordingTarget target = doCreation( new TestSchemaFilter() );
 
-		Assert.assertThat( target.getActions( SCHEMA_CREATE ), containsExactly( "the_schema_1" ) );
 		Assert.assertThat(
 				target.getActions( TABLE_CREATE ),
-				containsExactly( "the_entity_0", "the_schema_1.the_entity_1" )
+				containsExactly( "the_entity_0", "the_catalog_1.the_entity_1" )
 		);
 	}
 
 	@Test
-	public void dropSchema_unfiltered() {
+	public void dropCatalog_unfiltered() {
 		RecordingTarget target = doDrop( new DefaultSchemaFilter() );
 
-		Assert.assertThat( target.getActions( SCHEMA_DROP ), containsExactly( "the_schema_1", "the_schema_2" ) );
 		Assert.assertThat( target.getActions( TABLE_DROP ), containsExactly(
 				"the_entity_0",
-				"the_schema_1.the_entity_1",
-				"the_schema_1.the_entity_2",
-				"the_schema_2.the_entity_3",
-				"the_schema_2.the_entity_4"
+				"the_catalog_1.the_entity_1",
+				"the_catalog_1.the_entity_2",
+				"the_catalog_2.the_entity_3",
+				"the_catalog_2.the_entity_4"
 		) );
 	}
 
 	@Test
-	public void dropSchema_filtered() {
+	public void dropCatalog_filtered() {
 		RecordingTarget target = doDrop( new TestSchemaFilter() );
 
-		Assert.assertThat( target.getActions( SCHEMA_DROP ), containsExactly( "the_schema_1" ) );
 		Assert.assertThat(
 				target.getActions( TABLE_DROP ),
-				containsExactly( "the_entity_0", "the_schema_1.the_entity_1" )
+				containsExactly( "the_entity_0", "the_catalog_1.the_entity_1" )
 		);
 	}
 
@@ -151,12 +142,9 @@ public class SchemaFilterTest extends BaseUnitTestCase {
 
 		@Override
 		public boolean includeNamespace(Namespace namespace) {
-			// exclude schema "the_schema_2"
-			Identifier identifier = namespace.getName().getSchema();
-			if ( identifier != null ) {
-				return !"the_schema_2".equals( identifier.getText() );
-			}
-			return true;
+			// exclude schema "the_catalog_2"
+			Identifier identifier = namespace.getName().getCatalog();
+			return identifier == null || !"the_catalog_2".equals( identifier.getText() );
 		}
 
 		@Override
@@ -172,8 +160,8 @@ public class SchemaFilterTest extends BaseUnitTestCase {
 	}
 
 	@Entity
-	@javax.persistence.Table(name = "the_entity_1", schema = "the_schema_1")
-	public static class Schema1Entity1 {
+	@javax.persistence.Table(name = "the_entity_1", catalog = "the_catalog_1")
+	public static class Catalog1Entity1 {
 
 		@Id
 		private long id;
@@ -188,8 +176,8 @@ public class SchemaFilterTest extends BaseUnitTestCase {
 	}
 
 	@Entity
-	@javax.persistence.Table(name = "the_entity_2", schema = "the_schema_1")
-	public static class Schema1Entity2 {
+	@javax.persistence.Table(name = "the_entity_2", catalog = "the_catalog_1")
+	public static class Catalog1Entity2 {
 
 		@Id
 		private long id;
@@ -204,8 +192,8 @@ public class SchemaFilterTest extends BaseUnitTestCase {
 	}
 
 	@Entity
-	@javax.persistence.Table(name = "the_entity_3", schema = "the_schema_2")
-	public static class Schema2Entity3 {
+	@javax.persistence.Table(name = "the_entity_3", catalog = "the_catalog_2")
+	public static class Catalog2Entity3 {
 
 		@Id
 		private long id;
@@ -220,8 +208,8 @@ public class SchemaFilterTest extends BaseUnitTestCase {
 	}
 
 	@Entity
-	@javax.persistence.Table(name = "the_entity_4", schema = "the_schema_2")
-	public static class Schema2Entity4 {
+	@javax.persistence.Table(name = "the_entity_4", catalog = "the_catalog_2")
+	public static class Catalog2Entity4 {
 
 		@Id
 		private long id;
@@ -237,7 +225,7 @@ public class SchemaFilterTest extends BaseUnitTestCase {
 
 	@Entity
 	@javax.persistence.Table(name = "the_entity_0")
-	public static class SchemaNoneEntity0 {
+	public static class CatalogNoneEntity0 {
 
 		@Id
 		private long id;

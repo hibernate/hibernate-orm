@@ -22,6 +22,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQL5Dialect;
+import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQL94Dialect;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.tool.schema.Action;
@@ -29,6 +30,7 @@ import org.hibernate.type.PostgresUUIDType;
 import org.hibernate.type.Type;
 import org.hibernate.type.UUIDBinaryType;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
@@ -40,6 +42,7 @@ import static org.junit.Assert.assertThat;
  * @author Steve Ebersole
  */
 public class UUIDBasedIdInterpretationTest extends BaseUnitTestCase {
+
 	@Test
 	@TestForIssue( jiraKey = "HHH-10564")
 	public void testH2() {
@@ -100,6 +103,7 @@ public class UUIDBasedIdInterpretationTest extends BaseUnitTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-10564")
+	@SkipForDialect(PostgreSQL81Dialect.class)
 	public void testBinaryRuntimeUsage() {
 		StandardServiceRegistry ssr = buildStandardServiceRegistry( H2Dialect.class, true );
 		try {

@@ -2734,4 +2734,13 @@ public abstract class Dialect implements ConversionContext {
 	public boolean isJdbcLogWarningsEnabledByDefault() {
 		return true;
 	}
+
+	/**
+	 * Does this dialect supports Nationalized Types
+	 *
+	 * @return boolean
+	 */
+	public boolean supportsNationalizedTypes() {
+		return true;
+	}
 }

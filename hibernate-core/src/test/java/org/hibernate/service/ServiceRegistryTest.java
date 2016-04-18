@@ -21,10 +21,11 @@ import org.hibernate.testing.TestForIssue;
 
 import static org.junit.Assert.assertTrue;
 
-@TestForIssue( jiraKey = "HHH-10427")
+@TestForIssue(jiraKey = "HHH-10427")
 public class ServiceRegistryTest {
 	private final ServiceRegistry registry = buildRegistry();
 	private final static int NUMBER_OF_THREADS = 100;
+	private StandardServiceRegistryBuilder standardServiceRegistryBuilder;
 
 	@Test
 	public void testOnlyOneInstanceOfTheServiceShouldBeCreated() throws InterruptedException, ExecutionException {
@@ -40,15 +41,16 @@ public class ServiceRegistryTest {
 			else {
 				assertTrue( "There are more than one instance of the service", result == previousResult );
 			}
-			assertTrue( "The service is not initialized", result.isInitialized() );
-			assertTrue( "The service is not configured", result.isConfigured() );
-			assertTrue( "The service is not started", result.isStarted() );
+
 		}
+
+		standardServiceRegistryBuilder.destroy( registry );
+
 	}
 
 	private ServiceRegistry buildRegistry() {
-		return new StandardServiceRegistryBuilder()
-				.addInitiator( new SlowServiceInitiator() ).build();
+		standardServiceRegistryBuilder = new StandardServiceRegistryBuilder();
+		return standardServiceRegistryBuilder.addInitiator( new SlowServiceInitiator() ).build();
 	}
 
 	private FutureTask<SlowInitializationService>[] execute()
@@ -56,7 +58,7 @@ public class ServiceRegistryTest {
 		FutureTask<SlowInitializationService>[] results = new FutureTask[NUMBER_OF_THREADS];
 		ExecutorService executor = Executors.newFixedThreadPool( NUMBER_OF_THREADS );
 		for ( int i = 0; i < NUMBER_OF_THREADS; i++ ) {
-			results[i] = new FutureTask<SlowInitializationService>( new ServiceCallable( registry ) );
+			results[i] = new FutureTask<>( new ServiceCallable( registry ) );
 			executor.execute( results[i] );
 		}
 		return results;
@@ -71,7 +73,11 @@ public class ServiceRegistryTest {
 
 		@Override
 		public SlowInitializationService call() throws Exception {
-			return registry.getService( SlowInitializationService.class );
+			final SlowInitializationService service = registry.getService( SlowInitializationService.class );
+			assertTrue( "The service is not initialized", service.isInitialized() );
+			assertTrue( "The service is not configured", service.isConfigured() );
+			assertTrue( "The service is not started", service.isStarted() );
+			return service;
 		}
 	}
 

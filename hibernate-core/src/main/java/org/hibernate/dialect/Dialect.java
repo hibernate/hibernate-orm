@@ -2850,4 +2850,13 @@ public abstract class Dialect implements ConversionContext {
 	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) throws SQLException {
 		return databaseMetaData != null && databaseMetaData.supportsNamedParameters();
 	}
+
+	/**
+	 * Does this dialect supports Nationalized Types
+	 *
+	 * @return boolean
+	 */
+	public boolean supportsNationalizedTypes() {
+		return true;
+	}
 }

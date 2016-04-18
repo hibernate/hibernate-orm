@@ -3,6 +3,7 @@ package org.hibernate.test.schemaupdate;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.EnumSet;
+import java.util.regex.Pattern;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -12,7 +13,6 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
-
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
@@ -30,10 +30,10 @@ import org.junit.Test;
 public class SchemaUpdateFormatterTest {
 	
 	private static final String AFTER_FORMAT =
-			"\n    create table test_entity (\n" +
-			"        field varchar(255) not null,\n" +
-			"        primary key (field)\n" +
-			"    );\n";
+			"\n\\s+create table test_entity \\(\n" +
+			"\\s+field varchar\\(255\\) not null,\n" +
+			"\\s+primary key \\(field\\)\n" +
+			"\\s+\\).*?;\n";
 	private static final String DELIMITER = ";";
 
 	@Test
@@ -63,7 +63,7 @@ public class SchemaUpdateFormatterTest {
 			//On Windows, \r\n would become \n\n, so we eliminate duplicates
 			outputContent = outputContent.replaceAll( "\n\n", "\n");
 
-			Assert.assertEquals( AFTER_FORMAT, outputContent );
+			Assert.assertTrue( Pattern.compile( AFTER_FORMAT ).matcher( outputContent ).matches()  );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );

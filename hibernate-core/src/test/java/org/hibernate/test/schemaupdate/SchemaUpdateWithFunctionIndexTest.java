@@ -49,6 +49,8 @@ public class SchemaUpdateWithFunctionIndexTest extends BaseNonConfigCoreFunction
 
 	@Before
 	public void setUp() {
+		dropFunctionIndex();
+		dropTable();
 		createTable();
 		createFunctionIndex();
 		serviceRegistry = new StandardServiceRegistryBuilder()
@@ -78,15 +80,13 @@ public class SchemaUpdateWithFunctionIndexTest extends BaseNonConfigCoreFunction
 		session.close();
 	}
 
-	@After
-	public void tearDown() {
-		dropFunctionIndex();
-		System.out.println( "********* Starting SchemaExport (drop) for TEAR-DOWN *************************" );
-		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE, TargetType.SCRIPT ), metadata );
-		System.out.println( "********* Completed SchemaExport (drop) for TEAR-DOWN *************************" );
-
-		StandardServiceRegistryBuilder.destroy( serviceRegistry );
-		serviceRegistry = null;
+	private void dropTable() {
+		Session session = openSession();
+		Transaction transaction = session.beginTransaction();
+		Query query = session.createSQLQuery( "DROP TABLE IF EXISTS MyEntity;" );
+		query.executeUpdate();
+		transaction.commit();
+		session.close();
 	}
 
 	private void dropFunctionIndex() {
@@ -96,6 +96,14 @@ public class SchemaUpdateWithFunctionIndexTest extends BaseNonConfigCoreFunction
 		query.executeUpdate();
 		transaction.commit();
 		session.close();
+	}
+
+	@After
+	public void tearDown() {
+		dropFunctionIndex();
+		dropTable();
+		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ), metadata );
+		StandardServiceRegistryBuilder.destroy( serviceRegistry );
 	}
 
 	@Entity

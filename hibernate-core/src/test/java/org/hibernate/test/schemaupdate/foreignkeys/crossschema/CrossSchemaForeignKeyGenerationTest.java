@@ -31,7 +31,6 @@ import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
 import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 import org.hibernate.tool.schema.internal.SchemaMigratorImpl;
-import org.hibernate.test.tool.schema.TargetDatabaseImpl;
 import org.hibernate.tool.schema.internal.exec.GenerationTarget;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToStdout;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
@@ -42,6 +41,7 @@ import org.hibernate.tool.schema.spi.SourceDescriptor;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.test.tool.schema.TargetDatabaseImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -87,7 +87,7 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 		final List<String> sqlLines = Files.readAllLines( output.toPath(), Charset.defaultCharset() );
 		assertThat(
 				"Expected alter table SCHEMA1.Child add constraint but is : " + sqlLines.get( 4 ),
-				sqlLines.get( 4 ).startsWith( "alter table " ),
+				sqlLines.get( sqlLines.size() - 1 ).startsWith( "alter table " ),
 				is( true )
 		);
 	}

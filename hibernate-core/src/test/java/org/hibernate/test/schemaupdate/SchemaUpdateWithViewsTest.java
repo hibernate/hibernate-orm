@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.schemaupdate;
 
+import java.io.IOException;
 import java.util.EnumSet;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -38,16 +39,17 @@ import org.junit.Test;
 @TestForIssue(jiraKey = "HHH-1872")
 @RequiresDialect(PostgreSQL81Dialect.class)
 public class SchemaUpdateWithViewsTest extends BaseNonConfigCoreFunctionalTestCase {
+
 	protected ServiceRegistry serviceRegistry;
 	protected MetadataImplementor metadata;
 
 	@Test
 	public void testUpdateSchema() {
-		new SchemaUpdate().execute( EnumSet.of( TargetType.SCRIPT, TargetType.DATABASE ), metadata );
+		new SchemaUpdate().execute( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ), metadata );
 	}
 
 	@Before
-	public void setUp() {
+	public void setUp() throws IOException {
 		createViewWithSameNameOfEntityTable();
 		serviceRegistry = new StandardServiceRegistryBuilder()
 				.applySetting( Environment.GLOBALLY_QUOTED_IDENTIFIERS, "false" )
@@ -56,12 +58,13 @@ public class SchemaUpdateWithViewsTest extends BaseNonConfigCoreFunctionalTestCa
 		metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
 				.addAnnotatedClass( MyEntity.class )
 				.buildMetadata();
+		metadata.validate();
 	}
 
 	private void createViewWithSameNameOfEntityTable() {
 		Session session = openSession();
 		Transaction transaction = session.beginTransaction();
-		Query query = session.createSQLQuery( "CREATE VIEW MyEntity AS SELECT 'Hello World' " );
+		Query query = session.createSQLQuery( "CREATE OR REPLACE VIEW MyEntity AS SELECT 'Hello World' " );
 		query.executeUpdate();
 		transaction.commit();
 		session.close();
@@ -81,7 +84,7 @@ public class SchemaUpdateWithViewsTest extends BaseNonConfigCoreFunctionalTestCa
 	private void dropView() {
 		Session session = openSession();
 		Transaction transaction = session.beginTransaction();
-		Query query = session.createSQLQuery( "DROP VIEW MyEntity " );
+		Query query = session.createSQLQuery( "DROP VIEW IF EXISTS MyEntity " );
 		query.executeUpdate();
 		transaction.commit();
 		session.close();

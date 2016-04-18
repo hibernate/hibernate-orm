@@ -74,3 +74,5 @@ implement JPA methods now in core I decided to implement more of a composition a
 	returns.  #getFlushMode has been altered to return JPA's FlushModeType.  The Hibernate FlushMode
 	is still available via #getHibernateFlushMode and #setHibernateFlushMode.  Same for Session#getFlushMode
 	and EntityManager#getFlushMode.
+* Setting `hibernate.listeners.envers.autoRegister` has been deprecated in favor of
+  `hibernate.envers.autoRegisterListeners`.

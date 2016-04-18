@@ -16,6 +16,7 @@ import javax.persistence.Id;
 import javax.persistence.Lob;
 
 import org.hibernate.Session;
+import org.hibernate.engine.jdbc.BlobProxy;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
@@ -49,8 +50,7 @@ public class BlobTest extends BaseEntityManagerFunctionalTestCase {
 			product.setName( "Mobile phone" );
 
 			session.doWork( connection -> {
-				product.setImage( connection.createBlob() );
-				product.getImage().setBytes( 1, image );
+				product.setImage( BlobProxy.generateProxy( image ) );
 			} );
 
 			entityManager.persist( product );

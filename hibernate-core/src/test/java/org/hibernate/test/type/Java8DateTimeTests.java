@@ -16,6 +16,7 @@ import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Iterator;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -92,14 +93,32 @@ public class Java8DateTimeTests extends BaseNonConfigCoreFunctionalTestCase {
 	@Entity(name = "TheEntity")
 	@Table(name="the_entity")
 	public static class TheEntity {
+
+		@Id
 		private Integer id;
+
+		@Column(name = "local_date_time")
 		private LocalDateTime localDateTime = LocalDateTime.now();
+
+		@Column(name = "local_date")
 		private LocalDate localDate = LocalDate.now();
+
+		@Column(name = "local_time")
 		private LocalTime localTime = LocalTime.now();
+
+		@Column(name = "instant_value")
 		private Instant instant = Instant.now();
+
+		@Column(name = "zoned_date_time")
 		private ZonedDateTime zonedDateTime = ZonedDateTime.now();
+
+		@Column(name = "offset_date_time")
 		private OffsetDateTime offsetDateTime = OffsetDateTime.now();
+
+		@Column(name = "offset_time")
 		private OffsetTime offsetTime = OffsetTime.now();
+
+		@Column(name = "duration_value")
 		private Duration duration = Duration.of( 20, ChronoUnit.DAYS );
 
 		public TheEntity() {
@@ -109,7 +128,6 @@ public class Java8DateTimeTests extends BaseNonConfigCoreFunctionalTestCase {
 			this.id = id;
 		}
 
-		@Id
 		public Integer getId() {
 			return id;
 		}

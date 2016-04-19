@@ -75,7 +75,7 @@ public class SchemaExportTest extends BaseUnitTestCase {
     public void testBothType() {
 		final SchemaExport schemaExport = new SchemaExport();
 
-        // drop before create (nothing to drop yeT)
+        // drop beforeQuery create (nothing to drop yeT)
         schemaExport.execute( EnumSet.of( TargetType.DATABASE ), SchemaExport.Action.DROP, metadata );
         if ( doesDialectSupportDropTableIfExist() ) {
             assertEquals( 0, schemaExport.getExceptions().size() );
@@ -84,7 +84,7 @@ public class SchemaExportTest extends BaseUnitTestCase {
             assertEquals( 1, schemaExport.getExceptions().size() );
         }
 
-        // drop before create again (this time drops the tables before re-creating)
+        // drop beforeQuery create again (this time drops the tables beforeQuery re-creating)
 		schemaExport.execute( EnumSet.of( TargetType.DATABASE ), SchemaExport.Action.BOTH, metadata );
         assertEquals( 0, schemaExport.getExceptions().size() );
 
@@ -116,7 +116,7 @@ public class SchemaExportTest extends BaseUnitTestCase {
     public void testCreateAndDrop() {
 		final SchemaExport schemaExport = new SchemaExport();
 
-        // should drop before creating, but tables don't exist yet
+        // should drop beforeQuery creating, but tables don't exist yet
         schemaExport.create( EnumSet.of( TargetType.DATABASE ), metadata );
 		if ( doesDialectSupportDropTableIfExist() ) {
 			assertEquals( 0, schemaExport.getExceptions().size() );
@@ -124,7 +124,7 @@ public class SchemaExportTest extends BaseUnitTestCase {
 		else {
 			assertEquals( 1, schemaExport.getExceptions().size() );
 		}
-        // call create again; it should drop tables before re-creating
+        // call create again; it should drop tables beforeQuery re-creating
 		schemaExport.create( EnumSet.of( TargetType.DATABASE ), metadata );
         assertEquals( 0, schemaExport.getExceptions().size() );
         // drop the tables

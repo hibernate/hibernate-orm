@@ -8,7 +8,6 @@ package org.hibernate.jpa.test.schemagen;
 
 import java.net.URL;
 import java.util.Map;
-
 import javax.persistence.EntityManagerFactory;
 
 import org.hibernate.dialect.H2Dialect;
@@ -17,6 +16,7 @@ import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
@@ -117,7 +117,7 @@ public class JpaSchemaGeneratorTest extends BaseEntityManagerFunctionalTestCase 
 
 	@SuppressWarnings("unchecked")
 	private void doTest(Map settings) {
-		// We want a fresh db after emf close
+		// We want a fresh db afterQuery emf close
 		// Unfortunately we have to use this dirty hack because the db seems not to be closed otherwise
 		settings.put( "hibernate.connection.url", "jdbc:h2:mem:db-schemagen" + schemagenNumber++
 				+ ";MVCC=TRUE;LOCK_TIMEOUT=10000" );

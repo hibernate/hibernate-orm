@@ -8,8 +8,7 @@ package org.hibernate.procedure;
 
 import java.util.Map;
 
-import org.hibernate.Session;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * Represents a "memento" (disconnected, externalizable form) of a ProcedureCall
@@ -24,16 +23,7 @@ public interface ProcedureCallMemento {
 	 *
 	 * @return The executable call
 	 */
-	public ProcedureCall makeProcedureCall(Session session);
-
-	/**
-	 * Convert the memento back into an executable (connected) form.
-	 *
-	 * @param session The session to connect the procedure call to
-	 *
-	 * @return The executable call
-	 */
-	public ProcedureCall makeProcedureCall(SessionImplementor session);
+	ProcedureCall makeProcedureCall(SharedSessionContractImplementor session);
 
 	/**
 	 * Access to any hints associated with the memento.
@@ -42,5 +32,5 @@ public interface ProcedureCallMemento {
 	 *
 	 * @return The hints.
 	 */
-	public Map<String, Object> getHintsMap();
+	Map<String, Object> getHintsMap();
 }

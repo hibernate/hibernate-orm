@@ -14,11 +14,11 @@ import org.hibernate.engine.query.spi.NativeQueryInterpreter;
 import org.hibernate.engine.query.spi.NativeSQLQueryPlan;
 import org.hibernate.engine.query.spi.OrdinalParameterDescriptor;
 import org.hibernate.engine.query.spi.ParamLocationRecognizer;
-import org.hibernate.engine.query.spi.ParameterMetadata;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.loader.custom.sql.SQLCustomQuery;
+import org.hibernate.query.internal.ParameterMetadataImpl;
 
 /**
  * @author Steve Ebersole
@@ -30,7 +30,7 @@ public class NativeQueryInterpreterStandardImpl implements NativeQueryInterprete
 	public static final NativeQueryInterpreterStandardImpl INSTANCE = new NativeQueryInterpreterStandardImpl();
 
 	@Override
-	public ParameterMetadata getParameterMetadata(String nativeQuery) {
+	public ParameterMetadataImpl getParameterMetadata(String nativeQuery) {
 		final ParamLocationRecognizer recognizer = ParamLocationRecognizer.parseLocations( nativeQuery );
 
 		final int size = recognizer.getOrdinalParameterLocationList().size();
@@ -56,7 +56,7 @@ public class NativeQueryInterpreterStandardImpl implements NativeQueryInterprete
 			);
 		}
 
-		return new ParameterMetadata( ordinalDescriptors, namedParamDescriptorMap );
+		return new ParameterMetadataImpl( ordinalDescriptors, namedParamDescriptorMap );
 	}
 
 	@Override

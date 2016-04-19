@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.query.spi;
 
@@ -17,13 +17,13 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 @Incubating
-public interface QueryParameterBinding {
+public interface QueryParameterBinding<T> {
 	/**
 	 * Sets the parameter binding value.  The inherent parameter type (if known) is assumed
 	 *
 	 * @param value The bind value
 	 */
-	void setBindValue(Object value);
+	void setBindValue(T value);
 
 	/**
 	 * Sets the parameter binding value using the explicit Type.
@@ -31,7 +31,7 @@ public interface QueryParameterBinding {
 	 * @param value The bind value
 	 * @param clarifiedType The explicit Type to use
 	 */
-	void setBindValue(Object value, Type clarifiedType);
+	void setBindValue(T value, Type clarifiedType);
 
 	/**
 	 * Sets the parameter binding value using the explicit TemporalType.
@@ -39,19 +39,19 @@ public interface QueryParameterBinding {
 	 * @param value The bind value
 	 * @param clarifiedTemporalType The temporal type to use
 	 */
-	void setBindValue(Object value, TemporalType clarifiedTemporalType);
+	void setBindValue(T value, TemporalType clarifiedTemporalType);
 
 	/**
 	 * Get the value current bound.
 	 *
 	 * @return The currently bound value
 	 */
-	Object getBindValue();
+	T getBindValue();
 
 	/**
-	 * Get the Type currently bound.
+	 * Get the Type currently associated with this binding.
 	 *
-	 * @return The currently bound Type
+	 * @return The currently associated Type
 	 */
 	Type getBindType();
 }

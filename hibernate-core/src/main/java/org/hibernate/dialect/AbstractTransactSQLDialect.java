@@ -222,7 +222,7 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 						return "#" + baseName;
 					}
 				},
-				// sql-server, at least needed this dropped after use; strange!
+				// sql-server, at least needed this dropped afterQuery use; strange!
 				AfterUseAction.DROP,
 				TempTableDdlTransactionHandling.NONE
 		);

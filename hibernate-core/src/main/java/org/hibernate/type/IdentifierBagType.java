@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.internal.PersistentIdentifierBag;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 
 public class IdentifierBagType extends CollectionType {
@@ -21,23 +21,27 @@ public class IdentifierBagType extends CollectionType {
 		super( typeScope, role, propertyRef );
 	}
 
+	@Override
 	public PersistentCollection instantiate(
-		SessionImplementor session,
+		SharedSessionContractImplementor session,
 		CollectionPersister persister, Serializable key)
 		throws HibernateException {
 
-		return new PersistentIdentifierBag(session);
+		return new PersistentIdentifierBag( session );
 	}
 
+	@Override
 	public Object instantiate(int anticipatedSize) {
 		return anticipatedSize <= 0 ? new ArrayList() : new ArrayList( anticipatedSize + 1 );
 	}
-	
+
+	@Override
 	public Class getReturnedClass() {
 		return java.util.Collection.class;
 	}
 
-	public PersistentCollection wrap(SessionImplementor session, Object collection) {
+	@Override
+	public PersistentCollection wrap(SharedSessionContractImplementor session, Object collection) {
 		return new PersistentIdentifierBag( session, (java.util.Collection) collection );
 	}
 

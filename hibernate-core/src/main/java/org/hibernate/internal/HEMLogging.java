@@ -6,8 +6,6 @@
  */
 package org.hibernate.internal;
 
-import org.hibernate.internal.EntityManagerMessageLogger;
-
 import org.jboss.logging.Logger;
 
 /**

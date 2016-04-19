@@ -10,7 +10,7 @@ import java.io.Serializable;
 
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
@@ -34,7 +34,7 @@ public final class QueuedOperationCollectionAction extends CollectionAction {
 			final PersistentCollection collection,
 			final CollectionPersister persister,
 			final Serializable id,
-			final SessionImplementor session) {
+			final SharedSessionContractImplementor session) {
 		super( persister, collection, id, session );
 	}
 

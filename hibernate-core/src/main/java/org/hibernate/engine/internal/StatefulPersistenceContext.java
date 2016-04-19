@@ -50,6 +50,7 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
@@ -83,7 +84,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	private static final boolean TRACE_ENABLED = LOG.isTraceEnabled();
 	private static final int INIT_COLL_SIZE = 8;
 
-	private SessionImplementor session;
+	private SharedSessionContractImplementor session;
 
 	// Loaded entity instances, by EntityKey
 	private Map<EntityKey, Object> entitiesByKey;
@@ -145,31 +146,38 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 *
 	 * @param session The session "owning" this context.
 	 */
-	public StatefulPersistenceContext(SessionImplementor session) {
+	public StatefulPersistenceContext(SharedSessionContractImplementor session) {
 		this.session = session;
 
-		entitiesByKey = new HashMap<EntityKey, Object>( INIT_COLL_SIZE );
-		entitiesByUniqueKey = new HashMap<EntityUniqueKey, Object>( INIT_COLL_SIZE );
+		entitiesByKey = new HashMap<>( INIT_COLL_SIZE );
+		entitiesByUniqueKey = new HashMap<>( INIT_COLL_SIZE );
 		//noinspection unchecked
-		proxiesByKey = new ConcurrentReferenceHashMap<EntityKey, Object>( INIT_COLL_SIZE, .75f, 1, ConcurrentReferenceHashMap.ReferenceType.STRONG, ConcurrentReferenceHashMap.ReferenceType.WEAK, null );
-		entitySnapshotsByKey = new HashMap<EntityKey, Object>( INIT_COLL_SIZE );
+		proxiesByKey = new ConcurrentReferenceHashMap<>(
+				INIT_COLL_SIZE,
+				.75f,
+				1,
+				ConcurrentReferenceHashMap.ReferenceType.STRONG,
+				ConcurrentReferenceHashMap.ReferenceType.WEAK,
+				null
+		);
+		entitySnapshotsByKey = new HashMap<>( INIT_COLL_SIZE );
 
 		entityEntryContext = new EntityEntryContext();
 //		entityEntries = IdentityMap.instantiateSequenced( INIT_COLL_SIZE );
 		collectionEntries = IdentityMap.instantiateSequenced( INIT_COLL_SIZE );
-		parentsByChild = new IdentityHashMap<Object,Object>( INIT_COLL_SIZE );
+		parentsByChild = new IdentityHashMap<>( INIT_COLL_SIZE );
 
-		collectionsByKey = new HashMap<CollectionKey, PersistentCollection>( INIT_COLL_SIZE );
-		arrayHolders = new IdentityHashMap<Object, PersistentCollection>( INIT_COLL_SIZE );
+		collectionsByKey = new HashMap<>( INIT_COLL_SIZE );
+		arrayHolders = new IdentityHashMap<>( INIT_COLL_SIZE );
 
-		nullifiableEntityKeys = new HashSet<EntityKey>();
+		nullifiableEntityKeys = new HashSet<>();
 
 		initTransientState();
 	}
 
 	private void initTransientState() {
-		nullAssociations = new HashSet<AssociationKey>( INIT_COLL_SIZE );
-		nonlazyCollections = new ArrayList<PersistentCollection>( INIT_COLL_SIZE );
+		nullAssociations = new HashSet<>( INIT_COLL_SIZE );
+		nonlazyCollections = new ArrayList<>( INIT_COLL_SIZE );
 	}
 
 	@Override
@@ -178,7 +186,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public SessionImplementor getSession() {
+	public SharedSessionContractImplementor getSession() {
 		return session;
 	}
 
@@ -193,7 +201,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void addUnownedCollection(CollectionKey key, PersistentCollection collection) {
 		if (unownedCollections==null) {
-			unownedCollections = new HashMap<CollectionKey,PersistentCollection>(INIT_COLL_SIZE);
+			unownedCollections = new HashMap<>( INIT_COLL_SIZE );
 		}
 		unownedCollections.put( key, collection );
 	}
@@ -365,7 +373,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	private EntityPersister locateProperPersister(EntityPersister persister) {
-		return session.getFactory().getEntityPersister( persister.getRootEntityName() );
+		return session.getFactory().getMetamodel().entityPersister( persister.getRootEntityName() );
 	}
 
 	@Override
@@ -592,7 +600,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 */
 	private void reassociateProxy(LazyInitializer li, HibernateProxy proxy) {
 		if ( li.getSession() != this.getSession() ) {
-			final EntityPersister persister = session.getFactory().getEntityPersister( li.getEntityName() );
+			final EntityPersister persister = session.getFactory().getMetamodel().entityPersister( li.getEntityName() );
 			final EntityKey key = session.generateEntityKey( li.getIdentifier(), persister );
 		  	// any earlier proxy takes precedence
 			proxiesByKey.putIfAbsent( key, proxy );
@@ -1065,7 +1073,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		if ( removeOrphanBeforeUpdatesCounter >= getCascadeLevel() ) {
 			throw new IllegalStateException(
 					String.format(
-							"Cascade level [%d] is out of sync with removeOrphanBeforeUpdatesCounter [%d] before incrementing removeOrphanBeforeUpdatesCounter",
+							"Cascade level [%d] is out of sync with removeOrphanBeforeUpdatesCounter [%d] beforeQuery incrementing removeOrphanBeforeUpdatesCounter",
 							getCascadeLevel(),
 							removeOrphanBeforeUpdatesCounter
 					)
@@ -1081,7 +1089,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		if ( removeOrphanBeforeUpdatesCounter > getCascadeLevel() ) {
 			throw new IllegalStateException(
 					String.format(
-							"Cascade level [%d] is out of sync with removeOrphanBeforeUpdatesCounter [%d] before decrementing removeOrphanBeforeUpdatesCounter",
+							"Cascade level [%d] is out of sync with removeOrphanBeforeUpdatesCounter [%d] beforeQuery decrementing removeOrphanBeforeUpdatesCounter",
 							getCascadeLevel(),
 							removeOrphanBeforeUpdatesCounter
 					)
@@ -1091,7 +1099,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	/**
-	 * Call this before beginning a two-phase load
+	 * Call this beforeQuery beginning a two-phase load
 	 */
 	@Override
 	public void beforeLoad() {
@@ -1099,7 +1107,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	/**
-	 * Call this after finishing a two-phase load
+	 * Call this afterQuery finishing a two-phase load
 	 */
 	@Override
 	public void afterLoad() {
@@ -1125,8 +1133,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public Serializable getOwnerId(String entityName, String propertyName, Object childEntity, Map mergeMap) {
 		final String collectionRole = entityName + '.' + propertyName;
-		final EntityPersister persister = session.getFactory().getEntityPersister( entityName );
-		final CollectionPersister collectionPersister = session.getFactory().getCollectionPersister( collectionRole );
+		final EntityPersister persister = session.getFactory().getMetamodel().entityPersister( entityName );
+		final CollectionPersister collectionPersister = session.getFactory().getMetamodel().collectionPersister( collectionRole );
 
 	    // try cache lookup first
 		final Object parent = parentsByChild.get( childEntity );
@@ -1244,8 +1252,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public Object getIndexInOwner(String entity, String property, Object childEntity, Map mergeMap) {
-		final EntityPersister persister = session.getFactory().getEntityPersister( entity );
-		final CollectionPersister cp = session.getFactory().getCollectionPersister( entity + '.' + property );
+		final EntityPersister persister = session.getFactory().getMetamodel().entityPersister( entity );
+		final CollectionPersister cp = session.getFactory().getMetamodel().collectionPersister( entity + '.' + property );
 
 	    // try cache lookup first
 		final Object parent = parentsByChild.get( childEntity );
@@ -1544,7 +1552,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			if ( tracing ) {
 				LOG.trace( "Starting deserialization of [" + count + "] entitiesByKey entries" );
 			}
-			rtn.entitiesByKey = new HashMap<EntityKey,Object>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
+			rtn.entitiesByKey = new HashMap<>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
 			for ( int i = 0; i < count; i++ ) {
 				rtn.entitiesByKey.put( EntityKey.deserialize( ois, sfi ), ois.readObject() );
 			}
@@ -1553,7 +1561,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			if ( tracing ) {
 				LOG.trace( "Starting deserialization of [" + count + "] entitiesByUniqueKey entries" );
 			}
-			rtn.entitiesByUniqueKey = new HashMap<EntityUniqueKey,Object>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
+			rtn.entitiesByUniqueKey = new HashMap<>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
 			for ( int i = 0; i < count; i++ ) {
 				rtn.entitiesByUniqueKey.put( EntityUniqueKey.deserialize( ois, session ), ois.readObject() );
 			}
@@ -1563,7 +1571,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				LOG.trace( "Starting deserialization of [" + count + "] proxiesByKey entries" );
 			}
 			//noinspection unchecked
-			rtn.proxiesByKey = new ConcurrentReferenceHashMap<EntityKey, Object>(
+			rtn.proxiesByKey = new ConcurrentReferenceHashMap<>(
 					count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count,
 					.75f,
 					1,
@@ -1590,7 +1598,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			if ( tracing ) {
 				LOG.trace( "Starting deserialization of [" + count + "] entitySnapshotsByKey entries" );
 			}
-			rtn.entitySnapshotsByKey = new HashMap<EntityKey,Object>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
+			rtn.entitySnapshotsByKey = new HashMap<>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
 			for ( int i = 0; i < count; i++ ) {
 				rtn.entitySnapshotsByKey.put( EntityKey.deserialize( ois, sfi ), ois.readObject() );
 			}
@@ -1601,7 +1609,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			if ( tracing ) {
 				LOG.trace( "Starting deserialization of [" + count + "] collectionsByKey entries" );
 			}
-			rtn.collectionsByKey = new HashMap<CollectionKey,PersistentCollection>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
+			rtn.collectionsByKey = new HashMap<>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
 			for ( int i = 0; i < count; i++ ) {
 				rtn.collectionsByKey.put( CollectionKey.deserialize( ois, session ), (PersistentCollection) ois.readObject() );
 			}
@@ -1622,7 +1630,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			if ( tracing ) {
 				LOG.trace( "Starting deserialization of [" + count + "] arrayHolders entries" );
 			}
-			rtn.arrayHolders = new IdentityHashMap<Object, PersistentCollection>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
+			rtn.arrayHolders = new IdentityHashMap<>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
 			for ( int i = 0; i < count; i++ ) {
 				rtn.arrayHolders.put( ois.readObject(), (PersistentCollection) ois.readObject() );
 			}
@@ -1631,7 +1639,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			if ( tracing ) {
 				LOG.trace( "Starting deserialization of [" + count + "] nullifiableEntityKey entries" );
 			}
-			rtn.nullifiableEntityKeys = new HashSet<EntityKey>();
+			rtn.nullifiableEntityKeys = new HashSet<>();
 			for ( int i = 0; i < count; i++ ) {
 				rtn.nullifiableEntityKeys.add( EntityKey.deserialize( ois, sfi ) );
 			}
@@ -1664,12 +1672,12 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		// we only are worried about registering these if the persister defines caching
 		if ( persister.hasCache() ) {
 			if ( insertedKeysMap == null ) {
-				insertedKeysMap = new HashMap<String, List<Serializable>>();
+				insertedKeysMap = new HashMap<>();
 			}
 			final String rootEntityName = persister.getRootEntityName();
 			List<Serializable> insertedEntityIds = insertedKeysMap.get( rootEntityName );
 			if ( insertedEntityIds == null ) {
-				insertedEntityIds = new ArrayList<Serializable>();
+				insertedEntityIds = new ArrayList<>();
 				insertedKeysMap.put( rootEntityName, insertedEntityIds );
 			}
 			insertedEntityIds.add( id );
@@ -1795,10 +1803,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 					);
 
 					if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-						factory.getStatisticsImplementor().naturalIdCachePut(
-								naturalIdCacheAccessStrategy.getRegion()
-										.getName()
-						);
+						factory.getStatistics().naturalIdCachePut( naturalIdCacheAccessStrategy.getRegion().getName() );
 					}
 
 					break;
@@ -1806,20 +1811,18 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				case INSERT: {
 					final boolean put = naturalIdCacheAccessStrategy.insert( session, naturalIdCacheKey, id );
 					if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-						factory.getStatisticsImplementor()
-								.naturalIdCachePut( naturalIdCacheAccessStrategy.getRegion().getName() );
+						factory.getStatistics().naturalIdCachePut( naturalIdCacheAccessStrategy.getRegion().getName() );
 					}
 
 					( (EventSource) session ).getActionQueue().registerProcess(
 							new AfterTransactionCompletionProcess() {
 								@Override
-								public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
+								public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
 									if (success) {
 										final boolean put = naturalIdCacheAccessStrategy.afterInsert( session, naturalIdCacheKey, id );
 
 										if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-											factory.getStatisticsImplementor()
-												.naturalIdCachePut( naturalIdCacheAccessStrategy.getRegion().getName() );
+											factory.getStatistics().naturalIdCachePut( naturalIdCacheAccessStrategy.getRegion().getName() );
 										}
 									}
 									else {
@@ -1843,14 +1846,13 @@ public class StatefulPersistenceContext implements PersistenceContext {
 					final SoftLock lock = naturalIdCacheAccessStrategy.lockItem( session, naturalIdCacheKey, null );
 					final boolean put = naturalIdCacheAccessStrategy.update( session, naturalIdCacheKey, id );
 					if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-						factory.getStatisticsImplementor()
-								.naturalIdCachePut( naturalIdCacheAccessStrategy.getRegion().getName() );
+						factory.getStatistics().naturalIdCachePut( naturalIdCacheAccessStrategy.getRegion().getName() );
 					}
 
 					( (EventSource) session ).getActionQueue().registerProcess(
 							new AfterTransactionCompletionProcess() {
 								@Override
-								public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
+								public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
 									naturalIdCacheAccessStrategy.unlockItem( session, previousCacheKey, removalLock );
 									if (success) {
 										final boolean put = naturalIdCacheAccessStrategy.afterUpdate(
@@ -1861,8 +1863,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 										);
 
 										if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-											factory.getStatisticsImplementor()
-												.naturalIdCachePut( naturalIdCacheAccessStrategy.getRegion().getName() );
+											factory.getStatistics().naturalIdCachePut( naturalIdCacheAccessStrategy.getRegion().getName() );
 										}
 									}
 									else {

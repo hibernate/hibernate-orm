@@ -14,16 +14,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.jboss.shrinkwrap.api.ArchivePath;
-import org.jboss.shrinkwrap.api.ArchivePaths;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.exporter.ExplodedExporter;
-import org.jboss.shrinkwrap.api.exporter.ZipExporter;
-import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.junit.After;
-import org.junit.Before;
-
 import org.hibernate.jpa.test.Cat;
 import org.hibernate.jpa.test.Distributor;
 import org.hibernate.jpa.test.Item;
@@ -51,6 +41,16 @@ import org.hibernate.jpa.test.pack.various.Airplane;
 import org.hibernate.jpa.test.pack.various.Seat;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
+import org.junit.Before;
+
+import org.jboss.shrinkwrap.api.ArchivePath;
+import org.jboss.shrinkwrap.api.ArchivePaths;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.exporter.ExplodedExporter;
+import org.jboss.shrinkwrap.api.exporter.ZipExporter;
+import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.jboss.shrinkwrap.api.spec.WebArchive;
 
 import static org.junit.Assert.fail;
 
@@ -199,7 +199,7 @@ public abstract class PackagingTestCase extends BaseCoreFunctionalTestCase {
 
 	protected File buildExplicitPar() {
 		// explicitpar/persistence.xml references externaljar.jar so build that from here.
-		// this is the reason for tests failing after clean at least on my (Steve) local system
+		// this is the reason for tests failing afterQuery clean at least on my (Steve) local system
 		buildExternalJar();
 
 		String fileName = "explicitpar.par";
@@ -226,7 +226,7 @@ public abstract class PackagingTestCase extends BaseCoreFunctionalTestCase {
 
 	protected File buildExplicitPar2() {
 		// explicitpar/persistence.xml references externaljar.jar so build that from here.
-		// this is the reason for tests failing after clean at least on my (Steve) local system
+		// this is the reason for tests failing afterQuery clean at least on my (Steve) local system
 		File jar = buildExternalJar2();
 
 		String fileName = "explicitpar2.par";

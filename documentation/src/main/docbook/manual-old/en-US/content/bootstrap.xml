@@ -916,7 +916,7 @@
             <listitem>
                 <para>
                     <literal>hibernate.query.plan_parameter_metadata_max_size</literal> - Controls the maximum number of
-                    <interfacename>org.hibernate.engine.query.spi.ParameterMetadata</interfacename> instances Hibernate
+                    <interfacename>org.hibernate.query.internal.ParameterMetadata</interfacename> instances Hibernate
                     will maintain in its QueryPlanCache.  The default is 128.
                 </para>
             </listitem>

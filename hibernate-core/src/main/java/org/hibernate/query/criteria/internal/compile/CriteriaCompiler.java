@@ -11,13 +11,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.ParameterExpression;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
+import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.type.Type;
 
 /**
@@ -30,13 +30,13 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class CriteriaCompiler implements Serializable {
-	private final HibernateEntityManagerImplementor entityManager;
+	private final SessionImplementor entityManager;
 
-	public CriteriaCompiler(HibernateEntityManagerImplementor entityManager) {
+	public CriteriaCompiler(SessionImplementor entityManager) {
 		this.entityManager = entityManager;
 	}
 
-	public Query compile(CompilableCriteria criteria) {
+	public QueryImplementor compile(CompilableCriteria criteria) {
 		try {
 			criteria.validate();
 		}
@@ -44,10 +44,8 @@ public class CriteriaCompiler implements Serializable {
 			throw new IllegalArgumentException( "Error occurred validating the Criteria", ise );
 		}
 
-		final Map<ParameterExpression<?>, ExplicitParameterInfo<?>> explicitParameterInfoMap =
-				new HashMap<ParameterExpression<?>, ExplicitParameterInfo<?>>();
-
-		final List<ImplicitParameterBinding> implicitParameterBindings = new ArrayList<ImplicitParameterBinding>();
+		final Map<ParameterExpression<?>, ExplicitParameterInfo<?>> explicitParameterInfoMap = new HashMap<>();
+		final List<ImplicitParameterBinding> implicitParameterBindings = new ArrayList<>();
 
 		RenderingContext renderingContext = new RenderingContext() {
 			private int aliasCount;
@@ -115,8 +113,7 @@ public class CriteriaCompiler implements Serializable {
 			}
 
 			public String getCastType(Class javaType) {
-				SessionFactoryImplementor factory =
-						( SessionFactoryImplementor ) entityManager.getFactory().getSessionFactory();
+				SessionFactoryImplementor factory = entityManager.getFactory();
 				Type hibernateType = factory.getTypeResolver().heuristicType( javaType.getName() );
 				if ( hibernateType == null ) {
 					throw new IllegalArgumentException(

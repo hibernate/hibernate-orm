@@ -27,9 +27,9 @@ import javax.persistence.metamodel.Type;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.jpa.internal.metamodel.MetamodelImpl;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.mapping.MappedSuperclass;
+import org.hibernate.metamodel.internal.MetamodelImpl;
 
 import org.junit.Test;
 

@@ -9,8 +9,6 @@ package org.hibernate.internal;
 import java.net.URISyntaxException;
 import java.net.URL;
 
-import org.hibernate.internal.CoreMessageLogger;
-
 import org.jboss.logging.annotations.Cause;
 import org.jboss.logging.annotations.LogMessage;
 import org.jboss.logging.annotations.Message;
@@ -25,7 +23,7 @@ import static org.jboss.logging.Logger.Level.WARN;
  * The jboss-logging {@link MessageLogger} for the hibernate-entitymanager module.  It reserves message ids ranging from
  * 15001 to 20000 inclusively.
  * <p/>
- * New messages must be added after the last message defined to ensure message codes are unique.
+ * New messages must be added afterQuery the last message defined to ensure message codes are unique.
  */
 @MessageLogger(projectCode = "HHH")
 public interface EntityManagerMessageLogger extends CoreMessageLogger {

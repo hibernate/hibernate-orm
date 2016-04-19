@@ -9,21 +9,21 @@ package org.hibernate.query.internal;
 import javax.persistence.TemporalType;
 
 import org.hibernate.query.spi.QueryParameterBinding;
-import org.hibernate.sql.gen.NotYetImplementedException;
 import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole
  */
-public class QueryParameterBindingImpl implements QueryParameterBinding {
+public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 	private Type bindType;
-	private Object bindValue;
+	private T bindValue;
 
-	public QueryParameterBindingImpl() {
+	public QueryParameterBindingImpl(Type type) {
+		this.bindType = type;
 	}
 
 	@Override
-	public Object getBindValue() {
+	public T getBindValue() {
 		return bindValue;
 	}
 
@@ -33,7 +33,7 @@ public class QueryParameterBindingImpl implements QueryParameterBinding {
 	}
 
 	@Override
-	public void setBindValue(Object value) {
+	public void setBindValue(T value) {
 		if ( value == null ) {
 			throw new IllegalArgumentException( "Cannot bind null to query parameter" );
 		}
@@ -41,13 +41,14 @@ public class QueryParameterBindingImpl implements QueryParameterBinding {
 	}
 
 	@Override
-	public void setBindValue(Object value, Type clarifiedType) {
+	public void setBindValue(T value, Type clarifiedType) {
 		setBindValue( value );
 		this.bindType = clarifiedType;
 	}
 
 	@Override
-	public void setBindValue(Object value, TemporalType clarifiedTemporalType) {
-		throw new NotYetImplementedException( "swapping types based on TemporalType not yet implemented" );
+	public void setBindValue(T value, TemporalType clarifiedTemporalType) {
+		setBindValue( value );
+		this.bindType = BindingTypeHelper.INSTANCE.determineTypeForTemporalType( clarifiedTemporalType, bindType, value );
 	}
 }

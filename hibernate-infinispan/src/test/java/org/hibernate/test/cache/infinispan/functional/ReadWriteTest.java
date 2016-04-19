@@ -21,16 +21,18 @@ import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
+
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.test.cache.infinispan.functional.entities.Citizen;
 import org.hibernate.test.cache.infinispan.functional.entities.Item;
 import org.hibernate.test.cache.infinispan.functional.entities.NaturalIdOnManyToOne;
 import org.hibernate.test.cache.infinispan.functional.entities.OtherItem;
 import org.hibernate.test.cache.infinispan.functional.entities.State;
 import org.hibernate.test.cache.infinispan.functional.entities.VersionedItem;
-import org.hibernate.testing.TestForIssue;
-import org.infinispan.commons.util.ByRef;
 import org.junit.After;
 import org.junit.Test;
+
+import org.infinispan.commons.util.ByRef;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
@@ -475,7 +477,7 @@ public class ReadWriteTest extends ReadOnlyTest {
 	public void testNaturalIdCached() throws Exception {
 		saveSomeCitizens();
 
-		// Clear the cache before the transaction begins
+		// Clear the cache beforeQuery the transaction begins
 		ReadWriteTest.this.cleanupCache();
 		Thread.sleep(10);
 
@@ -531,7 +533,7 @@ public class ReadWriteTest extends ReadOnlyTest {
 		assertEquals( "NaturalId Cache Puts", 2, stats.getNaturalIdCachePutCount() );
 		assertEquals( "NaturalId Cache Queries", 0, stats.getNaturalIdQueryExecutionCount() );
 
-		//Try NaturalIdLoadAccess after insert
+		//Try NaturalIdLoadAccess afterQuery insert
 		final Citizen citizen = withTxSessionApply(s -> {
 			State france = ReadWriteTest.this.getState(s, "Ile de France");
 			NaturalIdLoadAccess<Citizen> naturalIdLoader = s.byNaturalId(Citizen.class);
@@ -573,7 +575,7 @@ public class ReadWriteTest extends ReadOnlyTest {
 			markRollbackOnly(s);
 		});
 
-		// Try NaturalIdLoadAccess after load
+		// Try NaturalIdLoadAccess afterQuery load
 		withTxSession(s -> {
 			State france = ReadWriteTest.this.getState(s, "Ile de France");
 			NaturalIdLoadAccess naturalIdLoader = s.byNaturalId(Citizen.class);

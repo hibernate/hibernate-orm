@@ -6,8 +6,6 @@
  */
 package org.hibernate.test.cache.infinispan.access;
 
-import javax.transaction.TransactionManager;
-
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Properties;
@@ -20,30 +18,37 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import javax.transaction.TransactionManager;
 
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.engine.spi.SessionImplementor;
+
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
-import org.hibernate.testing.TestForIssue;
-import org.infinispan.configuration.cache.Configuration;
-import org.infinispan.configuration.cache.ConfigurationBuilder;
-import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.test.CacheManagerCallable;
-import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.infinispan.configuration.cache.Configuration;
+import org.infinispan.configuration.cache.ConfigurationBuilder;
+import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.test.CacheManagerCallable;
+import org.infinispan.test.fwk.TestCacheManagerFactory;
+
 import static org.infinispan.test.TestingUtil.withCacheManager;
 import static org.infinispan.test.TestingUtil.withTx;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.junit.Assert.*;
 
 /**
  * Tests of {@link PutFromLoadValidator}.
@@ -154,7 +159,7 @@ public class PutFromLoadValidatorUnitTest {
 			public void call() {
 				PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), regionFactory(cm));
 				Invalidation invalidation = new Invalidation(testee, removeRegion);
-				// the naked put can succeed because it has txTimestamp after invalidation
+				// the naked put can succeed because it has txTimestamp afterQuery invalidation
 				NakedPut nakedPut = new NakedPut(testee, true);
 				exec(transactional, invalidation, nakedPut);
 			}
@@ -464,7 +469,7 @@ public class PutFromLoadValidatorUnitTest {
 		@Override
 		public Void call() throws Exception {
 			try {
-				long txTimestamp = System.currentTimeMillis(); // this should be acquired before UserTransaction.begin()
+				long txTimestamp = System.currentTimeMillis(); // this should be acquired beforeQuery UserTransaction.begin()
 				SessionImplementor session = mock (SessionImplementor.class);
 				putFromLoadValidator.registerPendingPut(session, KEY1, txTimestamp);
 
@@ -495,7 +500,7 @@ public class PutFromLoadValidatorUnitTest {
 		@Override
 		public Void call() throws Exception {
 			try {
-				long txTimestamp = System.currentTimeMillis(); // this should be acquired before UserTransaction.begin()
+				long txTimestamp = System.currentTimeMillis(); // this should be acquired beforeQuery UserTransaction.begin()
 				SessionImplementor session = mock (SessionImplementor.class);
 				PutFromLoadValidator.Lock lock = testee.acquirePutFromLoadLock(session, KEY1, txTimestamp);
 				try {

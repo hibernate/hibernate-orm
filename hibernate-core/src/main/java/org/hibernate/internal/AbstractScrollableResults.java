@@ -20,7 +20,7 @@ import java.util.TimeZone;
 import org.hibernate.HibernateException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.QueryParameters;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.HolderInstantiator;
 import org.hibernate.loader.Loader;
 import org.hibernate.type.StandardBasicTypes;
@@ -36,7 +36,7 @@ public abstract class AbstractScrollableResults implements ScrollableResults {
 
 	private final ResultSet resultSet;
 	private final PreparedStatement ps;
-	private final SessionImplementor session;
+	private final SharedSessionContractImplementor session;
 	private final Loader loader;
 	private final QueryParameters queryParameters;
 	private final Type[] types;
@@ -45,7 +45,7 @@ public abstract class AbstractScrollableResults implements ScrollableResults {
 	protected AbstractScrollableResults(
 			ResultSet rs,
 			PreparedStatement ps,
-			SessionImplementor sess,
+			SharedSessionContractImplementor sess,
 			Loader loader,
 			QueryParameters queryParameters,
 			Type[] types,
@@ -71,7 +71,7 @@ public abstract class AbstractScrollableResults implements ScrollableResults {
 		return ps;
 	}
 
-	protected SessionImplementor getSession() {
+	protected SharedSessionContractImplementor getSession() {
 		return session;
 	}
 

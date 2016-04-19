@@ -10,7 +10,7 @@ import java.io.Serializable;
 
 import org.hibernate.cache.spi.access.RegionAccessStrategy;
 import org.hibernate.engine.spi.SessionEventListenerManager;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * @author Steve Ebersole
@@ -22,7 +22,7 @@ public final class CacheHelper {
 	}
 
 	public static Serializable fromSharedCache(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Object cacheKey,
 			RegionAccessStrategy cacheAccessStrategy) {
 		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();

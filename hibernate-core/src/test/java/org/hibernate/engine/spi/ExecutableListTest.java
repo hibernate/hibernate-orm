@@ -19,6 +19,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.action.spi.Executable;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Assert;
@@ -86,7 +87,7 @@ public class ExecutableListTest extends BaseUnitTestCase {
 		}
 
 		@Override
-		public void afterDeserialize(SessionImplementor session) {
+		public void afterDeserialize(SharedSessionContractImplementor session) {
 			this.afterDeserializeCalled = true;
 		}
 

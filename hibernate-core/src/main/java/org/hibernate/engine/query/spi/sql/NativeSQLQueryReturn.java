@@ -6,7 +6,6 @@
  */
 package org.hibernate.engine.query.spi.sql;
 
-
 /**
  * Describes a return in a native SQL query.
  * <p/>

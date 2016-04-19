@@ -12,7 +12,11 @@ import org.hibernate.jpa.HibernateEntityManagerFactory;
  * Internal contact for things that have {@link HibernateEntityManagerFactory} access.
  *
  * @author Strong Liu <stliu@hibernate.org>
+ *
+ * @deprecated (since 6.0) Why do we need an over-arching access to HibernateEntityManagerFactory across
+ * multiple contract hierarchies?
  */
+@Deprecated
 public interface HibernateEntityManagerFactoryAware {
 	/**
 	 * Get access to the Hibernate extended EMF contract.

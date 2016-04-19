@@ -12,7 +12,7 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cache.CacheException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.Type;
 
 /**
@@ -29,7 +29,7 @@ public interface QueryCache {
 	 *
 	 * @throws CacheException Indicates a problem delegating to the underlying cache.
 	 */
-	public void clear() throws CacheException;
+	void clear() throws CacheException;
 
 	/**
 	 * Put a result into the query cache.
@@ -44,7 +44,12 @@ public interface QueryCache {
 	 *
 	 * @throws HibernateException Indicates a problem delegating to the underlying cache.
 	 */
-	public boolean put(QueryKey key, Type[] returnTypes, List result, boolean isNaturalKeyLookup, SessionImplementor session) throws HibernateException;
+	boolean put(
+			QueryKey key,
+			Type[] returnTypes,
+			List result,
+			boolean isNaturalKeyLookup,
+			SharedSessionContractImplementor session) throws HibernateException;
 
 	/**
 	 * Get results from the cache.
@@ -59,18 +64,23 @@ public interface QueryCache {
 	 *
 	 * @throws HibernateException Indicates a problem delegating to the underlying cache.
 	 */
-	public List get(QueryKey key, Type[] returnTypes, boolean isNaturalKeyLookup, Set<Serializable> spaces, SessionImplementor session) throws HibernateException;
+	List get(
+			QueryKey key,
+			Type[] returnTypes,
+			boolean isNaturalKeyLookup,
+			Set<Serializable> spaces,
+			SharedSessionContractImplementor session) throws HibernateException;
 
 	/**
 	 * Destroy the cache.
 	 */
-	public void destroy();
+	void destroy();
 
 	/**
 	 * The underlying cache factory region being used.
 	 *
 	 * @return The cache region.
 	 */
-	public QueryResultsRegion getRegion();
+	QueryResultsRegion getRegion();
 
 }

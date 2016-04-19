@@ -14,7 +14,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import junit.framework.AssertionFailedError;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.access.AccessDelegate;
 import org.hibernate.cache.infinispan.access.NonTxInvalidationCacheAccessDelegate;
@@ -23,15 +22,18 @@ import org.hibernate.cache.infinispan.access.TxInvalidationCacheAccessDelegate;
 import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.engine.spi.SessionImplementor;
+
 import org.hibernate.test.cache.infinispan.AbstractRegionAccessStrategyTest;
 import org.hibernate.test.cache.infinispan.NodeEnvironment;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 import org.hibernate.test.cache.infinispan.util.TestingKeyFactory;
+import org.junit.Test;
+import junit.framework.AssertionFailedError;
+
 import org.infinispan.AdvancedCache;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.test.CacheManagerCallable;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
-import org.junit.Test;
 
 import static org.infinispan.test.TestingUtil.withCacheManager;
 import static org.junit.Assert.assertEquals;
@@ -147,7 +149,7 @@ public class CollectionRegionAccessStrategyTest extends
 				try {
 					removeLatch.countDown();
 					// the remove should be blocked because the putFromLoad has been acquired
-					// and the remove can continue only after we've inserted the entry
+					// and the remove can continue only afterQuery we've inserted the entry
 					assertFalse(pferLatch.await( 2, TimeUnit.SECONDS ) );
 				}
 				catch (InterruptedException e) {

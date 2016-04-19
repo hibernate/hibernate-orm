@@ -630,7 +630,7 @@ public class Ejb3Column {
 		}
 	}
 
-	//must only be called after all setters are defined and before bind
+	//must only be called afterQuery all setters are defined and beforeQuery bind
 	private void extractDataFromPropertyData(PropertyData inferredData) {
 		if ( inferredData != null ) {
 			XProperty property = inferredData.getProperty();

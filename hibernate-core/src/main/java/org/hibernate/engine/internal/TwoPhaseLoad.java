@@ -20,7 +20,7 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -55,7 +55,7 @@ public final class TwoPhaseLoad {
 	}
 
 	/**
-	 * Register the "hydrated" state of an entity instance, after the first step of 2-phase loading.
+	 * Register the "hydrated" state of an entity instance, afterQuery the first step of 2-phase loading.
 	 *
 	 * Add the "hydrated state" (an array) of an uninitialized entity to the session. We don't try
 	 * to resolve any associations yet, because there might be other entities waiting to be
@@ -76,7 +76,7 @@ public final class TwoPhaseLoad {
 			final Object rowId,
 			final Object object,
 			final LockMode lockMode,
-			final SessionImplementor session) {
+			final SharedSessionContractImplementor session) {
 		final Object version = Versioning.getVersion( values, persister );
 		session.getPersistenceContext().addEntry(
 				object,
@@ -115,7 +115,7 @@ public final class TwoPhaseLoad {
 	public static void initializeEntity(
 			final Object entity,
 			final boolean readOnly,
-			final SessionImplementor session,
+			final SharedSessionContractImplementor session,
 			final PreLoadEvent preLoadEvent) {
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		final EntityEntry entityEntry = persistenceContext.getEntry( entity );
@@ -129,7 +129,7 @@ public final class TwoPhaseLoad {
 			final Object entity,
 			final EntityEntry entityEntry,
 			final boolean readOnly,
-			final SessionImplementor session,
+			final SharedSessionContractImplementor session,
 			final PreLoadEvent preLoadEvent) throws HibernateException {
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		final EntityPersister persister = entityEntry.getPersister();
@@ -152,7 +152,7 @@ public final class TwoPhaseLoad {
 			}
 		}
 
-		//Must occur after resolving identifiers!
+		//Must occur afterQuery resolving identifiers!
 		if ( session.isEventSource() ) {
 			preLoadEvent.setEntity( entity ).setState( hydratedState ).setId( id ).setPersister( persister );
 
@@ -212,7 +212,7 @@ public final class TwoPhaseLoad {
 					);
 
 					if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-						factory.getStatisticsImplementor().secondLevelCachePut( cache.getRegion().getName() );
+						factory.getStatistics().secondLevelCachePut( cache.getRegion().getName() );
 					}
 				}
 				finally {
@@ -254,7 +254,7 @@ public final class TwoPhaseLoad {
 					hydratedState,
 					persister.getPropertyTypes(),
 					persister.getPropertyUpdateability(),
-					//after setting values to object
+					//afterQuery setting values to object
 					hydratedState,
 					session
 			);
@@ -271,12 +271,12 @@ public final class TwoPhaseLoad {
 		}
 
 		if ( factory.getStatistics().isStatisticsEnabled() ) {
-			factory.getStatisticsImplementor().loadEntity( persister.getEntityName() );
+			factory.getStatistics().loadEntity( persister.getEntityName() );
 		}
 	}
 	
 	/**
-	 * PostLoad cannot occur during initializeEntity, as that call occurs *before*
+	 * PostLoad cannot occur during initializeEntity, as that call occurs *beforeQuery*
 	 * the Set collections are added to the persistence context by Loader.
 	 * Without the split, LazyInitializationExceptions can occur in the Entity's
 	 * postLoad if it acts upon the collection.
@@ -289,7 +289,7 @@ public final class TwoPhaseLoad {
 	 */
 	public static void postLoad(
 			final Object entity,
-			final SessionImplementor session,
+			final SharedSessionContractImplementor session,
 			final PostLoadEvent postLoadEvent) {
 		
 		if ( session.isEventSource() ) {
@@ -309,7 +309,7 @@ public final class TwoPhaseLoad {
 		}
 	}
 
-	private static boolean useMinimalPuts(SessionImplementor session, EntityEntry entityEntry) {
+	private static boolean useMinimalPuts(SharedSessionContractImplementor session, EntityEntry entityEntry) {
 		if ( session.getFactory().getSessionFactoryOptions().isMinimalPutsEnabled() ) {
 			return session.getCacheMode() != CacheMode.REFRESH;
 		}
@@ -321,7 +321,7 @@ public final class TwoPhaseLoad {
 
 	/**
 	 * Add an uninitialized instance of an entity class, as a placeholder to ensure object
-	 * identity. Must be called before <tt>postHydrate()</tt>.
+	 * identity. Must be called beforeQuery <tt>postHydrate()</tt>.
 	 *
 	 * Create a "temporary" entry for a newly instantiated entity. The entity is uninitialized,
 	 * but we need the mapping from id to instance in order to guarantee uniqueness.
@@ -337,7 +337,7 @@ public final class TwoPhaseLoad {
 			final Object object,
 			final EntityPersister persister,
 			final LockMode lockMode,
-			final SessionImplementor session) {
+			final SharedSessionContractImplementor session) {
 		session.getPersistenceContext().addEntity(
 				object,
 				Status.LOADING,
@@ -367,7 +367,7 @@ public final class TwoPhaseLoad {
 			final EntityPersister persister,
 			final LockMode lockMode,
 			final Object version,
-			final SessionImplementor session) {
+			final SharedSessionContractImplementor session) {
 		session.getPersistenceContext().addEntity(
 				object,
 				Status.LOADING,

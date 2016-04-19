@@ -8,9 +8,6 @@ package org.hibernate.test.annotations.naturalid;
 
 import java.util.List;
 
-import org.junit.After;
-import org.junit.Test;
-
 import org.hibernate.Criteria;
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.Session;
@@ -19,7 +16,10 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.stat.Statistics;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -149,7 +149,7 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 		assertEquals( "NaturalId Cache Queries", 0, stats.getNaturalIdQueryExecutionCount() );
 
 		
-		//Try NaturalIdLoadAccess after insert
+		//Try NaturalIdLoadAccess afterQuery insert
 		
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -195,7 +195,7 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		
-		//Try NaturalIdLoadAccess after load
+		//Try NaturalIdLoadAccess afterQuery load
 		
 		s = openSession();
 		tx = s.beginTransaction();

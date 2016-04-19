@@ -14,7 +14,7 @@ import java.sql.Timestamp;
 import java.util.Date;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 
 import org.jboss.logging.Logger;
@@ -49,12 +49,12 @@ public class DbTimestampType extends TimestampType {
 	}
 
 	@Override
-	public Date seed(SessionImplementor session) {
+	public Date seed(SharedSessionContractImplementor session) {
 		if ( session == null ) {
 			LOG.trace( "Incoming session was null; using current jvm time" );
-			return super.seed( session );
+			return super.seed( null );
 		}
-		else if ( !session.getFactory().getDialect().supportsCurrentTimestampSelection() ) {
+		else if ( !session.getJdbcServices().getJdbcEnvironment().getDialect().supportsCurrentTimestampSelection() ) {
 			LOG.debug( "Falling back to vm-based timestamp, as dialect does not support current timestamp selection" );
 			return super.seed( session );
 		}
@@ -63,8 +63,8 @@ public class DbTimestampType extends TimestampType {
 		}
 	}
 
-	private Date getCurrentTimestamp(SessionImplementor session) {
-		Dialect dialect = session.getFactory().getDialect();
+	private Date getCurrentTimestamp(SharedSessionContractImplementor session) {
+		Dialect dialect = session.getJdbcServices().getJdbcEnvironment().getDialect();
 		String timestampSelectString = dialect.getCurrentTimestampSelectString();
 		if ( dialect.isCurrentTimestampSelectStringCallable() ) {
 			return useCallableStatement( timestampSelectString, session );
@@ -72,7 +72,7 @@ public class DbTimestampType extends TimestampType {
 		return usePreparedStatement( timestampSelectString, session );
 	}
 
-	private Timestamp usePreparedStatement(String timestampSelectString, SessionImplementor session) {
+	private Timestamp usePreparedStatement(String timestampSelectString, SharedSessionContractImplementor session) {
 		PreparedStatement ps = null;
 		try {
 			ps = session
@@ -93,7 +93,7 @@ public class DbTimestampType extends TimestampType {
 			return ts;
 		}
 		catch (SQLException e) {
-			throw session.getFactory().getSQLExceptionHelper().convert(
+			throw session.getJdbcServices().getSqlExceptionHelper().convert(
 					e,
 					"could not select current db timestamp",
 					timestampSelectString
@@ -101,13 +101,13 @@ public class DbTimestampType extends TimestampType {
 		}
 		finally {
 			if ( ps != null ) {
-				session.getJdbcCoordinator().getResourceRegistry().release( ps );
+				session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( ps );
 				session.getJdbcCoordinator().afterStatementExecution();
 			}
 		}
 	}
 
-	private Timestamp useCallableStatement(String callString, SessionImplementor session) {
+	private Timestamp useCallableStatement(String callString, SharedSessionContractImplementor session) {
 		CallableStatement cs = null;
 		try {
 			cs = (CallableStatement) session
@@ -128,7 +128,7 @@ public class DbTimestampType extends TimestampType {
 			return ts;
 		}
 		catch (SQLException e) {
-			throw session.getFactory().getSQLExceptionHelper().convert(
+			throw session.getJdbcServices().getSqlExceptionHelper().convert(
 					e,
 					"could not call current db timestamp function",
 					callString
@@ -136,7 +136,7 @@ public class DbTimestampType extends TimestampType {
 		}
 		finally {
 			if ( cs != null ) {
-				session.getJdbcCoordinator().getResourceRegistry().release( cs );
+				session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( cs );
 				session.getJdbcCoordinator().afterStatementExecution();
 			}
 		}

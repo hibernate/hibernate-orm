@@ -38,7 +38,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 			source.getEventListenerManager().partialFlushStart();
 
 			if ( flushMightBeNeeded(source) ) {
-				// Need to get the number of collection removals before flushing to executions
+				// Need to get the number of collection removals beforeQuery flushing to executions
 				// (because flushing to executions can add collection removal actions to the action queue).
 				final int oldSize = source.getActionQueue().numberOfCollectionRemovals();
 				flushEverythingToExecutions(event);
@@ -53,7 +53,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 					postPostFlush( source );
 
 					if ( source.getFactory().getStatistics().isStatisticsEnabled() ) {
-						source.getFactory().getStatisticsImplementor().flush();
+						source.getFactory().getStatistics().flush();
 					}
 				}
 				else {
@@ -73,15 +73,14 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 	}
 
 	private boolean flushIsReallyNeeded(AutoFlushEvent event, final EventSource source) {
-		return source.getActionQueue()
-				.areTablesToBeUpdated( event.getQuerySpaces() ) ||
-						source.getFlushMode()==FlushMode.ALWAYS;
+		return source.getHibernateFlushMode() == FlushMode.ALWAYS
+				|| source.getActionQueue().areTablesToBeUpdated( event.getQuerySpaces() );
 	}
 
 	private boolean flushMightBeNeeded(final EventSource source) {
-		return !source.getFlushMode().lessThan(FlushMode.AUTO) &&
-				source.getDontFlushFromFind() == 0 &&
-				( source.getPersistenceContext().getNumberOfManagedEntities() > 0 ||
+		return !source.getHibernateFlushMode().lessThan( FlushMode.AUTO )
+				&& source.getDontFlushFromFind() == 0
+				&& ( source.getPersistenceContext().getNumberOfManagedEntities() > 0 ||
 						source.getPersistenceContext().getCollectionEntries().size() > 0 );
 	}
 }

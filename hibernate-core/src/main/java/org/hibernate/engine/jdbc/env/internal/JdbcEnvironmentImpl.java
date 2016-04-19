@@ -252,7 +252,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		}
 		this.identifierHelper = identifierHelper;
 
-		// and that current-catalog and current-schema happen after it
+		// and that current-catalog and current-schema happen afterQuery it
 		this.currentCatalog = identifierHelper.toIdentifier( extractedMetaDataSupport.getConnectionCatalogName() );
 		this.currentSchema = identifierHelper.toIdentifier( extractedMetaDataSupport.getConnectionSchemaName() );
 

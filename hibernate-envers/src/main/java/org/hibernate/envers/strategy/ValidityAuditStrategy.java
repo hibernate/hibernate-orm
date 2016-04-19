@@ -101,7 +101,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		// null end date exists for each identifier.
 		final boolean reuseEntityIdentifier = enversService.getGlobalConfiguration().isAllowIdentifierReuse();
 		if ( reuseEntityIdentifier || getRevisionType( enversService, data ) != RevisionType.ADD ) {
-			// Register transaction completion process to guarantee execution of UPDATE statement after INSERT.
+			// Register transaction completion process to guarantee execution of UPDATE statement afterQuery INSERT.
 			( (EventSource) session ).getActionQueue().registerProcess( new BeforeTransactionCompletionProcess() {
 				@Override
 				public void doBeforeTransactionCompletion(final SessionImplementor sessionImplementor) {

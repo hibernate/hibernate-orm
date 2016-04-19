@@ -12,7 +12,7 @@ import java.lang.reflect.Method;
 
 import javassist.util.proxy.MethodHandler;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.pojo.BasicLazyInitializer;
@@ -40,7 +40,7 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 			Method getIdentifierMethod,
 			Method setIdentifierMethod,
 			CompositeType componentIdType,
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			boolean overridesEquals) {
 		super( entityName, persistentClass, id, getIdentifierMethod, setIdentifierMethod, componentIdType, session, overridesEquals );
 		this.interfaces = interfaces;

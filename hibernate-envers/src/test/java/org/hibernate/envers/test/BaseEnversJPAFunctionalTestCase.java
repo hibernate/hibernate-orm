@@ -30,14 +30,12 @@ import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
-import org.hibernate.jpa.internal.EntityManagerImpl;
 import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
 
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.junit4.Helper;
-
 import org.junit.After;
 
 import org.jboss.logging.Logger;
@@ -247,7 +245,7 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 		catch (IllegalStateException e) {
 		}
 		if ( em.isOpen() ) {
-			// as we open an EM before the test runs, it will still be open if the test uses a custom EM.
+			// as we open an EM beforeQuery the test runs, it will still be open if the test uses a custom EM.
 			// or, the person may have forgotten to close. So, do not raise a "fail", but log the fact.
 			em.close();
 			log.warn( "The EntityManager is not closed. Closing it." );

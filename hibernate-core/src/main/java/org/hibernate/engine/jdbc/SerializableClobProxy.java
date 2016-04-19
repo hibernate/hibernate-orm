@@ -44,7 +44,7 @@ public class SerializableClobProxy implements InvocationHandler, Serializable {
 	 */
 	public Clob getWrappedClob() {
 		if ( clob == null ) {
-			throw new IllegalStateException( "Clobs may not be accessed after serialization" );
+			throw new IllegalStateException( "Clobs may not be accessed afterQuery serialization" );
 		}
 		else {
 			return clob;

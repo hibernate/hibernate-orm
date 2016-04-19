@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.spi.id.IdTableInfo;
 import org.hibernate.hql.spi.id.TableBasedDeleteHandlerImpl;
@@ -45,18 +45,18 @@ public class DeleteHandlerImpl extends TableBasedDeleteHandlerImpl {
 	}
 
 	@Override
-	protected int handlePrependedParametersOnIdSelection(PreparedStatement ps, SessionImplementor session, int pos) throws SQLException {
+	protected int handlePrependedParametersOnIdSelection(PreparedStatement ps, SharedSessionContractImplementor session, int pos) throws SQLException {
 		Helper.INSTANCE.bindSessionIdentifier( ps, session, pos );
 		return 1;
 	}
 
 	@Override
-	protected void handleAddedParametersOnDelete(PreparedStatement ps, SessionImplementor session) throws SQLException {
+	protected void handleAddedParametersOnDelete(PreparedStatement ps, SharedSessionContractImplementor session) throws SQLException {
 		Helper.INSTANCE.bindSessionIdentifier( ps, session, 1 );
 	}
 
 	@Override
-	protected void releaseFromUse(Queryable persister, SessionImplementor session) {
+	protected void releaseFromUse(Queryable persister, SharedSessionContractImplementor session) {
 		// clean up our id-table rows
 		Helper.INSTANCE.cleanUpRows( idTableInfo.getQualifiedIdTableName(), session );
 	}

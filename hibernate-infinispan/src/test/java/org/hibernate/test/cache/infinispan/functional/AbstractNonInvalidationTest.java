@@ -1,20 +1,5 @@
 package org.hibernate.test.cache.infinispan.functional;
 
-import org.hibernate.PessimisticLockException;
-import org.hibernate.StaleStateException;
-import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
-import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
-import org.hibernate.cache.spi.Region;
-import org.hibernate.test.cache.infinispan.functional.entities.Item;
-import org.hibernate.test.cache.infinispan.util.TestInfinispanRegionFactory;
-import org.hibernate.test.cache.infinispan.util.TestTimeService;
-import org.hibernate.testing.AfterClassOnce;
-import org.hibernate.testing.BeforeClassOnce;
-import org.infinispan.AdvancedCache;
-import org.junit.After;
-import org.junit.Before;
-
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -26,6 +11,23 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import org.hibernate.PessimisticLockException;
+import org.hibernate.StaleStateException;
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
+import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
+import org.hibernate.cache.spi.Region;
+
+import org.hibernate.testing.AfterClassOnce;
+import org.hibernate.testing.BeforeClassOnce;
+import org.hibernate.test.cache.infinispan.functional.entities.Item;
+import org.hibernate.test.cache.infinispan.util.TestInfinispanRegionFactory;
+import org.hibernate.test.cache.infinispan.util.TestTimeService;
+import org.junit.After;
+import org.junit.Before;
+
+import org.infinispan.AdvancedCache;
 
 import static org.junit.Assert.assertEquals;
 
@@ -96,7 +98,7 @@ public abstract class AbstractNonInvalidationTest extends SingleNodeTest {
       return executor.submit(() -> withTxSessionApply(s -> {
          try {
             Item item = s.load(Item.class, id);
-            item.getName(); // force load & putFromLoad before the barrier
+            item.getName(); // force load & putFromLoad beforeQuery the barrier
             loadBarrier.await(WAIT_TIMEOUT, TimeUnit.SECONDS);
             s.delete(item);
             if (preFlushLatch != null) {
@@ -125,7 +127,7 @@ public abstract class AbstractNonInvalidationTest extends SingleNodeTest {
       return executor.submit(() -> withTxSessionApply(s -> {
          try {
             Item item = s.load(Item.class, id);
-            item.getName(); // force load & putFromLoad before the barrier
+            item.getName(); // force load & putFromLoad beforeQuery the barrier
             loadBarrier.await(WAIT_TIMEOUT, TimeUnit.SECONDS);
             item.setDescription("Updated item");
             s.update(item);

@@ -8,7 +8,7 @@ package org.hibernate.id.enhanced;
 
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * Encapsulates definition of the underlying data structure backing a
@@ -21,25 +21,25 @@ public interface DatabaseStructure extends ExportableProducer {
 	 * The name of the database structure (table or sequence).
 	 * @return The structure name.
 	 */
-	public String getName();
+	String getName();
 
 	/**
 	 * How many times has this structure been accessed through this reference?
 	 * @return The number of accesses.
 	 */
-	public int getTimesAccessed();
+	int getTimesAccessed();
 
 	/**
 	 * The configured initial value
 	 * @return The configured initial value
 	 */
-	public int getInitialValue();
+	int getInitialValue();
 
 	/**
 	 * The configured increment size
 	 * @return The configured increment size
 	 */
-	public int getIncrementSize();
+	int getIncrementSize();
 
 	/**
 	 * A callback to be able to get the next value from the underlying
@@ -48,34 +48,34 @@ public interface DatabaseStructure extends ExportableProducer {
 	 * @param session The session.
 	 * @return The next value.
 	 */
-	public AccessCallback buildCallback(SessionImplementor session);
+	AccessCallback buildCallback(SharedSessionContractImplementor session);
 
 	/**
-	 * Prepare this structure for use.  Called sometime after instantiation,
-	 * but before first use.
+	 * Prepare this structure for use.  Called sometime afterQuery instantiation,
+	 * but beforeQuery first use.
 	 *
 	 * @param optimizer The optimizer being applied to the generator.
 	 */
-	public void prepare(Optimizer optimizer);
+	void prepare(Optimizer optimizer);
 
 	/**
 	 * Commands needed to create the underlying structures.
 	 * @param dialect The database dialect being used.
 	 * @return The creation commands.
 	 */
-	public String[] sqlCreateStrings(Dialect dialect);
+	String[] sqlCreateStrings(Dialect dialect);
 
 	/**
 	 * Commands needed to drop the underlying structures.
 	 * @param dialect The database dialect being used.
 	 * @return The drop commands.
 	 */
-	public String[] sqlDropStrings(Dialect dialect);
+	String[] sqlDropStrings(Dialect dialect);
 
 	/**
 	 * Is the structure physically a sequence?
 	 *
 	 * @return {@code true} if the actual database structure is a sequence; {@code false} otherwise.
 	 */
-	public boolean isPhysicalSequence();
+	boolean isPhysicalSequence();
 }

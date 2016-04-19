@@ -73,8 +73,10 @@ public class NoCachingRegionFactory implements RegionFactory {
 	}
 
 	@Override
-	public CollectionRegion buildCollectionRegion(String regionName, Properties properties, CacheDataDescription metadata)
-			throws CacheException {
+	public CollectionRegion buildCollectionRegion(
+			String regionName,
+			Properties properties,
+			CacheDataDescription metadata) throws CacheException {
 		throw new NoCacheRegionFactoryAvailableException();
 	}
 

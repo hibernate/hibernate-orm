@@ -1,3 +1,9 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
 package org.hibernate.jpa.spi;
 
 import java.util.List;
@@ -8,13 +14,15 @@ import org.hibernate.query.criteria.internal.ValueHandlerFactory;
 import org.hibernate.transform.BasicTransformerAdapter;
 
 /**
+ * ResultTransformer adapter for handling Tuple results from Criteria queries
+ *
  * @author Steve Ebersole
  */
-class CriteriaQueryTupleTransformer extends BasicTransformerAdapter {
+public class CriteriaQueryTupleTransformer extends BasicTransformerAdapter {
 	private final List<ValueHandlerFactory.ValueHandler> valueHandlers;
 	private final List tupleElements;
 
-	CriteriaQueryTupleTransformer(List<ValueHandlerFactory.ValueHandler> valueHandlers, List tupleElements) {
+	public CriteriaQueryTupleTransformer(List<ValueHandlerFactory.ValueHandler> valueHandlers, List tupleElements) {
 		// todo : should these 2 sizes match *always*?
 		this.valueHandlers = valueHandlers;
 		this.tupleElements = tupleElements;

@@ -14,7 +14,7 @@ import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
  *         First to allow the coordinator to determine if its owner is still active (open, etc).
  *     </li>
  *     <li>
- *         Second is to allow the coordinator to dispatch before and after completion events to the owner
+ *         Second is to allow the coordinator to dispatch beforeQuery and afterQuery completion events to the owner
  *     </li>
  * </ul>
  *
@@ -26,34 +26,34 @@ public interface TransactionCoordinatorOwner {
 	 *
 	 * @return {@code true} indicates the owner is still active; {@code false} indicates it is not.
 	 */
-	public boolean isActive();
+	boolean isActive();
 
 	/**
-	 * A after-begin callback from the coordinator to its owner.
+	 * A afterQuery-begin callback from the coordinator to its owner.
 	 */
-	public void afterTransactionBegin();
+	void afterTransactionBegin();
 
 	/**
-	 * A before-completion callback from the coordinator to its owner.
+	 * A beforeQuery-completion callback from the coordinator to its owner.
 	 */
-	public void beforeTransactionCompletion();
+	void beforeTransactionCompletion();
 
 	/**
-	 * An after-completion callback from the coordinator to its owner.
+	 * An afterQuery-completion callback from the coordinator to its owner.
 	 *
 	 * @param successful Was the transaction successful?
-	 * @param delayed Is this a delayed after transaction completion call (aka after a timeout)?
+	 * @param delayed Is this a delayed afterQuery transaction completion call (aka afterQuery a timeout)?
 	 */
-	public void afterTransactionCompletion(boolean successful, boolean delayed);
+	void afterTransactionCompletion(boolean successful, boolean delayed);
 
-	public JdbcSessionOwner getJdbcSessionOwner();
+	JdbcSessionOwner getJdbcSessionOwner();
 
 	/**
 	 * Set the effective transaction timeout period for the current transaction, in seconds.
 	 *
-	 * @param seconds The number of seconds before a time out should occur.
+	 * @param seconds The number of seconds beforeQuery a time out should occur.
 	 */
-	public void setTransactionTimeOut(int seconds);
+	void setTransactionTimeOut(int seconds);
 
-	public void flushBeforeTransactionCompletion();
+	void flushBeforeTransactionCompletion();
 }

@@ -11,7 +11,7 @@ import java.io.Serializable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostCollectionUpdateEvent;
@@ -41,7 +41,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 				final CollectionPersister persister,
 				final Serializable id,
 				final boolean emptySnapshot,
-				final SessionImplementor session) {
+				final SharedSessionContractImplementor session) {
 		super( persister, collection, id, session );
 		this.emptySnapshot = emptySnapshot;
 	}
@@ -49,7 +49,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 	@Override
 	public void execute() throws HibernateException {
 		final Serializable id = getKey();
-		final SessionImplementor session = getSession();
+		final SharedSessionContractImplementor session = getSession();
 		final CollectionPersister persister = getPersister();
 		final PersistentCollection collection = getCollection();
 		final boolean affectedByFilters = persister.isAffectedByEnabledFilters( session );
@@ -90,7 +90,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 		postUpdate();
 
 		if ( getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
-			getSession().getFactory().getStatisticsImplementor().updateCollection( getPersister().getRole() );
+			getSession().getFactory().getStatistics().updateCollection( getPersister().getRole() );
 		}
 	}
 	

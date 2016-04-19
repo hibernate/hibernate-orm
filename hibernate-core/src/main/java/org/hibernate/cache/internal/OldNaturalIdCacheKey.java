@@ -12,7 +12,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.type.EntityType;
@@ -48,7 +48,7 @@ public class OldNaturalIdCacheKey implements Serializable {
 	public OldNaturalIdCacheKey(
 			final Object[] naturalIdValues,
 			Type[] propertyTypes, int[] naturalIdPropertyIndexes, final String entityName,
-			final SessionImplementor session) {
+			final SharedSessionContractImplementor session) {
 
 		this.entityName = entityName;
 		this.tenantId = session.getTenantIdentifier();
@@ -84,13 +84,14 @@ public class OldNaturalIdCacheKey implements Serializable {
 	}
 
 	private void initTransients() {
-		this.toString = new ValueHolder<String>(
+		this.toString = new ValueHolder<>(
 				new ValueHolder.DeferredInitializer<String>() {
 					@Override
 					public String initialize() {
 						//Complex toString is needed as naturalIds for entities are not simply based on a single value like primary keys
 						//the only same way to differentiate the keys is to included the disassembled values in the string.
-						final StringBuilder toStringBuilder = new StringBuilder().append( entityName ).append( "##NaturalId[" );
+						final StringBuilder toStringBuilder = new StringBuilder().append( entityName ).append(
+								"##NaturalId[" );
 						for ( int i = 0; i < naturalIdValues.length; i++ ) {
 							toStringBuilder.append( naturalIdValues[i] );
 							if ( i + 1 < naturalIdValues.length ) {

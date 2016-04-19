@@ -12,7 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * This interface should be implemented by user-defined "types".
@@ -55,14 +55,14 @@ public interface UserType {
 	 * @see java.sql.Types
 	 * @return int[] the typecodes
 	 */
-	public int[] sqlTypes();
+	int[] sqlTypes();
 
 	/**
 	 * The class returned by <tt>nullSafeGet()</tt>.
 	 *
 	 * @return Class
 	 */
-	public Class returnedClass();
+	Class returnedClass();
 
 	/**
 	 * Compare two instances of the class mapped by this type for persistence "equality".
@@ -72,12 +72,12 @@ public interface UserType {
 	 * @param y
 	 * @return boolean
 	 */
-	public boolean equals(Object x, Object y) throws HibernateException;
+	boolean equals(Object x, Object y) throws HibernateException;
 
 	/**
 	 * Get a hashcode for the instance, consistent with persistence "equality"
 	 */
-	public int hashCode(Object x) throws HibernateException;
+	int hashCode(Object x) throws HibernateException;
 
 	/**
 	 * Retrieve an instance of the mapped class from a JDBC resultset. Implementors
@@ -91,7 +91,7 @@ public interface UserType {
 	 * @throws HibernateException
 	 * @throws SQLException
 	 */
-	public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner) throws HibernateException, SQLException;
+	Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner) throws HibernateException, SQLException;
 
 	/**
 	 * Write an instance of the mapped class to a prepared statement. Implementors
@@ -106,7 +106,7 @@ public interface UserType {
 	 * @throws HibernateException
 	 * @throws SQLException
 	 */
-	public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session) throws HibernateException, SQLException;
+	void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException;
 
 	/**
 	 * Return a deep copy of the persistent state, stopping at entities and at
@@ -116,14 +116,14 @@ public interface UserType {
 	 * @param value the object to be cloned, which may be null
 	 * @return Object a copy
 	 */
-	public Object deepCopy(Object value) throws HibernateException;
+	Object deepCopy(Object value) throws HibernateException;
 
 	/**
 	 * Are objects of this type mutable?
 	 *
 	 * @return boolean
 	 */
-	public boolean isMutable();
+	boolean isMutable();
 
 	/**
 	 * Transform the object into its cacheable representation. At the very least this
@@ -135,7 +135,7 @@ public interface UserType {
 	 * @return a cachable representation of the object
 	 * @throws HibernateException
 	 */
-	public Serializable disassemble(Object value) throws HibernateException;
+	Serializable disassemble(Object value) throws HibernateException;
 
 	/**
 	 * Reconstruct an object from the cacheable representation. At the very least this
@@ -146,7 +146,7 @@ public interface UserType {
 	 * @return a reconstructed object from the cachable representation
 	 * @throws HibernateException
 	 */
-	public Object assemble(Serializable cached, Object owner) throws HibernateException;
+	Object assemble(Serializable cached, Object owner) throws HibernateException;
 
 	/**
 	 * During merge, replace the existing (target) value in the entity we are merging to
@@ -159,5 +159,5 @@ public interface UserType {
 	 * @param target the value in the managed entity
 	 * @return the value to be merged
 	 */
-	public Object replace(Object original, Object target, Object owner) throws HibernateException;
+	Object replace(Object original, Object target, Object owner) throws HibernateException;
 }

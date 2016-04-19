@@ -242,12 +242,12 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	protected void addTopExpression(StringBuilder sql) {
 		final int distinctStartPos = shallowIndexOfWord( sql, DISTINCT, 0 );
 		if ( distinctStartPos > 0 ) {
-			// Place TOP after DISTINCT.
+			// Place TOP afterQuery DISTINCT.
 			sql.insert( distinctStartPos + DISTINCT.length(), " TOP(?)" );
 		}
 		else {
 			final int selectStartPos = shallowIndexOf( sql, SELECT_WITH_SPACE, 0 );
-			// Place TOP after SELECT.
+			// Place TOP afterQuery SELECT.
 			sql.insert( selectStartPos + SELECT.length(), " TOP(?)" );
 		}
 		topAdded = true;

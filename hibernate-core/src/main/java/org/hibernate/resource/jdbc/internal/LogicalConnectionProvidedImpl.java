@@ -14,6 +14,7 @@ import java.sql.Connection;
 import org.hibernate.resource.jdbc.LogicalConnection;
 import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 
 import org.jboss.logging.Logger;
 
@@ -45,6 +46,11 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 		this.resourceRegistry = new ResourceRegistryStandardImpl();
 		this.closed = closed;
 		this.initiallyAutoCommit = initiallyAutoCommit;
+	}
+
+	@Override
+	public PhysicalConnectionHandlingMode getConnectionHandlingMode() {
+		return PhysicalConnectionHandlingMode.IMMEDIATE_ACQUISITION_AND_HOLD;
 	}
 
 	@Override
@@ -124,7 +130,7 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 		}
 		else if ( providedConnection != null ) {
 			throw new IllegalArgumentException(
-					"cannot reconnect to a new user-supplied connection because currently connected; must disconnect before reconnecting."
+					"cannot reconnect to a new user-supplied connection because currently connected; must disconnect beforeQuery reconnecting."
 			);
 		}
 		providedConnection = connection;

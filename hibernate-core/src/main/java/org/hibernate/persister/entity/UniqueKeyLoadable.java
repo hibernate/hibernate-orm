@@ -5,8 +5,8 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.persister.entity;
-import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * @author Gavin King
@@ -16,11 +16,11 @@ public interface UniqueKeyLoadable extends Loadable {
 	 * Load an instance of the persistent class, by a unique key other
 	 * than the primary key.
 	 */
-	public Object loadByUniqueKey(String propertyName, Object uniqueKey, SessionImplementor session) 
-	throws HibernateException;
+	Object loadByUniqueKey(String propertyName, Object uniqueKey, SharedSessionContractImplementor session);
+
 	/**
 	 * Get the property number of the unique key property
 	 */
-	public int getPropertyIndex(String propertyName);
+	int getPropertyIndex(String propertyName);
 
 }

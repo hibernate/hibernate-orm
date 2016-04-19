@@ -9,12 +9,11 @@ package org.hibernate.jpa.test.ops;
 import java.util.Map;
 import javax.persistence.EntityManager;
 
+import org.hibernate.cfg.Environment;
+import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+
 import org.junit.Assert;
 import org.junit.Test;
-
-import org.hibernate.cfg.Environment;
-import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * @author Gavin King

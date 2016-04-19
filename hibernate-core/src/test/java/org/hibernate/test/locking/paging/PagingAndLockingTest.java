@@ -10,18 +10,15 @@ import java.util.List;
 
 import org.hibernate.Criteria;
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
@@ -102,9 +99,9 @@ public class PagingAndLockingTest extends BaseCoreFunctionalTestCase {
 		qry.getLockOptions().setLockMode( LockMode.PESSIMISTIC_WRITE );
 		qry.setFirstResult( 2 );
 		qry.setMaxResults( 2 );
-		@SuppressWarnings("unchecked") List<Door> results = qry.list();
+		@SuppressWarnings("unchecked") List results = qry.list();
 		assertEquals( 2, results.size() );
-		for ( Door door : results ) {
+		for ( Object door : results ) {
 			assertEquals( LockMode.PESSIMISTIC_WRITE, session.getCurrentLockMode( door ) );
 		}
 		session.getTransaction().commit();

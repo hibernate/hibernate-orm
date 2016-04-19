@@ -23,6 +23,7 @@
  */
 package org.hibernate.jpa.test.criteria.selectcase;
 
+import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -30,23 +31,15 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-import java.util.List;
 
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.jpa.criteria.expression.ConcatExpression;
-import org.hibernate.jpa.criteria.expression.ExpressionImpl;
-import org.hibernate.jpa.criteria.expression.function.AbsFunction;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Test;
-
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.RequiresDialects;
 import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
 
 @TestForIssue( jiraKey = "HHH-9731" )
 public class SelectCaseTest extends BaseEntityManagerFunctionalTestCase {

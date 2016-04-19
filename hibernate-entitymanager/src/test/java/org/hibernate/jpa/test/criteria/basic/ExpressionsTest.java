@@ -18,19 +18,18 @@ import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.Query;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.jpa.test.metamodel.Phone;
 import org.hibernate.jpa.test.metamodel.Product;
 import org.hibernate.jpa.test.metamodel.Product_;
-import org.hibernate.internal.AbstractQueryImpl;
+
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
@@ -272,8 +271,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	}
 
 	private int countGeneratedParameters(Query query) {
-		AbstractQueryImpl hqlQueryImpl = (AbstractQueryImpl) query;
-		return hqlQueryImpl.getParameterMetadata().getNamedParameterNames().size();
+		return query.getParameterMetadata().getNamedParameterNames().size();
 	}
 
 	@Test

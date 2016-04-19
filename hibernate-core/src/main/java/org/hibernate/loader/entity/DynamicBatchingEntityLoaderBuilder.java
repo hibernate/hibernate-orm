@@ -24,7 +24,7 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -50,7 +50,8 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 	@SuppressWarnings("unchecked")
 	public List multiLoad(
 			OuterJoinLoadable persister,
-			Serializable[] ids, SessionImplementor session,
+			Serializable[] ids,
+			SharedSessionContractImplementor session,
 			MultiLoadOptions loadOptions) {
 		List result = CollectionHelper.arrayList( ids.length );
 
@@ -102,7 +103,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 			maxBatchSize = loadOptions.getBatchSize();
 		}
 		else {
-			maxBatchSize = session.getFactory().getDialect().getDefaultBatchLoadSizingStrategy().determineOptimalBatchLoadSize(
+			maxBatchSize = session.getJdbcServices().getJdbcEnvironment().getDialect().getDefaultBatchLoadSizingStrategy().determineOptimalBatchLoadSize(
 					persister.getIdentifierType().getColumnSpan( session.getFactory() ),
 					numberOfIdsLeft
 			);
@@ -203,7 +204,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 		public Object load(
 				Serializable id,
 				Object optionalObject,
-				SessionImplementor session,
+				SharedSessionContractImplementor session,
 				LockOptions lockOptions) {
 			final Serializable[] batch = session.getPersistenceContext()
 					.getBatchFetchQueue()
@@ -261,7 +262,11 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 			) {
 				@Override
 				protected StringBuilder whereString(String alias, String[] columnNames, int batchSize) {
-					return StringHelper.buildBatchFetchRestrictionFragment( alias, columnNames, getFactory().getDialect() );
+					return StringHelper.buildBatchFetchRestrictionFragment(
+							alias,
+							columnNames,
+							getFactory().getDialect()
+					);
 				}
 			};
 
@@ -286,7 +291,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 		}
 
 		public List doEntityBatchFetch(
-				SessionImplementor session,
+				SharedSessionContractImplementor session,
 				QueryParameters queryParameters,
 				Serializable[] ids) {
 			final String sql = StringHelper.expandBatchIdPlaceholder(
@@ -294,7 +299,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 					ids,
 					alias,
 					persister.getKeyColumnNames(),
-					getFactory().getDialect()
+					session.getJdbcServices().getJdbcEnvironment().getDialect()
 			);
 
 			try {
@@ -329,7 +334,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 				}
 			}
 			catch ( SQLException sqle ) {
-				throw session.getFactory().getSQLExceptionHelper().convert(
+				throw session.getJdbcServices().getSqlExceptionHelper().convert(
 						sqle,
 						"could not load an entity batch: " + MessageHelper.infoString(
 								getEntityPersisters()[0],
@@ -341,13 +346,13 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 			}
 		}
 
-		private List doTheLoad(String sql, QueryParameters queryParameters, SessionImplementor session) throws SQLException {
+		private List doTheLoad(String sql, QueryParameters queryParameters, SharedSessionContractImplementor session) throws SQLException {
 			final RowSelection selection = queryParameters.getRowSelection();
 			final int maxRows = LimitHelper.hasMaxRows( selection ) ?
 					selection.getMaxRows() :
 					Integer.MAX_VALUE;
 
-			final List<AfterLoadAction> afterLoadActions = new ArrayList<AfterLoadAction>();
+			final List<AfterLoadAction> afterLoadActions = new ArrayList<>();
 			final SqlStatementWrapper wrapper = executeQueryStatement( sql, queryParameters, false, afterLoadActions, session );
 			final ResultSet rs = wrapper.getResultSet();
 			final Statement st = wrapper.getStatement();
@@ -355,7 +360,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 				return processResultSet( rs, queryParameters, session, false, null, maxRows, afterLoadActions );
 			}
 			finally {
-				session.getJdbcCoordinator().getResourceRegistry().release( st );
+				session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
 				session.getJdbcCoordinator().afterStatementExecution();
 			}
 		}

@@ -14,7 +14,7 @@ import java.util.Comparator;
 import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.type.descriptor.java.InstantJavaDescriptor;
 import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
@@ -44,12 +44,12 @@ public class InstantType
 	}
 
 	@Override
-	public Instant seed(SessionImplementor session) {
+	public Instant seed(SharedSessionContractImplementor session) {
 		return Instant.now();
 	}
 
 	@Override
-	public Instant next(Instant current, SessionImplementor session) {
+	public Instant next(Instant current, SharedSessionContractImplementor session) {
 		return Instant.now();
 	}
 

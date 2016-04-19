@@ -18,18 +18,16 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.LoggableUserType;
 import org.hibernate.usertype.Sized;
 import org.hibernate.usertype.UserType;
 import org.hibernate.usertype.UserVersionType;
-
-import org.dom4j.Node;
 
 /**
  * Adapts {@link UserType} to the generic {@link Type} interface, in order
@@ -72,10 +70,12 @@ public class CustomType
 		return userType;
 	}
 
+	@Override
 	public String[] getRegistrationKeys() {
 		return registrationKeys;
 	}
 
+	@Override
 	public int[] sqlTypes(Mapping pi) {
 		return types;
 	}
@@ -90,61 +90,83 @@ public class CustomType
 		return defaultSizes;
 	}
 
+	@Override
 	public int getColumnSpan(Mapping session) {
 		return types.length;
 	}
 
+	@Override
 	public Class getReturnedClass() {
 		return userType.returnedClass();
 	}
 
+	@Override
 	public boolean isEqual(Object x, Object y) throws HibernateException {
 		return userType.equals( x, y );
 	}
 
+	@Override
 	public int getHashCode(Object x) {
 		return userType.hashCode(x);
 	}
 
-	public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner)
-			throws HibernateException, SQLException {
+	@Override
+	public Object nullSafeGet(
+			ResultSet rs,
+			String[] names,
+			SharedSessionContractImplementor session,
+			Object owner) throws SQLException {
 		return userType.nullSafeGet(rs, names, session, owner);
 	}
 
-	public Object nullSafeGet(ResultSet rs, String columnName, SessionImplementor session, Object owner)
-			throws HibernateException, SQLException {
+	@Override
+	public Object nullSafeGet(
+			ResultSet rs,
+			String columnName,
+			SharedSessionContractImplementor session,
+			Object owner) throws SQLException {
 		return nullSafeGet(rs, new String[] { columnName }, session, owner);
 	}
 
 
-	public Object assemble(Serializable cached, SessionImplementor session, Object owner)
-			throws HibernateException {
+	@Override
+	public Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) {
 		return userType.assemble(cached, owner);
 	}
 
-	public Serializable disassemble(Object value, SessionImplementor session, Object owner)
-			throws HibernateException {
+	@Override
+	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) {
 		return userType.disassemble(value);
 	}
 
+	@Override
 	public Object replace(
 			Object original,
 			Object target,
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Object owner,
 			Map copyCache) throws HibernateException {
 		return userType.replace( original, target, owner );
 	}
 
-	public void nullSafeSet(PreparedStatement st, Object value, int index, boolean[] settable, SessionImplementor session)
-			throws HibernateException, SQLException {
+	@Override
+	public void nullSafeSet(
+			PreparedStatement st,
+			Object value,
+			int index,
+			boolean[] settable,
+			SharedSessionContractImplementor session) throws SQLException {
 		if ( settable[0] ) {
 			userType.nullSafeSet( st, value, index, session );
 		}
 	}
 
-	public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session)
-			throws HibernateException, SQLException {
+	@Override
+	public void nullSafeSet(
+			PreparedStatement st,
+			Object value,
+			int index,
+			SharedSessionContractImplementor session) throws SQLException {
 		userType.nullSafeSet( st, value, index, session );
 	}
 
@@ -158,39 +180,47 @@ public class CustomType
 		return fromStringValue( xml );
 	}
 
+	@Override
 	public String getName() {
 		return name;
 	}
 
-	public Object deepCopy(Object value, SessionFactoryImplementor factory)
-			throws HibernateException {
+	@Override
+	public Object deepCopy(Object value, SessionFactoryImplementor factory) throws HibernateException {
 		return userType.deepCopy(value);
 	}
 
+	@Override
 	public boolean isMutable() {
 		return userType.isMutable();
 	}
 
+	@Override
 	public Object stringToObject(String xml) {
 		return fromStringValue( xml );
 	}
 
+	@Override
 	public String objectToSQLString(Object value, Dialect dialect) throws Exception {
 		return ( (EnhancedUserType) userType ).objectToSQLString(value);
 	}
 
+	@Override
 	public Comparator getComparator() {
 		return (Comparator) userType;
 	}
 
-	public Object next(Object current, SessionImplementor session) {
+	@Override
+	public Object next(Object current, SharedSessionContractImplementor session) {
 		return ( (UserVersionType) userType ).next( current, session );
 	}
 
-	public Object seed(SessionImplementor session) {
+	@Override
+	public Object seed(SharedSessionContractImplementor session) {
 		return ( (UserVersionType) userType ).seed( session );
 	}
 
+	@Override
 	public String toLoggableString(Object value, SessionFactoryImplementor factory)
 			throws HibernateException {
 		if ( value == null ) {
@@ -204,6 +234,7 @@ public class CustomType
 		}
 	}
 
+	@Override
 	public boolean[] toColumnNullness(Object value, Mapping mapping) {
 		boolean[] result = new boolean[ getColumnSpan(mapping) ];
 		if ( value != null ) {
@@ -212,7 +243,8 @@ public class CustomType
 		return result;
 	}
 
-	public boolean isDirty(Object old, Object current, boolean[] checkable, SessionImplementor session)
+	@Override
+	public boolean isDirty(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session)
 			throws HibernateException {
 		return checkable[0] && isDirty(old, current, session);
 	}
@@ -262,7 +294,7 @@ public class CustomType
 
 	@Override
 	public void nullSafeSet(
-			CallableStatement statement, Object value, String name, SessionImplementor session) throws SQLException {
+			CallableStatement statement, Object value, String name, SharedSessionContractImplementor session) throws SQLException {
 		if ( canDoSetting() ) {
 			((ProcedureParameterNamedBinder) userType).nullSafeSet( statement, value, name, session );
 		}
@@ -282,7 +314,7 @@ public class CustomType
 	}
 
 	@Override
-	public Object extract(CallableStatement statement, int startIndex, SessionImplementor session) throws SQLException {
+	public Object extract(CallableStatement statement, int startIndex, SharedSessionContractImplementor session) throws SQLException {
 		if ( canDoExtraction() ) {
 			return ((ProcedureParameterExtractionAware) userType).extract( statement, startIndex, session );
 		}
@@ -294,7 +326,7 @@ public class CustomType
 	}
 
 	@Override
-	public Object extract(CallableStatement statement, String[] paramNames, SessionImplementor session)
+	public Object extract(CallableStatement statement, String[] paramNames, SharedSessionContractImplementor session)
 			throws SQLException {
 		if ( canDoExtraction() ) {
 			return ((ProcedureParameterExtractionAware) userType).extract( statement, paramNames, session );

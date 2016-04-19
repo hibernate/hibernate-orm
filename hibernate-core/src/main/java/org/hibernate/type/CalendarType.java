@@ -10,7 +10,7 @@ import java.util.Calendar;
 import java.util.Comparator;
 import java.util.GregorianCalendar;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.CalendarTypeDescriptor;
 import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
 
@@ -30,6 +30,7 @@ public class CalendarType
 		super( TimestampTypeDescriptor.INSTANCE, CalendarTypeDescriptor.INSTANCE );
 	}
 
+	@Override
 	public String getName() {
 		return "calendar";
 	}
@@ -39,14 +40,17 @@ public class CalendarType
 		return new String[] { getName(), Calendar.class.getName(), GregorianCalendar.class.getName() };
 	}
 
-	public Calendar next(Calendar current, SessionImplementor session) {
+	@Override
+	public Calendar next(Calendar current, SharedSessionContractImplementor session) {
 		return seed( session );
 	}
 
-	public Calendar seed(SessionImplementor session) {
+	@Override
+	public Calendar seed(SharedSessionContractImplementor session) {
 		return Calendar.getInstance();
 	}
 
+	@Override
 	public Comparator<Calendar> getComparator() {
 		return getJavaTypeDescriptor().getComparator();
 	}

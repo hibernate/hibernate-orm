@@ -6,20 +6,6 @@
  */
 package org.hibernate.jpa.test.lock;
 
-import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.Oracle10gDialect;
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.dialect.PostgreSQL81Dialect;
-import org.hibernate.dialect.SybaseASE15Dialect;
-import org.hibernate.ejb.AvailableSettings;
-import org.hibernate.ejb.QueryHints;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-
-import org.hibernate.testing.*;
-import org.jboss.logging.Logger;
-import org.junit.Test;
-
-import javax.persistence.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,8 +13,39 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
+import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
+import javax.persistence.LockTimeoutException;
+import javax.persistence.OptimisticLockException;
+import javax.persistence.PersistenceException;
+import javax.persistence.PessimisticLockException;
+import javax.persistence.Query;
+import javax.persistence.QueryTimeoutException;
 
-import static org.junit.Assert.*;
+import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.Oracle10gDialect;
+import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.jpa.QueryHints;
+import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.SkipForDialects;
+import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
+
+import org.jboss.logging.Logger;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Emmanuel Bernard
@@ -355,7 +372,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 				em.getTransaction().commit();
 				boolean backgroundThreadHasReadNewValue = future.get();
 				assertTrue(
-						"Background thread should read the new value after being unblocked",
+						"Background thread should read the new value afterQuery being unblocked",
 						backgroundThreadHasReadNewValue
 				);
 			}
@@ -366,7 +383,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	private void cleanup(EntityManager em, EntityManager isolatedEntityManager, Lock lock) throws InterruptedException {
-		// only commit the second transaction after the first one completed
+		// only commit the second transaction afterQuery the first one completed
 		isolatedEntityManager.getTransaction().commit();
 		isolatedEntityManager.close();
 
@@ -516,7 +533,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			if ( em.getTransaction().isActive() ) {
 				em.getTransaction().rollback();
 			}
-			if ( t != null ) {	  // wait for background thread to finish before deleting entity
+			if ( t != null ) {	  // wait for background thread to finish beforeQuery deleting entity
 				t.join();
 			}
 			em.getTransaction().begin();
@@ -605,7 +622,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			if ( em.getTransaction().isActive() ) {
 				em.getTransaction().rollback();
 			}
-			if ( t != null ) {	  // wait for background thread to finish before deleting entity
+			if ( t != null ) {	  // wait for background thread to finish beforeQuery deleting entity
 				t.join();
 			}
 			em.getTransaction().begin();
@@ -694,7 +711,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			if ( em.getTransaction().isActive() ) {
 				em.getTransaction().rollback();
 			}
-			if ( t != null ) {	  // wait for background thread to finish before deleting entity
+			if ( t != null ) {	  // wait for background thread to finish beforeQuery deleting entity
 				t.join();
 			}
 			em.getTransaction().begin();
@@ -788,7 +805,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			if ( em.getTransaction().isActive() ) {
 				em.getTransaction().rollback();
 			}
-			if ( t != null ) {	  // wait for background thread to finish before deleting entity
+			if ( t != null ) {	  // wait for background thread to finish beforeQuery deleting entity
 				t.join();
 			}
 			em.getTransaction().begin();
@@ -882,7 +899,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			if ( em.getTransaction().isActive() ) {
 				em.getTransaction().rollback();
 			}
-			if ( t != null ) {	  // wait for background thread to finish before deleting entity
+			if ( t != null ) {	  // wait for background thread to finish beforeQuery deleting entity
 				t.join();
 			}
 			em.getTransaction().begin();
@@ -967,7 +984,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			if ( em.getTransaction().isActive() ) {
 				em.getTransaction().rollback();
 			}
-			if ( t != null ) {	  // wait for background thread to finish before deleting entity
+			if ( t != null ) {	  // wait for background thread to finish beforeQuery deleting entity
 				t.join();
 			}
 			em.getTransaction().begin();

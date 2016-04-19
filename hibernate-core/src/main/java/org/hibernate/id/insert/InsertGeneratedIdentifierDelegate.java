@@ -5,9 +5,10 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.id.insert;
+
 import java.io.Serializable;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * Responsible for handling delegation relating to variants in how
@@ -26,7 +27,7 @@ public interface InsertGeneratedIdentifierDelegate {
 	 *
 	 * @return The insert object.
 	 */
-	public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert();
+	IdentifierGeneratingInsert prepareIdentifierGeneratingInsert();
 
 	/**
 	 * Perform the indicated insert SQL statement and determine the identifier value
@@ -39,6 +40,6 @@ public interface InsertGeneratedIdentifierDelegate {
 	 * 
 	 * @return The generated identifier value.
 	 */
-	public Serializable performInsert(String insertSQL, SessionImplementor session, Binder binder);
+	Serializable performInsert(String insertSQL, SharedSessionContractImplementor session, Binder binder);
 
 }

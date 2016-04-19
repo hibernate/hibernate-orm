@@ -6,7 +6,6 @@
  */
 package org.hibernate.engine.spi;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -165,7 +164,7 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 			NativeSQLQueryReturn[] queryReturns) {
 		super(
 				name,
-				query.trim(), /* trim done to workaround stupid oracle bug that cant handle whitespaces before a { in a sp */
+				query.trim(), /* trim done to workaround stupid oracle bug that cant handle whitespaces beforeQuery a { in a sp */
 				cacheable,
 				cacheRegion,
 				timeout,

@@ -18,7 +18,7 @@ import java.util.ListIterator;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
@@ -51,7 +51,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	 *
 	 * @param session The session
 	 */
-	public PersistentIdentifierBag(SessionImplementor session) {
+	public PersistentIdentifierBag(SharedSessionContractImplementor session) {
 		super( session );
 	}
 
@@ -62,20 +62,20 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	 * @param coll The base elements
 	 */
 	@SuppressWarnings("unchecked")
-	public PersistentIdentifierBag(SessionImplementor session, Collection coll) {
+	public PersistentIdentifierBag(SharedSessionContractImplementor session, Collection coll) {
 		super( session );
 		if (coll instanceof List) {
 			values = (List<Object>) coll;
 		}
 		else {
-			values = new ArrayList<Object>();
+			values = new ArrayList<>();
 			for ( Object element : coll ) {
 				values.add( element );
 			}
 		}
 		setInitialized();
 		setDirectlyAccessible( true );
-		identifiers = new HashMap<Integer, Object>();
+		identifiers = new HashMap<>();
 	}
 
 	@Override
@@ -206,11 +206,11 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	@Override
 	public void beforeInitialize(CollectionPersister persister, int anticipatedSize) {
 		identifiers = anticipatedSize <= 0
-				? new HashMap<Integer, Object>()
-				: new HashMap<Integer, Object>( anticipatedSize + 1 + (int)( anticipatedSize * .75f ), .75f );
+				? new HashMap<>()
+				: new HashMap<>( anticipatedSize + 1 + (int) ( anticipatedSize * .75f ), .75f );
 		values = anticipatedSize <= 0
-				? new ArrayList<Object>()
-				: new ArrayList<Object>( anticipatedSize );
+				? new ArrayList<>()
+				: new ArrayList<>( anticipatedSize );
 	}
 
 	@Override

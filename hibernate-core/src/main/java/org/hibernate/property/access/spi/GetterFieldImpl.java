@@ -14,8 +14,7 @@ import java.lang.reflect.Method;
 import java.util.Locale;
 import java.util.Map;
 
-import org.hibernate.boot.archive.internal.ByteArrayInputStreamAccess;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.property.access.internal.AbstractFieldSerialForm;
 
 /**
@@ -78,7 +77,7 @@ public class GetterFieldImpl implements Getter {
 	}
 
 	@Override
-	public Object getForInsert(Object owner, Map mergeMap, SessionImplementor session) {
+	public Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
 		return get( owner );
 	}
 

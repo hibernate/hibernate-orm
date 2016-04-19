@@ -402,7 +402,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 			errorIfInvalid();
 			getTransactionCoordinatorOwner().flushBeforeTransactionCompletion();
 
-			// we don't have to perform any before/after completion processing here.  We leave that for
+			// we don't have to perform any beforeQuery/afterQuery completion processing here.  We leave that for
 			// the Synchronization callbacks
 			jtaTransactionAdapter.commit();
 		}
@@ -411,7 +411,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		public void rollback() {
 			errorIfInvalid();
 
-			// we don't have to perform any after completion processing here.  We leave that for
+			// we don't have to perform any afterQuery completion processing here.  We leave that for
 			// the Synchronization callbacks
 			jtaTransactionAdapter.rollback();
 		}

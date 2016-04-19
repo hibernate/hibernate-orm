@@ -9,7 +9,7 @@ package org.hibernate.hql.internal.ast.exec;
 import org.hibernate.HibernateException;
 import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.engine.spi.QueryParameters;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
@@ -23,16 +23,18 @@ public class MultiTableDeleteExecutor implements StatementExecutor {
 	private final MultiTableBulkIdStrategy.DeleteHandler deleteHandler;
 
 	public MultiTableDeleteExecutor(HqlSqlWalker walker) {
-		final MultiTableBulkIdStrategy strategy = walker.getSessionFactoryHelper().getFactory().getSettings()
+		final MultiTableBulkIdStrategy strategy = walker.getSessionFactoryHelper().getFactory().getSessionFactoryOptions()
 				.getMultiTableBulkIdStrategy();
 		this.deleteHandler = strategy.buildDeleteHandler( walker.getSessionFactoryHelper().getFactory(), walker );
 	}
 
+	@Override
 	public String[] getSqlStatements() {
 		return deleteHandler.getSqlStatements();
 	}
 
-	public int execute(QueryParameters parameters, SessionImplementor session) throws HibernateException {
+	@Override
+	public int execute(QueryParameters parameters, SharedSessionContractImplementor session) throws HibernateException {
 		BulkOperationCleanupAction action = new BulkOperationCleanupAction( session, deleteHandler.getTargetedQueryable() );
 		if ( session.isEventSource() ) {
 			( (EventSource) session ).getActionQueue().addAction( action );

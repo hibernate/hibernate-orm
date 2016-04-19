@@ -10,7 +10,7 @@ import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.loader.criteria.CriteriaJoinWalker;
@@ -56,7 +56,7 @@ public abstract class SubqueryExpression implements Criterion {
 
 		final SessionFactoryImplementor factory = criteriaQuery.getFactory();
 		final OuterJoinLoadable persister =
-				(OuterJoinLoadable) factory.getEntityPersister( criteriaImpl.getEntityOrClassName() );
+				(OuterJoinLoadable) factory.getMetamodel().entityPersister( criteriaImpl.getEntityOrClassName() );
 
 		createAndSetInnerQuery( criteriaQuery, factory );
 		criteriaImpl.setSession( deriveRootSession( criteria ) );
@@ -74,7 +74,7 @@ public abstract class SubqueryExpression implements Criterion {
 		return buf.append( '(' ).append( walker.getSQLString() ).append( ')' ).toString();
 	}
 
-	private SessionImplementor deriveRootSession(Criteria criteria) {
+	private SharedSessionContractImplementor deriveRootSession(Criteria criteria) {
 		if ( criteria instanceof CriteriaImpl ) {
 			return ( (CriteriaImpl) criteria ).getSession();
 		}

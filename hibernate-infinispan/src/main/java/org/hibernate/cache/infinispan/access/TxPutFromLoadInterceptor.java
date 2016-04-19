@@ -6,9 +6,12 @@
  */
 package org.hibernate.cache.infinispan.access;
 
+import java.util.Set;
+
 import org.hibernate.cache.infinispan.util.CacheCommandInitializer;
 import org.hibernate.cache.infinispan.util.EndInvalidationCommand;
 import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
+
 import org.infinispan.commands.VisitableCommand;
 import org.infinispan.commands.tx.CommitCommand;
 import org.infinispan.commands.tx.PrepareCommand;
@@ -22,12 +25,10 @@ import org.infinispan.interceptors.base.BaseRpcInterceptor;
 import org.infinispan.remoting.inboundhandler.DeliverOrder;
 import org.infinispan.remoting.rpc.RpcManager;
 
-import java.util.Set;
-
 /**
  * Intercepts transactions in Infinispan, calling {@link PutFromLoadValidator#beginInvalidatingKey(Object, Object)}
- * before locks are acquired (and the entry is invalidated) and sends {@link EndInvalidationCommand} to release
- * invalidation throught {@link PutFromLoadValidator#endInvalidatingKey(Object, Object)} after the transaction
+ * beforeQuery locks are acquired (and the entry is invalidated) and sends {@link EndInvalidationCommand} to release
+ * invalidation throught {@link PutFromLoadValidator#endInvalidatingKey(Object, Object)} afterQuery the transaction
  * is committed.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -53,14 +54,14 @@ class TxPutFromLoadInterceptor extends BaseRpcInterceptor {
 	}
 
 	// We need to intercept PrepareCommand, not InvalidateCommand since the interception takes
-	// place before EntryWrappingInterceptor and the PrepareCommand is multiplexed into InvalidateCommands
+	// place beforeQuery EntryWrappingInterceptor and the PrepareCommand is multiplexed into InvalidateCommands
 	// as part of EntryWrappingInterceptor
 	@Override
 	public Object visitPrepareCommand(TxInvocationContext ctx, PrepareCommand command) throws Throwable {
 		if (ctx.isOriginLocal()) {
 			// We can't wait to commit phase to remove the entry locally (invalidations are processed in 1pc
 			// on remote nodes, so only local case matters here). The problem is that while the entry is locked
-			// reads still can take place and we can read outdated collection after reading updated entity
+			// reads still can take place and we can read outdated collection afterQuery reading updated entity
 			// owning this collection from DB; when this happens, the version lock on entity cannot protect
 			// us against concurrent modification of the collection. Therefore, we need to remove the entry
 			// here (even without lock!) and let possible update happen in commit phase.

@@ -12,7 +12,7 @@ import java.util.Date;
 
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.JdbcTimestampTypeDescriptor;
 import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
 
@@ -32,6 +32,7 @@ public class TimestampType
 		super( TimestampTypeDescriptor.INSTANCE, JdbcTimestampTypeDescriptor.INSTANCE );
 	}
 
+	@Override
 	public String getName() {
 		return "timestamp";
 	}
@@ -41,18 +42,22 @@ public class TimestampType
 		return new String[] { getName(), Timestamp.class.getName(), java.util.Date.class.getName() };
 	}
 
-	public Date next(Date current, SessionImplementor session) {
+	@Override
+	public Date next(Date current, SharedSessionContractImplementor session) {
 		return seed( session );
 	}
 
-	public Date seed(SessionImplementor session) {
+	@Override
+	public Date seed(SharedSessionContractImplementor session) {
 		return new Timestamp( System.currentTimeMillis() );
 	}
 
+	@Override
 	public Comparator<Date> getComparator() {
 		return getJavaTypeDescriptor().getComparator();
 	}
 
+	@Override
 	public String objectToSQLString(Date value, Dialect dialect) throws Exception {
 		final Timestamp ts = Timestamp.class.isInstance( value )
 				? ( Timestamp ) value
@@ -61,6 +66,7 @@ public class TimestampType
 		return StringType.INSTANCE.objectToSQLString( ts.toString(), dialect );
 	}
 
+	@Override
 	public Date fromStringValue(String xml) throws HibernateException {
 		return fromString( xml );
 	}

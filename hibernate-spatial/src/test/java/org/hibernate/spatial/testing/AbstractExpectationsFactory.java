@@ -15,15 +15,15 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.spatial.HSMessageLogger;
+
+import org.jboss.logging.Logger;
+
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKTReader;
-
-import org.jboss.logging.Logger;
-
-import org.hibernate.spatial.HSMessageLogger;
 
 /**
  * An <code>AbstractExpectationsFactory</code> provides the expected
@@ -363,7 +363,7 @@ public abstract class AbstractExpectationsFactory {
 	/**
 	 * Returns the expected results of the convexhull function
 	 *
-	 * @param geom geometry with which each testsuite-suite geometry is unioned before convexhull calculation
+	 * @param geom geometry with which each testsuite-suite geometry is unioned beforeQuery convexhull calculation
 	 *
 	 * @return
 	 *

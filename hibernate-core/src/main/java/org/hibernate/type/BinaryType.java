@@ -8,7 +8,7 @@ package org.hibernate.type;
 
 import java.util.Comparator;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
 import org.hibernate.type.descriptor.sql.VarbinaryTypeDescriptor;
 
@@ -38,7 +38,7 @@ public class BinaryType
 	}
 
 	@Override
-	public byte[] seed(SessionImplementor session) {
+	public byte[] seed(SharedSessionContractImplementor session) {
 		// Note : simply returns null for seed() and next() as the only known
 		// 		application of binary types for versioning is for use with the
 		// 		TIMESTAMP datatype supported by Sybase and SQL Server, which
@@ -47,7 +47,7 @@ public class BinaryType
 	}
 
 	@Override
-	public byte[] next(byte[] current, SessionImplementor session) {
+	public byte[] next(byte[] current, SharedSessionContractImplementor session) {
 		return current;
 	}
 

@@ -159,7 +159,7 @@ public final class Collections {
 		// The CollectionEntry.isReached() stuff is just to detect any silly users
 		// who set up circular or shared references between/to collections.
 		if ( ce.isReached() ) {
-			// We've been here before
+			// We've been here beforeQuery
 			throw new HibernateException(
 					"Found shared references to a collection: " + type.getRole()
 			);

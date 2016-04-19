@@ -9,7 +9,6 @@ package org.hibernate.query.criteria.internal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.Query;
 import javax.persistence.criteria.CommonAbstractCriteria;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
@@ -17,14 +16,15 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
 
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 import org.hibernate.query.criteria.internal.compile.CompilableCriteria;
 import org.hibernate.query.criteria.internal.compile.CriteriaInterpretation;
 import org.hibernate.query.criteria.internal.compile.ImplicitParameterBinding;
 import org.hibernate.query.criteria.internal.compile.InterpretedParameterMetadata;
 import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.criteria.internal.path.RootImpl;
-import org.hibernate.jpa.internal.QueryImpl;
-import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
+import org.hibernate.query.spi.QueryImplementor;
 
 /**
  * Base class for commonality between {@link javax.persistence.criteria.CriteriaUpdate} and
@@ -103,13 +103,13 @@ public abstract class AbstractManipulationCriteriaQuery<T> implements Compilable
 		return new CriteriaInterpretation() {
 			@Override
 			@SuppressWarnings("unchecked")
-			public Query buildCompiledQuery(
-					HibernateEntityManagerImplementor entityManager,
+			public QueryImplementor buildCompiledQuery(
+					SessionImplementor entityManager,
 					final InterpretedParameterMetadata interpretedParameterMetadata) {
 
 				final Map<String,Class> implicitParameterTypes = extractTypeMap( interpretedParameterMetadata.implicitParameterBindings() );
 
-				QueryImpl jpaqlQuery = entityManager.createQuery(
+				QueryImplementor query = entityManager.createQuery(
 						jpaqlString,
 						null,
 						null,
@@ -132,14 +132,14 @@ public abstract class AbstractManipulationCriteriaQuery<T> implements Compilable
 				);
 
 				for ( ImplicitParameterBinding implicitParameterBinding : interpretedParameterMetadata.implicitParameterBindings() ) {
-					implicitParameterBinding.bind( jpaqlQuery );
+					implicitParameterBinding.bind( query );
 				}
 
-				return jpaqlQuery;
+				return query;
 			}
 
 			private Map<String, Class> extractTypeMap(List<ImplicitParameterBinding> implicitParameterBindings) {
-				final HashMap<String,Class> map = new HashMap<String, Class>();
+				final HashMap<String,Class> map = new HashMap<>();
 				for ( ImplicitParameterBinding implicitParameter : implicitParameterBindings ) {
 					map.put( implicitParameter.getParameterName(), implicitParameter.getJavaType() );
 				}

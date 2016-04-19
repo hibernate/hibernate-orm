@@ -8,7 +8,6 @@ package org.hibernate.test.cache.infinispan;
 
 import java.util.Properties;
 import java.util.function.BiConsumer;
-
 import javax.transaction.TransactionManager;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -26,15 +25,15 @@ import org.hibernate.engine.transaction.jta.platform.internal.AbstractJtaPlatfor
 import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
 import org.hibernate.service.ServiceRegistry;
 
+import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
-import org.hibernate.testing.ServiceRegistryBuilder;
-import org.infinispan.configuration.cache.ClusteringConfigurationBuilder;
 import org.junit.Rule;
 import org.junit.Test;
 
 import org.infinispan.AdvancedCache;
 import org.infinispan.configuration.cache.CacheMode;
+import org.infinispan.configuration.cache.ClusteringConfigurationBuilder;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
@@ -44,8 +43,17 @@ import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.transaction.TransactionMode;
 
-import static org.hibernate.cache.infinispan.InfinispanRegionFactory.*;
-import static org.junit.Assert.*;
+import static org.hibernate.cache.infinispan.InfinispanRegionFactory.DEF_PENDING_PUTS_RESOURCE;
+import static org.hibernate.cache.infinispan.InfinispanRegionFactory.DEF_TIMESTAMPS_RESOURCE;
+import static org.hibernate.cache.infinispan.InfinispanRegionFactory.DataType;
+import static org.hibernate.cache.infinispan.InfinispanRegionFactory.INFINISPAN_CONFIG_RESOURCE_PROP;
+import static org.hibernate.cache.infinispan.InfinispanRegionFactory.TIMESTAMPS_CACHE_RESOURCE_PROP;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * InfinispanRegionFactoryTestCase.
@@ -636,7 +644,7 @@ public class InfinispanRegionFactoryTestCase  {
 			else
 				m = super.createCacheManager(properties, serviceRegistry);
 			// since data type cache configuration templates are defined when cache manager is created,
-			// we have to use hooks and set the configuration before the whole factory starts
+			// we have to use hooks and set the configuration beforeQuery the whole factory starts
 			if (afterCacheManagerCreated != null) {
 				afterCacheManagerCreated.accept(this, m);
 			}

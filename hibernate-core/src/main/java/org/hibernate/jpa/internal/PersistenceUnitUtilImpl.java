@@ -11,10 +11,8 @@ import javax.persistence.PersistenceUnitUtil;
 import javax.persistence.spi.LoadState;
 
 import org.hibernate.Hibernate;
-import org.hibernate.ejb.HibernateEntityManagerFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
-import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.jboss.logging.Logger;
@@ -22,13 +20,13 @@ import org.jboss.logging.Logger;
 /**
  * @author Steve Ebersole
  */
-class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializable {
+public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializable {
 	private static final Logger log = Logger.getLogger( PersistenceUnitUtilImpl.class );
 
 	private final SessionFactoryImplementor sessionFactory;
 	private final transient PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
 
-	PersistenceUnitUtilImpl(SessionFactoryImplementor sessionFactory) {
+	public PersistenceUnitUtilImpl(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
 	}
 

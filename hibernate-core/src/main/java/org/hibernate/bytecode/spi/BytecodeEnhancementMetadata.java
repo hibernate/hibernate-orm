@@ -6,11 +6,9 @@
  */
 package org.hibernate.bytecode.spi;
 
-import java.util.Set;
-
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributesMetadata;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * Encapsulates bytecode enhancement information about a particular entity.
@@ -47,7 +45,7 @@ public interface BytecodeEnhancementMetadata {
 	 */
 	LazyAttributeLoadingInterceptor injectInterceptor(
 			Object entity,
-			SessionImplementor session) throws NotInstrumentedException;
+			SharedSessionContractImplementor session) throws NotInstrumentedException;
 
 	/**
 	 * Extract the field interceptor instance from the enhanced entity.

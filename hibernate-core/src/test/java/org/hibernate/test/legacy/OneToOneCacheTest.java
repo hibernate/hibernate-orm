@@ -46,7 +46,7 @@ public class OneToOneCacheTest extends LegacyTestCase {
 
 		assertNotNull( mainObject.getObj2() );
 
-		// after evicting, it works.
+		// afterQuery evicting, it works.
 		sessionFactory().getCache().evictEntityRegion( MainObject.class );
 
 		mainObject = readMainObject();

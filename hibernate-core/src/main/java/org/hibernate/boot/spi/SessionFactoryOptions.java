@@ -8,7 +8,6 @@ package org.hibernate.boot.spi;
 
 import java.util.Map;
 
-import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityMode;
@@ -78,6 +77,13 @@ public interface SessionFactoryOptions {
 	 * @return The interceptor to use factory wide.  May be {@code null}
 	 */
 	Interceptor getInterceptor();
+
+	/**
+	 * Get the interceptor to use by default for all sessions opened from this factory.
+	 *
+	 * @return The interceptor to use factory wide.  May be {@code null}
+	 */
+	Class<? extends Interceptor> getStatelessInterceptorImplementor();
 
 	StatementInspector getStatementInspector();
 

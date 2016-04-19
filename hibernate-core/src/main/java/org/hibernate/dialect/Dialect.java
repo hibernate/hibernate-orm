@@ -61,7 +61,7 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.spi.ConversionContext;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.SQLExceptionConverter;
@@ -70,6 +70,7 @@ import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.persistent.PersistentTableBulkIdStrategy;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
@@ -104,8 +105,6 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
-import org.jboss.logging.Logger;
-
 /**
  * Represents a dialect of SQL implemented by a particular RDBMS.  Subclasses implement Hibernate compatibility
  * with different systems.  Subclasses should provide a public default constructor that register a set of type
@@ -115,10 +114,7 @@ import org.jboss.logging.Logger;
  */
 @SuppressWarnings("deprecation")
 public abstract class Dialect implements ConversionContext {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			Dialect.class.getName()
-	);
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( Dialect.class );
 
 	/**
 	 * Defines a default batch size constant
@@ -144,8 +140,8 @@ public abstract class Dialect implements ConversionContext {
 	private final TypeNames hibernateTypeNames = new TypeNames();
 
 	private final Properties properties = new Properties();
-	private final Map<String, SQLFunction> sqlFunctions = new HashMap<String, SQLFunction>();
-	private final Set<String> sqlKeywords = new HashSet<String>();
+	private final Map<String, SQLFunction> sqlFunctions = new HashMap<>();
+	private final Set<String> sqlKeywords = new HashSet<>();
 
 	private final UniqueDelegate uniqueDelegate;
 
@@ -490,17 +486,17 @@ public abstract class Dialect implements ConversionContext {
 	@SuppressWarnings( {"UnusedDeclaration"})
 	protected static final LobMergeStrategy LEGACY_LOB_MERGE_STRATEGY = new LobMergeStrategy() {
 		@Override
-		public Blob mergeBlob(Blob original, Blob target, SessionImplementor session) {
+		public Blob mergeBlob(Blob original, Blob target, SharedSessionContractImplementor session) {
 			return target;
 		}
 
 		@Override
-		public Clob mergeClob(Clob original, Clob target, SessionImplementor session) {
+		public Clob mergeClob(Clob original, Clob target, SharedSessionContractImplementor session) {
 			return target;
 		}
 
 		@Override
-		public NClob mergeNClob(NClob original, NClob target, SessionImplementor session) {
+		public NClob mergeNClob(NClob original, NClob target, SharedSessionContractImplementor session) {
 			return target;
 		}
 	};
@@ -511,7 +507,7 @@ public abstract class Dialect implements ConversionContext {
 	@SuppressWarnings( {"UnusedDeclaration"})
 	protected static final LobMergeStrategy STREAM_XFER_LOB_MERGE_STRATEGY = new LobMergeStrategy() {
 		@Override
-		public Blob mergeBlob(Blob original, Blob target, SessionImplementor session) {
+		public Blob mergeBlob(Blob original, Blob target, SharedSessionContractImplementor session) {
 			if ( original != target ) {
 				try {
 					// the BLOB just read during the load phase of merge
@@ -531,7 +527,7 @@ public abstract class Dialect implements ConversionContext {
 		}
 
 		@Override
-		public Clob mergeClob(Clob original, Clob target, SessionImplementor session) {
+		public Clob mergeClob(Clob original, Clob target, SharedSessionContractImplementor session) {
 			if ( original != target ) {
 				try {
 					// the CLOB just read during the load phase of merge
@@ -551,7 +547,7 @@ public abstract class Dialect implements ConversionContext {
 		}
 
 		@Override
-		public NClob mergeNClob(NClob original, NClob target, SessionImplementor session) {
+		public NClob mergeNClob(NClob original, NClob target, SharedSessionContractImplementor session) {
 			if ( original != target ) {
 				try {
 					// the NCLOB just read during the load phase of merge
@@ -576,7 +572,7 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	protected static final LobMergeStrategy NEW_LOCATOR_LOB_MERGE_STRATEGY = new LobMergeStrategy() {
 		@Override
-		public Blob mergeBlob(Blob original, Blob target, SessionImplementor session) {
+		public Blob mergeBlob(Blob original, Blob target, SharedSessionContractImplementor session) {
 			if ( original == null && target == null ) {
 				return null;
 			}
@@ -594,7 +590,7 @@ public abstract class Dialect implements ConversionContext {
 		}
 
 		@Override
-		public Clob mergeClob(Clob original, Clob target, SessionImplementor session) {
+		public Clob mergeClob(Clob original, Clob target, SharedSessionContractImplementor session) {
 			if ( original == null && target == null ) {
 				return null;
 			}
@@ -610,7 +606,7 @@ public abstract class Dialect implements ConversionContext {
 		}
 
 		@Override
-		public NClob mergeNClob(NClob original, NClob target, SessionImplementor session) {
+		public NClob mergeNClob(NClob original, NClob target, SharedSessionContractImplementor session) {
 			if ( original == null && target == null ) {
 				return null;
 			}
@@ -997,7 +993,7 @@ public abstract class Dialect implements ConversionContext {
 	 * Does the <tt>LIMIT</tt> clause come at the start of the
 	 * <tt>SELECT</tt> statement, rather than at the end?
 	 *
-	 * @return true if limit parameters should come before other parameters
+	 * @return true if limit parameters should come beforeQuery other parameters
 	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
 	 */
 	@Deprecated
@@ -1978,7 +1974,7 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Do we need to drop constraints before dropping tables in this dialect?
+	 * Do we need to drop constraints beforeQuery dropping tables in this dialect?
 	 *
 	 * @return True if constraints must be dropped prior to dropping
 	 * the table; false otherwise.
@@ -2120,44 +2116,44 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * For dropping a table, can the phrase "if exists" be applied before the table name?
+	 * For dropping a table, can the phrase "if exists" be applied beforeQuery the table name?
 	 * <p/>
 	 * NOTE : Only one or the other (or neither) of this and {@link #supportsIfExistsAfterTableName} should return true
 	 *
-	 * @return {@code true} if the "if exists" can be applied before the table name
+	 * @return {@code true} if the "if exists" can be applied beforeQuery the table name
 	 */
 	public boolean supportsIfExistsBeforeTableName() {
 		return false;
 	}
 
 	/**
-	 * For dropping a table, can the phrase "if exists" be applied after the table name?
+	 * For dropping a table, can the phrase "if exists" be applied afterQuery the table name?
 	 * <p/>
 	 * NOTE : Only one or the other (or neither) of this and {@link #supportsIfExistsBeforeTableName} should return true
 	 *
-	 * @return {@code true} if the "if exists" can be applied after the table name
+	 * @return {@code true} if the "if exists" can be applied afterQuery the table name
 	 */
 	public boolean supportsIfExistsAfterTableName() {
 		return false;
 	}
 
 	/**
-	 * For dropping a constraint with an "alter table", can the phrase "if exists" be applied before the constraint name?
+	 * For dropping a constraint with an "alter table", can the phrase "if exists" be applied beforeQuery the constraint name?
 	 * <p/>
 	 * NOTE : Only one or the other (or neither) of this and {@link #supportsIfExistsAfterConstraintName} should return true
 	 *
-	 * @return {@code true} if the "if exists" can be applied before the constraint name
+	 * @return {@code true} if the "if exists" can be applied beforeQuery the constraint name
 	 */
 	public boolean supportsIfExistsBeforeConstraintName() {
 		return false;
 	}
 
 	/**
-	 * For dropping a constraint with an "alter table", can the phrase "if exists" be applied after the constraint name?
+	 * For dropping a constraint with an "alter table", can the phrase "if exists" be applied afterQuery the constraint name?
 	 * <p/>
 	 * NOTE : Only one or the other (or neither) of this and {@link #supportsIfExistsBeforeConstraintName} should return true
 	 *
-	 * @return {@code true} if the "if exists" can be applied after the constraint name
+	 * @return {@code true} if the "if exists" can be applied afterQuery the constraint name
 	 */
 	public boolean supportsIfExistsAfterConstraintName() {
 		return false;

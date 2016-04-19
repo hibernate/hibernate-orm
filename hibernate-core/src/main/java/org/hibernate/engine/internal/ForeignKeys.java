@@ -13,7 +13,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
@@ -34,7 +34,7 @@ public final class ForeignKeys {
 	public static class Nullifier {
 		private final boolean isDelete;
 		private final boolean isEarlyInsert;
-		private final SessionImplementor session;
+		private final SharedSessionContractImplementor session;
 		private final Object self;
 
 		/**
@@ -45,7 +45,7 @@ public final class ForeignKeys {
 		 * @param isEarlyInsert Is this an early insert (INSERT generated id strategy)?
 		 * @param session The session
 		 */
-		public Nullifier(Object self, boolean isDelete, boolean isEarlyInsert, SessionImplementor session) {
+		public Nullifier(Object self, boolean isDelete, boolean isEarlyInsert, SharedSessionContractImplementor session) {
 			this.isDelete = isDelete;
 			this.isEarlyInsert = isEarlyInsert;
 			this.session = session;
@@ -181,7 +181,7 @@ public final class ForeignKeys {
 	 * @return {@code true} if the given entity is not transient (meaning it is either detached/persistent)
 	 */
 	@SuppressWarnings("SimplifiableIfStatement")
-	public static boolean isNotTransient(String entityName, Object entity, Boolean assumed, SessionImplementor session) {
+	public static boolean isNotTransient(String entityName, Object entity, Boolean assumed, SharedSessionContractImplementor session) {
 		if ( entity instanceof HibernateProxy ) {
 			return true;
 		}
@@ -208,7 +208,7 @@ public final class ForeignKeys {
 	 *
 	 * @return {@code true} if the given entity is transient (unsaved)
 	 */
-	public static boolean isTransient(String entityName, Object entity, Boolean assumed, SessionImplementor session) {
+	public static boolean isTransient(String entityName, Object entity, Boolean assumed, SharedSessionContractImplementor session) {
 		if ( entity == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
 			// an unfetched association can only point to
 			// an entity that already exists in the db
@@ -234,7 +234,7 @@ public final class ForeignKeys {
 			return assumed;
 		}
 
-		// hit the database, after checking the session cache for a snapshot
+		// hit the database, afterQuery checking the session cache for a snapshot
 		final Object[] snapshot = session.getPersistenceContext().getDatabaseSnapshot(
 				persister.getIdentifier( entity, session ),
 				persister
@@ -263,7 +263,7 @@ public final class ForeignKeys {
 	public static Serializable getEntityIdentifierIfNotUnsaved(
 			final String entityName,
 			final Object object,
-			final SessionImplementor session) throws TransientObjectException {
+			final SharedSessionContractImplementor session) throws TransientObjectException {
 		if ( object == null ) {
 			return null;
 		}
@@ -275,7 +275,7 @@ public final class ForeignKeys {
 				// deeper checks...
 				if ( isTransient( entityName, object, Boolean.FALSE, session ) ) {
 					throw new TransientObjectException(
-							"object references an unsaved transient instance - save the transient instance before flushing: " +
+							"object references an unsaved transient instance - save the transient instance beforeQuery flushing: " +
 									(entityName == null ? session.guessEntityName( object ) : entityName)
 					);
 				}
@@ -306,7 +306,7 @@ public final class ForeignKeys {
 			Object entity,
 			Object[] values,
 			boolean isEarlyInsert,
-			SessionImplementor session) {
+			SharedSessionContractImplementor session) {
 		final Nullifier nullifier = new Nullifier( entity, false, isEarlyInsert, session );
 		final EntityPersister persister = session.getEntityPersister( entityName, entity );
 		final String[] propertyNames = persister.getPropertyNames();
@@ -333,7 +333,7 @@ public final class ForeignKeys {
 			String propertyName,
 			Type type,
 			boolean isNullable,
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			NonNullableTransientDependencies nonNullableTransientEntities) {
 		if ( value == null ) {
 			return;

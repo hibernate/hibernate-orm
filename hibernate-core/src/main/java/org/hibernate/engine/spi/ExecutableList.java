@@ -278,7 +278,7 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 			oos.writeObject( e );
 		}
 
-		// if the spaces are initialized, write them out for usage after deserialization
+		// if the spaces are initialized, write them out for usage afterQuery deserialization
 		if ( querySpaces == null ) {
 			oos.writeInt( -1 );
 		}
@@ -323,7 +323,7 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	}
 
 	/**
-	 * Allow the Executables to re-associate themselves with the Session after deserialization.
+	 * Allow the Executables to re-associate themselves with the Session afterQuery deserialization.
 	 * 
 	 * @param session The session to which to associate the Executables
 	 */

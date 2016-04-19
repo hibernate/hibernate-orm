@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.internal;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,8 +25,9 @@ import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.NaturalIdentifier;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.query.internal.AbstractProducedQuery;
 import org.hibernate.sql.JoinType;
 import org.hibernate.transform.ResultTransformer;
 
@@ -36,18 +38,18 @@ import org.hibernate.transform.ResultTransformer;
 public class CriteriaImpl implements Criteria, Serializable {
 
 	private final String entityOrClassName;
-	private transient SessionImplementor session;
+	private transient SharedSessionContractImplementor session;
 	private final String rootAlias;
 
-	private List<CriterionEntry> criterionEntries = new ArrayList<CriterionEntry>();
-	private List<OrderEntry> orderEntries = new ArrayList<OrderEntry>();
+	private List<CriterionEntry> criterionEntries = new ArrayList<>();
+	private List<OrderEntry> orderEntries = new ArrayList<>();
 	private Projection projection;
 	private Criteria projectionCriteria;
 
-	private List<Subcriteria> subcriteriaList = new ArrayList<Subcriteria>();
+	private List<Subcriteria> subcriteriaList = new ArrayList<>();
 
-	private Map<String, FetchMode> fetchModes = new HashMap<String, FetchMode>();
-	private Map<String, LockMode> lockModes = new HashMap<String, LockMode>();
+	private Map<String, FetchMode> fetchModes = new HashMap<>();
+	private Map<String, LockMode> lockModes = new HashMap<>();
 
 	private Integer maxResults;
 	private Integer firstResult;
@@ -71,11 +73,11 @@ public class CriteriaImpl implements Criteria, Serializable {
 
 	// Constructors ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	public CriteriaImpl(String entityOrClassName, SessionImplementor session) {
+	public CriteriaImpl(String entityOrClassName, SharedSessionContractImplementor session) {
 		this(entityOrClassName, ROOT_ALIAS, session);
 	}
 
-	public CriteriaImpl(String entityOrClassName, String alias, SessionImplementor session) {
+	public CriteriaImpl(String entityOrClassName, String alias, SharedSessionContractImplementor session) {
 		this.session = session;
 		this.entityOrClassName = entityOrClassName;
 		this.cacheable = false;
@@ -95,11 +97,11 @@ public class CriteriaImpl implements Criteria, Serializable {
 
 	// State ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	public SessionImplementor getSession() {
+	public SharedSessionContractImplementor getSession() {
 		return session;
 	}
 
-	public void setSession(SessionImplementor session) {
+	public void setSession(SharedSessionContractImplementor session) {
 		this.session = session;
 	}
 
@@ -382,13 +384,13 @@ public class CriteriaImpl implements Criteria, Serializable {
 	}
 	@Override
 	public Object uniqueResult() throws HibernateException {
-		return AbstractQueryImpl.uniqueElement( list() );
+		return AbstractProducedQuery.uniqueElement( list() );
 	}
 
 	protected void before() {
 		if ( flushMode != null ) {
-			sessionFlushMode = getSession().getFlushMode();
-			getSession().setFlushMode( flushMode );
+			sessionFlushMode = getSession().getHibernateFlushMode();
+			getSession().setHibernateFlushMode( flushMode );
 		}
 		if ( cacheMode != null ) {
 			sessionCacheMode = getSession().getCacheMode();
@@ -398,7 +400,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 
 	protected void after() {
 		if ( sessionFlushMode != null ) {
-			getSession().setFlushMode( sessionFlushMode );
+			getSession().setHibernateFlushMode( sessionFlushMode );
 			sessionFlushMode = null;
 		}
 		if ( sessionCacheMode != null ) {

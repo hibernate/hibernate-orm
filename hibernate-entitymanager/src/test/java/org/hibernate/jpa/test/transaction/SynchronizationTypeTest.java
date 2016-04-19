@@ -6,13 +6,13 @@
  */
 package org.hibernate.jpa.test.transaction;
 
+import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
 import javax.persistence.SynchronizationType;
 import javax.persistence.TransactionRequiredException;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaUpdate;
-import java.util.Map;
 
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
@@ -20,12 +20,11 @@ import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 
-import org.junit.Test;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.junit4.ExtraAssertions;
+import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -64,7 +63,7 @@ public class SynchronizationTypeTest extends BaseEntityManagerFunctionalTestCase
 
 	@Test
 	public void testImplicitJoining() throws Exception {
-		// here the transaction is started before the EM is opened.  Because the SynchronizationType is UNSYNCHRONIZED
+		// here the transaction is started beforeQuery the EM is opened.  Because the SynchronizationType is UNSYNCHRONIZED
 		// though, it should not auto join the transaction
 
 		assertFalse( "setup problem", JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );

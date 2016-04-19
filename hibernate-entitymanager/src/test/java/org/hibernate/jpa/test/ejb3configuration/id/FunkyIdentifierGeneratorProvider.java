@@ -9,12 +9,10 @@ package org.hibernate.jpa.test.ejb3configuration.id;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.ejb.cfg.spi.IdentifierGeneratorStrategyProvider;
-
 /**
  * @author Emmanuel Bernard <emmanuel@hibernate.org>
  */
-public class FunkyIdentifierGeneratorProvider implements IdentifierGeneratorStrategyProvider {
+public class FunkyIdentifierGeneratorProvider implements org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider {
 	public Map<String, Class<?>> getStrategies() {
 		final HashMap<String, Class<?>> result = new HashMap<String, Class<?>>( 1 );
 		result.put( "funky", FunkyIdGenerator.class );

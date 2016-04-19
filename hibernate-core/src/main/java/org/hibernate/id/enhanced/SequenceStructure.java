@@ -18,7 +18,7 @@ import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.internal.CoreMessageLogger;
@@ -81,7 +81,7 @@ public class SequenceStructure implements DatabaseStructure {
 	}
 
 	@Override
-	public AccessCallback buildCallback(final SessionImplementor session) {
+	public AccessCallback buildCallback(final SharedSessionContractImplementor session) {
 		if ( sql == null ) {
 			throw new AssertionFailure( "SequenceStyleGenerator's SequenceStructure was not properly initialized" );
 		}
@@ -105,7 +105,7 @@ public class SequenceStructure implements DatabaseStructure {
 						}
 						finally {
 							try {
-								session.getJdbcCoordinator().getResourceRegistry().release( rs, st );
+								session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, st );
 							}
 							catch( Throwable ignore ) {
 								// intentionally empty
@@ -113,13 +113,13 @@ public class SequenceStructure implements DatabaseStructure {
 						}
 					}
 					finally {
-						session.getJdbcCoordinator().getResourceRegistry().release( st );
+						session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
 						session.getJdbcCoordinator().afterStatementExecution();
 					}
 
 				}
 				catch ( SQLException sqle) {
-					throw session.getFactory().getSQLExceptionHelper().convert(
+					throw session.getJdbcServices().getSqlExceptionHelper().convert(
 							sqle,
 							"could not get next sequence value",
 							sql

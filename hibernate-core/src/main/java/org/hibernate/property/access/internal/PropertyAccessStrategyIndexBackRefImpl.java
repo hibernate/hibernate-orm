@@ -11,7 +11,7 @@ import java.lang.reflect.Method;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
@@ -75,7 +75,7 @@ public class PropertyAccessStrategyIndexBackRefImpl implements PropertyAccessStr
 		}
 
 		@Override
-		public Object getForInsert(Object owner, Map mergeMap, SessionImplementor session) {
+		public Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
 			if ( session == null ) {
 				return PropertyAccessStrategyBackRefImpl.UNKNOWN;
 			}

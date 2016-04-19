@@ -80,9 +80,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.Join;
-import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SingleTableSubclass;
@@ -163,7 +161,7 @@ public class EntityBinder {
 
 	/**
 	 * For the most part, this is a simple delegation to {@link PersistentClass#isPropertyDefinedInHierarchy},
-	 * after verifying that PersistentClass is indeed set here.
+	 * afterQuery verifying that PersistentClass is indeed set here.
 	 *
 	 * @param name The name of the property to check
 	 *
@@ -699,8 +697,8 @@ public class EntityBinder {
 
 	public void finalSecondaryTableBinding(PropertyHolder propertyHolder) {
 		/*
-		 * Those operations has to be done after the id definition of the persistence class.
-		 * ie after the properties parsing
+		 * Those operations has to be done afterQuery the id definition of the persistence class.
+		 * ie afterQuery the properties parsing
 		 */
 		Iterator joins = secondaryTables.values().iterator();
 		Iterator joinColumns = secondaryTableJoins.values().iterator();

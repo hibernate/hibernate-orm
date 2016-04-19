@@ -10,7 +10,7 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.proxy.AbstractLazyInitializer;
 import org.hibernate.type.CompositeType;
@@ -39,7 +39,7 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 			Method getIdentifierMethod,
 			Method setIdentifierMethod,
 			CompositeType componentIdType,
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			boolean overridesEquals) {
 		super( entityName, id, session );
 		this.persistentClass = persistentClass;
@@ -91,11 +91,11 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 	}
 
 	private Object getReplacement() {
-		final SessionImplementor session = getSession();
+		final SharedSessionContractImplementor session = getSession();
 		if ( isUninitialized() && session != null && session.isOpen() ) {
 			final EntityKey key = session.generateEntityKey(
 					getIdentifier(),
-					session.getFactory().getEntityPersister( getEntityName() )
+					session.getFactory().getMetamodel().entityPersister( getEntityName() )
 			);
 			final Object entity = session.getPersistenceContext().getEntity( key );
 			if ( entity != null ) {

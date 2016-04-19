@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.Query;
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
@@ -25,14 +24,14 @@ import javax.persistence.criteria.Selection;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
 
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 import org.hibernate.query.criteria.internal.compile.CompilableCriteria;
 import org.hibernate.query.criteria.internal.compile.CriteriaInterpretation;
-import org.hibernate.query.criteria.internal.compile.CriteriaQueryTypeQueryAdapter;
 import org.hibernate.query.criteria.internal.compile.ImplicitParameterBinding;
 import org.hibernate.query.criteria.internal.compile.InterpretedParameterMetadata;
 import org.hibernate.query.criteria.internal.compile.RenderingContext;
-import org.hibernate.jpa.internal.QueryImpl;
-import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
+import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -312,11 +311,13 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 		return new CriteriaInterpretation() {
 			@Override
 			@SuppressWarnings("unchecked")
-			public Query buildCompiledQuery(HibernateEntityManagerImplementor entityManager, final InterpretedParameterMetadata parameterMetadata) {
+			public QueryImplementor buildCompiledQuery(
+					SessionImplementor entityManager,
+					final InterpretedParameterMetadata parameterMetadata) {
 
 				final Map<String,Class> implicitParameterTypes = extractTypeMap( parameterMetadata.implicitParameterBindings() );
 
-				QueryImpl jpaqlQuery = entityManager.createQuery(
+				QueryImplementor<T> jpaqlQuery = entityManager.createQuery(
 						jpaqlString,
 						getResultType(),
 						getSelection(),
@@ -369,11 +370,13 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 					implicitParameterBinding.bind( jpaqlQuery );
 				}
 
-				return new CriteriaQueryTypeQueryAdapter(
-						entityManager,
-						jpaqlQuery,
-						parameterMetadata.explicitParameterInfoMap()
-				);
+//				return new CriteriaQueryTypeQueryAdapter(
+//						entityManager,
+//						jpaqlQuery,
+//						parameterMetadata.explicitParameterInfoMap()
+//				);
+
+				return jpaqlQuery;
 			}
 
 			private Map<String, Class> extractTypeMap(List<ImplicitParameterBinding> implicitParameterBindings) {

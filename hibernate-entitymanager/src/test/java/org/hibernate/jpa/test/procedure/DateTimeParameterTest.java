@@ -6,15 +6,6 @@
  */
 package org.hibernate.jpa.test.procedure;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityManager;
-import javax.persistence.Id;
-import javax.persistence.ParameterMode;
-import javax.persistence.StoredProcedureQuery;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -29,6 +20,15 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityManager;
+import javax.persistence.Id;
+import javax.persistence.ParameterMode;
+import javax.persistence.StoredProcedureQuery;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 import org.hibernate.dialect.DerbyTenSevenDialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -40,11 +40,10 @@ import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
 
@@ -198,7 +197,7 @@ public class DateTimeParameterTest extends BaseUnitTestCase {
 					conn.commit();
 				}
 				catch (SQLException e) {
-					System.out.println( "Unable to commit transaction after creating creating procedures");
+					System.out.println( "Unable to commit transaction afterQuery creating creating procedures");
 				}
 
 				try {
@@ -287,7 +286,7 @@ public class DateTimeParameterTest extends BaseUnitTestCase {
 					conn.commit();
 				}
 				catch (SQLException e) {
-					System.out.println( "Unable to commit transaction after creating dropping procedures");
+					System.out.println( "Unable to commit transaction afterQuery creating dropping procedures");
 				}
 
 				try {

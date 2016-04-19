@@ -21,6 +21,7 @@ import org.hibernate.TransientPropertyValueException;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.IdentitySet;
@@ -36,7 +37,7 @@ import org.jboss.logging.Logger;
  * an unsaved transient entity, and the foreign key points to that
  * unsaved transient entity.
  *
- * These references must be resolved before an insert action can be
+ * These references must be resolved beforeQuery an insert action can be
  * executed.
  *
  * @author Gail Badner
@@ -49,10 +50,8 @@ public class UnresolvedEntityInsertActions {
 
 	private static final int INIT_SIZE = 5;
 
-	private final Map<AbstractEntityInsertAction,NonNullableTransientDependencies> dependenciesByAction =
-			new IdentityHashMap<AbstractEntityInsertAction,NonNullableTransientDependencies>( INIT_SIZE );
-	private final Map<Object,Set<AbstractEntityInsertAction>> dependentActionsByTransientEntity =
-			new IdentityHashMap<Object,Set<AbstractEntityInsertAction>>( INIT_SIZE );
+	private final Map<AbstractEntityInsertAction,NonNullableTransientDependencies> dependenciesByAction = new IdentityHashMap<>( INIT_SIZE );
+	private final Map<Object,Set<AbstractEntityInsertAction>> dependentActionsByTransientEntity = new IdentityHashMap<>( INIT_SIZE );
 
 	/**
 	 * Add an unresolved insert action.
@@ -92,7 +91,7 @@ public class UnresolvedEntityInsertActions {
 	 * Throws {@link org.hibernate.PropertyValueException} if there are any unresolved
 	 * entity insert actions that depend on non-nullable associations with
 	 * a transient entity. This method should be called on completion of
-	 * an operation (after all cascades are completed) that saves an entity.
+	 * an operation (afterQuery all cascades are completed) that saves an entity.
 	 *
 	 * @throws org.hibernate.PropertyValueException if there are any unresolved entity
 	 * insert actions; {@link org.hibernate.PropertyValueException#getEntityName()}
@@ -118,7 +117,7 @@ public class UnresolvedEntityInsertActions {
 					nonNullableTransientDependencies.getNonNullableTransientPropertyPaths( firstTransientDependency ).iterator().next();
 
 			throw new TransientPropertyValueException(
-					"Not-null property references a transient value - transient instance must be saved before current operation",
+					"Not-null property references a transient value - transient instance must be saved beforeQuery current operation",
 					firstDependentAction.getSession().guessEntityName( firstTransientDependency ),
 					firstDependentAction.getEntityName(),
 					firstPropertyPath
@@ -126,14 +125,14 @@ public class UnresolvedEntityInsertActions {
 		}
 	}
 
-	private void logCannotResolveNonNullableTransientDependencies(SessionImplementor session) {
+	private void logCannotResolveNonNullableTransientDependencies(SharedSessionContractImplementor session) {
 		for ( Map.Entry<Object,Set<AbstractEntityInsertAction>> entry : dependentActionsByTransientEntity.entrySet() ) {
 			final Object transientEntity = entry.getKey();
 			final String transientEntityName = session.guessEntityName( transientEntity );
-			final Serializable transientEntityId = session.getFactory().getEntityPersister( transientEntityName ).getIdentifier( transientEntity, session );
+			final Serializable transientEntityId = session.getFactory().getMetamodel().entityPersister( transientEntityName ).getIdentifier( transientEntity, session );
 			final String transientEntityString = MessageHelper.infoString( transientEntityName, transientEntityId );
-			final Set<String> dependentEntityStrings = new TreeSet<String>();
-			final Set<String> nonNullableTransientPropertyPaths = new TreeSet<String>();
+			final Set<String> dependentEntityStrings = new TreeSet<>();
+			final Set<String> nonNullableTransientPropertyPaths = new TreeSet<>();
 			for ( AbstractEntityInsertAction dependentAction : entry.getValue() ) {
 				dependentEntityStrings.add( MessageHelper.infoString( dependentAction.getEntityName(), dependentAction.getId() ) );
 				for ( String path : dependenciesByAction.get( dependentAction ).getNonNullableTransientPropertyPaths( transientEntity ) ) {
@@ -204,7 +203,7 @@ public class UnresolvedEntityInsertActions {
 		final Set<AbstractEntityInsertAction> resolvedActions = new IdentitySet(  );
 		if ( traceEnabled  ) {
 			LOG.tracev(
-					"Unresolved inserts before resolving [{0}]: [{1}]",
+					"Unresolved inserts beforeQuery resolving [{0}]: [{1}]",
 					MessageHelper.infoString( entityEntry.getEntityName(), entityEntry.getId() ),
 					toString()
 			);
@@ -234,7 +233,7 @@ public class UnresolvedEntityInsertActions {
 		}
 		if ( traceEnabled  ) {
 			LOG.tracev(
-					"Unresolved inserts after resolving [{0}]: [{1}]",
+					"Unresolved inserts afterQuery resolving [{0}]: [{1}]",
 					MessageHelper.infoString( entityEntry.getEntityName(), entityEntry.getId() ),
 					toString()
 			);

@@ -11,10 +11,14 @@ import javax.persistence.spi.PersistenceUnitTransactionType;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.AfterCompletionAction;
 
+import org.jboss.logging.Logger;
+
 /**
  * @author Steve Ebersole
  */
 public class AfterCompletionActionLegacyJpaImpl implements AfterCompletionAction {
+	private static final Logger log = Logger.getLogger( AfterCompletionActionLegacyJpaImpl.class );
+
 	/**
 	 * Singleton access
 	 */
@@ -23,7 +27,7 @@ public class AfterCompletionActionLegacyJpaImpl implements AfterCompletionAction
 	@Override
 	public void doAction(boolean successful, SessionImplementor session) {
 		if ( session.isClosed() ) {
-			EntityManagerImpl.LOG.trace( "Session was closed; nothing to do" );
+			log.trace( "Session was closed; nothing to do" );
 			return;
 		}
 

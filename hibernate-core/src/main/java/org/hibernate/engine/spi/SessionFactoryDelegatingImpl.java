@@ -6,14 +6,30 @@
  */
 package org.hibernate.engine.spi;
 
+import java.sql.Connection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javax.naming.NamingException;
 import javax.naming.Reference;
-import java.sql.Connection;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import javax.persistence.EntityGraph;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceUnitUtil;
+import javax.persistence.Query;
+import javax.persistence.SynchronizationType;
+import javax.persistence.criteria.CriteriaBuilder;
 
-import org.hibernate.*;
+import org.hibernate.CustomEntityDirtinessStrategy;
+import org.hibernate.EntityNameResolver;
+import org.hibernate.HibernateException;
+import org.hibernate.Interceptor;
+import org.hibernate.MappingException;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.SessionFactoryObserver;
+import org.hibernate.StatelessSession;
+import org.hibernate.StatelessSessionBuilder;
+import org.hibernate.TypeHelper;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.QueryCache;
 import org.hibernate.cache.spi.Region;
@@ -29,16 +45,17 @@ import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.query.spi.QueryPlanCache;
 import org.hibernate.exception.spi.SQLExceptionConverter;
+import org.hibernate.graph.spi.EntityGraphImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
-import org.hibernate.internal.NamedQueryRepository;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.stat.Statistics;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
@@ -118,7 +135,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public Statistics getStatistics() {
+	public StatisticsImplementor getStatistics() {
 		return delegate.getStatistics();
 	}
 
@@ -133,8 +150,28 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public Cache getCache() {
+	public CacheImplementor getCache() {
 		return delegate.getCache();
+	}
+
+	@Override
+	public PersistenceUnitUtil getPersistenceUnitUtil() {
+		return null;
+	}
+
+	@Override
+	public void addNamedQuery(String name, Query query) {
+
+	}
+
+	@Override
+	public <T> T unwrap(Class<T> cls) {
+		return null;
+	}
+
+	@Override
+	public <T> void addNamedEntityGraph(String graphName, EntityGraph<T> entityGraph) {
+
 	}
 
 	@Override
@@ -163,7 +200,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public Properties getProperties() {
+	public Map<String, Object> getProperties() {
 		return delegate.getProperties();
 	}
 
@@ -225,6 +262,11 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public String getImportedClassName(String name) {
 		return delegate.getImportedClassName( name );
+	}
+
+	@Override
+	public EntityGraphImplementor findEntityGraphByName(String name) {
+		return delegate.findEntityGraphByName( name );
 	}
 
 	@Override
@@ -413,7 +455,52 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
+	public String getName() {
+		return delegate.getName();
+	}
+
+	@Override
 	public Reference getReference() throws NamingException {
 		return delegate.getReference();
+	}
+
+	@Override
+	public <T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass) {
+		return delegate.findEntityGraphsByType( entityClass );
+	}
+
+	@Override
+	public EntityManager createEntityManager() {
+		return delegate.createEntityManager();
+	}
+
+	@Override
+	public EntityManager createEntityManager(Map map) {
+		return delegate.createEntityManager( map );
+	}
+
+	@Override
+	public EntityManager createEntityManager(SynchronizationType synchronizationType) {
+		return delegate.createEntityManager( synchronizationType );
+	}
+
+	@Override
+	public EntityManager createEntityManager(SynchronizationType synchronizationType, Map map) {
+		return delegate.createEntityManager( synchronizationType, map );
+	}
+
+	@Override
+	public CriteriaBuilder getCriteriaBuilder() {
+		return delegate.getCriteriaBuilder();
+	}
+
+	@Override
+	public MetamodelImplementor getMetamodel() {
+		return delegate.getMetamodel();
+	}
+
+	@Override
+	public boolean isOpen() {
+		return delegate.isOpen();
 	}
 }

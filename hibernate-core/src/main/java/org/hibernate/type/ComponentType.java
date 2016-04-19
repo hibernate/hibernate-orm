@@ -24,7 +24,7 @@ import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.tuple.StandardProperty;
@@ -245,7 +245,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	}
 
 	@Override
-	public boolean isDirty(final Object x, final Object y, final SessionImplementor session) throws HibernateException {
+	public boolean isDirty(final Object x, final Object y, final SharedSessionContractImplementor session) throws HibernateException {
 		if ( x == y ) {
 			return false;
 		}
@@ -258,7 +258,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		return false;
 	}
 
-	public boolean isDirty(final Object x, final Object y, final boolean[] checkable, final SessionImplementor session)
+	public boolean isDirty(final Object x, final Object y, final boolean[] checkable, final SharedSessionContractImplementor session)
 			throws HibernateException {
 		if ( x == y ) {
 			return false;
@@ -297,7 +297,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 			final Object old,
 			final Object current,
 			final boolean[] checkable,
-			final SessionImplementor session) throws HibernateException {
+			final SharedSessionContractImplementor session) throws HibernateException {
 		if ( current == null ) {
 			return old != null;
 		}
@@ -320,13 +320,13 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	}
 
 	@Override
-	public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner)
+	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException, SQLException {
 		return resolve( hydrate( rs, names, session, owner ), session, owner );
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, Object value, int begin, SessionImplementor session)
+	public void nullSafeSet(PreparedStatement st, Object value, int begin, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 
 		Object[] subvalues = nullSafeGetValues( value, entityMode );
@@ -343,7 +343,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 			Object value,
 			int begin,
 			boolean[] settable,
-			SessionImplementor session)
+			SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 
 		Object[] subvalues = nullSafeGetValues( value, entityMode );
@@ -381,14 +381,14 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	}
 
 	@Override
-	public Object nullSafeGet(ResultSet rs, String name, SessionImplementor session, Object owner)
+	public Object nullSafeGet(ResultSet rs, String name, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException, SQLException {
 
 		return nullSafeGet( rs, new String[] {name}, session, owner );
 	}
 
 	@Override
-	public Object getPropertyValue(Object component, int i, SessionImplementor session)
+	public Object getPropertyValue(Object component, int i, SharedSessionContractImplementor session)
 			throws HibernateException {
 		return getPropertyValue( component, i );
 	}
@@ -416,7 +416,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	}
 
 	@Override
-	public Object[] getPropertyValues(Object component, SessionImplementor session)
+	public Object[] getPropertyValues(Object component, SharedSessionContractImplementor session)
 			throws HibernateException {
 		return getPropertyValues( component, entityMode );
 	}
@@ -469,7 +469,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		if ( entityMode == null ) {
 			throw new ClassCastException( value.getClass().getName() );
 		}
-		Map<String, String> result = new HashMap<String, String>();
+		Map<String, String> result = new HashMap<>();
 		Object[] values = getPropertyValues( value, entityMode );
 		for ( int i = 0; i < propertyTypes.length; i++ ) {
 			result.put( propertyNames[i], propertyTypes[i].toLoggableString( values[i], factory ) );
@@ -510,7 +510,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	public Object replace(
 			Object original,
 			Object target,
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Object owner,
 			Map copyCache)
 			throws HibernateException {
@@ -541,7 +541,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	public Object replace(
 			Object original,
 			Object target,
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Object owner,
 			Map copyCache,
 			ForeignKeyDirection foreignKeyDirection)
@@ -577,7 +577,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		return componentTuplizer.instantiate();
 	}
 
-	public Object instantiate(Object parent, SessionImplementor session)
+	public Object instantiate(Object parent, SharedSessionContractImplementor session)
 			throws HibernateException {
 
 		Object result = instantiate( entityMode );
@@ -604,7 +604,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	}
 
 	@Override
-	public Serializable disassemble(Object value, SessionImplementor session, Object owner)
+	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException {
 
 		if ( value == null ) {
@@ -620,7 +620,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	}
 
 	@Override
-	public Object assemble(Serializable object, SessionImplementor session, Object owner)
+	public Object assemble(Serializable object, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException {
 
 		if ( object == null ) {
@@ -647,7 +647,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	public Object hydrate(
 			final ResultSet rs,
 			final String[] names,
-			final SessionImplementor session,
+			final SharedSessionContractImplementor session,
 			final Object owner)
 			throws HibernateException, SQLException {
 
@@ -674,7 +674,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	}
 
 	@Override
-	public Object resolve(Object value, SessionImplementor session, Object owner)
+	public Object resolve(Object value, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException {
 
 		if ( value != null ) {
@@ -696,7 +696,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	}
 
 	@Override
-	public Object semiResolve(Object value, SessionImplementor session, Object owner)
+	public Object semiResolve(Object value, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException {
 		//note that this implementation is kinda broken
 		//for components with many-to-one associations
@@ -765,7 +765,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	}
 
 	@Override
-	public Object extract(CallableStatement statement, int startIndex, SessionImplementor session) throws SQLException {
+	public Object extract(CallableStatement statement, int startIndex, SharedSessionContractImplementor session) throws SQLException {
 		Object[] values = new Object[propertySpan];
 
 		int currentIndex = startIndex;
@@ -798,7 +798,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	}
 
 	@Override
-	public Object extract(CallableStatement statement, String[] paramNames, SessionImplementor session)
+	public Object extract(CallableStatement statement, String[] paramNames, SharedSessionContractImplementor session)
 			throws SQLException {
 		// for this form to work all sub-property spans must be one (1)...
 

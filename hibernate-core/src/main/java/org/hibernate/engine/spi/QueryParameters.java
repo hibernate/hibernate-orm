@@ -24,6 +24,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.FilterImpl;
 import org.hibernate.internal.util.EntityPrinter;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.query.internal.QueryParameterBindingsImpl;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
 
@@ -225,6 +226,42 @@ public final class QueryParameters {
 		this.optionalObject = optionalObject;
 	}
 
+	public QueryParameters(
+			QueryParameterBindingsImpl queryParameterBindings,
+			LockOptions lockOptions,
+			RowSelection selection,
+			final boolean isReadOnlyInitialized,
+			boolean readOnly,
+			boolean cacheable,
+			String cacheRegion,
+			String comment,
+			List<String> dbHints,
+			final Serializable[] collectionKeys,
+			final Object optionalObject,
+			final String optionalEntityName,
+			final Serializable optionalId,
+			ResultTransformer resultTransformer) {
+		this(
+				queryParameterBindings.collectPositionalBindTypes(),
+				queryParameterBindings.collectPositionalBindValues(),
+				queryParameterBindings.collectNamedParameterBindings(),
+				lockOptions,
+				selection,
+				isReadOnlyInitialized,
+				readOnly,
+				cacheable,
+				cacheRegion,
+				comment,
+				dbHints,
+				collectionKeys,
+				optionalObject,
+				optionalEntityName,
+				optionalId,
+				resultTransformer
+		);
+
+	}
+
 	@SuppressWarnings( {"UnusedDeclaration"})
 	public boolean hasRowSelection() {
 		return rowSelection != null;
@@ -373,7 +410,7 @@ public final class QueryParameters {
 	/**
 	 * Has the read-only/modifiable mode been explicitly set?
 	 * @see QueryParameters#setReadOnly(boolean)
-	 * @see QueryParameters#isReadOnly(org.hibernate.engine.spi.SessionImplementor)
+	 * @see QueryParameters#isReadOnly(SharedSessionContractImplementor)
 	 *
 	 * @return true, the read-only/modifiable mode was explicitly set
 	 *         false, the read-only/modifiable mode was not explicitly set
@@ -385,14 +422,14 @@ public final class QueryParameters {
 	/**
 	 * Should entities and proxies loaded by the Query be put in read-only mode? The
 	 * read-only/modifiable setting must be initialized via QueryParameters#setReadOnly(boolean)
-	 * before calling this method.
+	 * beforeQuery calling this method.
 	 *
 	 * @see QueryParameters#isReadOnlyInitialized()
-	 * @see QueryParameters#isReadOnly(org.hibernate.engine.spi.SessionImplementor)
+	 * @see QueryParameters#isReadOnly(SharedSessionContractImplementor)
 	 * @see QueryParameters#setReadOnly(boolean)
 	 *
 	 * The read-only/modifiable setting has no impact on entities/proxies returned by the
-	 * query that existed in the session before the query was executed.
+	 * query that existed in the session beforeQuery the query was executed.
 	 *
 	 * @return true, entities and proxies loaded by the Query will be put in read-only mode
 	 *         false, entities and proxies loaded by the Query will be put in modifiable mode
@@ -412,7 +449,7 @@ public final class QueryParameters {
 	 * then the default read-only/modifiable setting for the persistence context is returned instead.
 	 * <p/>
 	 * The read-only/modifiable setting has no impact on entities/proxies returned by the
-	 * query that existed in the session before the query was executed.
+	 * query that existed in the session beforeQuery the query was executed.
 	 *
 	 * @param session The originating session
 	 *
@@ -424,10 +461,10 @@ public final class QueryParameters {
 	 * @see org.hibernate.engine.spi.PersistenceContext#isDefaultReadOnly()
 	 *
 	 * The read-only/modifiable setting has no impact on entities/proxies returned by the
-	 * query that existed in the session before the query was executed.
+	 * query that existed in the session beforeQuery the query was executed.
 	 *
 	 */
-	public boolean isReadOnly(SessionImplementor session) {
+	public boolean isReadOnly(SharedSessionContractImplementor session) {
 		return isReadOnlyInitialized
 				? isReadOnly()
 				: session.getPersistenceContext().isDefaultReadOnly();
@@ -437,13 +474,13 @@ public final class QueryParameters {
 	 * Set the read-only/modifiable mode for entities and proxies loaded by the query.
 	 * <p/>
 	 * The read-only/modifiable setting has no impact on entities/proxies returned by the
-	 * query that existed in the session before the query was executed.
+	 * query that existed in the session beforeQuery the query was executed.
 	 *
 	 * @param readOnly if {@code true}, entities and proxies loaded by the query will be put in read-only mode; if
 	 * {@code false}, entities and proxies loaded by the query will be put in modifiable mode
 	 *
 	 * @see QueryParameters#isReadOnlyInitialized()
-	 * @see QueryParameters#isReadOnly(org.hibernate.engine.spi.SessionImplementor)
+	 * @see QueryParameters#isReadOnly(SharedSessionContractImplementor)
 	 * @see QueryParameters#setReadOnly(boolean)
 	 * @see org.hibernate.engine.spi.PersistenceContext#isDefaultReadOnly()
 	 */
@@ -464,7 +501,7 @@ public final class QueryParameters {
 		return autodiscovertypes;
 	}
 
-	public void processFilters(String sql, SessionImplementor session) {
+	public void processFilters(String sql, SharedSessionContractImplementor session) {
 		processFilters( sql, session.getLoadQueryInfluencers().getEnabledFilters(), session.getFactory() );
 	}
 

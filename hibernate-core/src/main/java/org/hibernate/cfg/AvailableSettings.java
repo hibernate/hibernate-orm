@@ -7,12 +7,174 @@
 package org.hibernate.cfg;
 
 import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.tool.schema.SourceType;
 
 /**
  * @author Steve Ebersole
  */
 public interface AvailableSettings {
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// JPA defined settings
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * THe name of the {@link javax.persistence.spi.PersistenceProvider} implementor
+	 * <p/>
+	 * See JPA 2 sections 9.4.3 and 8.2.1.4
+	 */
+	String JPA_PERSISTENCE_PROVIDER = "javax.persistence.provider";
+
+	/**
+	 * The type of transactions supported by the entity managers.
+	 * <p/>
+	 * See JPA 2 sections 9.4.3 and 8.2.1.2
+	 */
+	String JPA_TRANSACTION_TYPE = "javax.persistence.transactionType";
+
+	/**
+	 * The JNDI name of a JTA {@link javax.sql.DataSource}.
+	 * <p/>
+	 * See JPA 2 sections 9.4.3 and 8.2.1.5
+	 */
+	String JPA_JTA_DATASOURCE = "javax.persistence.jtaDataSource";
+
+	/**
+	 * The JNDI name of a non-JTA {@link javax.sql.DataSource}.
+	 * <p/>
+	 * See JPA 2 sections 9.4.3 and 8.2.1.5
+	 */
+	String JPA_NON_JTA_DATASOURCE = "javax.persistence.nonJtaDataSource";
+
+	/**
+	 * The name of a JDBC driver to use to connect to the database.
+	 * <p/>
+	 * Used in conjunction with {@link #JPA_JDBC_URL}, {@link #JPA_JDBC_USER} and {@link #JPA_JDBC_PASSWORD}
+	 * to define how to make connections to the database in lieu of
+	 * a datasource (either {@link #JPA_JTA_DATASOURCE} or {@link #JPA_NON_JTA_DATASOURCE}).
+	 * <p/>
+	 * See section 8.2.1.9
+	 */
+	String JPA_JDBC_DRIVER = "javax.persistence.jdbc.driver";
+
+	/**
+	 * The JDBC connection url to use to connect to the database.
+	 * <p/>
+	 * Used in conjunction with {@link #JPA_JDBC_DRIVER}, {@link #JPA_JDBC_USER} and {@link #JPA_JDBC_PASSWORD}
+	 * to define how to make connections to the database in lieu of
+	 * a datasource (either {@link #JPA_JTA_DATASOURCE} or {@link #JPA_NON_JTA_DATASOURCE}).
+	 * <p/>
+	 * See section 8.2.1.9
+	 */
+	String JPA_JDBC_URL = "javax.persistence.jdbc.url";
+
+	/**
+	 * The JDBC connection user name.
+	 * <p/>
+	 * Used in conjunction with {@link #JPA_JDBC_DRIVER}, {@link #JPA_JDBC_URL} and {@link #JPA_JDBC_PASSWORD}
+	 * to define how to make connections to the database in lieu of
+	 * a datasource (either {@link #JPA_JTA_DATASOURCE} or {@link #JPA_NON_JTA_DATASOURCE}).
+	 * <p/>
+	 * See section 8.2.1.9
+	 */
+	String JPA_JDBC_USER = "javax.persistence.jdbc.user";
+
+	/**
+	 * The JDBC connection password.
+	 * <p/>
+	 * Used in conjunction with {@link #JPA_JDBC_DRIVER}, {@link #JPA_JDBC_URL} and {@link #JPA_JDBC_USER}
+	 * to define how to make connections to the database in lieu of
+	 * a datasource (either {@link #JPA_JTA_DATASOURCE} or {@link #JPA_NON_JTA_DATASOURCE}).
+	 * <p/>
+	 * See JPA 2 section 8.2.1.9
+	 */
+	String JPA_JDBC_PASSWORD = "javax.persistence.jdbc.password";
+
+	/**
+	 * Used to indicate whether second-level (what JPA terms shared cache) caching is
+	 * enabled as per the rules defined in JPA 2 section 3.1.7.
+	 * <p/>
+	 * See JPA 2 sections 9.4.3 and 8.2.1.7
+	 * @see javax.persistence.SharedCacheMode
+	 */
+	String JPA_SHARED_CACHE_MODE = "javax.persistence.sharedCache.mode";
+
+	/**
+	 * NOTE : Not a valid EMF property...
+	 * <p/>
+	 * Used to indicate if the provider should attempt to retrieve requested data
+	 * in the shared cache.
+	 *
+	 * @see javax.persistence.CacheRetrieveMode
+	 */
+	String JPA_SHARED_CACHE_RETRIEVE_MODE ="javax.persistence.cache.retrieveMode";
+
+	/**
+	 * NOTE : Not a valid EMF property...
+	 * <p/>
+	 * Used to indicate if the provider should attempt to store data loaded from the database
+	 * in the shared cache.
+	 *
+	 * @see javax.persistence.CacheStoreMode
+	 */
+	String JPA_SHARED_CACHE_STORE_MODE ="javax.persistence.cache.storeMode";
+
+	/**
+	 * Used to indicate what form of automatic validation is in effect as per rules defined
+	 * in JPA 2 section 3.6.1.1
+	 * <p/>
+	 * See JPA 2 sections 9.4.3 and 8.2.1.8
+	 * @see javax.persistence.ValidationMode
+	 */
+	String JPA_VALIDATION_MODE = "javax.persistence.validation.mode";
+
+	/**
+	 * Used to pass along any discovered validator factory.
+	 */
+	String JPA_VALIDATION_FACTORY = "javax.persistence.validation.factory";
+
+	/**
+	 * Used to coordinate with bean validators
+	 * <p/>
+	 * See JPA 2 section 8.2.1.9
+	 */
+	String JPA_PERSIST_VALIDATION_GROUP = "javax.persistence.validation.group.pre-persist";
+
+	/**
+	 * Used to coordinate with bean validators
+	 * <p/>
+	 * See JPA 2 section 8.2.1.9
+	 */
+	String JPA_UPDATE_VALIDATION_GROUP = "javax.persistence.validation.group.pre-update";
+
+	/**
+	 * Used to coordinate with bean validators
+	 * <p/>
+	 * See JPA 2 section 8.2.1.9
+	 */
+	String JPA_REMOVE_VALIDATION_GROUP = "javax.persistence.validation.group.pre-remove";
+
+	/**
+	 * Used to request (hint) a pessimistic lock scope.
+	 * <p/>
+	 * See JPA 2 sections 8.2.1.9 and 3.4.4.3
+	 */
+	String JPA_LOCK_SCOPE = "javax.persistence.lock.scope";
+
+	/**
+	 * Used to request (hint) a pessimistic lock timeout (in milliseconds).
+	 * <p/>
+	 * See JPA 2 sections 8.2.1.9 and 3.4.4.3
+	 */
+	String JPA_LOCK_TIMEOUT = "javax.persistence.lock.timeout";
+
+	/**
+	 * Used to pass along the CDI BeanManager, if any, to be used.
+	 */
+	String CDI_BEAN_MANAGER = "javax.persistence.bean.manager";
+
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// BootstrapServiceRegistry level settings
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -59,6 +221,30 @@ public interface AvailableSettings {
 	 */
 	@Deprecated
 	String ENVIRONMENT_CLASSLOADER = "hibernate.classLoader.environment";
+
+	/**
+	 * @deprecated use {@link #JPA_METAMODEL_POPULATION} instead.
+	 */
+	@Deprecated
+	String JPA_METAMODEL_GENERATION = "hibernate.ejb.metamodel.generation";
+
+	/**
+	 * Setting that controls whether we seek out JPA "static metamodel" classes and populate them.  Accepts
+	 * 3 values:<ul>
+	 *     <li>
+	 *         <b>enabled</b> - Do the population
+	 *     </li>
+	 *     <li>
+	 *         <b>disabled</b> - Do not do the population
+	 *     </li>
+	 *     <li>
+	 *         <b>ignoreUnsupported</b> - Do the population, but ignore any non-JPA features that would otherwise
+	 *         result in the population failing.
+	 *     </li>
+	 * </ul>
+	 *
+	 */
+	String JPA_METAMODEL_POPULATION = "hibernate.ejb.metamodel.population";
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -637,7 +823,7 @@ public interface AvailableSettings {
 	String C3P0_ACQUIRE_INCREMENT = "hibernate.c3p0.acquire_increment";
 
 	/**
-	 * Idle time before a C3P0 pooled connection is validated
+	 * Idle time beforeQuery a C3P0 pooled connection is validated
 	 */
 	String C3P0_IDLE_TEST_PERIOD = "hibernate.c3p0.idle_test_period";
 
@@ -821,7 +1007,7 @@ public interface AvailableSettings {
 	String QUERY_PLAN_CACHE_MAX_SIZE = "hibernate.query.plan_cache_max_size";
 
 	/**
-	 * The maximum number of {@link org.hibernate.engine.query.spi.ParameterMetadata} maintained 
+	 * The maximum number of {@link ParameterMetadataImpl} maintained
 	 * by {@link org.hibernate.engine.query.spi.QueryPlanCache}. Default is 128.
 	 */
 	String QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE = "hibernate.query.plan_parameter_metadata_max_size";
@@ -997,7 +1183,7 @@ public interface AvailableSettings {
 	/**
 	 * Comma-separated names of the optional files containing SQL DML statements executed
 	 * during the SessionFactory creation.
-	 * File order matters, the statements of a give file are executed before the statements of the
+	 * File order matters, the statements of a give file are executed beforeQuery the statements of the
 	 * following files.
 	 * <p/>
 	 * These statements are only executed if the schema is created ie if <tt>hibernate.hbm2ddl.auto</tt>
@@ -1112,7 +1298,13 @@ public interface AvailableSettings {
 	String MULTI_TENANT_IDENTIFIER_RESOLVER = "hibernate.tenant_identifier_resolver";
 
 	/**
-	 * Names a {@link org.hibernate.Interceptor} implementation to be applied to the {@link org.hibernate.SessionFactory}
+	 * Names a {@link org.hibernate.Interceptor} implementation to be applied to the
+	 * {@link org.hibernate.SessionFactory} and propagated to each Session created from the SessionFactory.
+	 * This setting identifies an Interceptor which is effectively a singleton across all the Sessions
+	 * opened from the SessionFactory to which it is applied; the same instance will be passed to each Session.
+	 * <p/>
+	 * See {@link #SESSION_SCOPED_INTERCEPTOR} for an approach to create unique Interceptor instances for each Session
+	 * <p/>
 	 * Can reference<ul>
 	 *     <li>Interceptor instance</li>
 	 *     <li>Interceptor implementation {@link Class} reference</li>
@@ -1122,6 +1314,23 @@ public interface AvailableSettings {
 	 * @since 5.0
 	 */
 	String INTERCEPTOR = "hibernate.session_factory.interceptor";
+
+	/**
+	 * Names a {@link org.hibernate.Interceptor} implementation to be applied to the
+	 * {@link org.hibernate.SessionFactory} and propagated to each Session created from the SessionFactory.
+	 * This setting identifies an Interceptor implementation that is to be applied to every Session opened
+	 * from the SessionFactory, but unlike {@link #INTERCEPTOR} a unique instance of the Interceptor is
+	 * used for each Session.
+	 * <p/>
+	 * Can reference<ul>
+	 *     <li>Interceptor implementation {@link Class} reference</li>
+	 *     <li>Interceptor implementation class name</li>
+	 * </ul>
+	 * Note specifically that this setting cannot name an Interceptor instance.
+	 *
+	 * @since 5.2
+	 */
+	String SESSION_SCOPED_INTERCEPTOR = "hibernate.session_factory.session_scoped_interceptor";
 
 	/**
 	 * Names a {@link org.hibernate.resource.jdbc.spi.StatementInspector} implementation to be applied to

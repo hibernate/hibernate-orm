@@ -16,30 +16,30 @@ import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 
 import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.graph.spi.GraphNodeImplementor;
-import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.graph.spi.EntityGraphImplementor;
 
 /**
  * The Hibernate implementation of the JPA EntityGraph contract.
  *
  * @author Steve Ebersole
  */
-public class EntityGraphImpl<T> extends AbstractGraphNode<T> implements EntityGraph<T>, GraphNodeImplementor {
+public class EntityGraphImpl<T> extends AbstractGraphNode<T> implements EntityGraph<T>, EntityGraphImplementor<T> {
 	private final String name;
 	private final EntityType<T> entityType;
 
-	public EntityGraphImpl(String name, EntityType<T> entityType, EntityManagerFactoryImpl entityManagerFactory) {
-		super( entityManagerFactory, true );
+	public EntityGraphImpl(String name, EntityType<T> entityType, SessionFactoryImplementor sessionFactory) {
+		super( sessionFactory, true );
 		this.name = name;
 		this.entityType = entityType;
 	}
 
 	public EntityGraphImpl<T> makeImmutableCopy(String name) {
-		return new EntityGraphImpl<T>( name, this, false );
+		return new EntityGraphImpl<>( name, this, false );
 	}
 
 	public EntityGraphImpl<T> makeMutableCopy() {
-		return new EntityGraphImpl<T>( name, this, true );
+		return new EntityGraphImpl<>( name, this, true );
 	}
 
 	private EntityGraphImpl(String name, EntityGraphImpl<T> original, boolean mutable) {
@@ -63,7 +63,8 @@ public class EntityGraphImpl<T> extends AbstractGraphNode<T> implements EntityGr
 	}
 
 	@Override
-	public void addAttributeNodes(Attribute<T, ?>... attributes) {
+	@SafeVarargs
+	public final void addAttributeNodes(Attribute<T, ?>... attributes) {
 		super.addAttributeNodes( attributes );
 	}
 
@@ -108,7 +109,7 @@ public class EntityGraphImpl<T> extends AbstractGraphNode<T> implements EntityGr
 	}
 
 	@Override
-	public <T1 extends Object> Subgraph<? extends T1> addSubclassSubgraph(Class<? extends T1> type) {
+	public <X> Subgraph<? extends X> addSubclassSubgraph(Class<? extends X> type) {
 		// todo : implement
 		throw new NotYetImplementedException();
 	}
@@ -119,6 +120,7 @@ public class EntityGraphImpl<T> extends AbstractGraphNode<T> implements EntityGr
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	protected Attribute<T,?> resolveAttribute(String attributeName) {
 		final Attribute attribute = entityType.getAttribute( attributeName );
 		if ( attribute == null ) {
@@ -135,7 +137,7 @@ public class EntityGraphImpl<T> extends AbstractGraphNode<T> implements EntityGr
 
 	@SuppressWarnings("unchecked")
 	public boolean appliesTo(String entityName) {
-		return appliesTo( getFactory().getEntityTypeByName( entityName ) );
+		return appliesTo( getFactory().getMetamodel().entity( entityName ) );
 	}
 
 	public boolean appliesTo(EntityType<? super T> entityType) {

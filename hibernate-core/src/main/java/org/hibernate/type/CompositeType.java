@@ -12,7 +12,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * Contract for value types to hold collections and have cascades, etc.  The notion is that of composition.  JPA terms
@@ -54,7 +54,7 @@ public interface CompositeType extends Type {
 	 *
 	 * @throws HibernateException Indicates a problem access the property values.
 	 */
-	Object[] getPropertyValues(Object component, SessionImplementor session) throws HibernateException;
+	Object[] getPropertyValues(Object component, SharedSessionContractImplementor session) throws HibernateException;
 
 	/**
 	 * Extract the values of the component properties from the given component instance without access to the
@@ -82,7 +82,7 @@ public interface CompositeType extends Type {
 	 *
 	 * @throws HibernateException Indicates a problem access the property value.
 	 */
-	Object getPropertyValue(Object component, int index, SessionImplementor session) throws HibernateException;
+	Object getPropertyValue(Object component, int index, SharedSessionContractImplementor session) throws HibernateException;
 
 	/**
 	 * Inject property values onto the given component instance

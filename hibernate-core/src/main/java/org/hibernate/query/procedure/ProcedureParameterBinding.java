@@ -4,12 +4,12 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.query;
+package org.hibernate.query.procedure;
+
+import org.hibernate.query.spi.QueryParameterBinding;
 
 /**
- * The legacy Hibernate Query base contract
- *
  * @author Steve Ebersole
  */
-public interface LegacyHibernateQuery {
+public interface ProcedureParameterBinding<T> extends QueryParameterBinding<T> {
 }

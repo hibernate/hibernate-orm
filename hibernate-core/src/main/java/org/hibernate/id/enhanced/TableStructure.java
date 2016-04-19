@@ -26,7 +26,7 @@ import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionEventListenerManager;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.ExportableColumn;
 import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.id.IdentifierGeneratorHelper;
@@ -109,7 +109,7 @@ public class TableStructure implements DatabaseStructure {
 	}
 
 	@Override
-	public AccessCallback buildCallback(final SessionImplementor session) {
+	public AccessCallback buildCallback(final SharedSessionContractImplementor session) {
 		final SqlStatementLogger statementLogger = session.getFactory().getServiceRegistry()
 				.getService( JdbcServices.class )
 				.getSqlStatementLogger();
@@ -129,13 +129,12 @@ public class TableStructure implements DatabaseStructure {
 								final IntegralDataTypeHolder value = makeValue();
 								int rows;
 								do {
-									final PreparedStatement selectStatement = prepareStatement(
+									try (PreparedStatement selectStatement = prepareStatement(
 											connection,
 											selectQuery,
 											statementLogger,
 											statsCollector
-									);
-									try {
+									)) {
 										final ResultSet selectRS = executeQuery( selectStatement, statsCollector );
 										if ( !selectRS.next() ) {
 											final String err = "could not read a hi value - you need to populate the table: " + tableNameText;
@@ -149,18 +148,14 @@ public class TableStructure implements DatabaseStructure {
 										LOG.error( "could not read a hi value", sqle );
 										throw sqle;
 									}
-									finally {
-										selectStatement.close();
-									}
 
 
-									final PreparedStatement updatePS = prepareStatement(
+									try (PreparedStatement updatePS = prepareStatement(
 											connection,
 											updateQuery,
 											statementLogger,
 											statsCollector
-									);
-									try {
+									)) {
 										final int increment = applyIncrementSizeToSourceValues ? incrementSize : 1;
 										final IntegralDataTypeHolder updateValue = value.copy().add( increment );
 										updateValue.bind( updatePS, 1 );
@@ -170,9 +165,6 @@ public class TableStructure implements DatabaseStructure {
 									catch (SQLException e) {
 										LOG.unableToUpdateQueryHiValue( tableNameText, e );
 										throw e;
-									}
-									finally {
-										updatePS.close();
 									}
 								} while ( rows == 0 );
 

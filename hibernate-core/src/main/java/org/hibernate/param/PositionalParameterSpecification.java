@@ -5,11 +5,12 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.param;
+
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import org.hibernate.engine.spi.QueryParameters;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.Type;
 
 /**
@@ -43,7 +44,7 @@ public class PositionalParameterSpecification extends AbstractExplicitParameterS
 	 * @return The number of sql bind positions "eaten" by this bind operation.
 	 */
 	@Override
-	public int bind(PreparedStatement statement, QueryParameters qp, SessionImplementor session, int position) throws SQLException {
+	public int bind(PreparedStatement statement, QueryParameters qp, SharedSessionContractImplementor session, int position) throws SQLException {
 		Type type = qp.getPositionalParameterTypes()[hqlPosition];
 		Object value = qp.getPositionalParameterValues()[hqlPosition];
 

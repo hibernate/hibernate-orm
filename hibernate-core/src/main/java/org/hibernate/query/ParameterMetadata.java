@@ -6,6 +6,9 @@
  */
 package org.hibernate.query;
 
+import java.util.Set;
+import javax.persistence.Parameter;
+
 /**
  * Access to known information about the parameters for a query.
  *
@@ -26,12 +29,16 @@ public interface ParameterMetadata {
 	 */
 	boolean hasPositionalParameters();
 
+	Set<QueryParameter<?>> collectAllParameters();
+
+	Set<Parameter<?>> collectAllParametersJpa();
+
 	/**
 	 * Return the names of all named parameters of the query.
 	 *
 	 * @return the parameter names, in no particular order
 	 */
-	String[] getNamedParameterNames();
+	Set<String> getNamedParameterNames();
 
 	/**
 	 * Returns the number of positional parameters.
@@ -43,4 +50,6 @@ public interface ParameterMetadata {
 	<T> QueryParameter<T> getQueryParameter(String name);
 
 	<T> QueryParameter<T> getQueryParameter(Integer position);
+
+	<T> QueryParameter<T> resolve(Parameter<T> param);
 }

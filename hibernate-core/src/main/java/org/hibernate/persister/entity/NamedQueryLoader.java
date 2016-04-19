@@ -10,11 +10,11 @@ import java.io.Serializable;
 
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.internal.AbstractQueryImpl;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.entity.UniqueEntityLoader;
+import org.hibernate.query.internal.AbstractProducedQuery;
 
 /**
  * Not really a Loader, just a wrapper around a named query.  Used when the metadata has named a query to use for
@@ -42,7 +42,7 @@ public final class NamedQueryLoader implements UniqueEntityLoader {
 	}
 
 	@Override
-	public Object load(Serializable id, Object optionalObject, SessionImplementor session, LockOptions lockOptions) {
+	public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session, LockOptions lockOptions) {
 		if ( lockOptions != null ) {
 			LOG.debug( "Ignoring lock-options passed to named query loader" );
 		}
@@ -50,14 +50,14 @@ public final class NamedQueryLoader implements UniqueEntityLoader {
 	}
 
 	@Override
-	public Object load(Serializable id, Object optionalObject, SessionImplementor session) {
+	public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session) {
 		LOG.debugf( "Loading entity: %s using named query: %s", persister.getEntityName(), queryName );
 
 		// IMPL NOTE: essentially we perform the named query (which loads the entity into the PC), and then
 		// do an internal lookup of the entity from the PC.
 
-		final AbstractQueryImpl query = (AbstractQueryImpl) session.getNamedQuery( queryName );
-		if ( query.hasNamedParameters() ) {
+		final AbstractProducedQuery query = (AbstractProducedQuery) session.getNamedQuery( queryName );
+		if ( query.getParameterMetadata().hasNamedParameters() ) {
 			query.setParameter( query.getNamedParameters()[0], id, persister.getIdentifierType() );
 		}
 		else {

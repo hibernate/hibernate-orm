@@ -202,9 +202,9 @@ public class ActionQueue {
 
 	private void addInsertAction(AbstractEntityInsertAction insert) {
 		if ( insert.isEarlyInsert() ) {
-			// For early inserts, must execute inserts before finding non-nullable transient entities.
+			// For early inserts, must execute inserts beforeQuery finding non-nullable transient entities.
 			// TODO: find out why this is necessary
-			LOG.tracev( "Executing inserts before finding non-nullable transient entities for early insert: [{0}]", insert );
+			LOG.tracev( "Executing inserts beforeQuery finding non-nullable transient entities for early insert: [{0}]", insert );
 			executeInserts();
 		}
 		NonNullableTransientDependencies nonNullableTransientDependencies = insert.findNonNullableTransientEntities();
@@ -226,7 +226,7 @@ public class ActionQueue {
 
 	private void addResolvedEntityInsertAction(AbstractEntityInsertAction insert) {
 		if ( insert.isEarlyInsert() ) {
-			LOG.trace( "Executing insertions before resolved early-insert" );
+			LOG.trace( "Executing insertions beforeQuery resolved early-insert" );
 			executeInserts();
 			LOG.debug( "Executing identity-insert immediately" );
 			execute( insert );
@@ -380,7 +380,7 @@ public class ActionQueue {
 	/**
 	 * Throws {@link org.hibernate.PropertyValueException} if there are any unresolved entity insert actions that depend
 	 * on non-nullable associations with a transient entity. This method should be called on completion of an operation
-	 * (after all cascades are completed) that saves an entity.
+	 * (afterQuery all cascades are completed) that saves an entity.
 	 * 
 	 * @throws org.hibernate.PropertyValueException if there are any unresolved entity insert actions;
 	 * {@link org.hibernate.PropertyValueException#getEntityName()} and
@@ -578,7 +578,7 @@ public class ActionQueue {
 		finally {
 			if ( session.getFactory().getSessionFactoryOptions().isQueryCacheEnabled() ) {
 				// Strictly speaking, only a subset of the list may have been processed if a RuntimeException occurs.
-				// We still invalidate all spaces. I don't see this as a big deal - after all, RuntimeExceptions are
+				// We still invalidate all spaces. I don't see this as a big deal - afterQuery all, RuntimeExceptions are
 				// unexpected.
 				Set<Serializable> propertySpaces = list.getQuerySpaces();
 				invalidateSpaces( propertySpaces.toArray( new Serializable[propertySpaces.size()] ) );
@@ -886,7 +886,7 @@ public class ActionQueue {
 	}
 
 	/**
-	 * Encapsulates behavior needed for before transaction processing
+	 * Encapsulates behavior needed for beforeQuery transaction processing
 	 */
 	private static class BeforeTransactionCompletionProcessQueue extends AbstractTransactionCompletionProcessQueue<BeforeTransactionCompletionProcess> {
 		private BeforeTransactionCompletionProcessQueue(SessionImplementor session) {
@@ -909,7 +909,7 @@ public class ActionQueue {
 	}
 
 	/**
-	 * Encapsulates behavior needed for after transaction processing
+	 * Encapsulates behavior needed for afterQuery transaction processing
 	 */
 	private static class AfterTransactionCompletionProcessQueue extends AbstractTransactionCompletionProcessQueue<AfterTransactionCompletionProcess> {
 		private Set<String> querySpacesToInvalidate = new HashSet<String>();
@@ -1017,7 +1017,7 @@ public class ActionQueue {
 					// we can be assured that all referenced entities have already
 					// been processed,
 					// so specify that this entity is with the latest batch.
-					// doing the batch number before adding the name to the list is
+					// doing the batch number beforeQuery adding the name to the list is
 					// a faster way to get an accurate number.
 
 					batchNumber = actionBatches.size();
@@ -1044,14 +1044,14 @@ public class ActionQueue {
 		 */
 		private Integer findBatchNumber(AbstractEntityInsertAction action, String entityName) {
 			// loop through all the associated entities and make sure they have been
-			// processed before the latest
+			// processed beforeQuery the latest
 			// batch associated with this entity type.
 
 			// the current batch number is the latest batch for this entity type.
 			Integer latestBatchNumberForType = latestBatches.get( entityName );
 
 			// loop through all the associations of the current entity and make sure that they are processed
-			// before the current batch number
+			// beforeQuery the current batch number
 			Object[] propertyValues = action.getState();
 			Type[] propertyTypes = action.getPersister().getClassMetadata().getPropertyTypes();
 
@@ -1066,7 +1066,7 @@ public class ActionQueue {
 						latestBatchNumberForType = actionBatches.size();
 						latestBatches.put( entityName, latestBatchNumberForType );
 						// since this entity will now be processed in the latest possible batch,
-						// we can be assured that it will come after all other associations,
+						// we can be assured that it will come afterQuery all other associations,
 						// there's not need to continue checking.
 						break;
 					}

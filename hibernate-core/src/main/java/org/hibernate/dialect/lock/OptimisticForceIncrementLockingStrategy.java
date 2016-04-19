@@ -12,12 +12,12 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.action.internal.EntityIncrementVersionProcess;
 import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.entity.Lockable;
 
 /**
- * An optimistic locking strategy that forces an increment of the version (after verifying that version hasn't changed).
+ * An optimistic locking strategy that forces an increment of the version (afterQuery verifying that version hasn't changed).
  * This takes place just prior to transaction commit.
  * <p/>
  * This strategy is valid for LockMode.OPTIMISTIC_FORCE_INCREMENT
@@ -44,7 +44,7 @@ public class OptimisticForceIncrementLockingStrategy implements LockingStrategy 
 	}
 
 	@Override
-	public void lock(Serializable id, Object version, Object object, int timeout, SessionImplementor session) {
+	public void lock(Serializable id, Object version, Object object, int timeout, SharedSessionContractImplementor session) {
 		if ( !lockable.isVersioned() ) {
 			throw new HibernateException( "[" + lockMode + "] not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
 		}

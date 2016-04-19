@@ -6,9 +6,9 @@
  */
 package org.hibernate.internal;
 
-import org.hibernate.Transaction;
-import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.ActionQueue;
+import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.resource.transaction.TransactionCoordinator;
 
 /**
@@ -20,8 +20,9 @@ import org.hibernate.resource.transaction.TransactionCoordinator;
  * @see org.hibernate.SharedSessionBuilder
  */
 public interface SharedSessionCreationOptions extends SessionCreationOptions {
+	boolean isTransactionCoordinatorShared();
 	TransactionCoordinator getTransactionCoordinator();
-	JdbcCoordinatorImpl getJdbcCoordinator();
-	Transaction getTransaction();
+	JdbcCoordinator getJdbcCoordinator();
+	TransactionImplementor getTransaction();
 	ActionQueue.TransactionCompletionProcesses getTransactionCompletionProcesses();
 }

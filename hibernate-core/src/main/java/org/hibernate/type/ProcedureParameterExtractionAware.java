@@ -9,7 +9,7 @@ package org.hibernate.type;
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * Optional {@link Type} contract for implementations that are aware of how to extract values from
@@ -23,7 +23,7 @@ public interface ProcedureParameterExtractionAware<T> {
 	 *
 	 * @return {@code true} indicates that @{link #extract} calls will not fail due to {@link IllegalStateException}.
 	 */
-	public boolean canDoExtraction();
+	boolean canDoExtraction();
 
 	/**
 	 * Perform the extraction
@@ -37,7 +37,7 @@ public interface ProcedureParameterExtractionAware<T> {
 	 * @throws SQLException Indicates an issue calling into the CallableStatement
 	 * @throws IllegalStateException Thrown if this method is called on instances that return {@code false} for {@link #canDoExtraction}
 	 */
-	public T extract(CallableStatement statement, int startIndex, SessionImplementor session) throws SQLException;
+	T extract(CallableStatement statement, int startIndex, SharedSessionContractImplementor session) throws SQLException;
 
 	/**
 	 * Perform the extraction
@@ -51,5 +51,5 @@ public interface ProcedureParameterExtractionAware<T> {
 	 * @throws SQLException Indicates an issue calling into the CallableStatement
 	 * @throws IllegalStateException Thrown if this method is called on instances that return {@code false} for {@link #canDoExtraction}
 	 */
-	public T extract(CallableStatement statement, String[] paramNames, SessionImplementor session) throws SQLException;
+	T extract(CallableStatement statement, String[] paramNames, SharedSessionContractImplementor session) throws SQLException;
 }

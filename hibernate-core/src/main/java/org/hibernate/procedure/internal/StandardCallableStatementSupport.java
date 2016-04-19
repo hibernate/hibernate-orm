@@ -13,7 +13,7 @@ import javax.persistence.ParameterMode;
 
 import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.procedure.spi.ParameterStrategy;
@@ -45,7 +45,7 @@ public class StandardCallableStatementSupport implements CallableStatementSuppor
 			String procedureName,
 			ParameterStrategy parameterStrategy,
 			List<ParameterRegistrationImplementor<?>> parameterRegistrations,
-			SessionImplementor session) {
+			SharedSessionContractImplementor session) {
 		final StringBuilder buffer = new StringBuilder().append( "{call " )
 				.append( procedureName )
 				.append( "(" );
@@ -56,7 +56,7 @@ public class StandardCallableStatementSupport implements CallableStatementSuppor
 			}
 
 			if ( parameter.getMode() == ParameterMode.REF_CURSOR ) {
-				verifyRefCursorSupport( session.getFactory().getDialect() );
+				verifyRefCursorSupport( session.getJdbcServices().getJdbcEnvironment().getDialect() );
 				buffer.append( sep ).append( "?" );
 				sep = ",";
 			}
@@ -83,7 +83,7 @@ public class StandardCallableStatementSupport implements CallableStatementSuppor
 			CallableStatement statement,
 			ParameterStrategy parameterStrategy,
 			List<ParameterRegistrationImplementor<?>> parameterRegistrations,
-			SessionImplementor session) {
+			SharedSessionContractImplementor session) {
 		// prepare parameters
 		int i = 1;
 
@@ -99,7 +99,7 @@ public class StandardCallableStatementSupport implements CallableStatementSuppor
 			}
 		}
 		catch (SQLException e) {
-			throw session.getFactory().getSQLExceptionHelper().convert(
+			throw session.getJdbcServices().getSqlExceptionHelper().convert(
 					e,
 					"Error registering CallableStatement parameters",
 					procedureName

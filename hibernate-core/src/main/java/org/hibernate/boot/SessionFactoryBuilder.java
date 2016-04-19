@@ -46,7 +46,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public SessionFactoryBuilder applyValidatorFactory(Object validatorFactory);
+	SessionFactoryBuilder applyValidatorFactory(Object validatorFactory);
 
 	/**
 	 * Apply a CDI BeanManager to the SessionFactory being built.
@@ -57,7 +57,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public SessionFactoryBuilder applyBeanManager(Object beanManager);
+	SessionFactoryBuilder applyBeanManager(Object beanManager);
 
 	/**
 	 * Applies a SessionFactory name.
@@ -68,7 +68,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#SESSION_FACTORY_NAME
 	 */
-	public SessionFactoryBuilder applyName(String sessionFactoryName);
+	SessionFactoryBuilder applyName(String sessionFactoryName);
 
 	/**
 	 * Applies a SessionFactory name.
@@ -80,7 +80,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#SESSION_FACTORY_NAME_IS_JNDI
 	 */
-	public SessionFactoryBuilder applyNameAsJndiName(boolean isJndiName);
+	SessionFactoryBuilder applyNameAsJndiName(boolean isJndiName);
 
 	/**
 	 * Applies whether Sessions should be automatically closed at the end of the transaction.
@@ -91,7 +91,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#AUTO_CLOSE_SESSION
 	 */
-	public SessionFactoryBuilder applyAutoClosing(boolean enabled);
+	SessionFactoryBuilder applyAutoClosing(boolean enabled);
 
 	/**
 	 * Applies whether Sessions should be automatically flushed at the end of the transaction.
@@ -102,7 +102,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#FLUSH_BEFORE_COMPLETION
 	 */
-	public SessionFactoryBuilder applyAutoFlushing(boolean enabled);
+	SessionFactoryBuilder applyAutoFlushing(boolean enabled);
 
 	/**
 	 * Applies whether statistics gathering is enabled.
@@ -113,7 +113,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#GENERATE_STATISTICS
 	 */
-	public SessionFactoryBuilder applyStatisticsSupport(boolean enabled);
+	SessionFactoryBuilder applyStatisticsSupport(boolean enabled);
 
 	/**
 	 * Names an interceptor to be applied to the SessionFactory, which in turn means it will be used by all
@@ -125,7 +125,19 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#INTERCEPTOR
 	 */
-	public SessionFactoryBuilder applyInterceptor(Interceptor interceptor);
+	SessionFactoryBuilder applyInterceptor(Interceptor interceptor);
+
+	/**
+	 * Names an interceptor Class to be applied to the SessionFactory, which in turn means it will be used by all
+	 * Sessions unless one is explicitly specified in {@link org.hibernate.SessionBuilder#interceptor}
+	 *
+	 * @param statelessInterceptorClass The interceptor class
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#SESSION_SCOPED_INTERCEPTOR
+	 */
+	SessionFactoryBuilder applyStatelessInterceptor(Class<? extends Interceptor> statelessInterceptorClass);
 
 	/**
 	 * Names a StatementInspector to be applied to the SessionFactory, which in turn means it will be used by all
@@ -137,7 +149,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#STATEMENT_INSPECTOR
 	 */
-	public SessionFactoryBuilder applyStatementInspector(StatementInspector statementInspector);
+	SessionFactoryBuilder applyStatementInspector(StatementInspector statementInspector);
 
 	/**
 	 * Specifies one or more observers to be applied to the SessionFactory.  Can be called multiple times to add
@@ -147,7 +159,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public SessionFactoryBuilder addSessionFactoryObservers(SessionFactoryObserver... observers);
+	SessionFactoryBuilder addSessionFactoryObservers(SessionFactoryObserver... observers);
 
 	/**
 	 * Specifies a custom entity dirtiness strategy to be applied to the SessionFactory.  See the contract
@@ -159,7 +171,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#CUSTOM_ENTITY_DIRTINESS_STRATEGY
 	 */
-	public SessionFactoryBuilder applyCustomEntityDirtinessStrategy(CustomEntityDirtinessStrategy strategy);
+	SessionFactoryBuilder applyCustomEntityDirtinessStrategy(CustomEntityDirtinessStrategy strategy);
 
 	/**
 	 * Specifies one or more entity name resolvers to be applied to the SessionFactory (see the {@link org.hibernate.EntityNameResolver}
@@ -169,7 +181,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public SessionFactoryBuilder addEntityNameResolver(EntityNameResolver... entityNameResolvers);
+	SessionFactoryBuilder addEntityNameResolver(EntityNameResolver... entityNameResolvers);
 
 	/**
 	 * Names the {@link org.hibernate.proxy.EntityNotFoundDelegate} to be applied to the SessionFactory.  EntityNotFoundDelegate is a
@@ -179,7 +191,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public SessionFactoryBuilder applyEntityNotFoundDelegate(EntityNotFoundDelegate entityNotFoundDelegate);
+	SessionFactoryBuilder applyEntityNotFoundDelegate(EntityNotFoundDelegate entityNotFoundDelegate);
 
 	/**
 	 * Should generated identifiers be "unset" on entities during a rollback?
@@ -190,7 +202,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#USE_IDENTIFIER_ROLLBACK
 	 */
-	public SessionFactoryBuilder applyIdentifierRollbackSupport(boolean enabled);
+	SessionFactoryBuilder applyIdentifierRollbackSupport(boolean enabled);
 
 	/**
 	 * Applies the given entity mode as the default for the SessionFactory.
@@ -204,7 +216,7 @@ public interface SessionFactoryBuilder {
 	 * @deprecated Different entity modes per entity is soon to be removed as a feature.
 	 */
 	@Deprecated
-	public SessionFactoryBuilder applyDefaultEntityMode(EntityMode entityMode);
+	SessionFactoryBuilder applyDefaultEntityMode(EntityMode entityMode);
 
 	/**
 	 * Should attributes using columns marked as not-null be checked (by Hibernate) for nullness?
@@ -216,7 +228,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#CHECK_NULLABILITY
 	 */
-	public SessionFactoryBuilder applyNullabilityChecking(boolean enabled);
+	SessionFactoryBuilder applyNullabilityChecking(boolean enabled);
 
 	/**
 	 * Should the application be allowed to initialize uninitialized lazy state outside the bounds of a transaction?
@@ -228,7 +240,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#ENABLE_LAZY_LOAD_NO_TRANS
 	 */
-	public SessionFactoryBuilder applyLazyInitializationOutsideTransaction(boolean enabled);
+	SessionFactoryBuilder applyLazyInitializationOutsideTransaction(boolean enabled);
 
 	/**
 	 * Specify the EntityTuplizerFactory to use.
@@ -237,7 +249,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public SessionFactoryBuilder applyEntityTuplizerFactory(EntityTuplizerFactory entityTuplizerFactory);
+	SessionFactoryBuilder applyEntityTuplizerFactory(EntityTuplizerFactory entityTuplizerFactory);
 
 	/**
 	 * Register the default {@link org.hibernate.tuple.entity.EntityTuplizer} to be applied to the SessionFactory.
@@ -247,7 +259,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public SessionFactoryBuilder applyEntityTuplizer(
+	SessionFactoryBuilder applyEntityTuplizer(
 			EntityMode entityMode,
 			Class<? extends EntityTuplizer> tuplizerClass);
 
@@ -260,9 +272,9 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#HQL_BULK_ID_STRATEGY
 	 */
-	public SessionFactoryBuilder applyMultiTableBulkIdStrategy(MultiTableBulkIdStrategy strategy);
+	SessionFactoryBuilder applyMultiTableBulkIdStrategy(MultiTableBulkIdStrategy strategy);
 
-	public SessionFactoryBuilder applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling);
+	SessionFactoryBuilder applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling);
 
 	/**
 	 * What style of batching should be used?
@@ -273,7 +285,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#BATCH_FETCH_STYLE
 	 */
-	public SessionFactoryBuilder applyBatchFetchStyle(BatchFetchStyle style);
+	SessionFactoryBuilder applyBatchFetchStyle(BatchFetchStyle style);
 
 	/**
 	 * Allows specifying a default batch-fetch size for all entities and collections
@@ -286,7 +298,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_BATCH_FETCH_SIZE
 	 */
-	public SessionFactoryBuilder applyDefaultBatchFetchSize(int size);
+	SessionFactoryBuilder applyDefaultBatchFetchSize(int size);
 
 	/**
 	 * Apply a limit to the depth Hibernate will use for outer joins.  Note that this is different than an
@@ -298,7 +310,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#MAX_FETCH_DEPTH
 	 */
-	public SessionFactoryBuilder applyMaximumFetchDepth(int depth);
+	SessionFactoryBuilder applyMaximumFetchDepth(int depth);
 
 	/**
 	 * Apply a null precedence (NULLS FIRST, NULLS LAST) to be applied order-by clauses rendered into
@@ -310,7 +322,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_NULL_ORDERING
 	 */
-	public SessionFactoryBuilder applyDefaultNullPrecedence(NullPrecedence nullPrecedence);
+	SessionFactoryBuilder applyDefaultNullPrecedence(NullPrecedence nullPrecedence);
 
 	/**
 	 * Apply whether ordering of inserts should be enabled.  This allows more efficient SQL
@@ -323,7 +335,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#ORDER_INSERTS
 	 */
-	public SessionFactoryBuilder applyOrderingOfInserts(boolean enabled);
+	SessionFactoryBuilder applyOrderingOfInserts(boolean enabled);
 
 	/**
 	 * Apply whether ordering of updates should be enabled.  This allows more efficient SQL
@@ -336,7 +348,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#ORDER_UPDATES
 	 */
-	public SessionFactoryBuilder applyOrderingOfUpdates(boolean enabled);
+	SessionFactoryBuilder applyOrderingOfUpdates(boolean enabled);
 
 	/**
 	 * Apply the form of multi-tenancy used by the application
@@ -347,7 +359,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#MULTI_TENANT
 	 */
-	public SessionFactoryBuilder applyMultiTenancyStrategy(MultiTenancyStrategy strategy);
+	SessionFactoryBuilder applyMultiTenancyStrategy(MultiTenancyStrategy strategy);
 
 	/**
 	 * Specifies a strategy for resolving the notion of a "current" tenant-identifier when using multi-tenancy
@@ -359,7 +371,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#MULTI_TENANT_IDENTIFIER_RESOLVER
 	 */
-	public SessionFactoryBuilder applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver resolver);
+	SessionFactoryBuilder applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver resolver);
 
 	/**
 	 * If using the built-in Hibernate JTA-based TransactionCoordinator/Builder, should it track JTA
@@ -371,7 +383,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#JTA_TRACK_BY_THREAD
 	 */
-	public SessionFactoryBuilder applyJtaTrackingByThread(boolean enabled);
+	SessionFactoryBuilder applyJtaTrackingByThread(boolean enabled);
 
 	/**
 	 * If using the built-in Hibernate JTA-based TransactionCoordinator/Builder, should it prefer to use
@@ -384,7 +396,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#PREFER_USER_TRANSACTION
 	 */
-	public SessionFactoryBuilder applyPreferUserTransactions(boolean preferUserTransactions);
+	SessionFactoryBuilder applyPreferUserTransactions(boolean preferUserTransactions);
 
 	/**
 	 * Apply query substitutions to use in HQL queries.  Note, this is a legacy feature and almost always
@@ -399,7 +411,7 @@ public interface SessionFactoryBuilder {
 	 * @deprecated This is a legacy feature and should never be needed anymore...
 	 */
 	@Deprecated
-	public SessionFactoryBuilder applyQuerySubstitutions(Map substitutions);
+	SessionFactoryBuilder applyQuerySubstitutions(Map substitutions);
 
 	/**
 	 * Should we strictly adhere to JPA Query Language (JPQL) syntax, or more broadly support
@@ -415,7 +427,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#JPAQL_STRICT_COMPLIANCE
 	 */
-	public SessionFactoryBuilder applyStrictJpaQueryLanguageCompliance(boolean enabled);
+	SessionFactoryBuilder applyStrictJpaQueryLanguageCompliance(boolean enabled);
 
 	/**
 	 * Should named queries be checked on startup?
@@ -426,7 +438,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#QUERY_STARTUP_CHECKING
 	 */
-	public SessionFactoryBuilder applyNamedQueryCheckingOnStartup(boolean enabled);
+	SessionFactoryBuilder applyNamedQueryCheckingOnStartup(boolean enabled);
 
 	/**
 	 * Should second level caching support be enabled?
@@ -438,7 +450,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#USE_SECOND_LEVEL_CACHE
 	 */
-	public SessionFactoryBuilder applySecondLevelCacheSupport(boolean enabled);
+	SessionFactoryBuilder applySecondLevelCacheSupport(boolean enabled);
 
 	/**
 	 * Should second level query caching support be enabled?
@@ -450,7 +462,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#USE_QUERY_CACHE
 	 */
-	public SessionFactoryBuilder applyQueryCacheSupport(boolean enabled);
+	SessionFactoryBuilder applyQueryCacheSupport(boolean enabled);
 
 	/**
 	 * Specifies a QueryCacheFactory to use for building query cache handlers.
@@ -461,7 +473,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#QUERY_CACHE_FACTORY
 	 */
-	public SessionFactoryBuilder applyQueryCacheFactory(QueryCacheFactory factory);
+	SessionFactoryBuilder applyQueryCacheFactory(QueryCacheFactory factory);
 
 	/**
 	 * Apply a prefix to prepended to all cache region names for this SessionFactory.
@@ -472,7 +484,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#CACHE_REGION_PREFIX
 	 */
-	public SessionFactoryBuilder applyCacheRegionPrefix(String prefix);
+	SessionFactoryBuilder applyCacheRegionPrefix(String prefix);
 
 	/**
 	 * By default, Hibernate will always just push data into the cache without first checking
@@ -492,7 +504,7 @@ public interface SessionFactoryBuilder {
 	 * @see org.hibernate.cfg.AvailableSettings#USE_MINIMAL_PUTS
 	 * @see org.hibernate.cache.spi.RegionFactory#isMinimalPutsEnabledByDefault()
 	 */
-	public SessionFactoryBuilder applyMinimalPutsForCaching(boolean enabled);
+	SessionFactoryBuilder applyMinimalPutsForCaching(boolean enabled);
 
 	/**
 	 * By default, Hibernate stores data in the cache in its own optimized format.  However,
@@ -506,7 +518,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#USE_STRUCTURED_CACHE
 	 */
-	public SessionFactoryBuilder applyStructuredCacheEntries(boolean enabled);
+	SessionFactoryBuilder applyStructuredCacheEntries(boolean enabled);
 
 	/**
 	 * Generally, Hibernate will extract the information from an entity and put that
@@ -523,7 +535,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#USE_DIRECT_REFERENCE_CACHE_ENTRIES
 	 */
-	public SessionFactoryBuilder applyDirectReferenceCaching(boolean enabled);
+	SessionFactoryBuilder applyDirectReferenceCaching(boolean enabled);
 
 	/**
 	 * When using bi-directional many-to-one associations and caching the one-to-many side
@@ -540,7 +552,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#AUTO_EVICT_COLLECTION_CACHE
 	 */
-	public SessionFactoryBuilder applyAutomaticEvictionOfCollectionCaches(boolean enabled);
+	SessionFactoryBuilder applyAutomaticEvictionOfCollectionCaches(boolean enabled);
 
 	/**
 	 * Specifies the maximum number of statements to batch together in a JDBC batch for
@@ -554,7 +566,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#STATEMENT_BATCH_SIZE
 	 */
-	public SessionFactoryBuilder applyJdbcBatchSize(int size);
+	SessionFactoryBuilder applyJdbcBatchSize(int size);
 
 	/**
 	 * This setting controls whether versioned entities will be included in JDBC batching.  The reason
@@ -567,7 +579,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#BATCH_VERSIONED_DATA
 	 */
-	public SessionFactoryBuilder applyJdbcBatchingForVersionedEntities(boolean enabled);
+	SessionFactoryBuilder applyJdbcBatchingForVersionedEntities(boolean enabled);
 
 	/**
 	 * Should scrollable results be supported in queries?  We ask the JDBC driver whether it
@@ -581,7 +593,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#USE_SCROLLABLE_RESULTSET
 	 */
-	public SessionFactoryBuilder applyScrollableResultsSupport(boolean enabled);
+	SessionFactoryBuilder applyScrollableResultsSupport(boolean enabled);
 
 	/**
 	 * Hibernate currently accesses results from the JDBC ResultSet by name.  This is known
@@ -596,7 +608,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#WRAP_RESULT_SETS
 	 */
-	public SessionFactoryBuilder applyResultSetsWrapping(boolean enabled);
+	SessionFactoryBuilder applyResultSetsWrapping(boolean enabled);
 
 	/**
 	 * Should JDBC {@link java.sql.PreparedStatement#getGeneratedKeys()} feature be used for
@@ -609,7 +621,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#USE_GET_GENERATED_KEYS
 	 */
-	public SessionFactoryBuilder applyGetGeneratedKeysSupport(boolean enabled);
+	SessionFactoryBuilder applyGetGeneratedKeysSupport(boolean enabled);
 
 	/**
 	 * Apply a fetch size to the JDBC driver for fetching results.
@@ -621,7 +633,7 @@ public interface SessionFactoryBuilder {
 	 * @see org.hibernate.cfg.AvailableSettings#USE_GET_GENERATED_KEYS
 	 * @see java.sql.Statement#setFetchSize(int)
 	 */
-	public SessionFactoryBuilder applyJdbcFetchSize(int size);
+	SessionFactoryBuilder applyJdbcFetchSize(int size);
 
 	/**
 	 * Apply the specified handling mode for JDBC connections
@@ -660,7 +672,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#USE_SQL_COMMENTS
 	 */
-	public SessionFactoryBuilder applySqlComments(boolean enabled);
+	SessionFactoryBuilder applySqlComments(boolean enabled);
 
 	/**
 	 * Apply a SQLFunction to the underlying {@link org.hibernate.dialect.function.SQLFunctionRegistry}.
@@ -673,7 +685,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public SessionFactoryBuilder applySqlFunction(String registrationName, SQLFunction sqlFunction);
+	SessionFactoryBuilder applySqlFunction(String registrationName, SQLFunction sqlFunction);
 
 	/**
 	 * Allows unwrapping this builder as another, more specific type.
@@ -683,12 +695,12 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @return The unwrapped builder.
 	 */
-	public <T extends SessionFactoryBuilder> T unwrap(Class<T> type);
+	<T extends SessionFactoryBuilder> T unwrap(Class<T> type);
 
 	/**
 	 * After all options have been set, build the SessionFactory.
 	 *
 	 * @return The built SessionFactory.
 	 */
-	public SessionFactory build();
+	SessionFactory build();
 }

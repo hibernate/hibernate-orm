@@ -9,7 +9,7 @@ package org.hibernate.event.spi;
 import java.io.Serializable;
 
 /**
- * Called after removing a collection
+ * Called afterQuery removing a collection
  *
  * @author Gail Badner
  */

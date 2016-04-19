@@ -131,7 +131,7 @@ public final class ReflectHelper {
 	/**
 	 * Perform resolution of a class name.
 	 * <p/>
-	 * Here we first check the context classloader, if one, before delegating to
+	 * Here we first check the context classloader, if one, beforeQuery delegating to
 	 * {@link Class#forName(String, boolean, ClassLoader)} using the caller's classloader
 	 *
 	 * @param name The class name

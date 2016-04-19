@@ -12,7 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
@@ -33,8 +33,8 @@ public class GUIDGenerator implements IdentifierGenerator {
 		}
 	}
 
-	public Serializable generate(SessionImplementor session, Object obj) throws HibernateException {
-		final String sql = session.getFactory().getDialect().getSelectGUIDString();
+	public Serializable generate(SharedSessionContractImplementor session, Object obj) throws HibernateException {
+		final String sql = session.getJdbcServices().getJdbcEnvironment().getDialect().getSelectGUIDString();
 		try {
 			PreparedStatement st = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
 			try {
@@ -47,18 +47,18 @@ public class GUIDGenerator implements IdentifierGenerator {
 					result = rs.getString( 1 );
 				}
 				finally {
-					session.getJdbcCoordinator().getResourceRegistry().release( rs, st );
+					session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, st );
 				}
 				LOG.guidGenerated( result );
 				return result;
 			}
 			finally {
-				session.getJdbcCoordinator().getResourceRegistry().release( st );
+				session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
 				session.getJdbcCoordinator().afterStatementExecution();
 			}
 		}
 		catch (SQLException sqle) {
-			throw session.getFactory().getSQLExceptionHelper().convert(
+			throw session.getJdbcServices().getSqlExceptionHelper().convert(
 					sqle,
 					"could not retrieve GUID",
 					sql

@@ -16,7 +16,7 @@ import org.hibernate.SessionException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -38,7 +38,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	private boolean initialized;
 	private boolean readOnly;
 	private boolean unwrap;
-	private transient SessionImplementor session;
+	private transient SharedSessionContractImplementor session;
 	private Boolean readOnlyBeforeAttachedToSession;
 
 	private String sessionFactoryUuid;
@@ -57,7 +57,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	 * @param id The identifier of the entity being proxied.
 	 * @param session The session owning the proxy.
 	 */
-	protected AbstractLazyInitializer(String entityName, Serializable id, SessionImplementor session) {
+	protected AbstractLazyInitializer(String entityName, Serializable id, SharedSessionContractImplementor session) {
 		this.entityName = entityName;
 		this.id = id;
 		// initialize other fields depending on session state
@@ -90,12 +90,12 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	}
 
 	@Override
-	public final SessionImplementor getSession() {
+	public final SharedSessionContractImplementor getSession() {
 		return session;
 	}
 
 	@Override
-	public final void setSession(SessionImplementor s) throws HibernateException {
+	public final void setSession(SharedSessionContractImplementor s) throws HibernateException {
 		if ( s != session ) {
 			// check for s == null first, since it is least expensive
 			if ( s == null ) {
@@ -122,7 +122,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		}
 	}
 
-	private static EntityKey generateEntityKeyOrNull(Serializable id, SessionImplementor s, String entityName) {
+	private static EntityKey generateEntityKeyOrNull(Serializable id, SharedSessionContractImplementor s, String entityName) {
 		if ( id == null || s == null || entityName == null ) {
 			return null;
 		}
@@ -172,7 +172,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 			try {
 				SessionFactoryImplementor sf = (SessionFactoryImplementor)
 						SessionFactoryRegistry.INSTANCE.getSessionFactory( sessionFactoryUuid );
-				SessionImplementor session = (SessionImplementor) sf.openSession();
+				SharedSessionContractImplementor session = (SharedSessionContractImplementor) sf.openSession();
 				session.getPersistenceContext().setDefaultReadOnly( true );
 				session.setFlushMode( FlushMode.MANUAL );
 
@@ -268,7 +268,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	}
 
 	@Override
-	public final Object getImplementation(SessionImplementor s) throws HibernateException {
+	public final Object getImplementation(SharedSessionContractImplementor s) throws HibernateException {
 		final EntityKey entityKey = generateEntityKeyOrNull( getIdentifier(), s, getEntityName() );
 		return (entityKey == null ? null : s.getPersistenceContext().getEntity( entityKey ));
 	}
@@ -353,7 +353,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	 * Set the read-only/modifiable setting that should be put in affect when it is
 	 * attached to a session.
 	 * <p/>
-	 * This method should only be called during deserialization, before associating
+	 * This method should only be called during deserialization, beforeQuery associating
 	 * the proxy with a session.
 	 *
 	 * @param readOnlyBeforeAttachedToSession, the read-only/modifiable setting to use when

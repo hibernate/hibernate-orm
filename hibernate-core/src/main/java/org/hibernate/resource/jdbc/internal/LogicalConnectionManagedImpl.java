@@ -14,6 +14,7 @@ import java.sql.SQLException;
 
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
+import org.hibernate.HibernateException;
 import org.hibernate.ResourceClosedException;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -38,7 +39,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	private final transient JdbcObserver observer;
 	private final transient SqlExceptionHelper sqlExceptionHelper;
 
-	private final transient PhysicalConnectionHandlingMode physicalConnectionHandlingMode;
+	private final transient PhysicalConnectionHandlingMode connectionHandlingMode;
 
 	private transient Connection physicalConnection;
 	private boolean closed;
@@ -55,15 +56,31 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 			ResourceRegistry resourceRegistry) {
 		this.jdbcConnectionAccess = jdbcConnectionAccess;
 		this.observer = jdbcSessionContext.getObserver();
+		this.resourceRegistry = resourceRegistry;
+
+		this.connectionHandlingMode = jdbcSessionContext.getPhysicalConnectionHandlingMode();
+		validateConnectionHandlingMode( connectionHandlingMode, jdbcConnectionAccess );
 
 		this.sqlExceptionHelper = jdbcSessionContext.getServiceRegistry()
 				.getService( JdbcServices.class )
 				.getSqlExceptionHelper();
-		this.physicalConnectionHandlingMode = jdbcSessionContext.getPhysicalConnectionHandlingMode();
-		this.resourceRegistry = resourceRegistry;
 
-		if ( physicalConnectionHandlingMode.getAcquisitionMode() == ConnectionAcquisitionMode.IMMEDIATELY ) {
+		if ( connectionHandlingMode.getAcquisitionMode() == ConnectionAcquisitionMode.IMMEDIATELY ) {
 			acquireConnectionIfNeeded();
+		}
+	}
+
+	private void validateConnectionHandlingMode(
+			PhysicalConnectionHandlingMode connectionHandlingMode,
+			JdbcConnectionAccess jdbcConnectionAccess) {
+		if ( connectionHandlingMode.getReleaseMode() == ConnectionReleaseMode.AFTER_STATEMENT ) {
+			// make sure the Connection access supports reacquisition...
+			// 		NOTE we used to just swap it here with a more correct release-mode, but
+			//		really this ought to be validated at a higher level...
+			if ( !jdbcConnectionAccess.supportsAggressiveRelease() ) {
+				throw new HibernateException(
+						"Connection provider reports to not support aggressive release, but ATER_STATEMENT releasing was requested" );
+			}
 		}
 	}
 
@@ -74,7 +91,6 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 		this( jdbcConnectionAccess, jdbcSessionContext, new ResourceRegistryStandardImpl() );
 		this.closed = closed;
 	}
-
 
 	private Connection acquireConnectionIfNeeded() {
 		if ( physicalConnection == null ) {
@@ -99,6 +115,11 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	}
 
 	@Override
+	public PhysicalConnectionHandlingMode getConnectionHandlingMode() {
+		return connectionHandlingMode;
+	}
+
+	@Override
 	public boolean isPhysicallyConnected() {
 		return physicalConnection != null;
 	}
@@ -113,9 +134,9 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	public void afterStatement() {
 		super.afterStatement();
 
-		if ( physicalConnectionHandlingMode.getReleaseMode() == ConnectionReleaseMode.AFTER_STATEMENT ) {
+		if ( connectionHandlingMode.getReleaseMode() == ConnectionReleaseMode.AFTER_STATEMENT ) {
 			if ( getResourceRegistry().hasRegisteredResources() ) {
-				log.debug( "Skipping aggressive release of JDBC Connection after-statement due to held resources" );
+				log.debug( "Skipping aggressive release of JDBC Connection afterQuery-statement due to held resources" );
 			}
 			else {
 				log.debug( "Initiating JDBC connection release from afterStatement" );
@@ -128,7 +149,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	public void afterTransaction() {
 		super.afterTransaction();
 
-		if ( physicalConnectionHandlingMode.getReleaseMode() != ConnectionReleaseMode.ON_CLOSE ) {
+		if ( connectionHandlingMode.getReleaseMode() != ConnectionReleaseMode.ON_CLOSE ) {
 			// NOTE : we check for !ON_CLOSE here (rather than AFTER_TRANSACTION) to also catch AFTER_STATEMENT cases
 			// that were circumvented due to held resources
 			log.debug( "Initiating JDBC connection release from afterTransaction" );

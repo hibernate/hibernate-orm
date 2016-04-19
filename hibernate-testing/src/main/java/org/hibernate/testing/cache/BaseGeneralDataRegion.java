@@ -8,8 +8,8 @@ package org.hibernate.testing.cache;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.GeneralDataRegion;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
-import org.hibernate.engine.spi.SessionImplementor;
 import org.jboss.logging.Logger;
 
 /**
@@ -23,7 +23,7 @@ class BaseGeneralDataRegion extends BaseRegion implements GeneralDataRegion {
 	}
 
 	@Override
-	public Object get(SessionImplementor session, Object key) throws CacheException {
+	public Object get(SharedSessionContractImplementor session, Object key) throws CacheException {
 		LOG.debugf( "Cache[%s] lookup : key[%s]", getName(), key );
 		if ( key == null ) {
 			return null;
@@ -36,7 +36,7 @@ class BaseGeneralDataRegion extends BaseRegion implements GeneralDataRegion {
 	}
 
 	@Override
-	public void put(SessionImplementor session, Object key, Object value) throws CacheException {
+	public void put(SharedSessionContractImplementor session, Object key, Object value) throws CacheException {
 		LOG.debugf( "Caching[%s] : [%s] -> [%s]", getName(), key, value );
 		if ( key == null || value == null ) {
 			LOG.debug( "Key or Value is null" );

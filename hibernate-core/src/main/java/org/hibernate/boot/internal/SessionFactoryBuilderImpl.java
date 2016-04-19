@@ -55,6 +55,7 @@ import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
+
 import org.jboss.logging.Logger;
 
 import static org.hibernate.cfg.AvailableSettings.ACQUIRE_CONNECTIONS;
@@ -88,6 +89,7 @@ import static org.hibernate.cfg.AvailableSettings.QUERY_SUBSTITUTIONS;
 import static org.hibernate.cfg.AvailableSettings.RELEASE_CONNECTIONS;
 import static org.hibernate.cfg.AvailableSettings.SESSION_FACTORY_NAME;
 import static org.hibernate.cfg.AvailableSettings.SESSION_FACTORY_NAME_IS_JNDI;
+import static org.hibernate.cfg.AvailableSettings.SESSION_SCOPED_INTERCEPTOR;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_FETCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_INSPECTOR;
@@ -187,6 +189,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SessionFactoryBuilder applyInterceptor(Interceptor interceptor) {
 		this.options.interceptor = interceptor;
+		return this;
+	}
+
+	@Override
+	public SessionFactoryBuilder applyStatelessInterceptor(Class<? extends Interceptor> statelessInterceptorClass) {
+		this.options.statelessInterceptorClass = statelessInterceptorClass;
 		return this;
 	}
 
@@ -496,13 +504,14 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		// Statistics/Interceptor/observers
 		private boolean statisticsEnabled;
 		private Interceptor interceptor;
+		private Class<? extends Interceptor> statelessInterceptorClass;
 		private StatementInspector statementInspector;
-		private List<SessionFactoryObserver> sessionFactoryObserverList = new ArrayList<SessionFactoryObserver>();
+		private List<SessionFactoryObserver> sessionFactoryObserverList = new ArrayList<>();
 		private BaselineSessionEventsListenerBuilder baselineSessionEventsListenerBuilder;	// not exposed on builder atm
 
 		// persistence behavior
 		private CustomEntityDirtinessStrategy customEntityDirtinessStrategy;
-		private List<EntityNameResolver> entityNameResolvers = new ArrayList<EntityNameResolver>();
+		private List<EntityNameResolver> entityNameResolvers = new ArrayList<>();
 		private EntityNotFoundDelegate entityNotFoundDelegate;
 		private boolean identifierRollbackEnabled;
 		private EntityMode defaultEntityMode;
@@ -587,6 +596,17 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 					configurationSettings.get( INTERCEPTOR ),
 					EmptyInterceptor.INSTANCE
 			);
+
+			final Object statelessInterceptorSetting = configurationSettings.get( SESSION_SCOPED_INTERCEPTOR );
+			if ( statelessInterceptorSetting instanceof Class ) {
+				this.statelessInterceptorClass = (Class<? extends Interceptor>) statelessInterceptorSetting;
+			}
+			else {
+				this.statelessInterceptorClass = strategySelector.selectStrategyImplementor(
+						Interceptor.class,
+						statelessInterceptorSetting.toString()
+				);
+			}
 			this.statementInspector = strategySelector.resolveStrategy(
 					StatementInspector.class,
 					configurationSettings.get( STATEMENT_INSPECTOR )
@@ -780,6 +800,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		@Override
 		public Interceptor getInterceptor() {
 			return interceptor == null ? EmptyInterceptor.INSTANCE : interceptor;
+		}
+
+		@Override
+		public Class<? extends Interceptor> getStatelessInterceptorImplementor() {
+			return statelessInterceptorClass;
 		}
 
 		@Override
@@ -1056,6 +1081,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public Interceptor getInterceptor() {
 		return options.getInterceptor();
+	}
+
+	@Override
+	public Class<? extends Interceptor> getStatelessInterceptorImplementor() {
+		return options.getStatelessInterceptorImplementor();
 	}
 
 	@Override

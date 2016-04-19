@@ -95,7 +95,7 @@ public final class CollectionEntry implements Serializable {
 
 		collection.setSnapshot(loadedKey, role, null);
 
-		//postInitialize() will be called after initialization
+		//postInitialize() will be called afterQuery initialization
 	}
 
 	/**
@@ -204,7 +204,7 @@ public final class CollectionEntry implements Serializable {
 	}
 
 	/**
-	 * Called after a successful flush
+	 * Called afterQuery a successful flush
 	 */
 	public void postFlush(PersistentCollection collection) throws HibernateException {
 		if ( isIgnore() ) {
@@ -217,7 +217,7 @@ public final class CollectionEntry implements Serializable {
 	}
 
 	/**
-	 * Called after execution of an action
+	 * Called afterQuery execution of an action
 	 */
 	public void afterAction(PersistentCollection collection) {
 		loadedKey = getCurrentKey();

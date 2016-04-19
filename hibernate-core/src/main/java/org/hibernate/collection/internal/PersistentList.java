@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.ListIterator;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
@@ -42,7 +42,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	 *
 	 * @param session The session
 	 */
-	public PersistentList(SessionImplementor session) {
+	public PersistentList(SharedSessionContractImplementor session) {
 		super( session );
 	}
 
@@ -52,7 +52,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	 * @param session The session
 	 * @param list The raw list
 	 */
-	public PersistentList(SessionImplementor session, List list) {
+	public PersistentList(SharedSessionContractImplementor session, List list) {
 		super( session );
 		this.list = list;
 		setInitialized();

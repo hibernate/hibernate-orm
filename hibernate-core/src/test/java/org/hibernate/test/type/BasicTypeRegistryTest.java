@@ -5,18 +5,15 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.test.type;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
-import org.junit.Test;
-
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
@@ -29,6 +26,9 @@ import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -117,106 +117,130 @@ public class BasicTypeRegistryTest extends BaseUnitTestCase {
 
 	public static class TotallyIrrelevantUserType implements UserType {
 
+		@Override
 		public int[] sqlTypes() {
 			return new int[0];
 		}
 
+		@Override
 		public Class returnedClass() {
 			return null;
 		}
 
+		@Override
 		public boolean equals(Object x, Object y) throws HibernateException {
 			return false;
 		}
 
+		@Override
 		public int hashCode(Object x) throws HibernateException {
 			return 0;
 		}
 
-		public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner) throws HibernateException, SQLException {
+		@Override
+		public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner) throws HibernateException, SQLException {
 			return null;
 		}
 
-		public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session) throws HibernateException, SQLException {
+		@Override
+		public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
 		}
 
+		@Override
 		public Object deepCopy(Object value) throws HibernateException {
 			return null;
 		}
 
+		@Override
 		public boolean isMutable() {
 			return false;
 		}
 
+		@Override
 		public Serializable disassemble(Object value) throws HibernateException {
 			return null;
 		}
 
+		@Override
 		public Object assemble(Serializable cached, Object owner) throws HibernateException {
 			return null;
 		}
 
+		@Override
 		public Object replace(Object original, Object target, Object owner) throws HibernateException {
 			return null;
 		}
 	}
 
 	public static class TotallyIrrelevantCompositeUserType implements CompositeUserType {
-
+		@Override
 		public String[] getPropertyNames() {
 			return new String[0];
 		}
 
+		@Override
 		public Type[] getPropertyTypes() {
 			return new Type[0];
 		}
 
+		@Override
 		public Object getPropertyValue(Object component, int property) throws HibernateException {
 			return null;
 		}
 
+		@Override
 		public void setPropertyValue(Object component, int property, Object value) throws HibernateException {
 		}
 
+		@Override
 		public Class returnedClass() {
 			return null;
 		}
 
+		@Override
 		public boolean equals(Object x, Object y) throws HibernateException {
 			return false;
 		}
 
+		@Override
 		public int hashCode(Object x) throws HibernateException {
 			return 0;
 		}
 
-		public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner)
+		@Override
+		public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
 				throws HibernateException, SQLException {
 			return null;
 		}
 
-		public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session)
+		@Override
+		public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
 				throws HibernateException, SQLException {
 		}
 
+		@Override
 		public Object deepCopy(Object value) throws HibernateException {
 			return null;
 		}
 
+		@Override
 		public boolean isMutable() {
 			return false;
 		}
 
-		public Serializable disassemble(Object value, SessionImplementor session) throws HibernateException {
+		@Override
+		public Serializable disassemble(Object value, SharedSessionContractImplementor session) throws HibernateException {
 			return null;
 		}
 
-		public Object assemble(Serializable cached, SessionImplementor session, Object owner)
+		@Override
+		public Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner)
 				throws HibernateException {
 			return null;
 		}
 
-		public Object replace(Object original, Object target, SessionImplementor session, Object owner)
+		@Override
+		public Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner)
 				throws HibernateException {
 			return null;
 		}

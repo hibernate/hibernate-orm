@@ -6,9 +6,8 @@
  */
 package org.hibernate.query.criteria.internal.compile;
 
-import javax.persistence.Query;
-
-import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.query.spi.QueryImplementor;
 
 /**
  * The interpretation of a JPA criteria object.
@@ -26,5 +25,5 @@ public interface CriteriaInterpretation {
 	 *
 	 * @return The created Query instance.
 	 */
-	public Query buildCompiledQuery(HibernateEntityManagerImplementor entityManager, InterpretedParameterMetadata interpretedParameterMetadata);
+	QueryImplementor buildCompiledQuery(SessionImplementor entityManager, InterpretedParameterMetadata interpretedParameterMetadata);
 }

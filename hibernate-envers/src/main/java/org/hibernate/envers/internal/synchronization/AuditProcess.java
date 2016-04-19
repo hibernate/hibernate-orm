@@ -137,7 +137,9 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 		if ( FlushMode.isManualFlushMode( session.getFlushMode() ) ) {
 			Session temporarySession = null;
 			try {
-				temporarySession = ((Session) session).sessionWithOptions().transactionContext().autoClose( false )
+				temporarySession = ((Session) session).sessionWithOptions()
+						.transactionContext()
+						.autoClose( false )
 						.connectionReleaseMode( ConnectionReleaseMode.AFTER_TRANSACTION )
 						.openSession();
 				executeInSession( temporarySession );

@@ -5,12 +5,13 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.persister.entity;
+
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.Type;
 
 /**
@@ -22,77 +23,76 @@ import org.hibernate.type.Type;
  */
 public interface Loadable extends EntityPersister {
 	
-	public static final String ROWID_ALIAS = "rowid_";
+	String ROWID_ALIAS = "rowid_";
 
 	/**
 	 * Does this persistent class have subclasses?
 	 */
-	public boolean hasSubclasses();
+	boolean hasSubclasses();
 
 	/**
 	 * Get the discriminator type
 	 */
-	public Type getDiscriminatorType();
+	Type getDiscriminatorType();
 
 	/**
 	 * Get the discriminator value
 	 */
-	public Object getDiscriminatorValue();
+	Object getDiscriminatorValue();
 
 	/**
 	 * Get the concrete subclass corresponding to the given discriminator
 	 * value
 	 */
-	public String getSubclassForDiscriminatorValue(Object value);
+	String getSubclassForDiscriminatorValue(Object value);
 
 	/**
 	 * Get the names of columns used to persist the identifier
 	 */
-	public String[] getIdentifierColumnNames();
+	String[] getIdentifierColumnNames();
 
 	/**
 	 * Get the result set aliases used for the identifier columns, given a suffix
 	 */
-	public String[] getIdentifierAliases(String suffix);
+	String[] getIdentifierAliases(String suffix);
 	/**
 	 * Get the result set aliases used for the property columns, given a suffix (properties of this class, only).
 	 */
-	public String[] getPropertyAliases(String suffix, int i);
+	String[] getPropertyAliases(String suffix, int i);
 	
 	/**
 	 * Get the result set column names mapped for this property (properties of this class, only).
 	 */
-	public String[] getPropertyColumnNames(int i);
+	String[] getPropertyColumnNames(int i);
 	
 	/**
 	 * Get the result set aliases used for the identifier columns, given a suffix
 	 */
-	public String getDiscriminatorAlias(String suffix);
+	String getDiscriminatorAlias(String suffix);
 	
 	/**
 	 * @return the column name for the discriminator as specified in the mapping.
 	 */
-	public String getDiscriminatorColumnName();
+	String getDiscriminatorColumnName();
 	
 	/**
 	 * Does the result set contain rowids?
 	 */
-	public boolean hasRowId();
+	boolean hasRowId();
 	
 	/**
 	 * Retrieve property values from one row of a result set
 	 */
-	public Object[] hydrate(
+	Object[] hydrate(
 			ResultSet rs,
 			Serializable id,
 			Object object,
 			Loadable rootLoadable,
 			String[][] suffixedPropertyColumns,
-			boolean allProperties, 
-			SessionImplementor session)
-	throws SQLException, HibernateException;
+			boolean allProperties,
+			SharedSessionContractImplementor session) throws SQLException, HibernateException;
 
-	public boolean isAbstract();
+	boolean isAbstract();
 
 	/**
 	 * Register the name of a fetch profile determined to have an affect on the
@@ -101,7 +101,7 @@ public interface Loadable extends EntityPersister {
 	 * 
 	 * @param fetchProfileName The name of the profile affecting this.
 	 */
-	public void registerAffectingFetchProfile(String fetchProfileName);
+	void registerAffectingFetchProfile(String fetchProfileName);
 
 	/**
 	 * Given a column name and the root table alias in use for the entity hierarchy, determine the proper table alias
@@ -115,5 +115,5 @@ public interface Loadable extends EntityPersister {
 	 *
 	 * @return The proper table alias for qualifying the given column.
 	 */
-	public String getTableAliasForColumn(String columnName, String rootAlias);
+	String getTableAliasForColumn(String columnName, String rootAlias);
 }

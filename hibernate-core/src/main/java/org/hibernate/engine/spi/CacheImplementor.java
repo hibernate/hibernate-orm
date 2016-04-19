@@ -7,27 +7,30 @@
 package org.hibernate.engine.spi;
 
 import java.io.Serializable;
-import java.util.Map;
 
 import org.hibernate.Cache;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.QueryCache;
-import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.UpdateTimestampsCache;
+import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.service.Service;
 
 /**
  * Define internal contact of <tt>Cache API</tt>
  *
- * @author Strong Liu <stliu@hibernate.org>
+ * @author Strong Liu
  */
 public interface CacheImplementor extends Service, Cache, Serializable {
 
 	/**
 	 * Close all cache regions.
 	 */
-	public void close();
+	void close();
 
 	/**
 	 * Get query cache by <tt>region name</tt> or create a new one if none exist.
@@ -38,59 +41,88 @@ public interface CacheImplementor extends Service, Cache, Serializable {
 	 * @return The {@code QueryCache} associated with the region name, or default query cache if the region name is <tt>null</tt>.
 	 * @throws HibernateException {@code HibernateException} maybe thrown when the creation of new QueryCache instance.
 	 */
-	public QueryCache getQueryCache(String regionName) throws HibernateException;
+	QueryCache getQueryCache(String regionName) throws HibernateException;
+
+	/**
+	 * Get the default {@code QueryCache}.
+	 *
+	 * @deprecated Use {@link #getDefaultQueryCache} instead.
+	 */
+	@Deprecated
+	default QueryCache getQueryCache() {
+		return getDefaultQueryCache();
+	}
 
 	/**
 	 * Get the default {@code QueryCache}.
 	 */
-	public QueryCache getQueryCache();
-
-	/**
-	 * Add {@code Region} to this Cache scope.
-	 *
-	 * @param name The region name.
-	 * @param region The {@code Region} instance.
-	 */
-	public void addCacheRegion(String name, Region region);
+	QueryCache getDefaultQueryCache();
 
 	/**
 	 * Get {@code UpdateTimestampsCache} instance managed by the {@code SessionFactory}.
 	 */
-	public UpdateTimestampsCache getUpdateTimestampsCache();
+	UpdateTimestampsCache getUpdateTimestampsCache();
 
 	/**
 	 * Clean up the default {@code QueryCache}.
 	 *
  	 * @throws HibernateException
 	 */
-	public void evictQueries() throws HibernateException;
+	void evictQueries() throws HibernateException;
 
 	/**
-	 * Get second level cache region by its name.
-	 *
-	 * @param regionName The region name.
-	 * @return The second level cache region.
-	 */
-	public Region getSecondLevelCacheRegion(String regionName);
-
-	/**
-	 * Get natural id cache region by its name.
-	 *
-	 * @param regionName The region name.
-	 * @return The natural id cache region.
-	 */
-	public Region getNaturalIdCacheRegion(String regionName);
-
-	/**
-	 * Get <tt>all</tt> cache regions, including query cache.
-	 *
-	 * @return The map contains all cache regions with region name as the key.
-	 */
-	public Map<String, Region> getAllSecondLevelCacheRegions();
-
-	/**
+	 * The underlying RegionFactory in use.
 	 *
 	 * @return The {@code RegionFactory}
 	 */
-	public RegionFactory getRegionFactory();
+	RegionFactory getRegionFactory();
+
+	/**
+	 * Applies any defined prefix, handling all {@code null} checks.
+	 *
+	 * @param regionName The region name to qualify
+	 *
+	 * @return The qualified name
+	 */
+	String qualifyRegionName(String regionName);
+
+	/**
+	 * Get the names of <tt>all</tt> cache regions, including entity, collection, natural-id and query caches.
+	 *
+	 * @return All cache region names
+	 */
+	String[] getSecondLevelCacheRegionNames();
+
+	/**
+	 * Find the "access strategy" for the named entity cache region.
+	 *
+	 * @param regionName The name of the region
+	 *
+	 * @return That region's "access strategy"
+	 */
+	EntityRegionAccessStrategy getEntityRegionAccess(String regionName);
+
+	/**
+	 * Find the "access strategy" for the named collection cache region.
+	 *
+	 * @param regionName The name of the region
+	 *
+	 * @return That region's "access strategy"
+	 */
+	CollectionRegionAccessStrategy getCollectionRegionAccess(String regionName);
+
+	/**
+	 * Find the "access strategy" for the named natrual-id cache region.
+	 *
+	 * @param regionName The name of the region
+	 *
+	 * @return That region's "access strategy"
+	 */
+	NaturalIdRegionAccessStrategy getNaturalIdCacheRegionAccessStrategy(String regionName);
+
+	EntityRegionAccessStrategy determineEntityRegionAccessStrategy(PersistentClass model);
+
+	NaturalIdRegionAccessStrategy determineNaturalIdRegionAccessStrategy(PersistentClass model);
+
+	CollectionRegionAccessStrategy determineCollectionRegionAccessStrategy(Collection model);
 }

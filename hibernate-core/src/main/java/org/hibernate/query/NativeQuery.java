@@ -1,7 +1,18 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
 package org.hibernate.query;
+
+import org.hibernate.FlushMode;
+import org.hibernate.SQLQuery;
 
 /**
  * @author Steve Ebersole
  */
-public interface NativeQuery {
+public interface NativeQuery extends Query<Object>, SQLQuery {
+	@Override
+	NativeQuery setFlushMode(FlushMode flushMode);
 }

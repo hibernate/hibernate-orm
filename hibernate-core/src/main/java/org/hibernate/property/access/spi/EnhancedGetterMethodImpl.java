@@ -9,16 +9,12 @@ package org.hibernate.property.access.spi;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.Map;
 
 import org.hibernate.PropertyAccessException;
-import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
@@ -98,7 +94,7 @@ public class EnhancedGetterMethodImpl implements Getter {
 	}
 
 	@Override
-	public Object getForInsert(Object owner, Map mergeMap, SessionImplementor session) {
+	public Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
 		return get( owner );
 	}
 

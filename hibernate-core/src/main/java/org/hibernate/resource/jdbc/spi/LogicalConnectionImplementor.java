@@ -27,6 +27,8 @@ public interface LogicalConnectionImplementor extends LogicalConnection {
 	 */
 	Connection getPhysicalConnection();
 
+	PhysicalConnectionHandlingMode getConnectionHandlingMode();
+
 	/**
 	 * Notification indicating a JDBC statement has been executed to trigger
 	 * {@link org.hibernate.ConnectionReleaseMode#AFTER_STATEMENT} releasing if needed
@@ -49,7 +51,7 @@ public interface LogicalConnectionImplementor extends LogicalConnection {
 	Connection manualDisconnect();
 
 	/**
-	 * Manually reconnect the underlying JDBC Connection.  Should be called at some point after manualDisconnect().
+	 * Manually reconnect the underlying JDBC Connection.  Should be called at some point afterQuery manualDisconnect().
 	 *
 	 * @param suppliedConnection For user supplied connection strategy the user needs to hand us the connection
 	 * with which to reconnect.  It is an error to pass a connection in the other strategies.

@@ -23,7 +23,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface NamedNativeQuery {
 	/**
-	 * The name.  It is a named query after all :)
+	 * The name.  It is a named query afterQuery all :)
 	 */
 	String name();
 

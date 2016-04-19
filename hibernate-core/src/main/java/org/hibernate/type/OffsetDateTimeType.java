@@ -12,7 +12,7 @@ import java.util.Comparator;
 import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.OffsetDateTimeJavaDescriptor;
 import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
 
@@ -40,12 +40,12 @@ public class OffsetDateTimeType
 	}
 
 	@Override
-	public OffsetDateTime seed(SessionImplementor session) {
+	public OffsetDateTime seed(SharedSessionContractImplementor session) {
 		return OffsetDateTime.now();
 	}
 
 	@Override
-	public OffsetDateTime next(OffsetDateTime current, SessionImplementor session) {
+	public OffsetDateTime next(OffsetDateTime current, SharedSessionContractImplementor session) {
 		return OffsetDateTime.now();
 	}
 

@@ -7,7 +7,7 @@
 package org.hibernate.event.spi;
 
 /**
- * Called after an entity insert is committed to the datastore.
+ * Called afterQuery an entity insert is committed to the datastore.
  *
  * @author Shawn Clowater
  */

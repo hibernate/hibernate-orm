@@ -9,22 +9,22 @@ package org.hibernate.test.cache.infinispan.entity;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import junit.framework.AssertionFailedError;
 import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionImplementor;
+
 import org.hibernate.test.cache.infinispan.AbstractRegionAccessStrategyTest;
 import org.hibernate.test.cache.infinispan.NodeEnvironment;
 import org.hibernate.test.cache.infinispan.util.TestSynchronization;
 import org.hibernate.test.cache.infinispan.util.TestingKeyFactory;
 import org.junit.Test;
+import junit.framework.AssertionFailedError;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
 
 /**
  * Base class for tests of EntityRegionAccessStrategy impls.
@@ -316,7 +316,7 @@ public class EntityRegionAccessStrategyTest extends
 						log.debug("Read latch acquired, verify local access strategy");
 
 						// This won't block w/ mvc and will read the old value (if transactional as the transaction
-						// is not being committed yet, or if non-strict as we do the actual update only after transaction)
+						// is not being committed yet, or if non-strict as we do the actual update only afterQuery transaction)
 						// or null if non-transactional
 						Object expected = isTransactional() || accessType == AccessType.NONSTRICT_READ_WRITE ? VALUE1 : null;
 						assertEquals("Correct value", expected, localAccessStrategy.get(session, KEY, session.getTimestamp()));

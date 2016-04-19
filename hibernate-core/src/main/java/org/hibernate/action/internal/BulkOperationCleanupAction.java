@@ -21,7 +21,7 @@ import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
@@ -41,9 +41,9 @@ import org.hibernate.persister.entity.Queryable;
 public class BulkOperationCleanupAction implements Executable, Serializable {
 	private final Serializable[] affectedTableSpaces;
 
-	private final Set<EntityCleanup> entityCleanups = new HashSet<EntityCleanup>();
-	private final Set<CollectionCleanup> collectionCleanups = new HashSet<CollectionCleanup>();
-	private final Set<NaturalIdCleanup> naturalIdCleanups = new HashSet<NaturalIdCleanup>();
+	private final Set<EntityCleanup> entityCleanups = new HashSet<>();
+	private final Set<CollectionCleanup> collectionCleanups = new HashSet<>();
+	private final Set<NaturalIdCleanup> naturalIdCleanups = new HashSet<>();
 
 	/**
 	 * Constructs an action to cleanup "affected cache regions" based on the
@@ -55,7 +55,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	 * @param session The session to which this request is tied.
 	 * @param affectedQueryables The affected entity persisters.
 	 */
-	public BulkOperationCleanupAction(SessionImplementor session, Queryable... affectedQueryables) {
+	public BulkOperationCleanupAction(SharedSessionContractImplementor session, Queryable... affectedQueryables) {
 		final SessionFactoryImplementor factory = session.getFactory();
 		final LinkedHashSet<String> spacesList = new LinkedHashSet<String>();
 		for ( Queryable persister : affectedQueryables ) {
@@ -84,7 +84,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 
 	/**
 	 * Constructs an action to cleanup "affected cache regions" based on a
-	 * set of affected table spaces.  This differs from {@link #BulkOperationCleanupAction(SessionImplementor, Queryable[])}
+	 * set of affected table spaces.  This differs from {@link #BulkOperationCleanupAction(SharedSessionContractImplementor, Queryable[])}
 	 * in that here we have the affected <strong>table names</strong>.  From those
 	 * we deduce the entity persisters which are affected based on the defined
 	 * {@link EntityPersister#getQuerySpaces() table spaces}; and from there, we
@@ -95,7 +95,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	 * @param tableSpaces The table spaces.
 	 */
 	@SuppressWarnings({ "unchecked" })
-	public BulkOperationCleanupAction(SessionImplementor session, Set tableSpaces) {
+	public BulkOperationCleanupAction(SharedSessionContractImplementor session, Set tableSpaces) {
 		final LinkedHashSet<String> spacesList = new LinkedHashSet<String>();
 		spacesList.addAll( tableSpaces );
 
@@ -170,7 +170,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	public AfterTransactionCompletionProcess getAfterTransactionCompletionProcess() {
 		return new AfterTransactionCompletionProcess() {
 			@Override
-			public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
+			public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
 				for ( EntityCleanup cleanup : entityCleanups ) {
 					cleanup.release();
 				}
@@ -246,7 +246,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	}
 
 	@Override
-	public void afterDeserialize(SessionImplementor session) {
+	public void afterDeserialize(SharedSessionContractImplementor session) {
 		// nop
 	}
 }

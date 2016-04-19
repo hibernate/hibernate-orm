@@ -6,8 +6,10 @@
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmIdBagCollectionType;
@@ -19,6 +21,7 @@ import org.hibernate.boot.model.source.spi.PluralAttributeNature;
 import org.hibernate.boot.model.source.spi.RelationalValueSource;
 import org.hibernate.boot.model.source.spi.SizeSource;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 
 /**
  * @author Steve Ebersole
@@ -81,10 +84,12 @@ public class PluralAttributeSourceIdBagImpl extends AbstractPluralAttributeSourc
 			);
 		}
 
+
 		this.collectionIdSource = new CollectionIdSourceImpl(
 				(ColumnSource) collectionIdRelationalValueSource,
 				new HibernateTypeSourceImpl( idBagMapping.getCollectionId().getType() ),
-				idBagMapping.getCollectionId().getGenerator().getClazz()
+				idBagMapping.getCollectionId().getGenerator().getClazz(),
+				Helper.extractParameters( idBagMapping.getCollectionId().getGenerator().getConfigParameters() )
 		);
 	}
 
@@ -122,14 +127,22 @@ public class PluralAttributeSourceIdBagImpl extends AbstractPluralAttributeSourc
 		private final ColumnSource columnSource;
 		private final HibernateTypeSourceImpl typeSource;
 		private final String generator;
+		private final Map<String, String> parameters;
 
 		public CollectionIdSourceImpl(
 				ColumnSource columnSource,
 				HibernateTypeSourceImpl typeSource,
-				String generator) {
+				String generator,
+				final Map<String, String> parameters) {
 			this.columnSource = columnSource;
 			this.typeSource = typeSource;
 			this.generator = generator;
+			if ( CollectionHelper.isEmpty( parameters ) ) {
+				this.parameters = Collections.emptyMap();
+			}
+			else {
+				this.parameters = Collections.unmodifiableMap( parameters );
+			}
 		}
 
 		@Override
@@ -145,6 +158,10 @@ public class PluralAttributeSourceIdBagImpl extends AbstractPluralAttributeSourc
 		@Override
 		public String getGeneratorName() {
 			return generator;
+		}
+
+		public Map<String, String> getParameters() {
+			return parameters;
 		}
 	}
 }

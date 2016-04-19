@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import java.util.Map;
+
 /**
  * @author Steve Ebersole
  */
@@ -30,4 +32,9 @@ public interface CollectionIdSource {
 	 * @return The identifier value generator name
 	 */
 	public String getGeneratorName();
+
+	/**
+	 * @return The identifier generator configuration parameters
+	 */
+	public Map<String, String> getParameters();
 }

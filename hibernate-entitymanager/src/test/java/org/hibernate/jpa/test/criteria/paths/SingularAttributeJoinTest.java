@@ -18,10 +18,10 @@ import javax.persistence.metamodel.Bindable;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
-import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
-import org.hibernate.jpa.criteria.PathSource;
-import org.hibernate.jpa.criteria.path.SingularAttributeJoin;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
+import org.hibernate.query.criteria.internal.PathSource;
+import org.hibernate.query.criteria.internal.path.SingularAttributeJoin;
 
 import org.junit.Test;
 

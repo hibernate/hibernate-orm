@@ -17,13 +17,11 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.type.AbstractType;
 import org.hibernate.type.Type;
-
-import org.dom4j.Node;
 
 /**
  * TODO : javadoc
@@ -54,7 +52,7 @@ public class DiscriminatorType extends AbstractType {
 	public Object nullSafeGet(
 			ResultSet rs,
 			String[] names,
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Object owner) throws HibernateException, SQLException {
 		return nullSafeGet( rs, names[0], session, owner );
 	}
@@ -62,7 +60,7 @@ public class DiscriminatorType extends AbstractType {
 	public Object nullSafeGet(
 			ResultSet rs,
 			String name,
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Object owner) throws HibernateException, SQLException {
 		final Object discriminatorValue = underlyingType.nullSafeGet( rs, name, session, owner );
 		final String entityName = persister.getSubclassForDiscriminatorValue( discriminatorValue );
@@ -78,7 +76,7 @@ public class DiscriminatorType extends AbstractType {
 			Object value,
 			int index,
 			boolean[] settable,
-			SessionImplementor session) throws HibernateException, SQLException {
+			SharedSessionContractImplementor session) throws HibernateException, SQLException {
 		nullSafeSet( st, value, index, session );
 	}
 
@@ -86,7 +84,7 @@ public class DiscriminatorType extends AbstractType {
 			PreparedStatement st,
 			Object value,
 			int index,
-			SessionImplementor session) throws HibernateException, SQLException {
+			SharedSessionContractImplementor session) throws HibernateException, SQLException {
 		String entityName = session.getFactory().getClassMetadata((Class) value).getEntityName();
 		Loadable entityPersister = (Loadable) session.getFactory().getEntityPersister(entityName);
 		underlyingType.nullSafeSet(st, entityPersister.getDiscriminatorValue(), index, session);
@@ -101,7 +99,7 @@ public class DiscriminatorType extends AbstractType {
 		return value;
 	}
 
-	public Object replace(Object original, Object target, SessionImplementor session, Object owner, Map copyCache)
+	public Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner, Map copyCache)
 			throws HibernateException {
 		return original;
 	}
@@ -112,7 +110,7 @@ public class DiscriminatorType extends AbstractType {
 				: ArrayHelper.TRUE;
 	}
 
-	public boolean isDirty(Object old, Object current, boolean[] checkable, SessionImplementor session)
+	public boolean isDirty(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session)
 			throws HibernateException {
 		return EqualsHelper.equals( old, current );
 	}

@@ -8,7 +8,8 @@ package org.hibernate.testing.cache;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -26,18 +27,18 @@ class ReadOnlyEntityRegionAccessStrategy extends BaseEntityRegionAccessStrategy 
 	 * This cache is asynchronous hence a no-op
 	 */
 	@Override
-	public boolean insert(SessionImplementor session, Object key, Object value, Object version) throws CacheException {
+	public boolean insert(SharedSessionContractImplementor session, Object key, Object value, Object version) throws CacheException {
 		return false; //wait until tx complete, see afterInsert().
 	}
 
 	@Override
-	public boolean afterInsert(SessionImplementor session, Object key, Object value, Object version) throws CacheException {
+	public boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value, Object version) throws CacheException {
 		getInternalRegion().put( session, key, value ); //save into cache since the tx is completed
 		return true;
 	}
 
 	@Override
-	public void unlockItem(SessionImplementor session, Object key, SoftLock lock) throws CacheException {
+	public void unlockItem(SharedSessionContractImplementor session, Object key, SoftLock lock) throws CacheException {
 		evict( key );
 	}
 
@@ -47,7 +48,7 @@ class ReadOnlyEntityRegionAccessStrategy extends BaseEntityRegionAccessStrategy 
 	 * @throws UnsupportedOperationException always
 	 */
 	@Override
-	public boolean update(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion)
+	public boolean update(SharedSessionContractImplementor session, Object key, Object value, Object currentVersion, Object previousVersion)
 			throws CacheException {
 		LOG.info( "Illegal attempt to update item cached as read-only : " + key );
 		throw new UnsupportedOperationException( "Can't write to a readonly object" );
@@ -59,7 +60,7 @@ class ReadOnlyEntityRegionAccessStrategy extends BaseEntityRegionAccessStrategy 
 	 * @throws UnsupportedOperationException always
 	 */
 	@Override
-	public boolean afterUpdate(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
+	public boolean afterUpdate(SharedSessionContractImplementor session, Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
 			throws CacheException {
 		LOG.info( "Illegal attempt to update item cached as read-only : " + key );
 		throw new UnsupportedOperationException( "Can't write to a readonly object" );

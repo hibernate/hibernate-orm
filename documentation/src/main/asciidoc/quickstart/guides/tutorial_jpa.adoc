@@ -61,7 +61,7 @@ The previous tutorials used the Hibernate native APIs.  This tutorial uses the J
 [source, JAVA]
 ----
 protected void setUp() throws Exception {
-	entityManagerFactory = Persistence.createEntityManagerFactory( "org.hibernate.tutorial.jpa" );
+	sessionFactory = Persistence.createEntityManagerFactory( "org.hibernate.tutorial.jpa" );
 }
 ----
 ====
@@ -74,7 +74,7 @@ Notice again that the persistence unit name is `org.hibernate.tutorial.jpa`, whi
 ====
 [source, JAVA]
 ----
-EntityManager entityManager = entityManagerFactory.createEntityManager();
+EntityManager entityManager = sessionFactory.createEntityManager();
 entityManager.getTransaction().begin();
 entityManager.persist( new Event( "Our very first event!", new Date() ) );
 entityManager.persist( new Event( "A follow up event", new Date() ) );
@@ -92,7 +92,7 @@ is used instead of the `org.hibernate.Session` interface.  JPA calls this operat
 ====
 [source, JAVA]
 ----
-entityManager = entityManagerFactory.createEntityManager();
+entityManager = sessionFactory.createEntityManager();
 entityManager.getTransaction().begin();
 List<Event> result = entityManager.createQuery( "from Event", Event.class ).getResultList();
 for ( Event event : result ) {

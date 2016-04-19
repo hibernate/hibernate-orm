@@ -6,6 +6,11 @@
  */
 package org.hibernate.dialect;
 
+import java.io.Serializable;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Locale;
+
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
@@ -31,7 +36,7 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.RowSelection;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
@@ -44,12 +49,8 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.type.StandardBasicTypes;
-import org.jboss.logging.Logger;
 
-import java.io.Serializable;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Locale;
+import org.jboss.logging.Logger;
 
 /**
  * An SQL dialect compatible with HSQLDB (HyperSQL).
@@ -606,7 +607,8 @@ public class HSQLDialect extends Dialect {
 			super( lockable, lockMode );
 		}
 
-		public void lock(Serializable id, Object version, Object object, int timeout, SessionImplementor session)
+		@Override
+		public void lock(Serializable id, Object version, Object object, int timeout, SharedSessionContractImplementor session)
 				throws StaleObjectStateException, JDBCException {
 			if ( getLockMode().greaterThan( LockMode.READ ) ) {
 				LOG.hsqldbSupportsOnlyReadCommittedIsolation();

@@ -12,20 +12,30 @@ import javax.persistence.EntityGraph;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.metamodel.EntityType;
 
+import org.hibernate.Metamodel;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
  * Contract giving access to the underlying {@link org.hibernate.SessionFactory} from an {@link javax.persistence.EntityManagerFactory}
  *
  * @author Gavin King
+ *
+ * @deprecated (since 6.0) Use SessionFactory (or SessionFactoryImplementor) as it now extends EntityManagerFactory directly
  */
+@Deprecated
 public interface HibernateEntityManagerFactory extends EntityManagerFactory, Serializable {
 	/**
 	 * Obtain the underlying Hibernate SessionFactory.
 	 *
 	 * @return The underlying Hibernate SessionFactory
+	 *
+	 * @deprecated The expectation is that SessionFactory implementors also implement EntityManagerFactory; so this call
+	 * really should just return {@code this}
 	 */
-	SessionFactoryImplementor getSessionFactory();
+	@Deprecated
+	default SessionFactoryImplementor getSessionFactory() {
+		return (SessionFactoryImplementor) this;
+	}
 
 	/**
 	 * Find all  {@code EntityGraph}s associated with a given entity type.
@@ -37,20 +47,24 @@ public interface HibernateEntityManagerFactory extends EntityManagerFactory, Ser
 	 */
 	<T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass);
 
-	/**
-	 * Returns the name of the factory. The name is either can be specified via the property <i>hibernate.ejb.entitymanager_factory_name</i>.
-	 * If the property is not set the persistence unit name is used. If persistence unit name is not available, a unique
-	 * name will be generated.
-	 *
-	 * @return the name of the factory.
-	 */
-	String getEntityManagerFactoryName();
+	@Override
+	Metamodel getMetamodel();
 
 	/**
 	 * Find an entity type by name
 	 *
 	 * @param entityName entity name
+	 *
 	 * @return the {@code EntityType} for the specified name
+	 *
+	 * @deprecated Use org.hibernate.MetamodelImplementor#getEntityTypeByName instead.
 	 */
-	EntityType getEntityTypeByName(String entityName);
+	@Deprecated
+	default EntityType getEntityTypeByName(String entityName) {
+		final EntityType entityType = getMetamodel().getEntityTypeByName( entityName );
+		if ( entityType == null ) {
+			throw new IllegalArgumentException( "[" + entityName + "] did not refer to EntityType" );
+		}
+		return entityType;
+	}
 }

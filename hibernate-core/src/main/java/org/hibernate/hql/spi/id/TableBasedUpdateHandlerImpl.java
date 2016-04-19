@@ -12,9 +12,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.tree.AssignmentSpecification;
 import org.hibernate.hql.internal.ast.tree.FromElement;
@@ -50,8 +51,9 @@ public class TableBasedUpdateHandlerImpl
 			IdTableInfo idTableInfo) {
 		super( factory, walker );
 
-		UpdateStatement updateStatement = ( UpdateStatement ) walker.getAST();
-		FromElement fromElement = updateStatement.getFromClause().getFromElement();
+		final Dialect dialect = factory.getJdbcServices().getJdbcEnvironment().getDialect();
+		final UpdateStatement updateStatement = (UpdateStatement) walker.getAST();
+		final FromElement fromElement = updateStatement.getFromClause().getFromElement();
 
 		this.targetedPersister = fromElement.getQueryable();
 
@@ -70,11 +72,11 @@ public class TableBasedUpdateHandlerImpl
 		assignmentParameterSpecifications = new ParameterSpecification[tableNames.length][];
 		for ( int tableIndex = 0; tableIndex < tableNames.length; tableIndex++ ) {
 			boolean affected = false;
-			final List<ParameterSpecification> parameterList = new ArrayList<ParameterSpecification>();
-			final Update update = new Update( factory().getDialect() )
+			final List<ParameterSpecification> parameterList = new ArrayList<>();
+			final Update update = new Update( dialect )
 					.setTableName( tableNames[tableIndex] )
 					.setWhere( "(" + StringHelper.join( ", ", columnNames[tableIndex] ) + ") IN (" + idSubselect + ")" );
-			if ( factory().getSettings().isCommentsEnabled() ) {
+			if ( factory().getSessionFactoryOptions().isCommentsEnabled() ) {
 				update.setComment( "bulk update" );
 			}
 			final List<AssignmentSpecification> assignmentSpecifications = walker.getAssignmentSpecifications();
@@ -105,7 +107,7 @@ public class TableBasedUpdateHandlerImpl
 	}
 
 	@Override
-	public int execute(SessionImplementor session, QueryParameters queryParameters) {
+	public int execute(SharedSessionContractImplementor session, QueryParameters queryParameters) {
 		prepareForUse( targetedPersister, session );
 		try {
 			// First, save off the pertinent ids, as the return value
@@ -123,13 +125,13 @@ public class TableBasedUpdateHandlerImpl
 				}
 				finally {
 					if ( ps != null ) {
-						session.getJdbcCoordinator().getResourceRegistry().release( ps );
+						session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( ps );
 						session.getJdbcCoordinator().afterStatementExecution();
 					}
 				}
 			}
 			catch( SQLException e ) {
-				throw convert( e, "could not insert/select ids for bulk update", idInsertSelect );
+				throw session.getJdbcServices().getSqlExceptionHelper().convert( e, "could not insert/select ids for bulk update", idInsertSelect );
 			}
 
 			// Start performing the updates
@@ -151,13 +153,13 @@ public class TableBasedUpdateHandlerImpl
 					}
 					finally {
 						if ( ps != null ) {
-							session.getJdbcCoordinator().getResourceRegistry().release( ps );
+							session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( ps );
 							session.getJdbcCoordinator().afterStatementExecution();
 						}
 					}
 				}
 				catch( SQLException e ) {
-					throw convert( e, "error performing bulk update", updates[i] );
+					throw session.getJdbcServices().getSqlExceptionHelper().convert( e, "error performing bulk update", updates[i] );
 				}
 			}
 
@@ -168,10 +170,10 @@ public class TableBasedUpdateHandlerImpl
 		}
 	}
 
-	protected int handlePrependedParametersOnIdSelection(PreparedStatement ps, SessionImplementor session, int pos) throws SQLException {
+	protected int handlePrependedParametersOnIdSelection(PreparedStatement ps, SharedSessionContractImplementor session, int pos) throws SQLException {
 		return 0;
 	}
 
-	protected void handleAddedParametersOnUpdate(PreparedStatement ps, SessionImplementor session, int position) throws SQLException {
+	protected void handleAddedParametersOnUpdate(PreparedStatement ps, SharedSessionContractImplementor session, int position) throws SQLException {
 	}
 }

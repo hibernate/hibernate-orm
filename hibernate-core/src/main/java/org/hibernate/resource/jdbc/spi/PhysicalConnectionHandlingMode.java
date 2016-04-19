@@ -34,12 +34,12 @@ public enum PhysicalConnectionHandlingMode {
 	DELAYED_ACQUISITION_AND_HOLD( AS_NEEDED, ON_CLOSE ),
 	/**
 	 * The Connection will be acquired as soon as it is needed; it will be released
-	 * after each statement is executed.
+	 * afterQuery each statement is executed.
 	 */
 	DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT( AS_NEEDED, AFTER_STATEMENT ),
 	/**
 	 * The Connection will be acquired as soon as it is needed; it will be released
-	 * after each transaction is completed.
+	 * afterQuery each transaction is completed.
 	 */
 	DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION( AS_NEEDED, AFTER_TRANSACTION )
 	;

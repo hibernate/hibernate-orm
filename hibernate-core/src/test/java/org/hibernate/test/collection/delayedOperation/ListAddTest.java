@@ -129,7 +129,7 @@ public class ListAddTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	/**
-	 * This test succeeds thanks to a dirty workaround consisting in initializing the ordered question list after the
+	 * This test succeeds thanks to a dirty workaround consisting in initializing the ordered question list afterQuery the
 	 * question has been inserted
 	 */
 	@Test

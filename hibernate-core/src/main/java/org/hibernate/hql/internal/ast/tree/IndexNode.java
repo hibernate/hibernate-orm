@@ -13,7 +13,7 @@ import java.util.List;
 import org.hibernate.QueryException;
 import org.hibernate.engine.internal.JoinSequence;
 import org.hibernate.engine.spi.QueryParameters;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.ast.SqlGenerator;
 import org.hibernate.hql.internal.ast.util.SessionFactoryHelper;
 import org.hibernate.internal.CoreLogging;
@@ -81,7 +81,7 @@ public class IndexNode extends FromReferenceNode {
 		String collectionRole = ( (CollectionType) type ).getRole();
 		QueryableCollection queryableCollection = sessionFactoryHelper.requireQueryableCollection( collectionRole );
 		if ( !queryableCollection.hasIndex() ) {
-			throw new QueryException( "unindexed fromElement before []: " + collectionNode.getPath() );
+			throw new QueryException( "unindexed fromElement beforeQuery []: " + collectionNode.getPath() );
 		}
 
 		// Generate the inner join -- The elements need to be joined to the collection they are in.
@@ -167,7 +167,7 @@ public class IndexNode extends FromReferenceNode {
 		}
 
 		@Override
-		public int bind(PreparedStatement statement, QueryParameters qp, SessionImplementor session, int position)
+		public int bind(PreparedStatement statement, QueryParameters qp, SharedSessionContractImplementor session, int position)
 				throws SQLException {
 			int bindCount = 0;
 			for ( ParameterSpecification paramSpec : paramSpecs ) {

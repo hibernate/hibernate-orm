@@ -8,7 +8,7 @@ package org.hibernate.testing.cache;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * @author Eric Dalquist
@@ -19,27 +19,27 @@ class NonstrictReadWriteNaturalIdRegionAccessStrategy extends BaseNaturalIdRegio
 	}
 
 	@Override
-	public void unlockItem(SessionImplementor session, Object key, SoftLock lock) throws CacheException {
+	public void unlockItem(SharedSessionContractImplementor session, Object key, SoftLock lock) throws CacheException {
 		evict( key );
 	}
 
 	@Override
-	public void remove(SessionImplementor session, Object key) throws CacheException {
+	public void remove(SharedSessionContractImplementor session, Object key) throws CacheException {
 		evict( key );
 	}
 
 	@Override
-	public boolean insert(SessionImplementor session, Object key, Object value) throws CacheException {
+	public boolean insert(SharedSessionContractImplementor session, Object key, Object value) throws CacheException {
 		return false;
 	}
 
 	@Override
-	public boolean afterInsert(SessionImplementor session, Object key, Object value) throws CacheException {
+	public boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value) throws CacheException {
 		return false;
 	}
 
 	@Override
-	public boolean update(SessionImplementor session, Object key, Object value) throws CacheException {
+	public boolean update(SharedSessionContractImplementor session, Object key, Object value) throws CacheException {
 		remove( session, key );
 		return false;
 	}

@@ -6,14 +6,15 @@
  */
 package org.hibernate.cache.infinispan.util;
 
+import java.util.Arrays;
+
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
+
 import org.infinispan.commands.remote.BaseRpcCommand;
 import org.infinispan.context.InvocationContext;
 
-import java.util.Arrays;
-
 /**
- * Sent in commit phase (after DB commit) to remote nodes in order to stop invalidating
+ * Sent in commit phase (afterQuery DB commit) to remote nodes in order to stop invalidating
  * putFromLoads.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;

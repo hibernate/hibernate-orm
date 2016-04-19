@@ -22,7 +22,7 @@ import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.sql.DataSource;
 
 import org.hibernate.cfg.Environment;
-import org.hibernate.ejb.HibernatePersistence;
+import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.test.Distributor;
 import org.hibernate.jpa.test.Item;
 import org.hibernate.jpa.test.xml.Light;
@@ -47,7 +47,7 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 	}
 
 	public String getPersistenceProviderClassName() {
-		return HibernatePersistence.class.getName();
+		return HibernatePersistenceProvider.class.getName();
 	}
 
 	public DataSource getJtaDataSource() {

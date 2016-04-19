@@ -30,6 +30,7 @@ dependencies {
     provided( libraries.jacc )
     provided( libraries.validation )
     provided( libraries.ant )
+    provided( "javax.enterprise:cdi-api:1.1-PFD" )
 
     testCompile( project(':hibernate-testing') )
     testCompile( libraries.validation )

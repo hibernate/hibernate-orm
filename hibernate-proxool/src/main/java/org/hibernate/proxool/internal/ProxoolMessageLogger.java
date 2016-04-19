@@ -6,7 +6,6 @@
  */
 package org.hibernate.proxool.internal;
 
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.ConnectionPoolingLogger;
 
 import org.jboss.logging.annotations.LogMessage;
@@ -20,7 +19,7 @@ import static org.jboss.logging.Logger.Level.INFO;
  * The jboss-logging {@link MessageLogger} for the hibernate-proxool module.  It reserves message ids ranging from
  * 30001 to 35000 inclusively.
  * <p/>
- * New messages must be added after the last message defined to ensure message codes are unique.
+ * New messages must be added afterQuery the last message defined to ensure message codes are unique.
  */
 @MessageLogger(projectCode = "HHH")
 @ValidIdRange( min = 30001, max = 35000 )

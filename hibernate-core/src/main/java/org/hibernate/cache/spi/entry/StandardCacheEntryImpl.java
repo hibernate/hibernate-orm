@@ -7,12 +7,11 @@
 package org.hibernate.cache.spi.entry;
 
 import java.io.Serializable;
-import java.util.Set;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
@@ -20,7 +19,6 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.TypeHelper;
 
@@ -49,7 +47,7 @@ public class StandardCacheEntryImpl implements CacheEntry {
 			final Object[] state,
 			final EntityPersister persister,
 			final Object version,
-			final SessionImplementor session,
+			final SharedSessionContractImplementor session,
 			final Object owner) throws HibernateException {
 		// disassembled state gets put in a new array (we write to cache by value!)
 		this.disassembledState = TypeHelper.disassemble(
@@ -140,7 +138,7 @@ public class StandardCacheEntryImpl implements CacheEntry {
 				session, instance
 		);
 
-		//persister.setIdentifier(instance, id); //before calling interceptor, for consistency with normal load
+		//persister.setIdentifier(instance, id); //beforeQuery calling interceptor, for consistency with normal load
 
 		//TODO: reuse the PreLoadEvent
 		final PreLoadEvent preLoadEvent = new PreLoadEvent( session )

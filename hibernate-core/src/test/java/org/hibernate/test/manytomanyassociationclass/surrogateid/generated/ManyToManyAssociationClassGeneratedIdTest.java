@@ -5,14 +5,15 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.test.manytomanyassociationclass.surrogateid.generated;
-import java.util.HashSet;
 
-import org.junit.Test;
+import java.util.HashSet;
 
 import org.hibernate.Session;
 import org.hibernate.exception.ConstraintViolationException;
+
 import org.hibernate.test.manytomanyassociationclass.AbstractManyToManyAssociationClassTest;
 import org.hibernate.test.manytomanyassociationclass.Membership;
+import org.junit.Test;
 
 import static org.junit.Assert.fail;
 
@@ -42,12 +43,12 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 		try {
 			// The new membership is transient (it has a null surrogate ID), so
 			// Hibernate assumes that it should be added to the collection.
-			// Inserts are done before deletes, so a ConstraintViolationException
+			// Inserts are done beforeQuery deletes, so a ConstraintViolationException
 			// will be thrown on the insert because the unique constraint on the
 			// user and group IDs in the join table is violated. See HHH-2801.
 			s.merge( getUser() );
 			s.getTransaction().commit();
-			fail( "should have failed because inserts are before deletes");
+			fail( "should have failed because inserts are beforeQuery deletes");
 		}
 		catch( ConstraintViolationException ex ) {
 			// expected
@@ -70,12 +71,12 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 		try {
 			// The new membership is transient (it has a null surrogate ID), so
 			// Hibernate assumes that it should be added to the collection.
-			// Inserts are done before deletes, so a ConstraintViolationException
+			// Inserts are done beforeQuery deletes, so a ConstraintViolationException
 			// will be thrown on the insert because the unique constraint on the
 			// user and group IDs in the join table is violated. See HHH-2801.
 			s.merge( getUser() );
 			s.getTransaction().commit();
-			fail( "should have failed because inserts are before deletes");
+			fail( "should have failed because inserts are beforeQuery deletes");
 		}
 		catch( ConstraintViolationException ex ) {
 			// expected
@@ -98,12 +99,12 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 		try {
 			// The new membership is transient (it has a null surrogate ID), so
 			// Hibernate assumes that it should be added to the collection.
-			// Inserts are done before deletes, so a ConstraintViolationException
+			// Inserts are done beforeQuery deletes, so a ConstraintViolationException
 			// will be thrown on the insert because the unique constraint on the
 			// user and group IDs in the join table is violated. See HHH-2801.
 			s.merge( getUser() );
 			s.getTransaction().commit();
-			fail( "should have failed because inserts are before deletes");
+			fail( "should have failed because inserts are beforeQuery deletes");
 		}
 		catch( ConstraintViolationException ex ) {
 			// expected

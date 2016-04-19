@@ -12,7 +12,7 @@ import java.util.Comparator;
 import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ZonedDateTimeComparator;
 import org.hibernate.type.descriptor.java.ZonedDateTimeJavaDescriptor;
 import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
@@ -41,12 +41,12 @@ public class ZonedDateTimeType
 	}
 
 	@Override
-	public ZonedDateTime seed(SessionImplementor session) {
+	public ZonedDateTime seed(SharedSessionContractImplementor session) {
 		return ZonedDateTime.now();
 	}
 
 	@Override
-	public ZonedDateTime next(ZonedDateTime current, SessionImplementor session) {
+	public ZonedDateTime next(ZonedDateTime current, SharedSessionContractImplementor session) {
 		return ZonedDateTime.now();
 	}
 

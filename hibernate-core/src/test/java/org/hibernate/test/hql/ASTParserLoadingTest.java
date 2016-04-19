@@ -6,6 +6,18 @@
  */
 package org.hibernate.test.hql;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
@@ -38,6 +50,19 @@ import org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.DiscriminatorType;
 import org.hibernate.stat.QueryStatistics;
+import org.hibernate.transform.DistinctRootEntityResultTransformer;
+import org.hibernate.transform.Transformers;
+import org.hibernate.type.ComponentType;
+import org.hibernate.type.ManyToOneType;
+import org.hibernate.type.Type;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.any.IntegerPropertyValue;
 import org.hibernate.test.any.PropertySet;
 import org.hibernate.test.any.PropertyValue;
@@ -47,32 +72,9 @@ import org.hibernate.test.cid.LineItem;
 import org.hibernate.test.cid.LineItem.Id;
 import org.hibernate.test.cid.Order;
 import org.hibernate.test.cid.Product;
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.transform.DistinctRootEntityResultTransformer;
-import org.hibernate.transform.Transformers;
-import org.hibernate.type.ComponentType;
-import org.hibernate.type.ManyToOneType;
-import org.hibernate.type.Type;
-import org.jboss.logging.Logger;
 import org.junit.Test;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.sql.Date;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import org.jboss.logging.Logger;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
 import static org.junit.Assert.assertEquals;
@@ -2252,7 +2254,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testLoadSnapshotWithCustomColumnReadAndWrite() {
-		// Exercises entity snapshot load when select-before-update is true.
+		// Exercises entity snapshot load when select-beforeQuery-update is true.
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		final double SIZE_IN_KB = 1536d;

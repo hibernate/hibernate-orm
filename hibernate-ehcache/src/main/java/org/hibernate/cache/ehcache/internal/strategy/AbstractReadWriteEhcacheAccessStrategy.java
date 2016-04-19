@@ -18,6 +18,7 @@ import org.hibernate.cache.ehcache.internal.regions.EhcacheTransactionalDataRegi
 import org.hibernate.cache.spi.access.RegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionImplementor;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -51,7 +52,7 @@ abstract class AbstractReadWriteEhcacheAccessStrategy<T extends EhcacheTransacti
 
 	/**
 	 * Returns <code>null</code> if the item is not readable.  Locked items are not readable, nor are items created
-	 * after the start of this transaction.
+	 * afterQuery the start of this transaction.
 	 *
 	 * @see RegionAccessStrategy#get(SessionImplementor, Object, long)
 	 * @see RegionAccessStrategy#get(SessionImplementor, Object, long)

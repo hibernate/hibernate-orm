@@ -78,7 +78,6 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.NamedQueryRepository;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
@@ -97,6 +96,7 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
+import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.type.TypeResolver;
 
 /**
@@ -1567,7 +1567,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 
 	/**
-	 * Ugh!  But we need this done before we ask Envers to produce its entities.
+	 * Ugh!  But we need this done beforeQuery we ask Envers to produce its entities.
 	 */
 	public void processSecondPasses(MetadataBuildingContext buildingContext) {
 		inSecondPass = true;

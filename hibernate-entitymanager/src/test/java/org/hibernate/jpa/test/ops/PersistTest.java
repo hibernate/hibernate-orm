@@ -16,11 +16,10 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
 
-import org.junit.Test;
-
 import org.hibernate.cfg.Environment;
-import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

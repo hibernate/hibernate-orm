@@ -56,7 +56,7 @@ import org.hibernate.cfg.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.internal.log.DeprecationLogger;
+import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
@@ -65,8 +65,6 @@ import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.boot.spi.StrategyRegistrationProviderList;
 import org.hibernate.jpa.boot.spi.TypeContributorList;
 import org.hibernate.jpa.event.spi.JpaIntegrator;
-import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
-import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.jpa.internal.util.LogHelper;
 import org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper;
 import org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider;
@@ -84,15 +82,15 @@ import org.jboss.jandex.Index;
 
 import static org.hibernate.cfg.AvailableSettings.JACC_CONTEXT_ID;
 import static org.hibernate.cfg.AvailableSettings.JACC_PREFIX;
+import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_MODE;
+import static org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_MODE;
 import static org.hibernate.cfg.AvailableSettings.SESSION_FACTORY_NAME;
+import static org.hibernate.internal.HEMLogging.messageLogger;
 import static org.hibernate.jpa.AvailableSettings.CFG_FILE;
 import static org.hibernate.jpa.AvailableSettings.CLASS_CACHE_PREFIX;
 import static org.hibernate.jpa.AvailableSettings.COLLECTION_CACHE_PREFIX;
 import static org.hibernate.jpa.AvailableSettings.DISCARD_PC_ON_CLOSE;
 import static org.hibernate.jpa.AvailableSettings.PERSISTENCE_UNIT_NAME;
-import static org.hibernate.jpa.AvailableSettings.SHARED_CACHE_MODE;
-import static org.hibernate.jpa.AvailableSettings.VALIDATION_MODE;
-import static org.hibernate.internal.HEMLogging.messageLogger;
 
 /**
  * @author Steve Ebersole
@@ -212,17 +210,11 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		final boolean lazyInitializationEnabled = readBooleanConfigurationValue( AvailableSettings.ENHANCER_ENABLE_LAZY_INITIALIZATION );
 		final boolean associationManagementEnabled = readBooleanConfigurationValue( AvailableSettings.ENHANCER_ENABLE_ASSOCIATION_MANAGEMENT );
 
-		// todo: remove the support for the old instrumentation property in the future
-		final boolean deprecatedInstrumentation = readBooleanConfigurationValue( AvailableSettings.USE_CLASS_ENHANCER );
-		if ( deprecatedInstrumentation ) {
-			LOG.deprecatedInstrumentationProperty();
-		}
-
-		if ( deprecatedInstrumentation || dirtyTrackingEnabled || lazyInitializationEnabled || associationManagementEnabled ) {
+		if ( dirtyTrackingEnabled || lazyInitializationEnabled || associationManagementEnabled ) {
 			EnhancementContext enhancementContext = getEnhancementContext(
-					deprecatedInstrumentation || dirtyTrackingEnabled,
-					deprecatedInstrumentation || lazyInitializationEnabled,
-					deprecatedInstrumentation || associationManagementEnabled
+					dirtyTrackingEnabled,
+					lazyInitializationEnabled,
+					associationManagementEnabled
 			);
 
 			persistenceUnit.pushClassTransformer( enhancementContext );
@@ -411,15 +403,15 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			}
 		}
 
-		if ( !mergedSettings.configurationValues.containsKey( VALIDATION_MODE ) ) {
+		if ( !mergedSettings.configurationValues.containsKey( JPA_VALIDATION_MODE ) ) {
 			if ( persistenceUnit.getValidationMode() != null ) {
-				mergedSettings.configurationValues.put( VALIDATION_MODE, persistenceUnit.getValidationMode() );
+				mergedSettings.configurationValues.put( JPA_VALIDATION_MODE, persistenceUnit.getValidationMode() );
 			}
 		}
 
-		if ( !mergedSettings.configurationValues.containsKey( SHARED_CACHE_MODE ) ) {
+		if ( !mergedSettings.configurationValues.containsKey( JPA_SHARED_CACHE_MODE ) ) {
 			if ( persistenceUnit.getSharedCacheMode() != null ) {
-				mergedSettings.configurationValues.put( SHARED_CACHE_MODE, persistenceUnit.getSharedCacheMode() );
+				mergedSettings.configurationValues.put( JPA_SHARED_CACHE_MODE, persistenceUnit.getSharedCacheMode() );
 			}
 		}
 
@@ -557,7 +549,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		applyJdbcConnectionProperties( ssrBuilder );
 		applyTransactionProperties( ssrBuilder, settings );
 
-		// flush before completion validation
+		// flush beforeQuery completion validation
 		if ( "true".equals( configurationValues.get( Environment.FLUSH_BEFORE_COMPLETION ) ) ) {
 			ssrBuilder.applySetting( Environment.FLUSH_BEFORE_COMPLETION, "false" );
 			LOG.definingFlushBeforeCompletionIgnoredInHem( Environment.FLUSH_BEFORE_COMPLETION );
@@ -781,15 +773,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			}
 		}
 
-		final Object namingStrategySetting = configurationValues.remove( AvailableSettings.NAMING_STRATEGY );
-		if ( namingStrategySetting != null ) {
-			DeprecationLogger.DEPRECATION_LOGGER.logDeprecatedNamingStrategySetting(
-					AvailableSettings.NAMING_STRATEGY,
-					org.hibernate.cfg.AvailableSettings.IMPLICIT_NAMING_STRATEGY,
-					org.hibernate.cfg.AvailableSettings.PHYSICAL_NAMING_STRATEGY
-			);
-		}
-
 		final TypeContributorList typeContributorList = (TypeContributorList) configurationValues.remove(
 				TYPE_CONTRIBUTORS
 		);
@@ -876,28 +859,19 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		SessionFactoryBuilder sfBuilder = metadata().getSessionFactoryBuilder();
 		populate( sfBuilder, standardServiceRegistry );
 
-		SessionFactoryImplementor sessionFactory;
 		try {
-			sessionFactory = (SessionFactoryImplementor) sfBuilder.build();
+			return sfBuilder.build();
 		}
 		catch (Exception e) {
 			throw persistenceException( "Unable to build Hibernate SessionFactory", e );
 		}
-
-		return new EntityManagerFactoryImpl(
-				persistenceUnit.getName(),
-				sessionFactory,
-				metadata(),
-				settings,
-				configurationValues
-		);
 	}
 
 	protected void populate(SessionFactoryBuilder sfBuilder, StandardServiceRegistry ssr) {
 		final StrategySelector strategySelector = ssr.getService( StrategySelector.class );
 
 		// Locate and apply the requested SessionFactory-level interceptor (if one)
-		final Object sessionFactoryInterceptorSetting = configurationValues.remove( AvailableSettings.INTERCEPTOR );
+		final Object sessionFactoryInterceptorSetting = configurationValues.remove( org.hibernate.cfg.AvailableSettings.INTERCEPTOR );
 		if ( sessionFactoryInterceptorSetting != null ) {
 			final Interceptor sessionFactoryInterceptor =
 					strategySelector.resolveStrategy( Interceptor.class, sessionFactoryInterceptorSetting );

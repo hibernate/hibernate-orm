@@ -42,14 +42,14 @@ public interface SynchronizationCallbackTarget {
 	boolean isActive();
 
 	/**
-	 * Callback of before-completion.
+	 * Callback of beforeQuery-completion.
 	 *
 	 * @see javax.transaction.Synchronization#beforeCompletion
 	 */
 	void beforeCompletion();
 
 	/**
-	 * Callback of after-completion.
+	 * Callback of afterQuery-completion.
 	 *
 	 * @param successful Was the transaction successful?
 	 *

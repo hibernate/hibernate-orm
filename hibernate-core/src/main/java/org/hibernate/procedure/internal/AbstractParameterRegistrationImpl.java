@@ -16,7 +16,7 @@ import javax.persistence.TemporalType;
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.ParameterBind;
 import org.hibernate.procedure.ParameterMisuseException;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
@@ -142,7 +142,7 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 		);
 	}
 
-	protected SessionImplementor session() {
+	protected SharedSessionContractImplementor session() {
 		return procedureCall.getSession();
 	}
 

@@ -6,12 +6,17 @@
  */
 package org.hibernate.query.internal;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import javax.persistence.Parameter;
 
 import org.hibernate.QueryParameterException;
 import org.hibernate.engine.query.spi.NamedParameterDescriptor;
 import org.hibernate.engine.query.spi.OrdinalParameterDescriptor;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.type.Type;
@@ -54,6 +59,32 @@ public class ParameterMetadataImpl implements ParameterMetadata {
 			copy.putAll( namedDescriptorMap );
 			this.namedDescriptorMap = java.util.Collections.unmodifiableMap( copy );
 		}
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public Set<QueryParameter<?>> collectAllParameters() {
+		if ( hasNamedParameters() || hasPositionalParameters() ) {
+			final HashSet allParameters = new HashSet();
+			allParameters.addAll( namedDescriptorMap.values() );
+			allParameters.addAll( ArrayHelper.toList( ordinalDescriptors ) );
+			return allParameters;
+		}
+
+		return Collections.emptySet();
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public Set<Parameter<?>> collectAllParametersJpa() {
+		if ( hasNamedParameters() || hasPositionalParameters() ) {
+			final HashSet allParameters = new HashSet();
+			allParameters.addAll( namedDescriptorMap.values() );
+			allParameters.addAll( ArrayHelper.toList( ordinalDescriptors ) );
+			return allParameters;
+		}
+
+		return Collections.emptySet();
 	}
 
 	@Override
@@ -129,7 +160,7 @@ public class ParameterMetadataImpl implements ParameterMetadata {
 	 *
 	 * @return The named parameter names
 	 */
-	public String[] getNamedParameterNames() {
+	public Set<String> getNamedParameterNames() {
 		return  namedDescriptorMap.keySet();
 	}
 
@@ -142,6 +173,23 @@ public class ParameterMetadataImpl implements ParameterMetadata {
 	@SuppressWarnings("unchecked")
 	public <T> QueryParameter<T> getQueryParameter(Integer position) {
 		return getOrdinalParameterDescriptor( position );
+	}
+
+	@Override
+	public <T> QueryParameter<T> resolve(Parameter<T> param) {
+		if ( param instanceof QueryParameter ) {
+			return (QueryParameter<T>) param;
+		}
+
+		if ( param.getName() != null ) {
+			return getQueryParameter( param.getName() );
+		}
+
+		if ( param.getPosition() != null ) {
+			return getQueryParameter( param.getPosition() );
+		}
+
+		throw new IllegalArgumentException( "Could not resolve javax.persistence.Parameter to org.hibernate.query.QueryParameter" );
 	}
 
 	/**

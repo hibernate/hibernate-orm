@@ -13,11 +13,9 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceException;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.ejb.HibernateEntityManagerFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.SessionFactoryImpl;
-import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
-import org.hibernate.jpa.internal.EntityManagerImpl;
+import org.hibernate.jpa.HibernateEntityManagerFactory;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.Before;

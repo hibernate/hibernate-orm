@@ -9,17 +9,14 @@ package org.hibernate.jpa.test.cacheable.cachemodes;
 import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
 import javax.persistence.EntityManager;
-import javax.persistence.Query;
-
-import org.junit.Test;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Session;
-import org.hibernate.ejb.AvailableSettings;
-import org.hibernate.ejb.HibernateEntityManager;
-import org.hibernate.ejb.HibernateQuery;
+import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.jpa.HibernateEntityManager;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.internal.AbstractQueryImpl;
+
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
@@ -71,35 +68,34 @@ public class SharedCacheModesTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testQueryCacheModes() {
 		EntityManager em = getOrCreateEntityManager();
-		Query jpaQuery = em.createQuery( "from SimpleEntity" );
-		AbstractQueryImpl hibQuery = (AbstractQueryImpl) ( (HibernateQuery) jpaQuery ).getHibernateQuery();
+		org.hibernate.query.Query query = em.createQuery( "from SimpleEntity" ).unwrap( org.hibernate.query.Query.class );
 
-		jpaQuery.setHint( AvailableSettings.SHARED_CACHE_STORE_MODE, CacheStoreMode.USE );
-		assertEquals( CacheStoreMode.USE, jpaQuery.getHints().get( AvailableSettings.SHARED_CACHE_STORE_MODE ) );
-		assertEquals( CacheMode.NORMAL, hibQuery.getCacheMode() );
+		query.setHint( AvailableSettings.SHARED_CACHE_STORE_MODE, CacheStoreMode.USE );
+		assertEquals( CacheStoreMode.USE, query.getHints().get( AvailableSettings.SHARED_CACHE_STORE_MODE ) );
+		assertEquals( CacheMode.NORMAL, query.getCacheMode() );
 
-		jpaQuery.setHint( AvailableSettings.SHARED_CACHE_STORE_MODE, CacheStoreMode.BYPASS );
-		assertEquals( CacheStoreMode.BYPASS, jpaQuery.getHints().get( AvailableSettings.SHARED_CACHE_STORE_MODE ) );
-		assertEquals( CacheMode.GET, hibQuery.getCacheMode() );
+		query.setHint( AvailableSettings.SHARED_CACHE_STORE_MODE, CacheStoreMode.BYPASS );
+		assertEquals( CacheStoreMode.BYPASS, query.getHints().get( AvailableSettings.SHARED_CACHE_STORE_MODE ) );
+		assertEquals( CacheMode.GET, query.getCacheMode() );
 
-		jpaQuery.setHint( AvailableSettings.SHARED_CACHE_STORE_MODE, CacheStoreMode.REFRESH );
-		assertEquals( CacheStoreMode.REFRESH, jpaQuery.getHints().get( AvailableSettings.SHARED_CACHE_STORE_MODE ) );
-		assertEquals( CacheMode.REFRESH, hibQuery.getCacheMode() );
+		query.setHint( AvailableSettings.SHARED_CACHE_STORE_MODE, CacheStoreMode.REFRESH );
+		assertEquals( CacheStoreMode.REFRESH, query.getHints().get( AvailableSettings.SHARED_CACHE_STORE_MODE ) );
+		assertEquals( CacheMode.REFRESH, query.getCacheMode() );
 
-		jpaQuery.setHint( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE, CacheRetrieveMode.BYPASS );
-		assertEquals( CacheRetrieveMode.BYPASS, jpaQuery.getHints().get( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE ) );
-		assertEquals( CacheStoreMode.REFRESH, jpaQuery.getHints().get( AvailableSettings.SHARED_CACHE_STORE_MODE ) );
-		assertEquals( CacheMode.REFRESH, hibQuery.getCacheMode() );
+		query.setHint( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE, CacheRetrieveMode.BYPASS );
+		assertEquals( CacheRetrieveMode.BYPASS, query.getHints().get( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE ) );
+		assertEquals( CacheStoreMode.REFRESH, query.getHints().get( AvailableSettings.SHARED_CACHE_STORE_MODE ) );
+		assertEquals( CacheMode.REFRESH, query.getCacheMode() );
 
-		jpaQuery.setHint( AvailableSettings.SHARED_CACHE_STORE_MODE, CacheStoreMode.BYPASS );
-		assertEquals( CacheRetrieveMode.BYPASS, jpaQuery.getHints().get( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE ) );
-		assertEquals( CacheStoreMode.BYPASS, jpaQuery.getHints().get( AvailableSettings.SHARED_CACHE_STORE_MODE ) );
-		assertEquals( CacheMode.IGNORE, hibQuery.getCacheMode() );
+		query.setHint( AvailableSettings.SHARED_CACHE_STORE_MODE, CacheStoreMode.BYPASS );
+		assertEquals( CacheRetrieveMode.BYPASS, query.getHints().get( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE ) );
+		assertEquals( CacheStoreMode.BYPASS, query.getHints().get( AvailableSettings.SHARED_CACHE_STORE_MODE ) );
+		assertEquals( CacheMode.IGNORE, query.getCacheMode() );
 
-		jpaQuery.setHint( AvailableSettings.SHARED_CACHE_STORE_MODE, CacheStoreMode.USE );
-		assertEquals( CacheRetrieveMode.BYPASS, jpaQuery.getHints().get( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE ) );
-		assertEquals( CacheStoreMode.USE, jpaQuery.getHints().get( AvailableSettings.SHARED_CACHE_STORE_MODE ) );
-		assertEquals( CacheMode.PUT, hibQuery.getCacheMode() );
+		query.setHint( AvailableSettings.SHARED_CACHE_STORE_MODE, CacheStoreMode.USE );
+		assertEquals( CacheRetrieveMode.BYPASS, query.getHints().get( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE ) );
+		assertEquals( CacheStoreMode.USE, query.getHints().get( AvailableSettings.SHARED_CACHE_STORE_MODE ) );
+		assertEquals( CacheMode.PUT, query.getCacheMode() );
 	}
 
 }

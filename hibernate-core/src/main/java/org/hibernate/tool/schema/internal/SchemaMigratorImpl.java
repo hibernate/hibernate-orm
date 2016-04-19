@@ -176,7 +176,7 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 			);
 		}
 
-		// Create before-table AuxiliaryDatabaseObjects
+		// Create beforeQuery-table AuxiliaryDatabaseObjects
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
 			if ( auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
 				continue;
@@ -299,7 +299,7 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 			}
 		}
 
-		//NOTE : Foreign keys must be created *after* all tables of all namespaces for cross namespace fks. see HHH-10420
+		//NOTE : Foreign keys must be created *afterQuery* all tables of all namespaces for cross namespace fks. see HHH-10420
 		for ( Namespace namespace : database.getNamespaces() ) {
 			for ( Table table : namespace.getTables() ) {
 				final TableInformation tableInformation = existingDatabase.getTableInformation( table.getQualifiedTableName() );
@@ -310,7 +310,7 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 			}
 		}
 
-		// Create after-table AuxiliaryDatabaseObjects
+		// Create afterQuery-table AuxiliaryDatabaseObjects
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
 			if ( !auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
 				continue;

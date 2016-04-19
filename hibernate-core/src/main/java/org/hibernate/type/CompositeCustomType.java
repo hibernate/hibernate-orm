@@ -23,7 +23,7 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.LoggableUserType;
@@ -51,6 +51,22 @@ public class CompositeCustomType extends AbstractType implements CompositeType, 
 		this.registrationKeys = registrationKeys;
 	}
 
+	@Override
+	public String getName() {
+		return name;
+	}
+
+	@Override
+	public Class getReturnedClass() {
+		return userType.returnedClass();
+	}
+
+	@Override
+	public boolean isMutable() {
+		return userType.isMutable();
+	}
+
+	@Override
 	public String[] getRegistrationKeys() {
 		return registrationKeys;
 	}
@@ -59,10 +75,12 @@ public class CompositeCustomType extends AbstractType implements CompositeType, 
 		return userType;
 	}
 
+	@Override
 	public boolean isMethodOf(Method method) {
 		return false;
 	}
 
+	@Override
 	public Type[] getSubtypes() {
 		return userType.getPropertyTypes();
 	}
@@ -84,10 +102,12 @@ public class CompositeCustomType extends AbstractType implements CompositeType, 
 		);
 	}
 
-	public Object[] getPropertyValues(Object component, SessionImplementor session) throws HibernateException {
+	@Override
+	public Object[] getPropertyValues(Object component, SharedSessionContractImplementor session) throws HibernateException {
 		return getPropertyValues( component, EntityMode.POJO );
 	}
 
+	@Override
 	public Object[] getPropertyValues(Object component, EntityMode entityMode) throws HibernateException {
 		int len = getSubtypes().length;
 		Object[] result = new Object[len];
@@ -97,13 +117,15 @@ public class CompositeCustomType extends AbstractType implements CompositeType, 
 		return result;
 	}
 
+	@Override
 	public void setPropertyValues(Object component, Object[] values, EntityMode entityMode) throws HibernateException {
 		for ( int i = 0; i < values.length; i++ ) {
 			userType.setPropertyValue( component, i, values[i] );
 		}
 	}
 
-	public Object getPropertyValue(Object component, int i, SessionImplementor session) throws HibernateException {
+	@Override
+	public Object getPropertyValue(Object component, int i, SharedSessionContractImplementor session) throws HibernateException {
 		return getPropertyValue( component, i );
 	}
 
@@ -111,53 +133,63 @@ public class CompositeCustomType extends AbstractType implements CompositeType, 
 		return userType.getPropertyValue( component, i );
 	}
 
+	@Override
 	public CascadeStyle getCascadeStyle(int i) {
 		return CascadeStyles.NONE;
 	}
 
+	@Override
 	public FetchMode getFetchMode(int i) {
 		return FetchMode.DEFAULT;
 	}
 
+	@Override
 	public boolean isComponentType() {
 		return true;
 	}
 
+	@Override
 	public Object deepCopy(Object value, SessionFactoryImplementor factory)
 			throws HibernateException {
 		return userType.deepCopy( value );
 	}
 
+	@Override
 	public Object assemble(
 			Serializable cached,
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Object owner) throws HibernateException {
 		return userType.assemble( cached, session, owner );
 	}
 
-	public Serializable disassemble(Object value, SessionImplementor session, Object owner) throws HibernateException {
+	@Override
+	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException {
 		return userType.disassemble( value, session );
 	}
 
+	@Override
 	public Object replace(
 			Object original,
 			Object target,
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Object owner,
 			Map copyCache)
 			throws HibernateException {
 		return userType.replace( original, target, session, owner );
 	}
 
+	@Override
 	public boolean isEqual(Object x, Object y)
 			throws HibernateException {
 		return userType.equals( x, y );
 	}
 
+	@Override
 	public int getHashCode(Object x) {
 		return userType.hashCode( x );
 	}
 
+	@Override
 	public int getColumnSpan(Mapping mapping) throws MappingException {
 		Type[] types = userType.getPropertyTypes();
 		int n = 0;
@@ -167,51 +199,44 @@ public class CompositeCustomType extends AbstractType implements CompositeType, 
 		return n;
 	}
 
-	public String getName() {
-		return name;
-	}
-
-	public Class getReturnedClass() {
-		return userType.returnedClass();
-	}
-
-	public boolean isMutable() {
-		return userType.isMutable();
-	}
-
+	@Override
 	public Object nullSafeGet(
 			ResultSet rs,
 			String columnName,
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Object owner) throws HibernateException, SQLException {
 		return userType.nullSafeGet( rs, new String[] {columnName}, session, owner );
 	}
 
+	@Override
 	public Object nullSafeGet(
 			ResultSet rs,
 			String[] names,
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Object owner) throws HibernateException, SQLException {
 		return userType.nullSafeGet( rs, names, session, owner );
 	}
 
+	@Override
 	public void nullSafeSet(
 			PreparedStatement st,
 			Object value,
 			int index,
-			SessionImplementor session) throws HibernateException, SQLException {
+			SharedSessionContractImplementor session) throws HibernateException, SQLException {
 		userType.nullSafeSet( st, value, index, session );
 	}
 
+	@Override
 	public void nullSafeSet(
 			PreparedStatement st,
 			Object value,
 			int index,
 			boolean[] settable,
-			SessionImplementor session) throws HibernateException, SQLException {
+			SharedSessionContractImplementor session) throws HibernateException, SQLException {
 		userType.nullSafeSet( st, value, index, session );
 	}
 
+	@Override
 	public int[] sqlTypes(Mapping mapping) throws MappingException {
 		int[] result = new int[getColumnSpan( mapping )];
 		int n = 0;
@@ -249,6 +274,7 @@ public class CompositeCustomType extends AbstractType implements CompositeType, 
 		return sizes;
 	}
 
+	@Override
 	public String toLoggableString(Object value, SessionFactoryImplementor factory) throws HibernateException {
 		if ( value == null ) {
 			return "null";
@@ -261,10 +287,12 @@ public class CompositeCustomType extends AbstractType implements CompositeType, 
 		}
 	}
 
+	@Override
 	public boolean[] getPropertyNullability() {
 		return null;
 	}
 
+	@Override
 	public boolean[] toColumnNullness(Object value, Mapping mapping) {
 		boolean[] result = new boolean[getColumnSpan( mapping )];
 		if ( value == null ) {
@@ -281,11 +309,13 @@ public class CompositeCustomType extends AbstractType implements CompositeType, 
 		return result;
 	}
 
-	public boolean isDirty(Object old, Object current, boolean[] checkable, SessionImplementor session)
+	@Override
+	public boolean isDirty(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session)
 			throws HibernateException {
 		return isDirty( old, current, session );
 	}
 
+	@Override
 	public boolean isEmbedded() {
 		return false;
 	}

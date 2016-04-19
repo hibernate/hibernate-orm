@@ -35,71 +35,72 @@ import javax.persistence.criteria.Selection;
 import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
 
+import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.jpa.criteria.expression.BinaryArithmeticOperation;
-import org.hibernate.jpa.criteria.expression.CoalesceExpression;
-import org.hibernate.jpa.criteria.expression.CompoundSelectionImpl;
-import org.hibernate.jpa.criteria.expression.ConcatExpression;
-import org.hibernate.jpa.criteria.expression.LiteralExpression;
-import org.hibernate.jpa.criteria.expression.NullLiteralExpression;
-import org.hibernate.jpa.criteria.expression.NullifExpression;
-import org.hibernate.jpa.criteria.expression.ParameterExpressionImpl;
-import org.hibernate.jpa.criteria.expression.SearchedCaseExpression;
-import org.hibernate.jpa.criteria.expression.SimpleCaseExpression;
-import org.hibernate.jpa.criteria.expression.SizeOfCollectionExpression;
-import org.hibernate.jpa.criteria.expression.SubqueryComparisonModifierExpression;
-import org.hibernate.jpa.criteria.expression.UnaryArithmeticOperation;
-import org.hibernate.jpa.criteria.expression.function.AbsFunction;
-import org.hibernate.jpa.criteria.expression.function.AggregationFunction;
-import org.hibernate.jpa.criteria.expression.function.BasicFunctionExpression;
-import org.hibernate.jpa.criteria.expression.function.CurrentDateFunction;
-import org.hibernate.jpa.criteria.expression.function.CurrentTimeFunction;
-import org.hibernate.jpa.criteria.expression.function.CurrentTimestampFunction;
-import org.hibernate.jpa.criteria.expression.function.LengthFunction;
-import org.hibernate.jpa.criteria.expression.function.LocateFunction;
-import org.hibernate.jpa.criteria.expression.function.LowerFunction;
-import org.hibernate.jpa.criteria.expression.function.ParameterizedFunctionExpression;
-import org.hibernate.jpa.criteria.expression.function.SqrtFunction;
-import org.hibernate.jpa.criteria.expression.function.SubstringFunction;
-import org.hibernate.jpa.criteria.expression.function.TrimFunction;
-import org.hibernate.jpa.criteria.expression.function.UpperFunction;
-import org.hibernate.jpa.criteria.path.PluralAttributePath;
-import org.hibernate.jpa.criteria.path.RootImpl;
-import org.hibernate.jpa.criteria.predicate.BetweenPredicate;
-import org.hibernate.jpa.criteria.predicate.BooleanAssertionPredicate;
-import org.hibernate.jpa.criteria.predicate.BooleanExpressionPredicate;
-import org.hibernate.jpa.criteria.predicate.BooleanStaticAssertionPredicate;
-import org.hibernate.jpa.criteria.predicate.ComparisonPredicate;
-import org.hibernate.jpa.criteria.predicate.ComparisonPredicate.ComparisonOperator;
-import org.hibernate.jpa.criteria.predicate.CompoundPredicate;
-import org.hibernate.jpa.criteria.predicate.ExistsPredicate;
-import org.hibernate.jpa.criteria.predicate.InPredicate;
-import org.hibernate.jpa.criteria.predicate.IsEmptyPredicate;
-import org.hibernate.jpa.criteria.predicate.LikePredicate;
-import org.hibernate.jpa.criteria.predicate.MemberOfPredicate;
-import org.hibernate.jpa.criteria.predicate.NullnessPredicate;
-import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.internal.expression.BinaryArithmeticOperation;
+import org.hibernate.query.criteria.internal.expression.CoalesceExpression;
+import org.hibernate.query.criteria.internal.expression.CompoundSelectionImpl;
+import org.hibernate.query.criteria.internal.expression.ConcatExpression;
+import org.hibernate.query.criteria.internal.expression.LiteralExpression;
+import org.hibernate.query.criteria.internal.expression.NullLiteralExpression;
+import org.hibernate.query.criteria.internal.expression.NullifExpression;
+import org.hibernate.query.criteria.internal.expression.ParameterExpressionImpl;
+import org.hibernate.query.criteria.internal.expression.SearchedCaseExpression;
+import org.hibernate.query.criteria.internal.expression.SimpleCaseExpression;
+import org.hibernate.query.criteria.internal.expression.SizeOfCollectionExpression;
+import org.hibernate.query.criteria.internal.expression.SubqueryComparisonModifierExpression;
+import org.hibernate.query.criteria.internal.expression.UnaryArithmeticOperation;
+import org.hibernate.query.criteria.internal.expression.function.AbsFunction;
+import org.hibernate.query.criteria.internal.expression.function.AggregationFunction;
+import org.hibernate.query.criteria.internal.expression.function.BasicFunctionExpression;
+import org.hibernate.query.criteria.internal.expression.function.CurrentDateFunction;
+import org.hibernate.query.criteria.internal.expression.function.CurrentTimeFunction;
+import org.hibernate.query.criteria.internal.expression.function.CurrentTimestampFunction;
+import org.hibernate.query.criteria.internal.expression.function.LengthFunction;
+import org.hibernate.query.criteria.internal.expression.function.LocateFunction;
+import org.hibernate.query.criteria.internal.expression.function.LowerFunction;
+import org.hibernate.query.criteria.internal.expression.function.ParameterizedFunctionExpression;
+import org.hibernate.query.criteria.internal.expression.function.SqrtFunction;
+import org.hibernate.query.criteria.internal.expression.function.SubstringFunction;
+import org.hibernate.query.criteria.internal.expression.function.TrimFunction;
+import org.hibernate.query.criteria.internal.expression.function.UpperFunction;
+import org.hibernate.query.criteria.internal.path.PluralAttributePath;
+import org.hibernate.query.criteria.internal.path.RootImpl;
+import org.hibernate.query.criteria.internal.predicate.BetweenPredicate;
+import org.hibernate.query.criteria.internal.predicate.BooleanAssertionPredicate;
+import org.hibernate.query.criteria.internal.predicate.BooleanExpressionPredicate;
+import org.hibernate.query.criteria.internal.predicate.BooleanStaticAssertionPredicate;
+import org.hibernate.query.criteria.internal.predicate.ComparisonPredicate;
+import org.hibernate.query.criteria.internal.predicate.ComparisonPredicate.ComparisonOperator;
+import org.hibernate.query.criteria.internal.predicate.CompoundPredicate;
+import org.hibernate.query.criteria.internal.predicate.ExistsPredicate;
+import org.hibernate.query.criteria.internal.predicate.InPredicate;
+import org.hibernate.query.criteria.internal.predicate.IsEmptyPredicate;
+import org.hibernate.query.criteria.internal.predicate.LikePredicate;
+import org.hibernate.query.criteria.internal.predicate.MemberOfPredicate;
+import org.hibernate.query.criteria.internal.predicate.NullnessPredicate;
 
 /**
  * Hibernate implementation of the JPA {@link CriteriaBuilder} contract.
  *
  * @author Steve Ebersole
  */
-public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
-	private final EntityManagerFactoryImpl entityManagerFactory;
+public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializable {
+	private final SessionFactoryImpl sessionFactory;
 
-	public CriteriaBuilderImpl(EntityManagerFactoryImpl entityManagerFactory) {
-		this.entityManagerFactory = entityManagerFactory;
+	public CriteriaBuilderImpl(SessionFactoryImpl sessionFactory) {
+		this.sessionFactory = sessionFactory;
 	}
 
 	/**
-	 * Provides protected access to the underlying {@link EntityManagerFactoryImpl}.
+	 * Provides protected access to the underlying {@link SessionFactoryImpl}.
 	 *
-	 * @return The underlying {@link EntityManagerFactoryImpl}
+	 * @return The underlying {@link SessionFactoryImpl}
 	 */
-	public  EntityManagerFactoryImpl getEntityManagerFactory() {
-		return entityManagerFactory;
+	public  SessionFactoryImpl getEntityManagerFactory() {
+		return sessionFactory;
 	}
 
 

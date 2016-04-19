@@ -8,7 +8,7 @@ package org.hibernate.type;
 
 import java.util.Comparator;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * Additional contract for types which may be used to version (and optimistic lock) data.
@@ -23,7 +23,7 @@ public interface VersionType<T> extends Type {
 	 * @param session The session from which this request originates.
 	 * @return an instance of the type
 	 */
-	public T seed(SessionImplementor session);
+	T seed(SharedSessionContractImplementor session);
 
 	/**
 	 * Increment the version.
@@ -32,12 +32,12 @@ public interface VersionType<T> extends Type {
 	 * @param current the current version
 	 * @return an instance of the type
 	 */
-	public T next(T current, SessionImplementor session);
+	T next(T current, SharedSessionContractImplementor session);
 
 	/**
 	 * Get a comparator for version values.
 	 *
 	 * @return The comparator to use to compare different version values.
 	 */
-	public Comparator<T> getComparator();
+	Comparator<T> getComparator();
 }

@@ -68,13 +68,13 @@ public interface ScrollableResults extends java.io.Closeable {
 	public boolean first();
 
 	/**
-	 * Go to a location just before first result,  This is the location of the cursor on a newly returned
+	 * Go to a location just beforeQuery first result,  This is the location of the cursor on a newly returned
 	 * scrollable result.
 	 */
 	public void beforeFirst();
 
 	/**
-	 * Go to a location just after the last result.
+	 * Go to a location just afterQuery the last result.
 	 */
 	public void afterLast();
 

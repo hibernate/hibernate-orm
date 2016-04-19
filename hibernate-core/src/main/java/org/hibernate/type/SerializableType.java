@@ -26,7 +26,7 @@ import org.hibernate.type.descriptor.sql.VarbinaryTypeDescriptor;
  * @author Steve Ebersole
  */
 public class SerializableType<T extends Serializable> extends AbstractSingleColumnStandardBasicType<T> {
-	public static final SerializableType<Serializable> INSTANCE = new SerializableType<Serializable>( Serializable.class );
+	public static final SerializableType<Serializable> INSTANCE = new SerializableType<>( Serializable.class );
 
 	private final Class<T> serializableClass;
 

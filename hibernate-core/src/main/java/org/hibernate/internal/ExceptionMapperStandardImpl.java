@@ -1,3 +1,9 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
 package org.hibernate.internal;
 
 import javax.transaction.SystemException;
@@ -10,6 +16,8 @@ import org.hibernate.resource.transaction.backend.jta.internal.synchronization.E
  * @author Steve Ebersole
  */
 public class ExceptionMapperStandardImpl implements ExceptionMapper {
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( ExceptionMapperStandardImpl.class );
+
 	public static final ExceptionMapper INSTANCE = new ExceptionMapperStandardImpl();
 
 	@Override
@@ -28,7 +36,7 @@ public class ExceptionMapperStandardImpl implements ExceptionMapper {
 			String message,
 			RuntimeException failure,
 			SessionImplementor session) {
-		SessionImpl.log.unableToPerformManagedFlush( failure.getMessage() );
+		log.unableToPerformManagedFlush( failure.getMessage() );
 		return failure;
 	}
 }

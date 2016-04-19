@@ -8,7 +8,6 @@ package org.hibernate.boot.internal;
 
 import java.util.Map;
 
-import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityMode;
@@ -54,6 +53,8 @@ public interface SessionFactoryOptionsState {
 	boolean isStatisticsEnabled();
 
 	Interceptor getInterceptor();
+
+	Class<? extends Interceptor> getStatelessInterceptorImplementor();
 
 	StatementInspector getStatementInspector();
 
@@ -150,5 +151,4 @@ public interface SessionFactoryOptionsState {
 	Map<String, SQLFunction> getCustomSqlFunctionMap();
 
 	boolean isPreferUserTransaction();
-
 }

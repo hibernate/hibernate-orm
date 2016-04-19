@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.test.hql;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -13,14 +14,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import antlr.RecognitionException;
-import antlr.collections.AST;
-import org.junit.Test;
-
 import org.hibernate.QueryException;
+import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -52,14 +49,19 @@ import org.hibernate.hql.internal.ast.tree.SelectClause;
 import org.hibernate.hql.internal.ast.util.ASTUtil;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.hql.spi.QueryTranslatorFactory;
+import org.hibernate.type.CalendarDateType;
+import org.hibernate.type.DoubleType;
+import org.hibernate.type.StringType;
+
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.type.CalendarDateType;
-import org.hibernate.type.DoubleType;
-import org.hibernate.type.StringType;
+import org.junit.Test;
+
+import antlr.RecognitionException;
+import antlr.collections.AST;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -1451,7 +1453,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 
 	@Test
 	public void testCorrelatedSubselect1() throws Exception {
-		// The old translator generates the theta join before the condition in the sub query.
+		// The old translator generates the theta join beforeQuery the condition in the sub query.
 		// TODO: Decide if we want to bother generating the theta join in the same order (non simple).
 		assertTranslation( "from Animal a where exists (from a.offspring o where o.bodyWeight>10)" );
 	}

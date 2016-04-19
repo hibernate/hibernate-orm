@@ -7,16 +7,11 @@
 package org.hibernate.test.resource.transaction.jta;
 
 import javax.transaction.Status;
-import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
 
-import org.hibernate.HibernateException;
 import org.hibernate.TransactionException;
-import org.hibernate.resource.transaction.TransactionCoordinator;
-import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
-import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.SynchronizationCallbackCoordinatorTrackingImpl;
@@ -56,7 +51,7 @@ public abstract class AbstractBasicJtaTestScenarios {
 	@Before
 	@After
 	public void resetJtaPlatform() throws SystemException {
-		// make sure the JTA platform is reset back to no active transactions before and after each test
+		// make sure the JTA platform is reset back to no active transactions beforeQuery and afterQuery each test
 		JtaPlatformStandardTestingImpl.INSTANCE.reset();
 	}
 

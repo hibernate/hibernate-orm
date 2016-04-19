@@ -7,6 +7,45 @@
 
 package org.hibernate.test.cache.infinispan.stress;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.NavigableMap;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import javax.transaction.RollbackException;
+import javax.transaction.Status;
+import javax.transaction.TransactionManager;
+
 import org.hibernate.LockMode;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.PessimisticLockException;
@@ -20,8 +59,8 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.cache.infinispan.access.InvalidationCacheAccessDelegate;
+import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.RegionAccessStrategy;
@@ -38,13 +77,21 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
+
+import org.hibernate.testing.jta.JtaAwareConnectionProviderImpl;
+import org.hibernate.testing.jta.TestingJtaPlatformImpl;
+import org.hibernate.testing.junit4.CustomParameterized;
 import org.hibernate.test.cache.infinispan.stress.entities.Address;
 import org.hibernate.test.cache.infinispan.stress.entities.Family;
 import org.hibernate.test.cache.infinispan.stress.entities.Person;
 import org.hibernate.test.cache.infinispan.util.TestInfinispanRegionFactory;
-import org.hibernate.testing.jta.JtaAwareConnectionProviderImpl;
-import org.hibernate.testing.jta.TestingJtaPlatformImpl;
-import org.hibernate.testing.junit4.CustomParameterized;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
 import org.infinispan.commands.VisitableCommand;
 import org.infinispan.commands.tx.CommitCommand;
 import org.infinispan.commands.tx.RollbackCommand;
@@ -55,30 +102,6 @@ import org.infinispan.configuration.cache.InterceptorConfiguration;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.interceptors.base.BaseCustomInterceptor;
 import org.infinispan.remoting.RemoteException;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
-import javax.transaction.RollbackException;
-import javax.transaction.Status;
-import javax.transaction.TransactionManager;
-
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.nio.file.Files;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /**
  * Tries to execute random operations for {@link #EXECUTION_TIME} and then verify the log for correctness.
@@ -467,7 +490,7 @@ public abstract class CorrectnessTestCase {
       List<DelayedInvalidators> delayed = new LinkedList<>();
       for (int i = 0; i < sessionFactories.length; i++) {
          SessionFactoryImplementor sfi = (SessionFactoryImplementor) sessionFactories[i];
-         for (Object regionName : sfi.getAllSecondLevelCacheRegions().keySet()) {
+         for (Object regionName : sfi.getCache().getSecondLevelCacheRegionNames()) {
             PutFromLoadValidator validator = getPutFromLoadValidator(sfi, (String) regionName);
             if (validator == null) {
                log.warn("No validator for " + regionName);
@@ -665,7 +688,7 @@ public abstract class CorrectnessTestCase {
                throw e;
             }
          }
-         // cannot close before XA commit since force increment requires open connection
+         // cannot close beforeQuery XA commit since force increment requires open connection
          // s.close();
       }
 

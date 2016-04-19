@@ -8,7 +8,6 @@ package org.hibernate.jpa.boot.spi;
 
 import java.util.Map;
 
-import org.hibernate.ejb.HibernatePersistence;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 
@@ -25,8 +24,7 @@ public final class ProviderChecker {
 
 	@SuppressWarnings("deprecation")
 	private static String[] HIBERNATE_PROVIDER_NAMES = new String[] {
-			HibernatePersistenceProvider.class.getName(),
-			HibernatePersistence.class.getName()
+			HibernatePersistenceProvider.class.getName()
 	};
 
 	/**

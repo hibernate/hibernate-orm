@@ -6,14 +6,13 @@
  */
 package org.hibernate.hql.spi.id;
 
-import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.HibernateException;
-import org.hibernate.JDBCException;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.SqlGenerator;
 import org.hibernate.internal.util.StringHelper;
@@ -60,10 +59,6 @@ public abstract class AbstractTableBasedBulkIdHandler {
 
 	public abstract Queryable getTargetedQueryable();
 
-	protected JDBCException convert(SQLException e, String message, String sql) {
-		throw factory().getSQLExceptionHelper().convert( e, message, sql );
-	}
-
 	protected static class ProcessedWhereClause {
 		public static final ProcessedWhereClause NO_WHERE_CLAUSE = new ProcessedWhereClause();
 
@@ -71,7 +66,7 @@ public abstract class AbstractTableBasedBulkIdHandler {
 		private final List<ParameterSpecification> idSelectParameterSpecifications;
 
 		private ProcessedWhereClause() {
-			this( "", Collections.<ParameterSpecification>emptyList() );
+			this( "", Collections.emptyList() );
 		}
 
 		public ProcessedWhereClause(String userWhereClauseFragment, List<ParameterSpecification> idSelectParameterSpecifications) {
@@ -132,8 +127,10 @@ public abstract class AbstractTableBasedBulkIdHandler {
 			IdTableInfo idTableInfo,
 			ProcessedWhereClause whereClause) {
 
-		Select select = new Select( sessionFactory.getDialect() );
-		SelectValues selectClause = new SelectValues( sessionFactory.getDialect() ).addColumns(
+		final Dialect dialect = sessionFactory.getJdbcServices().getJdbcEnvironment().getDialect();
+
+		final Select select = new Select( dialect );
+		final SelectValues selectClause = new SelectValues( dialect ).addColumns(
 				tableAlias,
 				getTargetedQueryable().getIdentifierColumnNames(),
 				getTargetedQueryable().getIdentifierColumnNames()
@@ -164,8 +161,8 @@ public abstract class AbstractTableBasedBulkIdHandler {
 		}
 		select.setWhereClause( whereJoinFragment + whereClause.getUserWhereClauseFragment() );
 
-		InsertSelect insert = new InsertSelect( sessionFactory.getDialect() );
-		if ( sessionFactory.getSettings().isCommentsEnabled() ) {
+		InsertSelect insert = new InsertSelect( dialect );
+		if ( sessionFactory.getSessionFactoryOptions().isCommentsEnabled() ) {
 			insert.setComment( "insert-select for " + getTargetedQueryable().getEntityName() + " ids" );
 		}
 		insert.setTableName( idTableInfo.getQualifiedIdTableName() );
@@ -188,9 +185,9 @@ public abstract class AbstractTableBasedBulkIdHandler {
 				" from " + idTableInfo.getQualifiedIdTableName();
 	}
 
-	protected void prepareForUse(Queryable persister, SessionImplementor session) {
+	protected void prepareForUse(Queryable persister, SharedSessionContractImplementor session) {
 	}
 
-	protected void releaseFromUse(Queryable persister, SessionImplementor session) {
+	protected void releaseFromUse(Queryable persister, SharedSessionContractImplementor session) {
 	}
 }

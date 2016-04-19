@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
@@ -50,7 +50,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	 *
 	 * @param session The session to which this map will belong.
 	 */
-	public PersistentMap(SessionImplementor session) {
+	public PersistentMap(SharedSessionContractImplementor session) {
 		super( session );
 	}
 
@@ -61,7 +61,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	 * @param session The session to which this map will belong.
 	 * @param map The underlying map data.
 	 */
-	public PersistentMap(SessionImplementor session, Map map) {
+	public PersistentMap(SharedSessionContractImplementor session, Map map) {
 		super( session );
 		this.map = map;
 		setInitialized();
@@ -264,7 +264,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 		if ( element != null ) {
 			final Object index = persister.readIndex( rs, descriptor.getSuffixedIndexAliases(), getSession() );
 			if ( loadingEntries == null ) {
-				loadingEntries = new ArrayList<Object[]>();
+				loadingEntries = new ArrayList<>();
 			}
 			loadingEntries.add( new Object[] { index, element } );
 		}

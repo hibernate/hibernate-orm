@@ -5,9 +5,10 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.id.uuid;
+
 import java.util.UUID;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.UUIDGenerationStrategy;
 
 /**
@@ -31,7 +32,7 @@ public class StandardRandomStrategy implements UUIDGenerationStrategy {
 	 * Delegates to {@link UUID#randomUUID()}
 	 */
 	@Override
-	public UUID generateUUID(SessionImplementor session) {
+	public UUID generateUUID(SharedSessionContractImplementor session) {
 		return UUID.randomUUID();
 	}
 }

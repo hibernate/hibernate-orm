@@ -9,18 +9,22 @@ package org.hibernate.jpa;
 import javax.persistence.EntityManager;
 
 import org.hibernate.Session;
+import org.hibernate.query.QueryProducer;
 
 /**
  * Additional contract for Hibernate implementations of {@link javax.persistence.EntityManager} providing access to various Hibernate
  * specific functionality.
  *
  * @author Gavin King
+ *
+ * @deprecated (snce 5.2) Use Session (or SessionImplementor), as it now extends EntityManager directly
  */
-public interface HibernateEntityManager extends EntityManager {
+@Deprecated
+public interface HibernateEntityManager extends EntityManager, QueryProducer {
 	/**
 	 * Retrieve a reference to the Hibernate {@link org.hibernate.Session} used by this {@link javax.persistence.EntityManager}.
 	 *
 	 * @return The session
 	 */
-	public Session getSession();
+	Session getSession();
 }

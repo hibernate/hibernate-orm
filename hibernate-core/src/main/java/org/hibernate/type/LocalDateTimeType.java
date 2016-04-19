@@ -12,7 +12,7 @@ import java.util.Comparator;
 import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.type.descriptor.java.LocalDateTimeJavaDescriptor;
 import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
@@ -52,12 +52,12 @@ public class LocalDateTimeType
 	}
 
 	@Override
-	public LocalDateTime seed(SessionImplementor session) {
+	public LocalDateTime seed(SharedSessionContractImplementor session) {
 		return LocalDateTime.now();
 	}
 
 	@Override
-	public LocalDateTime next(LocalDateTime current, SessionImplementor session) {
+	public LocalDateTime next(LocalDateTime current, SharedSessionContractImplementor session) {
 		return LocalDateTime.now();
 	}
 

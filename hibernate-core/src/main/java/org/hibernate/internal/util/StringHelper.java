@@ -6,20 +6,18 @@
  */
 package org.hibernate.internal.util;
 
-import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.collections.ArrayHelper;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import java.util.StringTokenizer;
+
+import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 public final class StringHelper {
 
@@ -332,7 +330,7 @@ public final class StringHelper {
 		if ( name == null || !name.startsWith( qualifierBase ) ) {
 			return name;
 		}
-		return name.substring( qualifierBase.length() + 1 ); // +1 to start after the following '.'
+		return name.substring( qualifierBase.length() + 1 ); // +1 to start afterQuery the following '.'
 	}
 
 	/**

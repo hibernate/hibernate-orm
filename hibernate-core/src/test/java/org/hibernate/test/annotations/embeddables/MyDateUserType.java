@@ -13,7 +13,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.UserType;
 
 /**
@@ -48,18 +48,20 @@ public class MyDateUserType implements UserType {
 	}
 
 	@Override
-	public MyDate nullSafeGet(ResultSet rs, String[] names,
-			SessionImplementor session, Object owner)
-			throws HibernateException, SQLException {
-		
-		MyDate result = new MyDate(rs.getDate(rs.findColumn(names[0])));
-		return result;
+	public MyDate nullSafeGet(
+			ResultSet rs,
+			String[] names,
+			SharedSessionContractImplementor session,
+			Object owner) throws HibernateException, SQLException {
+		return new MyDate(rs.getDate(rs.findColumn(names[0])));
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, Object value, int index,
-			SessionImplementor session) throws HibernateException, SQLException {
-		
+	public void nullSafeSet(
+			PreparedStatement st,
+			Object value,
+			int index,
+			SharedSessionContractImplementor session) throws HibernateException, SQLException {
 		st.setDate(index, new java.sql.Date(((MyDate)value).getDate().getTime()));
 	}
 

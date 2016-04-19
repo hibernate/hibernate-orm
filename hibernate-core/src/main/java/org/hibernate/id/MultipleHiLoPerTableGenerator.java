@@ -28,7 +28,7 @@ import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionEventListenerManager;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.enhanced.AccessCallback;
 import org.hibernate.id.enhanced.LegacyHiLoAlgorithmOptimizer;
 import org.hibernate.internal.CoreLogging;
@@ -69,7 +69,7 @@ import org.hibernate.type.Type;
  * <li>value_column: hi value column name(default <tt>sequence_next_hi_value</tt>)</li>
  * <li>primary_key_value: key value for the current entity (default to the entity's primary table name)</li>
  * <li>primary_key_length: length of the key column in DB represented as a varchar (default to 255)</li>
- * <li>max_lo: max low value before increasing hi (default to Short.MAX_VALUE)</li>
+ * <li>max_lo: max low value beforeQuery increasing hi (default to Short.MAX_VALUE)</li>
  * </ul>
  *
  * @author Emmanuel Bernard
@@ -110,7 +110,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 	private Class returnClass;
 	private int keySize;
 
-	public synchronized Serializable generate(final SessionImplementor session, Object obj) {
+	public synchronized Serializable generate(final SharedSessionContractImplementor session, Object obj) {
 		DeprecationLogger.DEPRECATION_LOGGER.deprecatedTableGenerator( getClass().getName() );
 
 		final SqlStatementLogger statementLogger = session.getFactory().getServiceRegistry()

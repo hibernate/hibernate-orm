@@ -10,9 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.JDBCException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.AbstractSessionImpl;
 import org.hibernate.type.UUIDCharType;
 
@@ -31,14 +29,14 @@ public class Helper {
 	}
 
 
-	public void bindSessionIdentifier(PreparedStatement ps, SessionImplementor session, int position) throws SQLException {
+	public void bindSessionIdentifier(PreparedStatement ps, SharedSessionContractImplementor session, int position) throws SQLException {
 		if ( ! AbstractSessionImpl.class.isInstance( session ) ) {
 			throw new HibernateException( "Only available on SessionImpl instances" );
 		}
-		UUIDCharType.INSTANCE.set( ps, ( (AbstractSessionImpl) session ).getSessionIdentifier(), position, session );
+		UUIDCharType.INSTANCE.set( ps, session.getSessionIdentifier(), position, session );
 	}
 
-	public void cleanUpRows(String tableName, SessionImplementor session) {
+	public void cleanUpRows(String tableName, SharedSessionContractImplementor session) {
 		final String sql = "delete from " + tableName + " where " + SESSION_ID_COLUMN_NAME + "=?";
 		try {
 			PreparedStatement ps = null;
@@ -50,7 +48,7 @@ public class Helper {
 			finally {
 				if ( ps != null ) {
 					try {
-						session.getJdbcCoordinator().getResourceRegistry().release( ps );
+						session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( ps );
 					}
 					catch( Throwable ignore ) {
 						// ignore
@@ -59,11 +57,7 @@ public class Helper {
 			}
 		}
 		catch (SQLException e) {
-			throw convert( session.getFactory(), e, "Unable to clean up id table [" + tableName + "]", sql );
+			throw session.getJdbcServices().getSqlExceptionHelper().convert( e, "Unable to clean up id table [" + tableName + "]", sql );
 		}
-	}
-
-	public JDBCException convert(SessionFactoryImplementor factory, SQLException e, String message, String sql) {
-		throw factory.getSQLExceptionHelper().convert( e, message, sql );
 	}
 }

@@ -14,7 +14,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.uuid.StandardRandomStrategy;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -97,7 +97,7 @@ public class UUIDGenerator implements IdentifierGenerator, Configurable {
 		}
 	}
 
-	public Serializable generate(SessionImplementor session, Object object) throws HibernateException {
+	public Serializable generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
 		return valueTransformer.transform( strategy.generateUUID( session ) );
 	}
 }

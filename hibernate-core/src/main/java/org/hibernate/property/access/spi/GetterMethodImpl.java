@@ -14,7 +14,7 @@ import java.lang.reflect.Method;
 import java.util.Map;
 
 import org.hibernate.PropertyAccessException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
@@ -72,7 +72,7 @@ public class GetterMethodImpl implements Getter {
 	}
 
 	@Override
-	public Object getForInsert(Object owner, Map mergeMap, SessionImplementor session) {
+	public Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
 		return get( owner );
 	}
 

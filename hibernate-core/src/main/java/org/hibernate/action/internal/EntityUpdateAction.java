@@ -19,7 +19,7 @@ import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.EventType;
@@ -72,7 +72,7 @@ public final class EntityUpdateAction extends EntityAction {
 			final Object instance,
 			final Object rowId,
 			final EntityPersister persister,
-			final SessionImplementor session) {
+			final SharedSessionContractImplementor session) {
 		super( session, id, instance, persister );
 		this.state = state;
 		this.previousState = previousState;
@@ -95,7 +95,7 @@ public final class EntityUpdateAction extends EntityAction {
 	private Object[] determinePreviousNaturalIdValues(
 			EntityPersister persister,
 			Object[] previousState,
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Serializable id) {
 		if ( ! persister.hasNaturalIdentifier() ) {
 			return null;
@@ -112,7 +112,7 @@ public final class EntityUpdateAction extends EntityAction {
 	public void execute() throws HibernateException {
 		final Serializable id = getId();
 		final EntityPersister persister = getPersister();
-		final SessionImplementor session = getSession();
+		final SharedSessionContractImplementor session = getSession();
 		final Object instance = getInstance();
 
 		final boolean veto = preUpdate();
@@ -195,7 +195,7 @@ public final class EntityUpdateAction extends EntityAction {
 
 				final boolean put = cacheUpdate( persister, previousVersion, ck );
 				if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-					factory.getStatisticsImplementor().secondLevelCachePut( getPersister().getCacheAccessStrategy().getRegion().getName() );
+					factory.getStatistics().secondLevelCachePut( getPersister().getCacheAccessStrategy().getRegion().getName() );
 				}
 			}
 		}
@@ -211,12 +211,12 @@ public final class EntityUpdateAction extends EntityAction {
 		postUpdate();
 
 		if ( factory.getStatistics().isStatisticsEnabled() && !veto ) {
-			factory.getStatisticsImplementor().updateEntity( getPersister().getEntityName() );
+			factory.getStatistics().updateEntity( getPersister().getEntityName() );
 		}
 	}
 
 	private boolean cacheUpdate(EntityPersister persister, Object previousVersion, Object ck) {
-		final SessionImplementor session = getSession();
+		final SharedSessionContractImplementor session = getSession();
 		try {
 			session.getEventListenerManager().cachePutStart();
 			return persister.getCacheAccessStrategy().update( session, ck, cacheEntry, nextVersion, previousVersion );
@@ -308,7 +308,7 @@ public final class EntityUpdateAction extends EntityAction {
 	}
 
 	@Override
-	public void doAfterTransactionCompletion(boolean success, SessionImplementor session) throws CacheException {
+	public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) throws CacheException {
 		final EntityPersister persister = getPersister();
 		if ( persister.hasCache() ) {
 			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
@@ -324,7 +324,7 @@ public final class EntityUpdateAction extends EntityAction {
 				final boolean put = cacheAfterUpdate( cache, ck );
 
 				if ( put && getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
-					getSession().getFactory().getStatisticsImplementor().secondLevelCachePut( cache.getRegion().getName() );
+					getSession().getFactory().getStatistics().secondLevelCachePut( cache.getRegion().getName() );
 				}
 			}
 			else {
@@ -335,7 +335,7 @@ public final class EntityUpdateAction extends EntityAction {
 	}
 
 	private boolean cacheAfterUpdate(EntityRegionAccessStrategy cache, Object ck) {
-		final SessionImplementor session = getSession();
+		final SharedSessionContractImplementor session = getSession();
 		SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
 		try {
 			eventListenerManager.cachePutStart();

@@ -11,16 +11,16 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.persistence.AttributeNode;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphNodeImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 import org.hibernate.jpa.spi.HibernateEntityManagerFactoryAware;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -31,18 +31,20 @@ import org.jboss.logging.Logger;
 public abstract class AbstractGraphNode<T> implements GraphNodeImplementor, HibernateEntityManagerFactoryAware {
 	private static final Logger log = Logger.getLogger( AbstractGraphNode.class );
 
-	private final EntityManagerFactoryImpl entityManagerFactory;
+	private final SessionFactoryImplementor sessionFactory;
 	private final boolean mutable;
 
 	private Map<String, AttributeNodeImplementor<?>> attributeNodeMap;
 
-	protected AbstractGraphNode(EntityManagerFactoryImpl entityManagerFactory, boolean mutable) {
-		this.entityManagerFactory = entityManagerFactory;
+	@SuppressWarnings("WeakerAccess")
+	protected AbstractGraphNode(SessionFactoryImplementor sessionFactory, boolean mutable) {
+		this.sessionFactory = sessionFactory;
 		this.mutable = mutable;
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	protected AbstractGraphNode(AbstractGraphNode<T> original, boolean mutable) {
-		this.entityManagerFactory = original.entityManagerFactory;
+		this.sessionFactory = original.sessionFactory;
 		this.mutable = mutable;
 		this.attributeNodeMap = makeSafeMapCopy( original.attributeNodeMap );
 	}
@@ -53,7 +55,7 @@ public abstract class AbstractGraphNode<T> implements GraphNodeImplementor, Hibe
 		}
 
 		final int properSize = CollectionHelper.determineProperSizing( attributeNodeMap );
-		final HashMap<String,AttributeNodeImplementor<?>> copy = new HashMap<String,AttributeNodeImplementor<?>>( properSize );
+		final HashMap<String,AttributeNodeImplementor<?>> copy = new HashMap<>( properSize );
 		for ( Map.Entry<String,AttributeNodeImplementor<?>> attributeNodeEntry : attributeNodeMap.entrySet() ) {
 			copy.put(
 					attributeNodeEntry.getKey(),
@@ -65,8 +67,8 @@ public abstract class AbstractGraphNode<T> implements GraphNodeImplementor, Hibe
 
 
 	@Override
-	public EntityManagerFactoryImpl getFactory() {
-		return entityManagerFactory;
+	public SessionFactoryImplementor getFactory() {
+		return sessionFactory;
 	}
 
 	@Override
@@ -75,7 +77,7 @@ public abstract class AbstractGraphNode<T> implements GraphNodeImplementor, Hibe
 			return Collections.emptyList();
 		}
 		else {
-			return new ArrayList<AttributeNodeImplementor<?>>( attributeNodeMap.values() );
+			return new ArrayList<>( attributeNodeMap.values() );
 		}
 	}
 
@@ -85,7 +87,7 @@ public abstract class AbstractGraphNode<T> implements GraphNodeImplementor, Hibe
 			return Collections.emptyList();
 		}
 		else {
-			return new ArrayList<AttributeNode<?>>( attributeNodeMap.values() );
+			return new ArrayList<>( attributeNodeMap.values() );
 		}
 	}
 
@@ -106,17 +108,19 @@ public abstract class AbstractGraphNode<T> implements GraphNodeImplementor, Hibe
 
 	protected abstract Attribute<T,?> resolveAttribute(String attributeName);
 
+	@SuppressWarnings("WeakerAccess")
 	protected <X> AttributeNodeImpl<X> buildAttributeNode(Attribute<T, X> attribute) {
-		return new AttributeNodeImpl<X>( entityManagerFactory, getManagedType(), attribute );
+		return new AttributeNodeImpl<>( sessionFactory, getManagedType(), attribute );
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	protected AttributeNodeImpl addAttributeNode(AttributeNodeImpl attributeNode) {
 		if ( ! mutable ) {
 			throw new IllegalStateException( "Entity/sub graph is not mutable" );
 		}
 
 		if ( attributeNodeMap == null ) {
-			attributeNodeMap = new HashMap<String, AttributeNodeImplementor<?>>();
+			attributeNodeMap = new HashMap<>();
 		}
 		else {
 			final AttributeNode old = attributeNodeMap.get( attributeNode.getRegistrationName() );
@@ -135,6 +139,7 @@ public abstract class AbstractGraphNode<T> implements GraphNodeImplementor, Hibe
 		return attributeNode;
 	}
 
+	@SuppressWarnings("unchecked")
 	protected void addAttributeNodes(Attribute<T, ?>... attributes) {
 		for ( Attribute attribute : attributes ) {
 			addAttribute( attribute );

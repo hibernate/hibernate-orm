@@ -8,7 +8,6 @@ package org.hibernate.boot.internal;
 
 import java.util.Map;
 
-import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityMode;
@@ -59,6 +58,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	// Statistics/Interceptor/observers
 	private final boolean statisticsEnabled;
 	private final Interceptor interceptor;
+	private Class<? extends Interceptor> statelessInterceptorClass;
 	private final StatementInspector statementInspector;
 	private final SessionFactoryObserver[] sessionFactoryObserverList;
 	private final BaselineSessionEventsListenerBuilder baselineSessionEventsListenerBuilder;	// not exposed on builder atm
@@ -133,6 +133,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 
 		this.statisticsEnabled = state.isStatisticsEnabled();
 		this.interceptor = state.getInterceptor();
+		this.statelessInterceptorClass = state.getStatelessInterceptorImplementor();
 		this.statementInspector = state.getStatementInspector();
 		this.sessionFactoryObserverList = state.getSessionFactoryObservers();
 		this.baselineSessionEventsListenerBuilder = state.getBaselineSessionEventsListenerBuilder();
@@ -227,6 +228,11 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public Interceptor getInterceptor() {
 		return interceptor;
+	}
+
+	@Override
+	public Class<? extends Interceptor> getStatelessInterceptorImplementor() {
+		return statelessInterceptorClass;
 	}
 
 	@Override

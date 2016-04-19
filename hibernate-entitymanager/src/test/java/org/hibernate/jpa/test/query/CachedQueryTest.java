@@ -12,16 +12,16 @@ import javax.persistence.EntityManager;
 import javax.persistence.SharedCacheMode;
 import javax.persistence.TypedQuery;
 
-import org.junit.Test;
-
 import org.hibernate.cfg.Environment;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.HibernateEntityManagerFactory;
-import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 import org.hibernate.jpa.QueryHints;
+import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.stat.Statistics;
+
 import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
@@ -114,7 +114,7 @@ public class CachedQueryTest extends BaseEntityManagerFunctionalTestCase {
 		assertEquals( 1, stats.getQueryCacheHitCount() );
 		assertEquals( 0, stats.getQueryCacheMissCount() );
 		assertEquals( 0, stats.getQueryCachePutCount() );
-		// since entity regions were evicted, the 10 entities are not found, and are re-put after loading
+		// since entity regions were evicted, the 10 entities are not found, and are re-put afterQuery loading
 		// as each entity ID is read from the query cache, Hibernate will look the entity up in the
 		// cache and will not find it; that's why the "miss" and "put" counts are both 10.
 		assertEquals( 0, stats.getSecondLevelCacheHitCount() );

@@ -9,7 +9,8 @@ package org.hibernate.testing.cache;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.RegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -24,17 +25,17 @@ abstract class BaseRegionAccessStrategy implements RegionAccessStrategy {
 	protected abstract boolean isDefaultMinimalPutOverride();
 
 	@Override
-	public Object get(SessionImplementor session, Object key, long txTimestamp) throws CacheException {
+	public Object get(SharedSessionContractImplementor session, Object key, long txTimestamp) throws CacheException {
 		return getInternalRegion().get( session, key );
 	}
 
 	@Override
-	public boolean putFromLoad(SessionImplementor session, Object key, Object value, long txTimestamp, Object version) throws CacheException {
+	public boolean putFromLoad(SharedSessionContractImplementor session, Object key, Object value, long txTimestamp, Object version) throws CacheException {
 		return putFromLoad(session, key, value, txTimestamp, version, isDefaultMinimalPutOverride() );
 	}
 
 	@Override
-	public boolean putFromLoad(SessionImplementor session, Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
+	public boolean putFromLoad(SharedSessionContractImplementor session, Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
 			throws CacheException {
 
 		if ( key == null || value == null ) {
@@ -75,23 +76,22 @@ abstract class BaseRegionAccessStrategy implements RegionAccessStrategy {
 	}
 
 	@Override
-	public SoftLock lockItem(SessionImplementor session, Object key, Object version) throws CacheException {
+	public SoftLock lockItem(SharedSessionContractImplementor session, Object key, Object version) throws CacheException {
 		return null;
 	}
 
 	@Override
-	public void unlockItem(SessionImplementor session, Object key, SoftLock lock) throws CacheException {
+	public void unlockItem(SharedSessionContractImplementor session, Object key, SoftLock lock) throws CacheException {
 	}
 
 
 	/**
 	 * A no-op since this is an asynchronous cache access strategy.
 	 *
-	 * @see RegionAccessStrategy#remove(SessionImplementor, Object)
-	 * @see RegionAccessStrategy#remove(SessionImplementor, Object)
+	 * @see RegionAccessStrategy#remove(SharedSessionContractImplementor, Object)
 	 */
 	@Override
-	public void remove(SessionImplementor session, Object key) throws CacheException {
+	public void remove(SharedSessionContractImplementor session, Object key) throws CacheException {
 	}
 
 	/**

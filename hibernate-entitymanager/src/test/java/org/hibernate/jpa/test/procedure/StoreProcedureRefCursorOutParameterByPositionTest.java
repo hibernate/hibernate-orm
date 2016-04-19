@@ -6,6 +6,9 @@
  */
 package org.hibernate.jpa.test.procedure;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
@@ -16,9 +19,6 @@ import javax.persistence.ParameterMode;
 import javax.persistence.StoredProcedureParameter;
 import javax.persistence.StoredProcedureQuery;
 import javax.persistence.Table;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
 
 import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -26,11 +26,10 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
+import org.junit.Before;
+import org.junit.Test;
 
 import static org.junit.Assert.fail;
 
@@ -103,7 +102,7 @@ public class StoreProcedureRefCursorOutParameterByPositionTest extends BaseEntit
 					conn.commit();
 				}
 				catch (SQLException e) {
-					System.out.println( "Unable to commit transaction after creating creating procedures" );
+					System.out.println( "Unable to commit transaction afterQuery creating creating procedures" );
 					fail();
 				}
 

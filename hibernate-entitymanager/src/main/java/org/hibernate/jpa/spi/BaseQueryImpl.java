@@ -27,11 +27,12 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.QueryParameterException;
 import org.hibernate.engine.query.spi.EntityGraphQueryHint;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.TypedParameterValue;
 import org.hibernate.jpa.graph.internal.EntityGraphImpl;
-import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
@@ -67,7 +68,7 @@ public abstract class BaseQueryImpl implements Query {
 			AbstractQueryImpl.class.getName()
 	);
 
-	private final HibernateEntityManagerImplementor entityManager;
+	private final SharedSessionContractImplementor entityManager;
 
 	private int firstResult;
 	private int maxResults = -1;
@@ -75,11 +76,11 @@ public abstract class BaseQueryImpl implements Query {
 
 	private EntityGraphQueryHint entityGraphQueryHint;
 
-	public BaseQueryImpl(HibernateEntityManagerImplementor entityManager) {
+	public BaseQueryImpl(SharedSessionContractImplementor entityManager) {
 		this.entityManager = entityManager;
 	}
 
-	protected HibernateEntityManagerImplementor entityManager() {
+	protected SharedSessionContractImplementor entityManager() {
 		return entityManager;
 	}
 

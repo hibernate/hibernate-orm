@@ -11,7 +11,7 @@ import java.io.Serializable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostCollectionRemoveEvent;
@@ -45,13 +45,13 @@ public final class CollectionRemoveAction extends CollectionAction {
 				final CollectionPersister persister,
 				final Serializable id,
 				final boolean emptySnapshot,
-				final SessionImplementor session) {
+				final SharedSessionContractImplementor session) {
 		super( persister, collection, id, session );
 		if ( collection == null ) {
 			throw new AssertionFailure("collection == null");
 		}
 		this.emptySnapshot = emptySnapshot;
-		// the loaded owner will be set to null after the collection is removed,
+		// the loaded owner will be set to null afterQuery the collection is removed,
 		// so capture its value as the affected owner so it is accessible to
 		// both pre- and post- events
 		this.affectedOwner = session.getPersistenceContext().getLoadedCollectionOwnerOrNull( collection );
@@ -75,7 +75,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 				final CollectionPersister persister,
 				final Serializable id,
 				final boolean emptySnapshot,
-				final SessionImplementor session) {
+				final SharedSessionContractImplementor session) {
 		super( persister, null, id, session );
 		if ( affectedOwner == null ) {
 			throw new AssertionFailure("affectedOwner == null");
@@ -105,7 +105,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 		postRemove();
 
 		if ( getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
-			getSession().getFactory().getStatisticsImplementor().removeCollection( getPersister().getRole() );
+			getSession().getFactory().getStatistics().removeCollection( getPersister().getRole() );
 		}
 	}
 

@@ -19,22 +19,21 @@ import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.ParameterExpression;
 
-import org.hibernate.Query;
-import org.hibernate.ejb.HibernateQuery;
-import org.hibernate.jpa.internal.QueryImpl;
-import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.jpa.HibernateQuery;
+import org.hibernate.query.spi.QueryImplementor;
 
 /**
  * @author Steve Ebersole
  */
 public class CriteriaQueryTypeQueryAdapter<X> implements TypedQuery<X>, HibernateQuery {
-	private final HibernateEntityManagerImplementor entityManager;
-	private final QueryImpl<X> jpqlQuery;
+	private final SessionImplementor entityManager;
+	private final QueryImplementor<X> jpqlQuery;
 	private final Map<ParameterExpression<?>, ExplicitParameterInfo<?>> explicitParameterInfoMap;
 
 	public CriteriaQueryTypeQueryAdapter(
-			HibernateEntityManagerImplementor entityManager,
-			QueryImpl<X> jpqlQuery,
+			SessionImplementor entityManager,
+			QueryImplementor<X> jpqlQuery,
 			Map<ParameterExpression<?>, ExplicitParameterInfo<?>> explicitParameterInfoMap) {
 		this.entityManager = entityManager;
 		this.jpqlQuery = jpqlQuery;
@@ -42,8 +41,8 @@ public class CriteriaQueryTypeQueryAdapter<X> implements TypedQuery<X>, Hibernat
 	}
 
 	@Override
-	public Query getHibernateQuery() {
-		return jpqlQuery.getHibernateQuery();
+	public QueryImplementor getHibernateQuery() {
+		return jpqlQuery;
 	}
 
 	public List<X> getResultList() {

@@ -10,9 +10,8 @@ import java.util.Locale;
 
 import org.hibernate.FlushMode;
 import org.hibernate.LazyInitializationException;
-import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.SessionFactoryRegistry;
 
 import org.jboss.logging.Logger;
@@ -24,13 +23,13 @@ public class Helper {
 	private static final Logger log = Logger.getLogger( Helper.class );
 
 	interface Consumer {
-		SessionImplementor getLinkedSession();
+		SharedSessionContractImplementor getLinkedSession();
 		boolean allowLoadOutsideTransaction();
 		String getSessionFactoryUuid();
 	}
 
 	interface LazyInitializationWork<T> {
-		T doWork(SessionImplementor session, boolean isTemporarySession);
+		T doWork(SharedSessionContractImplementor session, boolean isTemporarySession);
 
 		// informational details
 		String getEntityName();
@@ -45,7 +44,7 @@ public class Helper {
 	}
 
 	public <T> T performWork(LazyInitializationWork<T> lazyInitializationWork) {
-		SessionImplementor session = consumer.getLinkedSession();
+		SharedSessionContractImplementor session = consumer.getLinkedSession();
 
 		boolean isTempSession = false;
 		boolean isJta = false;
@@ -89,7 +88,7 @@ public class Helper {
 				// be created even if a current session and transaction are
 				// open (ex: session.clear() was used).  We must prevent
 				// multiple transactions.
-				( (Session) session ).beginTransaction();
+				session.beginTransaction();
 			}
 		}
 
@@ -102,7 +101,7 @@ public class Helper {
 				try {
 					// Commit the JDBC transaction is we started one.
 					if ( !isJta ) {
-						( (Session) session ).getTransaction().commit();
+						session.getTransaction().commit();
 					}
 				}
 				catch (Exception e) {
@@ -114,7 +113,7 @@ public class Helper {
 
 				// Close the just opened temp Session
 				try {
-					( (Session) session ).close();
+					session.close();
 				}
 				catch (Exception e) {
 					log.warn( "Unable to close temporary session used to load lazy collection associated to no session" );
@@ -165,16 +164,16 @@ public class Helper {
 		throw new LazyInitializationException( message );
 	}
 
-	private SessionImplementor openTemporarySessionForLoading(LazyInitializationWork lazyInitializationWork) {
+	private SharedSessionContractImplementor openTemporarySessionForLoading(LazyInitializationWork lazyInitializationWork) {
 		if ( consumer.getSessionFactoryUuid() == null ) {
 			throwLazyInitializationException( Cause.NO_SF_UUID, lazyInitializationWork );
 		}
 
 		final SessionFactoryImplementor sf = (SessionFactoryImplementor)
 				SessionFactoryRegistry.INSTANCE.getSessionFactory( consumer.getSessionFactoryUuid() );
-		final SessionImplementor session = (SessionImplementor) sf.openSession();
+		final SharedSessionContractImplementor session = (SharedSessionContractImplementor) sf.openSession();
 		session.getPersistenceContext().setDefaultReadOnly( true );
-		session.setFlushMode( FlushMode.MANUAL );
+		session.setHibernateFlushMode( FlushMode.MANUAL );
 		return session;
 	}
 }

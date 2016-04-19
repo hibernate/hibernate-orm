@@ -12,7 +12,7 @@ import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.persister.entity.Queryable;
 
@@ -32,7 +32,7 @@ public interface MultiTableBulkIdStrategy {
 	 * @param metadata Access to the O/RM mapping information
 	 * @param sessionFactoryOptions
 	 */
-	public void prepare(
+	void prepare(
 			JdbcServices jdbcServices,
 			JdbcConnectionAccess connectionAccess,
 			MetadataImplementor metadata,
@@ -44,16 +44,16 @@ public interface MultiTableBulkIdStrategy {
 	 * @param jdbcServices The JdbcService object
 	 * @param connectionAccess Access to the JDBC Connection
 	 */
-	public void release(JdbcServices jdbcServices, JdbcConnectionAccess connectionAccess);
+	void release(JdbcServices jdbcServices, JdbcConnectionAccess connectionAccess);
 
 	/**
 	 * Handler for dealing with multi-table HQL bulk update statements.
 	 */
-	public static interface UpdateHandler {
-		public Queryable getTargetedQueryable();
-		public String[] getSqlStatements();
+	interface UpdateHandler {
+		Queryable getTargetedQueryable();
+		String[] getSqlStatements();
 
-		public int execute(SessionImplementor session, QueryParameters queryParameters);
+		int execute(SharedSessionContractImplementor session, QueryParameters queryParameters);
 	}
 
 	/**
@@ -64,16 +64,16 @@ public interface MultiTableBulkIdStrategy {
 	 *
 	 * @return The handler
 	 */
-	public UpdateHandler buildUpdateHandler(SessionFactoryImplementor factory, HqlSqlWalker walker);
+	UpdateHandler buildUpdateHandler(SessionFactoryImplementor factory, HqlSqlWalker walker);
 
 	/**
 	 * Handler for dealing with multi-table HQL bulk delete statements.
 	 */
-	public static interface DeleteHandler {
-		public Queryable getTargetedQueryable();
-		public String[] getSqlStatements();
+	interface DeleteHandler {
+		Queryable getTargetedQueryable();
+		String[] getSqlStatements();
 
-		public int execute(SessionImplementor session, QueryParameters queryParameters);
+		int execute(SharedSessionContractImplementor session, QueryParameters queryParameters);
 	}
 
 	/**
@@ -84,5 +84,5 @@ public interface MultiTableBulkIdStrategy {
 	 *
 	 * @return The handler
 	 */
-	public DeleteHandler buildDeleteHandler(SessionFactoryImplementor factory, HqlSqlWalker walker);
+	DeleteHandler buildDeleteHandler(SessionFactoryImplementor factory, HqlSqlWalker walker);
 }

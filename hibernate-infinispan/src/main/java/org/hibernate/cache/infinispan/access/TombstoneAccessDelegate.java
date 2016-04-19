@@ -6,21 +6,22 @@
  */
 package org.hibernate.cache.infinispan.access;
 
+import java.util.concurrent.TimeUnit;
+
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.infinispan.util.FutureUpdate;
 import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
-import org.hibernate.cache.infinispan.util.TombstoneUpdate;
 import org.hibernate.cache.infinispan.util.Tombstone;
+import org.hibernate.cache.infinispan.util.TombstoneUpdate;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.resource.transaction.TransactionCoordinator;
+
 import org.infinispan.AdvancedCache;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.context.Flag;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -78,7 +79,7 @@ public class TombstoneAccessDelegate implements AccessDelegate {
 	public boolean putFromLoad(SessionImplementor session, Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride) throws CacheException {
 		long lastRegionInvalidation = region.getLastRegionInvalidation();
 		if (txTimestamp < lastRegionInvalidation) {
-			log.tracef("putFromLoad not executed since tx started at %d, before last region invalidation finished = %d", txTimestamp, lastRegionInvalidation);
+			log.tracef("putFromLoad not executed since tx started at %d, beforeQuery last region invalidation finished = %d", txTimestamp, lastRegionInvalidation);
 			return false;
 		}
 		if (minimalPutOverride) {
@@ -87,7 +88,7 @@ public class TombstoneAccessDelegate implements AccessDelegate {
 				Tombstone tombstone = (Tombstone) prev;
 				long lastTimestamp = tombstone.getLastTimestamp();
 				if (txTimestamp <= lastTimestamp) {
-					log.tracef("putFromLoad not executed since tx started at %d, before last invalidation finished = %d", txTimestamp, lastTimestamp);
+					log.tracef("putFromLoad not executed since tx started at %d, beforeQuery last invalidation finished = %d", txTimestamp, lastTimestamp);
 					return false;
 				}
 			}

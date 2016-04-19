@@ -12,6 +12,7 @@ import java.util.Collections;
 
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
@@ -105,15 +106,16 @@ public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 		final String fromTableFragment;
 		final String rootAlias = entityReferenceAliases.getTableAlias();
 		final OuterJoinLoadable outerJoinLoadable = (OuterJoinLoadable) getRootEntityReturn().getEntityPersister();
+		final Dialect dialect = getSessionFactory().getJdbcServices().getJdbcEnvironment().getDialect();
 		if ( getQueryBuildingParameters().getLockOptions() != null ) {
-			fromTableFragment = getSessionFactory().getDialect().appendLockHint(
+			fromTableFragment = dialect.appendLockHint(
 					getQueryBuildingParameters().getLockOptions(),
 					outerJoinLoadable.fromTableFragment( rootAlias )
 			);
 			select.setLockOptions( getQueryBuildingParameters().getLockOptions() );
 		}
 		else if ( getQueryBuildingParameters().getLockMode() != null ) {
-			fromTableFragment = getSessionFactory().getDialect().appendLockHint(
+			fromTableFragment = dialect.appendLockHint(
 					getQueryBuildingParameters().getLockMode(),
 					outerJoinLoadable.fromTableFragment( rootAlias )
 			);

@@ -23,15 +23,14 @@ import javax.persistence.metamodel.Type;
 
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.EntityManagerMessageLogger;
+import org.hibernate.internal.HEMLogging;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.jpa.internal.EntityManagerMessageLogger;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-
-import static org.hibernate.jpa.internal.HEMLogging.messageLogger;
 
 /**
  * Defines a context for storing information during the building of the {@link MetamodelImpl}.
@@ -77,10 +76,10 @@ class MetadataContext {
 	public MetadataContext(
 			SessionFactoryImplementor sessionFactory,
 			Set<MappedSuperclass> mappedSuperclasses,
-			boolean ignoreUnsupported) {
+			JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting) {
 		this.sessionFactory = sessionFactory;
 		this.knownMappedSuperclasses = mappedSuperclasses;
-		this.ignoreUnsupported = ignoreUnsupported;
+		this.ignoreUnsupported = jpaMetaModelPopulationSetting == JpaMetaModelPopulationSetting.IGNORE_UNSUPPORTED;
 	}
 
 	/*package*/ SessionFactoryImplementor getSessionFactory() {

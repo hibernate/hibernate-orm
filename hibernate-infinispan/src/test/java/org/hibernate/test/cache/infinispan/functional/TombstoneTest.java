@@ -1,11 +1,5 @@
 package org.hibernate.test.cache.infinispan.functional;
 
-import org.hibernate.cache.infinispan.util.Caches;
-import org.hibernate.cache.infinispan.util.FutureUpdate;
-import org.hibernate.cache.infinispan.util.Tombstone;
-import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
-import org.junit.Test;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -15,7 +9,16 @@ import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.*;
+import org.hibernate.cache.infinispan.util.Caches;
+import org.hibernate.cache.infinispan.util.FutureUpdate;
+import org.hibernate.cache.infinispan.util.Tombstone;
+import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
+
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 
 /**
@@ -47,7 +50,7 @@ public class TombstoneTest extends AbstractNonInvalidationTest {
       first.get(WAIT_TIMEOUT, TimeUnit.SECONDS);
       second.get(WAIT_TIMEOUT, TimeUnit.SECONDS);
 
-      // after commit, the tombstone should still be in memory for some time (though, updatable)
+      // afterQuery commit, the tombstone should still be in memory for some time (though, updatable)
       contents = Caches.entrySet(entityCache).toMap();
       assertEquals(1, contents.size());
       assertEquals(Tombstone.class, contents.get(itemId).getClass());

@@ -6,11 +6,8 @@
  */
 package org.hibernate.jpa.test.criteria;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaQuery;
@@ -18,9 +15,6 @@ import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.EntityType;
 
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
-import org.hibernate.jpa.criteria.predicate.ComparisonPredicate;
-import org.hibernate.jpa.internal.metamodel.MetamodelImpl;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.jpa.test.metamodel.Address;
 import org.hibernate.jpa.test.metamodel.Alias;
@@ -35,9 +29,15 @@ import org.hibernate.jpa.test.metamodel.Phone;
 import org.hibernate.jpa.test.metamodel.Product;
 import org.hibernate.jpa.test.metamodel.ShelfLife;
 import org.hibernate.jpa.test.metamodel.Spouse;
+import org.hibernate.metamodel.internal.MetamodelImpl;
+import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
+import org.hibernate.query.criteria.internal.predicate.ComparisonPredicate;
+
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Steve Ebersole

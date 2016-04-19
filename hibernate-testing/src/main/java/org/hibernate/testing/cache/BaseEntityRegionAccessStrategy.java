@@ -12,7 +12,7 @@ import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -32,23 +32,23 @@ class BaseEntityRegionAccessStrategy extends BaseRegionAccessStrategy implements
 	}
 
 	@Override
-	public boolean insert(SessionImplementor session, Object key, Object value, Object version) throws CacheException {
+	public boolean insert(SharedSessionContractImplementor session, Object key, Object value, Object version) throws CacheException {
 		return putFromLoad( session, key, value, 0, version );
 	}
 
 	@Override
-	public boolean afterInsert(SessionImplementor session, Object key, Object value, Object version) throws CacheException {
+	public boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value, Object version) throws CacheException {
 		return true;
 	}
 
 	@Override
-	public boolean update(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion)
+	public boolean update(SharedSessionContractImplementor session, Object key, Object value, Object currentVersion, Object previousVersion)
 			throws CacheException {
 		return false;
 	}
 
 	@Override
-	public boolean afterUpdate(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
+	public boolean afterUpdate(SharedSessionContractImplementor session, Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
 			throws CacheException {
 		return false;
 	}

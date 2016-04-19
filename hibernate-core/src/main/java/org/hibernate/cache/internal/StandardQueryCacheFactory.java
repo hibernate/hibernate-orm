@@ -6,13 +6,10 @@
  */
 package org.hibernate.cache.internal;
 
-import java.util.Properties;
-
-import org.hibernate.HibernateException;
-import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.QueryCache;
 import org.hibernate.cache.spi.QueryCacheFactory;
-import org.hibernate.cache.spi.UpdateTimestampsCache;
+import org.hibernate.cache.spi.QueryResultsRegion;
+import org.hibernate.engine.spi.CacheImplementor;
 
 /**
  * Standard Hibernate implementation of the QueryCacheFactory interface.  Returns instances of
@@ -25,11 +22,7 @@ public class StandardQueryCacheFactory implements QueryCacheFactory {
 	public static final StandardQueryCacheFactory INSTANCE = new StandardQueryCacheFactory();
 
 	@Override
-	public QueryCache getQueryCache(
-			final String regionName,
-			final UpdateTimestampsCache updateTimestampsCache,
-			final SessionFactoryOptions settings,
-			final Properties props) throws HibernateException {
-		return new StandardQueryCache(settings, props, updateTimestampsCache, regionName);
+	public QueryCache buildQueryCache(QueryResultsRegion region, CacheImplementor cacheManager) {
+		return new StandardQueryCache( region, cacheManager );
 	}
 }

@@ -26,6 +26,8 @@ import org.hibernate.internal.FilterImpl;
 import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.query.ParameterMetadata;
+import org.hibernate.query.internal.ParameterMetadataImpl;
 
 /**
  * Acts as a cache for compiled query plans, as well as query-parameter metadata.
@@ -62,7 +64,7 @@ public class QueryPlanCache implements Serializable {
 	 * Used solely for caching param metadata for native-sql queries, see {@link #getSQLParameterMetadata} for a
 	 * discussion as to why...
 	 */
-	private final BoundedConcurrentHashMap<String,ParameterMetadata> parameterMetadataCache;
+	private final BoundedConcurrentHashMap<String,ParameterMetadataImpl> parameterMetadataCache;
 
 
 	private NativeQueryInterpreter nativeQueryInterpreterService;
@@ -100,7 +102,7 @@ public class QueryPlanCache implements Serializable {
 		}
 
 		queryPlanCache = new BoundedConcurrentHashMap( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
-		parameterMetadataCache = new BoundedConcurrentHashMap<String, ParameterMetadata>(
+		parameterMetadataCache = new BoundedConcurrentHashMap<String, ParameterMetadataImpl>(
 				maxParameterMetadataCount,
 				20,
 				BoundedConcurrentHashMap.Eviction.LIRS
@@ -120,7 +122,7 @@ public class QueryPlanCache implements Serializable {
 	 * @return The parameter metadata
 	 */
 	public ParameterMetadata getSQLParameterMetadata(final String query)  {
-		ParameterMetadata value = parameterMetadataCache.get( query );
+		ParameterMetadataImpl value = parameterMetadataCache.get( query );
 		if ( value == null ) {
 			value = nativeQueryInterpreterService.getParameterMetadata( query );
 			parameterMetadataCache.putIfAbsent( query, value );

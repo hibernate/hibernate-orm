@@ -1,34 +1,65 @@
-= 5.1 Migration Guide
+= 6.0 Migration Guide
 :toc:
 
-This guide discusses migration from Hibernate ORM version 5.0 to version 5.1.  For migration from
+This guide discusses migration from Hibernate ORM version 5.1 to version 6.0.  For migration from
 earlier versions, see any other pertinent migration guides as well.
 
-== Oracle12cDialect maps byte[] and Byte[] to BLOB
+== Move to Java 8 for baseline
 
-Previous versions of Hibernate have mapped `byte[]` and `Byte[]` to Oracle's `LONG RAW` data type (via the JDBC
-LONGVARBINARY type).  Oracle have deprecated the `LONG RAW` data type for many releases - possibly as far back
-as 8i.  Therefore it was decided to start having Hibernate map `byte[]` and `Byte[]` to `BLOB` for Oracle.
+Hibernate 6.0 is built using Java 8 JDK and will require Java 8 JRE at runtime (we are investigating whether
+Java 9 will also work).  This has a number of implications:
 
-However, in the interest of backwards compatibility and not breaking existing applications it was also decided to
-limit this change to just the Oracle12cDialect.  So starting in 5.1 applications using Oracle12cDialect and
-implicitly mapping `byte[]` and `Byte[]` values will start seeing those handled as `BLOB` data rather than `LONG RAW`
-data.  For existing applications that want to continue to use Oracle12cDialect and still continue to implicitly map
-`byte[]` and `Byte[]` attributes to `LONG RAW`, there is a new configuration setting you can use to enable that:
-`hibernate.dialect.oracle.prefer_longvarbinary`, which is false by default (map to `BLOB`).
+* The hibernate-java8 module has been merged into hibernate-core and the Java 8 date/time types are now natively
+	supported.
+* (todo) support for Java 8 Optional
+* (todo) support for other Java 8 features?
 
 
-== Changes to schema management tooling
+== hibernate-entitymanager merged into hibernate-core
 
-The changes mainly focused on:
+The hibernate-entitymanager module has also been merged into hibernate-core.
 
-* Unifying handling of `hbm2ddl.auto` and Hibernate's JPA schema-generation support.
-* Removing JDBC concerns from the SPI to facilitate true replacement (for OGM)
+* `org.hibernate.SessionFactory` now extends `javax.persistence.EntityManagerFactory` - temporarily it
+	technically extends `org.hibernate.jpa.HibernateEntityManagerFactory` (which in turn extends
+	`javax.persistence.EntityManagerFactory`) for backwards compatibility.  `HibernateEntityManagerFactory`
+	is deprecated.
+* `org.hibernate.Session` now extends `javax.persistence.EntityManager` - temporarily it
+	technically extends `org.hibernate.jpa.HibernateEntityManager` (which in turn extends
+	`javax.persistence.EntityManager`) for backwards compatibility.  `HibernateEntityManager` is deprecated.
+* Persister/type access is now exposed through `org.hibernate.Metamodel`, which extends
+	`javax.persistence.metamodel.Metamodel`.  MetamodelImpl now manages all aspects of type system (see below).
+* Cache management has also been consolidated.  `org.hibernate.Cache` now extends `javax.persistence.Cache`.  CacheImpl
+	now manages all aspects of cache regions (see below).
 
-These changes will only be a migration concern for applications directly using any of the following classes:
 
-* `org.hibernate.tool.hbm2ddl.SchemaExport`
-* `org.hibernate.tool.hbm2ddl.SchemaUpdate`
-* `org.hibernate.tool.hbm2ddl.SchemaValidator`
-* `org.hibernate.tool.schema.spi.SchemaManagementTool` or any of its delegates
+== SessionFactory hierarchy cleanup
 
+As part of merging hibernate-entitymanager into hibernate-core, I also wanted to take a moment to clean up
+some of these very old contracts,  In conjunction with the move to Java 8 (default methods) and needing to
+implement JPA methods now in core I decided to implement more of a composition approach here, thus:
+
+* SessionFactoryImplementor used to have a number of methods pertaining to managing and accessing entity and collection persisters.
+	Since we need to deal with JPA Metamodel contract anyway, I went ahead and moved all of that code into our new
+	`org.hibernate.metamodel.spi.MetamodelImplementor`
+* SessionFactory and SessionFactoryImplementor each had a number of methods dealing with cache regions.
+	Many of these methods have been deprecated since 5.0 and those will be removed.  However, the functionality
+	has been moved into the `org.hibernate.Cache` and `org.hibernate.engine.spi.CacheImplementor` contracts
+	helping implement JPA's `javax.persistence.Cache` role.
+
+== SQM
+
+todo - discuss
+
+
+== Misc
+
+* QueryCacheFactory contract changed
+* RegionFactory contract changes
+* todo : merge AvailableSettings together
+* org.hibernate.Transaction now extends JPA's EntityTransaction and follows its pre- and post- assertions.
+	e.g. begin() now throws an exception if transaction is already active.
+* (todo) following the above one, JPA also says that only PersistenceUnitTransactionType#JTA EntiytManagers
+	are allowed to access EntityTransactions.  Need a strategy to handle this
+* Session#getFlushMode and Query#getFlushMode clash in terms of Hibernate (FlushMode) and JPA (FlushModeType)
+	returns.  #getFlushMode has been altered to return JPA's FlushModeType.  The Hibernate FlushMode
+	is still available via #getHibernateFlushMode and #setHibernateFlushMode

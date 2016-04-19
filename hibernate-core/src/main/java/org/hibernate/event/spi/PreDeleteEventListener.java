@@ -9,7 +9,7 @@ package org.hibernate.event.spi;
 import java.io.Serializable;
 
 /**
- * Called before deleting an item from the datastore
+ * Called beforeQuery deleting an item from the datastore
  * 
  * @author Gavin King
  */

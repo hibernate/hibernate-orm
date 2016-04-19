@@ -19,8 +19,8 @@ import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.Type;
 
 import org.hibernate.annotations.common.AssertionFailure;
-import org.hibernate.jpa.internal.EntityManagerMessageLogger;
-import org.hibernate.jpa.internal.HEMLogging;
+import org.hibernate.internal.EntityManagerMessageLogger;
+import org.hibernate.internal.HEMLogging;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Map;

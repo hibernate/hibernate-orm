@@ -8,13 +8,17 @@ package org.hibernate.jpa.internal;
 
 import org.hibernate.FlushMode;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.internal.SessionImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ManagedFlushChecker;
 
 /**
  * @author Steve Ebersole
  */
-class ManagedFlushCheckerLegacyJpaImpl implements ManagedFlushChecker {
+public class ManagedFlushCheckerLegacyJpaImpl implements ManagedFlushChecker {
+	/**
+	 * Singleton access
+	 */
+	public static final ManagedFlushCheckerLegacyJpaImpl INSTANCE = new ManagedFlushCheckerLegacyJpaImpl();
+
 	@Override
 	public boolean shouldDoManagedFlush(SessionImplementor session) {
 		return !session.isClosed()

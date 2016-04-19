@@ -16,6 +16,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
@@ -111,6 +112,20 @@ public final class Hibernate {
 	 */
 	public static LobCreator getLobCreator(Session session) {
 		return getLobCreator( (SessionImplementor) session );
+	}
+
+	/**
+	 * Obtain a lob creator for the given session.
+	 *
+	 * @param session The session for which to obtain a lob creator
+	 *
+	 * @return The log creator reference
+	 */
+	public static LobCreator getLobCreator(SharedSessionContractImplementor session) {
+		return session.getFactory()
+				.getServiceRegistry()
+				.getService( JdbcServices.class )
+				.getLobCreator( session );
 	}
 
 	/**

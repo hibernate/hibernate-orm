@@ -14,7 +14,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.usertype.LoggableUserType;
 import org.hibernate.usertype.UserCollectionType;
@@ -57,42 +57,53 @@ public class CustomCollectionType extends CollectionType {
 		}
 	}
 
-	public PersistentCollection instantiate(SessionImplementor session, CollectionPersister persister, Serializable key)
+	@Override
+	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Serializable key)
 	throws HibernateException {
-		return userType.instantiate(session, persister);
+		return userType.instantiate( session, persister );
 	}
 
-	public PersistentCollection wrap(SessionImplementor session, Object collection) {
-		return userType.wrap(session, collection);
+	@Override
+	public PersistentCollection wrap(SharedSessionContractImplementor session, Object collection) {
+		return userType.wrap( session, collection );
 	}
 
+	@Override
 	public Class getReturnedClass() {
 		return userType.instantiate( -1 ).getClass();
 	}
 
+	@Override
 	public Object instantiate(int anticipatedType) {
 		return userType.instantiate( anticipatedType );
 	}
 
+	@Override
 	public Iterator getElementsIterator(Object collection) {
 		return userType.getElementsIterator(collection);
 	}
-	public boolean contains(Object collection, Object entity, SessionImplementor session) {
+
+	@Override
+	public boolean contains(Object collection, Object entity, SharedSessionContractImplementor session) {
 		return userType.contains(collection, entity);
 	}
+
+	@Override
 	public Object indexOf(Object collection, Object entity) {
 		return userType.indexOf(collection, entity);
 	}
 
-	public Object replaceElements(Object original, Object target, Object owner, Map copyCache, SessionImplementor session)
+	@Override
+	public Object replaceElements(Object original, Object target, Object owner, Map copyCache, SharedSessionContractImplementor session)
 	throws HibernateException {
-		CollectionPersister cp = session.getFactory().getCollectionPersister( getRole() );
+		CollectionPersister cp = session.getFactory().getMetamodel().collectionPersister( getRole() );
 		return userType.replaceElements(original, target, cp, owner, copyCache, session);
 	}
 
+	@Override
 	protected String renderLoggableString(Object value, SessionFactoryImplementor factory) throws HibernateException {
 		if ( customLogging ) {
-			return ( ( LoggableUserType ) userType ).toLoggableString( value, factory );
+			return ( (LoggableUserType) userType ).toLoggableString( value, factory );
 		}
 		else {
 			return super.renderLoggableString( value, factory );

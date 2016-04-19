@@ -24,7 +24,7 @@ import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.hql.internal.QueryExecutionRequestException;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
@@ -347,7 +347,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	}
 
 	@Override
-	public List list(SessionImplementor session, QueryParameters queryParameters)
+	public List list(SharedSessionContractImplementor session, QueryParameters queryParameters)
 			throws HibernateException {
 		// Delegate to the QueryLoader...
 		errorIfDML();
@@ -416,14 +416,14 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	 * Return the query results, as an instance of <tt>ScrollableResults</tt>
 	 */
 	@Override
-	public ScrollableResults scroll(QueryParameters queryParameters, SessionImplementor session)
+	public ScrollableResults scroll(QueryParameters queryParameters, SharedSessionContractImplementor session)
 			throws HibernateException {
 		// Delegate to the QueryLoader...
 		errorIfDML();
 		return queryLoader.scroll( queryParameters, session );
 	}
 	@Override
-	public int executeUpdate(QueryParameters queryParameters, SessionImplementor session)
+	public int executeUpdate(QueryParameters queryParameters, SharedSessionContractImplementor session)
 			throws HibernateException {
 		errorIfSelect();
 		return statementExecutor.execute( queryParameters, session );
@@ -518,7 +518,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		}
 
 		// This is not strictly true.  We actually just need to make sure that
-		// it is ordered by root-entity PK and that that order-by comes before
+		// it is ordered by root-entity PK and that that order-by comes beforeQuery
 		// any non-root-entity ordering...
 
 		AST primaryOrdering = query.getOrderByClause().getFirstChild();

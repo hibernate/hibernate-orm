@@ -12,8 +12,8 @@ import javax.persistence.Subgraph;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.GraphNodeImplementor;
-import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 
 /**
  * @author Steve Ebersole
@@ -22,8 +22,9 @@ public class SubgraphImpl<T> extends AbstractGraphNode<T> implements Subgraph<T>
 	private final ManagedType managedType;
 	private final Class<T> subclass;
 
+	@SuppressWarnings("WeakerAccess")
 	public SubgraphImpl(
-			EntityManagerFactoryImpl entityManagerFactory,
+			SessionFactoryImplementor entityManagerFactory,
 			ManagedType managedType,
 			Class<T> subclass) {
 		super( entityManagerFactory, true );
@@ -37,8 +38,9 @@ public class SubgraphImpl<T> extends AbstractGraphNode<T> implements Subgraph<T>
 		this.subclass = original.subclass;
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	public SubgraphImpl<T> makeImmutableCopy() {
-		return new SubgraphImpl<T>( this );
+		return new SubgraphImpl<>( this );
 	}
 
 	@Override
@@ -47,7 +49,8 @@ public class SubgraphImpl<T> extends AbstractGraphNode<T> implements Subgraph<T>
 	}
 
 	@Override
-	public void addAttributeNodes(Attribute<T, ?>... attributes) {
+	@SafeVarargs
+	public final void addAttributeNodes(Attribute<T, ?>... attributes) {
 		super.addAttributeNodes( attributes );
 	}
 

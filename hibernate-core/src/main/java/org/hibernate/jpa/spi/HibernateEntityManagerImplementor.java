@@ -15,9 +15,10 @@ import javax.persistence.criteria.Selection;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.StaleStateException;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jpa.HibernateEntityManager;
+import org.hibernate.query.Query;
 import org.hibernate.query.criteria.internal.ValueHandlerFactory;
-import org.hibernate.jpa.internal.QueryImpl;
 import org.hibernate.type.Type;
 
 /**
@@ -25,9 +26,13 @@ import org.hibernate.type.Type;
  *
  * @author Emmanuel Bernard
  * @author Steve Ebersole
+ *
+ * @deprecated (since 5.2) move these methods to SessionImplementor
  */
+@Deprecated
 public interface HibernateEntityManagerImplementor extends HibernateEntityManager, HibernateEntityManagerFactoryAware {
-
+	@Override
+	SessionImplementor getSession();
 
 	/**
 	 * Used to ensure the EntityManager is open, throwing IllegalStateException if it is closed.
@@ -40,7 +45,7 @@ public interface HibernateEntityManagerImplementor extends HibernateEntityManage
 	 *
 	 * @throws IllegalStateException Thrown if the EM is closed
 	 */
-	public void checkOpen(boolean markForRollbackIfClosed) throws IllegalStateException;
+	void checkOpen(boolean markForRollbackIfClosed) throws IllegalStateException;
 
 	/**
 	 * Provides access to whether a transaction is currently in progress.
@@ -52,7 +57,7 @@ public interface HibernateEntityManagerImplementor extends HibernateEntityManage
 	/**
 	 * Used to mark a transaction for rollback only (when that is the JPA spec defined behavior).
 	 */
-	public void markForRollbackOnly();
+	void markForRollbackOnly();
 
 	/**
 	 * Handles marking for rollback and other such operations that need to occur depending on the type of
@@ -60,14 +65,14 @@ public interface HibernateEntityManagerImplementor extends HibernateEntityManage
 	 *
 	 * @param e The exception being handled.
 	 */
-	public void handlePersistenceException(PersistenceException e);
+	void handlePersistenceException(PersistenceException e);
 
 	/**
 	 * Delegates to {@link #handlePersistenceException} and then throws the given exception.
 	 *
 	 * @param e The exception being handled and finally thrown.
 	 */
-	public void throwPersistenceException(PersistenceException e);
+	void throwPersistenceException(PersistenceException e);
 
 	/**
 	 * Converts a Hibernate-specific exception into a JPA-specified exception; note that the JPA sepcification makes use
@@ -80,7 +85,7 @@ public interface HibernateEntityManagerImplementor extends HibernateEntityManage
 	 *
 	 * @return The JPA-specified exception
 	 */
-	public RuntimeException convert(HibernateException e, LockOptions lockOptions);
+	RuntimeException convert(HibernateException e, LockOptions lockOptions);
 
 	/**
 	 * Converts a Hibernate-specific exception into a JPA-specified exception; note that the JPA sepcification makes use
@@ -92,16 +97,18 @@ public interface HibernateEntityManagerImplementor extends HibernateEntityManage
 	 *
 	 * @return The JPA-specified exception
 	 */
-	public RuntimeException convert(HibernateException e);
+	RuntimeException convert(HibernateException e);
+
+	RuntimeException convert(RuntimeException e);
 
 	/**
 	 * Delegates to {@link #convert} and then throws the given exception.
 	 *
 	 * @param e The exception being handled and finally thrown.
 	 */
-	public void throwPersistenceException(HibernateException e);
+	void throwPersistenceException(HibernateException e);
 
-	public PersistenceException wrapStaleStateException(StaleStateException e);
+	PersistenceException wrapStaleStateException(StaleStateException e);
 
 	/**
 	 * Convert from JPA 2 {@link javax.persistence.LockModeType} & properties into {@link org.hibernate.LockOptions}
@@ -110,22 +117,38 @@ public interface HibernateEntityManagerImplementor extends HibernateEntityManage
 	 * @param properties are the lock properties
 	 *
 	 * @return the LockOptions
+	 *
+	 * @deprecated (since 6.0) use {@link #buildLockOptions(LockModeType, Map)} instead
 	 */
-	public LockOptions getLockRequest(LockModeType lockModeType, Map<String, Object> properties);
+	@Deprecated
+	LockOptions getLockRequest(LockModeType lockModeType, Map<String, Object> properties);
 
-	public static interface QueryOptions {
-		public static interface ResultMetadataValidator {
-			public void validate(Type[] returnTypes);
+	/**
+	 * Given a JPA {@link javax.persistence.LockModeType} and properties, build a Hibernate
+	 * {@link org.hibernate.LockOptions}
+	 *
+	 * @param lockModeType the requested LockModeType
+	 * @param properties the lock properties
+	 *
+	 * @return the LockOptions
+	 */
+	default LockOptions buildLockOptions(LockModeType lockModeType, Map<String, Object> properties) {
+		return getLockRequest( lockModeType, properties );
+	}
+
+	interface QueryOptions {
+		interface ResultMetadataValidator {
+			void validate(Type[] returnTypes);
 		}
 
-		public ResultMetadataValidator getResultMetadataValidator();
+		ResultMetadataValidator getResultMetadataValidator();
 
 		/**
 		 * Get the conversions for the individual tuples in the query results.
 		 *
 		 * @return Value conversions to be applied to the JPA QL results
 		 */
-		public List<ValueHandlerFactory.ValueHandler> getValueHandlers();
+		List<ValueHandlerFactory.ValueHandler> getValueHandlers();
 
 		/**
 		 * Get the explicit parameter types.  Generally speaking these would apply to implicit named
@@ -133,7 +156,7 @@ public interface HibernateEntityManagerImplementor extends HibernateEntityManage
 		 *
 		 * @return The
 		 */
-		public Map<String, Class> getNamedParameterExplicitTypes();
+		Map<String, Class> getNamedParameterExplicitTypes();
 	}
 
 	/**
@@ -145,7 +168,17 @@ public interface HibernateEntityManagerImplementor extends HibernateEntityManage
 	 * @param queryOptions The options to use to build the query.
 	 * @param <T> The query type
 	 *
+	 * @deprecated (since 5.2) this method form is used to construct a "compiled" representation of
+	 * a JPA Criteria query.  However it assumes the old yucky implementation of "compilation" that
+	 * converted the Criteria into a HQL/JPQL string.  In 6.0 that is re-written from scratch to
+	 * compile to SQM, and so this method would not be needed in 6.0
+	 *
 	 * @return The typed query
 	 */
-	public <T> QueryImpl<T> createQuery(String jpaqlString, Class<T> resultClass, Selection selection, QueryOptions queryOptions);
+	@Deprecated
+	<T> Query<T> createQuery(
+			String jpaqlString,
+			Class<T> resultClass,
+			Selection selection,
+			QueryOptions queryOptions);
 }

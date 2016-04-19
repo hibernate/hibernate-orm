@@ -6,16 +6,6 @@
  */
 package org.hibernate.testing.junit4;
 
-import org.junit.runner.Runner;
-import org.junit.runner.manipulation.NoTestsRemainException;
-import org.junit.runner.notification.RunNotifier;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Suite;
-import org.junit.runners.model.FrameworkField;
-import org.junit.runners.model.FrameworkMethod;
-import org.junit.runners.model.InitializationError;
-import org.junit.runners.model.Statement;
-
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -30,14 +20,24 @@ import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import org.junit.runner.Runner;
+import org.junit.runner.manipulation.NoTestsRemainException;
+import org.junit.runner.notification.RunNotifier;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Suite;
+import org.junit.runners.model.FrameworkField;
+import org.junit.runners.model.FrameworkMethod;
+import org.junit.runners.model.InitializationError;
+import org.junit.runners.model.Statement;
+
 /**
  * Allows the {@link CustomRunner} features in parameterized tests.
  * This is mostly copy-paste from {@link Parameterized} since the methods could not be overridden.
  *
  * The static {@link org.junit.BeforeClass} and {@link org.junit.AfterClass} methods will be executed
- * only once before and after all tests (since these should prepare static members).
+ * only once beforeQuery and afterQuery all tests (since these should prepare static members).
  * Hibernate-specific {@link org.hibernate.testing.BeforeClassOnce} and {@link org.hibernate.testing.AfterClassOnce}
- * will be executed before and after each set of tests with given parameters.
+ * will be executed beforeQuery and afterQuery each set of tests with given parameters.
  *
  * Class can override the parameters list (annotated by {@link org.junit.runners.Parameterized.Parameters}
  * by defining static method of the same name in inheriting class (this works although usually static

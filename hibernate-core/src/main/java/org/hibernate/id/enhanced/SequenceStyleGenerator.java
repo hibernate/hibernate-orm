@@ -17,7 +17,7 @@ import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.Configurable;
 import org.hibernate.id.PersistentIdentifierGenerator;
@@ -382,7 +382,7 @@ public class SequenceStyleGenerator
 	 * @param forceTableUse Should a table be used even if the dialect supports sequences?
 	 * @param sequenceName The name to use for the sequence or table.
 	 * @param initialValue The initial value.
-	 * @param incrementSize the increment size to use (after any adjustments).
+	 * @param incrementSize the increment size to use (afterQuery any adjustments).
 	 *
 	 * @return An abstraction for the actual database structure in use (table vs. sequence).
 	 */
@@ -408,7 +408,7 @@ public class SequenceStyleGenerator
 	// IdentifierGenerator implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public Serializable generate(SessionImplementor session, Object object) throws HibernateException {
+	public Serializable generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
 		return optimizer.generate( databaseStructure.buildCallback( session ) );
 	}
 

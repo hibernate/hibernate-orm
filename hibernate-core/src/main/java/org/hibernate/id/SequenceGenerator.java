@@ -22,7 +22,7 @@ import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
@@ -105,11 +105,11 @@ public class SequenceGenerator
 	}
 
 	@Override
-	public Serializable generate(SessionImplementor session, Object obj) {
+	public Serializable generate(SharedSessionContractImplementor session, Object obj) {
 		return generateHolder( session ).makeValue();
 	}
 
-	protected IntegralDataTypeHolder generateHolder(SessionImplementor session) {
+	protected IntegralDataTypeHolder generateHolder(SharedSessionContractImplementor session) {
 		try {
 			PreparedStatement st = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
 			try {
@@ -122,17 +122,17 @@ public class SequenceGenerator
 					return result;
 				}
 				finally {
-					session.getJdbcCoordinator().getResourceRegistry().release( rs, st );
+					session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, st );
 				}
 			}
 			finally {
-				session.getJdbcCoordinator().getResourceRegistry().release( st );
+				session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
 				session.getJdbcCoordinator().afterStatementExecution();
 			}
 
 		}
 		catch (SQLException sqle) {
-			throw session.getFactory().getSQLExceptionHelper().convert(
+			throw session.getJdbcServices().getSqlExceptionHelper().convert(
 					sqle,
 					"could not get next sequence value",
 					sql

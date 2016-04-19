@@ -16,7 +16,7 @@ import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessor;
 import org.hibernate.loader.plan.exec.process.spi.RowReader;
 import org.hibernate.loader.plan.exec.process.spi.ScrollableResultSetProcessor;
@@ -60,7 +60,7 @@ public class ResultSetProcessorImpl implements ResultSetProcessor {
 	@Override
 	public List extractResults(
 			ResultSet resultSet,
-			final SessionImplementor session,
+			final SharedSessionContractImplementor session,
 			QueryParameters queryParameters,
 			NamedParameterContext namedParameterContext,
 			boolean returnProxies,
@@ -133,7 +133,7 @@ public class ResultSetProcessorImpl implements ResultSetProcessor {
 			LoadPlan loadPlan,
 			Serializable[] collectionKeys,
 			ResultSet resultSet,
-			SessionImplementor session) {
+			SharedSessionContractImplementor session) {
 		if ( collectionKeys == null ) {
 			// this is not a collection initializer (and empty collections will be detected by looking for
 			// the owner's identifier in the result set)

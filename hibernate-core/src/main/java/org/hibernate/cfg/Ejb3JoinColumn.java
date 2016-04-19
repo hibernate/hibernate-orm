@@ -23,7 +23,6 @@ import org.hibernate.annotations.JoinFormula;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitPrimaryKeyJoinColumnNameSource;
@@ -957,7 +956,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 				currentJoinColumn.setMappedBy( mappedBy );
 				currentJoinColumn.setJoinAnnotation( annJoin, propertyName );
 				currentJoinColumn.setNullable( false ); //I break the spec, but it's for good
-				//done after the annotation to override it
+				//done afterQuery the annotation to override it
 				currentJoinColumn.bind();
 				joinColumns[index] = currentJoinColumn;
 			}

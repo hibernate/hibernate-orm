@@ -21,7 +21,7 @@ public interface TransactionCoordinator {
 	 * around {@link javax.persistence.EntityManager#joinTransaction()}, and generally speaking only has an impact in
 	 * JTA environments
 	 */
-	public void explicitJoin();
+	void explicitJoin();
 
 	/**
 	 * Determine if there is an active transaction that this coordinator is already joined to.
@@ -29,26 +29,26 @@ public interface TransactionCoordinator {
 	 * @return {@code true} if there is an active transaction this coordinator is already joined to; {@code false}
 	 * otherwise.
 	 */
-	public boolean isJoined();
+	boolean isJoined();
 
 	/**
 	 * Used by owner of the JdbcSession as a means to indicate that implicit joining should be done if needed.
 	 */
-	public void pulse();
+	void pulse();
 
 	/**
 	 * Get the delegate used by the local transaction driver to control the underlying transaction
 	 *
 	 * @return The control delegate.
 	 */
-	public TransactionDriver getTransactionDriverControl();
+	TransactionDriver getTransactionDriverControl();
 
 	/**
 	 * Get access to the local registry of Synchronization instances
 	 *
 	 * @return The local Synchronization registry
 	 */
-	public SynchronizationRegistry getLocalSynchronizations();
+	SynchronizationRegistry getLocalSynchronizations();
 
 	/**
 	 * Is this transaction still active?
@@ -61,14 +61,14 @@ public interface TransactionCoordinator {
 	 *
 	 * @throws org.hibernate.HibernateException Indicates a problem checking the transaction status.
 	 */
-	public boolean isActive();
+	boolean isActive();
 
 	/**
 	 * Retrieve an isolation delegate appropriate for this transaction strategy.
 	 *
 	 * @return An isolation delegate.
 	 */
-	public IsolationDelegate createIsolationDelegate();
+	IsolationDelegate createIsolationDelegate();
 
 	/**
 	 * Adds an observer to the coordinator.
@@ -77,24 +77,24 @@ public interface TransactionCoordinator {
 	 *
 	 * @param observer The observer to add.
 	 */
-	public void addObserver(TransactionObserver observer);
+	void addObserver(TransactionObserver observer);
 
 	/**
 	 * Removed an observer from the coordinator.
 	 *
 	 * @param observer The observer to remove.
 	 */
-	public void removeObserver(TransactionObserver observer);
+	void removeObserver(TransactionObserver observer);
 
 	/**
 	 *
 	 * @return
 	 */
-	public TransactionCoordinatorBuilder getTransactionCoordinatorBuilder();
+	TransactionCoordinatorBuilder getTransactionCoordinatorBuilder();
 
-	public void setTimeOut(int seconds);
+	void setTimeOut(int seconds);
 
-	public int getTimeOut();
+	int getTimeOut();
 
 	/**
 	 * Provides the means for "local transactions" (as transaction drivers) to control the
@@ -102,25 +102,25 @@ public interface TransactionCoordinator {
 	 *
 	 * @author Steve Ebersole
 	 */
-	public interface TransactionDriver {
+	interface TransactionDriver {
 		/**
 		 * Begin the physical transaction
 		 */
-		public void begin();
+		void begin();
 
 		/**
 		 * Commit the physical transaction
 		 */
-		public void commit();
+		void commit();
 
 		/**
 		 * Rollback the physical transaction
 		 */
-		public void rollback();
+		void rollback();
 
-		public TransactionStatus getStatus();
+		TransactionStatus getStatus();
 
-		public void markRollbackOnly();
+		void markRollbackOnly();
 
 		// todo : org.hibernate.Transaction will need access to register local Synchronizations.
 		//		depending on how we integrate TransactionCoordinator/TransactionDriverControl with

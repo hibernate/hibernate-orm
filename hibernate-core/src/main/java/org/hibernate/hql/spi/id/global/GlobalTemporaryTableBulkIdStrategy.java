@@ -17,7 +17,7 @@ import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.tree.DeleteStatement;
 import org.hibernate.hql.internal.ast.tree.FromElement;
@@ -76,7 +76,7 @@ public class GlobalTemporaryTableBulkIdStrategy
 		super( idTableSupport );
 		this.afterUseAction = afterUseAction;
 		if ( afterUseAction == AfterUseAction.DROP ) {
-			throw new IllegalArgumentException( "DROP not supported as a after-use action for global temp table strategy" );
+			throw new IllegalArgumentException( "DROP not supported as a afterQuery-use action for global temp table strategy" );
 		}
 	}
 
@@ -153,7 +153,7 @@ public class GlobalTemporaryTableBulkIdStrategy
 
 		return new TableBasedUpdateHandlerImpl( factory, walker, getIdTableInfo( targetedPersister ) ) {
 			@Override
-			protected void releaseFromUse(Queryable persister, SessionImplementor session) {
+			protected void releaseFromUse(Queryable persister, SharedSessionContractImplementor session) {
 				if ( afterUseAction == AfterUseAction.NONE ) {
 					return;
 				}
@@ -164,7 +164,7 @@ public class GlobalTemporaryTableBulkIdStrategy
 		};
 	}
 
-	private void cleanUpRows(String tableName, SessionImplementor session) {
+	private void cleanUpRows(String tableName, SharedSessionContractImplementor session) {
 		final String sql = "delete from " + tableName;
 		PreparedStatement ps = null;
 		try {
@@ -174,7 +174,7 @@ public class GlobalTemporaryTableBulkIdStrategy
 		finally {
 			if ( ps != null ) {
 				try {
-					session.getJdbcCoordinator().getResourceRegistry().release( ps );
+					session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( ps );
 				}
 				catch( Throwable ignore ) {
 					// ignore
@@ -192,7 +192,7 @@ public class GlobalTemporaryTableBulkIdStrategy
 
 		return new TableBasedDeleteHandlerImpl( factory, walker, getIdTableInfo( targetedPersister ) ) {
 			@Override
-			protected void releaseFromUse(Queryable persister, SessionImplementor session) {
+			protected void releaseFromUse(Queryable persister, SharedSessionContractImplementor session) {
 				if ( afterUseAction == AfterUseAction.NONE ) {
 					return;
 				}

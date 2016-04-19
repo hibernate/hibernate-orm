@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -15,119 +16,280 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import javax.persistence.FlushModeType;
+import javax.persistence.LockModeType;
+import javax.persistence.Parameter;
+import javax.persistence.TemporalType;
+import javax.persistence.TypedQuery;
 
+import org.hibernate.query.ParameterMetadata;
+import org.hibernate.query.QueryParameter;
 import org.hibernate.transform.ResultTransformer;
+import org.hibernate.type.BigDecimalType;
+import org.hibernate.type.BigIntegerType;
+import org.hibernate.type.BinaryType;
+import org.hibernate.type.BooleanType;
+import org.hibernate.type.ByteType;
+import org.hibernate.type.CharacterType;
+import org.hibernate.type.DateType;
+import org.hibernate.type.DoubleType;
+import org.hibernate.type.FloatType;
+import org.hibernate.type.IntegerType;
+import org.hibernate.type.LocaleType;
+import org.hibernate.type.LongType;
+import org.hibernate.type.ShortType;
+import org.hibernate.type.StringType;
+import org.hibernate.type.TextType;
+import org.hibernate.type.TimeType;
+import org.hibernate.type.TimestampType;
 import org.hibernate.type.Type;
 
 /**
- * An object-oriented representation of a Hibernate query. A <tt>Query</tt>
- * instance is obtained by calling <tt>Session.createQuery()</tt>. This
- * interface exposes some extra functionality beyond that provided by
- * <tt>Session.iterate()</tt> and <tt>Session.find()</tt>:
- * <ul>
- * <li>a particular page of the result set may be selected by calling <tt>
- * setMaxResults(), setFirstResult()</tt>
- * <li>named query parameters may be used
- * <li>the results may be returned as an instance of <tt>ScrollableResults</tt>
- * </ul>
- * <br>
- * Named query parameters are tokens of the form <tt>:name</tt> in the
- * query string. A value is bound to the <tt>integer</tt> parameter
- * <tt>:foo</tt> by calling<br>
- * <br>
- * <tt>setParameter("foo", foo, Hibernate.INTEGER);</tt><br>
- * <br>
- * for example. A name may appear multiple times in the query string.<br>
- * <br>
- * JDBC-style <tt>?</tt> parameters are also supported. To bind a
- * value to a JDBC-style parameter use a set method that accepts an
- * <tt>int</tt> positional argument (numbered from zero, contrary
- * to JDBC).<br>
- * <br>
- * You may not mix and match JDBC-style parameters and named parameters
- * in the same query.<br>
- * <br>
- * Queries are executed by calling <tt>list()</tt>, <tt>scroll()</tt> or
- * <tt>iterate()</tt>. A query may be re-executed by subsequent invocations.
- * Its lifespan is, however, bounded by the lifespan of the <tt>Session</tt>
- * that created it.<br>
- * <br>
- * Implementors are not intended to be threadsafe.
- *
- * @see org.hibernate.Session#createQuery(java.lang.String)
- * @see org.hibernate.ScrollableResults
+ * Represents an HQL/JPQL query or a compiled Criteria query
  *
  * @author Gavin King
+ * @author Steve Ebersole
+ *
+ * @deprecated (since 5.2) use {@link org.hibernate.query.Query} instead
  */
+@Deprecated
 @SuppressWarnings("UnusedDeclaration")
-public interface Query extends BasicQueryContract {
+public interface Query<R> extends org.hibernate.BasicQueryContract, TypedQuery<R> {
+
 	/**
 	 * Get the query string.
 	 *
 	 * @return the query string
 	 */
-	public String getQueryString();
+	String getQueryString();
 
 	/**
-	 * Obtains the limit set on the maximum number of rows to retrieve.  No set limit means there is no limit set
-	 * on the number of rows returned.  Technically both {@code null} and any negative values are interpreted as no
-	 * limit; however, this method should always return null in such case.
+	 * Obtain the FlushMode in effect for this query.  By default, the query inherits the FlushMode of the Session
+	 * from which it originates.
 	 *
-	 * @return The
+	 * @return The query FlushMode.
+	 *
+	 * @see FlushMode
 	 */
-	public Integer getMaxResults();
+	FlushMode getHibernateFlushMode();
 
 	/**
-	 * Set the maximum number of rows to retrieve.
+	 * (Re)set the current FlushMode in effect for this query.
 	 *
-	 * @param maxResults the maximum number of rows
+	 * @param flushMode The new FlushMode to use.
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @see #getMaxResults()
+	 * @see #getHibernateFlushMode()
 	 */
-	public Query setMaxResults(int maxResults);
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setHibernateFlushMode(FlushMode flushMode) {
+		setFlushMode( flushMode );
+		return (org.hibernate.query.Query) this;
+	}
 
 	/**
-	 * Obtain the value specified (if any) for the first row to be returned from the query results; zero-based.  Used,
-	 * in conjunction with {@link #getMaxResults()} in "paginated queries".  No value specified means the first result
-	 * is returned.  Zero and negative numbers are the same as no setting.
+	 * (Re)set the current FlushMode in effect for this query.
 	 *
-	 * @return The first result number.
-	 */
-	public Integer getFirstResult();
-
-	/**
-	 * Set the first row to retrieve.
-	 *
-	 * @param firstResult a row number, numbered from <tt>0</tt>
+	 * @param flushMode The new FlushMode to use.
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @see #getFirstResult()
+	 * @see #getHibernateFlushMode()
+	 *
+	 * @deprecated (since 5.2) use {@link #setHibernateFlushMode} instead
 	 */
-	public Query setFirstResult(int firstResult);
+	@Deprecated
+	org.hibernate.query.Query setFlushMode(FlushMode flushMode);
 
-	@Override
-	public Query setFlushMode(FlushMode flushMode);
+	/**
+	 * For users of the Hibernate native APIs, we've had to rename this method
+	 * as defined by Hibernate historically because the JPA contract defines a method of the same
+	 * name, but returning the JPA {@link FlushModeType} rather than Hibernate's {@link FlushMode}.  For
+	 * the former behavior, use {@link org.hibernate.query.Query#getHibernateFlushMode()} instead.
+	 *
+	 * @return The FlushModeType in effect for this query.
+	 */
+	FlushModeType getFlushMode();
 
-	@Override
-	public Query setCacheMode(CacheMode cacheMode);
+	/**
+	 * Obtain the CacheMode in effect for this query.  By default, the query inherits the CacheMode of the Session
+	 * from which is originates.
+	 *
+	 * NOTE: The CacheMode here only effects reading/writing of the query cache, not the
+	 * entity/collection caches.
+	 *
+	 * @return The query CacheMode.
+	 *
+	 * @see Session#getCacheMode()
+	 * @see CacheMode
+	 */
+	CacheMode getCacheMode();
 
-	@Override
-	public Query setCacheable(boolean cacheable);
+	/**
+	 * (Re)set the current CacheMode in effect for this query.
+	 *
+	 * @param cacheMode The new CacheMode to use.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see #getCacheMode()
+	 */
+	org.hibernate.query.Query setCacheMode(CacheMode cacheMode);
 
-	@Override
-	public Query setCacheRegion(String cacheRegion);
+	/**
+	 * Are the results of this query eligible for second level query caching?  This is different that second level
+	 * caching of any returned entities and collections.
+	 *
+	 * NOTE: the query being "eligible" for caching does not necessarily mean its results will be cached.  Second level
+	 * query caching still has to be enabled on the {@link SessionFactory} for this to happen.  Usually that is
+	 * controlled by the {@code hibernate.cache.use_query_cache} configuration setting.
+	 *
+	 * @return {@code true} if the query results are eligible for caching, {@code false} otherwise.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#USE_QUERY_CACHE
+	 */
+	boolean isCacheable();
 
-	@Override
-	public Query setTimeout(int timeout);
+	/**
+	 * Enable/disable second level query (result) caching for this query.
+	 *
+	 * @param cacheable Should the query results be cacheable?
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see #isCacheable
+	 */
+	org.hibernate.query.Query setCacheable(boolean cacheable);
 
-	@Override
-	public Query setFetchSize(int fetchSize);
+	/**
+	 * Obtain the name of the second level query cache region in which query results will be stored (if they are
+	 * cached, see the discussion on {@link #isCacheable()} for more information).  {@code null} indicates that the
+	 * default region should be used.
+	 *
+	 * @return The specified cache region name into which query results should be placed; {@code null} indicates
+	 * the default region.
+	 */
+	String getCacheRegion();
 
-	@Override
-	public Query setReadOnly(boolean readOnly);
+	/**
+	 * Set the name of the cache region where query results should be cached (if cached at all).
+	 *
+	 * @param cacheRegion the name of a query cache region, or {@code null} to indicate that the default region
+	 * should be used.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see #getCacheRegion()
+	 */
+	org.hibernate.query.Query setCacheRegion(String cacheRegion);
+
+	/**
+	 * Obtain the query timeout <b>in seconds</b>.  This value is eventually passed along to the JDBC query via
+	 * {@link java.sql.Statement#setQueryTimeout(int)}.  Zero indicates no timeout.
+	 *
+	 * @return The timeout <b>in seconds</b>
+	 *
+	 * @see java.sql.Statement#getQueryTimeout()
+	 * @see java.sql.Statement#setQueryTimeout(int)
+	 */
+	Integer getTimeout();
+
+	/**
+	 * Set the query timeout <b>in seconds</b>.
+	 *
+	 * NOTE it is important to understand that any value set here is eventually passed directly through to the JDBC
+	 * Statement which expressly disallows negative values.  So negative values should be avoided as a general rule.
+	 *
+	 * @param timeout the timeout <b>in seconds</b>
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see #getTimeout()
+	 */
+	org.hibernate.query.Query setTimeout(int timeout);
+
+	/**
+	 * Obtain the JDBC fetch size hint in effect for this query.  This value is eventually passed along to the JDBC
+	 * query via {@link java.sql.Statement#setFetchSize(int)}.  As defined b y JDBC, this value is a hint to the
+	 * driver to indicate how many rows to fetch from the database when more rows are needed.
+	 *
+	 * NOTE : JDBC expressly defines this value as a hint.  It may or may not have any effect on the actual
+	 * query execution and ResultSet processing depending on the driver.
+	 *
+	 * @return The timeout <b>in seconds</b>
+	 *
+	 * @see java.sql.Statement#getFetchSize()
+	 * @see java.sql.Statement#setFetchSize(int)
+	 */
+	Integer getFetchSize();
+
+	/**
+	 * Sets a JDBC fetch size hint for the query.
+	 *
+	 * @param fetchSize the fetch size hint
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see #getFetchSize()
+	 */
+	org.hibernate.query.Query setFetchSize(int fetchSize);
+
+	/**
+	 * Should entities and proxies loaded by this Query be put in read-only mode? If the
+	 * read-only/modifiable setting was not initialized, then the default
+	 * read-only/modifiable setting for the persistence context is returned instead.
+	 *
+	 * @see #setReadOnly(boolean)
+	 * @see org.hibernate.engine.spi.PersistenceContext#isDefaultReadOnly()
+	 *
+	 * The read-only/modifiable setting has no impact on entities/proxies returned by the
+	 * query that existed in the session beforeQuery the query was executed.
+	 *
+	 * @return {@code true} if the entities and proxies loaded by the query will be put
+	 * in read-only mode; {@code false} otherwise (they will be modifiable)
+	 */
+	boolean isReadOnly();
+
+	/**
+	 * Set the read-only/modifiable mode for entities and proxies
+	 * loaded by this Query. This setting overrides the default setting
+	 * for the persistence context.
+	 * @see org.hibernate.engine.spi.PersistenceContext#isDefaultReadOnly()
+	 *
+	 * To set the default read-only/modifiable setting used for
+	 * entities and proxies that are loaded into the session:
+	 * @see org.hibernate.engine.spi.PersistenceContext#setDefaultReadOnly(boolean)
+	 * @see Session#setDefaultReadOnly(boolean)
+	 *
+	 * Read-only entities are not dirty-checked and snapshots of persistent
+	 * state are not maintained. Read-only entities can be modified, but
+	 * changes are not persisted.
+	 *
+	 * When a proxy is initialized, the loaded entity will have the same
+	 * read-only/modifiable setting as the uninitialized
+	 * proxy has, regardless of the session's current setting.
+	 *
+	 * The read-only/modifiable setting has no impact on entities/proxies
+	 * returned by the query that existed in the session beforeQuery the query was executed.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @param readOnly {@code true} indicates that entities and proxies loaded by the query
+	 * are to be put in read-only mode; {@code false} indicates that entities and proxies
+	 * loaded by the query will be put in modifiable mode
+	 */
+	org.hibernate.query.Query setReadOnly(boolean readOnly);
+
+	/**
+	 * Return the Hibernate types of the query results.
+	 *
+	 * @return an array of types
+	 *
+	 * @deprecated (since 5.2) with no replacement; to be removed in 6.0
+	 */
+	@Deprecated
+	Type[] getReturnTypes();
 
 	/**
 	 * Obtains the LockOptions in effect for this query.
@@ -136,7 +298,7 @@ public interface Query extends BasicQueryContract {
 	 *
 	 * @see LockOptions
 	 */
-	public LockOptions getLockOptions();
+	LockOptions getLockOptions();
 
 	/**
 	 * Set the lock options for the query.  Specifically only the following are taken into consideration:<ol>
@@ -152,7 +314,7 @@ public interface Query extends BasicQueryContract {
 	 *
 	 * @see #getLockOptions()
 	 */
-	public Query setLockOptions(LockOptions lockOptions);
+	org.hibernate.query.Query setLockOptions(LockOptions lockOptions);
 
 	/**
 	 * Set the LockMode to use for specific alias (as defined in the query's <tt>FROM</tt> clause).
@@ -171,7 +333,7 @@ public interface Query extends BasicQueryContract {
 	 *
 	 * @see #getLockOptions()
 	 */
-	public Query setLockMode(String alias, LockMode lockMode);
+	org.hibernate.query.Query setLockMode(String alias, LockMode lockMode);
 
 	/**
 	 * Obtain the comment currently associated with this query.  Provided SQL commenting is enabled
@@ -181,7 +343,7 @@ public interface Query extends BasicQueryContract {
 	 *
 	 * @return The comment.
 	 */
-	public String getComment();
+	String getComment();
 
 	/**
 	 * Set the comment for this query.
@@ -192,31 +354,17 @@ public interface Query extends BasicQueryContract {
 	 *
 	 * @see #getComment()
 	 */
-	public Query setComment(String comment);
-	
+	org.hibernate.query.Query setComment(String comment);
+
 	/**
 	 * Add a DB query hint to the SQL.  These differ from JPA's {@link javax.persistence.QueryHint}, which is specific
 	 * to the JPA implementation and ignores DB vendor-specific hints.  Instead, these are intended solely for the
 	 * vendor-specific hints, such as Oracle's optimizers.  Multiple query hints are supported; the Dialect will
 	 * determine concatenation and placement.
-	 * 
+	 *
 	 * @param hint The database specific query hint to add.
 	 */
-	public Query addQueryHint(String hint);
-
-	/**
-	 * Return the HQL select clause aliases, if any.
-	 *
-	 * @return an array of aliases as strings
-	 */
-	public String[] getReturnAliases();
-
-	/**
-	 * Return the names of all named parameters of the query.
-	 *
-	 * @return the parameter names, in no particular order
-	 */
-	public String[] getNamedParameters();
+	org.hibernate.query.Query addQueryHint(String hint);
 
 	/**
 	 * Return the query results as an <tt>Iterator</tt>. If the query
@@ -228,7 +376,7 @@ public interface Query extends BasicQueryContract {
 	 *
 	 * @return the result iterator
 	 */
-	public Iterator iterate();
+	Iterator<R> iterate();
 
 	/**
 	 * Return the query results as <tt>ScrollableResults</tt>. The
@@ -239,7 +387,7 @@ public interface Query extends BasicQueryContract {
 	 *
 	 * @return the result iterator
 	 */
-	public ScrollableResults scroll();
+	ScrollableResults scroll();
 
 	/**
 	 * Return the query results as ScrollableResults. The scrollability of the returned results
@@ -253,7 +401,7 @@ public interface Query extends BasicQueryContract {
 	 * @see ScrollMode
 	 *
 	 */
-	public ScrollableResults scroll(ScrollMode scrollMode);
+	ScrollableResults scroll(ScrollMode scrollMode);
 
 	/**
 	 * Return the query results as a <tt>List</tt>. If the query contains
@@ -262,26 +410,107 @@ public interface Query extends BasicQueryContract {
 	 *
 	 * @return the result list
 	 */
-	public List list();
+	List<R> list();
+
+	default List<R> getResultList() {
+		return list();
+	}
 
 	/**
 	 * Convenience method to return a single instance that matches
-	 * the query, or null if the query returns no results.
+	 * the query, or {@code null} if the query returns no results.
 	 *
 	 * @return the single result or <tt>null</tt>
 	 *
 	 * @throws NonUniqueResultException if there is more than one matching result
 	 */
-	public Object uniqueResult();
+	R uniqueResult();
+
+	default R getSingleResult() {
+		return uniqueResult();
+	}
 
 	/**
-	 * Execute the update or delete statement.
+	 * Access to information about query parameters.
 	 *
-	 * The semantics are compliant with the ejb3 Query.executeUpdate() method.
-	 *
-	 * @return The number of entities updated or deleted.
+	 * @return information about query parameters.
 	 */
-	public int executeUpdate();
+	ParameterMetadata getParameterMetadata();
+
+	/**
+	 * Return the names of all named parameters of the query.
+	 *
+	 * @return the parameter names, in no particular order
+	 *
+	 * @deprecated (since 5.2) use {@link ParameterMetadata#getNamedParameterNames()}
+	 */
+	String[] getNamedParameters();
+
+	/**
+	 * Bind a query parameter using its inferred Type.  If the parameter is
+	 * defined in such a way that the Type cannot be inferred from its usage context then
+	 * use of this form of binding is not allowed, and {@link #setParameter(QueryParameter, Object, Type)}
+	 * should be used instead
+	 *
+	 * @param parameter The query parameter memento
+	 * @param val the possibly-null parameter value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	<T> org.hibernate.query.Query setParameter(QueryParameter<T> parameter, T val);
+
+	<T> org.hibernate.query.Query setParameter(Parameter<T> param, T value);
+
+	/**
+	 * Bind a named query parameter using its inferred Type.  If the parameter is
+	 * defined in such a way that the Type cannot be inferred from its usage context then
+	 * use of this form of binding is not allowed, and {@link #setParameter(String, Object, Type)}
+	 * should be used instead
+	 *
+	 * @param name the parameter name
+	 * @param val the (possibly-null) parameter value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	@SuppressWarnings("unchecked")
+	org.hibernate.query.Query setParameter(String name, Object val);
+
+	/**
+	 * Bind a positional query parameter using its inferred Type.  If the parameter is
+	 * defined in such a way that the Type cannot be inferred from its usage context then
+	 * use of this form of binding is not allowed, and {@link #setParameter(int, Object, Type)}
+	 * should be used instead
+	 *
+	 * @param position the position of the parameter in the query
+	 * string, numbered from <tt>0</tt>.
+	 * @param val the possibly-null parameter value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	@SuppressWarnings("unchecked")
+	org.hibernate.query.Query setParameter(int position, Object val);
+
+	/**
+	 * Bind a query parameter using the supplied Type
+	 *
+	 * @param parameter The query parameter memento
+	 * @param val the possibly-null parameter value
+	 * @param type the Hibernate type
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	<P> org.hibernate.query.Query setParameter(QueryParameter<P> parameter, P val, Type type);
+
+	/**
+	 * Bind a named query parameter using the supplied Type
+	 *
+	 * @param name the name of the parameter
+	 * @param val the possibly-null parameter value
+	 * @param type the Hibernate type
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	org.hibernate.query.Query setParameter(String name, Object val, Type type);
 
 	/**
 	 * Bind a value to a JDBC-style query parameter.
@@ -293,44 +522,960 @@ public interface Query extends BasicQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public Query setParameter(int position, Object val, Type type);
+	org.hibernate.query.Query setParameter(int position, Object val, Type type);
 
 	/**
-	 * Bind a value to a named query parameter.
+	 * Bind a query parameter as some form of date/time using the indicated
+	 * temporal-type.
 	 *
-	 * @param name the name of the parameter
+	 * @param parameter The query parameter memento
 	 * @param val the possibly-null parameter value
-	 * @param type the Hibernate type
+	 * @param temporalType the temporal-type to use in binding the date/time
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public Query setParameter(String name, Object val, Type type);
+	<P> org.hibernate.query.Query setParameter(QueryParameter<P> parameter, P val, TemporalType temporalType);
 
 	/**
-	 * Bind a value to a JDBC-style query parameter. The Hibernate type of the parameter is
-	 * first detected via the usage/position in the query and if not sufficient secondly 
-	 * guessed from the class of the given object.
+	 * Bind a named query parameter as some form of date/time using
+	 * the indicated temporal-type.
+	 *
+	 * @param name the parameter name
+	 * @param val the possibly-null parameter value
+	 * @param temporalType the temporal-type to use in binding the date/time
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	org.hibernate.query.Query setParameter(String name, Object val, TemporalType temporalType);
+
+	/**
+	 * Bind a positional query parameter as some form of date/time using
+	 * the indicated temporal-type.
 	 *
 	 * @param position the position of the parameter in the query
 	 * string, numbered from <tt>0</tt>.
-	 * @param val the non-null parameter value
+	 * @param val the possibly-null parameter value
+	 * @param temporalType the temporal-type to use in binding the date/time
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public Query setParameter(int position, Object val);
+	org.hibernate.query.Query setParameter(int position, Object val, TemporalType temporalType);
+
+
+
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// todo: consider for deprecation
+	//
+	//		The major concern with parameter lists is "expansion" which is where we need
+	// 		to dynamically adjust the query string to include a JDBC parameter placeholder
+	// 		for each list value
+	//
+	//		For the rest, its a question of slimming-down the API
 
 	/**
-	 * Bind a value to a named query parameter. The Hibernate type of the parameter is
-	 * first detected via the usage/position in the query and if not sufficient secondly 
-	 * guessed from the class of the given object.
+	 * Bind multiple values to a query parameter using its inferred Type. The Hibernate type of the parameter values is
+	 * first detected via the usage/position in the query and if not sufficient secondly
+	 * guessed from the class of the first object in the collection. This is useful for binding a list of values
+	 * to an expression such as <tt>foo.bar in (:value_list)</tt>.
 	 *
-	 * @param name the name of the parameter
-	 * @param val the non-null parameter value
+	 * @param parameter the parameter memento
+	 * @param values a collection of values to list
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public Query setParameter(String name, Object val);
-	
+	<P> org.hibernate.query.Query setParameterList(QueryParameter<P> parameter, Collection<P> values);
+
+	/**
+	 * Bind multiple values to a named query parameter. The Hibernate type of the parameter is
+	 * first detected via the usage/position in the query and if not sufficient secondly
+	 * guessed from the class of the first object in the collection. This is useful for binding a list of values
+	 * to an expression such as <tt>foo.bar in (:value_list)</tt>.
+	 *
+	 * @param name the name of the parameter
+	 * @param values a collection of values to list
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	org.hibernate.query.Query setParameterList(String name, Collection values);
+
+	/**
+	 * Bind multiple values to a named query parameter. This is useful for binding
+	 * a list of values to an expression such as <tt>foo.bar in (:value_list)</tt>.
+	 *
+	 * @param name the name of the parameter
+	 * @param values a collection of values to list
+	 * @param type the Hibernate type of the values
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	org.hibernate.query.Query setParameterList(String name, Collection values, Type type);
+
+	/**
+	 * Bind multiple values to a named query parameter. This is useful for binding
+	 * a list of values to an expression such as <tt>foo.bar in (:value_list)</tt>.
+	 *
+	 * @param name the name of the parameter
+	 * @param values a collection of values to list
+	 * @param type the Hibernate type of the values
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	org.hibernate.query.Query setParameterList(String name, Object[] values, Type type);
+
+	/**
+	 * Bind multiple values to a named query parameter. The Hibernate type of the parameter is
+	 * first detected via the usage/position in the query and if not sufficient secondly
+	 * guessed from the class of the first object in the array. This is useful for binding a list of values
+	 * to an expression such as <tt>foo.bar in (:value_list)</tt>.
+	 *
+	 * @param name the name of the parameter
+	 * @param values a collection of values to list
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	org.hibernate.query.Query setParameterList(String name, Object[] values);
+
+	/**
+	 * Bind the property values of the given bean to named parameters of the query,
+	 * matching property names with parameter names and mapping property types to
+	 * Hibernate types using heuristics.
+	 *
+	 * @param bean any JavaBean or POJO
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	org.hibernate.query.Query setProperties(Object bean);
+
+	/**
+	 * Bind the values of the given Map for each named parameters of the query,
+	 * matching key names with parameter names and mapping value types to
+	 * Hibernate types using heuristics.
+	 *
+	 * @param bean a java.util.Map
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	org.hibernate.query.Query setProperties(Map bean);
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// covariant overrides
+
+	@Override
+	org.hibernate.query.Query<R> setMaxResults(int maxResult);
+
+	@Override
+	org.hibernate.query.Query<R> setFirstResult(int startPosition);
+
+	@Override
+	org.hibernate.query.Query<R> setHint(String hintName, Object value);
+
+	@Override
+	org.hibernate.query.Query<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
+
+	@Override
+	org.hibernate.query.Query<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
+
+	@Override
+	org.hibernate.query.Query<R> setParameter(String name, Calendar value, TemporalType temporalType);
+
+	@Override
+	org.hibernate.query.Query<R> setParameter(String name, Date value, TemporalType temporalType);
+
+	@Override
+	org.hibernate.query.Query<R> setParameter(int position, Calendar value, TemporalType temporalType);
+
+	@Override
+	org.hibernate.query.Query<R> setParameter(int position, Date value, TemporalType temporalType);
+
+	@Override
+	org.hibernate.query.Query<R> setFlushMode(FlushModeType flushMode);
+
+	@Override
+	org.hibernate.query.Query<R> setLockMode(LockModeType lockMode);
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// proposed deprecations
+
+	/**
+	 * Bind a positional String-valued parameter.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setString(int position, String val) {
+		setParameter( position, val, StringType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a positional char-valued parameter.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setCharacter(int position, char val) {
+		setParameter( position, val, CharacterType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a positional boolean-valued parameter.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setBoolean(int position, boolean val) {
+		setParameter( position, val, BooleanType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a positional byte-valued parameter.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setByte(int position, byte val) {
+		setParameter( position, val, ByteType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a positional short-valued parameter.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setShort(int position, short val) {
+		setParameter( position, val, ShortType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a positional int-valued parameter.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setInteger(int position, int val) {
+		setParameter( position, val, IntegerType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a positional long-valued parameter.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setLong(int position, long val) {
+		setParameter( position, val, LongType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a positional float-valued parameter.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setFloat(int position, float val) {
+		setParameter( position, val, FloatType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a positional double-valued parameter.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setDouble(int position, double val) {
+		setParameter( position, val, DoubleType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a positional binary-valued parameter.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setBinary(int position, byte[] val) {
+		setParameter( position, val, BinaryType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a positional String-valued parameter using streaming.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setText(int position, String val) {
+		setParameter( position, val, TextType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a positional binary-valued parameter using serialization.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setSerializable(int position, Serializable val) {
+		setParameter( position, val );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a positional Locale-valued parameter.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setLocale(int position, Locale val) {
+		setParameter( position, val, LocaleType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a positional BigDecimal-valued parameter.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setBigDecimal(int position, BigDecimal val) {
+		setParameter( position, val, BigDecimalType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a positional BigDecimal-valued parameter.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setBigInteger(int position, BigInteger val) {
+		setParameter( position, val, BigIntegerType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a positional Date-valued parameter using just the Date portion.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setDate(int position, Date val) {
+		setParameter( position, val, DateType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a positional Date-valued parameter using just the Time portion.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setTime(int position, Date val) {
+		setParameter( position, val, TimeType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a positional Date-valued parameter using the full Timestamp.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setTimestamp(int position, Date val) {
+		setParameter( position, val, TimestampType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a positional Calendar-valued parameter using the full Timestamp portion.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setCalendar(int position, Calendar val) {
+		setParameter( position, val, TimestampType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a positional Calendar-valued parameter using just the Date portion.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setCalendarDate(int position, Calendar val) {
+		setParameter( position, val, DateType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a named String-valued parameter.
+	 *
+	 * @param name The parameter name
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setString(String name, String val) {
+		setParameter( name, val, StringType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a named char-valued parameter.
+	 *
+	 * @param name The parameter name
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setCharacter(String name, char val) {
+		setParameter( name, val, CharacterType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a named boolean-valued parameter.
+	 *
+	 * @param name The parameter name
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setBoolean(String name, boolean val) {
+		setParameter( name, val, BooleanType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a named byte-valued parameter.
+	 *
+	 * @param name The parameter name
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setByte(String name, byte val) {
+		setParameter( name, val, ByteType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a named short-valued parameter.
+	 *
+	 * @param name The parameter name
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setShort(String name, short val) {
+		setParameter( name, val, ShortType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a named int-valued parameter.
+	 *
+	 * @param name The parameter name
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setInteger(String name, int val) {
+		setParameter( name, val, IntegerType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a named long-valued parameter.
+	 *
+	 * @param name The parameter name
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setLong(String name, long val) {
+		setParameter( name, val, LongType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a named float-valued parameter.
+	 *
+	 * @param name The parameter name
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setFloat(String name, float val) {
+		setParameter( name, val, FloatType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a named double-valued parameter.
+	 *
+	 * @param name The parameter name
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setDouble(String name, double val) {
+		setParameter( name, val, DoubleType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a named binary-valued parameter.
+	 *
+	 * @param name The parameter name
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setBinary(String name, byte[] val) {
+		setParameter( name, val, BinaryType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a named String-valued parameter using streaming.
+	 *
+	 * @param name The parameter name
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setText(String name, String val) {
+		setParameter( name, val, TextType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a named binary-valued parameter using serialization.
+	 *
+	 * @param name The parameter name
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setSerializable(String name, Serializable val) {
+		setParameter( name, val );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a named Locale-valued parameter.
+	 *
+	 * @param name The parameter name
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setLocale(String name, Locale val) {
+		setParameter( name, val, TextType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a named BigDecimal-valued parameter.
+	 *
+	 * @param name The parameter name
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setBigDecimal(String name, BigDecimal val) {
+		setParameter( name, val, BigDecimalType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a named BigInteger-valued parameter.
+	 *
+	 * @param name The parameter name
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setBigInteger(String name, BigInteger val) {
+		setParameter( name, val, BigIntegerType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind the val (time is truncated) of a given Date object to a named query parameter.
+	 *
+	 * @param name The name of the parameter
+	 * @param val The val object
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setDate(String name, Date val) {
+		setParameter( name, val, DateType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind the time (val is truncated) of a given Date object to a named query parameter.
+	 *
+	 * @param name The name of the parameter
+	 * @param val The val object
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setTime(String name, Date val) {
+		setParameter( name, val, TimeType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind the value and the time of a given Date object to a named query parameter.
+	 *
+	 * @param name The name of the parameter
+	 * @param value The value object
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setTimestamp(String name, Date value) {
+		setParameter( name, value, TimestampType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a named Calendar-valued parameter using the full Timestamp.
+	 *
+	 * @param name The parameter name
+	 * @param value The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setCalendar(String name, Calendar value) {
+		setParameter( name, value, TimestampType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind a named Calendar-valued parameter using just the Date portion.
+	 *
+	 * @param name The parameter name
+	 * @param value The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setCalendarDate(String name, Calendar value) {
+		setParameter( name, value, DateType.INSTANCE );
+		return (org.hibernate.query.Query) this;
+	}
+
+	/**
+	 * Bind an instance of a mapped persistent class to a JDBC-style query parameter.
+	 * Use {@link #setParameter(int, Object)} for null values.
+	 *
+	 * @param position the position of the parameter in the query
+	 * string, numbered from <tt>0</tt>.
+	 * @param val a non-null instance of a persistent class
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	org.hibernate.query.Query setEntity(int position, Object val);
+
+	/**
+	 * Bind an instance of a mapped persistent class to a named query parameter.  Use
+	 * {@link #setParameter(String, Object)} for null values.
+	 *
+	 * @param name the name of the parameter
+	 * @param val a non-null instance of a persistent class
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
+	 * instead
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	org.hibernate.query.Query setEntity(String name, Object val);
+
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// deprecations
+
+	/**
+	 * Set a strategy for handling the query results. This can be used to change
+	 * "shape" of the query result.
+	 *
+	 * @param transformer The transformer to apply
+	 *
+	 * @return this (for method chaining)
+	 *
+	 * @deprecated (since 6.0) - todo : develop a new approach to result transformers
+	 */
+	@Deprecated
+	org.hibernate.query.Query setResultTransformer(ResultTransformer transformer);
+
+	/**
+	 * @deprecated (since 6.0) use {@link javax.persistence.Tuple} if you need access to "result variables".
+	 */
+	@Deprecated
+	default String[] getReturnAliases() {
+		return null;
+	}
+
 	/**
 	 * Bind values and types to positional parameters.  Allows binding more than one at a time; no real performance
 	 * impact.
@@ -342,512 +1487,17 @@ public interface Query extends BasicQueryContract {
 	 * @param values The values
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 6.0) Bind values individually
 	 */
-	public Query setParameters(Object[] values, Type[] types);
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default org.hibernate.query.Query setParameters(Object[] values, Type[] types) {
+		assert values.length == types.length;
+		for ( int i = 0; i < values.length; i++ ) {
+			setParameter( i, values[i], types[i] );
+		}
 
-	/**
-	 * Bind multiple values to a named query parameter. This is useful for binding
-	 * a list of values to an expression such as <tt>foo.bar in (:value_list)</tt>.
-	 *
-	 * @param name the name of the parameter
-	 * @param values a collection of values to list
-	 * @param type the Hibernate type of the values
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setParameterList(String name, Collection values, Type type);
-
-	/**
-	 * Bind multiple values to a named query parameter. The Hibernate type of the parameter is
-	 * first detected via the usage/position in the query and if not sufficient secondly 
-	 * guessed from the class of the first object in the collection. This is useful for binding a list of values
-	 * to an expression such as <tt>foo.bar in (:value_list)</tt>.
-	 *
-	 * @param name the name of the parameter
-	 * @param values a collection of values to list
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setParameterList(String name, Collection values);
-
-	/**
-	 * Bind multiple values to a named query parameter. This is useful for binding
-	 * a list of values to an expression such as <tt>foo.bar in (:value_list)</tt>.
-	 *
-	 * @param name the name of the parameter
-	 * @param values a collection of values to list
-	 * @param type the Hibernate type of the values
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setParameterList(String name, Object[] values, Type type);
-
-	/**
-	 * Bind multiple values to a named query parameter. The Hibernate type of the parameter is
-	 * first detected via the usage/position in the query and if not sufficient secondly 
-	 * guessed from the class of the first object in the array. This is useful for binding a list of values
-	 * to an expression such as <tt>foo.bar in (:value_list)</tt>.
-	 *
-	 * @param name the name of the parameter
-	 * @param values a collection of values to list
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setParameterList(String name, Object[] values);
-
-	/**
-	 * Bind the property values of the given bean to named parameters of the query,
-	 * matching property names with parameter names and mapping property types to
-	 * Hibernate types using heuristics.
-	 *
-	 * @param bean any JavaBean or POJO
-	 *
-	 * @return {@code this}, for method chaining
-	 */	
-	public Query setProperties(Object bean);
-	
-	/**
-	 * Bind the values of the given Map for each named parameters of the query,
-	 * matching key names with parameter names and mapping value types to
-	 * Hibernate types using heuristics.
-	 *
-	 * @param bean a java.util.Map
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setProperties(Map bean);
-
-	/**
-	 * Bind a positional String-valued parameter.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setString(int position, String val);
-
-	/**
-	 * Bind a positional char-valued parameter.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setCharacter(int position, char val);
-
-	/**
-	 * Bind a positional boolean-valued parameter.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setBoolean(int position, boolean val);
-
-	/**
-	 * Bind a positional byte-valued parameter.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setByte(int position, byte val);
-
-	/**
-	 * Bind a positional short-valued parameter.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setShort(int position, short val);
-
-	/**
-	 * Bind a positional int-valued parameter.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setInteger(int position, int val);
-
-	/**
-	 * Bind a positional long-valued parameter.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setLong(int position, long val);
-
-	/**
-	 * Bind a positional float-valued parameter.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setFloat(int position, float val);
-
-	/**
-	 * Bind a positional double-valued parameter.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setDouble(int position, double val);
-
-	/**
-	 * Bind a positional binary-valued parameter.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setBinary(int position, byte[] val);
-
-	/**
-	 * Bind a positional String-valued parameter using streaming.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setText(int position, String val);
-
-	/**
-	 * Bind a positional binary-valued parameter using serialization.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setSerializable(int position, Serializable val);
-
-	/**
-	 * Bind a positional Locale-valued parameter.
-	 *
-	 * @param position The parameter position
-	 * @param locale The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setLocale(int position, Locale locale);
-
-	/**
-	 * Bind a positional BigDecimal-valued parameter.
-	 *
-	 * @param position The parameter position
-	 * @param number The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setBigDecimal(int position, BigDecimal number);
-
-	/**
-	 * Bind a positional BigDecimal-valued parameter.
-	 *
-	 * @param position The parameter position
-	 * @param number The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setBigInteger(int position, BigInteger number);
-
-	/**
-	 * Bind a positional Date-valued parameter using just the Date portion.
-	 *
-	 * @param position The parameter position
-	 * @param date The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setDate(int position, Date date);
-
-	/**
-	 * Bind a positional Date-valued parameter using just the Time portion.
-	 *
-	 * @param position The parameter position
-	 * @param date The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setTime(int position, Date date);
-
-	/**
-	 * Bind a positional Date-valued parameter using the full Timestamp.
-	 *
-	 * @param position The parameter position
-	 * @param date The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setTimestamp(int position, Date date);
-
-	/**
-	 * Bind a positional Calendar-valued parameter using the full Timestamp portion.
-	 *
-	 * @param position The parameter position
-	 * @param calendar The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setCalendar(int position, Calendar calendar);
-
-	/**
-	 * Bind a positional Calendar-valued parameter using just the Date portion.
-	 *
-	 * @param position The parameter position
-	 * @param calendar The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setCalendarDate(int position, Calendar calendar);
-
-	/**
-	 * Bind a named String-valued parameter.
-	 *
-	 * @param name The parameter name
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setString(String name, String val);
-
-	/**
-	 * Bind a named char-valued parameter.
-	 *
-	 * @param name The parameter name
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setCharacter(String name, char val);
-
-	/**
-	 * Bind a named boolean-valued parameter.
-	 *
-	 * @param name The parameter name
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setBoolean(String name, boolean val);
-
-	/**
-	 * Bind a named byte-valued parameter.
-	 *
-	 * @param name The parameter name
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setByte(String name, byte val);
-
-	/**
-	 * Bind a named short-valued parameter.
-	 *
-	 * @param name The parameter name
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setShort(String name, short val);
-
-	/**
-	 * Bind a named int-valued parameter.
-	 *
-	 * @param name The parameter name
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setInteger(String name, int val);
-
-	/**
-	 * Bind a named long-valued parameter.
-	 *
-	 * @param name The parameter name
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setLong(String name, long val);
-
-	/**
-	 * Bind a named float-valued parameter.
-	 *
-	 * @param name The parameter name
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setFloat(String name, float val);
-
-	/**
-	 * Bind a named double-valued parameter.
-	 *
-	 * @param name The parameter name
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setDouble(String name, double val);
-
-	/**
-	 * Bind a named binary-valued parameter.
-	 *
-	 * @param name The parameter name
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setBinary(String name, byte[] val);
-
-	/**
-	 * Bind a named String-valued parameter using streaming.
-	 *
-	 * @param name The parameter name
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setText(String name, String val);
-
-	/**
-	 * Bind a named binary-valued parameter using serialization.
-	 *
-	 * @param name The parameter name
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setSerializable(String name, Serializable val);
-
-	/**
-	 * Bind a named Locale-valued parameter.
-	 *
-	 * @param name The parameter name
-	 * @param locale The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setLocale(String name, Locale locale);
-
-	/**
-	 * Bind a named BigDecimal-valued parameter.
-	 *
-	 * @param name The parameter name
-	 * @param number The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setBigDecimal(String name, BigDecimal number);
-
-	/**
-	 * Bind a named BigInteger-valued parameter.
-	 *
-	 * @param name The parameter name
-	 * @param number The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setBigInteger(String name, BigInteger number);
-
-	/**
-	 * Bind the date (time is truncated) of a given Date object to a named query parameter.
-	 *
-	 * @param name The name of the parameter
-	 * @param date The date object
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setDate(String name, Date date);
-
-	/**
-	 * Bind the time (date is truncated) of a given Date object to a named query parameter.
-	 *
-	 * @param name The name of the parameter
-	 * @param date The date object
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setTime(String name, Date date);
-
-	/**
-	 * Bind the date and the time of a given Date object to a named query parameter.
-	 *
-	 * @param name The name of the parameter
-	 * @param date The date object
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setTimestamp(String name, Date date);
-
-	/**
-	 * Bind a named Calendar-valued parameter using the full Timestamp.
-	 *
-	 * @param name The parameter name
-	 * @param calendar The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setCalendar(String name, Calendar calendar);
-
-	/**
-	 * Bind a named Calendar-valued parameter using just the Date portion.
-	 *
-	 * @param name The parameter name
-	 * @param calendar The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setCalendarDate(String name, Calendar calendar);
-
-	/**
-	 * Bind an instance of a mapped persistent class to a JDBC-style query parameter.
-	 * Use {@link #setParameter(int, Object)} for null values.
-	 *
-	 * @param position the position of the parameter in the query
-	 * string, numbered from <tt>0</tt>.
-	 * @param val a non-null instance of a persistent class
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setEntity(int position, Object val);
-
-	/**
-	 * Bind an instance of a mapped persistent class to a named query parameter.  Use
-	 * {@link #setParameter(String, Object)} for null values.
-	 *
-	 * @param name the name of the parameter
-	 * @param val a non-null instance of a persistent class
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public Query setEntity(String name, Object val);
-	
-	
-	/**
-	 * Set a strategy for handling the query results. This can be used to change
-	 * "shape" of the query result.
-	 *
-	 * @param transformer The transformer to apply
-	 * @return this (for method chaining)
-	 */
-	public Query setResultTransformer(ResultTransformer transformer);
-
+		return (org.hibernate.query.Query) this;
+	}
 }

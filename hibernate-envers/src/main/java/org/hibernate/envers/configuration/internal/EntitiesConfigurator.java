@@ -6,9 +6,10 @@
  */
 package org.hibernate.envers.configuration.internal;
 
-import org.dom4j.Document;
-import org.dom4j.DocumentException;
-import org.dom4j.Element;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -24,9 +25,9 @@ import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.service.ServiceRegistry;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.Element;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -45,7 +46,7 @@ public class EntitiesConfigurator {
 		// Creating a name register to capture all audit entity names created.
 		final AuditEntityNameRegister auditEntityNameRegister = new AuditEntityNameRegister();
 
-		// Sorting the persistent class topologically - superclass always before subclass
+		// Sorting the persistent class topologically - superclass always beforeQuery subclass
 		final Iterator<PersistentClass> classes = GraphTopologicalSort.sort( new PersistentClassGraphDefiner( metadata ) )
 				.iterator();
 

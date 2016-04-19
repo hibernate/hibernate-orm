@@ -18,7 +18,7 @@ import java.util.Set;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.QueryParameters;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessingContext;
 import org.hibernate.loader.plan.exec.query.spi.NamedParameterContext;
@@ -35,7 +35,7 @@ import org.hibernate.type.EntityType;
  */
 public class ResultSetProcessingContextImpl implements ResultSetProcessingContext {
 	private final ResultSet resultSet;
-	private final SessionImplementor session;
+	private final SharedSessionContractImplementor session;
 	private final LoadPlan loadPlan;
 	private final boolean readOnly;
 	private final boolean shouldUseOptionalEntityInformation;
@@ -59,7 +59,7 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 	 */
 	public ResultSetProcessingContextImpl(
 			final ResultSet resultSet,
-			final SessionImplementor session,
+			final SharedSessionContractImplementor session,
 			final LoadPlan loadPlan,
 			final boolean readOnly,
 			final boolean shouldUseOptionalEntityInformation,
@@ -90,7 +90,7 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 	}
 
 	@Override
-	public SessionImplementor getSession() {
+	public SharedSessionContractImplementor getSession() {
 		return session;
 	}
 
@@ -132,7 +132,7 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 	@Override
 	public EntityReferenceProcessingState getProcessingState(final EntityReference entityReference) {
 		if ( identifierResolutionContextMap == null ) {
-			identifierResolutionContextMap = new IdentityHashMap<EntityReference, EntityReferenceProcessingState>();
+			identifierResolutionContextMap = new IdentityHashMap<>();
 		}
 
 		EntityReferenceProcessingState context = identifierResolutionContextMap.get( entityReference );
@@ -239,7 +239,7 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 	@Override
 	public void registerHydratedEntity(EntityReference entityReference, EntityKey entityKey, Object entityInstance) {
 		if ( currentRowHydratedEntityRegistrationList == null ) {
-			currentRowHydratedEntityRegistrationList = new ArrayList<HydratedEntityRegistration>();
+			currentRowHydratedEntityRegistrationList = new ArrayList<>();
 		}
 		currentRowHydratedEntityRegistrationList.add(
 				new HydratedEntityRegistration(
@@ -264,7 +264,7 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 
 		// managing the running list of registrations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		if ( hydratedEntityRegistrationList == null ) {
-			hydratedEntityRegistrationList = new ArrayList<HydratedEntityRegistration>();
+			hydratedEntityRegistrationList = new ArrayList<>();
 		}
 		hydratedEntityRegistrationList.addAll( currentRowHydratedEntityRegistrationList );
 
@@ -272,14 +272,14 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 		// managing the map forms needed for subselect fetch generation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		if ( hadSubselectFetches ) {
 			if ( subselectLoadableEntityKeyMap == null ) {
-				subselectLoadableEntityKeyMap = new HashMap<EntityPersister, Set<EntityKey>>();
+				subselectLoadableEntityKeyMap = new HashMap<>();
 			}
 			for ( HydratedEntityRegistration registration : currentRowHydratedEntityRegistrationList ) {
 				Set<EntityKey> entityKeys = subselectLoadableEntityKeyMap.get(
 						registration.getEntityReference().getEntityPersister()
 				);
 				if ( entityKeys == null ) {
-					entityKeys = new HashSet<EntityKey>();
+					entityKeys = new HashSet<>();
 					subselectLoadableEntityKeyMap.put( registration.getEntityReference().getEntityPersister(), entityKeys );
 				}
 				entityKeys.add( registration.getKey() );

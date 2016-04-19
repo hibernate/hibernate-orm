@@ -6,15 +6,16 @@
  */
 package org.hibernate.cache.infinispan;
 
-import org.hibernate.cache.CacheException;
-import org.infinispan.configuration.cache.Configuration;
-import org.infinispan.configuration.cache.ConfigurationBuilder;
-import org.infinispan.eviction.EvictionStrategy;
-
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
+
+import org.hibernate.cache.CacheException;
+
+import org.infinispan.configuration.cache.Configuration;
+import org.infinispan.configuration.cache.ConfigurationBuilder;
+import org.infinispan.eviction.EvictionStrategy;
 
 /**
  * This class represents Infinispan cache parameters that can be configured via hibernate configuration properties
@@ -103,11 +104,11 @@ public class TypeOverrides implements Serializable {
 	}
 
    /**
-    * Maximum lifespan of a cache entry, after which the entry is expired
+    * Maximum lifespan of a cache entry, afterQuery which the entry is expired
     * cluster-wide, in milliseconds. -1 means the entries never expire.
     *
     * @param expirationLifespan long representing the maximum lifespan,
-    *                           in milliseconds, for a cached entry before
+    *                           in milliseconds, for a cached entry beforeQuery
     *                           it's expired
     */
 	public void setExpirationLifespan(long expirationLifespan) {
@@ -125,7 +126,7 @@ public class TypeOverrides implements Serializable {
     * cluster-wide. -1 means the entries never expire.
     *
     * @param expirationMaxIdle long representing the maximum idle time, in
-    *                          milliseconds, for a cached entry before it's
+    *                          milliseconds, for a cached entry beforeQuery it's
     *                          expired
     */
 	public void setExpirationMaxIdle(long expirationMaxIdle) {

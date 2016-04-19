@@ -14,8 +14,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
-import org.hibernate.engine.spi.SessionImplementor;
 import org.jboss.logging.Logger;
 
 /**
@@ -32,10 +32,10 @@ abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessStrategy 
 
 	/**
 	 * Returns <code>null</code> if the item is not readable.  Locked items are not readable, nor are items created
-	 * after the start of this transaction.
+	 * afterQuery the start of this transaction.
 	 */
 	@Override
-	public final Object get(SessionImplementor session, Object key, long txTimestamp) throws CacheException {
+	public final Object get(SharedSessionContractImplementor session, Object key, long txTimestamp) throws CacheException {
 		LOG.debugf( "getting key[%s] from region[%s]", key, getInternalRegion().getName() );
 		try {
 			readLock.lock();
@@ -69,7 +69,7 @@ abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessStrategy 
 	 */
 	@Override
 	public final boolean putFromLoad(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Object key,
 			Object value,
 			long txTimestamp,
@@ -110,7 +110,7 @@ abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessStrategy 
 	 * Soft-lock a cache item.
 	 */
 	@Override
-	public final SoftLock lockItem(SessionImplementor session, Object key, Object version) throws CacheException {
+	public final SoftLock lockItem(SharedSessionContractImplementor session, Object key, Object version) throws CacheException {
 
 		try {
 			LOG.debugf( "locking key[%s] in region[%s]", key, getInternalRegion().getName() );
@@ -134,7 +134,7 @@ abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessStrategy 
 	 * Soft-unlock a cache item.
 	 */
 	@Override
-	public final void unlockItem(SessionImplementor session, Object key, SoftLock lock) throws CacheException {
+	public final void unlockItem(SharedSessionContractImplementor session, Object key, SoftLock lock) throws CacheException {
 
 		try {
 			LOG.debugf( "unlocking key[%s] in region[%s]", key, getInternalRegion().getName() );
@@ -160,7 +160,7 @@ abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessStrategy 
 	/**
 	 * Unlock and re-put the given key, lock combination.
 	 */
-	protected void decrementLock(SessionImplementor session, Object key, Lock lock) {
+	protected void decrementLock(SharedSessionContractImplementor session, Object key, Lock lock) {
 		lock.unlock( getInternalRegion().nextTimestamp() );
 		getInternalRegion().put( session, key, lock );
 	}
@@ -168,7 +168,7 @@ abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessStrategy 
 	/**
 	 * Handle the timeout of a previous lock mapped to this key
 	 */
-	protected void handleLockExpiry(SessionImplementor session, Object key, Lockable lock) {
+	protected void handleLockExpiry(SharedSessionContractImplementor session, Object key, Lockable lock) {
 		LOG.info( "Cached entry expired : " + key );
 
 		long ts = getInternalRegion().nextTimestamp() + getInternalRegion().getTimeout();

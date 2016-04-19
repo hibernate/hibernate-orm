@@ -6,7 +6,7 @@
  */
 package org.hibernate;
 
-import java.util.Locale;
+import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 
 /**
  * Represents a flushing strategy. The flush process synchronizes
@@ -21,16 +21,6 @@ import java.util.Locale;
  */
 public enum FlushMode {
 	/**
-	 * The {@link Session} is never flushed unless {@link Session#flush}
-	 * is explicitly called by the application. This mode is very
-	 * efficient for read only transactions.
-	 *
-	 * @deprecated use {@link #MANUAL} instead.
-	 */
-	@Deprecated
-	NEVER ( 0 ),
-
-	/**
 	 * The {@link Session} is only ever flushed when {@link Session#flush}
 	 * is explicitly called by the application. This mode is very
 	 * efficient for read only transactions.
@@ -44,14 +34,14 @@ public enum FlushMode {
 	COMMIT(5 ),
 
 	/**
-	 * The {@link Session} is sometimes flushed before query execution
+	 * The {@link Session} is sometimes flushed beforeQuery query execution
 	 * in order to ensure that queries never return stale state. This
 	 * is the default flush mode.
 	 */
 	AUTO(10 ),
 
 	/**
-	 * The {@link Session} is flushed before every query. This is
+	 * The {@link Session} is flushed beforeQuery every query. This is
 	 * almost always unnecessary and inefficient.
 	 */
 	ALWAYS(20 );
@@ -80,7 +70,7 @@ public enum FlushMode {
 	 *
 	 * @return true/false
 	 *
-	 * @deprecated Just use equality check against {@link #MANUAL}.  Legacy from before this was an enum
+	 * @deprecated Just use equality check against {@link #MANUAL}.  Legacy from beforeQuery this was an enum
 	 */
 	@Deprecated
 	public static boolean isManualFlushMode(FlushMode mode) {
@@ -99,15 +89,6 @@ public enum FlushMode {
 	 * @throws MappingException Indicates an unrecognized external representation
 	 */
 	public static FlushMode interpretExternalSetting(String externalName) {
-		if ( externalName == null ) {
-			return null;
-		}
-
-		try {
-			return FlushMode.valueOf( externalName.toUpperCase(Locale.ROOT) );
-		}
-		catch ( IllegalArgumentException e ) {
-			throw new MappingException( "unknown FlushMode : " + externalName );
-		}
+		return FlushModeTypeHelper.interpretExternalSetting( externalName );
 	}
 }

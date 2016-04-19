@@ -9,8 +9,8 @@ package org.hibernate.engine.transaction.internal;
 import javax.transaction.Synchronization;
 
 import org.hibernate.HibernateException;
-import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
+import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
@@ -23,7 +23,7 @@ import static org.hibernate.resource.transaction.TransactionCoordinator.Transact
  * @author Andrea Boriero
  * @author Steve Ebersole
  */
-public class TransactionImpl implements Transaction {
+public class TransactionImpl implements TransactionImplementor {
 	private static final Logger LOG = CoreLogging.logger( TransactionImpl.class );
 
 	private final TransactionCoordinator transactionCoordinator;
@@ -38,14 +38,13 @@ public class TransactionImpl implements Transaction {
 
 	@Override
 	public void begin() {
-		TransactionStatus status = transactionDriverControl.getStatus();
-
 		if ( !valid ) {
 			throw new TransactionException( "Transaction instance is no longer valid" );
 		}
-		if ( status == TransactionStatus.ACTIVE ) {
-//			throw new TransactionException( "nested transactions not supported" );
-			return;
+
+		// per-JPA
+		if ( isActive() ) {
+			throw new IllegalStateException( "Transaction already active" );
 		}
 
 		LOG.debug( "begin" );
@@ -54,9 +53,8 @@ public class TransactionImpl implements Transaction {
 
 	@Override
 	public void commit() {
-		TransactionStatus status = transactionDriverControl.getStatus();
-		if ( status != TransactionStatus.ACTIVE ) {
-			throw new TransactionException( "Transaction not successfully started" );
+		if ( getStatus() != TransactionStatus.ACTIVE ) {
+			throw new IllegalStateException( "Transaction not successfully started" );
 		}
 
 		LOG.debug( "committing" );
@@ -71,7 +69,9 @@ public class TransactionImpl implements Transaction {
 
 	@Override
 	public void rollback() {
-		TransactionStatus status = transactionDriverControl.getStatus();
+		// todo : may need a "JPA compliant" flag here
+
+		TransactionStatus status = getStatus();
 		if ( status == TransactionStatus.ROLLED_BACK || status == TransactionStatus.NOT_ACTIVE ) {
 			// Allow rollback() calls on completed transactions, just no-op.
 			LOG.debug( "rollback() called on an inactive transaction" );
@@ -95,6 +95,11 @@ public class TransactionImpl implements Transaction {
 	}
 
 	@Override
+	public boolean isActive() {
+		return getStatus() == TransactionStatus.ACTIVE || getStatus() == TransactionStatus.MARKED_ROLLBACK;
+	}
+
+	@Override
 	public TransactionStatus getStatus() {
 		return transactionDriverControl.getStatus();
 	}
@@ -115,8 +120,13 @@ public class TransactionImpl implements Transaction {
 	}
 
 	@Override
-	public void markRollbackOnly() {
+	public void setRollbackOnly() {
 		transactionDriverControl.markRollbackOnly();
+	}
+
+	@Override
+	public boolean getRollbackOnly() {
+		return getStatus() == TransactionStatus.MARKED_ROLLBACK;
 	}
 
 	public void invalidate() {

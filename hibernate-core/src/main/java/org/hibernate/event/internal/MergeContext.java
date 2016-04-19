@@ -12,16 +12,16 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.event.spi.EntityCopyObserver;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.pretty.MessageHelper;
 
+import org.jboss.logging.Logger;
+
 /**
  * MergeContext is a Map implementation that is intended to be used by a merge
  * event listener to keep track of each entity being merged and their corresponding
- * managed result. Entities to be merged may to be added to the MergeContext before
+ * managed result. Entities to be merged may to be added to the MergeContext beforeQuery
  * the merge operation has cascaded to that entity.
  *
  * "Merge entity" and "mergeEntity" method parameter refer to an entity that is (or will be)

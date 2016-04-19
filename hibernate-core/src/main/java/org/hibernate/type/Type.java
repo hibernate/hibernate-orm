@@ -14,12 +14,10 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.jdbc.Size;
-
-import org.dom4j.Node;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * Defines a mapping between a Java type and one or more JDBC {@linkplain java.sql.Types types}, as well
@@ -44,7 +42,7 @@ public interface Type extends Serializable {
 	 *
 	 * @return True if this type is also an {@link AssociationType} implementor; false otherwise.
 	 */
-	public boolean isAssociationType();
+	boolean isAssociationType();
 
 	/**
 	 * Return true if the implementation is castable to {@link CollectionType}. Essentially a polymorphic version of
@@ -55,7 +53,7 @@ public interface Type extends Serializable {
 	 *
 	 * @return True if this type is also an {@link CollectionType} implementor; false otherwise.
 	 */
-	public boolean isCollectionType();
+	boolean isCollectionType();
 
 	/**
 	 * Return true if the implementation is castable to {@link EntityType}. Essentially a polymorphic
@@ -66,7 +64,7 @@ public interface Type extends Serializable {
 	 *
 	 * @return True if this type is also an {@link EntityType} implementor; false otherwise.
 	 */
-	public boolean isEntityType();
+	boolean isEntityType();
 
 	/**
 	 * Return true if the implementation is castable to {@link AnyType}. Essentially a polymorphic
@@ -77,7 +75,7 @@ public interface Type extends Serializable {
 	 *
 	 * @return True if this type is also an {@link AnyType} implementor; false otherwise.
 	 */
-	public boolean isAnyType();
+	boolean isAnyType();
 
 	/**
 	 * Return true if the implementation is castable to {@link CompositeType}. Essentially a polymorphic
@@ -86,7 +84,7 @@ public interface Type extends Serializable {
 	 *
 	 * @return True if this type is also an {@link CompositeType} implementor; false otherwise.
 	 */
-	public boolean isComponentType();
+	boolean isComponentType();
 
 	/**
 	 * How many columns are used to persist this type.  Always the same as {@code sqlTypes(mapping).length}
@@ -97,7 +95,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws MappingException Generally indicates an issue accessing the passed mapping object.
 	 */
-	public int getColumnSpan(Mapping mapping) throws MappingException;
+	int getColumnSpan(Mapping mapping) throws MappingException;
 
 	/**
 	 * Return the JDBC types codes (per {@link java.sql.Types}) for the columns mapped by this type.
@@ -110,7 +108,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws MappingException Generally indicates an issue accessing the passed mapping object.
 	 */
-	public int[] sqlTypes(Mapping mapping) throws MappingException;
+	int[] sqlTypes(Mapping mapping) throws MappingException;
 
 	/**
 	 * Return the column sizes dictated by this type.  For example, the mapping for a {@code char}/{@link Character} would
@@ -125,7 +123,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws MappingException Generally indicates an issue accessing the passed mapping object.
 	 */
-	public Size[] dictatedSizes(Mapping mapping) throws MappingException;
+	Size[] dictatedSizes(Mapping mapping) throws MappingException;
 
 	/**
 	 * Defines the column sizes to use according to this type if the user did not explicitly say (and if no
@@ -140,7 +138,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws MappingException Generally indicates an issue accessing the passed mapping object.
 	 */
-	public Size[] defaultSizes(Mapping mapping) throws MappingException;
+	Size[] defaultSizes(Mapping mapping) throws MappingException;
 
 	/**
 	 * The class returned by {@link #nullSafeGet} methods. This is used to  establish the class of an array of
@@ -148,7 +146,7 @@ public interface Type extends Serializable {
 	 *
 	 * @return The java type class handled by this type.
 	 */
-	public Class getReturnedClass();
+	Class getReturnedClass();
 
 	/**
 	 * Compare two instances of the class mapped by this type for persistence "equality" (equality of persistent
@@ -164,7 +162,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException A problem occurred performing the comparison
 	 */
-	public boolean isSame(Object x, Object y) throws HibernateException;
+	boolean isSame(Object x, Object y) throws HibernateException;
 
 	/**
 	 * Compare two instances of the class mapped by this type for persistence "equality" (equality of persistent
@@ -181,7 +179,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException A problem occurred performing the comparison
 	 */
-	public boolean isEqual(Object x, Object y) throws HibernateException;
+	boolean isEqual(Object x, Object y) throws HibernateException;
 
 	/**
 	 * Compare two instances of the class mapped by this type for persistence "equality" (equality of persistent
@@ -199,7 +197,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException A problem occurred performing the comparison
 	 */
-	public boolean isEqual(Object x, Object y, SessionFactoryImplementor factory) throws HibernateException;
+	boolean isEqual(Object x, Object y, SessionFactoryImplementor factory) throws HibernateException;
 
 	/**
 	 * Get a hash code, consistent with persistence "equality".  Again for most types the normal usage is to
@@ -210,7 +208,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException A problem occurred calculating the hash code
 	 */
-	public int getHashCode(Object x) throws HibernateException;
+	int getHashCode(Object x) throws HibernateException;
 
 	/**
 	 * Get a hash code, consistent with persistence "equality".  Again for most types the normal usage is to
@@ -223,7 +221,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException A problem occurred calculating the hash code
 	 */
-	public int getHashCode(Object x, SessionFactoryImplementor factory) throws HibernateException;
+	int getHashCode(Object x, SessionFactoryImplementor factory) throws HibernateException;
 	
 	/**
 	 * Perform a {@link java.util.Comparator} style comparison between values
@@ -233,7 +231,7 @@ public interface Type extends Serializable {
 	 *
 	 * @return The comparison result.  See {@link java.util.Comparator#compare} for a discussion.
 	 */
-	public int compare(Object x, Object y);
+	int compare(Object x, Object y);
 
 	/**
 	 * Should the parent be considered dirty, given both the old and current value?
@@ -246,7 +244,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException A problem occurred performing the checking
 	 */
-	public boolean isDirty(Object old, Object current, SessionImplementor session) throws HibernateException;
+	boolean isDirty(Object old, Object current, SharedSessionContractImplementor session) throws HibernateException;
 
 	/**
 	 * Should the parent be considered dirty, given both the old and current value?
@@ -260,7 +258,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException A problem occurred performing the checking
 	 */
-	public boolean isDirty(Object oldState, Object currentState, boolean[] checkable, SessionImplementor session)
+	boolean isDirty(Object oldState, Object currentState, boolean[] checkable, SharedSessionContractImplementor session)
 			throws HibernateException;
 
 	/**
@@ -278,7 +276,11 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException A problem occurred performing the checking
 	 */
-	public boolean isModified(Object dbState, Object currentState, boolean[] checkable, SessionImplementor session)
+	boolean isModified(
+			Object dbState,
+			Object currentState,
+			boolean[] checkable,
+			SharedSessionContractImplementor session)
 			throws HibernateException;
 
 	/**
@@ -295,9 +297,9 @@ public interface Type extends Serializable {
 	 * @throws HibernateException An error from Hibernate
 	 * @throws SQLException An error from the JDBC driver
 	 *
-	 * @see Type#hydrate(ResultSet, String[], SessionImplementor, Object) alternative, 2-phase property initialization
+	 * @see Type#hydrate(ResultSet, String[], SharedSessionContractImplementor, Object) alternative, 2-phase property initialization
 	 */
-	public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner)
+	Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
 	throws HibernateException, SQLException;
 
 	/**
@@ -315,7 +317,7 @@ public interface Type extends Serializable {
 	 * @throws HibernateException An error from Hibernate
 	 * @throws SQLException An error from the JDBC driver
 	 */
-	public Object nullSafeGet(ResultSet rs, String name, SessionImplementor session, Object owner)
+	Object nullSafeGet(ResultSet rs, String name, SharedSessionContractImplementor session, Object owner)
 	throws HibernateException, SQLException;
 
 	/**
@@ -332,7 +334,12 @@ public interface Type extends Serializable {
 	 * @throws HibernateException An error from Hibernate
 	 * @throws SQLException An error from the JDBC driver
 	 */
-	public void nullSafeSet(PreparedStatement st, Object value, int index, boolean[] settable, SessionImplementor session)
+	void nullSafeSet(
+			PreparedStatement st,
+			Object value,
+			int index,
+			boolean[] settable,
+			SharedSessionContractImplementor session)
 	throws HibernateException, SQLException;
 
 	/**
@@ -348,7 +355,7 @@ public interface Type extends Serializable {
 	 * @throws HibernateException An error from Hibernate
 	 * @throws SQLException An error from the JDBC driver
 	 */
-	public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session)
+	void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
 	throws HibernateException, SQLException;
 
 	/**
@@ -361,7 +368,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException An error from Hibernate
 	 */
-	public String toLoggableString(Object value, SessionFactoryImplementor factory)
+	String toLoggableString(Object value, SessionFactoryImplementor factory)
 	throws HibernateException;
 
 	/**
@@ -369,7 +376,7 @@ public interface Type extends Serializable {
 	 *
 	 * @return String the Hibernate type name
 	 */
-	public String getName();
+	String getName();
 
 	/**
 	 * Return a deep copy of the persistent state, stopping at entities and at collections.
@@ -381,7 +388,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException An error from Hibernate
 	 */
-	public Object deepCopy(Object value, SessionFactoryImplementor factory)
+	Object deepCopy(Object value, SessionFactoryImplementor factory)
 	throws HibernateException;
 
 	/**
@@ -391,7 +398,7 @@ public interface Type extends Serializable {
 	 *
 	 * @return boolean
 	 */
-	public boolean isMutable();
+	boolean isMutable();
 
 	/**
 	 * Return a disassembled representation of the object.  This is the value Hibernate will use in second level
@@ -406,7 +413,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException An error from Hibernate
 	 */
-	public Serializable disassemble(Object value, SessionImplementor session, Object owner) throws HibernateException;
+	Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException;
 
 	/**
 	 * Reconstruct the object from its disassembled state.  This method is the reciprocal of {@link #disassemble}
@@ -419,17 +426,16 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException An error from Hibernate
 	 */
-	public Object assemble(Serializable cached, SessionImplementor session, Object owner)
-	throws HibernateException;
+	Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) throws HibernateException;
 	
 	/**
-	 * Called before assembling a query result set from the query cache, to allow batch fetching
+	 * Called beforeQuery assembling a query result set from the query cache, to allow batch fetching
 	 * of entities missing from the second-level cache.
 	 *
 	 * @param cached The key
 	 * @param session The originating session
 	 */
-	public void beforeAssemble(Serializable cached, SessionImplementor session);
+	void beforeAssemble(Serializable cached, SharedSessionContractImplementor session);
 
 	/**
 	 * Extract a value from the JDBC result set.  This is useful for 2-phase property initialization - the second
@@ -451,7 +457,7 @@ public interface Type extends Serializable {
 	 *
 	 * @see #resolve
 	 */
-	public Object hydrate(ResultSet rs, String[] names, SessionImplementor session, Object owner)
+	Object hydrate(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
 	throws HibernateException, SQLException;
 
 	/**
@@ -468,7 +474,7 @@ public interface Type extends Serializable {
 	 *
 	 * @see #hydrate
 	 */
-	public Object resolve(Object value, SessionImplementor session, Object owner)
+	Object resolve(Object value, SharedSessionContractImplementor session, Object owner)
 	throws HibernateException;
 	
 	/**
@@ -483,7 +489,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException An error from Hibernate
 	 */
-	public Object semiResolve(Object value, SessionImplementor session, Object owner)
+	Object semiResolve(Object value, SharedSessionContractImplementor session, Object owner)
 	throws HibernateException;
 	
 	/**
@@ -495,7 +501,7 @@ public interface Type extends Serializable {
 	 *
 	 * @return The semi-resolved type
 	 */
-	public Type getSemiResolvedType(SessionFactoryImplementor factory);
+	Type getSemiResolvedType(SessionFactoryImplementor factory);
 
 	/**
 	 * During merge, replace the existing (target) value in the entity we are merging to
@@ -514,11 +520,11 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException An error from Hibernate
 	 */
-	public Object replace(
-			Object original, 
-			Object target, 
-			SessionImplementor session, 
-			Object owner, 
+	Object replace(
+			Object original,
+			Object target,
+			SharedSessionContractImplementor session,
+			Object owner,
 			Map copyCache) throws HibernateException;
 	
 	/**
@@ -539,12 +545,12 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException An error from Hibernate
 	 */
-	public Object replace(
-			Object original, 
-			Object target, 
-			SessionImplementor session, 
-			Object owner, 
-			Map copyCache, 
+	Object replace(
+			Object original,
+			Object target,
+			SharedSessionContractImplementor session,
+			Object owner,
+			Map copyCache,
 			ForeignKeyDirection foreignKeyDirection) throws HibernateException;
 	
 	/**
@@ -556,6 +562,6 @@ public interface Type extends Serializable {
 	 *
 	 * @return array indicating column nullness for a value instance
 	 */
-	public boolean[] toColumnNullness(Object value, Mapping mapping);
+	boolean[] toColumnNullness(Object value, Mapping mapping);
 	
 }

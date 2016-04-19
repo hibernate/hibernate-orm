@@ -13,7 +13,7 @@ import java.io.File;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceException;
 
-import org.hibernate.ejb.HibernatePersistence;
+import org.hibernate.jpa.HibernatePersistenceProvider;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -29,7 +29,7 @@ public class DataSourceInjectionTest {
 		sub.mkdir();
 		PersistenceUnitInfoImpl info = new PersistenceUnitInfoImpl( sub.toURI().toURL(), new String[]{} );
 		try {
-			EntityManagerFactory emf = new HibernatePersistence().createContainerEntityManagerFactory( info, null );
+			EntityManagerFactory emf = new HibernatePersistenceProvider().createContainerEntityManagerFactory( info, null );
 			try {
 				emf.createEntityManager().createQuery( "select i from Item i" ).getResultList();
 			}

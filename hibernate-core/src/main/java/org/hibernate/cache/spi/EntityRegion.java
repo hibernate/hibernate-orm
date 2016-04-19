@@ -26,5 +26,5 @@ public interface EntityRegion extends TransactionalDataRegion {
 	 * for the requested type of access.
 	 * @throws org.hibernate.cache.CacheException Usually indicates mis-configuration.
 	 */
-	public EntityRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException;
+	EntityRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException;
 }

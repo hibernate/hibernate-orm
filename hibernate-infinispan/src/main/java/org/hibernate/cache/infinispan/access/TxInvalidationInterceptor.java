@@ -6,7 +6,15 @@
  */
 package org.hibernate.cache.infinispan.access;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
+
 import org.infinispan.commands.AbstractVisitor;
 import org.infinispan.commands.CommandsFactory;
 import org.infinispan.commands.FlagAffectedCommand;
@@ -35,13 +43,6 @@ import org.infinispan.jmx.annotations.ManagedAttribute;
 import org.infinispan.jmx.annotations.ManagedOperation;
 import org.infinispan.jmx.annotations.MeasurementType;
 import org.infinispan.jmx.annotations.Parameter;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * This interceptor acts as a replacement to the replication interceptor when the CacheImpl is configured with
@@ -115,7 +116,7 @@ public class TxInvalidationInterceptor extends BaseRpcInterceptor implements Jmx
 	public Object visitPrepareCommand(TxInvocationContext ctx, PrepareCommand command) throws Throwable {
 		Object retval = invokeNextInterceptor( ctx, command );
 		log.tracef( "Entering InvalidationInterceptor's prepare phase.  Ctx flags are empty" );
-		// fetch the modifications before the transaction is committed (and thus removed from the txTable)
+		// fetch the modifications beforeQuery the transaction is committed (and thus removed from the txTable)
 		if ( shouldInvokeRemoteTxCommand( ctx ) ) {
 			if ( ctx.getTransaction() == null ) {
 				throw new IllegalStateException( "We must have an associated transaction" );

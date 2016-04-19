@@ -12,7 +12,6 @@ import javax.persistence.EntityManager;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
-import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.TestForIssue;

@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.Type;
 
 /**
@@ -49,7 +49,7 @@ public class ScalarResultColumnProcessor implements ResultColumnProcessor {
 	}
 
 	@Override
-	public Object extract(Object[] data, ResultSet resultSet, SessionImplementor session)
+	public Object extract(Object[] data, ResultSet resultSet, SharedSessionContractImplementor session)
 			throws SQLException, HibernateException {
 		return type.nullSafeGet( resultSet, alias, session, null );
 	}

@@ -80,7 +80,7 @@ public abstract class AbstractJdbcConnectionContextImpl implements JdbcConnectio
 			}
 			catch (SQLException e) {
 				throw new SchemaManagementException(
-						"Unable to reset auto-commit after schema management;  may or may not be a problem",
+						"Unable to reset auto-commit afterQuery schema management;  may or may not be a problem",
 						e
 				);
 			}

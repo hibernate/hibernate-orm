@@ -6,6 +6,11 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.CallableStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+
 import org.hibernate.LockMode;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.ConditionalParenthesisFunction;
@@ -42,11 +47,6 @@ import org.hibernate.persister.entity.Lockable;
 import org.hibernate.sql.CacheJoinFragment;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.type.StandardBasicTypes;
-
-import java.sql.CallableStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
 
 /**
  * Cach&eacute; 2007.1 dialect.
@@ -432,7 +432,7 @@ public class Cache71Dialect extends Dialect {
 
 	@Override
 	public boolean dropConstraints() {
-		// Do we need to drop constraints before dropping tables in this dialect?
+		// Do we need to drop constraints beforeQuery dropping tables in this dialect?
 		return true;
 	}
 
@@ -517,7 +517,7 @@ public class Cache71Dialect extends Dialect {
 	@Override
 	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
 		// InterSystems Cache' does not current support "SELECT ... FOR UPDATE" syntax...
-		// Set your transaction mode to READ_COMMITTED before using
+		// Set your transaction mode to READ_COMMITTED beforeQuery using
 		if ( lockMode==LockMode.PESSIMISTIC_FORCE_INCREMENT) {
 			return new PessimisticForceIncrementLockingStrategy( lockable, lockMode);
 		}

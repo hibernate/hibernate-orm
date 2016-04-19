@@ -32,5 +32,5 @@ public interface WorkExecutorVisitable<T> {
 	 * @throws SQLException Thrown during execution of the underlying JDBC interaction.
 	 * @throws org.hibernate.HibernateException Generally indicates a wrapped SQLException.
 	 */
-	public T accept(WorkExecutor<T> executor, Connection connection) throws SQLException;
+	T accept(WorkExecutor<T> executor, Connection connection) throws SQLException;
 }

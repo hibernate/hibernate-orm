@@ -16,12 +16,11 @@ import java.util.Set;
 
 import org.hibernate.JDBCException;
 import org.hibernate.engine.spi.QueryParameters;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.loader.custom.CustomLoader;
 import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.loader.custom.sql.SQLQueryReturnProcessor;
-import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.result.NoMoreReturnsException;
 import org.hibernate.result.Output;
 import org.hibernate.result.Outputs;
@@ -76,7 +75,7 @@ public class OutputsImpl implements Outputs {
 	}
 
 	protected JDBCException convert(SQLException e, String message) {
-		return context.getSession().getFactory().getSQLExceptionHelper().convert(
+		return context.getSession().getJdbcServices().getSqlExceptionHelper().convert(
 				e,
 				message,
 				context.getSql()
@@ -261,14 +260,14 @@ public class OutputsImpl implements Outputs {
 
 	private static class CustomLoaderExtension extends CustomLoader {
 		private QueryParameters queryParameters;
-		private SessionImplementor session;
+		private SharedSessionContractImplementor session;
 
 		private boolean needsDiscovery = true;
 
 		public CustomLoaderExtension(
 				CustomQuery customQuery,
 				QueryParameters queryParameters,
-				SessionImplementor session) {
+				SharedSessionContractImplementor session) {
 			super( customQuery, session.getFactory() );
 			this.queryParameters = queryParameters;
 			this.session = session;
@@ -289,7 +288,7 @@ public class OutputsImpl implements Outputs {
 					true,
 					null,
 					Integer.MAX_VALUE,
-					Collections.<AfterLoadAction>emptyList()
+					Collections.emptyList()
 			);
 		}
 	}

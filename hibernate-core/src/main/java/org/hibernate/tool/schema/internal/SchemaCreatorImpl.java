@@ -253,7 +253,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			}
 		}
 
-		// next, create all "before table" auxiliary objects
+		// next, create all "beforeQuery table" auxiliary objects
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
 			if ( !auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
 				continue;
@@ -351,9 +351,9 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			}
 		}
 
-		//NOTE : Foreign keys must be created *after* all tables of all namespaces for cross namespace fks. see HHH-10420
+		//NOTE : Foreign keys must be created *afterQuery* all tables of all namespaces for cross namespace fks. see HHH-10420
 		for ( Namespace namespace : database.getNamespaces() ) {
-			// NOTE : Foreign keys must be created *after* unique keys for numerous DBs.  See HHH-8390
+			// NOTE : Foreign keys must be created *afterQuery* unique keys for numerous DBs.  See HHH-8390
 
 			if ( !schemaFilter.includeNamespace( namespace ) ) {
 				continue;
@@ -377,7 +377,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			}
 		}
 
-		// next, create all "after table" auxiliary objects
+		// next, create all "afterQuery table" auxiliary objects
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
 			if ( auxiliaryDatabaseObject.appliesToDialect( dialect )
 					&& !auxiliaryDatabaseObject.beforeTablesOnCreation() ) {

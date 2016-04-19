@@ -11,11 +11,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Test;
-
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.transform.AliasToBeanResultTransformer;
 import org.hibernate.transform.AliasToEntityMapResultTransformer;
 import org.hibernate.transform.AliasedTupleSubsetResultTransformer;
@@ -27,6 +24,9 @@ import org.hibernate.transform.ResultTransformer;
 import org.hibernate.transform.RootEntityResultTransformer;
 import org.hibernate.transform.ToListResultTransformer;
 import org.hibernate.transform.TupleSubsetResultTransformer;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Test;
 
 /**
  * Tests relating to {@link QueryKey} instances.
@@ -61,7 +61,7 @@ public class QueryKeyTest extends BaseUnitTestCase {
 	public void testSerializedEqualityResultTransformer() throws Exception {
 		// settings are lazily initialized when calling transformTuple(),
 		// so they have not been initialized for the following test
-		// (it *should* be initialized before creating a QueryKey)
+		// (it *should* be initialized beforeQuery creating a QueryKey)
 		doResultTransformerTest( new AliasToBeanResultTransformer( AClass.class ), false );
 
 		// initialize settings for the next test

@@ -11,7 +11,7 @@ import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -36,22 +36,22 @@ class BaseNaturalIdRegionAccessStrategy extends BaseRegionAccessStrategy impleme
 	}
 
 	@Override
-	public boolean insert(SessionImplementor session, Object key, Object value) throws CacheException {
+	public boolean insert(SharedSessionContractImplementor session, Object key, Object value) throws CacheException {
 		return putFromLoad( session, key, value, 0, null );
 	}
 
 	@Override
-	public boolean afterInsert(SessionImplementor session, Object key, Object value) throws CacheException {
+	public boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value) throws CacheException {
 		return false;
 	}
 
 	@Override
-	public boolean update(SessionImplementor session, Object key, Object value) throws CacheException {
+	public boolean update(SharedSessionContractImplementor session, Object key, Object value) throws CacheException {
 		return putFromLoad( session, key, value, 0, null );
 	}
 
 	@Override
-	public boolean afterUpdate(SessionImplementor session, Object key, Object value, SoftLock lock) throws CacheException {
+	public boolean afterUpdate(SharedSessionContractImplementor session, Object key, Object value, SoftLock lock) throws CacheException {
 		return false;
 	}
 
@@ -60,7 +60,7 @@ class BaseNaturalIdRegionAccessStrategy extends BaseRegionAccessStrategy impleme
 	}
 
 	@Override
-	public Object generateCacheKey(Object[] naturalIdValues, EntityPersister persister, SessionImplementor session) {
+	public Object generateCacheKey(Object[] naturalIdValues, EntityPersister persister, SharedSessionContractImplementor session) {
 		return DefaultCacheKeysFactory.createNaturalIdKey( naturalIdValues, persister, session );
 	}
 

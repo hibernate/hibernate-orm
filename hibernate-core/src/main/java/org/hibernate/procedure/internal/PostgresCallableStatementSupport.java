@@ -13,7 +13,7 @@ import java.util.List;
 import javax.persistence.ParameterMode;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.procedure.spi.ParameterStrategy;
@@ -32,7 +32,7 @@ public class PostgresCallableStatementSupport implements CallableStatementSuppor
 			String procedureName,
 			ParameterStrategy parameterStrategy,
 			List<ParameterRegistrationImplementor<?>> parameterRegistrations,
-			SessionImplementor session) {
+			SharedSessionContractImplementor session) {
 		// if there are any parameters, see if the first is REF_CURSOR
 		final boolean firstParamIsRefCursor = ! parameterRegistrations.isEmpty()
 				&& parameterRegistrations.get( 0 ).getMode() == ParameterMode.REF_CURSOR;
@@ -81,7 +81,7 @@ public class PostgresCallableStatementSupport implements CallableStatementSuppor
 			CallableStatement statement,
 			ParameterStrategy parameterStrategy,
 			List<ParameterRegistrationImplementor<?>> parameterRegistrations,
-			SessionImplementor session) {
+			SharedSessionContractImplementor session) {
 		// prepare parameters
 		int i = 1;
 
@@ -99,7 +99,7 @@ public class PostgresCallableStatementSupport implements CallableStatementSuppor
 			}
 		}
 		catch (SQLException e) {
-			throw session.getFactory().getSQLExceptionHelper().convert(
+			throw session.getJdbcServices().getSqlExceptionHelper().convert(
 					e,
 					"Error registering CallableStatement parameters",
 					procedureName

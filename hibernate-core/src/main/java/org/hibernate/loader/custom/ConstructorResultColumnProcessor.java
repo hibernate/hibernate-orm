@@ -7,14 +7,13 @@
 package org.hibernate.loader.custom;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.type.PrimitiveWrapperHelper;
 import org.hibernate.type.Type;
 
@@ -36,7 +35,7 @@ public class ConstructorResultColumnProcessor implements ResultColumnProcessor {
 
 	@Override
 	public void performDiscovery(JdbcResultMetadata metadata, List<Type> types, List<String> aliases) throws SQLException {
-		final List<Type> localTypes = new ArrayList<Type>();
+		final List<Type> localTypes = new ArrayList<>();
 		for ( ScalarResultColumnProcessor scalar : scalarProcessors ) {
 			scalar.performDiscovery( metadata, localTypes, aliases );
 		}
@@ -47,7 +46,7 @@ public class ConstructorResultColumnProcessor implements ResultColumnProcessor {
 	}
 
 	@Override
-	public Object extract(Object[] data, ResultSet resultSet, SessionImplementor session)
+	public Object extract(Object[] data, ResultSet resultSet, SharedSessionContractImplementor session)
 			throws SQLException, HibernateException {
 		if ( constructor == null ) {
 			throw new IllegalStateException( "Constructor to call was null" );
@@ -60,12 +59,6 @@ public class ConstructorResultColumnProcessor implements ResultColumnProcessor {
 
 		try {
 			return constructor.newInstance( args );
-		}
-		catch (InvocationTargetException e) {
-			throw new HibernateException(
-					String.format( "Unable to call %s constructor", constructor.getDeclaringClass() ),
-					e
-			);
 		}
 		catch (Exception e) {
 			throw new HibernateException(

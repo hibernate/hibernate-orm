@@ -26,7 +26,7 @@ import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.HolderInstantiator;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -332,7 +332,7 @@ public class CustomLoader extends Loader {
 		return entiytOwners;
 	}
 
-	public List list(SessionImplementor session, QueryParameters queryParameters) throws HibernateException {
+	public List list(SharedSessionContractImplementor session, QueryParameters queryParameters) throws HibernateException {
 		return list( session, queryParameters, querySpaces, resultTypes );
 	}
 
@@ -356,7 +356,7 @@ public class CustomLoader extends Loader {
 					private final LockOptions originalLockOptions = lockOptions.makeCopy();
 
 					@Override
-					public void afterLoad(SessionImplementor session, Object entity, Loadable persister) {
+					public void afterLoad(SharedSessionContractImplementor session, Object entity, Loadable persister) {
 						( (Session) session ).buildLockRequest( originalLockOptions ).lock(
 								persister.getEntityName(),
 								entity
@@ -369,7 +369,7 @@ public class CustomLoader extends Loader {
 		return sql;
 	}
 
-	public ScrollableResults scroll(final QueryParameters queryParameters, final SessionImplementor session)
+	public ScrollableResults scroll(final QueryParameters queryParameters, final SharedSessionContractImplementor session)
 			throws HibernateException {
 		return scroll(
 				queryParameters,
@@ -410,12 +410,12 @@ public class CustomLoader extends Loader {
 			Object[] row,
 			ResultTransformer transformer,
 			ResultSet rs,
-			SessionImplementor session) throws SQLException, HibernateException {
+			SharedSessionContractImplementor session) throws SQLException, HibernateException {
 		return rowProcessor.buildResultRow( row, rs, transformer != null, session );
 	}
 
 	@Override
-	protected Object[] getResultRow(Object[] row, ResultSet rs, SessionImplementor session)
+	protected Object[] getResultRow(Object[] row, ResultSet rs, SharedSessionContractImplementor session)
 			throws SQLException, HibernateException {
 		return rowProcessor.buildResultRow( row, rs, session );
 	}
@@ -523,18 +523,18 @@ public class CustomLoader extends Loader {
 
 	/**
 	 * {@link #resultTypes} can be overridden by {@link #autoDiscoverTypes(ResultSet)},
-	 * *after* {@link #list(SessionImplementor, QueryParameters)} has already been called.  It's a bit of a
+	 * *afterQuery* {@link #list(SharedSessionContractImplementor, QueryParameters)} has already been called.  It's a bit of a
 	 * chicken-and-the-egg issue since {@link #autoDiscoverTypes(ResultSet)} needs the {@link ResultSet}.
 	 * <p/>
 	 * As a hacky workaround, override
-	 * {@link #putResultInQueryCache(SessionImplementor, QueryParameters, Type[], QueryCache, QueryKey, List)} here
+	 * {@link #putResultInQueryCache(SharedSessionContractImplementor, QueryParameters, Type[], QueryCache, QueryKey, List)} here
 	 * and provide the {@link #resultTypes}.
 	 *
 	 * see HHH-3051
 	 */
 	@Override
 	protected void putResultInQueryCache(
-			final SessionImplementor session,
+			final SharedSessionContractImplementor session,
 			final QueryParameters queryParameters,
 			final Type[] resultTypes,
 			final QueryCache queryCache,

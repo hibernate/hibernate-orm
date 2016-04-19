@@ -1,6 +1,13 @@
 package org.hibernate.test.cache.infinispan;
 
-import junit.framework.AssertionFailedError;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.concurrent.CountDownLatch;
+import javax.transaction.RollbackException;
+import javax.transaction.SystemException;
+import javax.transaction.TransactionManager;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -23,27 +30,22 @@ import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLoca
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransactionAccess;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
 import org.hibernate.service.ServiceRegistry;
+
 import org.hibernate.test.cache.infinispan.util.BatchModeJtaPlatform;
 import org.hibernate.test.cache.infinispan.util.BatchModeTransactionCoordinator;
 import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
 import org.hibernate.test.cache.infinispan.util.JdbcResourceTransactionMock;
 import org.hibernate.test.cache.infinispan.util.TestSynchronization;
-import org.infinispan.Cache;
-import org.infinispan.test.TestingUtil;
-import org.jboss.logging.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import junit.framework.AssertionFailedError;
 
-import javax.transaction.RollbackException;
-import javax.transaction.SystemException;
-import javax.transaction.TransactionManager;
+import org.infinispan.Cache;
+import org.infinispan.test.TestingUtil;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.concurrent.CountDownLatch;
+import org.jboss.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -330,7 +332,7 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 		assertNull(remoteAccessStrategy.get(s8, KEY, s8.getTimestamp()));
 		assertEquals(0, remoteRegion.getCache().size());
 
-		// Wait for async propagation of EndInvalidationCommand before executing naked put
+		// Wait for async propagation of EndInvalidationCommand beforeQuery executing naked put
 		sleep(250);
 
 		// Test whether the get above messes up the optimistic version

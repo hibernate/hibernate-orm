@@ -7,14 +7,13 @@
 package org.hibernate.test.annotations.embeddables;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.UserType;
 
 /**
@@ -49,26 +48,26 @@ public class DollarValueUserType implements UserType {
 	}
 
 	@Override
-	public DollarValue nullSafeGet(ResultSet rs, String[] names,
-			SessionImplementor session, Object owner)
-			throws HibernateException, SQLException {
-		
-		DollarValue result = new DollarValue(rs.getBigDecimal(rs.findColumn(names[0])));
-		return result;
+	public DollarValue nullSafeGet(
+			ResultSet rs,
+			String[] names,
+			SharedSessionContractImplementor session,
+			Object owner) throws HibernateException, SQLException {
+		return new DollarValue( rs.getBigDecimal( rs.findColumn( names[0])));
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, Object value, int index,
-			SessionImplementor session) throws HibernateException, SQLException {
-		
+	public void nullSafeSet(
+			PreparedStatement st,
+			Object value,
+			int index,
+			SharedSessionContractImplementor session) throws HibernateException, SQLException {
 		st.setBigDecimal(index, ((DollarValue)value).getAmount());
 	}
 
 	@Override
 	public Object deepCopy(Object value) throws HibernateException {
-		DollarValue result = new DollarValue();
-
-		return result;
+		return new DollarValue();
 	}
 
 	@Override

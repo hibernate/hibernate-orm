@@ -6,13 +6,6 @@
  */
 package org.hibernate.test.legacy;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -48,15 +41,14 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.criterion.Example;
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.InterbaseDialect;
 import org.hibernate.dialect.MckoiDialect;
@@ -79,16 +71,24 @@ import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jdbc.AbstractWork;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.type.StandardBasicTypes;
+
 import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
-import org.hibernate.type.StandardBasicTypes;
-import org.jboss.logging.Logger;
 import org.junit.Test;
+
+import org.jboss.logging.Logger;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class FooBarTest extends LegacyTestCase {
 	private static final Logger log = Logger.getLogger( FooBarTest.class );
@@ -3303,7 +3303,7 @@ public class FooBarTest extends LegacyTestCase {
 		assertTrue( g.getStrings().size()==1 );
 		assertTrue( g.getProxyArray().length==1 );
 		assertTrue( g.getProxySet().size()==1 );
-		assertTrue( "versioned collection before", g.getVersion() == 1 );
+		assertTrue( "versioned collection beforeQuery", g.getVersion() == 1 );
 		s.getTransaction().commit();
 		s.close();
 
@@ -3313,14 +3313,14 @@ public class FooBarTest extends LegacyTestCase {
 		assertTrue( g.getStrings().get(0).equals("foo") );
 		assertTrue( g.getProxyArray()[0]==g );
 		assertTrue( g.getProxySet().iterator().next()==g );
-		assertTrue( "versioned collection before", g.getVersion() == 1 );
+		assertTrue( "versioned collection beforeQuery", g.getVersion() == 1 );
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
 		s.beginTransaction();
 		g = (GlarchProxy) s.load(Glarch.class, gid);
-		assertTrue( "versioned collection before", g.getVersion() == 1 );
+		assertTrue( "versioned collection beforeQuery", g.getVersion() == 1 );
 		g.getStrings().add( "bar" );
 		s.getTransaction().commit();
 		s.close();
@@ -3328,8 +3328,8 @@ public class FooBarTest extends LegacyTestCase {
 		s = openSession();
 		s.beginTransaction();
 		g = (GlarchProxy) s.load(Glarch.class, gid);
-		assertTrue( "versioned collection after", g.getVersion()==2 );
-		assertTrue( "versioned collection after", g.getStrings().size() == 2 );
+		assertTrue( "versioned collection afterQuery", g.getVersion()==2 );
+		assertTrue( "versioned collection afterQuery", g.getStrings().size() == 2 );
 		g.setProxyArray( null );
 		s.getTransaction().commit();
 		s.close();
@@ -3337,8 +3337,8 @@ public class FooBarTest extends LegacyTestCase {
 		s = openSession();
 		s.beginTransaction();
 		g = (GlarchProxy) s.load(Glarch.class, gid);
-		assertTrue( "versioned collection after", g.getVersion()==3 );
-		assertTrue( "versioned collection after", g.getProxyArray().length == 0 );
+		assertTrue( "versioned collection afterQuery", g.getVersion()==3 );
+		assertTrue( "versioned collection afterQuery", g.getProxyArray().length == 0 );
 		g.setFooComponents( new ArrayList() );
 		g.setProxyArray( null );
 		s.getTransaction().commit();
@@ -3347,7 +3347,7 @@ public class FooBarTest extends LegacyTestCase {
 		s = openSession();
 		s.beginTransaction();
 		g = (GlarchProxy) s.load(Glarch.class, gid);
-		assertTrue( "versioned collection after", g.getVersion()==4 );
+		assertTrue( "versioned collection afterQuery", g.getVersion()==4 );
 		s.delete(g);
 		s.flush();
 		assertTrue( s.createQuery( "from java.lang.Object" ).list().size()==0 );
@@ -4013,7 +4013,7 @@ public class FooBarTest extends LegacyTestCase {
 		finally {
 			s.close();
 		}
-		assertTrue( "lazy collection should have blown in the before trans completion", ok );
+		assertTrue( "lazy collection should have blown in the beforeQuery trans completion", ok );
 
 		s = openSession();
 		s.beginTransaction();

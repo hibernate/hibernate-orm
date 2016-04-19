@@ -64,7 +64,7 @@ public class DefaultGeneratedValueTest extends BaseCoreFunctionalTestCase {
 		assertNull( theEntity.vmCreatedSqlTimestamp );
 		assertNull( theEntity.name );
 		s.save( theEntity );
-		//TODO: Actually the values should be non-null after save
+		//TODO: Actually the values should be non-null afterQuery save
 		assertNull( theEntity.createdDate );
 		assertNull( theEntity.alwaysDate );
 		assertNull( theEntity.vmCreatedDate );
@@ -105,7 +105,7 @@ public class DefaultGeneratedValueTest extends BaseCoreFunctionalTestCase {
 		assertNull( theEntity.updated );
 		s.save( theEntity );
 
-		//TODO: Actually the value should be non-null after save
+		//TODO: Actually the value should be non-null afterQuery save
 		assertNull( theEntity.updated );
 		s.getTransaction().commit();
 		s.close();

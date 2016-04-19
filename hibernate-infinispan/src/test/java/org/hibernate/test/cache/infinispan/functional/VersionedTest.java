@@ -1,25 +1,5 @@
 package org.hibernate.test.cache.infinispan.functional;
 
-import org.hibernate.PessimisticLockException;
-import org.hibernate.Session;
-import org.hibernate.StaleStateException;
-import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
-import org.hibernate.cache.infinispan.util.Caches;
-import org.hibernate.cache.infinispan.util.VersionedEntry;
-import org.hibernate.cache.spi.entry.CacheEntry;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.test.cache.infinispan.functional.entities.Item;
-import org.hibernate.test.cache.infinispan.functional.entities.OtherItem;
-import org.infinispan.AdvancedCache;
-import org.infinispan.commands.write.PutKeyValueCommand;
-import org.infinispan.commons.util.ByRef;
-import org.infinispan.context.Flag;
-import org.infinispan.context.InvocationContext;
-import org.infinispan.interceptors.base.BaseCustomInterceptor;
-import org.junit.Test;
-
-import javax.transaction.Synchronization;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -32,15 +12,40 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
+import javax.transaction.Synchronization;
 
-import static org.junit.Assert.*;
+import org.hibernate.PessimisticLockException;
+import org.hibernate.Session;
+import org.hibernate.StaleStateException;
+import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
+import org.hibernate.cache.infinispan.util.Caches;
+import org.hibernate.cache.infinispan.util.VersionedEntry;
+import org.hibernate.cache.spi.entry.CacheEntry;
+import org.hibernate.engine.spi.SessionImplementor;
+
+import org.hibernate.test.cache.infinispan.functional.entities.Item;
+import org.hibernate.test.cache.infinispan.functional.entities.OtherItem;
+import org.junit.Test;
+
+import org.infinispan.AdvancedCache;
+import org.infinispan.commands.write.PutKeyValueCommand;
+import org.infinispan.commons.util.ByRef;
+import org.infinispan.context.Flag;
+import org.infinispan.context.InvocationContext;
+import org.infinispan.interceptors.base.BaseCustomInterceptor;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 
 /**
  * Tests specific to versioned entries -based caches.
  * Similar to {@link TombstoneTest} but some cases have been removed since
  * we are modifying the cache only once, therefore some sequences of operations
- * would fail before touching the cache.
+ * would fail beforeQuery touching the cache.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */

@@ -11,7 +11,7 @@ import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
@@ -24,15 +24,14 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public class Assigned implements IdentifierGenerator, Configurable {
-	
 	private String entityName;
 
-	public Serializable generate(SessionImplementor session, Object obj) throws HibernateException {
+	public Serializable generate(SharedSessionContractImplementor session, Object obj) throws HibernateException {
 		//TODO: cache the persister, this shows up in yourkit
 		final Serializable id = session.getEntityPersister( entityName, obj ).getIdentifier( obj, session );
 		if ( id == null ) {
 			throw new IdentifierGenerationException(
-					"ids for this class must be manually assigned before calling save(): " + entityName
+					"ids for this class must be manually assigned beforeQuery calling save(): " + entityName
 			);
 		}
 		

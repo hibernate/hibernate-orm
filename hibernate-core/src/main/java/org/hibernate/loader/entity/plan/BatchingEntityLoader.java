@@ -13,7 +13,7 @@ import java.util.List;
 
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.QueryParameters;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.Loader;
 import org.hibernate.loader.entity.UniqueEntityLoader;
 import org.hibernate.persister.entity.EntityPersister;
@@ -48,7 +48,7 @@ public abstract class BatchingEntityLoader implements UniqueEntityLoader {
 	}
 
 	@Override
-	public Object load(Serializable id, Object optionalObject, SessionImplementor session) {
+	public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session) {
 		return load( id, optionalObject, session, LockOptions.NONE );
 	}
 
@@ -70,7 +70,7 @@ public abstract class BatchingEntityLoader implements UniqueEntityLoader {
 		return qp;
 	}
 
-	protected Object getObjectFromList(List results, Serializable id, SessionImplementor session) {
+	protected Object getObjectFromList(List results, Serializable id, SharedSessionContractImplementor session) {
 		for ( Object obj : results ) {
 			final boolean equal = persister.getIdentifierType().isEqual(
 					id,
@@ -87,7 +87,7 @@ public abstract class BatchingEntityLoader implements UniqueEntityLoader {
 	protected Object doBatchLoad(
 			Serializable id,
 			Loader loaderToUse,
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Serializable[] ids,
 			Object optionalObject,
 			LockOptions lockOptions) {
@@ -103,7 +103,7 @@ public abstract class BatchingEntityLoader implements UniqueEntityLoader {
 			return getObjectFromList(results, id, session);
 		}
 		catch ( SQLException sqle ) {
-			throw session.getFactory().getSQLExceptionHelper().convert(
+			throw session.getJdbcServices().getSqlExceptionHelper().convert(
 					sqle,
 					"could not load an entity batch: " + MessageHelper.infoString( persister(), ids, session.getFactory() ),
 					loaderToUse.getSQLString()

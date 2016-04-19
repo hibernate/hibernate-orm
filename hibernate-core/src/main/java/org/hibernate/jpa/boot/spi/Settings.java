@@ -19,7 +19,7 @@ public interface Settings {
 	/**
 	 * Should resources held by {@link javax.persistence.EntityManager} instance be released immediately on close?
 	 * <p/>
-	 * The other option is to release them as part of an after-transaction callback.
+	 * The other option is to release them as part of an afterQuery-transaction callback.
 	 *
 	 * @return {@code true}/{@code false}
 	 */

@@ -1,3 +1,9 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
 package org.hibernate.internal;
 
 import java.io.Serializable;
@@ -11,11 +17,11 @@ import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 /**
  * @author Steve Ebersole
  */
-class NonContextualJdbcConnectionAccess implements JdbcConnectionAccess, Serializable {
+public class NonContextualJdbcConnectionAccess implements JdbcConnectionAccess, Serializable {
 	private final SessionEventListener listener;
 	private final ConnectionProvider connectionProvider;
 
-	NonContextualJdbcConnectionAccess(
+	public NonContextualJdbcConnectionAccess(
 			SessionEventListener listener,
 			ConnectionProvider connectionProvider) {
 		this.listener = listener;

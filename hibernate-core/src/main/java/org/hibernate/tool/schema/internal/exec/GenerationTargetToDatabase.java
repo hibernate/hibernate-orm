@@ -90,7 +90,7 @@ public class GenerationTargetToDatabase implements GenerationTarget {
 				jdbcStatement.close();
 			}
 			catch (SQLException e) {
-				log.debug( "Unable to close JDBC statement after JPA schema generation : " + e.toString() );
+				log.debug( "Unable to close JDBC statement afterQuery JPA schema generation : " + e.toString() );
 			}
 		}
 		jdbcStatement = null;

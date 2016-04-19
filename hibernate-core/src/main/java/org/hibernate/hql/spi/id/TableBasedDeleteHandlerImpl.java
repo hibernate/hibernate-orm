@@ -13,7 +13,7 @@ import java.util.List;
 
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.tree.DeleteStatement;
 import org.hibernate.hql.internal.ast.tree.FromElement;
@@ -59,14 +59,14 @@ public class TableBasedDeleteHandlerImpl
 		log.tracev( "Generated ID-INSERT-SELECT SQL (multi-table delete) : {0}", idInsertSelect );
 		
 		final String idSubselect = generateIdSubselect( targetedPersister, idTableInfo );
-		deletes = new ArrayList<String>();
+		deletes = new ArrayList<>();
 		
 		// If many-to-many, delete the FK row in the collection table.
 		// This partially overlaps with DeleteExecutor, but it instead uses the temp table in the idSubselect.
 		for ( Type type : targetedPersister.getPropertyTypes() ) {
 			if ( type.isCollectionType() ) {
 				CollectionType cType = (CollectionType) type;
-				AbstractCollectionPersister cPersister = (AbstractCollectionPersister)factory.getCollectionPersister( cType.getRole() );
+				AbstractCollectionPersister cPersister = (AbstractCollectionPersister) factory.getMetamodel().collectionPersister( cType.getRole() );
 				if ( cPersister.isManyToMany() ) {
 					deletes.add( generateDelete( cPersister.getTableName(),
 							cPersister.getKeyColumnNames(), idSubselect, "bulk delete - m2m join table cleanup"));
@@ -89,7 +89,7 @@ public class TableBasedDeleteHandlerImpl
 		final Delete delete = new Delete()
 				.setTableName( tableName )
 				.setWhere( "(" + StringHelper.join( ", ", columnNames ) + ") IN (" + idSubselect + ")" );
-		if ( factory().getSettings().isCommentsEnabled() ) {
+		if ( factory().getSessionFactoryOptions().isCommentsEnabled() ) {
 			delete.setComment( comment );
 		}
 		return delete.toStatementString();
@@ -106,7 +106,7 @@ public class TableBasedDeleteHandlerImpl
 	}
 
 	@Override
-	public int execute(SessionImplementor session, QueryParameters queryParameters) {
+	public int execute(SharedSessionContractImplementor session, QueryParameters queryParameters) {
 		prepareForUse( targetedPersister, session );
 		try {
 			PreparedStatement ps = null;
@@ -123,13 +123,13 @@ public class TableBasedDeleteHandlerImpl
 				}
 				finally {
 					if ( ps != null ) {
-						session.getJdbcCoordinator().getResourceRegistry().release( ps );
+						session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( ps );
 						session.getJdbcCoordinator().afterStatementExecution();
 					}
 				}
 			}
 			catch( SQLException e ) {
-				throw convert( e, "could not insert/select ids for bulk delete", idInsertSelect );
+				throw session.getJdbcServices().getSqlExceptionHelper().convert( e, "could not insert/select ids for bulk delete", idInsertSelect );
 			}
 
 			// Start performing the deletes
@@ -145,13 +145,13 @@ public class TableBasedDeleteHandlerImpl
 					}
 					finally {
 						if ( ps != null ) {
-							session.getJdbcCoordinator().getResourceRegistry().release( ps );
+							session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( ps );
 							session.getJdbcCoordinator().afterStatementExecution();
 						}
 					}
 				}
 				catch (SQLException e) {
-					throw convert( e, "error performing bulk delete", delete );
+					throw session.getJdbcServices().getSqlExceptionHelper().convert( e, "error performing bulk delete", delete );
 				}
 			}
 
@@ -163,10 +163,10 @@ public class TableBasedDeleteHandlerImpl
 		}
 	}
 
-	protected int handlePrependedParametersOnIdSelection(PreparedStatement ps, SessionImplementor session, int pos) throws SQLException {
+	protected int handlePrependedParametersOnIdSelection(PreparedStatement ps, SharedSessionContractImplementor session, int pos) throws SQLException {
 		return 0;
 	}
 
-	protected void handleAddedParametersOnDelete(PreparedStatement ps, SessionImplementor session) throws SQLException {
+	protected void handleAddedParametersOnDelete(PreparedStatement ps, SharedSessionContractImplementor session) throws SQLException {
 	}
 }

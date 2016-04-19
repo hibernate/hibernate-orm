@@ -5,9 +5,10 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.type;
+
 import java.sql.Clob;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.ClobTypeDescriptor;
 
 /**
@@ -23,6 +24,7 @@ public class ClobType extends AbstractSingleColumnStandardBasicType<Clob> {
 		super( org.hibernate.type.descriptor.sql.ClobTypeDescriptor.DEFAULT, ClobTypeDescriptor.INSTANCE );
 	}
 
+	@Override
 	public String getName() {
 		return "clob";
 	}
@@ -33,8 +35,8 @@ public class ClobType extends AbstractSingleColumnStandardBasicType<Clob> {
 	}
 
 	@Override
-	protected Clob getReplacement(Clob original, Clob target, SessionImplementor session) {
-		return session.getFactory().getDialect().getLobMergeStrategy().mergeClob( original, target, session );
+	protected Clob getReplacement(Clob original, Clob target, SharedSessionContractImplementor session) {
+		return session.getJdbcServices().getJdbcEnvironment().getDialect().getLobMergeStrategy().mergeClob( original, target, session );
 	}
 
 }

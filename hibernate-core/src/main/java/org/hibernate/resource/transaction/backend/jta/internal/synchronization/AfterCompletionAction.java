@@ -8,6 +8,8 @@ package org.hibernate.resource.transaction.backend.jta.internal.synchronization;
 
 import java.io.Serializable;
 
+import org.hibernate.engine.spi.SessionImplementor;
+
 /**
  * A pluggable strategy for defining any actions to be performed during
  * {@link javax.transaction.Synchronization#afterCompletion} processing from the the
@@ -16,5 +18,5 @@ import java.io.Serializable;
  * @author Steve Ebersole
  */
 public interface AfterCompletionAction extends Serializable {
-	void doAction(boolean successful);
+	void doAction(boolean successful, SessionImplementor session);
 }

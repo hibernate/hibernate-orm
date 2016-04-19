@@ -89,14 +89,14 @@ public class ConcurrentWriteTest extends SingleNodeTest {
 	public void testSingleUser() throws Exception {
 		// setup
 		sessionFactory().getStatistics().clear();
-		// wait a while to make sure that timestamp comparison works after invalidateRegion
+		// wait a while to make sure that timestamp comparison works afterQuery invalidateRegion
 		Thread.sleep(1);
 
 		Customer customer = createCustomer( 0 );
 		final Integer customerId = customer.getId();
 		getCustomerIDs().add( customerId );
 
-		// wait a while to make sure that timestamp comparison works after collection remove (during insert)
+		// wait a while to make sure that timestamp comparison works afterQuery collection remove (during insert)
 		Thread.sleep(1);
 
 		assertNull( "contact exists despite not being added", getFirstContact( customerId ) );
@@ -120,17 +120,17 @@ public class ConcurrentWriteTest extends SingleNodeTest {
 		final Contact contact = addContact( customerId );
 		assertNotNull( "contact returned by addContact is null", contact );
 		assertEquals(
-				"Customer.contacts cache was not invalidated after addContact", 0,
+				"Customer.contacts cache was not invalidated afterQuery addContact", 0,
 				contactsCollectionSlcs.getElementCountInMemory()
 		);
 
-		assertNotNull( "Contact missing after successful add call", getFirstContact( customerId ) );
+		assertNotNull( "Contact missing afterQuery successful add call", getFirstContact( customerId ) );
 
 		// read everyone's contacts
 		readEveryonesFirstContact();
 
 		removeContact( customerId );
-		assertNull( "contact still exists after successful remove call", getFirstContact( customerId ) );
+		assertNull( "contact still exists afterQuery successful remove call", getFirstContact( customerId ) );
 
 	}
 

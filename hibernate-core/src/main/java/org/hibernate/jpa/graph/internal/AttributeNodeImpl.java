@@ -18,11 +18,9 @@ import javax.persistence.metamodel.PluralAttribute;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.jpa.HibernateEntityManagerFactory;
-import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
+import org.hibernate.jpa.spi.HibernateEntityManagerFactoryAware;
 import org.hibernate.metamodel.internal.Helper;
 import org.hibernate.metamodel.internal.PluralAttributeImpl;
-import org.hibernate.jpa.spi.HibernateEntityManagerFactoryAware;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
@@ -35,16 +33,19 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImplementor<T>, HibernateEntityManagerFactoryAware {
-	private final EntityManagerFactoryImpl entityManagerFactory;
+	private final SessionFactoryImplementor sessionFactory;
 	private final Attribute<?,T> attribute;
 	private final ManagedType managedType;
 
 	private Map<Class, Subgraph> subgraphMap;
 	private Map<Class, Subgraph> keySubgraphMap;
 
+	@SuppressWarnings("WeakerAccess")
 	public <X> AttributeNodeImpl(
-			EntityManagerFactoryImpl entityManagerFactory, ManagedType managedType, Attribute<X, T> attribute) {
-		this.entityManagerFactory = entityManagerFactory;
+			SessionFactoryImplementor sessionFactory,
+			ManagedType managedType,
+			Attribute<X, T> attribute) {
+		this.sessionFactory = sessionFactory;
 		this.managedType = managedType;
 		this.attribute = attribute;
 	}
@@ -53,12 +54,12 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 	 * Intended only for use from {@link #makeImmutableCopy()}
 	 */
 	private AttributeNodeImpl(
-			EntityManagerFactoryImpl entityManagerFactory,
+			SessionFactoryImplementor sessionFactory,
 			ManagedType managedType,
 			Attribute<?, T> attribute,
 			Map<Class, Subgraph> subgraphMap,
 			Map<Class, Subgraph> keySubgraphMap) {
-		this.entityManagerFactory = entityManagerFactory;
+		this.sessionFactory = sessionFactory;
 		this.managedType = managedType;
 		this.attribute = attribute;
 		this.subgraphMap = subgraphMap;
@@ -66,12 +67,12 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 	}
 
 	@Override
-	public HibernateEntityManagerFactory getFactory() {
-		return entityManagerFactory;
+	public SessionFactoryImplementor getFactory() {
+		return sessionFactory;
 	}
 
 	private SessionFactoryImplementor sessionFactory() {
-		return (SessionFactoryImplementor) getFactory().getSessionFactory();
+		return getFactory();
 	}
 
 	@Override
@@ -79,6 +80,7 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 		return attribute;
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	public String getRegistrationName() {
 		return getAttributeName();
 	}
@@ -90,25 +92,26 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 
 	@Override
 	public Map<Class, Subgraph> getSubgraphs() {
-		return subgraphMap == null ? Collections.<Class, Subgraph>emptyMap() : subgraphMap;
+		return subgraphMap == null ? Collections.emptyMap() : subgraphMap;
 	}
 
 	@Override
 	public Map<Class, Subgraph> getKeySubgraphs() {
-		return keySubgraphMap == null ? Collections.<Class, Subgraph>emptyMap() : keySubgraphMap;
+		return keySubgraphMap == null ? Collections.emptyMap() : keySubgraphMap;
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T> SubgraphImpl<T> makeSubgraph() {
-		return (SubgraphImpl<T>) internalMakeSubgraph( null );
+	public <X> SubgraphImpl<X> makeSubgraph() {
+		return (SubgraphImpl<X>) internalMakeSubgraph( null );
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("WeakerAccess")
 	public <X extends T> SubgraphImpl<X> makeSubgraph(Class<X> type) {
-		return (SubgraphImpl<X>) internalMakeSubgraph( type );
+		return internalMakeSubgraph( type );
 	}
 
-	private SubgraphImpl internalMakeSubgraph(Class type) {
+	@SuppressWarnings("unchecked")
+	private <X> SubgraphImpl<X> internalMakeSubgraph(Class<X> type) {
 		if ( attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.BASIC
 				|| attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED ) {
 			throw new IllegalArgumentException(
@@ -122,7 +125,7 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 		}
 
 		if ( subgraphMap == null ) {
-			subgraphMap = new HashMap<Class, Subgraph>();
+			subgraphMap = new HashMap<>();
 		}
 
 		final Helper.AttributeSource attributeSource = Helper.resolveAttributeSource( sessionFactory(), managedType );
@@ -169,7 +172,7 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 		
 		ManagedType managedType = null;
 		try {
-			managedType = entityManagerFactory.getEntityTypeByName( type.getName() );
+			managedType = sessionFactory.getMetamodel().entity( type.getName() );
 		}
 		catch (IllegalArgumentException e) {
 			// do nothing
@@ -178,7 +181,7 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 			managedType = attribute.getDeclaringType();
 		}
 
-		final SubgraphImpl subgraph = new SubgraphImpl( this.entityManagerFactory, managedType, type );
+		final SubgraphImpl<X> subgraph = new SubgraphImpl<>( this.sessionFactory, managedType, type );
 		subgraphMap.put( type, subgraph );
 		return subgraph;
 	}
@@ -198,16 +201,17 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T> SubgraphImpl<T> makeKeySubgraph() {
-		return (SubgraphImpl<T>) internalMakeKeySubgraph( null );
+	public <X> SubgraphImpl<X> makeKeySubgraph() {
+		return (SubgraphImpl<X>) internalMakeKeySubgraph( null );
+	}
+
+	@SuppressWarnings("WeakerAccess")
+	public <X extends T> SubgraphImpl<X> makeKeySubgraph(Class<X> type) {
+		return internalMakeKeySubgraph( type );
 	}
 
 	@SuppressWarnings("unchecked")
-	public <X extends T> SubgraphImpl<X> makeKeySubgraph(Class<X> type) {
-		return (SubgraphImpl<X>) internalMakeKeySubgraph( type );
-	}
-
-	public SubgraphImpl internalMakeKeySubgraph(Class type) {
+	private <X> SubgraphImpl<X> internalMakeKeySubgraph(Class<X> type) {
 		if ( ! attribute.isCollection() ) {
 			throw new IllegalArgumentException(
 					String.format( "Non-collection attribute [%s] cannot be target of key subgraph", getAttributeName() )
@@ -232,7 +236,7 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 		}
 
 		if ( keySubgraphMap == null ) {
-			keySubgraphMap = new HashMap<Class, Subgraph>();
+			keySubgraphMap = new HashMap<>();
 		}
 
 		final AssociationType indexAssociationType = (AssociationType) indexType;
@@ -254,15 +258,15 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 			}
 		}
 
-		final SubgraphImpl subgraph = new SubgraphImpl( this.entityManagerFactory, attribute.getDeclaringType(), type );
+		final SubgraphImpl<X> subgraph = new SubgraphImpl<>( this.sessionFactory, attribute.getDeclaringType(), type );
 		keySubgraphMap.put( type, subgraph );
 		return subgraph;
 	}
 
 	@Override
 	public AttributeNodeImpl<T> makeImmutableCopy() {
-		return new AttributeNodeImpl<T>(
-				this.entityManagerFactory,
+		return new AttributeNodeImpl<>(
+				this.sessionFactory,
 				this.managedType,
 				this.attribute,
 				makeSafeMapCopy( subgraphMap ),
@@ -276,7 +280,7 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 		}
 
 		final int properSize = CollectionHelper.determineProperSizing( subgraphMap );
-		final HashMap<Class,Subgraph> copy = new HashMap<Class,Subgraph>( properSize );
+		final HashMap<Class,Subgraph> copy = new HashMap<>( properSize );
 		for ( Map.Entry<Class, Subgraph> subgraphEntry : subgraphMap.entrySet() ) {
 			copy.put(
 					subgraphEntry.getKey(),

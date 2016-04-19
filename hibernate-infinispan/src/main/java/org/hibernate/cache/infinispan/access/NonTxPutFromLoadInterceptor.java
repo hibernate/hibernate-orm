@@ -9,6 +9,7 @@ package org.hibernate.cache.infinispan.access;
 import org.hibernate.cache.infinispan.util.BeginInvalidationCommand;
 import org.hibernate.cache.infinispan.util.CacheCommandInitializer;
 import org.hibernate.cache.infinispan.util.EndInvalidationCommand;
+
 import org.infinispan.commands.write.InvalidateCommand;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.factories.annotations.Inject;
@@ -19,7 +20,7 @@ import org.infinispan.remoting.rpc.RpcManager;
 /**
  * Non-transactional counterpart of {@link TxPutFromLoadInterceptor}.
  * Invokes {@link PutFromLoadValidator#beginInvalidatingKey(Object, Object)} for each invalidation from
- * remote node ({@link BeginInvalidationCommand} and sends {@link EndInvalidationCommand} after the transaction
+ * remote node ({@link BeginInvalidationCommand} and sends {@link EndInvalidationCommand} afterQuery the transaction
  * is complete, with help of {@link InvalidationSynchronization};
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;

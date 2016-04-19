@@ -10,7 +10,7 @@ import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.pretty.MessageHelper;
 
@@ -32,7 +32,7 @@ public abstract class AbstractReturningDelegate implements InsertGeneratedIdenti
 	@Override
 	public final Serializable performInsert(
 			String insertSQL,
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Binder binder) {
 		try {
 			// prepare and execute the insert
@@ -46,7 +46,7 @@ public abstract class AbstractReturningDelegate implements InsertGeneratedIdenti
 			}
 		}
 		catch (SQLException sqle) {
-			throw session.getFactory().getSQLExceptionHelper().convert(
+			throw session.getJdbcServices().getSqlExceptionHelper().convert(
 					sqle,
 					"could not insert: " + MessageHelper.infoString( persister ),
 					insertSQL
@@ -58,13 +58,13 @@ public abstract class AbstractReturningDelegate implements InsertGeneratedIdenti
 		return persister;
 	}
 
-	protected abstract PreparedStatement prepare(String insertSQL, SessionImplementor session) throws SQLException;
+	protected abstract PreparedStatement prepare(String insertSQL, SharedSessionContractImplementor session) throws SQLException;
 
-	protected abstract Serializable executeAndExtract(PreparedStatement insert, SessionImplementor session)
+	protected abstract Serializable executeAndExtract(PreparedStatement insert, SharedSessionContractImplementor session)
 			throws SQLException;
 
-	protected void releaseStatement(PreparedStatement insert, SessionImplementor session) throws SQLException {
-		session.getJdbcCoordinator().getResourceRegistry().release( insert );
+	protected void releaseStatement(PreparedStatement insert, SharedSessionContractImplementor session) throws SQLException {
+		session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( insert );
 		session.getJdbcCoordinator().afterStatementExecution();
 	}
 }

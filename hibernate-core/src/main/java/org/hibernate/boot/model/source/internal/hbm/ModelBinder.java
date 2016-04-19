@@ -3386,7 +3386,7 @@ public class ModelBinder {
 
 				makeIdentifier(
 						mappingDocument,
-						new IdentifierGeneratorDefinition( idSource.getGeneratorName() ),
+						new IdentifierGeneratorDefinition( idSource.getGeneratorName(), idSource.getParameters() ),
 						null,
 						idBinding
 				);

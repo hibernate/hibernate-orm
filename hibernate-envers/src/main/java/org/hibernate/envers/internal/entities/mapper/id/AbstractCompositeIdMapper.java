@@ -62,7 +62,7 @@ public abstract class AbstractCompositeIdMapper extends AbstractIdMapper impleme
 
 	@Override
 	public Iterable<Map.Entry<PropertyData, SingleIdMapper>> getIds() {
-		return Collections.unmodifiableMap(ids).entrySet();
+		return Collections.unmodifiableMap( ids ).entrySet();
 	}
 
 	@Override

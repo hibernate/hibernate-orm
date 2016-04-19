@@ -323,6 +323,9 @@ public class PersistentList extends AbstractPersistentCollection implements List
 			write();
 			list.add( index, value );
 		}
+		else if ( !isConnectedToSession() ) {
+			list.add( index, value );
+		}
 		else {
 			queueOperation( new Add( index, value ) );
 		}

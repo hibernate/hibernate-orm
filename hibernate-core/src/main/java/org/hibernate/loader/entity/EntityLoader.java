@@ -166,6 +166,10 @@ public class EntityLoader extends AbstractEntityLoader {
 		return !batchLoader;
 	}
 
+	protected boolean isSubselectLoadingEnabled() {
+		return batchLoader && hasSubselectLoadableCollections();
+	}
+
 	@Override
     public int[][] getCompositeKeyManyToOneTargetIndices() {
 		return compositeKeyManyToOneTargetIndices;

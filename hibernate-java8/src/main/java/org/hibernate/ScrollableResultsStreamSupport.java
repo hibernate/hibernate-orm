@@ -4,9 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.internal;
-
-import org.hibernate.ScrollableResults;
+package org.hibernate;
 
 import java.util.Iterator;
 import java.util.Spliterator;
@@ -41,7 +39,7 @@ public class ScrollableResultsStreamSupport {
 	 * @return a {@link Stream} with values from the {@link ScrollableResults}
 	 */
 	public static <T> Stream<T> asStream(ScrollableResults scrollableResults, Class<T> type){
-		return asStream( scrollableResults, type, DEFAULT_CHARACTERISTICS, false);
+		return asStream( scrollableResults, type, DEFAULT_CHARACTERISTICS, false );
 	}
 
 	/**
@@ -52,7 +50,7 @@ public class ScrollableResultsStreamSupport {
 	 * @return a parallel {@link Stream} with values from the {@link ScrollableResults}
 	 */
 	public static <T> Stream<T> asParallelStream(ScrollableResults scrollableResults, Class<T> type){
-		return asStream( scrollableResults, type, DEFAULT_CHARACTERISTICS,true);
+		return asStream( scrollableResults, type, DEFAULT_CHARACTERISTICS, true );
 	}
 
 	private static <T> Stream<T> asStream(
@@ -63,9 +61,9 @@ public class ScrollableResultsStreamSupport {
 		// build the stream whether parallel or not, with all required information
 		return stream(
 				spliteratorUnknownSize(
-						new ScrollableResultIterator<>( scrollableResults, type),
-						characteristics),
-				parallel);
+						new ScrollableResultIterator<>( scrollableResults, type ),
+						characteristics ),
+				parallel );
 	}
 
 	/**
@@ -89,7 +87,7 @@ public class ScrollableResultsStreamSupport {
 		@Override
 		public T next() {
 			if (sr.next()){
-				return type.cast( sr.get()[0]);
+				return type.cast( sr.get()[0] );
 			}
 			return null;
 		}

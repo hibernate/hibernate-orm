@@ -268,9 +268,11 @@ public class AltibaseDialect extends Dialect {
 	public boolean supportsLimit() {
 		return true;
 	}
+
 	public boolean supportsLimitOffset() {
 		return true;
 	}
+
 	public boolean bindLimitParametersInReverseOrder() {
 		return false;
 	}
@@ -278,6 +280,7 @@ public class AltibaseDialect extends Dialect {
 	public boolean useMaxForLimit() {
 		return true;
 	}
+
 	public boolean bindLimitParametersFirst() {
 		return true;
 	}
@@ -296,7 +299,7 @@ public class AltibaseDialect extends Dialect {
 			sb.append( " limit 1" );
 		}
 		else {
-			sb.append( " limit " ).append( offset + 1 ).append(", ").append( limit - offset );
+			sb.append( " limit " ).append( offset ).append(", ").append( limit - offset );
 		}
 
 		return sb.toString();

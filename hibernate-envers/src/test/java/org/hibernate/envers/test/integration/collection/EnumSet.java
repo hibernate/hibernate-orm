@@ -99,10 +99,10 @@ public class EnumSet extends BaseEnversJPAFunctionalTestCase {
 	public void testEnumRepresentation() {
 		EntityManager entityManager = getEntityManager();
 		List<Object> enums1 = entityManager.createNativeQuery(
-				"SELECT enums1 FROM EnumSetEntity_enums1_AUD ORDER BY rev ASC"
+				"SELECT enums1 FROM EnumSetEntity_enums1_AUD ORDER BY REV ASC"
 		).getResultList();
 		List<Object> enums2 = entityManager.createNativeQuery(
-				"SELECT enums2 FROM EnumSetEntity_enums2_AUD ORDER BY rev ASC"
+				"SELECT enums2 FROM EnumSetEntity_enums2_AUD ORDER BY REV ASC"
 		).getResultList();
 		entityManager.close();
 

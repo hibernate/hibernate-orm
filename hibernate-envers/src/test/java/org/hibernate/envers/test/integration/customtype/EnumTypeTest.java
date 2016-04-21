@@ -45,7 +45,7 @@ public class EnumTypeTest extends BaseEnversJPAFunctionalTestCase {
 		EntityManager entityManager = getEntityManager();
 		entityManager.getTransaction().begin();
 		List<Object[]> values = entityManager.createNativeQuery(
-				"SELECT enum1, enum2 FROM EnumTypeEntity_AUD ORDER BY rev ASC"
+				"SELECT enum1, enum2 FROM EnumTypeEntity_AUD ORDER BY REV ASC"
 		).getResultList();
 		entityManager.getTransaction().commit();
 		entityManager.close();

@@ -13,6 +13,7 @@ import java.util.Date;
 import javax.persistence.ParameterMode;
 import javax.persistence.TemporalType;
 
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -30,6 +31,9 @@ import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.cfg.AvailableSettings.PROCEDURE_NULL_PARAM_PASSING;
+import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
+
 /**
  * Abstract implementation of ParameterRegistration/ParameterRegistrationImplementor
  *
@@ -45,6 +49,7 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 
 	private final ParameterMode mode;
 	private final Class<T> type;
+	private final boolean passNulls;
 
 	private ParameterBindImpl bind;
 
@@ -109,6 +114,11 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 
 		this.mode = mode;
 		this.type = type;
+
+		this.passNulls = procedureCall.getSession().getFactory()
+				.getServiceRegistry()
+				.getService( ConfigurationService.class )
+				.getSetting( PROCEDURE_NULL_PARAM_PASSING, BOOLEAN, false );
 
 		if ( mode == ParameterMode.REF_CURSOR ) {
 			return;
@@ -261,17 +271,28 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 
 			if ( mode == ParameterMode.INOUT || mode == ParameterMode.IN ) {
 				if ( bind == null || bind.getValue() == null ) {
-					// the user did not bind a value to the parameter being processed.  That might be ok *if* the
-					// procedure as defined in the database defines a default value for that parameter.
+					// the user did not bind a value to the parameter being processed.  This is the condition
+					// defined by `passNulls` and that value controls what happens here.  If `passNulls` is
+					// {@code true} we will bind the NULL value into the statement; if `passNulls` is
+					// {@code false} we will not.
+					//
 					// Unfortunately there is not a way to reliably know through JDBC metadata whether a procedure
-					// parameter defines a default value.  So we simply allow the procedure execution to happen
-					// assuming that the database will complain appropriately if not setting the given parameter
-					// bind value is an error.
-					log.debugf(
-							"Stored procedure [%s] IN/INOUT parameter [%s] not bound; assuming procedure defines default value",
-							procedureCall.getProcedureName(),
-							this
-					);
+					// parameter defines a default value.  Deferring to that information would be the best option
+					if ( passNulls ) {
+						log.debugf(
+								"Stored procedure [%s] IN/INOUT parameter [%s] not bound and `passNulls` was set to true; binding NULL",
+								procedureCall.getProcedureName(),
+								this
+						);
+						typeToUse.nullSafeSet( statement, null, startIndex, session() );
+					}
+					else {
+						log.debugf(
+								"Stored procedure [%s] IN/INOUT parameter [%s] not bound and `passNulls` was set to false; assuming procedure defines default value",
+								procedureCall.getProcedureName(),
+								this
+						);
+					}
 				}
 				else {
 					if ( this.procedureCall.getParameterStrategy() == ParameterStrategy.NAMED && canDoNameParameterBinding()) {

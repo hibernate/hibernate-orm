@@ -984,4 +984,13 @@ public interface AvailableSettings {
 	 */
 	String AUTO_SESSION_EVENTS_LISTENER = "hibernate.session.events.auto";
 
+	/**
+	 * Global setting for whether NULL parameter bindings should be passed to database
+	 * procedure/function calls as part of {@link org.hibernate.procedure.ProcedureCall}
+	 * handling.  By default, Hibernate will not pass the NULL, the intention being to allow
+	 * any default argument values to be applied.
+	 * <p/>
+	 * Values are {@code true} (pass the NULLs) or {@code false} (do not pass the NULLs).
+	 */
+	String PROCEDURE_NULL_PARAM_PASSING = "hibernate.proc.param_null_passing";
 }

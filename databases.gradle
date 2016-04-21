@@ -33,9 +33,9 @@ ext {
                 mysql : [
                         'db.dialect' : 'org.hibernate.dialect.MySQL57InnoDBDialect',
                         'jdbc.driver': 'com.mysql.jdbc.Driver',
-                        'jdbc.user'  : 'hibernateormtest',
-                        'jdbc.pass'  : 'hibernateormtest',
-                        'jdbc.url'   : 'jdbc:mysql://localhost/hibernate_orm_test'
+                        'jdbc.user'  : 'dballo15',
+                        'jdbc.pass'  : 'dballo15',
+                        'jdbc.url'   : 'jdbc\\:mysql\\://db19.mw.lab.eng.bos.redhat.com\\:3306/dballo15'
                 ],
                 mariadb : [
                         'db.dialect' : 'org.hibernate.dialect.MySQL57InnoDBDialect',

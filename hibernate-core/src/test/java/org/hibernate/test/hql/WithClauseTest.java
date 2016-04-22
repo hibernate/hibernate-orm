@@ -6,22 +6,25 @@
  */
 package org.hibernate.test.hql;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
+import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.hql.internal.ast.InvalidWithClauseException;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
+
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Implementation of WithClauseTest.
@@ -46,6 +49,9 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 			        .setDouble( "someLimit", 1 )
 			        .list();
 			fail( "ad-hoc on clause allowed with fetched association" );
+		}
+		catch (IllegalArgumentException e) {
+			assertTyping( QueryException.class, e.getCause() );
 		}
 		catch ( HibernateException e ) {
 			// the expected response...
@@ -72,6 +78,9 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 					.list();
 			fail( "failure expected" );
 		}
+		catch (IllegalArgumentException e) {
+			assertTyping( QueryException.class, e.getCause() );
+		}
 		catch( InvalidWithClauseException expected ) {
 		}
 
@@ -80,6 +89,9 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 					.setEntity( "cousin", s.load( Human.class, new Long(123) ) )
 					.list();
 			fail( "failure expected" );
+		}
+		catch (IllegalArgumentException e) {
+			assertTyping( QueryException.class, e.getCause() );
 		}
 		catch( InvalidWithClauseException expected ) {
 		}

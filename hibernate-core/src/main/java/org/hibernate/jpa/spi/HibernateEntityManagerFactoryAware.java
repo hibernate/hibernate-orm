@@ -13,7 +13,7 @@ import org.hibernate.jpa.HibernateEntityManagerFactory;
  *
  * @author Strong Liu <stliu@hibernate.org>
  *
- * @deprecated (since 6.0) Why do we need an over-arching access to HibernateEntityManagerFactory across
+ * @deprecated (since 5.2) Why do we need an over-arching access to HibernateEntityManagerFactory across
  * multiple contract hierarchies?
  */
 @Deprecated

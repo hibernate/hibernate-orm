@@ -16,6 +16,7 @@ import org.hibernate.Transaction;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.fail;
 
 /**
@@ -72,6 +73,9 @@ public class CaseStatementTest extends BaseCoreFunctionalTestCase {
 					.list();
 			fail( "was expecting an exception" );
 		}
+		catch (IllegalArgumentException e) {
+			assertTyping( QueryException.class, e.getCause() );
+		}
 		catch (QueryException expected) {
 			// expected
 		}
@@ -121,6 +125,9 @@ public class CaseStatementTest extends BaseCoreFunctionalTestCase {
 					.setString( "opt2", "y" )
 					.list();
 			fail( "was expecting an exception" );
+		}
+		catch (IllegalArgumentException e) {
+			assertTyping( QueryException.class, e.getCause() );
 		}
 		catch (QueryException expected) {
 			// expected

@@ -11,7 +11,7 @@
 <hibernate-mapping default-lazy="false">
 
     <class name="org.hibernate.test.legacy.Custom" persister="org.hibernate.test.legacy.CustomPersister">
-        <id type="string" name="id" column="id_" length="64" unsaved-value="null">
+        <id type="string" name="id" column="id_" length="64" unsaved-value="null" access="field">
             <generator class="uuid.hex"/>
         </id>
     </class>

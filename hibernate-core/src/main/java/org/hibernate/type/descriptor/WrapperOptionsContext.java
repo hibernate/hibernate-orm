@@ -11,7 +11,7 @@ package org.hibernate.type.descriptor;
  *
  * @author Steve Ebersole
  *
- * @deprecated (since 6.0) Just directly implement WrapperOptions
+ * @deprecated (since 5.2) Just directly implement WrapperOptions
  */
 @Deprecated
 public interface WrapperOptionsContext extends WrapperOptions {
@@ -20,7 +20,7 @@ public interface WrapperOptionsContext extends WrapperOptions {
 	 *
 	 * @return The WrapperOptions
 	 *
-	 * @deprecated (since 6.0) Just directly implement WrapperOptions
+	 * @deprecated (since 5.2) Just directly implement WrapperOptions
 	 */
 	@Deprecated
 	default WrapperOptions getWrapperOptions() {

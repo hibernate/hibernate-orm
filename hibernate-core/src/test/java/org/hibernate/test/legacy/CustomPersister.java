@@ -61,6 +61,7 @@ public class CustomPersister implements EntityPersister {
 	private static final IdentifierGenerator GENERATOR = new UUIDHexGenerator();
 
 	private SessionFactoryImplementor factory;
+	private EntityMetamodel entityMetamodel;
 
 	@SuppressWarnings("UnusedParameters")
 	public CustomPersister(
@@ -69,6 +70,7 @@ public class CustomPersister implements EntityPersister {
 			NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
 			PersisterCreationContext creationContext) {
 		this.factory = creationContext.getSessionFactory();
+		this.entityMetamodel = new EntityMetamodel( model, this, factory );
 	}
 
 	public boolean hasLazyProperties() {
@@ -674,7 +676,7 @@ public class CustomPersister implements EntityPersister {
 
 	@Override
 	public EntityMetamodel getEntityMetamodel() {
-		return null;
+		return entityMetamodel;
 	}
 
 	@Override

@@ -17,9 +17,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.persistence.ParameterMode;
 
-import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -435,8 +433,13 @@ public class ProcedureCallImpl extends AbstractProducedQuery implements Procedur
 	}
 
 	@Override
-	public Type[] getReturnTypes() throws HibernateException {
-		throw new NotYetImplementedException();
+	public String[] getReturnAliases() {
+		throw new UnsupportedOperationException( "Procedure/function calls do not support returning aliases" );
+	}
+
+	@Override
+	public Type[] getReturnTypes() {
+		throw new UnsupportedOperationException( "Procedure/function calls do not support returning 'return types'" );
 	}
 
 	@Override

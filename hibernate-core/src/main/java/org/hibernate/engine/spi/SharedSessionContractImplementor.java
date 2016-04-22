@@ -404,7 +404,7 @@ public interface SharedSessionContractImplementor
 	 *
 	 * @param flushMode the new flush mode
 	 *
-	 * @deprecated (since 6.0) use {@link #setHibernateFlushMode(FlushMode)} instead
+	 * @deprecated (since 5.2) use {@link #setHibernateFlushMode(FlushMode)} instead
 	 */
 	@Deprecated
 	void setFlushMode(FlushMode flushMode);

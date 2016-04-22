@@ -6,7 +6,11 @@
  */
 package org.hibernate.query.internal;
 
+import java.util.Iterator;
+import java.util.List;
+
 import org.hibernate.HibernateException;
+import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.Query;
@@ -42,15 +46,65 @@ public class CollectionFilterImpl extends org.hibernate.query.internal.AbstractP
 	}
 
 	@Override
+	public Iterator iterate() throws HibernateException {
+		getQueryParameterBindings().verifyParametersBound( false );
+		return getProducer().iterateFilter(
+				collection,
+				getQueryParameterBindings().expandListValuedParameters( getQueryString(), getProducer() ),
+				getQueryParameters()
+		);
+	}
+
+	@Override
+	public List list() throws HibernateException {
+		getQueryParameterBindings().verifyParametersBound( false );
+		return getProducer().listFilter(
+				collection,
+				getQueryParameterBindings().expandListValuedParameters( getQueryString(), getProducer() ),
+				getQueryParameters()
+		);
+	}
+
+	@Override
+	public ScrollableResults scroll() throws HibernateException {
+		throw new UnsupportedOperationException( "Can't scroll filters" );
+	}
+
+	@Override
+	public ScrollableResults scroll(ScrollMode scrollMode) {
+		throw new UnsupportedOperationException( "Can't scroll filters" );
+	}
+
+	@Override
+	protected Type[] getPositionalParameterTypes() {
+		final Type[] explicitParameterTypes = super.getPositionalParameterTypes();
+		final Type[] expandedParameterTypes = new Type[ explicitParameterTypes.length + 1 ];
+
+		// previously this logic would only add an additional slot in the array, not fill it.  carry that logic here, for now
+		System.arraycopy( explicitParameterTypes, 0, expandedParameterTypes, 1, explicitParameterTypes.length );
+
+		return expandedParameterTypes;
+	}
+
+	@SuppressWarnings("deprecation")
+	protected Object[] getPositionalParameterValues() {
+		final Object[] explicitParameterValues = super.getPositionalParameterValues();
+		final Object[] expandedParameterValues = new Object[ explicitParameterValues.length + 1 ];
+
+		// previously this logic would only add an additional slot in the array, not fill it.  carry that logic here, for now
+		System.arraycopy( explicitParameterValues, 0, expandedParameterValues, 1, explicitParameterValues.length );
+
+		return expandedParameterValues;
+	}
+
+	@Override
 	public Type[] getReturnTypes() {
 		return getProducer().getFactory().getReturnTypes( getQueryString() );
 	}
 
-	/**
-	 * @see org.hibernate.Query#scroll()
-	 */
-	public ScrollableResults scroll() throws HibernateException {
-		throw new UnsupportedOperationException( "Can't scroll filters" );
+	@Override
+	public String[] getReturnAliases() {
+		return getProducer().getFactory().getReturnAliases( getQueryString() );
 	}
 
 	@Override

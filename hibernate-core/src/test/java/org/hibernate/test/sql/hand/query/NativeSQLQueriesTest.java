@@ -185,7 +185,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 		s.persist( jboss );
 
 		// now query on Employment, this should not cause an auto-flush
-		s.createSQLQuery( getEmploymentSQL() ).list();
+		s.createSQLQuery( getEmploymentSQL() ).addSynchronizedQuerySpace( "ABC" ).list();
 		assertEquals( 0, sessionFactory().getStatistics().getEntityInsertCount() );
 
 		// now try to query on Employment but this time add Organization as a synchronized query space...
@@ -630,7 +630,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		Dimension dim = new Dimension( 3, Integer.MAX_VALUE );
+		Dimension dim = new Dimension( 3, 30 );
 		s.save( dim );
 		list = s.createSQLQuery( "select d_len * d_width as surface, d_len * d_width * 10 as volume from Dimension" ).list();
 		s.delete( dim );

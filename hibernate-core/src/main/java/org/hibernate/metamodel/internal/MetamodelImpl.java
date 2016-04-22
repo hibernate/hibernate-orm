@@ -8,7 +8,6 @@ package org.hibernate.metamodel.internal;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
@@ -61,33 +60,33 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 	private final SessionFactoryImplementor sessionFactory;
 
-	private final Map<String,String> imports;
-	private final Map<String,EntityPersister> entityPersisterMap;
-	private final Map<Class,String> entityProxyInterfaceMap;
-	private final Map<String,CollectionPersister> collectionPersisterMap;
-	private final Map<String,Set<String>> collectionRolesByEntityParticipant;
-	private final ConcurrentMap<EntityNameResolver,Object> entityNameResolvers;
+	private final Map<String,String> imports = new ConcurrentHashMap<>();
+	private final Map<String,EntityPersister> entityPersisterMap = new ConcurrentHashMap<>();
+	private final Map<Class,String> entityProxyInterfaceMap = new ConcurrentHashMap<>();
+	private final Map<String,CollectionPersister> collectionPersisterMap = new ConcurrentHashMap<>();
+	private final Map<String,Set<String>> collectionRolesByEntityParticipant = new ConcurrentHashMap<>();
+	private final ConcurrentMap<EntityNameResolver,Object> entityNameResolvers = new ConcurrentHashMap<>();
 
 
-	private final Map<Class<?>, EntityTypeImpl<?>> entities;
-	private final Map<Class<?>, EmbeddableTypeImpl<?>> embeddables;
-	private final Map<Class<?>, MappedSuperclassType<?>> mappedSuperclassTypeMap;
-	private final Map<String, EntityTypeImpl<?>> entityTypesByEntityName;
+	private final Map<Class<?>, EntityTypeImpl<?>> jpaEntityTypeMap = new ConcurrentHashMap<>();
+	private final Map<Class<?>, EmbeddableTypeImpl<?>> jpaEmbeddableTypeMap = new ConcurrentHashMap<>();
+	private final Map<Class<?>, MappedSuperclassType<?>> jpaMappedSuperclassTypeMap = new ConcurrentHashMap<>();
+	private final Map<String, EntityTypeImpl<?>> jpaEntityTypesByEntityName = new ConcurrentHashMap<>();
+
+	public MetamodelImpl(SessionFactoryImplementor sessionFactory) {
+		this.sessionFactory = sessionFactory;
+	}
 
 	/**
-	 * Build the metamodel using the information from the collection of Hibernate
-	 * {@link PersistentClass} models as well as the Hibernate {@link org.hibernate.SessionFactory}.
+	 * Prepare the metamodel using the information from the collection of Hibernate
+	 * {@link PersistentClass} models
 	 *
-	 * @param mappingMetadata Access to the mapping metadata
-	 * @param sessionFactory The Hibernate session factory.
-	 * @param jpaMetaModelPopulationSetting ignore unsupported/unknown annotations (like @Any)
-	 *
-	 * @return The built metamodel
+	 * @param mappingMetadata The mapping information
+	 * @param jpaMetaModelPopulationSetting Should the JPA Metamodel be built as well?
 	 */
-	public static MetamodelImpl buildMetamodel(
-			MetadataImplementor mappingMetadata,
-			SessionFactoryImplementor sessionFactory,
-			JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting) {
+	public void initialize(MetadataImplementor mappingMetadata, JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting) {
+		this.imports.putAll( mappingMetadata.getImports() );
+
 		final PersisterCreationContext persisterCreationContext = new PersisterCreationContext() {
 			@Override
 			public SessionFactoryImplementor getSessionFactory() {
@@ -102,8 +101,6 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 		final PersisterFactory persisterFactory = sessionFactory.getServiceRegistry().getService( PersisterFactory.class );
 
-		final Map<String,EntityPersister> entityPersisterMap = CollectionHelper.concurrentMap( mappingMetadata.getEntityBindings().size() );
-		final Map<Class,String> entityProxyInterfaceMap = CollectionHelper.concurrentMap( mappingMetadata.getEntityBindings().size() );
 		for ( final PersistentClass model : mappingMetadata.getEntityBindings() ) {
 			final EntityRegionAccessStrategy accessStrategy = sessionFactory.getCache().determineEntityRegionAccessStrategy(
 					model
@@ -151,9 +148,6 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 			}
 		}
 
-		final Map<String,CollectionPersister> collectionPersisterMap = new HashMap<>();
-		final Map<String,Set<String>> entityToCollectionRoleMap = new HashMap<>();
-
 		for ( final Collection model : mappingMetadata.getCollectionBindings() ) {
 			final CollectionRegionAccessStrategy accessStrategy = sessionFactory.getCache().determineCollectionRegionAccessStrategy(
 					model
@@ -168,28 +162,26 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 			Type indexType = persister.getIndexType();
 			if ( indexType != null && indexType.isAssociationType() && !indexType.isAnyType() ) {
 				String entityName = ( (AssociationType) indexType ).getAssociatedEntityName( sessionFactory );
-				Set<String> roles = entityToCollectionRoleMap.get( entityName );
+				Set<String> roles = collectionRolesByEntityParticipant.get( entityName );
 				if ( roles == null ) {
 					roles = new HashSet<>();
-					entityToCollectionRoleMap.put( entityName, roles );
+					collectionRolesByEntityParticipant.put( entityName, roles );
 				}
 				roles.add( persister.getRole() );
 			}
 			Type elementType = persister.getElementType();
 			if ( elementType.isAssociationType() && !elementType.isAnyType() ) {
 				String entityName = ( ( AssociationType ) elementType ).getAssociatedEntityName( sessionFactory );
-				Set<String> roles = entityToCollectionRoleMap.get( entityName );
+				Set<String> roles = collectionRolesByEntityParticipant.get( entityName );
 				if ( roles == null ) {
 					roles = new HashSet<>();
-					entityToCollectionRoleMap.put( entityName, roles );
+					collectionRolesByEntityParticipant.put( entityName, roles );
 				}
 				roles.add( persister.getRole() );
 			}
 		}
 
-		ConcurrentHashMap<EntityNameResolver, Object> entityNameResolvers = new ConcurrentHashMap<>();
-
-		// afterQuery *all* persisters and named queries are registered
+		// after *all* persisters and named queries are registered
 		entityPersisterMap.values().forEach( EntityPersister::generateEntityDefinition );
 
 		for ( EntityPersister persister : entityPersisterMap.values() ) {
@@ -211,22 +203,11 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 		}
 		context.wrapUp();
 
-		return new MetamodelImpl(
-				sessionFactory,
-				mappingMetadata.getImports(),
-				entityPersisterMap,
-				entityProxyInterfaceMap,
-				entityNameResolvers,
-				collectionPersisterMap,
-				entityToCollectionRoleMap,
-				context.getEntityTypeMap(),
-				context.getEmbeddableTypeMap(),
-				context.getMappedSuperclassTypeMap(),
-				context.getEntityTypesByEntityName()
-		);
+		this.jpaEntityTypeMap.putAll( context.getEntityTypeMap() );
+		this.jpaEmbeddableTypeMap.putAll( context.getEmbeddableTypeMap() );
+		this.jpaMappedSuperclassTypeMap.putAll( context.getMappedSuperclassTypeMap() );
+		this.jpaEntityTypesByEntityName.putAll( context.getEntityTypesByEntityName() );
 	}
-
-
 
 	public java.util.Collection<EntityNameResolver> getEntityNameResolvers() {
 		return entityNameResolvers.keySet();
@@ -330,38 +311,38 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 		return mappedSuperclassType;
 	}
 
-	/**
-	 * Instantiate the metamodel.
-	 *
-	 * @param entityNameResolvers
-	 * @param entities The entity mappings.
-	 * @param embeddables The embeddable (component) mappings.
-	 * @param mappedSuperclassTypeMap The {@link javax.persistence.MappedSuperclass} mappings
-	 */
-	private MetamodelImpl(
-			SessionFactoryImplementor sessionFactory,
-			Map<String, String> imports,
-			Map<String, EntityPersister> entityPersisterMap,
-			Map<Class, String> entityProxyInterfaceMap,
-			ConcurrentHashMap<EntityNameResolver, Object> entityNameResolvers,
-			Map<String, CollectionPersister> collectionPersisterMap,
-			Map<String, Set<String>> collectionRolesByEntityParticipant,
-			Map<Class<?>, EntityTypeImpl<?>> entities,
-			Map<Class<?>, EmbeddableTypeImpl<?>> embeddables,
-			Map<Class<?>, MappedSuperclassType<?>> mappedSuperclassTypeMap,
-			Map<String, EntityTypeImpl<?>> entityTypesByEntityName) {
-		this.sessionFactory = sessionFactory;
-		this.imports = imports;
-		this.entityPersisterMap = entityPersisterMap;
-		this.entityProxyInterfaceMap = entityProxyInterfaceMap;
-		this.entityNameResolvers = entityNameResolvers;
-		this.collectionPersisterMap = collectionPersisterMap;
-		this.collectionRolesByEntityParticipant = collectionRolesByEntityParticipant;
-		this.entities = entities;
-		this.embeddables = embeddables;
-		this.mappedSuperclassTypeMap = mappedSuperclassTypeMap;
-		this.entityTypesByEntityName = entityTypesByEntityName;
-	}
+//	/**
+//	 * Instantiate the metamodel.
+//	 *
+//	 * @param entityNameResolvers
+//	 * @param entities The entity mappings.
+//	 * @param embeddables The embeddable (component) mappings.
+//	 * @param mappedSuperclassTypeMap The {@link javax.persistence.MappedSuperclass} mappings
+//	 */
+//	private MetamodelImpl(
+//			SessionFactoryImplementor sessionFactory,
+//			Map<String, String> imports,
+//			Map<String, EntityPersister> entityPersisterMap,
+//			Map<Class, String> entityProxyInterfaceMap,
+//			ConcurrentHashMap<EntityNameResolver, Object> entityNameResolvers,
+//			Map<String, CollectionPersister> collectionPersisterMap,
+//			Map<String, Set<String>> collectionRolesByEntityParticipant,
+//			Map<Class<?>, EntityTypeImpl<?>> entities,
+//			Map<Class<?>, EmbeddableTypeImpl<?>> embeddables,
+//			Map<Class<?>, MappedSuperclassType<?>> mappedSuperclassTypeMap,
+//			Map<String, EntityTypeImpl<?>> entityTypesByEntityName) {
+//		this.sessionFactory = sessionFactory;
+//		this.imports = imports;
+//		this.entityPersisterMap = entityPersisterMap;
+//		this.entityProxyInterfaceMap = entityProxyInterfaceMap;
+//		this.entityNameResolvers = entityNameResolvers;
+//		this.collectionPersisterMap = collectionPersisterMap;
+//		this.collectionRolesByEntityParticipant = collectionRolesByEntityParticipant;
+//		this.entities = entities;
+//		this.embeddables = embeddables;
+//		this.mappedSuperclassTypeMap = mappedSuperclassTypeMap;
+//		this.entityTypesByEntityName = entityTypesByEntityName;
+//	}
 
 	@Override
 	public SessionFactoryImplementor getSessionFactory() {
@@ -371,7 +352,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	@Override
 	@SuppressWarnings({"unchecked"})
 	public <X> EntityType<X> entity(Class<X> cls) {
-		final EntityType<?> entityType = entities.get( cls );
+		final EntityType<?> entityType = jpaEntityTypeMap.get( cls );
 		if ( entityType == null ) {
 			throw new IllegalArgumentException( "Not an entity: " + cls );
 		}
@@ -381,12 +362,12 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	@Override
 	@SuppressWarnings({"unchecked"})
 	public <X> ManagedType<X> managedType(Class<X> cls) {
-		ManagedType<?> type = entities.get( cls );
+		ManagedType<?> type = jpaEntityTypeMap.get( cls );
 		if ( type == null ) {
-			type = mappedSuperclassTypeMap.get( cls );
+			type = jpaMappedSuperclassTypeMap.get( cls );
 		}
 		if ( type == null ) {
-			type = embeddables.get( cls );
+			type = jpaEmbeddableTypeMap.get( cls );
 		}
 		if ( type == null ) {
 			throw new IllegalArgumentException( "Not a managed type: " + cls );
@@ -397,7 +378,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	@Override
 	@SuppressWarnings({"unchecked"})
 	public <X> EmbeddableType<X> embeddable(Class<X> cls) {
-		final EmbeddableType<?> embeddableType = embeddables.get( cls );
+		final EmbeddableType<?> embeddableType = jpaEmbeddableTypeMap.get( cls );
 		if ( embeddableType == null ) {
 			throw new IllegalArgumentException( "Not an embeddable: " + cls );
 		}
@@ -407,29 +388,29 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	@Override
 	public Set<ManagedType<?>> getManagedTypes() {
 		final int setSize = CollectionHelper.determineProperSizing(
-				entities.size() + mappedSuperclassTypeMap.size() + embeddables.size()
+				jpaEntityTypeMap.size() + jpaMappedSuperclassTypeMap.size() + jpaEmbeddableTypeMap.size()
 		);
 		final Set<ManagedType<?>> managedTypes = new HashSet<ManagedType<?>>( setSize );
-		managedTypes.addAll( entities.values() );
-		managedTypes.addAll( mappedSuperclassTypeMap.values() );
-		managedTypes.addAll( embeddables.values() );
+		managedTypes.addAll( jpaEntityTypeMap.values() );
+		managedTypes.addAll( jpaMappedSuperclassTypeMap.values() );
+		managedTypes.addAll( jpaEmbeddableTypeMap.values() );
 		return managedTypes;
 	}
 
 	@Override
 	public Set<EntityType<?>> getEntities() {
-		return new HashSet<>( entityTypesByEntityName.values() );
+		return new HashSet<>( jpaEntityTypesByEntityName.values() );
 	}
 
 	@Override
 	public Set<EmbeddableType<?>> getEmbeddables() {
-		return new HashSet<>( embeddables.values() );
+		return new HashSet<>( jpaEmbeddableTypeMap.values() );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <X> EntityType<X> entity(String entityName) {
-		return (EntityType<X>) entityTypesByEntityName.get( entityName );
+		return (EntityType<X>) jpaEntityTypesByEntityName.get( entityName );
 	}
 
 	@Override

@@ -20,11 +20,13 @@ import javax.persistence.LockTimeoutException;
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.OptimisticLockException;
+import javax.persistence.PersistenceContextType;
 import javax.persistence.PersistenceException;
 import javax.persistence.PessimisticLockException;
 import javax.persistence.QueryTimeoutException;
 import javax.persistence.SynchronizationType;
 import javax.persistence.Tuple;
+import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
@@ -94,6 +96,7 @@ import org.hibernate.query.internal.QueryImpl;
 import org.hibernate.query.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
@@ -127,8 +130,19 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	private final String tenantIdentifier;
 	private final UUID sessionIdentifier;
 
+	// todo : (5.2) review synchronizationType, persistenceContextType, transactionType usage
+
+	private transient PhysicalConnectionHandlingMode connectionHandlingMode;
+	// SynchronizationType -> should we auto enlist in transactions
+	private transient SynchronizationType synchronizationType;
+	// PersistenceUnitTransactionType -> what type of TransactionCoordinator(Builder) to use;
+	// 		according to JPA should technically also disallow access to Transaction object for
+	// 		JTA environments
+	private transient PersistenceUnitTransactionType transactionType;
+	// PersistenceContextType -> influences FlushMode and 'autoClose'
+	private transient PersistenceContextType persistenceContextType;
+
 	private final boolean isTransactionCoordinatorShared;
-	private final boolean autoJoinTransactions;
 	private final TransactionCoordinator transactionCoordinator;
 	private final JdbcCoordinator jdbcCoordinator;
 	private final Interceptor interceptor;
@@ -139,7 +153,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	private CacheMode cacheMode;
 	private boolean closed;
 
-	private transient SessionEventListenerManagerImpl sessionEventsManager;
+	private transient SessionEventListenerManagerImpl sessionEventsManager = new SessionEventListenerManagerImpl();
 	private transient JdbcConnectionAccess jdbcConnectionAccess;
 	private transient TransactionImplementor currentHibernateTransaction;
 	private transient Boolean useStreamForLobBinding;
@@ -149,6 +163,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		this.factory = factory;
 		this.sessionIdentifier = StandardRandomStrategy.INSTANCE.generateUUID( null );
 		this.timestamp = factory.getCache().getRegionFactory().nextTimestamp();
+
+		this.transactionType = options.getPersistenceUnitTransactionType();
+		this.synchronizationType = options.getSynchronizationType();
+		this.persistenceContextType = PersistenceContextType.TRANSACTION;
 
 		this.tenantIdentifier = options.getTenantIdentifier();
 		if ( MultiTenancyStrategy.NONE == factory.getSettings().getMultiTenancyStrategy() ) {
@@ -175,7 +193,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			}
 
 			this.isTransactionCoordinatorShared = true;
-			this.autoJoinTransactions = false;
 
 			final SharedSessionCreationOptions sharedOptions = (SharedSessionCreationOptions) options;
 			this.transactionCoordinator = sharedOptions.getTransactionCoordinator();
@@ -196,10 +213,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 								"with sharing JDBC connection between sessions; ignoring"
 				);
 			}
+
+			addSharedSessionTransactionObserver( transactionCoordinator );
 		}
 		else {
 			this.isTransactionCoordinatorShared = false;
-			this.autoJoinTransactions = options.getSynchronizationType() == SynchronizationType.SYNCHRONIZED;
 
 			this.jdbcCoordinator = new JdbcCoordinatorImpl( options.getConnection(), this );
 			this.transactionCoordinator = factory.getServiceRegistry()
@@ -209,6 +227,9 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			// prime currentHibernateTransaction
 			getTransaction();
 		}
+	}
+
+	protected void addSharedSessionTransactionObserver(TransactionCoordinator transactionCoordinator) {
 	}
 
 	private Interceptor interpret(Interceptor interceptor) {
@@ -236,15 +257,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public SessionEventListenerManager getEventListenerManager() {
-		if ( sessionEventsManager == null ) {
-			// See class-level JavaDocs for a discussion of the concurrent-access safety of this method
-			sessionEventsManager = new SessionEventListenerManagerImpl();
-		}
-		return sessionEventsManager;
-	}
-
-	@Override
 	public JdbcCoordinator getJdbcCoordinator() {
 		return jdbcCoordinator;
 	}
@@ -264,6 +276,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
+	public SessionEventListenerManager getEventListenerManager() {
+		return sessionEventsManager;
+	}
+
+	@Override
 	public UUID getSessionIdentifier() {
 		return sessionIdentifier;
 	}
@@ -271,6 +288,24 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public String getTenantIdentifier() {
 		return tenantIdentifier;
+	}
+
+	public SynchronizationType getSynchronizationType() {
+		return synchronizationType;
+	}
+
+	public PersistenceUnitTransactionType getTransactionType() {
+		return transactionType;
+	}
+
+	public PersistenceContextType getPersistenceContextType() {
+		return persistenceContextType;
+	}
+
+	@Override
+	public void disableTransactionAutoJoin() {
+		checkOpen();
+		synchronizationType = SynchronizationType.UNSYNCHRONIZED;
 	}
 
 	@Override
@@ -294,7 +329,9 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			return;
 		}
 
-		sessionEventsManager.end();
+		if ( sessionEventsManager != null ) {
+			sessionEventsManager.end();
+		}
 
 		if ( currentHibernateTransaction != null ) {
 			currentHibernateTransaction.invalidate();
@@ -404,7 +441,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public boolean isConnected() {
-		return jdbcCoordinator.getLogicalConnection().isPhysicallyConnected();
+		checkTransactionSynchStatus();
+		return jdbcCoordinator.getLogicalConnection().isOpen();
 	}
 
 	@Override
@@ -882,12 +920,12 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public NativeQueryImplementor createSQLQuery(String queryString) {
-		return null;
+		return createNativeQuery( queryString );
 	}
 
 	@Override
 	public NativeQueryImplementor getNamedSQLQuery(String name) {
-		return null;
+		return getNamedNativeQuery( name );
 	}
 
 	@Override

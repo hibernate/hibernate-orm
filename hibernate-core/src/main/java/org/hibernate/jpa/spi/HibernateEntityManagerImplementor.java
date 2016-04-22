@@ -118,7 +118,7 @@ public interface HibernateEntityManagerImplementor extends HibernateEntityManage
 	 *
 	 * @return the LockOptions
 	 *
-	 * @deprecated (since 6.0) use {@link #buildLockOptions(LockModeType, Map)} instead
+	 * @deprecated (since 5.2) use {@link #buildLockOptions(LockModeType, Map)} instead
 	 */
 	@Deprecated
 	LockOptions getLockRequest(LockModeType lockModeType, Map<String, Object> properties);

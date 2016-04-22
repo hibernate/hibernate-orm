@@ -598,7 +598,10 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 			);
 
 			final Object statelessInterceptorSetting = configurationSettings.get( SESSION_SCOPED_INTERCEPTOR );
-			if ( statelessInterceptorSetting instanceof Class ) {
+			if ( statelessInterceptorSetting == null ) {
+				this.statelessInterceptorClass = null;
+			}
+			else if ( statelessInterceptorSetting instanceof Class ) {
 				this.statelessInterceptorClass = (Class<? extends Interceptor>) statelessInterceptorSetting;
 			}
 			else {

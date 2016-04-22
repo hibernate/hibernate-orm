@@ -20,7 +20,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  *
  * @author Gavin King
  *
- * @deprecated (since 6.0) Use SessionFactory (or SessionFactoryImplementor) as it now extends EntityManagerFactory directly
+ * @deprecated (since 5.2) Use SessionFactory (or SessionFactoryImplementor) as it now extends EntityManagerFactory directly
  */
 @Deprecated
 public interface HibernateEntityManagerFactory extends EntityManagerFactory, Serializable {

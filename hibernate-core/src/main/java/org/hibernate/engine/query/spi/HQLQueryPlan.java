@@ -104,13 +104,12 @@ public class HQLQueryPlan implements Serializable {
 		final List<String> sqlStringList = new ArrayList<String>();
 		final Set<Serializable> combinedQuerySpaces = new HashSet<Serializable>();
 
-		final boolean hasCollectionRole = (collectionRole == null);
 		final Map querySubstitutions = factory.getSessionFactoryOptions().getQuerySubstitutions();
 		final QueryTranslatorFactory queryTranslatorFactory = factory.getServiceRegistry().getService( QueryTranslatorFactory.class );
 
 
 		for ( int i=0; i<length; i++ ) {
-			if ( hasCollectionRole ) {
+			if ( collectionRole == null ) {
 				translators[i] = queryTranslatorFactory
 						.createQueryTranslator( hql, concreteQueryStrings[i], enabledFilters, factory, entityGraphQueryHint );
 				translators[i].compile( querySubstitutions, shallow );
@@ -394,13 +393,13 @@ public class HQLQueryPlan implements Serializable {
 		ordinalParamCount = locations.length;
 
 		final OrdinalParameterDescriptor[] ordinalParamDescriptors = new OrdinalParameterDescriptor[ordinalParamCount];
-		for ( int i = 1; i <= ordinalParamCount; i++ ) {
-			ordinalParamDescriptors[ i - 1 ] = new OrdinalParameterDescriptor(
+		for ( int i = 0; i < ordinalParamCount; i++ ) {
+			ordinalParamDescriptors[ i ] = new OrdinalParameterDescriptor(
 					i,
 					parameterTranslations.supportsOrdinalParameterMetadata()
 							? parameterTranslations.getOrdinalParameterExpectedType( i )
 							: null,
-					locations[ i - 1 ]
+					locations[ i ]
 			);
 		}
 

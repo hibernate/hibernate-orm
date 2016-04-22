@@ -9,10 +9,7 @@ package org.hibernate.test.hql;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collections;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import javax.persistence.PersistenceException;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -23,12 +20,17 @@ import org.hibernate.hql.internal.ast.tree.SelectClause;
 import org.hibernate.hql.internal.classic.ClassicQueryTranslatorFactory;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.hql.spi.QueryTranslatorFactory;
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.type.BigDecimalType;
 import org.hibernate.type.BigIntegerType;
 import org.hibernate.type.DoubleType;
 import org.hibernate.type.LongType;
 
+import org.hibernate.testing.TestForIssue;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -322,6 +324,15 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 				fail( "expected SQLGrammarException" );
 			}
 			assertEquals( 1, count.longValue() );
+		}
+		catch (PersistenceException e) {
+			SQLGrammarException cause = assertTyping( SQLGrammarException.class, e.getCause() );
+			if ( ! getDialect().supportsTupleCounts() ) {
+				// expected
+			}
+			else {
+				throw e;
+			}
 		}
 		catch ( SQLGrammarException ex ) {
 			if ( ! getDialect().supportsTupleCounts() ) {

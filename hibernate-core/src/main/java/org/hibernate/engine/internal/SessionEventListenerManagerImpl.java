@@ -19,9 +19,10 @@ import org.hibernate.engine.spi.SessionEventListenerManager;
 public class SessionEventListenerManagerImpl implements SessionEventListenerManager, Serializable {
 	private List<SessionEventListener> listenerList;
 
+	@Override
 	public void addListener(SessionEventListener... listeners) {
 		if ( listenerList == null ) {
-			listenerList = new ArrayList<SessionEventListener>();
+			listenerList = new ArrayList<>();
 		}
 
 		java.util.Collections.addAll( listenerList, listeners );

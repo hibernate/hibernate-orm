@@ -53,25 +53,18 @@ class MetadataContext {
 	private final boolean ignoreUnsupported;
 	private final AttributeFactory attributeFactory = new AttributeFactory( this );
 
-	private Map<Class<?>, EntityTypeImpl<?>> entityTypes
-			= new HashMap<Class<?>, EntityTypeImpl<?>>();
-	private Map<String, EntityTypeImpl<?>> entityTypesByEntityName
-			= new HashMap<String, EntityTypeImpl<?>>();
-	private Map<PersistentClass, EntityTypeImpl<?>> entityTypesByPersistentClass
-			= new HashMap<PersistentClass, EntityTypeImpl<?>>();
-	private Map<Class<?>, EmbeddableTypeImpl<?>> embeddables
-			= new HashMap<Class<?>, EmbeddableTypeImpl<?>>();
-	private Map<MappedSuperclass, MappedSuperclassTypeImpl<?>> mappedSuperclassByMappedSuperclassMapping
-			= new HashMap<MappedSuperclass, MappedSuperclassTypeImpl<?>>();
+	private Map<Class<?>, EntityTypeImpl<?>> entityTypes = new HashMap<>();
+	private Map<String, EntityTypeImpl<?>> entityTypesByEntityName = new HashMap<>();
+	private Map<PersistentClass, EntityTypeImpl<?>> entityTypesByPersistentClass = new HashMap<>();
+	private Map<Class<?>, EmbeddableTypeImpl<?>> embeddables = new HashMap<>();
+	private Map<MappedSuperclass, MappedSuperclassTypeImpl<?>> mappedSuperclassByMappedSuperclassMapping = new HashMap<>();
 	//this list contains MappedSuperclass and EntityTypes ordered by superclass first
-	private List<Object> orderedMappings = new ArrayList<Object>();
+	private List<Object> orderedMappings = new ArrayList<>();
 	/**
 	 * Stack of PersistentClass being process. Last in the list is the highest in the stack.
 	 */
-	private List<PersistentClass> stackOfPersistentClassesBeingProcessed
-			= new ArrayList<PersistentClass>();
-	private Map<MappedSuperclassTypeImpl<?>, PersistentClass> mappedSuperClassTypeToPersistentClass
-			= new HashMap<MappedSuperclassTypeImpl<?>, PersistentClass>();
+	private List<PersistentClass> stackOfPersistentClassesBeingProcessed = new ArrayList<>();
+	private Map<MappedSuperclassTypeImpl<?>, PersistentClass> mappedSuperClassTypeToPersistentClass = new HashMap<>();
 
 	public MetadataContext(
 			SessionFactoryImplementor sessionFactory,
@@ -120,7 +113,9 @@ class MetadataContext {
 	}
 
 	/*package*/ void registerEntityType(PersistentClass persistentClass, EntityTypeImpl<?> entityType) {
-		entityTypes.put( entityType.getBindableJavaType(), entityType );
+		if ( entityType.getBindableJavaType() != null ) {
+			entityTypes.put( entityType.getBindableJavaType(), entityType );
+		}
 		entityTypesByEntityName.put( persistentClass.getEntityName(), entityType );
 		entityTypesByPersistentClass.put( persistentClass, entityType );
 		orderedMappings.add( persistentClass );

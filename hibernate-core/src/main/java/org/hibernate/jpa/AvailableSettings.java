@@ -20,115 +20,115 @@ public interface AvailableSettings {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#JPA_PERSISTENCE_PROVIDER} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#JPA_PERSISTENCE_PROVIDER} instead
 	 */
 	@Deprecated
 	String PROVIDER = org.hibernate.cfg.AvailableSettings.JPA_PERSISTENCE_PROVIDER;
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#JPA_TRANSACTION_TYPE} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#JPA_TRANSACTION_TYPE} instead
 	 */
 	@Deprecated
 	String TRANSACTION_TYPE = org.hibernate.cfg.AvailableSettings.JPA_TRANSACTION_TYPE;
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#JPA_JTA_DATASOURCE} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#JPA_JTA_DATASOURCE} instead
 	 */
 	@Deprecated
 	String JTA_DATASOURCE = org.hibernate.cfg.AvailableSettings.JPA_JTA_DATASOURCE;
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#JPA_NON_JTA_DATASOURCE} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#JPA_NON_JTA_DATASOURCE} instead
 	 */
 	@Deprecated
 	String NON_JTA_DATASOURCE = org.hibernate.cfg.AvailableSettings.JPA_NON_JTA_DATASOURCE;
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#JPA_JDBC_DRIVER} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#JPA_JDBC_DRIVER} instead
 	 */
 	@Deprecated
 	String JDBC_DRIVER = org.hibernate.cfg.AvailableSettings.JPA_JDBC_DRIVER;
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#JPA_JDBC_URL} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#JPA_JDBC_URL} instead
 	 */
 	@Deprecated
 	String JDBC_URL = org.hibernate.cfg.AvailableSettings.JPA_JDBC_URL;
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#JPA_JDBC_USER} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#JPA_JDBC_USER} instead
 	 */
 	@Deprecated
 	String JDBC_USER = org.hibernate.cfg.AvailableSettings.JPA_JDBC_USER;
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#JPA_JDBC_USER} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#JPA_JDBC_USER} instead
 	 */
 	@Deprecated
 	String JDBC_PASSWORD = org.hibernate.cfg.AvailableSettings.JPA_JDBC_USER;
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#JPA_SHARED_CACHE_MODE} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#JPA_SHARED_CACHE_MODE} instead
 	 */
 	@Deprecated
 	String SHARED_CACHE_MODE = org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_MODE;
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#JPA_SHARED_CACHE_RETRIEVE_MODE} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#JPA_SHARED_CACHE_RETRIEVE_MODE} instead
 	 */
 	@Deprecated
 	String SHARED_CACHE_RETRIEVE_MODE = org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#JPA_SHARED_CACHE_STORE_MODE} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#JPA_SHARED_CACHE_STORE_MODE} instead
 	 */
 	@Deprecated
 	String SHARED_CACHE_STORE_MODE = org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#JPA_VALIDATION_MODE} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#JPA_VALIDATION_MODE} instead
 	 */
 	@Deprecated
 	String VALIDATION_MODE = org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_MODE;
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#JPA_VALIDATION_FACTORY} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#JPA_VALIDATION_FACTORY} instead
 	 */
 	@Deprecated
 	String VALIDATION_FACTORY = org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_FACTORY;
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#JPA_PERSIST_VALIDATION_GROUP} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#JPA_PERSIST_VALIDATION_GROUP} instead
 	 */
 	@Deprecated
 	String PERSIST_VALIDATION_GROUP = org.hibernate.cfg.AvailableSettings.JPA_PERSIST_VALIDATION_GROUP;
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#JPA_UPDATE_VALIDATION_GROUP} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#JPA_UPDATE_VALIDATION_GROUP} instead
 	 */
 	@Deprecated
 	String UPDATE_VALIDATION_GROUP = org.hibernate.cfg.AvailableSettings.JPA_UPDATE_VALIDATION_GROUP;
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#JPA_REMOVE_VALIDATION_GROUP} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#JPA_REMOVE_VALIDATION_GROUP} instead
 	 */
 	@Deprecated
 	String REMOVE_VALIDATION_GROUP = org.hibernate.cfg.AvailableSettings.JPA_REMOVE_VALIDATION_GROUP;
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#JPA_LOCK_SCOPE} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#JPA_LOCK_SCOPE} instead
 	 */
 	@Deprecated
 	String LOCK_SCOPE = org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#JPA_LOCK_TIMEOUT} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#JPA_LOCK_TIMEOUT} instead
 	 */
 	@Deprecated
 	String LOCK_TIMEOUT = org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#CDI_BEAN_MANAGER} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#CDI_BEAN_MANAGER} instead
 	 */
 	@Deprecated
 	String CDI_BEAN_MANAGER = org.hibernate.cfg.AvailableSettings.CDI_BEAN_MANAGER;
@@ -139,86 +139,86 @@ public interface AvailableSettings {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_CREATE_SOURCE} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_CREATE_SOURCE} instead
 	 */
 	@Deprecated
 	String SCHEMA_GEN_CREATE_SOURCE = org.hibernate.cfg.AvailableSettings.HBM2DDL_CREATE_SOURCE;
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_DROP_SOURCE} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_DROP_SOURCE} instead
 	 */
 	@Deprecated
 	String SCHEMA_GEN_DROP_SOURCE = org.hibernate.cfg.AvailableSettings.HBM2DDL_DROP_SOURCE;
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_CREATE_SCRIPT_SOURCE} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_CREATE_SCRIPT_SOURCE} instead
 	 */
 	@Deprecated
 	String SCHEMA_GEN_CREATE_SCRIPT_SOURCE = org.hibernate.cfg.AvailableSettings.HBM2DDL_CREATE_SCRIPT_SOURCE;
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_DROP_SCRIPT_SOURCE} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_DROP_SCRIPT_SOURCE} instead
 	 */
 	@Deprecated
 	String SCHEMA_GEN_DROP_SCRIPT_SOURCE = org.hibernate.cfg.AvailableSettings.HBM2DDL_DROP_SCRIPT_SOURCE;
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_DATABASE_ACTION} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_DATABASE_ACTION} instead
 	 */
 	@Deprecated
 	String SCHEMA_GEN_DATABASE_ACTION = org.hibernate.cfg.AvailableSettings.HBM2DDL_DATABASE_ACTION;
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_SCRIPTS_ACTION} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_SCRIPTS_ACTION} instead
 	 */
 	@Deprecated
 	String SCHEMA_GEN_SCRIPTS_ACTION = org.hibernate.cfg.AvailableSettings.HBM2DDL_SCRIPTS_ACTION;
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_SCRIPTS_CREATE_TARGET} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_SCRIPTS_CREATE_TARGET} instead
 	 */
 	@Deprecated
 	String SCHEMA_GEN_SCRIPTS_CREATE_TARGET = org.hibernate.cfg.AvailableSettings.HBM2DDL_SCRIPTS_CREATE_TARGET;
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_SCRIPTS_DROP_TARGET} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_SCRIPTS_DROP_TARGET} instead
 	 */
 	@Deprecated
 	String SCHEMA_GEN_SCRIPTS_DROP_TARGET = org.hibernate.cfg.AvailableSettings.HBM2DDL_SCRIPTS_DROP_TARGET;
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#HBM2DLL_CREATE_NAMESPACES}
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#HBM2DLL_CREATE_NAMESPACES}
 	 * or {@link org.hibernate.cfg.AvailableSettings#HBM2DLL_CREATE_SCHEMAS} instead
 	 */
 	@Deprecated
 	String SCHEMA_GEN_CREATE_SCHEMAS = org.hibernate.cfg.AvailableSettings.HBM2DLL_CREATE_NAMESPACES;
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_CONNECTION} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_CONNECTION} instead
 	 */
 	@Deprecated
 	String SCHEMA_GEN_CONNECTION = org.hibernate.cfg.AvailableSettings.HBM2DDL_CONNECTION;
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_DB_NAME} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_DB_NAME} instead
 	 */
 	@Deprecated
 	String SCHEMA_GEN_DB_NAME = org.hibernate.cfg.AvailableSettings.HBM2DDL_DB_NAME;
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_DB_MAJOR_VERSION} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_DB_MAJOR_VERSION} instead
 	 */
 	@Deprecated
 	String SCHEMA_GEN_DB_MAJOR_VERSION = org.hibernate.cfg.AvailableSettings.HBM2DDL_DB_MAJOR_VERSION;
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_DB_MINOR_VERSION} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_DB_MINOR_VERSION} instead
 	 */
 	@Deprecated
 	String SCHEMA_GEN_DB_MINOR_VERSION = org.hibernate.cfg.AvailableSettings.HBM2DDL_DB_MINOR_VERSION;
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_LOAD_SCRIPT_SOURCE} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_LOAD_SCRIPT_SOURCE} instead
 	 */
 	@Deprecated
 	String SCHEMA_GEN_LOAD_SCRIPT_SOURCE = org.hibernate.cfg.AvailableSettings.HBM2DDL_LOAD_SCRIPT_SOURCE;
@@ -229,13 +229,13 @@ public interface AvailableSettings {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#INTERCEPTOR} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#INTERCEPTOR} instead
 	 */
 	@Deprecated
 	String INTERCEPTOR = "hibernate.ejb.interceptor";
 
 	/**
-	 * @deprecated (since 6.0) use {@link org.hibernate.cfg.AvailableSettings#SESSION_SCOPED_INTERCEPTOR} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#SESSION_SCOPED_INTERCEPTOR} instead
 	 */
 	@Deprecated
 	String SESSION_INTERCEPTOR = "hibernate.ejb.interceptor.session_scoped";

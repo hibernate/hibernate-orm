@@ -239,14 +239,16 @@ public class AttributeFactory {
 		final Type.PersistenceType persistenceType = ownerType.getPersistenceType();
 		if ( persistenceType == Type.PersistenceType.ENTITY ) {
 			return context.getSessionFactory()
-					.getEntityPersister( ownerType.getTypeName() )
+					.getMetamodel()
+					.entityPersister( ownerType.getTypeName() )
 					.getEntityMetamodel();
 		}
 		else if ( persistenceType == Type.PersistenceType.MAPPED_SUPERCLASS ) {
 			PersistentClass persistentClass =
 					context.getPersistentClassHostingProperties( (MappedSuperclassTypeImpl<?>) ownerType );
 			return context.getSessionFactory()
-					.getEntityPersister( persistentClass.getClassName() )
+					.getMetamodel()
+					.entityPersister( persistentClass.getClassName() )
 					.getEntityMetamodel();
 		}
 		else {
@@ -920,6 +922,9 @@ public class AttributeFactory {
 		}
 		else if ( java.util.Collection.class.isAssignableFrom( javaType ) ) {
 			return PluralAttribute.CollectionType.COLLECTION;
+		}
+		else if ( javaType.isArray() ) {
+			return PluralAttribute.CollectionType.LIST;
 		}
 		else {
 			throw new IllegalArgumentException( "Expecting collection type [" + javaType.getName() + "]" );

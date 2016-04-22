@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.annotations.entity;
 
+import javax.persistence.OptimisticLockException;
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Date;
@@ -16,7 +17,6 @@ import java.util.Set;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -116,7 +116,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 			parallelTx.commit();
 			fail( "All optimistic locking should have make it fail" );
 		}
-		catch (HibernateException e) {
+		catch (OptimisticLockException e) {
 			if ( parallelTx != null ) parallelTx.rollback();
 		}
 		finally {

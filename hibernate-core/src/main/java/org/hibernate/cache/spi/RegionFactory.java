@@ -40,7 +40,7 @@ public interface RegionFactory extends Service {
 	 * considered as a sign to stop {@link org.hibernate.SessionFactory}
 	 * building.
 	 *
-	 * @deprecated (since 6.0) use the form accepting map instead.
+	 * @deprecated (since 5.2) use the form accepting map instead.
 	 */
 	@Deprecated
 	void start(SessionFactoryOptions settings, Properties properties) throws CacheException;
@@ -108,7 +108,7 @@ public interface RegionFactory extends Service {
 	 *
 	 * @throws CacheException Indicates problems building the region.
 	 *
-	 * @deprecated (since 6.0) use the form taking Map instead
+	 * @deprecated (since 5.2) use the form taking Map instead
 	 */
 	@Deprecated
 	EntityRegion buildEntityRegion(String regionName, Properties properties, CacheDataDescription metadata)
@@ -143,7 +143,7 @@ public interface RegionFactory extends Service {
 	 *
 	 * @throws CacheException Indicates problems building the region.
 	 *
-	 * @deprecated (since 6.0) use the form accepting a Map instead
+	 * @deprecated (since 5.2) use the form accepting a Map instead
 	 */
 	@Deprecated
 	NaturalIdRegion buildNaturalIdRegion(String regionName, Properties properties, CacheDataDescription metadata)
@@ -209,7 +209,7 @@ public interface RegionFactory extends Service {
 	 *
 	 * @throws CacheException Indicates problems building the region.
 	 *
-	 * @deprecated (since 6.0) use the form taking Map instead
+	 * @deprecated (since 5.2) use the form taking Map instead
 	 */
 	@Deprecated
 	QueryResultsRegion buildQueryResultsRegion(String regionName, Properties properties) throws CacheException;
@@ -240,7 +240,7 @@ public interface RegionFactory extends Service {
 	 *
 	 * @throws CacheException Indicates problems building the region.
 	 *
-	 * @deprecated (since 6.0) use the form taking Map
+	 * @deprecated (since 5.2) use the form taking Map
 	 */
 	@Deprecated
 	TimestampsRegion buildTimestampsRegion(String regionName, Properties properties) throws CacheException;

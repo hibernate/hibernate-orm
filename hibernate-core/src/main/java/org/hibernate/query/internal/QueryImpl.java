@@ -31,8 +31,18 @@ public class QueryImpl<R> extends AbstractProducedQuery<R> implements Query<R> {
 	}
 
 	@Override
+	protected boolean isNativeQuery() {
+		return false;
+	}
+
+	@Override
 	public Type[] getReturnTypes() {
 		return getProducer().getFactory().getReturnTypes( queryString );
+	}
+
+	@Override
+	public String[] getReturnAliases() {
+		return getProducer().getFactory().getReturnAliases( queryString );
 	}
 
 	@Override
@@ -43,10 +53,5 @@ public class QueryImpl<R> extends AbstractProducedQuery<R> implements Query<R> {
 	@Override
 	public Query setEntity(String name, Object val) {
 		return setParameter( name, val, getProducer().getFactory().getTypeHelper().entity( resolveEntityName( val ) ) );
-	}
-
-	@Override
-	protected boolean isNativeQuery() {
-		return false;
 	}
 }

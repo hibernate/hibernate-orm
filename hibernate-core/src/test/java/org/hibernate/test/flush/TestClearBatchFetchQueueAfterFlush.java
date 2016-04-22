@@ -11,6 +11,7 @@ import java.util.Iterator;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -57,15 +58,13 @@ public class TestClearBatchFetchQueueAfterFlush extends BaseCoreFunctionalTestCa
 		s.getTransaction().commit();
 		s.clear();
 
-		bookStore1 = (BookStore) s.load( BookStore.class, bookStore1.getId() );
-		bookStore2 = (BookStore) s.load( BookStore.class, bookStore2.getId() );
-		bookStore3 = (BookStore) s.load( BookStore.class, bookStore3.getId() );
+		bookStore1 = s.load( BookStore.class, bookStore1.getId() );
+		bookStore2 = s.load( BookStore.class, bookStore2.getId() );
+		bookStore3 = s.load( BookStore.class, bookStore3.getId() );
 
 		s.beginTransaction();
 		s.delete( bookStore2 );
 		s.getTransaction().commit();
-
-		s.flush();
 
 		bookStore1.getBooks().size();
 		bookStore3.getBooks().size();

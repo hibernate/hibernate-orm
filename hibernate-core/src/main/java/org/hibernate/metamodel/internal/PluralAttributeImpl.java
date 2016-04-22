@@ -103,6 +103,13 @@ public abstract class PluralAttributeImpl<X, C, E>
 			}
 
 			//apply loose rules
+			if ( collectionClass.isArray() ) {
+				final Builder<X, List<E>, E,?> builder = (Builder<X, List<E>, E,?>) this;
+				return ( PluralAttributeImpl<X, C, E> ) new ListAttributeImpl<X,E>(
+						builder
+				);
+			}
+
 			if ( Map.class.isAssignableFrom( collectionClass ) ) {
 				final Builder<X,Map<K,E>,E,K> builder = (Builder<X,Map<K,E>,E,K>) this;
 				return ( PluralAttributeImpl<X, C, E> ) new MapAttributeImpl<X,K,E>(

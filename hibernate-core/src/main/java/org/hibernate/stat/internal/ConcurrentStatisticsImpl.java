@@ -301,15 +301,27 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 
 			final EntityRegionAccessStrategy entityRegionAccess = sessionFactory.getCache().getEntityRegionAccess( regionName );
 			final CollectionRegionAccessStrategy collectionRegionAccess = sessionFactory.getCache().getCollectionRegionAccess( regionName );
+
 			if ( entityRegionAccess == null && collectionRegionAccess == null ) {
-				return null;
+				final Region region = sessionFactory.getCache().getQueryCache( regionName ).getRegion();
+				if ( region == null ) {
+					throw new IllegalArgumentException( "Could not resolve region name [" + regionName + "]" );
+				}
+				stat = new ConcurrentSecondLevelCacheStatisticsImpl( region, null, null );
+			}
+			else {
+
+				final Region region = entityRegionAccess != null
+						? entityRegionAccess.getRegion()
+						: collectionRegionAccess.getRegion();
+
+				stat = new ConcurrentSecondLevelCacheStatisticsImpl(
+						region,
+						entityRegionAccess,
+						collectionRegionAccess
+				);
 			}
 
-			final Region region = entityRegionAccess != null
-					? entityRegionAccess.getRegion()
-					: collectionRegionAccess.getRegion();
-
-			stat = new ConcurrentSecondLevelCacheStatisticsImpl( region, entityRegionAccess, collectionRegionAccess );
 			ConcurrentSecondLevelCacheStatisticsImpl previous;
 			if ( ( previous = secondLevelCacheStatistics.putIfAbsent( regionName, stat ) ) != null ) {
 				stat = previous;

@@ -9,17 +9,21 @@ package org.hibernate.query.internal;
 import javax.persistence.TemporalType;
 
 import org.hibernate.query.spi.QueryParameterBinding;
+import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole
  */
 public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
+	private final QueryParameterBindingTypeResolver typeResolver;
+
 	private Type bindType;
 	private T bindValue;
 
-	public QueryParameterBindingImpl(Type type) {
+	public QueryParameterBindingImpl(Type type, QueryParameterBindingTypeResolver typeResolver) {
 		this.bindType = type;
+		this.typeResolver = typeResolver;
 	}
 
 	@Override
@@ -34,10 +38,11 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 
 	@Override
 	public void setBindValue(T value) {
-		if ( value == null ) {
-			throw new IllegalArgumentException( "Cannot bind null to query parameter" );
-		}
 		this.bindValue = value;
+
+		if ( bindType == null ) {
+			this.bindType = typeResolver.resolveParameterBindType( value );
+		}
 	}
 
 	@Override

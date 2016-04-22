@@ -26,8 +26,10 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryConstructorReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryScalarReturn;
+import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -98,6 +100,7 @@ public class NativeQueryImpl extends AbstractProducedQuery<Object> implements Na
 			ParameterMetadata sqlParameterMetadata) {
 		super( session, sqlParameterMetadata );
 
+		this.queryReturns = new ArrayList<>();
 		this.sqlString = sqlString;
 		this.callable = callable;
 		this.querySpaces = new ArrayList<>();
@@ -131,9 +134,30 @@ public class NativeQueryImpl extends AbstractProducedQuery<Object> implements Na
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
+	protected List<Object> doList() {
+		return getProducer().list(
+				generateQuerySpecification(),
+				getQueryParameters()
+		);
+	}
+
+	private NativeSQLQuerySpecification generateQuerySpecification() {
+		return new NativeSQLQuerySpecification(
+				getQueryParameterBindings().expandListValuedParameters( getQueryString(), getProducer() ),
+				queryReturns.toArray( new NativeSQLQueryReturn[queryReturns.size()] ),
+				querySpaces
+		);
+	}
+
+	@Override
 	public QueryParameters getQueryParameters() {
 		final QueryParameters queryParameters = super.getQueryParameters();
-		queryParameters.setCollectionKeys( new Serializable[] {collectionKey} );
+		queryParameters.setCallable( callable );
+		queryParameters.setAutoDiscoverScalarTypes( autoDiscoverTypes );
+		if ( collectionKey != null ) {
+			queryParameters.setCollectionKeys( new Serializable[] {collectionKey} );
+		}
 		return queryParameters;
 	}
 
@@ -156,6 +180,27 @@ public class NativeQueryImpl extends AbstractProducedQuery<Object> implements Na
 
 	@Override
 	protected void beforeQuery() {
+		prepareQueryReturnsIfNecessary();
+		boolean noReturns = queryReturns == null || queryReturns.isEmpty();
+		if ( noReturns ) {
+			this.autoDiscoverTypes = true;
+		}
+		else {
+			for ( NativeSQLQueryReturn queryReturn : queryReturns ) {
+				if ( queryReturn instanceof NativeSQLQueryScalarReturn ) {
+					NativeSQLQueryScalarReturn scalar = (NativeSQLQueryScalarReturn) queryReturn;
+					if ( scalar.getType() == null ) {
+						autoDiscoverTypes = true;
+						break;
+					}
+				}
+				else if ( NativeSQLQueryConstructorReturn.class.isInstance( queryReturn ) ) {
+					autoDiscoverTypes = true;
+					break;
+				}
+			}
+		}
+
 		super.beforeQuery();
 
 		if ( getSynchronizedQuerySpaces() != null && !getSynchronizedQuerySpaces().isEmpty() ) {
@@ -167,9 +212,19 @@ public class NativeQueryImpl extends AbstractProducedQuery<Object> implements Na
 		// otherwise we need to flush.  the query itself is not required to execute in a transaction; if there is
 		// no transaction, the flush would throw a TransactionRequiredException which would potentially break existing
 		// apps, so we only do the flush if a transaction is in progress.
+		//
+		// NOTE : this was added for JPA initially.  Perhaps we want to only do this from JPA usage?
 		if ( getProducer().isTransactionInProgress() ) {
 			getProducer().flush();
 		}
+
+	}
+
+	protected int doExecuteUpdate() {
+		return getProducer().executeNativeUpdate(
+				generateQuerySpecification(),
+				getQueryParameters()
+		);
 	}
 
 	@Override
@@ -313,6 +368,15 @@ public class NativeQueryImpl extends AbstractProducedQuery<Object> implements Na
 	public NativeQueryImplementor addSynchronizedQuerySpace(String querySpace) {
 		addQuerySpaces( querySpace );
 		return this;
+	}
+
+	protected void addQuerySpaces(String... spaces) {
+		if ( spaces != null ) {
+			if ( querySpaces == null ) {
+				querySpaces = new ArrayList<>();
+			}
+			querySpaces.addAll( Arrays.asList( (String[]) spaces ) );
+		}
 	}
 
 	protected void addQuerySpaces(Serializable... spaces) {

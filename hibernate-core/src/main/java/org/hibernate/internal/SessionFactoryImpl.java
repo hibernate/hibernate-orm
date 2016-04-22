@@ -100,6 +100,7 @@ import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.proxy.HibernateProxyHelper;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -116,6 +117,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tool.schema.spi.DelayedDropAction;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.hibernate.tuple.entity.EntityTuplizer;
+import org.hibernate.type.SerializableType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
 
@@ -221,7 +223,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		this.sqlFunctionRegistry = new SQLFunctionRegistry( jdbcServices.getJdbcEnvironment().getDialect(), options.getCustomSqlFunctionMap() );
 		this.cacheAccess = this.serviceRegistry.getService( CacheImplementor.class );
-		this.metamodel = MetamodelImpl.buildMetamodel( metadata, this, determineJpaMetaModelPopulationSetting( properties ) );
 		this.criteriaBuilder = new CriteriaBuilderImpl( this );
 		this.persistenceUnitUtil = new PersistenceUnitUtilImpl( this );
 
@@ -282,6 +283,9 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 
 		LOG.debug( "Instantiated session factory" );
+
+		this.metamodel = new MetamodelImpl( this );
+		this.metamodel.initialize( metadata, determineJpaMetaModelPopulationSetting( properties ) );
 
 		settings.getMultiTableBulkIdStrategy().prepare(
 				jdbcServices,
@@ -645,25 +649,20 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	public CollectionMetadata getCollectionMetadata(String roleName) throws HibernateException {
-//		return collectionMetadata.get( roleName );
-		return null;
+		return (CollectionMetadata) getMetamodel().collectionPersister( roleName );
 	}
 
 	public ClassMetadata getClassMetadata(String entityName) throws HibernateException {
-//		return classMetadata.get( entityName );
-		return null;
+		return (ClassMetadata) getMetamodel().entityPersister( entityName );
 	}
 
-
-
+	@Override
 	public Map<String,ClassMetadata> getAllClassMetadata() throws HibernateException {
-//		return classMetadata;
-		return null;
+		throw new UnsupportedOperationException( "org.hibernate.SessionFactory.getAllClassMetadata is no longer supported" );
 	}
 
 	public Map getAllCollectionMetadata() throws HibernateException {
-//		return collectionMetadata;
-		return null;
+		throw new UnsupportedOperationException( "org.hibernate.SessionFactory.getAllCollectionMetadata is no longer supported" );
 	}
 
 	public Type getReferencedPropertyType(String className, String propertyName)
@@ -748,8 +747,13 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		return isClosed;
 	}
 
+	private transient StatisticsImplementor statistics;
+
 	public StatisticsImplementor getStatistics() {
-		return serviceRegistry.getService( StatisticsImplementor.class );
+		if ( statistics == null ) {
+			statistics = serviceRegistry.getService( StatisticsImplementor.class );
+		}
+		return statistics;
 	}
 
 	public FilterDefinition getFilterDefinition(String filterName) throws HibernateException {
@@ -839,6 +843,36 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	public TypeHelper getTypeHelper() {
 		return typeHelper;
+	}
+
+	@Override
+	public Type resolveParameterBindType(Object bindValue) {
+		if ( bindValue == null ) {
+			// we can't guess
+			return null;
+		}
+
+		final Class clazz = HibernateProxyHelper.getClassWithoutInitializingProxy( bindValue );
+		String typename = clazz.getName();
+		Type type = getTypeResolver().heuristicType( typename );
+		boolean serializable = type != null && type instanceof SerializableType;
+		if ( type == null || serializable ) {
+			try {
+				getMetamodel().entityPersister( clazz.getName() );
+			}
+			catch (MappingException me) {
+				if ( serializable ) {
+					return type;
+				}
+				else {
+					throw new HibernateException( "Could not determine a type for class: " + typename );
+				}
+			}
+			return getTypeHelper().entity( clazz );
+		}
+		else {
+			return type;
+		}
 	}
 
 	static class SessionBuilderImpl<T extends SessionBuilder> implements SessionBuilderImplementor<T>, SessionCreationOptions {

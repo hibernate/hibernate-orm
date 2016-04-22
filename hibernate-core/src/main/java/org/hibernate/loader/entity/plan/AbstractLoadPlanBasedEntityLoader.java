@@ -174,7 +174,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 			result = extractEntityResult( results );
 		}
 		catch ( SQLException sqle ) {
-			throw getFactory().getSQLExceptionHelper().convert(
+			throw session.getJdbcServices().getSqlExceptionHelper().convert(
 					sqle,
 					"could not load an entity: " + MessageHelper.infoString(
 							entityPersister,

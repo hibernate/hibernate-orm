@@ -5,17 +5,18 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.test.cuk;
+
 import java.util.List;
 import java.util.Set;
-
-import org.junit.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -62,8 +63,8 @@ public class CompositePropertyRefTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		s.clear();
 		
-		p = (Person) s.get( Person.class, p.getId() ); //get address reference by outer join
-		p2 = (Person) s.get( Person.class, p2.getId() ); //get null address reference by outer join
+		p = s.get( Person.class, p.getId() ); //get address reference by outer join
+		p2 = s.get( Person.class, p2.getId() ); //get null address reference by outer join
 		assertNull( p2.getAddress() );
 		assertNotNull( p.getAddress() );
 		List l = s.createQuery("from Person").list(); //pull address references for cache

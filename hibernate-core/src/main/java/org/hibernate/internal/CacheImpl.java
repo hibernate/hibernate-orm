@@ -23,6 +23,7 @@ import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.cache.spi.QueryCache;
 import org.hibernate.cache.spi.QueryResultsRegion;
+import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.UpdateTimestampsCache;
@@ -52,6 +53,8 @@ public class CacheImpl implements CacheImplementor {
 	private final SessionFactoryOptions settings;
 	private final transient RegionFactory regionFactory;
 	private final String cacheRegionPrefix;
+
+	private final transient ConcurrentHashMap<String, Region> allRegionsMap = new ConcurrentHashMap<>();
 
 	private final transient ConcurrentHashMap<String, EntityRegionAccessStrategy> entityRegionAccessStrategyMap = new ConcurrentHashMap<>();
 	private final transient ConcurrentHashMap<String, CollectionRegionAccessStrategy> collectionRegionAccessStrategyMap = new ConcurrentHashMap<>();

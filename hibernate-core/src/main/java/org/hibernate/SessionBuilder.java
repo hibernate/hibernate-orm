@@ -72,7 +72,7 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @deprecated (since 6.0) use {@link #connectionHandlingMode} instead
+	 * @deprecated (since 5.2) use {@link #connectionHandlingMode} instead
 	 */
 	@Deprecated
 	T connectionReleaseMode(ConnectionReleaseMode connectionReleaseMode);

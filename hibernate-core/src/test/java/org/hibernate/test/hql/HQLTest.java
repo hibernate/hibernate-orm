@@ -250,12 +250,12 @@ public class HQLTest extends QueryTranslatorTestCase {
 		assertEquals( "incorrect return type", CalendarDateType.INSTANCE, translator.getReturnTypes()[0] );
 
 		translator = createNewQueryTranslator( "from Order o where o.orderDate > ?" );
-		assertEquals( "incorrect expected param type", CalendarDateType.INSTANCE, translator.getParameterTranslations().getOrdinalParameterExpectedType( 1 ) );
+		assertEquals( "incorrect expected param type", CalendarDateType.INSTANCE, translator.getParameterTranslations().getOrdinalParameterExpectedType( 0 ) );
 
 		translator = createNewQueryTranslator( "select o.orderDate + ? from Order o" );
 		assertEquals( "incorrect return type count", 1, translator.getReturnTypes().length );
 		assertEquals( "incorrect return type", CalendarDateType.INSTANCE, translator.getReturnTypes()[0] );
-		assertEquals( "incorrect expected param type", DoubleType.INSTANCE, translator.getParameterTranslations().getOrdinalParameterExpectedType( 1 ) );
+		assertEquals( "incorrect expected param type", DoubleType.INSTANCE, translator.getParameterTranslations().getOrdinalParameterExpectedType( 0 ) );
 
 	}
 

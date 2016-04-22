@@ -44,6 +44,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.spi.NamedQueryRepository;
+import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
@@ -59,7 +60,7 @@ import org.hibernate.type.TypeResolver;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface SessionFactoryImplementor extends Mapping, SessionFactory {
+public interface SessionFactoryImplementor extends Mapping, SessionFactory, QueryParameterBindingTypeResolver {
 	/**
 	 * Get the UUID for this SessionFactory.  The value is generated as a {@link java.util.UUID}, but kept
 	 * as a String.
@@ -103,7 +104,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 *
 	 * @return The factory scope interceptor, or null if none.
 	 *
-	 * @deprecated (since 6.0) if access to the SessionFactory-scoped Interceptor is needed, use
+	 * @deprecated (since 5.2) if access to the SessionFactory-scoped Interceptor is needed, use
 	 * {@link SessionFactoryOptions#getInterceptor()} instead.  However, generally speaking this access
 	 * is not needed.
 	 */
@@ -214,7 +215,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	// NamedQueryRepository
 
 	/**
-	 * @deprecated (since 6.0) Use {@link NamedQueryRepository#getNamedQueryDefinition(java.lang.String)} instead.
+	 * @deprecated (since 5.2) Use {@link NamedQueryRepository#getNamedQueryDefinition(java.lang.String)} instead.
 	 */
 	@Deprecated
 	default NamedQueryDefinition getNamedQuery(String queryName) {
@@ -222,7 +223,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	}
 
 	/**
-	 * @deprecated (since 6.0) Use {@link NamedQueryRepository#registerNamedQueryDefinition} instead.
+	 * @deprecated (since 5.2) Use {@link NamedQueryRepository#registerNamedQueryDefinition} instead.
 	 */
 	@Deprecated
 	default void registerNamedQueryDefinition(String name, NamedQueryDefinition definition) {
@@ -230,7 +231,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	}
 
 	/**
-	 * @deprecated (since 6.0) Use {@link NamedQueryRepository#getNamedSQLQueryDefinition} instead.
+	 * @deprecated (since 5.2) Use {@link NamedQueryRepository#getNamedSQLQueryDefinition} instead.
 	 */
 	@Deprecated
 	default NamedSQLQueryDefinition getNamedSQLQuery(String queryName) {
@@ -238,7 +239,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	}
 
 	/**
-	 * @deprecated (since 6.0) Use {@link NamedQueryRepository#registerNamedSQLQueryDefinition} instead.
+	 * @deprecated (since 5.2) Use {@link NamedQueryRepository#registerNamedSQLQueryDefinition} instead.
 	 */
 	@Deprecated
 	default void registerNamedSQLQueryDefinition(String name, NamedSQLQueryDefinition definition) {
@@ -246,7 +247,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	}
 
 	/**
-	 * @deprecated (since 6.0) Use {@link NamedQueryRepository#getResultSetMappingDefinition} instead.
+	 * @deprecated (since 5.2) Use {@link NamedQueryRepository#getResultSetMappingDefinition} instead.
 	 */
 	@Deprecated
 	default ResultSetMappingDefinition getResultSetMapping(String name) {
@@ -267,7 +268,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 *
 	 * @return The dialect
 	 *
-	 * @deprecated (since 6.0) instead, use this factory's {{@link #getServiceRegistry()}} ->
+	 * @deprecated (since 5.2) instead, use this factory's {{@link #getServiceRegistry()}} ->
 	 * {@link JdbcServices#getDialect()}
 	 */
 	@Deprecated
@@ -321,7 +322,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	MetamodelImplementor getMetamodel();
 
 	/**
-	 * @deprecated (since 6.0) Use {@link MetamodelImplementor#entityPersister(Class)} instead.
+	 * @deprecated (since 5.2) Use {@link MetamodelImplementor#entityPersister(Class)} instead.
 	 */
 	@Deprecated
 	default EntityPersister getEntityPersister(String entityName) throws MappingException {
@@ -329,7 +330,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	}
 
 	/**
-	 * @deprecated (since 6.0) Use {@link MetamodelImplementor#entityPersisters} instead.
+	 * @deprecated (since 5.2) Use {@link MetamodelImplementor#entityPersisters} instead.
 	 */
 	@Deprecated
 	default Map<String,EntityPersister> getEntityPersisters() {
@@ -337,7 +338,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	}
 
 	/**
-	 * @deprecated (since 6.0) Use {@link MetamodelImplementor#collectionPersister(String)} instead.
+	 * @deprecated (since 5.2) Use {@link MetamodelImplementor#collectionPersister(String)} instead.
 	 */
 	@Deprecated
 	default CollectionPersister getCollectionPersister(String role) throws MappingException {
@@ -345,7 +346,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	}
 
 	/**
-	 * @deprecated (since 6.0) Use {@link MetamodelImplementor#collectionPersisters} instead.
+	 * @deprecated (since 5.2) Use {@link MetamodelImplementor#collectionPersisters} instead.
 	 */
 	@Deprecated
 	default Map<String, CollectionPersister> getCollectionPersisters() {
@@ -353,7 +354,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	}
 
 	/**
-	 * @deprecated (since 6.0) Use {@link MetamodelImplementor#collectionPersisters} instead.
+	 * @deprecated (since 5.2) Use {@link MetamodelImplementor#collectionPersisters} instead.
 	 * Retrieves a set of all the collection roles in which the given entity
 	 * is a participant, as either an index or an element.
 	 *
@@ -365,7 +366,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	}
 
 	/**
-	 * @deprecated (since 6.0) Use {@link MetamodelImplementor#locateEntityPersister(Class)} instead.
+	 * @deprecated (since 5.2) Use {@link MetamodelImplementor#locateEntityPersister(Class)} instead.
 	 */
 	@Deprecated
 	default EntityPersister locateEntityPersister(Class byClass) {
@@ -373,7 +374,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	}
 
 	/**
-	 * @deprecated (since 6.0) Use {@link MetamodelImplementor#locateEntityPersister(String)} instead.
+	 * @deprecated (since 5.2) Use {@link MetamodelImplementor#locateEntityPersister(String)} instead.
 	 */
 	@Deprecated
 	default EntityPersister locateEntityPersister(String byName) {
@@ -413,7 +414,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 *
 	 * @return The name of the region
 	 *
-	 * @deprecated (since 6.0) Use this factory's {@link #getCache()} reference
+	 * @deprecated (since 5.2) Use this factory's {@link #getCache()} reference
 	 * to access Region via {@link CacheImplementor#determineEntityRegionAccessStrategy} or
 	 * {@link CacheImplementor#determineCollectionRegionAccessStrategy} instead.
 	 */
@@ -440,7 +441,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 * @return That region's "access strategy"
 	 *
 	 *
-	 * @deprecated (since 6.0) Use this factory's {@link #getCache()} reference
+	 * @deprecated (since 5.2) Use this factory's {@link #getCache()} reference
 	 * to access {@link CacheImplementor#determineEntityRegionAccessStrategy} or
 	 * {@link CacheImplementor#determineCollectionRegionAccessStrategy} instead.
 	 */
@@ -466,7 +467,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 *
 	 * @return The region
 	 *
-	 * @deprecated (since 6.0) Use this factory's {@link #getCache()} ->
+	 * @deprecated (since 5.2) Use this factory's {@link #getCache()} ->
 	 * {@link CacheImplementor#getNaturalIdCacheRegionAccessStrategy(String)} ->
 	 * {@link NaturalIdRegionAccessStrategy#getRegion()} instead.
 	 */
@@ -482,7 +483,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 *
 	 * @return That region's "access strategy"
 	 *
-	 * @deprecated (since 6.0) Use this factory's {@link #getCache()} ->
+	 * @deprecated (since 5.2) Use this factory's {@link #getCache()} ->
 	 * {@link CacheImplementor#getNaturalIdCacheRegionAccessStrategy(String)} instead.
 	 */
 	@Deprecated
@@ -497,7 +498,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 *
 	 * @return The map of regions
 	 *
-	 * @deprecated (since 6.0) with no direct replacement; use this factory's {@link #getCache()} reference
+	 * @deprecated (since 5.2) with no direct replacement; use this factory's {@link #getCache()} reference
 	 * to access cache objects as needed.
 	 */
 	@Deprecated

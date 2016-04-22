@@ -750,7 +750,7 @@ public interface Query<R> extends org.hibernate.BasicQueryContract, TypedQuery<R
 	@Deprecated
 	@SuppressWarnings("unchecked")
 	default org.hibernate.query.Query setBoolean(int position, boolean val) {
-		setParameter( position, val, BooleanType.INSTANCE );
+		setParameter( position, val, determineProperBooleanType( position, val, BooleanType.INSTANCE ) );
 		return (org.hibernate.query.Query) this;
 	}
 
@@ -1110,7 +1110,7 @@ public interface Query<R> extends org.hibernate.BasicQueryContract, TypedQuery<R
 	@Deprecated
 	@SuppressWarnings("unchecked")
 	default org.hibernate.query.Query setBoolean(String name, boolean val) {
-		setParameter( name, val, BooleanType.INSTANCE );
+		setParameter( name, val, determineProperBooleanType( name, val, BooleanType.INSTANCE ) );
 		return (org.hibernate.query.Query) this;
 	}
 
@@ -1450,6 +1450,17 @@ public interface Query<R> extends org.hibernate.BasicQueryContract, TypedQuery<R
 	@SuppressWarnings("unchecked")
 	org.hibernate.query.Query setEntity(String name, Object val);
 
+	/**
+	 * @deprecated added only to allow default method definition for deprecated methods here.
+	 */
+	@Deprecated
+	Type determineProperBooleanType(int position, Object value, Type defaultType);
+
+	/**
+	 * @deprecated added only to allow default method definition for deprecated methods here.
+	 */
+	@Deprecated
+	Type determineProperBooleanType(String name, Object value, Type defaultType);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1463,18 +1474,17 @@ public interface Query<R> extends org.hibernate.BasicQueryContract, TypedQuery<R
 	 *
 	 * @return this (for method chaining)
 	 *
-	 * @deprecated (since 6.0) - todo : develop a new approach to result transformers
+	 * @deprecated (since 5.2)
+	 * @todo develop a new approach to result transformers
 	 */
 	@Deprecated
 	org.hibernate.query.Query setResultTransformer(ResultTransformer transformer);
 
 	/**
-	 * @deprecated (since 6.0) use {@link javax.persistence.Tuple} if you need access to "result variables".
+	 * @deprecated (since 5.2) use {@link javax.persistence.Tuple} if you need access to "result variables".
 	 */
 	@Deprecated
-	default String[] getReturnAliases() {
-		return null;
-	}
+	String[] getReturnAliases();
 
 	/**
 	 * Bind values and types to positional parameters.  Allows binding more than one at a time; no real performance
@@ -1488,7 +1498,7 @@ public interface Query<R> extends org.hibernate.BasicQueryContract, TypedQuery<R
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @deprecated (since 6.0) Bind values individually
+	 * @deprecated (since 5.2) Bind values individually
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")

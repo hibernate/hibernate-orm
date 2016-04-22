@@ -503,4 +503,9 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	public boolean isOpen() {
 		return delegate.isOpen();
 	}
+
+	@Override
+	public Type resolveParameterBindType(Object bindValue) {
+		return delegate.resolveParameterBindType( bindValue );
+	}
 }

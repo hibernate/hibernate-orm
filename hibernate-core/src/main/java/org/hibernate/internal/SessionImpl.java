@@ -20,6 +20,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -38,6 +39,7 @@ import javax.persistence.LockTimeoutException;
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.OptimisticLockException;
+import javax.persistence.PersistenceContextType;
 import javax.persistence.PersistenceException;
 import javax.persistence.PessimisticLockException;
 import javax.persistence.PessimisticLockScope;
@@ -81,7 +83,6 @@ import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
-import org.hibernate.TransactionException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.TypeHelper;
 import org.hibernate.TypeMismatchException;
@@ -92,7 +93,6 @@ import org.hibernate.criterion.NaturalIdentifier;
 import org.hibernate.dialect.lock.LockingStrategyException;
 import org.hibernate.dialect.lock.OptimisticEntityLockException;
 import org.hibernate.dialect.lock.PessimisticEntityLockException;
-import org.hibernate.engine.internal.SessionEventListenerManagerImpl;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NonContextualLobCreator;
@@ -166,6 +166,7 @@ import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.jpa.spi.CriteriaQueryTupleTransformer;
 import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
+import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.loader.criteria.CriteriaLoader;
 import org.hibernate.loader.custom.CustomLoader;
 import org.hibernate.loader.custom.CustomQuery;
@@ -239,9 +240,7 @@ public final class SessionImpl
 
 	private transient SessionOwner sessionOwner;
 
-	private SessionEventListenerManagerImpl sessionEventsManager = new SessionEventListenerManagerImpl();
-
-	private Map<String, Object> properties;
+	private Map<String, Object> properties = new HashMap<>();
 
 	private transient ActionQueue actionQueue;
 	private transient StatefulPersistenceContext persistenceContext;
@@ -252,18 +251,11 @@ public final class SessionImpl
 	private transient ManagedFlushChecker managedFlushChecker;
 	private transient AfterCompletionAction afterCompletionAction;
 
+	// todo : (5.2) HEM always initialized this.  Is that really needed?
+	private LockOptions lockOptions = new LockOptions();
 
-	// todo : (5.2) review synchronizationType, persistenceContextType, transactionType usage
-
-	private transient PhysicalConnectionHandlingMode connectionHandlingMode;
-	private transient SynchronizationType synchronizationType;
-	private transient PersistenceUnitTransactionType transactionType;
-
-	private LockOptions lockOptions;
-
-
+	// todo : (5.2) are these still really needed?
 	private transient boolean autoClear; //for EJB3
-	private transient boolean autoJoinTransactions = true;
 	private transient boolean flushBeforeCompletionEnabled;
 	private transient boolean autoCloseSessionEnabled;
 
@@ -277,14 +269,14 @@ public final class SessionImpl
 	public SessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
 
-		this.transactionType = options.getPersistenceUnitTransactionType();
-		this.synchronizationType = options.getSynchronizationType();
-
 		this.actionQueue = new ActionQueue( this );
 		this.persistenceContext = new StatefulPersistenceContext( this );
 
 		this.sessionOwner = options.getSessionOwner();
 		initializeFromSessionOwner( sessionOwner );
+
+		this.autoClear = options.isClearStateOnCloseEnabled();
+		this.flushBeforeCompletionEnabled = options.isFlushBeforeCompletionEnabled();
 
 		if ( options instanceof SharedSessionCreationOptions && ( (SharedSessionCreationOptions) options ).isTransactionCoordinatorShared() ) {
 			final SharedSessionCreationOptions sharedOptions = (SharedSessionCreationOptions) options;
@@ -318,12 +310,14 @@ public final class SessionImpl
 						public void afterCompletion(boolean successful, boolean delayed) {
 							log.tracef( "TransactionObserver#afterCompletion(%s, %s) on Session [%s]", successful, delayed, getSessionIdentifier() );
 							afterTransactionCompletion( successful, delayed );
-							if ( !isClosed() && autoCloseSessionEnabled ) {
-								managedClose();
-							}
 						}
 					}
 			);
+
+		}
+		else {
+			this.autoCloseSessionEnabled = getPersistenceContextType() == PersistenceContextType.TRANSACTION
+					&& factory.getSessionFactoryOptions().isAutoCloseSessionEnabled();
 		}
 
 		loadQueryInfluencers = new LoadQueryInfluencers( factory );
@@ -388,7 +382,7 @@ public final class SessionImpl
 
 
 	private void applyProperties() {
-		setHibernateFlushMode( ConfigurationHelper.getFlushMode( properties.get( AvailableSettings.FLUSH_MODE ) ) );
+		setHibernateFlushMode( ConfigurationHelper.getFlushMode( properties.get( AvailableSettings.FLUSH_MODE ), FlushMode.AUTO ) );
 		setLockOptions( this.properties, this.lockOptions );
 		getSession().setCacheMode(
 				CacheModeHelper.interpretCacheMode(
@@ -623,9 +617,15 @@ public final class SessionImpl
 	@Override
 	public void close() throws HibernateException {
 		log.tracef( "Closing session [%s]", getSessionIdentifier() );
-		checkOpen();
+
+// todo : we want this check if usage is JPA, but not native Hibernate usage
+//		checkOpen();
 
 		super.close();
+
+		if ( getFactory().getStatistics().isStatisticsEnabled() ) {
+			getFactory().getStatistics().closeSession();
+		}
 
 // Original hibernate-entitymanager EM#close behavior
 // does any of this need to be integrated?
@@ -663,7 +663,7 @@ public final class SessionImpl
 
 	@Override
 	public boolean shouldAutoJoinTransaction() {
-		return synchronizationType == SynchronizationType.SYNCHRONIZED;
+		return getSynchronizationType() == SynchronizationType.SYNCHRONIZED;
 	}
 
 	@Override
@@ -744,12 +744,6 @@ public final class SessionImpl
 		autoClear = enabled;
 	}
 
-	@Override
-	public void disableTransactionAutoJoin() {
-		checkOpen();
-		autoJoinTransactions = false;
-	}
-
 	/**
 	 * Check if there is a Hibernate or JTA transaction in progress and,
 	 * if there is not, flush if necessary, make sure the connection has
@@ -762,11 +756,6 @@ public final class SessionImpl
 		if ( !isTransactionInProgress() ) {
 			getJdbcCoordinator().afterTransaction();
 		}
-	}
-
-	@Override
-	public SessionEventListenerManagerImpl getEventListenerManager() {
-		return sessionEventsManager;
 	}
 
 	@Override
@@ -2120,10 +2109,14 @@ public final class SessionImpl
 		checkOpen();
 //		checkTransactionSynchStatus();
 
-		if ( object != null
-				&& !( object instanceof HibernateProxy )
-				&& getSessionFactory().getMetamodel().entityPersister( object.getClass() ) == null ) {
-			throw convert( new IllegalArgumentException( "Not an entity:" + object.getClass() ) );
+		if ( object != null && !HibernateProxy.class.isInstance( object ) ) {
+			// check if it is an entity -> if not throw an exception (per JPA)
+			try {
+				getSessionFactory().getMetamodel().entityPersister( object.getClass() );
+			}
+			catch (HibernateException e) {
+				throw convert( new IllegalArgumentException( "Not an entity:" + object.getClass() ) );
+			}
 		}
 
 		try {
@@ -2518,12 +2511,12 @@ public final class SessionImpl
 
 	@Override
 	public PersistenceUnitTransactionType getTransactionType() {
-		return transactionType;
+		return super.getTransactionType();
 	}
 
 	@Override
 	public SynchronizationType getSynchronizationType() {
-		return synchronizationType;
+		return super.getSynchronizationType();
 	}
 
 	private static class LobHelperImpl implements LobHelper {
@@ -2617,7 +2610,7 @@ public final class SessionImpl
 
 		@Override
 		public T autoJoinTransactions() {
-			return autoJoinTransactions( session.autoJoinTransactions );
+			return autoJoinTransactions( session.isAutoCloseSessionEnabled() );
 		}
 
 		@Override
@@ -2712,6 +2705,39 @@ public final class SessionImpl
 		public void lock(Object object) throws HibernateException {
 			fireLock( object, lockOptions );
 		}
+	}
+
+	@Override
+	protected void addSharedSessionTransactionObserver(TransactionCoordinator transactionCoordinator) {
+		transactionCoordinator.addObserver(
+				new TransactionObserver() {
+					@Override
+					public void afterBegin() {
+					}
+
+					@Override
+					public void beforeCompletion() {
+						if ( isOpen() && flushBeforeCompletionEnabled ) {
+							managedFlush();
+						}
+						actionQueue.beforeTransactionCompletion();
+						try {
+							getInterceptor().beforeTransactionCompletion( getCurrentTransaction() );
+						}
+						catch (Throwable t) {
+							log.exceptionInBeforeTransactionCompletionInterceptor( t );
+						}
+					}
+
+					@Override
+					public void afterCompletion(boolean successful, boolean delayed) {
+						afterTransactionCompletion( successful, delayed );
+						if ( !isClosed() && autoCloseSessionEnabled ) {
+							managedClose();
+						}
+					}
+				}
+		);
 	}
 
 	private class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
@@ -3286,9 +3312,9 @@ public final class SessionImpl
 	@Override
 	public RuntimeException convert(HibernateException e, LockOptions lockOptions) {
 		Throwable cause = e;
-		if(e instanceof TransactionException){
-			cause = e.getCause();
-		}
+//		if (e instanceof TransactionException){
+//			cause = e.getCause();
+//		}
 		if ( cause instanceof StaleStateException ) {
 			final PersistenceException converted = wrapStaleStateException( (StaleStateException) cause );
 			handlePersistenceException( converted );
@@ -3335,6 +3361,9 @@ public final class SessionImpl
 			return converted;
 		}
 		else if ( cause instanceof QueryException ) {
+			return new IllegalArgumentException( cause );
+		}
+		else if ( cause instanceof MultipleBagFetchException ) {
 			return new IllegalArgumentException( cause );
 		}
 		else if ( cause instanceof TransientObjectException ) {
@@ -3660,9 +3689,7 @@ public final class SessionImpl
 
 	private void checkTransactionNeeded() {
 		if ( !isTransactionInProgress() ) {
-			throw new TransactionRequiredException(
-					"no transaction is in progress"
-			);
+			throw new TransactionRequiredException( "no transaction is in progress" );
 		}
 	}
 
@@ -3974,7 +4001,7 @@ public final class SessionImpl
 	}
 
 	private void joinTransaction(boolean explicitRequest) {
-		if ( transactionType != PersistenceUnitTransactionType.JTA ) {
+		if ( getTransactionType() != PersistenceUnitTransactionType.JTA ) {
 			if ( explicitRequest ) {
 				log.callingJoinTransactionOnNonJtaEntityManager();
 			}

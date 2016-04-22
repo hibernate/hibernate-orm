@@ -186,6 +186,6 @@ public final class QuerySplitter {
 	}
 
 	public static String getImportedClass(String name, SessionFactoryImplementor factory) {
-		return factory.getImportedClassName( name );
+		return factory.getMetamodel().getImportedClassName( name );
 	}
 }

@@ -6,27 +6,29 @@
  */
 package org.hibernate.test.hql;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import org.hibernate.HibernateException;
+import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipForDialects;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
+
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Tests the new functionality of allowing scrolling of results which
@@ -47,6 +49,9 @@ public class ScrollableCollectionFetchingTest extends BaseCoreFunctionalTestCase
 		try {
 			s.createQuery( "select a, a.weight from Animal a inner join fetch a.offspring" ).scroll();
 			fail( "scroll allowed with collection fetch and reurning tuples" );
+		}
+		catch (IllegalArgumentException e) {
+			assertTyping( QueryException.class, e.getCause() );
 		}
 		catch( HibernateException e ) {
 			// expected result...

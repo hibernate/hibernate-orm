@@ -145,6 +145,11 @@ public class StoredProcedureQueryImpl extends AbstractProducedQuery<Object> impl
 	}
 
 	@Override
+	public String[] getReturnAliases() {
+		throw new UnsupportedOperationException( "Procedure/function calls do not support returning aliases" );
+	}
+
+	@Override
 	protected boolean applyTimeoutHint(int timeout) {
 		procedureCall.setTimeout( timeout );
 		return true;

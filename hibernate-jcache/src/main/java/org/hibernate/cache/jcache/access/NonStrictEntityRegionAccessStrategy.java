@@ -60,4 +60,9 @@ public class NonStrictEntityRegionAccessStrategy extends JCacheRegionAccessStrat
 	public Object getCacheKeyId(Object cacheKey) {
 		return DefaultCacheKeysFactory.getEntityId( cacheKey );
 	}
+
+	@Override
+	public void remove(SharedSessionContractImplementor session, Object key) throws CacheException {
+		evict( key );
+	}
 }

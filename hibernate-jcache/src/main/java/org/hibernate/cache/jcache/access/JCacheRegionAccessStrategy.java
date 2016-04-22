@@ -68,17 +68,17 @@ abstract class JCacheRegionAccessStrategy<R extends JCacheTransactionalDataRegio
 
 	@Override
 	public void unlockRegion(SoftLock lock) throws CacheException {
-		// no op
+		evictAll();
 	}
 
 	@Override
 	public void remove(SharedSessionContractImplementor session, Object key) throws CacheException {
-		region.remove( key );
+		// jcache only supports asynchronous access strategies
 	}
 
 	@Override
 	public void removeAll() throws CacheException {
-		region.clear();
+		evictAll();
 	}
 
 	@Override

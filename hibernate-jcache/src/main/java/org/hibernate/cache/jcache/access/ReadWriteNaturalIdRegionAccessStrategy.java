@@ -7,10 +7,6 @@
 
 package org.hibernate.cache.jcache.access;
 
-import javax.cache.processor.EntryProcessor;
-import javax.cache.processor.EntryProcessorException;
-import javax.cache.processor.MutableEntry;
-
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.jcache.JCacheNaturalIdRegion;
@@ -37,21 +33,7 @@ public class ReadWriteNaturalIdRegionAccessStrategy
 
 	@Override
 	public boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value) throws CacheException {
-		return region.invoke(
-				key, new EntryProcessor<Object, Object, Boolean>() {
-					@Override
-					public Boolean process(MutableEntry<Object, Object> entry, Object... args)
-							throws EntryProcessorException {
-						if ( !entry.exists() ) {
-							entry.setValue( new Item( args[0], null, (Long) args[1] ) );
-							return true;
-						}
-						else {
-							return false;
-						}
-					}
-				}, value, region.nextTimestamp()
-		);
+		return region.putIfAbsent( key, new Item( value, null, region.nextTimestamp(), nextItemId() ));
 	}
 
 	@Override
@@ -63,33 +45,28 @@ public class ReadWriteNaturalIdRegionAccessStrategy
 	@Override
 	public boolean afterUpdate(SharedSessionContractImplementor session, Object key, Object value, SoftLock lock)
 			throws CacheException {
-		return region.invoke(
-				key, new EntryProcessor<Object, Object, Boolean>() {
-					@Override
-					public Boolean process(MutableEntry<Object, Object> entry, Object... args)
-							throws EntryProcessorException {
-						final Lockable item = (Lockable) entry.getValue();
+		while (true) {
+			Lockable item = (Lockable) region.get( key );
 
-						if ( item != null && item.isUnlockable( (SoftLock) args[1] ) ) {
-							final Lock lockItem = (Lock) item;
-							if ( lockItem.wasLockedConcurrently() ) {
-								lockItem.unlock( region.nextTimestamp() );
-								entry.setValue( lockItem );
-								return false;
-							}
-							else {
-								entry.setValue( new Item( args[0], null, (Long) args[2] ) );
-								return true;
-							}
-						}
-						else {
-							entry.setValue( null );
-							return false;
-						}
-
+			if ( item != null && item.isUnlockable( lock ) ) {
+				final Lock lockItem = (Lock) item;
+				if ( lockItem.wasLockedConcurrently() ) {
+					if (region.replace( key, lockItem, lockItem.unlock( region.nextTimestamp() ) )) {
+						return false;
 					}
-				}, value, lock, region.nextTimestamp()
-		);
+				}
+				else {
+					if (region.replace( key, lockItem, new Item(value, null, region.nextTimestamp(), nextItemId() ))) {
+						return true;
+					}
+				}
+			}
+			else {
+				handleMissingLock( key, item );
+				return false;
+			}
+
+		}
 	}
 
 	@Override

@@ -1403,7 +1403,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
  			s.isReadOnly( dp );
 			fail( "should have failed because session was closed" );
 		}
-		catch ( SessionException ex) {
+		catch ( IllegalStateException ex) {
 			// expected
 			assertFalse( ( ( HibernateProxy ) dp ).getHibernateLazyInitializer().isReadOnlySettingAvailable() );
 		}
@@ -1531,7 +1531,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
  			s.setReadOnly( dp, true );
 			fail( "should have failed because session was closed" );
 		}
-		catch ( SessionException ex) {
+		catch ( IllegalStateException ex) {
 			// expected
 			assertFalse( ( ( HibernateProxy ) dp ).getHibernateLazyInitializer().isReadOnlySettingAvailable() );
 		}
@@ -1600,7 +1600,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 			( ( HibernateProxy ) dp ).getHibernateLazyInitializer().setSession( ( SessionImplementor ) s );			
 			fail( "should have failed because session was closed" );
 		}
-		catch ( SessionException ex) {
+		catch ( IllegalStateException ex) {
 			// expected
 			assertFalse( ( ( HibernateProxy ) dp ).getHibernateLazyInitializer().isReadOnlySettingAvailable() );
 		}

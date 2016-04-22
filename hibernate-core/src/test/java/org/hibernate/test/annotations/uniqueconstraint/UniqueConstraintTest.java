@@ -6,12 +6,15 @@
  */
 package org.hibernate.test.annotations.uniqueconstraint;
 
+import javax.persistence.PersistenceException;
+
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.fail;
 
 /**
@@ -52,12 +55,16 @@ public class UniqueConstraintTest extends BaseCoreFunctionalTestCase {
         s.persist(house2);
         try {
             s.flush();
-            fail("Database constraint non-existant");
-        } catch(JDBCException e) {
+            fail( "Database constraint non-existant" );
+        }
+        catch (PersistenceException e) {
+            assertTyping( JDBCException.class, e.getCause() );
             //success
         }
-        tx.rollback();
-        s.close();
+        finally {
+            tx.rollback();
+            s.close();
+        }
     }
     
 }

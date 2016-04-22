@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.annotations.immutable;
 
+import javax.persistence.PersistenceException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -102,9 +103,10 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 			tx.commit();
 			fail();
 		}
-		catch (HibernateException e) {
-			assertTrue(e.getMessage().contains("changed an immutable collection instance"));
-            log.debug("success");
+		catch ( PersistenceException ex ) {
+			// expected
+			assertTrue(ex.getMessage().contains("changed an immutable collection instance"));
+			log.debug("success");
 		}
 		s.close();
 
@@ -119,7 +121,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		try {
 			tx.commit();
 			fail();
-		} catch (HibernateException e) {
+		} catch (PersistenceException e) {
 			assertTrue(e.getMessage().contains("changed an immutable collection instance"));
             log.debug("success");
 		}

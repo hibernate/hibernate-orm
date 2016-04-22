@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.manytomanyassociationclass.surrogateid.generated;
 
+import javax.persistence.PersistenceException;
 import java.util.HashSet;
 
 import org.hibernate.Session;
@@ -15,6 +16,7 @@ import org.hibernate.test.manytomanyassociationclass.AbstractManyToManyAssociati
 import org.hibernate.test.manytomanyassociationclass.Membership;
 import org.junit.Test;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.fail;
 
 /**
@@ -50,9 +52,10 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 			s.getTransaction().commit();
 			fail( "should have failed because inserts are beforeQuery deletes");
 		}
-		catch( ConstraintViolationException ex ) {
-			// expected
+		catch (PersistenceException e) {
 			s.getTransaction().rollback();
+			// expected
+			assertTyping( ConstraintViolationException.class, e.getCause() );
 		}
 		finally {
 			s.close();
@@ -78,9 +81,10 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 			s.getTransaction().commit();
 			fail( "should have failed because inserts are beforeQuery deletes");
 		}
-		catch( ConstraintViolationException ex ) {
-			// expected
+		catch (PersistenceException e) {
 			s.getTransaction().rollback();
+			// expected
+			assertTyping( ConstraintViolationException.class, e.getCause() );
 		}
 		finally {
 			s.close();
@@ -106,9 +110,10 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 			s.getTransaction().commit();
 			fail( "should have failed because inserts are beforeQuery deletes");
 		}
-		catch( ConstraintViolationException ex ) {
-			// expected
+		catch (PersistenceException e) {
 			s.getTransaction().rollback();
+			// expected
+			assertTyping( ConstraintViolationException.class, e.getCause() );
 		}
 		finally {
 			s.close();

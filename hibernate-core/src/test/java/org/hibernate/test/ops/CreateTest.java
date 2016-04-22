@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.ops;
 
+import javax.persistence.PersistenceException;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -16,6 +17,7 @@ import org.hibernate.exception.ConstraintViolationException;
 
 import org.junit.Test;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -129,8 +131,9 @@ public class CreateTest extends AbstractOperationTestCase {
 			tx.commit();
 			fail( "Expecting constraint failure" );
 		}
-		catch (ConstraintViolationException te) {
+		catch (PersistenceException e){
 			//verify that an exception is thrown!
+			assertTyping(ConstraintViolationException.class, e.getCause());
 		}
 		tx.rollback();
 		s.close();
@@ -145,8 +148,9 @@ public class CreateTest extends AbstractOperationTestCase {
 			tx.commit();
 			assertFalse(true);
 		}
-		catch (ConstraintViolationException te) {
+		catch (PersistenceException e){
 			//verify that an exception is thrown!
+			assertTyping(ConstraintViolationException.class, e.getCause());
 		}
 		tx.rollback();
 		s.close();
@@ -168,8 +172,9 @@ public class CreateTest extends AbstractOperationTestCase {
 			s.persist(dupe);
 			assertFalse(true);
 		}
-		catch (PersistentObjectException poe) {
+		catch (PersistenceException e){
 			//verify that an exception is thrown!
+			assertTyping(PersistentObjectException.class, e.getCause());
 		}
 		tx.rollback();
 		s.close();
@@ -183,8 +188,9 @@ public class CreateTest extends AbstractOperationTestCase {
 			s.persist(nondupe);
 			assertFalse(true);
 		}
-		catch (PersistentObjectException poe) {
+		catch (PersistenceException e){
 			//verify that an exception is thrown!
+			assertTyping(PersistentObjectException.class, e.getCause());
 		}
 		tx.rollback();
 		s.close();

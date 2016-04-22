@@ -6,6 +6,8 @@
  */
 package org.hibernate.test.jpa.naturalid;
 
+import javax.persistence.PersistenceException;
+
 import org.junit.Test;
 
 import org.hibernate.HibernateException;
@@ -82,7 +84,7 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 			s.flush();
 			fail();
 		}
-		catch ( HibernateException he ) {
+		catch ( PersistenceException p ) {
 		}
 		u.setUserName( "steve" );
 		s.delete( u );

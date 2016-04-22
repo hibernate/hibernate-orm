@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.annotations.override;
 
+import javax.persistence.PersistenceException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -45,7 +46,7 @@ public class AssociationOverrideTest extends BaseNonConfigCoreFunctionalTestCase
 			s.flush();
 			fail( "Should be non nullable" );
 		}
-		catch (HibernateException e) {
+		catch (PersistenceException e) {
 			//success
 		}
 		finally {

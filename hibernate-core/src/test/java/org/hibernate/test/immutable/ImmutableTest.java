@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.test.immutable;
+import javax.persistence.PersistenceException;
 import java.util.Iterator;
 
 import org.junit.Test;
@@ -859,7 +860,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 			t.commit();
 			fail( "should have failed because reassociated object has a dirty collection");
 		}
-		catch ( HibernateException ex ) {
+		catch ( PersistenceException ex ) {
 			// expected
 		}
 		finally {
@@ -1082,7 +1083,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 			t.commit();
 			fail( "should have failed because an immutable collection was changed");
 		}
-		catch ( HibernateException ex ) {
+		catch ( PersistenceException ex ) {
 			// expected
 			t.rollback();
 		}

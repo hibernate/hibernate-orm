@@ -8,6 +8,7 @@ package org.hibernate.test.annotations.beanvalidation;
 
 import java.math.BigDecimal;
 import java.util.Map;
+import javax.persistence.PersistenceException;
 import javax.validation.ConstraintViolationException;
 
 import org.hibernate.Session;
@@ -102,15 +103,19 @@ public class DDLWithoutCallbackTest extends BaseNonConfigCoreFunctionalTestCase 
 			s.flush();
 			fail( "expecting SQL constraint violation" );
 		}
-		catch ( ConstraintViolationException e ) {
-			fail( "invalid object should not be validated" );
-		}
-		catch ( org.hibernate.exception.ConstraintViolationException e ) {
-			if ( getDialect().supportsColumnCheck() ) {
-				// expected
+		catch (PersistenceException pe) {
+			final Throwable cause = pe.getCause();
+			if ( cause instanceof ConstraintViolationException ) {
+				fail( "invalid object should not be validated" );
 			}
-			else {
-				fail( "Unexpected SQL constraint violation [" + e.getConstraintName() + "] : " + e.getSQLException() );
+			else if ( cause instanceof org.hibernate.exception.ConstraintViolationException ) {
+				if ( getDialect().supportsColumnCheck() ) {
+					// expected
+				}
+				else {
+					org.hibernate.exception.ConstraintViolationException cve = (org.hibernate.exception.ConstraintViolationException) cause;
+					fail( "Unexpected SQL constraint violation [" + cve.getConstraintName() + "] : " + cve.getSQLException() );
+				}
 			}
 		}
 		tx.rollback();

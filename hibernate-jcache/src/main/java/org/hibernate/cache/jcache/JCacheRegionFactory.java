@@ -22,6 +22,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.jcache.time.Timestamper;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.EntityRegion;
@@ -187,11 +188,11 @@ public class JCacheRegionFactory implements RegionFactory {
 	}
 
 	static long nextTS() {
-		return System.currentTimeMillis() / 100;
+		return Timestamper.next();
 	}
 
 	static int timeOut() {
-		return (int) (TimeUnit.SECONDS.toMillis(60) / 100);
+		return (int) TimeUnit.SECONDS.toMillis( 60 ) * Timestamper.ONE_MS;
 	}
 
 	private String getProp(Properties properties, String prop) {

@@ -11,23 +11,29 @@ import java.io.Serializable;
 import java.util.Comparator;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
-import javax.cache.processor.EntryProcessor;
-import javax.cache.processor.EntryProcessorException;
-import javax.cache.processor.MutableEntry;
 
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.jcache.JCacheMessageLogger;
 import org.hibernate.cache.jcache.JCacheTransactionalDataRegion;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.jboss.logging.Logger;
 
 /**
  * @author Alex Snaps
  */
-public class AbstractReadWriteRegionAccessStrategy<R extends JCacheTransactionalDataRegion> {
+abstract class AbstractReadWriteRegionAccessStrategy<R extends JCacheTransactionalDataRegion> {
+
+	private static final JCacheMessageLogger LOG = Logger.getMessageLogger(
+			JCacheMessageLogger.class,
+			AbstractReadWriteRegionAccessStrategy.class.getName()
+	);
+
 	protected final R region;
 	protected final Comparator versionComparator;
 	private final UUID uuid = UUID.randomUUID();
 	private final AtomicLong nextLockId = new AtomicLong();
+	private final AtomicLong nextItemId = new AtomicLong();
 
 	public AbstractReadWriteRegionAccessStrategy(R region) {
 		this.versionComparator = region.getCacheDataDescription().getVersionComparator();
@@ -51,26 +57,29 @@ public class AbstractReadWriteRegionAccessStrategy<R extends JCacheTransactional
 	}
 
 	public boolean putFromLoad(SharedSessionContractImplementor session, Object key, Object value, long txTimestamp, Object version) throws CacheException {
-		return region.invoke(
-				key, new EntryProcessor<Object, Object, Boolean>() {
-					@Override
-					public Boolean process(MutableEntry<Object, Object> entry, Object... args)
-							throws EntryProcessorException {
-						final Lockable item = (Lockable) entry.getValue();
-						final boolean writeable = item == null || item.isWriteable(
-								(Long) args[1],
-								args[2],
-								versionComparator
-						);
-						if ( writeable ) {
-							entry.setValue( new Item( args[0], args[2], region.nextTimestamp() ) );
-							return true;
-						}
-						else {
-							return false;
-						}
-					}
-				}, value, txTimestamp, version);
+		while (true) {
+			Lockable item = (Lockable) region.get( key );
+
+			if (item == null) {
+				/*
+				 * If the item is null due a softlock being evicted... then this
+				 * is wrong, the in-doubt soft-lock could get replaced with the
+				 * old value.  All that can be done from a JCache perspective is
+				 * to log a warning.
+				 */
+				if (region.putIfAbsent( key, new Item( value, version, txTimestamp, nextItemId() ))) {
+					return true;
+				}
+			}
+			else if (item.isWriteable( txTimestamp, version, versionComparator )) {
+				if (region.replace( key, item, new Item( value, version, txTimestamp, nextItemId() ))) {
+					return true;
+				}
+			}
+			else {
+				return false;
+			}
+		}
 	}
 
 	public boolean putFromLoad(SharedSessionContractImplementor session, Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
@@ -79,49 +88,47 @@ public class AbstractReadWriteRegionAccessStrategy<R extends JCacheTransactional
 	}
 
 	public SoftLock lockItem(SharedSessionContractImplementor session, Object key, Object version) throws CacheException {
-		return region.invoke(
-				key, new EntryProcessor<Object, Object, SoftLock>() {
-					@Override
-					public SoftLock process(MutableEntry<Object, Object> entry, Object... args)
-							throws EntryProcessorException {
-						final Lockable item = (Lockable) entry.getValue();
-						final long timeout = region.nextTimestamp() + region.getTimeout();
-						final Lock lock = ( item == null ) ? new Lock(
-								timeout,
-								(UUID) args[0],
-								(Long) args[1],
-								args[2]
-						)
-								: item.lock( timeout, (UUID) args[0], (Long) args[1] );
-						entry.setValue( lock );
-						return lock;
-					}
-				}, uuid, nextLockId(), version
-		);
+		long timeout = region.nextTimestamp() + region.getTimeout();
+		while (true) {
+			Lockable item = (Lockable) region.get( key );
+
+			if ( item == null ) {
+				/*
+				 * What happens here if a previous soft-lock was evicted to make
+				 * this null.
+				 */
+				Lock lock = new Lock(timeout, uuid, nextLockId(), version);
+				if (region.putIfAbsent( key, lock )) {
+					return lock;
+				}
+			}
+			else {
+				Lock lock = item.lock( timeout, uuid, nextLockId() );
+				if (region.replace(key, item, lock)) {
+					return lock;
+				}
+			}
+		}
 	}
 
 	public void unlockItem(SharedSessionContractImplementor session, Object key, SoftLock lock) throws CacheException {
-		region.invoke(
-				key, new EntryProcessor<Object, Object, Void>() {
-					@Override
-					public Void process(MutableEntry<Object, Object> entry, Object... args)
-							throws EntryProcessorException {
-						final Lockable item = (Lockable) entry.getValue();
+		while (true) {
+			Lockable item = (Lockable) region.get( key );
 
-						if ( (item != null) && item.isUnlockable( (SoftLock) args[0] ) ) {
-							( (Lock) item ).unlock( region.nextTimestamp() );
-							entry.setValue( item );
-						}
-						else {
-							entry.setValue( null );
-						}
-						return null;
-					}
-				}, lock);
+			if (item != null && item.isUnlockable( lock )) {
+				if (region.replace(key, item, ((Lock) item ).unlock(region.nextTimestamp()))) {
+					return;
+				}
+			}
+			else {
+				handleMissingLock( key, item );
+				return;
+			}
+		}
 	}
 
 	public void remove(SharedSessionContractImplementor session, Object key) throws CacheException {
-		region.remove( key );
+		//this access strategy is asynchronous
 	}
 
 	public void removeAll() throws CacheException {
@@ -141,11 +148,23 @@ public class AbstractReadWriteRegionAccessStrategy<R extends JCacheTransactional
 	}
 
 	public void unlockRegion(SoftLock lock) throws CacheException {
-		throw new UnsupportedOperationException( "JCache doesn't support region locking" );
+		region.clear();
 	}
 
 	private long nextLockId() {
 		return nextLockId.getAndIncrement();
+	}
+
+	protected long nextItemId() {
+		return nextItemId.getAndIncrement();
+	}
+
+	protected void handleMissingLock(Object key, Lockable lock) {
+		LOG.missingLock( region, key, lock );
+		long ts = region.nextTimestamp() + region.getTimeout();
+		// create new lock that times out immediately
+		Lock newLock = new Lock( ts, uuid, nextLockId.getAndIncrement(), null ).unlock( ts );
+		region.put( key, newLock );
 	}
 
 	/**
@@ -189,14 +208,16 @@ public class AbstractReadWriteRegionAccessStrategy<R extends JCacheTransactional
 		private final Object value;
 		private final Object version;
 		private final long timestamp;
+		private final long itemId;
 
 		/**
 		 * Creates an unlocked item wrapping the given value with a version and creation timestamp.
 		 */
-		Item(Object value, Object version, long timestamp) {
+		Item(Object value, Object version, long timestamp, long itemId) {
 			this.value = value;
 			this.version = version;
 			this.timestamp = timestamp;
+			this.itemId = itemId;
 		}
 
 		@Override
@@ -224,6 +245,29 @@ public class AbstractReadWriteRegionAccessStrategy<R extends JCacheTransactional
 		public Lock lock(long timeout, UUID uuid, long lockId) {
 			return new Lock( timeout, uuid, lockId, version );
 		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj == this) {
+				return true;
+			}
+			else if (obj instanceof Item) {
+				return itemId == ((Item) obj).itemId;
+			}
+			else {
+				return false;
+			}
+		}
+
+		@Override
+		public int hashCode() {
+			return Long.hashCode( itemId );
+		}
+
+		@Override
+		public String toString() {
+			return value.toString() + " version: " + version;
+		}
 	}
 
 	/**
@@ -236,19 +280,28 @@ public class AbstractReadWriteRegionAccessStrategy<R extends JCacheTransactional
 		private final long lockId;
 		private final Object version;
 
-		private long timeout;
-		private boolean concurrent;
-		private int multiplicity = 1;
-		private long unlockTimestamp;
+		private final long timeout;
+		private final boolean concurrent;
+		private final int multiplicity;
+		private final long unlockTimestamp;
 
 		/**
 		 * Creates a locked item with the given identifiers and object version.
 		 */
 		public Lock(long timeout, UUID sourceUuid, long lockId, Object version) {
-			this.timeout = timeout;
+			this(timeout, sourceUuid, lockId, version, 0, 1, false);
+		}
+
+		private Lock(long timeout, UUID sourceUuid, long lockId, Object version,
+				long unlockTimestamp, int multiplicity, boolean concurrent) {
+			this.sourceUuid = sourceUuid;
 			this.lockId = lockId;
 			this.version = version;
-			this.sourceUuid = sourceUuid;
+
+			this.timeout = timeout;
+			this.unlockTimestamp = unlockTimestamp;
+			this.multiplicity = multiplicity;
+			this.concurrent = concurrent;
 		}
 
 		@Override
@@ -279,7 +332,15 @@ public class AbstractReadWriteRegionAccessStrategy<R extends JCacheTransactional
 
 		@Override
 		public boolean isUnlockable(SoftLock lock) {
-			return equals( lock );
+			if ( lock == this ) {
+				return true;
+			}
+			else if ( lock instanceof Lock ) {
+				return (lockId == ((Lock) lock).lockId) && sourceUuid.equals(((Lock) lock).sourceUuid);
+			}
+			else {
+				return false;
+			}
 		}
 
 		@Override
@@ -289,7 +350,8 @@ public class AbstractReadWriteRegionAccessStrategy<R extends JCacheTransactional
 				return true;
 			}
 			else if ( o instanceof Lock ) {
-				return ( lockId == ( (Lock) o ).lockId ) && sourceUuid.equals( ( (Lock) o ).sourceUuid );
+				return (lockId == ((Lock)o ).lockId) && sourceUuid.equals( ( (Lock) o ).sourceUuid )
+						&& (multiplicity == ((Lock) o).multiplicity);
 			}
 			else {
 				return false;
@@ -299,11 +361,7 @@ public class AbstractReadWriteRegionAccessStrategy<R extends JCacheTransactional
 		@Override
 		public int hashCode() {
 			final int hash = ( sourceUuid != null ? sourceUuid.hashCode() : 0 );
-			int temp = (int) lockId;
-			for ( int i = 1; i < Long.SIZE / Integer.SIZE; i++ ) {
-				temp ^= ( lockId >>> ( i * Integer.SIZE ) );
-			}
-			return hash + temp;
+			return hash ^ Long.hashCode( lockId );
 		}
 
 		/**
@@ -315,18 +373,22 @@ public class AbstractReadWriteRegionAccessStrategy<R extends JCacheTransactional
 
 		@Override
 		public Lock lock(long timeout, UUID uuid, long lockId) {
-			concurrent = true;
-			multiplicity++;
-			this.timeout = timeout;
-			return this;
+			return new Lock( timeout, this.sourceUuid, this.lockId, this.version,
+					0, this.multiplicity + 1, true );
 		}
 
 		/**
 		 * Unlocks this Lock, and timestamps the unlock event.
 		 */
-		public void unlock(long timestamp) {
-			if ( --multiplicity == 0 ) {
-				unlockTimestamp = timestamp;
+		public Lock unlock(long timestamp) {
+			if (multiplicity == 1) {
+				return new Lock(timeout, sourceUuid, lockId, version,
+						timestamp, 0, concurrent );
+
+			}
+			else {
+				return new Lock(timeout, sourceUuid, lockId, version,
+						0, multiplicity - 1, concurrent );
 			}
 		}
 

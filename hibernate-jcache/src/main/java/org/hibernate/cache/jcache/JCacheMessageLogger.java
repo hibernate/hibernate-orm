@@ -12,6 +12,7 @@ import org.jboss.logging.annotations.MessageLogger;
 
 import org.hibernate.internal.CoreMessageLogger;
 
+import static org.jboss.logging.Logger.Level.ERROR;
 import static org.jboss.logging.Logger.Level.WARN;
 
 /**
@@ -36,4 +37,12 @@ public interface JCacheMessageLogger extends CoreMessageLogger {
 			id = NAMESPACE + 2
 	)
 	void attemptToRestopAlreadyStoppedJCacheProvider();
+
+	@LogMessage(level = ERROR)
+	@Message(
+			value = "Cache: %s Key: %s Lockable: %s. A soft-locked cache entry was missing. This is either"
+					+ " out of balance lock/unlock sequences, or an eagerly evicting cache.",
+			id = NAMESPACE + 3
+	)
+	void missingLock(JCacheRegion region, Object key, Object value);
 }

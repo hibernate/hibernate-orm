@@ -284,8 +284,6 @@ Setting this to `true` may cause valid HQL to throw an exception because it viol
 Global setting for whether `null` parameter bindings should be passed to database procedure/function calls as part of `org.hibernate.procedure.ProcedureCall` handling.
 Implicitly Hibernate will not pass the `null`, the intention being to allow any default argument values to be applied.
 
-This defines a global setting, which can then be controlled per parameter via `org.hibernate.procedure.ParameterRegistration#enablePassingNulls(boolean)`
-
 Values are `true` (pass the NULLs) or `false` (do not pass the NULLs).
 
 |`hibernate.session_factory.statement_inspector` | A fully-qualified class name, an instance, or a `Class` object reference a|

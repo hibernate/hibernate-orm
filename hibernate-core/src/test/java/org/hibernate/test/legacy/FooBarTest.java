@@ -83,6 +83,7 @@ import org.junit.Test;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -1769,8 +1770,10 @@ public class FooBarTest extends LegacyTestCase {
 		try {
 			q.setParameterList("nameList", (Collection)null);
 			fail("Should throw an queryexception when passing a null!");
-		} catch (QueryException qe) {
+		}
+		catch (IllegalArgumentException qe) {
 			//should happen
+			assertTyping( QueryException.class, qe.getCause() );
 		}
 
 		q = s.createQuery("select bar, b from Bar bar inner join bar.baz baz inner join baz.cascadingBars b where bar.name like 'Bar%'");

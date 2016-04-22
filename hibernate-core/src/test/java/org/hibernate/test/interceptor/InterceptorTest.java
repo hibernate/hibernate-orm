@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.test.interceptor;
+import javax.persistence.PersistenceException;
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
@@ -23,6 +24,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.Type;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -139,11 +141,12 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
         	t.commit();
             fail( "Transaction should have timed out" );
         }
-		catch (TransactionException e) {
+		catch (PersistenceException e){
+			assertTyping(TransactionException.class, e.getCause());
 			assertTrue(
 					"Transaction failed for the wrong reason.  Expecting transaction timeout, but found [" +
-							e.getMessage() + "]"					,
-					e.getMessage().contains( "transaction timeout expired" )
+							e.getCause().getMessage() + "]"					,
+					e.getCause().getMessage().contains( "transaction timeout expired" )
 			);
 		}
 	}

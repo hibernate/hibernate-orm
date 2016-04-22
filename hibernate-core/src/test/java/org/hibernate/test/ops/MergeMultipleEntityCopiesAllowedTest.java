@@ -6,11 +6,13 @@
  */
 package org.hibernate.test.ops;
 
+import javax.persistence.PersistenceException;
 import java.util.List;
 
 import org.junit.Test;
 
 import org.hibernate.Hibernate;
+import org.hibernate.PersistentObjectException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.Transaction;
@@ -18,6 +20,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -671,8 +674,9 @@ public class MergeMultipleEntityCopiesAllowedTest extends BaseCoreFunctionalTest
 			category1_1 = (Category) s.merge( category1_1 );
 			fail( "should have failed because one representation is an older version." );
 		}
-		catch( StaleObjectStateException ex ) {
+		catch (PersistenceException e){
 			// expected
+			assertTyping( StaleObjectStateException.class, e.getCause());
 		}
 		finally {
 			tx.rollback();
@@ -722,8 +726,9 @@ public class MergeMultipleEntityCopiesAllowedTest extends BaseCoreFunctionalTest
 			category1_1 = (Category) s.merge( category1_1 );
 			fail( "should have failed because one representation is an older version." );
 		}
-		catch( StaleObjectStateException ex ) {
+		catch (PersistenceException e){
 			// expected
+			assertTyping( StaleObjectStateException.class, e.getCause());
 		}
 		finally {
 			tx.rollback();

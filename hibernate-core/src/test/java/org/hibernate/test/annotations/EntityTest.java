@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.annotations;
 
+import javax.persistence.PersistenceException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -221,7 +222,7 @@ public class EntityTest extends BaseNonConfigCoreFunctionalTestCase {
 			tx.commit();
 			fail( "unique constraints not respected" );
 		}
-		catch (HibernateException e) {
+		catch (PersistenceException e) {
 			//success
 			if ( tx != null ) {
 				tx.rollback();
@@ -273,8 +274,13 @@ public class EntityTest extends BaseNonConfigCoreFunctionalTestCase {
 			tx.commit();
 			fail( "Optimistic locking should work" );
 		}
-		catch (StaleStateException expected) {
-			// expected exception
+		catch (PersistenceException expected) {
+			if ( expected.getCause() instanceof StaleStateException ) {
+				//expected
+			}
+			else {
+				fail( "StaleStateException expected but is " + expected.getCause() );
+			}
 		}
 		finally {
 			if ( tx != null ) {

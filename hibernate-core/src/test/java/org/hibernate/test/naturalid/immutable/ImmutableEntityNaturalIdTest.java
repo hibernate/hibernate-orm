@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.naturalid.immutable;
 
+import javax.persistence.PersistenceException;
 import java.lang.reflect.Field;
 
 import org.junit.Test;
@@ -57,7 +58,7 @@ public class ImmutableEntityNaturalIdTest extends BaseCoreFunctionalTestCase {
 			s.flush();
             fail( "should have failed because immutable natural ID was altered");
         }
-        catch (HibernateException he) {
+        catch (PersistenceException e) {
 			// expected
 		}
 		finally {

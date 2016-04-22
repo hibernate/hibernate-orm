@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.annotations.onetomany;
 
+import javax.persistence.PersistenceException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -19,6 +20,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
@@ -33,6 +35,7 @@ import org.hibernate.test.annotations.TicketComparator;
 import org.junit.Assert;
 import org.junit.Test;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -161,9 +164,15 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 			tx.commit();
 			fail( "A one to many should not allow several trainer per Tiger" );
 		}
-		catch ( HibernateException ce ) {
-			tx.rollback();
-			//success
+		catch (PersistenceException ce) {
+			try {
+				assertTyping( ConstraintViolationException.class, ce.getCause() );
+				//success
+
+			}
+			finally {
+				tx.rollback();
+			}
 		}
 		s.close();
 	}

@@ -13,7 +13,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
+import java.util.stream.Stream;
 
+import org.hibernate.internal.ScrollableResultsStreamSupport;
 import org.hibernate.type.Type;
 
 /**
@@ -355,4 +357,27 @@ public interface ScrollableResults extends java.io.Closeable {
 	 * @throws IndexOutOfBoundsException If col is an invalid index.
 	 */
 	public TimeZone getTimeZone(int col);
+
+	/**
+	 * @param type the class of the {@link Stream}'s elements
+	 *
+	 * @param <T> the type of the {@link Stream}'s elements
+	 *
+	 * @return a {@link Stream} with values from the {@link ScrollableResults}
+	 */
+	default <T> Stream<T> asStream(Class<T> type){
+		return ScrollableResultsStreamSupport.asStream( this, type );
+	}
+
+	/**
+	 * @param type the class of the {@link Stream}'s elements
+	 *
+	 * @param <T> the type of the {@link Stream}'s elements
+	 *
+	 * @return a parallel {@link Stream} with values from the {@link ScrollableResults}
+	 */
+	default <T> Stream<T> asParallelStream(Class<T> type){
+		return ScrollableResultsStreamSupport.asParallelStream( this, type );
+	}
+
 }

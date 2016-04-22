@@ -8,6 +8,8 @@
 //$Id$
 package org.hibernate.test.annotations;
 
+import javax.persistence.PersistenceException;
+
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -15,9 +17,11 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.hql.internal.ast.QuerySyntaxException;
 
 import org.junit.Test;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -59,7 +63,8 @@ public class ConfigurationTest {
 			s.createQuery( "from Boat" ).list();
 			fail( "Boat should not be mapped" );
 		}
-		catch (HibernateException e) {
+		catch (IllegalArgumentException e) {
+			assertTyping( QuerySyntaxException.class, e.getCause());
 			//all good
 		}
 		q = s.createQuery( "from Plane" );

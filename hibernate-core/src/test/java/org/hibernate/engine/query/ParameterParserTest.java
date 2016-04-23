@@ -8,20 +8,22 @@ package org.hibernate.engine.query;
 
 import org.hibernate.engine.query.spi.ParamLocationRecognizer;
 import org.hibernate.engine.query.spi.ParameterParser;
+import org.hibernate.engine.query.spi.ParameterParser.Recognizer;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Unit tests of the ParameterParser class
  *
  * @author Steve Ebersole
  */
-public class ParameterParserTest extends BaseUnitTestCase {
+public class ParameterParserTest {
 	@Test
 	public void testEscapeCallRecognition() {
 		assertTrue( ParameterParser.startsWithEscapeCallTemplate( "{ ? = call abc(?) }" ) );
@@ -75,4 +77,44 @@ public class ParameterParserTest extends BaseUnitTestCase {
 
 		assertTrue(recognizer.getNamedParameterDescriptionMap().containsKey("param"));
 	}
+	
+    @Test
+	@TestForIssue( jiraKey = "HHH-1237")
+    public void testParseColonCharacterEscaped() {
+        final StringBuilder captured = new StringBuilder();
+        Recognizer recognizer = new Recognizer() {
+            @Override
+            public void outParameter(int position) {
+                fail();
+            }
+            @Override
+            public void ordinalParameter(int position) {
+                fail();
+            }
+            @Override
+            public void namedParameter(String name, int position) {
+                fail();
+            }
+            @Override
+            public void jpaPositionalParameter(String name, int position) {
+                fail();
+            }
+            @Override
+            public void other(char character) {
+                captured.append(character);
+            }
+        };
+        ParameterParser.parse("SELECT @a,(@a::=20) FROM tbl_name", recognizer);
+        assertEquals("SELECT @a,(@a:=20) FROM tbl_name", captured.toString());
+    }
+    
+    @Test
+    public void testParseNamedParameter() {
+        ParamLocationRecognizer recognizer = new ParamLocationRecognizer();
+        ParameterParser.parse("from Stock s where s.stockCode = :stockCode and s.xyz = :pxyz", recognizer);
+        assertTrue(recognizer.getNamedParameterDescriptionMap().containsKey("stockCode"));
+        assertTrue(recognizer.getNamedParameterDescriptionMap().containsKey("pxyz"));
+        assertEquals( 2, recognizer.getNamedParameterDescriptionMap().size() );
+    }
+
 }

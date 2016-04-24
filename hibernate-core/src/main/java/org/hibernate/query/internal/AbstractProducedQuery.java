@@ -90,7 +90,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	private Integer timeout;
 	private boolean cacheable;
 	private String cacheRegion;
-	private boolean readOnly;
+	private Boolean readOnly;
 
 	private LockOptions lockOptions = new LockOptions();
 
@@ -212,7 +212,10 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public boolean isReadOnly() {
-		return readOnly;
+		return ( readOnly == null ?
+				producer.getPersistenceContext().isDefaultReadOnly() :
+				readOnly
+		);
 	}
 
 	@Override
@@ -618,7 +621,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			}
 			else if ( SPEC_HINT_TIMEOUT.equals( hintName ) ) {
 				// convert milliseconds to seconds
-				int timeout = (int)Math.round(ConfigurationHelper.getInteger( value ).doubleValue() / 1000.0 );
+				int timeout = (int)Math.round( ConfigurationHelper.getInteger( value ).doubleValue() / 1000.0 );
 				applied = applyTimeoutHint( timeout );
 			}
 			else if ( AvailableSettings.LOCK_TIMEOUT.equals( hintName ) ) {

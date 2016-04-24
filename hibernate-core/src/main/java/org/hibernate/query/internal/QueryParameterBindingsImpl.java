@@ -194,7 +194,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 	public void verifyParametersBound(boolean reserveFirstParameter) {
 		for ( Map.Entry<QueryParameter, QueryParameterBinding> bindEntry : parameterBindingMap.entrySet() ) {
-			if ( bindEntry.getValue() == null ) {
+			if ( bindEntry.getValue().getBindValue() == null ) {
 				if ( bindEntry.getKey().getName() == null ) {
 					throw new QueryException( "Named parameter [" + bindEntry.getKey().getName() + "] not set" );
 				}

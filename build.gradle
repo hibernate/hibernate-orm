@@ -146,6 +146,8 @@ subprojects { subProject ->
 		testRuntime( libraries.hsqldb )
 		testRuntime( libraries.postgresql )
 		testRuntime( libraries.mysql )
+		testRuntime( libraries.oracle )
+		testRuntime( libraries.mssql )
 		testRuntime( libraries.mariadb )
 		testRuntime( libraries.woodstox )
 

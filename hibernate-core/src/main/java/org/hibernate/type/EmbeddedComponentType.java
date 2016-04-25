@@ -9,7 +9,7 @@ package org.hibernate.type;
 import java.lang.reflect.Method;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.tuple.component.ComponentMetamodel;
 
 /**
@@ -28,7 +28,8 @@ public class EmbeddedComponentType extends ComponentType {
 		return componentTuplizer.isMethodOf( method );
 	}
 
-	public Object instantiate(Object parent, SessionImplementor session) throws HibernateException {
+	@Override
+	public Object instantiate(Object parent, SharedSessionContractImplementor session) throws HibernateException {
 		final boolean useParent = parent != null &&
 				//TODO: Yuck! This is not quite good enough, it's a quick
 				//hack around the problem of having a to-one association

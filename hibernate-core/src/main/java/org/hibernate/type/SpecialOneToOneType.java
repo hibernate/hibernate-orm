@@ -15,8 +15,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.Mapping;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * A one-to-one association that maps to specific formula(s)
@@ -86,16 +86,17 @@ public class SpecialOneToOneType extends OneToOneType {
 	public boolean useLHSPrimaryKey() {
 		return false;
 	}
-	
-	public Object hydrate(ResultSet rs, String[] names, SessionImplementor session, Object owner)
+
+	@Override
+	public Object hydrate(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
 	throws HibernateException, SQLException {
 		return super.getIdentifierOrUniqueKeyType( session.getFactory() )
 			.nullSafeGet(rs, names, session, owner);
 	}
 	
 	// TODO: copy/paste from ManyToOneType
-
-	public Serializable disassemble(Object value, SessionImplementor session, Object owner)
+	@Override
+	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner)
 	throws HibernateException {
 
 		if (value==null) {
@@ -115,7 +116,8 @@ public class SpecialOneToOneType extends OneToOneType {
 		}
 	}
 
-	public Object assemble(Serializable oid, SessionImplementor session, Object owner)
+	@Override
+	public Object assemble(Serializable oid, SharedSessionContractImplementor session, Object owner)
 	throws HibernateException {
 		//TODO: currently broken for unique-key references (does not detect
 		//      change to unique key property of the associated object)

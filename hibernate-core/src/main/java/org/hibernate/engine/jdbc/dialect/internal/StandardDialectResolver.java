@@ -156,6 +156,7 @@ public class StandardDialectResolver implements DialectResolver {
 				case 10:
 					return new SQLServer2008Dialect();
 				case 11:
+				case 12:
 					return new SQLServer2012Dialect();
 				default:
 					LOG.unknownSqlServerVersion( majorVersion );

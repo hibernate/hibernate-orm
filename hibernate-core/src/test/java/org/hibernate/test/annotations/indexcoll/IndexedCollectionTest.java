@@ -6,6 +6,14 @@
  */
 package org.hibernate.test.annotations.indexcoll;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -14,19 +22,12 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.TeradataDialect;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
+
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -496,7 +497,7 @@ public class IndexedCollectionTest extends BaseNonConfigCoreFunctionalTestCase {
 		assertEquals( 1, atm.colorPerDate.size() );
 		final Date date = atm.colorPerDate.keySet().iterator().next();
 		final long diff = new Date( 1234567000 ).getTime() - date.getTime();
-		assertTrue( "24h diff max", diff > 0 && diff < 24*60*60*1000 );
+		assertTrue( "24h diff max", diff >= 0 && diff < 24*60*60*1000 );
 		tx.rollback();
 		s.close();
 	}

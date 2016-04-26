@@ -93,9 +93,12 @@ public class SchemaExportTest extends BaseUnitTestCase {
 
         // drop beforeQuery create again (this time drops the tables beforeQuery re-creating)
 		schemaExport.execute( EnumSet.of( TargetType.DATABASE ), SchemaExport.Action.BOTH, metadata );
-        assertEquals( 0, schemaExport.getExceptions().size() );
+		int exceptionCount = schemaExport.getExceptions().size();
+		if ( doesDialectSupportDropTableIfExist() ) {
+			assertEquals( 0,  exceptionCount);
+		}
 
-        // drop tables
+		// drop tables
 		schemaExport.execute( EnumSet.of( TargetType.DATABASE ), SchemaExport.Action.DROP, metadata );
         assertEquals( 0, schemaExport.getExceptions().size() );
     }

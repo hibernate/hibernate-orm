@@ -189,4 +189,10 @@ abstract public class DialectChecks {
 			return dialect.supportsRowValueConstructorSyntax() == false;
 		}
 	}
+
+	public static class DoesNotSupportFollowOnLocking implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return !dialect.useFollowOnLocking();
+		}
+	}
 }

@@ -16,12 +16,16 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
 /**
  * @author Andrea Boriero
  */
-public class InheritanceSchemaUpdateTest {
+@RequiresDialectFeature( value = DialectChecks.SupportsIdentityColumns.class)
+public class InheritanceSchemaUpdateTest extends BaseUnitTestCase {
 
 	@Test
 	public void testBidirectionalOneToManyReferencingRootEntity() throws Exception {

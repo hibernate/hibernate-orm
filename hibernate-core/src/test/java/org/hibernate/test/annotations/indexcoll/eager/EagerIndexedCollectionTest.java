@@ -97,7 +97,7 @@ public class EagerIndexedCollectionTest extends BaseNonConfigCoreFunctionalTestC
 		assertEquals( 1, atm.colorPerDate.size() );
 		final Date date = atm.colorPerDate.keySet().iterator().next();
 		final long diff = new Date( 1234567000 ).getTime() - date.getTime();
-		assertTrue( "24h diff max", diff > 0 && diff < 24*60*60*1000 );
+		assertTrue( "24h diff max", diff >= 0 && diff < 24*60*60*1000 );
 		tx.rollback();
 		s.close();
 	}

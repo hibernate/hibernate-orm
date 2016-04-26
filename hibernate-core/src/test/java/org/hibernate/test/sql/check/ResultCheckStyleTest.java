@@ -6,12 +6,10 @@
  */
 package org.hibernate.test.sql.check;
 
-import org.junit.Test;
-
-import org.hibernate.HibernateException;
-import org.hibernate.JDBCException;
 import org.hibernate.Session;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.fail;
 
@@ -35,11 +33,11 @@ public abstract class ResultCheckStyleTest extends BaseCoreFunctionalTestCase {
 			s.flush();
 			fail( "expection flush failure!" );
 		}
-		catch( JDBCException ex ) {
+		catch( Exception ex ) {
 			// these should specifically be JDBCExceptions...
 		}
 		s.clear();
-		s.getTransaction().commit();
+		s.getTransaction().rollback();
 		s.close();
 	}
 
@@ -54,11 +52,11 @@ public abstract class ResultCheckStyleTest extends BaseCoreFunctionalTestCase {
 			s.flush();
 			fail( "expection flush failure!" );
 		}
-		catch( HibernateException ex ) {
+		catch( Exception ex ) {
 			// these should specifically be HibernateExceptions...
 		}
 		s.clear();
-		s.getTransaction().commit();
+		s.getTransaction().rollback();
 		s.close();
 	}
 
@@ -74,11 +72,11 @@ public abstract class ResultCheckStyleTest extends BaseCoreFunctionalTestCase {
 			s.flush();
 			fail( "expection flush failure!" );
 		}
-		catch( JDBCException ex ) {
+		catch( Exception ex ) {
 			// these should specifically be JDBCExceptions...
 		}
 		s.clear();
-		s.getTransaction().commit();
+		s.getTransaction().rollback();
 		s.close();
 	}
 
@@ -94,11 +92,11 @@ public abstract class ResultCheckStyleTest extends BaseCoreFunctionalTestCase {
 			s.flush();
 			fail( "expection flush failure!" );
 		}
-		catch( HibernateException ex ) {
+		catch( Exception ex ) {
 			// these should specifically be HibernateExceptions...
 		}
 		s.clear();
-		s.getTransaction().commit();
+		s.getTransaction().rollback();
 		s.close();
 	}
 
@@ -114,11 +112,11 @@ public abstract class ResultCheckStyleTest extends BaseCoreFunctionalTestCase {
 			s.flush();
 			fail( "expection flush failure!" );
 		}
-		catch( JDBCException ex ) {
+		catch( Exception ex ) {
 			// these should specifically be JDBCExceptions...
 		}
 		s.clear();
-		s.getTransaction().commit();
+		s.getTransaction().rollback();
 		s.close();
 	}
 
@@ -134,11 +132,11 @@ public abstract class ResultCheckStyleTest extends BaseCoreFunctionalTestCase {
 			s.flush();
 			fail( "expection flush failure!" );
 		}
-		catch( HibernateException ex ) {
+		catch( Exception ex ) {
 			// these should specifically be HibernateExceptions...
 		}
 		s.clear();
-		s.getTransaction().commit();
+		s.getTransaction().rollback();
 		s.close();
 	}
 }

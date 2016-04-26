@@ -11,6 +11,7 @@
 /build
 */build
 testdb
+lib
 
 # IntelliJ specific files/directories
 out

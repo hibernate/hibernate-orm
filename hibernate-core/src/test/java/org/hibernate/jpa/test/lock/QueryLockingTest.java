@@ -6,8 +6,16 @@
  */
 package org.hibernate.jpa.test.lock;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.List;
 import java.util.Map;
+
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.Id;
@@ -22,15 +30,10 @@ import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.NativeQuery;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * @author Steve Ebersole
@@ -327,6 +330,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 	 * lock some entities via a query and check the resulting lock mode type via EntityManager
 	 */
 	@Test
+	@RequiresDialectFeature( value = DialectChecks.DoesNotSupportFollowOnLocking.class)
 	public void testEntityLockModeStateAfterQueryLocking() {
 		// Create some test data
 		EntityManager em = getOrCreateEntityManager();

@@ -21,6 +21,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+
 import org.hibernate.testing.TestForIssue;
 
 import org.junit.Test;
@@ -31,7 +32,8 @@ import static org.junit.Assert.assertEquals;
  * @author Janario Oliveira
  * @author Gail Badner
  */
-public class EntitySuperclassCollectionTest extends BaseEntityManagerFunctionalTestCase {
+public class EntitySuperclassCollectionTest
+		extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {
@@ -40,7 +42,7 @@ public class EntitySuperclassCollectionTest extends BaseEntityManagerFunctionalT
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10556")
+	@TestForIssue(jiraKey = "HHH-10556")
 	public void testPerson() {
 		String address = "super-address";
 
@@ -50,10 +52,17 @@ public class EntitySuperclassCollectionTest extends BaseEntityManagerFunctionalT
 	}
 
 	private void assertAddress(PersonBase person, String address) {
-		List<Object> results = find( person.getClass(), person.id, "addresses" );
+		List<Object> results = find(
+				person.getClass(),
+				person.id,
+				"addresses"
+		);
 		assertEquals( 1, results.size() );
 
-		assertEquals( person.addresses.get( 0 ).id, ( (Address) results.get( 0 ) ).id );
+		assertEquals(
+				person.addresses.get( 0 ).id,
+				( (Address) results.get( 0 ) ).id
+		);
 		assertEquals( address, ( (Address) results.get( 0 ) ).name );
 
 		getOrCreateEntityManager().close();
@@ -83,7 +92,7 @@ public class EntitySuperclassCollectionTest extends BaseEntityManagerFunctionalT
 		return query.getResultList();
 	}
 
-	@Entity(name="Address")
+	@Entity(name = "Address")
 	public static class Address {
 		@Id
 		@GeneratedValue
@@ -98,7 +107,7 @@ public class EntitySuperclassCollectionTest extends BaseEntityManagerFunctionalT
 		}
 	}
 
-	@Entity
+	@Entity(name = "PersonBase")
 	public abstract static class PersonBase {
 		@Id
 		@GeneratedValue
@@ -107,7 +116,7 @@ public class EntitySuperclassCollectionTest extends BaseEntityManagerFunctionalT
 		List<Address> addresses = new ArrayList<Address>();
 	}
 
-	@Entity(name="Person")
+	@Entity(name = "Person")
 	public static class Person extends PersonBase {
 	}
 }

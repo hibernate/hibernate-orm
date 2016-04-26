@@ -14,6 +14,7 @@ import javax.persistence.PersistenceException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Projections;
+import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.hql.internal.ast.QueryTranslatorImpl;
 import org.hibernate.hql.internal.ast.tree.SelectClause;
@@ -25,6 +26,7 @@ import org.hibernate.type.BigIntegerType;
 import org.hibernate.type.DoubleType;
 import org.hibernate.type.LongType;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.After;
 import org.junit.Before;
@@ -206,6 +208,7 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = Oracle8iDialect.class, comment = "Cannot count distinct over multiple columns in Oracle")
 	public void testCountReturnValues() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

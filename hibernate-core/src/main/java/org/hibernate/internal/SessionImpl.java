@@ -1887,7 +1887,7 @@ public final class SessionImpl
 		checkOpen();
 //		checkTransactionSynchStatus();
 
-		if ( object != null && !HibernateProxy.class.isInstance( object ) ) {
+		if ( object != null && !HibernateProxy.class.isInstance( object ) && persistenceContext.getEntry( object ) == null ) {
 			// check if it is an entity -> if not throw an exception (per JPA)
 			try {
 				getSessionFactory().getMetamodel().entityPersister( object.getClass() );

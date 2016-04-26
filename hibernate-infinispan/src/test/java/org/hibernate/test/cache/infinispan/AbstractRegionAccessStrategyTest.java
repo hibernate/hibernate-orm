@@ -25,9 +25,9 @@ import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
-import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransactionAccess;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
 import org.hibernate.service.ServiceRegistry;
 

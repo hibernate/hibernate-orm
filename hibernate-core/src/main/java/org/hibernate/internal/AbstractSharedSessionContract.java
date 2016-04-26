@@ -20,13 +20,10 @@ import javax.persistence.LockTimeoutException;
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.OptimisticLockException;
-import javax.persistence.PersistenceContextType;
 import javax.persistence.PersistenceException;
 import javax.persistence.PessimisticLockException;
 import javax.persistence.QueryTimeoutException;
-import javax.persistence.SynchronizationType;
 import javax.persistence.Tuple;
-import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
@@ -96,11 +93,10 @@ import org.hibernate.query.internal.QueryImpl;
 import org.hibernate.query.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
-import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.hibernate.resource.transaction.TransactionCoordinator;
-import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -126,36 +122,28 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 public abstract class AbstractSharedSessionContract implements SharedSessionContractImplementor {
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( SessionImpl.class );
 
-	private final SessionFactoryImpl factory;
+	private transient SessionFactoryImpl factory;
 	private final String tenantIdentifier;
 	private final UUID sessionIdentifier;
 
-	// todo : (5.2) review synchronizationType, persistenceContextType, transactionType usage
-
-	private transient PhysicalConnectionHandlingMode connectionHandlingMode;
-	// SynchronizationType -> should we auto enlist in transactions
-	private transient SynchronizationType synchronizationType;
-	// PersistenceUnitTransactionType -> what type of TransactionCoordinator(Builder) to use;
-	// 		according to JPA should technically also disallow access to Transaction object for
-	// 		JTA environments
-	private transient PersistenceUnitTransactionType transactionType;
-	// PersistenceContextType -> influences FlushMode and 'autoClose'
-	private transient PersistenceContextType persistenceContextType;
-
 	private final boolean isTransactionCoordinatorShared;
-	private final TransactionCoordinator transactionCoordinator;
-	private final JdbcCoordinator jdbcCoordinator;
 	private final Interceptor interceptor;
-	private final JdbcSessionContext jdbcSessionContext;
-	private final EntityNameResolver entityNameResolver;
 
 	private FlushMode flushMode;
+	private boolean autoJoinTransactions;
+
 	private CacheMode cacheMode;
+
 	private boolean closed;
 
+	// transient & non-final for Serialization purposes - ugh
 	private transient SessionEventListenerManagerImpl sessionEventsManager = new SessionEventListenerManagerImpl();
+	private transient EntityNameResolver entityNameResolver;
 	private transient JdbcConnectionAccess jdbcConnectionAccess;
+	private transient JdbcSessionContext jdbcSessionContext;
+	private transient JdbcCoordinator jdbcCoordinator;
 	private transient TransactionImplementor currentHibernateTransaction;
+	private transient TransactionCoordinator transactionCoordinator;
 	private transient Boolean useStreamForLobBinding;
 	private transient long timestamp;
 
@@ -164,9 +152,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		this.sessionIdentifier = StandardRandomStrategy.INSTANCE.generateUUID( null );
 		this.timestamp = factory.getCache().getRegionFactory().nextTimestamp();
 
-		this.transactionType = options.getPersistenceUnitTransactionType();
-		this.synchronizationType = options.getSynchronizationType();
-		this.persistenceContextType = PersistenceContextType.TRANSACTION;
+		this.flushMode = options.getInitialSessionFlushMode();
 
 		this.tenantIdentifier = options.getTenantIdentifier();
 		if ( MultiTenancyStrategy.NONE == factory.getSettings().getMultiTenancyStrategy() ) {
@@ -201,11 +187,12 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			// todo : "wrap" the transaction to no-op cmmit/rollback attempts?
 			this.currentHibernateTransaction = sharedOptions.getTransaction();
 
-			if ( sharedOptions.getSynchronizationType() != null ) {
+			if ( sharedOptions.shouldAutoJoinTransactions() ) {
 				log.debug(
 						"Session creation specified 'autoJoinTransactions', which is invalid in conjunction " +
 								"with sharing JDBC connection between sessions; ignoring"
 				);
+				autoJoinTransactions = false;
 			}
 			if ( sharedOptions.getPhysicalConnectionHandlingMode() != this.jdbcCoordinator.getLogicalConnection().getConnectionHandlingMode() ) {
 				log.debug(
@@ -218,6 +205,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 		else {
 			this.isTransactionCoordinatorShared = false;
+			this.autoJoinTransactions = options.shouldAutoJoinTransactions();
 
 			this.jdbcCoordinator = new JdbcCoordinatorImpl( options.getConnection(), this );
 			this.transactionCoordinator = factory.getServiceRegistry()
@@ -230,6 +218,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	protected void addSharedSessionTransactionObserver(TransactionCoordinator transactionCoordinator) {
+	}
+
+	@Override
+	public boolean shouldAutoJoinTransaction() {
+		return autoJoinTransactions;
 	}
 
 	private Interceptor interpret(Interceptor interceptor) {
@@ -288,24 +281,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public String getTenantIdentifier() {
 		return tenantIdentifier;
-	}
-
-	public SynchronizationType getSynchronizationType() {
-		return synchronizationType;
-	}
-
-	public PersistenceUnitTransactionType getTransactionType() {
-		return transactionType;
-	}
-
-	public PersistenceContextType getPersistenceContextType() {
-		return persistenceContextType;
-	}
-
-	@Override
-	public void disableTransactionAutoJoin() {
-		checkOpen();
-		synchronizationType = SynchronizationType.UNSYNCHRONIZED;
 	}
 
 	@Override
@@ -1170,13 +1145,18 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return scrollCustomQuery( getNativeQueryPlan( spec ).getCustomQuery(), queryParameters );
 	}
 
-	protected void writeObject(ObjectOutputStream oos) throws IOException {
+	@SuppressWarnings("unused")
+	private void writeObject(ObjectOutputStream oos) throws IOException {
 		log.trace( "Serializing " + getClass().getSimpleName() + " [" );
 
 		if ( !jdbcCoordinator.isReadyForSerialization() ) {
 			// throw a more specific (helpful) exception message when this happens from Session,
 			//		as opposed to more generic exception from jdbcCoordinator#serialize call later
 			throw new IllegalStateException( "Cannot serialize " + getClass().getSimpleName() + " [" + getSessionIdentifier() + "] while connected" );
+		}
+
+		if ( isTransactionCoordinatorShared ) {
+			throw new IllegalStateException( "Cannot serialize " + getClass().getSimpleName() + " [" + getSessionIdentifier() + "] as it has a shared TransactionCoordinator" );
 		}
 
 		// todo : (5.2) come back and review serialization plan...
@@ -1190,10 +1170,14 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Step 2 :: write transient state...
-		// 		-- none that we want to serialize atm (see concurrent access discussion)
+		// 		-- see concurrent access discussion
+
+		factory.serialize( oos );
+		oos.writeObject( jdbcSessionContext.getStatementInspector() );
+		jdbcCoordinator.serialize( oos );
 	}
 
-	protected void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException, SQLException {
+	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException, SQLException {
 		log.trace( "Deserializing " + getClass().getSimpleName() );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1202,7 +1186,16 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Step 2 :: read back transient state...
-		//		-- again none, see above
+		//		-- see above
 
+		factory = SessionFactoryImpl.deserialize( ois );
+		jdbcSessionContext = new JdbcSessionContextImpl( this, (StatementInspector) ois.readObject() );
+		jdbcCoordinator = JdbcCoordinatorImpl.deserialize( ois, this );
+
+		this.transactionCoordinator = factory.getServiceRegistry()
+				.getService( TransactionCoordinatorBuilder.class )
+				.buildTransactionCoordinator( jdbcCoordinator, this );
+
+		entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
 	}
 }

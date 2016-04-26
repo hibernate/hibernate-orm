@@ -23,7 +23,7 @@ import org.hibernate.cache.infinispan.util.CacheCommandInitializer;
 import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.resource.transaction.TransactionCoordinator;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 
 import org.infinispan.AdvancedCache;
 import org.infinispan.configuration.cache.CacheMode;

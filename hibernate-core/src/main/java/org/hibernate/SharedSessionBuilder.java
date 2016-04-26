@@ -64,20 +64,30 @@ public interface SharedSessionBuilder<T extends SharedSessionBuilder> extends Se
 	T autoJoinTransactions();
 
 	/**
+	 * Signifies that the FlushMode from the original session should be used to create the new session.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	T flushMode();
+
+	/**
 	 * Signifies that the autoClose flag from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated For same reasons as {@link SessionBuilder#autoClose(boolean)} was deprecated.  However, shared
-	 * session builders can use {@link #autoClose(boolean)} since they do not "inherit" the owner.
 	 */
-	@Deprecated
 	T autoClose();
 
 	/**
 	 * Signifies that the flushBeforeCompletion flag from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #flushMode()} instead.
 	 */
-	T flushBeforeCompletion();
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default T flushBeforeCompletion() {
+		flushMode();
+		return (T) this;
+	}
 }

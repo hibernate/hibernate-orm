@@ -4,13 +4,12 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.resource.transaction;
-
-import org.hibernate.ConnectionReleaseMode;
-import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
-import org.hibernate.service.Service;
+package org.hibernate.resource.transaction.spi;
 
 import org.hibernate.ConnectionAcquisitionMode;
+import org.hibernate.ConnectionReleaseMode;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
+import org.hibernate.service.Service;
 
 /**
  * Builder for TransactionCoordinator instances
@@ -21,7 +20,7 @@ public interface TransactionCoordinatorBuilder extends Service {
 	/**
 	 * Access to options to are specific to each TransactionCoordinator instance
 	 */
-	static interface TransactionCoordinatorOptions {
+	static interface Options {
 		/**
 		 * Indicates whether an active transaction should be automatically joined.  Only relevant
 		 * for JTA-based TransactionCoordinator instances.
@@ -32,11 +31,25 @@ public interface TransactionCoordinatorBuilder extends Service {
 		boolean shouldAutoJoinTransaction();
 	}
 
-	TransactionCoordinator buildTransactionCoordinator(TransactionCoordinatorOwner owner, TransactionCoordinatorOptions options);
+	TransactionCoordinator buildTransactionCoordinator(TransactionCoordinatorOwner owner, Options options);
 
 	boolean isJta();
 
-	ConnectionReleaseMode getDefaultConnectionReleaseMode();
+	PhysicalConnectionHandlingMode getDefaultConnectionHandlingMode();
 
-	ConnectionAcquisitionMode getDefaultConnectionAcquisitionMode();
+	/**
+	 * @deprecated (since 5.2) Use {@link #getDefaultConnectionHandlingMode} instead
+	 */
+	@Deprecated
+	default ConnectionAcquisitionMode getDefaultConnectionAcquisitionMode() {
+		return getDefaultConnectionHandlingMode().getAcquisitionMode();
+	}
+
+	/**
+	 * @deprecated (since 5.2) Use {@link #getDefaultConnectionHandlingMode} instead
+	 */
+	@Deprecated
+	default ConnectionReleaseMode getDefaultConnectionReleaseMode() {
+		return getDefaultConnectionHandlingMode().getReleaseMode();
+	}
 }

@@ -20,7 +20,8 @@ This documentation largely treats the physical and logic notions of a transactio
 Hibernate uses the JDBC API for persistence. In the world of Java there are two well-defined mechanism for dealing with transactions in JDBC: JDBC itself and JTA.
 Hibernate supports both mechanisms for integrating with transactions and allowing applications to manage physical transactions.
 
-Transaction handling per `Session` is handled by the `org.hibernate.resource.transaction.TransactionCoordinator` contract, which are built by the `org.hibernate.resource.transaction.TransactionCoordinatorBuilder` service.
+Transaction handling per `Session` is handled by the `org.hibernate.resource.transaction.spi.TransactionCoordinator` contract,
+which are built by the `org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder` service.
 `TransactionCoordinatorBuilder` represents a strategy for dealing with transactions whereas TransactionCoordinator represents one instance of that strategy related to a Session.
 Which `TransactionCoordinatorBuilder` implementation to use is defined by the `hibernate.transaction.coordinator_class` setting.
 

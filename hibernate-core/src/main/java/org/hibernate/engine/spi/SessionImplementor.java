@@ -9,12 +9,10 @@ package org.hibernate.engine.spi;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.SynchronizationType;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Selection;
-import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -22,6 +20,8 @@ import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 
 /**
  * Defines the "internal contract" for {@link Session} and other parts of Hibernate such as
@@ -34,8 +34,8 @@ import org.hibernate.query.spi.QueryImplementor;
  *         {@link org.hibernate.resource.jdbc.spi.JdbcSessionContext} delegate
  *     </li>
  *     <li>
- *         {@link org.hibernate.resource.transaction.TransactionCoordinatorBuilder.TransactionCoordinatorOptions}
- *         to drive the creation of the {@link org.hibernate.resource.transaction.TransactionCoordinator} delegate
+ *         {@link TransactionCoordinatorBuilder.Options}
+ *         to drive the creation of the {@link TransactionCoordinator} delegate
  *     </li>
  *     <li>
  *         {@link org.hibernate.engine.jdbc.LobCreationContext} to act as the context for JDBC LOB instance creation
@@ -54,13 +54,14 @@ import org.hibernate.query.spi.QueryImplementor;
  */
 public interface SessionImplementor
 		extends Session, SharedSessionContractImplementor, HibernateEntityManagerImplementor {
-	PersistenceUnitTransactionType getTransactionType();
-	SynchronizationType getSynchronizationType();
 
 	@Override
 	SessionFactoryImplementor getSessionFactory();
 
-	// todo : isFlushBeforeCompletionEnabled is based on another value (SynchronizationType?), find usages of this and replace with that
+	/**
+	 * @deprecated (since 5.2) use {@link #getHibernateFlushMode()} instead.
+	 */
+	@Deprecated
 	boolean isFlushBeforeCompletionEnabled();
 
 	ActionQueue getActionQueue();

@@ -6,13 +6,14 @@
  */
 package org.hibernate.cache.infinispan.access;
 
+import java.util.concurrent.TimeUnit;
+
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.infinispan.util.InvocationAfterCompletion;
 import org.hibernate.cache.infinispan.util.VersionedEntry;
-import org.hibernate.resource.transaction.TransactionCoordinator;
-import org.infinispan.AdvancedCache;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 
-import java.util.concurrent.TimeUnit;
+import org.infinispan.AdvancedCache;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;

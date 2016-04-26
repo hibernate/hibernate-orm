@@ -8,6 +8,8 @@ package org.hibernate.cfg;
 
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.query.internal.ParameterMetadataImpl;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.tool.schema.SourceType;
 
 /**
@@ -357,8 +359,8 @@ public interface AvailableSettings {
 	String SCHEMA_MANAGEMENT_TOOL = "hibernate.schema_management_tool";
 
 	/**
-	 * Names the implementation of {@link org.hibernate.resource.transaction.TransactionCoordinatorBuilder} to use for
-	 * creating {@link org.hibernate.resource.transaction.TransactionCoordinator} instances.
+	 * Names the implementation of {@link TransactionCoordinatorBuilder} to use for
+	 * creating {@link TransactionCoordinator} instances.
 	 * <p/>
 	 * Can be<ul>
 	 *     <li>TransactionCoordinatorBuilder instance</li>
@@ -706,7 +708,10 @@ public interface AvailableSettings {
 	 * @see org.hibernate.ConnectionAcquisitionMode
 	 *
 	 * @since 5.1
+	 *
+	 * @deprecated (since 5.2) use {@link #CONNECTION_HANDLING} instead
 	 */
+	@Deprecated
 	String ACQUIRE_CONNECTIONS = "hibernate.connection.acquisition_mode";
 
 	/**
@@ -714,8 +719,21 @@ public interface AvailableSettings {
 	 * this or {@link #ACQUIRE_CONNECTIONS}, not both
 	 *
 	 * @see org.hibernate.ConnectionReleaseMode
+	 *
+	 * @deprecated (since 5.2) use {@link #CONNECTION_HANDLING} instead
 	 */
+	@Deprecated
 	String RELEASE_CONNECTIONS = "hibernate.connection.release_mode";
+
+	/**
+	 * Specifies how Hibernate should manage JDBC connections in terms of acquiring and releasing.
+	 * Supersedes {@link #ACQUIRE_CONNECTIONS} and {@link #RELEASE_CONNECTIONS}
+	 *
+	 * @see org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode
+	 *
+	 * @since 5.2
+	 */
+	String CONNECTION_HANDLING = "hibernate.connection.handling_mode";
 
 	/**
 	 * Context scoping impl for {@link org.hibernate.SessionFactory#getCurrentSession()} processing.

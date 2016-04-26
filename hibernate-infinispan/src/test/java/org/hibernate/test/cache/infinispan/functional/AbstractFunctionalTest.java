@@ -24,23 +24,23 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 
+import org.hibernate.testing.BeforeClassOnce;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.junit4.CustomParameterized;
+import org.hibernate.test.cache.infinispan.tm.JtaPlatformImpl;
 import org.hibernate.test.cache.infinispan.tm.XaConnectionProvider;
 import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
 import org.hibernate.test.cache.infinispan.util.TestInfinispanRegionFactory;
 import org.hibernate.test.cache.infinispan.util.TxUtil;
-import org.hibernate.testing.BeforeClassOnce;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.cache.infinispan.tm.JtaPlatformImpl;
-
-import org.hibernate.testing.junit4.CustomParameterized;
-import org.infinispan.configuration.cache.CacheMode;
 import org.junit.ClassRule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+
+import org.infinispan.configuration.cache.CacheMode;
 
 /**
  * @author Galder Zamarreño

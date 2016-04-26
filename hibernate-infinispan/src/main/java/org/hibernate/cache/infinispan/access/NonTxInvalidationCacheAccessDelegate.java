@@ -14,7 +14,7 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.impl.BaseRegion;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.resource.transaction.TransactionCoordinator;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 /**

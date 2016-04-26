@@ -6,13 +6,14 @@
  */
 package org.hibernate.cache.infinispan.access;
 
+import java.util.UUID;
+
 import org.hibernate.cache.infinispan.util.FutureUpdate;
 import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.cache.infinispan.util.InvocationAfterCompletion;
-import org.hibernate.resource.transaction.TransactionCoordinator;
-import org.infinispan.AdvancedCache;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 
-import java.util.UUID;
+import org.infinispan.AdvancedCache;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;

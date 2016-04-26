@@ -8,6 +8,8 @@ package org.hibernate;
 
 import java.util.Locale;
 
+import org.hibernate.internal.util.StringHelper;
+
 /**
  * Defines the various policies by which Hibernate might release its underlying
  * JDBC connection.  Inverse of {@link ConnectionAcquisitionMode}.
@@ -47,5 +49,27 @@ public enum ConnectionReleaseMode{
 	 */
 	public static ConnectionReleaseMode parse(final String name) {
 		return ConnectionReleaseMode.valueOf( name.toUpperCase(Locale.ROOT) );
+	}
+
+	public static ConnectionReleaseMode interpret(Object setting) {
+		if ( setting == null ) {
+			return null;
+		}
+
+		if ( setting instanceof ConnectionReleaseMode ) {
+			return (ConnectionReleaseMode) setting;
+		}
+
+		final String value = setting.toString();
+		if ( StringHelper.isEmpty( value ) ) {
+			return null;
+		}
+
+		// here we disregard "auto"
+		if ( value.equalsIgnoreCase( "auto" ) ) {
+			return null;
+		}
+
+		return parse( value );
 	}
 }

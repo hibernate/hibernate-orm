@@ -8,13 +8,12 @@ package org.hibernate.test.resource.transaction;
 
 import java.util.Collections;
 
-import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
-import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.internal.TransactionCoordinatorBuilderInitiator;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;

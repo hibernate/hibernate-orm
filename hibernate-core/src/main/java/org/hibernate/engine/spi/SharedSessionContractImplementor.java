@@ -33,7 +33,9 @@ import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryProducerImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
-import org.hibernate.resource.transaction.TransactionCoordinatorBuilder.TransactionCoordinatorOptions;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder.Options;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
@@ -48,10 +50,10 @@ import org.hibernate.type.descriptor.WrapperOptions;
  *         Can therefor be used to construct a JdbcCoordinator, which (for now) models a "JDBC session"
  *     </li>
  *     <li>
- *         {@link org.hibernate.resource.transaction.TransactionCoordinatorBuilder.TransactionCoordinatorOptions}
- *         to drive the creation of the {@link org.hibernate.resource.transaction.TransactionCoordinator} delegate.
+ *         {@link Options}
+ *         to drive the creation of the {@link TransactionCoordinator} delegate.
  *         This allows it to be passed along to
- *         {@link org.hibernate.resource.transaction.TransactionCoordinatorBuilder#buildTransactionCoordinator}
+ *         {@link TransactionCoordinatorBuilder#buildTransactionCoordinator}
  *     </li>
  *     <li>
  *         {@link org.hibernate.engine.jdbc.LobCreationContext} to act as the context for JDBC LOB instance creation
@@ -66,7 +68,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  * @author Steve Ebersole
  */
 public interface SharedSessionContractImplementor
-		extends SharedSessionContract, JdbcSessionOwner, TransactionCoordinatorOptions, LobCreationContext, WrapperOptions, QueryProducerImplementor, Serializable {
+		extends SharedSessionContract, JdbcSessionOwner, Options, LobCreationContext, WrapperOptions, QueryProducerImplementor {
 
 	// todo : this is the shared contract between Session and StatelessSession, but it defines methods that StatelessSession does not implement
 	//	(it just throws UnsupportedOperationException).  To me it seems like it is better to properly isolate those methods
@@ -195,19 +197,6 @@ public interface SharedSessionContractImplementor
 	 * System time beforeQuery the start of the transaction
 	 */
 	long getTimestamp();
-
-	/**
-	 * Disable automatic transaction joining.  The really only has any effect for CMT transactions.  The default
-	 * Hibernate behavior is to auto join any active JTA transaction (register {@link javax.transaction.Synchronization}).
-	 * JPA however defines an explicit join transaction operation.
-	 * <p/>
-	 * See javax.persistence.EntityManager#joinTransaction
-	 *
-	 * @deprecated (since 5.2) (1) this is not supported in StatelessSession and (2) this is based
-	 * on SynchronizationType and in Session hierarchy we should just leverage {@link SessionImplementor#getSynchronizationType()}
-	 */
-	@Deprecated
-	void disableTransactionAutoJoin();
 
 	/**
 	 * Does this <tt>Session</tt> have an active Hibernate transaction

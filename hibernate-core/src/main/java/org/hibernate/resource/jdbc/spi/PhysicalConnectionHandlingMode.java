@@ -6,8 +6,11 @@
  */
 package org.hibernate.resource.jdbc.spi;
 
+import java.util.Locale;
+
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
+import org.hibernate.internal.util.StringHelper;
 
 import static org.hibernate.ConnectionAcquisitionMode.AS_NEEDED;
 import static org.hibernate.ConnectionAcquisitionMode.IMMEDIATELY;
@@ -60,6 +63,23 @@ public enum PhysicalConnectionHandlingMode {
 
 	public ConnectionReleaseMode getReleaseMode() {
 		return releaseMode;
+	}
+
+	public static PhysicalConnectionHandlingMode interpret(Object setting) {
+		if ( setting == null ) {
+			return null;
+		}
+
+		if ( setting instanceof PhysicalConnectionHandlingMode ) {
+			return (PhysicalConnectionHandlingMode) setting;
+		}
+
+		final String value = setting.toString();
+		if ( StringHelper.isEmpty( value ) ) {
+			return null;
+		}
+
+		return PhysicalConnectionHandlingMode.valueOf( value.toUpperCase( Locale.ROOT ) );
 	}
 
 	public static PhysicalConnectionHandlingMode interpret(

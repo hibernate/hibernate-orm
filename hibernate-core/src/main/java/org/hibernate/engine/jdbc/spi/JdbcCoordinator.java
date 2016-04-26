@@ -6,6 +6,8 @@
  */
 package org.hibernate.engine.jdbc.spi;
 
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.Statement;
@@ -190,4 +192,7 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	default ResourceRegistry getResourceRegistry() {
 		return getLogicalConnection().getResourceRegistry();
 	}
+
+	void serialize(ObjectOutputStream objectOutputStream) throws IOException;
+
 }

@@ -12,6 +12,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.internal.CoreLogging;
+import org.hibernate.loader.plan.exec.query.internal.QueryBuildingParametersImpl;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.type.Type;
@@ -63,28 +64,14 @@ public class CollectionLoader extends AbstractLoadPlanBasedCollectionInitializer
 		}
 
 		public CollectionLoader byKey() {
-			final QueryBuildingParameters buildingParameters = new QueryBuildingParameters() {
-				@Override
-				public LoadQueryInfluencers getQueryInfluencers() {
-					return influencers;
-				}
-
-				@Override
-				public int getBatchSize() {
-					return batchSize;
-				}
-
-				@Override
-				public LockMode getLockMode() {
-					return LockMode.NONE;
-				}
-
-				@Override
-				public LockOptions getLockOptions() {
-					return null;
-				}
-			};
-			return new CollectionLoader( collectionPersister, buildingParameters ) ;
+			// capture current values in a new instance of QueryBuildingParametersImpl
+			final QueryBuildingParameters currentBuildingParameters = new QueryBuildingParametersImpl(
+					influencers,
+					batchSize,
+					LockMode.NONE,
+					null
+			);
+			return new CollectionLoader( collectionPersister, currentBuildingParameters ) ;
 		}
 	}
 

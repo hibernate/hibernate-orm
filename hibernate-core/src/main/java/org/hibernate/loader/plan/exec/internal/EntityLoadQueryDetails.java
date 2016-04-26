@@ -151,6 +151,18 @@ public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 	}
 
 	@Override
+	protected boolean isSubselectLoadingEnabled(FetchStats fetchStats) {
+		return getQueryBuildingParameters().getBatchSize() > 1 &&
+				fetchStats != null &&
+				fetchStats.hasSubselectFetches();
+	}
+
+	@Override
+	protected boolean shouldUseOptionalEntityInstance() {
+		return getQueryBuildingParameters().getBatchSize() < 2;
+	}
+
+	@Override
 	protected ReaderCollector getReaderCollector() {
 		return readerCollector;
 	}

@@ -1002,18 +1002,22 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Iterator<R> iterate() {
 		beforeQuery();
 		try {
-			return getProducer().iterate(
-					queryParameterBindings.expandListValuedParameters( getQueryString(), getProducer() ),
-					getQueryParameters()
-			);
+			return doIterate();
 		}
 		finally {
 			afterQuery();
 		}
+	}
+
+	@SuppressWarnings("unchecked")
+	protected Iterator<R> doIterate() {
+		return getProducer().iterate(
+				queryParameterBindings.expandListValuedParameters( getQueryString(), getProducer() ),
+				getQueryParameters()
+		);
 	}
 
 	@Override
@@ -1025,16 +1029,20 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	public ScrollableResults scroll(ScrollMode scrollMode) {
 		beforeQuery();
 		try {
-			QueryParameters queryParameters = getQueryParameters();
-			queryParameters.setScrollMode( scrollMode );
-			return getProducer().scroll(
-					queryParameterBindings.expandListValuedParameters( getQueryString(), getProducer() ),
-					queryParameters
-			);
+			return doScroll( scrollMode );
 		}
 		finally {
 			afterQuery();
 		}
+	}
+
+	protected ScrollableResults doScroll(ScrollMode scrollMode) {
+		QueryParameters queryParameters = getQueryParameters();
+		queryParameters.setScrollMode( scrollMode );
+		return getProducer().scroll(
+				queryParameterBindings.expandListValuedParameters( getQueryString(), getProducer() ),
+				queryParameters
+		);
 	}
 
 	@Override

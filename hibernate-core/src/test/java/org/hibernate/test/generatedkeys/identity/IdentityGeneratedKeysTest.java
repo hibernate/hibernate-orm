@@ -6,6 +6,9 @@
  */
 package org.hibernate.test.generatedkeys.identity;
 
+import javax.persistence.PersistenceException;
+import javax.persistence.TransactionRequiredException;
+
 import org.junit.Test;
 
 import org.hibernate.Session;
@@ -15,9 +18,11 @@ import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 /**
  * @author Steve Ebersole
@@ -49,31 +54,31 @@ public class IdentityGeneratedKeysTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testPersistOutsideTransaction() {
 		Session s = openSession();
+		try {
+			// first test save() which should force an immediate insert...
+			MyEntity myEntity1 = new MyEntity( "test-save" );
+			Long id = (Long) s.save( myEntity1 );
+			assertNotNull( "identity column did not force immediate insert", id );
+			assertEquals( id, myEntity1.getId() );
 
-		// first test save() which should force an immediate insert...
-		MyEntity myEntity1 = new MyEntity( "test-save" );
-		Long id = ( Long ) s.save( myEntity1 );
-		assertNotNull( "identity column did not force immediate insert", id );
-		assertEquals( id, myEntity1.getId() );
+			// next test persist() which should cause a delayed insert...
+			long initialInsertCount = sessionFactory().getStatistics().getEntityInsertCount();
+			MyEntity myEntity2 = new MyEntity( "test-persist" );
+			s.persist( myEntity2 );
+			assertEquals( "persist on identity column not delayed", initialInsertCount, sessionFactory().getStatistics().getEntityInsertCount() );
+			assertNull( myEntity2.getId() );
 
-		// next test persist() which should cause a delayed insert...
-		long initialInsertCount = sessionFactory().getStatistics().getEntityInsertCount();
-		MyEntity myEntity2 = new MyEntity( "test-persist");
-		s.persist( myEntity2 );
-		assertEquals( "persist on identity column not delayed", initialInsertCount, sessionFactory().getStatistics().getEntityInsertCount() );
-		assertNull( myEntity2.getId() );
-
-		// an explicit flush should cause execution of the delayed insertion
-		s.flush();
-		assertEquals( "delayed persist insert not executed on flush", initialInsertCount + 1, sessionFactory().getStatistics().getEntityInsertCount() );
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		s.delete( myEntity1 );
-		s.delete( myEntity2 );
-		s.getTransaction().commit();
-		s.close();
+			// an explicit flush should cause execution of the delayed insertion
+			s.flush();
+			fail( "TransactionRequiredException required upon flush" );
+		}
+		catch ( PersistenceException ex ) {
+			// expected
+			assertTyping( TransactionRequiredException.class, ex );
+		}
+		finally {
+			s.close();
+		}
 	}
 
 	@Test
@@ -81,21 +86,22 @@ public class IdentityGeneratedKeysTest extends BaseCoreFunctionalTestCase {
 	public void testPersistOutsideTransactionCascadedToNonInverseCollection() {
 		long initialInsertCount = sessionFactory().getStatistics().getEntityInsertCount();
 		Session s = openSession();
-		MyEntity myEntity = new MyEntity( "test-persist");
-		myEntity.getNonInverseChildren().add( new MyChild( "test-child-persist-non-inverse" ) );
-		s.persist( myEntity );
-		assertEquals( "persist on identity column not delayed", initialInsertCount, sessionFactory().getStatistics().getEntityInsertCount() );
-		assertNull( myEntity.getId() );
-		s.flush();
-		assertEquals( "delayed persist insert not executed on flush", initialInsertCount + 2, sessionFactory().getStatistics().getEntityInsertCount() );
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		s.createQuery( "delete MyChild" ).executeUpdate();
-		s.createQuery( "delete MyEntity" ).executeUpdate();
-		s.getTransaction().commit();
-		s.close();
+		try {
+			MyEntity myEntity = new MyEntity( "test-persist" );
+			myEntity.getNonInverseChildren().add( new MyChild( "test-child-persist-non-inverse" ) );
+			s.persist( myEntity );
+			assertEquals( "persist on identity column not delayed", initialInsertCount, sessionFactory().getStatistics().getEntityInsertCount() );
+			assertNull( myEntity.getId() );
+			s.flush();
+			fail( "TransactionRequiredException required upon flush" );
+		}
+		catch ( PersistenceException ex ) {
+			// expected
+			assertTyping( TransactionRequiredException.class, ex );
+		}
+		finally {
+			s.close();
+		}
 	}
 
 	@Test
@@ -103,65 +109,68 @@ public class IdentityGeneratedKeysTest extends BaseCoreFunctionalTestCase {
 	public void testPersistOutsideTransactionCascadedToInverseCollection() {
 		long initialInsertCount = sessionFactory().getStatistics().getEntityInsertCount();
 		Session s = openSession();
-		MyEntity myEntity2 = new MyEntity( "test-persist-2");
-		MyChild child = new MyChild( "test-child-persist-inverse" );
-		myEntity2.getInverseChildren().add( child );
-		child.setInverseParent( myEntity2 );
-		s.persist( myEntity2 );
-		assertEquals( "persist on identity column not delayed", initialInsertCount, sessionFactory().getStatistics().getEntityInsertCount() );
-		assertNull( myEntity2.getId() );
-		s.flush();
-		assertEquals( "delayed persist insert not executed on flush", initialInsertCount + 2, sessionFactory().getStatistics().getEntityInsertCount() );
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		s.createQuery( "delete MyChild" ).executeUpdate();
-		s.createQuery( "delete MyEntity" ).executeUpdate();
-		s.getTransaction().commit();
-		s.close();
+		try {
+			MyEntity myEntity2 = new MyEntity( "test-persist-2" );
+			MyChild child = new MyChild( "test-child-persist-inverse" );
+			myEntity2.getInverseChildren().add( child );
+			child.setInverseParent( myEntity2 );
+			s.persist( myEntity2 );
+			assertEquals( "persist on identity column not delayed", initialInsertCount, sessionFactory().getStatistics().getEntityInsertCount() );
+			assertNull( myEntity2.getId() );
+			s.flush();
+			fail( "TransactionRequiredException expected upon flush." );
+		}
+		catch ( PersistenceException ex ) {
+			// expected
+			assertTyping( TransactionRequiredException.class, ex );
+		}
+		finally {
+			s.close();
+		}
 	}
 
 	@Test
 	public void testPersistOutsideTransactionCascadedToManyToOne() {
 		long initialInsertCount = sessionFactory().getStatistics().getEntityInsertCount();
 		Session s = openSession();
-		MyEntity myEntity = new MyEntity( "test-persist");
-		myEntity.setSibling( new MySibling( "test-persist-sibling-out" ) );
-		s.persist( myEntity );
-		assertEquals( "persist on identity column not delayed", initialInsertCount, sessionFactory().getStatistics().getEntityInsertCount() );
-		assertNull( myEntity.getId() );
-		s.flush();
-		assertEquals( "delayed persist insert not executed on flush", initialInsertCount + 2, sessionFactory().getStatistics().getEntityInsertCount() );
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		s.createQuery( "delete MyEntity" ).executeUpdate();
-		s.createQuery( "delete MySibling" ).executeUpdate();
-		s.getTransaction().commit();
-		s.close();
+		try {
+			MyEntity myEntity = new MyEntity( "test-persist" );
+			myEntity.setSibling( new MySibling( "test-persist-sibling-out" ) );
+			s.persist( myEntity );
+			assertEquals( "persist on identity column not delayed", initialInsertCount, sessionFactory().getStatistics().getEntityInsertCount() );
+			assertNull( myEntity.getId() );
+			s.flush();
+			fail( "TransactionRequiredException expected upon flush." );
+		}
+		catch ( PersistenceException ex ) {
+			// expected
+			assertTyping( TransactionRequiredException.class, ex );
+		}
+		finally {
+			s.close();
+		}
 	}
 
 	@Test
 	public void testPersistOutsideTransactionCascadedFromManyToOne() {
 		long initialInsertCount = sessionFactory().getStatistics().getEntityInsertCount();
 		Session s = openSession();
-		MyEntity myEntity2 = new MyEntity( "test-persist-2");
-		MySibling sibling = new MySibling( "test-persist-sibling-in" );
-		sibling.setEntity( myEntity2 );
-		s.persist( sibling );
-		assertEquals( "persist on identity column not delayed", initialInsertCount, sessionFactory().getStatistics().getEntityInsertCount() );
-		assertNull( myEntity2.getId() );
-		s.flush();
-		assertEquals( "delayed persist insert not executed on flush", initialInsertCount + 2, sessionFactory().getStatistics().getEntityInsertCount() );
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		s.createQuery( "delete MySibling" ).executeUpdate();
-		s.createQuery( "delete MyEntity" ).executeUpdate();
-		s.getTransaction().commit();
-		s.close();
+		try {
+			MyEntity myEntity2 = new MyEntity( "test-persist-2" );
+			MySibling sibling = new MySibling( "test-persist-sibling-in" );
+			sibling.setEntity( myEntity2 );
+			s.persist( sibling );
+			assertEquals( "persist on identity column not delayed", initialInsertCount, sessionFactory().getStatistics().getEntityInsertCount() );
+			assertNull( myEntity2.getId() );
+			s.flush();
+			fail( "TransactionRequiredException expected upon flush." );
+		}
+		catch ( PersistenceException ex ) {
+			// expected
+			assertTyping( TransactionRequiredException.class, ex );
+		}
+		finally {
+			s.close();
+		}
 	}
 }

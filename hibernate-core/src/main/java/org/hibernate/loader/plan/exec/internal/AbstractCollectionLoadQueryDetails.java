@@ -92,6 +92,16 @@ public abstract class AbstractCollectionLoadQueryDetails extends AbstractLoadQue
 	}
 
 	@Override
+	protected boolean isSubselectLoadingEnabled(FetchStats fetchStats) {
+		return fetchStats != null && fetchStats.hasSubselectFetches();
+	}
+
+	@Override
+	protected boolean shouldUseOptionalEntityInstance() {
+		return false;
+	}
+
+	@Override
 	protected ReaderCollector getReaderCollector() {
 		return readerCollector;
 	}

@@ -173,11 +173,22 @@ public abstract class AbstractLoadQueryDetails implements LoadQueryDetails {
 		this.sqlStatement = select.toStatementString();
 		this.resultSetProcessor = new ResultSetProcessorImpl(
 				loadPlan,
+				queryProcessor.getAliasResolutionContext(),
 				getReaderCollector().buildRowReader(),
-				fetchStats != null && fetchStats.hasSubselectFetches()
+				shouldUseOptionalEntityInstance(),
+				isSubselectLoadingEnabled( fetchStats )
 		);
 	}
 
+	/**
+	 * Is subselect loading enabled?
+	 *
+	 * @param fetchStats the fetch stats; may be null
+	 * @return {@code true} if subselect loading is enabled; {@code false} otherwise.
+	 */
+	protected abstract boolean isSubselectLoadingEnabled(FetchStats fetchStats);
+
+	protected abstract boolean shouldUseOptionalEntityInstance();
 	protected abstract ReaderCollector getReaderCollector();
 	protected abstract QuerySpace getRootQuerySpace();
 	protected abstract String getRootTableAlias();

@@ -21,6 +21,7 @@ import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessor;
 import org.hibernate.loader.plan.exec.process.spi.RowReader;
 import org.hibernate.loader.plan.exec.process.spi.ScrollableResultSetProcessor;
 import org.hibernate.loader.plan.exec.query.spi.NamedParameterContext;
+import org.hibernate.loader.plan.exec.spi.AliasResolutionContext;
 import org.hibernate.loader.plan.spi.CollectionReturn;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.loader.spi.AfterLoadAction;
@@ -37,13 +38,27 @@ public class ResultSetProcessorImpl implements ResultSetProcessor {
 	private static final Logger LOG = Logger.getLogger( ResultSetProcessorImpl.class );
 
 	private final LoadPlan loadPlan;
+	private final AliasResolutionContext aliasResolutionContext;
 	private final RowReader rowReader;
 
 	private final boolean hadSubselectFetches;
 
-	public ResultSetProcessorImpl(LoadPlan loadPlan, RowReader rowReader, boolean hadSubselectFetches) {
+	private final boolean shouldUseOptionalEntityInstance;
+
+	// There are times when the "optional entity information" on QueryParameters should be used and
+	// times when they should be ignored.  Loader uses its isSingleRowLoader method to allow
+	// subclasses to override that.  Collection initializers, batch loaders, e.g. override that
+	// it to be false.  The 'shouldUseOptionalEntityInstance' setting is meant to fill that same role.
+	public ResultSetProcessorImpl(
+			LoadPlan loadPlan,
+			AliasResolutionContext aliasResolutionContext,
+			RowReader rowReader,
+			boolean shouldUseOptionalEntityInstance,
+			boolean hadSubselectFetches) {
 		this.loadPlan = loadPlan;
+		this.aliasResolutionContext = aliasResolutionContext;
 		this.rowReader = rowReader;
+		this.shouldUseOptionalEntityInstance = shouldUseOptionalEntityInstance;
 		this.hadSubselectFetches = hadSubselectFetches;
 	}
 
@@ -80,12 +95,6 @@ public class ResultSetProcessorImpl implements ResultSetProcessor {
 			maxRows = Integer.MAX_VALUE;
 		}
 
-		// There are times when the "optional entity information" on QueryParameters should be used and
-		// times when they should be ignored.  Loader uses its isSingleRowLoader method to allow
-		// subclasses to override that.  Collection initializers, batch loaders, e.g. override that
-		// it to be false.  The 'shouldUseOptionalEntityInstance' setting is meant to fill that same role.
-		final boolean shouldUseOptionalEntityInstance = true;
-
 		// Handles the "FETCH ALL PROPERTIES" directive in HQL
 		final boolean forceFetchLazyAttributes = false;
 
@@ -93,6 +102,7 @@ public class ResultSetProcessorImpl implements ResultSetProcessor {
 				resultSet,
 				session,
 				loadPlan,
+				aliasResolutionContext,
 				readOnly,
 				shouldUseOptionalEntityInstance,
 				forceFetchLazyAttributes,

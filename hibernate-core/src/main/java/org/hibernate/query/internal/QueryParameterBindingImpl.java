@@ -18,12 +18,19 @@ import org.hibernate.type.Type;
 public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 	private final QueryParameterBindingTypeResolver typeResolver;
 
+	private boolean isBound;
+
 	private Type bindType;
 	private T bindValue;
 
 	public QueryParameterBindingImpl(Type type, QueryParameterBindingTypeResolver typeResolver) {
 		this.bindType = type;
 		this.typeResolver = typeResolver;
+	}
+
+	@Override
+	public boolean isBound() {
+		return isBound;
 	}
 
 	@Override
@@ -38,6 +45,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 
 	@Override
 	public void setBindValue(T value) {
+		this.isBound = true;
 		this.bindValue = value;
 
 		if ( bindType == null ) {

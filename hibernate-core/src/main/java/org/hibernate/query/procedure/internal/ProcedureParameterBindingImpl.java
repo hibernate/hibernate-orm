@@ -23,6 +23,11 @@ public class ProcedureParameterBindingImpl<T> implements ProcedureParameterBindi
 	}
 
 	@Override
+	public boolean isBound() {
+		return parameter.getNativeParameterRegistration().getBind() != null;
+	}
+
+	@Override
 	public void setBindValue(T value) {
 		parameter.getNativeParameterRegistration().bindValue( value );
 	}

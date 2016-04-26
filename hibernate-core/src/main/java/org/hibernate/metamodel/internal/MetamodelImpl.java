@@ -209,6 +209,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 		this.jpaEntityTypesByEntityName.putAll( context.getEntityTypesByEntityName() );
 	}
 
+	@Override
 	public java.util.Collection<EntityNameResolver> getEntityNameResolvers() {
 		return entityNameResolvers.keySet();
 	}

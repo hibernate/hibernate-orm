@@ -163,7 +163,13 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, Quer
 	 */
 	CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver();
 
-	Iterable<EntityNameResolver> iterateEntityNameResolvers();
+	/**
+	 * @deprecated (since 5.2) use {@link #getMetamodel()} -> {@link MetamodelImplementor#getEntityNameResolvers()}
+	 */
+	@Deprecated
+	default Iterable<EntityNameResolver> iterateEntityNameResolvers() {
+		return getMetamodel().getEntityNameResolvers();
+	}
 
 	/**
 	 * Contract for resolving this SessionFactory on deserialization

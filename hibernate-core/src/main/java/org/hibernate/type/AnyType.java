@@ -178,7 +178,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		}
 
 		if ( entityName == null ) {
-			for ( EntityNameResolver resolver : scope.resolveFactory().iterateEntityNameResolvers() ) {
+			for ( EntityNameResolver resolver : scope.resolveFactory().getMetamodel().getEntityNameResolvers() ) {
 				entityName = resolver.resolveEntityName( entity );
 				if ( entityName != null ) {
 					break;

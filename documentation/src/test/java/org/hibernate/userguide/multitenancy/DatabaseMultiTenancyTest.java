@@ -14,7 +14,7 @@ import org.hibernate.testing.RequiresDialect;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect( value = H2Dialect.class)
+@RequiresDialect(H2Dialect.class)
 public class DatabaseMultiTenancyTest extends AbstractMultiTenancyTest {
 
 	@Override

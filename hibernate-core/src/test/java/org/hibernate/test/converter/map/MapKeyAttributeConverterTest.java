@@ -93,7 +93,7 @@ public class MapKeyAttributeConverterTest extends BaseNonConfigCoreFunctionalTes
 		MapValue foundValue = found.enumDefaultType.get( EnumMapKey.VALUE_1 );
 		assertEquals( EnumMapKey.VALUE_1, foundValue.enumDefault );
 
-		assertEquals( 0, findDatabaseValue( foundValue, "enumDefault" ) );
+		assertEquals( 0, ((Number) findDatabaseValue( foundValue, "enumDefault" )).intValue() );
 		getSession().close();
 	}
 
@@ -109,7 +109,7 @@ public class MapKeyAttributeConverterTest extends BaseNonConfigCoreFunctionalTes
 		MapValue foundValue = found.enumExplicitOrdinalType.get( EnumMapKey.VALUE_2 );
 		assertEquals( EnumMapKey.VALUE_2, foundValue.enumExplicitOrdinal );
 
-		assertEquals( 1, findDatabaseValue( foundValue, "enumExplicitOrdinal" ) );
+		assertEquals( 1, ((Number) findDatabaseValue( foundValue, "enumExplicitOrdinal" )).intValue() );
 		getSession().close();
 	}
 
@@ -173,7 +173,7 @@ public class MapKeyAttributeConverterTest extends BaseNonConfigCoreFunctionalTes
 		MapValue foundValue = found.enumImplicitOverrideOrdinalType.get( ImplicitEnumMapKey.VALUE_1 );
 		assertEquals( ImplicitEnumMapKey.VALUE_1, foundValue.enumImplicitOverrideOrdinal );
 
-		assertEquals( 0, findDatabaseValue( foundValue, "enumImplicitOverrideOrdinal" ) );
+		assertEquals( 0, ((Number) findDatabaseValue( foundValue, "enumImplicitOverrideOrdinal" )).intValue() );
 		getSession().close();
 	}
 
@@ -238,7 +238,7 @@ public class MapKeyAttributeConverterTest extends BaseNonConfigCoreFunctionalTes
 	@Table(name = "map_entity")
 	public static class MapEntity {
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue(strategy = GenerationType.AUTO)
 		private Integer id;
 
 		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL)
@@ -280,7 +280,7 @@ public class MapKeyAttributeConverterTest extends BaseNonConfigCoreFunctionalTes
 	@Table(name = "map_value")
 	public static class MapValue {
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue(strategy = GenerationType.AUTO)
 		private Integer id;
 		@ManyToOne
 		@JoinColumn(name = "map_entity_id")

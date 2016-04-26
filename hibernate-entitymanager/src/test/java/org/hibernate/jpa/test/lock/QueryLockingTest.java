@@ -29,6 +29,9 @@ import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.internal.QueryImpl;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
@@ -334,6 +337,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 	 * lock some entities via a query and check the resulting lock mode type via EntityManager
 	 */
 	@Test
+	@RequiresDialectFeature( value = DialectChecks.DoesNotSupportFollowOnLocking.class)
 	public void testEntityLockModeStateAfterQueryLocking() {
 		// Create some test data
 		EntityManager em = getOrCreateEntityManager();

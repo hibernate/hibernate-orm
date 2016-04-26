@@ -15,16 +15,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.dialect.TeradataDialect;
-import org.jboss.logging.Logger;
-import org.junit.Test;
-
 import org.hibernate.Query;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.InterbaseDialect;
 import org.hibernate.dialect.MckoiDialect;
@@ -35,8 +31,13 @@ import org.hibernate.dialect.Sybase11Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.dialect.TeradataDialect;
 import org.hibernate.dialect.TimesTenDialect;
 import org.hibernate.dialect.function.SQLFunction;
+
+import org.junit.Test;
+
+import org.jboss.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -175,18 +176,19 @@ public class SQLFunctionsTest extends LegacyTestCase {
 	public void testSetPropertiesMap() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
+
 		Simple simple = new Simple( Long.valueOf(10) );
 		simple.setName("Simple 1");
 		s.save( simple );
-		Map parameters = new HashMap();
-		parameters.put("name", simple.getName());
-		parameters.put("count", new Integer(simple.getCount()));
 
+		Map<String,Object> parameters = new HashMap<>();
+		parameters.put( "name", simple.getName() );
+		parameters.put( "count", simple.getCount() );
 		Query q = s.createQuery("from Simple s where s.name=:name and s.count=:count");
 		q.setProperties((parameters));
 		assertTrue( q.list().get(0)==simple );
 
-		List l = new ArrayList();
+		List<String> l = new ArrayList<>();
 		l.add("Simple 1");
 		l.add("Slimeball");
 		parameters.put("several", l);
@@ -194,11 +196,11 @@ public class SQLFunctionsTest extends LegacyTestCase {
 		q.setProperties(parameters);
 		assertTrue( q.list().get(0)==simple );
 
-
 		parameters.put("stuff", l.toArray(new String[0]));
 		q = s.createQuery("from Simple s where s.name in (:stuff)");
 		q.setProperties(parameters);
 		assertTrue( q.list().get(0)==simple );
+
 		s.delete(simple);
 		t.commit();
 		s.close();

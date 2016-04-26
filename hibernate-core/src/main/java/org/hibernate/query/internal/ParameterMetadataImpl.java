@@ -166,7 +166,7 @@ public class ParameterMetadataImpl implements ParameterMetadata {
 
 	@Override
 	public <T> QueryParameter<T> getQueryParameter(String name) {
-		return null;
+		return getNamedParameterDescriptor( name );
 	}
 
 	@Override

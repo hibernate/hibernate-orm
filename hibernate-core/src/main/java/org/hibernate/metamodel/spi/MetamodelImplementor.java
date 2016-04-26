@@ -6,9 +6,11 @@
  */
 package org.hibernate.metamodel.spi;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.EntityNameResolver;
 import org.hibernate.MappingException;
 import org.hibernate.Metamodel;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -21,6 +23,8 @@ import org.hibernate.persister.entity.EntityPersister;
 public interface MetamodelImplementor extends Metamodel {
 	@Override
 	SessionFactoryImplementor getSessionFactory();
+
+	Collection<EntityNameResolver> getEntityNameResolvers();
 
 	/**
 	 * Locate an EntityPersister by the entity class.  The passed Class might refer to either

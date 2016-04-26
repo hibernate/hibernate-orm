@@ -18,6 +18,8 @@ import org.hibernate.type.Type;
  */
 @Incubating
 public interface QueryParameterBinding<T> {
+	boolean isBound();
+
 	/**
 	 * Sets the parameter binding value.  The inherent parameter type (if known) is assumed
 	 *

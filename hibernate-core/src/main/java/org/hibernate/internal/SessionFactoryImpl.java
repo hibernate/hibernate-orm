@@ -18,8 +18,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 import javax.persistence.EntityGraph;
@@ -35,7 +33,6 @@ import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EmptyInterceptor;
-import org.hibernate.EntityNameResolver;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -118,7 +115,6 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tool.schema.spi.DelayedDropAction;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
-import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.SerializableType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
@@ -184,7 +180,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient Map<String,IdentifierGenerator> identifierGenerators;
 	private final transient Map<String, FilterDefinition> filters;
 	private final transient Map<String, FetchProfile> fetchProfiles;
-	private final transient ConcurrentMap<EntityNameResolver,Object> entityNameResolvers = new ConcurrentHashMap<>();
 
 	private final transient TypeResolver typeResolver;
 	private final transient TypeHelper typeHelper;
@@ -496,35 +491,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	public TypeResolver getTypeResolver() {
 		return typeResolver;
-	}
-
-	private void registerEntityNameResolvers(EntityPersister persister) {
-		if ( persister.getEntityMetamodel() == null || persister.getEntityMetamodel().getTuplizer() == null ) {
-			return;
-		}
-		registerEntityNameResolvers( persister.getEntityMetamodel().getTuplizer() );
-	}
-
-	private void registerEntityNameResolvers(EntityTuplizer tuplizer) {
-		EntityNameResolver[] resolvers = tuplizer.getEntityNameResolvers();
-		if ( resolvers == null ) {
-			return;
-		}
-
-		for ( EntityNameResolver resolver : resolvers ) {
-			registerEntityNameResolver( resolver );
-		}
-	}
-
-	private static final Object ENTITY_NAME_RESOLVER_MAP_VALUE = new Object();
-
-	public void registerEntityNameResolver(EntityNameResolver resolver) {
-		entityNameResolvers.put( resolver, ENTITY_NAME_RESOLVER_MAP_VALUE );
-	}
-
-	@Override
-	public Iterable<EntityNameResolver> iterateEntityNameResolvers() {
-		return entityNameResolvers.keySet();
 	}
 
 	public QueryPlanCache getQueryPlanCache() {

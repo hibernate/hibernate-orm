@@ -131,11 +131,6 @@ When a generator specified an increment-size and an optimizer was not explicitly
 
 3+|Quoting options
 |`hibernate.globally_quoted_identifiers` |`true` or `false` (default value) |Should all database identifiers be quoted.
-|`hibernate.globally_quoted_identifiers_skip_column_definitions` |`true` or `false` (default value) |
-
-Assuming `hibernate.globally_quoted_identifiers` is `true`, this allows the global quoting to skip column-definitions as defined by `javax.persistence.Column`,
-`javax.persistence.JoinColumn`, etc, and while it avoids column-definitions being quoted due to global quoting, they can still be explicitly quoted in the annotation/xml mappings.
-
 |`hibernate.auto_quote_keyword` |`true` or `false` (default value) |Specifies whether to automatically quote any names that are deemed keywords.
 
 3+|Discriminator options
@@ -567,8 +562,6 @@ The default value is `org.hibernate.tool.hbm2ddl.SingleLineSqlCommandExtractor`.
 The JPA variant of `hibernate.hbm2dll.create_namespaces`. Specifies whether the persistence provider is to create the database schema(s) in addition to creating database objects (tables, sequences, constraints, etc).
 The value of this boolean property should be set to `true` if the persistence provider is to create schemas in the database or to generate DDL that contains "CREATE SCHEMA" commands.
 If this property is not supplied (or is explicitly `false`), the provider should not attempt to create database schemas.
-
-|`hibernate.hbm2ddl.delimiter` | `;` |Identifies the delimiter to use to separate schema management statements in script outputs.
 
 |`hibernate.schema_management_tool` |A schema name |Used to specify the `org.hibernate.tool.schema.spi.SchemaManagementTool` to use for performing schema management. The default is to use `org.hibernate.tool.schema.internal.HibernateSchemaManagementTool`
 |`hibernate.synonyms` |`true` or `false` (default value) |If enabled, allows schema update and validation to support synonyms. Due to the possibility that this would return duplicate tables (especially in Oracle), this is disabled by default.

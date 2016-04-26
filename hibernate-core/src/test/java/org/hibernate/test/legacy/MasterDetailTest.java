@@ -969,7 +969,7 @@ public class MasterDetailTest extends LegacyTestCase {
 	@Test
 	public void testCustomPersister() throws Exception {
 		Session s = openSession();
-		Custom c = c = new Custom();
+		Custom c = new Custom();
 		c.setName( "foo" );
 		c.id="100";
 		s.beginTransaction();

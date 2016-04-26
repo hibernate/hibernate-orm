@@ -25,6 +25,8 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
+import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryConstructorReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
@@ -176,6 +178,14 @@ public class NativeQueryImpl extends AbstractProducedQuery<Object> implements Na
 			}
 			queryReturnBuilders = null;
 		}
+	}
+
+	@Override
+	protected ScrollableResults doScroll(ScrollMode scrollMode) {
+		return getProducer().scroll(
+				generateQuerySpecification(),
+				getQueryParameters()
+		);
 	}
 
 	@Override

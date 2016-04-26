@@ -969,24 +969,32 @@ public class MasterDetailTest extends LegacyTestCase {
 	@Test
 	public void testCustomPersister() throws Exception {
 		Session s = openSession();
-		Custom c = new Custom();
+		Custom c = c = new Custom();
 		c.setName( "foo" );
 		c.id="100";
-		String id = (String) s.save(c);
-		assertTrue( c==s.load(Custom.class, id) );
+		s.beginTransaction();
+		String id = id = (String) s.save( c );
+		assertTrue( c == s.load( Custom.class, id ) );
 		s.flush();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		c = (Custom) s.load(Custom.class, id);
 		assertTrue( c.getName().equals("foo") );
 		c.setName( "bar" );
 		s.flush();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		c = (Custom) s.load(Custom.class, id);
 		assertTrue( c.getName().equals("bar") );
 		s.delete(c);
 		s.flush();
+		s.getTransaction().commit();
 		s.close();
 		s = openSession();
 		boolean none = false;
@@ -998,7 +1006,6 @@ public class MasterDetailTest extends LegacyTestCase {
 		}
 		assertTrue(none);
 		s.close();
-
 	}
 
 	@Test

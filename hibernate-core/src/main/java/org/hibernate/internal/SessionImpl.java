@@ -855,6 +855,7 @@ public final class SessionImpl
 			for ( MergeEventListener listener : listeners( EventType.MERGE ) ) {
 				listener.onMerge( event );
 			}
+			checkNoUnresolvedActionsAfterOperation();
 		}
 		catch ( ObjectDeletedException sse ) {
 			throw convert( new IllegalArgumentException( sse ) );
@@ -865,9 +866,6 @@ public final class SessionImpl
 		catch ( RuntimeException e ) {
 			//including HibernateException
 			throw convert( e );
-		}
-		finally {
-			checkNoUnresolvedActionsAfterOperation();
 		}
 
 		return event.getResult();

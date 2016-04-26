@@ -13,6 +13,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.plan.build.internal.FetchStyleLoadPlanBuildingAssociationVisitationStrategy;
 import org.hibernate.loader.plan.build.spi.MetamodelDrivenLoadPlanBuilder;
 import org.hibernate.loader.plan.exec.internal.BatchingLoadQueryDetailsFactory;
+import org.hibernate.loader.plan.exec.query.internal.QueryBuildingParametersImpl;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
 import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.loader.plan.spi.LoadPlan;
@@ -27,14 +28,21 @@ public class Helper implements QueryBuildingParameters {
 	 */
 	public static final Helper INSTANCE = new Helper();
 
+	private static final QueryBuildingParameters queryBuildingParameters = new QueryBuildingParametersImpl(
+			LoadQueryInfluencers.NONE,
+			1,
+			LockMode.NONE,
+			null
+	);
+
 	private Helper() {
 	}
 
 	public LoadPlan buildLoadPlan(SessionFactoryImplementor sf, EntityPersister entityPersister) {
 		final FetchStyleLoadPlanBuildingAssociationVisitationStrategy strategy = new FetchStyleLoadPlanBuildingAssociationVisitationStrategy(
 				sf,
-				LoadQueryInfluencers.NONE,
-				LockMode.NONE
+				queryBuildingParameters.getQueryInfluencers(),
+				queryBuildingParameters.getLockMode()
 		);
 		return MetamodelDrivenLoadPlanBuilder.buildRootEntityLoadPlan( strategy, entityPersister );
 	}
@@ -50,28 +58,28 @@ public class Helper implements QueryBuildingParameters {
 		return BatchingLoadQueryDetailsFactory.INSTANCE.makeEntityLoadQueryDetails(
 				loadPlan,
 				null,
-				this,
+				queryBuildingParameters,
 				sf
 		);
 	}
 
 	@Override
 	public LoadQueryInfluencers getQueryInfluencers() {
-		return LoadQueryInfluencers.NONE;
+		return queryBuildingParameters.getQueryInfluencers();
 	}
 
 	@Override
 	public int getBatchSize() {
-		return 1;
+		return queryBuildingParameters.getBatchSize();
 	}
 
 	@Override
 	public LockMode getLockMode() {
-		return null;
+		return queryBuildingParameters.getLockMode();
 	}
 
 	@Override
 	public LockOptions getLockOptions() {
-		return null;
+		return queryBuildingParameters.getLockOptions();
 	}
 }

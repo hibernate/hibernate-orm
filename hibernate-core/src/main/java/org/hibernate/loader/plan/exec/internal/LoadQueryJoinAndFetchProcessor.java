@@ -443,10 +443,8 @@ public class LoadQueryJoinAndFetchProcessor {
 			Fetch fetch,
 			ReaderCollector readerCollector,
 			FetchStatsImpl fetchStats) {
-		if ( ! FetchStrategyHelper.isJoinFetched( fetch.getFetchStrategy() ) ) {
-			return;
-		}
 
+		// process fetch even if it is not join fetched
 		if ( EntityFetch.class.isInstance( fetch ) ) {
 			final EntityFetch entityFetch = (EntityFetch) fetch;
 			processEntityFetch(
@@ -494,6 +492,10 @@ public class LoadQueryJoinAndFetchProcessor {
 //		}
 
 		fetchStats.processingFetch( fetch );
+		if ( ! FetchStrategyHelper.isJoinFetched( fetch.getFetchStrategy() ) ) {
+			// not join fetched, so nothing else to do
+			return;
+		}
 
 		// First write out the SQL SELECT fragments
 		final Joinable joinable = (Joinable) fetch.getEntityPersister();
@@ -540,7 +542,13 @@ public class LoadQueryJoinAndFetchProcessor {
 			CollectionAttributeFetch fetch,
 			ReaderCollector readerCollector,
 			FetchStatsImpl fetchStats) {
+
 		fetchStats.processingFetch( fetch );
+
+		if ( ! FetchStrategyHelper.isJoinFetched( fetch.getFetchStrategy() ) ) {
+			// not join fetched, so nothing else to do
+			return;
+		}
 
 		final CollectionReferenceAliases aliases = aliasResolutionContext.resolveCollectionReferenceAliases(
 				fetch.getQuerySpaceUid()

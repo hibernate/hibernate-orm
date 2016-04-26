@@ -76,7 +76,7 @@ public final class FetchStrategyHelper {
 	 * @param type The association type
 	 * @param sessionFactory The session factory
 	 *
-	 * @return
+	 * @return the fetch style
 	 */
 	public static FetchStyle determineFetchStyleByMetadata(
 			FetchMode mappingFetchMode,
@@ -90,14 +90,13 @@ public final class FetchStrategyHelper {
 			return FetchStyle.JOIN;
 		}
 
-		if ( mappingFetchMode == FetchMode.SELECT ) {
-			return FetchStyle.SELECT;
-
-		}
 		if ( type.isEntityType() ) {
 			EntityPersister persister = (EntityPersister) type.getAssociatedJoinable( sessionFactory );
 			if ( persister.isBatchLoadable() ) {
 				return FetchStyle.BATCH;
+			}
+			else if ( mappingFetchMode == FetchMode.SELECT ) {
+				return FetchStyle.SELECT;
 			}
 			else if ( !persister.hasProxy() ) {
 				return FetchStyle.JOIN;
@@ -113,7 +112,6 @@ public final class FetchStrategyHelper {
 				return FetchStyle.BATCH;
 			}
 		}
-
 		return FetchStyle.SELECT;
 	}
 

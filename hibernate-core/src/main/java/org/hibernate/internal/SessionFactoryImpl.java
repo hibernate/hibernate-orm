@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentMap;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 import javax.persistence.EntityGraph;
-import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContextType;
 import javax.persistence.PersistenceUnitUtil;
 import javax.persistence.Query;
 import javax.persistence.SynchronizationType;
@@ -36,6 +36,7 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.EntityNameResolver;
+import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
@@ -107,6 +108,7 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.AfterCompletionAction;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ExceptionMapper;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ManagedFlushChecker;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.secure.spi.GrantedPermission;
 import org.hibernate.secure.spi.JaccPermissionDeclarations;
 import org.hibernate.secure.spi.JaccService;
@@ -553,24 +555,60 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		return null;
 	}
 
+
+
+	// todo : (5.2) review synchronizationType, persistenceContextType, transactionType usage
+
+	// SynchronizationType -> should we auto enlist in transactions
+	private transient SynchronizationType synchronizationType;
+
+	// PersistenceContextType -> influences FlushMode and 'autoClose'
+	private transient PersistenceContextType persistenceContextType;
+
+
 	@Override
-	public EntityManager createEntityManager() {
-		return null;
+	public Session createEntityManager() {
+		return buildEntityManager( SynchronizationType.SYNCHRONIZED, Collections.emptyMap() );
+	}
+
+	private Session buildEntityManager(SynchronizationType synchronizationType, Map map) {
+		SessionBuilderImplementor builder = withOptions();
+		if ( synchronizationType == SynchronizationType.SYNCHRONIZED ) {
+			builder.autoJoinTransactions( true );
+		}
+		else {
+			builder.autoJoinTransactions( false );
+		}
+		return builder.openSession();
 	}
 
 	@Override
-	public EntityManager createEntityManager(Map map) {
-		return null;
+	public Session createEntityManager(Map map) {
+		return buildEntityManager( SynchronizationType.SYNCHRONIZED, map );
 	}
 
 	@Override
-	public EntityManager createEntityManager(SynchronizationType synchronizationType) {
-		return null;
+	public Session createEntityManager(SynchronizationType synchronizationType) {
+		errorIfResourceLocalDueToExplicitSynchronizationType();
+		return buildEntityManager( synchronizationType, Collections.emptyMap() );
+	}
+
+	private void errorIfResourceLocalDueToExplicitSynchronizationType() {
+		// JPA requires that we throw IllegalStateException in cases where:
+		//		1) the PersistenceUnitTransactionType (TransactionCoordinator) is non-JTA
+		//		2) an explicit SynchronizationType is specified
+		if ( !getServiceRegistry().getService( TransactionCoordinatorBuilder.class ).isJta() ) {
+			throw new IllegalStateException(
+					"Illegal attempt to specify a SynchronizationType when building an EntityManager from a " +
+							"EntityManagerFactory defined as RESOURCE_LOCAL (as opposed to JTA)"
+			);
+		}
 	}
 
 	@Override
-	public EntityManager createEntityManager(SynchronizationType synchronizationType, Map map) {
-		return null;
+	public Session createEntityManager(SynchronizationType synchronizationType, Map map) {
+		errorIfResourceLocalDueToExplicitSynchronizationType();
+		return buildEntityManager( synchronizationType, map );
 	}
 
 	@Override
@@ -884,9 +922,10 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		private StatementInspector statementInspector;
 		private Connection connection;
 		private PhysicalConnectionHandlingMode connectionHandlingMode;
-		private boolean autoClose;
 		private boolean autoJoinTransactions = true;
-		private boolean flushBeforeCompletion;
+		private FlushMode flushMode;
+		private boolean autoClose;
+		private boolean autoClear;
 		private String tenantIdentifier;
 		private List<SessionEventListener> listeners;
 
@@ -902,7 +941,9 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			this.statementInspector = sessionFactory.getSessionFactoryOptions().getStatementInspector();
 			this.connectionHandlingMode = sessionFactory.getSessionFactoryOptions().getPhysicalConnectionHandlingMode();
 			this.autoClose = sessionFactory.getSessionFactoryOptions().isAutoCloseSessionEnabled();
-			this.flushBeforeCompletion = sessionFactory.getSessionFactoryOptions().isFlushBeforeCompletionEnabled();
+			this.flushMode = sessionFactory.getSessionFactoryOptions().isFlushBeforeCompletionEnabled()
+					? FlushMode.AUTO
+					: FlushMode.MANUAL;
 
 			if ( sessionFactory.getCurrentTenantIdentifierResolver() != null ) {
 				tenantIdentifier = sessionFactory.getCurrentTenantIdentifierResolver().resolveCurrentTenantIdentifier();
@@ -953,6 +994,26 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		@Override
+		public boolean shouldAutoJoinTransactions() {
+			return autoJoinTransactions;
+		}
+
+		@Override
+		public FlushMode getInitialSessionFlushMode() {
+			return flushMode;
+		}
+
+		@Override
+		public boolean shouldAutoClose() {
+			return autoClose;
+		}
+
+		@Override
+		public boolean shouldAutoClear() {
+			return autoClear;
+		}
+
+		@Override
 		public Connection getConnection() {
 			return connection;
 		}
@@ -993,26 +1054,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		@Override
 		public String getTenantIdentifier() {
 			return tenantIdentifier;
-		}
-
-		@Override
-		public PersistenceUnitTransactionType getPersistenceUnitTransactionType() {
-			return persistenceUnitTransactionType;
-		}
-
-		@Override
-		public SynchronizationType getSynchronizationType() {
-			return autoJoinTransactions ? SynchronizationType.SYNCHRONIZED : SynchronizationType.UNSYNCHRONIZED;
-		}
-
-		@Override
-		public boolean isClearStateOnCloseEnabled() {
-			return autoClose;
-		}
-
-		@Override
-		public boolean isFlushBeforeCompletionEnabled() {
-			return flushBeforeCompletion;
 		}
 
 
@@ -1103,8 +1144,15 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		@Override
 		@SuppressWarnings("unchecked")
-		public T flushBeforeCompletion(boolean flushBeforeCompletion) {
-			this.flushBeforeCompletion = flushBeforeCompletion;
+		public T autoClear(boolean autoClear) {
+			this.autoClear = autoClear;
+			return (T) this;
+		}
+
+		@Override
+		@SuppressWarnings("unchecked")
+		public T flushMode(FlushMode flushMode) {
+			this.flushMode = flushMode;
 			return (T) this;
 		}
 
@@ -1126,13 +1174,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		@SuppressWarnings("unchecked")
 		public T clearEventListeners() {
 			listeners.clear();
-			return (T) this;
-		}
-
-		@Override
-		@SuppressWarnings("unchecked")
-		public T persistenceUnitTransactionType(PersistenceUnitTransactionType persistenceUnitTransactionType) {
-			this.persistenceUnitTransactionType = persistenceUnitTransactionType;
 			return (T) this;
 		}
 	}
@@ -1168,23 +1209,23 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		@Override
-		public SessionOwner getSessionOwner() {
-			return null;
+		public boolean shouldAutoJoinTransactions() {
+			return true;
 		}
 
 		@Override
-		public ExceptionMapper getExceptionMapper() {
-			return null;
+		public FlushMode getInitialSessionFlushMode() {
+			return FlushMode.ALWAYS;
 		}
 
 		@Override
-		public AfterCompletionAction getAfterCompletionAction() {
-			return null;
+		public boolean shouldAutoClose() {
+			return false;
 		}
 
 		@Override
-		public ManagedFlushChecker getManagedFlushChecker() {
-			return null;
+		public boolean shouldAutoClear() {
+			return false;
 		}
 
 		@Override
@@ -1227,23 +1268,23 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		@Override
-		public PersistenceUnitTransactionType getPersistenceUnitTransactionType() {
+		public SessionOwner getSessionOwner() {
 			return null;
 		}
 
 		@Override
-		public SynchronizationType getSynchronizationType() {
+		public ExceptionMapper getExceptionMapper() {
 			return null;
 		}
 
 		@Override
-		public boolean isClearStateOnCloseEnabled() {
-			return false;
+		public AfterCompletionAction getAfterCompletionAction() {
+			return null;
 		}
 
 		@Override
-		public boolean isFlushBeforeCompletionEnabled() {
-			return false;
+		public ManagedFlushChecker getManagedFlushChecker() {
+			return null;
 		}
 	}
 

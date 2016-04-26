@@ -52,8 +52,8 @@
 
         <para>
             Transaction handling per Session is handled by the
-            <interfacename>org.hibernate.resource.transaction.TransactionCoordinator</interfacename> contract, which
-            are built by the <interfacename>org.hibernate.resource.transaction.TransactionCoordinatorBuilder</interfacename>
+            <interfacename>org.hibernate.resource.transaction.spi.TransactionCoordinator</interfacename> contract, which
+            are built by the <interfacename>org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder</interfacename>
             service.  TransactionCoordinatorBuilder represents a strategy for dealing with transactions whereas
             TransactionCoordinator represents one instance of that strategy related to a Session.  Which
             TransactionCoordinatorBuilder implementation to use is defined by the

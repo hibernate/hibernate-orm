@@ -7,9 +7,8 @@
 package org.hibernate.internal;
 
 import java.sql.Connection;
-import javax.persistence.SynchronizationType;
-import javax.persistence.spi.PersistenceUnitTransactionType;
 
+import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
 import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -25,22 +24,13 @@ public interface SessionCreationOptions {
 	// todo : (5.2) review this. intended as a consolidation of the options needed to create a Session
 	//		comes from building a Session and a EntityManager
 
-	/**
-	 * Access to the SessionOwner, which defines the contract for things that can wrap a Session
-	 *
-	 * @return The SessionOwner
-	 *
-	 * @deprecated since 6.0 SessionOwner is no longer pertinent due to the
-	 * hibernate-entitymanager -> hibernate-core consolidation
-	 */
-	@Deprecated
-	SessionOwner getSessionOwner();
+	boolean shouldAutoJoinTransactions();
 
-	ExceptionMapper getExceptionMapper();
+	FlushMode getInitialSessionFlushMode();
 
-	AfterCompletionAction getAfterCompletionAction();
+	boolean shouldAutoClose();
 
-	ManagedFlushChecker getManagedFlushChecker();
+	boolean shouldAutoClear();
 
 	Connection getConnection();
 
@@ -52,15 +42,25 @@ public interface SessionCreationOptions {
 
 	String getTenantIdentifier();
 
-	PersistenceUnitTransactionType getPersistenceUnitTransactionType();
 
-	SynchronizationType getSynchronizationType();
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// deprecations
 
-	boolean isClearStateOnCloseEnabled();
+	/**
+	 * Access to the SessionOwner, which defines the contract for things that can wrap a Session
+	 *
+	 * @return The SessionOwner
+	 *
+	 * @deprecated (since 5,2) SessionOwner is no longer pertinent due to the
+	 * hibernate-entitymanager -> hibernate-core consolidation
+	 */
+	@Deprecated
+	SessionOwner getSessionOwner();
 
-	boolean isFlushBeforeCompletionEnabled();
+	ExceptionMapper getExceptionMapper();
 
-	// not sure of these are needed
-//	boolean isAutoCloseSessionEnabled();
-//	PersistenceContextType getPersistenceContextType();
+	AfterCompletionAction getAfterCompletionAction();
+
+	ManagedFlushChecker getManagedFlushChecker();
+
 }

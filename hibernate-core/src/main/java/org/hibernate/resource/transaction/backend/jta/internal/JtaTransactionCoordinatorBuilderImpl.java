@@ -6,10 +6,9 @@
  */
 package org.hibernate.resource.transaction.backend.jta.internal;
 
-import org.hibernate.ConnectionAcquisitionMode;
-import org.hibernate.ConnectionReleaseMode;
-import org.hibernate.resource.transaction.TransactionCoordinator;
-import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
 
 /**
@@ -21,7 +20,7 @@ public class JtaTransactionCoordinatorBuilderImpl implements TransactionCoordina
 	public static final String SHORT_NAME = "jta";
 
 	@Override
-	public TransactionCoordinator buildTransactionCoordinator(TransactionCoordinatorOwner owner, TransactionCoordinatorOptions options) {
+	public TransactionCoordinator buildTransactionCoordinator(TransactionCoordinatorOwner owner, Options options) {
 		return new JtaTransactionCoordinatorImpl(
 				this,
 				owner,
@@ -35,12 +34,8 @@ public class JtaTransactionCoordinatorBuilderImpl implements TransactionCoordina
 	}
 
 	@Override
-	public ConnectionReleaseMode getDefaultConnectionReleaseMode() {
-		return ConnectionReleaseMode.AFTER_STATEMENT;
-	}
-
-	@Override
-	public ConnectionAcquisitionMode getDefaultConnectionAcquisitionMode() {
-		return ConnectionAcquisitionMode.AS_NEEDED;
+	public PhysicalConnectionHandlingMode getDefaultConnectionHandlingMode() {
+		// todo : I want to change this to PhysicalConnectionHandlingMode#IMMEDIATE_ACQUISITION_AND_HOLD
+		return PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT;
 	}
 }

@@ -6,8 +6,6 @@
  */
 package org.hibernate.resource.transaction.spi;
 
-import org.hibernate.resource.transaction.SynchronizationRegistry;
-
 /**
  * SPI contract for SynchronizationRegistry implementors.
  *

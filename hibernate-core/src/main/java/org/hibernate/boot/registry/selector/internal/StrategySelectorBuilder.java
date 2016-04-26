@@ -86,9 +86,9 @@ import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.persistent.PersistentTableBulkIdStrategy;
-import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 
 import org.jboss.logging.Logger;
 

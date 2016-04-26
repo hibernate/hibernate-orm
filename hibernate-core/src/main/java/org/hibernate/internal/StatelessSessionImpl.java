@@ -426,12 +426,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public void disableTransactionAutoJoin() {
-		throw new UnsupportedOperationException();
-	}
-
-
-	@Override
 	protected Object load(String entityName, Serializable identifier) {
 		return null;
 	}

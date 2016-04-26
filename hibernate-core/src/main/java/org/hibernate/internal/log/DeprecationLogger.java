@@ -230,4 +230,12 @@ public interface DeprecationLogger extends BasicLogger {
 			value = "Hibernate's legacy org.hibernate.Criteria API is deprecated; use the JPA javax.persistence.criteria.CriteriaQuery instead"
 	)
 	void deprecatedLegacyCriteria();
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000023,
+			value = "Encountered use of deprecated Connection handling settings [hibernate.connection.acquisition_mode]" +
+					"or [hibernate.connection.release_mode]; use [hibernate.connection.handling_mode] instead"
+	)
+	void logUseOfDeprecatedConnectionHandlingSettings();
 }

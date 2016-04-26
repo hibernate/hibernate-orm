@@ -7,7 +7,6 @@
 package org.hibernate;
 
 import java.sql.Connection;
-import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -92,21 +91,41 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 * @param autoJoinTransactions Should JTA transactions be automatically joined
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @see javax.persistence.SynchronizationType#SYNCHRONIZED
 	 */
 	T autoJoinTransactions(boolean autoJoinTransactions);
 
 	/**
-	 * Should the session be automatically closed afterQuery transaction completion.
+	 * Should the session be automatically closed after transaction completion?
 	 *
 	 * @param autoClose Should the session be automatically closed
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @deprecated Only integrations can specify autoClosing behavior of individual sessions.  See
-	 * {@link org.hibernate.engine.spi.SessionOwner}
+	 * @see javax.persistence.PersistenceContextType
 	 */
-	@Deprecated
 	T autoClose(boolean autoClose);
+
+	/**
+	 * Should the session be automatically cleared on a failed transaction?
+	 *
+	 * @param autoClear Whether the Session should be automatically cleared
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	T autoClear(boolean autoClear);
+
+	/**
+	 * Specify the initial FlushMode to use for the opened Session
+	 *
+	 * @param flushMode The initial FlushMode to use for the opened Session
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see javax.persistence.PersistenceContextType
+	 */
+	T flushMode(FlushMode flushMode);
 
 	/**
 	 * Should the session be automatically flushed during the "beforeQuery completion" phase of transaction handling.
@@ -114,8 +133,20 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 * @param flushBeforeCompletion Should the session be automatically flushed
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (since 5.2) use {@link #flushMode(FlushMode)} instead.
 	 */
-	T flushBeforeCompletion(boolean flushBeforeCompletion);
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default T flushBeforeCompletion(boolean flushBeforeCompletion) {
+		if ( flushBeforeCompletion ) {
+			flushMode( FlushMode.ALWAYS );
+		}
+		else {
+			flushMode( FlushMode.MANUAL );
+		}
+		return (T) this;
+	}
 
 	/**
 	 * Define the tenant identifier to be associated with the opened session.
@@ -142,7 +173,5 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 * {@code this}, for method chaining
 	 */
 	T clearEventListeners();
-
-	T persistenceUnitTransactionType(PersistenceUnitTransactionType persistenceUnitTransactionType);
 
 }

@@ -12,12 +12,12 @@ import org.hibernate.HibernateException;
 import org.hibernate.TransactionException;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.internal.CoreLogging;
-import org.hibernate.resource.transaction.TransactionCoordinator;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.resource.transaction.TransactionCoordinator.TransactionDriver;
+import static org.hibernate.resource.transaction.spi.TransactionCoordinator.TransactionDriver;
 
 /**
  * @author Andrea Boriero

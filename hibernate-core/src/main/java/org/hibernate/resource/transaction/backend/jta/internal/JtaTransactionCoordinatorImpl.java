@@ -21,9 +21,6 @@ import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
-import org.hibernate.resource.transaction.SynchronizationRegistry;
-import org.hibernate.resource.transaction.TransactionCoordinator;
-import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.RegisteredSynchronization;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.SynchronizationCallbackCoordinator;
@@ -31,6 +28,9 @@ import org.hibernate.resource.transaction.backend.jta.internal.synchronization.S
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.SynchronizationCallbackCoordinatorTrackingImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.SynchronizationCallbackTarget;
 import org.hibernate.resource.transaction.internal.SynchronizationRegistryStandardImpl;
+import org.hibernate.resource.transaction.spi.SynchronizationRegistry;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 

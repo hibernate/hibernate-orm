@@ -7,7 +7,7 @@
 package org.hibernate.resource.jdbc.spi;
 
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
-import org.hibernate.resource.transaction.TransactionCoordinator;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 
 /**
  * Contract for something that controls a JdbcSessionContext.  The name comes from the

@@ -35,7 +35,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jdbc.Work;
-import org.hibernate.resource.transaction.TransactionCoordinator;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;

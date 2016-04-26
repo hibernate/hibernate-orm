@@ -19,14 +19,12 @@ import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.PersistenceException;
 import javax.persistence.StoredProcedureQuery;
-import javax.persistence.SynchronizationType;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Selection;
 import javax.persistence.metamodel.Metamodel;
-import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
@@ -65,7 +63,7 @@ import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
-import org.hibernate.resource.transaction.TransactionCoordinator;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
@@ -140,11 +138,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void setAutoClear(boolean enabled) {
 		delegate.setAutoClear( enabled );
-	}
-
-	@Override
-	public void disableTransactionAutoJoin() {
-		delegate.disableTransactionAutoJoin();
 	}
 
 	@Override
@@ -1114,16 +1107,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void addEventListeners(SessionEventListener... listeners) {
 		delegate.addEventListeners( listeners );
-	}
-
-	@Override
-	public PersistenceUnitTransactionType getTransactionType() {
-		return delegate.getTransactionType();
-	}
-
-	@Override
-	public SynchronizationType getSynchronizationType() {
-		return delegate.getSynchronizationType();
 	}
 
 	@Override

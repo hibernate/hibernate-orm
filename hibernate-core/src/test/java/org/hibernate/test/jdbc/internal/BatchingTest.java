@@ -6,11 +6,6 @@
  */
 package org.hibernate.test.jdbc.internal;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 
@@ -28,12 +23,15 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
-import org.hibernate.resource.transaction.TransactionCoordinator;
 
-import org.hibernate.test.common.JournalingBatchObserver;
-import org.hibernate.test.common.JournalingTransactionObserver;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.test.common.JournalingBatchObserver;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole

@@ -6,13 +6,10 @@
  */
 package org.hibernate.test.resource.transaction.jdbc;
 
-import javax.transaction.Synchronization;
-
-import org.hibernate.HibernateException;
 import org.hibernate.TransactionException;
-import org.hibernate.resource.transaction.TransactionCoordinator;
-import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import org.hibernate.test.resource.common.SynchronizationCollectorImpl;
@@ -34,7 +31,7 @@ public class BasicJdbcTransactionTests {
 
 		final TransactionCoordinator transactionCoordinator = transactionCoordinatorBuilder.buildTransactionCoordinator(
 				owner,
-				new TransactionCoordinatorBuilder.TransactionCoordinatorOptions() {
+				new TransactionCoordinatorBuilder.Options() {
 					@Override
 					public boolean shouldAutoJoinTransaction() {
 						return false;
@@ -66,7 +63,7 @@ public class BasicJdbcTransactionTests {
 
 		final TransactionCoordinator transactionCoordinator = transactionCoordinatorBuilder.buildTransactionCoordinator(
 				owner,
-				new TransactionCoordinatorBuilder.TransactionCoordinatorOptions() {
+				new TransactionCoordinatorBuilder.Options() {
 					@Override
 					public boolean shouldAutoJoinTransaction() {
 						return false;
@@ -101,7 +98,7 @@ public class BasicJdbcTransactionTests {
 
 		final TransactionCoordinator transactionCoordinator = transactionCoordinatorBuilder.buildTransactionCoordinator(
 				owner,
-				new TransactionCoordinatorBuilder.TransactionCoordinatorOptions() {
+				new TransactionCoordinatorBuilder.Options() {
 					@Override
 					public boolean shouldAutoJoinTransaction() {
 						return false;

@@ -54,7 +54,7 @@ public class ThreadLocalCurrentSessionTest extends ConnectionManagementTestCase 
 		long initialCount = sessionFactory().getStatistics().getSessionCloseCount();
 		session.getTransaction().commit();
 		long subsequentCount = sessionFactory().getStatistics().getSessionCloseCount();
-		assertEquals( "Session still open afterQuery commit", initialCount + 1, subsequentCount );
+		assertEquals( "Session still open after commit", initialCount + 1, subsequentCount );
 		// also make sure it was cleaned up from the internal ThreadLocal...
 		assertFalse( "session still bound to internal ThreadLocal", TestableThreadLocalContext.hasBind() );
 	}
@@ -90,7 +90,7 @@ public class ThreadLocalCurrentSessionTest extends ConnectionManagementTestCase 
 		Session session = sessionFactory().getCurrentSession();
 		session.beginTransaction();
 		session.getTransaction().commit();
-		assertFalse( "session open afterQuery txn completion", session.isOpen() );
+		assertFalse( "session open after txn completion", session.isOpen() );
 		assertFalse( "session still bound afterQuery txn completion", TestableThreadLocalContext.isSessionBound( session ) );
 
 		Session session2 = sessionFactory().getCurrentSession();

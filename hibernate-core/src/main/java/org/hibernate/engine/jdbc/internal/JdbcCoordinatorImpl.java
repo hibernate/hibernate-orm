@@ -484,6 +484,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	 *
 	 * @throws IOException Trouble accessing the stream
 	 */
+	@Override
 	public void serialize(ObjectOutputStream oos) throws IOException {
 		if ( ! isReadyForSerialization() ) {
 			throw new HibernateException( "Cannot serialize Session while connected" );

@@ -16,12 +16,12 @@ import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
-import org.hibernate.resource.transaction.SynchronizationRegistry;
-import org.hibernate.resource.transaction.TransactionCoordinator;
-import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransaction;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransactionAccess;
 import org.hibernate.resource.transaction.internal.SynchronizationRegistryStandardImpl;
+import org.hibernate.resource.transaction.spi.SynchronizationRegistry;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 

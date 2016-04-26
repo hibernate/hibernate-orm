@@ -39,13 +39,11 @@ import javax.persistence.LockTimeoutException;
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.OptimisticLockException;
-import javax.persistence.PersistenceContextType;
 import javax.persistence.PersistenceException;
 import javax.persistence.PessimisticLockException;
 import javax.persistence.PessimisticLockScope;
 import javax.persistence.QueryTimeoutException;
 import javax.persistence.StoredProcedureQuery;
-import javax.persistence.SynchronizationType;
 import javax.persistence.TransactionRequiredException;
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -53,17 +51,13 @@ import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Selection;
-import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.CacheMode;
-import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Criteria;
-import org.hibernate.EmptyInterceptor;
 import org.hibernate.Filter;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.IdentifierLoadAccess;
-import org.hibernate.Interceptor;
 import org.hibernate.LobHelper;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -188,14 +182,12 @@ import org.hibernate.query.criteria.internal.expression.CompoundSelectionImpl;
 import org.hibernate.query.internal.CollectionFilterImpl;
 import org.hibernate.query.procedure.internal.StoredProcedureQueryImpl;
 import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
-import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.AfterCompletionAction;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ExceptionMapper;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ManagedFlushChecker;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.internal.SessionStatisticsImpl;
@@ -204,7 +196,6 @@ import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
-import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION;
 
 /**
  * Concrete implementation of a Session.
@@ -247,23 +238,19 @@ public final class SessionImpl
 
 	private transient LoadQueryInfluencers loadQueryInfluencers;
 
+	// todo : (5.2) HEM always initialized this.  Is that really needed?
+	private LockOptions lockOptions = new LockOptions();
+
+	private transient boolean autoClear;
+	private transient boolean autoClose;
+
+	private transient int dontFlushFromFind;
+
 	private transient ExceptionMapper exceptionMapper;
 	private transient ManagedFlushChecker managedFlushChecker;
 	private transient AfterCompletionAction afterCompletionAction;
 
-	// todo : (5.2) HEM always initialized this.  Is that really needed?
-	private LockOptions lockOptions = new LockOptions();
-
-	// todo : (5.2) are these still really needed?
-	private transient boolean autoClear; //for EJB3
-	private transient boolean flushBeforeCompletionEnabled;
-	private transient boolean autoCloseSessionEnabled;
-
-	private transient int dontFlushFromFind;
-
-
 	private transient LoadEvent loadEvent; //cached LoadEvent instance
-
 
 
 	public SessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
@@ -275,49 +262,17 @@ public final class SessionImpl
 		this.sessionOwner = options.getSessionOwner();
 		initializeFromSessionOwner( sessionOwner );
 
-		this.autoClear = options.isClearStateOnCloseEnabled();
-		this.flushBeforeCompletionEnabled = options.isFlushBeforeCompletionEnabled();
+		this.autoClear = options.shouldAutoClear();
+		this.autoClose = options.shouldAutoClose();
 
 		if ( options instanceof SharedSessionCreationOptions && ( (SharedSessionCreationOptions) options ).isTransactionCoordinatorShared() ) {
 			final SharedSessionCreationOptions sharedOptions = (SharedSessionCreationOptions) options;
 			if ( sharedOptions.getTransactionCompletionProcesses() != null ) {
 				actionQueue.setTransactionCompletionProcesses( sharedOptions.getTransactionCompletionProcesses(), true );
 			}
-
-			getTransactionCoordinator().addObserver(
-					new TransactionObserver() {
-						@Override
-						public void afterBegin() {
-							log.tracef( "TransactionObserver#afterBegin on Session [%s]", getSessionIdentifier() );
-						}
-
-						@Override
-						public void beforeCompletion() {
-							log.tracef( "TransactionObserver#beforeCompletion on Session [%s]", getSessionIdentifier() );
-							if ( isOpen() && flushBeforeCompletionEnabled ) {
-								SessionImpl.this.managedFlush();
-							}
-							actionQueue.beforeTransactionCompletion();
-							try {
-								getInterceptor().beforeTransactionCompletion( getTransaction() );
-							}
-							catch (Throwable t) {
-								log.exceptionInBeforeTransactionCompletionInterceptor( t );
-							}
-						}
-
-						@Override
-						public void afterCompletion(boolean successful, boolean delayed) {
-							log.tracef( "TransactionObserver#afterCompletion(%s, %s) on Session [%s]", successful, delayed, getSessionIdentifier() );
-							afterTransactionCompletion( successful, delayed );
-						}
-					}
-			);
-
 		}
 		else {
-			this.autoCloseSessionEnabled = getPersistenceContextType() == PersistenceContextType.TRANSACTION
-					&& factory.getSessionFactoryOptions().isAutoCloseSessionEnabled();
+			this.autoClose = options.shouldAutoClose();
 		}
 
 		loadQueryInfluencers = new LoadQueryInfluencers( factory );
@@ -335,41 +290,6 @@ public final class SessionImpl
 		if ( TRACE_ENABLED ) {
 			log.tracef( "Opened Session [%s] at timestamp: %s", getSessionIdentifier(), getTimestamp() );
 		}
-	}
-
-	private PhysicalConnectionHandlingMode interpret(
-			Connection userSuppliedConnection,
-			PhysicalConnectionHandlingMode connectionHandlingMode) {
-		if ( userSuppliedConnection != null ) {
-			return DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION;
-		}
-
-		if ( connectionHandlingMode == null ) {
-			connectionHandlingMode = getFactory().getSessionFactoryOptions().getPhysicalConnectionHandlingMode();
-		}
-
-		if ( connectionHandlingMode.getReleaseMode() == ConnectionReleaseMode.AFTER_STATEMENT ) {
-			if ( !getJdbcConnectionAccess().supportsAggressiveRelease() ) {
-				log.debug( "Connection provider reports to not support aggressive release; overriding" );
-				return PhysicalConnectionHandlingMode.interpret(
-						connectionHandlingMode.getAcquisitionMode(),
-						ConnectionReleaseMode.AFTER_TRANSACTION
-				);
-			}
-		}
-
-		return connectionHandlingMode;
-	}
-
-	private Interceptor interpret(Interceptor interceptor) {
-		return interceptor == null ? EmptyInterceptor.INSTANCE : interceptor;
-	}
-
-	private StatementInspector interpret(StatementInspector statementInspector) {
-		if ( statementInspector == null ) {
-			return (StatementInspector) sql -> getInterceptor().onPrepareStatement( sql );
-		}
-		return statementInspector;
 	}
 
 	private void setDefaultProperties() {
@@ -414,144 +334,6 @@ public final class SessionImpl
 		return determineCacheStoreMode( properties );
 	}
 
-	//	/**
-//	 * Constructor used for openSession(...) processing, as well as construction
-//	 * of sessions for getCurrentSession().
-//	 *
-//	 * @param connection The user-supplied connection to use for this session.
-//	 * @param factory The factory from which this session was obtained
-//	 * @param transactionCoordinator The transaction coordinator to use, may be null to indicate that a new transaction
-//	 * coordinator should get created.
-//	 * @param autoJoinTransactions Should the session automatically join JTA transactions?
-//	 * @param timestamp The timestamp for this session
-//	 * @param interceptor The interceptor to be applied to this session
-//	 * @param flushBeforeCompletionEnabled Should we auto flush beforeQuery completion of transaction
-//	 * @param autoCloseSessionEnabled Should we auto close afterQuery completion of transaction
-//	 * @param connectionReleaseMode The mode by which we should release JDBC connections.
-//	 * @param tenantIdentifier The tenant identifier to use.  May be null
-//	 */
-//	SessionImpl(
-//			final Connection connection,
-//			final SessionFactoryImpl factory,
-//			final SessionOwner sessionOwner,
-//			final TransactionCoordinator transactionCoordinator,
-//			final JdbcCoordinatorImpl jdbcCoordinator,
-//			final Transaction transaction,
-//			final ActionQueue.TransactionCompletionProcesses transactionCompletionProcesses,
-//			final boolean autoJoinTransactions,
-//			final long timestamp,
-//			final Interceptor interceptor,
-//			final StatementInspector statementInspector,
-//			final boolean flushBeforeCompletionEnabled,
-//			final boolean autoCloseSessionEnabled,
-//			final ConnectionReleaseMode connectionReleaseMode,
-//			final String tenantIdentifier) {
-//		super( factory, tenantIdentifier );
-//		this.timestamp = timestamp;
-//		this.sessionOwner = sessionOwner;
-//		this.interceptor = interceptor == null ? EmptyInterceptor.INSTANCE : interceptor;
-//		this.actionQueue = new ActionQueue( this );
-//		this.persistenceContext = new StatefulPersistenceContext( this );
-//
-//		this.autoCloseSessionEnabled = autoCloseSessionEnabled;
-//		this.flushBeforeCompletionEnabled = flushBeforeCompletionEnabled;
-//
-//		initializeFromSessionOwner( sessionOwner );
-//
-//		if ( statementInspector == null ) {
-//			this.statementInspector = new StatementInspector() {
-//				@Override
-//				@SuppressWarnings("deprecation")
-//				public String inspect(String sql) {
-//					return SessionImpl.this.interceptor.onPrepareStatement( sql );
-//				}
-//			};
-//		}
-//		else {
-//			this.statementInspector = statementInspector;
-//		}
-//		this.jdbcSessionContext = new JdbcSessionContextImpl( factory, this.statementInspector );
-//
-//		if ( transactionCoordinator == null ) {
-//			this.isTransactionCoordinatorShared = false;
-//			this.connectionReleaseMode = connectionReleaseMode;
-//			this.autoJoinTransactions = autoJoinTransactions;
-//
-//			this.jdbcCoordinator = new JdbcCoordinatorImpl( connection, this );
-//			this.transactionCoordinator = getTransactionCoordinatorBuilder().buildTransactionCoordinator(
-//					this.jdbcCoordinator,
-//					this
-//			);
-//			this.currentHibernateTransaction = getTransaction();
-//		}
-//		else {
-//			if ( connection != null ) {
-//				throw new SessionException( "Cannot simultaneously share transaction context and specify connection" );
-//			}
-//			this.transactionCoordinator = transactionCoordinator;
-//			this.jdbcCoordinator = jdbcCoordinator;
-//			this.currentHibernateTransaction = transaction;
-//			this.isTransactionCoordinatorShared = true;
-//			this.autoJoinTransactions = false;
-//			if ( transactionCompletionProcesses != null ) {
-//				actionQueue.setTransactionCompletionProcesses( transactionCompletionProcesses, true );
-//			}
-//			if ( autoJoinTransactions ) {
-//				log.debug(
-//						"Session creation specified 'autoJoinTransactions', which is invalid in conjunction " +
-//								"with sharing JDBC connection between sessions; ignoring"
-//				);
-//			}
-//			if ( connectionReleaseMode != this.jdbcCoordinator.getConnectionReleaseMode() ) {
-//				log.debug(
-//						"Session creation specified 'getConnectionReleaseMode', which is invalid in conjunction " +
-//								"with sharing JDBC connection between sessions; ignoring"
-//				);
-//			}
-//			this.connectionReleaseMode = this.jdbcCoordinator.getConnectionReleaseMode();
-//
-//			transactionObserver = new TransactionObserver() {
-//				@Override
-//				public void afterBegin() {
-//				}
-//
-//				@Override
-//				public void beforeCompletion() {
-//					if ( isOpen() && flushBeforeCompletionEnabled ) {
-//						SessionImpl.this.managedFlush();
-//					}
-//					actionQueue.beforeTransactionCompletion();
-//					try {
-//						SessionImpl.this.interceptor.beforeTransactionCompletion( currentHibernateTransaction );
-//					}
-//					catch (Throwable t) {
-//						log.exceptionInBeforeTransactionCompletionInterceptor( t );
-//					}
-//				}
-//
-//				@Override
-//				public void afterCompletion(boolean successful, boolean delayed) {
-//					afterTransactionCompletion( successful, delayed );
-//					if ( !isClosed() && autoCloseSessionEnabled ) {
-//						managedClose();
-//					}
-//				}
-//			};
-//
-//			transactionCoordinator.addObserver( transactionObserver );
-//		}
-//
-//		loadQueryInfluencers = new LoadQueryInfluencers( factory );
-//
-//		if ( factory.getStatistics().isStatisticsEnabled() ) {
-//			factory.getStatistics().openSession();
-//		}
-//
-//		if ( TRACE_ENABLED ) {
-//			log.tracef( "Opened session at timestamp: %s", timestamp );
-//		}
-//
-//	}
 
 	private void initializeFromSessionOwner(SessionOwner sessionOwner) {
 		if ( sessionOwner != null ) {
@@ -658,12 +440,7 @@ public final class SessionImpl
 
 	@Override
 	public boolean isAutoCloseSessionEnabled() {
-		return autoCloseSessionEnabled;
-	}
-
-	@Override
-	public boolean shouldAutoJoinTransaction() {
-		return getSynchronizationType() == SynchronizationType.SYNCHRONIZED;
+		return autoClose;
 	}
 
 	@Override
@@ -708,6 +485,9 @@ public final class SessionImpl
 			return sessionOwner.shouldAutoCloseSession();
 		}
 		else {
+			// JPA technically requires that this be a PersistentUnityTransactionType#JTA to work,
+			// but we do not assert that here...
+			//return isAutoCloseSessionEnabled() && getTransactionCoordinator().getTransactionCoordinatorBuilder().isJta();
 			return isAutoCloseSessionEnabled();
 		}
 	}
@@ -2480,7 +2260,11 @@ public final class SessionImpl
 	public void afterTransactionCompletion(boolean successful, boolean delayed) {
 		log.tracef( "SessionImpl#afterTransactionCompletion(successful=%s, delayed=%s)", successful, delayed );
 
-		afterCompletionAction.doAction( successful, this );
+		if ( !isClosed() ) {
+			if ( !successful && autoClear ) {
+				clear();
+			}
+		}
 
 		persistenceContext.afterTransactionCompletion();
 		actionQueue.afterTransactionCompletion( successful );
@@ -2503,20 +2287,6 @@ public final class SessionImpl
 				managedClose();
 			}
 		}
-
-		if ( autoClear ) {
-			internalClear();
-		}
-	}
-
-	@Override
-	public PersistenceUnitTransactionType getTransactionType() {
-		return super.getTransactionType();
-	}
-
-	@Override
-	public SynchronizationType getSynchronizationType() {
-		return super.getSynchronizationType();
 	}
 
 	private static class LobHelperImpl implements LobHelper {
@@ -2614,13 +2384,13 @@ public final class SessionImpl
 		}
 
 		@Override
-		public T autoClose() {
-			return autoClose( session.autoCloseSessionEnabled );
+		public T flushMode() {
+			return flushMode( session.getHibernateFlushMode() );
 		}
 
 		@Override
-		public T flushBeforeCompletion() {
-			return flushBeforeCompletion( session.flushBeforeCompletionEnabled );
+		public T autoClose() {
+			return autoClose( session.autoClose );
 		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2717,7 +2487,7 @@ public final class SessionImpl
 
 					@Override
 					public void beforeCompletion() {
-						if ( isOpen() && flushBeforeCompletionEnabled ) {
+						if ( isOpen() && getHibernateFlushMode() !=  FlushMode.MANUAL ) {
 							managedFlush();
 						}
 						actionQueue.beforeTransactionCompletion();
@@ -2732,7 +2502,7 @@ public final class SessionImpl
 					@Override
 					public void afterCompletion(boolean successful, boolean delayed) {
 						afterTransactionCompletion( successful, delayed );
-						if ( !isClosed() && autoCloseSessionEnabled ) {
+						if ( !isClosed() && autoClose ) {
 							managedClose();
 						}
 					}
@@ -3221,9 +2991,12 @@ public final class SessionImpl
 
 	@Override
 	public void flushBeforeTransactionCompletion() {
-		boolean flush = isTransactionFlushable() && managedFlushChecker.shouldDoManagedFlush( this );
+		final boolean doFlush = ! isClosed()
+				&& isTransactionFlushable()
+				&& getHibernateFlushMode() != FlushMode.MANUAL;
+
 		try {
-			if ( flush ) {
+			if ( doFlush ) {
 				managedFlush();
 			}
 		}
@@ -3243,7 +3016,7 @@ public final class SessionImpl
 
 	@Override
 	public boolean isFlushBeforeCompletionEnabled() {
-		return flushBeforeCompletionEnabled;
+		return getHibernateFlushMode() != FlushMode.MANUAL;
 	}
 
 	private static final AfterCompletionAction STANDARD_AFTER_COMPLETION_ACTION = (AfterCompletionAction) (successful, session) -> {
@@ -3254,13 +3027,10 @@ public final class SessionImpl
 	public static class ManagedFlushCheckerStandardImpl implements ManagedFlushChecker {
 		@Override
 		public boolean shouldDoManagedFlush(SessionImplementor session) {
-			final FlushMode flushMode = session.getHibernateFlushMode();
-			final boolean isFlushModeNever = flushMode == FlushMode.MANUAL;
-			return ( !isFlushModeNever &&
-					!session.isFlushBeforeCompletionEnabled() ) ||
-					!session.isClosed()
-							&& !isFlushModeNever
-							&& session.isFlushBeforeCompletionEnabled();
+			if ( session.isClosed() ) {
+				return false;
+			}
+			return session.getHibernateFlushMode() != FlushMode.MANUAL;
 		}
 	}
 
@@ -4001,7 +3771,7 @@ public final class SessionImpl
 	}
 
 	private void joinTransaction(boolean explicitRequest) {
-		if ( getTransactionType() != PersistenceUnitTransactionType.JTA ) {
+		if ( !getTransactionCoordinator().getTransactionCoordinatorBuilder().isJta() ) {
 			if ( explicitRequest ) {
 				log.callingJoinTransactionOnNonJtaEntityManager();
 			}
@@ -4104,11 +3874,8 @@ public final class SessionImpl
 	 *
 	 * @throws IOException Indicates a general IO stream exception
 	 */
-	@Override
-	protected void writeObject(ObjectOutputStream oos) throws IOException {
+	private void writeObject(ObjectOutputStream oos) throws IOException {
 		log.tracef( "Serializing Session [%s]", getSessionIdentifier() );
-
-		super.writeObject( oos );
 
 		oos.defaultWriteObject();
 
@@ -4126,11 +3893,8 @@ public final class SessionImpl
 	 * @throws IOException Indicates a general IO stream exception
 	 * @throws ClassNotFoundException Indicates a class resolution issue
 	 */
-	@Override
-	protected void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException, SQLException {
+	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException, SQLException {
 		log.tracef( "Deserializing Session [%s]", getSessionIdentifier() );
-
-		super.readObject( ois );
 
 		ois.defaultReadObject();
 

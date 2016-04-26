@@ -6,6 +6,10 @@
  */
 package org.hibernate.cache.infinispan.query;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 
@@ -17,16 +21,12 @@ import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.cache.infinispan.util.InvocationAfterCompletion;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.resource.transaction.TransactionCoordinator;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
+
 import org.infinispan.AdvancedCache;
 import org.infinispan.configuration.cache.TransactionConfiguration;
 import org.infinispan.context.Flag;
 import org.infinispan.transaction.TransactionMode;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 /**
  * Region for caching query results.

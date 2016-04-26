@@ -9,7 +9,7 @@ package org.hibernate.internal;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
-import org.hibernate.resource.transaction.TransactionCoordinator;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 
 /**
  * An extension of SessionCreationOptions for cases where the Session to be created shares

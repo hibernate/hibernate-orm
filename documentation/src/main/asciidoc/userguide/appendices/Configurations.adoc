@@ -424,7 +424,8 @@ Should we prefer using the `org.hibernate.engine.transaction.jta.platform.spi.Jt
 |`hibernate.transaction.auto_close_session` |`true` or `false` (default value) |Causes the session to be closed during the after completion phase of the transaction. If possible, use built-in and automatic session context management instead.
 |`hibernate.transaction.coordinator_class` | a|
 
-Names the implementation of `org.hibernate.resource.transaction.TransactionCoordinatorBuilder` to use for creating `org.hibernate.resource.transaction.TransactionCoordinator` instances.
+Names the implementation of `org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder` to use for creating
+`org.hibernate.resource.transaction.spi.TransactionCoordinator` instances.
 
 Can be
 

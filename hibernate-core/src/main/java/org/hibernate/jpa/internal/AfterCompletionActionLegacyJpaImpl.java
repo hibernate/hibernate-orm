@@ -6,8 +6,6 @@
  */
 package org.hibernate.jpa.internal;
 
-import javax.persistence.spi.PersistenceUnitTransactionType;
-
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.AfterCompletionAction;
 
@@ -31,7 +29,7 @@ public class AfterCompletionActionLegacyJpaImpl implements AfterCompletionAction
 			return;
 		}
 
-		if ( !successful && session.getTransactionType() == PersistenceUnitTransactionType.JTA ) {
+		if ( !successful && session.getTransactionCoordinator().getTransactionCoordinatorBuilder().isJta() ) {
 			session.clear();
 		}
 	}

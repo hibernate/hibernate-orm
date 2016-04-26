@@ -46,12 +46,13 @@ import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.internal.SessionFactoryImpl;
+import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
@@ -66,6 +67,7 @@ import static org.hibernate.cfg.AvailableSettings.BATCH_FETCH_STYLE;
 import static org.hibernate.cfg.AvailableSettings.BATCH_VERSIONED_DATA;
 import static org.hibernate.cfg.AvailableSettings.CACHE_REGION_PREFIX;
 import static org.hibernate.cfg.AvailableSettings.CHECK_NULLABILITY;
+import static org.hibernate.cfg.AvailableSettings.CONNECTION_HANDLING;
 import static org.hibernate.cfg.AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_BATCH_FETCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_ENTITY_MODE;
@@ -587,7 +589,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 					true
 			);
 
-			this.flushBeforeCompletionEnabled = cfgService.getSetting( FLUSH_BEFORE_COMPLETION, BOOLEAN, false );
+			this.flushBeforeCompletionEnabled = cfgService.getSetting( FLUSH_BEFORE_COMPLETION, BOOLEAN, true );
 			this.autoCloseSessionEnabled = cfgService.getSetting( AUTO_CLOSE_SESSION, BOOLEAN, false );
 
 			this.statisticsEnabled = cfgService.getSetting( GENERATE_STATISTICS, BOOLEAN, false );
@@ -730,34 +732,71 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 			);
 			this.jdbcFetchSize = ConfigurationHelper.getInteger( STATEMENT_FETCH_SIZE, configurationSettings );
 
-			final ConnectionAcquisitionMode connectionAcquisitionMode = ConnectionAcquisitionMode.interpret(
-					ConfigurationHelper.getString(
-							ACQUIRE_CONNECTIONS,
-							configurationSettings,
-							ConnectionAcquisitionMode.AS_NEEDED.name()
-					)
-			);
-
-			final ConnectionReleaseMode connectionReleaseMode;
-			final String releaseModeName = ConfigurationHelper.getString( RELEASE_CONNECTIONS, configurationSettings, "auto" );
-			if ( "auto".equals( releaseModeName ) ) {
-				// nothing was specified (or someone happened to configure the "magic" value)
-				if ( connectionAcquisitionMode == ConnectionAcquisitionMode.IMMEDIATELY ) {
-					connectionReleaseMode = ConnectionReleaseMode.ON_CLOSE;
-				}
-				else {
-					connectionReleaseMode = serviceRegistry.getService( TransactionCoordinatorBuilder.class )
-							.getDefaultConnectionReleaseMode();
-				}
-			}
-			else {
-				connectionReleaseMode = ConnectionReleaseMode.parse( releaseModeName );
-			}
-			this.connectionHandlingMode = PhysicalConnectionHandlingMode.interpret( connectionAcquisitionMode, connectionReleaseMode );
+			this.connectionHandlingMode = interpretConnectionHandlingMode( configurationSettings, serviceRegistry );
 
 			this.commentsEnabled = ConfigurationHelper.getBoolean( USE_SQL_COMMENTS, configurationSettings );
 
 			this.preferUserTransaction = ConfigurationHelper.getBoolean( PREFER_USER_TRANSACTION, configurationSettings, false  );
+		}
+
+		private PhysicalConnectionHandlingMode interpretConnectionHandlingMode(
+				Map configurationSettings,
+				StandardServiceRegistry serviceRegistry) {
+			final PhysicalConnectionHandlingMode specifiedHandlingMode = PhysicalConnectionHandlingMode.interpret(
+					configurationSettings.get( CONNECTION_HANDLING )
+			);
+
+			if ( specifiedHandlingMode != null ) {
+				return specifiedHandlingMode;
+			}
+
+
+			final TransactionCoordinatorBuilder transactionCoordinatorBuilder = serviceRegistry.getService( TransactionCoordinatorBuilder.class );
+
+			// see if the deprecated ConnectionAcquisitionMode/ConnectionReleaseMode were used..
+			final ConnectionAcquisitionMode specifiedAcquisitionMode = ConnectionAcquisitionMode.interpret(
+					configurationSettings.get( ACQUIRE_CONNECTIONS )
+			);
+			final ConnectionReleaseMode specifiedReleaseMode = ConnectionReleaseMode.interpret(
+					configurationSettings.get( RELEASE_CONNECTIONS )
+			);
+			if ( specifiedAcquisitionMode != null || specifiedReleaseMode != null ) {
+				return interpretConnectionHandlingMode( specifiedAcquisitionMode, specifiedReleaseMode, configurationSettings, transactionCoordinatorBuilder );
+			}
+
+			return transactionCoordinatorBuilder.getDefaultConnectionHandlingMode();
+		}
+
+		@Deprecated
+		private PhysicalConnectionHandlingMode interpretConnectionHandlingMode(
+				ConnectionAcquisitionMode specifiedAcquisitionMode,
+				ConnectionReleaseMode specifiedReleaseMode,
+				Map configurationSettings,
+				TransactionCoordinatorBuilder transactionCoordinatorBuilder) {
+			DeprecationLogger.DEPRECATION_LOGGER.logUseOfDeprecatedConnectionHandlingSettings();
+
+			final ConnectionAcquisitionMode effectiveAcquisitionMode = specifiedAcquisitionMode == null
+					? ConnectionAcquisitionMode.AS_NEEDED
+					: specifiedAcquisitionMode;
+
+			final ConnectionReleaseMode effectiveReleaseMode;
+			if ( specifiedReleaseMode == null ) {
+				// check the actual setting.  If we get in here it *should* be "auto" or null
+				final String releaseModeName = ConfigurationHelper.getString( RELEASE_CONNECTIONS, configurationSettings, "auto" );
+				assert "auto".equalsIgnoreCase( releaseModeName );
+				// nothing was specified (or someone happened to configure the "magic" value)
+				if ( effectiveAcquisitionMode == ConnectionAcquisitionMode.IMMEDIATELY ) {
+					effectiveReleaseMode = ConnectionReleaseMode.ON_CLOSE;
+				}
+				else {
+					effectiveReleaseMode = transactionCoordinatorBuilder.getDefaultConnectionReleaseMode();
+				}
+			}
+			else {
+				effectiveReleaseMode = specifiedReleaseMode;
+			}
+
+			return PhysicalConnectionHandlingMode.interpret( effectiveAcquisitionMode, effectiveReleaseMode );
 		}
 
 		@Override

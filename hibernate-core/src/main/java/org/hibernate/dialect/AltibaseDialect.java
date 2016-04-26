@@ -45,7 +45,7 @@ public class AltibaseDialect extends Dialect {
 
 	protected void registerCharacterTypeMappings() {
 		registerColumnType( Types.CHAR, "char(1)" );
-		registerColumnType( Types.VARCHAR, 32767, "varchar($l)" );
+		registerColumnType( Types.VARCHAR, 32000, "varchar($l)" );
 		registerColumnType( Types.VARCHAR, "clob" );
 		registerColumnType( Types.LONGVARCHAR, "varchar(32000)" );
 	}

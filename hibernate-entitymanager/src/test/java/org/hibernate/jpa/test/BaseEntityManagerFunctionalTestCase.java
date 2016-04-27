@@ -284,6 +284,10 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		if ( em == null ) {
 			return;
 		}
+		if ( !em.isOpen() ) {
+			return;
+		}
+
 		if ( em.getTransaction().isActive() ) {
 			em.getTransaction().rollback();
             log.warn("You left an open transaction! Fix your test case. For now, we are closing it for you.");

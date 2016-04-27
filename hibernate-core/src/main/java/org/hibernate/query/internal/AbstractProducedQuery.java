@@ -56,14 +56,12 @@ import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.proxy.HibernateProxyHelper;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.SerializableType;
-import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
 import static org.hibernate.jpa.QueryHints.HINT_CACHEABLE;
@@ -1131,6 +1129,20 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		beforeQuery();
 		try {
 			return doExecuteUpdate();
+		}
+		catch ( QueryExecutionRequestException e) {
+			throw new IllegalStateException( e );
+		}
+		catch( TypeMismatchException e ) {
+			throw new IllegalArgumentException( e );
+		}
+		catch ( HibernateException e) {
+			if ( getProducer().getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
+				throw getProducer().convert( e );
+			}
+			else {
+				throw e;
+			}
 		}
 		finally {
 			afterQuery();

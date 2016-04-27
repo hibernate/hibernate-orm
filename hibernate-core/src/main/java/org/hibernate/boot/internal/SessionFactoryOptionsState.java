@@ -19,6 +19,7 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
@@ -38,6 +39,11 @@ import org.hibernate.tuple.entity.EntityTuplizerFactory;
 public interface SessionFactoryOptionsState {
 	StandardServiceRegistry getServiceRegistry();
 
+	/**
+	 * @deprecated (since 5.2) see {@link SessionFactoryOptions#isJpaBootstrap} for details
+	 * on deprecation and intention/use.
+	 */
+	@Deprecated
 	boolean isJpaBootstrap();
 
 	Object getBeanManagerReference();

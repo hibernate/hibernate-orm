@@ -869,7 +869,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	protected void populate(SessionFactoryBuilder sfBuilder, StandardServiceRegistry ssr) {
-		( ( SessionFactoryBuilderImplementor) sfBuilder ).markAsJpaBootstrap( true );
+		( ( SessionFactoryBuilderImplementor) sfBuilder ).markAsJpaBootstrap();
 
 		final StrategySelector strategySelector = ssr.getService( StrategySelector.class );
 

@@ -27,21 +27,21 @@ public class TransactionImpl implements TransactionImplementor {
 	private static final Logger LOG = CoreLogging.logger( TransactionImpl.class );
 
 	private final TransactionCoordinator transactionCoordinator;
-	private final TransactionDriver transactionDriverControl;
-
-	private boolean valid = true;
+	private TransactionDriver transactionDriverControl;
 
 	public TransactionImpl(TransactionCoordinator transactionCoordinator) {
 		this.transactionCoordinator = transactionCoordinator;
-		this.transactionDriverControl = transactionCoordinator.getTransactionDriverControl();
 	}
 
 	@Override
 	public void begin() {
-		if ( !valid ) {
-			throw new TransactionException( "Transaction instance is no longer valid" );
+		if ( !transactionCoordinator.isActive() ) {
+			throw new TransactionException( "Cannot begin Transaction on closed Session/EntityManager" );
 		}
 
+		if ( transactionDriverControl == null ) {
+			transactionDriverControl = transactionCoordinator.getTransactionDriverControl();
+		}
 		// per-JPA
 		if ( isActive() ) {
 			throw new IllegalStateException( "Transaction already active" );
@@ -61,11 +61,19 @@ public class TransactionImpl implements TransactionImplementor {
 		LOG.debug( "committing" );
 
 		try {
-			this.transactionDriverControl.commit();
+			internalGetTransactionDriverControl().commit();
 		}
 		finally {
-			invalidate();
+//			invalidate();
 		}
+	}
+
+	public TransactionDriver internalGetTransactionDriverControl() {
+		// NOTE here to help be a more descriptive NullPointerException
+		if ( this.transactionDriverControl == null ) {
+			throw new IllegalStateException( "Transaction was not properly begun/started" );
+		}
+		return this.transactionDriverControl;
 	}
 
 	@Override
@@ -76,7 +84,7 @@ public class TransactionImpl implements TransactionImplementor {
 		if ( status == TransactionStatus.ROLLED_BACK || status == TransactionStatus.NOT_ACTIVE ) {
 			// Allow rollback() calls on completed transactions, just no-op.
 			LOG.debug( "rollback() called on an inactive transaction" );
-			invalidate();
+//			invalidate();
 			return;
 		}
 
@@ -87,7 +95,7 @@ public class TransactionImpl implements TransactionImplementor {
 		LOG.debug( "rolling back" );
 		if ( status != TransactionStatus.FAILED_COMMIT || allowFailedCommitToPhysicallyRollback() ) {
 			try {
-				this.transactionDriverControl.rollback();
+				internalGetTransactionDriverControl().rollback();
 			}
 			finally {
 				invalidate();
@@ -102,7 +110,10 @@ public class TransactionImpl implements TransactionImplementor {
 
 	@Override
 	public TransactionStatus getStatus() {
-		return transactionDriverControl.getStatus();
+		// Allow looking at STATUS on closed Session/Transaction
+		return transactionDriverControl == null
+				? TransactionStatus.NOT_ACTIVE
+				: transactionDriverControl.getStatus();
 	}
 
 	@Override
@@ -122,16 +133,12 @@ public class TransactionImpl implements TransactionImplementor {
 
 	@Override
 	public void setRollbackOnly() {
-		transactionDriverControl.markRollbackOnly();
+		internalGetTransactionDriverControl().markRollbackOnly();
 	}
 
 	@Override
 	public boolean getRollbackOnly() {
 		return getStatus() == TransactionStatus.MARKED_ROLLBACK;
-	}
-
-	public void invalidate() {
-		valid = false;
 	}
 
 	protected boolean allowFailedCommitToPhysicallyRollback() {

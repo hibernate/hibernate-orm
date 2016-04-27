@@ -85,10 +85,11 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 			fail();
 		}
 		catch ( PersistenceException p ) {
+			//expected
+			t.rollback();
 		}
 		u.setUserName( "steve" );
 		s.delete( u );
-		t.commit();
 		s.close();
 	}
 

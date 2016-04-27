@@ -38,6 +38,8 @@ import org.hibernate.tuple.entity.EntityTuplizerFactory;
 public interface SessionFactoryOptionsState {
 	StandardServiceRegistry getServiceRegistry();
 
+	boolean isJpaBootstrap();
+
 	Object getBeanManagerReference();
 
 	Object getValidatorFactoryReference();

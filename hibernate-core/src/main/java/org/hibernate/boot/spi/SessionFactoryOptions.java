@@ -43,6 +43,8 @@ public interface SessionFactoryOptions {
 	 */
 	StandardServiceRegistry getServiceRegistry();
 
+	boolean isJpaBootstrap();
+
 	Object getBeanManagerReference();
 
 	Object getValidatorFactoryReference();

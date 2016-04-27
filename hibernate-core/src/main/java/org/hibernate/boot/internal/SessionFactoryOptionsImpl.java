@@ -44,6 +44,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private final Object validatorFactoryReference;
 
 	// SessionFactory behavior
+	private boolean jpaBootstrap;
 	private final String sessionFactoryName;
 	private final boolean sessionFactoryNameAlsoJndiName;
 
@@ -122,6 +123,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.beanManagerReference = state.getBeanManagerReference();
 		this.validatorFactoryReference = state.getValidatorFactoryReference();
 
+		this.jpaBootstrap = state.isJpaBootstrap();
 		this.sessionFactoryName = state.getSessionFactoryName();
 		this.sessionFactoryNameAlsoJndiName = state.isSessionFactoryNameAlsoJndiName();
 
@@ -188,6 +190,11 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public StandardServiceRegistry getServiceRegistry() {
 		return serviceRegistry;
+	}
+
+	@Override
+	public boolean isJpaBootstrap() {
+		return jpaBootstrap;
 	}
 
 	@Override

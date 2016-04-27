@@ -36,7 +36,7 @@ import org.hibernate.tuple.entity.EntityTuplizerFactory;
  * @author Steve Ebersole
  */
 @SuppressWarnings("unused")
-public abstract class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOptions {
+public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOptions {
 	private final SessionFactoryOptions delegate;
 
 	public AbstractDelegatingSessionFactoryOptions(SessionFactoryOptions delegate) {
@@ -46,6 +46,11 @@ public abstract class AbstractDelegatingSessionFactoryOptions implements Session
 	@Override
 	public StandardServiceRegistry getServiceRegistry() {
 		return delegate.getServiceRegistry();
+	}
+
+	@Override
+	public boolean isJpaBootstrap() {
+		return delegate.isJpaBootstrap();
 	}
 
 	@Override
@@ -322,5 +327,10 @@ public abstract class AbstractDelegatingSessionFactoryOptions implements Session
 	@Override
 	public boolean isPreferUserTransaction() {
 		return delegate.isPreferUserTransaction();
+	}
+
+	@Override
+	public Class<? extends Interceptor> getStatelessInterceptorImplementor() {
+		return delegate.getStatelessInterceptorImplementor();
 	}
 }

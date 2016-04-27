@@ -529,8 +529,6 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			);
 		}
 
-		parameterListBindingMap.clear();
-
 		return queryString;
 	}
 }

@@ -86,20 +86,16 @@ public class MergeTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	private void clearCounts() {
-		( ( EntityManagerFactoryImpl ) entityManagerFactory() ).getSessionFactory().getStatistics().clear();
+		entityManagerFactory().getStatistics().clear();
 	}
 
 	private void assertInsertCount(int count) {
-		int inserts = ( int ) ( ( EntityManagerFactoryImpl ) entityManagerFactory() ).getSessionFactory()
-				.getStatistics()
-				.getEntityInsertCount();
+		int inserts = ( int ) entityManagerFactory().getStatistics().getEntityInsertCount();
 		Assert.assertEquals( count, inserts );
 	}
 
 	private void assertUpdateCount(int count) {
-		int updates = ( int ) entityManagerFactory().getSessionFactory()
-				.getStatistics()
-				.getEntityUpdateCount();
+		int updates = ( int ) entityManagerFactory().getStatistics().getEntityUpdateCount();
 		Assert.assertEquals( count, updates );
 	}
 

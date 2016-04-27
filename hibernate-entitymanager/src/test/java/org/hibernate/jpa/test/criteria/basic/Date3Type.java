@@ -15,7 +15,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.usertype.CompositeUserType;
@@ -95,7 +95,7 @@ public class Date3Type implements CompositeUserType {
 	}
 
 	@Override
-	public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner) throws HibernateException, SQLException {
+	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner) throws HibernateException, SQLException {
 		Date date = new Date();
 		Calendar c = GregorianCalendar.getInstance();
 		c.setTime( date );
@@ -110,7 +110,7 @@ public class Date3Type implements CompositeUserType {
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session) throws HibernateException, SQLException {
+	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
 		Date date = new Date();
 		Calendar c = GregorianCalendar.getInstance();
 		c.setTime( date );
@@ -135,17 +135,17 @@ public class Date3Type implements CompositeUserType {
 	}
 
 	@Override
-	public Serializable disassemble(Object value, SessionImplementor session) throws HibernateException {
+	public Serializable disassemble(Object value, SharedSessionContractImplementor session) throws HibernateException {
 		return (Serializable) deepCopy( value );
 	}
 
 	@Override
-	public Object assemble(Serializable cached, SessionImplementor session, Object owner) throws HibernateException {
+	public Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) throws HibernateException {
 		return deepCopy( cached );
 	}
 
 	@Override
-	public Object replace(Object original, Object target, SessionImplementor session, Object owner) throws HibernateException {
+	public Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner) throws HibernateException {
 		return deepCopy( original ); // TODO: improve
 	}
 }

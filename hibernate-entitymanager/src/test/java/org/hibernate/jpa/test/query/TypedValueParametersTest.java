@@ -17,7 +17,6 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.Id;
-import javax.persistence.Persistence;
 import javax.persistence.Query;
 import javax.persistence.Table;
 import javax.persistence.TypedQuery;
@@ -25,8 +24,7 @@ import javax.persistence.TypedQuery;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.spi.TypedValue;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jpa.TypedParameterValue;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.type.CustomType;
@@ -140,7 +138,7 @@ public class TypedValueParametersTest extends BaseEntityManagerFunctionalTestCas
 		private final int SQLTYPE = java.sql.Types.VARCHAR;
 
 		@Override
-		public void nullSafeSet(PreparedStatement statement, Object value, int index, SessionImplementor session) throws HibernateException, SQLException {
+		public void nullSafeSet(PreparedStatement statement, Object value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
 			if (value == null) {
 				statement.setNull(index, SQLTYPE);
 			} else {
@@ -160,7 +158,7 @@ public class TypedValueParametersTest extends BaseEntityManagerFunctionalTestCas
 		}
 
 		@Override
-		public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner) throws HibernateException, SQLException {
+		public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner) throws HibernateException, SQLException {
 			String string = rs.getString(names[0]);
 
 			if (rs.wasNull()) {

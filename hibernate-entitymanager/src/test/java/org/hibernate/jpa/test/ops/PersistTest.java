@@ -193,20 +193,16 @@ public class PersistTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	private void clearCounts() {
-		( ( EntityManagerFactoryImpl ) entityManagerFactory() ).getSessionFactory().getStatistics().clear();
+		entityManagerFactory().getStatistics().clear();
 	}
 
 	private void assertInsertCount(int count) {
-		int inserts = ( int ) ( ( EntityManagerFactoryImpl ) entityManagerFactory() ).getSessionFactory()
-				.getStatistics()
-				.getEntityInsertCount();
+		int inserts = ( int ) entityManagerFactory().getStatistics().getEntityInsertCount();
 		assertEquals( count, inserts );
 	}
 
 	private void assertUpdateCount(int count) {
-		int updates = ( int ) ( ( EntityManagerFactoryImpl ) entityManagerFactory() ).getSessionFactory()
-				.getStatistics()
-				.getEntityUpdateCount();
+		int updates = ( int ) entityManagerFactory().getStatistics().getEntityUpdateCount();
 		assertEquals( count, updates );
 	}
 

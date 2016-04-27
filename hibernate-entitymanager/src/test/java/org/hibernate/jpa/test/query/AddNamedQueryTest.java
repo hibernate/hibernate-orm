@@ -157,7 +157,7 @@ public class AddNamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 		query = em.createNamedQuery( name );
 		hibernateQuery = ( (HibernateQuery) query ).getHibernateQuery();
 		// assert the state of the query config settings based on the initial named query
-		assertEquals( (Integer) 51, hibernateQuery.getFirstResult() );
+		assertEquals( 51, hibernateQuery.getFirstResult() );
 		assertNull( hibernateQuery.getMaxResults() );
 		assertEquals( FlushMode.AUTO, hibernateQuery.getFlushMode() );
 		assertEquals( CacheMode.IGNORE, hibernateQuery.getCacheMode() );

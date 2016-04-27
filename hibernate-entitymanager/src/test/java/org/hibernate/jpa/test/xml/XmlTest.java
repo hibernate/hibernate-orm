@@ -10,13 +10,13 @@ import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.SharedCacheMode;
 
-import junit.framework.Assert;
-import org.junit.Test;
-
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.persister.entity.EntityPersister;
+
+import org.junit.Test;
+import junit.framework.Assert;
 
 /**
  * @author Emmanuel Bernard
@@ -31,7 +31,7 @@ public class XmlTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testXmlMappingWithCacheable() throws Exception{
 		EntityManager em = getOrCreateEntityManager();
-		SessionImplementor session = em.unwrap( SessionImplementor.class );
+		SharedSessionContractImplementor session = em.unwrap( SharedSessionContractImplementor.class );
 		EntityPersister entityPersister= session.getFactory().getEntityPersister( Lighter.class.getName() );
 		Assert.assertTrue(entityPersister.hasCache());
 	}

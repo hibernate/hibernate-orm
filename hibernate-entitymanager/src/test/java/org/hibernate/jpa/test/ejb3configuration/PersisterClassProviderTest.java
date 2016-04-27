@@ -29,7 +29,7 @@ import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
@@ -48,9 +48,9 @@ import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
+import org.hibernate.tuple.entity.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
-import org.hibernate.tuple.entity.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
 
@@ -216,12 +216,12 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public int[] findDirty(Object[] currentState, Object[] previousState, Object owner, SessionImplementor session) {
+		public int[] findDirty(Object[] currentState, Object[] previousState, Object owner, SharedSessionContractImplementor session) {
 			return new int[0];
 		}
 
 		@Override
-		public int[] findModified(Object[] old, Object[] current, Object object, SessionImplementor session) {
+		public int[] findModified(Object[] old, Object[] current, Object object, SharedSessionContractImplementor session) {
 			return new int[0];
 		}
 
@@ -266,13 +266,13 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public Object[] getNaturalIdentifierSnapshot(Serializable id, SessionImplementor session) {
+		public Object[] getNaturalIdentifierSnapshot(Serializable id, SharedSessionContractImplementor session) {
 			return new Object[0];
 		}
 
 		@Override
 		public Serializable loadEntityIdByNaturalId(Object[] naturalIdValues, LockOptions lockOptions,
-				SessionImplementor session) {
+				SharedSessionContractImplementor session) {
 			return null;
 		}
 		
@@ -297,43 +297,43 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public Object load(Serializable id, Object optionalObject, LockMode lockMode, SessionImplementor session) {
+		public Object load(Serializable id, Object optionalObject, LockMode lockMode, SharedSessionContractImplementor session) {
 			return null;
 		}
 
 		@Override
-		public Object load(Serializable id, Object optionalObject, LockOptions lockOptions, SessionImplementor session) {
+		public Object load(Serializable id, Object optionalObject, LockOptions lockOptions, SharedSessionContractImplementor session) {
 			return null;
 		}
 
 		@Override
-		public List multiLoad(Serializable[] ids, SessionImplementor session, MultiLoadOptions loadOptions) {
+		public List multiLoad(Serializable[] ids, SharedSessionContractImplementor session, MultiLoadOptions loadOptions) {
 			return Collections.emptyList();
 		}
 
 		@Override
-		public void lock(Serializable id, Object version, Object object, LockMode lockMode, SessionImplementor session) {
+		public void lock(Serializable id, Object version, Object object, LockMode lockMode, SharedSessionContractImplementor session) {
 		}
 
 		@Override
-		public void lock(Serializable id, Object version, Object object, LockOptions lockOptions, SessionImplementor session) {
+		public void lock(Serializable id, Object version, Object object, LockOptions lockOptions, SharedSessionContractImplementor session) {
 		}
 
 		@Override
-		public void insert(Serializable id, Object[] fields, Object object, SessionImplementor session) {
+		public void insert(Serializable id, Object[] fields, Object object, SharedSessionContractImplementor session) {
 		}
 
 		@Override
-		public Serializable insert(Object[] fields, Object object, SessionImplementor session) {
+		public Serializable insert(Object[] fields, Object object, SharedSessionContractImplementor session) {
 			return null;
 		}
 
 		@Override
-		public void delete(Serializable id, Object version, Object object, SessionImplementor session) {
+		public void delete(Serializable id, Object version, Object object, SharedSessionContractImplementor session) {
 		}
 
 		@Override
-		public void update(Serializable id, Object[] fields, int[] dirtyFields, boolean hasDirtyCollection, Object[] oldFields, Object oldVersion, Object object, Object rowId, SessionImplementor session) {
+		public void update(Serializable id, Object[] fields, int[] dirtyFields, boolean hasDirtyCollection, Object[] oldFields, Object oldVersion, Object object, Object rowId, SharedSessionContractImplementor session) {
 		}
 
 		@Override
@@ -442,22 +442,22 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public Object[] getDatabaseSnapshot(Serializable id, SessionImplementor session) throws HibernateException {
+		public Object[] getDatabaseSnapshot(Serializable id, SharedSessionContractImplementor session) throws HibernateException {
 			return new Object[0];
 		}
 
 		@Override
-		public Serializable getIdByUniqueKey(Serializable key, String uniquePropertyName, SessionImplementor session) {
+		public Serializable getIdByUniqueKey(Serializable key, String uniquePropertyName, SharedSessionContractImplementor session) {
 			throw new UnsupportedOperationException( "Not supported" );
 		}
 
 		@Override
-		public Object getCurrentVersion(Serializable id, SessionImplementor session) throws HibernateException {
+		public Object getCurrentVersion(Serializable id, SharedSessionContractImplementor session) throws HibernateException {
 			return null;
 		}
 
 		@Override
-		public Object forceVersionIncrement(Serializable id, Object currentVersion, SessionImplementor session) {
+		public Object forceVersionIncrement(Serializable id, Object currentVersion, SharedSessionContractImplementor session) {
 			return null;
 		}
 
@@ -482,34 +482,34 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public void afterInitialize(Object entity, SessionImplementor session) {
+		public void afterInitialize(Object entity, SharedSessionContractImplementor session) {
 		}
 
 		@Override
-		public void afterReassociate(Object entity, SessionImplementor session) {
+		public void afterReassociate(Object entity, SharedSessionContractImplementor session) {
 		}
 
 		@Override
-		public Object createProxy(Serializable id, SessionImplementor session) throws HibernateException {
+		public Object createProxy(Serializable id, SharedSessionContractImplementor session) throws HibernateException {
 			return null;
 		}
 
 		@Override
-		public Boolean isTransient(Object object, SessionImplementor session) throws HibernateException {
+		public Boolean isTransient(Object object, SharedSessionContractImplementor session) throws HibernateException {
 			return null;
 		}
 
 		@Override
-		public Object[] getPropertyValuesToInsert(Object object, Map mergeMap, SessionImplementor session) {
+		public Object[] getPropertyValuesToInsert(Object object, Map mergeMap, SharedSessionContractImplementor session) {
 			return new Object[0];
 		}
 
 		@Override
-		public void processInsertGeneratedProperties(Serializable id, Object entity, Object[] state, SessionImplementor session) {
+		public void processInsertGeneratedProperties(Serializable id, Object entity, Object[] state, SharedSessionContractImplementor session) {
 		}
 
 		@Override
-		public void processUpdateGeneratedProperties(Serializable id, Object entity, Object[] state, SessionImplementor session) {
+		public void processUpdateGeneratedProperties(Serializable id, Object entity, Object[] state, SharedSessionContractImplementor session) {
 		}
 
 		@Override
@@ -556,12 +556,12 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public Serializable getIdentifier(Object entity, SessionImplementor session) {
+		public Serializable getIdentifier(Object entity, SharedSessionContractImplementor session) {
 			return null;
 		}
 
 		@Override
-		public void setIdentifier(Object entity, Serializable id, SessionImplementor session) {
+		public void setIdentifier(Object entity, Serializable id, SharedSessionContractImplementor session) {
 		}
 
 		@Override
@@ -570,7 +570,7 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public Object instantiate(Serializable id, SessionImplementor session) {
+		public Object instantiate(Serializable id, SharedSessionContractImplementor session) {
 			return null;
 		}
 
@@ -585,7 +585,7 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public void resetIdentifier(Object entity, Serializable currentId, Object currentVersion, SessionImplementor session) {
+		public void resetIdentifier(Object entity, Serializable currentId, Object currentVersion, SharedSessionContractImplementor session) {
 		}
 
 		@Override
@@ -609,7 +609,7 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SessionImplementor session) {
+		public CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SharedSessionContractImplementor session) {
 			return null;
 		}
 

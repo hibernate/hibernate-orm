@@ -15,7 +15,7 @@ import javax.persistence.TransactionRequiredException;
 import javax.transaction.Status;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.jpa.AvailableSettings;
@@ -78,7 +78,7 @@ public class TransactionJoiningTest extends BaseEntityManagerFunctionalTestCase 
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		EntityManager entityManager = entityManagerFactory().createEntityManager();
-		SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
+		SharedSessionContractImplementor session = entityManager.unwrap( SharedSessionContractImplementor.class );
 
 		ExtraAssertions.assertTyping( JtaTransactionCoordinatorImpl.class, session.getTransactionCoordinator() );
 		JtaTransactionCoordinatorImpl transactionCoordinator = (JtaTransactionCoordinatorImpl) session.getTransactionCoordinator();
@@ -104,7 +104,7 @@ public class TransactionJoiningTest extends BaseEntityManagerFunctionalTestCase 
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		EntityManager entityManager = entityManagerFactory().createEntityManager();
-		SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
+		SharedSessionContractImplementor session = entityManager.unwrap( SharedSessionContractImplementor.class );
 
 		ExtraAssertions.assertTyping( JtaTransactionCoordinatorImpl.class, session.getTransactionCoordinator() );
 		JtaTransactionCoordinatorImpl transactionCoordinator = (JtaTransactionCoordinatorImpl) session.getTransactionCoordinator();
@@ -130,7 +130,7 @@ public class TransactionJoiningTest extends BaseEntityManagerFunctionalTestCase 
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		EntityManager entityManager = entityManagerFactory().createEntityManager();
-		SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
+		SharedSessionContractImplementor session = entityManager.unwrap( SharedSessionContractImplementor.class );
 
 		ExtraAssertions.assertTyping( JtaTransactionCoordinatorImpl.class, session.getTransactionCoordinator() );
 		JtaTransactionCoordinatorImpl transactionCoordinator = (JtaTransactionCoordinatorImpl) session.getTransactionCoordinator();

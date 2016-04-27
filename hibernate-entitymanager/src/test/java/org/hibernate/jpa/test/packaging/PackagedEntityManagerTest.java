@@ -15,7 +15,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.PersistenceException;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.util.ConfigHelper;
@@ -309,7 +309,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory( "manager1", new HashMap() );
 		EntityManager em = emf.createEntityManager();
-		EventListenerRegistry listenerRegistry = em.unwrap( SessionImplementor.class ).getFactory()
+		EventListenerRegistry listenerRegistry = em.unwrap( SharedSessionContractImplementor.class ).getFactory()
 				.getServiceRegistry()
 				.getService( EventListenerRegistry.class );
 		assertEquals(

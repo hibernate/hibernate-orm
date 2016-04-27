@@ -14,7 +14,7 @@ import javax.persistence.TransactionRequiredException;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaUpdate;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
@@ -71,7 +71,7 @@ public class SynchronizationTypeTest extends BaseEntityManagerFunctionalTestCase
 		assertTrue( "setup problem", JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
 
 		EntityManager entityManager = entityManagerFactory().createEntityManager( SynchronizationType.UNSYNCHRONIZED, null );
-		SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
+		SharedSessionContractImplementor session = entityManager.unwrap( SharedSessionContractImplementor.class );
 
 		ExtraAssertions.assertTyping( JtaTransactionCoordinatorImpl.class, session.getTransactionCoordinator() );
 		JtaTransactionCoordinatorImpl transactionCoordinator = (JtaTransactionCoordinatorImpl) session.getTransactionCoordinator();

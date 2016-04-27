@@ -6,6 +6,8 @@
  */
 package org.hibernate.test.naturalid.immutable;
 
+import javax.persistence.PersistenceException;
+
 import org.junit.Test;
 
 import org.hibernate.HibernateException;
@@ -76,11 +78,12 @@ public class ImmutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 			s.flush();
 			fail();
 		}
-		catch ( HibernateException he ) {
+		catch ( PersistenceException e ) {
+			//expected
+			t.rollback();
 		}
 		u.setUserName( "steve" );
 		s.delete( u );
-		t.commit();
 		s.close();
 	}
 

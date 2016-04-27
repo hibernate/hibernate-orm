@@ -10,6 +10,9 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -20,6 +23,12 @@ import static org.junit.Assert.assertEquals;
 public class IdClassTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "idclass/Customer.hbm.xml" };
+	}
+
+	@Override
+	protected void configure(Configuration configuration) {
+		// the Customer entity has a composite id that is not embeddable ( not supported by JPA ).
+		configuration.setProperty( AvailableSettings.JPA_METAMODEL_POPULATION, "disabled" );
 	}
 
 	@Test

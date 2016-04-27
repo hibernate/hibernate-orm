@@ -25,7 +25,9 @@ public class QueryParameterListBindingImpl<T> implements QueryParameterListBindi
 
 	@Override
 	public void setBindValues(Collection<T> bindValues) {
-		assert bindValues != null;
+		if ( bindValues == null ) {
+			throw new IllegalArgumentException( "Collection must be not null!" );
+		}
 		this.bindValues = bindValues;
 	}
 

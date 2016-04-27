@@ -14,12 +14,11 @@ import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 
-import org.junit.Test;
-
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.junit4.ExtraAssertions;
 import org.hibernate.test.jpa.AbstractJPATest;
+import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -50,26 +49,26 @@ public class JtaTransactionJoiningTest extends AbstractJPATest {
 		JtaTransactionCoordinatorImpl transactionCoordinator = (JtaTransactionCoordinatorImpl) session.getTransactionCoordinator();
 
 		assertFalse( transactionCoordinator.isSynchronizationRegistered() );
-		assertFalse( transactionCoordinator.isActive() );
+		assertFalse( transactionCoordinator.isJtaTransactionCurrentlyActive() );
 		assertFalse( transactionCoordinator.isJoined() );
 
 		session.getFlushMode();  // causes a call to TransactionCoordinator#pulse
 
 		assertFalse( transactionCoordinator.isSynchronizationRegistered() );
-		assertFalse( transactionCoordinator.isActive() );
+		assertFalse( transactionCoordinator.isJtaTransactionCurrentlyActive() );
 		assertFalse( transactionCoordinator.isJoined() );
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 
 		assertTrue( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
-		assertTrue( transactionCoordinator.isActive() );
+		assertTrue( transactionCoordinator.isJtaTransactionCurrentlyActive() );
 		assertFalse( transactionCoordinator.isJoined() );
 		assertFalse( transactionCoordinator.isSynchronizationRegistered() );
 
 		session.getFlushMode();
 
 		assertTrue( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
-		assertTrue( transactionCoordinator.isActive() );
+		assertTrue( transactionCoordinator.isJtaTransactionCurrentlyActive() );
 		assertFalse( transactionCoordinator.isSynchronizationRegistered() );
 		assertFalse( transactionCoordinator.isJoined() );
 
@@ -77,7 +76,7 @@ public class JtaTransactionJoiningTest extends AbstractJPATest {
 		session.getFlushMode();
 
 		assertTrue( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
-		assertTrue( transactionCoordinator.isActive() );
+		assertTrue( transactionCoordinator.isJtaTransactionCurrentlyActive() );
 		assertTrue( transactionCoordinator.isSynchronizationRegistered() );
 		assertTrue( transactionCoordinator.isJoined() );
 

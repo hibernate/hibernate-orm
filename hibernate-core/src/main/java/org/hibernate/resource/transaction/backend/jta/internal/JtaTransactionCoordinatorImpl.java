@@ -275,6 +275,10 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 
 	@Override
 	public boolean isActive() {
+		return transactionCoordinatorOwner.isActive();
+	}
+
+	public boolean isJtaTransactionCurrentlyActive() {
 		return getTransactionDriverControl().getStatus() == TransactionStatus.ACTIVE;
 	}
 

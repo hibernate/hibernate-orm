@@ -2259,8 +2259,8 @@ public final class SessionImpl
 		log.tracef( "SessionImpl#afterTransactionCompletion(successful=%s, delayed=%s)", successful, delayed );
 
 		if ( !isClosed() ) {
-			if ( !successful && autoClear ) {
-				clear();
+			if ( autoClear ) {
+				internalClear();
 			}
 		}
 

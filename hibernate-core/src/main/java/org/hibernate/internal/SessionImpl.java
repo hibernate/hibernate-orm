@@ -1229,21 +1229,38 @@ public final class SessionImpl
 	}
 
 	private void fireRefresh(RefreshEvent event) {
-		checkOpen();
-		checkTransactionSynchStatus();
-		for ( RefreshEventListener listener : listeners( EventType.REFRESH ) ) {
-			listener.onRefresh( event );
+		try {
+			checkOpen();
+			checkTransactionSynchStatus();
+			for ( RefreshEventListener listener : listeners( EventType.REFRESH ) ) {
+				listener.onRefresh( event );
+			}
 		}
-		delayedAfterCompletion();
+		catch (RuntimeException e) {
+			//including HibernateException
+			throw convert( e );
+		}
+		finally {
+			delayedAfterCompletion();
+		}
 	}
 
 	private void fireRefresh(Map refreshedAlready, RefreshEvent event) {
-		checkOpen();
-		checkTransactionSynchStatus();
-		for ( RefreshEventListener listener : listeners( EventType.REFRESH ) ) {
-			listener.onRefresh( event, refreshedAlready );
+		try {
+			checkOpen();
+			checkTransactionSynchStatus();
+			for ( RefreshEventListener listener : listeners( EventType.REFRESH ) ) {
+				listener.onRefresh( event, refreshedAlready );
+			}
+			delayedAfterCompletion();
 		}
-		delayedAfterCompletion();
+		catch (RuntimeException e) {
+			//including HibernateException
+			throw convert( e );
+		}
+		finally {
+			delayedAfterCompletion();
+		}
 	}
 
 

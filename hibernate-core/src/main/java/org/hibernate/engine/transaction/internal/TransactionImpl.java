@@ -42,6 +42,7 @@ public class TransactionImpl implements TransactionImplementor {
 		if ( transactionDriverControl == null ) {
 			transactionDriverControl = transactionCoordinator.getTransactionDriverControl();
 		}
+
 		// per-JPA
 		if ( isActive() ) {
 			throw new IllegalStateException( "Transaction already active" );
@@ -60,12 +61,7 @@ public class TransactionImpl implements TransactionImplementor {
 
 		LOG.debug( "committing" );
 
-		try {
-			internalGetTransactionDriverControl().commit();
-		}
-		finally {
-//			invalidate();
-		}
+		internalGetTransactionDriverControl().commit();
 	}
 
 	public TransactionDriver internalGetTransactionDriverControl() {
@@ -84,7 +80,6 @@ public class TransactionImpl implements TransactionImplementor {
 		if ( status == TransactionStatus.ROLLED_BACK || status == TransactionStatus.NOT_ACTIVE ) {
 			// Allow rollback() calls on completed transactions, just no-op.
 			LOG.debug( "rollback() called on an inactive transaction" );
-//			invalidate();
 			return;
 		}
 
@@ -94,12 +89,7 @@ public class TransactionImpl implements TransactionImplementor {
 
 		LOG.debug( "rolling back" );
 		if ( status != TransactionStatus.FAILED_COMMIT || allowFailedCommitToPhysicallyRollback() ) {
-			try {
-				internalGetTransactionDriverControl().rollback();
-			}
-			finally {
-				invalidate();
-			}
+			internalGetTransactionDriverControl().rollback();
 		}
 	}
 
@@ -110,10 +100,10 @@ public class TransactionImpl implements TransactionImplementor {
 
 	@Override
 	public TransactionStatus getStatus() {
-		// Allow looking at STATUS on closed Session/Transaction
-		return transactionDriverControl == null
-				? TransactionStatus.NOT_ACTIVE
-				: transactionDriverControl.getStatus();
+		if ( transactionDriverControl == null ) {
+			transactionDriverControl = transactionCoordinator.getTransactionDriverControl();
+		}
+		return transactionDriverControl.getStatus();
 	}
 
 	@Override

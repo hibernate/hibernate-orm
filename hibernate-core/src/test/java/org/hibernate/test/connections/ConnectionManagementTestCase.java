@@ -234,7 +234,6 @@ public abstract class ConnectionManagementTestCase extends BaseNonConfigCoreFunc
 	public final void testManualDisconnectWithOpenResources() throws Throwable {
 		prepare();
 		Session sessionUnderTest = getSessionUnderTest();
-		sessionUnderTest.beginTransaction();
 
 		Silly silly = new Silly( "tester" );
 		sessionUnderTest.save( silly );
@@ -256,8 +255,6 @@ public abstract class ConnectionManagementTestCase extends BaseNonConfigCoreFunc
 		reconnect( sessionUnderTest );
 		sessionUnderTest.delete( silly );
 		sessionUnderTest.flush();
-
-		sessionUnderTest.getTransaction().commit();
 
 		release( sessionUnderTest );
 		done();

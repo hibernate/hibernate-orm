@@ -8,7 +8,7 @@ package org.hibernate.cache.infinispan.access;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * Defines the strategy for access to entity or collection data in a Infinispan instance.
@@ -20,7 +20,7 @@ import org.hibernate.engine.spi.SessionImplementor;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public interface AccessDelegate {
-	Object get(SessionImplementor session, Object key, long txTimestamp) throws CacheException;
+	Object get(SharedSessionContractImplementor session, Object key, long txTimestamp) throws CacheException;
 
 	/**
 	 * Attempt to cache an object, afterQuery loading from the database.
@@ -32,7 +32,7 @@ public interface AccessDelegate {
 	 * @param version the item version number
 	 * @return <tt>true</tt> if the object was successfully cached
 	 */
-	boolean putFromLoad(SessionImplementor session, Object key, Object value, long txTimestamp, Object version);
+	boolean putFromLoad(SharedSessionContractImplementor session, Object key, Object value, long txTimestamp, Object version);
 
 	/**
 	 * Attempt to cache an object, afterQuery loading from the database, explicitly
@@ -47,7 +47,7 @@ public interface AccessDelegate {
 	 * @return <tt>true</tt> if the object was successfully cached
 	 * @throws org.hibernate.cache.CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
-	boolean putFromLoad(SessionImplementor session, Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
+	boolean putFromLoad(SharedSessionContractImplementor session, Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
 			throws CacheException;
 
 	/**
@@ -61,7 +61,7 @@ public interface AccessDelegate {
 	 * @return Were the contents of the cache actual changed by this operation?
 	 * @throws CacheException if the insert fails
 	 */
-	boolean insert(SessionImplementor session, Object key, Object value, Object version) throws CacheException;
+	boolean insert(SharedSessionContractImplementor session, Object key, Object value, Object version) throws CacheException;
 
 	/**
 	 * Called afterQuery an item has been updated (beforeQuery the transaction completes),
@@ -75,7 +75,7 @@ public interface AccessDelegate {
 	 * @return Whether the contents of the cache actual changed by this operation
 	 * @throws CacheException if the update fails
 	 */
-	boolean update(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion)
+	boolean update(SharedSessionContractImplementor session, Object key, Object value, Object currentVersion, Object previousVersion)
 			throws CacheException;
 
 	/**
@@ -85,7 +85,7 @@ public interface AccessDelegate {
 	 * @param key The key of the item to remove
 	 * @throws CacheException if removing the cached item fails
 	 */
-	void remove(SessionImplementor session, Object key) throws CacheException;
+	void remove(SharedSessionContractImplementor session, Object key) throws CacheException;
 
 	/**
 	 * Called to evict data from the entire region
@@ -121,7 +121,7 @@ public interface AccessDelegate {
 	 * @param key The item key
 	 * @throws org.hibernate.cache.CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
-	void unlockItem(SessionImplementor session, Object key) throws CacheException;
+	void unlockItem(SharedSessionContractImplementor session, Object key) throws CacheException;
 
 	/**
 	 * Called afterQuery an item has been inserted (afterQuery the transaction completes),
@@ -136,7 +136,7 @@ public interface AccessDelegate {
 	 * @return Were the contents of the cache actual changed by this operation?
 	 * @throws CacheException Propagated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
-	boolean afterInsert(SessionImplementor session, Object key, Object value, Object version);
+	boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value, Object version);
 
 	/**
 	 * Called afterQuery an item has been updated (afterQuery the transaction completes),
@@ -153,5 +153,5 @@ public interface AccessDelegate {
 	 * @return Were the contents of the cache actual changed by this operation?
 	 * @throws CacheException Propagated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
-	boolean afterUpdate(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock);
+	boolean afterUpdate(SharedSessionContractImplementor session, Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock);
 }

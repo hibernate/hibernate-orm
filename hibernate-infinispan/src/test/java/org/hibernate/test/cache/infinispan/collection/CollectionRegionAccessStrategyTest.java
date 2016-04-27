@@ -21,7 +21,7 @@ import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.cache.infinispan.access.TxInvalidationCacheAccessDelegate;
 import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import org.hibernate.test.cache.infinispan.AbstractRegionAccessStrategyTest;
 import org.hibernate.test.cache.infinispan.NodeEnvironment;
@@ -92,7 +92,7 @@ public class CollectionRegionAccessStrategyTest extends
 
 				Callable<Void> pferCallable = new Callable<Void>() {
 					public Void call() throws Exception {
-						SessionImplementor session = mockedSession();
+						SharedSessionContractImplementor session = mockedSession();
 						delegate.putFromLoad(session, "k1", "v1", session.getTimestamp(), null );
 						return null;
 					}
@@ -101,7 +101,7 @@ public class CollectionRegionAccessStrategyTest extends
 				Callable<Void> removeCallable = new Callable<Void>() {
 					public Void call() throws Exception {
 						removeLatch.await();
-						SessionImplementor session = mockedSession();
+						SharedSessionContractImplementor session = mockedSession();
 						withTx(localEnvironment, session, new Callable<Void>() {
 							@Override
 							public Void call() throws Exception {
@@ -144,7 +144,7 @@ public class CollectionRegionAccessStrategyTest extends
 		regionFactory.start(CacheTestUtil.sfOptionsForStart(), new Properties());
 		return new PutFromLoadValidator(cache, regionFactory, cm) {
 			@Override
-			public Lock acquirePutFromLoadLock(SessionImplementor session, Object key, long txTimestamp) {
+			public Lock acquirePutFromLoadLock(SharedSessionContractImplementor session, Object key, long txTimestamp) {
 				Lock lock = super.acquirePutFromLoadLock(session, key, txTimestamp);
 				try {
 					removeLatch.countDown();
@@ -187,7 +187,7 @@ public class CollectionRegionAccessStrategyTest extends
 			@Override
 			public void run() {
 				try {
-					SessionImplementor session = mockedSession();
+					SharedSessionContractImplementor session = mockedSession();
 					withTx(localEnvironment, session, () -> {
 						assertNull(localAccessStrategy.get(session, KEY, session.getTimestamp()));
 
@@ -230,9 +230,9 @@ public class CollectionRegionAccessStrategyTest extends
 
 		long txTimestamp = System.currentTimeMillis();
 
-		SessionImplementor s1 = mockedSession();
+		SharedSessionContractImplementor s1 = mockedSession();
 		assertEquals( VALUE2, localAccessStrategy.get(s1, KEY, s1.getTimestamp() ) );
-		SessionImplementor s2 = mockedSession();
+		SharedSessionContractImplementor s2 = mockedSession();
 		Object remoteValue = remoteAccessStrategy.get(s2, KEY, s2.getTimestamp());
 		if (isUsingInvalidation()) {
 			assertEquals( VALUE1, remoteValue);

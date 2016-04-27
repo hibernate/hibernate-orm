@@ -7,13 +7,14 @@
 package org.hibernate.cache.ehcache.internal.nonstop;
 
 import net.sf.ehcache.constructs.nonstop.NonStopCacheException;
+
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
@@ -66,7 +67,7 @@ public class NonstopAwareCollectionRegionAccessStrategy implements CollectionReg
 	}
 
 	@Override
-	public Object get(SessionImplementor session, Object key, long txTimestamp) throws CacheException {
+	public Object get(SharedSessionContractImplementor session, Object key, long txTimestamp) throws CacheException {
 		try {
 			return actualStrategy.get( session, key, txTimestamp );
 		}
@@ -77,7 +78,7 @@ public class NonstopAwareCollectionRegionAccessStrategy implements CollectionReg
 	}
 
 	@Override
-	public SoftLock lockItem(SessionImplementor session, Object key, Object version) throws CacheException {
+	public SoftLock lockItem(SharedSessionContractImplementor session, Object key, Object version) throws CacheException {
 		try {
 			return actualStrategy.lockItem( session, key, version );
 		}
@@ -99,7 +100,7 @@ public class NonstopAwareCollectionRegionAccessStrategy implements CollectionReg
 	}
 
 	@Override
-	public boolean putFromLoad(SessionImplementor session, Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
+	public boolean putFromLoad(SharedSessionContractImplementor session, Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
 			throws CacheException {
 		try {
 			return actualStrategy.putFromLoad( session, key, value, txTimestamp, version, minimalPutOverride );
@@ -111,7 +112,7 @@ public class NonstopAwareCollectionRegionAccessStrategy implements CollectionReg
 	}
 
 	@Override
-	public boolean putFromLoad(SessionImplementor session, Object key, Object value, long txTimestamp, Object version) throws CacheException {
+	public boolean putFromLoad(SharedSessionContractImplementor session, Object key, Object value, long txTimestamp, Object version) throws CacheException {
 		try {
 			return actualStrategy.putFromLoad( session, key, value, txTimestamp, version );
 		}
@@ -122,7 +123,7 @@ public class NonstopAwareCollectionRegionAccessStrategy implements CollectionReg
 	}
 
 	@Override
-	public void remove(SessionImplementor session, Object key) throws CacheException {
+	public void remove(SharedSessionContractImplementor session, Object key) throws CacheException {
 		try {
 			actualStrategy.remove( session, key);
 		}
@@ -142,7 +143,7 @@ public class NonstopAwareCollectionRegionAccessStrategy implements CollectionReg
 	}
 
 	@Override
-	public void unlockItem(SessionImplementor session, Object key, SoftLock lock) throws CacheException {
+	public void unlockItem(SharedSessionContractImplementor session, Object key, SoftLock lock) throws CacheException {
 		try {
 			actualStrategy.unlockItem( session, key, lock );
 		}

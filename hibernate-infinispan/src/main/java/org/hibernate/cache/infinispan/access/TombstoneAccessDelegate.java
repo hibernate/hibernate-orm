@@ -16,7 +16,7 @@ import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.cache.infinispan.util.Tombstone;
 import org.hibernate.cache.infinispan.util.TombstoneUpdate;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 
 import org.infinispan.AdvancedCache;
@@ -54,7 +54,7 @@ public class TombstoneAccessDelegate implements AccessDelegate {
 	}
 
 	@Override
-	public Object get(SessionImplementor session, Object key, long txTimestamp) throws CacheException {
+	public Object get(SharedSessionContractImplementor session, Object key, long txTimestamp) throws CacheException {
 		if (txTimestamp < region.getLastRegionInvalidation() ) {
 			return null;
 		}
@@ -71,12 +71,12 @@ public class TombstoneAccessDelegate implements AccessDelegate {
 	}
 
 	@Override
-	public boolean putFromLoad(SessionImplementor session, Object key, Object value, long txTimestamp, Object version) {
+	public boolean putFromLoad(SharedSessionContractImplementor session, Object key, Object value, long txTimestamp, Object version) {
 		return putFromLoad(session, key, value, txTimestamp, version, false);
 	}
 
 	@Override
-	public boolean putFromLoad(SessionImplementor session, Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride) throws CacheException {
+	public boolean putFromLoad(SharedSessionContractImplementor session, Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride) throws CacheException {
 		long lastRegionInvalidation = region.getLastRegionInvalidation();
 		if (txTimestamp < lastRegionInvalidation) {
 			log.tracef("putFromLoad not executed since tx started at %d, beforeQuery last region invalidation finished = %d", txTimestamp, lastRegionInvalidation);
@@ -104,18 +104,18 @@ public class TombstoneAccessDelegate implements AccessDelegate {
 	}
 
 	@Override
-	public boolean insert(SessionImplementor session, Object key, Object value, Object version) throws CacheException {
+	public boolean insert(SharedSessionContractImplementor session, Object key, Object value, Object version) throws CacheException {
 		write(session, key, value);
 		return true;
 	}
 
 	@Override
-	public boolean update(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion) throws CacheException {
+	public boolean update(SharedSessionContractImplementor session, Object key, Object value, Object currentVersion, Object previousVersion) throws CacheException {
 		write(session, key, value);
 		return true;
 	}
 
-	protected void write(SessionImplementor session, Object key, Object value) {
+	protected void write(SharedSessionContractImplementor session, Object key, Object value) {
 		TransactionCoordinator tc = session.getTransactionCoordinator();
 		FutureUpdateSynchronization sync = new FutureUpdateSynchronization(tc, writeCache, requiresTransaction, key, value);
 		// FutureUpdate is handled in TombstoneCallInterceptor
@@ -124,7 +124,7 @@ public class TombstoneAccessDelegate implements AccessDelegate {
 	}
 
 	@Override
-	public void remove(SessionImplementor session, Object key) throws CacheException {
+	public void remove(SharedSessionContractImplementor session, Object key) throws CacheException {
 		TransactionCoordinator transactionCoordinator = session.getTransactionCoordinator();
 		TombstoneSynchronization sync = new TombstoneSynchronization(transactionCoordinator, asyncWriteCache, requiresTransaction, region, key);
 		Tombstone tombstone = new Tombstone(sync.getUuid(), session.getTimestamp() + region.getTombstoneExpiration(), false);
@@ -160,16 +160,16 @@ public class TombstoneAccessDelegate implements AccessDelegate {
 	}
 
 	@Override
-	public void unlockItem(SessionImplementor session, Object key) throws CacheException {
+	public void unlockItem(SharedSessionContractImplementor session, Object key) throws CacheException {
 	}
 
 	@Override
-	public boolean afterInsert(SessionImplementor session, Object key, Object value, Object version) {
+	public boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value, Object version) {
 		return false;
 	}
 
 	@Override
-	public boolean afterUpdate(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock) {
+	public boolean afterUpdate(SharedSessionContractImplementor session, Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock) {
 		return false;
 	}
 }

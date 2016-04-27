@@ -7,7 +7,7 @@
 package org.hibernate.cache.spi;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -19,7 +19,7 @@ public interface CacheKeysFactory {
 
 	Object createEntityKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier);
 
-	Object createNaturalIdKey(Object[] naturalIdValues, EntityPersister persister, SessionImplementor session);
+	Object createNaturalIdKey(Object[] naturalIdValues, EntityPersister persister, SharedSessionContractImplementor session);
 
 	Object getEntityId(Object cacheKey);
 

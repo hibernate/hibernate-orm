@@ -9,7 +9,7 @@ package org.hibernate.cache.infinispan.entity;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.access.AccessDelegate;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * Read-write or transactional entity region access for Infinispan.
@@ -24,12 +24,12 @@ class ReadWriteAccess extends ReadOnlyAccess {
 		super(region, delegate);
 	}
 
-	public boolean update(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion)
+	public boolean update(SharedSessionContractImplementor session, Object key, Object value, Object currentVersion, Object previousVersion)
 			throws CacheException {
 		return delegate.update( session, key, value, currentVersion, previousVersion );
 	}
 
-	public boolean afterUpdate(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
+	public boolean afterUpdate(SharedSessionContractImplementor session, Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
 			throws CacheException {
 		return delegate.afterUpdate( session, key, value, currentVersion, previousVersion, lock );
 	}

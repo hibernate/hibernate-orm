@@ -20,7 +20,7 @@ import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
@@ -117,13 +117,13 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 		waitForClusterToForm(localRegion.getCache(), remoteRegion.getCache());
 	}
 
-	private interface SessionMock extends Session, SessionImplementor {
+	private interface SessionMock extends Session, SharedSessionContractImplementor {
 	}
 
 	private interface NonJtaTransactionCoordinator extends TransactionCoordinatorOwner, JdbcResourceTransactionAccess {
 	}
 
-	protected SessionImplementor mockedSession() {
+	protected SharedSessionContractImplementor mockedSession() {
 		SessionMock session = mock(SessionMock.class);
 		when(session.isClosed()).thenReturn(false);
 		when(session.getTimestamp()).thenReturn(System.currentTimeMillis());
@@ -219,21 +219,21 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 		assertEquals(0, localRegion.getCache().size());
 		assertEquals(0, remoteRegion.getCache().size());
 
-		SessionImplementor s1 = mockedSession();
+		SharedSessionContractImplementor s1 = mockedSession();
 		assertNull("local is clean", localAccessStrategy.get(s1, KEY, s1.getTimestamp()));
-		SessionImplementor s2 = mockedSession();
+		SharedSessionContractImplementor s2 = mockedSession();
 		assertNull("remote is clean", remoteAccessStrategy.get(s2, KEY, s2.getTimestamp()));
 
-		SessionImplementor s3 = mockedSession();
+		SharedSessionContractImplementor s3 = mockedSession();
 		localAccessStrategy.putFromLoad(s3, KEY, VALUE1, s3.getTimestamp(), 1);
-		SessionImplementor s4 = mockedSession();
+		SharedSessionContractImplementor s4 = mockedSession();
 		assertEquals(VALUE1, localAccessStrategy.get(s4, KEY, s4.getTimestamp()));
-		SessionImplementor s5 = mockedSession();
+		SharedSessionContractImplementor s5 = mockedSession();
 		remoteAccessStrategy.putFromLoad(s5, KEY, VALUE1, s5.getTimestamp(), new Integer(1));
-		SessionImplementor s6 = mockedSession();
+		SharedSessionContractImplementor s6 = mockedSession();
 		assertEquals(VALUE1, remoteAccessStrategy.get(s6, KEY, s6.getTimestamp()));
 
-		SessionImplementor session = mockedSession();
+		SharedSessionContractImplementor session = mockedSession();
 		withTx(localEnvironment, session, () -> {
 			if (evict) {
 				localAccessStrategy.evict(KEY);
@@ -244,15 +244,15 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 			return null;
 		});
 
-		SessionImplementor s7 = mockedSession();
+		SharedSessionContractImplementor s7 = mockedSession();
 		assertNull(localAccessStrategy.get(s7, KEY, s7.getTimestamp()));
 		assertEquals(0, localRegion.getCache().size());
-		SessionImplementor s8 = mockedSession();
+		SharedSessionContractImplementor s8 = mockedSession();
 		assertNull(remoteAccessStrategy.get(s8, KEY, s8.getTimestamp()));
 		assertEquals(0, remoteRegion.getCache().size());
 	}
 
-	protected void doRemove(TransactionManager tm, S strategy, SessionImplementor session, Object key) throws SystemException, RollbackException {
+	protected void doRemove(TransactionManager tm, S strategy, SharedSessionContractImplementor session, Object key) throws SystemException, RollbackException {
 		SoftLock softLock = strategy.lockItem(session, key, null);
 		strategy.remove(session, key);
 		session.getTransactionCoordinator().getLocalSynchronizations().registerSynchronization(
@@ -294,18 +294,18 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 		final Object KEY = generateNextKey();
 		assertEquals(0, localRegion.getCache().size());
 		assertEquals(0, remoteRegion.getCache().size());
-		SessionImplementor s1 = mockedSession();
+		SharedSessionContractImplementor s1 = mockedSession();
 		assertNull("local is clean", localAccessStrategy.get(s1, KEY, s1.getTimestamp()));
-		SessionImplementor s2 = mockedSession();
+		SharedSessionContractImplementor s2 = mockedSession();
 		assertNull("remote is clean", remoteAccessStrategy.get(s2, KEY, s2.getTimestamp()));
 
-		SessionImplementor s3 = mockedSession();
+		SharedSessionContractImplementor s3 = mockedSession();
 		localAccessStrategy.putFromLoad(s3, KEY, VALUE1, s3.getTimestamp(), 1);
-		SessionImplementor s4 = mockedSession();
+		SharedSessionContractImplementor s4 = mockedSession();
 		assertEquals(VALUE1, localAccessStrategy.get(s4, KEY, s4.getTimestamp()));
-		SessionImplementor s5 = mockedSession();
+		SharedSessionContractImplementor s5 = mockedSession();
 		remoteAccessStrategy.putFromLoad(s5, KEY, VALUE1, s5.getTimestamp(), 1);
-		SessionImplementor s6 = mockedSession();
+		SharedSessionContractImplementor s6 = mockedSession();
 		assertEquals(VALUE1, remoteAccessStrategy.get(s6, KEY, s6.getTimestamp()));
 
 		// Wait for async propagation
@@ -322,13 +322,13 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 			return null;
 		});
 		// This should re-establish the region root node in the optimistic case
-		SessionImplementor s7 = mockedSession();
+		SharedSessionContractImplementor s7 = mockedSession();
 		assertNull(localAccessStrategy.get(s7, KEY, s7.getTimestamp()));
 		assertEquals(0, localRegion.getCache().size());
 
 		// Re-establishing the region root on the local node doesn't
 		// propagate it to other nodes. Do a get on the remote node to re-establish
-		SessionImplementor s8 = mockedSession();
+		SharedSessionContractImplementor s8 = mockedSession();
 		assertNull(remoteAccessStrategy.get(s8, KEY, s8.getTimestamp()));
 		assertEquals(0, remoteRegion.getCache().size());
 
@@ -336,18 +336,18 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 		sleep(250);
 
 		// Test whether the get above messes up the optimistic version
-		SessionImplementor s9 = mockedSession();
+		SharedSessionContractImplementor s9 = mockedSession();
  		assertTrue(remoteAccessStrategy.putFromLoad(s9, KEY, VALUE1, s9.getTimestamp(), 1));
-		SessionImplementor s10 = mockedSession();
+		SharedSessionContractImplementor s10 = mockedSession();
 		assertEquals(VALUE1, remoteAccessStrategy.get(s10, KEY, s10.getTimestamp()));
 		assertEquals(1, remoteRegion.getCache().size());
 
 		// Wait for async propagation
 		sleep(250);
 
-		SessionImplementor s11 = mockedSession();
+		SharedSessionContractImplementor s11 = mockedSession();
 		assertEquals((isUsingInvalidation() ? null : VALUE1), localAccessStrategy.get(s11, KEY, s11.getTimestamp()));
-		SessionImplementor s12 = mockedSession();
+		SharedSessionContractImplementor s12 = mockedSession();
 		assertEquals(VALUE1, remoteAccessStrategy.get(s12, KEY, s12.getTimestamp()));
 	}
 
@@ -369,7 +369,7 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 		@Override
 		public void run() {
 			try {
-				SessionImplementor session = mockedSession();
+				SharedSessionContractImplementor session = mockedSession();
 				withTx(remoteEnvironment, session, () -> {
 
 					assertNull(remoteAccessStrategy.get(session, KEY, session.getTimestamp()));

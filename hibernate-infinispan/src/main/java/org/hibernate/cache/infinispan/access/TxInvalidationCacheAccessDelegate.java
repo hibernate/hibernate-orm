@@ -9,7 +9,7 @@ package org.hibernate.cache.infinispan.access;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.impl.BaseRegion;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * Delegate for transactional caches
@@ -23,7 +23,7 @@ public class TxInvalidationCacheAccessDelegate extends InvalidationCacheAccessDe
 
 	@Override
 	@SuppressWarnings("UnusedParameters")
-	public boolean insert(SessionImplementor session, Object key, Object value, Object version) throws CacheException {
+	public boolean insert(SharedSessionContractImplementor session, Object key, Object value, Object version) throws CacheException {
 		if ( !region.checkValid() ) {
 			return false;
 		}
@@ -46,7 +46,7 @@ public class TxInvalidationCacheAccessDelegate extends InvalidationCacheAccessDe
 
 	@Override
 	@SuppressWarnings("UnusedParameters")
-	public boolean update(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion)
+	public boolean update(SharedSessionContractImplementor session, Object key, Object value, Object currentVersion, Object previousVersion)
 			throws CacheException {
 		// We update whether or not the region is valid. Other nodes
 		// may have already restored the region so they need to
@@ -69,7 +69,7 @@ public class TxInvalidationCacheAccessDelegate extends InvalidationCacheAccessDe
 	}
 
 	@Override
-	public boolean afterInsert(SessionImplementor session, Object key, Object value, Object version) {
+	public boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value, Object version) {
 		if ( !putValidator.endInvalidatingKey(session, key) ) {
 			log.failedEndInvalidating(key, region.getName());
 		}
@@ -77,7 +77,7 @@ public class TxInvalidationCacheAccessDelegate extends InvalidationCacheAccessDe
 	}
 
 	@Override
-	public boolean afterUpdate(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock) {
+	public boolean afterUpdate(SharedSessionContractImplementor session, Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock) {
 		if ( !putValidator.endInvalidatingKey(session, key) ) {
 			log.failedEndInvalidating(key, region.getName());
 		}

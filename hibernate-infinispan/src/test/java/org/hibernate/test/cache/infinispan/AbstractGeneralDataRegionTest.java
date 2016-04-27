@@ -21,18 +21,20 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.impl.BaseGeneralDataRegion;
-import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.spi.GeneralDataRegion;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 import org.hibernate.test.cache.infinispan.util.TestInfinispanRegionFactory;
-import org.infinispan.AdvancedCache;
-import org.jboss.logging.Logger;
 import org.junit.Test;
+
+import org.infinispan.AdvancedCache;
+
+import org.jboss.logging.Logger;
 
 import static org.hibernate.test.cache.infinispan.util.CacheTestUtil.assertEqualsEventually;
 import static org.junit.Assert.assertEquals;
@@ -111,8 +113,8 @@ public abstract class AbstractGeneralDataRegionTest extends AbstractRegionImplTe
 		withSessionFactoriesAndRegions(2, ((sessionFactories, regions) -> {
 			GeneralDataRegion localRegion = regions.get(0);
 			GeneralDataRegion remoteRegion = regions.get(1);
-			SessionImplementor localSession = (SessionImplementor) sessionFactories.get(0).openSession();
-			SessionImplementor remoteSession = (SessionImplementor) sessionFactories.get(1).openSession();
+			SharedSessionContractImplementor localSession = (SharedSessionContractImplementor) sessionFactories.get(0).openSession();
+			SharedSessionContractImplementor remoteSession = (SharedSessionContractImplementor) sessionFactories.get(1).openSession();
 			try {
 				assertNull("local is clean", localRegion.get(localSession, KEY));
 				assertNull("remote is clean", remoteRegion.get(remoteSession, KEY));
@@ -166,8 +168,8 @@ public abstract class AbstractGeneralDataRegionTest extends AbstractRegionImplTe
 			GeneralDataRegion remoteRegion = regions.get(1);
 			AdvancedCache localCache = ((BaseGeneralDataRegion) localRegion).getCache();
 			AdvancedCache remoteCache = ((BaseGeneralDataRegion) remoteRegion).getCache();
-			SessionImplementor localSession = (SessionImplementor) sessionFactories.get(0).openSession();
-			SessionImplementor remoteSession = (SessionImplementor) sessionFactories.get(1).openSession();
+			SharedSessionContractImplementor localSession = (SharedSessionContractImplementor) sessionFactories.get(0).openSession();
+			SharedSessionContractImplementor remoteSession = (SharedSessionContractImplementor) sessionFactories.get(1).openSession();
 
 			try {
 				Set localKeys = localCache.keySet();

@@ -11,7 +11,7 @@ import org.hibernate.cache.infinispan.access.AccessDelegate;
 import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -28,12 +28,12 @@ class ReadOnlyAccess implements NaturalIdRegionAccessStrategy {
 	}
 
 	@Override
-	public boolean insert(SessionImplementor session, Object key, Object value) throws CacheException {
+	public boolean insert(SharedSessionContractImplementor session, Object key, Object value) throws CacheException {
 		return delegate.insert( session, key, value, null );
 	}
 
 	@Override
-	public boolean update(SessionImplementor session, Object key, Object value) throws CacheException {
+	public boolean update(SharedSessionContractImplementor session, Object key, Object value) throws CacheException {
 		throw new UnsupportedOperationException( "Illegal attempt to edit read only item" );
 	}
 
@@ -53,23 +53,23 @@ class ReadOnlyAccess implements NaturalIdRegionAccessStrategy {
 	}
 
 	@Override
-	public Object get(SessionImplementor session, Object key, long txTimestamp) throws CacheException {
+	public Object get(SharedSessionContractImplementor session, Object key, long txTimestamp) throws CacheException {
 		return delegate.get( session, key, txTimestamp );
 	}
 
 	@Override
-	public boolean putFromLoad(SessionImplementor session, Object key, Object value, long txTimestamp, Object version) throws CacheException {
+	public boolean putFromLoad(SharedSessionContractImplementor session, Object key, Object value, long txTimestamp, Object version) throws CacheException {
 		return delegate.putFromLoad( session, key, value, txTimestamp, version );
 	}
 
 	@Override
-	public boolean putFromLoad(SessionImplementor session, Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
+	public boolean putFromLoad(SharedSessionContractImplementor session, Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
 			throws CacheException {
 		return delegate.putFromLoad( session, key, value, txTimestamp, version, minimalPutOverride );
 	}
 
 	@Override
-	public void remove(SessionImplementor session, Object key) throws CacheException {
+	public void remove(SharedSessionContractImplementor session, Object key) throws CacheException {
 		delegate.remove( session, key );
 	}
 
@@ -79,7 +79,7 @@ class ReadOnlyAccess implements NaturalIdRegionAccessStrategy {
 	}
 
 	@Override
-	public SoftLock lockItem(SessionImplementor session, Object key, Object version) throws CacheException {
+	public SoftLock lockItem(SharedSessionContractImplementor session, Object key, Object version) throws CacheException {
 		return null;
 	}
 
@@ -89,7 +89,7 @@ class ReadOnlyAccess implements NaturalIdRegionAccessStrategy {
 	}
 
 	@Override
-	public void unlockItem(SessionImplementor session, Object key, SoftLock lock) throws CacheException {
+	public void unlockItem(SharedSessionContractImplementor session, Object key, SoftLock lock) throws CacheException {
 		delegate.unlockItem( session, key );
 	}
 
@@ -98,17 +98,17 @@ class ReadOnlyAccess implements NaturalIdRegionAccessStrategy {
 	}
 
 	@Override
-	public boolean afterInsert(SessionImplementor session, Object key, Object value) throws CacheException {
+	public boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value) throws CacheException {
 		return delegate.afterInsert( session, key, value, null );
 	}
 
 	@Override
-	public boolean afterUpdate(SessionImplementor session, Object key, Object value, SoftLock lock) throws CacheException {
+	public boolean afterUpdate(SharedSessionContractImplementor session, Object key, Object value, SoftLock lock) throws CacheException {
 		throw new UnsupportedOperationException( "Illegal attempt to edit read only item" );
 	}
 
 	@Override
-	public Object generateCacheKey(Object[] naturalIdValues, EntityPersister persister, SessionImplementor session) {
+	public Object generateCacheKey(Object[] naturalIdValues, EntityPersister persister, SharedSessionContractImplementor session) {
 		return region.getCacheKeysFactory().createNaturalIdKey(naturalIdValues, persister, session);
 	}
 

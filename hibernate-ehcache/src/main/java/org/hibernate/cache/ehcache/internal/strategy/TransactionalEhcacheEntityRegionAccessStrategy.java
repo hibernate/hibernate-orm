@@ -8,6 +8,7 @@ package org.hibernate.cache.ehcache.internal.strategy;
 
 import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
+
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheEntityRegion;
@@ -16,7 +17,7 @@ import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -47,17 +48,17 @@ public class TransactionalEhcacheEntityRegionAccessStrategy extends AbstractEhca
 	}
 
 	@Override
-	public boolean afterInsert(SessionImplementor session, Object key, Object value, Object version) {
+	public boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value, Object version) {
 		return false;
 	}
 
 	@Override
-	public boolean afterUpdate(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock) {
+	public boolean afterUpdate(SharedSessionContractImplementor session, Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock) {
 		return false;
 	}
 
 	@Override
-	public Object get(SessionImplementor session, Object key, long txTimestamp) throws CacheException {
+	public Object get(SharedSessionContractImplementor session, Object key, long txTimestamp) throws CacheException {
 		try {
 			final Element element = ehcache.get( key );
 			return element == null ? null : element.getObjectValue();
@@ -73,7 +74,7 @@ public class TransactionalEhcacheEntityRegionAccessStrategy extends AbstractEhca
 	}
 
 	@Override
-	public boolean insert(SessionImplementor session, Object key, Object value, Object version)
+	public boolean insert(SharedSessionContractImplementor session, Object key, Object value, Object version)
 			throws CacheException {
 		//OptimisticCache? versioning?
 		try {
@@ -86,13 +87,13 @@ public class TransactionalEhcacheEntityRegionAccessStrategy extends AbstractEhca
 	}
 
 	@Override
-	public SoftLock lockItem(SessionImplementor session, Object key, Object version) throws CacheException {
+	public SoftLock lockItem(SharedSessionContractImplementor session, Object key, Object version) throws CacheException {
 		return null;
 	}
 
 	@Override
 	public boolean putFromLoad(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Object key,
 			Object value,
 			long txTimestamp,
@@ -112,7 +113,7 @@ public class TransactionalEhcacheEntityRegionAccessStrategy extends AbstractEhca
 	}
 
 	@Override
-	public void remove(SessionImplementor session, Object key) throws CacheException {
+	public void remove(SharedSessionContractImplementor session, Object key) throws CacheException {
 		try {
 			ehcache.remove( key );
 		}
@@ -122,13 +123,13 @@ public class TransactionalEhcacheEntityRegionAccessStrategy extends AbstractEhca
 	}
 
 	@Override
-	public void unlockItem(SessionImplementor session, Object key, SoftLock lock) throws CacheException {
+	public void unlockItem(SharedSessionContractImplementor session, Object key, SoftLock lock) throws CacheException {
 		// no-op
 	}
 
 	@Override
 	public boolean update(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Object key,
 			Object value,
 			Object currentVersion,

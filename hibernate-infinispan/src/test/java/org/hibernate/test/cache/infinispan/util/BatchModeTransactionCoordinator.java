@@ -27,7 +27,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Mocks transaction coordinator when {@link org.hibernate.engine.spi.SessionImplementor} is only mocked
+ * Mocks transaction coordinator when {@link org.hibernate.engine.spi.SharedSessionContractImplementor} is only mocked
  * and {@link org.infinispan.transaction.tm.BatchModeTransactionManager} is used.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -174,6 +174,21 @@ public class BatchModeTransactionCoordinator implements TransactionCoordinator {
 		@Override
 		public void rollback() {
 			transactionDriver.rollback();
+		}
+
+		@Override
+		public void setRollbackOnly() {
+
+		}
+
+		@Override
+		public boolean getRollbackOnly() {
+			return false;
+		}
+
+		@Override
+		public boolean isActive() {
+			return false;
 		}
 
 		@Override

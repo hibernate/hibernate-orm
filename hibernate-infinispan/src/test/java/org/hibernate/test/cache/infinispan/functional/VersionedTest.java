@@ -21,7 +21,7 @@ import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.infinispan.util.VersionedEntry;
 import org.hibernate.cache.spi.entry.CacheEntry;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import org.hibernate.test.cache.infinispan.functional.entities.Item;
 import org.hibernate.test.cache.infinispan.functional.entities.OtherItem;
@@ -144,7 +144,7 @@ public class VersionedTest extends AbstractNonInvalidationTest {
 
       Future<Boolean> action = executor.submit(() -> withTxSessionApply(s -> {
          try {
-            ((SessionImplementor) s).getTransactionCoordinator().getLocalSynchronizations().registerSynchronization(new Synchronization() {
+            ((SharedSessionContractImplementor) s).getTransactionCoordinator().getLocalSynchronizations().registerSynchronization(new Synchronization() {
                @Override
                public void beforeCompletion() {
                }

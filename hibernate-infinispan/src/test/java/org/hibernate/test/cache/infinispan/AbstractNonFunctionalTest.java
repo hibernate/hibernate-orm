@@ -10,33 +10,34 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
+import javax.transaction.TransactionManager;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.util.Caches;
+import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
+
+import org.hibernate.testing.junit4.CustomParameterized;
 import org.hibernate.test.cache.infinispan.util.BatchModeJtaPlatform;
+import org.hibernate.test.cache.infinispan.util.CacheTestSupport;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
 import org.hibernate.test.cache.infinispan.util.TestInfinispanRegionFactory;
-import org.hibernate.testing.junit4.CustomParameterized;
-import org.infinispan.Cache;
-import org.infinispan.configuration.cache.CacheMode;
-import org.jboss.logging.Logger;
 import org.junit.After;
 import org.junit.Before;
-
-import org.hibernate.cache.spi.RegionFactory;
-import org.hibernate.test.cache.infinispan.util.CacheTestSupport;
 import org.junit.Rule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import javax.transaction.TransactionManager;
+import org.infinispan.Cache;
+import org.infinispan.configuration.cache.CacheMode;
+
+import org.jboss.logging.Logger;
 
 /**
  * Base class for all non-functional tests of Infinispan integration.
@@ -139,7 +140,7 @@ public abstract class AbstractNonFunctionalTest extends org.hibernate.testing.ju
 		return true;
 	}
 
-	protected <T> T withTx(NodeEnvironment environment, SessionImplementor session, Callable<T> callable) throws Exception {
+	protected <T> T withTx(NodeEnvironment environment, SharedSessionContractImplementor session, Callable<T> callable) throws Exception {
 		if (jtaPlatform != null) {
 			TransactionManager tm = environment.getServiceRegistry().getService(JtaPlatform.class).retrieveTransactionManager();
 			return Caches.withinTx(tm, callable);

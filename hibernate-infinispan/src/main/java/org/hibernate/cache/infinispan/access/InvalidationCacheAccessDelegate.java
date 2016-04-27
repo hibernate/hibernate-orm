@@ -10,7 +10,7 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.impl.BaseRegion;
 import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import org.infinispan.AdvancedCache;
 
@@ -54,7 +54,7 @@ public abstract class InvalidationCacheAccessDelegate implements AccessDelegate 
     */
 	@Override
 	@SuppressWarnings("UnusedParameters")
-	public Object get(SessionImplementor session, Object key, long txTimestamp) throws CacheException {
+	public Object get(SharedSessionContractImplementor session, Object key, long txTimestamp) throws CacheException {
 		if ( !region.checkValid() ) {
 			return null;
 		}
@@ -66,7 +66,7 @@ public abstract class InvalidationCacheAccessDelegate implements AccessDelegate 
 	}
 
 	@Override
-	public boolean putFromLoad(SessionImplementor session, Object key, Object value, long txTimestamp, Object version) {
+	public boolean putFromLoad(SharedSessionContractImplementor session, Object key, Object value, long txTimestamp, Object version) {
 		return putFromLoad(session, key, value, txTimestamp, version, false );
 	}
 
@@ -85,7 +85,7 @@ public abstract class InvalidationCacheAccessDelegate implements AccessDelegate 
     */
 	@Override
 	@SuppressWarnings("UnusedParameters")
-	public boolean putFromLoad(SessionImplementor session, Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
+	public boolean putFromLoad(SharedSessionContractImplementor session, Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
 			throws CacheException {
 		if ( !region.checkValid() ) {
 			if ( TRACE_ENABLED ) {
@@ -122,7 +122,7 @@ public abstract class InvalidationCacheAccessDelegate implements AccessDelegate 
 	}
 
 	@Override
-	public void remove(SessionImplementor session, Object key) throws CacheException {
+	public void remove(SharedSessionContractImplementor session, Object key) throws CacheException {
 		if ( !putValidator.beginInvalidatingKey(session, key)) {
 			throw log.failedInvalidatePendingPut(key, region.getName());
 		}
@@ -173,7 +173,7 @@ public abstract class InvalidationCacheAccessDelegate implements AccessDelegate 
 	}
 
 	@Override
-	public void unlockItem(SessionImplementor session, Object key) throws CacheException {
+	public void unlockItem(SharedSessionContractImplementor session, Object key) throws CacheException {
 		if ( !putValidator.endInvalidatingKey(session, key) ) {
 			log.failedEndInvalidating(key, region.getName());
 		}

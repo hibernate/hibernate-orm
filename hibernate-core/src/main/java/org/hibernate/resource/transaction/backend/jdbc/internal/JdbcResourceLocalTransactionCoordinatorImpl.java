@@ -168,16 +168,6 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		for ( TransactionObserver observer : observers ) {
 			observer.afterCompletion( successful, false );
 		}
-		invalidateDelegate();
-	}
-
-	private void invalidateDelegate() {
-		if ( physicalTransactionDelegate == null ) {
-			throw new IllegalStateException( "Physical-transaction delegate not known on attempt to invalidate" );
-		}
-
-		physicalTransactionDelegate.invalidate();
-		physicalTransactionDelegate = null;
 	}
 
 	public void addObserver(TransactionObserver observer) {

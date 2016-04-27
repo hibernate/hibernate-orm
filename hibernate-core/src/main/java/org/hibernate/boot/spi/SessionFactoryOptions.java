@@ -43,11 +43,20 @@ public interface SessionFactoryOptions {
 	 */
 	StandardServiceRegistry getServiceRegistry();
 
-	boolean isJpaBootstrap();
-
 	Object getBeanManagerReference();
 
 	Object getValidatorFactoryReference();
+
+	/**
+	 * @deprecated (since 5.2) In fact added in 5.2 as part of consolidating JPA support
+	 * directly into Hibernate contracts (SessionFactory, Session); intended to provide
+	 * transition help in cases where we need to know the difference in JPA/native use for
+	 * various reasons.
+	 *
+	 * @see SessionFactoryBuilderImplementor#markAsJpaBootstrap
+	 */
+	@Deprecated
+	boolean isJpaBootstrap();
 
 	/**
 	 * The name to be used for the SessionFactory.  This is use both in:<ul>

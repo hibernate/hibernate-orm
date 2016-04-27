@@ -476,8 +476,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public void markAsJpaBootstrap(boolean jpaBootstrap) {
-		this.options.jpaBootstrap = jpaBootstrap;
+	public void markAsJpaBootstrap() {
+		this.options.jpaBootstrap = true;
 	}
 
 	@Override

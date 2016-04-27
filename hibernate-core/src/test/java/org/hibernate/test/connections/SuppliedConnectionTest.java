@@ -63,7 +63,9 @@ public class SuppliedConnectionTest extends ConnectionManagementTestCase {
 	@Override
 	protected Session getSessionUnderTest() throws Throwable {
 		connectionUnderTest = cp.getConnection();
-		return sessionFactory().withOptions().connection( connectionUnderTest ).openSession();
+		Session session = sessionFactory().withOptions().connection( connectionUnderTest ).openSession();
+		session.beginTransaction();
+		return session;
 	}
 
 	@Override

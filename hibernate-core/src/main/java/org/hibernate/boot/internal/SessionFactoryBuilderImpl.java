@@ -476,6 +476,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
+	public void markAsJpaBootstrap(boolean jpaBootstrap) {
+		this.options.jpaBootstrap = jpaBootstrap;
+	}
+
+	@Override
 	public SessionFactoryOptions buildSessionFactoryOptions() {
 		return new SessionFactoryOptionsImpl( this );
 	}
@@ -492,6 +497,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		private Object validatorFactoryReference;
 
 		// SessionFactory behavior
+		private boolean jpaBootstrap;
 		private String sessionFactoryName;
 		private boolean sessionFactoryNameAlsoJndiName;
 
@@ -805,6 +811,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		}
 
 		@Override
+		public boolean isJpaBootstrap() {
+			return jpaBootstrap;
+		}
+
+		@Override
 		public Object getBeanManagerReference() {
 			return beanManagerReference;
 		}
@@ -1083,6 +1094,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public StandardServiceRegistry getServiceRegistry() {
 		return options.getServiceRegistry();
+	}
+
+	@Override
+	public boolean isJpaBootstrap() {
+		return options.isJpaBootstrap();
 	}
 
 	@Override

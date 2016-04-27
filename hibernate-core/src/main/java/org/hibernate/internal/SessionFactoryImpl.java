@@ -158,6 +158,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	private final String name;
 	private final String uuid;
+	private final boolean jpaBootstrap;
 	private transient boolean isClosed;
 
 	private final transient SessionFactoryObserverChain observer = new SessionFactoryObserverChain();
@@ -220,6 +221,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		catch (Exception e) {
 			throw new AssertionFailure("Could not generate UUID");
 		}
+		this.jpaBootstrap = options.isJpaBootstrap();
 
 		final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 

@@ -15,5 +15,6 @@ import org.hibernate.boot.SessionFactoryBuilder;
  * @author Steve Ebersole
  */
 public interface SessionFactoryBuilderImplementor extends SessionFactoryBuilder {
-	public SessionFactoryOptions buildSessionFactoryOptions();
+	void markAsJpaBootstrap(boolean jpaBootstrap);
+	SessionFactoryOptions buildSessionFactoryOptions();
 }

@@ -48,6 +48,7 @@ import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.MetadataBuilderImplementor;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
 import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.cfg.AttributeConverterDefinition;
@@ -868,6 +869,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	protected void populate(SessionFactoryBuilder sfBuilder, StandardServiceRegistry ssr) {
+		( ( SessionFactoryBuilderImplementor) sfBuilder ).markAsJpaBootstrap( true );
+
 		final StrategySelector strategySelector = ssr.getService( StrategySelector.class );
 
 		// Locate and apply the requested SessionFactory-level interceptor (if one)

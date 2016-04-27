@@ -21,7 +21,9 @@ import java.util.Set;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 import javax.persistence.EntityGraph;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceContextType;
+import javax.persistence.PersistenceException;
 import javax.persistence.PersistenceUnitUtil;
 import javax.persistence.Query;
 import javax.persistence.SynchronizationType;
@@ -72,6 +74,10 @@ import org.hibernate.engine.query.spi.QueryPlanCache;
 import org.hibernate.engine.query.spi.ReturnMetadata;
 import org.hibernate.engine.spi.CacheImplementor;
 import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.engine.spi.NamedQueryDefinition;
+import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
+import org.hibernate.engine.spi.NamedSQLQueryDefinition;
+import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
 import org.hibernate.engine.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionOwner;
@@ -97,9 +103,11 @@ import org.hibernate.metamodel.internal.MetamodelImpl;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
+import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.proxy.HibernateProxyHelper;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
+import org.hibernate.query.procedure.internal.StoredProcedureQueryImpl;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.AfterCompletionAction;
@@ -167,7 +175,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	private final transient MetamodelImpl metamodel;
 	private final transient CriteriaBuilderImpl criteriaBuilder;
-	private final transient PersistenceUnitUtilImpl persistenceUnitUtil;
+	private final PersistenceUnitUtil jpaPersistenceUnitUtil;
 	private final transient CacheImplementor cacheAccess;
 	private final transient org.hibernate.query.spi.NamedQueryRepository namedQueryRepository;
 	private final transient QueryPlanCache queryPlanCache;
@@ -221,7 +229,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		this.sqlFunctionRegistry = new SQLFunctionRegistry( jdbcServices.getJdbcEnvironment().getDialect(), options.getCustomSqlFunctionMap() );
 		this.cacheAccess = this.serviceRegistry.getService( CacheImplementor.class );
 		this.criteriaBuilder = new CriteriaBuilderImpl( this );
-		this.persistenceUnitUtil = new PersistenceUnitUtilImpl( this );
+		this.jpaPersistenceUnitUtil = new PersistenceUnitUtilImpl( this );
 
 		for ( SessionFactoryObserver sessionFactoryObserver : options.getSessionFactoryObservers() ) {
 			this.observer.addObserver( sessionFactoryObserver );
@@ -729,17 +737,120 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public PersistenceUnitUtil getPersistenceUnitUtil() {
-		return null;
+		validateNotClosed();
+		return jpaPersistenceUnitUtil;
 	}
 
 	@Override
 	public void addNamedQuery(String name, Query query) {
+		validateNotClosed();
 
+		// NOTE : we use Query#unwrap here (rather than direct type checking) to account for possibly wrapped
+		// query implementations
+
+		// first, handle StoredProcedureQuery
+		try {
+			final StoredProcedureQueryImpl unwrapped = query.unwrap( StoredProcedureQueryImpl.class );
+			if ( unwrapped != null ) {
+				addNamedStoredProcedureQuery( name, unwrapped );
+				return;
+			}
+		}
+		catch ( PersistenceException ignore ) {
+			// this means 'query' is not a StoredProcedureQueryImpl
+		}
+
+		// then try as a native-SQL or JPQL query
+		try {
+			org.hibernate.query.Query hibernateQuery = query.unwrap( org.hibernate.query.Query.class );
+			if ( hibernateQuery != null ) {
+				// create and register the proper NamedQueryDefinition...
+				if ( org.hibernate.query.NativeQuery.class.isInstance( hibernateQuery ) ) {
+					getNamedQueryRepository().registerNamedSQLQueryDefinition(
+							name,
+							extractSqlQueryDefinition( (org.hibernate.query.NativeQuery) hibernateQuery, name )
+					);
+				}
+				else {
+					getNamedQueryRepository().registerNamedQueryDefinition(
+							name,
+							extractHqlQueryDefinition( hibernateQuery, name )
+					);
+				}
+				return;
+			}
+		}
+		catch ( PersistenceException ignore ) {
+			// this means 'query' is not a native-SQL or JPQL query
+		}
+
+		// if we get here, we are unsure how to properly unwrap the incoming query to extract the needed information
+		throw new PersistenceException(
+				String.format(
+						"Unsure how to how to properly unwrap given Query [%s] as basis for named query",
+						query
+				)
+		);
+	}
+
+	private void addNamedStoredProcedureQuery(String name, StoredProcedureQueryImpl query) {
+		final ProcedureCall procedureCall = query.getHibernateProcedureCall();
+		getNamedQueryRepository().registerNamedProcedureCallMemento(
+				name,
+				procedureCall.extractMemento( query.getHints() )
+		);
+	}
+
+	private NamedSQLQueryDefinition extractSqlQueryDefinition(org.hibernate.query.NativeQuery nativeSqlQuery, String name) {
+		final NamedSQLQueryDefinitionBuilder builder = new NamedSQLQueryDefinitionBuilder( name );
+		fillInNamedQueryBuilder( builder, nativeSqlQuery );
+		builder.setCallable( nativeSqlQuery.isCallable() )
+				.setQuerySpaces( nativeSqlQuery.getSynchronizedQuerySpaces() )
+				.setQueryReturns( nativeSqlQuery.getQueryReturns() );
+		return builder.createNamedQueryDefinition();
+	}
+
+	private NamedQueryDefinition extractHqlQueryDefinition(org.hibernate.query.Query hqlQuery, String name) {
+		final NamedQueryDefinitionBuilder builder = new NamedQueryDefinitionBuilder( name );
+		fillInNamedQueryBuilder( builder, hqlQuery );
+		// LockOptions only valid for HQL/JPQL queries...
+		builder.setLockOptions( hqlQuery.getLockOptions().makeCopy() );
+		return builder.createNamedQueryDefinition();
+	}
+
+	private void fillInNamedQueryBuilder(NamedQueryDefinitionBuilder builder, org.hibernate.query.Query query) {
+		builder.setQuery( query.getQueryString() )
+				.setComment( query.getComment() )
+				.setCacheable( query.isCacheable() )
+				.setCacheRegion( query.getCacheRegion() )
+				.setCacheMode( query.getCacheMode() )
+				.setTimeout( query.getTimeout() )
+				.setFetchSize( query.getFetchSize() )
+				.setFirstResult( query.getFirstResult() )
+				.setMaxResults( query.getMaxResults() )
+				.setReadOnly( query.isReadOnly() )
+				.setFlushMode( query.getHibernateFlushMode() );
 	}
 
 	@Override
-	public <T> T unwrap(Class<T> cls) {
-		return null;
+	public <T> T unwrap(Class<T> type) {
+		if ( type.isAssignableFrom( SessionFactory.class ) ) {
+			return type.cast( this );
+		}
+
+		if ( type.isAssignableFrom( SessionFactoryImplementor.class ) ) {
+			return type.cast( this );
+		}
+
+		if ( type.isAssignableFrom( SessionFactoryImpl.class ) ) {
+			return type.cast( this );
+		}
+
+		if ( type.isAssignableFrom( EntityManagerFactory.class ) ) {
+			return type.cast( this );
+		}
+
+		throw new PersistenceException( "Hibernate cannot unwrap EntityManagerFactory as '" + type.getName() + "'" );
 	}
 
 	@Override

@@ -108,7 +108,7 @@ public class ForeignGenerator implements IdentifierGenerator, Configurable {
 			id = session.save( foreignValueSourceType.getAssociatedEntityName(), associatedObject );
 		}
 
-		if ( session.contains(object) ) {
+		if ( session.contains( entityName, object ) ) {
 			//abort the save (the object is already saved by a circular cascade)
 			return IdentifierGeneratorHelper.SHORT_CIRCUIT_INDICATOR;
 			//throw new IdentifierGenerationException("save associated object first, or disable cascade for inverse association");

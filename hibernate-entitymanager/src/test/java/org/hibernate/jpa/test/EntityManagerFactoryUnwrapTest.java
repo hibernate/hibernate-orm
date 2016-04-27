@@ -9,6 +9,7 @@
 
 package org.hibernate.jpa.test;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceException;
 
@@ -89,18 +90,9 @@ public class EntityManagerFactoryUnwrapTest extends BaseEntityManagerFunctionalT
 	}
 
 	@Test
-	public void testEntityManagerCanBeUnwrappedToEntityManagerFactoryImpl() {
-		EntityManagerFactoryImpl entityManager = entityManagerFactory.unwrap( EntityManagerFactoryImpl.class );
-		assertNotNull(
-				"Unwrapping to EntityManagerFactoryImpl should be ok",
-				entityManager
-		);
-	}
-
-	@Test
 	public void testEntityManagerCannotBeUnwrappedToUnrelatedType() {
 		try {
-			entityManagerFactory.unwrap( EntityManagerImpl.class );
+			entityManagerFactory.unwrap( EntityManager.class );
 			fail( "It should not be possible to unwrap to unrelated type." );
 		}
 		catch ( PersistenceException e ) {

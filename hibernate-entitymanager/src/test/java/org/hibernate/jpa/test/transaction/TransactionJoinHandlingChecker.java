@@ -8,7 +8,7 @@ package org.hibernate.jpa.test.transaction;
 
 import javax.persistence.EntityManager;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 
@@ -25,7 +25,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class TransactionJoinHandlingChecker {
 	static void validateExplicitJoiningHandling(EntityManager entityManager) throws Exception {
-		SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
+		SharedSessionContractImplementor session = entityManager.unwrap( SharedSessionContractImplementor.class );
 
 		ExtraAssertions.assertTyping( JtaTransactionCoordinatorImpl.class, session.getTransactionCoordinator() );
 		JtaTransactionCoordinatorImpl transactionCoordinator = (JtaTransactionCoordinatorImpl) session.getTransactionCoordinator();

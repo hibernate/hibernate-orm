@@ -23,9 +23,9 @@ import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.AvailableSettings;
-import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
@@ -51,7 +51,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	private static final Dialect dialect = Dialect.getDialect();
 
 	private StandardServiceRegistryImpl serviceRegistry;
-	private HibernateEntityManagerFactory entityManagerFactory;
+	private SessionFactoryImplementor entityManagerFactory;
 
 	private EntityManager em;
 	private ArrayList<EntityManager> isolatedEms = new ArrayList<EntityManager>();
@@ -60,7 +60,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		return dialect;
 	}
 
-	protected HibernateEntityManagerFactory entityManagerFactory() {
+	protected SessionFactoryImplementor entityManagerFactory() {
 		return entityManagerFactory;
 	}
 
@@ -76,10 +76,9 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		entityManagerFactory =  Bootstrap.getEntityManagerFactoryBuilder(
 				buildPersistenceUnitDescriptor(),
 				buildSettings()
-		).build().unwrap( HibernateEntityManagerFactory.class );
+		).build().unwrap( SessionFactoryImplementor.class );
 
-		serviceRegistry = (StandardServiceRegistryImpl) entityManagerFactory.getSessionFactory()
-				.getServiceRegistry()
+		serviceRegistry = (StandardServiceRegistryImpl) entityManagerFactory.getServiceRegistry()
 				.getParentServiceRegistry();
 
 		afterEntityManagerFactoryBuilt();

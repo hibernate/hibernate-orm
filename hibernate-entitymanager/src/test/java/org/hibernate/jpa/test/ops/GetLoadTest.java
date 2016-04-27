@@ -97,13 +97,11 @@ public class GetLoadTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	private void clearCounts() {
-		( ( EntityManagerFactoryImpl ) entityManagerFactory() ).getSessionFactory().getStatistics().clear();
+		entityManagerFactory().getStatistics().clear();
 	}
 
 	private void assertFetchCount(int count) {
-		int fetches = ( int ) ( ( EntityManagerFactoryImpl ) entityManagerFactory() ).getSessionFactory()
-				.getStatistics()
-				.getEntityFetchCount();
+		int fetches = ( int ) entityManagerFactory().getStatistics().getEntityFetchCount();
 		assertEquals( count, fetches );
 	}
 

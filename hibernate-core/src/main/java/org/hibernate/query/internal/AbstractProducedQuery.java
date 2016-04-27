@@ -29,10 +29,12 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.MappingException;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
+import org.hibernate.Session;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
@@ -54,11 +56,13 @@ import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.proxy.HibernateProxyHelper;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.transform.ResultTransformer;
+import org.hibernate.type.SerializableType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
@@ -531,11 +535,33 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			type = parameterMetadata.getQueryParameter( namedParam ).getType();
 		}
 		if ( type == null ) {
-			type = StandardBasicTypes.SERIALIZABLE;
+			type = guessType( retType );
 		}
 		return type;
 	}
 
+	private Type guessType(Class clazz) throws HibernateException {
+		String typename = clazz.getName();
+		Type type = getProducer().getFactory().getTypeResolver().heuristicType( typename );
+		boolean serializable = type != null && type instanceof SerializableType;
+		if ( type == null || serializable ) {
+			try {
+				getProducer().getFactory().getMetamodel().entityPersister( clazz );
+			}
+			catch ( MappingException me ) {
+				if ( serializable ) {
+					return type;
+				}
+				else {
+					throw new HibernateException( "Could not determine a type for class: " + typename );
+				}
+			}
+			return ( (Session) getProducer() ).getTypeHelper().entity( clazz );
+		}
+		else {
+			return type;
+		}
+	}
 
 	@Override
 	@SuppressWarnings("unchecked")

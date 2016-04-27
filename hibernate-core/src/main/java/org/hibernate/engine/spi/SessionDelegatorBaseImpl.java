@@ -720,6 +720,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public boolean contains(String entityName, Object object) {
+		return delegate.contains( entityName, object );
+	}
+
+	@Override
 	public boolean contains(Object object) {
 		return delegate.contains( object );
 	}

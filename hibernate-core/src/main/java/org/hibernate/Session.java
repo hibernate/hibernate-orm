@@ -251,12 +251,15 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	Serializable getIdentifier(Object object);
 
 	/**
-	 * Check if this instance is associated with this <tt>Session</tt>.
+	 * Check if this entity is associated with this Session.  This form caters to
+	 * non-POJO entities, by allowing the entity-name to be passed in
 	 *
+	 * @param entityName The entity name
 	 * @param object an instance of a persistent class
+	 *
 	 * @return true if the given instance is associated with this <tt>Session</tt>
 	 */
-	boolean contains(Object object);
+	boolean contains(String entityName, Object object);
 
 	/**
 	 * Remove this instance from the session cache. Changes to the instance will

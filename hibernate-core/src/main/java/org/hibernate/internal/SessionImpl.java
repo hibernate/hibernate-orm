@@ -1885,19 +1885,87 @@ public final class SessionImpl
 	@Override
 	public boolean contains(Object object) {
 		checkOpen();
-//		checkTransactionSynchStatus();
+		checkTransactionSynchStatus();
 
-		if ( object != null && !HibernateProxy.class.isInstance( object ) && persistenceContext.getEntry( object ) == null ) {
-			// check if it is an entity -> if not throw an exception (per JPA)
-			try {
-				getSessionFactory().getMetamodel().entityPersister( object.getClass() );
-			}
-			catch (HibernateException e) {
-				throw convert( new IllegalArgumentException( "Not an entity:" + object.getClass() ) );
-			}
+		if ( object == null ) {
+			return false;
 		}
 
 		try {
+			if ( object instanceof HibernateProxy ) {
+				//do not use proxiesByKey, since not all
+				//proxies that point to this session's
+				//instances are in that collection!
+				LazyInitializer li = ( (HibernateProxy) object ).getHibernateLazyInitializer();
+				if ( li.isUninitialized() ) {
+					//if it is an uninitialized proxy, pointing
+					//with this session, then when it is accessed,
+					//the underlying instance will be "contained"
+					return li.getSession() == this;
+				}
+				else {
+					//if it is initialized, see if the underlying
+					//instance is contained, since we need to
+					//account for the fact that it might have been
+					//evicted
+					object = li.getImplementation();
+				}
+			}
+
+			// A session is considered to contain an entity only if the entity has
+			// an entry in the session's persistence context and the entry reports
+			// that the entity has not been removed
+			EntityEntry entry = persistenceContext.getEntry( object );
+			delayedAfterCompletion();
+
+			if ( entry == null ) {
+				if ( !HibernateProxy.class.isInstance( object ) && persistenceContext.getEntry( object ) == null ) {
+					// check if it is even an entity -> if not throw an exception (per JPA)
+					try {
+						final String entityName = getEntityNameResolver().resolveEntityName( object );
+						if ( entityName == null ) {
+							throw new IllegalArgumentException( "Could not resolve entity-name [" + object + "]" );
+						}
+						getSessionFactory().getMetamodel().entityPersister( object.getClass() );
+					}
+					catch (HibernateException e) {
+						throw new IllegalArgumentException( "Not an entity [" + object.getClass() + "]", e );
+					}
+				}
+				return false;
+			}
+			else {
+				return entry.getStatus() != Status.DELETED && entry.getStatus() != Status.GONE;
+			}
+		}
+		catch (MappingException e) {
+			throw new IllegalArgumentException( e.getMessage(), e );
+		}
+		catch (RuntimeException e) {
+			throw convert( e );
+		}
+	}
+
+	@Override
+	public boolean contains(String entityName, Object object) {
+		checkOpen();
+		checkTransactionSynchStatus();
+
+		if ( object == null ) {
+			return false;
+		}
+
+		try {
+			if ( !HibernateProxy.class.isInstance( object ) && persistenceContext.getEntry( object ) == null ) {
+				// check if it is an entity -> if not throw an exception (per JPA)
+				try {
+					getSessionFactory().getMetamodel().entityPersister( entityName );
+				}
+				catch (HibernateException e) {
+					throw new IllegalArgumentException( "Not an entity [" + entityName + "] : " + object );
+				}
+			}
+
 			if ( object instanceof HibernateProxy ) {
 				//do not use proxiesByKey, since not all
 				//proxies that point to this session's

@@ -106,6 +106,7 @@ import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SessionOwner;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
@@ -3889,6 +3890,9 @@ public final class SessionImpl
 			return (T) this;
 		}
 		if ( SessionImplementor.class.isAssignableFrom( clazz ) ) {
+			return (T) this;
+		}
+		if ( SharedSessionContractImplementor.class.isAssignableFrom( clazz ) ) {
 			return (T) this;
 		}
 		if ( EntityManager.class.isAssignableFrom( clazz ) ) {

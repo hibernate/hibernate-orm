@@ -10,10 +10,14 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
- * Mark an Entity or a Collection as immutable. No annotation means the element is mutable.
+ * Mark an Entity, Attribute or a Collection as immutable. No annotation means the element is mutable.
  * <p>
  * An immutable entity may not be updated by the application. Updates to an immutable
  * entity will be ignored, but no exception is thrown. &#064;Immutable  must be used on root entities only. 
+ * </p>
+ * <p>
+ * An immutable attribute will not be copied to detect if entity is dirty. As a result loading entity will require less memory 
+ * and checking changes will be much faster.
  * </p>
  * <p>
  * &#064;Immutable placed on a collection makes the collection immutable, meaning additions and 

@@ -587,12 +587,21 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 
 	@Override
 	public <T> ParameterExpression<T> parameter(Class<T> paramClass) {
-		return new ParameterExpressionImpl<T>( this, paramClass, guessType( paramClass ) );
+		return new ParameterExpressionImpl<T>(
+				this,
+				paramClass,
+				sessionFactory.resolveParameterBindType( paramClass )
+		);
 	}
 
 	@Override
 	public <T> ParameterExpression<T> parameter(Class<T> paramClass, String name) {
-		return new ParameterExpressionImpl<T>( this, paramClass, name, guessType( paramClass ) );
+		return new ParameterExpressionImpl<T>(
+				this,
+				paramClass,
+				name,
+				sessionFactory.resolveParameterBindType( paramClass )
+		);
 	}
 
 	@Override
@@ -1351,28 +1360,5 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	@Override
 	public <E, C extends Collection<E>> Predicate isNotMember(Expression<E> eExpression, Expression<C> cExpression) {
 		return isMember(eExpression, cExpression).not();
-	}
-
-	private Type guessType(Class clazz) throws HibernateException {
-		String typename = clazz.getName();
-		Type type = sessionFactory.getTypeResolver().heuristicType( typename );
-		boolean serializable = type != null && type instanceof SerializableType;
-		if ( type == null || serializable ) {
-			try {
-				sessionFactory.getMetamodel().entityPersister( clazz );
-			}
-			catch ( MappingException me ) {
-				if ( serializable ) {
-					return type;
-				}
-				else {
-					throw new HibernateException( "Could not determine a type for class: " + typename );
-				}
-			}
-			return  sessionFactory.getTypeHelper().entity( clazz );
-		}
-		else {
-			return type;
-		}
 	}
 }

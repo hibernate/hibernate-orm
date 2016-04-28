@@ -508,4 +508,9 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	public Type resolveParameterBindType(Object bindValue) {
 		return delegate.resolveParameterBindType( bindValue );
 	}
+
+	@Override
+	public Type resolveParameterBindType(Class clazz) {
+		return delegate.resolveParameterBindType( clazz );
+	}
 }

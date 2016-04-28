@@ -533,32 +533,9 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			type = parameterMetadata.getQueryParameter( namedParam ).getType();
 		}
 		if ( type == null ) {
-			type = guessType( retType );
+			type = getProducer().getFactory().resolveParameterBindType( retType );
 		}
 		return type;
-	}
-
-	private Type guessType(Class clazz) throws HibernateException {
-		String typename = clazz.getName();
-		Type type = getProducer().getFactory().getTypeResolver().heuristicType( typename );
-		boolean serializable = type != null && type instanceof SerializableType;
-		if ( type == null || serializable ) {
-			try {
-				getProducer().getFactory().getMetamodel().entityPersister( clazz );
-			}
-			catch ( MappingException me ) {
-				if ( serializable ) {
-					return type;
-				}
-				else {
-					throw new HibernateException( "Could not determine a type for class: " + typename );
-				}
-			}
-			return ( (Session) getProducer() ).getTypeHelper().entity( clazz );
-		}
-		else {
-			return type;
-		}
 	}
 
 	@Override

@@ -400,8 +400,10 @@ public final class SessionImpl
 	public void close() throws HibernateException {
 		log.tracef( "Closing session [%s]", getSessionIdentifier() );
 
-// todo : we want this check if usage is JPA, but not native Hibernate usage
-//		checkOpen();
+		// todo : we want this check if usage is JPA, but not native Hibernate usage
+		if ( getSessionFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
+			checkOpen();
+		}
 
 		super.close();
 

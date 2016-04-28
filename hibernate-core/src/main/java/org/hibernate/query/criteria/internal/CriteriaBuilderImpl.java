@@ -35,6 +35,9 @@ import javax.persistence.criteria.Selection;
 import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
 
+import org.hibernate.HibernateException;
+import org.hibernate.MappingException;
+import org.hibernate.Session;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -81,6 +84,8 @@ import org.hibernate.query.criteria.internal.predicate.IsEmptyPredicate;
 import org.hibernate.query.criteria.internal.predicate.LikePredicate;
 import org.hibernate.query.criteria.internal.predicate.MemberOfPredicate;
 import org.hibernate.query.criteria.internal.predicate.NullnessPredicate;
+import org.hibernate.type.SerializableType;
+import org.hibernate.type.Type;
 
 /**
  * Hibernate implementation of the JPA {@link CriteriaBuilder} contract.
@@ -582,12 +587,12 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 
 	@Override
 	public <T> ParameterExpression<T> parameter(Class<T> paramClass) {
-		return new ParameterExpressionImpl<T>( this, paramClass );
+		return new ParameterExpressionImpl<T>( this, paramClass, guessType( paramClass ) );
 	}
 
 	@Override
 	public <T> ParameterExpression<T> parameter(Class<T> paramClass, String name) {
-		return new ParameterExpressionImpl<T>( this, paramClass, name );
+		return new ParameterExpressionImpl<T>( this, paramClass, name, guessType( paramClass ) );
 	}
 
 	@Override
@@ -1346,5 +1351,28 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	@Override
 	public <E, C extends Collection<E>> Predicate isNotMember(Expression<E> eExpression, Expression<C> cExpression) {
 		return isMember(eExpression, cExpression).not();
+	}
+
+	private Type guessType(Class clazz) throws HibernateException {
+		String typename = clazz.getName();
+		Type type = sessionFactory.getTypeResolver().heuristicType( typename );
+		boolean serializable = type != null && type instanceof SerializableType;
+		if ( type == null || serializable ) {
+			try {
+				sessionFactory.getMetamodel().entityPersister( clazz );
+			}
+			catch ( MappingException me ) {
+				if ( serializable ) {
+					return type;
+				}
+				else {
+					throw new HibernateException( "Could not determine a type for class: " + typename );
+				}
+			}
+			return  sessionFactory.getTypeHelper().entity( clazz );
+		}
+		else {
+			return type;
+		}
 	}
 }

@@ -6,17 +6,17 @@
  */
 package org.hibernate;
 
+import javax.persistence.PersistenceException;
+
 /**
  * The base exception type for Hibernate exceptions.
  * <p/>
  * Note that all {@link java.sql.SQLException SQLExceptions} will be wrapped in some form of 
  * {@link JDBCException}.
  * 
- * @see JDBCException
- * 
  * @author Gavin King
  */
-public class HibernateException extends RuntimeException {
+public class HibernateException extends PersistenceException {
 	/**
 	 * Constructs a HibernateException using the given exception message.
 	 *

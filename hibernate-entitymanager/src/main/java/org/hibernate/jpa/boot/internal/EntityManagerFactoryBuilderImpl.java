@@ -44,6 +44,7 @@ import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.MetadataBuilderImplementor;
@@ -154,7 +155,15 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			PersistenceUnitDescriptor persistenceUnit,
 			Map integrationSettings,
 			ClassLoader providedClassLoader ) {
-		
+		this(persistenceUnit,integrationSettings,providedClassLoader,null);
+	}
+	
+	public EntityManagerFactoryBuilderImpl(
+			PersistenceUnitDescriptor persistenceUnit,
+			Map integrationSettings,
+			ClassLoader providedClassLoader,
+			ClassLoaderService providedClassLoaderService) {
+
 		LogHelper.logPersistenceUnitInformation( persistenceUnit );
 
 		this.persistenceUnit = persistenceUnit;
@@ -164,7 +173,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 
 		// Build the boot-strap service registry, which mainly handles class loader interactions
-		final BootstrapServiceRegistry bsr = buildBootstrapServiceRegistry( integrationSettings, providedClassLoader );
+		final BootstrapServiceRegistry bsr = buildBootstrapServiceRegistry( integrationSettings, providedClassLoader, providedClassLoaderService);
 
 		// merge configuration sources and build the "standard" service registry
 		final StandardServiceRegistryBuilder ssrBuilder = new StandardServiceRegistryBuilder( bsr );
@@ -307,8 +316,12 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	 */
 	private BootstrapServiceRegistry buildBootstrapServiceRegistry(
 			Map integrationSettings,
-			ClassLoader providedClassLoader) {
+			ClassLoader providedClassLoader, 
+			ClassLoaderService providedClassLoaderService) {
 		final BootstrapServiceRegistryBuilder bsrBuilder = new BootstrapServiceRegistryBuilder();
+		if (providedClassLoaderService != null) {
+			bsrBuilder.applyClassLoaderService(providedClassLoaderService);
+		}
 		bsrBuilder.applyIntegrator( new JpaIntegrator() );
 
 		final IntegratorProvider integratorProvider = (IntegratorProvider) integrationSettings.get( INTEGRATOR_PROVIDER );

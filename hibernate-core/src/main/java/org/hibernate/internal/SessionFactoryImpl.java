@@ -967,7 +967,11 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			return null;
 		}
 
-		final Class clazz = HibernateProxyHelper.getClassWithoutInitializingProxy( bindValue );
+		return resolveParameterBindType( HibernateProxyHelper.getClassWithoutInitializingProxy( bindValue ) );
+	}
+
+	@Override
+	public Type resolveParameterBindType(Class clazz){
 		String typename = clazz.getName();
 		Type type = getTypeResolver().heuristicType( typename );
 		boolean serializable = type != null && type instanceof SerializableType;

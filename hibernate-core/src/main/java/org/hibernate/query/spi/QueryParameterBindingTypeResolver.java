@@ -16,4 +16,5 @@ import org.hibernate.type.Type;
  */
 public interface QueryParameterBindingTypeResolver {
 	Type resolveParameterBindType(Object bindValue);
+	Type resolveParameterBindType(Class clazz);
 }

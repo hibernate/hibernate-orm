@@ -60,13 +60,10 @@ public class OrmVersionTest {
 			hp.createContainerEntityManagerFactory( pui, Collections.EMPTY_MAP );
             Assert.fail( "expecting 'invalid content' error" );
 		}
-		catch ( InvalidMappingException expected ) {
+		catch ( InvalidMappingException | AnnotationException expected ) {
 			// expected condition
 		}
 		catch ( PersistenceException expected ) {
-			// expected condition
-		}
-		catch (AnnotationException expected) {
 			// expected condition
 		}
 	}

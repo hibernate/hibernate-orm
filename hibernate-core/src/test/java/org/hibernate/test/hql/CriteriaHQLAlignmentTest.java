@@ -325,6 +325,14 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 			}
 			assertEquals( 1, count.longValue() );
 		}
+		catch ( SQLGrammarException ex ) {
+			if ( ! getDialect().supportsTupleCounts() ) {
+				// expected
+			}
+			else {
+				throw ex;
+			}
+		}
 		catch (PersistenceException e) {
 			SQLGrammarException cause = assertTyping( SQLGrammarException.class, e.getCause() );
 			if ( ! getDialect().supportsTupleCounts() ) {
@@ -332,14 +340,6 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 			}
 			else {
 				throw e;
-			}
-		}
-		catch ( SQLGrammarException ex ) {
-			if ( ! getDialect().supportsTupleCounts() ) {
-				// expected
-			}
-			else {
-				throw ex;
 			}
 		}
 		finally {

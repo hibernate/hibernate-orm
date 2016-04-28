@@ -40,6 +40,7 @@ import org.hibernate.type.Type;
  * Manages the group of QueryParameterBinding for a particular query.
  *
  * @author Steve Ebersole
+ * @author Chris Cranford
  */
 @Incubating
 public class QueryParameterBindingsImpl implements QueryParameterBindings {
@@ -49,6 +50,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 	private Map<QueryParameter, QueryParameterBinding> parameterBindingMap;
 	private Map<QueryParameter, QueryParameterListBinding> parameterListBindingMap;
+	private Map<QueryParameter, QueryParameterBinding> positionParameterBindingMap;
 
 	public static QueryParameterBindingsImpl from(ParameterMetadata parameterMetadata, SessionFactoryImplementor sessionFactory) {
 		if ( parameterMetadata == null ) {
@@ -65,6 +67,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 	public QueryParameterBindingsImpl(SessionFactoryImplementor sessionFactory, Set<QueryParameter<?>> queryParameters) {
 		this.sessionFactory = sessionFactory;
+		this.positionParameterBindingMap = new HashMap<>();
 
 		if ( queryParameters == null || queryParameters.isEmpty() ) {
 			parameterBindingMap = Collections.emptyMap();
@@ -165,12 +168,28 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	}
 
 	protected QueryParameterBinding locateBinding(int position) {
+		Map.Entry<QueryParameter, QueryParameterBinding> entry = locateBindingEntry( position );
+		if ( entry != null ) {
+			return entry.getValue();
+		}
+		return null;
+	}
+
+	protected Map.Entry<QueryParameter, QueryParameterBinding> locateBindingEntry(int position) {
 		for ( Map.Entry<QueryParameter, QueryParameterBinding> entry : parameterBindingMap.entrySet() ) {
 			if ( entry.getKey().getPosition() != null && position == entry.getKey().getPosition() ) {
-				return entry.getValue();
+				return entry;
 			}
 		}
+		return null;
+	}
 
+	protected Map.Entry<QueryParameter, QueryParameterBinding> locatePositionBinding(int position) {
+		for ( Map.Entry<QueryParameter, QueryParameterBinding> entry : positionParameterBindingMap.entrySet() ) {
+			if ( entry.getKey().getPosition() != null && position == entry.getKey().getPosition() ) {
+				return entry;
+			}
+		}
 		return null;
 	}
 
@@ -184,28 +203,79 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	}
 
 	public QueryParameterBinding getBinding(int position) {
-		final QueryParameterBinding binding = locateBinding( position );
-		if ( binding == null ) {
-			throw new IllegalArgumentException( "Unknown parameter position : " + position );
+		// locate cached binding by position (cached only after getBinding(int) called)
+		Map.Entry<QueryParameter, QueryParameterBinding> bindingEntry = locatePositionBinding( position );
+		if ( bindingEntry == null ) {
+			bindingEntry = locateBindingEntry( position );
+			// cache the bind position mapping
+			positionParameterBindingMap.put( bindingEntry.getKey(), bindingEntry.getValue() );
 		}
-
-		return binding;
+		if ( bindingEntry == null ) {
+			throw new IllegalArgumentException( "Unknown parameter position: " + position );
+		}
+		return bindingEntry.getValue();
 	}
 
 	public void verifyParametersBound(boolean reserveFirstParameter) {
 		for ( Map.Entry<QueryParameter, QueryParameterBinding> bindEntry : parameterBindingMap.entrySet() ) {
-			if ( !bindEntry.getValue().isBound() ) {
-				if ( bindEntry.getKey().getName() != null ) {
-					throw new QueryException( "Named parameter [" + bindEntry.getKey().getName() + "] not set" );
-				}
-				else if ( bindEntry.getKey().getPosition() != null ) {
-					throw new QueryException( "Positional parameter [" + bindEntry.getKey().getPosition() + "] not set" );
-				}
-				else {
-					throw new QueryException( "Parameter memento [" + bindEntry.getKey() + "] not set" );
+			if ( bindEntry.getKey().getPosition() == null ) {
+				if ( !bindEntry.getValue().isBound() ) {
+					if ( bindEntry.getKey().getName() != null ) {
+						throw new QueryException( "Named parameter [" + bindEntry.getKey().getName() + "] not set" );
+					}
+					else {
+						throw new QueryException( "Parameter memento [" + bindEntry.getKey() + "] not set" );
+					}
 				}
 			}
 		}
+
+		final int positionalValueSpan = getPositionalValueSpan( reserveFirstParameter );
+		final int positionCounts = getPositionalParameterCount();
+
+		if ( positionCounts != positionalValueSpan ) {
+			if ( reserveFirstParameter && positionCounts - 1 != positionalValueSpan ) {
+				throw new QueryException(
+						"Expected positional parameter count: " +
+								( positionCounts - 1 ) +
+								", actually detected " + positionalValueSpan
+				);
+			}
+			else if ( !reserveFirstParameter ) {
+				throw new QueryException(
+						"Expected positional parameter count: " +
+								( positionCounts ) +
+								", actually detected " + positionalValueSpan
+				);
+			}
+		}
+	}
+
+	private int getPositionalValueSpan(boolean reserveFirstParameter) {
+		int positionalValueSpan = 0;
+		for ( QueryParameterBinding binding : positionParameterBindingMap.values() ) {
+			if ( binding.isBound() ) {
+				Type bindType = binding.getBindType();
+				if ( bindType != null ) {
+					Object object = binding.getBindValue();
+					positionalValueSpan += bindType.getColumnSpan( sessionFactory );
+				}
+				else {
+					positionalValueSpan += 1;
+				}
+			}
+		}
+		return positionalValueSpan;
+	}
+
+	private int getPositionalParameterCount() {
+		int count = 0;
+		for( QueryParameter queryParameter : parameterBindingMap.keySet() ) {
+			if ( queryParameter.getPosition() != null ) {
+				count++;
+			}
+		}
+		return count;
 	}
 
 	/**
@@ -263,11 +333,11 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			if ( entry.getKey().getPosition() == null ) {
 				continue;
 			}
-
-			final int position = entry.getKey().getPosition();
-
-			// these should be contiguous
-			bindings.put( position, entry.getValue() );
+			// only add those which have been cached
+			if ( positionParameterBindingMap.containsKey( entry.getKey() ) ) {
+				// these should be contiguous
+				bindings.put( entry.getKey().getPosition(), entry.getValue() );
+			}
 		}
 
 		return bindings;

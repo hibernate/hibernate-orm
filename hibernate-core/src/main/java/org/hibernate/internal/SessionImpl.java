@@ -3401,7 +3401,7 @@ public final class SessionImpl
 			Selection selection,
 			QueryOptions queryOptions) {
 		try {
-			final QueryImplementor query = createQuery( jpaqlString, resultClass );
+			final QueryImplementor query = createQuery( jpaqlString );
 
 			if ( queryOptions.getValueHandlers() == null ) {
 				if ( queryOptions.getResultMetadataValidator() != null ) {

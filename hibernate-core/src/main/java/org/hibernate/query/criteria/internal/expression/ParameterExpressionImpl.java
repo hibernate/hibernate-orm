@@ -9,10 +9,12 @@ package org.hibernate.query.criteria.internal.expression;
 import java.io.Serializable;
 import javax.persistence.criteria.ParameterExpression;
 
+import org.hibernate.query.QueryParameter;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
 import org.hibernate.query.criteria.internal.compile.ExplicitParameterInfo;
 import org.hibernate.query.criteria.internal.compile.RenderingContext;
+import org.hibernate.type.Type;
 
 /**
  * Defines a parameter specification, or the information about a parameter (where it occurs, what is
@@ -22,34 +24,41 @@ import org.hibernate.query.criteria.internal.compile.RenderingContext;
  */
 public class ParameterExpressionImpl<T>
 		extends ExpressionImpl<T>
-		implements ParameterExpression<T>, Serializable {
+		implements ParameterExpression<T>, QueryParameter<T>, Serializable {
 	private final String name;
 	private final Integer position;
+	private final Type expectedType;
 
 	public ParameterExpressionImpl(
 			CriteriaBuilderImpl criteriaBuilder,
 			Class<T> javaType,
-			String name) {
+			String name,
+			Type expectedType) {
 		super( criteriaBuilder, javaType );
 		this.name = name;
 		this.position = null;
+		this.expectedType = expectedType;
 	}
 
 	public ParameterExpressionImpl(
 			CriteriaBuilderImpl criteriaBuilder,
 			Class<T> javaType,
-			Integer position) {
+			Integer position,
+			Type expectedType) {
 		super( criteriaBuilder, javaType );
 		this.name = null;
 		this.position = position;
+		this.expectedType = expectedType;
 	}
 
 	public ParameterExpressionImpl(
 			CriteriaBuilderImpl criteriaBuilder,
-			Class<T> javaType) {
+			Class<T> javaType,
+			Type expectedType) {
 		super( criteriaBuilder, javaType );
 		this.name = null;
 		this.position = null;
+		this.expectedType = expectedType;
 	}
 
 	public String getName() {
@@ -75,5 +84,15 @@ public class ParameterExpressionImpl<T>
 
 	public String renderProjection(RenderingContext renderingContext) {
 		return render( renderingContext );
+	}
+
+	@Override
+	public Type getType() {
+		return expectedType;
+	}
+
+	@Override
+	public boolean isJpaPositionalParameter() {
+		return true;
 	}
 }

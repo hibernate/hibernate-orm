@@ -282,15 +282,13 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			identifierGenerators.put( model.getEntityName(), generator );
 		} );
 
-
-		//Named Queries:
-		this.namedQueryRepository = metadata.buildNamedQueryRepository( this );
-
-
 		LOG.debug( "Instantiated session factory" );
 
 		this.metamodel = new MetamodelImpl( this );
 		this.metamodel.initialize( metadata, determineJpaMetaModelPopulationSetting( properties ) );
+
+		//Named Queries:
+		this.namedQueryRepository = metadata.buildNamedQueryRepository( this );
 
 		settings.getMultiTableBulkIdStrategy().prepare(
 				jdbcServices,

@@ -7,7 +7,6 @@
 package org.hibernate.userguide.sql;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -17,7 +16,6 @@ import javax.persistence.PersistenceException;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
@@ -42,6 +40,7 @@ import org.junit.Test;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.hibernate.userguide.util.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -485,20 +484,28 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 		}
 	}
 
-	@Test(expected = NonUniqueDiscoveredSqlAliasException.class)
+	@Test
 	public void test_sql_hibernate_multi_entity_query_example() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Session session = entityManager.unwrap( Session.class );
-			//tag::sql-hibernate-multi-entity-query-example[]
-			List<Object> entities = session.createSQLQuery(
-				"SELECT * " +
-				"FROM person pr, partner pt " +
-				"WHERE pr.name = pt.name" )
-			.list();
-			//end::sql-hibernate-multi-entity-query-example[]
-			assertEquals(2, entities.size());
-		});
-		fail("Should throw NonUniqueDiscoveredSqlAliasException!");
+		try {
+			doInJPA( this::entityManagerFactory, entityManager -> {
+				Session session = entityManager.unwrap( Session.class );
+				//tag::sql-hibernate-multi-entity-query-example[]
+				List<Object> entities = session.createSQLQuery(
+						"SELECT * " +
+								"FROM person pr, partner pt " +
+								"WHERE pr.name = pt.name" )
+						.list();
+				//end::sql-hibernate-multi-entity-query-example[]
+				assertEquals( 2, entities.size() );
+			} );
+			fail( "Should throw NonUniqueDiscoveredSqlAliasException!" );
+		}
+		catch (NonUniqueDiscoveredSqlAliasException e) {
+			// expected
+		}
+		catch (PersistenceException e) {
+			assertTyping( NonUniqueDiscoveredSqlAliasException.class, e.getCause() );
+		}
 	}
 
 	@Test

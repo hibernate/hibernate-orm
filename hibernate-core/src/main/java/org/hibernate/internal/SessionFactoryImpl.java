@@ -107,7 +107,6 @@ import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.proxy.HibernateProxyHelper;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
-import org.hibernate.query.procedure.internal.StoredProcedureQueryImpl;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.AfterCompletionAction;
@@ -756,7 +755,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		// first, handle StoredProcedureQuery
 		try {
-			final StoredProcedureQueryImpl unwrapped = query.unwrap( StoredProcedureQueryImpl.class );
+			final ProcedureCall unwrapped = query.unwrap( ProcedureCall.class );
 			if ( unwrapped != null ) {
 				addNamedStoredProcedureQuery( name, unwrapped );
 				return;
@@ -799,11 +798,10 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		);
 	}
 
-	private void addNamedStoredProcedureQuery(String name, StoredProcedureQueryImpl query) {
-		final ProcedureCall procedureCall = query.getHibernateProcedureCall();
+	private void addNamedStoredProcedureQuery(String name, ProcedureCall procedureCall) {
 		getNamedQueryRepository().registerNamedProcedureCallMemento(
 				name,
-				procedureCall.extractMemento( query.getHints() )
+				procedureCall.extractMemento( procedureCall.getHints() )
 		);
 	}
 

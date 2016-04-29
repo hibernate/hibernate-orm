@@ -88,41 +88,41 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, BasicQu
 	Query<R> setLockMode(LockModeType lockMode);
 
 	@Override
-	Query setReadOnly(boolean readOnly);
+	Query<R> setReadOnly(boolean readOnly);
 
 	@Override
-	Query setHibernateFlushMode(FlushMode flushMode);
+	Query<R> setHibernateFlushMode(FlushMode flushMode);
 
 	@Override
-	default Query setFlushMode(FlushMode flushMode) {
+	default Query<R> setFlushMode(FlushMode flushMode) {
 		setHibernateFlushMode( flushMode );
 		return this;
 	}
 
 	@Override
-	Query setCacheMode(CacheMode cacheMode);
+	Query<R> setCacheMode(CacheMode cacheMode);
 
 	@Override
-	Query setCacheable(boolean cacheable);
+	Query<R> setCacheable(boolean cacheable);
 
 	@Override
-	Query setCacheRegion(String cacheRegion);
+	Query<R> setCacheRegion(String cacheRegion);
 
 	@Override
-	Query setTimeout(int timeout);
+	Query<R> setTimeout(int timeout);
 
 	@Override
-	Query setFetchSize(int fetchSize);
+	Query<R> setFetchSize(int fetchSize);
 
 	@Override
-	Query setLockOptions(LockOptions lockOptions);
+	Query<R> setLockOptions(LockOptions lockOptions);
 
 	@Override
-	Query setLockMode(String alias, LockMode lockMode);
+	Query<R> setLockMode(String alias, LockMode lockMode);
 
 	@Override
-	Query setComment(String comment);
+	Query<R> setComment(String comment);
 
 	@Override
-	Query addQueryHint(String hint);
+	Query<R> addQueryHint(String hint);
 }

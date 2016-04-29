@@ -19,7 +19,7 @@ import java.util.Collection;
  *
  * @author Steve Ebersole
  */
-public interface SynchronizeableQuery {
+public interface SynchronizeableQuery<T> {
 	/**
 	 * Obtain the list of query spaces the query is synchronized on.
 	 *
@@ -34,7 +34,7 @@ public interface SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	SynchronizeableQuery addSynchronizedQuerySpace(String querySpace);
+	SynchronizeableQuery<T> addSynchronizedQuerySpace(String querySpace);
 
 	/**
 	 * Adds an entity name for (a) auto-flush checking and (b) query result cache invalidation checking.  Same as
@@ -46,7 +46,7 @@ public interface SynchronizeableQuery {
 	 *
 	 * @throws MappingException Indicates the given name could not be resolved as an entity
 	 */
-	SynchronizeableQuery addSynchronizedEntityName(String entityName) throws MappingException;
+	SynchronizeableQuery<T> addSynchronizedEntityName(String entityName) throws MappingException;
 
 	/**
 	 * Adds an entity for (a) auto-flush checking and (b) query result cache invalidation checking.  Same as
@@ -58,5 +58,5 @@ public interface SynchronizeableQuery {
 	 *
 	 * @throws MappingException Indicates the given class could not be resolved as an entity
 	 */
-	SynchronizeableQuery addSynchronizedEntityClass(Class entityClass) throws MappingException;
+	SynchronizeableQuery<T> addSynchronizedEntityClass(Class entityClass) throws MappingException;
 }

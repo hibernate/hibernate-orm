@@ -770,7 +770,12 @@ public final class SessionImpl
 			throw convert( e );
 		}
 		finally {
-			checkNoUnresolvedActionsAfterOperation();
+			try {
+				checkNoUnresolvedActionsAfterOperation();
+			}
+			catch (RuntimeException e) {
+				throw convert( e );
+			}
 		}
 	}
 

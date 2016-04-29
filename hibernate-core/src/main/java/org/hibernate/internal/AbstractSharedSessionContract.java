@@ -765,11 +765,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		if ( resultType != null ) {
 			resultClassChecking( resultType, queryDefinition );
 		}
-		String queryString = queryDefinition.getQueryString();
+
 		final NativeQueryImpl query = new NativeQueryImpl(
 				queryDefinition,
 				this,
-				getQueryPlan( queryString, false ).getParameterMetadata()
+				factory.getQueryPlanCache().getSQLParameterMetadata( queryDefinition.getQueryString() )
 		);
 		query.setHibernateFlushMode( queryDefinition.getFlushMode() );
 		query.setComment( queryDefinition.getComment() != null ? queryDefinition.getComment() : queryDefinition.getName() );

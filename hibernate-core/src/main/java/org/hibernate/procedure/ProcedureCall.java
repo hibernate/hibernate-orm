@@ -9,6 +9,7 @@ package org.hibernate.procedure;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.ParameterMode;
+import javax.persistence.StoredProcedureQuery;
 
 import org.hibernate.BasicQueryContract;
 import org.hibernate.MappingException;
@@ -19,22 +20,22 @@ import org.hibernate.SynchronizeableQuery;
  *
  * @author Steve Ebersole
  */
-public interface ProcedureCall extends BasicQueryContract, SynchronizeableQuery {
+public interface ProcedureCall extends BasicQueryContract, SynchronizeableQuery, StoredProcedureQuery {
 	@Override
-	public ProcedureCall addSynchronizedQuerySpace(String querySpace);
+	ProcedureCall addSynchronizedQuerySpace(String querySpace);
 
 	@Override
-	public ProcedureCall addSynchronizedEntityName(String entityName) throws MappingException;
+	ProcedureCall addSynchronizedEntityName(String entityName) throws MappingException;
 
 	@Override
-	public ProcedureCall addSynchronizedEntityClass(Class entityClass) throws MappingException;
+	ProcedureCall addSynchronizedEntityClass(Class entityClass) throws MappingException;
 
 	/**
 	 * Get the name of the stored procedure to be called.
 	 *
 	 * @return The procedure name.
 	 */
-	public String getProcedureName();
+	String getProcedureName();
 
 	/**
 	 * Basic form for registering a positional parameter.
@@ -46,7 +47,7 @@ public interface ProcedureCall extends BasicQueryContract, SynchronizeableQuery 
 	 *
 	 * @return The parameter registration memento
 	 */
-	public <T> ParameterRegistration<T> registerParameter(int position, Class<T> type, ParameterMode mode);
+	<T> ParameterRegistration<T> registerParameter(int position, Class<T> type, ParameterMode mode);
 
 	/**
 	 * Chained form of {@link #registerParameter(int, Class, javax.persistence.ParameterMode)}
@@ -57,7 +58,7 @@ public interface ProcedureCall extends BasicQueryContract, SynchronizeableQuery 
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public ProcedureCall registerParameter0(int position, Class type, ParameterMode mode);
+	ProcedureCall registerParameter0(int position, Class type, ParameterMode mode);
 
 	/**
 	 * Retrieve a previously registered parameter memento by the position under which it was registered.
@@ -69,7 +70,7 @@ public interface ProcedureCall extends BasicQueryContract, SynchronizeableQuery 
 	 * @throws ParameterStrategyException If the ProcedureCall is defined using named parameters
 	 * @throws NoSuchParameterException If no parameter with that position exists
 	 */
-	public ParameterRegistration getParameterRegistration(int position);
+	ParameterRegistration getParameterRegistration(int position);
 
 	/**
 	 * Basic form for registering a named parameter.
@@ -84,7 +85,7 @@ public interface ProcedureCall extends BasicQueryContract, SynchronizeableQuery 
 	 * @throws NamedParametersNotSupportedException When the underlying database is known to not support
 	 * named procedure parameters.
 	 */
-	public <T> ParameterRegistration<T> registerParameter(String parameterName, Class<T> type, ParameterMode mode)
+	<T> ParameterRegistration<T> registerParameter(String parameterName, Class<T> type, ParameterMode mode)
 			throws NamedParametersNotSupportedException;
 
 	/**
@@ -99,7 +100,7 @@ public interface ProcedureCall extends BasicQueryContract, SynchronizeableQuery 
 	 * @throws NamedParametersNotSupportedException When the underlying database is known to not support
 	 * named procedure parameters.
 	 */
-	public ProcedureCall registerParameter0(String parameterName, Class type, ParameterMode mode)
+	ProcedureCall registerParameter0(String parameterName, Class type, ParameterMode mode)
 			throws NamedParametersNotSupportedException;
 
 	/**
@@ -112,14 +113,14 @@ public interface ProcedureCall extends BasicQueryContract, SynchronizeableQuery 
 	 * @throws ParameterStrategyException If the ProcedureCall is defined using positional parameters
 	 * @throws NoSuchParameterException If no parameter with that name exists
 	 */
-	public ParameterRegistration getParameterRegistration(String name);
+	ParameterRegistration getParameterRegistration(String name);
 
 	/**
 	 * Retrieve all registered parameters.
 	 *
 	 * @return The (immutable) list of all registered parameters.
 	 */
-	public List<ParameterRegistration> getRegisteredParameters();
+	List<ParameterRegistration> getRegisteredParameters();
 
 	/**
 	 * Retrieves access to outputs of this procedure call.  Can be called multiple times, returning the same
@@ -130,7 +131,7 @@ public interface ProcedureCall extends BasicQueryContract, SynchronizeableQuery 
 	 *
 	 * @return The ProcedureOutputs representation
 	 */
-	public ProcedureOutputs getOutputs();
+	ProcedureOutputs getOutputs();
 
 	/**
 	 * Extract the disconnected representation of this call.  Used in HEM to allow redefining a named query
@@ -139,5 +140,12 @@ public interface ProcedureCall extends BasicQueryContract, SynchronizeableQuery 
 	 *
 	 * @return The memento
 	 */
-	public ProcedureCallMemento extractMemento(Map<String, Object> hints);
+	ProcedureCallMemento extractMemento(Map<String, Object> hints);
+
+	/**
+	 * Extract the disconnected representation of this call.  Used in HEM to allow redefining a named query
+	 * *
+	 * @return The memento
+	 */
+	ProcedureCallMemento extractMemento();
 }

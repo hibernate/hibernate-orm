@@ -62,7 +62,6 @@ dependencies {
 	testCompile( 'org.apache.commons:commons-lang3:3.4' )
 
 	testCompile( project(':hibernate-core') )
-	testCompile( project(':hibernate-entitymanager') )
 	testCompile( project(':hibernate-ehcache') )
 	testCompile( project(':hibernate-spatial') )
 

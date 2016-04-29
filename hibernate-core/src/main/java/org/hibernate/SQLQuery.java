@@ -56,7 +56,7 @@ import org.hibernate.type.Type;
  * @deprecated (since 5.2) use {@link NativeQuery} instead.
  */
 @Deprecated
-public interface SQLQuery extends Query<Object>, SynchronizeableQuery {
+public interface SQLQuery<T> extends Query<T>, SynchronizeableQuery<T> {
 	/**
 	 * Use a predefined named result-set mapping.  This might be defined by a {@code <result-set/>} element in a
 	 * Hibernate <tt>hbm.xml</tt> file or through a {@link javax.persistence.SqlResultSetMapping} annotation.
@@ -65,7 +65,7 @@ public interface SQLQuery extends Query<Object>, SynchronizeableQuery {
 	 *
 	 * @return this, for method chaining
 	 */
-	NativeQuery setResultSetMapping(String name);
+	NativeQuery<T> setResultSetMapping(String name);
 
 	/**
 	 * Is this native-SQL query known to be callable?
@@ -90,7 +90,7 @@ public interface SQLQuery extends Query<Object>, SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery addScalar(String columnAlias);
+	NativeQuery<T> addScalar(String columnAlias);
 
 	/**
 	 * Declare a scalar query result.
@@ -102,7 +102,7 @@ public interface SQLQuery extends Query<Object>, SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery addScalar(String columnAlias, Type type);
+	NativeQuery<T> addScalar(String columnAlias, Type type);
 
 	/**
 	 * Add a new root return mapping, returning a {@link NativeQuery.RootReturn} to allow further definition.
@@ -138,7 +138,7 @@ public interface SQLQuery extends Query<Object>, SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery addEntity(String entityName);
+	NativeQuery<T> addEntity(String entityName);
 
 	/**
 	 * Declare a "root" entity.
@@ -148,7 +148,7 @@ public interface SQLQuery extends Query<Object>, SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery addEntity(String tableAlias, String entityName);
+	NativeQuery<T> addEntity(String tableAlias, String entityName);
 
 	/**
 	 * Declare a "root" entity, specifying a lock mode.
@@ -159,7 +159,7 @@ public interface SQLQuery extends Query<Object>, SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery addEntity(String tableAlias, String entityName, LockMode lockMode);
+	NativeQuery<T> addEntity(String tableAlias, String entityName, LockMode lockMode);
 
 	/**
 	 * Declare a "root" entity, without specifying an alias.  The expectation here is that the table alias is the
@@ -169,7 +169,7 @@ public interface SQLQuery extends Query<Object>, SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery addEntity(Class entityType);
+	NativeQuery<T> addEntity(Class entityType);
 
 	/**
 	 * Declare a "root" entity.
@@ -179,7 +179,7 @@ public interface SQLQuery extends Query<Object>, SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery addEntity(String tableAlias, Class entityType);
+	NativeQuery<T> addEntity(String tableAlias, Class entityType);
 
 	/**
 	 * Declare a "root" entity, specifying a lock mode.
@@ -190,7 +190,7 @@ public interface SQLQuery extends Query<Object>, SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery addEntity(String tableAlias, Class entityClass, LockMode lockMode);
+	NativeQuery<T> addEntity(String tableAlias, Class entityClass, LockMode lockMode);
 
 	/**
 	 * Declare a join fetch result.
@@ -214,7 +214,7 @@ public interface SQLQuery extends Query<Object>, SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery addJoin(String tableAlias, String path);
+	NativeQuery<T> addJoin(String tableAlias, String path);
 
 	/**
 	 * Declare a join fetch result.
@@ -228,7 +228,7 @@ public interface SQLQuery extends Query<Object>, SynchronizeableQuery {
 	 *
 	 * @since 3.6
 	 */
-	NativeQuery addJoin(String tableAlias, String ownerTableAlias, String joinPropertyName);
+	NativeQuery<T> addJoin(String tableAlias, String ownerTableAlias, String joinPropertyName);
 
 	/**
 	 * Declare a join fetch result, specifying a lock mode.
@@ -239,7 +239,7 @@ public interface SQLQuery extends Query<Object>, SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery addJoin(String tableAlias, String path, LockMode lockMode);
+	NativeQuery<T> addJoin(String tableAlias, String path, LockMode lockMode);
 
 	/**
 	 * Allows access to further control how properties within a root or join fetch are mapped back from the result set.
@@ -337,120 +337,120 @@ public interface SQLQuery extends Query<Object>, SynchronizeableQuery {
 
 
 	@Override
-	NativeQuery setHibernateFlushMode(FlushMode flushMode);
+	NativeQuery<T> setHibernateFlushMode(FlushMode flushMode);
 
 	@Override
-	NativeQuery setFlushMode(FlushModeType flushMode);
+	NativeQuery<T> setFlushMode(FlushModeType flushMode);
 
 	@Override
-	NativeQuery setCacheMode(CacheMode cacheMode);
+	NativeQuery<T> setCacheMode(CacheMode cacheMode);
 
 	@Override
-	NativeQuery setCacheable(boolean cacheable);
+	NativeQuery<T> setCacheable(boolean cacheable);
 
 	@Override
-	NativeQuery setCacheRegion(String cacheRegion);
+	NativeQuery<T> setCacheRegion(String cacheRegion);
 
 	@Override
-	NativeQuery setTimeout(int timeout);
+	NativeQuery<T> setTimeout(int timeout);
 
 	@Override
-	NativeQuery setFetchSize(int fetchSize);
+	NativeQuery<T> setFetchSize(int fetchSize);
 
 	@Override
-	NativeQuery setReadOnly(boolean readOnly);
+	NativeQuery<T> setReadOnly(boolean readOnly);
 
 	@Override
-	NativeQuery setLockOptions(LockOptions lockOptions);
+	NativeQuery<T> setLockOptions(LockOptions lockOptions);
 
 	@Override
-	NativeQuery setLockMode(String alias, LockMode lockMode);
+	NativeQuery<T> setLockMode(String alias, LockMode lockMode);
 
 	@Override
-	NativeQuery setComment(String comment);
+	NativeQuery<T> setComment(String comment);
 
 	@Override
-	NativeQuery addQueryHint(String hint);
+	NativeQuery<T> addQueryHint(String hint);
 
 	@Override
-	<T> NativeQuery setParameter(QueryParameter<T> parameter, T val);
+	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val);
 
 	@Override
-	<T> NativeQuery setParameter(Parameter<T> param, T value);
+	<P> NativeQuery<T> setParameter(Parameter<P> param, P value);
 
 	@Override
-	NativeQuery setParameter(String name, Object val);
+	NativeQuery<T> setParameter(String name, Object val);
 
 	@Override
-	NativeQuery setParameter(int position, Object val);
+	NativeQuery<T> setParameter(int position, Object val);
 
 	@Override
-	<P> NativeQuery setParameter(QueryParameter<P> parameter, P val, Type type);
+	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, Type type);
 
 	@Override
-	NativeQuery setParameter(String name, Object val, Type type);
+	NativeQuery<T> setParameter(String name, Object val, Type type);
 
 	@Override
-	NativeQuery setParameter(int position, Object val, Type type);
+	NativeQuery<T> setParameter(int position, Object val, Type type);
 
 	@Override
-	<P> NativeQuery setParameter(QueryParameter<P> parameter, P val, TemporalType temporalType);
+	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, TemporalType temporalType);
 
 	@Override
-	NativeQuery setParameter(String name, Object val, TemporalType temporalType);
+	<P> NativeQuery<T> setParameter(String name, P val, TemporalType temporalType);
 
 	@Override
-	NativeQuery setParameter(int position, Object val, TemporalType temporalType);
+	<P> NativeQuery<T> setParameter(int position, P val, TemporalType temporalType);
 
 	@Override
-	<P> NativeQuery setParameterList(QueryParameter<P> parameter, Collection<P> values);
+	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, Collection<P> values);
 
 	@Override
-	NativeQuery setParameterList(String name, Collection values);
+	NativeQuery<T> setParameterList(String name, Collection values);
 
 	@Override
-	NativeQuery setParameterList(String name, Collection values, Type type);
+	NativeQuery<T> setParameterList(String name, Collection values, Type type);
 
 	@Override
-	NativeQuery setParameterList(String name, Object[] values, Type type);
+	NativeQuery<T> setParameterList(String name, Object[] values, Type type);
 
 	@Override
-	NativeQuery setParameterList(String name, Object[] values);
+	NativeQuery<T> setParameterList(String name, Object[] values);
 
 	@Override
-	NativeQuery setProperties(Object bean);
+	NativeQuery<T> setProperties(Object bean);
 
 	@Override
-	NativeQuery setProperties(Map bean);
+	NativeQuery<T> setProperties(Map bean);
 
 	@Override
-	NativeQuery setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
+	NativeQuery<T> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
 
 	@Override
-	NativeQuery setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
+	NativeQuery<T> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
 	@Override
-	NativeQuery setParameter(String name, Calendar value, TemporalType temporalType);
+	NativeQuery<T> setParameter(String name, Calendar value, TemporalType temporalType);
 
 	@Override
-	NativeQuery setParameter(String name, Date value, TemporalType temporalType);
+	NativeQuery<T> setParameter(String name, Date value, TemporalType temporalType);
 
 	@Override
-	NativeQuery setParameter(int position, Calendar value, TemporalType temporalType);
+	NativeQuery<T> setParameter(int position, Calendar value, TemporalType temporalType);
 
 	@Override
-	NativeQuery setParameter(int position, Date value, TemporalType temporalType);
+	NativeQuery<T> setParameter(int position, Date value, TemporalType temporalType);
 
 	@Override
-	NativeQuery addSynchronizedQuerySpace(String querySpace);
+	NativeQuery<T> addSynchronizedQuerySpace(String querySpace);
 
 	@Override
-	NativeQuery addSynchronizedEntityName(String entityName) throws MappingException;
+	NativeQuery<T> addSynchronizedEntityName(String entityName) throws MappingException;
 
 	@Override
-	NativeQuery addSynchronizedEntityClass(Class entityClass) throws MappingException;
+	NativeQuery<T> addSynchronizedEntityClass(Class entityClass) throws MappingException;
 
 	@Override
-	NativeQuery setFlushMode(FlushMode flushMode);
+	NativeQuery<T> setFlushMode(FlushMode flushMode);
 
 }

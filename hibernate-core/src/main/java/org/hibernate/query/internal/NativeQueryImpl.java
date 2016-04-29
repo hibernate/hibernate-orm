@@ -46,7 +46,7 @@ import org.hibernate.type.Type;
 /**
  * @author Steve Ebersole
  */
-public class NativeQueryImpl extends AbstractProducedQuery<Object> implements NativeQueryImplementor {
+public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements NativeQueryImplementor<T> {
 	private final String sqlString;
 	private List<NativeSQLQueryReturn> queryReturns;
 	private List<NativeQueryReturnBuilder> queryReturnBuilders;
@@ -137,7 +137,7 @@ public class NativeQueryImpl extends AbstractProducedQuery<Object> implements Na
 
 	@Override
 	@SuppressWarnings("unchecked")
-	protected List<Object> doList() {
+	protected List<T> doList() {
 		return getProducer().list(
 				generateQuerySpecification(),
 				getQueryParameters()
@@ -244,12 +244,12 @@ public class NativeQueryImpl extends AbstractProducedQuery<Object> implements Na
 	}
 
 	@Override
-	public NativeQueryImplementor addScalar(String columnAlias) {
+	public NativeQueryImplementor<T> addScalar(String columnAlias) {
 		return addScalar( columnAlias, null );
 	}
 
 	@Override
-	public NativeQueryImplementor addScalar(String columnAlias, Type type) {
+	public NativeQueryImplementor<T> addScalar(String columnAlias, Type type) {
 		addReturnBuilder(
 				new NativeQueryReturnBuilder() {
 					public NativeSQLQueryReturn buildReturn() {
@@ -281,34 +281,34 @@ public class NativeQueryImpl extends AbstractProducedQuery<Object> implements Na
 	}
 
 	@Override
-	public NativeQueryImplementor addEntity(String entityName) {
+	public NativeQueryImplementor<T> addEntity(String entityName) {
 		return addEntity( StringHelper.unqualify( entityName ), entityName );
 	}
 
 	@Override
-	public NativeQueryImplementor addEntity(String tableAlias, String entityName) {
+	public NativeQueryImplementor<T> addEntity(String tableAlias, String entityName) {
 		addRoot( tableAlias, entityName );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor addEntity(String tableAlias, String entityName, LockMode lockMode) {
+	public NativeQueryImplementor<T> addEntity(String tableAlias, String entityName, LockMode lockMode) {
 		addRoot( tableAlias, entityName ).setLockMode( lockMode );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor addEntity(Class entityType) {
+	public NativeQueryImplementor<T> addEntity(Class entityType) {
 		return addEntity( entityType.getName() );
 	}
 
 	@Override
-	public NativeQueryImplementor addEntity(String tableAlias, Class entityClass) {
+	public NativeQueryImplementor<T> addEntity(String tableAlias, Class entityClass) {
 		return addEntity( tableAlias, entityClass.getName() );
 	}
 
 	@Override
-	public NativeQueryImplementor addEntity(String tableAlias, Class entityClass, LockMode lockMode) {
+	public NativeQueryImplementor<T> addEntity(String tableAlias, Class entityClass, LockMode lockMode) {
 		return addEntity( tableAlias, entityClass.getName(), lockMode );
 	}
 
@@ -320,7 +320,7 @@ public class NativeQueryImpl extends AbstractProducedQuery<Object> implements Na
 	}
 
 	@Override
-	public NativeQueryImplementor addJoin(String tableAlias, String path) {
+	public NativeQueryImplementor<T> addJoin(String tableAlias, String path) {
 		createFetchJoin( tableAlias, path );
 		return this;
 	}
@@ -336,13 +336,13 @@ public class NativeQueryImpl extends AbstractProducedQuery<Object> implements Na
 	}
 
 	@Override
-	public NativeQueryImplementor addJoin(String tableAlias, String ownerTableAlias, String joinPropertyName) {
+	public NativeQueryImplementor<T> addJoin(String tableAlias, String ownerTableAlias, String joinPropertyName) {
 		addFetch( tableAlias, ownerTableAlias, joinPropertyName );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor addJoin(String tableAlias, String path, LockMode lockMode) {
+	public NativeQueryImplementor<T> addJoin(String tableAlias, String path, LockMode lockMode) {
 		createFetchJoin( tableAlias, path ).setLockMode( lockMode );
 		return this;
 	}
@@ -358,13 +358,13 @@ public class NativeQueryImpl extends AbstractProducedQuery<Object> implements Na
 	}
 
 	@Override
-	public NativeQuery setEntity(int position, Object val) {
+	public NativeQueryImplementor<T> setEntity(int position, Object val) {
 		setParameter( position, val, getProducer().getFactory().getTypeHelper().entity( resolveEntityName( val ) ) );
 		return this;
 	}
 
 	@Override
-	public NativeQuery setEntity(String name, Object val) {
+	public NativeQueryImplementor<T> setEntity(String name, Object val) {
 		setParameter( name, val, getProducer().getFactory().getTypeHelper().entity( resolveEntityName( val ) ) );
 		return this;
 	}
@@ -375,7 +375,7 @@ public class NativeQueryImpl extends AbstractProducedQuery<Object> implements Na
 	}
 
 	@Override
-	public NativeQueryImplementor addSynchronizedQuerySpace(String querySpace) {
+	public NativeQueryImplementor<T> addSynchronizedQuerySpace(String querySpace) {
 		addQuerySpaces( querySpace );
 		return this;
 	}
@@ -399,13 +399,13 @@ public class NativeQueryImpl extends AbstractProducedQuery<Object> implements Na
 	}
 
 	@Override
-	public NativeQueryImplementor addSynchronizedEntityName(String entityName) throws MappingException {
+	public NativeQueryImplementor<T> addSynchronizedEntityName(String entityName) throws MappingException {
 		addQuerySpaces( getProducer().getFactory().getMetamodel().entityPersister( entityName ).getQuerySpaces() );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor addSynchronizedEntityClass(Class entityClass) throws MappingException {
+	public NativeQueryImplementor<T> addSynchronizedEntityClass(Class entityClass) throws MappingException {
 		addQuerySpaces( getProducer().getFactory().getMetamodel().entityPersister( entityClass.getName() ).getQuerySpaces() );
 		return this;
 	}
@@ -416,132 +416,133 @@ public class NativeQueryImpl extends AbstractProducedQuery<Object> implements Na
 	}
 
 	@Override
-	public NativeQueryImplementor setHibernateFlushMode(FlushMode flushMode) {
+	public NativeQueryImplementor<T> setHibernateFlushMode(FlushMode flushMode) {
 		super.setHibernateFlushMode( flushMode );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor setFlushMode(FlushMode flushMode) {
+	public NativeQueryImplementor<T> setFlushMode(FlushMode flushMode) {
 		super.setFlushMode( flushMode );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor setFlushMode(FlushModeType flushModeType) {
+	public NativeQueryImplementor<T> setFlushMode(FlushModeType flushModeType) {
 		super.setFlushMode( flushModeType );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor setCacheMode(CacheMode cacheMode) {
+	public NativeQueryImplementor<T> setCacheMode(CacheMode cacheMode) {
 		super.setCacheMode( cacheMode );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor setCacheable(boolean cacheable) {
+	public NativeQueryImplementor<T> setCacheable(boolean cacheable) {
 		super.setCacheable( cacheable );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor setCacheRegion(String cacheRegion) {
+	public NativeQueryImplementor<T> setCacheRegion(String cacheRegion) {
 		super.setCacheRegion( cacheRegion );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor setTimeout(int timeout) {
+	public NativeQueryImplementor<T> setTimeout(int timeout) {
 		super.setTimeout( timeout );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor setFetchSize(int fetchSize) {
+	public NativeQueryImplementor<T> setFetchSize(int fetchSize) {
 		super.setFetchSize( fetchSize );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor setReadOnly(boolean readOnly) {
+	public NativeQueryImplementor<T> setReadOnly(boolean readOnly) {
 		super.setReadOnly( readOnly );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor setLockOptions(LockOptions lockOptions) {
+	public NativeQueryImplementor<T> setLockOptions(LockOptions lockOptions) {
 		super.setLockOptions( lockOptions );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor setLockMode(String alias, LockMode lockMode) {
+	public NativeQueryImplementor<T> setLockMode(String alias, LockMode lockMode) {
 		super.setLockMode( alias, lockMode );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor setLockMode(LockModeType lockModeType) {
+	public NativeQueryImplementor<T> setLockMode(LockModeType lockModeType) {
 		throw new IllegalStateException( "Illegal attempt to set lock mode on a native SQL query" );
 	}
 
 	@Override
-	public NativeQueryImplementor setComment(String comment) {
+	public NativeQueryImplementor<T> setComment(String comment) {
 		super.setComment( comment );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor addQueryHint(String hint) {
+	public NativeQueryImplementor<T> addQueryHint(String hint) {
 		super.addQueryHint( hint );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor setParameter(QueryParameter parameter, Object value) {
+	@SuppressWarnings("unchecked")
+	public NativeQueryImplementor<T> setParameter(QueryParameter parameter, Object value) {
+		super.setParameter( (Parameter<Object>) parameter, value );
+		return this;
+	}
+
+	@Override
+	public <P> NativeQueryImplementor<T> setParameter(Parameter<P> parameter, P value) {
 		super.setParameter( parameter, value );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor setParameter(Parameter parameter, Object value) {
-		super.setParameter( parameter, value );
-		return this;
-	}
-
-	@Override
-	public NativeQueryImplementor setParameter(String name, Object value) {
+	public NativeQueryImplementor<T> setParameter(String name, Object value) {
 		super.setParameter( name, value );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor setParameter(int position, Object value) {
+	public NativeQueryImplementor<T> setParameter(int position, Object value) {
 		super.setParameter( position, value );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor setParameter(QueryParameter parameter, Object value, Type type) {
+	public NativeQueryImplementor<T> setParameter(QueryParameter parameter, Object value, Type type) {
 		super.setParameter( parameter, value, type );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor setParameter(String name, Object value, Type type) {
+	public NativeQueryImplementor<T> setParameter(String name, Object value, Type type) {
 		super.setParameter( name, value, type );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor setParameter(int position, Object value, Type type) {
+	public NativeQueryImplementor<T> setParameter(int position, Object value, Type type) {
 		super.setParameter( position, value, type );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor setParameter(QueryParameter parameter, Object value, TemporalType temporalType) {
+	public <P> NativeQueryImplementor<T> setParameter(QueryParameter<P> parameter, P value, TemporalType temporalType) {
 		super.setParameter( parameter, value, temporalType );
 		return this;
 	}

@@ -9,7 +9,7 @@ import java.util.BitSet;
 import java.util.Objects;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.StringType;
 import org.hibernate.usertype.UserType;
 
@@ -49,7 +49,7 @@ public class BitSetUserType implements UserType {
 
     @Override
     public Object nullSafeGet(
-            ResultSet rs, String[] names, SessionImplementor session, Object owner)
+            ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
             throws HibernateException, SQLException {
         String columnName = names[0];
         String columnValue = (String) rs.getObject( columnName );
@@ -60,7 +60,7 @@ public class BitSetUserType implements UserType {
 
     @Override
     public void nullSafeSet(
-            PreparedStatement st, Object value, int index, SessionImplementor session)
+            PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
             throws HibernateException, SQLException {
         if ( value == null ) {
             log.debugv("Binding null to parameter {0} ",index);

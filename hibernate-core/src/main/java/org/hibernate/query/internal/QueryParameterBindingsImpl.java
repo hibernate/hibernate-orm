@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.QueryException;
+import org.hibernate.QueryParameterException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.query.spi.NamedParameterDescriptor;
@@ -196,34 +197,34 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	}
 
 	public QueryParameterBinding getBinding(int position) {
-		final boolean isJpaBootstrap = sessionFactory.getSessionFactoryOptions().isJpaBootstrap();
-
 		QueryParameterBinding binding = null;
 		if ( parameterMetadata != null ) {
-			if ( isJpaBootstrap && parameterMetadata.getPositionalParameterCount() == 0 ) {
+			if ( parameterMetadata.getPositionalParameterCount() == 0 ) {
 				// no positional parameters, assume jpa named.
 				binding = locateBinding( String.valueOf( position ) );
 			}
 			else {
-				final int positionIndex = ( isJpaBootstrap ? position - 1 : position );
-				final int parameterIndex = ( isJpaBootstrap ? position : position + 1 );
-
-				if ( positionIndex < positionalParameterBindings.size() ) {
-					binding = positionalParameterBindings.get( positionIndex );
-					if ( binding == null ) {
+				try {
+					if ( position < positionalParameterBindings.size() ) {
+						binding = positionalParameterBindings.get( position );
+						if ( binding == null ) {
+							// metadata parameters are 1-based
+							binding = makeBinding( parameterMetadata.getQueryParameter( position + 1 ) );
+							positionalParameterBindings.set( position, binding );
+						}
+					}
+					else {
+						for ( int i = 0; i < position - positionalParameterBindings.size(); i++ ) {
+							positionalParameterBindings.add( null );
+						}
 						// metadata parameters are 1-based
-						binding = makeBinding( parameterMetadata.getQueryParameter( parameterIndex ) );
-						positionalParameterBindings.set( positionIndex, binding );
+						QueryParameter queryParameter = parameterMetadata.getQueryParameter( position + 1 );
+						binding = makeBinding( queryParameter );
+						positionalParameterBindings.add( binding );
 					}
 				}
-				else {
-					for ( int i = 0; i < positionIndex - positionalParameterBindings.size(); i++ ) {
-						positionalParameterBindings.add( null );
-					}
-					// metadata parameters are 1-based
-					QueryParameter queryParameter = parameterMetadata.getQueryParameter( parameterIndex );
-					binding = makeBinding( queryParameter );
-					positionalParameterBindings.add( binding );
+				catch ( QueryParameterException e ) {
+					// treat this as null binding
 				}
 			}
 		}

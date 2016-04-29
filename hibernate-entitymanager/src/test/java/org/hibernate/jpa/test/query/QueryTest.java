@@ -12,11 +12,18 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.*;
+import javax.persistence.CacheRetrieveMode;
+import javax.persistence.CacheStoreMode;
+import javax.persistence.EntityManager;
+import javax.persistence.Parameter;
+import javax.persistence.PersistenceException;
+import javax.persistence.Query;
+import javax.persistence.TemporalType;
+import javax.persistence.Tuple;
 
-import org.junit.Test;
-
+import junit.framework.Assert;
 import org.hibernate.Hibernate;
+import org.hibernate.QueryParameterException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.PostgreSQL9Dialect;
@@ -27,12 +34,10 @@ import org.hibernate.jpa.test.Distributor;
 import org.hibernate.jpa.test.Item;
 import org.hibernate.jpa.test.Wallet;
 import org.hibernate.stat.Statistics;
-
-import junit.framework.Assert;
-
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipForDialects;
 import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
 
 import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
@@ -111,16 +116,16 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		Item item = new Item( "Mouse", "Micro$oft mouse" );
 		em.persist( item );
 		Query q = em.createQuery( "from Item i where i.intVal=?" );
-		q.setParameter( 1, null );
+		q.setParameter( 0, null );
 		List results = q.getResultList();
 		// null != null
 		assertEquals( 0, results.size() );
 		q = em.createQuery( "from Item i where i.intVal is null and ? is null" );
-		q.setParameter( 1, null );
+		q.setParameter( 0, null );
 		results = q.getResultList();
 		assertEquals( 1, results.size() );
 		q = em.createQuery( "from Item i where i.intVal is null or i.intVal = ?" );
-		q.setParameter( 1, null );
+		q.setParameter( 0, null );
 		results = q.getResultList();
 		assertEquals( 1, results.size() );
 		em.getTransaction().rollback();
@@ -316,16 +321,16 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		// native queries don't seem to flush by default ?!?
 		em.flush();
 		Query q = em.createNativeQuery( "select * from Item i where i.intVal=?" );
-		q.setParameter( 1, null );
+		q.setParameter( 0, null );
 		List results = q.getResultList();
 		// null != null
 		assertEquals( 0, results.size() );
 		q = em.createNativeQuery( "select * from Item i where i.intVal is null and ? is null" );
-		q.setParameter( 1, null );
+		q.setParameter( 0, null );
 		results = q.getResultList();
 		assertEquals( 1, results.size() );
 		q = em.createNativeQuery( "select * from Item i where i.intVal is null or i.intVal = ?" );
-		q.setParameter( 1, null );
+		q.setParameter( 0, null );
 		results = q.getResultList();
 		assertEquals( 1, results.size() );
 		em.getTransaction().rollback();
@@ -549,8 +554,9 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		Query query = em.createQuery( "from Item item where item.name =?1 or item.descr = ?1" );
 		Parameter p1 = query.getParameter( 1 );
 		Assert.assertNotNull( p1 );
-		Assert.assertNotNull( p1.getPosition() );
-		Assert.assertNull( p1.getName() );
+		// in 5.2, '?<position' parameters are named while '?' are position-based.
+		Assert.assertNotNull( p1.getName() );
+		Assert.assertNull( p1.getPosition() );
 
 		em.getTransaction().commit();
 		em.close();
@@ -802,7 +808,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 
 		// finally using hql-style positional parameter
 		query = em.createQuery( "select w from Wallet w where w.brand = ?" );
-		query.setParameter( 1, "Lacoste" );
+		query.setParameter( 0, "Lacoste" );
 		w = (Wallet) query.getSingleResult();
 		assertNotNull( w );
 
@@ -822,20 +828,31 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		em.persist( w );
 		em.flush();
 
-
-		Query query = em.createQuery( "select w from Wallet w where w.brand = ?1 and w.model = ?3" );
-		query.setParameter( 1, "Lacoste" );
+		// using jpa-style, position index should match syntax '?<position'.
+		Query jpaQuery = em.createQuery( "select w from Wallet w where w.brand = ?1 and w.model = ?3" );
+		jpaQuery.setParameter( 1, "Lacoste" );
 		try {
-			query.setParameter( 2, "Expensive" );
+			jpaQuery.setParameter( 2, "Expensive" );
 			fail( "Should fail due to a user error in parameters" );
 		}
-		catch ( IllegalArgumentException e ) {
-			//success
+		catch( IllegalArgumentException e ) {
+			// success, expected
 		}
-		finally {
-			em.getTransaction().rollback();
-			em.close();
+
+		// using hql-style, should be 0-based
+		Query hqlQuery = em.createQuery( "select w from Wallet w where w.brand = ? and w.model = ?" );
+		try {
+			hqlQuery.setParameter( 1, "Lacoste" );
+			hqlQuery.setParameter( 2, "Expensive" );
+			fail( "Should fail due to a user error in parameters" );
 		}
+		catch( QueryParameterException e ) {
+			// success expected
+			e.printStackTrace();
+		}
+
+		em.getTransaction().rollback();
+		em.close();
 	}
 
 	@Test
@@ -850,7 +867,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		em.getTransaction().commit();
 		em.getTransaction().begin();
 		Query query = em.createNativeQuery( "select * from Wallet w where w.brand = ?", Wallet.class );
-		query.setParameter( 1, "Lacoste" );
+		query.setParameter( 0, "Lacoste" );
 		w = (Wallet) query.getSingleResult();
 		assertNotNull( w );
 		em.remove( w );
@@ -875,7 +892,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		assertNotNull( item );
 		assertEquals( "Micro$oft mouse", item.getDescr() );
 		query = em.createNativeQuery( "select * from Item where name = ?", Item.class );
-		query.setParameter( 1, "Mouse" );
+		query.setParameter( 0, "Mouse" );
 		item = (Item) query.getSingleResult();
 		assertNotNull( item );
 		assertEquals( "Micro$oft mouse", item.getDescr() );

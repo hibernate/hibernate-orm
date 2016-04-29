@@ -755,18 +755,18 @@ public final class SessionImpl
 
 	private void firePersist(PersistEvent event) {
 		checkOpen();
-		checkTransactionSynchStatus();
-		checkNoUnresolvedActionsBeforeOperation();
-
 		try {
+			checkTransactionSynchStatus();
+			checkNoUnresolvedActionsBeforeOperation();
+
 			for ( PersistEventListener listener : listeners( EventType.PERSIST ) ) {
 				listener.onPersist( event );
 			}
 		}
-		catch ( MappingException e ) {
-			throw convert( new IllegalArgumentException( e.getMessage() ) ) ;
+		catch (MappingException e) {
+			throw convert( new IllegalArgumentException( e.getMessage() ) );
 		}
-		catch ( RuntimeException e ) {
+		catch (RuntimeException e) {
 			throw convert( e );
 		}
 		finally {

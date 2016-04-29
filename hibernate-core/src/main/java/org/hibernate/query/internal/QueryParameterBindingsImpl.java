@@ -236,14 +236,12 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	public void verifyParametersBound(boolean reserveFirstParameter) {
 		// verify named parameters bound
 		for ( Map.Entry<QueryParameter, QueryParameterBinding> bindEntry : parameterBindingMap.entrySet() ) {
-			if ( bindEntry.getKey().getPosition() == null ) {
-				if ( !bindEntry.getValue().isBound() ) {
-					if ( bindEntry.getKey().getName() != null ) {
-						throw new QueryException( "Named parameter [" + bindEntry.getKey().getName() + "] not set" );
-					}
-					else {
-						throw new QueryException( "Parameter memento [" + bindEntry.getKey() + "] not set" );
-					}
+			if ( !bindEntry.getValue().isBound() ) {
+				if ( bindEntry.getKey().getName() != null ) {
+					throw new QueryException( "Named parameter [" + bindEntry.getKey().getName() + "] not set" );
+				}
+				else {
+					throw new QueryException( "Parameter memento [" + bindEntry.getKey() + "] not set" );
 				}
 			}
 		}

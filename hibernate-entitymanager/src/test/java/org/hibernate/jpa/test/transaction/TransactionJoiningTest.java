@@ -91,7 +91,7 @@ public class TransactionJoiningTest extends BaseEntityManagerFunctionalTestCase 
 		assertTrue( session.isOpen() );
 		entityManager.close();
 		assertFalse( entityManager.isOpen() );
-		assertTrue( session.isOpen() );
+		assertFalse( session.isOpen() );
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 		assertFalse( entityManager.isOpen() );
@@ -189,6 +189,8 @@ public class TransactionJoiningTest extends BaseEntityManagerFunctionalTestCase 
 		}
 		catch ( PersistenceException e ) {
 			// HHH-9312
+			caught = true;
+		}catch (Exception e){
 			caught = true;
 		}
 		assertTrue( caught );

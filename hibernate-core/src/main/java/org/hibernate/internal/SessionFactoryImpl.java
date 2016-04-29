@@ -553,11 +553,13 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		final Session session = builder.openSession();
-		map.keySet().forEach ( key -> {
-			if ( key instanceof String ) {
-				session.setProperty( (String) key, map.get( key ) );
-			}
-		});
+		if ( map != null ) {
+			map.keySet().forEach( key -> {
+				if ( key instanceof String ) {
+					session.setProperty( (String) key, map.get( key ) );
+				}
+			} );
+		}
 		return session;
 	}
 

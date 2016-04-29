@@ -31,12 +31,10 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.MappingException;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.Session;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
@@ -63,7 +61,6 @@ import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.transform.ResultTransformer;
-import org.hibernate.type.SerializableType;
 import org.hibernate.type.Type;
 
 import static org.hibernate.jpa.QueryHints.HINT_CACHEABLE;
@@ -144,7 +141,10 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public FlushModeType getFlushMode() {
-		return FlushModeTypeHelper.getFlushModeType( flushMode );
+		return ( flushMode == null ?
+				getProducer().getFlushMode() :
+				FlushModeTypeHelper.getFlushModeType( flushMode )
+		);
 	}
 
 	@Override

@@ -150,6 +150,7 @@ import static org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting.det
  *
  * @author Gavin King
  * @author Steve Ebersole
+ * @author Chris Cranford
  */
 public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SessionFactoryImpl.class );
@@ -215,7 +216,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		this.name = sfName;
 		try {
-			uuid = (String) UUID_GENERATOR.generate(null, null);
+			uuid = (String) UUID_GENERATOR.generate( null, null );
 		}
 		catch (Exception e) {
 			throw new AssertionFailure("Could not generate UUID");
@@ -349,7 +350,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 				// then construct the fetch instance...
 				fetchProfile.addFetch( new Association( owner, mappingFetch.getAssociation() ), fetchStyle );
-				((Loadable) owner).registerAffectingFetchProfile( fetchProfile.getName() );
+				( (Loadable) owner ).registerAffectingFetchProfile( fetchProfile.getName() );
 			}
 			fetchProfiles.put( fetchProfile.getName(), fetchProfile );
 		}
@@ -551,7 +552,14 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		else {
 			builder.autoJoinTransactions( false );
 		}
-		return builder.openSession();
+
+		final Session session = builder.openSession();
+		map.keySet().forEach ( key -> {
+			if ( key instanceof String ) {
+				session.setProperty( (String) key, map.get( key ) );
+			}
+		});
+		return session;
 	}
 
 	@Override

@@ -26,12 +26,11 @@ import javax.persistence.Query;
 
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
+import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
 import org.hibernate.jpa.AvailableSettings;
-import org.hibernate.jpa.HibernateEntityManager;
 import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.stat.Statistics;
-
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
@@ -221,8 +220,8 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 		EntityManager em = getOrCreateEntityManager();
 		em.setFlushMode( FlushModeType.COMMIT );
 		assertEquals( FlushModeType.COMMIT, em.getFlushMode() );
-		( ( HibernateEntityManager ) em ).getSession().setFlushMode( FlushMode.ALWAYS );
-		assertNull( em.getFlushMode() );
+		( (Session) em ).setFlushMode( FlushMode.ALWAYS );
+		assertEquals( em.getFlushMode(), FlushModeType.AUTO );
 		em.close();
 	}
 

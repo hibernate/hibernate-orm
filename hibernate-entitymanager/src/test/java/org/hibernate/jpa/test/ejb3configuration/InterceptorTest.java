@@ -6,20 +6,19 @@
  */
 package org.hibernate.jpa.test.ejb3configuration;
 
+import java.util.Arrays;
+import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
-import java.util.Arrays;
-import java.util.Map;
-
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.jpa.test.SettingsGenerator;
+import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.test.Distributor;
 import org.hibernate.jpa.test.Item;
 import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
-import org.hibernate.jpa.AvailableSettings;
-import org.hibernate.jpa.boot.spi.Bootstrap;
+import org.hibernate.jpa.test.SettingsGenerator;
 
 import org.junit.Test;
 
@@ -31,10 +30,69 @@ import static org.junit.Assert.fail;
  */
 public class InterceptorTest {
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // test deprecated Interceptor settings
+
     @Test
-    public void testConfiguredInterceptor() {
+    public void testDeprecatedConfiguredInterceptor() {
 		Map settings = basicSettings();
 		settings.put( AvailableSettings.INTERCEPTOR, ExceptionInterceptor.class.getName() );
+		EntityManagerFactory emf = Bootstrap.getEntityManagerFactoryBuilder( new PersistenceUnitDescriptorAdapter(), settings ).build();
+        EntityManager em = emf.createEntityManager();
+        Item i = new Item();
+        i.setName( "Laptop" );
+        try {
+            em.getTransaction().begin();
+            em.persist( i );
+            em.getTransaction().commit();
+            fail( "No interceptor" );
+        }
+        catch ( IllegalStateException e ) {
+            assertEquals( ExceptionInterceptor.EXCEPTION_MESSAGE, e.getMessage() );
+        }
+        finally {
+            if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
+                em.getTransaction().rollback();
+            }
+            em.close();
+            emf.close();
+        }
+    }
+
+	@Test
+	public void testDeprecatedConfiguredSessionInterceptor() {
+		Map settings = basicSettings();
+		settings.put( AvailableSettings.SESSION_INTERCEPTOR, LocalExceptionInterceptor.class.getName() );
+		EntityManagerFactory emf = Bootstrap.getEntityManagerFactoryBuilder( new PersistenceUnitDescriptorAdapter(), settings ).build();
+		EntityManager em = emf.createEntityManager();
+		Item i = new Item();
+		i.setName( "Laptop" );
+		try {
+			em.getTransaction().begin();
+			em.persist( i );
+			em.getTransaction().commit();
+			fail( "No interceptor" );
+		}
+		catch ( IllegalStateException e ) {
+			assertEquals( LocalExceptionInterceptor.LOCAL_EXCEPTION_MESSAGE, e.getMessage() );
+		}
+		finally {
+			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
+				em.getTransaction().rollback();
+			}
+			em.close();
+			emf.close();
+		}
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// test Interceptor settings
+
+	@Test
+    public void testConfiguredInterceptor() {
+		Map settings = basicSettings();
+		settings.put( org.hibernate.cfg.AvailableSettings.INTERCEPTOR, ExceptionInterceptor.class.getName() );
 		EntityManagerFactory emf = Bootstrap.getEntityManagerFactoryBuilder( new PersistenceUnitDescriptorAdapter(), settings ).build();
         EntityManager em = emf.createEntityManager();
         Item i = new Item();
@@ -60,7 +118,7 @@ public class InterceptorTest {
     @Test
     public void testConfiguredSessionInterceptor() {
 		Map settings = basicSettings();
-		settings.put( AvailableSettings.SESSION_INTERCEPTOR, LocalExceptionInterceptor.class.getName() );
+		settings.put( org.hibernate.cfg.AvailableSettings.SESSION_SCOPED_INTERCEPTOR, LocalExceptionInterceptor.class.getName() );
 		EntityManagerFactory emf = Bootstrap.getEntityManagerFactoryBuilder( new PersistenceUnitDescriptorAdapter(), settings ).build();
         EntityManager em = emf.createEntityManager();
         Item i = new Item();

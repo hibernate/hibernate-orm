@@ -992,6 +992,34 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 	}
 
+	public static Interceptor configuredInterceptor(Interceptor interceptor, SessionFactoryOptions options) {
+		// NOTE : DO NOT return EmptyInterceptor.INSTANCE from here as a "default for the Session"
+		// 		we "filter" that one out here.  The return from here should represent the
+		//		explicitly configured Interceptor (if one).  Return null from here instead; Session
+		//		will handle it
+
+		if ( interceptor != null && interceptor != EmptyInterceptor.INSTANCE ) {
+			return interceptor;
+		}
+
+		// prefer the SF-scoped interceptor, prefer that to any Session-scoped interceptor prototype
+		if ( options.getInterceptor() != null && options.getInterceptor() != EmptyInterceptor.INSTANCE ) {
+			return options.getInterceptor();
+		}
+
+		// then check the Session-scoped interceptor prototype
+		if ( options.getStatelessInterceptorImplementor() != null ) {
+			try {
+				return options.getStatelessInterceptorImplementor().newInstance();
+			}
+			catch (InstantiationException | IllegalAccessException e) {
+				throw new HibernateException( "Could not instantiate session-scoped SessionFactory Interceptor", e );
+			}
+		}
+
+		return null;
+	}
+
 	static class SessionBuilderImpl<T extends SessionBuilder> implements SessionBuilderImplementor<T>, SessionCreationOptions {
 		private static final Logger log = CoreLogging.logger( SessionBuilderImpl.class );
 
@@ -1099,25 +1127,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		@Override
 		public Interceptor getInterceptor() {
-			if ( interceptor != null && interceptor != EmptyInterceptor.INSTANCE ) {
-				return interceptor;
-			}
-
-			// prefer the SF-scoped interceptor, prefer that to any Session-scoped interceptor prototype
-			if ( sessionFactory.getSessionFactoryOptions().getInterceptor() != null ) {
-				return sessionFactory.getSessionFactoryOptions().getInterceptor();
-			}
-
-			if ( sessionFactory.getSessionFactoryOptions().getStatelessInterceptorImplementor() != null ) {
-				try {
-					return sessionFactory.getSessionFactoryOptions().getStatelessInterceptorImplementor().newInstance();
-				}
-				catch (InstantiationException | IllegalAccessException e) {
-					throw new HibernateException( "Could not instantiate session-scoped SessionFactory Interceptor", e );
-				}
-			}
-
-			return null;
+			return configuredInterceptor( interceptor, sessionFactory.getSessionFactoryOptions() );
 		}
 
 		@Override
@@ -1314,21 +1324,8 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		@Override
 		public Interceptor getInterceptor() {
-			// prefer the SF-scoped interceptor, prefer that to any Session-scoped interceptor prototype
-			if ( sessionFactory.getSessionFactoryOptions().getInterceptor() != null ) {
-				return sessionFactory.getSessionFactoryOptions().getInterceptor();
-			}
+			return configuredInterceptor( EmptyInterceptor.INSTANCE, sessionFactory.getSessionFactoryOptions() );
 
-			if ( sessionFactory.getSessionFactoryOptions().getStatelessInterceptorImplementor() != null ) {
-				try {
-					return sessionFactory.getSessionFactoryOptions().getStatelessInterceptorImplementor().newInstance();
-				}
-				catch (InstantiationException | IllegalAccessException e) {
-					throw new HibernateException( "Could not instantiate session-scoped SessionFactory Interceptor", e );
-				}
-			}
-
-			return null;
 		}
 
 		@Override

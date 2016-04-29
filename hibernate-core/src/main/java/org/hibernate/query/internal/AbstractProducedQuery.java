@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -25,6 +26,7 @@ import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
 
 import org.hibernate.CacheMode;
+import org.hibernate.Filter;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -251,6 +253,11 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setLockMode(LockModeType lockModeType) {
+		if ( !LockModeType.NONE.equals( lockModeType ) ) {
+			if ( !isSelect() ) {
+				throw new IllegalStateException( "Illegal attempt to set lock mode on a non-SELECT query" );
+			}
+		}
 		lockOptions.setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
 		return this;
 	}
@@ -1170,5 +1177,11 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		return binding.getBindType() != null
 				? binding.getBindType()
 				: defaultType;
+	}
+
+	private boolean isSelect() {
+		return getProducer().getFactory().getQueryPlanCache()
+				.getHQLQueryPlan( getQueryString(), false, Collections.<String, Filter>emptyMap() )
+				.isSelect();
 	}
 }

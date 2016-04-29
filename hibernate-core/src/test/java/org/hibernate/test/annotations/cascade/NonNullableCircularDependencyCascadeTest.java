@@ -10,11 +10,14 @@ import java.util.HashSet;
 
 import org.junit.Test;
 
-import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.TransientPropertyValueException;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+import static org.hamcrest.core.IsInstanceOf.instanceOf;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 /**
@@ -39,8 +42,9 @@ public class NonNullableCircularDependencyCascadeTest extends BaseCoreFunctional
 			s.flush();
 			fail( "should have failed because of transient entities have non-nullable, circular dependency." );
 		}
-		catch ( HibernateException ex) {
+		catch (IllegalStateException ex) {
 			// expected
+			assertThat( ex.getCause(), instanceOf( TransientPropertyValueException.class ) );
 		}
 		tx.rollback();
 		s.close();

@@ -7,6 +7,7 @@
 
 //$Id$
 package org.hibernate.jpa.test.emops;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -16,6 +17,7 @@ import javax.persistence.Id;
 @Entity
 public class Mail {
 	@Id private Long id;
+	@Column(name = "[from]")
 	private String from;
 
 	public String getFrom() {

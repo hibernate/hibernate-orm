@@ -211,6 +211,7 @@ import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
  * @author Gavin King
  * @author Steve Ebersole
  * @author Brett Meyer
+ * @author Chris Cranford
  */
 public final class SessionImpl
 		extends AbstractSessionImpl
@@ -294,7 +295,7 @@ public final class SessionImpl
 	}
 
 	private void setDefaultProperties() {
-		properties.putIfAbsent( AvailableSettings.FLUSH_MODE, getHibernateFlushMode() );
+		properties.putIfAbsent( AvailableSettings.FLUSH_MODE, getHibernateFlushMode().name() );
 		properties.putIfAbsent( JPA_LOCK_SCOPE, PessimisticLockScope.EXTENDED.name() );
 		properties.putIfAbsent( JPA_LOCK_TIMEOUT, LockOptions.WAIT_FOREVER );
 		properties.putIfAbsent( JPA_SHARED_CACHE_RETRIEVE_MODE, CacheModeHelper.DEFAULT_RETRIEVE_MODE );
@@ -315,10 +316,10 @@ public final class SessionImpl
 
 	protected void applyQuerySettingsAndHints(Query query) {
 		if ( lockOptions.getLockMode() != LockMode.NONE ) {
-			query.setLockMode( getLockMode(lockOptions.getLockMode()));
+			query.setLockMode( getLockMode( lockOptions.getLockMode() ) );
 		}
 		Object queryTimeout;
-		if ( (queryTimeout = getProperties().get(QueryHints.SPEC_HINT_TIMEOUT)) != null ) {
+		if ( (queryTimeout = getProperties().get( QueryHints.SPEC_HINT_TIMEOUT ) ) != null ) {
 			query.setHint( QueryHints.SPEC_HINT_TIMEOUT, queryTimeout );
 		}
 		Object lockTimeout;
@@ -3172,7 +3173,7 @@ public final class SessionImpl
 		}
 		catch ( Exception ne ) {
 			//we do not want the subsequent exception to swallow the original one
-			log.unableToMarkForRollbackOnPersistenceException(ne);
+			log.unableToMarkForRollbackOnPersistenceException( ne );
 		}
 	}
 
@@ -3687,7 +3688,7 @@ public final class SessionImpl
 			applyProperties();
 		}
 		else {
-			log.debugf("Trying to set a property which is not supported on entity manager level");
+			log.debugf( "Trying to set a property which is not supported on entity manager level" );
 		}
 	}
 

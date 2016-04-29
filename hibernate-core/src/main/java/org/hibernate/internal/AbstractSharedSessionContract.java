@@ -211,9 +211,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			this.transactionCoordinator = factory.getServiceRegistry()
 					.getService( TransactionCoordinatorBuilder.class )
 					.buildTransactionCoordinator( jdbcCoordinator, this );
-
-			// prime currentHibernateTransaction
-			getTransaction();
 		}
 	}
 

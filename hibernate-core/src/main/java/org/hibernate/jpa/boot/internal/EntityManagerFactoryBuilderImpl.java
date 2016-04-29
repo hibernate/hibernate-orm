@@ -561,13 +561,13 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			settings.setReleaseResourcesOnCloseEnabled( "true".equals( value ) );
 		}
 
-		final StrategySelector strategySelector = ssrBuilder.getBootstrapServiceRegistry().getService( StrategySelector.class );
-		final Object interceptorSetting = configurationValues.remove( AvailableSettings.SESSION_INTERCEPTOR );
-		if ( interceptorSetting != null ) {
-			settings.setSessionInterceptorClass(
-					loadSessionInterceptorClass( interceptorSetting, strategySelector )
-			);
-		}
+//		final StrategySelector strategySelector = ssrBuilder.getBootstrapServiceRegistry().getService( StrategySelector.class );
+//		final Object interceptorSetting = configurationValues.remove( AvailableSettings.SESSION_INTERCEPTOR );
+//		if ( interceptorSetting != null ) {
+//			settings.setSessionInterceptorClass(
+//					loadSessionInterceptorClass( interceptorSetting, strategySelector )
+//			);
+//		}
 
 		return settings;
 	}
@@ -873,13 +873,13 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 		final StrategySelector strategySelector = ssr.getService( StrategySelector.class );
 
-		// Locate and apply the requested SessionFactory-level interceptor (if one)
-		final Object sessionFactoryInterceptorSetting = configurationValues.remove( org.hibernate.cfg.AvailableSettings.INTERCEPTOR );
-		if ( sessionFactoryInterceptorSetting != null ) {
-			final Interceptor sessionFactoryInterceptor =
-					strategySelector.resolveStrategy( Interceptor.class, sessionFactoryInterceptorSetting );
-			sfBuilder.applyInterceptor( sessionFactoryInterceptor );
-		}
+//		// Locate and apply the requested SessionFactory-level interceptor (if one)
+//		final Object sessionFactoryInterceptorSetting = configurationValues.remove( org.hibernate.cfg.AvailableSettings.INTERCEPTOR );
+//		if ( sessionFactoryInterceptorSetting != null ) {
+//			final Interceptor sessionFactoryInterceptor =
+//					strategySelector.resolveStrategy( Interceptor.class, sessionFactoryInterceptorSetting );
+//			sfBuilder.applyInterceptor( sessionFactoryInterceptor );
+//		}
 
 		// Locate and apply any requested SessionFactoryObserver
 		final Object sessionFactoryObserverSetting = configurationValues.remove( AvailableSettings.SESSION_FACTORY_OBSERVER );

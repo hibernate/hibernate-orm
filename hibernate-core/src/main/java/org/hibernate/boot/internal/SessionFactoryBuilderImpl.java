@@ -599,25 +599,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 			this.autoCloseSessionEnabled = cfgService.getSetting( AUTO_CLOSE_SESSION, BOOLEAN, false );
 
 			this.statisticsEnabled = cfgService.getSetting( GENERATE_STATISTICS, BOOLEAN, false );
-			this.interceptor = strategySelector.resolveDefaultableStrategy(
-					Interceptor.class,
-					configurationSettings.get( INTERCEPTOR ),
-					EmptyInterceptor.INSTANCE
-			);
-
-			final Object statelessInterceptorSetting = configurationSettings.get( SESSION_SCOPED_INTERCEPTOR );
-			if ( statelessInterceptorSetting == null ) {
-				this.statelessInterceptorClass = null;
-			}
-			else if ( statelessInterceptorSetting instanceof Class ) {
-				this.statelessInterceptorClass = (Class<? extends Interceptor>) statelessInterceptorSetting;
-			}
-			else {
-				this.statelessInterceptorClass = strategySelector.selectStrategyImplementor(
-						Interceptor.class,
-						statelessInterceptorSetting.toString()
-				);
-			}
+			this.interceptor = determineInterceptor( configurationSettings, strategySelector );
+			this.statelessInterceptorClass = determineStatelessInterceptorClass( configurationSettings, strategySelector );
 			this.statementInspector = strategySelector.resolveStrategy(
 					StatementInspector.class,
 					configurationSettings.get( STATEMENT_INSPECTOR )
@@ -743,6 +726,56 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 			this.commentsEnabled = ConfigurationHelper.getBoolean( USE_SQL_COMMENTS, configurationSettings );
 
 			this.preferUserTransaction = ConfigurationHelper.getBoolean( PREFER_USER_TRANSACTION, configurationSettings, false  );
+		}
+
+		private static Interceptor determineInterceptor(Map configurationSettings, StrategySelector strategySelector) {
+			Object setting = configurationSettings.get( INTERCEPTOR );
+			if ( setting == null ) {
+				// try the legacy (deprecated) JPA name
+				setting = configurationSettings.get( org.hibernate.jpa.AvailableSettings.INTERCEPTOR );
+				if ( setting != null ) {
+					DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+							org.hibernate.jpa.AvailableSettings.INTERCEPTOR,
+							INTERCEPTOR
+					);
+				}
+			}
+
+			return strategySelector.resolveStrategy(
+					Interceptor.class,
+					setting
+			);
+		}
+
+		@SuppressWarnings("unchecked")
+		private static Class<? extends Interceptor> determineStatelessInterceptorClass(
+				Map configurationSettings,
+				StrategySelector strategySelector) {
+			Object setting = configurationSettings.get( SESSION_SCOPED_INTERCEPTOR );
+			if ( setting == null ) {
+				// try the legacy (deprecated) JPA name
+				setting = configurationSettings.get( org.hibernate.jpa.AvailableSettings.SESSION_INTERCEPTOR );
+				if ( setting != null ) {
+					DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+							org.hibernate.jpa.AvailableSettings.SESSION_INTERCEPTOR,
+							SESSION_SCOPED_INTERCEPTOR
+					);
+				}
+			}
+
+			if ( setting == null ) {
+				return null;
+			}
+			else if ( setting instanceof Class ) {
+				return (Class<? extends Interceptor>) setting;
+			}
+			else {
+				return strategySelector.selectStrategyImplementor(
+						Interceptor.class,
+						setting.toString()
+				);
+			}
+
 		}
 
 		private PhysicalConnectionHandlingMode interpretConnectionHandlingMode(

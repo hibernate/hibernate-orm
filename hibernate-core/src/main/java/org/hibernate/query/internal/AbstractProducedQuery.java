@@ -484,6 +484,11 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public Parameter<?> getParameter(int position) {
+		// lookup jpa-based positional parameters first by name.
+		if ( parameterMetadata.getPositionalParameterCount() == 0 ) {
+			return parameterMetadata.getQueryParameter( String.valueOf( position ) );
+		}
+		// fallback to oridinal lookup
 		return parameterMetadata.getQueryParameter( position );
 	}
 

@@ -1005,7 +1005,13 @@ public abstract class Loader {
 	}
 
 	private void createSubselects(List keys, QueryParameters queryParameters, SessionImplementor session) {
-		if ( keys.size() > 1 ) { //if we only returned one entity, query by key is more efficient
+		if ( keys.size() < 2 ) {
+			LOG.tracef(
+					"Loader [%s] Skipping subselect because there are fewer than 2 results, so query by key is more efficient.",
+					getClass().getName()
+			);
+		}
+		else {
 
 			Set[] keySets = transpose(keys);
 
@@ -1017,6 +1023,17 @@ public abstract class Loader {
 					queryParameters
 			);
 			final Iterator iter = keys.iterator();
+
+			if ( LOG.isTraceEnabled() && loadables.length > 1 ) {
+				LOG.tracef(
+						"Loader [%s] : persisters [%s], aliases [%s], query [%s]",
+						getClass().getName(),
+						Arrays.asList( loadables ),
+						Arrays.asList( aliases ),
+						subselectQueryString
+				);
+			}
+
 			while ( iter.hasNext() ) {
 
 				final EntityKey[] rowKeys = (EntityKey[]) iter.next();
@@ -1032,6 +1049,15 @@ public abstract class Loader {
 								keySets[i],
 								namedParameterLocMap
 							);
+
+						LOG.tracef(
+								"Loader [%s] created subselect: persister [%s], alias [%s], query [%s], entityKeys [%s]",
+								getClass().getName(),
+								loadables[i],
+								aliases[i],
+								subselectQueryString,
+								keySets[i]
+						);
 
 						session.getPersistenceContext()
 								.getBatchFetchQueue()

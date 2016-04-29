@@ -483,8 +483,7 @@ public class NativeQueryImpl extends AbstractProducedQuery<Object> implements Na
 
 	@Override
 	public NativeQueryImplementor setLockMode(LockModeType lockModeType) {
-		super.setLockMode( lockModeType );
-		return this;
+		throw new IllegalStateException( "Illegal attempt to set lock mode on a native SQL query" );
 	}
 
 	@Override

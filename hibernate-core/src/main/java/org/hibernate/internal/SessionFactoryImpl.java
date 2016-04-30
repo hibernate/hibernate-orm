@@ -544,6 +544,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	private Session buildEntityManager(SynchronizationType synchronizationType, Map map) {
+		validateNotClosed();
 		SessionBuilderImplementor builder = withOptions();
 		if ( synchronizationType == SynchronizationType.SYNCHRONIZED ) {
 			builder.autoJoinTransactions( true );
@@ -594,6 +595,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public CriteriaBuilder getCriteriaBuilder() {
+		validateNotClosed();
 		return criteriaBuilder;
 	}
 
@@ -739,6 +741,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	public CacheImplementor getCache() {
+		validateNotClosed();
 		return cacheAccess;
 	}
 

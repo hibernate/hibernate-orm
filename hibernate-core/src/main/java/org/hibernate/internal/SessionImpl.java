@@ -1238,6 +1238,11 @@ public final class SessionImpl
 
 	private void fireRefresh(RefreshEvent event) {
 		try {
+			if ( getSessionFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
+				if ( !contains( event.getObject() ) ) {
+					throw new IllegalArgumentException( "Entity not managed" );
+				}
+			}
 			checkOpen();
 			checkTransactionSynchStatus();
 			for ( RefreshEventListener listener : listeners( EventType.REFRESH ) ) {

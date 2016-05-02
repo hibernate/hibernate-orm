@@ -12,18 +12,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import javax.persistence.FlushModeType;
-import javax.persistence.PersistenceException;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
-import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.StaleStateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
@@ -141,57 +138,6 @@ public interface SharedSessionContractImplementor
 	 * Marks current transaction (if one) for rollback only
 	 */
 	void markForRollbackOnly();
-
-	/**
-	 * Handles marking for rollback and other such operations that need to occur depending on the type of
-	 * exception being handled.
-	 *
-	 * @param e The exception being handled.
-	 */
-	void handlePersistenceException(PersistenceException e);
-
-	/**
-	 * Delegates to {@link #handlePersistenceException} and then throws the given exception.
-	 *
-	 * @param e The exception being handled and finally thrown.
-	 */
-	void throwPersistenceException(PersistenceException e);
-
-	/**
-	 * Converts a Hibernate-specific exception into a JPA-specified exception; note that the JPA sepcification makes use
-	 * of exceptions outside its exception hierarchy, though they are all runtime exceptions.
-	 * <p/>
-	 * Any appropriate/needed calls to {@link #handlePersistenceException} are also made.
-	 *
-	 * @param e The Hibernate excepton.
-	 * @param lockOptions The lock options in effect at the time of exception (can be null)
-	 *
-	 * @return The JPA-specified exception
-	 */
-	RuntimeException convert(HibernateException e, LockOptions lockOptions);
-
-	/**
-	 * Converts a Hibernate-specific exception into a JPA-specified exception; note that the JPA sepcification makes use
-	 * of exceptions outside its exception hierarchy, though they are all runtime exceptions.
-	 * <p/>
-	 * Any appropriate/needed calls to {@link #handlePersistenceException} are also made.
-	 *
-	 * @param e The Hibernate excepton.
-	 *
-	 * @return The JPA-specified exception
-	 */
-	RuntimeException convert(HibernateException e);
-
-	RuntimeException convert(RuntimeException e);
-
-	/**
-	 * Delegates to {@link #convert} and then throws the given exception.
-	 *
-	 * @param e The exception being handled and finally thrown.
-	 */
-	void throwPersistenceException(HibernateException e);
-
-	PersistenceException wrapStaleStateException(StaleStateException e);
 
 	/**
 	 * System time beforeQuery the start of the transaction
@@ -451,4 +397,6 @@ public interface SharedSessionContractImplementor
 	 *         should never be null.
 	 */
 	LoadQueryInfluencers getLoadQueryInfluencers();
+
+	ExceptionConverter getExceptionConverter();
 }

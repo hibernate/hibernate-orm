@@ -38,6 +38,7 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
+import org.hibernate.engine.spi.ExceptionConverter;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -1091,7 +1092,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			throw new IllegalArgumentException( e );
 		}
 		catch (HibernateException he) {
-			throw getProducer().convert( he );
+			throw getExceptionConverter().convert( he );
 		}
 		finally {
 			afterQuery();
@@ -1147,7 +1148,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		}
 		catch ( HibernateException e) {
 			if ( getProducer().getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
-				throw getProducer().convert( e );
+				throw getExceptionConverter().convert( e );
 			}
 			else {
 				throw e;
@@ -1208,5 +1209,9 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		return getProducer().getFactory().getQueryPlanCache()
 				.getHQLQueryPlan( getQueryString(), false, Collections.<String, Filter>emptyMap() )
 				.isSelect();
+	}
+
+	protected ExceptionConverter getExceptionConverter(){
+		return producer.getExceptionConverter();
 	}
 }

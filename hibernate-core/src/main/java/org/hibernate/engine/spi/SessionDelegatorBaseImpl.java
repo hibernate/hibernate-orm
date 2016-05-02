@@ -17,7 +17,6 @@ import javax.persistence.EntityGraph;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
-import javax.persistence.PersistenceException;
 import javax.persistence.StoredProcedureQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaDelete;
@@ -143,41 +142,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public boolean isTransactionInProgress() {
 		return delegate.isTransactionInProgress();
-	}
-
-	@Override
-	public void handlePersistenceException(PersistenceException e) {
-		delegate.handlePersistenceException( e );
-	}
-
-	@Override
-	public void throwPersistenceException(PersistenceException e) {
-		delegate.throwPersistenceException( e );
-	}
-
-	@Override
-	public RuntimeException convert(HibernateException e, LockOptions lockOptions) {
-		return delegate.convert( e, lockOptions );
-	}
-
-	@Override
-	public RuntimeException convert(RuntimeException e) {
-		return delegate.convert( e );
-	}
-
-	@Override
-	public RuntimeException convert(HibernateException e) {
-		return delegate.convert( e );
-	}
-
-	@Override
-	public void throwPersistenceException(HibernateException e) {
-		delegate.throwPersistenceException( e );
-	}
-
-	@Override
-	public PersistenceException wrapStaleStateException(StaleStateException e) {
-		return delegate.wrapStaleStateException( e );
 	}
 
 	@Override
@@ -457,6 +421,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public LoadQueryInfluencers getLoadQueryInfluencers() {
 		return delegate.getLoadQueryInfluencers();
+	}
+
+	@Override
+	public ExceptionConverter getExceptionConverter() {
+		return delegate.getExceptionConverter();
 	}
 
 	@Override

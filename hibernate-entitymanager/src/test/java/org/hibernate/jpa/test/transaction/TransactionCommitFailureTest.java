@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceException;
+import javax.persistence.RollbackException;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
@@ -48,11 +49,10 @@ public class TransactionCommitFailureTest {
             transactionFailureTrigger.set( true );
             em.getTransaction().commit();
         }
-        catch ( Exception e ) {
-            assertEquals(PersistenceException.class, e.getCause().getClass());
-            assertEquals(COMMIT_FAILURE, e.getCause().getMessage());
-        }
-        finally {
+		catch (RollbackException e) {
+			assertEquals( COMMIT_FAILURE, e.getCause().getMessage() );
+		}
+		finally {
             if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
                 em.getTransaction().rollback();
             }

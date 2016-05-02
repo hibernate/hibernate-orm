@@ -419,6 +419,7 @@ public class ProcedureCallImpl<R>
 		);
 
 		try {
+			LOG.debugf( "Preparing procedure call : %s", call );
 			final CallableStatement statement = (CallableStatement) getSession()
 					.getJdbcCoordinator()
 					.getStatementPreparer()
@@ -596,7 +597,7 @@ public class ProcedureCallImpl<R>
 		getProducer().checkOpen( true );
 
 		try {
-			registerParameter( (ParameterRegistrationImplementor) registerParameter( position, type, mode ) );
+			registerParameter( position, type, mode );
 		}
 		catch (HibernateException he) {
 			throw getExceptionConverter().convert( he );

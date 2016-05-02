@@ -115,6 +115,9 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		this.producer = producer;
 		this.parameterMetadata = parameterMetadata;
 		this.queryParameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, producer.getFactory() );
+
+//		this.flushMode = producer.getHibernateFlushMode();
+//		this.cacheMode = producer.getCacheMode();
 	}
 
 	@Override

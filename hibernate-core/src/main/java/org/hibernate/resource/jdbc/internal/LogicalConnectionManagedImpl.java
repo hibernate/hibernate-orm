@@ -14,7 +14,6 @@ import java.sql.SQLException;
 
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
-import org.hibernate.HibernateException;
 import org.hibernate.ResourceClosedException;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -58,8 +57,11 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 		this.observer = jdbcSessionContext.getObserver();
 		this.resourceRegistry = resourceRegistry;
 
-		this.connectionHandlingMode = jdbcSessionContext.getPhysicalConnectionHandlingMode();
-		validateConnectionHandlingMode( connectionHandlingMode, jdbcConnectionAccess );
+		this.connectionHandlingMode = determineConnectionHandlingMode(
+				jdbcSessionContext.getPhysicalConnectionHandlingMode(),
+				jdbcConnectionAccess
+
+		);
 
 		this.sqlExceptionHelper = jdbcSessionContext.getServiceRegistry()
 				.getService( JdbcServices.class )
@@ -70,18 +72,15 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 		}
 	}
 
-	private void validateConnectionHandlingMode(
+	private PhysicalConnectionHandlingMode determineConnectionHandlingMode(
 			PhysicalConnectionHandlingMode connectionHandlingMode,
 			JdbcConnectionAccess jdbcConnectionAccess) {
-		if ( connectionHandlingMode.getReleaseMode() == ConnectionReleaseMode.AFTER_STATEMENT ) {
-			// make sure the Connection access supports reacquisition...
-			// 		NOTE we used to just swap it here with a more correct release-mode, but
-			//		really this ought to be validated at a higher level...
-			if ( !jdbcConnectionAccess.supportsAggressiveRelease() ) {
-				throw new HibernateException(
-						"Connection provider reports to not support aggressive release, but ATER_STATEMENT releasing was requested" );
-			}
+		if ( connectionHandlingMode.getReleaseMode() == ConnectionReleaseMode.AFTER_STATEMENT
+				&& !jdbcConnectionAccess.supportsAggressiveRelease() ) {
+			return PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION;
 		}
+
+		return connectionHandlingMode;
 	}
 
 	private LogicalConnectionManagedImpl(

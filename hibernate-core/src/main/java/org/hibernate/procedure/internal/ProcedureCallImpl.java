@@ -816,61 +816,114 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public <P> ProcedureCallImplementor<R> setParameter(QueryParameter<P> parameter, P value) {
-		super.setParameter( parameter, value );
+		locateParameterRegistration( parameter ).bindValue( value );
 		return this;
+	}
+
+	@SuppressWarnings("unchecked")
+	private  <P> ParameterRegistrationImplementor<P> locateParameterRegistration(Parameter<P> parameter) {
+		if ( parameter.getName() != null ) {
+			return locateParameterRegistration( parameter.getName() );
+		}
+
+		if ( parameter.getPosition() != null ) {
+			return locateParameterRegistration( parameter.getPosition() );
+		}
+
+		throw getExceptionConverter().convert(
+				new IllegalArgumentException( "Could not resolve registration for given parameter reference [" + parameter + "]" )
+		);
+	}
+
+	@SuppressWarnings("unchecked")
+	private <P> ParameterRegistrationImplementor<P> locateParameterRegistration(String name) {
+		assert name != null;
+
+		if ( parameterStrategy == ParameterStrategy.POSITIONAL ) {
+			throw new IllegalArgumentException( "Expecting positional parameter" );
+		}
+
+		for ( ParameterRegistrationImplementor<?> registeredParameter : registeredParameters ) {
+			if ( name.equals( registeredParameter.getName() ) ) {
+				return (ParameterRegistrationImplementor<P>) registeredParameter;
+			}
+		}
+
+		throw new IllegalArgumentException( "Unknown parameter registration name [" + name + "]" );
+	}
+
+	@SuppressWarnings("unchecked")
+	private <P> ParameterRegistrationImplementor<P> locateParameterRegistration(int position) {
+		if ( parameterStrategy == ParameterStrategy.NAMED ) {
+			throw new IllegalArgumentException( "Expecting named parameter" );
+		}
+
+		for ( ParameterRegistrationImplementor<?> registeredParameter : registeredParameters ) {
+			if ( registeredParameter.getPosition() != null && registeredParameter.getPosition() == position ) {
+				return (ParameterRegistrationImplementor<P>) registeredParameter;
+			}
+		}
+
+		throw new IllegalArgumentException( "Unknown parameter registration position [" + position + "]" );
 	}
 
 	@Override
 	public <P> ProcedureCallImplementor<R> setParameter(Parameter<P> parameter, P value) {
-		super.setParameter( parameter, value );
+		locateParameterRegistration( parameter ).bindValue( value );
 		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(String name, Object value) {
-		super.setParameter( name, value );
+		locateParameterRegistration( name ).bindValue( value );
 		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(int position, Object value) {
-		super.setParameter( position, value );
+		locateParameterRegistration( position ).bindValue( value );
 		return this;
 	}
 
 	@Override
 	public <P> ProcedureCallImplementor<R> setParameter(QueryParameter<P> parameter, P value, Type type) {
-		super.setParameter( parameter, value, type );
+		final ParameterRegistrationImplementor<P> reg = locateParameterRegistration( parameter );
+		reg.bindValue( value );
+		reg.setHibernateType( type );
 		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(String name, Object value, Type type) {
-		super.setParameter( name, value, type );
+		final ParameterRegistrationImplementor reg = locateParameterRegistration( name );
+		reg.bindValue( value );
+		reg.setHibernateType( type );
 		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(int position, Object value, Type type) {
-		super.setParameter( position, value, type );
+		final ParameterRegistrationImplementor reg = locateParameterRegistration( position );
+		reg.bindValue( value );
+		reg.setHibernateType( type );
 		return this;
 	}
 
 	@Override
 	public <P> ProcedureCallImplementor<R> setParameter(QueryParameter<P> parameter, P value, TemporalType temporalType) {
-		super.setParameter( parameter, value, temporalType );
+		locateParameterRegistration( parameter ).bindValue( value, temporalType );
 		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(String name, Object value, TemporalType temporalType) {
-		super.setParameter( name, value, temporalType );
+		locateParameterRegistration( name ).bindValue( value, temporalType );
 		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(int position, Object value, TemporalType temporalType) {
-		super.setParameter( position, value, temporalType );
+		locateParameterRegistration( position ).bindValue( value, temporalType );
 		return this;
 	}
 
@@ -905,38 +958,38 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public ProcedureCallImplementor<R> setParameter(Parameter param, Calendar value, TemporalType temporalType) {
-		super.setParameter( param, value, temporalType );
+	public ProcedureCallImplementor<R> setParameter(Parameter parameter, Calendar value, TemporalType temporalType) {
+		locateParameterRegistration( parameter ).bindValue( value, temporalType );
 		return this;
 	}
 
 	@Override
-	public ProcedureCallImplementor<R> setParameter(Parameter param, Date value, TemporalType temporalType) {
-		super.setParameter( param, value, temporalType );
+	public ProcedureCallImplementor<R> setParameter(Parameter parameter, Date value, TemporalType temporalType) {
+		locateParameterRegistration( parameter ).bindValue( value, temporalType );
 		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(String name, Calendar value, TemporalType temporalType) {
-		super.setParameter( name, value, temporalType );
+		locateParameterRegistration( name ).bindValue( value, temporalType );
 		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(String name, Date value, TemporalType temporalType) {
-		super.setParameter( name, value, temporalType );
+		locateParameterRegistration( name ).bindValue( value, temporalType );
 		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(int position, Calendar value, TemporalType temporalType) {
-		super.setParameter( position, value, temporalType );
+		locateParameterRegistration( position ).bindValue( value, temporalType );
 		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(int position, Date value, TemporalType temporalType) {
-		super.setParameter( position, value, temporalType );
+		locateParameterRegistration( position ).bindValue( value, temporalType );
 		return this;
 	}
 }

@@ -109,7 +109,7 @@ public class ParameterMetadataImpl implements ParameterMetadata {
 	/**
 	 * Get the descriptor for an ordinal parameter given its position
 	 *
-	 * @param position The position (1 based)
+	 * @param position The position (0 based)
 	 *
 	 * @return The ordinal parameter descriptor
 	 *
@@ -119,7 +119,7 @@ public class ParameterMetadataImpl implements ParameterMetadata {
 		if ( position < 0 || position >= ordinalDescriptors.length ) {
 			throw new QueryParameterException(
 					"Position beyond number of declared ordinal parameters. " +
-							"Remember that ordinal parameters are 1-based! Position: " + position
+							"Remember that ordinal parameters are 0-based! Position: " + position
 			);
 		}
 		return ordinalDescriptors[position];

@@ -208,7 +208,6 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 					if ( position < positionalParameterBindings.size() ) {
 						binding = positionalParameterBindings.get( position );
 						if ( binding == null ) {
-							// metadata parameters are 1-based
 							binding = makeBinding( parameterMetadata.getQueryParameter( position ) );
 							positionalParameterBindings.set( position, binding );
 						}
@@ -217,7 +216,6 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 						for ( int i = 0; i < position - positionalParameterBindings.size(); i++ ) {
 							positionalParameterBindings.add( null );
 						}
-						// metadata parameters are 1-based
 						QueryParameter queryParameter = parameterMetadata.getQueryParameter( position );
 						binding = makeBinding( queryParameter );
 						positionalParameterBindings.add( binding );

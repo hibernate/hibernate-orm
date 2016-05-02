@@ -594,7 +594,6 @@ public class ProcedureCallImpl<R>
 	@Override
 	public ProcedureCallImplementor<R> registerStoredProcedureParameter(int position, Class type, ParameterMode mode) {
 		getProducer().checkOpen( true );
-		getProducer().checkOpen( true );
 
 		try {
 			registerParameter( (ParameterRegistrationImplementor) registerParameter( position, type, mode ) );

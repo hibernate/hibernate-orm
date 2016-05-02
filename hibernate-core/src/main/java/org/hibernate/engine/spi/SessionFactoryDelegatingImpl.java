@@ -45,7 +45,6 @@ import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.query.spi.QueryPlanCache;
 import org.hibernate.exception.spi.SQLExceptionConverter;
-import org.hibernate.graph.spi.EntityGraphImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.metadata.ClassMetadata;
@@ -265,7 +264,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public EntityGraphImplementor findEntityGraphByName(String name) {
+	public EntityGraph findEntityGraphByName(String name) {
 		return delegate.findEntityGraphByName( name );
 	}
 

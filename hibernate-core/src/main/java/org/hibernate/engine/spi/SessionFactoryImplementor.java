@@ -9,6 +9,7 @@ package org.hibernate.engine.spi;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
+import javax.persistence.EntityGraph;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
@@ -37,7 +38,6 @@ import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.query.spi.QueryPlanCache;
 import org.hibernate.exception.spi.SQLExceptionConverter;
-import org.hibernate.graph.spi.EntityGraphImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -407,7 +407,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, Quer
 		return getMetamodel().getImportedClassName( name );
 	}
 
-	EntityGraphImplementor findEntityGraphByName(String name);
+	EntityGraph findEntityGraphByName(String name);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

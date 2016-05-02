@@ -86,7 +86,6 @@ import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
-import org.hibernate.graph.spi.EntityGraphImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
@@ -533,7 +532,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public <T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass) {
-		return null;
+		return getMetamodel().findEntityGraphsByType( entityClass );
 	}
 
 
@@ -619,8 +618,8 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public EntityGraphImplementor findEntityGraphByName(String name) {
-		return null;
+	public EntityGraph findEntityGraphByName(String name) {
+		return getMetamodel().findEntityGraphByName( name );
 	}
 
 	@Override
@@ -885,7 +884,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public <T> void addNamedEntityGraph(String graphName, EntityGraph<T> entityGraph) {
-
+		getMetamodel().addNamedEntityGraph( graphName, entityGraph );
 	}
 
 	public boolean isClosed() {

@@ -11,6 +11,8 @@ import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
 import org.junit.Test;
 
+import static org.junit.Assert.assertNotNull;
+
 public class SubgraphOrmNamedEntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 	
 	@Override
@@ -23,16 +25,17 @@ public class SubgraphOrmNamedEntityGraphTest extends BaseEntityManagerFunctional
 	public void testSubgraphsAreLoadededFromOrmXml() throws Exception {
 		EntityManager entityManager = getOrCreateEntityManager();
 		List<EntityGraph<? super Book>> lneg = entityManager.getEntityGraphs( Book.class );
-		
+
+		assertNotNull( lneg );
 		Assert.assertEquals(2, lneg.size());
 		for (EntityGraph<? super Book> neg : lneg){
 			if (neg.getName().equalsIgnoreCase( "full" )){
-				Assert.assertNotNull( neg.getAttributeNodes() );
+				assertNotNull( neg.getAttributeNodes() );
 				for (AttributeNode<?> n : neg.getAttributeNodes()){
 					if (n.getAttributeName().equalsIgnoreCase( "authors" )) {
 						Assert.assertEquals(1, n.getSubgraphs().size());
 						java.util.List<javax.persistence.AttributeNode<?>> attributeNodes = n.getSubgraphs().get(Author.class).getAttributeNodes();
-						Assert.assertNotNull("Subgraph attributes missing", attributeNodes);
+						assertNotNull("Subgraph attributes missing", attributeNodes);
 						Assert.assertEquals("Subgraph wrong number of attributes ", 3, attributeNodes.size());
 					}
 				}

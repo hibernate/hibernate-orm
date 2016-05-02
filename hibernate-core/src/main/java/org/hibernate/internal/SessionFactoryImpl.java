@@ -53,6 +53,7 @@ import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
 import org.hibernate.context.internal.JTASessionContext;
@@ -225,7 +226,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		this.properties = new HashMap<>();
 		this.properties.putAll( serviceRegistry.getService( ConfigurationService.class ).getSettings() );
-
+		maskOutSensitiveInformation(this.properties);
 		this.sqlFunctionRegistry = new SQLFunctionRegistry( jdbcServices.getJdbcEnvironment().getDialect(), options.getCustomSqlFunctionMap() );
 		this.cacheAccess = this.serviceRegistry.getService( CacheImplementor.class );
 		this.criteriaBuilder = new CriteriaBuilderImpl( this );
@@ -1477,5 +1478,16 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		boolean isNamed = ois.readBoolean();
 		final String name = isNamed ? ois.readUTF() : null;
 		return (SessionFactoryImpl) locateSessionFactoryOnDeserialization( uuid, name );
+	}
+
+	private void maskOutSensitiveInformation(Map<String, Object> props) {
+		maskOutIfSet( props, AvailableSettings.JPA_JDBC_USER );
+		maskOutIfSet( props, AvailableSettings.PASS );
+	}
+
+	private void maskOutIfSet(Map<String, Object> props, String setting) {
+		if ( props.containsKey( setting ) ) {
+			props.put( setting, "****" );
+		}
 	}
 }

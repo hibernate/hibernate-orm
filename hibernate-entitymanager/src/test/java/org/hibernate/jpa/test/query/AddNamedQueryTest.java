@@ -101,7 +101,7 @@ public class AddNamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 
 		// then lets create a query by name and check its setting
 		q = em.createNamedQuery( name );
-		assertEquals( FlushMode.COMMIT, q.unwrap( org.hibernate.Query.class ).getFlushMode() );
+		assertEquals( FlushMode.COMMIT, q.unwrap( org.hibernate.Query.class ).getHibernateFlushMode() );
 		assertEquals( FlushModeType.COMMIT, q.getFlushMode() );
 
 		em.getTransaction().commit();

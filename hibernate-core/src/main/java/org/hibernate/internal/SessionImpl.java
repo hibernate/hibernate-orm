@@ -3710,18 +3710,24 @@ public final class SessionImpl
 	@Override
 	public EntityGraph<?> createEntityGraph(String graphName) {
 		checkOpen();
-		final EntityGraphImplementor named = getEntityManagerFactory().findEntityGraphByName( graphName );
+		final EntityGraph named = getEntityManagerFactory().findEntityGraphByName( graphName );
 		if ( named == null ) {
 			return null;
 		}
-		return named.makeMutableCopy();
+
+		if ( EntityGraphImplementor.class.isInstance( named ) ) {
+			return ( (EntityGraphImplementor) named ).makeMutableCopy();
+		}
+		else {
+			return named;
+		}
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public EntityGraph<?> getEntityGraph(String graphName) {
 		checkOpen();
-		final EntityGraphImplementor named = getEntityManagerFactory().findEntityGraphByName( graphName );
+		final EntityGraph named = getEntityManagerFactory().findEntityGraphByName( graphName );
 		if ( named == null ) {
 			throw new IllegalArgumentException( "Could not locate EntityGraph with given name : " + graphName );
 		}

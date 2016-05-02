@@ -9,11 +9,17 @@ package org.hibernate.metamodel.internal;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import javax.persistence.EntityGraph;
+import javax.persistence.NamedAttributeNode;
+import javax.persistence.NamedEntityGraph;
+import javax.persistence.NamedSubgraph;
+import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
@@ -29,11 +35,18 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.graph.spi.EntityGraphImplementor;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.jpa.graph.internal.AbstractGraphNode;
+import org.hibernate.jpa.graph.internal.AttributeNodeImpl;
+import org.hibernate.jpa.graph.internal.EntityGraphImpl;
+import org.hibernate.jpa.graph.internal.SubgraphImpl;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
@@ -72,6 +85,8 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	private final Map<Class<?>, EmbeddableTypeImpl<?>> jpaEmbeddableTypeMap = new ConcurrentHashMap<>();
 	private final Map<Class<?>, MappedSuperclassType<?>> jpaMappedSuperclassTypeMap = new ConcurrentHashMap<>();
 	private final Map<String, EntityTypeImpl<?>> jpaEntityTypesByEntityName = new ConcurrentHashMap<>();
+
+	private final transient Map<String,EntityGraph> entityGraphMap = new ConcurrentHashMap<>();
 
 	public MetamodelImpl(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
@@ -207,6 +222,87 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 		this.jpaEmbeddableTypeMap.putAll( context.getEmbeddableTypeMap() );
 		this.jpaMappedSuperclassTypeMap.putAll( context.getMappedSuperclassTypeMap() );
 		this.jpaEntityTypesByEntityName.putAll( context.getEntityTypesByEntityName() );
+
+		applyNamedEntityGraphs( mappingMetadata.getNamedEntityGraphs().values() );
+
+	}
+
+	@SuppressWarnings("unchecked")
+	private void applyNamedEntityGraphs(java.util.Collection<NamedEntityGraphDefinition> namedEntityGraphs) {
+		for ( NamedEntityGraphDefinition definition : namedEntityGraphs ) {
+			log.debugf(
+					"Applying named entity graph [name=%s, entity-name=%s, jpa-entity-name=%s",
+					definition.getRegisteredName(),
+					definition.getEntityName(),
+					definition.getJpaEntityName()
+			);
+			final EntityType entityType = entity( definition.getEntityName() );
+			if ( entityType == null ) {
+				throw new IllegalArgumentException(
+						"Attempted to register named entity graph [" + definition.getRegisteredName()
+								+ "] for unknown entity ["+ definition.getEntityName() + "]"
+
+				);
+			}
+			final EntityGraphImpl entityGraph = new EntityGraphImpl(
+					definition.getRegisteredName(),
+					entityType,
+					this.getSessionFactory()
+			);
+
+			final NamedEntityGraph namedEntityGraph = definition.getAnnotation();
+
+			if ( namedEntityGraph.includeAllAttributes() ) {
+				for ( Object attributeObject : entityType.getAttributes() ) {
+					entityGraph.addAttributeNodes( (Attribute) attributeObject );
+				}
+			}
+
+			if ( namedEntityGraph.attributeNodes() != null ) {
+				applyNamedAttributeNodes( namedEntityGraph.attributeNodes(), namedEntityGraph, entityGraph );
+			}
+
+			entityGraphMap.put( definition.getRegisteredName(), entityGraph );
+		}
+	}
+
+	private void applyNamedAttributeNodes(
+			NamedAttributeNode[] namedAttributeNodes,
+			NamedEntityGraph namedEntityGraph,
+			AbstractGraphNode graphNode) {
+		for ( NamedAttributeNode namedAttributeNode : namedAttributeNodes ) {
+			final String value = namedAttributeNode.value();
+			AttributeNodeImpl attributeNode = graphNode.addAttribute( value );
+			if ( StringHelper.isNotEmpty( namedAttributeNode.subgraph() ) ) {
+				final SubgraphImpl subgraph = attributeNode.makeSubgraph();
+				applyNamedSubgraphs(
+						namedEntityGraph,
+						namedAttributeNode.subgraph(),
+						subgraph
+				);
+			}
+			if ( StringHelper.isNotEmpty( namedAttributeNode.keySubgraph() ) ) {
+				final SubgraphImpl subgraph = attributeNode.makeKeySubgraph();
+
+				applyNamedSubgraphs(
+						namedEntityGraph,
+						namedAttributeNode.keySubgraph(),
+						subgraph
+				);
+			}
+		}
+	}
+
+	private void applyNamedSubgraphs(NamedEntityGraph namedEntityGraph, String subgraphName, SubgraphImpl subgraph) {
+		for ( NamedSubgraph namedSubgraph : namedEntityGraph.subgraphs() ) {
+			if ( subgraphName.equals( namedSubgraph.name() ) ) {
+				applyNamedAttributeNodes(
+						namedSubgraph.attributeNodes(),
+						namedEntityGraph,
+						subgraph
+				);
+			}
+		}
 	}
 
 	@Override
@@ -564,6 +660,47 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	@Override
 	public String[] getAllCollectionRoles() {
 		return ArrayHelper.toStringArray( entityPersisterMap.keySet() );
+	}
+
+	@Override
+	public <T> void addNamedEntityGraph(String graphName, EntityGraph<T> entityGraph) {
+		if ( entityGraph instanceof EntityGraphImplementor ) {
+			entityGraph = ( (EntityGraphImplementor<T>) entityGraph ).makeImmutableCopy( graphName );
+		}
+		final EntityGraph old = entityGraphMap.put( graphName, entityGraph );
+		if ( old != null ) {
+			log.debugf( "EntityGraph being replaced on EntityManagerFactory for name %s", graphName );
+		}
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> EntityGraph<T> findEntityGraphByName(String name) {
+		return entityGraphMap.get( name );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass) {
+		final EntityType<T> entityType = entity( entityClass );
+		if ( entityType == null ) {
+			throw new IllegalArgumentException( "Given class is not an entity : " + entityClass.getName() );
+		}
+
+		final List<EntityGraph<? super T>> results = new ArrayList<>();
+
+		for ( EntityGraph entityGraph : entityGraphMap.values() ) {
+			if ( !EntityGraphImplementor.class.isInstance( entityGraph ) ) {
+				continue;
+			}
+
+			final EntityGraphImplementor egi = (EntityGraphImplementor) entityGraph;
+			if ( egi.appliesTo( entityType ) ) {
+				results.add( egi );
+			}
+		}
+
+		return results;
 	}
 
 	@Override

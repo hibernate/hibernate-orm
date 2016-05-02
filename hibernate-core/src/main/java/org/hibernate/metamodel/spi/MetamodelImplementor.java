@@ -7,8 +7,10 @@
 package org.hibernate.metamodel.spi;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.persistence.EntityGraph;
 
 import org.hibernate.EntityNameResolver;
 import org.hibernate.MappingException;
@@ -120,6 +122,12 @@ public interface MetamodelImplementor extends Metamodel {
 	 * @return All of the entity names
 	 */
 	String[] getAllCollectionRoles();
+
+	<T> void addNamedEntityGraph(String graphName, EntityGraph<T> entityGraph);
+
+	<T> EntityGraph<T> findEntityGraphByName(String name);
+
+	<T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass);
 
 	void close();
 }

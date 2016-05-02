@@ -62,6 +62,7 @@ import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
+import org.hibernate.query.spi.QueryParameterListBinding;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
 
@@ -293,36 +294,74 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <P> QueryImplementor setParameter(QueryParameter<P> parameter, P value) {
-		queryParameterBindings.getBinding( parameter ).setBindValue( value );
+		locateBinding( parameter ).setBindValue( value );
 		return this;
+	}
+
+	@SuppressWarnings("unchecked")
+	private <P> QueryParameterBinding<P> locateBinding(Parameter<P> parameter) {
+		if ( parameter instanceof QueryParameter ) {
+			return queryParameterBindings.getBinding( (QueryParameter) parameter );
+		}
+		else if ( parameter.getName() != null ) {
+			return queryParameterBindings.getBinding( parameter.getName() );
+		}
+		else if ( parameter.getPosition() != null ) {
+			return queryParameterBindings.getBinding( parameter.getPosition() );
+		}
+
+		throw getExceptionConverter().convert(
+				new IllegalArgumentException( "Could not resolve binding for given parameter reference [" + parameter + "]" )
+		);
+	}
+
+	private <P> QueryParameterBinding<P> locateBinding(QueryParameter<P> parameter) {
+		return queryParameterBindings.getBinding( parameter );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <P> QueryImplementor setParameter(Parameter<P> parameter, P value) {
 		if ( value instanceof TypedParameterValue ) {
-			final TypedParameterValue  typedValueWrapper = (TypedParameterValue ) value;
-			setParameter( (QueryParameter) parameter, typedValueWrapper.getValue(), typedValueWrapper.getType() );
+			setParameter( parameter, ( (TypedParameterValue) value ).getValue(), ( (TypedParameterValue) value ).getType() );
 		}
 		else if ( value instanceof Collection ) {
-			setParameterList( (QueryParameter) parameter, (Collection) value );
-		}
-		else if ( parameter instanceof QueryParameter ) {
-			queryParameterBindings.getBinding( (QueryParameter) parameter ).setBindValue( value );
-		}
-		else if ( parameter.getName() != null ) {
-			queryParameterBindings.getBinding( parameter.getName() ).setBindValue( value );
-		}
-		else if ( parameter.getPosition() != null ) {
-			queryParameterBindings.getBinding( parameter.getPosition() ).setBindValue( value );
+			locateListBinding( parameter ).setBindValues( (Collection) value );
 		}
 		else {
-			throw getExceptionConverter().convert(
-					new IllegalArgumentException( "Could not resolve parameter instance [" + parameter + "] as query parameter" )
-
-			);
+			locateBinding( parameter ).setBindValue( value );
 		}
+
 		return this;
+	}
+
+	@SuppressWarnings("unchecked")
+	private <P> void setParameter(Parameter<P> parameter, Object value, Type type) {
+		if ( parameter instanceof QueryParameter ) {
+			setParameter( (QueryParameter) parameter, value, type );
+		}
+		else if ( value == null ) {
+			locateBinding( parameter ).setBindValue( null, type );
+		}
+		else if ( value instanceof Collection ) {
+			locateListBinding( parameter ).setBindValues( (Collection) value, type );
+		}
+		else {
+			locateBinding( parameter ).setBindValue( (P) value, type );
+		}
+	}
+
+	private QueryParameterListBinding locateListBinding(Parameter parameter) {
+		if ( parameter instanceof QueryParameter ) {
+			return queryParameterBindings.getQueryParameterListBinding( (QueryParameter) parameter );
+		}
+		else {
+			return queryParameterBindings.getQueryParameterListBinding( parameter.getName() );
+		}
+	}
+
+	private QueryParameterListBinding locateListBinding(String name) {
+		return queryParameterBindings.getQueryParameterListBinding( name );
 	}
 
 	@Override
@@ -345,7 +384,16 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setParameter(int position, Object value) {
-		queryParameterBindings.getBinding( position ).setBindValue( value );
+		if ( value instanceof TypedParameterValue ) {
+			final TypedParameterValue typedParameterValue = (TypedParameterValue) value;
+			setParameter( position, typedParameterValue.getValue(), typedParameterValue.getType() );
+		}
+		if ( value instanceof Collection ) {
+			setParameterList( Integer.toString( position ), (Collection) value );
+		}
+		else {
+			queryParameterBindings.getBinding( position ).setBindValue( value );
+		}
 		return this;
 	}
 
@@ -494,9 +542,20 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public Parameter<?> getParameter(int position) {
+		// It is important to understand that there are 2 completely distinct conceptualization of
+		// "positional parameters" in play here:
+		//		1) The legacy Hibernate concept is akin to JDBC PreparedStatement parameters.  Very limited and
+		//			deprecated since 5.x.  These are numbered starting from 0 and kept in the
+		//			ParameterMetadata positional-parameter array keyed by this zero-based position
+		//		2) JPA's definition is really just a named parameter, but expected to explicitly be
+		//			sequential intergers starting from 0 (ZERO); they can repeat.
+		//
+		// It is considered illegal to mix positional-parameter with named parameters of any kind.  So therefore.
+		// if ParameterMetadata reports that it has any positional-parameters it is talking about the
+		// legacy Hibernate concept.
 		// lookup jpa-based positional parameters first by name.
 		if ( parameterMetadata.getPositionalParameterCount() == 0 ) {
-			return parameterMetadata.getQueryParameter( String.valueOf( position ) );
+			return parameterMetadata.getQueryParameter( Integer.toString( position ) );
 		}
 		// fallback to oridinal lookup
 		return parameterMetadata.getQueryParameter( position );

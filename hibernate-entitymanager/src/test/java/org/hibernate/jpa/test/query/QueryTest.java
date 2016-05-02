@@ -21,9 +21,7 @@ import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import javax.persistence.Tuple;
 
-import junit.framework.Assert;
 import org.hibernate.Hibernate;
-import org.hibernate.QueryParameterException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.PostgreSQL9Dialect;
@@ -34,10 +32,12 @@ import org.hibernate.jpa.test.Distributor;
 import org.hibernate.jpa.test.Item;
 import org.hibernate.jpa.test.Wallet;
 import org.hibernate.stat.Statistics;
+
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipForDialects;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
+import junit.framework.Assert;
 
 import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
@@ -146,7 +146,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			}
 			@Override
 			public Integer getPosition() {
-				return 1;
+				return 0;
 			}
 			@Override
 			public Class getParameterType() {
@@ -184,7 +184,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			}
 			@Override
 			public Integer getPosition() {
-				return 1;
+				return 0;
 			}
 			@Override
 			public Class getParameterType() {
@@ -354,7 +354,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			}
 			@Override
 			public Integer getPosition() {
-				return 1;
+				return 0;
 			}
 			@Override
 			public Class getParameterType() {
@@ -846,7 +846,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			hqlQuery.setParameter( 2, "Expensive" );
 			fail( "Should fail due to a user error in parameters" );
 		}
-		catch( QueryParameterException e ) {
+		catch( IllegalArgumentException e ) {
 			// success expected
 			e.printStackTrace();
 		}

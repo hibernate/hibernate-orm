@@ -199,9 +199,9 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	public QueryParameterBinding getBinding(int position) {
 		QueryParameterBinding binding = null;
 		if ( parameterMetadata != null ) {
-			if ( parameterMetadata.getPositionalParameterCount() == 0 ) {
+			if ( ! parameterMetadata.hasPositionalParameters() ) {
 				// no positional parameters, assume jpa named.
-				binding = locateBinding( String.valueOf( position ) );
+				binding = locateBinding( Integer.toString( position ) );
 			}
 			else {
 				try {
@@ -209,7 +209,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 						binding = positionalParameterBindings.get( position );
 						if ( binding == null ) {
 							// metadata parameters are 1-based
-							binding = makeBinding( parameterMetadata.getQueryParameter( position + 1 ) );
+							binding = makeBinding( parameterMetadata.getQueryParameter( position ) );
 							positionalParameterBindings.set( position, binding );
 						}
 					}
@@ -218,7 +218,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 							positionalParameterBindings.add( null );
 						}
 						// metadata parameters are 1-based
-						QueryParameter queryParameter = parameterMetadata.getQueryParameter( position + 1 );
+						QueryParameter queryParameter = parameterMetadata.getQueryParameter( position );
 						binding = makeBinding( queryParameter );
 						positionalParameterBindings.add( binding );
 					}
@@ -228,9 +228,11 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 				}
 			}
 		}
+
 		if ( binding == null ) {
 			throw new IllegalArgumentException( "Unknown parameter position: " + position );
 		}
+
 		return binding;
 	}
 

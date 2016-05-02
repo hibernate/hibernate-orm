@@ -56,7 +56,9 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 	@Override
 	public void setBindValue(T value, Type clarifiedType) {
 		setBindValue( value );
-		this.bindType = clarifiedType;
+		if ( clarifiedType != null ) {
+			this.bindType = clarifiedType;
+		}
 	}
 
 	@Override

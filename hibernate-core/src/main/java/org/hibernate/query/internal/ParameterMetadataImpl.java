@@ -116,13 +116,13 @@ public class ParameterMetadataImpl implements ParameterMetadata {
 	 * @throws QueryParameterException If the position is out of range
 	 */
 	public OrdinalParameterDescriptor getOrdinalParameterDescriptor(int position) {
-		if ( position < 1 || position > ordinalDescriptors.length ) {
+		if ( position < 0 || position >= ordinalDescriptors.length ) {
 			throw new QueryParameterException(
 					"Position beyond number of declared ordinal parameters. " +
 							"Remember that ordinal parameters are 1-based! Position: " + position
 			);
 		}
-		return ordinalDescriptors[position - 1];
+		return ordinalDescriptors[position];
 	}
 
 	/**

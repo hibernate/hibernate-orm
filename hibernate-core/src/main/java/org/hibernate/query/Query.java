@@ -19,6 +19,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.engine.spi.RowSelection;
 
 /**
  * Represents an HQL/JPQL query or a compiled Criteria query.  Also acts as the Hibernate
@@ -39,6 +40,15 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, BasicQu
 	 * Get the QueryProducer this Query originates from.
 	 */
 	QueryProducer getProducer();
+
+	/**
+	 * "QueryOptions" is a better name, I think, than "RowSelection" -> 6.0
+	 *
+	 * @return Return the encapsulation of this query's options, which includes access to
+	 * firstRow, maxRows, timeout and fetchSize.   Important because this gives access to
+	 * those values in their Integer form rather than the primitive form (int) required by JPA.
+	 */
+	RowSelection getQueryOptions();
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

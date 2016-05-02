@@ -90,21 +90,18 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 	private FlushMode flushMode;
 	private CacheMode cacheMode;
-	private Integer timeout;
 	private boolean cacheable;
 	private String cacheRegion;
 	private Boolean readOnly;
 
 	private LockOptions lockOptions = new LockOptions();
 
-	private Integer fetchSize;
-
 	private String comment;
 	private final List<String> dbHints = new ArrayList<>();
 	private Map<String, Object> hints;
 
 	private ResultTransformer resultTransformer;
-	private RowSelection selection = new RowSelection();
+	private RowSelection queryOptions = new RowSelection();
 	private HQLQueryPlan entityGraphHintedQueryPlan;
 
 	private Object optionalObject;
@@ -194,25 +191,25 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public Integer getTimeout() {
-		return timeout;
+		return queryOptions.getTimeout();
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setTimeout(int timeout) {
-		this.timeout = timeout;
+		queryOptions.setTimeout( timeout );
 		return this;
 	}
 
 	@Override
 	public Integer getFetchSize() {
-		return fetchSize;
+		return queryOptions.getFetchSize();
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setFetchSize(int fetchSize) {
-		this.fetchSize = fetchSize;
+		queryOptions.setFetchSize( fetchSize );
 		return this;
 	}
 
@@ -310,8 +307,20 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		else if ( value instanceof Collection ) {
 			setParameterList( (QueryParameter) parameter, (Collection) value );
 		}
-		else {
+		else if ( parameter instanceof QueryParameter ) {
 			queryParameterBindings.getBinding( (QueryParameter) parameter ).setBindValue( value );
+		}
+		else if ( parameter.getName() != null ) {
+			queryParameterBindings.getBinding( parameter.getName() ).setBindValue( value );
+		}
+		else if ( parameter.getPosition() != null ) {
+			queryParameterBindings.getBinding( parameter.getPosition() ).setBindValue( value );
+		}
+		else {
+			throw getExceptionConverter().convert(
+					new IllegalArgumentException( "Could not resolve parameter instance [" + parameter + "] as query parameter" )
+
+			);
 		}
 		return this;
 	}
@@ -604,8 +613,15 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
+	public RowSelection getQueryOptions() {
+		return queryOptions;
+	}
+
+	@Override
 	public int getMaxResults() {
-		return selection.getMaxRows();
+		// to be JPA compliant this method returns an int - specifically the "magic number" Integer.MAX_VALUE defined by the spec.
+		// For access to the Integer (for checking), use #getQueryOptions#getMaxRows instead
+		return queryOptions.getMaxRows() == null ? Integer.MAX_VALUE : queryOptions.getMaxRows();
 	}
 
 	@Override
@@ -613,23 +629,25 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	public QueryImplementor setMaxResults(int maxResult) {
 		if ( maxResult <= 0 ) {
 			// treat zero and negatives specially as meaning no limit...
-			selection.setMaxRows( null );
+			queryOptions.unsetMaxRows();
 		}
 		else {
-			selection.setMaxRows( maxResult );
+			queryOptions.setMaxRows( maxResult );
 		}
 		return this;
 	}
 
 	@Override
 	public int getFirstResult() {
-		return selection.getFirstRow();
+		// to be JPA compliant this method returns an int - specifically the "magic number" 0 (ZERO) defined by the spec.
+		// For access to the Integer (for checking), use #getQueryOptions#getFirstRow instead
+		return queryOptions.getFirstRow() == null ? 0 : queryOptions.getFirstRow();
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setFirstResult(int startPosition) {
-		selection.setFirstRow( startPosition );
+		queryOptions.setFirstRow( startPosition );
 		return this;
 	}
 
@@ -964,7 +982,8 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			return (T) this;
 		}
 
-		throw new IllegalArgumentException( "Could not unwrap this [" + toString() + "] as requested Java type [" + cls.getName() + "]" );
+		throw new HibernateException( "Could not unwrap this [" + toString() + "] as requested Java type [" + cls.getName() + "]" );
+//		throw new IllegalArgumentException( "Could not unwrap this [" + toString() + "] as requested Java type [" + cls.getName() + "]" );
 	}
 
 	public QueryParameters getQueryParameters() {
@@ -973,7 +992,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 				getPositionalParameterValues(),
 				getNamedParameterMap(),
 				getLockOptions(),
-				selection,
+				queryOptions,
 				true,
 				isReadOnly(),
 				cacheable,

@@ -123,7 +123,7 @@ public interface QueryProducer {
 	 *
 	 * @see javax.persistence.EntityManager#createNativeQuery(String,Class)
 	 */
-	NativeQuery createNativeQuery(String sqlString, Class resultClass);
+	<R> NativeQuery<R> createNativeQuery(String sqlString, Class<R> resultClass);
 
 	/**
 	 * Create a NativeQuery instance for the given native (SQL) query using

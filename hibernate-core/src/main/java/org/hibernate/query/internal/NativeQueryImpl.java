@@ -224,10 +224,24 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 		// apps, so we only do the flush if a transaction is in progress.
 		//
 		// NOTE : this was added for JPA initially.  Perhaps we want to only do this from JPA usage?
-		if ( getProducer().isTransactionInProgress() ) {
+		if ( shouldFlush() ) {
 			getProducer().flush();
 		}
+	}
 
+	private boolean shouldFlush() {
+		if ( getProducer().isTransactionInProgress() ) {
+			FlushMode effectiveFlushMode = getHibernateFlushMode();
+			if ( effectiveFlushMode == null ) {
+				effectiveFlushMode = getProducer().getHibernateFlushMode();
+			}
+
+			if ( effectiveFlushMode != FlushMode.MANUAL ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	protected int doExecuteUpdate() {

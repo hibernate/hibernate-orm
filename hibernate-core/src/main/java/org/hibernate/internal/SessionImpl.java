@@ -29,20 +29,13 @@ import java.util.Map;
 import java.util.Set;
 import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
-import javax.persistence.EntityExistsException;
 import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
-import javax.persistence.LockTimeoutException;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-import javax.persistence.OptimisticLockException;
 import javax.persistence.PersistenceException;
-import javax.persistence.PessimisticLockException;
 import javax.persistence.PessimisticLockScope;
-import javax.persistence.QueryTimeoutException;
 import javax.persistence.StoredProcedureQuery;
 import javax.persistence.TransactionRequiredException;
 import javax.persistence.Tuple;
@@ -75,8 +68,6 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
-import org.hibernate.StaleObjectStateException;
-import org.hibernate.StaleStateException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.TypeHelper;
 import org.hibernate.TypeMismatchException;
@@ -84,9 +75,6 @@ import org.hibernate.UnknownProfileException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.criterion.NaturalIdentifier;
-import org.hibernate.dialect.lock.LockingStrategyException;
-import org.hibernate.dialect.lock.OptimisticEntityLockException;
-import org.hibernate.dialect.lock.PessimisticEntityLockException;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NonContextualLobCreator;
@@ -161,7 +149,6 @@ import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.jpa.spi.CriteriaQueryTupleTransformer;
 import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
-import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.loader.criteria.CriteriaLoader;
 import org.hibernate.loader.custom.CustomLoader;
 import org.hibernate.loader.custom.CustomQuery;
@@ -252,7 +239,6 @@ public final class SessionImpl
 	private transient AfterCompletionAction afterCompletionAction;
 
 	private transient LoadEvent loadEvent; //cached LoadEvent instance
-
 
 	public SessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
@@ -381,7 +367,7 @@ public final class SessionImpl
 			internalClear();
 		}
 		catch (RuntimeException e) {
-			throw convert( e );
+			throw exceptionConverter.convert( e );
 		}
 	}
 
@@ -454,8 +440,7 @@ public final class SessionImpl
 			return !isClosed();
 		}
 		catch (HibernateException he) {
-			throwPersistenceException( he );
-			return false;
+			throw exceptionConverter.convert( he );
 		}
 	}
 
@@ -764,17 +749,17 @@ public final class SessionImpl
 			}
 		}
 		catch (MappingException e) {
-			throw convert( new IllegalArgumentException( e.getMessage() ) );
+			throw exceptionConverter.convert( new IllegalArgumentException( e.getMessage() ) );
 		}
 		catch (RuntimeException e) {
-			throw convert( e );
+			throw exceptionConverter.convert( e );
 		}
 		finally {
 			try {
 				checkNoUnresolvedActionsAfterOperation();
 			}
 			catch (RuntimeException e) {
-				throw convert( e );
+				throw exceptionConverter.convert( e );
 			}
 		}
 	}
@@ -789,10 +774,10 @@ public final class SessionImpl
 			}
 		}
 		catch ( MappingException e ) {
-			throw convert( new IllegalArgumentException( e.getMessage() ) ) ;
+			throw exceptionConverter.convert( new IllegalArgumentException( e.getMessage() ) ) ;
 		}
 		catch ( RuntimeException e ) {
-			throw convert( e );
+			throw exceptionConverter.convert( e );
 		}
 		finally {
 			delayedAfterCompletion();
@@ -866,14 +851,14 @@ public final class SessionImpl
 			checkNoUnresolvedActionsAfterOperation();
 		}
 		catch ( ObjectDeletedException sse ) {
-			throw convert( new IllegalArgumentException( sse ) );
+			throw exceptionConverter.convert( new IllegalArgumentException( sse ) );
 		}
 		catch ( MappingException e ) {
-			throw convert( new IllegalArgumentException( e.getMessage(), e ) );
+			throw exceptionConverter.convert( new IllegalArgumentException( e.getMessage(), e ) );
 		}
 		catch ( RuntimeException e ) {
 			//including HibernateException
-			throw convert( e );
+			throw exceptionConverter.convert( e );
 		}
 
 		return event.getResult();
@@ -889,14 +874,14 @@ public final class SessionImpl
 			}
 		}
 		catch ( ObjectDeletedException sse ) {
-			throw convert( new IllegalArgumentException( sse ) );
+			throw exceptionConverter.convert( new IllegalArgumentException( sse ) );
 		}
 		catch ( MappingException e ) {
-			throw convert( new IllegalArgumentException( e.getMessage(), e ) );
+			throw exceptionConverter.convert( new IllegalArgumentException( e.getMessage(), e ) );
 		}
 		catch ( RuntimeException e ) {
 			//including HibernateException
-			throw convert( e );
+			throw exceptionConverter.convert( e );
 		}
 		finally {
 			delayedAfterCompletion();
@@ -1256,7 +1241,7 @@ public final class SessionImpl
 				}
 			}
 			//including HibernateException
-			throw convert( e );
+			throw exceptionConverter.convert( e );
 		}
 		finally {
 			delayedAfterCompletion();
@@ -1273,14 +1258,7 @@ public final class SessionImpl
 			delayedAfterCompletion();
 		}
 		catch (RuntimeException e) {
-			if ( !getSessionFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
-				if ( e instanceof HibernateException ) {
-					handlePersistenceException( (HibernateException) e );
-					throw e;
-				}
-			}
-			//including HibernateException
-			throw convert( e );
+			throw exceptionConverter.convert( e );
 		}
 		finally {
 			delayedAfterCompletion();
@@ -1386,7 +1364,7 @@ public final class SessionImpl
 			delayedAfterCompletion();
 		}
 		catch ( RuntimeException e ) {
-			throw convert( e );
+			throw exceptionConverter.convert( e );
 		}
 	}
 
@@ -1983,7 +1961,7 @@ public final class SessionImpl
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
 		catch (RuntimeException e) {
-			throw convert( e );
+			throw exceptionConverter.convert( e );
 		}
 	}
 
@@ -2037,7 +2015,7 @@ public final class SessionImpl
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
 		catch (RuntimeException e) {
-			throw convert( e );
+			throw exceptionConverter.convert( e );
 		}
 	}
 
@@ -3157,208 +3135,6 @@ public final class SessionImpl
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// HibernateEntityManagerImplementor impl
 
-	@Override
-	public void handlePersistenceException(PersistenceException e) {
-		if ( e instanceof NoResultException ) {
-			return;
-		}
-		if ( e instanceof NonUniqueResultException ) {
-			return;
-		}
-		if ( e instanceof LockTimeoutException ) {
-			return;
-		}
-		if ( e instanceof QueryTimeoutException ) {
-			return;
-		}
-
-		try {
-			markForRollbackOnly();
-		}
-		catch ( Exception ne ) {
-			//we do not want the subsequent exception to swallow the original one
-			log.unableToMarkForRollbackOnPersistenceException( ne );
-		}
-	}
-
-	@Override
-	public void throwPersistenceException(PersistenceException e) {
-		throw convert( e );
-	}
-
-	@Override
-	public RuntimeException convert(HibernateException e, LockOptions lockOptions) {
-		Throwable cause = e;
-//		if (e instanceof TransactionException){
-//			cause = e.getCause();
-//		}
-		if ( cause instanceof StaleStateException ) {
-			final PersistenceException converted = wrapStaleStateException( (StaleStateException) cause );
-			handlePersistenceException( converted );
-			return converted;
-		}
-		else if ( cause instanceof LockingStrategyException ) {
-			final PersistenceException converted = wrapLockException( (HibernateException) cause, lockOptions );
-			handlePersistenceException( converted );
-			return converted;
-		}
-		else if ( cause instanceof org.hibernate.exception.LockTimeoutException ) {
-			final PersistenceException converted = wrapLockException( (HibernateException) cause, lockOptions );
-			handlePersistenceException( converted );
-			return converted;
-		}
-		else if ( cause instanceof org.hibernate.PessimisticLockException ) {
-			final PersistenceException converted = wrapLockException( (HibernateException) cause, lockOptions );
-			handlePersistenceException( converted );
-			return converted;
-		}
-		else if ( cause instanceof org.hibernate.QueryTimeoutException ) {
-			final QueryTimeoutException converted = new QueryTimeoutException( cause.getMessage(), cause );
-			handlePersistenceException( converted );
-			return converted;
-		}
-		else if ( cause instanceof ObjectNotFoundException ) {
-			final EntityNotFoundException converted = new EntityNotFoundException( cause.getMessage() );
-			handlePersistenceException( converted );
-			return converted;
-		}
-		else if ( cause instanceof org.hibernate.NonUniqueObjectException ) {
-			final EntityExistsException converted = new EntityExistsException( cause.getMessage() );
-			handlePersistenceException( converted );
-			return converted;
-		}
-		else if ( cause instanceof org.hibernate.NonUniqueResultException ) {
-			final NonUniqueResultException converted = new NonUniqueResultException( cause.getMessage() );
-			handlePersistenceException( converted );
-			return converted;
-		}
-		else if ( cause instanceof UnresolvableObjectException ) {
-			final EntityNotFoundException converted = new EntityNotFoundException( cause.getMessage() );
-			handlePersistenceException( converted );
-			return converted;
-		}
-		else if ( cause instanceof QueryException ) {
-			return new IllegalArgumentException( cause );
-		}
-		else if ( cause instanceof MultipleBagFetchException ) {
-			return new IllegalArgumentException( cause );
-		}
-		else if ( cause instanceof TransientObjectException ) {
-			try {
-				markForRollbackOnly();
-			}
-			catch ( Exception ne ) {
-				//we do not want the subsequent exception to swallow the original one
-				log.unableToMarkForRollbackOnTransientObjectException( ne );
-			}
-			return new IllegalStateException( e ); //Spec 3.2.3 Synchronization rules
-		}
-		else {
-			final PersistenceException converted = new PersistenceException( cause );
-			handlePersistenceException( converted );
-			return converted;
-		}
-	}
-
-	public PersistenceException wrapLockException(HibernateException e, LockOptions lockOptions) {
-		final PersistenceException pe;
-		if ( e instanceof OptimisticEntityLockException ) {
-			final OptimisticEntityLockException lockException = (OptimisticEntityLockException) e;
-			pe = new OptimisticLockException( lockException.getMessage(), lockException, lockException.getEntity() );
-		}
-		else if ( e instanceof org.hibernate.exception.LockTimeoutException ) {
-			pe = new LockTimeoutException( e.getMessage(), e, null );
-		}
-		else if ( e instanceof PessimisticEntityLockException ) {
-			final PessimisticEntityLockException lockException = (PessimisticEntityLockException) e;
-			if ( lockOptions != null && lockOptions.getTimeOut() > -1 ) {
-				// assume lock timeout occurred if a timeout or NO WAIT was specified
-				pe = new LockTimeoutException( lockException.getMessage(), lockException, lockException.getEntity() );
-			}
-			else {
-				pe = new PessimisticLockException( lockException.getMessage(), lockException, lockException.getEntity() );
-			}
-		}
-		else if ( e instanceof org.hibernate.PessimisticLockException ) {
-			final org.hibernate.PessimisticLockException jdbcLockException = (org.hibernate.PessimisticLockException) e;
-			if ( lockOptions != null && lockOptions.getTimeOut() > -1 ) {
-				// assume lock timeout occurred if a timeout or NO WAIT was specified
-				pe = new LockTimeoutException( jdbcLockException.getMessage(), jdbcLockException, null );
-			}
-			else {
-				pe = new PessimisticLockException( jdbcLockException.getMessage(), jdbcLockException, null );
-			}
-		}
-		else {
-			pe = new OptimisticLockException( e );
-		}
-		return pe;
-	}
-
-
-	@Override
-	public RuntimeException convert(HibernateException e) {
-		return convert( e, null );
-	}
-
-	public RuntimeException convert(RuntimeException e) {
-		RuntimeException result = e;
-		if ( e instanceof HibernateException ) {
-			result = convert( (HibernateException) e );
-		}
-		else {
-			markForRollbackOnly();
-		}
-		return result;
-	}
-
-	public RuntimeException convert(RuntimeException e, LockOptions lockOptions) {
-		RuntimeException result = e;
-		if ( e instanceof HibernateException ) {
-			result = convert( (HibernateException) e , lockOptions );
-		}
-		else {
-			markForRollbackOnly();
-		}
-		return result;
-	}
-
-
-	@Override
-	public void throwPersistenceException(HibernateException e) {
-		throw convert( e );
-	}
-
-	@Override
-	public PersistenceException wrapStaleStateException(StaleStateException e) {
-		PersistenceException pe;
-		if ( e instanceof StaleObjectStateException ) {
-			final StaleObjectStateException sose = (StaleObjectStateException) e;
-			final Serializable identifier = sose.getIdentifier();
-			if ( identifier != null ) {
-				try {
-					final Object entity = load( sose.getEntityName(), identifier );
-					if ( entity instanceof Serializable ) {
-						//avoid some user errors regarding boundary crossing
-						pe = new OptimisticLockException( e.getMessage(), e, entity );
-					}
-					else {
-						pe = new OptimisticLockException( e.getMessage(), e );
-					}
-				}
-				catch ( EntityNotFoundException enfe ) {
-					pe = new OptimisticLockException( e.getMessage(), e );
-				}
-			}
-			else {
-				pe = new OptimisticLockException( e.getMessage(), e );
-			}
-		}
-		else {
-			pe = new OptimisticLockException( e.getMessage(), e );
-		}
-		return pe;
-	}
 
 	@Override
 	public LockOptions getLockRequest(LockModeType lockModeType, Map<String, Object> properties) {
@@ -3444,7 +3220,7 @@ public final class SessionImpl
 			return query;
 		}
 		catch ( RuntimeException e ) {
-			throw convert( e );
+			throw exceptionConverter.convert( e );
 		}
 	}
 
@@ -3460,11 +3236,11 @@ public final class SessionImpl
 			delete( entity );
 		}
 		catch (MappingException e) {
-			throw convert( new IllegalArgumentException( e.getMessage(), e ) );
+			throw exceptionConverter.convert( new IllegalArgumentException( e.getMessage(), e ) );
 		}
 		catch ( RuntimeException e ) {
 			//including HibernateException
-			throw convert( e );
+			throw exceptionConverter.convert( e );
 		}
 	}
 
@@ -3527,10 +3303,10 @@ public final class SessionImpl
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
 		catch ( MappingException | TypeMismatchException | ClassCastException e ) {
-			throw convert( new IllegalArgumentException( e.getMessage(), e ) );
+			throw exceptionConverter.convert( new IllegalArgumentException( e.getMessage(), e ) );
 		}
 		catch ( RuntimeException e ) {
-			throw convert( e, lockOptions );
+			throw exceptionConverter.convert( e, lockOptions );
 		}
 		finally {
 			getLoadQueryInfluencers().setFetchGraph( null );
@@ -3578,10 +3354,10 @@ public final class SessionImpl
 			return byId( entityClass ).getReference( (Serializable) primaryKey );
 		}
 		catch ( MappingException | TypeMismatchException | ClassCastException e ) {
-			throw convert( new IllegalArgumentException( e.getMessage(), e ) );
+			throw exceptionConverter.convert( new IllegalArgumentException( e.getMessage(), e ) );
 		}
 		catch ( RuntimeException e ) {
-			throw convert( e );
+			throw exceptionConverter.convert( e );
 		}
 	}
 
@@ -3604,7 +3380,7 @@ public final class SessionImpl
 			buildLockRequest( lockOptions ).lock( entity );
 		}
 		catch (RuntimeException e) {
-			throw convert( e, lockOptions );
+			throw exceptionConverter.convert( e, lockOptions );
 		}
 	}
 
@@ -3630,7 +3406,7 @@ public final class SessionImpl
 			setCacheMode( refreshCacheMode );
 
 			if ( !contains( entity ) ) {
-				throw convert ( new IllegalArgumentException( "Entity not managed" ) );
+				throw exceptionConverter.convert( new IllegalArgumentException( "Entity not managed" ) );
 			}
 
 			if ( lockModeType != null ) {
@@ -3646,10 +3422,10 @@ public final class SessionImpl
 			}
 		}
 		catch (MappingException e) {
-			throw convert( new IllegalArgumentException( e.getMessage(), e ) );
+			throw exceptionConverter.convert( new IllegalArgumentException( e.getMessage(), e ) );
 		}
 		catch (RuntimeException e) {
-			throw convert( e, lockOptions );
+			throw exceptionConverter.convert( e, lockOptions );
 		}
 		finally {
 			setCacheMode( previousCacheMode );
@@ -3663,7 +3439,7 @@ public final class SessionImpl
 			evict( entity );
 		}
 		catch (RuntimeException e) {
-			throw convert( e );
+			throw exceptionConverter.convert( e );
 		}
 	}
 
@@ -3676,7 +3452,7 @@ public final class SessionImpl
 		}
 
 		if ( !contains( entity ) ) {
-			throw convert( new IllegalArgumentException( "entity not in the persistence context" ) );
+			throw exceptionConverter.convert( new IllegalArgumentException( "entity not in the persistence context" ) );
 		}
 
 		return LockModeTypeHelper.getLockModeType( getCurrentLockMode( entity ) );
@@ -3719,7 +3495,7 @@ public final class SessionImpl
 			return (QueryImplementor<T>) criteriaCompiler().compile( (CompilableCriteria) criteriaQuery );
 		}
 		catch ( RuntimeException e ) {
-			throw convert( e );
+			throw exceptionConverter.convert( e );
 		}
 	}
 
@@ -3730,7 +3506,7 @@ public final class SessionImpl
 			return criteriaCompiler().compile( (CompilableCriteria) criteriaUpdate );
 		}
 		catch ( RuntimeException e ) {
-			throw convert( e );
+			throw exceptionConverter.convert( e );
 		}
 	}
 
@@ -3741,7 +3517,7 @@ public final class SessionImpl
 			return criteriaCompiler().compile( (CompilableCriteria) criteriaDelete );
 		}
 		catch ( RuntimeException e ) {
-			throw convert( e );
+			throw exceptionConverter.convert( e );
 		}
 	}
 
@@ -3813,7 +3589,7 @@ public final class SessionImpl
 			return memento.makeProcedureCall( this );
 		}
 		catch ( RuntimeException e ) {
-			throw convert( e );
+			throw exceptionConverter.convert( e );
 		}
 	}
 
@@ -3823,7 +3599,7 @@ public final class SessionImpl
 			return createStoredProcedureCall( procedureName );
 		}
 		catch ( RuntimeException e ) {
-			throw convert( e );
+			throw exceptionConverter.convert( e );
 		}
 	}
 
@@ -3833,7 +3609,7 @@ public final class SessionImpl
 			return createStoredProcedureCall( procedureName, resultClasses );
 		}
 		catch ( RuntimeException e ) {
-			throw convert( e );
+			throw exceptionConverter.convert( e );
 		}
 	}
 
@@ -3849,7 +3625,7 @@ public final class SessionImpl
 			}
 		}
 		catch ( RuntimeException e ) {
-			throw convert( e );
+			throw exceptionConverter.convert( e );
 		}
 	}
 
@@ -3874,7 +3650,7 @@ public final class SessionImpl
 			throw new TransactionRequiredException( e.getMessage() );
 		}
 		catch (HibernateException he) {
-			throw convert( he );
+			throw exceptionConverter.convert( he );
 		}
 	}
 

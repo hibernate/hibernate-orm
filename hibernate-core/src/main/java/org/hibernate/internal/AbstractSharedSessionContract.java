@@ -13,16 +13,7 @@ import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
-import javax.persistence.EntityExistsException;
-import javax.persistence.EntityNotFoundException;
 import javax.persistence.FlushModeType;
-import javax.persistence.LockTimeoutException;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-import javax.persistence.OptimisticLockException;
-import javax.persistence.PersistenceException;
-import javax.persistence.PessimisticLockException;
-import javax.persistence.QueryTimeoutException;
 import javax.persistence.Tuple;
 
 import org.hibernate.AssertionFailure;
@@ -33,27 +24,15 @@ import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
-import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.MultiTenancyStrategy;
-import org.hibernate.ObjectNotFoundException;
-import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.SessionException;
-import org.hibernate.StaleObjectStateException;
-import org.hibernate.StaleStateException;
 import org.hibernate.Transaction;
-import org.hibernate.TransactionException;
-import org.hibernate.TransientObjectException;
-import org.hibernate.UnresolvableObjectException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.lock.LockingStrategyException;
-import org.hibernate.dialect.lock.OptimisticEntityLockException;
-import org.hibernate.dialect.lock.PessimisticEntityLockException;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.internal.SessionEventListenerManagerImpl;
 import org.hibernate.engine.jdbc.LobCreationContext;
@@ -71,6 +50,7 @@ import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.ExceptionConverter;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.QueryParameters;
@@ -147,6 +127,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	private transient Boolean useStreamForLobBinding;
 	private transient long timestamp;
 
+	protected transient ExceptionConverter exceptionConverter;
+
 	public AbstractSharedSessionContract(SessionFactoryImpl factory, SessionCreationOptions options) {
 		this.factory = factory;
 		this.sessionIdentifier = StandardRandomStrategy.INSTANCE.generateUUID( null );
@@ -212,6 +194,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 					.getService( TransactionCoordinatorBuilder.class )
 					.buildTransactionCoordinator( jdbcCoordinator, this );
 		}
+		exceptionConverter = new ExceptionConverterImpl( this );
 	}
 
 	protected void addSharedSessionTransactionObserver(TransactionCoordinator transactionCoordinator) {
@@ -377,7 +360,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			}
 
 			if ( this.currentHibernateTransaction == null ) {
-				this.currentHibernateTransaction = new TransactionImpl( getTransactionCoordinator() );
+				this.currentHibernateTransaction = new TransactionImpl(
+						getTransactionCoordinator(),
+						getExceptionConverter()
+				);
 			}
 			if ( !isClosed() ) {
 				getTransactionCoordinator().pulse();
@@ -389,7 +375,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			checkOpen();
 
 			if ( this.currentHibernateTransaction == null || this.currentHibernateTransaction.getStatus() != TransactionStatus.ACTIVE ) {
-				this.currentHibernateTransaction = new TransactionImpl( getTransactionCoordinator() );
+				this.currentHibernateTransaction = new TransactionImpl(
+						getTransactionCoordinator(),
+						getExceptionConverter()
+				);
 			}
 			getTransactionCoordinator().pulse();
 			return currentHibernateTransaction;
@@ -484,7 +473,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 						return callback.executeOnConnection( connection );
 					}
 					catch (SQLException e) {
-						throw convert(
+						throw exceptionConverter.convert(
 								e,
 								"Error creating contextual LOB : " + e.getMessage()
 						);
@@ -565,7 +554,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			return createNativeQuery( nativeQueryDefinition );
 		}
 
-		throw convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
+		throw exceptionConverter.convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
 	}
 
 	protected QueryImplementor createQuery(NamedQueryDefinition queryDefinition) {
@@ -650,7 +639,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			return query;
 		}
 		catch (RuntimeException e) {
-			throw convert( e );
+			throw exceptionConverter.convert( e );
 		}
 	}
 
@@ -671,7 +660,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			return query;
 		}
 		catch ( RuntimeException e ) {
-			throw convert( e );
+			throw exceptionConverter.convert( e );
 		}
 	}
 
@@ -748,7 +737,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			return (QueryImplementor<T>) createNativeQuery( nativeQueryDefinition, resultType );
 		}
 
-		throw convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
+		throw exceptionConverter.convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
 	}
 
 	@SuppressWarnings({"WeakerAccess", "unchecked"})
@@ -859,7 +848,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			return query;
 		}
 		catch ( RuntimeException he ) {
-			throw convert( he );
+			throw exceptionConverter.convert( he );
 		}
 	}
 
@@ -875,7 +864,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			return query;
 		}
 		catch ( RuntimeException he ) {
-			throw convert( he );
+			throw exceptionConverter.convert( he );
 		}
 	}
 
@@ -891,7 +880,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			return query;
 		}
 		catch ( RuntimeException he ) {
-			throw convert( he );
+			throw exceptionConverter.convert( he );
 		}
 	}
 
@@ -906,7 +895,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			return createNativeQuery( nativeQueryDefinition );
 		}
 
-		throw convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
+		throw exceptionConverter.convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
 	}
 
 	@Override
@@ -962,193 +951,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return procedureCall;
 	}
 
-
-
-	protected JDBCException convert(SQLException e, String message) {
-		return getJdbcServices().getSqlExceptionHelper().convert( e, message );
-	}
-
-	public RuntimeException convert(HibernateException e) {
-		return convert( e, null );
-	}
-
-	public RuntimeException convert(RuntimeException e) {
-		RuntimeException result = e;
-		if ( e instanceof HibernateException ) {
-			result = convert( (HibernateException) e );
-		}
-		else {
-			markForRollbackOnly();
-		}
-		return result;
-	}
-
-	public void handlePersistenceException(PersistenceException e) {
-		if ( e instanceof NoResultException ) {
-			return;
-		}
-		if ( e instanceof NonUniqueResultException ) {
-			return;
-		}
-		if ( e instanceof LockTimeoutException ) {
-			return;
-		}
-		if ( e instanceof QueryTimeoutException ) {
-			return;
-		}
-
-		try {
-			markForRollbackOnly();
-		}
-		catch ( Exception ne ) {
-			//we do not want the subsequent exception to swallow the original one
-			log.unableToMarkForRollbackOnPersistenceException(ne);
-		}
-	}
-
-	public void throwPersistenceException(PersistenceException e) {
-		throw convert( e );
-	}
-
-	public void throwPersistenceException(HibernateException e) {
-		throw convert( e );
-	}
-
-	public RuntimeException convert(HibernateException e, LockOptions lockOptions) {
-		Throwable cause = e;
-		if(e instanceof TransactionException ){
-			cause = e.getCause();
-		}
-		if ( cause instanceof StaleStateException ) {
-			final PersistenceException converted = wrapStaleStateException( (StaleStateException) cause );
-			handlePersistenceException( converted );
-			return converted;
-		}
-		else if ( cause instanceof LockingStrategyException ) {
-			final PersistenceException converted = wrapLockException( (HibernateException) cause, lockOptions );
-			handlePersistenceException( converted );
-			return converted;
-		}
-		else if ( cause instanceof org.hibernate.exception.LockTimeoutException ) {
-			final PersistenceException converted = wrapLockException( (HibernateException) cause, lockOptions );
-			handlePersistenceException( converted );
-			return converted;
-		}
-		else if ( cause instanceof org.hibernate.PessimisticLockException ) {
-			final PersistenceException converted = wrapLockException( (HibernateException) cause, lockOptions );
-			handlePersistenceException( converted );
-			return converted;
-		}
-		else if ( cause instanceof org.hibernate.QueryTimeoutException ) {
-			final QueryTimeoutException converted = new QueryTimeoutException( cause.getMessage(), cause );
-			handlePersistenceException( converted );
-			return converted;
-		}
-		else if ( cause instanceof ObjectNotFoundException ) {
-			final EntityNotFoundException converted = new EntityNotFoundException( cause.getMessage() );
-			handlePersistenceException( converted );
-			return converted;
-		}
-		else if ( cause instanceof org.hibernate.NonUniqueObjectException ) {
-			final EntityExistsException converted = new EntityExistsException( cause.getMessage() );
-			handlePersistenceException( converted );
-			return converted;
-		}
-		else if ( cause instanceof org.hibernate.NonUniqueResultException ) {
-			final NonUniqueResultException converted = new NonUniqueResultException( cause.getMessage() );
-			handlePersistenceException( converted );
-			return converted;
-		}
-		else if ( cause instanceof UnresolvableObjectException ) {
-			final EntityNotFoundException converted = new EntityNotFoundException( cause.getMessage() );
-			handlePersistenceException( converted );
-			return converted;
-		}
-		else if ( cause instanceof QueryException ) {
-			return new IllegalArgumentException( cause );
-		}
-		else if ( cause instanceof TransientObjectException ) {
-			try {
-				markForRollbackOnly();
-			}
-			catch ( Exception ne ) {
-				//we do not want the subsequent exception to swallow the original one
-				log.unableToMarkForRollbackOnTransientObjectException( ne );
-			}
-			return new IllegalStateException( e ); //Spec 3.2.3 Synchronization rules
-		}
-		else {
-			final PersistenceException converted = new PersistenceException( cause );
-			handlePersistenceException( converted );
-			return converted;
-		}
-	}
-
-	public PersistenceException wrapLockException(HibernateException e, LockOptions lockOptions) {
-		final PersistenceException pe;
-		if ( e instanceof OptimisticEntityLockException ) {
-			final OptimisticEntityLockException lockException = (OptimisticEntityLockException) e;
-			pe = new OptimisticLockException( lockException.getMessage(), lockException, lockException.getEntity() );
-		}
-		else if ( e instanceof org.hibernate.exception.LockTimeoutException ) {
-			pe = new LockTimeoutException( e.getMessage(), e, null );
-		}
-		else if ( e instanceof PessimisticEntityLockException ) {
-			final PessimisticEntityLockException lockException = (PessimisticEntityLockException) e;
-			if ( lockOptions != null && lockOptions.getTimeOut() > -1 ) {
-				// assume lock timeout occurred if a timeout or NO WAIT was specified
-				pe = new LockTimeoutException( lockException.getMessage(), lockException, lockException.getEntity() );
-			}
-			else {
-				pe = new PessimisticLockException( lockException.getMessage(), lockException, lockException.getEntity() );
-			}
-		}
-		else if ( e instanceof org.hibernate.PessimisticLockException ) {
-			final org.hibernate.PessimisticLockException jdbcLockException = (org.hibernate.PessimisticLockException) e;
-			if ( lockOptions != null && lockOptions.getTimeOut() > -1 ) {
-				// assume lock timeout occurred if a timeout or NO WAIT was specified
-				pe = new LockTimeoutException( jdbcLockException.getMessage(), jdbcLockException, null );
-			}
-			else {
-				pe = new PessimisticLockException( jdbcLockException.getMessage(), jdbcLockException, null );
-			}
-		}
-		else {
-			pe = new OptimisticLockException( e );
-		}
-		return pe;
-	}
-
-	public PersistenceException wrapStaleStateException(StaleStateException e) {
-		PersistenceException pe;
-		if ( e instanceof StaleObjectStateException ) {
-			final StaleObjectStateException sose = (StaleObjectStateException) e;
-			final Serializable identifier = sose.getIdentifier();
-			if ( identifier != null ) {
-				try {
-					final Object entity = load( sose.getEntityName(), identifier );
-					if ( entity instanceof Serializable ) {
-						//avoid some user errors regarding boundary crossing
-						pe = new OptimisticLockException( e.getMessage(), e, entity );
-					}
-					else {
-						pe = new OptimisticLockException( e.getMessage(), e );
-					}
-				}
-				catch ( EntityNotFoundException enfe ) {
-					pe = new OptimisticLockException( e.getMessage(), e );
-				}
-			}
-			else {
-				pe = new OptimisticLockException( e.getMessage(), e );
-			}
-		}
-		else {
-			pe = new OptimisticLockException( e.getMessage(), e );
-		}
-		return pe;
-	}
-
 	protected abstract Object load(String entityName, Serializable identifier);
 
 	@Override
@@ -1159,6 +961,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public ScrollableResults scroll(NativeSQLQuerySpecification spec, QueryParameters queryParameters) {
 		return scrollCustomQuery( getNativeQueryPlan( spec ).getCustomQuery(), queryParameters );
+	}
+
+	@Override
+	public ExceptionConverter getExceptionConverter(){
+		return exceptionConverter;
 	}
 
 	@SuppressWarnings("unused")

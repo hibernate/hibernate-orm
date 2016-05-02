@@ -10,6 +10,7 @@ import javax.transaction.Synchronization;
 
 import org.hibernate.HibernateException;
 import org.hibernate.TransactionException;
+import org.hibernate.engine.spi.ExceptionConverter;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
@@ -27,10 +28,12 @@ public class TransactionImpl implements TransactionImplementor {
 	private static final Logger LOG = CoreLogging.logger( TransactionImpl.class );
 
 	private final TransactionCoordinator transactionCoordinator;
+	private final ExceptionConverter exceptionConverter;
 	private TransactionDriver transactionDriverControl;
 
-	public TransactionImpl(TransactionCoordinator transactionCoordinator) {
+	public TransactionImpl(TransactionCoordinator transactionCoordinator, ExceptionConverter exceptionConverter) {
 		this.transactionCoordinator = transactionCoordinator;
+		this.exceptionConverter = exceptionConverter;
 	}
 
 	@Override
@@ -60,8 +63,12 @@ public class TransactionImpl implements TransactionImplementor {
 		}
 
 		LOG.debug( "committing" );
-
-		internalGetTransactionDriverControl().commit();
+		try {
+			internalGetTransactionDriverControl().commit();
+		}
+		catch (RuntimeException e) {
+			throw exceptionConverter.convertCommitException( e );
+		}
 	}
 
 	public TransactionDriver internalGetTransactionDriverControl() {

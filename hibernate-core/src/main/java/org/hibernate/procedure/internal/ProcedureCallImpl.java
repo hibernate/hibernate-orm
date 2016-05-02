@@ -602,7 +602,7 @@ public class ProcedureCallImpl<R>
 			registerParameter( (ParameterRegistrationImplementor) registerParameter( position, type, mode ) );
 		}
 		catch (HibernateException he) {
-			throw getProducer().convert( he );
+			throw getExceptionConverter().convert( he );
 		}
 		catch (RuntimeException e) {
 			getProducer().markForRollbackOnly();
@@ -620,7 +620,7 @@ public class ProcedureCallImpl<R>
 			registerParameter( (ParameterRegistrationImplementor) registerParameter( parameterName, type, mode ) );
 		}
 		catch (HibernateException he) {
-			throw getProducer().convert( he );
+			throw getExceptionConverter().convert( he );
 		}
 		catch (RuntimeException e) {
 			getProducer().markForRollbackOnly();
@@ -642,7 +642,7 @@ public class ProcedureCallImpl<R>
 			return false;
 		}
 		catch (HibernateException he) {
-			throw getProducer().convert( he );
+			throw getExceptionConverter().convert( he );
 		}
 		catch (RuntimeException e) {
 			getProducer().markForRollbackOnly();
@@ -724,7 +724,7 @@ public class ProcedureCallImpl<R>
 			return -1;
 		}
 		catch (HibernateException he) {
-			throw getProducer().convert( he );
+			throw getExceptionConverter().convert( he );
 		}
 		catch (RuntimeException e) {
 			getProducer().markForRollbackOnly();
@@ -751,7 +751,7 @@ public class ProcedureCallImpl<R>
 			return null;
 		}
 		catch (HibernateException he) {
-			throw getProducer().convert( he );
+			throw getExceptionConverter().convert( he );
 		}
 		catch (RuntimeException e) {
 			getProducer().markForRollbackOnly();

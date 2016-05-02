@@ -60,57 +60,6 @@ public interface HibernateEntityManagerImplementor extends HibernateEntityManage
 	void markForRollbackOnly();
 
 	/**
-	 * Handles marking for rollback and other such operations that need to occur depending on the type of
-	 * exception being handled.
-	 *
-	 * @param e The exception being handled.
-	 */
-	void handlePersistenceException(PersistenceException e);
-
-	/**
-	 * Delegates to {@link #handlePersistenceException} and then throws the given exception.
-	 *
-	 * @param e The exception being handled and finally thrown.
-	 */
-	void throwPersistenceException(PersistenceException e);
-
-	/**
-	 * Converts a Hibernate-specific exception into a JPA-specified exception; note that the JPA sepcification makes use
-	 * of exceptions outside its exception hierarchy, though they are all runtime exceptions.
-	 * <p/>
-	 * Any appropriate/needed calls to {@link #handlePersistenceException} are also made.
-	 *
-	 * @param e The Hibernate excepton.
-	 * @param lockOptions The lock options in effect at the time of exception (can be null)
-	 *
-	 * @return The JPA-specified exception
-	 */
-	RuntimeException convert(HibernateException e, LockOptions lockOptions);
-
-	/**
-	 * Converts a Hibernate-specific exception into a JPA-specified exception; note that the JPA sepcification makes use
-	 * of exceptions outside its exception hierarchy, though they are all runtime exceptions.
-	 * <p/>
-	 * Any appropriate/needed calls to {@link #handlePersistenceException} are also made.
-	 *
-	 * @param e The Hibernate excepton.
-	 *
-	 * @return The JPA-specified exception
-	 */
-	RuntimeException convert(HibernateException e);
-
-	RuntimeException convert(RuntimeException e);
-
-	/**
-	 * Delegates to {@link #convert} and then throws the given exception.
-	 *
-	 * @param e The exception being handled and finally thrown.
-	 */
-	void throwPersistenceException(HibernateException e);
-
-	PersistenceException wrapStaleStateException(StaleStateException e);
-
-	/**
 	 * Convert from JPA 2 {@link javax.persistence.LockModeType} & properties into {@link org.hibernate.LockOptions}
 	 *
 	 * @param lockModeType is the requested lock type

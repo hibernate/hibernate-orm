@@ -26,6 +26,11 @@ The hibernate-entitymanager module has also been merged into hibernate-core.
 * `org.hibernate.Session` now extends `javax.persistence.EntityManager` - temporarily it
 	technically extends `org.hibernate.jpa.HibernateEntityManager` (which in turn extends
 	`javax.persistence.EntityManager`) for backwards compatibility.  `HibernateEntityManager` is deprecated.
+* `org.hibernate.Query` (deprecated in favor of new `org.hibernate.query.Query`) now extends the JPA contracts
+	`javax.persistence.Query` and `javax.persistence.TypedQuery`.  `ProcedureCall` and `StoredProcedureQuery` as well.
+* `org.hibernate.HibernateException` now extends `javax.persistence.PersistenceExceptions`.  Hibernate methods
+	that "override" methods from their JPA counterparts now will also throw various JDK defined RuntimeExceptions
+	(such as `IllegalArgumentException`, `IllegalStateException`, etc) as required by the JPA contract.
 * Persister/type access is now exposed through `org.hibernate.Metamodel`, which extends
 	`javax.persistence.metamodel.Metamodel`.  MetamodelImpl now manages all aspects of type system (see below).
 * Cache management has also been consolidated.  `org.hibernate.Cache` now extends `javax.persistence.Cache`.  CacheImpl

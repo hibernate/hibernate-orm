@@ -25,7 +25,6 @@ import javax.sql.DataSource;
 import javassist.CtClass;
 import javassist.CtField;
 
-import org.hibernate.Interceptor;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.CacheRegionDefinition;
@@ -81,11 +80,24 @@ import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 
 import org.jboss.jandex.Index;
 
+import static org.hibernate.cfg.AvailableSettings.DATASOURCE;
+import static org.hibernate.cfg.AvailableSettings.DRIVER;
 import static org.hibernate.cfg.AvailableSettings.JACC_CONTEXT_ID;
 import static org.hibernate.cfg.AvailableSettings.JACC_PREFIX;
+import static org.hibernate.cfg.AvailableSettings.JPA_JDBC_DRIVER;
+import static org.hibernate.cfg.AvailableSettings.JPA_JDBC_PASSWORD;
+import static org.hibernate.cfg.AvailableSettings.JPA_JDBC_URL;
+import static org.hibernate.cfg.AvailableSettings.JPA_JDBC_USER;
+import static org.hibernate.cfg.AvailableSettings.JPA_JTA_DATASOURCE;
+import static org.hibernate.cfg.AvailableSettings.JPA_NON_JTA_DATASOURCE;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_MODE;
+import static org.hibernate.cfg.AvailableSettings.JPA_TRANSACTION_TYPE;
 import static org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_MODE;
+import static org.hibernate.cfg.AvailableSettings.PASS;
 import static org.hibernate.cfg.AvailableSettings.SESSION_FACTORY_NAME;
+import static org.hibernate.cfg.AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY;
+import static org.hibernate.cfg.AvailableSettings.URL;
+import static org.hibernate.cfg.AvailableSettings.USER;
 import static org.hibernate.internal.HEMLogging.messageLogger;
 import static org.hibernate.jpa.AvailableSettings.CFG_FILE;
 import static org.hibernate.jpa.AvailableSettings.CLASS_CACHE_PREFIX;
@@ -314,9 +326,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		final StrategyRegistrationProviderList strategyRegistrationProviderList
 				= (StrategyRegistrationProviderList) integrationSettings.get( STRATEGY_REGISTRATION_PROVIDERS );
 		if ( strategyRegistrationProviderList != null ) {
-			for ( StrategyRegistrationProvider strategyRegistrationProvider : strategyRegistrationProviderList
-					.getStrategyRegistrationProviders() ) {
-				bsrBuilder.withStrategySelectors( strategyRegistrationProvider );
+			for ( StrategyRegistrationProvider strategyRegistrationProvider : strategyRegistrationProviderList.getStrategyRegistrationProviders() ) {
+				bsrBuilder.applyStrategySelectors( strategyRegistrationProvider );
 			}
 		}
 
@@ -574,45 +585,45 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	private void applyJdbcConnectionProperties(StandardServiceRegistryBuilder ssrBuilder) {
 		if ( dataSource != null ) {
-			ssrBuilder.applySetting( org.hibernate.cfg.AvailableSettings.DATASOURCE, dataSource );
+			ssrBuilder.applySetting( DATASOURCE, dataSource );
 		}
 		else if ( persistenceUnit.getJtaDataSource() != null ) {
-			if ( ! ssrBuilder.getSettings().containsKey( org.hibernate.cfg.AvailableSettings.DATASOURCE ) ) {
-				ssrBuilder.applySetting( org.hibernate.cfg.AvailableSettings.DATASOURCE, persistenceUnit.getJtaDataSource() );
+			if ( ! ssrBuilder.getSettings().containsKey( DATASOURCE ) ) {
+				ssrBuilder.applySetting( DATASOURCE, persistenceUnit.getJtaDataSource() );
 				// HHH-8121 : make the PU-defined value available to EMF.getProperties()
-				configurationValues.put( AvailableSettings.JTA_DATASOURCE, persistenceUnit.getJtaDataSource() );
+				configurationValues.put( JPA_JTA_DATASOURCE, persistenceUnit.getJtaDataSource() );
 			}
 		}
 		else if ( persistenceUnit.getNonJtaDataSource() != null ) {
-			if ( ! ssrBuilder.getSettings().containsKey( org.hibernate.cfg.AvailableSettings.DATASOURCE ) ) {
-				ssrBuilder.applySetting( org.hibernate.cfg.AvailableSettings.DATASOURCE, persistenceUnit.getNonJtaDataSource() );
+			if ( ! ssrBuilder.getSettings().containsKey( DATASOURCE ) ) {
+				ssrBuilder.applySetting( DATASOURCE, persistenceUnit.getNonJtaDataSource() );
 				// HHH-8121 : make the PU-defined value available to EMF.getProperties()
-				configurationValues.put( AvailableSettings.NON_JTA_DATASOURCE, persistenceUnit.getNonJtaDataSource() );
+				configurationValues.put( JPA_NON_JTA_DATASOURCE, persistenceUnit.getNonJtaDataSource() );
 			}
 		}
 		else {
-			final String driver = (String) configurationValues.get( AvailableSettings.JDBC_DRIVER );
+			final String driver = (String) configurationValues.get( JPA_JDBC_DRIVER );
 			if ( StringHelper.isNotEmpty( driver ) ) {
-				ssrBuilder.applySetting( org.hibernate.cfg.AvailableSettings.DRIVER, driver );
+				ssrBuilder.applySetting( DRIVER, driver );
 			}
-			final String url = (String) configurationValues.get( AvailableSettings.JDBC_URL );
+			final String url = (String) configurationValues.get( JPA_JDBC_URL );
 			if ( StringHelper.isNotEmpty( url ) ) {
-				ssrBuilder.applySetting( org.hibernate.cfg.AvailableSettings.URL, url );
+				ssrBuilder.applySetting( URL, url );
 			}
-			final String user = (String) configurationValues.get( AvailableSettings.JDBC_USER );
+			final String user = (String) configurationValues.get( JPA_JDBC_USER );
 			if ( StringHelper.isNotEmpty( user ) ) {
-				ssrBuilder.applySetting( org.hibernate.cfg.AvailableSettings.USER, user );
+				ssrBuilder.applySetting( USER, user );
 			}
-			final String pass = (String) configurationValues.get( AvailableSettings.JDBC_PASSWORD );
+			final String pass = (String) configurationValues.get( JPA_JDBC_PASSWORD );
 			if ( StringHelper.isNotEmpty( pass ) ) {
-				ssrBuilder.applySetting( org.hibernate.cfg.AvailableSettings.PASS, pass );
+				ssrBuilder.applySetting( PASS, pass );
 			}
 		}
 	}
 
 	private void applyTransactionProperties(StandardServiceRegistryBuilder ssrBuilder, SettingsImpl settings) {
 		PersistenceUnitTransactionType txnType = PersistenceUnitTransactionTypeHelper.interpretTransactionType(
-				configurationValues.get( AvailableSettings.TRANSACTION_TYPE )
+				configurationValues.get( JPA_TRANSACTION_TYPE )
 		);
 		if ( txnType == null ) {
 			txnType = persistenceUnit.getTransactionType();
@@ -622,29 +633,18 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			txnType = PersistenceUnitTransactionType.RESOURCE_LOCAL;
 		}
 		settings.setTransactionType( txnType );
-		boolean hasTxStrategy = configurationValues.containsKey( Environment.TRANSACTION_COORDINATOR_STRATEGY );
+		boolean hasTxStrategy = configurationValues.containsKey( TRANSACTION_COORDINATOR_STRATEGY );
 		if ( hasTxStrategy ) {
-			LOG.overridingTransactionStrategyDangerous( Environment.TRANSACTION_COORDINATOR_STRATEGY );
+			LOG.overridingTransactionStrategyDangerous( TRANSACTION_COORDINATOR_STRATEGY );
 		}
 		else {
 			if ( txnType == PersistenceUnitTransactionType.JTA ) {
-				ssrBuilder.applySetting( Environment.TRANSACTION_COORDINATOR_STRATEGY, JtaTransactionCoordinatorBuilderImpl.class );
+				ssrBuilder.applySetting( TRANSACTION_COORDINATOR_STRATEGY, JtaTransactionCoordinatorBuilderImpl.class );
 			}
 			else if ( txnType == PersistenceUnitTransactionType.RESOURCE_LOCAL ) {
-				ssrBuilder.applySetting( Environment.TRANSACTION_COORDINATOR_STRATEGY, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class );
+				ssrBuilder.applySetting( TRANSACTION_COORDINATOR_STRATEGY, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class );
 			}
 		}
-	}
-
-	@SuppressWarnings("unchecked")
-	private Class<? extends Interceptor> loadSessionInterceptorClass(Object value, StrategySelector strategySelector) {
-		if ( value == null ) {
-			return null;
-		}
-
-		return Class.class.isInstance( value )
-				? (Class<? extends Interceptor>) value
-				: strategySelector.selectStrategyImplementor( Interceptor.class, value.toString() );
 	}
 
 	private void configure(StandardServiceRegistry ssr, MergedSettings mergedSettings) {
@@ -722,7 +722,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			for ( Class cls : loadedAnnotatedClasses ) {
 				if ( AttributeConverter.class.isAssignableFrom( cls ) ) {
 					if ( attributeConverterDefinitions == null ) {
-						attributeConverterDefinitions = new ArrayList<AttributeConverterDefinition>();
+						attributeConverterDefinitions = new ArrayList<>();
 					}
 					attributeConverterDefinitions.add( AttributeConverterDefinition.from( (Class<? extends AttributeConverter>) cls ) );
 				}
@@ -902,7 +902,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 
-	public static class ServiceRegistryCloser implements SessionFactoryObserver {
+	private static class ServiceRegistryCloser implements SessionFactoryObserver {
 		/**
 		 * Singleton access
 		 */
@@ -937,22 +937,22 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		return "[PersistenceUnit: " + persistenceUnit.getName() + "] ";
 	}
 
-	public static class MergedSettings {
+	private static class MergedSettings {
 		private final Map configurationValues = new ConcurrentHashMap( 16, 0.75f, 1 );
 
 		private Map<String, JaccPermissionDeclarations> jaccPermissionsByContextId;
 		private List<CacheRegionDefinition> cacheRegionDefinitions;
 
-		public MergedSettings() {
+		private MergedSettings() {
 		}
 
 		public Map getConfigurationValues() {
 			return configurationValues;
 		}
 
-		public JaccPermissionDeclarations getJaccPermissions(String jaccContextId) {
+		private JaccPermissionDeclarations getJaccPermissions(String jaccContextId) {
 			if ( jaccPermissionsByContextId == null ) {
-				jaccPermissionsByContextId = new HashMap<String, JaccPermissionDeclarations>();
+				jaccPermissionsByContextId = new HashMap<>();
 			}
 
 			JaccPermissionDeclarations jaccPermissions = jaccPermissionsByContextId.get( jaccContextId );
@@ -963,9 +963,9 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			return jaccPermissions;
 		}
 
-		public void addCacheRegionDefinition(CacheRegionDefinition cacheRegionDefinition) {
+		private void addCacheRegionDefinition(CacheRegionDefinition cacheRegionDefinition) {
 			if ( this.cacheRegionDefinitions == null ) {
-				this.cacheRegionDefinitions = new ArrayList<CacheRegionDefinition>();
+				this.cacheRegionDefinitions = new ArrayList<>();
 			}
 			this.cacheRegionDefinitions.add( cacheRegionDefinition );
 		}

@@ -49,10 +49,8 @@ import org.hibernate.procedure.ProcedureOutputs;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
-import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.AbstractProducedQuery;
-import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.result.NoMoreReturnsException;
 import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
@@ -785,17 +783,11 @@ public class ProcedureCallImpl<R>
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> cls) {
-		if ( ProcedureCall.class.isAssignableFrom( cls ) ) {
+		if ( cls.isInstance( this ) ) {
 			return (T) this;
 		}
-		else if ( ProcedureOutputs.class.isAssignableFrom( cls ) ) {
+		else if ( cls.isInstance( outputs ) ) {
 			return (T) outputs();
-		}
-		else if ( ParameterMetadata.class.isAssignableFrom( cls ) ) {
-			return (T) getParameterMetadata();
-		}
-		else if ( QueryParameterBindings.class.isAssignableFrom( cls ) ) {
-			return (T) getQueryParameterBindings();
 		}
 
 		return super.unwrap( cls );

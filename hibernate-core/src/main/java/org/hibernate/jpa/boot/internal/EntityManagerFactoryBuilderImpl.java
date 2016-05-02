@@ -201,7 +201,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				metamodelBuilder.getMetadataBuildingOptions()
 		);
 
-		withValidatorFactory( configurationValues.get( AvailableSettings.VALIDATION_FACTORY ) );
+		withValidatorFactory( configurationValues.get( org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_FACTORY ) );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// push back class transformation to the environment; for the time being this only has any effect in EE

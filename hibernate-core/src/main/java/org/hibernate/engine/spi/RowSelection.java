@@ -17,6 +17,10 @@ public final class RowSelection {
 	private Integer timeout;
 	private Integer fetchSize;
 
+	public void setFirstRow(Integer firstRow) {
+		this.firstRow = firstRow;
+	}
+
 	public void setFirstRow(int firstRow) {
 		this.firstRow = firstRow;
 	}
@@ -25,12 +29,20 @@ public final class RowSelection {
 		return firstRow;
 	}
 
+	public void setMaxRows(Integer maxRows) {
+		this.maxRows = maxRows;
+	}
+
 	public void setMaxRows(int maxRows) {
 		this.maxRows = maxRows;
 	}
 
 	public Integer getMaxRows() {
 		return maxRows;
+	}
+
+	public void setTimeout(Integer timeout) {
+		this.timeout = timeout;
 	}
 
 	public void setTimeout(int timeout) {
@@ -45,6 +57,10 @@ public final class RowSelection {
 		return fetchSize;
 	}
 
+	public void setFetchSize(Integer fetchSize) {
+		this.fetchSize = fetchSize;
+	}
+
 	public void setFetchSize(int fetchSize) {
 		this.fetchSize = fetchSize;
 	}
@@ -53,7 +69,4 @@ public final class RowSelection {
 		return maxRows != null || (firstRow != null && firstRow <= 0);
 	}
 
-	public void unsetMaxRows() {
-		maxRows = null;
-	}
 }

@@ -226,6 +226,14 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		this.properties = new HashMap<>();
 		this.properties.putAll( serviceRegistry.getService( ConfigurationService.class ).getSettings() );
+		if ( !properties.containsKey( AvailableSettings.JPA_VALIDATION_FACTORY ) ) {
+			if ( getSessionFactoryOptions().getValidatorFactoryReference() != null ) {
+				properties.put(
+						AvailableSettings.JPA_VALIDATION_FACTORY,
+						getSessionFactoryOptions().getValidatorFactoryReference()
+				);
+			}
+		}
 		maskOutSensitiveInformation(this.properties);
 		this.sqlFunctionRegistry = new SQLFunctionRegistry( jdbcServices.getJdbcEnvironment().getDialect(), options.getCustomSqlFunctionMap() );
 		this.cacheAccess = this.serviceRegistry.getService( CacheImplementor.class );

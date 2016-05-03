@@ -571,7 +571,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 
 		initQueryFromNamedDefinition( query, queryDefinition );
-		applyQuerySettingsAndHints( query );
+//		applyQuerySettingsAndHints( query );
 
 		return query;
 	}

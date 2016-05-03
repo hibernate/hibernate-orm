@@ -289,6 +289,7 @@ public final class SessionImpl
 
 
 	private void applyProperties() {
+		applyEntityManagerSpecificProperties();
 		setHibernateFlushMode( ConfigurationHelper.getFlushMode( properties.get( AvailableSettings.FLUSH_MODE ), FlushMode.AUTO ) );
 		setLockOptions( this.properties, this.lockOptions );
 		getSession().setCacheMode(
@@ -297,6 +298,14 @@ public final class SessionImpl
 						currentCacheRetrieveMode()
 				)
 		);
+	}
+
+	private void applyEntityManagerSpecificProperties() {
+		for ( String key : ENTITY_MANAGER_SPECIFIC_PROPERTIES ) {
+			if ( getFactory().getProperties().containsKey( key ) ) {
+				this.properties.put( key, getFactory().getProperties().get( key ) );
+			}
+		}
 	}
 
 	protected void applyQuerySettingsAndHints(Query query) {

@@ -96,7 +96,7 @@ public class SynchronizationTypeTest extends BaseEntityManagerFunctionalTestCase
 		assertTrue( session.isOpen() );
 		entityManager.close();
 		assertFalse( entityManager.isOpen() );
-		assertTrue( session.isOpen() );
+		assertFalse( session.isOpen() );
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 		assertFalse( entityManager.isOpen() );
@@ -111,10 +111,8 @@ public class SynchronizationTypeTest extends BaseEntityManagerFunctionalTestCase
 		assertFalse( "setup problem", JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		assertTrue(
-				"setup problem", JtaStatusHelper.isActive(
-				TestingJtaPlatformImpl.INSTANCE
-						.getTransactionManager()
-		)
+				"setup problem",
+				JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() )
 		);
 
 		EntityManager entityManager = entityManagerFactory().createEntityManager( SynchronizationType.UNSYNCHRONIZED, null );

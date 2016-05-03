@@ -6,18 +6,21 @@
  */
 package org.hibernate.test.enums;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.jdbc.Work;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
@@ -57,7 +60,9 @@ public class UnspecifiedEnumTypeTest extends BaseCoreFunctionalTestCase {
 
 	@After
 	public void dropTable() {
+		Session session = openSession();
 		dropTable( session );
+		session.close();
 	}
 
 	@Test
@@ -71,10 +76,13 @@ public class UnspecifiedEnumTypeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	private void executeUpdateSafety(Session session, String query) {
-		try {
-			session.createSQLQuery( query ).executeUpdate();
-		}
-		catch ( Exception e ) {
-		}
+		session.doWork(
+				new Work() {
+					@Override
+					public void execute(Connection connection) throws SQLException {
+						connection.createStatement().execute( query );
+					}
+				}
+		);
 	}
 }

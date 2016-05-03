@@ -48,7 +48,6 @@ import org.hibernate.hql.internal.QueryExecutionRequestException;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.TypedParameterValue;
 import org.hibernate.jpa.graph.internal.EntityGraphImpl;
@@ -67,6 +66,12 @@ import org.hibernate.query.spi.QueryParameterListBinding;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
 
+import static org.hibernate.LockOptions.WAIT_FOREVER;
+import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
+import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
+import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
+import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
+import static org.hibernate.jpa.AvailableSettings.ALIAS_SPECIFIC_LOCK_MODE;
 import static org.hibernate.jpa.QueryHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.QueryHints.HINT_CACHE_MODE;
 import static org.hibernate.jpa.QueryHints.HINT_CACHE_REGION;
@@ -75,7 +80,6 @@ import static org.hibernate.jpa.QueryHints.HINT_FETCHGRAPH;
 import static org.hibernate.jpa.QueryHints.HINT_FETCH_SIZE;
 import static org.hibernate.jpa.QueryHints.HINT_FLUSH_MODE;
 import static org.hibernate.jpa.QueryHints.HINT_LOADGRAPH;
-import static org.hibernate.jpa.QueryHints.HINT_NATIVE_LOCKMODE;
 import static org.hibernate.jpa.QueryHints.HINT_READONLY;
 import static org.hibernate.jpa.QueryHints.HINT_TIMEOUT;
 import static org.hibernate.jpa.QueryHints.SPEC_HINT_TIMEOUT;
@@ -91,7 +95,8 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	private final QueryParameterBindingsImpl queryParameterBindings;
 
 	private FlushMode flushMode;
-	private CacheMode cacheMode;
+	private CacheStoreMode cacheStoreMode;
+	private CacheRetrieveMode cacheRetrieveMode;
 	private boolean cacheable;
 	private String cacheRegion;
 	private Boolean readOnly;
@@ -100,7 +105,6 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 	private String comment;
 	private final List<String> dbHints = new ArrayList<>();
-	private Map<String, Object> hints;
 
 	private ResultTransformer resultTransformer;
 	private RowSelection queryOptions = new RowSelection();
@@ -117,9 +121,6 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		this.producer = producer;
 		this.parameterMetadata = parameterMetadata;
 		this.queryParameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, producer.getFactory() );
-
-//		this.flushMode = producer.getHibernateFlushMode();
-//		this.cacheMode = producer.getCacheMode();
 	}
 
 	@Override
@@ -161,13 +162,14 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public CacheMode getCacheMode() {
-		return cacheMode;
+		return CacheModeHelper.interpretCacheMode( cacheStoreMode, cacheRetrieveMode );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setCacheMode(CacheMode cacheMode) {
-		this.cacheMode = cacheMode;
+		this.cacheStoreMode = CacheModeHelper.interpretCacheStoreMode( cacheMode );
+		this.cacheRetrieveMode = CacheModeHelper.interpretCacheRetrieveMode( cacheMode );
 		return this;
 	}
 
@@ -730,8 +732,80 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public Map<String, Object> getHints() {
-		getProducer().checkOpen( false ); // technically should rollback
+		// Technically this should rollback, but that's insane :)
+		// If the TCK ever adds a check for this, we may need to change this behavior
+		getProducer().checkOpen( false );
+
+		final Map<String,Object> hints = new HashMap<>();
+		collectBaselineHints( hints );
+		collectHints( hints );
 		return hints;
+	}
+
+	protected void collectBaselineHints(Map<String, Object> hints) {
+		// nothing to do in this form
+	}
+
+	protected void collectHints(Map<String, Object> hints) {
+		if ( getQueryOptions().getTimeout() != null ) {
+			hints.put( HINT_TIMEOUT, getQueryOptions().getTimeout() );
+			hints.put( SPEC_HINT_TIMEOUT, getQueryOptions().getTimeout() * 1000 );
+		}
+
+		if ( getLockOptions().getTimeOut() != WAIT_FOREVER ) {
+			hints.put( JPA_LOCK_TIMEOUT, getLockOptions().getTimeOut() );
+		}
+
+		if ( getLockOptions().getScope() ) {
+			hints.put( JPA_LOCK_SCOPE, getLockOptions().getScope() );
+		}
+
+		if ( getLockOptions().hasAliasSpecificLockModes() && canApplyAliasSpecificLockModeHints() ) {
+			for ( Map.Entry<String, LockMode> entry : getLockOptions().getAliasSpecificLocks() ) {
+				hints.put(
+						ALIAS_SPECIFIC_LOCK_MODE + '.' + entry.getKey(),
+						entry.getValue().name()
+				);
+			}
+		}
+
+		putIfNotNull( hints, HINT_COMMENT, getComment() );
+		putIfNotNull( hints, HINT_FETCH_SIZE, getQueryOptions().getFetchSize() );
+		putIfNotNull( hints, HINT_FLUSH_MODE, getHibernateFlushMode() );
+
+		if ( cacheStoreMode != null || cacheRetrieveMode != null ) {
+			putIfNotNull( hints, HINT_CACHE_MODE, CacheModeHelper.interpretCacheMode( cacheStoreMode, cacheRetrieveMode ) );
+			putIfNotNull( hints, JPA_SHARED_CACHE_RETRIEVE_MODE, cacheRetrieveMode );
+			putIfNotNull( hints, JPA_SHARED_CACHE_STORE_MODE, cacheStoreMode );
+		}
+
+		if ( isCacheable() ) {
+			hints.put( HINT_CACHEABLE, true );
+			putIfNotNull( hints, HINT_CACHE_REGION, getCacheRegion() );
+		}
+
+		if ( isReadOnly() ) {
+			hints.put( HINT_READONLY, true );
+		}
+
+		if ( entityGraphQueryHint != null ) {
+			hints.put( entityGraphQueryHint.getHintName(), entityGraphQueryHint.getOriginEntityGraph() );
+		}
+	}
+
+	protected void putIfNotNull(Map<String, Object> hints, String hintName, Enum hintValue) {
+		// centralized spot to handle the decision whether to put enums directly into the hints map
+		// or whether to put the enum name
+		if ( hintValue != null ) {
+			hints.put( hintName, hintValue );
+//			hints.put( hintName, hintValue.name() );
+		}
+	}
+
+	protected void putIfNotNull(Map<String, Object> hints, String hintName, Object hintValue) {
+		if ( hintValue != null ) {
+			hints.put( hintName, hintValue );
+		}
 	}
 
 	@Override
@@ -748,7 +822,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 				int timeout = (int)Math.round( ConfigurationHelper.getInteger( value ).doubleValue() / 1000.0 );
 				applied = applyTimeoutHint( timeout );
 			}
-			else if ( AvailableSettings.LOCK_TIMEOUT.equals( hintName ) ) {
+			else if ( JPA_LOCK_TIMEOUT.equals( hintName ) ) {
 				applied = applyLockTimeoutHint( ConfigurationHelper.getInteger( value ) );
 			}
 			else if ( HINT_COMMENT.equals( hintName ) ) {
@@ -766,51 +840,27 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			else if ( HINT_READONLY.equals( hintName ) ) {
 				applied = applyReadOnlyHint( ConfigurationHelper.getBoolean( value ) );
 			}
-			else if ( HINT_CACHE_MODE.equals( hintName ) ) {
-				applied = applyCacheModeHint( ConfigurationHelper.getCacheMode( value ) );
-			}
 			else if ( HINT_FLUSH_MODE.equals( hintName ) ) {
 				applied = applyFlushModeHint( ConfigurationHelper.getFlushMode( value ) );
 			}
-			else if ( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE.equals( hintName ) ) {
-				final CacheRetrieveMode retrieveMode = value != null ? CacheRetrieveMode.valueOf( value.toString() ) : null;
-				final CacheStoreMode storeMode = getHint( AvailableSettings.SHARED_CACHE_STORE_MODE, CacheStoreMode.class );
-				applied = applyCacheModeHint( CacheModeHelper.interpretCacheMode( storeMode, retrieveMode ) );
+			else if ( HINT_CACHE_MODE.equals( hintName ) ) {
+				applied = applyCacheModeHint( ConfigurationHelper.getCacheMode( value ) );
 			}
-			else if ( AvailableSettings.SHARED_CACHE_STORE_MODE.equals( hintName ) ) {
+			else if ( JPA_SHARED_CACHE_RETRIEVE_MODE.equals( hintName ) ) {
+				final CacheRetrieveMode retrieveMode = value != null ? CacheRetrieveMode.valueOf( value.toString() ) : null;
+				applied = applyJpaCacheRetrieveMode( retrieveMode );
+			}
+			else if ( JPA_SHARED_CACHE_STORE_MODE.equals( hintName ) ) {
 				final CacheStoreMode storeMode = value != null ? CacheStoreMode.valueOf( value.toString() ) : null;
-				final CacheRetrieveMode retrieveMode = getHint( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE, CacheRetrieveMode.class );
-				applied = applyCacheModeHint( CacheModeHelper.interpretCacheMode( storeMode, retrieveMode ) );
+				applied = applyJpaCacheStoreMode( storeMode );
 			}
 			else if ( QueryHints.HINT_NATIVE_LOCKMODE.equals( hintName ) ) {
-				if ( !isNativeQuery() ) {
-					throw new IllegalStateException(
-							"Illegal attempt to set lock mode on non-native query via hint; use Query#setLockMode instead"
-					);
-				}
-				if ( LockMode.class.isInstance( value ) ) {
-					applyHibernateLockModeHint( (LockMode) value );
-				}
-				else if ( LockModeType.class.isInstance( value ) ) {
-					applyLockModeTypeHint( (LockModeType) value );
-				}
-				else {
-					throw new IllegalArgumentException(
-							String.format(
-									"Native lock-mode hint [%s] must specify %s or %s.  Encountered type : %s",
-									HINT_NATIVE_LOCKMODE,
-									LockMode.class.getName(),
-									LockModeType.class.getName(),
-									value.getClass().getName()
-							)
-					);
-				}
-				applied = true;
+				applied = applyNativeQueryLockMode( value );
 			}
-			else if ( hintName.startsWith( AvailableSettings.ALIAS_SPECIFIC_LOCK_MODE ) ) {
+			else if ( hintName.startsWith( ALIAS_SPECIFIC_LOCK_MODE ) ) {
 				if ( canApplyAliasSpecificLockModeHints() ) {
 					// extract the alias
-					final String alias = hintName.substring( AvailableSettings.ALIAS_SPECIFIC_LOCK_MODE.length() + 1 );
+					final String alias = hintName.substring( ALIAS_SPECIFIC_LOCK_MODE.length() + 1 );
 					// determine the LockMode
 					try {
 						final LockMode lockMode = LockModeTypeHelper.interpretLockMode( value );
@@ -827,7 +877,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			}
 			else if ( HINT_FETCHGRAPH.equals( hintName ) || HINT_LOADGRAPH.equals( hintName ) ) {
 				if (value instanceof EntityGraphImpl ) {
-					applyEntityGraphQueryHint( new EntityGraphQueryHint( (EntityGraphImpl) value ) );
+					applyEntityGraphQueryHint( new EntityGraphQueryHint( hintName, (EntityGraphImpl) value ) );
 				}
 				else {
 					log.warnf( "The %s hint was set, but the value was not an EntityGraph!", hintName );
@@ -842,28 +892,31 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			throw new IllegalArgumentException( "Value for hint" );
 		}
 
-		if ( applied ) {
-			if ( hints == null ) {
-				hints = new HashMap<>();
-			}
-			hints.put( hintName, value );
-		}
-		else {
+		if ( !applied ) {
 			log.debugf( "Skipping unsupported query hint [%s]", hintName );
 		}
 
 		return this;
 	}
 
-	private <T extends Enum<T>> T getHint(String key, Class<T> hintClass) {
-		Object hint = hints != null ? hints.get( key ) : null;
+	protected boolean applyJpaCacheRetrieveMode(CacheRetrieveMode mode) {
+		this.cacheRetrieveMode = mode;
+		return true;
+	}
 
-// todo : we need this
-//		if ( hint == null ) {
-//			hint = getProducer().getProperties().get( key );
-//		}
+	protected boolean applyJpaCacheStoreMode(CacheStoreMode storeMode) {
+		this.cacheStoreMode = storeMode;
+		return true;
+	}
 
-		return hint != null ? Enum.valueOf( hintClass, hint.toString() ) : null;
+	protected boolean applyNativeQueryLockMode(Object value) {
+		if ( !isNativeQuery() ) {
+			throw new IllegalStateException(
+					"Illegal attempt to set lock mode on non-native query via hint; use Query#setLockMode instead"
+			);
+		}
+
+		return false;
 	}
 
 	/**
@@ -1117,9 +1170,9 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			sessionFlushMode = getProducer().getHibernateFlushMode();
 			getProducer().setHibernateFlushMode( flushMode );
 		}
-		if ( cacheMode != null ) {
+		if ( getCacheMode() != null ) {
 			sessionCacheMode = getProducer().getCacheMode();
-			getProducer().setCacheMode( cacheMode );
+			getProducer().setCacheMode( getCacheMode() );
 		}
 	}
 

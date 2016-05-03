@@ -539,8 +539,8 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		query.setHint( "javax.persistence.cache.retrieveMode", "USE" );
 		query.setHint( "javax.persistence.cache.storeMode", "REFRESH" );
 
-		assertEquals( "USE", query.getHints().get( "javax.persistence.cache.retrieveMode" ) );
-		assertEquals( "REFRESH", query.getHints().get( "javax.persistence.cache.storeMode" ) );
+		assertEquals( CacheRetrieveMode.USE, query.getHints().get( "javax.persistence.cache.retrieveMode" ) );
+		assertEquals( CacheStoreMode.REFRESH, query.getHints().get( "javax.persistence.cache.storeMode" ) );
 
 		em.getTransaction().commit();
 		em.close();

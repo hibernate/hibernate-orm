@@ -11,7 +11,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.persistence.AttributeNode;
 import javax.persistence.EntityGraph;
 import javax.persistence.Subgraph;
@@ -29,6 +28,9 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
+import static org.hibernate.jpa.QueryHints.HINT_FETCHGRAPH;
+import static org.hibernate.jpa.QueryHints.HINT_LOADGRAPH;
+
 /**
  * Encapsulates a JPA EntityGraph provided through a JPQL query hint.  Converts the fetches into a list of AST
  * FromElements.  The logic is kept here as much as possible in order to make it easy to remove this in the future,
@@ -37,10 +39,23 @@ import org.hibernate.type.Type;
  * @author Brett Meyer
  */
 public class EntityGraphQueryHint {
+	private final String hintName;
 	private final EntityGraph<?> originEntityGraph;
 
-	public EntityGraphQueryHint(EntityGraph<?> originEntityGraph) {
+	public EntityGraphQueryHint(String hintName, EntityGraph<?> originEntityGraph) {
+		assert hintName != null;
+		assert HINT_FETCHGRAPH.equals( hintName ) || HINT_LOADGRAPH.equals( hintName );
+
+		this.hintName = hintName;
 		this.originEntityGraph = originEntityGraph;
+	}
+
+	public String getHintName() {
+		return hintName;
+	}
+
+	public EntityGraph<?> getOriginEntityGraph() {
+		return originEntityGraph;
 	}
 
 	public List<FromElement> toFromElements(FromClause fromClause, HqlSqlWalker walker) {

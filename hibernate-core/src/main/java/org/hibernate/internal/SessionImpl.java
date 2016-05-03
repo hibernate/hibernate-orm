@@ -258,9 +258,6 @@ public final class SessionImpl
 				actionQueue.setTransactionCompletionProcesses( sharedOptions.getTransactionCompletionProcesses(), true );
 			}
 		}
-		else {
-			this.autoClose = options.shouldAutoClose();
-		}
 
 		loadQueryInfluencers = new LoadQueryInfluencers( factory );
 
@@ -317,8 +314,8 @@ public final class SessionImpl
 			query.setHint( QueryHints.SPEC_HINT_TIMEOUT, queryTimeout );
 		}
 		Object lockTimeout;
-		if( (lockTimeout = getProperties().get( AvailableSettings.LOCK_TIMEOUT ))!=null){
-			query.setHint( AvailableSettings.LOCK_TIMEOUT, lockTimeout );
+		if( (lockTimeout = getProperties().get( JPA_LOCK_TIMEOUT ))!=null){
+			query.setHint( JPA_LOCK_TIMEOUT, lockTimeout );
 		}
 	}
 

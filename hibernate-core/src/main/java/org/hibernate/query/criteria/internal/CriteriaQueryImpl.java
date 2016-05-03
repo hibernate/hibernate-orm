@@ -28,6 +28,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 import org.hibernate.query.criteria.internal.compile.CompilableCriteria;
 import org.hibernate.query.criteria.internal.compile.CriteriaInterpretation;
+import org.hibernate.query.criteria.internal.compile.CriteriaQueryTypeQueryAdapter;
 import org.hibernate.query.criteria.internal.compile.ImplicitParameterBinding;
 import org.hibernate.query.criteria.internal.compile.InterpretedParameterMetadata;
 import org.hibernate.query.criteria.internal.compile.RenderingContext;
@@ -370,13 +371,12 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 					implicitParameterBinding.bind( jpaqlQuery );
 				}
 
-//				return new CriteriaQueryTypeQueryAdapter(
-//						entityManager,
-//						jpaqlQuery,
-//						parameterMetadata.explicitParameterInfoMap()
-//				);
+				return new CriteriaQueryTypeQueryAdapter(
+						entityManager,
+						jpaqlQuery,
+						parameterMetadata.explicitParameterInfoMap()
+				);
 
-				return jpaqlQuery;
 			}
 
 			private Map<String, Class> extractTypeMap(List<ImplicitParameterBinding> implicitParameterBindings) {

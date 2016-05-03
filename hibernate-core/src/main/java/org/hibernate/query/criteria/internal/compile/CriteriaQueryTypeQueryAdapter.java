@@ -16,17 +16,27 @@ import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
-import javax.persistence.TypedQuery;
 import javax.persistence.criteria.ParameterExpression;
 
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.jpa.HibernateQuery;
+import org.hibernate.query.Query;
+import org.hibernate.query.internal.AbstractProducedQuery;
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.type.Type;
 
 /**
+ * <strong>Make this go away in 6.0</strong> :)
+ * <p/>
+ * Needed because atm we render a JPA Criteria query into a HQL/JPQL query String and some metadata, and then
+ * compile into a Query.  This class wraps the compiled HQL/JPQL query and adds an extra layer of metadata.
+ * <p/>
+ * But the move to SQM in 6.0 allows us to do away with the "wrapping".
+ *
+ * Essentially
+ *
  * @author Steve Ebersole
  */
-public class CriteriaQueryTypeQueryAdapter<X> implements TypedQuery<X>, HibernateQuery {
+public class CriteriaQueryTypeQueryAdapter<X> extends AbstractProducedQuery<X> implements QueryImplementor<X> {
 	private final SessionImplementor entityManager;
 	private final QueryImplementor<X> jpqlQuery;
 	private final Map<ParameterExpression<?>, ExplicitParameterInfo<?>> explicitParameterInfoMap;
@@ -35,14 +45,10 @@ public class CriteriaQueryTypeQueryAdapter<X> implements TypedQuery<X>, Hibernat
 			SessionImplementor entityManager,
 			QueryImplementor<X> jpqlQuery,
 			Map<ParameterExpression<?>, ExplicitParameterInfo<?>> explicitParameterInfoMap) {
+		super( entityManager, jpqlQuery.getParameterMetadata() );
 		this.entityManager = entityManager;
 		this.jpqlQuery = jpqlQuery;
 		this.explicitParameterInfoMap = explicitParameterInfoMap;
-	}
-
-	@Override
-	public QueryImplementor getHibernateQuery() {
-		return jpqlQuery;
 	}
 
 	public List<X> getResultList() {
@@ -57,7 +63,7 @@ public class CriteriaQueryTypeQueryAdapter<X> implements TypedQuery<X>, Hibernat
 		return jpqlQuery.getMaxResults();
 	}
 
-	public TypedQuery<X> setMaxResults(int i) {
+	public QueryImplementor<X> setMaxResults(int i) {
 		jpqlQuery.setMaxResults( i );
 		return this;
 	}
@@ -66,7 +72,7 @@ public class CriteriaQueryTypeQueryAdapter<X> implements TypedQuery<X>, Hibernat
 		return jpqlQuery.getFirstResult();
 	}
 
-	public TypedQuery<X> setFirstResult(int i) {
+	public QueryImplementor<X> setFirstResult(int i) {
 		jpqlQuery.setFirstResult( i );
 		return this;
 	}
@@ -75,16 +81,31 @@ public class CriteriaQueryTypeQueryAdapter<X> implements TypedQuery<X>, Hibernat
 		return jpqlQuery.getHints();
 	}
 
-	public TypedQuery<X> setHint(String name, Object value) {
+	public QueryImplementor<X> setHint(String name, Object value) {
 		jpqlQuery.setHint( name, value );
 		return this;
+	}
+
+	@Override
+	protected boolean isNativeQuery() {
+		return false;
+	}
+
+	@Override
+	public String getQueryString() {
+		return jpqlQuery.getQueryString();
 	}
 
 	public FlushModeType getFlushMode() {
 		return jpqlQuery.getFlushMode();
 	}
 
-	public TypedQuery<X> setFlushMode(FlushModeType flushModeType) {
+	@Override
+	public Type[] getReturnTypes() {
+		return jpqlQuery.getReturnTypes();
+	}
+
+	public QueryImplementor<X> setFlushMode(FlushModeType flushModeType) {
 		jpqlQuery.setFlushMode( flushModeType );
 		return this;
 	}
@@ -93,9 +114,24 @@ public class CriteriaQueryTypeQueryAdapter<X> implements TypedQuery<X>, Hibernat
 		return jpqlQuery.getLockMode();
 	}
 
-	public TypedQuery<X> setLockMode(LockModeType lockModeType) {
+	public QueryImplementor<X> setLockMode(LockModeType lockModeType) {
 		jpqlQuery.setLockMode( lockModeType );
 		return this;
+	}
+
+	@Override
+	public Query<X> setEntity(int position, Object val) {
+		return null;
+	}
+
+	@Override
+	public Query<X> setEntity(String name, Object val) {
+		return null;
+	}
+
+	@Override
+	public String[] getReturnAliases() {
+		return new String[0];
 	}
 
 	@SuppressWarnings({ "unchecked" })
@@ -142,7 +178,7 @@ public class CriteriaQueryTypeQueryAdapter<X> implements TypedQuery<X>, Hibernat
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	public <T> TypedQuery<X> setParameter(Parameter<T> param, T t) {
+	public <T> QueryImplementor<X> setParameter(Parameter<T> param, T t) {
 		entityManager.checkOpen( false );
 		final ExplicitParameterInfo parameterInfo = resolveParameterInfo( param );
 		if ( parameterInfo.isNamed() ) {
@@ -155,7 +191,7 @@ public class CriteriaQueryTypeQueryAdapter<X> implements TypedQuery<X>, Hibernat
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	public TypedQuery<X> setParameter(Parameter<Calendar> param, Calendar calendar, TemporalType temporalType) {
+	public QueryImplementor<X> setParameter(Parameter<Calendar> param, Calendar calendar, TemporalType temporalType) {
 		entityManager.checkOpen( false );
 		final ExplicitParameterInfo parameterInfo = resolveParameterInfo( param );
 		if ( parameterInfo.isNamed() ) {
@@ -168,7 +204,7 @@ public class CriteriaQueryTypeQueryAdapter<X> implements TypedQuery<X>, Hibernat
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	public TypedQuery<X> setParameter(Parameter<Date> param, Date date, TemporalType temporalType) {
+	public QueryImplementor<X> setParameter(Parameter<Date> param, Date date, TemporalType temporalType) {
 		entityManager.checkOpen( false );
 		final ExplicitParameterInfo parameterInfo = resolveParameterInfo( param );
 		if ( parameterInfo.isNamed() ) {
@@ -219,7 +255,7 @@ public class CriteriaQueryTypeQueryAdapter<X> implements TypedQuery<X>, Hibernat
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	public TypedQuery<X> setParameter(String name, Object value) {
+	public QueryImplementor<X> setParameter(String name, Object value) {
 		entityManager.checkOpen( true );
 		ExplicitParameterInfo parameterInfo = locateParameterByName( name );
 		parameterInfo.validateBindValue( value );
@@ -228,7 +264,7 @@ public class CriteriaQueryTypeQueryAdapter<X> implements TypedQuery<X>, Hibernat
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	public TypedQuery<X> setParameter(String name, Calendar calendar, TemporalType temporalType) {
+	public QueryImplementor<X> setParameter(String name, Calendar calendar, TemporalType temporalType) {
 		entityManager.checkOpen( true );
 		ExplicitParameterInfo parameterInfo = locateParameterByName( name );
 		parameterInfo.validateCalendarBind();
@@ -237,7 +273,7 @@ public class CriteriaQueryTypeQueryAdapter<X> implements TypedQuery<X>, Hibernat
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	public TypedQuery<X> setParameter(String name, Date date, TemporalType temporalType) {
+	public QueryImplementor<X> setParameter(String name, Date date, TemporalType temporalType) {
 		entityManager.checkOpen( true );
 		ExplicitParameterInfo parameterInfo = locateParameterByName( name );
 		parameterInfo.validateDateBind();
@@ -252,15 +288,15 @@ public class CriteriaQueryTypeQueryAdapter<X> implements TypedQuery<X>, Hibernat
 		throw new IllegalStateException( "Typed criteria queries do not support executeUpdate" );
 	}
 
-	public TypedQuery<X> setParameter(int i, Object o) {
+	public QueryImplementor<X> setParameter(int i, Object o) {
 		throw new IllegalArgumentException( "Criteria queries do not support positioned parameters" );
 	}
 
-	public TypedQuery<X> setParameter(int i, Calendar calendar, TemporalType temporalType) {
+	public QueryImplementor<X> setParameter(int i, Calendar calendar, TemporalType temporalType) {
 		throw new IllegalArgumentException( "Criteria queries do not support positioned parameters" );
 	}
 
-	public TypedQuery<X> setParameter(int i, Date date, TemporalType temporalType) {
+	public QueryImplementor<X> setParameter(int i, Date date, TemporalType temporalType) {
 		throw new IllegalArgumentException( "Criteria queries do not support positioned parameters" );
 	}
 

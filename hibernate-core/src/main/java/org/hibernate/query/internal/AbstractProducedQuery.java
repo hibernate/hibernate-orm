@@ -103,7 +103,8 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 	private ResultTransformer resultTransformer;
 	private RowSelection queryOptions = new RowSelection();
-	private HQLQueryPlan entityGraphHintedQueryPlan;
+
+	private EntityGraphQueryHint entityGraphQueryHint;
 
 	private Object optionalObject;
 	private Serializable optionalId;
@@ -487,14 +488,14 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public QueryImplementor setParameter(Parameter param, Calendar value, TemporalType temporalType) {
+	public QueryImplementor setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
 		queryParameterBindings.getBinding( (QueryParameter) param ).setBindValue( value, temporalType );
 		return this;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public QueryImplementor setParameter(Parameter param, Date value, TemporalType temporalType) {
+	public QueryImplementor setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
 		queryParameterBindings.getBinding( (QueryParameter) param ).setBindValue( value, temporalType );
 		return this;
 	}
@@ -1009,19 +1010,8 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	 *
 	 * @param hint The entity graph hint object
 	 */
-	public void applyEntityGraphQueryHint(EntityGraphQueryHint hint) {
-		queryParameterBindings.verifyParametersBound( false );
-
-		// todo : ideally we'd update the instance state related to queryString but that is final atm
-
-		final String expandedQuery = queryParameterBindings.expandListValuedParameters( getQueryString(), getProducer() );
-		this.entityGraphHintedQueryPlan = new HQLQueryPlan(
-				expandedQuery,
-				false,
-				getProducer().getLoadQueryInfluencers().getEnabledFilters(),
-				getProducer().getFactory(),
-				hint
-		);
+	protected void applyEntityGraphQueryHint(EntityGraphQueryHint hint) {
+		this.entityGraphQueryHint = hint;
 	}
 
 	/**
@@ -1057,6 +1047,25 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	}
 
 	public QueryParameters getQueryParameters() {
+		final HQLQueryPlan entityGraphHintedQueryPlan;
+		if ( entityGraphQueryHint == null) {
+			entityGraphHintedQueryPlan = null;
+		}
+		else {
+			queryParameterBindings.verifyParametersBound( false );
+
+			// todo : ideally we'd update the instance state related to queryString but that is final atm
+
+			final String expandedQuery = queryParameterBindings.expandListValuedParameters( getQueryString(), getProducer() );
+			entityGraphHintedQueryPlan = new HQLQueryPlan(
+					expandedQuery,
+					false,
+					getProducer().getLoadQueryInfluencers().getEnabledFilters(),
+					getProducer().getFactory(),
+					entityGraphQueryHint
+			);
+		}
+
 		QueryParameters queryParameters = new QueryParameters(
 				getPositionalParameterTypes(),
 				getPositionalParameterValues(),

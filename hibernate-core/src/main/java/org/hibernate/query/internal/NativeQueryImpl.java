@@ -213,6 +213,7 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 
 		super.beforeQuery();
 
+
 		if ( getSynchronizedQuerySpaces() != null && !getSynchronizedQuerySpaces().isEmpty() ) {
 			// The application defined query spaces on the Hibernate native SQLQuery which means the query will already
 			// perform a partial flush according to the defined query spaces, no need to do a full flush.
@@ -237,7 +238,9 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 			}
 
 			if ( effectiveFlushMode != FlushMode.MANUAL ) {
-				return true;
+				if ( getProducer().getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
+					return true;
+				}
 			}
 		}
 

@@ -129,7 +129,7 @@ public class AutoFlushTest extends BaseEntityManagerFunctionalTestCase {
 			assertTrue(((Number) session
 					.createSQLQuery( "select count(*) from Person")
 					.uniqueResult()).intValue() == 0 );
-			//end::flushing-auto-flush-sql-native-example[]
+			//end::flushing-auto-flush-sql-native-example[\]
 		} );
 	}
 

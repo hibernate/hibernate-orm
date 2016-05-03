@@ -346,4 +346,14 @@ public interface AvailableSettings {
 	 * @since 5.0.8
 	 */
 	String DELAY_CDI_ACCESS = "hibernate.delay_cdi_access";
+
+	/**
+	 * Setting that allows access to the underlying {@link org.hibernate.Transaction}, even
+	 * when using a JTA since normal JPA operations prohibit this behavior.
+	 * <p/>
+	 * Values are {@code true} grants access, {@code false} does not.
+	 * <p/>
+	 * The default behavior is to allow access unless the session is bootstrapped via JPA.
+	 */
+	String ALLOW_JTA_TRANSACTION_ACCESS = "hibernate.jta.allowTransactionAccess";
 }

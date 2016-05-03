@@ -46,6 +46,8 @@ public interface SessionFactoryOptionsState {
 	@Deprecated
 	boolean isJpaBootstrap();
 
+	boolean isJtaTransactionAccessEnabled();
+
 	Object getBeanManagerReference();
 
 	Object getValidatorFactoryReference();

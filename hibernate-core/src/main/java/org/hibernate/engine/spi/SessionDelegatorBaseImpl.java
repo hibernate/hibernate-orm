@@ -434,6 +434,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public Transaction accessTransaction() {
+		return delegate.accessTransaction();
+	}
+
+	@Override
 	public Transaction beginTransaction() {
 		return delegate.beginTransaction();
 	}

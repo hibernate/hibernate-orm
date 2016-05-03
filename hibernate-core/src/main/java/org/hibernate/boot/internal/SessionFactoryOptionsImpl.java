@@ -51,6 +51,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	// Session behavior
 	private final boolean flushBeforeCompletionEnabled;
 	private final boolean autoCloseSessionEnabled;
+	private boolean jtaTransactionAccessEnabled;
 
 	// transaction handling
 	private final boolean jtaTrackByThread;
@@ -124,6 +125,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.validatorFactoryReference = state.getValidatorFactoryReference();
 
 		this.jpaBootstrap = state.isJpaBootstrap();
+		this.jtaTransactionAccessEnabled = state.isJtaTransactionAccessEnabled();
 		this.sessionFactoryName = state.getSessionFactoryName();
 		this.sessionFactoryNameAlsoJndiName = state.isSessionFactoryNameAlsoJndiName();
 
@@ -195,6 +197,11 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public boolean isJpaBootstrap() {
 		return jpaBootstrap;
+	}
+
+	@Override
+	public boolean isJtaTransactionAccessEnabled() {
+		return jtaTransactionAccessEnabled;
 	}
 
 	@Override

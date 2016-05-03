@@ -352,37 +352,29 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		if ( getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
 			// JPA requires that we throw IllegalStateException if this is called
 			// on a JTA EntityManager
-			//
-			// todo : ultimately add an option for allowing users to access the Transaction in JTA cases too like classic Hibernate
-
 			if ( getTransactionCoordinator().getTransactionCoordinatorBuilder().isJta() ) {
-				throw new IllegalStateException( "A JTA EntityManager cannot use getTransaction()" );
+				if ( !getFactory().getSessionFactoryOptions().isJtaTransactionAccessEnabled() ) {
+					throw new IllegalStateException( "A JTA EntityManager cannot use getTransaction()" );
+				}
 			}
-
-			if ( this.currentHibernateTransaction == null ) {
-				this.currentHibernateTransaction = new TransactionImpl(
-						getTransactionCoordinator(),
-						getExceptionConverter()
-				);
-			}
-			if ( !isClosed() ) {
-				getTransactionCoordinator().pulse();
-			}
-			return currentHibernateTransaction;
 		}
-		else {
-			// Historically Hibernate would not allow access to the Transaction after the Session is closed
-			checkOpen();
+		return accessTransaction();
+	}
 
-			if ( this.currentHibernateTransaction == null || this.currentHibernateTransaction.getStatus() != TransactionStatus.ACTIVE ) {
-				this.currentHibernateTransaction = new TransactionImpl(
-						getTransactionCoordinator(),
-						getExceptionConverter()
-				);
-			}
+	@Override
+	public Transaction accessTransaction() {
+		checkOpen();
+		if ( this.currentHibernateTransaction == null || this.currentHibernateTransaction.getStatus() != TransactionStatus.ACTIVE ) {
+			this.currentHibernateTransaction = new TransactionImpl(
+					getTransactionCoordinator(),
+					getExceptionConverter()
+			);
+
+		}
+		if ( !isClosed() ) {
 			getTransactionCoordinator().pulse();
-			return currentHibernateTransaction;
 		}
+		return this.currentHibernateTransaction;
 	}
 
 	@Override

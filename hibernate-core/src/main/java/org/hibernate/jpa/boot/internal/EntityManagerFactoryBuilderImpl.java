@@ -881,6 +881,12 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 //			sfBuilder.applyInterceptor( sessionFactoryInterceptor );
 //		}
 
+		// will use user override value or default to false if not supplied to follow JPA spec.
+		final boolean jtaTransactionAccessEnabled = readBooleanConfigurationValue( AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS );
+		if ( !jtaTransactionAccessEnabled ) {
+			( ( SessionFactoryBuilderImplementor ) sfBuilder ).disableJtaTransactionAccess();
+		}
+
 		// Locate and apply any requested SessionFactoryObserver
 		final Object sessionFactoryObserverSetting = configurationValues.remove( AvailableSettings.SESSION_FACTORY_OBSERVER );
 		if ( sessionFactoryObserverSetting != null ) {

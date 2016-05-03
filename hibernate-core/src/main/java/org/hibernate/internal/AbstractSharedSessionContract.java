@@ -363,7 +363,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public Transaction accessTransaction() {
-		checkOpen();
 		if ( this.currentHibernateTransaction == null || this.currentHibernateTransaction.getStatus() != TransactionStatus.ACTIVE ) {
 			this.currentHibernateTransaction = new TransactionImpl(
 					getTransactionCoordinator(),

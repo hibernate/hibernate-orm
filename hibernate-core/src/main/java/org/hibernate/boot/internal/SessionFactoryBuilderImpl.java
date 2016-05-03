@@ -60,6 +60,7 @@ import org.hibernate.tuple.entity.EntityTuplizerFactory;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.cfg.AvailableSettings.ACQUIRE_CONNECTIONS;
+import static org.hibernate.cfg.AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS;
 import static org.hibernate.cfg.AvailableSettings.AUTO_CLOSE_SESSION;
 import static org.hibernate.cfg.AvailableSettings.AUTO_EVICT_COLLECTION_CACHE;
 import static org.hibernate.cfg.AvailableSettings.AUTO_SESSION_EVENTS_LISTENER;
@@ -481,6 +482,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
+	public void disableJtaTransactionAccess() {
+		this.options.jtaTransactionAccessEnabled = false;
+	}
+
+	@Override
 	public SessionFactoryOptions buildSessionFactoryOptions() {
 		return new SessionFactoryOptionsImpl( this );
 	}
@@ -504,6 +510,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		// Session behavior
 		private boolean flushBeforeCompletionEnabled;
 		private boolean autoCloseSessionEnabled;
+		private boolean jtaTransactionAccessEnabled;
 
 		// (JTA) transaction handling
 		private boolean jtaTrackByThread;
@@ -591,6 +598,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 			this.sessionFactoryName = (String) configurationSettings.get( SESSION_FACTORY_NAME );
 			this.sessionFactoryNameAlsoJndiName = cfgService.getSetting(
 					SESSION_FACTORY_NAME_IS_JNDI,
+					BOOLEAN,
+					true
+			);
+			this.jtaTransactionAccessEnabled = cfgService.getSetting(
+					ALLOW_JTA_TRANSACTION_ACCESS,
 					BOOLEAN,
 					true
 			);
@@ -846,6 +858,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		@Override
 		public boolean isJpaBootstrap() {
 			return jpaBootstrap;
+		}
+
+		@Override
+		public boolean isJtaTransactionAccessEnabled() {
+			return jtaTransactionAccessEnabled;
 		}
 
 		@Override
@@ -1132,6 +1149,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public boolean isJpaBootstrap() {
 		return options.isJpaBootstrap();
+	}
+
+	@Override
+	public boolean isJtaTransactionAccessEnabled() {
+		return options.isJtaTransactionAccessEnabled();
 	}
 
 	@Override

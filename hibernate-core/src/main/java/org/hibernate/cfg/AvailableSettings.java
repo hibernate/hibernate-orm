@@ -1463,4 +1463,15 @@ public interface AvailableSettings {
 	 * @since 5.1
 	 */
 	String CREATE_EMPTY_COMPOSITES_ENABLED = "hibernate.create_empty_composites.enabled";
+
+	/**
+	 * Setting that allows access to the underlying {@link org.hibernate.Transaction}, even
+	 * when using a JTA since normal JPA operations prohibit this behavior.
+	 * <p/>
+	 * Values are {@code true} grants access, {@code false} does not.
+	 * <p/>
+	 * The default behavior is to allow access unless the session is bootstrapped via JPA.
+	 */
+	String ALLOW_JTA_TRANSACTION_ACCESS = "hibernate.jta.allowTransactionAccess";
+
 }

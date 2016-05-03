@@ -21,6 +21,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.SharedSessionContract;
+import org.hibernate.Transaction;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
@@ -149,6 +150,15 @@ public interface SharedSessionContractImplementor
 	 * or is there a JTA transaction in progress?
 	 */
 	boolean isTransactionInProgress();
+
+	/**
+	 * Provides access to the underlying transaction or creates a new transaction if
+	 * one does not already exist or is active.  This is primarily for internal or
+	 * integrator use.
+	 *
+	 * @return the transaction
+     */
+	Transaction accessTransaction();
 
 	/**
 	 * Hide the changing requirements of entity key creation

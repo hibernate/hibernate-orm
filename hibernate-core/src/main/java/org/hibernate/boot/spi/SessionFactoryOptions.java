@@ -58,6 +58,8 @@ public interface SessionFactoryOptions {
 	@Deprecated
 	boolean isJpaBootstrap();
 
+	boolean isJtaTransactionAccessEnabled();
+
 	/**
 	 * The name to be used for the SessionFactory.  This is use both in:<ul>
 	 *     <li>in-VM serialization</li>

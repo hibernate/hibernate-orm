@@ -28,6 +28,8 @@ public interface SessionFactoryBuilderImplementor extends SessionFactoryBuilder 
 	@Deprecated
 	void markAsJpaBootstrap();
 
+	void disableJtaTransactionAccess();
+
 	/**
 	 * Build the SessionFactoryOptions that will ultimately be passed to SessionFactoryImpl constructor.
 	 *

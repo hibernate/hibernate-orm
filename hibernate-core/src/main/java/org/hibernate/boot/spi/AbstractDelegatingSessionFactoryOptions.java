@@ -54,6 +54,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public boolean isJtaTransactionAccessEnabled() {
+		return delegate.isJtaTransactionAccessEnabled();
+	}
+
+	@Override
 	public Object getBeanManagerReference() {
 		return delegate.getBeanManagerReference();
 	}

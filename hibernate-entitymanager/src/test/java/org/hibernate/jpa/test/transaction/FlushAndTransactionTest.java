@@ -161,7 +161,6 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 		}
 		catch ( IllegalStateException e ) {
 			//success
-			em.getTransaction().rollback();
 		}
 	}
 

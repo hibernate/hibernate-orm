@@ -35,9 +35,6 @@ import javax.persistence.criteria.Selection;
 import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
 
-import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
-import org.hibernate.Session;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -84,8 +81,6 @@ import org.hibernate.query.criteria.internal.predicate.IsEmptyPredicate;
 import org.hibernate.query.criteria.internal.predicate.LikePredicate;
 import org.hibernate.query.criteria.internal.predicate.MemberOfPredicate;
 import org.hibernate.query.criteria.internal.predicate.NullnessPredicate;
-import org.hibernate.type.SerializableType;
-import org.hibernate.type.Type;
 
 /**
  * Hibernate implementation of the JPA {@link CriteriaBuilder} contract.

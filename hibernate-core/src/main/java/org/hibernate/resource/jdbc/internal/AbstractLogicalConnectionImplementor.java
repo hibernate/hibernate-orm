@@ -9,7 +9,6 @@ package org.hibernate.resource.jdbc.internal;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.hibernate.ResourceClosedException;
 import org.hibernate.TransactionException;
 import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
@@ -35,7 +34,7 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 
 	protected void errorIfClosed() {
 		if ( !isOpen() ) {
-			throw new ResourceClosedException( this.toString() + " is closed" );
+			throw new IllegalStateException( this.toString() + " is closed" );
 		}
 	}
 

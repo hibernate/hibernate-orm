@@ -24,6 +24,7 @@ import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
+import javax.persistence.TransactionRequiredException;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Filter;
@@ -1203,6 +1204,12 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 	@SuppressWarnings("unchecked")
 	protected List<R> doList() {
+		if ( lockOptions.getLockMode() != null && lockOptions.getLockMode() != LockMode.NONE ) {
+			if ( !getProducer().isTransactionInProgress() ) {
+				throw new TransactionRequiredException( "no transaction is in progress" );
+			}
+		}
+
 		return getProducer().list(
 				queryParameterBindings.expandListValuedParameters( getQueryString(), getProducer() ),
 				getQueryParameters()
@@ -1234,6 +1241,13 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public int executeUpdate() throws HibernateException {
+		if ( ! getProducer().isTransactionInProgress() ) {
+			throw getProducer().getExceptionConverter().convert(
+					new TransactionRequiredException(
+							"Executing an update/delete query"
+					)
+			);
+		}
 		beforeQuery();
 		try {
 			return doExecuteUpdate();

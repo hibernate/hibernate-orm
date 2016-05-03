@@ -7,13 +7,11 @@
 package org.hibernate.test.sql.syncSpace;
 
 import java.util.Map;
-
 import javax.persistence.Cacheable;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -80,7 +78,9 @@ public class NativeQuerySyncSpaceCachingTest extends BaseNonConfigCoreFunctional
 		assertTrue( sessionFactory().getCache().containsEntity( Customer.class, 1 ) );
 
 		Session session = openSession();
+		session.beginTransaction();
 		session.createSQLQuery( "update Address set id = id" ).executeUpdate();
+		session.getTransaction().commit();
 		session.close();
 
 		// NOTE false here because executeUpdate is different than selects
@@ -92,7 +92,9 @@ public class NativeQuerySyncSpaceCachingTest extends BaseNonConfigCoreFunctional
 		assertTrue( sessionFactory().getCache().containsEntity( Customer.class, 1 ) );
 
 		Session session = openSession();
+		session.beginTransaction();
 		session.createSQLQuery( "update Address set id = id" ).addSynchronizedEntityClass( Address.class ).executeUpdate();
+		session.getTransaction().commit();
 		session.close();
 
 		assertTrue( sessionFactory().getCache().containsEntity( Customer.class, 1 ) );
@@ -114,7 +116,9 @@ public class NativeQuerySyncSpaceCachingTest extends BaseNonConfigCoreFunctional
 		assertTrue( sessionFactory().getCache().containsEntity( Customer.class, 1 ) );
 
 		Session session = openSession();
+		session.beginTransaction();
 		session.createSQLQuery( "update Customer set id = id" ).executeUpdate();
+		session.getTransaction().commit();
 		session.close();
 
 		// NOTE false here because executeUpdate is different than selects
@@ -126,7 +130,9 @@ public class NativeQuerySyncSpaceCachingTest extends BaseNonConfigCoreFunctional
 		assertTrue( sessionFactory().getCache().containsEntity( Customer.class, 1 ) );
 
 		Session session = openSession();
+		session.beginTransaction();
 		session.createSQLQuery( "update Customer set id = id" ).addSynchronizedEntityClass( Customer.class ).executeUpdate();
+		session.getTransaction().commit();
 		session.close();
 
 		assertFalse( sessionFactory().getCache().containsEntity( Customer.class, 1 ) );

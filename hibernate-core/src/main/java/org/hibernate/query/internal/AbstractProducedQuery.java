@@ -1170,9 +1170,10 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			sessionFlushMode = getProducer().getHibernateFlushMode();
 			getProducer().setHibernateFlushMode( flushMode );
 		}
-		if ( getCacheMode() != null ) {
+		final CacheMode effectiveCacheMode = CacheModeHelper.effectiveCacheMode( cacheStoreMode, cacheRetrieveMode );
+		if ( effectiveCacheMode != null ) {
 			sessionCacheMode = getProducer().getCacheMode();
-			getProducer().setCacheMode( getCacheMode() );
+			getProducer().setCacheMode( effectiveCacheMode );
 		}
 	}
 

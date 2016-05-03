@@ -239,7 +239,11 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 				effectiveFlushMode = getProducer().getHibernateFlushMode();
 			}
 
-			if ( effectiveFlushMode != FlushMode.MANUAL ) {
+			if ( effectiveFlushMode == FlushMode.ALWAYS ) {
+				return true;
+			}
+
+			if ( effectiveFlushMode == FlushMode.AUTO ) {
 				if ( getProducer().getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
 					return true;
 				}

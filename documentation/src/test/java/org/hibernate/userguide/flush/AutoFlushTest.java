@@ -9,6 +9,7 @@ package org.hibernate.userguide.flush;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
+import javax.persistence.FlushModeType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
@@ -125,6 +126,14 @@ public class AutoFlushTest extends BaseEntityManagerFunctionalTestCase {
 			Person person = new Person( "John Doe" );
 			entityManager.persist( person );
 			Session session = entityManager.unwrap(Session.class);
+
+			// for this to work, the Session/EntityManager must be put into COMMIT FlushMode
+			//  - this is a change since 5.2 to account for merging EntityManager functionality
+			// 		directly into Session.  Flushing would be the JPA-spec compliant behavior,
+			//		so we know do that by default.
+			session.setFlushMode( FlushModeType.COMMIT );
+			//		or using Hibernate's FlushMode enum
+			//session.setHibernateFlushMode( FlushMode.COMMIT );
 
 			assertTrue(((Number) session
 					.createSQLQuery( "select count(*) from Person")

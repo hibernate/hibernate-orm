@@ -847,10 +847,9 @@ public final class SessionImpl
 
 	private Object fireMerge(MergeEvent event) {
 		checkOpen();
-		checkTransactionSynchStatus();
-		checkNoUnresolvedActionsBeforeOperation();
-
 		try {
+			checkTransactionSynchStatus();
+			checkNoUnresolvedActionsBeforeOperation();
 			for ( MergeEventListener listener : listeners( EventType.MERGE ) ) {
 				listener.onMerge( event );
 			}
@@ -872,9 +871,9 @@ public final class SessionImpl
 
 	private void fireMerge(Map copiedAlready, MergeEvent event) {
 		checkOpen();
-		checkTransactionSynchStatus();
 
 		try {
+			checkTransactionSynchStatus();
 			for ( MergeEventListener listener : listeners( EventType.MERGE ) ) {
 				listener.onMerge( event, copiedAlready );
 			}
@@ -958,20 +957,48 @@ public final class SessionImpl
 
 	private void fireDelete(DeleteEvent event) {
 		checkOpen();
+		try{
 		checkTransactionSynchStatus();
 		for ( DeleteEventListener listener : listeners( EventType.DELETE ) ) {
 			listener.onDelete( event );
 		}
-		delayedAfterCompletion();
+		}
+		catch ( ObjectDeletedException sse ) {
+			throw exceptionConverter.convert( new IllegalArgumentException( sse ) );
+		}
+		catch ( MappingException e ) {
+			throw exceptionConverter.convert( new IllegalArgumentException( e.getMessage(), e ) );
+		}
+		catch ( RuntimeException e ) {
+			//including HibernateException
+			throw exceptionConverter.convert( e );
+		}
+		finally {
+			delayedAfterCompletion();
+		}
 	}
 
 	private void fireDelete(DeleteEvent event, Set transientEntities) {
 		checkOpen();
+		try{
 		checkTransactionSynchStatus();
 		for ( DeleteEventListener listener : listeners( EventType.DELETE ) ) {
 			listener.onDelete( event, transientEntities );
 		}
-		delayedAfterCompletion();
+		}
+		catch ( ObjectDeletedException sse ) {
+			throw exceptionConverter.convert( new IllegalArgumentException( sse ) );
+		}
+		catch ( MappingException e ) {
+			throw exceptionConverter.convert( new IllegalArgumentException( e.getMessage(), e ) );
+		}
+		catch ( RuntimeException e ) {
+			//including HibernateException
+			throw exceptionConverter.convert( e );
+		}
+		finally {
+			delayedAfterCompletion();
+		}
 	}
 
 

@@ -335,9 +335,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public void markForRollbackOnly() {
-		if ( currentHibernateTransaction != null ) {
-			currentHibernateTransaction.markRollbackOnly();
-		}
+		accessTransaction().markRollbackOnly();
 	}
 
 	@Override

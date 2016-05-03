@@ -34,6 +34,7 @@ public class TransactionImpl implements TransactionImplementor {
 	public TransactionImpl(TransactionCoordinator transactionCoordinator, ExceptionConverter exceptionConverter) {
 		this.transactionCoordinator = transactionCoordinator;
 		this.exceptionConverter = exceptionConverter;
+		transactionDriverControl = transactionCoordinator.getTransactionDriverControl();
 	}
 
 	@Override

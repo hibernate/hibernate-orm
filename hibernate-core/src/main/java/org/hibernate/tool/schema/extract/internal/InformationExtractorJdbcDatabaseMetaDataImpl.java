@@ -361,31 +361,42 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 			Identifier tableName,
 			ResultSet resultSet) throws SQLException {
 		try {
-			if ( !resultSet.next() ) {
+			Map<String,TableInformation> candidates = new HashMap<String,TableInformation>(7);
+			while ( resultSet.next() ) {
+				TableInformation candidateInformation = extractTableInformation(
+						catalog,
+						schema,
+						tableName,
+						resultSet
+				);
+				String candidateIdentifier = identifierHelper().toIdentifier( resultSet.getString( "TABLE_NAME" ) ).getCanonicalName();
+				TableInformation duplicate = candidates.put( candidateIdentifier, candidateInformation );
+				if ( duplicate != null ) {
+					log.multipleTablesFound( tableName.render() );
+					final String catalogName = catalog == null ? "" : catalog.render();
+					final String schemaName = schema == null ? "" : schema.render();
+					throw new SchemaExtractionException(
+							String.format(
+									Locale.ENGLISH,
+									"More than one table found in namespace (%s, %s) : %s",
+									catalogName,
+									schemaName,
+									tableName.render()
+							)
+					);
+				}
+			}
+			
+			/*
+			 *  Apparent duplicates may be found if the requested tableName contains a character 
+			 *  which is also a wildcard such as underscore. Return the table information for the
+			 *  exact requested tableName. 
+			 */
+			TableInformation tableInformation = candidates.get( tableName.getCanonicalName() );
+			
+			if ( tableInformation == null ) {
 				log.tableNotFound( tableName.render() );
 				return null;
-			}
-
-			final TableInformation tableInformation = extractTableInformation(
-					catalog,
-					schema,
-					tableName,
-					resultSet
-			);
-
-			if ( resultSet.next() ) {
-				log.multipleTablesFound( tableName.render() );
-				final String catalogName = catalog == null ? "" : catalog.render();
-				final String schemaName = schema == null ? "" : schema.render();
-				throw new SchemaExtractionException(
-						String.format(
-								Locale.ENGLISH,
-								"More than one table found in namespace (%s, %s) : %s",
-								catalogName,
-								schemaName,
-								tableName.render()
-						)
-				);
 			}
 
 			return tableInformation;

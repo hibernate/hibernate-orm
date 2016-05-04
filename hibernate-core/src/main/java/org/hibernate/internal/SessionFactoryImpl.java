@@ -275,102 +275,110 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			integrator.integrate( metadata, this, this.serviceRegistry );
 			integratorObserver.integrators.add( integrator );
 		}
+		try {
+			//Generators:
 
-		//Generators:
+			this.identifierGenerators = new HashMap<>();
+			metadata.getEntityBindings().stream().filter( model -> !model.isInherited() ).forEach( model -> {
+				IdentifierGenerator generator = model.getIdentifier().createIdentifierGenerator(
+						metadata.getIdentifierGeneratorFactory(),
+						jdbcServices.getJdbcEnvironment().getDialect(),
+						settings.getDefaultCatalogName(),
+						settings.getDefaultSchemaName(),
+						(RootClass) model
+				);
+				identifierGenerators.put( model.getEntityName(), generator );
+			} );
 
-		this.identifierGenerators = new HashMap<>();
-		metadata.getEntityBindings().stream().filter( model -> !model.isInherited() ).forEach( model -> {
-			IdentifierGenerator generator = model.getIdentifier().createIdentifierGenerator(
-					metadata.getIdentifierGeneratorFactory(),
-					jdbcServices.getJdbcEnvironment().getDialect(),
-					settings.getDefaultCatalogName(),
-					settings.getDefaultSchemaName(),
-					(RootClass) model
+			LOG.debug( "Instantiated session factory" );
+
+			this.metamodel = new MetamodelImpl( this );
+			this.metamodel.initialize( metadata, determineJpaMetaModelPopulationSetting( properties ) );
+
+			//Named Queries:
+			this.namedQueryRepository = metadata.buildNamedQueryRepository( this );
+
+			settings.getMultiTableBulkIdStrategy().prepare(
+					jdbcServices,
+					buildLocalConnectionAccess(),
+					metadata,
+					sessionFactoryOptions
 			);
-			identifierGenerators.put( model.getEntityName(), generator );
-		} );
 
-		LOG.debug( "Instantiated session factory" );
+			SchemaManagementToolCoordinator.process(
+					metadata,
+					serviceRegistry,
+					properties,
+					action -> SessionFactoryImpl.this.delayedDropAction = action
+			);
 
-		this.metamodel = new MetamodelImpl( this );
-		this.metamodel.initialize( metadata, determineJpaMetaModelPopulationSetting( properties ) );
+			currentSessionContext = buildCurrentSessionContext();
 
-		//Named Queries:
-		this.namedQueryRepository = metadata.buildNamedQueryRepository( this );
-
-		settings.getMultiTableBulkIdStrategy().prepare(
-				jdbcServices,
-				buildLocalConnectionAccess(),
-				metadata,
-				sessionFactoryOptions
-		);
-
-		SchemaManagementToolCoordinator.process(
-				metadata,
-				serviceRegistry,
-				properties,
-				action -> SessionFactoryImpl.this.delayedDropAction = action
-		);
-
-		currentSessionContext = buildCurrentSessionContext();
-
-		//checking for named queries
-		if ( settings.isNamedQueryStartupCheckingEnabled() ) {
-			final Map<String,HibernateException> errors = checkNamedQueries();
-			if ( ! errors.isEmpty() ) {
-				StringBuilder failingQueries = new StringBuilder( "Errors in named queries: " );
-				String sep = "";
-				for ( Map.Entry<String,HibernateException> entry : errors.entrySet() ) {
-					LOG.namedQueryError( entry.getKey(), entry.getValue() );
-					failingQueries.append( sep ).append( entry.getKey() );
-					sep = ", ";
+			//checking for named queries
+			if ( settings.isNamedQueryStartupCheckingEnabled() ) {
+				final Map<String, HibernateException> errors = checkNamedQueries();
+				if ( !errors.isEmpty() ) {
+					StringBuilder failingQueries = new StringBuilder( "Errors in named queries: " );
+					String sep = "";
+					for ( Map.Entry<String, HibernateException> entry : errors.entrySet() ) {
+						LOG.namedQueryError( entry.getKey(), entry.getValue() );
+						failingQueries.append( sep ).append( entry.getKey() );
+						sep = ", ";
+					}
+					throw new HibernateException( failingQueries.toString() );
 				}
-				throw new HibernateException( failingQueries.toString() );
 			}
-		}
 
-		// this needs to happen afterQuery persisters are all ready to go...
-		this.fetchProfiles = new HashMap<>();
-		for ( org.hibernate.mapping.FetchProfile mappingProfile : metadata.getFetchProfiles() ) {
-			final FetchProfile fetchProfile = new FetchProfile( mappingProfile.getName() );
-			for ( org.hibernate.mapping.FetchProfile.Fetch mappingFetch : mappingProfile.getFetches() ) {
-				// resolve the persister owning the fetch
-				final String entityName = metamodel.getImportedClassName( mappingFetch.getEntity() );
-				final EntityPersister owner = entityName == null
-						? null
-						: metamodel.entityPersister( entityName );
-				if ( owner == null ) {
-					throw new HibernateException(
-							"Unable to resolve entity reference [" + mappingFetch.getEntity()
-									+ "] in fetch profile [" + fetchProfile.getName() + "]"
-					);
+			// this needs to happen afterQuery persisters are all ready to go...
+			this.fetchProfiles = new HashMap<>();
+			for ( org.hibernate.mapping.FetchProfile mappingProfile : metadata.getFetchProfiles() ) {
+				final FetchProfile fetchProfile = new FetchProfile( mappingProfile.getName() );
+				for ( org.hibernate.mapping.FetchProfile.Fetch mappingFetch : mappingProfile.getFetches() ) {
+					// resolve the persister owning the fetch
+					final String entityName = metamodel.getImportedClassName( mappingFetch.getEntity() );
+					final EntityPersister owner = entityName == null
+							? null
+							: metamodel.entityPersister( entityName );
+					if ( owner == null ) {
+						throw new HibernateException(
+								"Unable to resolve entity reference [" + mappingFetch.getEntity()
+										+ "] in fetch profile [" + fetchProfile.getName() + "]"
+						);
+					}
+
+					// validate the specified association fetch
+					Type associationType = owner.getPropertyType( mappingFetch.getAssociation() );
+					if ( associationType == null || !associationType.isAssociationType() ) {
+						throw new HibernateException( "Fetch profile [" + fetchProfile.getName() + "] specified an invalid association" );
+					}
+
+					// resolve the style
+					final Fetch.Style fetchStyle = Fetch.Style.parse( mappingFetch.getStyle() );
+
+					// then construct the fetch instance...
+					fetchProfile.addFetch( new Association( owner, mappingFetch.getAssociation() ), fetchStyle );
+					((Loadable) owner).registerAffectingFetchProfile( fetchProfile.getName() );
 				}
-
-				// validate the specified association fetch
-				Type associationType = owner.getPropertyType( mappingFetch.getAssociation() );
-				if ( associationType == null || !associationType.isAssociationType() ) {
-					throw new HibernateException( "Fetch profile [" + fetchProfile.getName() + "] specified an invalid association" );
-				}
-
-				// resolve the style
-				final Fetch.Style fetchStyle = Fetch.Style.parse( mappingFetch.getStyle() );
-
-				// then construct the fetch instance...
-				fetchProfile.addFetch( new Association( owner, mappingFetch.getAssociation() ), fetchStyle );
-				( (Loadable) owner ).registerAffectingFetchProfile( fetchProfile.getName() );
+				fetchProfiles.put( fetchProfile.getName(), fetchProfile );
 			}
-			fetchProfiles.put( fetchProfile.getName(), fetchProfile );
+
+			this.observer.sessionFactoryCreated( this );
+
+			SessionFactoryRegistry.INSTANCE.addSessionFactory(
+					uuid,
+					name,
+					settings.isSessionFactoryNameAlsoJndiName(),
+					this,
+					serviceRegistry.getService( JndiService.class )
+			);
 		}
-
-		this.observer.sessionFactoryCreated( this );
-
-		SessionFactoryRegistry.INSTANCE.addSessionFactory(
-				uuid,
-				name,
-				settings.isSessionFactoryNameAlsoJndiName(),
-				this,
-				serviceRegistry.getService( JndiService.class )
-		);
+		catch (Exception e) {
+			for ( Integrator integrator : serviceRegistry.getService( IntegratorService.class ).getIntegrators() ) {
+				integrator.disintegrate( this, serviceRegistry );
+				integratorObserver.integrators.remove( integrator );
+			}
+			throw e;
+		}
 	}
 
 	private void applyCfgXmlValues(LoadedConfig aggregatedConfig, SessionFactoryServiceRegistry serviceRegistry) {

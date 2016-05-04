@@ -25,6 +25,7 @@ import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.annotations.embedded.FloatLeg.RateIndex;
 import org.hibernate.test.annotations.embedded.Leg.Frequency;
 import org.hibernate.test.util.SchemaUtil;
+
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -58,26 +59,44 @@ public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 		p.name = "Homer";
 		s = openSession();
 		tx = s.beginTransaction();
-		s.persist( p );
-		tx.commit();
-		s.close();
+		try {
+			s.persist( p );
+			tx.commit();
+		}
+		catch (Exception e) {
+			if ( tx != null && tx.isActive() ) {
+				tx.rollback();
+			}
+		}
+		finally {
+			s.close();
+		}
 
 		s = openSession();
 		tx = s.beginTransaction();
-		p = (Person) s.get( Person.class, p.id );
-		assertNotNull( p );
-		assertNotNull( p.address );
-		assertEquals( "Springfield", p.address.city );
-		assertNotNull( p.address.country );
-		assertEquals( "DM", p.address.country.getIso2() );
-		assertNotNull( p.bornIn );
-		assertEquals( "US", p.bornIn.getIso2() );
-		tx.commit();
-		s.close();
+		try {
+			p = (Person) s.get( Person.class, p.id );
+			assertNotNull( p );
+			assertNotNull( p.address );
+			assertEquals( "Springfield", p.address.city );
+			assertNotNull( p.address.country );
+			assertEquals( "DM", p.address.country.getIso2() );
+			assertNotNull( p.bornIn );
+			assertEquals( "US", p.bornIn.getIso2() );
+			tx.commit();
+		}
+		catch (Exception e) {
+			if ( tx != null && tx.isActive() ) {
+				tx.rollback();
+			}
+		}
+		finally {
+			s.close();
+		}
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8172" )
+	@TestForIssue(jiraKey = "HHH-8172")
 	public void testQueryWithEmbeddedIsNull() throws Exception {
 		Session s;
 		Transaction tx;
@@ -98,26 +117,44 @@ public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 		p.name = "Homer";
 		s = openSession();
 		tx = s.beginTransaction();
-		s.persist( p );
-		tx.commit();
-		s.close();
+		try {
+			s.persist( p );
+			tx.commit();
+		}
+		catch (Exception e) {
+			if ( tx != null && tx.isActive() ) {
+				tx.rollback();
+			}
+		}
+		finally {
+			s.close();
+		}
 
 		s = openSession();
 		tx = s.beginTransaction();
-		p = (Person) s.createQuery( "from Person p where p.bornIn is null" ).uniqueResult();
-		assertNotNull( p );
-		assertNotNull( p.address );
-		assertEquals( "Springfield", p.address.city );
-		assertNotNull( p.address.country );
-		assertEquals( "DM", p.address.country.getIso2() );
-		assertNull( p.bornIn );
-		tx.commit();
-		s.close();
+		try {
+			p = (Person) s.createQuery( "from Person p where p.bornIn is null" ).uniqueResult();
+			assertNotNull( p );
+			assertNotNull( p.address );
+			assertEquals( "Springfield", p.address.city );
+			assertNotNull( p.address.country );
+			assertEquals( "DM", p.address.country.getIso2() );
+			assertNull( p.bornIn );
+			tx.commit();
+		}
+		catch (Exception e) {
+			if ( tx != null && tx.isActive() ) {
+				tx.rollback();
+			}
+		}
+		finally {
+			s.close();
+		}
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8172" )
-	@FailureExpected( jiraKey = "HHH-8172")
+	@TestForIssue(jiraKey = "HHH-8172")
+	@FailureExpected(jiraKey = "HHH-8172")
 	public void testQueryWithEmbeddedParameterAllNull() throws Exception {
 		Session s;
 		Transaction tx;
@@ -136,26 +173,46 @@ public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 		p.name = "Homer";
 		s = openSession();
 		tx = s.beginTransaction();
-		s.persist( p );
-		tx.commit();
-		s.close();
+		try {
+			s.persist( p );
+			tx.commit();
+		}
+		catch (Exception e) {
+			if ( tx != null && tx.isActive() ) {
+				tx.rollback();
+			}
+		}
+		finally {
+			s.close();
+		}
 
 		s = openSession();
 		tx = s.beginTransaction();
-		p = (Person) s.createQuery( "from Person p where p.bornIn = :b" ).setParameter( "b", p.bornIn ).uniqueResult();
-		assertNotNull( p );
-		assertNotNull( p.address );
-		assertEquals( "Springfield", p.address.city );
-		assertNotNull( p.address.country );
-		assertEquals( "DM", p.address.country.getIso2() );
-		assertNull( p.bornIn );
-		tx.commit();
-		s.close();
+		try {
+			p = (Person) s.createQuery( "from Person p where p.bornIn = :b" )
+					.setParameter( "b", p.bornIn )
+					.uniqueResult();
+			assertNotNull( p );
+			assertNotNull( p.address );
+			assertEquals( "Springfield", p.address.city );
+			assertNotNull( p.address.country );
+			assertEquals( "DM", p.address.country.getIso2() );
+			assertNull( p.bornIn );
+			tx.commit();
+		}
+		catch (Exception e) {
+			if ( tx != null && tx.isActive() ) {
+				tx.rollback();
+			}
+		}
+		finally {
+			s.close();
+		}
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8172" )
-	@FailureExpected( jiraKey = "HHH-8172")
+	@TestForIssue(jiraKey = "HHH-8172")
+	@FailureExpected(jiraKey = "HHH-8172")
 	public void testQueryWithEmbeddedParameterOneNull() throws Exception {
 		Session s;
 		Transaction tx;
@@ -176,26 +233,46 @@ public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 		p.name = "Homer";
 		s = openSession();
 		tx = s.beginTransaction();
-		s.persist( p );
-		tx.commit();
-		s.close();
+		try {
+			s.persist( p );
+			tx.commit();
+		}
+		catch (Exception e) {
+			if ( tx != null && tx.isActive() ) {
+				tx.rollback();
+			}
+		}
+		finally {
+			s.close();
+		}
 
 		s = openSession();
 		tx = s.beginTransaction();
-		p = (Person) s.createQuery( "from Person p where p.bornIn = :b" ).setParameter( "b", p.bornIn ).uniqueResult();
-		assertNotNull( p );
-		assertNotNull( p.address );
-		assertEquals( "Springfield", p.address.city );
-		assertNotNull( p.address.country );
-		assertEquals( "DM", p.address.country.getIso2() );
-		assertEquals( "US", p.bornIn.getIso2() );
-		assertNull( p.bornIn.getName() );
-		tx.commit();
-		s.close();
+		try {
+			p = (Person) s.createQuery( "from Person p where p.bornIn = :b" )
+					.setParameter( "b", p.bornIn )
+					.uniqueResult();
+			assertNotNull( p );
+			assertNotNull( p.address );
+			assertEquals( "Springfield", p.address.city );
+			assertNotNull( p.address.country );
+			assertEquals( "DM", p.address.country.getIso2() );
+			assertEquals( "US", p.bornIn.getIso2() );
+			assertNull( p.bornIn.getName() );
+			tx.commit();
+		}
+		catch (Exception e) {
+			if ( tx != null && tx.isActive() ) {
+				tx.rollback();
+			}
+		}
+		finally {
+			s.close();
+		}
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8172" )
+	@TestForIssue(jiraKey = "HHH-8172")
 	public void testQueryWithEmbeddedWithNullUsingSubAttributes() throws Exception {
 		Session s;
 		Transaction tx;
@@ -216,27 +293,45 @@ public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 		p.name = "Homer";
 		s = openSession();
 		tx = s.beginTransaction();
-		s.persist( p );
-		tx.commit();
-		s.close();
+		try {
+			s.persist( p );
+			tx.commit();
+		}
+		catch (Exception e) {
+			if ( tx != null && tx.isActive() ) {
+				tx.rollback();
+			}
+		}
+		finally {
+			s.close();
+		}
 
 		s = openSession();
 		tx = s.beginTransaction();
-		p = (Person) s.createQuery( "from Person p " +
-						"where ( p.bornIn.iso2 is null or p.bornIn.iso2 = :i ) and " +
-						"( p.bornIn.name is null or p.bornIn.name = :n )"
-		).setParameter( "i", p.bornIn.getIso2() )
-				.setParameter( "n", p.bornIn.getName() )
-				.uniqueResult();
-		assertNotNull( p );
-		assertNotNull( p.address );
-		assertEquals( "Springfield", p.address.city );
-		assertNotNull( p.address.country );
-		assertEquals( "DM", p.address.country.getIso2() );
-		assertEquals( "US", p.bornIn.getIso2() );
-		assertNull( p.bornIn.getName() );
-		tx.commit();
-		s.close();
+		try {
+			p = (Person) s.createQuery( "from Person p " +
+												"where ( p.bornIn.iso2 is null or p.bornIn.iso2 = :i ) and " +
+												"( p.bornIn.name is null or p.bornIn.name = :n )"
+			).setParameter( "i", p.bornIn.getIso2() )
+					.setParameter( "n", p.bornIn.getName() )
+					.uniqueResult();
+			assertNotNull( p );
+			assertNotNull( p.address );
+			assertEquals( "Springfield", p.address.city );
+			assertNotNull( p.address.country );
+			assertEquals( "DM", p.address.country.getIso2() );
+			assertEquals( "US", p.bornIn.getIso2() );
+			assertNull( p.bornIn.getName() );
+			tx.commit();
+		}
+		catch (Exception e) {
+			if ( tx != null && tx.isActive() ) {
+				tx.rollback();
+			}
+		}
+		finally {
+			s.close();
+		}
 	}
 
 	@Test
@@ -558,7 +653,7 @@ public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9642")
+	@TestForIssue(jiraKey = "HHH-9642")
 	public void testEmbeddedAndOneToManyHql() throws Exception {
 		Session s;
 		s = openSession();
@@ -598,7 +693,8 @@ public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 		s = openSession();
 		s.getTransaction().begin();
 		internetProviderQueried =
-				(InternetProvider) s.createQuery( "from InternetProvider i join fetch i.owner o join fetch o.topManagement" )
+				(InternetProvider) s.createQuery(
+						"from InternetProvider i join fetch i.owner o join fetch o.topManagement" )
 						.uniqueResult();
 		assertTrue( Hibernate.isInitialized( internetProviderQueried.getOwner().getTopManagement() ) );
 		s.getTransaction().commit();
@@ -618,9 +714,9 @@ public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void testDefaultCollectionTable() throws Exception {
 		//are the tables correct?
-		assertTrue( SchemaUtil.isTablePresent("WealthyPerson_vacationHomes", metadata() ) );
-		assertTrue( SchemaUtil.isTablePresent("WealthyPerson_legacyVacationHomes", metadata() ) );
-		assertTrue( SchemaUtil.isTablePresent("WelPers_VacHomes", metadata() ) );
+		assertTrue( SchemaUtil.isTablePresent( "WealthyPerson_vacationHomes", metadata() ) );
+		assertTrue( SchemaUtil.isTablePresent( "WealthyPerson_legacyVacationHomes", metadata() ) );
+		assertTrue( SchemaUtil.isTablePresent( "WelPers_VacHomes", metadata() ) );
 
 		//just to make sure, use the mapping
 		Session s;
@@ -641,7 +737,7 @@ public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 		vacation.address1 = "rock street";
 		vacation.city = "Plymouth";
 		vacation.country = c;
-		p.vacationHomes.add(vacation);
+		p.vacationHomes.add( vacation );
 		p.address = a;
 		p.bornIn = bornCountry;
 		p.name = "Homer";
@@ -674,21 +770,21 @@ public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 		Collection<URLFavorite> urls = new ArrayList<URLFavorite>();
 		URLFavorite urlFavorite = new URLFavorite();
 		urlFavorite.setUrl( "http://highscalability.com/" );
-		urls.add(urlFavorite);
+		urls.add( urlFavorite );
 
 		urlFavorite = new URLFavorite();
 		urlFavorite.setUrl( "http://www.jboss.org/" );
-		urls.add(urlFavorite);
+		urls.add( urlFavorite );
 
 		urlFavorite = new URLFavorite();
 		urlFavorite.setUrl( "http://www.hibernate.org/" );
-		urls.add(urlFavorite);
+		urls.add( urlFavorite );
 
 		urlFavorite = new URLFavorite();
 		urlFavorite.setUrl( "http://www.jgroups.org/" );
 		urls.add( urlFavorite );
 
- 		Collection<String>ideas = new ArrayList<String>();
+		Collection<String> ideas = new ArrayList<String>();
 		ideas.add( "lionheart" );
 		ideas.add( "xforms" );
 		ideas.add( "dynamic content" );
@@ -704,26 +800,28 @@ public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 		s = openSession();
 
 		tx = s.beginTransaction();
-		s.persist(favoriteThings);
+		s.persist( favoriteThings );
 		tx.commit();
 
 		tx = s.beginTransaction();
 		s.flush();
-		favoriteThings = (FavoriteThings) s.get( FavoriteThings.class,  favoriteThings.getId() );
+		favoriteThings = (FavoriteThings) s.get( FavoriteThings.class, favoriteThings.getId() );
 		assertTrue( "has web", favoriteThings.getWeb() != null );
 		assertTrue( "has ideas", favoriteThings.getWeb().getIdeas() != null );
-		assertTrue( "has favorite idea 'http'",favoriteThings.getWeb().getIdeas().contains("http") );
-		assertTrue( "has favorite idea 'http'",favoriteThings.getWeb().getIdeas().contains("dynamic content") );
+		assertTrue( "has favorite idea 'http'", favoriteThings.getWeb().getIdeas().contains( "http" ) );
+		assertTrue( "has favorite idea 'http'", favoriteThings.getWeb().getIdeas().contains( "dynamic content" ) );
 
 		urls = favoriteThings.getWeb().getLinks();
-		assertTrue( "has urls", urls != null);
+		assertTrue( "has urls", urls != null );
 		URLFavorite[] favs = new URLFavorite[4];
-		urls.toArray(favs);
-		assertTrue( "has http://www.hibernate.org url favorite link",
-			"http://www.hibernate.org/".equals( favs[0].getUrl() ) ||
-			"http://www.hibernate.org/".equals( favs[1].getUrl() ) ||
-			"http://www.hibernate.org/".equals( favs[2].getUrl() ) ||
-			"http://www.hibernate.org/".equals( favs[3].getUrl() ));
+		urls.toArray( favs );
+		assertTrue(
+				"has http://www.hibernate.org url favorite link",
+				"http://www.hibernate.org/".equals( favs[0].getUrl() ) ||
+						"http://www.hibernate.org/".equals( favs[1].getUrl() ) ||
+						"http://www.hibernate.org/".equals( favs[2].getUrl() ) ||
+						"http://www.hibernate.org/".equals( favs[3].getUrl() )
+		);
 		tx.commit();
 		s.close();
 	}
@@ -743,7 +841,7 @@ public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
-		return new Class[]{
+		return new Class[] {
 				Person.class,
 				WealthyPerson.class,
 				RegionalArticle.class,

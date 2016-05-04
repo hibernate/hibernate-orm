@@ -14,6 +14,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
@@ -57,6 +58,7 @@ public class JpaIntegrator implements Integrator {
 	private ListenerFactory jpaListenerFactory;
 	private CallbackBuilder callbackBuilder;
 	private CallbackRegistryImpl callbackRegistry;
+	private CascadeStyle oldPersistCascadeStyle;
 
 	private static final DuplicationStrategy JPA_DUPLICATION_STRATEGY = new JPADuplicationStrategy();
 
@@ -73,6 +75,12 @@ public class JpaIntegrator implements Integrator {
 			SessionFactoryServiceRegistry serviceRegistry) {
 
 		// first, register the JPA-specific persist cascade style
+		try {
+			oldPersistCascadeStyle = CascadeStyles.getCascadeStyle( "persist" );
+		}
+		catch (Exception e) {
+
+		}
 		CascadeStyles.registerCascadeStyle(
 				"persist",
 				new PersistCascadeStyle()
@@ -146,6 +154,17 @@ public class JpaIntegrator implements Integrator {
 
 	@Override
 	public void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
+		if ( oldPersistCascadeStyle == null ) {
+			CascadeStyles.registerCascadeStyle(
+					"persist",
+					null
+			);
+		}
+		CascadeStyles.registerCascadeStyle(
+				"persist",
+				(CascadeStyles.BaseCascadeStyle) oldPersistCascadeStyle
+		);
+
 		if ( callbackRegistry != null ) {
 			callbackRegistry.release();
 		}

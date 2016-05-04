@@ -53,18 +53,19 @@ public class AccessMappingTest {
         cfg.addAnnotatedClass( Course1.class );
         cfg.addAnnotatedClass( Student.class );
 		SessionFactory sf = null;
-        try {
-           sf= cfg.buildSessionFactory( serviceRegistry );
-            fail( "@Id and @OneToMany are not placed consistently in test entities. SessionFactory creation should fail." );
-        }
-        catch ( MappingException e ) {
-            // success
-        } finally {
-			if(sf!=null){
+		try {
+			sf = cfg.buildSessionFactory( serviceRegistry );
+			fail( "@Id and @OneToMany are not placed consistently in test entities. SessionFactory creation should fail." );
+		}
+		catch (MappingException e) {
+			// success
+		}
+		finally {
+			if ( sf != null ) {
 				sf.close();
 			}
 		}
-    }
+	}
 
     @Test
     public void testFieldAnnotationPlacement() throws Exception {
@@ -73,15 +74,19 @@ public class AccessMappingTest {
         cfg.addAnnotatedClass( classUnderTest );
         cfg.addAnnotatedClass( Student.class );
         SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
-        EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() )
-                .getEntityMetamodel()
-                .getTuplizer();
-        assertTrue(
-                "Field access should be used.",
-				tuplizer.getIdentifierGetter() instanceof GetterFieldImpl
-        );
-		factory.close();
-    }
+		try {
+			EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() )
+					.getEntityMetamodel()
+					.getTuplizer();
+			assertTrue(
+					"Field access should be used.",
+					tuplizer.getIdentifierGetter() instanceof GetterFieldImpl
+			);
+		}
+		finally {
+			factory.close();
+		}
+	}
 
     @Test
     public void testPropertyAnnotationPlacement() throws Exception {
@@ -90,15 +95,19 @@ public class AccessMappingTest {
         cfg.addAnnotatedClass( classUnderTest );
         cfg.addAnnotatedClass( Student.class );
         SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
-        EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() )
-                .getEntityMetamodel()
-                .getTuplizer();
-        assertTrue(
-                "Property access should be used.",
-                tuplizer.getIdentifierGetter() instanceof GetterMethodImpl
-        );
-		factory.close();
-    }
+		try {
+			EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() )
+					.getEntityMetamodel()
+					.getTuplizer();
+			assertTrue(
+					"Property access should be used.",
+					tuplizer.getIdentifierGetter() instanceof GetterMethodImpl
+			);
+		}
+		finally {
+			factory.close();
+		}
+	}
 
     @Test
     public void testExplicitPropertyAccessAnnotationsOnProperty() throws Exception {
@@ -107,15 +116,19 @@ public class AccessMappingTest {
         cfg.addAnnotatedClass( classUnderTest );
         cfg.addAnnotatedClass( Student.class );
         SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
-        EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() )
-                .getEntityMetamodel()
-                .getTuplizer();
-        assertTrue(
-                "Property access should be used.",
-                tuplizer.getIdentifierGetter() instanceof GetterMethodImpl
-        );
-		factory.close();
-    }
+		try {
+			EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() )
+					.getEntityMetamodel()
+					.getTuplizer();
+			assertTrue(
+					"Property access should be used.",
+					tuplizer.getIdentifierGetter() instanceof GetterMethodImpl
+			);
+		}
+		finally {
+			factory.close();
+		}
+	}
 
     @Test
     public void testExplicitPropertyAccessAnnotationsOnField() throws Exception {
@@ -123,18 +136,19 @@ public class AccessMappingTest {
         cfg.addAnnotatedClass( Course4.class );
         cfg.addAnnotatedClass( Student.class );
 		SessionFactory sf= null;
-        try {
-           sf = cfg.buildSessionFactory( serviceRegistry );
-            fail( "@Id and @OneToMany are not placed consistently in test entities. SessionFactory creation should fail." );
-        }
-        catch ( MappingException e ) {
-            // success
-        }  finally {
-			if(sf!=null){
+		try {
+			sf = cfg.buildSessionFactory( serviceRegistry );
+			fail( "@Id and @OneToMany are not placed consistently in test entities. SessionFactory creation should fail." );
+		}
+		catch (MappingException e) {
+			// success
+		}
+		finally {
+			if ( sf != null ) {
 				sf.close();
 			}
 		}
-    }
+	}
 
     @Test
     public void testExplicitPropertyAccessAnnotationsWithHibernateStyleOverride() throws Exception {
@@ -143,20 +157,24 @@ public class AccessMappingTest {
         cfg.addAnnotatedClass( classUnderTest );
         cfg.addAnnotatedClass( Student.class );
         SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
-        EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() )
-                .getEntityMetamodel()
-                .getTuplizer();
-        assertTrue(
-                "Field access should be used.",
-                tuplizer.getIdentifierGetter() instanceof GetterFieldImpl
-        );
+		try {
+			EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() )
+					.getEntityMetamodel()
+					.getTuplizer();
+			assertTrue(
+					"Field access should be used.",
+					tuplizer.getIdentifierGetter() instanceof GetterFieldImpl
+			);
 
-        assertTrue(
-                "Property access should be used.",
-                tuplizer.getGetter( 0 ) instanceof GetterMethodImpl
-        );
-		factory.close();
-    }
+			assertTrue(
+					"Property access should be used.",
+					tuplizer.getGetter( 0 ) instanceof GetterMethodImpl
+			);
+		}
+		finally {
+			factory.close();
+		}
+	}
 
     @Test
     public void testExplicitPropertyAccessAnnotationsWithJpaStyleOverride() throws Exception {
@@ -165,20 +183,24 @@ public class AccessMappingTest {
         cfg.addAnnotatedClass( classUnderTest );
         cfg.addAnnotatedClass( Student.class );
         SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
-        EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() )
-                .getEntityMetamodel()
-                .getTuplizer();
-        assertTrue(
-                "Field access should be used.",
-                tuplizer.getIdentifierGetter() instanceof GetterFieldImpl
-        );
+		try {
+			EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() )
+					.getEntityMetamodel()
+					.getTuplizer();
+			assertTrue(
+					"Field access should be used.",
+					tuplizer.getIdentifierGetter() instanceof GetterFieldImpl
+			);
 
-        assertTrue(
-                "Property access should be used.",
-                tuplizer.getGetter( 0 ) instanceof GetterMethodImpl
-        );
-		factory.close();
-    }
+			assertTrue(
+					"Property access should be used.",
+					tuplizer.getGetter( 0 ) instanceof GetterMethodImpl
+			);
+		}
+		finally {
+			factory.close();
+		}
+	}
 
     @Test
     public void testDefaultFieldAccessIsInherited() throws Exception {
@@ -188,15 +210,19 @@ public class AccessMappingTest {
         cfg.addAnnotatedClass( Person.class );
         cfg.addAnnotatedClass( Being.class );
         SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
-        EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() )
-                .getEntityMetamodel()
-                .getTuplizer();
-        assertTrue(
-                "Field access should be used since the default access mode gets inherited",
-                tuplizer.getIdentifierGetter() instanceof GetterFieldImpl
-        );
-		factory.close();
-    }
+		try {
+			EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() )
+					.getEntityMetamodel()
+					.getTuplizer();
+			assertTrue(
+					"Field access should be used since the default access mode gets inherited",
+					tuplizer.getIdentifierGetter() instanceof GetterFieldImpl
+			);
+		}
+		finally {
+			factory.close();
+		}
+	}
 
     @Test
     public void testDefaultPropertyAccessIsInherited() throws Exception {
@@ -205,23 +231,27 @@ public class AccessMappingTest {
         cfg.addAnnotatedClass( Animal.class );
 
         SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
-        EntityTuplizer tuplizer = factory.getEntityPersister( Animal.class.getName() )
-                .getEntityMetamodel()
-                .getTuplizer();
-        assertTrue(
-                "Property access should be used since explicity configured via @Access",
-                tuplizer.getIdentifierGetter() instanceof GetterMethodImpl
-        );
+		try {
+			EntityTuplizer tuplizer = factory.getEntityPersister( Animal.class.getName() )
+					.getEntityMetamodel()
+					.getTuplizer();
+			assertTrue(
+					"Property access should be used since explicity configured via @Access",
+					tuplizer.getIdentifierGetter() instanceof GetterMethodImpl
+			);
 
-        tuplizer = factory.getEntityPersister( Horse.class.getName() )
-                .getEntityMetamodel()
-                .getTuplizer();
-        assertTrue(
-                "Field access should be used since the default access mode gets inherited",
-                tuplizer.getGetter( 0 ) instanceof GetterFieldImpl
-        );
-		factory.close();
-    }
+			tuplizer = factory.getEntityPersister( Horse.class.getName() )
+					.getEntityMetamodel()
+					.getTuplizer();
+			assertTrue(
+					"Field access should be used since the default access mode gets inherited",
+					tuplizer.getGetter( 0 ) instanceof GetterFieldImpl
+			);
+		}
+		finally {
+			factory.close();
+		}
+	}
 
     @TestForIssue(jiraKey = "HHH-5004")
     @Test

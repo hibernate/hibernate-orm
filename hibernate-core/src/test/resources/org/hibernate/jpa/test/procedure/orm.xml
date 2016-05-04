@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<entity-mappings xmlns="http://xmlns.jcp.org/xml/ns/persistence/orm"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="2.1"
+        >
+    <package>org.hibernate.jpa.test.procedure</package>
+    <entity class="User" metadata-complete="true">
+        <named-stored-procedure-query name="s1" procedure-name="p1">
+            <parameter class="java.lang.Integer" mode="IN" name="p11"/>
+            <parameter class="java.lang.Integer" mode="IN" name="p12"/>
+        </named-stored-procedure-query>
+        <named-stored-procedure-query name="s2" procedure-name="p2">
+            <parameter class="java.lang.String" mode="INOUT"/>
+            <parameter class="java.lang.Long" mode="INOUT"/>
+        </named-stored-procedure-query>
+        <sql-result-set-mapping name="srms">
+            <entity-result entity-class="User">
+                <field-result name="id" column="order_id"/>
+                <field-result name="name" column="order_item"/>
+            </entity-result>
+        </sql-result-set-mapping>
+        <attributes>
+            <id name="id">
+                <column name="fld_id"/>
+            </id>
+            <basic name="name"/>
+        </attributes>
+    </entity>
+</entity-mappings>

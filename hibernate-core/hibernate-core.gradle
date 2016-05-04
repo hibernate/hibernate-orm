@@ -1,3 +1,5 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -9,6 +11,15 @@ apply plugin: 'hibernate-matrix-testing'
 
 apply plugin: 'version-injection'
 apply plugin: 'org.hibernate.build.gradle.xjc'
+
+configurations {
+    hibernateJpaModelGenTool {
+        description = "Dependencies for running the Hibernate JPA Metamodel Generator AnnotationProcessor tool"
+    }
+    tests {
+        description = 'Configuration for the produced test jar'
+    }
+}
 
 dependencies {
     compile( libraries.jpa )
@@ -33,24 +44,34 @@ dependencies {
     provided( "javax.enterprise:cdi-api:1.1-PFD" )
 
     testCompile( project(':hibernate-testing') )
+    testCompile( libraries.shrinkwrap_api )
+    testCompile( libraries.shrinkwrap )
     testCompile( libraries.validation )
     testCompile( libraries.jandex )
     testCompile( libraries.classmate )
     testCompile( libraries.mockito )
     testCompile( 'joda-time:joda-time:2.3' )
+    testCompile( "org.jboss.weld:weld-core:2.0.0.Beta6" )
+    testCompile( "org.jboss.weld.arquillian.container:arquillian-weld-ee-embedded-1.1:1.1.2.Final" )
+    compile( "javax.enterprise:cdi-api:1.1-PFD" ) {
+        // we need to force it to make sure we influence the one coming from arquillian
+        force=true
+    }
 
     testCompile( libraries.validator ) {
         // for test runtime
         transitive = true
     }
-    testRuntime( libraries.expression_language_api )
-    testRuntime( libraries.expression_language_impl )
 
     // for testing stored procedure support
     testCompile( libraries.derby )
 
+    testRuntime( "org.jboss.spec.javax.ejb:jboss-ejb-api_3.2_spec:1.0.0.Alpha2" )
+    testRuntime( libraries.expression_language_api )
+    testRuntime( libraries.expression_language_impl )
     testRuntime( 'jaxen:jaxen:1.1' )
     testRuntime( libraries.javassist )
+    testCompile( project( ':hibernate-jpamodelgen' ) )
 }
 
 mavenPom {
@@ -90,7 +111,10 @@ jar {
             'javax.naming.spi;resolution:=optional',
             'org.apache.tools.ant;resolution:=optional',
 			'org.apache.tools.ant.taskdefs;resolution:=optional',
-			'org.apache.tools.ant.types;resolution:=optional'
+			'org.apache.tools.ant.types;resolution:=optional',
+            '!javax.enterprise*',
+            'javax.enterprise.context.spi;resolution:=optional',
+            'javax.enterprise.inject.spi;resolution:=optional'
 
 //        // TODO: Uncomment once EntityManagerFactoryBuilderImpl no longer
 //        // uses ClassLoaderServiceImpl.
@@ -141,8 +165,25 @@ xjc {
 tasks.compile.dependsOn generateGrammarSource
 
 
-tasks."matrix_mariadb" {
-    beforeTest { descriptor ->
-        println "Starting test: " + descriptor
+
+task copyBundleResources (type: Copy) {
+    ext.bundlesTargetDir = file( "${buildDir}/bundles" )
+    from file('src/test/bundles')
+    into bundlesTargetDir
+    ext.bundleTokens = dbBundle[db]
+    ext.bundleTokens["buildDirName"] = buildDir.absolutePath
+    filter( ReplaceTokens, tokens: bundleTokens);
+    doFirst {
+        bundlesTargetDir.mkdirs()
     }
+}
+processTestResources.dependsOn copyBundleResources
+
+task testJar(type: Jar, dependsOn: testClasses) {
+    classifier = 'test'
+    from sourceSets.test.output
+}
+
+artifacts {
+    tests testJar
 }

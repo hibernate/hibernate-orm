@@ -391,6 +391,49 @@ http://hibernate.atlassian.net/projects/HHH/versions/21051
 
 
 
+Changes in 5.0.1.Final (September 3, 2015)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/21051
+
+** Bug
+    * [HHH-9962] - Second level query cache returns stale data if query and update statements are executed concurrently
+    * [HHH-9975] - CacheImpl.containsQuery(String) does not check if query cache is enabled
+    * [HHH-10008] - SessionImplementor.getTimestamp() does not return transaction start time
+    * [HHH-10024] - Cannot define Path rooted at a collection join referencing attribute named same as "collection property"
+    * [HHH-10044] - hibernate-osgi unmanaged JPA not able to locate persistence.xml schema in entitymanager jar
+    * [HHH-10053] - Revert HHH-9736; BigIntegerType really should use NumericTypeDescriptor
+    * [HHH-10057] - hibernate-infinispan incompatible with Infinispan 8.0.0.CR1
+    * [HHH-10060] - Order of subclass joins are no longer determinate
+    * [HHH-10064] - Broken documentation page link in User guide
+    * [HHH-10065] - Reuse JAXBContext instance (Slow mapping initialization)
+    * [HHH-10068] - Missing generated JPA static metamodel class for envers revision entity
+    * [HHH-10069] - ClassCastException between CompositeCustomType and ComponentType part 2
+    * [HHH-10073] - Remove obsolete Type, AssociationType and TypeFactory methods
+    * [HHH-10076] - Multiple bytecode enhancement attempts if hibernate.enable_lazy_load_no_trans set multiple times
+    * [HHH-10077] - Gradle plugin does not enhance any classes
+    * [HHH-10078] - Enforce synchronization on Enhancer.enhance()
+    * [HHH-10079] - Restrict enhanced getter/setter usage
+
+** New Feature
+    * [HHH-10030] - Add read-write cache concurrency strategy to Infinispan 2LC
+
+** Task
+    * [HHH-9593] - Remove superfluous references to enclosing class
+    * [HHH-9954] - Add EqualsHelper#areEqual which adds array-specific equality checks
+
+** Improvement
+    * [HHH-10020] - Improvements to org.hibernate.bytecode.enhance.internal.AttributeTypeDescriptor#buildInLineDirtyCheckingBodyFragment
+    * [HHH-10026] - Consider hibernate-java8 types for use with @Version
+    * [HHH-10054] - Modify Create Index SQL to support the Teradata database
+    * [HHH-10056] - Separate settings for notions of (1) disabling EnversService and (2) auto-registering Envers listeners
+    * [HHH-10058] - Parameterized test runner compatible with CustomRunner
+    * [HHH-10059] - Make EntityManagerFactoryBuilderImpl.populate methods protected
+
+** Deprecation
+    * [HHH-10070] - Deprecate use of "collection properties" in HQL
+
+
+
 Changes in 5.0.0.Final (August 20, 2015)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/20851

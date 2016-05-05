@@ -40,6 +40,7 @@ import org.hibernate.dialect.SQLServer2012Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
+import org.hibernate.dialect.TrafodionDialect;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.internal.CoreLogging;
@@ -72,6 +73,10 @@ public class StandardDialectResolver implements DialectResolver {
 
 		if ( "H2".equals( databaseName ) ) {
 			return new H2Dialect();
+		}
+
+		if ( "Trafodion".equals( databaseName ) ) {
+			return new TrafodionDialect();
 		}
 
 		if ( "MySQL".equals( databaseName ) ) {

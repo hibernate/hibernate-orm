@@ -6,6 +6,7 @@
  */
 package org.hibernate.loader.plan.spi;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -15,7 +16,7 @@ import java.util.List;
  *
  * @author Steve Ebersole
  */
-public interface QuerySpaces {
+public interface QuerySpaces extends Serializable {
 	/**
 	 * Gets the root QuerySpace references.
 	 *

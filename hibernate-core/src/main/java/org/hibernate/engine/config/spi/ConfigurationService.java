@@ -6,6 +6,7 @@
  */
 package org.hibernate.engine.config.spi;
 
+import java.io.Serializable;
 import java.util.Map;
 
 import org.hibernate.service.Service;
@@ -84,7 +85,7 @@ public interface ConfigurationService extends Service {
 	 *
 	 * @param <T> The Java type of the converted value
 	 */
-	public static interface Converter<T> {
+	public static interface Converter<T> extends Serializable {
 		/**
 		 * Convert an untyped Object reference to the Converter's type.
 		 *

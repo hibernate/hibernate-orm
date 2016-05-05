@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot;
 
+import java.io.Serializable;
 import javax.persistence.AttributeConverter;
 import javax.persistence.SharedCacheMode;
 
@@ -37,7 +38,7 @@ import org.jboss.jandex.IndexView;
  *
  * @since 5.0
  */
-public interface MetadataBuilder {
+public interface MetadataBuilder extends Serializable {
 	/**
 	 * Specify the implicit catalog name to apply to any unqualified database names.
 	 * <p/>

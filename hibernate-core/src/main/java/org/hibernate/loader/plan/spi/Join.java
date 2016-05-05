@@ -6,11 +6,13 @@
  */
 package org.hibernate.loader.plan.spi;
 
+import java.io.Serializable;
+
 /**
  * Represents a join in the QuerySpace-sense.  In HQL/JP-QL, this would be an implicit/explicit join; in
  * metamodel-driven LoadPlans, this would be joins indicated by the metamodel.
  */
-public interface Join {
+public interface Join extends Serializable {
 	/**
 	 * Get the {@link QuerySpace} from the left-hand-side of the join.
 	 *

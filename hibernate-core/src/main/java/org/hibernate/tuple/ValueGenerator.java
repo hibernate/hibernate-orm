@@ -6,6 +6,8 @@
  */
 package org.hibernate.tuple;
 
+import java.io.Serializable;
+
 import org.hibernate.Session;
 
 /**
@@ -13,7 +15,7 @@ import org.hibernate.Session;
  *
  * @author Steve Ebersole
  */
-public interface ValueGenerator<T> {
+public interface ValueGenerator<T> extends Serializable {
 	/**
 	 * Generate the value.
 	 *

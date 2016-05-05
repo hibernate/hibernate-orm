@@ -6,6 +6,8 @@
  */
 package org.hibernate.service.spi;
 
+import java.io.Serializable;
+
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
 /**
@@ -13,7 +15,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
  *
  * @author Steve Ebersole
  */
-public interface ServiceContributor {
+public interface ServiceContributor extends Serializable {
 	/**
 	 * Contribute services to the indicated registry builder.
 	 *

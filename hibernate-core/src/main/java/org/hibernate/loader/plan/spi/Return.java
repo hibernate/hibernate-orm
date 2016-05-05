@@ -6,6 +6,8 @@
  */
 package org.hibernate.loader.plan.spi;
 
+import java.io.Serializable;
+
 /**
  * Represents a return value in the query results.  Not the same as a result (column) in the JDBC ResultSet!
  * <p/>
@@ -17,5 +19,5 @@ package org.hibernate.loader.plan.spi;
  *
  * @author Steve Ebersole
  */
-public interface Return {
+public interface Return extends Serializable {
 }

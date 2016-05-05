@@ -7,6 +7,7 @@
 
 //$Id$
 package org.hibernate.test.annotations.inheritance.joined;
+import java.io.Serializable;
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.DiscriminatorType;
 import javax.persistence.DiscriminatorValue;
@@ -20,7 +21,7 @@ import javax.persistence.InheritanceType;
 @Inheritance(strategy = InheritanceType.JOINED)
 @DiscriminatorColumn(name = "DTYPE", discriminatorType = DiscriminatorType.STRING, length = 80)
 @DiscriminatorValue("EventInformationT")
-public class EventInformation implements java.io.Serializable {
+public class EventInformation implements Serializable {
 
 
 	protected String notificationId;

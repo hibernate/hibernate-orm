@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.cfgxml.spi;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -35,7 +36,7 @@ import org.jboss.logging.Logger;
  * A LoadedConfig is built via {@link #consume}.  An aggregated representation
  * can be maintained through calls to {@link #merge}
  */
-public class LoadedConfig {
+public class LoadedConfig implements Serializable {
 	private static final Logger log = Logger.getLogger( LoadedConfig.class );
 
 	private String sessionFactoryName;

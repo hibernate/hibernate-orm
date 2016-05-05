@@ -6,12 +6,14 @@
  */
 package org.hibernate.loader.plan.spi;
 
+import java.io.Serializable;
+
 /**
  * Descriptor for the identifier of an entity as a FetchSource (which allows for key-many-to-one handling).
  *
  * @author Steve Ebersole
  */
-public interface EntityIdentifierDescription {
+public interface EntityIdentifierDescription extends Serializable {
 	/**
 	 * Can this EntityIdentifierDescription be treated as a FetchSource and if so does it have any
 	 * fetches?

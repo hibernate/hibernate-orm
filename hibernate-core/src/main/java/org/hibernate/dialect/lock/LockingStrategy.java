@@ -24,7 +24,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *
  * @author Steve Ebersole
  */
-public interface LockingStrategy {
+public interface LockingStrategy extends Serializable {
 	/**
 	 * Acquire an appropriate type of lock on the underlying data that will
 	 * endure until the end of the current transaction.

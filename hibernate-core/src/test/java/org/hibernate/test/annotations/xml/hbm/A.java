@@ -6,10 +6,12 @@
  */
 package org.hibernate.test.annotations.xml.hbm;
 
+import java.io.Serializable;
+
 /**
  * @author Emmanuel Bernard
  */
-public interface A extends java.io.Serializable {
+public interface A extends Serializable {
 	public Integer getAId();
 
 	public void setAId(Integer aId);

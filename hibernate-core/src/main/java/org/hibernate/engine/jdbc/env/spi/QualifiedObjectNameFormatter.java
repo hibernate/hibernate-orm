@@ -6,6 +6,8 @@
  */
 package org.hibernate.engine.jdbc.env.spi;
 
+import java.io.Serializable;
+
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.QualifiedTableName;
@@ -16,7 +18,7 @@ import org.hibernate.dialect.Dialect;
  *
  * @author Steve Ebersole
  */
-public interface QualifiedObjectNameFormatter {
+public interface QualifiedObjectNameFormatter extends Serializable {
 	/**
 	 * Render a formatted a table name
 	 *

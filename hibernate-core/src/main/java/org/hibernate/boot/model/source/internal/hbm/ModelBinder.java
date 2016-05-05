@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
@@ -148,7 +149,7 @@ import org.hibernate.type.ForeignKeyDirection;
  *
  * @author Steve Ebersole
  */
-public class ModelBinder {
+public class ModelBinder implements Serializable {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( ModelBinder.class );
 	private static final boolean debugEnabled = log.isDebugEnabled();
 
@@ -2757,7 +2758,7 @@ public class ModelBinder {
 		}
 	}
 
-	private static class TypeResolution {
+	private static class TypeResolution implements Serializable {
 		private final String typeName;
 		private final Properties parameters;
 
@@ -2996,7 +2997,7 @@ public class ModelBinder {
 
 
 
-	public static final class DelayedPropertyReferenceHandlerImpl implements InFlightMetadataCollector.DelayedPropertyReferenceHandler {
+	public static final class DelayedPropertyReferenceHandlerImpl implements InFlightMetadataCollector.DelayedPropertyReferenceHandler, Serializable {
 		public final String referencedEntityName;
 		public final String referencedPropertyName;
 		public final boolean isUnique;
@@ -3058,7 +3059,7 @@ public class ModelBinder {
 	}
 
 
-	private abstract class AbstractPluralAttributeSecondPass implements SecondPass {
+	private abstract class AbstractPluralAttributeSecondPass implements SecondPass, Serializable {
 		private final MappingDocument mappingDocument;
 		private final PluralAttributeSource pluralAttributeSource;
 		private final Collection collectionBinding;
@@ -3667,7 +3668,7 @@ public class ModelBinder {
 		}
 	}
 
-	private class PluralAttributeListSecondPass extends AbstractPluralAttributeSecondPass {
+	private class PluralAttributeListSecondPass extends AbstractPluralAttributeSecondPass implements Serializable {
 		public PluralAttributeListSecondPass(
 				MappingDocument sourceDocument,
 				IndexedPluralAttributeSource attributeSource,
@@ -3706,7 +3707,7 @@ public class ModelBinder {
 		}
 	}
 
-	private class PluralAttributeSetSecondPass extends AbstractPluralAttributeSecondPass {
+	private class PluralAttributeSetSecondPass extends AbstractPluralAttributeSecondPass implements Serializable {
 		public PluralAttributeSetSecondPass(
 				MappingDocument sourceDocument,
 				PluralAttributeSource attributeSource,
@@ -3715,7 +3716,7 @@ public class ModelBinder {
 		}
 	}
 
-	private class PluralAttributeMapSecondPass extends AbstractPluralAttributeSecondPass {
+	private class PluralAttributeMapSecondPass extends AbstractPluralAttributeSecondPass implements Serializable {
 		public PluralAttributeMapSecondPass(
 				MappingDocument sourceDocument,
 				IndexedPluralAttributeSource attributeSource,
@@ -3772,7 +3773,7 @@ public class ModelBinder {
 		}
 	}
 
-	private class PluralAttributeBagSecondPass extends AbstractPluralAttributeSecondPass {
+	private class PluralAttributeBagSecondPass extends AbstractPluralAttributeSecondPass implements Serializable {
 		public PluralAttributeBagSecondPass(
 				MappingDocument sourceDocument,
 				PluralAttributeSource attributeSource,
@@ -3781,7 +3782,7 @@ public class ModelBinder {
 		}
 	}
 
-	private class PluralAttributeIdBagSecondPass extends AbstractPluralAttributeSecondPass {
+	private class PluralAttributeIdBagSecondPass extends AbstractPluralAttributeSecondPass implements Serializable {
 		public PluralAttributeIdBagSecondPass(
 				MappingDocument sourceDocument,
 				PluralAttributeSource attributeSource,
@@ -3790,7 +3791,7 @@ public class ModelBinder {
 		}
 	}
 
-	private class PluralAttributeArraySecondPass extends AbstractPluralAttributeSecondPass {
+	private class PluralAttributeArraySecondPass extends AbstractPluralAttributeSecondPass implements Serializable {
 		public PluralAttributeArraySecondPass(
 				MappingDocument sourceDocument,
 				IndexedPluralAttributeSource attributeSource,
@@ -3849,7 +3850,7 @@ public class ModelBinder {
 		}
 	}
 
-	private class PluralAttributePrimitiveArraySecondPass extends AbstractPluralAttributeSecondPass {
+	private class PluralAttributePrimitiveArraySecondPass extends AbstractPluralAttributeSecondPass implements Serializable {
 		public PluralAttributePrimitiveArraySecondPass(
 				MappingDocument sourceDocument,
 				IndexedPluralAttributeSource attributeSource,
@@ -4046,7 +4047,7 @@ public class ModelBinder {
 		}
 	}
 
-	private class ManyToOneColumnBinder implements ImplicitColumnNamingSecondPass {
+	private class ManyToOneColumnBinder implements ImplicitColumnNamingSecondPass, Serializable {
 		private final MappingDocument mappingDocument;
 		private final SingularAttributeSourceManyToOne manyToOneSource;
 		private final ManyToOne manyToOneBinding;
@@ -4231,7 +4232,7 @@ public class ModelBinder {
 		}
 	}
 
-	private class ManyToOneFkSecondPass extends FkSecondPass {
+	private class ManyToOneFkSecondPass extends FkSecondPass implements Serializable {
 		private final MappingDocument mappingDocument;
 		private final ManyToOne manyToOneBinding;
 
@@ -4292,7 +4293,7 @@ public class ModelBinder {
 		}
 	}
 
-	private class NaturalIdUniqueKeyBinderImpl implements NaturalIdUniqueKeyBinder {
+	private class NaturalIdUniqueKeyBinderImpl implements NaturalIdUniqueKeyBinder, Serializable {
 		private final MappingDocument mappingDocument;
 		private final PersistentClass entityBinding;
 		private final List<Property> attributeBindings = new ArrayList<Property>();

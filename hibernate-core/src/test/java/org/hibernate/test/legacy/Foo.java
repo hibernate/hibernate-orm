@@ -21,7 +21,7 @@ public class Foo implements Lifecycle, FooProxy, Serializable {
 
 	private static int count=0;
 
-	public static class Struct implements java.io.Serializable {
+	public static class Struct implements Serializable {
 		String name;
 		int count;
 		public boolean equals(Object other) {

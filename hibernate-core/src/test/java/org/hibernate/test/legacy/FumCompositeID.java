@@ -9,8 +9,9 @@
 package org.hibernate.test.legacy;
 
 
+import java.io.Serializable;
 
-public class FumCompositeID implements java.io.Serializable {
+public class FumCompositeID implements Serializable {
 	String string_;
 	short short_;
 	public boolean equals(Object other) {

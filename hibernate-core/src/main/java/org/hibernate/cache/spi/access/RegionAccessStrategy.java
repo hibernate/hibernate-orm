@@ -7,6 +7,8 @@
 package org.hibernate.cache.spi.access;
 
 
+import java.io.Serializable;
+
 import org.hibernate.cache.CacheException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -15,7 +17,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *
  * @author Gail Badner
  */
-public interface RegionAccessStrategy {
+public interface RegionAccessStrategy extends Serializable {
 
 	/**
 	 * Attempt to retrieve an object from the cache. Mainly used in attempting

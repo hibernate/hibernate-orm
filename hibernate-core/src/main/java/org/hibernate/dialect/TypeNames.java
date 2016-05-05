@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -43,7 +44,7 @@ import org.hibernate.internal.util.StringHelper;
  *
  * @author Christoph Beck
  */
-public class TypeNames {
+public class TypeNames implements Serializable {
 	/**
 	 * Holds default type mappings for a typeCode.  This is the non-sized mapping
 	 */

@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.spi;
 
+import java.io.Serializable;
+
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeCustomType;
 import org.hibernate.type.CustomType;
@@ -15,7 +17,7 @@ import org.hibernate.usertype.UserType;
 /**
  * @author Steve Ebersole
  */
-public class BasicTypeRegistration {
+public class BasicTypeRegistration implements Serializable {
 	private final BasicType basicType;
 	private final String[] registrationKeys;
 

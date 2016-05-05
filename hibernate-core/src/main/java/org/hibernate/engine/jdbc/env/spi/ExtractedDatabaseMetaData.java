@@ -6,6 +6,7 @@
  */
 package org.hibernate.engine.jdbc.env.spi;
 
+import java.io.Serializable;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -19,7 +20,7 @@ import org.hibernate.engine.jdbc.spi.TypeInfo;
  * @author Steve Ebersole
  */
 @SuppressWarnings( {"UnusedDeclaration"})
-public interface ExtractedDatabaseMetaData {
+public interface ExtractedDatabaseMetaData extends Serializable {
 	/**
 	 * Obtain the JDBC Environment from which this metadata came.
 	 *

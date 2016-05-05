@@ -12,6 +12,6 @@ import java.io.Serializable;
  *
  * @author Steve Ebersole
  */
-public interface EntityNotFoundDelegate {
+public interface EntityNotFoundDelegate extends Serializable {
 	public void handleEntityNotFound(String entityName, Serializable id);
 }

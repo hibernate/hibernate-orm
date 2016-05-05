@@ -6,6 +6,8 @@
  */
 package org.hibernate.cache.spi;
 
+import java.io.Serializable;
+
 import org.hibernate.engine.spi.CacheImplementor;
 
 /**
@@ -14,7 +16,7 @@ import org.hibernate.engine.spi.CacheImplementor;
  *
  * @author Steve Ebersole
  */
-public interface QueryCacheFactory {
+public interface QueryCacheFactory extends Serializable {
 	/**
 	 * Builds a named query cache.
 	 *

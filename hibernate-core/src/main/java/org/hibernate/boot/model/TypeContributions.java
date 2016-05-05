@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.model;
 
+import java.io.Serializable;
+
 import org.hibernate.type.BasicType;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
@@ -15,7 +17,7 @@ import org.hibernate.usertype.UserType;
  *
  * @author Steve Ebersole
  */
-public interface TypeContributions {
+public interface TypeContributions extends Serializable {
 	void contributeType(BasicType type);
 
 	void contributeType(BasicType type, String... keys);

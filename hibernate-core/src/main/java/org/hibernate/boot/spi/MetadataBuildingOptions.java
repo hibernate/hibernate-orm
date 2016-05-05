@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.spi;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.SharedCacheMode;
@@ -38,7 +39,7 @@ import org.jboss.jandex.IndexView;
  *
  * @since 5.0
  */
-public interface MetadataBuildingOptions {
+public interface MetadataBuildingOptions extends Serializable {
 	/**
 	 * Access to the service registry.
 	 *

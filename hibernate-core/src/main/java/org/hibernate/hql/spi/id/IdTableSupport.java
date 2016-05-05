@@ -6,10 +6,12 @@
  */
 package org.hibernate.hql.spi.id;
 
+import java.io.Serializable;
+
 /**
  * @author Steve Ebersole
  */
-public interface IdTableSupport {
+public interface IdTableSupport extends Serializable {
 	String generateIdTableName(String baseName);
 	String getCreateIdTableCommand();
 	String getCreateIdTableStatementOptions();

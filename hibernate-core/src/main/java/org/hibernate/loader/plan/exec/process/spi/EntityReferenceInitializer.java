@@ -6,6 +6,7 @@
  */
 package org.hibernate.loader.plan.exec.process.spi;
 
+import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -15,7 +16,7 @@ import org.hibernate.loader.plan.spi.EntityReference;
 /**
  * @author Steve Ebersole
  */
-public interface EntityReferenceInitializer {
+public interface EntityReferenceInitializer extends Serializable {
 	EntityReference getEntityReference();
 
 	void hydrateIdentifier(ResultSet resultSet, ResultSetProcessingContextImpl context) throws SQLException;

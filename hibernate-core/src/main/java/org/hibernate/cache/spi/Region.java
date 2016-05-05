@@ -6,6 +6,7 @@
  */
 package org.hibernate.cache.spi;
 
+import java.io.Serializable;
 import java.util.Map;
 
 import org.hibernate.cache.CacheException;
@@ -16,7 +17,7 @@ import org.hibernate.cache.CacheException;
  *
  * @author Steve Ebersole
  */
-public interface Region {
+public interface Region extends Serializable {
 	/**
 	 * Retrieve the name of this region.
 	 *

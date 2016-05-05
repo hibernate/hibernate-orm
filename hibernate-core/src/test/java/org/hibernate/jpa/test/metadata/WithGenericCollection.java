@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.jpa.test.metadata;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.Basic;
@@ -25,7 +26,7 @@ import javax.persistence.Table;
 */
 @Entity
 @Table(name = "WITH_GENERIC_COLLECTION")
-public class WithGenericCollection<T> implements java.io.Serializable {
+public class WithGenericCollection<T> implements Serializable {
     @Id
     @Column(name = "ID")
     private String id;

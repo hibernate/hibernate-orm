@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 
@@ -34,7 +35,7 @@ public class RelationalObjectBinder {
 	private final Database database;
 	private final PhysicalNamingStrategy physicalNamingStrategy;
 
-	public interface ColumnNamingDelegate {
+	public interface ColumnNamingDelegate extends Serializable {
 		Identifier determineImplicitName(LocalMetadataBuildingContext context);
 	}
 

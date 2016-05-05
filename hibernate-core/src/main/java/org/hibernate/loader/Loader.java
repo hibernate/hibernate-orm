@@ -96,7 +96,7 @@ import org.hibernate.type.VersionType;
  * @author Gavin King
  * @see org.hibernate.persister.entity.Loadable
  */
-public abstract class Loader {
+public abstract class Loader implements Serializable {
 
 	public static final String SELECT = "select";
 	public static final String SELECT_DISTINCT = "select distinct";

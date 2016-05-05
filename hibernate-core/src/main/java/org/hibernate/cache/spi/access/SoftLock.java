@@ -6,10 +6,12 @@
  */
 package org.hibernate.cache.spi.access;
 
+import java.io.Serializable;
+
 /**
  * Marker object for use by synchronous concurrency strategies
  *
  * @author Steve Ebersole
  */
-public interface SoftLock {
+public interface SoftLock extends Serializable {
 }

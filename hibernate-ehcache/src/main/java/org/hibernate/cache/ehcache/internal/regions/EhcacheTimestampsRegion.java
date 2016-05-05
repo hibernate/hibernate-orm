@@ -10,6 +10,7 @@ import java.util.Properties;
 
 import net.sf.ehcache.Ehcache;
 
+import org.hibernate.cache.ehcache.AbstractEhcacheRegionFactory;
 import org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
 
@@ -21,6 +22,7 @@ import org.hibernate.cache.spi.TimestampsRegion;
  * @author Alex Snaps
  */
 public class EhcacheTimestampsRegion extends EhcacheGeneralDataRegion implements TimestampsRegion {
+
 	/**
 	 * Constructs an EhcacheTimestampsRegion around the given underlying cache.
 	 *

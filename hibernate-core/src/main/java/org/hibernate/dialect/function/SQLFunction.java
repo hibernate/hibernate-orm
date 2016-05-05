@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect.function;
 
+import java.io.Serializable;
 import java.util.List;
 
 import org.hibernate.QueryException;
@@ -24,7 +25,7 @@ import org.hibernate.type.Type;
  * @author David Channon
  * @author Steve Ebersole
  */
-public interface SQLFunction {
+public interface SQLFunction extends Serializable {
 	/**
 	 * Does this function have any arguments?
 	 *

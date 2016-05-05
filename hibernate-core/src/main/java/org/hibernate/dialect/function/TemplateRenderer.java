@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect.function;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,7 +20,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class TemplateRenderer {
+public class TemplateRenderer implements Serializable {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
 			TemplateRenderer.class.getName()

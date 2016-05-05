@@ -7,6 +7,10 @@
 
 package org.hibernate.cache.ehcache.internal.regions;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,6 +21,7 @@ import net.sf.ehcache.constructs.nonstop.NonStopCacheException;
 import net.sf.ehcache.util.Timestamper;
 
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.ehcache.AbstractEhcacheRegionFactory;
 import org.hibernate.cache.ehcache.EhCacheMessageLogger;
 import org.hibernate.cache.ehcache.internal.nonstop.HibernateNonstopCacheExceptionHandler;
 import org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactory;
@@ -35,7 +40,7 @@ import org.jboss.logging.Logger;
  * @author Abhishek Sanoujam
  * @author Alex Snaps
  */
-public abstract class EhcacheDataRegion implements Region {
+public abstract class EhcacheDataRegion implements Region, Externalizable {
 	private static final EhCacheMessageLogger LOG = Logger.getMessageLogger(
 			EhCacheMessageLogger.class,
 			EhcacheDataRegion.class.getName()
@@ -43,10 +48,11 @@ public abstract class EhcacheDataRegion implements Region {
 	private static final String CACHE_LOCK_TIMEOUT_PROPERTY = "net.sf.ehcache.hibernate.cache_lock_timeout";
 	private static final int DEFAULT_CACHE_LOCK_TIMEOUT = 60000;
 
-	private final Ehcache cache;
-	private final EhcacheAccessStrategyFactory accessStrategyFactory;
-	private final int cacheLockTimeout;
-
+	private Ehcache cache;
+	private String cacheName;
+	private AbstractEhcacheRegionFactory regionFactory;
+	private EhcacheAccessStrategyFactory accessStrategyFactory;
+	private int cacheLockTimeout;
 
 	/**
 	 * Create a Hibernate data region backed by the given Ehcache instance.
@@ -54,6 +60,7 @@ public abstract class EhcacheDataRegion implements Region {
 	EhcacheDataRegion(EhcacheAccessStrategyFactory accessStrategyFactory, Ehcache cache, Properties properties) {
 		this.accessStrategyFactory = accessStrategyFactory;
 		this.cache = cache;
+		this.cacheName = cache.getName();
 		final String timeout = properties.getProperty(
 				CACHE_LOCK_TIMEOUT_PROPERTY,
 				Integer.toString( DEFAULT_CACHE_LOCK_TIMEOUT )
@@ -87,7 +94,7 @@ public abstract class EhcacheDataRegion implements Region {
 
 	@Override
 	public String getName() {
-		return getCache().getName();
+		return cacheName;
 	}
 
 	@Override
@@ -195,4 +202,20 @@ public abstract class EhcacheDataRegion implements Region {
 		return getCache().isKeyInCache( key );
 	}
 
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeObject(regionFactory);
+		out.writeObject(accessStrategyFactory);
+		out.writeInt(cacheLockTimeout);
+		out.writeUTF(cacheName);
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		regionFactory = (AbstractEhcacheRegionFactory) in.readObject();
+		accessStrategyFactory = (EhcacheAccessStrategyFactory) in.readObject();
+		cacheLockTimeout = in.readInt();
+		cacheName = in.readUTF();
+		cache = regionFactory.getManager().addCacheIfAbsent(cacheName);
+	}
 }

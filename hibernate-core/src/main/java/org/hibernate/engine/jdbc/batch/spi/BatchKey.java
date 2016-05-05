@@ -6,6 +6,8 @@
  */
 package org.hibernate.engine.jdbc.batch.spi;
 
+import java.io.Serializable;
+
 import org.hibernate.jdbc.Expectation;
 
 /**
@@ -13,7 +15,7 @@ import org.hibernate.jdbc.Expectation;
  *
  * @author Steve Ebersole
  */
-public interface BatchKey {
+public interface BatchKey extends Serializable {
 	/**
 	 * How many statements will be in this batch?
 	 * <p/>

@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.spi;
 
+import java.io.Serializable;
+
 import org.hibernate.boot.SessionFactoryBuilder;
 
 /**
@@ -15,7 +17,7 @@ import org.hibernate.boot.SessionFactoryBuilder;
  *
  * @author Steve Ebersole
  */
-public interface SessionFactoryBuilderFactory {
+public interface SessionFactoryBuilderFactory extends Serializable {
 	/**
 	 * The contract method.  Return the SessionFactoryBuilder.  May return {@code null}
 	 *

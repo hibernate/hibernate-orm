@@ -6,6 +6,8 @@
  */
 package org.hibernate.tuple;
 
+import java.io.Serializable;
+
 import org.hibernate.property.access.spi.Getter;
 
 /**
@@ -37,7 +39,7 @@ import org.hibernate.property.access.spi.Getter;
  *
  * @author Steve Ebersole
  */
-public interface Tuplizer {
+public interface Tuplizer extends Serializable {
 	/**
 	 * Extract the current values contained on the given entity.
 	 *

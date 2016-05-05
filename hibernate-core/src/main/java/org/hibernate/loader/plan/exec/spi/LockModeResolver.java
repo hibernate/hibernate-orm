@@ -6,12 +6,14 @@
  */
 package org.hibernate.loader.plan.exec.spi;
 
+import java.io.Serializable;
+
 import org.hibernate.LockMode;
 import org.hibernate.loader.plan.spi.EntityReference;
 
 /**
  * @author Steve Ebersole
  */
-public interface LockModeResolver {
+public interface LockModeResolver extends Serializable {
 	public LockMode resolveLockMode(EntityReference entityReference);
 }

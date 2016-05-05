@@ -6,6 +6,8 @@
  */
 package org.hibernate.loader.plan.spi;
 
+import java.io.Serializable;
+
 import org.hibernate.loader.PropertyPath;
 
 /**
@@ -14,7 +16,7 @@ import org.hibernate.loader.PropertyPath;
  *
  * @author Steve Ebersole
  */
-public interface FetchSource {
+public interface FetchSource extends Serializable {
 
 	/**
 	 * Get the property path to this fetch source

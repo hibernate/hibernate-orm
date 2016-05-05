@@ -6,12 +6,14 @@
  */
 package org.hibernate.engine;
 
+import java.io.Serializable;
+
 /**
  * Describes the strategy for fetching an association, which includes both when and how.
  *
  * @author Steve Ebersole
  */
-public class FetchStrategy {
+public class FetchStrategy implements Serializable {
 	private final FetchTiming timing;
 	private final FetchStyle style;
 

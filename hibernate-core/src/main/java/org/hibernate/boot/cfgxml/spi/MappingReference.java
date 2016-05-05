@@ -7,6 +7,7 @@
 package org.hibernate.boot.cfgxml.spi;
 
 import java.io.File;
+import java.io.Serializable;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.jaxb.cfg.spi.JaxbCfgMappingReferenceType;
@@ -18,7 +19,7 @@ import org.hibernate.internal.util.config.ConfigurationException;
  *
  * @author Steve Ebersole
  */
-public class MappingReference {
+public class MappingReference implements Serializable {
 	public static enum Type {
 		RESOURCE,
 		CLASS,

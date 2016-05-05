@@ -129,7 +129,6 @@ public class ProviderMBeanRegistrationHelper {
 			try {
 				final Class factoryType = SessionFactoryRegistry.class;
 				final Field instancesField = getField( factoryType, "sessionFactoryMap" );
-				// NOTE : no need to check accessibility here - we know it is private
 				instancesField.setAccessible( true );
 				final Map map = (Map) instancesField.get( SessionFactoryRegistry.INSTANCE );
 				if ( map == null ) {
@@ -140,7 +139,6 @@ public class ProviderMBeanRegistrationHelper {
 					final Class sessionFactoryType = sessionFactory.getClass();
 					final Field propertiesField = getField( sessionFactoryType, "properties" );
 					if ( propertiesField != null ) {
-						// NOTE : no need to check accessibility here - we know it is private
 						propertiesField.setAccessible( true );
 						final Properties props = (Properties) propertiesField.get( sessionFactory );
 						if ( props != null && props.equals( properties ) ) {

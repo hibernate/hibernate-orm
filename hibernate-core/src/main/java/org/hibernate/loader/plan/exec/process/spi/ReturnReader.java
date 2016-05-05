@@ -6,6 +6,7 @@
  */
 package org.hibernate.loader.plan.exec.process.spi;
 
+import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -14,7 +15,7 @@ import java.sql.SQLException;
  *
  * @author Steve Ebersole
  */
-public interface ReturnReader {
+public interface ReturnReader extends Serializable {
 	/**
 	 * Essentially performs the second phase of two-phase loading.
 	 *

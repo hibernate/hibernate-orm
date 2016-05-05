@@ -520,7 +520,7 @@ public class EntityMetamodel implements Serializable {
 		}
 	}
 
-	private static class CompositeGenerationStrategyPairBuilder {
+	private static class CompositeGenerationStrategyPairBuilder implements Serializable {
 		private final Property mappingProperty;
 
 		private boolean hadInMemoryGeneration;

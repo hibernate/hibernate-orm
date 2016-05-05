@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.model.relational;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -25,7 +26,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 /**
  * @author Steve Ebersole
  */
-public class Database {
+public class Database implements Serializable {
 	private final Dialect dialect;
 	private final MetadataBuildingOptions buildingOptions;
 	private final JdbcEnvironment jdbcEnvironment;

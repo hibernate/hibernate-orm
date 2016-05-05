@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot;
 
+import java.io.Serializable;
+
 /**
  * Models the definition of caching settings for a particular region.  Generally as found in either:<ul>
  *     <li>{@code cfg.xml}</li>
@@ -16,7 +18,7 @@ package org.hibernate.boot;
  *
  * @author Steve Ebersole
  */
-public class CacheRegionDefinition {
+public class CacheRegionDefinition implements Serializable {
 	public static enum CacheRegionType {
 		ENTITY,
 		COLLECTION,

@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -159,41 +160,42 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	private final String name;
 	private final String uuid;
-	private transient boolean isClosed;
+	private boolean isClosed;
 
-	private final transient SessionFactoryObserverChain observer = new SessionFactoryObserverChain();
+	private final SessionFactoryObserverChain observer = new SessionFactoryObserverChain();
 
-	private final transient SessionFactoryOptions sessionFactoryOptions;
-	private final transient Settings settings;
-	private final transient Map<String,Object> properties;
+	private final SessionFactoryOptions sessionFactoryOptions;
+	private final Settings settings;
+	private final Map<String,Object> properties;
 
-	private final transient SessionFactoryServiceRegistry serviceRegistry;
-	private transient JdbcServices jdbcServices;
+	private final SessionFactoryServiceRegistry serviceRegistry;
+	private JdbcServices jdbcServices;
 
-	private final transient SQLFunctionRegistry sqlFunctionRegistry;
+	private final SQLFunctionRegistry sqlFunctionRegistry;
 
 	// todo : org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor too?
 
-	private final transient MetamodelImpl metamodel;
-	private final transient CriteriaBuilderImpl criteriaBuilder;
+	private final MetamodelImpl metamodel;
+	private final CriteriaBuilderImpl criteriaBuilder;
 	private final PersistenceUnitUtil jpaPersistenceUnitUtil;
-	private final transient CacheImplementor cacheAccess;
-	private final transient org.hibernate.query.spi.NamedQueryRepository namedQueryRepository;
-	private final transient QueryPlanCache queryPlanCache;
+	private final CacheImplementor cacheAccess;
+	private final org.hibernate.query.spi.NamedQueryRepository namedQueryRepository;
+	private final QueryPlanCache queryPlanCache;
 
-	private final transient CurrentSessionContext currentSessionContext;
+	private final CurrentSessionContext currentSessionContext;
 
 	private DelayedDropAction delayedDropAction;
 
 	// todo : move to MetamodelImpl
-	private final transient Map<String,IdentifierGenerator> identifierGenerators;
-	private final transient Map<String, FilterDefinition> filters;
-	private final transient Map<String, FetchProfile> fetchProfiles;
+	private final Map<String,IdentifierGenerator> identifierGenerators;
+	private final Map<String, FilterDefinition> filters;
+	private final Map<String, FetchProfile> fetchProfiles;
 
-	private final transient TypeResolver typeResolver;
-	private final transient TypeHelper typeHelper;
+	private final TypeResolver typeResolver;
+	private final TypeHelper typeHelper;
 	private transient StatisticsImplementor statisticsImplementor;
 
+	private boolean deepSerialization;
 
 	public SessionFactoryImpl(final MetadataImplementor metadata, SessionFactoryOptions options) {
 		LOG.debug( "Building session factory" );
@@ -224,9 +226,10 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
+		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
 
 		this.properties = new HashMap<>();
-		this.properties.putAll( serviceRegistry.getService( ConfigurationService.class ).getSettings() );
+		this.properties.putAll( configurationService.getSettings() );
 		if ( !properties.containsKey( AvailableSettings.JPA_VALIDATION_FACTORY ) ) {
 			if ( getSessionFactoryOptions().getValidatorFactoryReference() != null ) {
 				properties.put(
@@ -373,13 +376,8 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 			this.observer.sessionFactoryCreated( this );
 
-			SessionFactoryRegistry.INSTANCE.addSessionFactory(
-					uuid,
-					name,
-					settings.isSessionFactoryNameAlsoJndiName(),
-					this,
-					serviceRegistry.getService( JndiService.class )
-			);
+			deepSerialization = ConfigurationHelper.getBoolean( AvailableSettings.SESSION_FACTORY_DEEP_SERIALIZATION, properties, false );
+			initTransients();
 		}
 		catch (Exception e) {
 			for ( Integrator integrator : serviceRegistry.getService( IntegratorService.class ).getIntegrators() ) {
@@ -389,6 +387,16 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			close();
 			throw e;
 		}
+	}
+
+	private void initTransients() {
+		SessionFactoryRegistry.INSTANCE.addSessionFactory(
+				uuid,
+				name,
+				settings.isSessionFactoryNameAlsoJndiName(),
+				this,
+				serviceRegistry.getService( JndiService.class )
+		);
 	}
 
 	private void applyCfgXmlValues(LoadedConfig aggregatedConfig, SessionFactoryServiceRegistry serviceRegistry) {
@@ -558,10 +566,10 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	// todo : (5.2) review synchronizationType, persistenceContextType, transactionType usage
 
 	// SynchronizationType -> should we auto enlist in transactions
-	private transient SynchronizationType synchronizationType;
+	private SynchronizationType synchronizationType;
 
 	// PersistenceContextType -> influences FlushMode and 'autoClose'
-	private transient PersistenceContextType persistenceContextType;
+	private PersistenceContextType persistenceContextType;
 
 
 	@Override
@@ -1514,6 +1522,15 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		LOG.trace( "Serialized" );
 	}
 
+	Object writeReplace() throws IOException, ClassNotFoundException {
+		LOG.debugf( "writeReplace: %s", uuid );
+		if( deepSerialization ) {
+			return this;
+		} else {
+			return new SerializedPlaceholder(uuid, name);
+		}
+	}
+
 	/**
 	 * Custom serialization hook defined by Java spec.  Used when the factory is directly deserialized
 	 *
@@ -1526,20 +1543,35 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		LOG.trace( "Deserializing" );
 		in.defaultReadObject();
 		LOG.debugf( "Deserialized: %s", uuid );
+		initTransients();
 	}
 
 	/**
-	 * Custom serialization hook defined by Java spec.  Used when the factory is directly deserialized.
-	 * Here we resolve the uuid/name read from the stream previously to resolve the SessionFactory
-	 * instance to use based on the registrations with the {@link SessionFactoryRegistry}
-	 *
-	 * @return The resolved factory to use.
-	 *
-	 * @throws InvalidObjectException Thrown if we could not resolve the factory by uuid/name.
+	 * Placeholder for lookup-based serialization.  Not used in deep serialization.
 	 */
-	private Object readResolve() throws InvalidObjectException {
-		LOG.trace( "Resolving serialized SessionFactory" );
-		return locateSessionFactoryOnDeserialization( uuid, name );
+	public static class SerializedPlaceholder implements Serializable {
+
+		private final String uuid;
+		private final String name;
+
+		public SerializedPlaceholder(String uuid, String name) {
+			this.uuid = uuid;
+			this.name = name;
+		}
+
+		/**
+		 * Custom serialization hook defined by Java spec.  Used when the factory is directly deserialized.
+		 * Here we resolve the uuid/name read from the stream previously to resolve the SessionFactory
+		 * instance to use based on the registrations with the {@link SessionFactoryRegistry}
+		 *
+		 * @return The resolved factory to use.
+		 *
+		 * @throws InvalidObjectException Thrown if we could not resolve the factory by uuid/name.
+		 */
+		private Object readResolve() throws InvalidObjectException {
+			LOG.trace( "Resolving serialized SessionFactory" );
+			return locateSessionFactoryOnDeserialization(uuid, name);
+		}
 	}
 
 	private static SessionFactory locateSessionFactoryOnDeserialization(String uuid, String name) throws InvalidObjectException{

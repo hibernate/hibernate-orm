@@ -6,6 +6,8 @@
  */
 package org.hibernate.cache.spi;
 
+import java.io.Serializable;
+
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -14,7 +16,7 @@ import org.hibernate.persister.entity.EntityPersister;
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public interface CacheKeysFactory {
+public interface CacheKeysFactory extends Serializable {
 	Object createCollectionKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier);
 
 	Object createEntityKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier);

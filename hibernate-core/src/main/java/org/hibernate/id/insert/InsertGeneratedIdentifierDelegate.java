@@ -19,7 +19,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *
  * @author Steve Ebersole
  */
-public interface InsertGeneratedIdentifierDelegate {
+public interface InsertGeneratedIdentifierDelegate extends Serializable {
 
 	/**
 	 * Build a {@link org.hibernate.sql.Insert} specific to the delegate's mode

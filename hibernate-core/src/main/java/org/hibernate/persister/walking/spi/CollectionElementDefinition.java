@@ -6,6 +6,8 @@
  */
 package org.hibernate.persister.walking.spi;
 
+import java.io.Serializable;
+
 import org.hibernate.type.Type;
 
 /**
@@ -13,7 +15,7 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public interface CollectionElementDefinition {
+public interface CollectionElementDefinition extends Serializable {
 
 	/**
 	 * Returns the collection definition.

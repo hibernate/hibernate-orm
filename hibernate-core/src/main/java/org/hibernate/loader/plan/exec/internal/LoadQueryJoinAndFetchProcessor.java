@@ -6,6 +6,7 @@
  */
 package org.hibernate.loader.plan.exec.internal;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -62,7 +63,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  * @author Chris Cranford
  */
-public class LoadQueryJoinAndFetchProcessor {
+public class LoadQueryJoinAndFetchProcessor implements Serializable {
 	private static final Logger LOG = CoreLogging.logger( LoadQueryJoinAndFetchProcessor.class );
 
 	private final AliasResolutionContextImpl aliasResolutionContext;

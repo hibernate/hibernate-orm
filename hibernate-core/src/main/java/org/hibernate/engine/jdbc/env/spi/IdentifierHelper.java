@@ -6,6 +6,8 @@
  */
 package org.hibernate.engine.jdbc.env.spi;
 
+import java.io.Serializable;
+
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.cfg.AvailableSettings;
 
@@ -14,7 +16,7 @@ import org.hibernate.cfg.AvailableSettings;
  *
  * @author Steve Ebersole
  */
-public interface IdentifierHelper {
+public interface IdentifierHelper extends Serializable {
 	/**
 	 * Essentially quotes the identifier if it needs to be.  Useful to apply global quoting,
 	 * as well as reserved word quoting after calls to naming strategies.

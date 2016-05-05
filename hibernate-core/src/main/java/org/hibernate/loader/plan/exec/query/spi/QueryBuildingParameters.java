@@ -6,6 +6,8 @@
  */
 package org.hibernate.loader.plan.exec.query.spi;
 
+import java.io.Serializable;
+
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -15,7 +17,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
  *
  * @author Steve Ebersole
  */
-public interface QueryBuildingParameters {
+public interface QueryBuildingParameters extends Serializable {
 
 	/**
 	 * Provides data for options which can influence the SQL query needed to load an

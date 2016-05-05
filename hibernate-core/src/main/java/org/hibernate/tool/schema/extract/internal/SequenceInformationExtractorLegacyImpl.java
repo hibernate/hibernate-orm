@@ -6,6 +6,7 @@
  */
 package org.hibernate.tool.schema.extract.internal;
 
+import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -21,7 +22,7 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 /**
  * @author Steve Ebersole
  */
-public class SequenceInformationExtractorLegacyImpl implements SequenceInformationExtractor {
+public class SequenceInformationExtractorLegacyImpl implements SequenceInformationExtractor, Serializable {
 	/**
 	 * Singleton access
 	 */

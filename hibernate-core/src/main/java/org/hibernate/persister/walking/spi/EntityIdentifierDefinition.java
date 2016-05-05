@@ -6,12 +6,14 @@
  */
 package org.hibernate.persister.walking.spi;
 
+import java.io.Serializable;
+
 /**
  * Describes aspects of the identifier for an entity
  *
  * @author Steve Ebersole
  */
-public interface EntityIdentifierDefinition {
+public interface EntityIdentifierDefinition extends Serializable {
 	/**
 	 * Is the entity identifier encapsulated?  Meaning, is it represented by a single attribute?
 	 *

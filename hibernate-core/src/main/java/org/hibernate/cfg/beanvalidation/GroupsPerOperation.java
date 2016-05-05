@@ -6,6 +6,7 @@
  */
 package org.hibernate.cfg.beanvalidation;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,7 +20,7 @@ import org.hibernate.boot.spi.ClassLoaderAccess;
 /**
  * @author Emmanuel Bernard
  */
-public class GroupsPerOperation {
+public class GroupsPerOperation implements Serializable {
 	private static final String JPA_GROUP_PREFIX = "javax.persistence.validation.group.";
 	private static final String HIBERNATE_GROUP_PREFIX = "org.hibernate.validator.group.";
 

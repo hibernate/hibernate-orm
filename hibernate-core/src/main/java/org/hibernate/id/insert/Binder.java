@@ -5,13 +5,14 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.id.insert;
+import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 /**
  * @author Steve Ebersole
  */
-public interface Binder {
+public interface Binder extends Serializable {
 	public void bindValues(PreparedStatement ps) throws SQLException;
 	public Object getEntity();
 }

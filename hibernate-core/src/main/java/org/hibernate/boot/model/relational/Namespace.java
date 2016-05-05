@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.model.relational;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
@@ -23,7 +24,7 @@ import org.hibernate.mapping.Table;
  *
  * @author Steve Ebersole
  */
-public class Namespace {
+public class Namespace implements Serializable {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( Namespace.class );
 
 	private final Database database;
@@ -157,7 +158,7 @@ public class Namespace {
 		return sequences.values();
 	}
 
-	public static class Name implements Comparable<Name> {
+	public static class Name implements Comparable<Name>, Serializable {
 		private final Identifier catalog;
 		private final Identifier schema;
 

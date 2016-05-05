@@ -6,6 +6,7 @@
  */
 package org.hibernate.jpamodelgen.test.rawtypes;
 
+import java.io.Serializable;
 import java.util.Collection;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
@@ -19,7 +20,7 @@ import javax.persistence.ManyToMany;
  * @author Emmanuel Bernard
  */
 @Entity
-public class DeskWithRawType implements java.io.Serializable {
+public class DeskWithRawType implements Serializable {
 
 	@Id
 	protected String id;

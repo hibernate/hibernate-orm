@@ -6,6 +6,7 @@
  */
 package org.hibernate.bytecode.spi;
 
+import java.io.Serializable;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 
@@ -19,7 +20,7 @@ import java.security.ProtectionDomain;
  * @author <a href="mailto:bill@jboss.org">Bill Burke</a>
  * @author Emmanuel Bernard
  */
-public interface ClassTransformer extends javax.persistence.spi.ClassTransformer {
+public interface ClassTransformer extends javax.persistence.spi.ClassTransformer, Serializable {
 	/**
 	 * Invoked when a class is being loaded or redefined to add hooks for persistence bytecode manipulation.
 	 *

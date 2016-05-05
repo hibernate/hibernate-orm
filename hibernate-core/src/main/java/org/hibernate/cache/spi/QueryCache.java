@@ -23,7 +23,7 @@ import org.hibernate.type.Type;
  * 
  * @author Gavin King
  */
-public interface QueryCache {
+public interface QueryCache extends Serializable {
 	/**
 	 * Clear items from the query cache.
 	 *

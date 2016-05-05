@@ -6,10 +6,12 @@
  */
 package org.hibernate.cache.spi;
 
+import java.io.Serializable;
+
 /**
  * Marker interface for identifying {@link org.hibernate.Cache} implementations which are aware of JTA transactions
  *
  * @author Steve Ebersole
  */
-public interface TransactionAwareCache {
+public interface TransactionAwareCache extends Serializable {
 }

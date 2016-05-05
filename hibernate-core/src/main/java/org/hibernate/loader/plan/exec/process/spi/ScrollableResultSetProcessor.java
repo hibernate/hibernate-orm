@@ -6,6 +6,7 @@
  */
 package org.hibernate.loader.plan.exec.process.spi;
 
+import java.io.Serializable;
 import java.sql.ResultSet;
 
 import org.hibernate.engine.spi.QueryParameters;
@@ -20,7 +21,7 @@ import org.hibernate.engine.spi.SessionImplementor;
  *
  * @author Steve Ebersole
  */
-public interface ScrollableResultSetProcessor {
+public interface ScrollableResultSetProcessor extends Serializable {
 
 	/**
 	 * Give a ResultSet, extract just a single result row.

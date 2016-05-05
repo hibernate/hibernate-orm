@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.internal;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -583,14 +584,14 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	public static class MetadataBuildingOptionsImpl
-			implements MetadataBuildingOptions, JpaOrmXmlPersistenceUnitDefaultAware {
+			implements MetadataBuildingOptions, JpaOrmXmlPersistenceUnitDefaultAware, Serializable {
 		private final StandardServiceRegistry serviceRegistry;
 		private final MappingDefaultsImpl mappingDefaults;
 
 		private ArrayList<BasicTypeRegistration> basicTypeRegistrations = new ArrayList<BasicTypeRegistration>();
 
 		private IndexView jandexView;
-		private ClassLoader tempClassLoader;
+		private transient ClassLoader tempClassLoader;
 
 		private ScanOptions scanOptions;
 		private ScanEnvironment scanEnvironment;
@@ -600,8 +601,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private ImplicitNamingStrategy implicitNamingStrategy;
 		private PhysicalNamingStrategy physicalNamingStrategy;
 
-		private ReflectionManager reflectionManager;
-		private ClassLoaderDelegate hcannClassLoaderDelegate;
+		private transient ReflectionManager reflectionManager;
+		private transient ClassLoaderDelegate hcannClassLoaderDelegate;
 
 		private SharedCacheMode sharedCacheMode;
 		private AccessType defaultCacheAccessType;
@@ -621,6 +622,9 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private IdGeneratorInterpreterImpl idGenerationTypeInterpreter = new IdGeneratorInterpreterImpl();
 
 		private boolean autoQuoteKeywords;
+
+
+		public static interface SerializableCallable<T> extends Serializable, Callable<T> {}
 
 //		private PersistentAttributeMemberResolver persistentAttributeMemberResolver =
 //				StandardPersistentAttributeMemberResolver.INSTANCE;
@@ -726,7 +730,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			this.implicitNamingStrategy = strategySelector.resolveDefaultableStrategy(
 					ImplicitNamingStrategy.class,
 					configService.getSettings().get( AvailableSettings.IMPLICIT_NAMING_STRATEGY ),
-					new Callable<ImplicitNamingStrategy>() {
+					new SerializableCallable<ImplicitNamingStrategy>() {
 						@Override
 						public ImplicitNamingStrategy call() throws Exception {
 							return strategySelector.resolveDefaultableStrategy(
@@ -799,7 +803,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		public ClassLoaderDelegate getHcannClassLoaderDelegate() {
 			if ( hcannClassLoaderDelegate == null ) {
 				hcannClassLoaderDelegate = new ClassLoaderDelegate() {
-					private final  ClassLoaderService classLoaderService = getServiceRegistry().getService( ClassLoaderService.class );
+					private final transient ClassLoaderService classLoaderService = getServiceRegistry().getService( ClassLoaderService.class );
 
 					@Override
 					public <T> Class<T> classForName(String className) throws ClassLoadingException {

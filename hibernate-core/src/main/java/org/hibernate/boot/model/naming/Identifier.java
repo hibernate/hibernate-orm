@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.model.naming;
 
+import java.io.Serializable;
 import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
@@ -16,7 +17,7 @@ import org.hibernate.internal.util.StringHelper;
  *
  * @author Steve Ebersole
  */
-public class Identifier implements Comparable<Identifier> {
+public class Identifier implements Comparable<Identifier>, Serializable {
 	private final String text;
 	private final boolean isQuoted;
 

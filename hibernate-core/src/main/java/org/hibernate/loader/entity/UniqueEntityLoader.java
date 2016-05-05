@@ -18,7 +18,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface UniqueEntityLoader {
+public interface UniqueEntityLoader extends Serializable {
 	/**
 	 * Load an entity instance. If <tt>optionalObject</tt> is supplied,
 	 * load the entity state into the given (uninitialized) object.

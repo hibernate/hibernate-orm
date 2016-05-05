@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.model;
 
+import java.io.Serializable;
+
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 
 /**
@@ -14,7 +16,7 @@ import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
  *
  * @author Steve Ebersole
  */
-public class CustomSql {
+public class CustomSql implements Serializable {
 	private final String sql;
 	private final boolean isCallable;
 	private final ExecuteUpdateResultCheckStyle checkStyle;

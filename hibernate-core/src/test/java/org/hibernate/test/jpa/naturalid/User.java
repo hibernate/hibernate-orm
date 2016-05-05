@@ -7,13 +7,15 @@
 package org.hibernate.test.jpa.naturalid;
 
 
+import java.io.Serializable;
+
 /**
  * {@inheritDoc}
  *
  * @author Steve Ebersole
  * (copied from org.hibernate.test.naturalid.immutable.User)
  */
-public class User implements java.io.Serializable {
+public class User implements Serializable {
 
 	private Integer myUserId;
 	private Integer version;

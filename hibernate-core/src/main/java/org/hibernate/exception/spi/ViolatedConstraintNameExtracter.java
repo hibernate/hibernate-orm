@@ -6,6 +6,7 @@
  */
 package org.hibernate.exception.spi;
 
+import java.io.Serializable;
 import java.sql.SQLException;
 
 /**
@@ -14,7 +15,7 @@ import java.sql.SQLException;
  *
  * @author Steve Ebersole
  */
-public interface ViolatedConstraintNameExtracter {
+public interface ViolatedConstraintNameExtracter extends Serializable {
 	/**
 	 * Extract the name of the violated constraint from the given SQLException.
 	 *

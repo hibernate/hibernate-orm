@@ -19,7 +19,7 @@ import org.hibernate.type.CompositeType;
  *
  * @author Gavin King
  */
-public interface ProxyFactory {
+public interface ProxyFactory extends Serializable {
 
 	/**
 	 * Called immediately after instantiation of this factory.

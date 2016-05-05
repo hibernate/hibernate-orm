@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.model.naming;
 
+import java.io.Serializable;
+
 import org.hibernate.boot.spi.MetadataBuildingContext;
 
 /**
@@ -13,7 +15,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
  *
  * @author Steve Ebersole
  */
-public interface ImplicitNameSource {
+public interface ImplicitNameSource extends Serializable {
 	/**
 	 * Access to the current building context.
 	 *

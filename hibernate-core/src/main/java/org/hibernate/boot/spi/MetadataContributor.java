@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.spi;
 
+import java.io.Serializable;
+
 import org.jboss.jandex.IndexView;
 
 /**
@@ -18,7 +20,7 @@ import org.jboss.jandex.IndexView;
  *
  * @since 5.0
  */
-public interface MetadataContributor {
+public interface MetadataContributor extends Serializable {
 	/**
 	 * Perform the contributions.
 	 *

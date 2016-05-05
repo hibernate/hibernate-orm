@@ -8,6 +8,8 @@ package org.hibernate.boot.registry.classloading.internal;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectStreamException;
+import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import java.net.URL;
@@ -35,12 +37,13 @@ import org.hibernate.internal.CoreMessageLogger;
  * @author Steve Ebersole
  * @author Sanne Grinovero
  */
-public class ClassLoaderServiceImpl implements ClassLoaderService {
+public class ClassLoaderServiceImpl implements ClassLoaderService,
+															  Serializable {
 
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( ClassLoaderServiceImpl.class );
 
-	private final ConcurrentMap<Class, ServiceLoader> serviceLoaders = new ConcurrentHashMap<Class, ServiceLoader>();
-	private volatile AggregatedClassLoader aggregatedClassLoader;
+	private transient final ConcurrentMap<Class, ServiceLoader> serviceLoaders = new ConcurrentHashMap<Class, ServiceLoader>();
+	private transient volatile AggregatedClassLoader aggregatedClassLoader;
 
 	/**
 	 * Constructs a ClassLoaderServiceImpl with standard set-up
@@ -495,4 +498,8 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		this.aggregatedClassLoader = null;
 	}
 
+	//TODO allow user to pass in ClassLoaderServiceImpl on deserialization.
+	Object readResolve() throws ObjectStreamException {
+		return new ClassLoaderServiceImpl();
+	}
 }

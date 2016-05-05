@@ -6,6 +6,7 @@
  */
 package org.hibernate.jpa.test.metamodel;
 
+import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -74,7 +75,7 @@ public class MixedIdAndIdClassHandling extends BaseEntityManagerFunctionalTestCa
 		}
 	}
 
-	public static class EmployeeId implements java.io.Serializable {
+	public static class EmployeeId implements Serializable {
 		String id;
 
 		public EmployeeId() {

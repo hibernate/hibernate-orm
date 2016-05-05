@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.model.naming;
 
+import java.io.Serializable;
+
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
 /**
@@ -17,7 +19,7 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
  *
  * @author Steve Ebersole
  */
-public interface PhysicalNamingStrategy {
+public interface PhysicalNamingStrategy extends Serializable {
 	public Identifier toPhysicalCatalogName(Identifier name, JdbcEnvironment jdbcEnvironment);
 
 	public Identifier toPhysicalSchemaName(Identifier name, JdbcEnvironment jdbcEnvironment);

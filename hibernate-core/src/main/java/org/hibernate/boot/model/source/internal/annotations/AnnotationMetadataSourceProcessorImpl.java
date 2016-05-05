@@ -54,7 +54,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	@SuppressWarnings("FieldCanBeLocal")
 	private final IndexView jandexView;
 
-	private final ReflectionManager reflectionManager;
+	private final transient ReflectionManager reflectionManager;
 
 	private final LinkedHashSet<String> annotatedPackages = new LinkedHashSet<String>();
 

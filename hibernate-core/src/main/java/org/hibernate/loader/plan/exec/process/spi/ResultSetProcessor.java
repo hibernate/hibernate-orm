@@ -6,6 +6,7 @@
  */
 package org.hibernate.loader.plan.exec.process.spi;
 
+import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -24,7 +25,7 @@ import org.hibernate.transform.ResultTransformer;
  *
  * @author Steve Ebersole
  */
-public interface ResultSetProcessor {
+public interface ResultSetProcessor extends Serializable {
 
 	/**
 	 * Make this go somewhere else.  These aren't really linked this way anymore.  ScrollableResultSetProcessor is

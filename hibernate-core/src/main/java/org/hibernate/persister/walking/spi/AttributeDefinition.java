@@ -6,12 +6,14 @@
  */
 package org.hibernate.persister.walking.spi;
 
+import java.io.Serializable;
+
 import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole
  */
-public interface AttributeDefinition {
+public interface AttributeDefinition  extends Serializable {
 	public AttributeSource getSource();
 	public String getName();
 	public Type getType();

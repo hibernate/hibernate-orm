@@ -6,13 +6,15 @@
  */
 package org.hibernate.boot.internal;
 
+import java.io.Serializable;
+
 import com.fasterxml.classmate.MemberResolver;
 import com.fasterxml.classmate.TypeResolver;
 
 /**
  * @author Steve Ebersole
  */
-public class ClassmateContext {
+public class ClassmateContext implements Serializable {
 	private TypeResolver typeResolver = new TypeResolver();
 	private MemberResolver memberResolver = new MemberResolver( typeResolver );
 

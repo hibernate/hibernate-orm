@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.model.naming;
 
+import java.io.Serializable;
+
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.StringHelper;
@@ -15,7 +17,7 @@ import org.hibernate.internal.util.StringHelper;
  *
  * @author Steve Ebersole
  */
-public abstract class ObjectNameNormalizer {
+public abstract class ObjectNameNormalizer implements Serializable {
 	private Database database;
 
 	/**

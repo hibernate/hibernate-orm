@@ -6,6 +6,8 @@
  */
 package org.hibernate;
 
+import java.io.Serializable;
+
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 
@@ -20,7 +22,7 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public interface CustomEntityDirtinessStrategy {
+public interface CustomEntityDirtinessStrategy extends Serializable {
 	/**
 	 * Is this strategy capable of telling whether the given entity is dirty?  A return of {@code true} means that
 	 * {@link #isDirty} will be called next as the definitive means to determine whether the entity is dirty.

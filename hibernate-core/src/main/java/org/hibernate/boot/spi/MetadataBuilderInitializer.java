@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.spi;
 
+import java.io.Serializable;
+
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 
@@ -20,6 +22,6 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
  *
  * @since 5.0
  */
-public interface MetadataBuilderInitializer {
+public interface MetadataBuilderInitializer extends Serializable {
 	public void contribute(MetadataBuilder metadataBuilder, StandardServiceRegistry serviceRegistry);
 }

@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect;
 
+import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.NClob;
@@ -17,7 +18,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *
  * @author Steve Ebersole
  */
-public interface LobMergeStrategy {
+public interface LobMergeStrategy extends Serializable {
 	/**
 	 * Perform merge on {@link Blob} values.
 	 *

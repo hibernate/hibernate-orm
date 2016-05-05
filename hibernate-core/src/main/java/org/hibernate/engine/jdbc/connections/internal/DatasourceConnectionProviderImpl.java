@@ -6,6 +6,10 @@
  */
 package org.hibernate.engine.jdbc.connections.internal;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
@@ -32,7 +36,8 @@ import org.hibernate.service.spi.Stoppable;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class DatasourceConnectionProviderImpl implements ConnectionProvider, Configurable, Stoppable {
+public class DatasourceConnectionProviderImpl implements ConnectionProvider, Configurable, Stoppable, Externalizable {
+	private Object dataSourceConfig;
 	private DataSource dataSource;
 	private String user;
 	private String pass;
@@ -79,13 +84,20 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 
 	@Override
 	public void configure(Map configValues) {
+		dataSourceConfig = configValues.get( Environment.DATASOURCE );
+		user = (String) configValues.get( Environment.USER );
+		pass = (String) configValues.get( Environment.PASS );
+
+		configure();
+	}
+
+	private void configure() {
 		if ( this.dataSource == null ) {
-			final Object dataSource = configValues.get( Environment.DATASOURCE );
-			if ( DataSource.class.isInstance( dataSource ) ) {
-				this.dataSource = (DataSource) dataSource;
+			if ( DataSource.class.isInstance( dataSourceConfig ) ) {
+				this.dataSource = (DataSource) dataSourceConfig;
 			}
 			else {
-				final String dataSourceJndiName = (String) dataSource;
+				final String dataSourceJndiName = (String) dataSourceConfig;
 				if ( dataSourceJndiName == null ) {
 					throw new HibernateException(
 							"DataSource to use was not injected nor specified by [" + Environment.DATASOURCE
@@ -102,8 +114,6 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 			throw new HibernateException( "Unable to determine appropriate DataSource to use" );
 		}
 
-		user = (String) configValues.get( Environment.USER );
-		pass = (String) configValues.get( Environment.PASS );
 		useCredentials = user != null || pass != null;
 		available = true;
 	}
@@ -130,5 +140,44 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 	@Override
 	public boolean supportsAggressiveRelease() {
 		return true;
+	}
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeBoolean( available );
+		out.writeBoolean( user != null );
+		if ( user != null ) {
+			out.writeUTF( user );
+		}
+		out.writeBoolean( pass != null );
+		if ( pass != null ) {
+			out.writeUTF( pass );
+		}
+		out.writeBoolean( jndiService != null );
+		if ( jndiService != null ) {
+			out.writeObject( jndiService );
+		}
+		out.writeBoolean( dataSource != null );
+		if ( dataSourceConfig != null ) {
+			out.writeObject( dataSourceConfig );
+		}
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		available = in.readBoolean();
+		if ( in.readBoolean() ) {
+			user = in.readUTF();
+		}
+		if ( in.readBoolean() ) {
+			pass = in.readUTF();
+		}
+		if ( in.readBoolean() ) {
+			jndiService = (JndiService) in.readObject();
+		}
+		if ( in.readBoolean() ) {
+			dataSourceConfig = in.readObject();
+			configure();
+		}
 	}
 }

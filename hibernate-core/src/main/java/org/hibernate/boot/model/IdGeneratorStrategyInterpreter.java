@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.model;
 
+import java.io.Serializable;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.SequenceGenerator;
@@ -16,7 +17,7 @@ import javax.persistence.TableGenerator;
  *
  * @author Steve Ebersole
  */
-public interface IdGeneratorStrategyInterpreter {
+public interface IdGeneratorStrategyInterpreter extends Serializable {
 	interface GeneratorNameDeterminationContext {
 		/**
 		 * The Java type of the attribute defining the id whose value is to

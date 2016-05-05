@@ -30,7 +30,7 @@ import org.hibernate.id.insert.InsertSelectIdentityInsert;
  *
  * @author Christoph Sturm
  */
-public class IdentityGenerator extends AbstractPostInsertGenerator {
+public class IdentityGenerator extends AbstractPostInsertGenerator implements Serializable {
 
 	@Override
 	public InsertGeneratedIdentifierDelegate getInsertGeneratedIdentifierDelegate(

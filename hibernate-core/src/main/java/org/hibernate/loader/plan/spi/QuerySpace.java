@@ -6,6 +6,8 @@
  */
 package org.hibernate.loader.plan.spi;
 
+import java.io.Serializable;
+
 import org.hibernate.persister.entity.PropertyMapping;
 
 /**
@@ -15,7 +17,7 @@ import org.hibernate.persister.entity.PropertyMapping;
  *
  * @author Steve Ebersole
  */
-public interface QuerySpace {
+public interface QuerySpace extends Serializable {
 	/**
 	 * The uid/alias which uniquely identifies this QuerySpace.  Can be used to uniquely reference this
 	 * QuerySpace elsewhere.

@@ -6,6 +6,8 @@
  */
 package org.hibernate.tuple;
 
+import java.io.Serializable;
+
 import org.hibernate.type.Type;
 
 /**
@@ -13,7 +15,7 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public interface Attribute {
+public interface Attribute extends Serializable {
 	public String getName();
 	public Type getType();
 }

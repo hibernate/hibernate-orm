@@ -6,9 +6,11 @@
  */
 package org.hibernate.hql.spi.id;
 
+import java.io.Serializable;
+
 /**
  * @author Steve Ebersole
  */
-public interface IdTableInfo {
+public interface IdTableInfo extends Serializable {
 	String getQualifiedIdTableName();
 }

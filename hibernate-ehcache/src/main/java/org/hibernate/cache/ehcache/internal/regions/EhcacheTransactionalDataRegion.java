@@ -6,6 +6,9 @@
  */
 package org.hibernate.cache.ehcache.internal.regions;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Properties;
 
 import net.sf.ehcache.Ehcache;
@@ -36,14 +39,14 @@ import org.hibernate.cache.spi.TransactionalDataRegion;
 public class EhcacheTransactionalDataRegion extends EhcacheDataRegion implements TransactionalDataRegion {
 	private static final int LOCAL_LOCK_PROVIDER_CONCURRENCY = 128;
 
-	private final SessionFactoryOptions settings;
+	private SessionFactoryOptions settings;
 
 	/**
 	 * Metadata associated with the objects stored in the region.
 	 */
-	protected final CacheDataDescription metadata;
+	protected CacheDataDescription metadata;
 
-	private final CacheLockProvider lockProvider;
+	private transient CacheLockProvider lockProvider;
 
 	/**
 	 * Construct an transactional Hibernate cache region around the given Ehcache instance.
@@ -55,7 +58,11 @@ public class EhcacheTransactionalDataRegion extends EhcacheDataRegion implements
 		this.settings = settings;
 		this.metadata = metadata;
 
-		final Object context = cache.getInternalContext();
+		initTransients();
+	}
+
+	private void initTransients() {
+		final Object context = getCache().getInternalContext();
 		if ( context instanceof CacheLockProvider ) {
 			this.lockProvider = (CacheLockProvider) context;
 		}
@@ -291,5 +298,21 @@ public class EhcacheTransactionalDataRegion extends EhcacheDataRegion implements
 	 */
 	public final boolean locksAreIndependentOfCache() {
 		return lockProvider instanceof StripedReadWriteLockSync;
+	}
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		super.writeExternal(out);
+		out.writeObject(settings);
+		out.writeObject(metadata);
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		super.readExternal(in);
+		settings = (SessionFactoryOptions) in.readObject();
+		metadata = (CacheDataDescription) in.readObject();
+
+		initTransients();
 	}
 }

@@ -31,6 +31,7 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
+import java.io.Serializable;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.function.Supplier;
@@ -40,7 +41,7 @@ import java.util.function.Supplier;
  *
  * @since 5.0
  */
-public interface SessionFactoryOptions {
+public interface SessionFactoryOptions extends Serializable {
 	/**
 	 * The service registry to use in building the factory.
 	 *

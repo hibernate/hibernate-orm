@@ -5,6 +5,8 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.loader;
+import java.io.Serializable;
+
 import org.hibernate.persister.entity.Loadable;
 
 /**
@@ -13,7 +15,7 @@ import org.hibernate.persister.entity.Loadable;
  * 
  * @author Gavin King
  */
-public interface EntityAliases {
+public interface EntityAliases extends Serializable {
 	/**
 	 * The result set column aliases for the primary key columns
 	 */

@@ -7,6 +7,7 @@
 
 //$Id$
 package org.hibernate.jpa.test.emops;
+import java.io.Serializable;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -16,7 +17,7 @@ import javax.persistence.InheritanceType;
 
 @Entity
 @Inheritance( strategy = InheritanceType.JOINED )
-public class Pet implements java.io.Serializable {
+public class Pet implements Serializable {
 	private int id;
 	private String name;
 	private double weight;

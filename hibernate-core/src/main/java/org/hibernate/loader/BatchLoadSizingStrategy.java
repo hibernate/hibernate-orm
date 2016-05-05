@@ -6,11 +6,13 @@
  */
 package org.hibernate.loader;
 
+import java.io.Serializable;
+
 /**
  * Strategy (pluggable) for determining an optimal size for batch loads.
  *
  * @author Steve Ebersole
  */
-public interface BatchLoadSizingStrategy {
+public interface BatchLoadSizingStrategy extends Serializable {
 	int determineOptimalBatchLoadSize(int numberOfKeyColumns, int numberOfKeys);
 }

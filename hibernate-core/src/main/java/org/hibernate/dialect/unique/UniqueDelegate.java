@@ -6,6 +6,8 @@
  */
 package org.hibernate.dialect.unique;
 
+import java.io.Serializable;
+
 import org.hibernate.boot.Metadata;
 import org.hibernate.mapping.UniqueKey;
 
@@ -31,7 +33,7 @@ import org.hibernate.mapping.UniqueKey;
  * 
  * @author Brett Meyer
  */
-public interface UniqueDelegate {
+public interface UniqueDelegate extends Serializable {
 	/**
 	 * Get the fragment that can be used to make a column unique as part of its column definition.
 	 * <p/>

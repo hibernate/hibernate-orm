@@ -6,6 +6,8 @@
  */
 package org.hibernate.cache.spi.entry;
 
+import java.io.Serializable;
+
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
@@ -13,7 +15,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  *
  * @author Gavin King
  */
-public interface CacheEntryStructure {
+public interface CacheEntryStructure extends Serializable {
 	/**
 	 * Convert the cache item into its "structured" form.  Perfectly valid to return the item as-is.
 	 *

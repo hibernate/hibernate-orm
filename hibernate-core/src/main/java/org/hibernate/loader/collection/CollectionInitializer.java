@@ -17,7 +17,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * @see OneToManyLoader
  * @author Gavin King
  */
-public interface CollectionInitializer {
+public interface CollectionInitializer extends Serializable {
 	/**
 	 * Initialize the given collection
 	 */

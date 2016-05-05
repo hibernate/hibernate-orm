@@ -7,6 +7,7 @@
 
 //$Id$
 package org.hibernate.jpa.test.emops;
+import java.io.Serializable;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -15,7 +16,7 @@ import javax.persistence.Id;
 import javax.persistence.OneToOne;
 
 @Entity
-public class Decorate implements java.io.Serializable {
+public class Decorate implements Serializable {
 
 	private int id;
 

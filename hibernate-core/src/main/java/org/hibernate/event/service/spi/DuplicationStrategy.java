@@ -6,13 +6,15 @@
  */
 package org.hibernate.event.service.spi;
 
+import java.io.Serializable;
+
 /**
  * Defines listener duplication checking strategy, both in terms of when a duplication is detected (see
  * {@link #areMatch}) as well as how to handle a duplication (see {@link #getAction}).
  *
  * @author Steve Ebersole
  */
-public interface DuplicationStrategy {
+public interface DuplicationStrategy extends Serializable {
 	/**
 	 * The enumerated list of actions available on duplication match
 	 */

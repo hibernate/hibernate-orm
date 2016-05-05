@@ -9,10 +9,12 @@
 package org.hibernate.test.annotations.xml.hbm;
 
 
+import java.io.Serializable;
+
 /**
  * @author Emmanuel Bernard
  */
-public interface Z extends java.io.Serializable {
+public interface Z extends Serializable {
   public Integer getZId();
 
   public void setZId(Integer zId);

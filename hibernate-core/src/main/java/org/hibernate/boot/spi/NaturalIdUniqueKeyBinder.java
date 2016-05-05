@@ -6,12 +6,14 @@
  */
 package org.hibernate.boot.spi;
 
+import java.io.Serializable;
+
 import org.hibernate.mapping.Property;
 
 /**
  * @author Steve Ebersole
  */
-public interface NaturalIdUniqueKeyBinder {
+public interface NaturalIdUniqueKeyBinder extends Serializable {
 	/**
 	 * Adds a attribute binding.  The attribute is a (top-level) part of the natural-id
 	 *

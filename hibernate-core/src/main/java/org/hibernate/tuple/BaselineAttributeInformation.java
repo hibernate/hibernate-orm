@@ -6,13 +6,15 @@
  */
 package org.hibernate.tuple;
 
+import java.io.Serializable;
+
 import org.hibernate.FetchMode;
 import org.hibernate.engine.spi.CascadeStyle;
 
 /**
 * @author Steve Ebersole
 */
-public class BaselineAttributeInformation {
+public class BaselineAttributeInformation implements Serializable {
 	private final boolean lazy;
 	private final boolean insertable;
 	private final boolean updateable;

@@ -6,6 +6,10 @@
  */
 package org.hibernate.cfg;
 
+import java.io.InvalidClassException;
+import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.ConnectionReleaseMode;
@@ -23,7 +27,6 @@ import org.hibernate.hql.spi.QueryTranslatorFactory;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -35,7 +38,7 @@ import org.jboss.logging.Logger;
  * @deprecated Use {@link org.hibernate.boot.spi.SessionFactoryOptions} instead.
  */
 @Deprecated
-public final class Settings {
+public final class Settings implements Serializable {
 	private static final Logger LOG = Logger.getLogger( Settings.class );
 
 	private final SessionFactoryOptions sessionFactoryOptions;

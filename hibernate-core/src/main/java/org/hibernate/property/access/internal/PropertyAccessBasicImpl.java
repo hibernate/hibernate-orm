@@ -25,24 +25,36 @@ import org.jboss.logging.Logger;
  *
  * @see PropertyAccessStrategyBasicImpl
  */
-public class PropertyAccessBasicImpl implements PropertyAccess {
+public class PropertyAccessBasicImpl implements PropertyAccess, java.io.Externalizable {
 	private static final Logger log = Logger.getLogger( PropertyAccessBasicImpl.class );
 
-	private final PropertyAccessStrategyBasicImpl strategy;
-	private final GetterMethodImpl getter;
-	private final SetterMethodImpl setter;
+	private PropertyAccessStrategyBasicImpl strategy;
+	private Class containerJavaType;
+	private String propertyName;
+
+	private transient GetterMethodImpl getter;
+	private transient SetterMethodImpl setter;
+
+	public PropertyAccessBasicImpl() {}
 
 	public PropertyAccessBasicImpl(
 			PropertyAccessStrategyBasicImpl strategy,
 			Class containerJavaType,
 			final String propertyName) {
 		this.strategy = strategy;
+		this.containerJavaType = containerJavaType;
+		this.propertyName = propertyName;
 
+		initTransients();
+	}
+
+	private void initTransients() {
 		final Method getterMethod = ReflectHelper.findGetterMethod( containerJavaType, propertyName );
 		this.getter = new GetterMethodImpl( containerJavaType, propertyName, getterMethod );
 
 		final Method setterMethod = ReflectHelper.findSetterMethod( containerJavaType, propertyName, getterMethod.getReturnType() );
 		this.setter = new SetterMethodImpl( containerJavaType, propertyName, setterMethod );
+
 	}
 
 	@Override
@@ -58,5 +70,19 @@ public class PropertyAccessBasicImpl implements PropertyAccess {
 	@Override
 	public Setter getSetter() {
 		return setter;
+	}
+
+	public void writeExternal(java.io.ObjectOutput out) throws java.io.IOException {
+		out.writeObject(strategy);
+		out.writeObject(containerJavaType);
+		out.writeObject(propertyName);
+	}
+
+	public void readExternal(java.io.ObjectInput in) throws java.io.IOException, ClassNotFoundException {
+		strategy = (PropertyAccessStrategyBasicImpl)in.readObject();
+		containerJavaType = (Class)in.readObject();
+		propertyName = (String)in.readObject();
+
+		initTransients();
 	}
 }

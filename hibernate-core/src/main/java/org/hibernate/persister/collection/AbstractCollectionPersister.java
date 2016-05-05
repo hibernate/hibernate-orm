@@ -1753,7 +1753,7 @@ public abstract class AbstractCollectionPersister
 	 * @param session The session
 	 * @throws HibernateException
 	 *
-	 * @deprecated Use {@link #doProcessQueuedOps(org.hibernate.collection.spi.PersistentCollection, java.io.Serializable, org.hibernate.engine.spi.SharedSessionContractImplementor)}
+	 * @deprecated Use {@link #doProcessQueuedOps(org.hibernate.collection.spi.PersistentCollection, Serializable, org.hibernate.engine.spi.SharedSessionContractImplementor)}
 	 */
 	@Deprecated
 	protected void doProcessQueuedOps(PersistentCollection collection, Serializable key,

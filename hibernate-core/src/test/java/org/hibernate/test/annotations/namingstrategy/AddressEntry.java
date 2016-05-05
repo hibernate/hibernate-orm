@@ -5,10 +5,11 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.test.annotations.namingstrategy;
+import java.io.Serializable;
 import javax.persistence.Embeddable;
 
 @Embeddable
-public class AddressEntry implements java.io.Serializable {
+public class AddressEntry implements Serializable {
 	protected String street;
 	protected String city;
 	protected String state;

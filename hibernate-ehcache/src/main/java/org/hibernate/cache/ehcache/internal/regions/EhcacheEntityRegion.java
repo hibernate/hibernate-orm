@@ -6,6 +6,7 @@
  */
 package org.hibernate.cache.ehcache.internal.regions;
 
+import java.io.Serializable;
 import java.util.Properties;
 
 import net.sf.ehcache.Ehcache;
@@ -28,7 +29,8 @@ import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
  * @author Abhishek Sanoujam
  * @author Alex Snaps
  */
-public class EhcacheEntityRegion extends EhcacheTransactionalDataRegion implements EntityRegion {
+public class EhcacheEntityRegion extends EhcacheTransactionalDataRegion implements EntityRegion, Serializable {
+
 	/**
 	 * Constructs an EhcacheCollectionRegion around the given underlying cache.
 	 *

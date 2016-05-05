@@ -6,6 +6,7 @@
  */
 package org.hibernate.exception.spi;
 
+import java.io.Serializable;
 import java.sql.SQLException;
 
 import org.hibernate.JDBCException;
@@ -16,7 +17,7 @@ import org.hibernate.JDBCException;
  *
  * @author Steve Ebersole
  */
-public interface SQLExceptionConversionDelegate {
+public interface SQLExceptionConversionDelegate extends Serializable {
 	/**
 	 * Convert the given SQLException into the Hibernate {@link org.hibernate.JDBCException} hierarchy.
 	 *

@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.model.naming;
 
+import java.io.Serializable;
+
 /**
  * Pluggable strategy for applying implicit naming rules when an
  * explicit name is not given.
@@ -45,7 +47,7 @@ package org.hibernate.boot.model.naming;
  *
  * @author Steve Ebersole
  */
-public interface ImplicitNamingStrategy {
+public interface ImplicitNamingStrategy extends Serializable {
 	/**
 	 * Determine the implicit name of an entity's primary table.
 	 *

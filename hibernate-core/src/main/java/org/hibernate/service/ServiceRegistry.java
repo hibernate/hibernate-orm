@@ -6,12 +6,14 @@
  */
 package org.hibernate.service;
 
+import java.io.Serializable;
+
 /**
  * A registry of {@link Service services}.
  *
  * @author Steve Ebersole
  */
-public interface ServiceRegistry {
+public interface ServiceRegistry extends Serializable {
 	/**
 	 * Retrieve this registry's parent registry.
 	 * 

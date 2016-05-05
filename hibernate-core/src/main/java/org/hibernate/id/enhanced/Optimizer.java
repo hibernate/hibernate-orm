@@ -23,7 +23,7 @@ import org.hibernate.id.IntegralDataTypeHolder;
  *
  * @author Steve Ebersole
  */
-public interface Optimizer {
+public interface Optimizer extends Serializable {
 	/**
 	 * Generate an identifier value accounting for this specific optimization.
 	 *

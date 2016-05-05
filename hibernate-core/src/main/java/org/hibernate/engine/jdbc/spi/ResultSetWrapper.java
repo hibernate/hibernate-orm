@@ -6,6 +6,7 @@
  */
 package org.hibernate.engine.jdbc.spi;
 
+import java.io.Serializable;
 import java.sql.ResultSet;
 
 import org.hibernate.engine.jdbc.ColumnNameCache;
@@ -15,7 +16,7 @@ import org.hibernate.engine.jdbc.ColumnNameCache;
  *
  * @author Gail Badner
  */
-public interface ResultSetWrapper {
+public interface ResultSetWrapper extends Serializable {
 	/**
 	 * Wrap a result set in a "column name cache" wrapper.
 	 *

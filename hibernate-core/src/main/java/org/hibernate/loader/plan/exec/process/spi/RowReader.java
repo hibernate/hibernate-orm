@@ -6,6 +6,7 @@
  */
 package org.hibernate.loader.plan.exec.process.spi;
 
+import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -16,7 +17,7 @@ import org.hibernate.loader.spi.AfterLoadAction;
 /**
  * @author Steve Ebersole
  */
-public interface RowReader {
+public interface RowReader extends Serializable {
 	// why the context *impl*?
 	Object readRow(ResultSet resultSet, ResultSetProcessingContextImpl context) throws SQLException;
 

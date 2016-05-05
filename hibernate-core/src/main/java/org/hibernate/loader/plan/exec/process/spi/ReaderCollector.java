@@ -6,6 +6,7 @@
  */
 package org.hibernate.loader.plan.exec.process.spi;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -14,7 +15,7 @@ import java.util.List;
  * @author Steve Ebersole
  * @author Gail Badner
  */
-public interface ReaderCollector {
+public interface ReaderCollector extends Serializable {
 	public ReturnReader getReturnReader();
 
 	public void add(CollectionReferenceInitializer collectionReferenceInitializer);

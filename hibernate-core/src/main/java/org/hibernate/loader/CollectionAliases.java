@@ -7,12 +7,14 @@
 package org.hibernate.loader;
 
 
+import java.io.Serializable;
+
 /**
  * Type definition of CollectionAliases.
  *
  * @author Steve Ebersole
  */
-public interface CollectionAliases {
+public interface CollectionAliases extends Serializable {
 	/**
 	 * Returns the suffixed result-set column-aliases for columns making
 	 * up the key for this collection (i.e., its FK to its owner).

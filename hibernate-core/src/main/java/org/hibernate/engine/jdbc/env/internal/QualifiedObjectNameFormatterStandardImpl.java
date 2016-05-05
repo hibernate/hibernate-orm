@@ -6,6 +6,7 @@
  */
 package org.hibernate.engine.jdbc.env.internal;
 
+import java.io.Serializable;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
@@ -110,7 +111,7 @@ public class QualifiedObjectNameFormatterStandardImpl implements QualifiedObject
 		);
 	}
 
-	private static interface Format {
+	private static interface Format extends Serializable {
 		public String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect);
 	}
 

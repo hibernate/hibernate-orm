@@ -5,6 +5,8 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.persister.entity;
+import java.io.Serializable;
+
 import org.hibernate.QueryException;
 import org.hibernate.type.Type;
 
@@ -24,7 +26,7 @@ import org.hibernate.type.Type;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface PropertyMapping {
+public interface PropertyMapping extends Serializable {
 	/**
 	 * Given a component path expression, get the type of the property
 	 */

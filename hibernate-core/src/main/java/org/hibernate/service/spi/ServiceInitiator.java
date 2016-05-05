@@ -6,6 +6,8 @@
  */
 package org.hibernate.service.spi;
 
+import java.io.Serializable;
+
 import org.hibernate.service.Service;
 
 /**
@@ -13,7 +15,7 @@ import org.hibernate.service.Service;
  *
  * @author Steve Ebersole
  */
-public interface ServiceInitiator<R extends Service> {
+public interface ServiceInitiator<R extends Service> extends Serializable {
 	/**
 	 * Obtains the service role initiated by this initiator.  Should be unique within a registry
 	 *

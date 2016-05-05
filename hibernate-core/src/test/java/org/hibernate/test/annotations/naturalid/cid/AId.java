@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.annotations.naturalid.cid;
 
+import java.io.Serializable;
 import javax.persistence.Embeddable;
 
 /**
@@ -13,7 +14,7 @@ import javax.persistence.Embeddable;
  */
 
 @Embeddable
-public class AId implements java.io.Serializable {
+public class AId implements Serializable {
     private final int id;
 
     protected AId() {

@@ -6,6 +6,10 @@
  */
 package org.hibernate.service.internal;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.List;
@@ -42,26 +46,27 @@ import org.hibernate.service.spi.Stoppable;
  * @author Sanne Grinovero
  */
 public abstract class AbstractServiceRegistryImpl
-		implements ServiceRegistryImplementor, ServiceBinding.ServiceLifecycleOwner {
+		implements ServiceRegistryImplementor, ServiceBinding.ServiceLifecycleOwner,
+		Externalizable{
 
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( AbstractServiceRegistryImpl.class );
 
 	public static final String ALLOW_CRAWLING = "hibernate.service.allow_crawling";
 
-	private final ServiceRegistryImplementor parent;
-	private final boolean allowCrawling;
+	private ServiceRegistryImplementor parent;
+	private boolean allowCrawling;
 
-	private final ConcurrentMap<Class,ServiceBinding> serviceBindingMap = new ConcurrentHashMap<>();
-	private final ConcurrentMap<Class,Class> roleXref = new ConcurrentHashMap<>();
+	private ConcurrentMap<Class,ServiceBinding> serviceBindingMap = new ConcurrentHashMap<>();
+	private ConcurrentMap<Class,Class> roleXref = new ConcurrentHashMap<>();
 	// The services stored in initializedServiceByRole are completely initialized
 	// (i.e., configured, dependencies injected, and started)
-	private final ConcurrentMap<Class,Service> initializedServiceByRole = new ConcurrentHashMap<>();
+	private ConcurrentMap<Class,Service> initializedServiceByRole = new ConcurrentHashMap<>();
 
 	// IMPL NOTE : the list used for ordered destruction.  Cannot used map above because we need to
 	// iterate it in reverse order which is only available through ListIterator
 	// assume 20 services for initial sizing
 	// All access guarded by synchronization on the serviceBindingList itself.
-	private final List<ServiceBinding> serviceBindingList = CollectionHelper.arrayList( 20 );
+	private List<ServiceBinding> serviceBindingList = CollectionHelper.arrayList( 20 );
 
 	// Guarded by synchronization on this.
 	private boolean autoCloseRegistry;
@@ -91,7 +96,9 @@ public abstract class AbstractServiceRegistryImpl
 		this.allowCrawling = ConfigurationHelper.getBoolean( ALLOW_CRAWLING, Environment.getProperties(), true );
 
 		this.autoCloseRegistry = autoCloseRegistry;
-		this.parent.registerChild( this );
+		if ( this.parent != null ) {
+			this.parent.registerChild( this );
+		}
 	}
 
 	public AbstractServiceRegistryImpl(BootstrapServiceRegistry bootstrapServiceRegistry) {
@@ -109,6 +116,33 @@ public abstract class AbstractServiceRegistryImpl
 
 		this.autoCloseRegistry = autoCloseRegistry;
 		this.parent.registerChild( this );
+	}
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeObject(parent);
+		out.writeBoolean(allowCrawling);
+		out.writeObject(serviceBindingMap);
+		out.writeObject(serviceBindingList);
+		out.writeObject(roleXref);
+		out.writeObject(childRegistries);
+		out.writeBoolean(autoCloseRegistry);
+		out.writeObject(initializedServiceByRole);
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		parent = (ServiceRegistryImplementor) in.readObject();
+		allowCrawling = in.readBoolean();
+		serviceBindingMap = (ConcurrentMap<Class,ServiceBinding>) in.readObject();
+		serviceBindingList = (List<ServiceBinding>) in.readObject();
+		roleXref = (ConcurrentMap<Class,Class>) in.readObject();
+		childRegistries = (Set<ServiceRegistryImplementor>) in.readObject();
+		autoCloseRegistry = in.readBoolean();
+		initializedServiceByRole = (ConcurrentMap<Class, Service>) in.readObject();
+		if ( this.parent != null ) {
+			this.parent.registerChild( this );
+		}
 	}
 
 	@SuppressWarnings({ "unchecked" })

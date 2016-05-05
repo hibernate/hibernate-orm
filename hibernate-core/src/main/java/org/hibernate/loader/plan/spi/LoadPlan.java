@@ -6,6 +6,7 @@
  */
 package org.hibernate.loader.plan.spi;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -35,7 +36,7 @@ import java.util.List;
  *
  * @author Steve Ebersole
  */
-public interface LoadPlan {
+public interface LoadPlan extends Serializable {
 
 	/**
 	 * What is the disposition of this LoadPlan, in terms of its returns.

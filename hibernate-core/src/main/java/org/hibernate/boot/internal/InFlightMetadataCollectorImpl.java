@@ -113,7 +113,7 @@ import org.hibernate.type.TypeResolver;
  *
  * @author Steve Ebersole
  */
-public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector {
+public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector, Serializable {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( InFlightMetadataCollectorImpl.class );
 
 	private final MetadataBuildingOptions options;

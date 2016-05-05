@@ -6,6 +6,7 @@
  */
 package org.hibernate.cfg;
 
+import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -32,7 +33,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
  * {@link org.hibernate.boot.model.convert.spi.ConverterDescriptor} instead
  */
 @Deprecated
-public class AttributeConverterDefinition implements AttributeConverterInfo {
+public class AttributeConverterDefinition implements AttributeConverterInfo, Serializable {
 	private final AttributeConverter attributeConverter;
 	private final boolean autoApply;
 	private final Class entityAttributeType;

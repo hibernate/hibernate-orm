@@ -26,7 +26,7 @@ import org.jboss.logging.Logger;
  * @author Gavin King
  * @author Mikheil Kapanadze
  */
-public class UpdateTimestampsCache {
+public class UpdateTimestampsCache implements Serializable {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, UpdateTimestampsCache.class.getName() );
 	private static final boolean DEBUG_ENABLED = LOG.isDebugEnabled();
 

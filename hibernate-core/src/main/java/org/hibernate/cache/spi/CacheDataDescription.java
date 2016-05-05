@@ -6,6 +6,7 @@
  */
 package org.hibernate.cache.spi;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
 import org.hibernate.type.Type;
@@ -15,7 +16,7 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public interface CacheDataDescription {
+public interface CacheDataDescription extends Serializable {
 	/**
 	 * Is the data marked as being mutable?
 	 *

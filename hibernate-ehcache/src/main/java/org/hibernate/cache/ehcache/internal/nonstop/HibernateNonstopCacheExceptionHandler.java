@@ -6,6 +6,8 @@
  */
 package org.hibernate.cache.ehcache.internal.nonstop;
 
+import java.io.Serializable;
+
 import net.sf.ehcache.constructs.nonstop.NonStopCacheException;
 
 import org.hibernate.cache.ehcache.EhCacheMessageLogger;
@@ -18,7 +20,7 @@ import org.jboss.logging.Logger;
  * @author Abhishek Sanoujam
  * @author Alex Snaps
  */
-public final class HibernateNonstopCacheExceptionHandler {
+public final class HibernateNonstopCacheExceptionHandler implements Serializable {
 	/**
 	 * Property name which set as "true" will throw exceptions on timeout with hibernate
 	 */

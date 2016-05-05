@@ -6,6 +6,8 @@
  */
 package org.hibernate.loader.plan.exec.spi;
 
+import java.io.Serializable;
+
 import org.hibernate.loader.EntityAliases;
 
 /**
@@ -15,7 +17,7 @@ import org.hibernate.loader.EntityAliases;
  *
  * @author Steve Ebersole
  */
-public interface EntityReferenceAliases {
+public interface EntityReferenceAliases extends Serializable {
 	/**
 	 * Obtain the table alias used for referencing the table of the EntityReference.
 	 * <p/>

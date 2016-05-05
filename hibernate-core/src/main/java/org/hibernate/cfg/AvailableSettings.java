@@ -1816,4 +1816,20 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * Disabled by default. Set to true to enable.
 	 */
 	String FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH = "hibernate.query.fail_on_pagination_over_collection_fetch";
+
+	/**
+	 * Settings allows caching of session factory on filesystem.
+	 *
+	 * @since 5.2.13
+	 */
+	String SESSION_FACTORY_SERIALIZATION_FILE = "hibernate.session_factory.serialization_file";
+
+	/**
+	 * If the {@link org.hibernate.SessionFactory} should be deep serialized.
+	 *
+	 * The default value is false.
+	 *
+	 * @since 5.2.13
+	 */
+	String SESSION_FACTORY_DEEP_SERIALIZATION = "hibernate.session_factory.deep_serialization";
 }

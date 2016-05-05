@@ -6,6 +6,7 @@
  */
 package org.hibernate.cfg;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,7 +17,7 @@ import org.hibernate.engine.internal.StatisticalLoggingSessionEventListener;
 /**
  * @author Steve Ebersole
  */
-public class BaselineSessionEventsListenerBuilder {
+public class BaselineSessionEventsListenerBuilder implements Serializable {
 	private boolean logSessionMetrics;
 	private Class<? extends SessionEventListener> autoListener;
 

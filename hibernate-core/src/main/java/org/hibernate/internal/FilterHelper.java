@@ -6,6 +6,7 @@
  */
 package org.hibernate.internal;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
@@ -20,7 +21,7 @@ import org.hibernate.sql.Template;
  * @author Steve Ebersole
  * @author Rob Worsnop
  */
-public class FilterHelper {
+public class FilterHelper implements Serializable {
 
 	private final String[] filterNames;
 	private final String[] filterConditions;

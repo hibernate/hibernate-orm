@@ -6,10 +6,12 @@
  */
 package org.hibernate.test.naturalid.cid;
 
+import java.io.Serializable;
+
 /**
  * @author Donnchadh O Donnabhain
  */
-public class AccountId implements java.io.Serializable {
+public class AccountId implements Serializable {
     private final int id;
 
     protected AccountId() {

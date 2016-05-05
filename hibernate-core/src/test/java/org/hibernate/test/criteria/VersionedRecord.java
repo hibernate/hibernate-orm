@@ -6,13 +6,14 @@
  */
 package org.hibernate.test.criteria;
 
+import java.io.Serializable;
 import javax.persistence.MappedSuperclass;
 
 /**
 * @author Strong Liu <stliu@hibernate.org>
 */
 @MappedSuperclass
-abstract class VersionedRecord implements java.io.Serializable {
+abstract class VersionedRecord implements Serializable {
 	Long recordVersion;
 	Boolean isDeleted;
 }

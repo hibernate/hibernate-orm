@@ -6,6 +6,7 @@
  */
 package org.hibernate.jpa.spi;
 
+import java.io.Serializable;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
@@ -15,12 +16,11 @@ import org.hibernate.jpa.JpaCompliance;
 /**
  * @author Steve Ebersole
  */
-public class JpaComplianceImpl implements JpaCompliance {
+public class JpaComplianceImpl implements JpaCompliance, Serializable {
 	private boolean queryCompliance;
 	private boolean transactionCompliance;
 	private boolean listCompliance;
 	private boolean closedCompliance;
-
 
 	@SuppressWarnings("ConstantConditions")
 	public JpaComplianceImpl(Map configurationSettings, boolean jpaByDefault) {

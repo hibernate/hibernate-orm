@@ -6,6 +6,7 @@
  */
 package org.hibernate.loader.plan.exec.process.spi;
 
+import java.io.Serializable;
 import java.sql.ResultSet;
 
 import org.hibernate.loader.plan.exec.process.internal.ResultSetProcessingContextImpl;
@@ -14,7 +15,7 @@ import org.hibernate.loader.plan.spi.CollectionReference;
 /**
  * @author Steve Ebersole
  */
-public interface CollectionReferenceInitializer {
+public interface CollectionReferenceInitializer extends Serializable {
 	// again, not sure.  ResultSetProcessingContextImpl.initializeEntitiesAndCollections() stuff?
 	void finishUpRow(ResultSet resultSet, ResultSetProcessingContextImpl context);
 

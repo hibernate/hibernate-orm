@@ -6,6 +6,8 @@
  */
 package org.hibernate.loader.plan.spi;
 
+import java.io.Serializable;
+
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.type.Type;
@@ -17,7 +19,7 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public interface Fetch {
+public interface Fetch extends Serializable {
 	/**
 	 * Obtain the owner of this fetch.
 	 *

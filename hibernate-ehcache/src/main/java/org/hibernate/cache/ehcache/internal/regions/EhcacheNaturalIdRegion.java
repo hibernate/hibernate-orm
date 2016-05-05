@@ -30,6 +30,7 @@ import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
  * @author Alex Snaps
  */
 public class EhcacheNaturalIdRegion extends EhcacheTransactionalDataRegion implements NaturalIdRegion {
+
 	/**
 	 * Constructs an EhcacheNaturalIdRegion around the given underlying cache.
 	 *

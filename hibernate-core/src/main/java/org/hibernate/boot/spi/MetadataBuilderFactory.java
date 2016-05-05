@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.spi;
 
+import java.io.Serializable;
+
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 
@@ -16,7 +18,7 @@ import org.hibernate.boot.MetadataSources;
  *
  * @author Gunnar Morling
  */
-public interface MetadataBuilderFactory {
+public interface MetadataBuilderFactory extends Serializable {
 
 	/**
 	 * Creates a {@link MetadataBuilderImplementor}.

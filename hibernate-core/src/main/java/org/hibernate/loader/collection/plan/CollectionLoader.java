@@ -6,6 +6,7 @@
  */
 package org.hibernate.loader.collection.plan;
 
+import java.io.Serializable;
 import java.sql.ResultSet;
 
 import org.hibernate.LockMode;
@@ -44,7 +45,7 @@ public class CollectionLoader extends AbstractLoadPlanBasedCollectionInitializer
 		//To change body of implemented methods use File | Settings | File Templates.
 	}
 
-	protected static class Builder {
+	protected static class Builder implements Serializable {
 		private final QueryableCollection collectionPersister;
 		private int batchSize = 1;
 		private LoadQueryInfluencers influencers = LoadQueryInfluencers.NONE;

@@ -20,6 +20,7 @@ import org.hibernate.cache.spi.QueryResultsRegion;
  * @author Alex Snaps
  */
 public class EhcacheQueryResultsRegion extends EhcacheGeneralDataRegion implements QueryResultsRegion {
+
 	/**
 	 * Constructs an EhcacheQueryResultsRegion around the given underlying cache.
 	 *

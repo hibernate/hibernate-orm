@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.spi;
 
+import java.io.Serializable;
+
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 
 /**
@@ -18,7 +20,7 @@ import org.hibernate.boot.model.naming.ObjectNameNormalizer;
  *
  * @since 5.0
  */
-public interface MetadataBuildingContext {
+public interface MetadataBuildingContext extends Serializable {
 	/**
 	 * Access to the options specified by the {@link org.hibernate.boot.MetadataBuilder}
 	 *

@@ -6,6 +6,8 @@
  */
 package org.hibernate.engine.jdbc.spi;
 
+import java.io.Serializable;
+
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.internal.CoreLogging;
@@ -17,7 +19,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class SqlStatementLogger {
+public class SqlStatementLogger implements Serializable {
 	private static final Logger LOG = CoreLogging.logger( "org.hibernate.SQL" );
 
 	private boolean logToStdout;

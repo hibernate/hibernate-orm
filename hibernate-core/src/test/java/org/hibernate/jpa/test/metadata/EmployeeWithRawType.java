@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.jpa.test.metadata;
+import java.io.Serializable;
 import java.util.Collection;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
@@ -16,8 +17,7 @@ import javax.persistence.ManyToMany;
  * @author Emmanuel Bernard
  */
 @Entity
-public class EmployeeWithRawType implements java.io.Serializable {
-
+public class EmployeeWithRawType implements Serializable {
 
 	@Id
 	protected String id;

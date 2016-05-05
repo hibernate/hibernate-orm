@@ -6,6 +6,7 @@
  */
 package org.hibernate.engine.jdbc.spi;
 
+import java.io.Serializable;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -24,7 +25,7 @@ import java.sql.Statement;
  * @author Brett Meyer
  * @author Steve Ebersole
  */
-public interface ResultSetReturn {
+public interface ResultSetReturn extends Serializable {
 	
 	/**
 	 * Extract the ResultSet from the PreparedStatement.

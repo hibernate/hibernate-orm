@@ -6,6 +6,7 @@
  */
 package org.hibernate.engine.jdbc.spi;
 
+import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
@@ -26,7 +27,7 @@ import org.jboss.logging.Logger.Level;
  *
  * @author Steve Ebersole
  */
-public class SqlExceptionHelper {
+public class SqlExceptionHelper implements Serializable {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
 			SqlExceptionHelper.class.getName()

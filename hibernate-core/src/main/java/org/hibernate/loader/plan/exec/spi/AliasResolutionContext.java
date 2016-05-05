@@ -6,13 +6,15 @@
  */
 package org.hibernate.loader.plan.exec.spi;
 
+import java.io.Serializable;
+
 /**
  * Provides aliases that are used by load queries and ResultSet processors.
  *
  * @author Gail Badner
  * @author Steve Ebersole
  */
-public interface AliasResolutionContext {
+public interface AliasResolutionContext extends Serializable {
 	public String resolveSqlTableAliasFromQuerySpaceUid(String querySpaceUid);
 
 	/**

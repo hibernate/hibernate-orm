@@ -6,12 +6,14 @@
  */
 package org.hibernate.bytecode.spi;
 
+import java.io.Serializable;
+
 /**
  * Represents reflection optimization for a particular class.
  *
  * @author Steve Ebersole
  */
-public interface ReflectionOptimizer {
+public interface ReflectionOptimizer extends Serializable {
 	/**
 	 * Retrieve the optimizer for calling an entity's constructor via reflection.
 	 *

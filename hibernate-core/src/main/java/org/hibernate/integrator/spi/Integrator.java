@@ -6,6 +6,8 @@
  */
 package org.hibernate.integrator.spi;
 
+import java.io.Serializable;
+
 import org.hibernate.boot.Metadata;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
@@ -19,7 +21,7 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
  * @author Steve Ebersole
  * @since 4.0
  */
-public interface Integrator {
+public interface Integrator extends Serializable {
 
 	/**
 	 * Perform integration.

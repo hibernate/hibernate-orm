@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect.function;
 
+import java.io.Serializable;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -16,7 +17,7 @@ import org.hibernate.dialect.Dialect;
  *
  * @author Steve Ebersole
  */
-public class SQLFunctionRegistry {
+public class SQLFunctionRegistry implements Serializable {
 	private final Map<String,SQLFunction> functionMap = new TreeMap<String, SQLFunction>(String.CASE_INSENSITIVE_ORDER);
 
 	/**

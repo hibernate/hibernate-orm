@@ -6,6 +6,7 @@
  */
 package org.hibernate.persister.walking.internal;
 
+import java.io.Serializable;
 import java.util.Iterator;
 
 import org.hibernate.engine.FetchStrategy;
@@ -35,6 +36,8 @@ import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
+
+import static javafx.scene.input.KeyCode.T;
 
 /**
  * A helper for getting attributes from a composition that is known
@@ -102,10 +105,10 @@ public final class CompositionSingularSubAttributesHelper {
 			final CompositeType compositeType,
 			final String lhsTableName,
 			final String[] lhsColumns) {
-		return new Iterable<AttributeDefinition>() {
+		return new SerializableIterable<AttributeDefinition>() {
 			@Override
-			public Iterator<AttributeDefinition> iterator() {
-				return new Iterator<AttributeDefinition>() {
+			public SerializableIterator<AttributeDefinition> iterator() {
+				return new SerializableIterator<AttributeDefinition>() {
 					private final int numberOfAttributes = compositeType.getSubtypes().length;
 					private int currentSubAttributeNumber;
 					private int currentColumnPosition;
@@ -283,3 +286,4 @@ public final class CompositionSingularSubAttributesHelper {
 		};
 	}
 }
+

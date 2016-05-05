@@ -217,7 +217,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 	 * backup in case a null (pre-initialized) value is ever seen in
 	 * an unsynchronized access method.
 	 */
-	private static class HashEntry<K, V> {
+	private static class HashEntry<K, V> implements Serializable {
 		final K key;
 		final int hash;
 		volatile V value;
@@ -284,7 +284,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		abstract <K, V> EvictionPolicy<K, V> make(Segment<K, V> s, int capacity, float lf);
 	}
 
-	public interface EvictionListener<K, V> {
+	public interface EvictionListener<K, V> extends Serializable  {
 		void onEntryEviction(Map<K, V> evicted);
 
 		void onEntryChosenForEviction(V internalCacheEntry);
@@ -302,7 +302,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		}
 	}
 
-	public interface EvictionPolicy<K, V> {
+	public interface EvictionPolicy<K, V> extends Serializable {
 
 		public final static int MAX_BATCH_SIZE = 64;
 
@@ -1217,9 +1217,9 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
 		final int evictCap;
 
-		transient final EvictionPolicy<K, V> eviction;
+		final EvictionPolicy<K, V> eviction;
 
-		transient final EvictionListener<K, V> evictionListener;
+		final EvictionListener<K, V> evictionListener;
 
 		Segment(int cap, int evictCap, float lf, Eviction es, EvictionListener<K, V> listener) {
 			loadFactor = lf;

@@ -81,6 +81,10 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		return sessionFactory;
 	}
 
+	public void sessionFactory(SessionFactoryImplementor sessionFactory) {
+		this.sessionFactory = sessionFactory;
+	}
+
 	protected Session openSession() throws HibernateException {
 		session = sessionFactory().openSession();
 		return session;
@@ -308,10 +312,16 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 				}
 				catch (Exception ignore) {
 				}
-				fail( "StandardServiceRegistry was not closed down as expected" );
+				if ( failOnServiceRegistryNotClosed() ) {
+					fail( "StandardServiceRegistry was not closed down as expected" );
+				}
 			}
 		}
 		serviceRegistry=null;
+	}
+
+	protected boolean failOnServiceRegistryNotClosed() {
+		return true;
 	}
 
 	@OnFailure

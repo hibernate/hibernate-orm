@@ -6,12 +6,14 @@
  */
 package org.hibernate.engine.spi;
 
+import java.io.Serializable;
+
 /**
  * The base contract for determining transient status versus detached status.
  *
  * @author Steve Ebersole
  */
-public interface UnsavedValueStrategy {
+public interface UnsavedValueStrategy extends Serializable {
 	/**
 	 * Make the transient/detached determination
 	 *

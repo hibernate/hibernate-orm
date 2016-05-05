@@ -6,12 +6,14 @@
  */
 package org.hibernate.engine.jdbc.env.spi;
 
+import java.io.Serializable;
+
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
 
 /**
  * @author Steve Ebersole
  */
-public interface LobCreatorBuilder {
+public interface LobCreatorBuilder extends Serializable {
 	LobCreator buildLobCreator(LobCreationContext lobCreationContext);
 }

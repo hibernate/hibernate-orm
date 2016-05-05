@@ -6,6 +6,7 @@
  */
 package org.hibernate.event.spi;
 
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -21,7 +22,7 @@ import org.hibernate.HibernateException;
  *
  * @author Steve Ebersole
  */
-public final class EventType<T> {
+public final class EventType<T> implements Serializable {
 
 	private static AtomicInteger typeCounter = new AtomicInteger( 0 );
 

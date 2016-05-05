@@ -6,6 +6,8 @@
  */
 package org.hibernate.engine.transaction.jta.platform.internal;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.Map;
 import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
@@ -27,11 +29,15 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  */
 public abstract class AbstractJtaPlatform
 		implements JtaPlatform, Configurable, ServiceRegistryAwareService, TransactionManagerAccess {
-	private boolean cacheTransactionManager;
-	private boolean cacheUserTransaction;
+	private transient boolean cacheTransactionManager;
+	private transient boolean cacheUserTransaction;
 	private ServiceRegistryImplementor serviceRegistry;
 
-	private final JtaSynchronizationStrategy tmSynchronizationStrategy = new TransactionManagerBasedSynchronizationStrategy( this );
+	private transient JtaSynchronizationStrategy tmSynchronizationStrategy;
+
+	private transient TransactionManager transactionManager;
+
+	private transient UserTransaction userTransaction;
 
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
@@ -60,6 +66,7 @@ public abstract class AbstractJtaPlatform
 				configValues,
 				canCacheUserTransactionByDefault()
 		);
+		initTransients();
 	}
 
 	protected boolean canCacheTransactionManagerByDefault() {
@@ -78,8 +85,6 @@ public abstract class AbstractJtaPlatform
 		return cacheUserTransaction;
 	}
 
-	private TransactionManager transactionManager;
-
 	@Override
 	public TransactionManager retrieveTransactionManager() {
 		if ( canCacheTransactionManager() ) {
@@ -97,8 +102,6 @@ public abstract class AbstractJtaPlatform
 	public TransactionManager getTransactionManager() {
 		return retrieveTransactionManager();
 	}
-
-	private UserTransaction userTransaction;
 
 	@Override
 	public UserTransaction retrieveUserTransaction() {
@@ -134,5 +137,15 @@ public abstract class AbstractJtaPlatform
 	@Override
 	public int getCurrentStatus() throws SystemException {
 		return retrieveTransactionManager().getStatus();
+	}
+
+	private void readObject(ObjectInputStream ois)
+			throws ClassNotFoundException, IOException {
+		ois.defaultReadObject();
+		initTransients();
+	}
+
+	protected void initTransients() {
+		tmSynchronizationStrategy = new TransactionManagerBasedSynchronizationStrategy( this );
 	}
 }

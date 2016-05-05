@@ -7,10 +7,12 @@
 package org.hibernate.test.namingstrategy;
 
 
+import java.io.Serializable;
+
 /**
  * @author Emmanuel Bernard
  */
-public class Customers implements java.io.Serializable {
+public class Customers implements Serializable {
 	private int id;
 	private String specified_column;
 

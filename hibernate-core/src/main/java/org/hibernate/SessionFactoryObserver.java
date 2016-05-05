@@ -19,7 +19,9 @@ public interface SessionFactoryObserver extends Serializable {
 	 *
 	 * @param factory The factory initialized.
 	 */
-	void sessionFactoryCreated(SessionFactory factory);
+	default void sessionFactoryCreated(SessionFactory factory) {
+		// nothing to do by default
+	}
 
 	/**
 	 * Callback to indicate that the given factory is about close.  The passed factory reference should be usable
@@ -34,8 +36,7 @@ public interface SessionFactoryObserver extends Serializable {
 	 * @since 5.2
 	 */
 	default void sessionFactoryClosing(SessionFactory factory) {
-		// todo : 6.0 remove
-		// do nothing by default for 5.x compatibility
+		// nothing to do by default
 	}
 
 	/**
@@ -44,5 +45,7 @@ public interface SessionFactoryObserver extends Serializable {
 	 *
 	 * @param factory The factory closed.
 	 */
-	void sessionFactoryClosed(SessionFactory factory);
+	default void sessionFactoryClosed(SessionFactory factory) {
+		// nothing to do by default
+	}
 }

@@ -19,7 +19,7 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
  * @author Steve Ebersole
  * @since 4.0
  */
-public interface Integrator {
+public interface Integrator extends java.io.Serializable {
 
 	/**
 	 * Perform integration.

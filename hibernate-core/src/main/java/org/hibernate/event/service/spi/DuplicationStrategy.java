@@ -12,7 +12,7 @@ package org.hibernate.event.service.spi;
  *
  * @author Steve Ebersole
  */
-public interface DuplicationStrategy {
+public interface DuplicationStrategy extends java.io.Serializable {
 	/**
 	 * The enumerated list of actions available on duplication match
 	 */

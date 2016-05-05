@@ -25,7 +25,7 @@ import org.hibernate.AssertionFailure;
  *
  * @see org.hibernate.boot.spi.AttributeConverterDescriptor
  */
-public class AttributeConverterDefinition {
+public class AttributeConverterDefinition implements java.io.Serializable {
 	private final AttributeConverter attributeConverter;
 	private final boolean autoApply;
 	private final Class entityAttributeType;

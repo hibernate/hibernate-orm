@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.spi;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,7 +28,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 @Incubating
-public class NamedQueryRepository {
+public class NamedQueryRepository implements Serializable {
 	private static final Logger log = Logger.getLogger( NamedQueryRepository.class );
 
 	private final Map<String, ResultSetMappingDefinition> namedSqlResultSetMappingMap;

@@ -11,5 +11,5 @@ package org.hibernate.cache.spi.access;
  *
  * @author Steve Ebersole
  */
-public interface SoftLock {
+public interface SoftLock extends java.io.Serializable {
 }

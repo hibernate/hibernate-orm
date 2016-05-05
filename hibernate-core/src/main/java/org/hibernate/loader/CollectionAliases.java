@@ -12,7 +12,7 @@ package org.hibernate.loader;
  *
  * @author Steve Ebersole
  */
-public interface CollectionAliases {
+public interface CollectionAliases extends java.io.Serializable {
 	/**
 	 * Returns the suffixed result-set column-aliases for columns making
 	 * up the key for this collection (i.e., its FK to its owner).

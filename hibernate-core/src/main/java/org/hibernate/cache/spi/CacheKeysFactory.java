@@ -14,7 +14,7 @@ import org.hibernate.persister.entity.EntityPersister;
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public interface CacheKeysFactory {
+public interface CacheKeysFactory extends java.io.Serializable {
 	Object createCollectionKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier);
 
 	Object createEntityKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier);

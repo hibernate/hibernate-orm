@@ -14,7 +14,7 @@ import org.hibernate.loader.PropertyPath;
  *
  * @author Steve Ebersole
  */
-public interface FetchSource {
+public interface FetchSource extends java.io.Serializable {
 
 	/**
 	 * Get the property path to this fetch source

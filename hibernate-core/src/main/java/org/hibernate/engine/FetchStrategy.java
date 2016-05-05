@@ -11,7 +11,7 @@ package org.hibernate.engine;
  *
  * @author Steve Ebersole
  */
-public class FetchStrategy {
+public class FetchStrategy implements java.io.Serializable {
 	private final FetchTiming timing;
 	private final FetchStyle style;
 

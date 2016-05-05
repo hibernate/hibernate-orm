@@ -15,7 +15,7 @@ import org.hibernate.usertype.UserType;
  *
  * @author Steve Ebersole
  */
-public interface TypeContributions {
+public interface TypeContributions extends java.io.Serializable {
 	void contributeType(BasicType type);
 
 	void contributeType(BasicType type, String... keys);

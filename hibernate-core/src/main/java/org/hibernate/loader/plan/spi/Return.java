@@ -17,5 +17,5 @@ package org.hibernate.loader.plan.spi;
  *
  * @author Steve Ebersole
  */
-public interface Return {
+public interface Return extends java.io.Serializable {
 }

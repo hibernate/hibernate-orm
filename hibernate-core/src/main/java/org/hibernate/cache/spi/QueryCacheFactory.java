@@ -14,7 +14,7 @@ import org.hibernate.engine.spi.CacheImplementor;
  *
  * @author Steve Ebersole
  */
-public interface QueryCacheFactory {
+public interface QueryCacheFactory extends java.io.Serializable {
 	/**
 	 * Builds a named query cache.
 	 *

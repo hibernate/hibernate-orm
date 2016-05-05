@@ -36,6 +36,11 @@ import org.infinispan.interceptors.base.CommandInterceptor;
 
 import javax.transaction.TransactionManager;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -48,11 +53,11 @@ import java.util.concurrent.TimeUnit;
  * @since 3.5
  */
 public abstract class BaseTransactionalDataRegion
-		extends BaseRegion implements TransactionalDataRegion {
+		extends BaseRegion implements TransactionalDataRegion, Externalizable {
 	private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog( BaseTransactionalDataRegion.class );
-	private final CacheDataDescription metadata;
-	private final CacheKeysFactory cacheKeysFactory;
-	private final boolean requiresTransaction;
+	private CacheDataDescription metadata;
+	private CacheKeysFactory cacheKeysFactory;
+	private boolean requiresTransaction;
 
 	private long tombstoneExpiration;
 	private PutFromLoadValidator validator;
@@ -62,6 +67,34 @@ public abstract class BaseTransactionalDataRegion
 
 	protected enum Strategy {
 		NONE, VALIDATION, TOMBSTONES, VERSIONED_ENTRIES
+	}
+
+
+	public BaseTransactionalDataRegion() {}
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		super.writeExternal(out);
+		out.writeObject(metadata);
+		out.writeObject(cacheKeysFactory);
+		out.writeBoolean(requiresTransaction);
+		out.writeLong(tombstoneExpiration);
+		out.writeBoolean(validator!=null);
+		out.writeObject(accessType);
+		out.writeObject(strategy);
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		super.readExternal(in);
+		this.metadata = (CacheDataDescription) in.readObject();
+		this.cacheKeysFactory = (CacheKeysFactory) in.readObject();
+		this.requiresTransaction = in.readBoolean();
+		this.tombstoneExpiration = in.readLong();
+		boolean hasValidator = in.readBoolean();
+		this.validator = new PutFromLoadValidator(cache, getRegionFactory());
+		this.accessType = (AccessType) in.readObject();
+		this.strategy = (Strategy) in.readObject();
 	}
 
 	/**
@@ -139,7 +172,7 @@ public abstract class BaseTransactionalDataRegion
 			assert strategy == Strategy.VALIDATION;
 			return;
 		}
-		validator = new PutFromLoadValidator(cache, factory);
+		validator = new PutFromLoadValidator(cache, getRegionFactory());
 		strategy = Strategy.VALIDATION;
 	}
 

@@ -6,10 +6,15 @@
  */
 package org.hibernate.cache.infinispan.access;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Comparator;
 import java.util.concurrent.TimeUnit;
 
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.infinispan.impl.BaseRegion;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
@@ -30,19 +35,24 @@ import org.infinispan.context.Flag;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class NonStrictAccessDelegate implements AccessDelegate {
+public class NonStrictAccessDelegate implements AccessDelegate, Externalizable {
 	private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog( NonStrictAccessDelegate.class );
 	private static final boolean trace = log.isTraceEnabled();
 
-	private final BaseTransactionalDataRegion region;
-	private final AdvancedCache cache;
-	private final AdvancedCache writeCache;
-	private final AdvancedCache putFromLoadCache;
-	private final Comparator versionComparator;
+	private BaseTransactionalDataRegion region;
+	private AdvancedCache cache;
+	private AdvancedCache writeCache;
+	private AdvancedCache putFromLoadCache;
+	private Comparator versionComparator;
 
+	public NonStrictAccessDelegate() {}
 
 	public NonStrictAccessDelegate(BaseTransactionalDataRegion region) {
 		this.region = region;
+		initTransients();
+	}
+
+	private void initTransients() {
 		this.cache = region.getCache();
 		this.writeCache = Caches.ignoreReturnValuesCache(cache);
 		this.putFromLoadCache = writeCache.withFlags( Flag.ZERO_LOCK_ACQUISITION_TIMEOUT, Flag.FAIL_SILENTLY );
@@ -194,5 +204,16 @@ public class NonStrictAccessDelegate implements AccessDelegate {
 		assert value != null;
 		assert version != null;
 		return new VersionedEntry(value, version, timestamp);
+	}
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeObject(region);
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		region = (BaseTransactionalDataRegion) in.readObject();
+		initTransients();
 	}
 }

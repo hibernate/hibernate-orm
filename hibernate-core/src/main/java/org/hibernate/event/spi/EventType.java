@@ -21,7 +21,7 @@ import org.hibernate.HibernateException;
  *
  * @author Steve Ebersole
  */
-public final class EventType<T> {
+public final class EventType<T> implements java.io.Serializable {
 
 	private static AtomicInteger typeCounter = new AtomicInteger( 0 );
 

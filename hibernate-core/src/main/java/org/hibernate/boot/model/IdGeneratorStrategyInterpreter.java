@@ -15,7 +15,7 @@ import javax.persistence.TableGenerator;
  *
  * @author Steve Ebersole
  */
-public interface IdGeneratorStrategyInterpreter {
+public interface IdGeneratorStrategyInterpreter extends java.io.Serializable {
 	public static interface GeneratorNameDeterminationContext {
 		public Class getIdType();
 	}

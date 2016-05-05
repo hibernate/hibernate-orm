@@ -139,7 +139,9 @@ public class ProviderMBeanRegistrationHelper {
 					final Field propertiesField = getField( sessionFactoryType, "properties" );
 					if ( propertiesField != null ) {
 						propertiesField.setAccessible( true );
-						final Properties props = (Properties) propertiesField.get( sessionFactory );
+						final Map<String,Object> propMap = (Map<String,Object>) propertiesField.get( sessionFactory );
+						final Properties props = new Properties();
+						props.putAll(propMap);
 						if ( props != null && props.equals( properties ) ) {
 							return sessionFactory;
 						}

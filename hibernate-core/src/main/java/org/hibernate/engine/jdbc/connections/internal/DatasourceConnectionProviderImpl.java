@@ -6,9 +6,12 @@
  */
 package org.hibernate.engine.jdbc.connections.internal;
 
+import java.io.*;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 import org.hibernate.HibernateException;
@@ -32,8 +35,9 @@ import org.hibernate.service.spi.Stoppable;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class DatasourceConnectionProviderImpl implements ConnectionProvider, Configurable, Stoppable {
+public class DatasourceConnectionProviderImpl implements ConnectionProvider, Configurable, Stoppable, Externalizable {
 	private DataSource dataSource;
+	private String datasourceJndiName;
 	private String user;
 	private String pass;
 	private boolean useCredentials;
@@ -85,27 +89,32 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 				this.dataSource = (DataSource) dataSource;
 			}
 			else {
-				final String dataSourceJndiName = (String) dataSource;
-				if ( dataSourceJndiName == null ) {
-					throw new HibernateException(
-							"DataSource to use was not injected nor specified by [" + Environment.DATASOURCE
-									+ "] configuration property"
-					);
-				}
-				if ( jndiService == null ) {
-					throw new HibernateException( "Unable to locate JndiService to lookup Datasource" );
-				}
-				this.dataSource = (DataSource) jndiService.locate( dataSourceJndiName );
+				datasourceJndiName = (String) dataSource;
 			}
+		}
+		user = (String) configValues.get( Environment.USER );
+		pass = (String) configValues.get( Environment.PASS );
+		available = true;
+		initTransients();
+	}
+
+	private void initTransients() {
+		if ( this.dataSource == null ) { //Lookup dataSource from JNDI if not injected
+			if ( datasourceJndiName == null ) {
+				throw new HibernateException(
+						"DataSource to use was not injected nor specified by [" + Environment.DATASOURCE
+								+ "] configuration property"
+				);
+			}
+			if ( jndiService == null ) {
+				throw new HibernateException( "Unable to locate JndiService to lookup Datasource" );
+			}
+			this.dataSource = (DataSource) jndiService.locate( datasourceJndiName );
 		}
 		if ( this.dataSource == null ) {
 			throw new HibernateException( "Unable to determine appropriate DataSource to use" );
 		}
-
-		user = (String) configValues.get( Environment.USER );
-		pass = (String) configValues.get( Environment.PASS );
 		useCredentials = user != null || pass != null;
-		available = true;
 	}
 
 	@Override
@@ -130,5 +139,43 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 	@Override
 	public boolean supportsAggressiveRelease() {
 		return true;
+	}
+
+	@Override public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeBoolean(available);
+		out.writeBoolean(user!=null);
+		if(user!=null)
+			out.writeUTF(user);
+		out.writeBoolean(pass!=null);
+		if(pass!=null)
+			out.writeUTF(pass);
+		out.writeBoolean(jndiService!=null);
+		if(jndiService!=null)
+			out.writeObject(jndiService);
+		if(available) {
+			out.writeUTF(datasourceJndiName);
+			if (datasourceJndiName == null) {  //only serialize injected, as opposed to looked up, datasource
+				out.writeBoolean(dataSource!=null);
+				if(dataSource!=null)
+					out.writeObject(dataSource);
+			}
+		}
+	}
+
+	@Override public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		available = in.readBoolean();
+		if(in.readBoolean())
+			user = in.readUTF();
+		if(in.readBoolean())
+			pass = in.readUTF();
+		if(in.readBoolean())
+			jndiService = (JndiService) in.readObject();
+		if( available ) { //init transients
+			datasourceJndiName = in.readUTF();
+			if ( datasourceJndiName == null && in.readBoolean() ) {
+				dataSource = (DataSource) in.readObject();
+			}
+			initTransients();
+		}
 	}
 }

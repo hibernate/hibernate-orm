@@ -11,7 +11,7 @@ import org.hibernate.internal.util.StringHelper;
 /**
  * @author Steve Ebersole
  */
-public class PropertyPath {
+public class PropertyPath implements java.io.Serializable {
 	public static final String IDENTIFIER_MAPPER_PROPERTY = "_identifierMapper";
 	private final PropertyPath parent;
 	private final String property;

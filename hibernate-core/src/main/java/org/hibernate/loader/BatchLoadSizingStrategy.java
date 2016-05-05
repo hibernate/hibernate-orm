@@ -11,6 +11,6 @@ package org.hibernate.loader;
  *
  * @author Steve Ebersole
  */
-public interface BatchLoadSizingStrategy {
+public interface BatchLoadSizingStrategy extends java.io.Serializable {
 	int determineOptimalBatchLoadSize(int numberOfKeyColumns, int numberOfKeys);
 }

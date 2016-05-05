@@ -14,7 +14,7 @@ import java.sql.SQLException;
  *
  * @author Steve Ebersole
  */
-public interface ReturnReader {
+public interface ReturnReader extends java.io.Serializable {
 	/**
 	 * Essentially performs the second phase of two-phase loading.
 	 *

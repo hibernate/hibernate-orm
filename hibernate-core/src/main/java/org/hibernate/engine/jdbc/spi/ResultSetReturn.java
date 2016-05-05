@@ -24,7 +24,7 @@ import java.sql.Statement;
  * @author Brett Meyer
  * @author Steve Ebersole
  */
-public interface ResultSetReturn {
+public interface ResultSetReturn extends java.io.Serializable {
 	
 	/**
 	 * Extract the ResultSet from the PreparedStatement.

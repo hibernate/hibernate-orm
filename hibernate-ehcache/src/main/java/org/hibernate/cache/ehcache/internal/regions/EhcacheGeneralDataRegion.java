@@ -13,6 +13,7 @@ import net.sf.ehcache.Element;
 import net.sf.ehcache.constructs.nonstop.NonStopCacheException;
 
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.ehcache.AbstractEhcacheRegionFactory;
 import org.hibernate.cache.ehcache.EhCacheMessageLogger;
 import org.hibernate.cache.ehcache.internal.nonstop.HibernateNonstopCacheExceptionHandler;
 import org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactory;
@@ -38,6 +39,8 @@ abstract class EhcacheGeneralDataRegion extends EhcacheDataRegion implements Gen
 			EhcacheGeneralDataRegion.class.getName()
 	);
 
+	public EhcacheGeneralDataRegion() {}
+
 	/**
 	 * Constructs an EhcacheGeneralDataRegion around the given underlying cache.
 	 *
@@ -46,10 +49,11 @@ abstract class EhcacheGeneralDataRegion extends EhcacheDataRegion implements Gen
 	 * @param properties Any additional[ properties
 	 */
 	public EhcacheGeneralDataRegion(
+			AbstractEhcacheRegionFactory regionFactory,
 			EhcacheAccessStrategyFactory accessStrategyFactory,
 			Ehcache underlyingCache,
 			Properties properties) {
-		super( accessStrategyFactory, underlyingCache, properties );
+		super( regionFactory, accessStrategyFactory, underlyingCache, properties );
 	}
 
 	@Override

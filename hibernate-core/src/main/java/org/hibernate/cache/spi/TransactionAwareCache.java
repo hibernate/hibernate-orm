@@ -11,5 +11,5 @@ package org.hibernate.cache.spi;
  *
  * @author Steve Ebersole
  */
-public interface TransactionAwareCache {
+public interface TransactionAwareCache extends java.io.Serializable {
 }

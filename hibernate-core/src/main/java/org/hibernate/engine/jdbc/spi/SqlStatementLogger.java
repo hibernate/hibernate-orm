@@ -17,7 +17,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class SqlStatementLogger {
+public class SqlStatementLogger implements java.io.Serializable {
 	private static final Logger LOG = CoreLogging.logger( "org.hibernate.SQL" );
 
 	private boolean logToStdout;

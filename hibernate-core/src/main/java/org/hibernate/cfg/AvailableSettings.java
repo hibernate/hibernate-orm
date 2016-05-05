@@ -1491,4 +1491,11 @@ public interface AvailableSettings {
 	 * The default behavior is to allow access unless the session is bootstrapped via JPA.
 	 */
 	String ALLOW_JTA_TRANSACTION_ACCESS = "hibernate.jta.allowTransactionAccess";
+
+	/**
+	 * Settings allows caching of session factory on filesystem.
+	 *
+	 * @since 5.2.1
+	 */
+	String SESSION_FACTORY_CACHE_FILE = "hibernate.sessionfactory.cache";
 }

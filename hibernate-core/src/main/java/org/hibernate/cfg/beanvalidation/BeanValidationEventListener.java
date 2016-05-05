@@ -6,6 +6,11 @@
  */
 package org.hibernate.cfg.beanvalidation;
 
+import java.io.IOException;
+import java.io.ObjectStreamException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -40,14 +45,15 @@ import org.jboss.logging.Logger;
  */
 //FIXME review exception model
 public class BeanValidationEventListener
-		implements PreInsertEventListener, PreUpdateEventListener, PreDeleteEventListener {
+		implements PreInsertEventListener, PreUpdateEventListener, PreDeleteEventListener,
+					  Serializable {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
 			BeanValidationEventListener.class.getName()
 	);
 
-	private ValidatorFactory factory;
+	private transient ValidatorFactory factory;
 	private ConcurrentHashMap<EntityPersister, Set<String>> associationsPerEntityPersister =
 			new ConcurrentHashMap<EntityPersister, Set<String>>();
 	private GroupsPerOperation groupsPerOperation;
@@ -150,5 +156,10 @@ public class BeanValidationEventListener
 		}
 		toString.append( "]" );
 		return toString.toString();
+	}
+
+	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
+		ois.defaultReadObject();
+		factory = Validation.buildDefaultValidatorFactory();
 	}
 }

@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.jdbc;
+import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
@@ -15,7 +16,7 @@ import org.hibernate.HibernateException;
  *
  * @author Steve Ebersole
  */
-public interface Expectation {
+public interface Expectation extends Serializable {
 	/**
 	 * Perform verification of the outcome of the RDBMS operation based on
 	 * the type of expectation defined.

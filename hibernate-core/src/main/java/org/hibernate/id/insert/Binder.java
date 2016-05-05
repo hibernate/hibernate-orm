@@ -11,7 +11,7 @@ import java.sql.SQLException;
 /**
  * @author Steve Ebersole
  */
-public interface Binder {
+public interface Binder extends java.io.Serializable {
 	public void bindValues(PreparedStatement ps) throws SQLException;
 	public Object getEntity();
 }

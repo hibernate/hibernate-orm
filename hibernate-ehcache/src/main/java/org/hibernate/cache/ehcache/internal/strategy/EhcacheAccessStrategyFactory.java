@@ -20,7 +20,7 @@ import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
  * @author Abhishek Sanoujam
  * @author Alex Snaps
  */
-public interface EhcacheAccessStrategyFactory {
+public interface EhcacheAccessStrategyFactory extends java.io.Serializable {
 	/**
 	 * Create {@link EntityRegionAccessStrategy} for the input {@link EhcacheEntityRegion} and {@link AccessType}
 	 *

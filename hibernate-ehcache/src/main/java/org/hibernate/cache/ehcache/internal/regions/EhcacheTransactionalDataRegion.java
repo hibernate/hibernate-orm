@@ -6,6 +6,10 @@
  */
 package org.hibernate.cache.ehcache.internal.regions;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
 import java.util.Properties;
 
 import net.sf.ehcache.Ehcache;
@@ -17,6 +21,7 @@ import net.sf.ehcache.constructs.nonstop.NonStopCacheException;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.ehcache.AbstractEhcacheRegionFactory;
 import org.hibernate.cache.ehcache.internal.nonstop.HibernateNonstopCacheExceptionHandler;
 import org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactory;
 import org.hibernate.cache.spi.CacheDataDescription;
@@ -36,25 +41,30 @@ import org.hibernate.cache.spi.TransactionalDataRegion;
 public class EhcacheTransactionalDataRegion extends EhcacheDataRegion implements TransactionalDataRegion {
 	private static final int LOCAL_LOCK_PROVIDER_CONCURRENCY = 128;
 
-	private final SessionFactoryOptions settings;
+	private SessionFactoryOptions settings;
 
 	/**
 	 * Metadata associated with the objects stored in the region.
 	 */
-	protected final CacheDataDescription metadata;
+	protected CacheDataDescription metadata;
 
-	private final CacheLockProvider lockProvider;
+	private transient CacheLockProvider lockProvider;
 
+	public EhcacheTransactionalDataRegion() {}
 	/**
 	 * Construct an transactional Hibernate cache region around the given Ehcache instance.
 	 */
 	EhcacheTransactionalDataRegion(
+			AbstractEhcacheRegionFactory regionFactory,
 			EhcacheAccessStrategyFactory accessStrategyFactory, Ehcache cache, SessionFactoryOptions settings,
 			CacheDataDescription metadata, Properties properties) {
-		super( accessStrategyFactory, cache, properties );
+		super( regionFactory, accessStrategyFactory, cache, properties );
 		this.settings = settings;
 		this.metadata = metadata;
+		initTransients();
+	}
 
+	private void initTransients() {
 		final Object context = cache.getInternalContext();
 		if ( context instanceof CacheLockProvider ) {
 			this.lockProvider = (CacheLockProvider) context;
@@ -291,5 +301,20 @@ public class EhcacheTransactionalDataRegion extends EhcacheDataRegion implements
 	 */
 	public final boolean locksAreIndependentOfCache() {
 		return lockProvider instanceof StripedReadWriteLockSync;
+	}
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		super.writeExternal(out);
+		out.writeObject(settings);
+		out.writeObject(metadata);
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		super.readExternal(in);
+		settings = (SessionFactoryOptions) in.readObject();
+		metadata = (CacheDataDescription) in.readObject();
+		initTransients();
 	}
 }

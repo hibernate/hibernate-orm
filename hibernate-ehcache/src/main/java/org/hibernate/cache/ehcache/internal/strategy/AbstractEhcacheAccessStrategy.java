@@ -6,6 +6,8 @@
  */
 package org.hibernate.cache.ehcache.internal.strategy;
 
+import java.io.Serializable;
+
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheTransactionalDataRegion;
@@ -21,7 +23,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * @author Chris Dennis
  * @author Alex Snaps
  */
-abstract class AbstractEhcacheAccessStrategy<T extends EhcacheTransactionalDataRegion> {
+abstract class AbstractEhcacheAccessStrategy<T extends EhcacheTransactionalDataRegion> implements java.io.Serializable {
 	private final T region;
 	private final SessionFactoryOptions settings;
 

@@ -16,7 +16,7 @@ import org.hibernate.service.ServiceRegistry;
  * NOTE: Cherry-pick of HHH-7998 from metamodel.  For merging simplicity, just
  * keep it in the o.h.metamodel.spi package.
  */
-public interface TypeContributor {
+public interface TypeContributor extends java.io.Serializable  {
 	/**
 	 * Contribute types
 	 *

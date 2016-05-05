@@ -17,7 +17,7 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
  *
  * @author Steve Ebersole
  */
-public interface PhysicalNamingStrategy {
+public interface PhysicalNamingStrategy extends java.io.Serializable {
 	public Identifier toPhysicalCatalogName(Identifier name, JdbcEnvironment jdbcEnvironment);
 
 	public Identifier toPhysicalSchemaName(Identifier name, JdbcEnvironment jdbcEnvironment);

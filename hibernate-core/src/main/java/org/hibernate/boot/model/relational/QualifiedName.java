@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.model.relational;
 
+import java.io.Serializable;
+
 import org.hibernate.boot.model.naming.Identifier;
 
 /**
@@ -22,7 +24,7 @@ import org.hibernate.boot.model.naming.Identifier;
  *
  * @author Steve Ebersole
  */
-public interface QualifiedName {
+public interface QualifiedName extends Serializable {
 	Identifier getCatalogName();
 	Identifier getSchemaName();
 	Identifier getObjectName();

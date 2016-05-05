@@ -11,7 +11,7 @@ import org.hibernate.mapping.Property;
 /**
  * @author Steve Ebersole
  */
-public interface NaturalIdUniqueKeyBinder {
+public interface NaturalIdUniqueKeyBinder extends java.io.Serializable {
 	/**
 	 * Adds a attribute binding.  The attribute is a (top-level) part of the natural-id
 	 *

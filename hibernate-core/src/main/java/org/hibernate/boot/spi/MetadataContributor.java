@@ -18,7 +18,7 @@ import org.jboss.jandex.IndexView;
  *
  * @since 5.0
  */
-public interface MetadataContributor {
+public interface MetadataContributor extends java.io.Serializable {
 	/**
 	 * Perform the contributions.
 	 *

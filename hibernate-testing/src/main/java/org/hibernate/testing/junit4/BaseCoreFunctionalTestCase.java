@@ -61,7 +61,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	private Configuration configuration;
 	private StandardServiceRegistryImpl serviceRegistry;
-	private SessionFactoryImplementor sessionFactory;
+	protected SessionFactoryImplementor sessionFactory;
 
 	protected Session session;
 

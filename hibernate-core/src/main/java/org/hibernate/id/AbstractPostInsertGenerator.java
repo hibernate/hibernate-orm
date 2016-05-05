@@ -17,7 +17,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * @author Gavin King
  */
 public abstract class AbstractPostInsertGenerator
-		implements PostInsertIdentifierGenerator, BulkInsertionCapableIdentifierGenerator {
+		implements PostInsertIdentifierGenerator, BulkInsertionCapableIdentifierGenerator, Serializable {
 	@Override
 	public Serializable generate(SharedSessionContractImplementor s, Object obj) {
 		return IdentifierGeneratorHelper.POST_INSERT_INDICATOR;

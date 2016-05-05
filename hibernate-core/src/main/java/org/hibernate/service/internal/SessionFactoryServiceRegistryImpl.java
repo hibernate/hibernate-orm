@@ -6,6 +6,9 @@
  */
 package org.hibernate.service.internal;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.List;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -22,8 +25,10 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
  */
 public class SessionFactoryServiceRegistryImpl extends AbstractServiceRegistryImpl implements SessionFactoryServiceRegistry  {
 
-	private final SessionFactoryOptions sessionFactoryOptions;
-	private final SessionFactoryImplementor sessionFactory;
+	private SessionFactoryOptions sessionFactoryOptions;
+	private SessionFactoryImplementor sessionFactory;
+
+	public SessionFactoryServiceRegistryImpl() {}
 
 	@SuppressWarnings( {"unchecked"})
 	public SessionFactoryServiceRegistryImpl(
@@ -58,5 +63,19 @@ public class SessionFactoryServiceRegistryImpl extends AbstractServiceRegistryIm
 	@Override
 	public <R extends Service> void configureService(ServiceBinding<R> serviceBinding) {
 		//TODO nothing to do here or should we inject SessionFactory properties?
+	}
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		super.writeExternal(out);
+		out.writeObject(sessionFactoryOptions);
+		out.writeObject(sessionFactory);
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		super.readExternal(in);
+		sessionFactoryOptions = (SessionFactoryOptions) in.readObject();
+		sessionFactory = (SessionFactoryImplementor) in.readObject();
 	}
 }

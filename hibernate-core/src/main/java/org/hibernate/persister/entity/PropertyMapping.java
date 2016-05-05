@@ -24,7 +24,7 @@ import org.hibernate.type.Type;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface PropertyMapping {
+public interface PropertyMapping extends java.io.Serializable {
 	/**
 	 * Given a component path expression, get the type of the property
 	 */

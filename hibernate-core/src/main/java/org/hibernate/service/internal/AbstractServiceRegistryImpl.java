@@ -6,7 +6,14 @@
  */
 package org.hibernate.service.internal;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 import java.lang.reflect.Method;
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
@@ -32,28 +39,31 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Startable;
 import org.hibernate.service.spi.Stoppable;
 
+import static javafx.scene.input.KeyCode.R;
+
 /**
  * Basic implementation of the ServiceRegistry and ServiceRegistryImplementor contracts
  *
  * @author Steve Ebersole
  */
 public abstract class AbstractServiceRegistryImpl
-		implements ServiceRegistryImplementor, ServiceBinding.ServiceLifecycleOwner {
+		implements ServiceRegistryImplementor, ServiceBinding.ServiceLifecycleOwner,
+					  Externalizable {
 
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( AbstractServiceRegistryImpl.class );
 
 	public static final String ALLOW_CRAWLING = "hibernate.service.allow_crawling";
 
-	private final ServiceRegistryImplementor parent;
-	private final boolean allowCrawling;
+	private ServiceRegistryImplementor parent;
+	private boolean allowCrawling;
 
-	private final ConcurrentServiceBinding<Class,ServiceBinding> serviceBindingMap = new ConcurrentServiceBinding<Class,ServiceBinding>();
+	private ConcurrentServiceBinding<Class,ServiceBinding> serviceBindingMap = new ConcurrentServiceBinding<Class,ServiceBinding>();
 	private ConcurrentServiceBinding<Class,Class> roleXref;
 
 	// IMPL NOTE : the list used for ordered destruction.  Cannot used map above because we need to
 	// iterate it in reverse order which is only available through ListIterator
 	// assume 20 services for initial sizing
-	private final List<ServiceBinding> serviceBindingList = CollectionHelper.arrayList( 20 );
+	private List<ServiceBinding> serviceBindingList = CollectionHelper.arrayList( 20 );
 
 	private boolean autoCloseRegistry;
 	private Set<ServiceRegistryImplementor> childRegistries;
@@ -79,7 +89,8 @@ public abstract class AbstractServiceRegistryImpl
 		this.allowCrawling = ConfigurationHelper.getBoolean( ALLOW_CRAWLING, Environment.getProperties(), true );
 
 		this.autoCloseRegistry = autoCloseRegistry;
-		this.parent.registerChild( this );
+		if(parent!=null)
+			this.parent.registerChild( this );
 	}
 
 	public AbstractServiceRegistryImpl(BootstrapServiceRegistry bootstrapServiceRegistry) {
@@ -97,6 +108,30 @@ public abstract class AbstractServiceRegistryImpl
 
 		this.autoCloseRegistry = autoCloseRegistry;
 		this.parent.registerChild( this );
+	}
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeObject(parent);
+		out.writeBoolean(allowCrawling);
+		out.writeObject(serviceBindingMap);
+		out.writeObject(serviceBindingList);
+		out.writeObject(roleXref);
+		out.writeObject(childRegistries);
+		out.writeBoolean(autoCloseRegistry);
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		parent = (ServiceRegistryImplementor) in.readObject();
+		allowCrawling = in.readBoolean();
+		serviceBindingMap = (ConcurrentServiceBinding<Class,ServiceBinding>) in.readObject();
+		serviceBindingList = (List<ServiceBinding>) in.readObject();
+		roleXref = (ConcurrentServiceBinding<Class,Class>) in.readObject();
+		childRegistries = (Set<ServiceRegistryImplementor>) in.readObject();
+		autoCloseRegistry = in.readBoolean();
+		if(parent!=null)
+			this.parent.registerChild( this );
 	}
 
 	@SuppressWarnings({ "unchecked" })
@@ -155,7 +190,7 @@ public abstract class AbstractServiceRegistryImpl
 			if ( serviceRole.isAssignableFrom( binding.getServiceRole() ) ) {
 				// we found an alternate...
 				log.alternateServiceRole( serviceRole.getName(), binding.getServiceRole().getName() );
-				registerAlternate( serviceRole, binding.getServiceRole() );
+				registerAlternate(serviceRole, binding.getServiceRole());
 				return binding;
 			}
 

@@ -6,6 +6,12 @@
  */
 package org.hibernate.boot.registry.internal;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 import java.util.List;
 import java.util.Map;
 
@@ -24,8 +30,11 @@ import org.hibernate.service.spi.ServiceInitiator;
  *
  * @author Steve Ebersole
  */
-public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl implements StandardServiceRegistry {
-	private final Map configurationValues;
+public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl implements StandardServiceRegistry,
+																													 Externalizable {
+	private Map configurationValues;
+
+	public StandardServiceRegistryImpl() {}
 
 	/**
 	 * Constructs a StandardServiceRegistryImpl.  Should not be instantiated directly; use
@@ -93,5 +102,17 @@ public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl imp
 		if ( Configurable.class.isInstance( serviceBinding.getService() ) ) {
 			( (Configurable) serviceBinding.getService() ).configure( configurationValues );
 		}
+	}
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		super.writeExternal(out);
+		out.writeObject(configurationValues);
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		super.readExternal(in);
+		configurationValues = (Map) in.readObject();
 	}
 }

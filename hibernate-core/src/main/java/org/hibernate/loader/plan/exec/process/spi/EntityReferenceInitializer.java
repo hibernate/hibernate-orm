@@ -15,7 +15,7 @@ import org.hibernate.loader.plan.spi.EntityReference;
 /**
  * @author Steve Ebersole
  */
-public interface EntityReferenceInitializer {
+public interface EntityReferenceInitializer extends java.io.Serializable {
 	EntityReference getEntityReference();
 
 	void hydrateIdentifier(ResultSet resultSet, ResultSetProcessingContextImpl context) throws SQLException;

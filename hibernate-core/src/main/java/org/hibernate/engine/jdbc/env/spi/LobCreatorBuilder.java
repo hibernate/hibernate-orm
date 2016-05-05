@@ -12,6 +12,6 @@ import org.hibernate.engine.jdbc.LobCreator;
 /**
  * @author Steve Ebersole
  */
-public interface LobCreatorBuilder {
+public interface LobCreatorBuilder extends java.io.Serializable {
 	LobCreator buildLobCreator(LobCreationContext lobCreationContext);
 }

@@ -47,7 +47,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * @see org.hibernate.type.Type
  * @author Gavin King
  */
-public interface UserType {
+public interface UserType extends Serializable {
 
 	/**
 	 * Return the SQL type codes for the columns mapped by this type. The

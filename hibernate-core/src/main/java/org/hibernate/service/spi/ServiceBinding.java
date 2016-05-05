@@ -15,7 +15,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public final class ServiceBinding<R extends Service> {
+public final class ServiceBinding<R extends Service> implements java.io.Serializable {
 	private static final Logger log = Logger.getLogger( ServiceBinding.class );
 
 	public static interface ServiceLifecycleOwner {

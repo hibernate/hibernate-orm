@@ -16,7 +16,7 @@ import org.hibernate.dialect.Dialect;
  *
  * @author Steve Ebersole
  */
-public interface QualifiedObjectNameFormatter {
+public interface QualifiedObjectNameFormatter extends java.io.Serializable {
 	/**
 	 * Render a formatted a table name
 	 *

@@ -35,7 +35,7 @@ import java.util.List;
  *
  * @author Steve Ebersole
  */
-public interface LoadPlan {
+public interface LoadPlan extends java.io.Serializable {
 
 	/**
 	 * What is the disposition of this LoadPlan, in terms of its returns.

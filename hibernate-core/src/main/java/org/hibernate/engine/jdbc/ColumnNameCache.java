@@ -6,6 +6,7 @@
  */
 package org.hibernate.engine.jdbc;
 
+import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author Steve Ebersole
  */
-public final class ColumnNameCache {
+public final class ColumnNameCache implements Serializable {
 	private static final float LOAD_FACTOR = .75f;
 
 	private final ConcurrentHashMap<String, Integer> columnNameToIndexCache;

@@ -18,7 +18,7 @@ import org.jboss.logging.Logger;
  * @author Abhishek Sanoujam
  * @author Alex Snaps
  */
-public final class HibernateNonstopCacheExceptionHandler {
+public final class HibernateNonstopCacheExceptionHandler implements java.io.Serializable {
 	/**
 	 * Property name which set as "true" will throw exceptions on timeout with hibernate
 	 */

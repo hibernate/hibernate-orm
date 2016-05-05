@@ -43,7 +43,7 @@ import org.hibernate.internal.util.StringHelper;
  *
  * @author Christoph Beck
  */
-public class TypeNames {
+public class TypeNames implements java.io.Serializable {
 	/**
 	 * Holds default type mappings for a typeCode.  This is the non-sized mapping
 	 */

@@ -6,6 +6,10 @@
  */
 package org.hibernate.cache.infinispan.access;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
 import javax.transaction.Status;
 import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
@@ -23,6 +27,9 @@ import org.hibernate.resource.transaction.spi.TransactionStatus;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class NonTxInvalidationCacheAccessDelegate extends InvalidationCacheAccessDelegate {
+
+	public NonTxInvalidationCacheAccessDelegate() {}
+
 	public NonTxInvalidationCacheAccessDelegate(BaseRegion region, PutFromLoadValidator validator) {
 		super(region, validator);
 	}

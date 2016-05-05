@@ -6,13 +6,17 @@
  */
 package org.hibernate.cache.ehcache;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Map;
 import java.util.Properties;
 
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Ehcache;
-
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
@@ -34,7 +38,6 @@ import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.service.spi.InjectService;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -46,7 +49,7 @@ import org.jboss.logging.Logger;
  * @author Abhishek Sanoujam
  * @author Alex Snaps
  */
-abstract class AbstractEhcacheRegionFactory implements RegionFactory {
+public abstract class AbstractEhcacheRegionFactory implements RegionFactory, Externalizable {
 
 	/**
 	 * The Hibernate system property specifying the location of the ehcache configuration file name.
@@ -65,7 +68,7 @@ abstract class AbstractEhcacheRegionFactory implements RegionFactory {
 	/**
 	 * MBean registration helper class instance for Ehcache Hibernate MBeans.
 	 */
-	protected final ProviderMBeanRegistrationHelper mbeanRegistrationHelper = new ProviderMBeanRegistrationHelper();
+	protected transient ProviderMBeanRegistrationHelper mbeanRegistrationHelper = new ProviderMBeanRegistrationHelper();
 
 	/**
 	 * Ehcache CacheManager that supplied Ehcache instances for this Hibernate RegionFactory.
@@ -78,9 +81,14 @@ abstract class AbstractEhcacheRegionFactory implements RegionFactory {
 	protected SessionFactoryOptions settings;
 
 	/**
+	 * Properties used to start cache manager
+	 */
+	protected Properties properties;
+
+	/**
 	 * {@link EhcacheAccessStrategyFactory} for creating various access strategies
 	 */
-	protected final EhcacheAccessStrategyFactory accessStrategyFactory =
+	protected EhcacheAccessStrategyFactory accessStrategyFactory =
 			new NonstopAccessStrategyFactory( new EhcacheAccessStrategyFactoryImpl() );
 
 	/**
@@ -97,6 +105,10 @@ abstract class AbstractEhcacheRegionFactory implements RegionFactory {
 		return true;
 	}
 
+	public CacheManager getManager() {
+		return manager;
+	}
+
 	@Override
 	public long nextTimestamp() {
 		return net.sf.ehcache.util.Timestamper.next();
@@ -105,13 +117,14 @@ abstract class AbstractEhcacheRegionFactory implements RegionFactory {
 	@Override
 	public EntityRegion buildEntityRegion(String regionName, Properties properties, CacheDataDescription metadata)
 			throws CacheException {
-		return new EhcacheEntityRegion( accessStrategyFactory, getCache( regionName ), settings, metadata, properties );
+		return new EhcacheEntityRegion( this, accessStrategyFactory, getCache( regionName ), settings, metadata, properties );
 	}
 
 	@Override
 	public NaturalIdRegion buildNaturalIdRegion(String regionName, Properties properties, CacheDataDescription metadata)
 			throws CacheException {
 		return new EhcacheNaturalIdRegion(
+				this,
 				accessStrategyFactory,
 				getCache( regionName ),
 				settings,
@@ -127,6 +140,7 @@ abstract class AbstractEhcacheRegionFactory implements RegionFactory {
 			CacheDataDescription metadata)
 			throws CacheException {
 		return new EhcacheCollectionRegion(
+				this,
 				accessStrategyFactory,
 				getCache( regionName ),
 				settings,
@@ -137,7 +151,7 @@ abstract class AbstractEhcacheRegionFactory implements RegionFactory {
 
 	@Override
 	public QueryResultsRegion buildQueryResultsRegion(String regionName, Properties properties) throws CacheException {
-		return new EhcacheQueryResultsRegion( accessStrategyFactory, getCache( regionName ), properties );
+		return new EhcacheQueryResultsRegion( this, accessStrategyFactory, getCache( regionName ), properties );
 	}
 
 	@InjectService
@@ -150,7 +164,7 @@ abstract class AbstractEhcacheRegionFactory implements RegionFactory {
 
 	@Override
 	public TimestampsRegion buildTimestampsRegion(String regionName, Properties properties) throws CacheException {
-		return new EhcacheTimestampsRegion( accessStrategyFactory, getCache( regionName ), properties );
+		return new EhcacheTimestampsRegion( this, accessStrategyFactory, getCache( regionName ), properties );
 	}
 
 	private Ehcache getCache(String name) throws CacheException {
@@ -219,5 +233,25 @@ abstract class AbstractEhcacheRegionFactory implements RegionFactory {
 	 */
 	public AccessType getDefaultAccessType() {
 		return AccessType.READ_WRITE;
+	}
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeObject(settings);
+		out.writeObject(properties);
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		mbeanRegistrationHelper = new ProviderMBeanRegistrationHelper();
+		accessStrategyFactory = new NonstopAccessStrategyFactory( new EhcacheAccessStrategyFactoryImpl() );
+		settings = (SessionFactoryOptions) in.readObject();
+		properties = (Properties) in.readObject();
+		if( settings != null && properties != null ) {
+			if ( LOG.isDebugEnabled() ) {
+				LOG.debug( "Starting ehcache CacheManager after deserialization" );
+			}
+			start( settings, (Map)properties);
+		}
 	}
 }

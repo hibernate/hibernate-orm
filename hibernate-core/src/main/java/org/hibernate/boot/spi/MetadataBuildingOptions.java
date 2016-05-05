@@ -36,7 +36,7 @@ import org.jboss.jandex.IndexView;
  *
  * @since 5.0
  */
-public interface MetadataBuildingOptions {
+public interface MetadataBuildingOptions extends java.io.Serializable {
 	/**
 	 * Access to the service registry.
 	 *

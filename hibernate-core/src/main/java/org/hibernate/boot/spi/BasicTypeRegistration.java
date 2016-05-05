@@ -15,7 +15,7 @@ import org.hibernate.usertype.UserType;
 /**
  * @author Steve Ebersole
  */
-public class BasicTypeRegistration {
+public class BasicTypeRegistration implements java.io.Serializable {
 	private final BasicType basicType;
 	private final String[] registrationKeys;
 

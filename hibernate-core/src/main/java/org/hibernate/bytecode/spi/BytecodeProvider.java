@@ -16,7 +16,7 @@ package org.hibernate.bytecode.spi;
  *
  * @author Steve Ebersole
  */
-public interface BytecodeProvider {
+public interface BytecodeProvider extends java.io.Serializable {
 	/**
 	 * Retrieve the specific factory for this provider capable of
 	 * generating run-time proxies for lazy-loading purposes.

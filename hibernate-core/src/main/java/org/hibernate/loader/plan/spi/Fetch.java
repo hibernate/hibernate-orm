@@ -17,7 +17,7 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public interface Fetch {
+public interface Fetch extends java.io.Serializable {
 	/**
 	 * Obtain the owner of this fetch.
 	 *

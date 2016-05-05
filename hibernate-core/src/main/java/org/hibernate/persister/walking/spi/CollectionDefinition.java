@@ -12,7 +12,7 @@ import org.hibernate.type.CollectionType;
 /**
  * @author Steve Ebersole
  */
-public interface CollectionDefinition {
+public interface CollectionDefinition extends java.io.Serializable {
 	public CollectionPersister getCollectionPersister();
 	public CollectionType getCollectionType();
 

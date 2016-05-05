@@ -24,7 +24,7 @@ import org.hibernate.type.Type;
  * @author David Channon
  * @author Steve Ebersole
  */
-public interface SQLFunction {
+public interface SQLFunction extends java.io.Serializable {
 	/**
 	 * Does this function have any arguments?
 	 *

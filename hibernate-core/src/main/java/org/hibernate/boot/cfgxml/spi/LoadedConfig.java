@@ -35,7 +35,7 @@ import org.jboss.logging.Logger;
  * A LoadedConfig is built via {@link #consume}.  An aggregated representation
  * can be maintained through calls to {@link #merge}
  */
-public class LoadedConfig {
+public class LoadedConfig implements java.io.Serializable{
 	private static final Logger log = Logger.getLogger( LoadedConfig.class );
 
 	private String sessionFactoryName;

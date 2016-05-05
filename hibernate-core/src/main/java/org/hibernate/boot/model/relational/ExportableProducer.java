@@ -6,12 +6,14 @@
  */
 package org.hibernate.boot.model.relational;
 
+import java.io.Serializable;
+
 /**
  * Identifies metamodel objects that can produce {@link Exportable} relational stuff.
  *
  * @author Steve Ebersole
  */
-public interface ExportableProducer {
+public interface ExportableProducer extends Serializable {
 	/**
 	 * Register the contained exportable things to the {@link Database}
 	 *

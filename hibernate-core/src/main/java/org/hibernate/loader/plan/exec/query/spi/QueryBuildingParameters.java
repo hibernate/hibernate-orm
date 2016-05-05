@@ -15,7 +15,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
  *
  * @author Steve Ebersole
  */
-public interface QueryBuildingParameters {
+public interface QueryBuildingParameters extends java.io.Serializable {
 
 	/**
 	 * Provides data for options which can influence the SQL query needed to load an

@@ -15,7 +15,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *
  * @author Gail Badner
  */
-public interface RegionAccessStrategy {
+public interface RegionAccessStrategy extends java.io.Serializable {
 
 	/**
 	 * Attempt to retrieve an object from the cache. Mainly used in attempting

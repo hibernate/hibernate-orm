@@ -6,12 +6,14 @@
  */
 package org.hibernate.tuple;
 
+import java.io.Serializable;
+
 /**
  * Strategy for describing values which are generated in the database.
  *
  * @author Steve Ebersole
  */
-public interface InDatabaseValueGenerationStrategy {
+public interface InDatabaseValueGenerationStrategy extends Serializable {
 	/**
 	 * When is this value generated : NEVER, INSERT, ALWAYS (INSERT+UPDATE)
 	 *

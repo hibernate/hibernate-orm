@@ -30,7 +30,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * @see PersistentIdentifierGenerator
  * @see Configurable
  */
-public interface IdentifierGenerator {
+public interface IdentifierGenerator extends java.io.Serializable {
 	/**
 	 * The configuration parameter holding the entity name
 	 */

@@ -11,7 +11,7 @@ package org.hibernate.bytecode.spi;
  *
  * @author Steve Ebersole
  */
-public interface ReflectionOptimizer {
+public interface ReflectionOptimizer extends java.io.Serializable {
 	/**
 	 * Retrieve the optimizer for calling an entity's constructor via reflection.
 	 *

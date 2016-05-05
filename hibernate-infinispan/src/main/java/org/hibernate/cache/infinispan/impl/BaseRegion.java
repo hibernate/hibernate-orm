@@ -6,6 +6,10 @@
  */
 package org.hibernate.cache.infinispan.impl;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Collections;
 import java.util.Map;
 import javax.transaction.SystemException;
@@ -31,18 +35,20 @@ import org.infinispan.context.Flag;
  * @author Galder Zamarreño
  * @since 3.5
  */
-public abstract class BaseRegion implements Region {
+public abstract class BaseRegion implements Region, Externalizable {
 
 	private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog( BaseRegion.class );
 
-	protected final String name;
-	protected final AdvancedCache cache;
-	protected final AdvancedCache localAndSkipLoadCache;
-	protected final TransactionManager tm;
-	protected final InfinispanRegionFactory factory;
+	protected String name;
+	protected AdvancedCache cache;
+	protected AdvancedCache localAndSkipLoadCache;
+	protected TransactionManager tm;
+	private InfinispanRegionFactory factory;
 
 	protected volatile long lastRegionInvalidation = Long.MIN_VALUE;
 	protected int invalidations = 0;
+
+	public BaseRegion() {}
 
 	/**
     * Base region constructor.
@@ -254,5 +260,28 @@ public abstract class BaseRegion implements Region {
 
 	public InfinispanRegionFactory getRegionFactory() {
 		return factory;
+	}
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeUTF(name);
+		out.writeObject(tm);
+		out.writeLong(lastRegionInvalidation);
+		out.writeInt(invalidations);
+		out.writeObject(factory);
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		this.name = in.readUTF();
+		this.tm = (TransactionManager) in.readObject();
+		this.lastRegionInvalidation = in.readLong();
+		this.invalidations = in.readInt();
+		this.factory = (InfinispanRegionFactory) in.readObject();
+		this.cache = (AdvancedCache) this.factory.getCacheManager().getCache(name);
+		this.localAndSkipLoadCache = cache.withFlags(
+				Flag.CACHE_MODE_LOCAL, Flag.ZERO_LOCK_ACQUISITION_TIMEOUT,
+				Flag.SKIP_CACHE_LOAD
+		);
 	}
 }

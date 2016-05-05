@@ -14,7 +14,7 @@ import java.util.List;
  * @author Steve Ebersole
  * @author Gail Badner
  */
-public interface ReaderCollector {
+public interface ReaderCollector extends java.io.Serializable {
 	public ReturnReader getReturnReader();
 
 	public void add(CollectionReferenceInitializer collectionReferenceInitializer);

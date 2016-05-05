@@ -6,6 +6,9 @@
  */
 package org.hibernate.engine.jdbc.connections.internal;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.SQLException;
@@ -41,7 +44,8 @@ import org.hibernate.service.spi.Stoppable;
  * @author Steve Ebersole
  */
 public class DriverManagerConnectionProviderImpl
-		implements ConnectionProvider, Configurable, Stoppable, ServiceRegistryAwareService {
+		implements ConnectionProvider, Configurable, Stoppable, ServiceRegistryAwareService,
+					  Serializable {
 
 	private static final ConnectionPoolingLogger log = ConnectionPoolingLogger.CONNECTIONS_LOGGER;
 
@@ -52,9 +56,10 @@ public class DriverManagerConnectionProviderImpl
 
 	private boolean active = true;
 
-	private ConnectionCreator connectionCreator;
-	private ScheduledExecutorService executorService;
-	private PooledConnections pool;
+	private transient ConnectionCreator connectionCreator;
+	private transient ScheduledExecutorService executorService;
+	private transient PooledConnections pool;
+	private Map configurationValues;
 
 
 	// create the pool ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -68,6 +73,11 @@ public class DriverManagerConnectionProviderImpl
 
 	@Override
 	public void configure(Map configurationValues) {
+		this.configurationValues = configurationValues;
+		initTransients();
+	}
+
+	private void initTransients() {
 		log.usingHibernateBuiltInConnectionPool();
 
 		connectionCreator = buildCreator( configurationValues );
@@ -87,6 +97,13 @@ public class DriverManagerConnectionProviderImpl
 				validationInterval,
 				TimeUnit.SECONDS
 		);
+	}
+
+	void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
+		ois.defaultReadObject();
+		if( configurationValues != null ) {
+			initTransients();
+		}
 	}
 
 	private PooledConnections buildPool(Map configurationValues) {

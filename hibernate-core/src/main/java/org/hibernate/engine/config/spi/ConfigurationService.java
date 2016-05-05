@@ -84,7 +84,7 @@ public interface ConfigurationService extends Service {
 	 *
 	 * @param <T> The Java type of the converted value
 	 */
-	public static interface Converter<T> {
+	public static interface Converter<T> extends java.io.Serializable {
 		/**
 		 * Convert an untyped Object reference to the Converter's type.
 		 *

@@ -15,7 +15,7 @@ import org.hibernate.boot.SessionFactoryBuilder;
  *
  * @author Steve Ebersole
  */
-public interface SessionFactoryBuilderFactory {
+public interface SessionFactoryBuilderFactory extends java.io.Serializable {
 	/**
 	 * The contract method.  Return the SessionFactoryBuilder.  May return {@code null}
 	 *

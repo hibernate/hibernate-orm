@@ -44,7 +44,7 @@ public class CollectionLoader extends AbstractLoadPlanBasedCollectionInitializer
 		//To change body of implemented methods use File | Settings | File Templates.
 	}
 
-	protected static class Builder {
+	protected static class Builder implements java.io.Serializable {
 		private final QueryableCollection collectionPersister;
 		private int batchSize = 1;
 		private LoadQueryInfluencers influencers = LoadQueryInfluencers.NONE;

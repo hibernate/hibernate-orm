@@ -13,7 +13,7 @@ import org.hibernate.persister.entity.Loadable;
  * 
  * @author Gavin King
  */
-public interface EntityAliases {
+public interface EntityAliases extends java.io.Serializable {
 	/**
 	 * The result set column aliases for the primary key columns
 	 */

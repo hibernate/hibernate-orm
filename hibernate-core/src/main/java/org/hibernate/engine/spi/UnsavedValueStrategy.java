@@ -11,7 +11,7 @@ package org.hibernate.engine.spi;
  *
  * @author Steve Ebersole
  */
-public interface UnsavedValueStrategy {
+public interface UnsavedValueStrategy extends java.io.Serializable {
 	/**
 	 * Make the transient/detached determination
 	 *

@@ -40,7 +40,7 @@ abstract class AbstractReadWriteEhcacheAccessStrategy<T extends EhcacheTransacti
 	private final UUID uuid = UUID.randomUUID();
 	private final AtomicLong nextLockId = new AtomicLong();
 
-	private final Comparator versionComparator;
+	private Comparator versionComparator;
 
 	/**
 	 * Creates a read/write cache access strategy around the given cache region.

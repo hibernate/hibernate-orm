@@ -25,7 +25,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 /**
  * @author Steve Ebersole
  */
-public class Database {
+public class Database implements java.io.Serializable {
 	private final Dialect dialect;
 	private final MetadataBuildingOptions buildingOptions;
 	private final JdbcEnvironment jdbcEnvironment;

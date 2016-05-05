@@ -6,6 +6,10 @@
  */
 package org.hibernate.cache.infinispan.timestamp;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import javax.transaction.Transaction;
 
 import org.hibernate.cache.CacheException;
@@ -27,8 +31,18 @@ import org.infinispan.context.Flag;
  */
 public class TimestampsRegionImpl extends BaseGeneralDataRegion implements TimestampsRegion {
 
-	private final AdvancedCache removeCache;
-	private final AdvancedCache timestampsPutCache;
+	private AdvancedCache removeCache;
+	private AdvancedCache timestampsPutCache;
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		super.readExternal(in);
+		initTransients();
+	}
+
+	public TimestampsRegionImpl() {
+		super();
+	}
 
    /**
     * Local timestamps region constructor.
@@ -41,6 +55,10 @@ public class TimestampsRegionImpl extends BaseGeneralDataRegion implements Times
 			AdvancedCache cache, String name,
 			InfinispanRegionFactory factory) {
 		super( cache, name, factory );
+		initTransients();
+	}
+
+	private void initTransients() {
 		this.removeCache = Caches.ignoreReturnValuesCache( cache );
 
 		// Skip locking when updating timestamps to provide better performance

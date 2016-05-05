@@ -7,6 +7,7 @@
 package org.hibernate.service.internal;
 
 import java.lang.reflect.Method;
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
@@ -32,13 +33,15 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Startable;
 import org.hibernate.service.spi.Stoppable;
 
+import static javafx.scene.input.KeyCode.R;
+
 /**
  * Basic implementation of the ServiceRegistry and ServiceRegistryImplementor contracts
  *
  * @author Steve Ebersole
  */
 public abstract class AbstractServiceRegistryImpl
-		implements ServiceRegistryImplementor, ServiceBinding.ServiceLifecycleOwner {
+		implements ServiceRegistryImplementor, ServiceBinding.ServiceLifecycleOwner, Serializable {
 
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( AbstractServiceRegistryImpl.class );
 
@@ -79,7 +82,8 @@ public abstract class AbstractServiceRegistryImpl
 		this.allowCrawling = ConfigurationHelper.getBoolean( ALLOW_CRAWLING, Environment.getProperties(), true );
 
 		this.autoCloseRegistry = autoCloseRegistry;
-		this.parent.registerChild( this );
+		if(parent!=null)
+			this.parent.registerChild( this );
 	}
 
 	public AbstractServiceRegistryImpl(BootstrapServiceRegistry bootstrapServiceRegistry) {
@@ -155,7 +159,7 @@ public abstract class AbstractServiceRegistryImpl
 			if ( serviceRole.isAssignableFrom( binding.getServiceRole() ) ) {
 				// we found an alternate...
 				log.alternateServiceRole( serviceRole.getName(), binding.getServiceRole().getName() );
-				registerAlternate( serviceRole, binding.getServiceRole() );
+				registerAlternate(serviceRole, binding.getServiceRole());
 				return binding;
 			}
 

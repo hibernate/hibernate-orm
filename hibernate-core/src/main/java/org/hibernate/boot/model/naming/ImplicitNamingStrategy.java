@@ -45,7 +45,7 @@ package org.hibernate.boot.model.naming;
  *
  * @author Steve Ebersole
  */
-public interface ImplicitNamingStrategy {
+public interface ImplicitNamingStrategy extends java.io.Serializable {
 	/**
 	 * Determine the implicit name of an entity's primary table.
 	 *

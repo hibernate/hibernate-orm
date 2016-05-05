@@ -12,9 +12,9 @@ import org.hibernate.boot.archive.scan.spi.ScanOptions;
  * @author Steve Ebersole
  */
 public class StandardScanOptions implements ScanOptions {
-	private final boolean detectClassesInRoot;
-	private final boolean detectClassesInNonRoot;
-	private final boolean detectHibernateMappingFiles;
+	private boolean detectClassesInRoot;
+	private boolean detectClassesInNonRoot;
+	private boolean detectHibernateMappingFiles;
 
 	public StandardScanOptions() {
 		this( "hbm,class", false );

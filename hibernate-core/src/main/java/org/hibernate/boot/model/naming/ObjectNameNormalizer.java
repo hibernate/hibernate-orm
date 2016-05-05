@@ -15,7 +15,7 @@ import org.hibernate.internal.util.StringHelper;
  *
  * @author Steve Ebersole
  */
-public abstract class ObjectNameNormalizer {
+public abstract class ObjectNameNormalizer implements java.io.Serializable {
 	private Database database;
 
 	/**

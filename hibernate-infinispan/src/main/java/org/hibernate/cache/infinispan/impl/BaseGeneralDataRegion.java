@@ -6,6 +6,11 @@
  */
 package org.hibernate.cache.infinispan.impl;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.util.Caches;
@@ -21,8 +26,16 @@ import org.infinispan.AdvancedCache;
  * @author Galder Zamarreño
  * @since 3.5
  */
-public abstract class BaseGeneralDataRegion extends BaseRegion implements GeneralDataRegion {
-	private final AdvancedCache putCache;
+public abstract class BaseGeneralDataRegion extends BaseRegion implements GeneralDataRegion, java.io.Externalizable {
+	private AdvancedCache putCache;
+
+	public BaseGeneralDataRegion() {}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		super.readExternal(in);
+		initTransients();
+	}
 
    /**
     * General data region constructor.
@@ -35,6 +48,10 @@ public abstract class BaseGeneralDataRegion extends BaseRegion implements Genera
 			AdvancedCache cache, String name,
 			InfinispanRegionFactory factory) {
 		super( cache, name, null, factory );
+		initTransients();
+	}
+
+	private void initTransients() {
 		this.putCache = Caches.ignoreReturnValuesCache( cache );
 	}
 

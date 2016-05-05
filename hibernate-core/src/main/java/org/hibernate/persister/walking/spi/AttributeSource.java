@@ -9,6 +9,6 @@ package org.hibernate.persister.walking.spi;
 /**
 * @author Steve Ebersole
 */
-public interface AttributeSource {
+public interface AttributeSource extends java.io.Serializable {
 	public Iterable<AttributeDefinition> getAttributes();
 }

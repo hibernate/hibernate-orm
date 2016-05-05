@@ -24,6 +24,7 @@ import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
@@ -37,7 +38,7 @@ import org.hibernate.tuple.entity.EntityTuplizerFactory;
  * to a specialization of {@link SessionFactoryBuilder}
  */
 public abstract class AbstractDelegatingSessionFactoryBuilder<T extends AbstractDelegatingSessionFactoryBuilder<T>> implements SessionFactoryBuilder {
-	private final SessionFactoryBuilder delegate;
+	protected final SessionFactoryBuilder delegate;
 
 	public AbstractDelegatingSessionFactoryBuilder(SessionFactoryBuilder delegate) {
 		this.delegate = delegate;
@@ -359,6 +360,18 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends Abstract
 			String registrationName,
 			SQLFunction sqlFunction) {
 		delegate.applySqlFunction( registrationName, sqlFunction );
+		return getThis();
+	}
+
+	@Override
+	public SessionFactoryBuilder applyStatelessInterceptor(Class<? extends Interceptor> statelessInterceptorClass) {
+		delegate.applyStatelessInterceptor(statelessInterceptorClass);
+		return getThis();
+	}
+
+	@Override
+	public SessionFactoryBuilder applyConnectionHandlingMode(PhysicalConnectionHandlingMode connectionHandlingMode) {
+		delegate.applyConnectionHandlingMode(connectionHandlingMode);
 		return getThis();
 	}
 

@@ -12,7 +12,7 @@ import org.hibernate.engine.spi.CascadeStyle;
 /**
 * @author Steve Ebersole
 */
-public class BaselineAttributeInformation {
+public class BaselineAttributeInformation implements java.io.Serializable {
 	private final boolean lazy;
 	private final boolean insertable;
 	private final boolean updateable;

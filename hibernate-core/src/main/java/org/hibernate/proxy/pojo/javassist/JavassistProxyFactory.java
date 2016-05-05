@@ -6,8 +6,12 @@
  */
 package org.hibernate.proxy.pojo.javassist;
 
+import java.io.ObjectStreamException;
+import java.io.InvalidObjectException;
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
@@ -31,12 +35,12 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  * @author Muga Nishizawa
  */
 public class JavassistProxyFactory implements ProxyFactory, Serializable {
-	private static final CoreMessageLogger LOG = messageLogger( JavassistProxyFactory.class );
+	private static final CoreMessageLogger LOG = messageLogger(JavassistProxyFactory.class);
 
 	private static final MethodFilter FINALIZE_FILTER = new MethodFilter() {
 		public boolean isHandled(Method m) {
 			// skip finalize methods
-			return !( m.getParameterTypes().length == 0 && m.getName().equals( "finalize" ) );
+			return !(m.getParameterTypes().length == 0 && m.getName().equals("finalize"));
 		}
 	};
 
@@ -63,21 +67,21 @@ public class JavassistProxyFactory implements ProxyFactory, Serializable {
 			CompositeType componentIdType) throws HibernateException {
 		this.entityName = entityName;
 		this.persistentClass = persistentClass;
-		this.interfaces = toArray( interfaces );
+		this.interfaces = toArray(interfaces);
 		this.getIdentifierMethod = getIdentifierMethod;
 		this.setIdentifierMethod = setIdentifierMethod;
 		this.componentIdType = componentIdType;
-		this.overridesEquals = ReflectHelper.overridesEquals( persistentClass );
+		this.overridesEquals = ReflectHelper.overridesEquals(persistentClass);
 
 		this.proxyClass = buildJavassistProxyFactory().createClass();
 	}
 
 	private Class[] toArray(Set<Class> interfaces) {
-		if ( interfaces == null ) {
+		if (interfaces == null) {
 			return ArrayHelper.EMPTY_CLASS_ARRAY;
 		}
 
-		return interfaces.toArray( new Class[interfaces.size()] );
+		return interfaces.toArray(new Class[interfaces.size()]);
 	}
 
 	private javassist.util.proxy.ProxyFactory buildJavassistProxyFactory() {
@@ -96,9 +100,9 @@ public class JavassistProxyFactory implements ProxyFactory, Serializable {
 				return persistentClass.getClassLoader();
 			}
 		};
-		factory.setSuperclass( interfaces.length == 1 ? persistentClass : null );
-		factory.setInterfaces( interfaces );
-		factory.setFilter( FINALIZE_FILTER );
+		factory.setSuperclass(interfaces.length == 1 ? persistentClass : null);
+		factory.setInterfaces(interfaces);
+		factory.setFilter(FINALIZE_FILTER);
 		return factory;
 	}
 
@@ -120,14 +124,14 @@ public class JavassistProxyFactory implements ProxyFactory, Serializable {
 
 		try {
 			final HibernateProxy proxy = (HibernateProxy) proxyClass.newInstance();
-			( (Proxy) proxy ).setHandler( initializer );
+			((Proxy) proxy).setHandler(initializer);
 			initializer.constructed();
 
 			return proxy;
 		}
 		catch (Throwable t) {
-			LOG.error( LOG.javassistEnhancementFailed( entityName ), t );
-			throw new HibernateException( LOG.javassistEnhancementFailed( entityName ), t );
+			LOG.error(LOG.javassistEnhancementFailed(entityName), t);
+			throw new HibernateException(LOG.javassistEnhancementFailed(entityName), t);
 		}
 	}
 
@@ -137,11 +141,11 @@ public class JavassistProxyFactory implements ProxyFactory, Serializable {
 				serializableProxy.getPersistentClass(),
 				serializableProxy.getInterfaces(),
 				serializableProxy.getId(),
-				resolveIdGetterMethod( serializableProxy ),
-				resolveIdSetterMethod( serializableProxy ),
+				resolveIdGetterMethod(serializableProxy),
+				resolveIdSetterMethod(serializableProxy),
 				serializableProxy.getComponentIdType(),
 				null,
-				ReflectHelper.overridesEquals( serializableProxy.getPersistentClass() )
+				ReflectHelper.overridesEquals(serializableProxy.getPersistentClass())
 		);
 
 		final javassist.util.proxy.ProxyFactory factory = buildJavassistProxyFactory(
@@ -152,26 +156,26 @@ public class JavassistProxyFactory implements ProxyFactory, Serializable {
 		// note: interface is assumed to already contain HibernateProxy.class
 		try {
 			final Class proxyClass = factory.createClass();
-			final HibernateProxy proxy = ( HibernateProxy ) proxyClass.newInstance();
-			( (Proxy) proxy ).setHandler( initializer );
+			final HibernateProxy proxy = (HibernateProxy) proxyClass.newInstance();
+			((Proxy) proxy).setHandler(initializer);
 			initializer.constructed();
 			return proxy;
 		}
-		catch ( Throwable t ) {
-			final String message = LOG.javassistEnhancementFailed( serializableProxy.getEntityName() );
-			LOG.error( message, t );
-			throw new HibernateException( message, t );
+		catch (Throwable t) {
+			final String message = LOG.javassistEnhancementFailed(serializableProxy.getEntityName());
+			LOG.error(message, t);
+			throw new HibernateException(message, t);
 		}
 	}
 
 	@SuppressWarnings("unchecked")
 	private static Method resolveIdGetterMethod(SerializableProxy serializableProxy) {
-		if ( serializableProxy.getIdentifierGetterMethodName() == null ) {
+		if (serializableProxy.getIdentifierGetterMethodName() == null) {
 			return null;
 		}
 
 		try {
-			return serializableProxy.getIdentifierGetterMethodClass().getDeclaredMethod( serializableProxy.getIdentifierGetterMethodName() );
+			return serializableProxy.getIdentifierGetterMethodClass().getDeclaredMethod(serializableProxy.getIdentifierGetterMethodName());
 		}
 		catch (NoSuchMethodException e) {
 			throw new HibernateException(
@@ -189,7 +193,7 @@ public class JavassistProxyFactory implements ProxyFactory, Serializable {
 
 	@SuppressWarnings("unchecked")
 	private static Method resolveIdSetterMethod(SerializableProxy serializableProxy) {
-		if ( serializableProxy.getIdentifierSetterMethodName() == null ) {
+		if (serializableProxy.getIdentifierSetterMethodName() == null) {
 			return null;
 		}
 
@@ -210,6 +214,81 @@ public class JavassistProxyFactory implements ProxyFactory, Serializable {
 							serializableProxy.getIdentifierSetterMethodClass()
 					)
 			);
+		}
+	}
+
+	private Object writeReplace() throws ObjectStreamException {
+		return new SerialForm(entityName, persistentClass, interfaces,
+				getIdentifierMethod, setIdentifierMethod, componentIdType);
+	}
+
+	public static class SerialForm implements java.io.Serializable {
+		private final Class persistentClass;
+		private final String entityName;
+		private final Class[] interfaces;
+		private final CompositeType componentIdType;
+
+		private final String identifierGetterMethodName;
+		private final Class identifierGetterMethodClass;
+
+		private final String identifierSetterMethodName;
+		private final Class identifierSetterMethodClass;
+		private final Class[] identifierSetterMethodParams;
+
+		public SerialForm(
+				String entityName,
+				Class persistentClass,
+				Class[] interfaces,
+				Method getIdentifierMethod,
+				Method setIdentifierMethod,
+				CompositeType componentIdType) {
+			this.entityName = entityName;
+			this.persistentClass = persistentClass;
+			this.interfaces = interfaces;
+			if (getIdentifierMethod != null) {
+				identifierGetterMethodName = getIdentifierMethod.getName();
+				identifierGetterMethodClass = getIdentifierMethod.getDeclaringClass();
+			}
+			else {
+				identifierGetterMethodName = null;
+				identifierGetterMethodClass = null;
+			}
+
+			if (setIdentifierMethod != null) {
+				identifierSetterMethodName = setIdentifierMethod.getName();
+				identifierSetterMethodClass = setIdentifierMethod.getDeclaringClass();
+				identifierSetterMethodParams = setIdentifierMethod.getParameterTypes();
+			}
+			else {
+				identifierSetterMethodName = null;
+				identifierSetterMethodClass = null;
+				identifierSetterMethodParams = null;
+			}
+
+			this.componentIdType = componentIdType;
+		}
+
+		private Object readResolve() throws ObjectStreamException {
+			JavassistProxyFactory factory = new JavassistProxyFactory();
+			try {
+				Method getIdentifierMethod = null;
+				if( identifierGetterMethodClass != null ) {
+					getIdentifierMethod = identifierGetterMethodClass.getDeclaredMethod(identifierGetterMethodName);
+				}
+				Method setIdentifierMethod = null;
+				if( identifierSetterMethodClass != null) {
+					setIdentifierMethod = identifierSetterMethodClass.getDeclaredMethod(identifierSetterMethodName,
+							identifierSetterMethodParams);
+				}
+				Set<Class> tmp = new HashSet<Class>(interfaces.length);
+				tmp.addAll(Arrays.asList(interfaces));
+				factory.postInstantiate(entityName, persistentClass, tmp,
+						getIdentifierMethod, setIdentifierMethod, componentIdType);
+				return factory;
+			} catch(NoSuchMethodException e) {
+				LOG.error("Error during JavassistProxyFactory.readResolve", e);
+				throw new InvalidObjectException(e.getMessage());
+			}
 		}
 	}
 }

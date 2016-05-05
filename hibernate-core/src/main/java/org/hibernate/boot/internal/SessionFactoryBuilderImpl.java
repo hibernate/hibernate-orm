@@ -115,8 +115,8 @@ import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplementor, SessionFactoryOptionsState {
 	private static final Logger log = Logger.getLogger( SessionFactoryBuilderImpl.class );
 
-	private final MetadataImplementor metadata;
-	private final SessionFactoryOptionsStateStandardImpl options;
+	protected final MetadataImplementor metadata;
+	protected final SessionFactoryOptionsStateStandardImpl options;
 
 	public SessionFactoryBuilderImpl(MetadataImplementor metadata) {
 		this.metadata = metadata;

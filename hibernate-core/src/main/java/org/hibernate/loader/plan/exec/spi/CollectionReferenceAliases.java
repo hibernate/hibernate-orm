@@ -11,7 +11,7 @@ import org.hibernate.loader.CollectionAliases;
 /**
  * @author Steve Ebersole
  */
-public interface CollectionReferenceAliases {
+public interface CollectionReferenceAliases extends java.io.Serializable {
 	/**
 	 * Obtain the table alias used for the collection table of the CollectionReference.
 	 *

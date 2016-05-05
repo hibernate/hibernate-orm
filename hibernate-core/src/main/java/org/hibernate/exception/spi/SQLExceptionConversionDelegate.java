@@ -16,7 +16,7 @@ import org.hibernate.JDBCException;
  *
  * @author Steve Ebersole
  */
-public interface SQLExceptionConversionDelegate {
+public interface SQLExceptionConversionDelegate extends java.io.Serializable {
 	/**
 	 * Convert the given SQLException into the Hibernate {@link org.hibernate.JDBCException} hierarchy.
 	 *

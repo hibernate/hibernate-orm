@@ -13,6 +13,7 @@ import net.sf.ehcache.Ehcache;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.ehcache.AbstractEhcacheRegionFactory;
 import org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactory;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.NaturalIdRegion;
@@ -40,12 +41,13 @@ public class EhcacheNaturalIdRegion extends EhcacheTransactionalDataRegion imple
 	 * @param properties Any additional[ properties
 	 */
 	public EhcacheNaturalIdRegion(
+			AbstractEhcacheRegionFactory regionFactory,
 			EhcacheAccessStrategyFactory accessStrategyFactory,
 			Ehcache underlyingCache,
 			SessionFactoryOptions settings,
 			CacheDataDescription metadata,
 			Properties properties) {
-		super( accessStrategyFactory, underlyingCache, settings, metadata, properties );
+		super( regionFactory, accessStrategyFactory, underlyingCache, settings, metadata, properties );
 	}
 
 	@Override

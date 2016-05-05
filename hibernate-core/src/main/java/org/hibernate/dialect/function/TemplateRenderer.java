@@ -19,7 +19,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class TemplateRenderer {
+public class TemplateRenderer implements java.io.Serializable {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
 			TemplateRenderer.class.getName()

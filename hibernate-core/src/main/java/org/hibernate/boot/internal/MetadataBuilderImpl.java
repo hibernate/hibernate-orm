@@ -531,14 +531,14 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	public static class MetadataBuildingOptionsImpl
-			implements MetadataBuildingOptions, JpaOrmXmlPersistenceUnitDefaultAware {
+			implements MetadataBuildingOptions, JpaOrmXmlPersistenceUnitDefaultAware, java.io.Serializable {
 		private final StandardServiceRegistry serviceRegistry;
 		private final MappingDefaultsImpl mappingDefaults;
 
 		private ArrayList<BasicTypeRegistration> basicTypeRegistrations = new ArrayList<BasicTypeRegistration>();
 
 		private IndexView jandexView;
-		private ClassLoader tempClassLoader;
+		private transient ClassLoader tempClassLoader;
 
 		private ScanOptions scanOptions;
 		private ScanEnvironment scanEnvironment;
@@ -548,8 +548,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private ImplicitNamingStrategy implicitNamingStrategy;
 		private PhysicalNamingStrategy physicalNamingStrategy;
 
-		private ReflectionManager reflectionManager;
-		private ClassLoaderDelegate hcannClassLoaderDelegate;
+		private transient ReflectionManager reflectionManager;
+		private transient ClassLoaderDelegate hcannClassLoaderDelegate;
 
 		private SharedCacheMode sharedCacheMode;
 		private AccessType defaultCacheAccessType;
@@ -569,6 +569,9 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private IdGeneratorInterpreterImpl idGenerationTypeInterpreter = new IdGeneratorInterpreterImpl();
 
 		private boolean autoQuoteKeywords;
+
+
+		public static interface SerializableCallable<T> extends java.io.Serializable, Callable<T> {}
 
 //		private PersistentAttributeMemberResolver persistentAttributeMemberResolver =
 //				StandardPersistentAttributeMemberResolver.INSTANCE;
@@ -674,7 +677,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			this.implicitNamingStrategy = strategySelector.resolveDefaultableStrategy(
 					ImplicitNamingStrategy.class,
 					configService.getSettings().get( AvailableSettings.IMPLICIT_NAMING_STRATEGY ),
-					new Callable<ImplicitNamingStrategy>() {
+					new SerializableCallable<ImplicitNamingStrategy>() {
 						@Override
 						public ImplicitNamingStrategy call() throws Exception {
 							return strategySelector.resolveDefaultableStrategy(
@@ -737,6 +740,10 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			return initialSelections;
 		}
 
+//		public static class SerializableJavaReflectionManager extends JavaReflectionManager implements java.io.Serializable {
+//			public SerializableJavaReflectionManager() {}
+//		}
+
 		private ReflectionManager generateDefaultReflectionManager() {
 			final JavaReflectionManager reflectionManager = new JavaReflectionManager();
 			reflectionManager.setMetadataProvider( new JPAMetadataProvider( this ) );
@@ -744,10 +751,12 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			return reflectionManager;
 		}
 
+//		public static interface SerializableCLD extends ClassLoaderDelegate, java.io.Serializable {}
+
 		public ClassLoaderDelegate getHcannClassLoaderDelegate() {
 			if ( hcannClassLoaderDelegate == null ) {
 				hcannClassLoaderDelegate = new ClassLoaderDelegate() {
-					private final  ClassLoaderService classLoaderService = getServiceRegistry().getService( ClassLoaderService.class );
+					private final transient ClassLoaderService classLoaderService = getServiceRegistry().getService( ClassLoaderService.class );
 
 					@Override
 					public <T> Class<T> classForName(String className) throws ClassLoadingException {

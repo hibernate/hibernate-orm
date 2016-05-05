@@ -8,6 +8,7 @@ package org.hibernate.dialect;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.Clob;
@@ -113,7 +114,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  * @author Gavin King, David Channon
  */
 @SuppressWarnings("deprecation")
-public abstract class Dialect implements ConversionContext {
+public abstract class Dialect implements ConversionContext, Serializable {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( Dialect.class );
 
 	/**

@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.registry.internal;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -38,7 +39,7 @@ import org.hibernate.service.spi.Stoppable;
  * @author Steve Ebersole
  */
 public class BootstrapServiceRegistryImpl
-		implements ServiceRegistryImplementor, BootstrapServiceRegistry, ServiceBinding.ServiceLifecycleOwner {
+		implements ServiceRegistryImplementor, BootstrapServiceRegistry, ServiceBinding.ServiceLifecycleOwner, Serializable {
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BootstrapServiceRegistryImpl.class );
 

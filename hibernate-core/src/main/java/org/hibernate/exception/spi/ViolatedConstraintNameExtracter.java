@@ -14,7 +14,7 @@ import java.sql.SQLException;
  *
  * @author Steve Ebersole
  */
-public interface ViolatedConstraintNameExtracter {
+public interface ViolatedConstraintNameExtracter extends java.io.Serializable {
 	/**
 	 * Extract the name of the violated constraint from the given SQLException.
 	 *

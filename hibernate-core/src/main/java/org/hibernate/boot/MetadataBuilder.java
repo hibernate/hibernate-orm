@@ -37,7 +37,7 @@ import org.jboss.jandex.IndexView;
  *
  * @since 5.0
  */
-public interface MetadataBuilder {
+public interface MetadataBuilder extends java.io.Serializable {
 	/**
 	 * Specify the implicit catalog name to apply to any unqualified database names.
 	 * <p/>

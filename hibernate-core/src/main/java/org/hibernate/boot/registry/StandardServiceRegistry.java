@@ -13,5 +13,5 @@ import org.hibernate.service.ServiceRegistry;
  *
  * @author Steve Ebersole
  */
-public interface StandardServiceRegistry extends ServiceRegistry {
+public interface StandardServiceRegistry extends ServiceRegistry, java.io.Serializable {
 }

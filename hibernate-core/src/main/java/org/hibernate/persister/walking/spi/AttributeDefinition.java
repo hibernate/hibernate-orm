@@ -11,7 +11,7 @@ import org.hibernate.type.Type;
 /**
  * @author Steve Ebersole
  */
-public interface AttributeDefinition {
+public interface AttributeDefinition  extends java.io.Serializable {
 	public AttributeSource getSource();
 	public String getName();
 	public Type getType();

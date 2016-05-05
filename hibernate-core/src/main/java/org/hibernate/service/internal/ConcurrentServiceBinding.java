@@ -6,9 +6,15 @@
  */
 package org.hibernate.service.internal;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectStreamException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import static com.sun.org.apache.xalan.internal.xsltc.compiler.util.Type.Node;
 
 /**
  * Since Service lookup is a very hot operation and essentially it's a read only
@@ -22,7 +28,7 @@ import java.util.List;
  *
  * @author Sanne Grinovero
  */
-public class ConcurrentServiceBinding<K,V> {
+public class ConcurrentServiceBinding<K,V> implements java.io.Serializable {
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private static final Node EMPTY_LEAF = new Node( new Entry( 0, null, null ), null, null );
@@ -45,6 +51,26 @@ public class ConcurrentServiceBinding<K,V> {
 		@SuppressWarnings("unchecked")
 		Entry<K, V>[] array = list.toArray( new Entry[size] );
 		treeRoot = treeFromRange( array, 0, size );
+	}
+
+	Object writeReplace() throws IOException, ClassNotFoundException {
+		return new SerialForm<K, V>(this);
+	}
+
+	public static class SerialForm<K, V> implements Serializable {
+		private List<Entry<K, V>> entries;
+
+		SerialForm(ConcurrentServiceBinding<K, V> data) {
+			entries = data.convertToArrayList(data.treeRoot, null);
+		}
+
+		Object readResolve() throws IOException, ClassNotFoundException {
+			Collections.sort( entries );
+			final int size = entries.size();
+			ConcurrentServiceBinding<K, V> binding = new ConcurrentServiceBinding<K, V>();
+			binding.treeRoot = binding.treeFromRange( entries.toArray( new Entry[size] ), 0, size );
+			return binding;
+		}
 	}
 
 	private Node<K, V> treeFromRange(final Entry<K, V>[] array, final int minInclusive, final int maxExclusive) {
@@ -86,9 +112,9 @@ public class ConcurrentServiceBinding<K,V> {
 		return list;
 	}
 
-	private static final class Entry<K,V> implements Comparable<Entry<K,V>> {
+	private static final class Entry<K,V> implements Comparable<Entry<K,V>>, java.io.Serializable {
 
-		private final int hash;
+		private transient final int hash;
 		private final K key;
 		private final V value;
 
@@ -96,6 +122,11 @@ public class ConcurrentServiceBinding<K,V> {
 			this.hash = keyHashCode;
 			this.key = key;
 			this.value = value;
+		}
+
+		//must recalculate the hash because the identities are different after deserialization.
+		Object readResolve() throws IOException, ClassNotFoundException {
+			return new Entry<K, V>(System.identityHashCode(key), key, value);
 		}
 
 		@Override
@@ -127,7 +158,7 @@ public class ConcurrentServiceBinding<K,V> {
 		}
 	}
 
-	private static final class Node<K,V> {
+	private static final class Node<K,V> implements java.io.Serializable {
 
 		private final Entry<K,V> entry;
 		private final Node<K, V> left;

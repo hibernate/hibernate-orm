@@ -28,10 +28,13 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderFactory;
+import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
@@ -158,11 +161,17 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			);
 		}
 
-		if ( builder != null ) {
-			return builder;
+		if ( builder == null ) {
+			builder = defaultBuilder;
 		}
 
-		return defaultBuilder;
+		final ConfigurationService cfg = metadataBuildingOptions.getServiceRegistry().getService( ConfigurationService.class );
+		String cacheFile = cfg.getSetting( AvailableSettings.SESSION_FACTORY_CACHE_FILE, String.class, null );
+		if ( cacheFile != null ) {
+			return new CachedSessionFactoryBuilderFactory().getSessionFactoryBuilder( this, (SessionFactoryBuilderImplementor) builder );
+		}
+
+		return builder;
 	}
 
 	@Override

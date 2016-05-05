@@ -139,7 +139,7 @@ import org.hibernate.type.VersionType;
  */
 public abstract class AbstractEntityPersister
 		implements OuterJoinLoadable, Queryable, ClassMetadata, UniqueKeyLoadable,
-				SQLLoadable, LazyPropertyInitializer, PostInsertIdentityPersister, Lockable {
+				SQLLoadable, LazyPropertyInitializer, PostInsertIdentityPersister, Lockable, java.io.Serializable {
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractEntityPersister.class );
 
@@ -5195,7 +5195,7 @@ public abstract class AbstractEntityPersister
 	/**
 	 * Consolidated these onto a single helper because the 2 pieces work in tandem.
 	 */
-	public interface CacheEntryHelper {
+	public interface CacheEntryHelper extends java.io.Serializable {
 		CacheEntryStructure getCacheEntryStructure();
 
 		CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SharedSessionContractImplementor session);

@@ -6,7 +6,10 @@
  */
 package org.hibernate.cache.infinispan;
 
+import java.io.Externalizable;
 import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -73,7 +76,7 @@ import javax.transaction.TransactionManager;
  * @author Galder Zamarreño
  * @since 3.5
  */
-public class InfinispanRegionFactory implements RegionFactory {
+public class InfinispanRegionFactory implements RegionFactory, Externalizable {
 	private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog( InfinispanRegionFactory.class );
 
 	private static final String PREFIX = "hibernate.cache.infinispan.";
@@ -285,6 +288,28 @@ public class InfinispanRegionFactory implements RegionFactory {
 
 	private List<BaseRegion> regions = new ArrayList<>();
 	private SessionFactoryOptions settings;
+	private Properties properties;
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeObject(settings);
+		out.writeObject(properties);
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		settings = (SessionFactoryOptions) in.readObject();
+		properties = (Properties) in.readObject();
+		if( settings != null && properties != null ) {
+			if ( log.isDebugEnabled() ) {
+				log.debug( "Starting Infinispan CacheManager after deserialization" );
+			}
+			long time = System.currentTimeMillis();
+			start( settings, properties );
+			long elapsed = System.currentTimeMillis() - time;
+			log.info("Infinispan cache building elapsed "+ elapsed);
+		}
+	}
 
 	private Boolean globalStats;
 
@@ -448,6 +473,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 
 		try {
 			this.settings = settings;
+			this.properties = properties;
 			transactionManagerlookup = createTransactionManagerLookup( settings, properties );
 			transactionManager = transactionManagerlookup.getTransactionManager();
 

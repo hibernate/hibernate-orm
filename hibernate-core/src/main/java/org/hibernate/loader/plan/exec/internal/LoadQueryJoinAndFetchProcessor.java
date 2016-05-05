@@ -56,7 +56,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class LoadQueryJoinAndFetchProcessor {
+public class LoadQueryJoinAndFetchProcessor implements java.io.Serializable {
 	private static final Logger LOG = CoreLogging.logger( LoadQueryJoinAndFetchProcessor.class );
 
 	private final AliasResolutionContextImpl aliasResolutionContext;

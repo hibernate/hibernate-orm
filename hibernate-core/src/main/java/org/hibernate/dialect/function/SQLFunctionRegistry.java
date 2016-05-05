@@ -16,7 +16,7 @@ import org.hibernate.dialect.Dialect;
  *
  * @author Steve Ebersole
  */
-public class SQLFunctionRegistry {
+public class SQLFunctionRegistry implements java.io.Serializable {
 	private final Map<String,SQLFunction> functionMap = new TreeMap<String, SQLFunction>(String.CASE_INSENSITIVE_ORDER);
 
 	/**

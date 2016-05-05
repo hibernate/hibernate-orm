@@ -17,7 +17,7 @@ import org.hibernate.cache.spi.access.AccessType;
  *
  * @since 5.0
  */
-public interface MappingDefaults {
+public interface MappingDefaults extends java.io.Serializable {
 	String DEFAULT_IDENTIFIER_COLUMN_NAME = "id";
 	String DEFAULT_TENANT_IDENTIFIER_COLUMN_NAME = "tenant_id";
 	String DEFAULT_DISCRIMINATOR_COLUMN_NAME = "class";

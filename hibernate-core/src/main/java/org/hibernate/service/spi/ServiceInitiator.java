@@ -13,7 +13,7 @@ import org.hibernate.service.Service;
  *
  * @author Steve Ebersole
  */
-public interface ServiceInitiator<R extends Service> {
+public interface ServiceInitiator<R extends Service> extends java.io.Serializable {
 	/**
 	 * Obtains the service role initiated by this initiator.  Should be unique within a registry
 	 *

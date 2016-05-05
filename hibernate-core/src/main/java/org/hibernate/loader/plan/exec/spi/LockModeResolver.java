@@ -12,6 +12,6 @@ import org.hibernate.loader.plan.spi.EntityReference;
 /**
  * @author Steve Ebersole
  */
-public interface LockModeResolver {
+public interface LockModeResolver extends java.io.Serializable {
 	public LockMode resolveLockMode(EntityReference entityReference);
 }

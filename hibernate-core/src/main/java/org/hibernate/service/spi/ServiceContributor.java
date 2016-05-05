@@ -13,7 +13,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
  *
  * @author Steve Ebersole
  */
-public interface ServiceContributor {
+public interface ServiceContributor extends java.io.Serializable {
 	/**
 	 * Contribute services to the indicated registry builder.
 	 *

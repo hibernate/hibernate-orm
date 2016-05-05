@@ -13,11 +13,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.config.Configuration;
-
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.util.HibernateEhcacheUtils;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -56,6 +54,7 @@ public class SingletonEhCacheRegionFactory extends AbstractEhcacheRegionFactory 
 	@Override
 	public void start(SessionFactoryOptions settings, Properties properties) throws CacheException {
 		this.settings = settings;
+		this.properties = properties;
 		try {
 			String configurationResourceName = null;
 			if ( properties != null ) {

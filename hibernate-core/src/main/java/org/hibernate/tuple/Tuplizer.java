@@ -37,7 +37,7 @@ import org.hibernate.property.access.spi.Getter;
  *
  * @author Steve Ebersole
  */
-public interface Tuplizer {
+public interface Tuplizer extends java.io.Serializable {
 	/**
 	 * Extract the current values contained on the given entity.
 	 *

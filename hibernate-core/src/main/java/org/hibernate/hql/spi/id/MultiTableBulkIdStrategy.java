@@ -21,7 +21,7 @@ import org.hibernate.persister.entity.Queryable;
  *
  * @author Steve Ebersole
  */
-public interface MultiTableBulkIdStrategy {
+public interface MultiTableBulkIdStrategy extends java.io.Serializable {
 	/**
 	 * Prepare the strategy.  Called as the SessionFactory is being built.  Intended patterns here include:<ul>
 	 *     <li>Adding tables to the passed Mappings, to be picked by by "schema management tools"</li>

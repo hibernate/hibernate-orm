@@ -20,7 +20,7 @@ import org.hibernate.engine.spi.SessionImplementor;
  *
  * @author Steve Ebersole
  */
-public interface ScrollableResultSetProcessor {
+public interface ScrollableResultSetProcessor extends java.io.Serializable {
 
 	/**
 	 * Give a ResultSet, extract just a single result row.

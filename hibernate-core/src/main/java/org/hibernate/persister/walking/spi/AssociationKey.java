@@ -6,6 +6,7 @@
  */
 package org.hibernate.persister.walking.spi;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 import org.hibernate.internal.util.StringHelper;
@@ -24,7 +25,7 @@ import org.hibernate.internal.util.StringHelper;
  * @author Gail Badner
  * @author Gavin King
  */
-public class AssociationKey {
+public class AssociationKey implements Serializable {
 	private final String table;
 	private final String[] columns;
 

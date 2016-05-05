@@ -6,6 +6,11 @@
  */
 package org.hibernate.cache.infinispan.access;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.impl.BaseRegion;
 import org.hibernate.cache.infinispan.util.Caches;
@@ -20,13 +25,15 @@ import org.infinispan.AdvancedCache;
  * @author Galder Zamarreño
  * @since 3.5
  */
-public abstract class InvalidationCacheAccessDelegate implements AccessDelegate {
+public abstract class InvalidationCacheAccessDelegate implements AccessDelegate, Externalizable {
 	protected static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog( InvalidationCacheAccessDelegate.class );
 	protected static final boolean TRACE_ENABLED = log.isTraceEnabled();
-	protected final AdvancedCache cache;
-	protected final BaseRegion region;
-	protected final PutFromLoadValidator putValidator;
-	protected final AdvancedCache<Object, Object> writeCache;
+	protected AdvancedCache cache;
+	protected BaseRegion region;
+	protected PutFromLoadValidator putValidator;
+	protected AdvancedCache<Object, Object> writeCache;
+
+	public InvalidationCacheAccessDelegate() {}
 
    /**
     * Create a new transactional access delegate instance.
@@ -39,6 +46,19 @@ public abstract class InvalidationCacheAccessDelegate implements AccessDelegate 
 		this.region = region;
 		this.cache = region.getCache();
 		this.putValidator = validator;
+		this.writeCache = Caches.ignoreReturnValuesCache( cache );
+	}
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeObject(region);
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		this.region = (BaseRegion) in.readObject();
+		this.cache = region.getCache();
+		this.putValidator = new PutFromLoadValidator(cache, region.getRegionFactory());
 		this.writeCache = Caches.ignoreReturnValuesCache( cache );
 	}
 

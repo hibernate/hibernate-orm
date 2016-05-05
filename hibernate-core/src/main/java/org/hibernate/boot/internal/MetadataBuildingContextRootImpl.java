@@ -19,7 +19,7 @@ import org.hibernate.boot.spi.MetadataBuildingOptions;
 public class MetadataBuildingContextRootImpl implements MetadataBuildingContext {
 	private final MetadataBuildingOptions options;
 	private final MappingDefaults mappingDefaults;
-	private final ClassLoaderAccess classLoaderAccess;
+	private final transient ClassLoaderAccess classLoaderAccess;
 	private final InFlightMetadataCollector metadataCollector;
 	private final ObjectNameNormalizer objectNameNormalizer;
 

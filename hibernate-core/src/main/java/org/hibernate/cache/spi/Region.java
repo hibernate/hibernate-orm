@@ -16,7 +16,7 @@ import org.hibernate.cache.CacheException;
  *
  * @author Steve Ebersole
  */
-public interface Region {
+public interface Region extends java.io.Serializable {
 	/**
 	 * Retrieve the name of this region.
 	 *

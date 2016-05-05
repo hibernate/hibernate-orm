@@ -18,7 +18,7 @@ import org.hibernate.internal.util.config.ConfigurationException;
  *
  * @author Steve Ebersole
  */
-public class MappingReference {
+public class MappingReference implements java.io.Serializable {
 	public static enum Type {
 		RESOURCE,
 		CLASS,

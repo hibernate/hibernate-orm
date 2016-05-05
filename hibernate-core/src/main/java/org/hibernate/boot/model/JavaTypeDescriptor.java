@@ -9,6 +9,6 @@ package org.hibernate.boot.model;
 /**
  * @author Steve Ebersole
  */
-public interface JavaTypeDescriptor {
+public interface JavaTypeDescriptor extends java.io.Serializable {
 	public String getName();
 }

@@ -110,7 +110,7 @@ public class QualifiedObjectNameFormatterStandardImpl implements QualifiedObject
 		);
 	}
 
-	private static interface Format {
+	private static interface Format extends java.io.Serializable {
 		public String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect);
 	}
 

@@ -11,7 +11,7 @@ import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessor;
 /**
  * @author Steve Ebersole
  */
-public interface LoadQueryDetails {
+public interface LoadQueryDetails extends java.io.Serializable {
 	public String getSqlStatement();
 
 	public ResultSetProcessor getResultSetProcessor();

@@ -36,7 +36,7 @@ import org.hibernate.tuple.entity.EntityTuplizerFactory;
  *
  * @since 5.0
  */
-public interface SessionFactoryOptions {
+public interface SessionFactoryOptions extends java.io.Serializable {
 	/**
 	 * The service registry to use in building the factory.
 	 *

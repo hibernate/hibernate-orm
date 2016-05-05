@@ -6,18 +6,14 @@
  */
 package org.hibernate.service.spi;
 
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-
 /**
- * Contract for contributing services.
- *
  * @author Steve Ebersole
  */
-public interface ServiceContributor {
+public interface SessionFactoryServiceContributor {
 	/**
 	 * Contribute services to the indicated registry builder.
 	 *
 	 * @param serviceRegistryBuilder The builder to which services (or initiators) should be contributed.
 	 */
-	void contribute(StandardServiceRegistryBuilder serviceRegistryBuilder);
+	void contribute(SessionFactoryServiceRegistryBuilder serviceRegistryBuilder);
 }

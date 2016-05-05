@@ -9,7 +9,6 @@ package org.hibernate.service.spi;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.Service;
-import org.hibernate.service.internal.SessionFactoryServiceRegistryImpl;
 
 /**
  * Contract for builder of {@link SessionFactoryServiceRegistry} instances.
@@ -29,7 +28,7 @@ public interface SessionFactoryServiceRegistryFactory extends Service {
 	 *
 	 * @return The registry
 	 */
-	public SessionFactoryServiceRegistryImpl buildServiceRegistry(
+	SessionFactoryServiceRegistry buildServiceRegistry(
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryOptions sessionFactoryOptions);
 

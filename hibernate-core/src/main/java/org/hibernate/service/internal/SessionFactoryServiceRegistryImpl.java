@@ -6,6 +6,8 @@
  */
 package org.hibernate.service.internal;
 
+import java.util.List;
+
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.Service;
@@ -26,6 +28,8 @@ public class SessionFactoryServiceRegistryImpl extends AbstractServiceRegistryIm
 	@SuppressWarnings( {"unchecked"})
 	public SessionFactoryServiceRegistryImpl(
 			ServiceRegistryImplementor parent,
+			List<SessionFactoryServiceInitiator> initiators,
+			List<ProvidedService> providedServices,
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryOptions sessionFactoryOptions) {
 		super( parent );
@@ -34,10 +38,15 @@ public class SessionFactoryServiceRegistryImpl extends AbstractServiceRegistryIm
 		this.sessionFactoryOptions = sessionFactoryOptions;
 
 		// for now, just use the standard initiator list
-		for ( SessionFactoryServiceInitiator initiator : StandardSessionFactoryServiceInitiators.LIST ) {
+		for ( SessionFactoryServiceInitiator initiator : initiators ) {
 			// create the bindings up front to help identify to which registry services belong
 			createServiceBinding( initiator );
 		}
+
+		for ( ProvidedService providedService : providedServices ) {
+			createServiceBinding( providedService );
+		}
+
 	}
 
 	@Override

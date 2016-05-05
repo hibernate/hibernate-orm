@@ -263,6 +263,10 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			}
 
 			@Override
+			public void sessionFactoryBeforeClose(SessionFactory factory) {
+			}
+
+			@Override
 			public void sessionFactoryClosed(SessionFactory factory) {
 				for ( Integrator integrator : integrators ) {
 					integrator.disintegrate( SessionFactoryImpl.this, SessionFactoryImpl.this.serviceRegistry );
@@ -1043,6 +1047,8 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			LOG.trace( "Already closed" );
 			return;
 		}
+
+		observer.sessionFactoryBeforeClose( this );
 
 		LOG.closing();
 

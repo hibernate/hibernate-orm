@@ -19,7 +19,24 @@ public interface SessionFactoryObserver extends Serializable {
 	 *
 	 * @param factory The factory initialized.
 	 */
-	public void sessionFactoryCreated(SessionFactory factory);
+	void sessionFactoryCreated(SessionFactory factory);
+
+	/**
+	 * Callback to indicate that the given factory is about close.  The passed factory reference should be usable
+	 * since it is only about to close.
+	 * <p/>
+	 * NOTE : defined as default to allow for existing SessionFactoryObserver impls to work
+	 * in 5.2.  Starting in 6.0 the default will be removed and SessionFactoryObserver impls
+	 * will be required to implement this new method.
+	 *
+	 * @param factory The factory about to be closed.
+	 *
+	 * @since 5.2
+	 */
+	default void sessionFactoryClosing(SessionFactory factory) {
+		// todo : 6.0 remove
+		// do nothing by default for 5.x compatibility
+	}
 
 	/**
 	 * Callback to indicate that the given factory has been closed.  Care should be taken
@@ -27,5 +44,5 @@ public interface SessionFactoryObserver extends Serializable {
 	 *
 	 * @param factory The factory closed.
 	 */
-	public void sessionFactoryClosed(SessionFactory factory);
+	void sessionFactoryClosed(SessionFactory factory);
 }

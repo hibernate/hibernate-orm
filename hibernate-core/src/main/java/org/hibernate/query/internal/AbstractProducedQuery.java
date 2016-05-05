@@ -7,6 +7,10 @@
 package org.hibernate.query.internal;
 
 import java.io.Serializable;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -296,6 +300,78 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	@Override
 	public String[] getNamedParameters() {
 		return ArrayHelper.toStringArray( getParameterMetadata().getNamedParameterNames() );
+	}
+
+	@Override
+	public QueryImplementor<R> setParameter(Parameter<Instant> param, Instant value, TemporalType temporalType) {
+		locateBinding( param ).setBindValue( value, temporalType );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setParameter(Parameter<LocalDateTime> param, LocalDateTime value, TemporalType temporalType) {
+		locateBinding( param ).setBindValue( value, temporalType );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setParameter(Parameter<ZonedDateTime> param, ZonedDateTime value, TemporalType temporalType) {
+		locateBinding( param ).setBindValue( value, temporalType );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setParameter(Parameter<OffsetDateTime> param, OffsetDateTime value, TemporalType temporalType) {
+		locateBinding( param ).setBindValue( value, temporalType );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setParameter(String name, Instant value, TemporalType temporalType) {
+		locateBinding( name ).setBindValue( value, temporalType );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setParameter(String name, LocalDateTime value, TemporalType temporalType) {
+		locateBinding( name ).setBindValue( value, temporalType );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setParameter(String name, ZonedDateTime value, TemporalType temporalType) {
+		locateBinding( name ).setBindValue( value, temporalType );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setParameter(String name, OffsetDateTime value, TemporalType temporalType) {
+		locateBinding( name ).setBindValue( value, temporalType );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setParameter(int position, Instant value, TemporalType temporalType) {
+		locateBinding( position ).setBindValue( value, temporalType );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setParameter(int position, LocalDateTime value, TemporalType temporalType) {
+		locateBinding( position ).setBindValue( value, temporalType );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setParameter(int position, ZonedDateTime value, TemporalType temporalType) {
+		locateBinding( position ).setBindValue( value, temporalType );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setParameter(int position, OffsetDateTime value, TemporalType temporalType) {
+		locateBinding( position ).setBindValue( value, temporalType );
+		return this;
 	}
 
 	@Override

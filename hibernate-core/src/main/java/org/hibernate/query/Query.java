@@ -6,6 +6,10 @@
  */
 package org.hibernate.query;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
 import javax.persistence.FlushModeType;
@@ -49,6 +53,31 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, BasicQu
 	 * those values in their Integer form rather than the primitive form (int) required by JPA.
 	 */
 	RowSelection getQueryOptions();
+
+	Query<R> setParameter(Parameter<Instant> param, Instant value, TemporalType temporalType);
+
+	Query<R> setParameter(Parameter<LocalDateTime> param, LocalDateTime value, TemporalType temporalType);
+
+	Query<R> setParameter(Parameter<ZonedDateTime> param, ZonedDateTime value, TemporalType temporalType);
+
+	Query<R> setParameter(Parameter<OffsetDateTime> param, OffsetDateTime value, TemporalType temporalType);
+
+	Query<R> setParameter(String name, Instant value, TemporalType temporalType);
+
+	Query<R> setParameter(String name, LocalDateTime value, TemporalType temporalType);
+
+	Query<R> setParameter(String name, ZonedDateTime value, TemporalType temporalType);
+
+	Query<R> setParameter(String name, OffsetDateTime value, TemporalType temporalType);
+
+	Query<R> setParameter(int position, Instant value, TemporalType temporalType);
+
+	Query<R> setParameter(int position, LocalDateTime value, TemporalType temporalType);
+
+	Query<R> setParameter(int position, ZonedDateTime value, TemporalType temporalType);
+
+	Query<R> setParameter(int position, OffsetDateTime value, TemporalType temporalType);
+
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

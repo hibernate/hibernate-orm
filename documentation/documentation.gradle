@@ -66,7 +66,7 @@ dependencies {
 	testCompile( project(':hibernate-spatial') )
 
 	testCompile( project(':hibernate-testing') )
-	testCompile( project(path: ':hibernate-entitymanager', configuration: 'tests') )
+//	testCompile( project(path: ':hibernate-entitymanager', configuration: 'tests') )
 
 	testRuntime( libraries.h2 )
 	testRuntime( libraries.hsqldb )

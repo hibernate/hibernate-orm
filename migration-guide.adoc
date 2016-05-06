@@ -1,34 +1,10 @@
-= 5.1 Migration Guide
+= 5.2 Migration Guide
 :toc:
 
-This guide discusses migration from Hibernate ORM version 5.0 to version 5.1.  For migration from
+This guide discusses migration from Hibernate ORM version 5.1 to version 5.2.  For migration from
 earlier versions, see any other pertinent migration guides as well.
 
-== Oracle12cDialect maps byte[] and Byte[] to BLOB
+== Deprecations
 
-Previous versions of Hibernate have mapped `byte[]` and `Byte[]` to Oracle's `LONG RAW` data type (via the JDBC
-LONGVARBINARY type).  Oracle have deprecated the `LONG RAW` data type for many releases - possibly as far back
-as 8i.  Therefore it was decided to start having Hibernate map `byte[]` and `Byte[]` to `BLOB` for Oracle.
-
-However, in the interest of backwards compatibility and not breaking existing applications it was also decided to
-limit this change to just the Oracle12cDialect.  So starting in 5.1 applications using Oracle12cDialect and
-implicitly mapping `byte[]` and `Byte[]` values will start seeing those handled as `BLOB` data rather than `LONG RAW`
-data.  For existing applications that want to continue to use Oracle12cDialect and still continue to implicitly map
-`byte[]` and `Byte[]` attributes to `LONG RAW`, there is a new configuration setting you can use to enable that:
-`hibernate.dialect.oracle.prefer_longvarbinary`, which is false by default (map to `BLOB`).
-
-
-== Changes to schema management tooling
-
-The changes mainly focused on:
-
-* Unifying handling of `hbm2ddl.auto` and Hibernate's JPA schema-generation support.
-* Removing JDBC concerns from the SPI to facilitate true replacement (for OGM)
-
-These changes will only be a migration concern for applications directly using any of the following classes:
-
-* `org.hibernate.tool.hbm2ddl.SchemaExport`
-* `org.hibernate.tool.hbm2ddl.SchemaUpdate`
-* `org.hibernate.tool.hbm2ddl.SchemaValidator`
-* `org.hibernate.tool.schema.spi.SchemaManagementTool` or any of its delegates
-
+* Setting `hibernate.listeners.envers.autoRegister` has been deprecated in favor of
+  `hibernate.envers.autoRegisterListeners`.

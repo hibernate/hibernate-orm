@@ -10,6 +10,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -28,7 +29,6 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
@@ -58,7 +58,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 
 	public InformationExtractorJdbcDatabaseMetaDataImpl(ExtractionContext extractionContext) {
 		this.extractionContext = extractionContext;
-		
+
 		ConfigurationService configService = extractionContext.getServiceRegistry()
 				.getService( ConfigurationService.class );
 
@@ -75,20 +75,18 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 			);
 		}
 
-		final String[] tempTableTypes;
+		final List<String> tableTypesList = new ArrayList<>();
+		tableTypesList.add( "TABLE" );
+		tableTypesList.add( "VIEW" );
 		if ( ConfigurationHelper.getBoolean( AvailableSettings.ENABLE_SYNONYMS, configService.getSettings(), false ) ) {
-			tempTableTypes = new String[] {"TABLE", "VIEW", "SYNONYM"};
+			tableTypesList.add( "SYNONYM" );
 		}
-		else {
-			tempTableTypes = new String[] {"TABLE", "VIEW"};
+		if ( extraPhysicalTableTypes != null ) {
+			Collections.addAll( tableTypesList, extraPhysicalTableTypes );
 		}
+		extractionContext.getJdbcEnvironment().getDialect().augmentRecognizedTableTypes( tableTypesList );
 
-		if ( this.extraPhysicalTableTypes != null ) {
-			this.tableTypes = ArrayHelper.join( tempTableTypes, this.extraPhysicalTableTypes );
-		}
-		else {
-			this.tableTypes = tempTableTypes;
-		}
+		this.tableTypes = tableTypesList.toArray( new String[ tableTypesList.size() ] );
 	}
 
 	protected IdentifierHelper identifierHelper() {

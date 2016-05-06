@@ -212,6 +212,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 			emf = Persistence.createEntityManagerFactory( "excludehbmpar", new HashMap() );
 		}
 		catch ( PersistenceException e ) {
+			emf.close();
 			Throwable nested = e.getCause();
 			if ( nested == null ) {
 				throw e;
@@ -224,6 +225,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 				throw e;
 			}
 			fail( "Try to process hbm file: " + e.getMessage() );
+
 		}
 		EntityManager em = emf.createEntityManager();
 		Caipirinha s = new Caipirinha( "Strong" );

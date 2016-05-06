@@ -32,7 +32,7 @@ import org.dom4j.Element;
  * @author Brett Meyer
  */
 public class XMLContext implements Serializable {
-    private static final CoreMessageLogger LOG = CoreLogging.messageLogger( XMLContext.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( XMLContext.class );
 
 	private final ClassLoaderAccess classLoaderAccess;
 
@@ -310,11 +310,21 @@ public class XMLContext implements Serializable {
 
 		public void override(Default globalDefault) {
 			if ( globalDefault != null ) {
-				if ( globalDefault.getAccess() != null ) access = globalDefault.getAccess();
-				if ( globalDefault.getPackageName() != null ) packageName = globalDefault.getPackageName();
-				if ( globalDefault.getSchema() != null ) schema = globalDefault.getSchema();
-				if ( globalDefault.getCatalog() != null ) catalog = globalDefault.getCatalog();
-				if ( globalDefault.getDelimitedIdentifier() != null ) delimitedIdentifier = globalDefault.getDelimitedIdentifier();
+				if ( globalDefault.getAccess() != null ) {
+					access = globalDefault.getAccess();
+				}
+				if ( globalDefault.getPackageName() != null ) {
+					packageName = globalDefault.getPackageName();
+				}
+				if ( globalDefault.getSchema() != null ) {
+					schema = globalDefault.getSchema();
+				}
+				if ( globalDefault.getCatalog() != null ) {
+					catalog = globalDefault.getCatalog();
+				}
+				if ( globalDefault.getDelimitedIdentifier() != null ) {
+					delimitedIdentifier = globalDefault.getDelimitedIdentifier();
+				}
 				if ( globalDefault.getMetadataComplete() != null ) {
 					metadataComplete = globalDefault.getMetadataComplete();
 				}

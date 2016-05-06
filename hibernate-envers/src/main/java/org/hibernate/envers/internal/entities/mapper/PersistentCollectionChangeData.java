@@ -43,11 +43,11 @@ public class PersistentCollectionChangeData {
 	 */
 	public Object getChangedElement() {
 		if ( changedElement instanceof Pair ) {
-			return ((Pair) changedElement).getSecond();
+			return ( (Pair) changedElement ).getSecond();
 		}
 
 		if ( changedElement instanceof Map.Entry ) {
-			return ((Map.Entry) changedElement).getValue();
+			return ( (Map.Entry) changedElement ).getValue();
 		}
 
 		return changedElement;
@@ -58,11 +58,11 @@ public class PersistentCollectionChangeData {
 	 */
 	public Object getChangedElementIndex() {
 		if ( changedElement instanceof Pair ) {
-			return ((Pair) changedElement).getFirst();
+			return ( (Pair) changedElement ).getFirst();
 		}
 
 		if ( changedElement instanceof Map.Entry ) {
-			return ((Map.Entry) changedElement).getKey();
+			return ( (Map.Entry) changedElement ).getKey();
 		}
 
 		return null;

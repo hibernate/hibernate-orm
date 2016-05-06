@@ -38,7 +38,7 @@ public final class BasicMetadataGenerator {
 				|| "org.hibernate.type.PrimitiveByteArrayBlobType".equals( type.getClass().getName() ) ) {
 			if ( parent != null ) {
 				final boolean addNestedType = (value instanceof SimpleValue)
-						&& ((SimpleValue) value).getTypeParameters() != null;
+						&& ( (SimpleValue) value ).getTypeParameters() != null;
 
 				String typeName = type.getName();
 				if ( typeName == null ) {
@@ -55,7 +55,7 @@ public final class BasicMetadataGenerator {
 				MetadataTools.addColumns( propMapping, value.getColumnIterator() );
 
 				if ( addNestedType ) {
-					final Properties typeParameters = ((SimpleValue) value).getTypeParameters();
+					final Properties typeParameters = ( (SimpleValue) value ).getTypeParameters();
 					final Element typeMapping = propMapping.addElement( "type" );
 					typeMapping.addAttribute( "name", typeName );
 
@@ -110,7 +110,7 @@ public final class BasicMetadataGenerator {
 		}
 		else {
 			parent.addElement( "param" ).addAttribute( "name", EnumType.NAMED )
-					.setText( "" + !((EnumType) ((CustomType) type).getUserType()).isOrdinal() );
+					.setText( "" + !( (EnumType) ( (CustomType) type ).getUserType() ).isOrdinal() );
 		}
 	}
 

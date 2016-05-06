@@ -61,7 +61,7 @@ public class MapCollectionMapper<T extends Map> extends AbstractCollectionMapper
 			return null;
 		}
 		else {
-			return ((Map) newCollection).entrySet();
+			return ( (Map) newCollection ).entrySet();
 		}
 	}
 
@@ -71,7 +71,7 @@ public class MapCollectionMapper<T extends Map> extends AbstractCollectionMapper
 			return null;
 		}
 		else {
-			return ((Map) oldCollection).entrySet();
+			return ( (Map) oldCollection ).entrySet();
 		}
 	}
 
@@ -85,13 +85,13 @@ public class MapCollectionMapper<T extends Map> extends AbstractCollectionMapper
 				session,
 				idData,
 				data,
-				((Map.Entry) changed).getValue()
+				( (Map.Entry) changed ).getValue()
 		);
 		indexComponentData.getComponentMapper().mapToMapFromObject(
 				session,
 				idData,
 				data,
-				((Map.Entry) changed).getKey()
+				( (Map.Entry) changed ).getKey()
 		);
 	}
 }

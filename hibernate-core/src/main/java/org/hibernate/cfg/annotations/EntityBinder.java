@@ -100,8 +100,8 @@ import static org.hibernate.cfg.BinderHelper.toAliasTableMap;
  * @author Emmanuel Bernard
  */
 public class EntityBinder {
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, EntityBinder.class.getName());
-    private static final String NATURAL_ID_CACHE_SUFFIX = "##NaturalId";
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, EntityBinder.class.getName());
+	private static final String NATURAL_ID_CACHE_SUFFIX = "##NaturalId";
 
 	private MetadataBuildingContext context;
 
@@ -296,10 +296,10 @@ public class EntityBinder {
 			}
 		}
 		else {
-            if (explicitHibernateEntityAnnotation) {
+			if (explicitHibernateEntityAnnotation) {
 				LOG.entityAnnotationOnNonRoot(annotatedClass.getName());
 			}
-            if (annotatedClass.isAnnotationPresent(Immutable.class)) {
+			if (annotatedClass.isAnnotationPresent(Immutable.class)) {
 				LOG.immutableAnnotationOnNonRoot(annotatedClass.getName());
 			}
 		}
@@ -1159,7 +1159,7 @@ public class EntityBinder {
 	public AccessType getPropertyAccessor(XAnnotatedElement element) {
 		AccessType accessType = getExplicitAccessType( element );
 		if ( accessType == null ) {
-		   accessType = propertyAccessType;
+			accessType = propertyAccessType;
 		}
 		return accessType;
 	}

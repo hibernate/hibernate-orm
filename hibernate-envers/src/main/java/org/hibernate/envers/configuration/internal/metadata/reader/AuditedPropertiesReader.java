@@ -544,12 +544,12 @@ public class AuditedPropertiesReader {
 			propertyData.setStore( aud.modStore() );
 			propertyData.setRelationTargetAuditMode( aud.targetAuditMode() );
 			propertyData.setUsingModifiedFlag( checkUsingModifiedFlag( aud ) );
-			if(aud.modifiedColumnName() != null && !"".equals(aud.modifiedColumnName())) {
-				propertyData.setModifiedFlagName(aud.modifiedColumnName());
+			if( aud.modifiedColumnName() != null && !"".equals( aud.modifiedColumnName() ) ) {
+				propertyData.setModifiedFlagName( aud.modifiedColumnName() );
 			}
 			else {
 				propertyData.setModifiedFlagName(
-						MetadataTools.getModifiedFlagPropertyName(propertyName, modifiedFlagSuffix)
+						MetadataTools.getModifiedFlagPropertyName( propertyName, modifiedFlagSuffix )
 				);
 			}
 			return true;

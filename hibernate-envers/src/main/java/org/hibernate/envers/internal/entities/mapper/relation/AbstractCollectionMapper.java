@@ -114,7 +114,7 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 			// Mapping collection element and index (if present).
 			mapToMapFromObject( session, originalId, entityData, changedObj );
 
-			(revisionTypeInId ? originalId : entityData).put(
+			( revisionTypeInId ? originalId : entityData ).put(
 					commonCollectionMapperData.getVerEntCfg()
 							.getRevisionTypePropName(), revisionType
 			);

@@ -59,8 +59,8 @@ public class ListCollectionInitializor extends AbstractCollectionInitializor<Lis
 		Object elementData = collectionRow;
 		Object indexData = collectionRow;
 		if ( collectionRow instanceof java.util.List ) {
-			elementData = ((List) collectionRow).get( elementComponentData.getComponentIndex() );
-			indexData = ((List) collectionRow).get( indexComponentData.getComponentIndex() );
+			elementData = ( (List) collectionRow ).get( elementComponentData.getComponentIndex() );
+			indexData = ( (List) collectionRow ).get( indexComponentData.getComponentIndex() );
 		}
 		final Object element = elementData instanceof Map
 				? elementComponentData.getComponentMapper().mapToObjectFromFullMap(
@@ -73,7 +73,7 @@ public class ListCollectionInitializor extends AbstractCollectionInitializor<Lis
 				entityInstantiator,
 				(Map<String, Object>) indexData, element, revision
 		);
-		final int index = ((Number) indexObj).intValue();
+		final int index = ( (Number) indexObj ).intValue();
 
 		collection.set( index, element );
 	}

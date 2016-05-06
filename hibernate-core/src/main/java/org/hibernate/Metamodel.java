@@ -19,6 +19,9 @@ public interface Metamodel extends javax.persistence.metamodel.Metamodel {
 	 */
 	SessionFactory getSessionFactory();
 
+	/**
+	 * @deprecated since 5.2
+	 */
 	@Deprecated
 	default EntityType getEntityTypeByName(String entityName) {
 		return entity( entityName );

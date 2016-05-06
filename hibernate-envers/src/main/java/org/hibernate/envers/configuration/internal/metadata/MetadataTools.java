@@ -375,7 +375,7 @@ public final class MetadataTools {
 	/**
 	 * An iterator over column names.
 	 */
-	public static abstract class ColumnNameIterator implements Iterator<String> {
+	public abstract static class ColumnNameIterator implements Iterator<String> {
 	}
 
 	public static ColumnNameIterator getColumnNameIterator(final Iterator<Selectable> selectableIterator) {
@@ -389,7 +389,7 @@ public final class MetadataTools {
 				if ( next.isFormula() ) {
 					throw new FormulaNotSupportedException();
 				}
-				return ((Column) next).getName();
+				return ( (Column) next ).getName();
 			}
 
 			public void remove() {

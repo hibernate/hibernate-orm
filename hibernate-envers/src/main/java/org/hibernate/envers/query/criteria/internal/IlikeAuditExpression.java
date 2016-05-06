@@ -37,7 +37,7 @@ public class IlikeAuditExpression implements AuditCriterion {
 		);
 		CriteriaTools.checkPropertyNotARelation( enversService, entityName, propertyName );
 
-		parameters.addWhereWithFunction( propertyName, " lower ", " like ", value.toLowerCase(Locale.ROOT) );
+		parameters.addWhereWithFunction( propertyName, " lower ", " like ", value.toLowerCase( Locale.ROOT ) );
 	}
 
 }

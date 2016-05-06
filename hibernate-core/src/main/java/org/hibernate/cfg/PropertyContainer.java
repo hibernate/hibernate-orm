@@ -49,7 +49,7 @@ class PropertyContainer {
 //        System.setProperty("jboss.i18n.generate-proxies", "true");
 //    }
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, PropertyContainer.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, PropertyContainer.class.getName());
 
 	/**
 	 * The class for which this container is created.
@@ -401,5 +401,3 @@ class PropertyContainer {
 				|| "org.hibernate.bytecode.internal.javassist.FieldHandler".equals( property.getType().getName() );
 	}
 }
-
-

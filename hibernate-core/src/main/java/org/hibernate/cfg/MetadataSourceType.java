@@ -46,5 +46,3 @@ public enum MetadataSourceType {
 		throw new HibernateException( "Unknown metadata source type value [" + value + "]" );
 	}
 }
-
-

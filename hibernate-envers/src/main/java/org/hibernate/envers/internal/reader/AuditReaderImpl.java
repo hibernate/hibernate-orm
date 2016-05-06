@@ -323,7 +323,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 
 		// Unwrap if necessary
 		if ( entity instanceof HibernateProxy ) {
-			entity = ((HibernateProxy) entity).getHibernateLazyInitializer().getImplementation();
+			entity = ( (HibernateProxy) entity ).getHibernateLazyInitializer().getImplementation();
 		}
 		if ( firstLevelCache.containsEntityName( primaryKey, revision, entity ) ) {
 			// it's on envers FLC!

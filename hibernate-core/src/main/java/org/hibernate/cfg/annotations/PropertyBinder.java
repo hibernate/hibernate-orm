@@ -51,7 +51,7 @@ import org.jboss.logging.Logger;
  * @author Emmanuel Bernard
  */
 public class PropertyBinder {
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, PropertyBinder.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, PropertyBinder.class.getName());
 
 	private MetadataBuildingContext buildingContext;
 

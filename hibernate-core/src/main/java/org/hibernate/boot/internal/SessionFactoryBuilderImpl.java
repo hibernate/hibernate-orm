@@ -818,6 +818,9 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 			return transactionCoordinatorBuilder.getDefaultConnectionHandlingMode();
 		}
 
+		/**
+		 * @deprecated since 5.2
+		 */
 		@Deprecated
 		private PhysicalConnectionHandlingMode interpretConnectionHandlingMode(
 				ConnectionAcquisitionMode specifiedAcquisitionMode,

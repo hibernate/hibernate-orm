@@ -20,8 +20,8 @@ import org.hibernate.envers.internal.tools.MutableInteger;
  * @author Adam Warski (adam at warski dot org)
  */
 public class Parameters {
-	public final static String AND = "and";
-	public final static String OR = "or";
+	public static final String AND = "and";
+	public static final String OR = "or";
 
 	/**
 	 * Main alias of the entity.

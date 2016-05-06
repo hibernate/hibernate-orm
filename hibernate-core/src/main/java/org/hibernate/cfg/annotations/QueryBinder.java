@@ -42,7 +42,7 @@ import org.jboss.logging.Logger;
  * @author Emmanuel Bernard
  */
 public abstract class QueryBinder {
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, QueryBinder.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, QueryBinder.class.getName());
 
 	public static void bindQuery(
 			NamedQuery queryAnn,

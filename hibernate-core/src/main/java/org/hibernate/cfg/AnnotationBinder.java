@@ -582,8 +582,8 @@ public final class AnnotationBinder {
 		entityBinder.setProxy( clazzToProcess.getAnnotation( Proxy.class ) );
 		entityBinder.setBatchSize( clazzToProcess.getAnnotation( BatchSize.class ) );
 		entityBinder.setWhere( clazzToProcess.getAnnotation( Where.class ) );
-	    entityBinder.setCache( determineCacheSettings( clazzToProcess, context ) );
-	    entityBinder.setNaturalIdCache( clazzToProcess, clazzToProcess.getAnnotation( NaturalIdCache.class ) );
+		entityBinder.setCache( determineCacheSettings( clazzToProcess, context ) );
+		entityBinder.setNaturalIdCache( clazzToProcess, clazzToProcess.getAnnotation( NaturalIdCache.class ) );
 
 		bindFilters( clazzToProcess, entityBinder, context );
 
@@ -701,7 +701,7 @@ public final class AnnotationBinder {
 			}
 		}
 
-        if ( onDeleteAnn != null && !onDeleteAppropriate ) {
+		if ( onDeleteAnn != null && !onDeleteAppropriate ) {
 			LOG.invalidOnDeleteAnnotation(propertyHolder.getEntityName());
 		}
 
@@ -2900,7 +2900,7 @@ public final class AnnotationBinder {
 						&& ! BinderHelper.isEmptyAnnotationValue( joinColumn.name() )
 						&& joinColumn.name().equals( columnName )
 						&& !property.isAnnotationPresent( MapsId.class ) ) {
-				   hasSpecjManyToOne = true;
+					hasSpecjManyToOne = true;
 					for ( Ejb3JoinColumn column : columns ) {
 						column.setInsertable( false );
 						column.setUpdatable( false );

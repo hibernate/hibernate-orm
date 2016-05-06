@@ -82,9 +82,11 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 					"@Index references a unknown column: " + columnName
 			);
 		}
-		if ( unique )
+		if ( unique ) {
 			table.getOrCreateUniqueKey( indexName ).addColumn( column );
-		else
+		}
+		else {
 			table.getOrCreateIndex( indexName ).addColumn( column );
+		}
 	}
 }

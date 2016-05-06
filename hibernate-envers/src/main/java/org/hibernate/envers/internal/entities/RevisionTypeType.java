@@ -53,7 +53,7 @@ public class RevisionTypeType implements UserType, Serializable {
 			throws HibernateException, SQLException {
 		IntegerType.INSTANCE.nullSafeSet(
 				preparedStatement,
-				(value == null ? null : ((RevisionType) value).getRepresentation().intValue()),
+				(value == null ? null : ( (RevisionType) value ).getRepresentation().intValue()),
 				index,
 				session
 		);

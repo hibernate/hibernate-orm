@@ -90,7 +90,7 @@ public class DefaultNamingStrategy implements NamingStrategy, Serializable {
 	 * otherwise the concatenation of owner entity table and the unqualified property name
 	 */
 	public String logicalCollectionTableName(String tableName,
-											 String ownerEntityTable, String associatedEntityTable, String propertyName
+			String ownerEntityTable, String associatedEntityTable, String propertyName
 	) {
 		if ( tableName != null ) {
 			return tableName;

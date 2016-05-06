@@ -61,10 +61,10 @@ public class EntitiesConfigurator {
 			if (pc.getClassName() != null) {
 				// Collecting information from annotations on the persistent class pc
 				final AnnotationsMetadataReader annotationsMetadataReader =
-						new AnnotationsMetadataReader(globalConfiguration, reflectionManager, pc);
+						new AnnotationsMetadataReader( globalConfiguration, reflectionManager, pc );
 				final ClassAuditingData auditData = annotationsMetadataReader.getAuditData();
 
-				classesAuditingData.addClassAuditingData(pc, auditData);
+				classesAuditingData.addClassAuditingData( pc, auditData );
 			}
 		}
 

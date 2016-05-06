@@ -121,8 +121,7 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 
 
 		Iterator<Property> propertyIterator = referencedValue.getPropertyIterator();
-		while(propertyIterator.hasNext())
-		{
+		while(propertyIterator.hasNext()) {
 			Property referencedComponentProperty = propertyIterator.next();
 
 			if ( referencedComponentProperty.isComposite() ) {

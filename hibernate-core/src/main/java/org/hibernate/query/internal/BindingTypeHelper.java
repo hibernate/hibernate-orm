@@ -120,8 +120,9 @@ public class BindingTypeHelper {
 	public BasicType resolveDateTemporalTypeVariant(Class javaType, Type baseType) {
 		// prefer to use any Type already known
 		if ( baseType != null && baseType instanceof BasicType ) {
-			if ( baseType.getReturnedClass().isAssignableFrom( javaType ) )
+			if ( baseType.getReturnedClass().isAssignableFrom( javaType ) ) {
 				return (BasicType) baseType;
+			}
 		}
 
 		if ( Calendar.class.isAssignableFrom( javaType ) ) {

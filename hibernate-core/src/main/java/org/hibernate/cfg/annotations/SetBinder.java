@@ -21,14 +21,14 @@ public class SetBinder extends CollectionBinder {
 	}
 
 	@Override
-    protected Collection createCollection(PersistentClass persistentClass) {
+	protected Collection createCollection(PersistentClass persistentClass) {
 		return new org.hibernate.mapping.Set( getBuildingContext().getMetadataCollector(), persistentClass );
 	}
 
 	@Override
-    public void setSqlOrderBy(OrderBy orderByAnn) {
+	public void setSqlOrderBy(OrderBy orderByAnn) {
 		if ( orderByAnn != null ) {
-            super.setSqlOrderBy( orderByAnn );
+			super.setSqlOrderBy( orderByAnn );
 		}
 	}
 }

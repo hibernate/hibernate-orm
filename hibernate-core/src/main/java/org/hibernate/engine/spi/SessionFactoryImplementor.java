@@ -367,6 +367,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, Quer
 	 * @param entityName The entity name for which to get the collection roles.
 	 * @return set of all the collection roles in which the given entityName participates.
 	 */
+	@Deprecated
 	default Set<String> getCollectionRolesByEntityParticipant(String entityName) {
 		return getMetamodel().getCollectionRolesByEntityParticipant( entityName );
 	}

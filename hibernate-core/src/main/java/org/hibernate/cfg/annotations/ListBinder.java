@@ -53,14 +53,16 @@ public class ListBinder extends CollectionBinder {
 
 	@Override
 	public void setSqlOrderBy(OrderBy orderByAnn) {
-		if ( orderByAnn != null )
+		if ( orderByAnn != null ) {
 			LOG.orderByAnnotationIndexedCollection();
+		}
 	}
 
 	@Override
 	public void setSort(Sort sortAnn) {
-		if ( sortAnn != null )
+		if ( sortAnn != null ) {
 			LOG.sortAnnotationIndexedCollection();
+		}
 	}
 
 	@Override

@@ -42,8 +42,10 @@ import org.jboss.logging.Logger;
 public class BeanValidationEventListener
 		implements PreInsertEventListener, PreUpdateEventListener, PreDeleteEventListener {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       BeanValidationEventListener.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			BeanValidationEventListener.class.getName()
+	);
 
 	private ValidatorFactory factory;
 	private ConcurrentHashMap<EntityPersister, Set<String>> associationsPerEntityPersister =
@@ -99,7 +101,7 @@ public class BeanValidationEventListener
 	}
 
 	private <T> void validate(T object, EntityMode mode, EntityPersister persister,
-							  SessionFactoryImplementor sessionFactory, GroupsPerOperation.Operation operation) {
+			SessionFactoryImplementor sessionFactory, GroupsPerOperation.Operation operation) {
 		if ( object == null || mode != EntityMode.POJO ) {
 			return;
 		}

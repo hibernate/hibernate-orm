@@ -50,12 +50,12 @@ public class ToOneFkSecondPass extends FkSecondPass {
 	}
 
 	@Override
-    public String getReferencedEntityName() {
+	public String getReferencedEntityName() {
 		return ( (ToOne) value ).getReferencedEntityName();
 	}
 
 	@Override
-    public boolean isInPrimaryKey() {
+	public boolean isInPrimaryKey() {
 		if ( entityClassName == null ) return false;
 		final PersistentClass persistentClass = buildingContext.getMetadataCollector().getEntityBinding( entityClassName );
 		Property property = persistentClass.getIdentifierProperty();

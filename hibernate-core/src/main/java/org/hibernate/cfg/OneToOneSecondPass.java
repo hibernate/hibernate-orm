@@ -308,4 +308,3 @@ public class OneToOneSecondPass implements SecondPass {
 		return join;
 	}
 }
-

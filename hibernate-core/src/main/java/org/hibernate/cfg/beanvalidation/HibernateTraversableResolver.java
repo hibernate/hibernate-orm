@@ -60,7 +60,8 @@ public class HibernateTraversableResolver implements TraversableResolver {
 		//ToOne association
 		else if ( type.isEntityType() || type.isAnyType() ) {
 			associations.add( prefix + name );
-		} else if ( type.isComponentType() ) {
+		}
+		else if ( type.isComponentType() ) {
 			CompositeType componentType = (CompositeType) type;
 			addAssociationsToTheSetForAllProperties(
 					componentType.getPropertyNames(),
@@ -88,20 +89,20 @@ public class HibernateTraversableResolver implements TraversableResolver {
 	}
 
 	public boolean isReachable(Object traversableObject,
-							   Path.Node traversableProperty,
-							   Class<?> rootBeanType,
-							   Path pathToTraversableObject,
-							   ElementType elementType) {
+			Path.Node traversableProperty,
+			Class<?> rootBeanType,
+			Path pathToTraversableObject,
+			ElementType elementType) {
 		//lazy, don't load
 		return Hibernate.isInitialized( traversableObject )
 				&& Hibernate.isPropertyInitialized( traversableObject, traversableProperty.getName() );
 	}
 
 	public boolean isCascadable(Object traversableObject,
-						  Path.Node traversableProperty,
-						  Class<?> rootBeanType,
-						  Path pathToTraversableObject,
-						  ElementType elementType) {
+			Path.Node traversableProperty,
+			Class<?> rootBeanType,
+			Path pathToTraversableObject,
+			ElementType elementType) {
 		String path = getStringBasedPath( traversableProperty, pathToTraversableObject );
 		return ! associations.contains(path);
 	}

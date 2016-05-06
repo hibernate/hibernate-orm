@@ -10,7 +10,6 @@ if ( !JavaVersion.current().java8Compatible ) {
 
 include 'hibernate-core'
 include 'hibernate-testing'
-include 'hibernate-entitymanager'
 include 'hibernate-envers'
 include 'hibernate-spatial'
 

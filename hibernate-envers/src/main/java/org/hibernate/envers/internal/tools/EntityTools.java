@@ -7,10 +7,10 @@
 package org.hibernate.envers.internal.tools;
 
 import javassist.util.proxy.ProxyFactory;
-
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 
@@ -43,7 +43,7 @@ public abstract class EntityTools {
 			return proxy.getHibernateLazyInitializer().getImplementation();
 		}
 
-		final SessionImplementor sessionImplementor = proxy.getHibernateLazyInitializer().getSession();
+		final SharedSessionContractImplementor sessionImplementor = proxy.getHibernateLazyInitializer().getSession();
 		final Session tempSession = sessionImplementor == null
 				? sessionFactoryImplementor.openTemporarySession()
 				: sessionImplementor.getFactory().openTemporarySession();

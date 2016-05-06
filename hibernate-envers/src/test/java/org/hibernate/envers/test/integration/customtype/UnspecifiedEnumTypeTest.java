@@ -6,6 +6,8 @@
  */
 package org.hibernate.envers.test.integration.customtype;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +19,7 @@ import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.customtype.UnspecifiedEnumTypeEntity;
 
+import org.hibernate.jdbc.Work;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
@@ -58,11 +61,10 @@ public class UnspecifiedEnumTypeTest extends BaseEnversFunctionalTestCase {
 	}
 
 	public void dropSchema(Session session) {
-		executeUpdateSafety( session, "alter table ENUM_ENTITY_AUD drop constraint FK_AUD_REV" );
 		executeUpdateSafety( session, "drop table ENUM_ENTITY if exists" );
 		executeUpdateSafety( session, "drop table ENUM_ENTITY_AUD if exists" );
 		executeUpdateSafety( session, "drop table REVINFO if exists" );
-		executeUpdateSafety( session, "drop sequence REVISION_GENERATOR" );
+		executeUpdateSafety( session, "drop sequence REVISION_GENERATOR if exists" );
 	}
 
 	private void createSchema(Session session) {
@@ -86,11 +88,14 @@ public class UnspecifiedEnumTypeTest extends BaseEnversFunctionalTestCase {
 	}
 
 	private void executeUpdateSafety(Session session, String query) {
-		try {
-			session.createSQLQuery( query ).executeUpdate();
-		}
-		catch (Exception e) {
-		}
+		session.doWork(
+				new Work() {
+					@Override
+					public void execute(Connection connection) throws SQLException {
+						connection.createStatement().execute( query );
+					}
+				}
+		);
 	}
 
 	@Test

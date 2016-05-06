@@ -9,13 +9,11 @@ package org.hibernate.envers.test.integration.modifiedflags;
 import java.util.List;
 import javax.persistence.EntityManager;
 
-import org.hibernate.QueryException;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.components.Component1;
 import org.hibernate.envers.test.entities.components.Component2;
 import org.hibernate.envers.test.entities.components.ComponentTestEntity;
 import org.hibernate.envers.test.tools.TestTools;
-
 import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
@@ -129,7 +127,7 @@ public class HasChangedComponents extends AbstractModifiedFlagsEntityTest {
 		);
 	}
 
-	@Test(expected = QueryException.class)
+	@Test(expected = IllegalArgumentException.class)
 	public void testHasChangedNotAudited() throws Exception {
 		queryForPropertyHasChanged( ComponentTestEntity.class, id1, "comp2" );
 	}

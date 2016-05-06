@@ -12,7 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.IntegerType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
@@ -75,7 +75,7 @@ public class CompositeTestUserType implements CompositeUserType {
 
 	public Object nullSafeGet(
 			final ResultSet rs, final String[] names,
-			final SessionImplementor session,
+			final SharedSessionContractImplementor session,
 			final Object owner) throws HibernateException, SQLException {
 		final String prop1 = rs.getString( names[0] );
 		if ( prop1 == null ) {
@@ -88,7 +88,7 @@ public class CompositeTestUserType implements CompositeUserType {
 
 	public void nullSafeSet(
 			final PreparedStatement st, final Object value,
-			final int index, final SessionImplementor session)
+			final int index, final SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 		if ( value == null ) {
 			st.setNull( index, StringType.INSTANCE.sqlType() );
@@ -110,19 +110,20 @@ public class CompositeTestUserType implements CompositeUserType {
 		return true;
 	}
 
-	public Serializable disassemble(final Object value, final SessionImplementor session) throws HibernateException {
+	public Serializable disassemble(
+			final Object value, final SharedSessionContractImplementor session) throws HibernateException {
 		return (Serializable) value;
 	}
 
 	public Object assemble(
-			final Serializable cached, final SessionImplementor session,
+			final Serializable cached, final SharedSessionContractImplementor session,
 			final Object owner) throws HibernateException {
 		return cached;
 	}
 
 	public Object replace(
 			Object original, Object target,
-			SessionImplementor session, Object owner) throws HibernateException {
+			SharedSessionContractImplementor session, Object owner) throws HibernateException {
 		return original;
 	}
 }

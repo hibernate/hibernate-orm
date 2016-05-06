@@ -7,19 +7,17 @@
 package org.hibernate.envers.test.integration.basic;
 
 import java.util.Map;
+import javax.persistence.TransactionRequiredException;
 
 import org.hibernate.Session;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.envers.configuration.EnversSettings;
-import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.integration.collection.norevision.Name;
 import org.hibernate.envers.test.integration.collection.norevision.Person;
-
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
-
 import org.junit.Test;
 
 /**
@@ -41,7 +39,7 @@ public class OutsideTransactionTest extends BaseEnversFunctionalTestCase {
 		settings.put( EnversSettings.REVISION_ON_COLLECTION_CHANGE, "true" );
 	}
 
-	@Test(expected = AuditException.class)
+	@Test(expected = TransactionRequiredException.class)
 	public void testInsertOutsideActiveTransaction() {
 		Session session = openSession();
 
@@ -53,7 +51,7 @@ public class OutsideTransactionTest extends BaseEnversFunctionalTestCase {
 		session.close();
 	}
 
-	@Test(expected = AuditException.class)
+	@Test(expected = TransactionRequiredException.class)
 	public void testUpdateOutsideActiveTransaction() {
 		Session session = openSession();
 
@@ -71,7 +69,7 @@ public class OutsideTransactionTest extends BaseEnversFunctionalTestCase {
 		session.close();
 	}
 
-	@Test(expected = AuditException.class)
+	@Test(expected = TransactionRequiredException.class)
 	public void testDeleteOutsideActiveTransaction() {
 		Session session = openSession();
 
@@ -88,7 +86,7 @@ public class OutsideTransactionTest extends BaseEnversFunctionalTestCase {
 		session.close();
 	}
 
-	@Test(expected = AuditException.class)
+	@Test(expected = TransactionRequiredException.class)
 	public void testCollectionUpdateOutsideActiveTransaction() {
 		Session session = openSession();
 
@@ -109,7 +107,7 @@ public class OutsideTransactionTest extends BaseEnversFunctionalTestCase {
 		session.close();
 	}
 
-	@Test(expected = AuditException.class)
+	@Test(expected = TransactionRequiredException.class)
 	public void testCollectionRemovalOutsideActiveTransaction() {
 		Session session = openSession();
 

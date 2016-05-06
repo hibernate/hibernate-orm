@@ -10,16 +10,15 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
+import javax.persistence.FlushModeType;
 
 import org.hibernate.ConnectionReleaseMode;
-import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoGenerator;
 import org.hibernate.envers.internal.synchronization.work.AuditWorkUnit;
 import org.hibernate.envers.tools.Pair;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -134,7 +133,7 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 		}
 
 		// see: http://www.jboss.com/index.html?module=bb&op=viewtopic&p=4178431
-		if ( FlushMode.isManualFlushMode( session.getFlushMode() ) ) {
+		if ( FlushModeType.COMMIT.equals ( session.getFlushMode() ) ) {
 			Session temporarySession = null;
 			try {
 				temporarySession = ((Session) session).sessionWithOptions()

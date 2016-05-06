@@ -9,10 +9,8 @@ package org.hibernate.envers.test.integration.modifiedflags;
 import java.util.List;
 import javax.persistence.EntityManager;
 
-import org.hibernate.QueryException;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.integration.basic.BasicTestEntity2;
-
 import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
@@ -69,7 +67,7 @@ public class HasChangedUnversionedProperties extends AbstractModifiedFlagsEntity
 		assertEquals( makeList( 1, 2 ), extractRevisionNumbers( list ) );
 	}
 
-	@Test(expected = QueryException.class)
+	@Test(expected = IllegalArgumentException.class)
 	public void testExceptionOnHasChangedQuery() throws Exception {
 		queryForPropertyHasChangedWithDeleted(
 				BasicTestEntity2.class,

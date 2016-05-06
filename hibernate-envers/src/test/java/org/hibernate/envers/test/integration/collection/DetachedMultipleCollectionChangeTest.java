@@ -15,6 +15,7 @@ import javax.persistence.Query;
 import javax.transaction.Status;
 import javax.transaction.TransactionManager;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
@@ -66,6 +67,7 @@ public class DetachedMultipleCollectionChangeTest extends BaseEnversJPAFunctiona
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
 		TestingJtaBootstrap.prepare( options );
+		options.put( AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS, "true" );
 		tm = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
 	}
 

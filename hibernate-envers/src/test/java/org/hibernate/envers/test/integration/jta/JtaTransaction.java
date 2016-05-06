@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import javax.persistence.EntityManager;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.IntTestEntity;
@@ -35,6 +36,7 @@ public class JtaTransaction extends BaseEnversJPAFunctionalTestCase {
 	@Override
 	protected void addConfigOptions(Map options) {
 		TestingJtaBootstrap.prepare( options );
+		options.put( AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS, "true" );
 	}
 
 	@Test

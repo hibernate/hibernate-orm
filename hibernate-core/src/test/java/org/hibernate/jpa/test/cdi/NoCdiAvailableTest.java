@@ -45,7 +45,7 @@ public class NoCdiAvailableTest extends BaseUnitTestCase {
 
 				@Override
 				public ClassLoader buildIsolatedClassLoader() {
-					return new ClassLoader(NoCdiAvailableTest.class.getClassLoader()) {
+					return new ClassLoader( NoCdiAvailableTest.class.getClassLoader() ) {
 						@Override
 						public Class<?> loadClass(String name) throws ClassNotFoundException {
 							for ( String excludedPackage : EXCLUDED_PACKAGES ) {
@@ -53,33 +53,7 @@ public class NoCdiAvailableTest extends BaseUnitTestCase {
 									throw new CdiClassLoadException( "CDI classes [" + name + "] excluded from load" );
 								}
 							}
-
-							Class c = findLoadedClass( name );
-							if ( c != null ) {
-								return c;
-							}
-
-							final String resourceName = name.replace( '.', '/' ) + ".class";
-							final URL resource = getResource( resourceName );
-							if ( resource == null ) {
-								throw new ClassNotFoundException( name + " not found" );
-							}
-							if ( !"file".equals( resource.getProtocol() ) ) {
-								return getParent().loadClass( name );
-							}
-
-							InputStream is = this.getResourceAsStream( name.replace( '.', '/' ) + ".class" );
-							if ( is == null ) {
-								throw new ClassNotFoundException( name + " not found" );
-							}
-
-							try {
-								byte[] bytecode = ByteCodeHelper.readByteCode( is );
-								return defineClass( name, bytecode, 0, bytecode.length );
-							}
-							catch( Throwable t ) {
-								throw new ClassNotFoundException( "Error reading class file for " + name, t );
-							}
+							return super.loadClass( name );
 						}
 					};
 				}

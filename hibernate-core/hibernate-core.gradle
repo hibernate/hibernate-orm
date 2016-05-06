@@ -167,7 +167,6 @@ tasks.compile.dependsOn generateGrammarSource
 
 
 task copyBundleResources (type: Copy) {
-println ">>>>>>>>>>>>>>" + buildDir.absolutePath
     ext.bundlesTargetDir = file( "${buildDir}/bundles" )
     from file('src/test/bundles')
     into bundlesTargetDir

@@ -9,15 +9,17 @@ package org.hibernate.envers.test.integration.components.dynamic;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.QueryException;
+import junit.framework.Assert;
 import org.hibernate.Session;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
-
 import org.junit.Test;
-import junit.framework.Assert;
+
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class SanityCheckTest extends BaseEnversFunctionalTestCase {
 
@@ -141,16 +143,14 @@ public class SanityCheckTest extends BaseEnversFunctionalTestCase {
 					.add( AuditEntity.property( "component_manyToManyList" ).eq( manyToManyEntities ) )
 					.getResultList();
 			//then
-			Assert.fail();
+			fail( "This should have generated an AuditException" );
 		}
-		catch ( AuditException e ) {
-			Assert.assertEquals(
+		catch ( Exception e ) {
+			assertTyping( AuditException.class, e );
+			assertEquals(
 					"This type of relation (org.hibernate.envers.test.integration.components.dynamic.PlainEntity.component_manyToManyList) isn't supported and can't be used in queries.",
 					e.getMessage()
 			);
-		}
-		catch ( Exception e ) {
-			Assert.fail();
 		}
 	}
 
@@ -176,12 +176,10 @@ public class SanityCheckTest extends BaseEnversFunctionalTestCase {
 					.getResultList();
 
 			//then
-			Assert.fail();
-		}
-		catch ( QueryException e ) {
+			fail( "This should have generated an IllegalArgumentException" );
 		}
 		catch ( Exception e ) {
-			Assert.fail();
+			assertTyping( IllegalArgumentException.class, e );
 		}
 	}
 }

@@ -13,6 +13,7 @@ import org.hibernate.Transaction;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoGenerator;
 import org.hibernate.event.spi.EventSource;
 
@@ -30,7 +31,7 @@ public class AuditProcessManager {
 	}
 
 	public AuditProcess get(EventSource session) {
-		final Transaction transaction = session.getTransaction();
+		final Transaction transaction = session.accessTransaction();
 
 		AuditProcess auditProcess = auditProcesses.get( transaction );
 		if ( auditProcess == null ) {
@@ -51,7 +52,7 @@ public class AuditProcessManager {
 
 			session.getActionQueue().registerProcess(
 					new AfterTransactionCompletionProcess() {
-						public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
+						public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
 							auditProcesses.remove( transaction );
 						}
 					}

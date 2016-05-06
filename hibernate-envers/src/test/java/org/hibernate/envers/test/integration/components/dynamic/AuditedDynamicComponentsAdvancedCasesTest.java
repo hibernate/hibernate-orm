@@ -25,6 +25,8 @@ import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 import junit.framework.Assert;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
+
 /**
  * @author Lukasz Zuchowski (author at zuchos dot com)
  *         More advanced tests for dynamic component.
@@ -350,11 +352,8 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
 			//then
 			Assert.fail();
 		}
-		catch ( QueryException e ) {
-
-		}
 		catch ( Exception e ) {
-			Assert.fail();
+			assertTyping( IllegalArgumentException.class, e );
 		}
 
 		try {
@@ -367,16 +366,13 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
 					.getResultList();
 			Assert.fail();
 		}
-		catch ( AuditException e ) {
+		catch ( Exception e ) {
+			assertTyping( AuditException.class, e );
 			Assert.assertEquals(
 					"This type of relation (org.hibernate.envers.test.integration.components.dynamic.AdvancedEntity.dynamicConfiguration_internalMapWithEntities) isn't supported and can't be used in queries.",
 					e.getMessage()
 			);
 		}
-		catch ( Exception e ) {
-			Assert.fail();
-		}
-
 	}
 
 	@Test

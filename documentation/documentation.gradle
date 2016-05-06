@@ -64,6 +64,7 @@ dependencies {
 	testCompile( project(':hibernate-core') )
 	testCompile( project(':hibernate-ehcache') )
 	testCompile( project(':hibernate-spatial') )
+	testCompile( project(path: ':hibernate-core', configuration: 'tests') )
 
 	testCompile( project(':hibernate-testing') )
 //	testCompile( project(path: ':hibernate-entitymanager', configuration: 'tests') )

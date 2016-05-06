@@ -112,7 +112,7 @@ import static org.hibernate.cfg.BinderHelper.toAliasTableMap;
  */
 @SuppressWarnings({"unchecked", "serial"})
 public abstract class CollectionBinder {
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, CollectionBinder.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, CollectionBinder.class.getName());
 
 	private MetadataBuildingContext buildingContext;
 
@@ -720,7 +720,7 @@ public abstract class CollectionBinder {
 			final MetadataBuildingContext buildingContext) {
 		return new CollectionSecondPass( buildingContext, collection ) {
 			@Override
-            public void secondPass(java.util.Map persistentClasses, java.util.Map inheritedMetas) throws MappingException {
+			public void secondPass(java.util.Map persistentClasses, java.util.Map inheritedMetas) throws MappingException {
 				bindStarToManySecondPass(
 						persistentClasses,
 						collType,
@@ -1174,18 +1174,18 @@ public abstract class CollectionBinder {
 
 		boolean isCollectionOfEntities = collectionEntity != null;
 		ManyToAny anyAnn = property.getAnnotation( ManyToAny.class );
-        if ( LOG.isDebugEnabled() ) {
+		if ( LOG.isDebugEnabled() ) {
 			String path = collValue.getOwnerEntityName() + "." + joinColumns[0].getPropertyName();
-            if ( isCollectionOfEntities && unique ) {
+			if ( isCollectionOfEntities && unique ) {
 				LOG.debugf("Binding a OneToMany: %s through an association table", path);
 			}
-            else if (isCollectionOfEntities) {
+			else if (isCollectionOfEntities) {
 				LOG.debugf("Binding as ManyToMany: %s", path);
 			}
-            else if (anyAnn != null) {
+			else if (anyAnn != null) {
 				LOG.debugf("Binding a ManyToAny: %s", path);
 			}
-            else {
+			else {
 				LOG.debugf("Binding a collection of element: %s", path);
 			}
 		}

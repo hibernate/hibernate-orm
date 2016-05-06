@@ -82,7 +82,7 @@ import org.hibernate.usertype.UserType;
  */
 @SuppressWarnings( {"UnusedDeclaration"})
 public class Configuration {
-    private static final CoreMessageLogger log = CoreLogging.messageLogger( Configuration.class );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( Configuration.class );
 
 	public static final String ARTEFACT_PROCESSING_ORDER = AvailableSettings.ARTIFACT_PROCESSING_ORDER;
 

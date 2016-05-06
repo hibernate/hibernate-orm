@@ -133,10 +133,10 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 		}
 
 		// see: http://www.jboss.com/index.html?module=bb&op=viewtopic&p=4178431
-		if ( FlushModeType.COMMIT.equals ( session.getFlushMode() ) ) {
+		if ( FlushModeType.COMMIT.equals( session.getFlushMode() ) ) {
 			Session temporarySession = null;
 			try {
-				temporarySession = ((Session) session).sessionWithOptions()
+				temporarySession = ( (Session) session ).sessionWithOptions()
 						.transactionContext()
 						.autoClose( false )
 						.connectionReleaseMode( ConnectionReleaseMode.AFTER_TRANSACTION )

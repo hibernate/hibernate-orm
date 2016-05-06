@@ -612,7 +612,7 @@ public interface AvailableSettings {
 	 * @see #SESSION_FACTORY_NAME_IS_JNDI
 	 * @see org.hibernate.internal.SessionFactoryRegistry
 	 */
-	 String SESSION_FACTORY_NAME = "hibernate.session_factory_name";
+	String SESSION_FACTORY_NAME = "hibernate.session_factory_name";
 
 	/**
 	 * Does the value defined by {@link #SESSION_FACTORY_NAME} represent a JNDI namespace into which
@@ -860,6 +860,7 @@ public interface AvailableSettings {
 	 * Proxool/Hibernate property prefix
 	 * @deprecated Use {@link #PROXOOL_CONFIG_PREFIX} instead
 	 */
+	@Deprecated
 	String PROXOOL_PREFIX = PROXOOL_CONFIG_PREFIX;
 
 	/**
@@ -950,7 +951,7 @@ public interface AvailableSettings {
 	/**
 	 * The EntityMode in which set the Session opened from the SessionFactory.
 	 */
-    String DEFAULT_ENTITY_MODE = "hibernate.default_entity_mode";
+	String DEFAULT_ENTITY_MODE = "hibernate.default_entity_mode";
 
 	/**
 	 * Should all database identifiers be quoted.  A {@code true}/{@code false} option.
@@ -1362,7 +1363,7 @@ public interface AvailableSettings {
 	 */
 	String STATEMENT_INSPECTOR = "hibernate.session_factory.statement_inspector";
 
-    String ENABLE_LAZY_LOAD_NO_TRANS = "hibernate.enable_lazy_load_no_trans";
+	String ENABLE_LAZY_LOAD_NO_TRANS = "hibernate.enable_lazy_load_no_trans";
 
 	String HQL_BULK_ID_STRATEGY = "hibernate.hql.bulk_id_strategy";
 

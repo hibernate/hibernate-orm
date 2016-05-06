@@ -96,7 +96,7 @@ public class MiddleEmbeddableComponentMapper implements MiddleComponentMapper, C
 				);
 			}
 			else if ( nestedMapper instanceof ToOneIdMapper ) {
-				((ToOneIdMapper) nestedMapper).addMiddleEqualToQuery(
+				( (ToOneIdMapper) nestedMapper ).addMiddleEqualToQuery(
 						parameters,
 						idPrefix1,
 						prefix1,

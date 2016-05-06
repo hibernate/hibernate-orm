@@ -42,7 +42,7 @@ import org.jboss.logging.Logger;
  */
 public class Ejb3Column {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Ejb3Column.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Ejb3Column.class.getName());
 
 	private MetadataBuildingContext context;
 
@@ -596,7 +596,7 @@ public class Ejb3Column {
 					column.setPropertyName(
 							BinderHelper.getRelativePath( propertyHolder, inferredData.getPropertyName() )
 					);
-			 		column.setNullable(
+					column.setNullable(
 						col.nullable()
 					); //TODO force to not null if available? This is a (bad) user choice.
 					column.setUnique( col.unique() );

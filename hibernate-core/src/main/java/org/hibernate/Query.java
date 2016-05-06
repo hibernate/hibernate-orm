@@ -444,6 +444,7 @@ public interface Query<R> extends org.hibernate.BasicQueryContract, TypedQuery<R
 	 *
 	 * @deprecated (since 5.2) use {@link ParameterMetadata#getNamedParameterNames()}
 	 */
+	@Deprecated
 	String[] getNamedParameters();
 
 	/**

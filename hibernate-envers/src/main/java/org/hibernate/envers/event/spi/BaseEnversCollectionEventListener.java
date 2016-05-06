@@ -55,7 +55,7 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
 			final AuditProcess auditProcess = getEnversService().getAuditProcessManager().get( event.getSession() );
 
 			final String entityName = event.getAffectedOwnerEntityName();
-			final String ownerEntityName = ((AbstractCollectionPersister) collectionEntry.getLoadedPersister()).getOwnerEntityName();
+			final String ownerEntityName = ( (AbstractCollectionPersister) collectionEntry.getLoadedPersister() ).getOwnerEntityName();
 			final String referencingPropertyName = collectionEntry.getRole().substring( ownerEntityName.length() + 1 );
 
 			// Checking if this is not a "fake" many-to-one bidirectional relation. The relation description may be

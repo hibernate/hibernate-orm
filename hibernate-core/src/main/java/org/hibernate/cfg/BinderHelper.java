@@ -59,7 +59,7 @@ public class BinderHelper {
 
 	public static final String ANNOTATION_STRING_DEFAULT = "";
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, BinderHelper.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, BinderHelper.class.getName());
 
 	private BinderHelper() {
 	}
@@ -258,7 +258,7 @@ public class BinderHelper {
 			Object columnOwner = findColumnOwner( ownerEntity, columns[0].getReferencedColumn(), context );
 			List<Property> properties = findPropertiesByColumns( columnOwner, columns, context );
 			//create an embeddable component
-                        Property synthProp = null;
+			Property synthProp = null;
 			if ( properties != null ) {
                         //todo how about properties.size() == 1, this should be much simpler
 				Component embeddedComp = columnOwner instanceof PersistentClass ?
@@ -273,8 +273,8 @@ public class BinderHelper {
 					clone.setNaturalIdentifier( false );
 					clone.setValueGenerationStrategy( property.getValueGenerationStrategy() );
 					embeddedComp.addProperty( clone );
-                                }
-                                    synthProp = new SyntheticProperty();
+				}
+				synthProp = new SyntheticProperty();
 				synthProp.setName( syntheticPropertyName );
 				synthProp.setPersistentClass( ownerEntity );
 				synthProp.setUpdateable( false );
@@ -282,9 +282,9 @@ public class BinderHelper {
 				synthProp.setValue( embeddedComp );
 				synthProp.setPropertyAccessorName( "embedded" );
 				ownerEntity.addProperty( synthProp );
-                                //make it unique
+				//make it unique
 				TableBinder.createUniqueConstraint( embeddedComp );
-                            }
+			}
 			else {
 				//TODO use a ToOne type doing a second select
 				StringBuilder columnsList = new StringBuilder();
@@ -838,7 +838,7 @@ public class BinderHelper {
 			MetadataBuildingContext buildingContext) {
 		final XClass persistentXClass;
 		try {
-			 persistentXClass = buildingContext.getBuildingOptions().getReflectionManager()
+			persistentXClass = buildingContext.getBuildingOptions().getReflectionManager()
 					.classForName( propertyHolder.getPersistentClass().getClassName() );
 		}
 		catch ( ClassLoadingException e ) {
@@ -857,8 +857,8 @@ public class BinderHelper {
 			}
 			return pd;
 		}
-        String propertyPath = isId ? "" : propertyName;
-        return buildingContext.getMetadataCollector().getPropertyAnnotatedWithMapsId( persistentXClass, propertyPath );
+		String propertyPath = isId ? "" : propertyName;
+		return buildingContext.getMetadataCollector().getPropertyAnnotatedWithMapsId( persistentXClass, propertyPath );
 	}
 	
 	public static Map<String,String> toAliasTableMap(SqlFragmentAlias[] aliases){

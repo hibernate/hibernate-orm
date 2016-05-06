@@ -30,7 +30,7 @@ public final class MiddleSimpleComponentMapper implements MiddleComponentMapper 
 	public Object mapToObjectFromFullMap(
 			EntityInstantiator entityInstantiator, Map<String, Object> data,
 			Object dataObject, Number revision) {
-		return ((Map<String, Object>) data.get( verEntCfg.getOriginalIdPropName() )).get( propertyName );
+		return ( (Map<String, Object>) data.get( verEntCfg.getOriginalIdPropName() ) ).get( propertyName );
 	}
 
 	@Override

@@ -42,7 +42,7 @@ public class EntityChangeNotifier {
 		Serializable entityId = vwu.getEntityId();
 		if ( entityId instanceof PersistentCollectionChangeWorkUnit.PersistentCollectionChangeWorkUnitId ) {
 			// Notify about a change in collection owner entity.
-			entityId = ((PersistentCollectionChangeWorkUnit.PersistentCollectionChangeWorkUnitId) entityId).getOwnerId();
+			entityId = ( (PersistentCollectionChangeWorkUnit.PersistentCollectionChangeWorkUnitId) entityId ).getOwnerId();
 		}
 		final Class entityClass = EntityTools.getEntityClass( sessionImplementor, session, vwu.getEntityName() );
 		revisionInfoGenerator.entityChanged(

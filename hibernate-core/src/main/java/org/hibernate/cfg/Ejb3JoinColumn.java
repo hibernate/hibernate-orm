@@ -479,7 +479,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 				getMappingColumn() != null ? getMappingColumn().isNullable() : false,
 				referencedColumn.getSqlType(),
 				getMappingColumn() != null ? getMappingColumn().isUnique() : false,
-			    false
+				false
 		);
 		linkWithValue( value );
 	}
@@ -763,7 +763,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	}
 
 	@Override
-    protected void addColumnBinding(SimpleValue value) {
+	protected void addColumnBinding(SimpleValue value) {
 		if ( StringHelper.isEmpty( mappedBy ) ) {
 			// was the column explicitly quoted in the mapping/annotation
 			// TODO: in metamodel, we need to better split global quoting and explicit quoting w/ respect to logical names

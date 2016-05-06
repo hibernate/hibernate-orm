@@ -67,8 +67,8 @@ public class MapCollectionInitializor<T extends Map> extends AbstractCollectionI
 		Object elementData = collectionRow;
 		Object indexData = collectionRow;
 		if ( collectionRow instanceof java.util.List ) {
-			elementData = ((List) collectionRow).get( elementComponentData.getComponentIndex() );
-			indexData = ((List) collectionRow).get( indexComponentData.getComponentIndex() );
+			elementData = ( (List) collectionRow ).get( elementComponentData.getComponentIndex() );
+			indexData = ( (List) collectionRow ).get( indexComponentData.getComponentIndex() );
 		}
 		final Object element = elementComponentData.getComponentMapper().mapToObjectFromFullMap(
 				entityInstantiator,

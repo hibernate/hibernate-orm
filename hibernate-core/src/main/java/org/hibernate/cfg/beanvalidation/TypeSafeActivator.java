@@ -58,7 +58,7 @@ import org.jboss.logging.Logger;
  */
 class TypeSafeActivator {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, TypeSafeActivator.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, TypeSafeActivator.class.getName());
 
 	private static final String FACTORY_PROPERTY = "javax.persistence.validation.factory";
 
@@ -268,7 +268,7 @@ class TypeSafeActivator {
 					descriptor.getComposingConstraints(),
 					property, propertyDesc, null,
 					canApplyNotNull,
-                    dialect
+					dialect
 			);
 		}
 		return hasNotNull;

@@ -69,7 +69,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 	/**
 	 * getter for the revision entity field annotated with @RevisionTimestamp
 	 */
-	private Getter revisionTimestampGetter = null;
+	private Getter revisionTimestampGetter;
 
 	private final SessionCacheCleaner sessionCacheCleaner;
 
@@ -221,7 +221,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 						);
 					}
 				}
-			});
+			} );
 		}
 		sessionCacheCleaner.scheduleAuditDataRemoval( session, data );
 	}
@@ -257,7 +257,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 			}
 		}
 
-		final SessionFactoryImplementor sessionFactory = ((SessionImplementor) session).getFactory();
+		final SessionFactoryImplementor sessionFactory = ( (SessionImplementor) session ).getFactory();
 		final Type propertyType = sessionFactory.getEntityPersister( entityName ).getPropertyType( propertyName );
 		if ( propertyType.isCollectionType() ) {
 			CollectionType collectionPropertyType = (CollectionType) propertyType;
@@ -328,7 +328,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 
 	@SuppressWarnings({"unchecked"})
 	private RevisionType getRevisionType(EnversService enversService, Object data) {
-		return (RevisionType) ((Map<String, Object>) data).get( enversService.getAuditEntitiesConfiguration().getRevisionTypePropName() );
+		return (RevisionType) ( (Map<String, Object>) data ).get( enversService.getAuditEntitiesConfiguration().getRevisionTypePropName() );
 	}
 
 	@SuppressWarnings({"unchecked"})
@@ -344,7 +344,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 			// Setting the end revision to be the current rev
 			Object previousData = l.get( 0 );
 			String revisionEndFieldName = enversService.getAuditEntitiesConfiguration().getRevisionEndFieldName();
-			((Map<String, Object>) previousData).put( revisionEndFieldName, revision );
+			( (Map<String, Object>) previousData ).put( revisionEndFieldName, revision );
 
 			if ( enversService.getAuditEntitiesConfiguration().isRevisionEndTimestampEnabled() ) {
 				// Determine the value of the revision property annotated with @RevisionTimestamp
@@ -353,7 +353,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 				Date revisionEndTimestamp = convertRevEndTimestampToDate( revEndTimestampObj );
 
 				// Setting the end revision timestamp
-				((Map<String, Object>) previousData).put( revEndTimestampFieldName, revisionEndTimestamp );
+				( (Map<String, Object>) previousData ).put( revEndTimestampFieldName, revisionEndTimestamp );
 			}
 
 			// Saving the previous version

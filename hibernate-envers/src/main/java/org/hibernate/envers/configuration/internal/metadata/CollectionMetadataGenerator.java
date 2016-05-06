@@ -932,7 +932,7 @@ public final class CollectionMetadataGenerator {
 			if ( property.getValue() instanceof Collection ) {
 				// The equality is intentional. We want to find a collection property with the same collection table.
 				//noinspection ObjectEquality
-				if ( ((Collection) property.getValue()).getCollectionTable() == collectionTable ) {
+				if ( ( (Collection) property.getValue() ).getCollectionTable() == collectionTable ) {
 					return property.getName();
 				}
 			}

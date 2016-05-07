@@ -355,7 +355,7 @@ public interface SharedSessionContractImplementor
 	void setFlushMode(FlushMode flushMode);
 
 	/**
-	 * {@inheritDoc}
+	 * Get the flush mode for this session.
 	 * <p/>
 	 * For users of the Hibernate native APIs, we've had to rename this method
 	 * as defined by Hibernate historically because the JPA contract defines a method of the same

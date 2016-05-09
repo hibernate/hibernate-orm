@@ -14,7 +14,7 @@ import java.sql.SQLException;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.usertype.UserType;
 
@@ -53,14 +53,14 @@ public class TestTypeContributor implements TypeContributor {
 
 		@Override
 		public Object nullSafeGet(
-				ResultSet rs, String[] names, SessionImplementor session, Object owner)
+				ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
 				throws HibernateException, SQLException {
 			return null;
 		}
 
 		@Override
 		public void nullSafeSet(
-				PreparedStatement st, Object value, int index, SessionImplementor session)
+				PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
 				throws HibernateException, SQLException {
 
 		}

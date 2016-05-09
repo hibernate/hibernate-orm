@@ -49,9 +49,6 @@ public class LiteralExpression<T> extends ExpressionImpl<T> implements Serializa
 		if ( ValueHandlerFactory.isNumeric( literal ) ) {
 			return ValueHandlerFactory.determineAppropriateHandler( (Class) literal.getClass() ).render( literal );
 		}
-		else if ( ValueHandlerFactory.isBoolean( literal ) ) {
-			return ValueHandlerFactory.determineAppropriateHandler( (Class) literal.getClass() ).render( literal );
-		}
 
 		// else...
 		final String parameterName = renderingContext.registerLiteralParameterBinding( getLiteral(), getJavaType() );

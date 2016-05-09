@@ -50,7 +50,6 @@ public class SelectCaseTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialect(value = H2Dialect.class, jiraKey = "HHH-10143")
 	public void selectCaseWithValuesShouldWork() {
 		EntityManager entityManager = getOrCreateEntityManager();
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -86,7 +85,6 @@ public class SelectCaseTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialect(value = H2Dialect.class, jiraKey = "HHH-10143")
 	public void simpleSelectCaseWithValuesShouldWork() {
 		EntityManager entityManager = getOrCreateEntityManager();
 

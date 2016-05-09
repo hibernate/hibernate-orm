@@ -28,7 +28,8 @@ import antlr.collections.AST;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class SearchedCaseNode extends AbstractSelectExpression implements SelectExpression {
+public class SearchedCaseNode extends AbstractSelectExpression implements SelectExpression, ExpectedTypeAwareNode {
+
 	@Override
 	public Type getDataType() {
 		// option is used to hold each WHEN/ELSE in turn
@@ -58,8 +59,7 @@ public class SearchedCaseNode extends AbstractSelectExpression implements Select
 
 			option = option.getNextSibling();
 		}
-
-		throw new QueryException( "Could not determine data type for searched case statement" );
+		return null;
 	}
 
 	@Override
@@ -67,4 +67,27 @@ public class SearchedCaseNode extends AbstractSelectExpression implements Select
 		ColumnHelper.generateSingleScalarColumn( this, i );
 	}
 
+	@Override
+	public void setExpectedType(Type expectedType) {
+		AST option = getFirstChild();
+		while ( option != null ) {
+			if ( option.getType() == HqlSqlTokenTypes.WHEN ) {
+				if ( ParameterNode.class.isAssignableFrom( option.getFirstChild().getNextSibling().getClass() ) ) {
+					((ParameterNode) option.getFirstChild().getNextSibling()).setExpectedType( expectedType );
+				}
+			}
+			else if ( option.getType() == HqlSqlTokenTypes.ELSE ) {
+				if ( ParameterNode.class.isAssignableFrom( option.getFirstChild().getClass() ) ) {
+					((ParameterNode) option.getFirstChild()).setExpectedType( expectedType );
+				}
+			}
+
+			option = option.getNextSibling();
+		}
+	}
+
+	@Override
+	public Type getExpectedType() {
+		return null;
+	}
 }

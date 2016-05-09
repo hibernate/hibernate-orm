@@ -155,7 +155,7 @@ public class SelectClause extends SelectExpressionList {
 
 				Type type = selectExpression.getDataType();
 				if ( type == null ) {
-					throw new IllegalStateException(
+					throw new QueryException(
 							"No data type for node: " + selectExpression.getClass().getName() + " "
 									+ new ASTPrinter( SqlTokenTypes.class ).showAsString( (AST) selectExpression, "" )
 					);

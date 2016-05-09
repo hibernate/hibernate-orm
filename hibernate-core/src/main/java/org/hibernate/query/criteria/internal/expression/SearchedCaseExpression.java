@@ -9,6 +9,7 @@ package org.hibernate.query.criteria.internal.expression;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiFunction;
 import javax.persistence.criteria.CriteriaBuilder.Case;
 import javax.persistence.criteria.Expression;
 
@@ -70,7 +71,7 @@ public class SearchedCaseExpression<R>
 		final Class<R> type = result != null
 				? (Class<R>) result.getClass()
 				: getJavaType();
-		return new CaseLiteralExpression<R>( criteriaBuilder(), type, result );
+		return new LiteralExpression<R>( criteriaBuilder(), type, result );
 	}
 
 	public Case<R> when(Expression<Boolean> condition, Expression<? extends R> result) {
@@ -114,20 +115,33 @@ public class SearchedCaseExpression<R>
 	}
 
 	public String render(RenderingContext renderingContext) {
+		return render(
+				renderingContext,
+				(Renderable expression, RenderingContext context) -> expression.render( context )
+		);
+	}
+
+	public String renderProjection(RenderingContext renderingContext) {
+		return render(
+				renderingContext,
+				(Renderable expression, RenderingContext context) -> expression.renderProjection( context )
+		);
+	}
+
+	private String render(
+			RenderingContext renderingContext,
+			BiFunction<Renderable, RenderingContext, String> formatter) {
 		StringBuilder caseStatement = new StringBuilder( "case" );
 		for ( WhenClause whenClause : getWhenClauses() ) {
 			caseStatement.append( " when " )
-					.append( ( (Renderable) whenClause.getCondition() ).render( renderingContext ) )
+					.append( formatter.apply( (Renderable) whenClause.getCondition(), renderingContext ) )
 					.append( " then " )
-					.append( ( (Renderable) whenClause.getResult() ).render( renderingContext ) );
+					.append( formatter.apply( ((Renderable) whenClause.getResult()), renderingContext ) );
 		}
 		caseStatement.append( " else " )
-				.append( ( (Renderable) getOtherwiseResult() ).render( renderingContext ) )
+				.append( formatter.apply( (Renderable) getOtherwiseResult(), renderingContext ) )
 				.append( " end" );
 		return caseStatement.toString();
 	}
 
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
-	}
 }

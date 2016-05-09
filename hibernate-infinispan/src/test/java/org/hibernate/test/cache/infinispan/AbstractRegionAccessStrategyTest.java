@@ -160,7 +160,7 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 							.buildTransactionCoordinator(txOwner, null);
 			when(session.getTransactionCoordinator()).thenReturn(txCoord);
 			when(session.beginTransaction()).then(invocation -> {
-				Transaction tx = new TransactionImpl(txCoord);
+				Transaction tx = new TransactionImpl(txCoord, session.getExceptionConverter());
 				tx.begin();
 				return tx;
 			});

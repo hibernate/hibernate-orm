@@ -1186,7 +1186,7 @@ include::{extrasdir}/basic/mapping-column-read-and-write-composite-type-persiste
 ====
 
 [[mapping-column-formula]]
-==== Formula
+==== @Formula
 
 Sometimes, you want the Database to do some computation for you rather than in the JVM, you might also create some kind of virtual column.
 You can use a SQL fragment (aka formula) instead of mapping a property into a column. This kind of property is read only (its value is calculated by your formula fragment)
@@ -1219,6 +1219,69 @@ include::{extrasdir}/basic/mapping-column-formula-persistence-example.sql[]
 [NOTE]
 ====
 The SQL fragment can be as complex as you want and even include subselects.
+====
+
+[[mapping-column-where]]
+==== @Where
+
+Sometimes, you want to filter out entities or collections using a custom SQL criteria.
+This can be achieved using the `@Where` annotation, which can be applied to entities and collections.
+
+[[mapping-where-example]]
+.`@Where` mapping usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/WhereTest.java[tags=mapping-where-example]
+----
+====
+
+If the database contains the following entities:
+
+[[mapping-where-persistence-example]]
+.Persisting an fetching entities with a `@Where` mapping
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/WhereTest.java[tags=mapping-where-persistence-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-where-persistence-example.sql[]
+----
+====
+
+When loading an `Account` entity, Hibernate is going to filter out all records that are not active.
+
+[[mapping-where-entity-query-example]]
+.Query entities mapped with `@Where`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/WhereTest.java[tags=mapping-where-entity-query-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-where-entity-query-example.sql[]
+----
+====
+
+When fetching the `debitAccounts` or the `creditAccounts` collections, Hibernate is going to apply the `@Where` clause filtering criteria to the associated child entities.
+
+[[mapping-where-collection-query-example]]
+.Traversing collections mapped with `@Where`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/WhereTest.java[tags=mapping-where-collection-query-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-where-collection-query-example.sql[]
+----
 ====
 
 [[mapping-column-any]]

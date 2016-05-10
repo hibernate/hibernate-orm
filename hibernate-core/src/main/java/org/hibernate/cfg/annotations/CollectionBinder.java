@@ -12,7 +12,6 @@ import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
-
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
 import javax.persistence.CollectionTable;
@@ -83,6 +82,7 @@ import org.hibernate.cfg.PropertyHolderBuilder;
 import org.hibernate.cfg.PropertyInferredData;
 import org.hibernate.cfg.PropertyPreloadedData;
 import org.hibernate.cfg.SecondPass;
+import org.hibernate.criterion.Junction;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -99,6 +99,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
+
 import org.jboss.logging.Logger;
 
 import static org.hibernate.cfg.BinderHelper.toAliasEntityMap;
@@ -944,9 +945,30 @@ public abstract class CollectionBinder {
 			}
 		}
 
-		Where where = property.getAnnotation( Where.class );
-		String whereClause = where == null ? null : where.clause();
-		if ( StringHelper.isNotEmpty( whereClause ) ) {
+		StringBuilder whereBuffer = new StringBuilder();
+		if ( property.getElementClass() != null ) {
+			Where whereOnClass = property.getElementClass().getAnnotation( Where.class );
+			if ( whereOnClass != null ) {
+				String clause = whereOnClass.clause();
+				if ( StringHelper.isNotEmpty( clause ) ) {
+					whereBuffer.append( clause );
+				}
+			}
+		}
+		Where whereOnCollection = property.getAnnotation( Where.class );
+		if ( whereOnCollection != null ) {
+			String clause = whereOnCollection.clause();
+			if ( StringHelper.isNotEmpty( clause ) ) {
+				if ( whereBuffer.length() > 0 ) {
+					whereBuffer.append( StringHelper.WHITESPACE );
+					whereBuffer.append( Junction.Nature.AND.getOperator() );
+					whereBuffer.append( StringHelper.WHITESPACE );
+				}
+				whereBuffer.append( clause );
+			}
+		}
+		if ( whereBuffer.length() > 0 ) {
+			String whereClause = whereBuffer.toString();
 			if ( hasAssociationTable ) {
 				collection.setManyToManyWhere( whereClause );
 			}

@@ -7,10 +7,12 @@
 package org.hibernate.test.annotations.entity;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Currency;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import javax.persistence.OptimisticLockException;
@@ -131,8 +133,74 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 	}
-
+	
 	@Test
+	@RequiresDialectFeature(DialectChecks.SupportsExpectedLobUsagePattern.class)
+	public void testWhereClause() throws Exception {
+		List<Doctor> doctors = new ArrayList<>();
+
+		Doctor goodDoctor = new Doctor();
+		goodDoctor.setName( "goodDoctor" );
+		goodDoctor.setYearsExperience( 15 );
+		goodDoctor.setActiveLicense( true );
+		doctors.add( goodDoctor );
+
+		Doctor docNotExperiencedLicensed = new Doctor();
+		docNotExperiencedLicensed.setName( "docNotExperiencedLicensed" );
+		docNotExperiencedLicensed.setYearsExperience( 1 );
+		docNotExperiencedLicensed.setActiveLicense( true );
+		doctors.add( docNotExperiencedLicensed );
+
+		Doctor docExperiencedUnlicensed = new Doctor();
+		docExperiencedUnlicensed.setName( "docExperiencedNotlicensed" );
+		docExperiencedUnlicensed.setYearsExperience( 10 );
+		doctors.add( docExperiencedUnlicensed );
+
+		Doctor badDoctor = new Doctor();
+		badDoctor.setName( "badDoctor" );
+		badDoctor.setYearsExperience( 2 );
+		doctors.add( badDoctor );
+
+		SoccerTeam team = new SoccerTeam();
+		team.setName( "New team" );
+		team.getPhysiologists().addAll( doctors );
+
+		Session s;
+		Transaction tx;
+		s = openSession();
+		tx = s.beginTransaction();
+
+		for ( Doctor doctor : doctors ) {
+			s.persist( doctor );
+		}
+
+		s.persist( team );
+
+		tx.commit();
+		s.close();
+
+		s = openSession();
+		tx = s.beginTransaction();
+
+		Query<Doctor> query = s.createQuery( "from " + Doctor.class.getName(), Doctor.class );
+		List<Doctor> list = query.getResultList();
+
+		assertEquals( 2, list.size() );
+
+		assertEquals( list.get( 0 ).getName(), goodDoctor.getName() );
+		assertEquals( list.get( 1 ).getName(), docExperiencedUnlicensed.getName() );
+
+		SoccerTeam loadedTeam = s.get( SoccerTeam.class, team.getId() );
+
+		assertEquals( 1, loadedTeam.getPhysiologists().size() );
+		assertEquals( goodDoctor.getName(), loadedTeam.getPhysiologists().get( 0 ).getName() );
+
+		tx.commit();
+		s.close();
+	}
+
+
+	@Test 
 	@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
 	public void testPolymorphism() throws Exception {
 		Forest forest = new Forest();
@@ -720,7 +788,8 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 				Drill.class,
 				PowerDrill.class,
 				SoccerTeam.class,
-				Player.class
+				Player.class,
+				Doctor.class,
 		};
 	}
 

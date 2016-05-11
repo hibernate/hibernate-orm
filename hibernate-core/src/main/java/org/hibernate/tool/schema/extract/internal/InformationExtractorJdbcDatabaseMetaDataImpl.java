@@ -359,33 +359,39 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 			Identifier tableName,
 			ResultSet resultSet) throws SQLException {
 		try {
-			if ( !resultSet.next() ) {
+			boolean found = false;
+			TableInformation tableInformation = null;
+			while ( resultSet.next() ) {
+				if ( tableName.equals( identifierHelper().toIdentifier( resultSet.getString( "TABLE_NAME" ) ) ) ) {
+					if ( found ) {
+						log.multipleTablesFound( tableName.render() );
+						final String catalogName = catalog == null ? "" : catalog.render();
+						final String schemaName = schema == null ? "" : schema.render();
+						throw new SchemaExtractionException(
+								String.format(
+										Locale.ENGLISH,
+										"More than one table found in namespace (%s, %s) : %s",
+										catalogName,
+										schemaName,
+										tableName.render()
+								)
+						);
+					}
+					else {
+						found = true;
+						tableInformation = extractTableInformation(
+								catalog,
+								schema,
+								tableName,
+								resultSet
+						);
+
+					}
+				}
+			}
+			if ( !found ) {
 				log.tableNotFound( tableName.render() );
-				return null;
 			}
-
-			final TableInformation tableInformation = extractTableInformation(
-					catalog,
-					schema,
-					tableName,
-					resultSet
-			);
-
-			if ( resultSet.next() ) {
-				log.multipleTablesFound( tableName.render() );
-				final String catalogName = catalog == null ? "" : catalog.render();
-				final String schemaName = schema == null ? "" : schema.render();
-				throw new SchemaExtractionException(
-						String.format(
-								Locale.ENGLISH,
-								"More than one table found in namespace (%s, %s) : %s",
-								catalogName,
-								schemaName,
-								tableName.render()
-						)
-				);
-			}
-
 			return tableInformation;
 		}
 		finally {

@@ -6,9 +6,12 @@
  */
 package org.hibernate.envers.query.criteria.internal;
 
+import java.util.List;
+
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.RelationDescription;
+import org.hibernate.envers.internal.entities.mapper.id.QueryParameterData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
@@ -16,22 +19,20 @@ import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.envers.query.internal.property.PropertyNameGetter;
 
 /**
- * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
+ * @since 5.2
  */
-public class RelatedAuditExpression implements AuditCriterion {
-	private final PropertyNameGetter propertyNameGetter;
-	private final Object id;
-	private final boolean equals;
+public class RelatedAuditInExpression implements AuditCriterion {
 
-	public RelatedAuditExpression(PropertyNameGetter propertyNameGetter, Object id, boolean equals) {
+	private final PropertyNameGetter propertyNameGetter;
+	private final Object[] ids;
+
+	public RelatedAuditInExpression(PropertyNameGetter propertyNameGetter, Object[] ids) {
 		this.propertyNameGetter = propertyNameGetter;
-		this.id = id;
-		this.equals = equals;
+		this.ids = ids;
 	}
 
-	@Override
-	public void addToQuery(
-			EnversService enversService,
+	public void addToQuery(EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			String entityName,
 			String alias,
@@ -45,15 +46,17 @@ public class RelatedAuditExpression implements AuditCriterion {
 		);
 
 		RelationDescription relatedEntity = CriteriaTools.getRelatedEntity( enversService, entityName, propertyName );
-
 		if ( relatedEntity == null ) {
 			throw new AuditException(
-					"This criterion can only be used on a property that is " +
-							"a relation to another property."
+					"The criterion can only be used on a property that is a relation to another property."
 			);
 		}
-		else {
-			relatedEntity.getIdMapper().addIdEqualsToQuery( parameters, id, null, equals );
+
+		// todo: should this throw an error if qpdList is null?  is it possible?
+		List<QueryParameterData> qpdList = relatedEntity.getIdMapper().mapToQueryParametersFromId( propertyName );
+		if ( qpdList != null ) {
+			QueryParameterData qpd = qpdList.iterator().next();
+			parameters.addWhereWithParams( qpd.getQueryParameterName(), "in (", ids, ")" );
 		}
 	}
 }

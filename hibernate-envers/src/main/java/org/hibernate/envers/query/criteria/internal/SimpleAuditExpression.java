@@ -6,6 +6,7 @@
  */
 package org.hibernate.envers.query.criteria.internal;
 
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.RelationDescription;
@@ -14,6 +15,9 @@ import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
 import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.envers.query.internal.property.PropertyNameGetter;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.ComponentType;
+import org.hibernate.type.Type;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -46,7 +50,29 @@ public class SimpleAuditExpression implements AuditCriterion {
 		RelationDescription relatedEntity = CriteriaTools.getRelatedEntity( enversService, entityName, propertyName );
 
 		if ( relatedEntity == null ) {
-			parameters.addWhereWithParam( propertyName, op, value );
+			// HHH-9178 - Add support to component type equality.
+			// This basically will allow = and <> operators to perform component-based equality checks.
+			// Any other operator for a component type will not be supported.
+			// Non-component types will continue to behave normally.
+			final SessionImplementor session = versionsReader.getSessionImplementor();
+			final Type type = getPropertyType( session, entityName, propertyName );
+			if ( type != null && type.isComponentType() ) {
+				if ( !"=".equals( op ) && !"<>".equals( op ) ) {
+					throw new AuditException( "Component-based criterion is not supported for op: " + op );
+				}
+				final ComponentType componentType = (ComponentType) type;
+				for ( int i = 0; i < componentType.getPropertyNames().length; i++ ) {
+					final Object componentValue = componentType.getPropertyValue( value, i, session );
+					parameters.addWhereWithParam(
+							propertyName + "_" + componentType.getPropertyNames()[ i ],
+							op,
+							componentValue
+					);
+				}
+			}
+			else {
+				parameters.addWhereWithParam( propertyName, op, value );
+			}
 		}
 		else {
 			if ( !"=".equals( op ) && !"<>".equals( op ) ) {
@@ -55,10 +81,28 @@ public class SimpleAuditExpression implements AuditCriterion {
 								") isn't supported and can't be used in queries."
 				);
 			}
-
 			Object id = relatedEntity.getIdMapper().mapToIdFromEntity( value );
-
 			relatedEntity.getIdMapper().addIdEqualsToQuery( parameters, id, null, "=".equals( op ) );
 		}
+	}
+
+	/**
+	 * Get the property type of a given property in the specified entity.
+	 *
+	 * @param session      the session
+	 * @param entityName   the entity name
+	 * @param propertyName the property name
+	 * @return the property type of the property or {@code null} if the property name isn't found.
+	 */
+	private Type getPropertyType(SessionImplementor session, String entityName, String propertyName) {
+		// rather than rely on QueryException from calling getPropertyType(), this allows a non-failure way
+		// to determine whether to return null or lookup the value safely.
+		final EntityPersister persister = session.getSessionFactory().getMetamodel().entityPersister( entityName );
+		for ( String name : persister.getPropertyNames() ) {
+			if ( name.equals( propertyName ) ) {
+				return persister.getPropertyType( propertyName );
+			}
+		}
+		return null;
 	}
 }

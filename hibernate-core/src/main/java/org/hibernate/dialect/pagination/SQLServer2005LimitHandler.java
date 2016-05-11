@@ -10,7 +10,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,13 +20,19 @@ import org.hibernate.internal.util.StringHelper;
  * LIMIT clause handler compatible with SQL Server 2005 and later.
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	private static final String SELECT = "select";
-	private static final String SELECT_WITH_SPACE = SELECT + ' ';
 	private static final String FROM = "from";
 	private static final String DISTINCT = "distinct";
 	private static final String ORDER_BY = "order by";
+
+	private static final Pattern SELECT_PATTERN = buildShallowIndexPattern( SELECT + "(.)*" );
+	private static final Pattern FROM_PATTERN = buildShallowIndexPattern( FROM );
+	private static final Pattern DISTINCT_PATTERN = buildShallowIndexPattern( DISTINCT );
+	private static final Pattern ORDER_BY_PATTERN = buildShallowIndexPattern( ORDER_BY );
+	private static final Pattern COMMA_PATTERN = buildShallowIndexPattern( "," );
 
 	private static final Pattern ALIAS_PATTERN = Pattern.compile( "(?i)\\sas\\s(.)+$" );
 
@@ -95,7 +100,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 		if ( LimitHelper.hasFirstRow( selection ) ) {
 			final String selectClause = fillAliasInSelectClause( sb );
 
-			final int orderByIndex = shallowIndexOfWord( sb, ORDER_BY, 0 );
+			final int orderByIndex = shallowIndexOfPattern( sb, ORDER_BY_PATTERN, 0 );
 			if ( orderByIndex > 0 ) {
 				// ORDER BY requires using TOP.
 				addTopExpression( sb );
@@ -140,8 +145,9 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 */
 	protected String fillAliasInSelectClause(StringBuilder sb) {
 		final List<String> aliases = new LinkedList<String>();
-		final int startPos = shallowIndexOf( sb, SELECT_WITH_SPACE, 0 );
-		int endPos = shallowIndexOfWord( sb, FROM, startPos );
+		final int startPos = shallowIndexOfPattern( sb, SELECT_PATTERN, 0 );
+		int endPos = shallowIndexOfPattern( sb, FROM_PATTERN, startPos );
+
 		int nextComa = startPos;
 		int prevComa = startPos;
 		int unique = 0;
@@ -149,7 +155,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 
 		while ( nextComa != -1 ) {
 			prevComa = nextComa;
-			nextComa = shallowIndexOf( sb, ",", nextComa );
+			nextComa = shallowIndexOfPattern( sb, COMMA_PATTERN, nextComa );
 			if ( nextComa > endPos ) {
 				break;
 			}
@@ -176,7 +182,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 		}
 		// Processing last column.
 		// Refreshing end position, because we might have inserted new alias.
-		endPos = shallowIndexOfWord( sb, FROM, startPos );
+		endPos = shallowIndexOfPattern( sb, FROM_PATTERN, startPos );
 		final String expression = sb.substring( prevComa, endPos );
 		if ( selectsMultipleColumns( expression ) ) {
 			selectsMultipleColumns = true;
@@ -240,13 +246,13 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 * @param sql SQL query.
 	 */
 	protected void addTopExpression(StringBuilder sql) {
-		final int distinctStartPos = shallowIndexOfWord( sql, DISTINCT, 0 );
+		final int distinctStartPos = shallowIndexOfPattern( sql, DISTINCT_PATTERN, 0 );
 		if ( distinctStartPos > 0 ) {
 			// Place TOP after DISTINCT.
 			sql.insert( distinctStartPos + DISTINCT.length(), " TOP(?)" );
 		}
 		else {
-			final int selectStartPos = shallowIndexOf( sql, SELECT_WITH_SPACE, 0 );
+			final int selectStartPos = shallowIndexOfPattern( sql, SELECT_PATTERN, 0 );
 			// Place TOP after SELECT.
 			sql.insert( selectStartPos + SELECT.length(), " TOP(?)" );
 		}
@@ -254,53 +260,41 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	}
 
 	/**
-	 * Returns index of the first case-insensitive match of search term surrounded by spaces
-	 * that is not enclosed in parentheses.
+	 * Returns index of the first case-insensitive match of search pattern that is not
+	 * enclosed in parenthesis.
 	 *
 	 * @param sb String to search.
-	 * @param search Search term.
+	 * @param pattern Compiled search pattern.
 	 * @param fromIndex The index from which to start the search.
 	 *
 	 * @return Position of the first match, or {@literal -1} if not found.
 	 */
-	private static int shallowIndexOfWord(final StringBuilder sb, final String search, int fromIndex) {
-		final int index = shallowIndexOf( sb, ' ' + search + ' ', fromIndex );
-		// In case of match adding one because of space placed in front of search term.
-		return index != -1 ? ( index + 1 ) : -1;
+	private static int shallowIndexOfPattern(final StringBuilder sb, final Pattern pattern, int fromIndex) {
+		int index = -1;
+		final String matchString = sb.toString();
+
+		// quick exit, save performance and avoid exceptions
+		if ( matchString.length() < fromIndex || fromIndex < 0 ) {
+			return -1;
+		}
+
+		Matcher matcher = pattern.matcher( matchString );
+		matcher.region( fromIndex, matchString.length() );
+
+		if ( matcher.find() && matcher.groupCount() > 0 ) {
+			index = matcher.start();
+		}
+		return index;
 	}
 
 	/**
-	 * Returns index of the first case-insensitive match of search term that is not enclosed in parentheses.
+	 * Builds a pattern that can be used to find matches of case-insensitive matches
+	 * based on the search pattern that is not enclosed in parenthesis.
 	 *
-	 * @param sb String to search.
-	 * @param search Search term.
-	 * @param fromIndex The index from which to start the search.
-	 *
-	 * @return Position of the first match, or {@literal -1} if not found.
+	 * @param pattern String search pattern.
+	 * @return Compiled {@link Pattern}.
 	 */
-	private static int shallowIndexOf(StringBuilder sb, String search, int fromIndex) {
-		// case-insensitive match
-		final String lowercase = sb.toString().toLowerCase(Locale.ROOT);
-		final int len = lowercase.length();
-		final int searchlen = search.length();
-		int pos = -1;
-		int depth = 0;
-		int cur = fromIndex;
-		do {
-			pos = lowercase.indexOf( search, cur );
-			if ( pos != -1 ) {
-				for ( int iter = cur; iter < pos; iter++ ) {
-					final char c = sb.charAt( iter );
-					if ( c == '(' ) {
-						depth = depth + 1;
-					}
-					else if ( c == ')' ) {
-						depth = depth - 1;
-					}
-				}
-				cur = pos + searchlen;
-			}
-		} while ( cur < len && depth != 0 && pos != -1 );
-		return depth == 0 ? pos : -1;
+	private static Pattern buildShallowIndexPattern(String pattern) {
+		return Pattern.compile( "(\\b" + pattern + ")(?![^\\(]*\\))", Pattern.CASE_INSENSITIVE );
 	}
 }

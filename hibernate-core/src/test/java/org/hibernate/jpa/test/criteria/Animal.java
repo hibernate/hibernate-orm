@@ -6,10 +6,14 @@
  */
 package org.hibernate.jpa.test.criteria;
 
+import java.util.Date;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 /**
  * Animal
@@ -22,6 +26,7 @@ public class Animal {
 	private Animal mother;
 	private Animal father;
 	private String name;
+	private Date born;
 
 	public String getName() {
 		return name;
@@ -56,5 +61,14 @@ public class Animal {
 
 	public void setFather(Animal father) {
 		this.father = father;
+	}
+
+	@Temporal(TemporalType.TIMESTAMP)
+	public Date getBorn() {
+		return born;
+	}
+
+	public void setBorn(Date born) {
+		this.born = born;
 	}
 }

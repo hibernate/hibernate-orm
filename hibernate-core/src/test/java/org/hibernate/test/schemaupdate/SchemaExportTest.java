@@ -6,6 +6,8 @@
  */
 package org.hibernate.test.schemaupdate;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.util.EnumSet;
 
 import org.hibernate.boot.MetadataSources;
@@ -17,12 +19,15 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -131,4 +136,23 @@ public class SchemaExportTest extends BaseUnitTestCase {
 		schemaExport.drop( EnumSet.of( TargetType.DATABASE ), metadata );
         assertEquals( 0, schemaExport.getExceptions().size() );
     }
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-10678")
+	public void testHibernateMappingSchemaPropertyIsNotIgnored() throws Exception {
+		File output = File.createTempFile( "update_script", ".sql" );
+		output.deleteOnExit();
+
+		final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
+				.addResource( "org/hibernate/test/schemaupdate/mapping2.hbm.xml" )
+				.buildMetadata();
+		metadata.validate();
+
+		final SchemaExport schemaExport = new SchemaExport();
+		schemaExport.setOutputFile( output.getAbsolutePath() );
+		schemaExport.execute( EnumSet.of( TargetType.SCRIPT ), SchemaExport.Action.CREATE, metadata );
+
+		String fileContent = new String( Files.readAllBytes( output.toPath() ) );
+		assertThat( fileContent, fileContent.toLowerCase().contains( "create table schema1.version" ), is( true ) );
+	}
 }

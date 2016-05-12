@@ -17,11 +17,13 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.envers.tools.Pair;
+import org.hibernate.internal.util.compare.EqualsHelper;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public abstract class Tools {
 	public static <K, V> Map<K, V> newHashMap() {
@@ -36,12 +38,14 @@ public abstract class Tools {
 		return new LinkedHashMap<K, V>();
 	}
 
+	/**
+	 * @deprecated (since 5.2), use {@link EqualsHelper#areEqual(Object, Object)}.
+	 */
+	@Deprecated
 	public static boolean objectsEqual(Object obj1, Object obj2) {
-		if ( obj1 == null ) {
-			return obj2 == null;
-		}
-
-		return obj1.equals( obj2 );
+		// HHH-10734
+		// Delegates to core's EqualsHelper to support array and non-array types
+		return EqualsHelper.areEqual( obj1, obj2 );
 	}
 
 	public static <T> List<T> iteratorToList(Iterator<T> iter) {

@@ -468,6 +468,8 @@ And to select only entities that are related to a given entity:
 query.add( AuditEntity.property( "address" ).eq( relatedEntityInstance ) );
 // or
 query.add( AuditEntity.relatedId( "address" ).eq( relatedEntityId ) );
+// or
+query.add( AuditEntity.relatedId( "address" ).in( relatedEntityId1, relatedEntityId2 ) );
 ----
 
 You can limit the number of results, order them, and set aggregations and projections (except grouping) in the usual way.

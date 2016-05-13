@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.sql.hand.query;
 
+import javax.persistence.PersistenceException;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -142,7 +143,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 			s.createSQLQuery( sql ).list();
 			fail( "Should throw an exception since no addEntity nor addScalar has been performed." );
 		}
-		catch( HibernateException he) {
+		catch( PersistenceException pe) {
 			// expected behavior
 		}
 		finally {

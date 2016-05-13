@@ -18,7 +18,9 @@ import org.hibernate.envers.test.tools.TestTools;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author Chris Cranford
@@ -115,7 +117,8 @@ public class AuditRelatedIdInTest extends BaseEnversJPAFunctionalTestCase {
 		assertEquals( 2, results.size() );
 		final Employee employee1 = makeEmployee( employee1Id, "Employee1", company1Id, "COMPANY1" );
 		final Employee employee2 = makeEmployee( employee2Id, "Employee2", company1Id, "COMPANY1" );
-		assertEquals( results, TestTools.makeList( employee1, employee2 ) );
+		assertThat( results.contains( employee1 ), is(true) );
+		assertThat( results.contains( employee2 ), is(true) );
 	}
 
 	@Test
@@ -124,9 +127,11 @@ public class AuditRelatedIdInTest extends BaseEnversJPAFunctionalTestCase {
 		auditQuery.add( AuditEntity.relatedId( "company" ).in( new Integer[]{ company2Id } ) );
 		final List<Employee> results = auditQuery.getResultList();
 		assertEquals( 2, results.size() );
+
 		final Employee employee1 = makeEmployee( employee2Id, "Employee2", company2Id, "COMPANY2" );
 		final Employee employee2 = makeEmployee( employee3Id, "Employee3", company2Id, "COMPANY2" );
-		assertEquals( results, TestTools.makeList( employee1, employee2 ) );
+		assertThat( results.contains( employee1 ), is(true) );
+		assertThat( results.contains( employee2 ), is(true) );
 	}
 
 	@Test

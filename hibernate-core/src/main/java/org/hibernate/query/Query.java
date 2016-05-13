@@ -12,7 +12,6 @@ import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Spliterator;
 import java.util.stream.Stream;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
@@ -41,7 +40,7 @@ import org.hibernate.engine.spi.RowSelection;
  */
 @Incubating
 @SuppressWarnings("UnusedDeclaration")
-public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, BasicQueryContract {
+public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQueryContract {
 	/**
 	 * Get the QueryProducer this Query originates from.
 	 */

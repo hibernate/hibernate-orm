@@ -21,7 +21,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.ScrollMode;
-import org.hibernate.ScrollableResults;
 import org.hibernate.SessionException;
 import org.hibernate.StatelessSession;
 import org.hibernate.UnresolvableObjectException;
@@ -179,7 +178,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public Object get(String entityName, Serializable id, LockMode lockMode) {
 		checkOpen();
-		Object result = getFactory().getEntityPersister( entityName )
+		Object result = getFactory().getMetamodel().entityPersister( entityName )
 				.load( id, null, lockMode, this );
 		if ( temporaryPersistenceContext.isLoadFinished() ) {
 			temporaryPersistenceContext.clear();
@@ -254,7 +253,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			String entityName,
 			Serializable id) throws HibernateException {
 		checkOpen();
-		return getFactory().getEntityPersister( entityName ).instantiate( id, this );
+		return getFactory().getMetamodel().entityPersister( entityName ).instantiate( id, this );
 	}
 
 	@Override
@@ -264,7 +263,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			boolean eager,
 			boolean nullable) throws HibernateException {
 		checkOpen();
-		EntityPersister persister = getFactory().getEntityPersister( entityName );
+		EntityPersister persister = getFactory().getMetamodel().entityPersister( entityName );
 		// first, try to load it from the temp PC associated to this SS
 		Object loaded = temporaryPersistenceContext.getEntity( generateEntityKey( id, persister ) );
 		if ( loaded != null ) {

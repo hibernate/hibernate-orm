@@ -184,9 +184,11 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 
 	@Override
 	protected ScrollableResultsImplementor doScroll(ScrollMode scrollMode) {
+		final QueryParameters queryParameters = getQueryParameters();
+		queryParameters.setScrollMode( scrollMode );
 		return getProducer().scroll(
 				generateQuerySpecification(),
-				getQueryParameters()
+				queryParameters
 		);
 	}
 

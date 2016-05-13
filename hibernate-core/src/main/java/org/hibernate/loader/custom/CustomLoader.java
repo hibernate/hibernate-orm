@@ -38,6 +38,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.Queryable;
+import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
@@ -369,7 +370,7 @@ public class CustomLoader extends Loader {
 		return sql;
 	}
 
-	public ScrollableResults scroll(final QueryParameters queryParameters, final SharedSessionContractImplementor session)
+	public ScrollableResultsImplementor scroll(final QueryParameters queryParameters, final SharedSessionContractImplementor session)
 			throws HibernateException {
 		return scroll(
 				queryParameters,

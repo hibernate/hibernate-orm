@@ -22,6 +22,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
 import javax.persistence.FlushModeType;
@@ -39,7 +43,6 @@ import org.hibernate.LockOptions;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.ScrollMode;
-import org.hibernate.ScrollableResults;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
@@ -67,6 +70,7 @@ import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterListBinding;
+import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
 
@@ -1284,12 +1288,12 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public ScrollableResults scroll() {
+	public ScrollableResultsImplementor scroll() {
 		return scroll( getProducer().getJdbcServices().getJdbcEnvironment().getDialect().defaultScrollMode() );
 	}
 
 	@Override
-	public ScrollableResults scroll(ScrollMode scrollMode) {
+	public ScrollableResultsImplementor scroll(ScrollMode scrollMode) {
 		beforeQuery();
 		try {
 			return doScroll( scrollMode );
@@ -1299,13 +1303,26 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		}
 	}
 
-	protected ScrollableResults doScroll(ScrollMode scrollMode) {
+	protected ScrollableResultsImplementor doScroll(ScrollMode scrollMode) {
 		QueryParameters queryParameters = getQueryParameters();
 		queryParameters.setScrollMode( scrollMode );
 		return getProducer().scroll(
 				queryParameterBindings.expandListValuedParameters( getQueryString(), getProducer() ),
 				queryParameters
 		);
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public Stream<R> stream() {
+		final ScrollableResultsImplementor scrollableResults = scroll( ScrollMode.FORWARD_ONLY );
+		final ScrollableResultsIterator<R> iterator = new ScrollableResultsIterator<>( scrollableResults );
+		final Spliterator<R> spliterator = Spliterators.spliteratorUnknownSize( iterator, Spliterator.NONNULL );
+
+		final Stream<R> stream = StreamSupport.stream( spliterator, false );
+		stream.onClose( scrollableResults::close );
+
+		return stream;
 	}
 
 	@Override

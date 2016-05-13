@@ -18,11 +18,11 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import org.hibernate.HibernateException;
-import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.HolderInstantiator;
 import org.hibernate.loader.Loader;
+import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
@@ -31,7 +31,7 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractScrollableResults implements ScrollableResults {
+public abstract class AbstractScrollableResults implements ScrollableResultsImplementor {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractScrollableResults.class );
 
 	private final ResultSet resultSet;
@@ -41,6 +41,7 @@ public abstract class AbstractScrollableResults implements ScrollableResults {
 	private final QueryParameters queryParameters;
 	private final Type[] types;
 	private HolderInstantiator holderInstantiator;
+	private boolean closed;
 
 	protected AbstractScrollableResults(
 			ResultSet rs,
@@ -93,6 +94,11 @@ public abstract class AbstractScrollableResults implements ScrollableResults {
 
 	@Override
 	public final void close() {
+		if ( this.closed ) {
+			// noop if already closed
+			return;
+		}
+
 		// not absolutely necessary, but does help with aggressive release
 		//session.getJDBCContext().getConnectionManager().closeQueryStatement( ps, resultSet );
 		session.getJdbcCoordinator().getResourceRegistry().release( ps );
@@ -106,15 +112,28 @@ public abstract class AbstractScrollableResults implements ScrollableResults {
 				LOG.tracev( "Exception trying to cleanup load context : {0}", ignore.getMessage() );
 			}
 		}
+
+		this.closed = true;
+	}
+
+	@Override
+	public boolean isClosed() {
+		return this.closed;
 	}
 
 	@Override
 	public final Object[] get() throws HibernateException {
+		if ( closed ) {
+			throw new IllegalStateException( "ScrollableResults is closed" );
+		}
 		return getCurrentRow();
 	}
 
 	@Override
 	public final Object get(int col) throws HibernateException {
+		if ( closed ) {
+			throw new IllegalStateException( "ScrollableResults is closed" );
+		}
 		return getCurrentRow()[col];
 	}
 
@@ -127,6 +146,10 @@ public abstract class AbstractScrollableResults implements ScrollableResults {
 	 * @param returnType a "final" type
 	 */
 	protected final Object getFinal(int col, Type returnType) throws HibernateException {
+		if ( closed ) {
+			throw new IllegalStateException( "ScrollableResults is closed" );
+		}
+
 		if ( holderInstantiator != null ) {
 			throw new HibernateException( "query specifies a holder class" );
 		}
@@ -148,6 +171,10 @@ public abstract class AbstractScrollableResults implements ScrollableResults {
 	 * @param returnType any type
 	 */
 	protected final Object getNonFinal(int col, Type returnType) throws HibernateException {
+		if ( closed ) {
+			throw new IllegalStateException( "ScrollableResults is closed" );
+		}
+
 		if ( holderInstantiator != null ) {
 			throw new HibernateException( "query specifies a holder class" );
 		}

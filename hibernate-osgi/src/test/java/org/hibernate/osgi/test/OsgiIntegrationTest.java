@@ -24,6 +24,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.osgi.test.client.DataPoint;
+import org.hibernate.osgi.test.client.OsgiTestActivator;
 import org.hibernate.osgi.test.client.SomeService;
 import org.hibernate.osgi.test.client.TestIntegrator;
 import org.hibernate.osgi.test.client.TestStrategyRegistrationProvider;
@@ -140,32 +141,43 @@ public class OsgiIntegrationTest {
 	public TestProbeBuilder probeConfiguration(TestProbeBuilder probe) {
 		System.out.println( "Configuring probe..." );
 
-		// Note : I found locally that this part is not needed.  But I am leaving this here as I might
-		// 		someday have a need for tweaking the probe and I want to remember how it is done...
+		// PAX-Exam has a default DynamicImport-Package: * for the probe, which hides
+		// ClassLoader problems by allowing the client to see everything. We override
+		// this to get better testing, however the imports are still wider than they
+		// should be. In an ideal world the JPA tests would packaged in a separate
+		// bundle and have no imports other than javax.persistence...
+		
+		// For now we make sure that javassist and hibernate proxy are not needed.
 
-//		// attempt to override PaxExam's default of dynamically importing everything
-//		probe.setHeader( Constants.DYNAMICIMPORT_PACKAGE, "" );
-//		// and use defined imports instead
-//		probe.setHeader(
-//				Constants.IMPORT_PACKAGE,
-//				"javassist.util.proxy"
-//						+ ",javax.persistence"
-//						+ ",javax.persistence.spi"
-//						+ ",org.h2"
-//						+ ",org.osgi.framework"
-//						+ ",org.hibernate"
-////						+ ",org.hibernate.boot.model"
-////						+ ",org.hibernate.boot.registry.selector"
-////						+ ",org.hibernate.boot.registry.selector.spi"
-////						+ ",org.hibernate.cfg"
-////						+ ",org.hibernate.engine.spi"
-////						+ ",org.hibernate.integrator.spi"
-////						+ ",org.hibernate.proxy"
-////						+ ",org.hibernate.service"
-////						+ ",org.hibernate.service.spi"
-////						+ ",org.ops4j.pax.exam.options"
-////						+ ",org.ops4j.pax.exam"
-//		);
+		// Remove DynamicImport-Package: *
+		probe.setHeader( Constants.DYNAMICIMPORT_PACKAGE, "" );
+		
+		// Use defined imports instead
+		// This is to avoid PAX EXAM "helping" and shadowing class loading issues elsewhere
+		// This test bundle needs the OSGi API, JPA API, JUnit API and core Hibernate API.
+		// The karaf API and Hibernate service integration APIs are needed for specific tests
+		probe.setHeader(
+				Constants.IMPORT_PACKAGE,
+						"javax.inject"
+						+ ",javax.persistence"
+						+ ",javax.persistence.spi"
+						+ ",org.h2"
+						+ ",org.junit"
+						+ ",org.osgi.framework"
+						+ ",org.apache.karaf.features"
+						+ ",org.hibernate"
+						+ ",org.hibernate.annotations"
+						+ ",org.hibernate.boot.model"
+						+ ",org.hibernate.boot.registry.selector"
+						+ ",org.hibernate.engine.spi"
+						+ ",org.hibernate.integrator.spi"
+						+ ",org.hibernate.service"
+						+ ",org.hibernate.service.spi"
+						+ ",org.hibernate.usertype"
+						+ ",org.ops4j.pax.exam.options"
+						+ ",org.ops4j.pax.exam"
+		);
+		
 		probe.setHeader( Constants.BUNDLE_ACTIVATOR, "org.hibernate.osgi.test.client.OsgiTestActivator" );
 		return probe;
 	}

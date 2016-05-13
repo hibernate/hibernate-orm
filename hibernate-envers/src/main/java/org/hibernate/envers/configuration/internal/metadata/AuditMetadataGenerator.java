@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.dom4j.Element;
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -34,6 +35,7 @@ import org.hibernate.mapping.Join;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.SyntheticProperty;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.service.ServiceRegistry;
@@ -43,10 +45,7 @@ import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.OneToOneType;
 import org.hibernate.type.TimestampType;
 import org.hibernate.type.Type;
-
 import org.jboss.logging.Logger;
-
-import org.dom4j.Element;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -56,6 +55,7 @@ import org.dom4j.Element;
  * @author Hern&aacute;n Chanfreau
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  * @author Michal Skowronek (mskowr at o2 dot pl)
+ * @author Chris Cranford
  */
 public final class AuditMetadataGenerator {
 	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
@@ -368,6 +368,14 @@ public final class AuditMetadataGenerator {
 			final String propertyName = property.getName();
 			final PropertyAuditingData propertyAuditingData = auditingData.getPropertyAuditingData( propertyName );
 			if ( propertyAuditingData != null ) {
+				// HHH-10246
+				// Verifies if a mapping exists using a @JoinColumn against a @NaturalId field
+				// and if so, this eliminates the mapping property as it isn't needed.
+				if ( property instanceof SyntheticProperty ) {
+					if ( property.getValue().isAlternateUniqueKey() ) {
+						continue;
+					}
+				}
 				addValue(
 						parent,
 						property.getValue(),

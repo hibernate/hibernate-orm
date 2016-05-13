@@ -67,9 +67,9 @@ public class SchemaScriptFileGenerationTest {
 		);
 
 		final String dropFileContent = new String( Files.readAllBytes( dropSchema.toPath() ) ).toLowerCase();
-		assertThat( dropFileContent.contains( "drop table test_entity" ), is( true ) );
+		assertThat( dropFileContent.contains( "drop table" ), is( true ) );
 		assertThat(
-				"The statement 'drop table test_entity' is generated twice",
+				"The statement 'drop table' is generated twice",
 				dropFileContent.replaceFirst( "drop table test_entity", "" ).contains( "drop table test_entity" ),
 				is( false )
 		);

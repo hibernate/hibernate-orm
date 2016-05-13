@@ -30,6 +30,7 @@ import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryProducerImplementor;
+import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -223,12 +224,12 @@ public interface SharedSessionContractImplementor
 	/**
 	 * Execute a <tt>scroll()</tt> query
 	 */
-	ScrollableResults scroll(String query, QueryParameters queryParameters) throws HibernateException;
+	ScrollableResultsImplementor scroll(String query, QueryParameters queryParameters) throws HibernateException;
 
 	/**
 	 * Execute a criteria query
 	 */
-	ScrollableResults scroll(Criteria criteria, ScrollMode scrollMode);
+	ScrollableResultsImplementor scroll(Criteria criteria, ScrollMode scrollMode);
 
 	/**
 	 * Execute a criteria query
@@ -290,7 +291,7 @@ public interface SharedSessionContractImplementor
 	/**
 	 * Execute an SQL Query
 	 */
-	ScrollableResults scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
+	ScrollableResultsImplementor scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
 			throws HibernateException;
 
 	/**
@@ -316,7 +317,7 @@ public interface SharedSessionContractImplementor
 	 *
 	 * @throws HibernateException
 	 */
-	ScrollableResults scroll(NativeSQLQuerySpecification spec, QueryParameters queryParameters);
+	ScrollableResultsImplementor scroll(NativeSQLQuerySpecification spec, QueryParameters queryParameters);
 
 	int getDontFlushFromFind();
 

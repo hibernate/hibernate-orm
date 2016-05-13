@@ -80,7 +80,7 @@ import org.hibernate.stat.SessionStatistics;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface Session extends SharedSessionContract, EntityManager, HibernateEntityManager, java.io.Closeable {
+public interface Session extends SharedSessionContract, EntityManager, HibernateEntityManager, AutoCloseable {
 	/**
 	 * Obtain a {@link Session} builder with the ability to grab certain information from this session.
 	 *

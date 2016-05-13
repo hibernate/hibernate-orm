@@ -6,6 +6,7 @@
  */
 package org.hibernate;
 
+import org.hibernate.query.CommonQueryContract;
 import org.hibernate.type.Type;
 
 /**
@@ -13,7 +14,7 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  *
- * @deprecated (since 5.2) use {@link org.hibernate.query.BasicQueryContract} instead.
+ * @deprecated (since 5.2) use {@link CommonQueryContract} instead.
  */
 @Deprecated
 public interface BasicQueryContract {
@@ -29,9 +30,9 @@ public interface BasicQueryContract {
 	 * @deprecated (since 5.2) use {@link #setHibernateFlushMode} instead
 	 */
 	@Deprecated
-	default org.hibernate.query.BasicQueryContract setFlushMode(FlushMode flushMode) {
+	default CommonQueryContract setFlushMode(FlushMode flushMode) {
 		setHibernateFlushMode( flushMode );
-		return (org.hibernate.query.BasicQueryContract) this;
+		return (CommonQueryContract) this;
 	}
 
 	/**
@@ -54,7 +55,7 @@ public interface BasicQueryContract {
 	 *
 	 * @see #getHibernateFlushMode()
 	 */
-	org.hibernate.query.BasicQueryContract setHibernateFlushMode(FlushMode flushMode);
+	CommonQueryContract setHibernateFlushMode(FlushMode flushMode);
 
 	/**
 	 * Obtain the CacheMode in effect for this query.  By default, the query inherits the CacheMode of the Session
@@ -79,7 +80,7 @@ public interface BasicQueryContract {
 	 *
 	 * @see #getCacheMode()
 	 */
-	org.hibernate.query.BasicQueryContract setCacheMode(CacheMode cacheMode);
+	CommonQueryContract setCacheMode(CacheMode cacheMode);
 
 	/**
 	 * Are the results of this query eligible for second level query caching?  This is different that second level
@@ -104,7 +105,7 @@ public interface BasicQueryContract {
 	 *
 	 * @see #isCacheable
 	 */
-	org.hibernate.query.BasicQueryContract setCacheable(boolean cacheable);
+	CommonQueryContract setCacheable(boolean cacheable);
 
 	/**
 	 * Obtain the name of the second level query cache region in which query results will be stored (if they are
@@ -126,7 +127,7 @@ public interface BasicQueryContract {
 	 *
 	 * @see #getCacheRegion()
 	 */
-	org.hibernate.query.BasicQueryContract setCacheRegion(String cacheRegion);
+	CommonQueryContract setCacheRegion(String cacheRegion);
 
 	/**
 	 * Obtain the query timeout <b>in seconds</b>.  This value is eventually passed along to the JDBC query via
@@ -151,7 +152,7 @@ public interface BasicQueryContract {
 	 *
 	 * @see #getTimeout()
 	 */
-	org.hibernate.query.BasicQueryContract setTimeout(int timeout);
+	CommonQueryContract setTimeout(int timeout);
 
 	/**
 	 * Obtain the JDBC fetch size hint in effect for this query.  This value is eventually passed along to the JDBC
@@ -177,7 +178,7 @@ public interface BasicQueryContract {
 	 *
 	 * @see #getFetchSize()
 	 */
-	org.hibernate.query.BasicQueryContract setFetchSize(int fetchSize);
+	CommonQueryContract setFetchSize(int fetchSize);
 
 	/**
 	 * Should entities and proxies loaded by this Query be put in read-only mode? If the
@@ -223,7 +224,7 @@ public interface BasicQueryContract {
 	 * are to be put in read-only mode; {@code false} indicates that entities and proxies
 	 * loaded by the query will be put in modifiable mode
 	 */
-	org.hibernate.query.BasicQueryContract setReadOnly(boolean readOnly);
+	CommonQueryContract setReadOnly(boolean readOnly);
 
 	/**
 	 * Return the Hibernate types of the query results.

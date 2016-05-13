@@ -28,7 +28,6 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
-import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.WrongClassException;
@@ -385,7 +384,7 @@ public abstract class Loader {
 			);
 		}
 		catch (SQLException sqle) {
-			throw factory.getSQLExceptionHelper().convert(
+			throw factory.getJdbcServices().getSqlExceptionHelper().convert(
 					sqle,
 					"could not read next row of results",
 					getSQLString()
@@ -445,7 +444,7 @@ public abstract class Loader {
 					isCurrentRowForSameEntity( keyToRead, 0, resultSet, session ) );
 		}
 		catch (SQLException sqle) {
-			throw factory.getSQLExceptionHelper().convert(
+			throw factory.getJdbcServices().getSqlExceptionHelper().convert(
 					sqle,
 					"could not doAfterTransactionCompletion sequential read of results (forward)",
 					getSQLString()
@@ -524,7 +523,7 @@ public abstract class Loader {
 			return sequentialLoad( resultSet, session, queryParameters, returnProxies, currentKey );
 		}
 		catch (SQLException sqle) {
-			throw factory.getSQLExceptionHelper().convert(
+			throw factory.getJdbcServices().getSqlExceptionHelper().convert(
 					sqle,
 					"could not perform sequential read of results (forward)",
 					getSQLString()
@@ -651,7 +650,7 @@ public abstract class Loader {
 			return sequentialLoad( resultSet, session, queryParameters, returnProxies, keyToRead );
 		}
 		catch (SQLException sqle) {
-			throw factory.getSQLExceptionHelper().convert(
+			throw factory.getJdbcServices().getSqlExceptionHelper().convert(
 					sqle,
 					"could not doAfterTransactionCompletion sequential read of results (forward)",
 					getSQLString()
@@ -939,7 +938,7 @@ public abstract class Loader {
 			);
 		}
 		finally {
-			session.getJdbcCoordinator().getResourceRegistry().release( st );
+			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
 			session.getJdbcCoordinator().afterStatementExecution();
 		}
 
@@ -1978,15 +1977,10 @@ public abstract class Loader {
 				LOG.tracev( "Bound [{0}] parameters total", col );
 			}
 		}
-		catch (SQLException sqle) {
-			session.getJdbcCoordinator().getResourceRegistry().release( st );
+		catch (SQLException | HibernateException e) {
+			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
 			session.getJdbcCoordinator().afterStatementExecution();
-			throw sqle;
-		}
-		catch (HibernateException he) {
-			session.getJdbcCoordinator().getResourceRegistry().release( st );
-			session.getJdbcCoordinator().afterStatementExecution();
-			throw he;
+			throw e;
 		}
 
 		return st;
@@ -2125,15 +2119,10 @@ public abstract class Loader {
 			}
 			return rs;
 		}
-		catch (SQLException sqle) {
-			session.getJdbcCoordinator().getResourceRegistry().release( st );
+		catch (SQLException | HibernateException e) {
+			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
 			session.getJdbcCoordinator().afterStatementExecution();
-			throw sqle;
-		}
-		catch (HibernateException he) {
-			session.getJdbcCoordinator().getResourceRegistry().release( st );
-			session.getJdbcCoordinator().afterStatementExecution();
-			throw he;
+			throw e;
 		}
 	}
 
@@ -2204,7 +2193,7 @@ public abstract class Loader {
 		}
 		catch (SQLException sqle) {
 			final Loadable[] persisters = getEntityPersisters();
-			throw factory.getSQLExceptionHelper().convert(
+			throw factory.getJdbcServices().getSqlExceptionHelper().convert(
 					sqle,
 					"could not load an entity: " +
 							MessageHelper.infoString(
@@ -2249,7 +2238,7 @@ public abstract class Loader {
 			);
 		}
 		catch (SQLException sqle) {
-			throw factory.getSQLExceptionHelper().convert(
+			throw factory.getJdbcServices().getSqlExceptionHelper().convert(
 					sqle,
 					"could not load collection element by index",
 					getSQLString()
@@ -2292,7 +2281,7 @@ public abstract class Loader {
 			result = doQueryAndInitializeNonLazyCollections( session, qp, false );
 		}
 		catch (SQLException sqle) {
-			throw factory.getSQLExceptionHelper().convert(
+			throw factory.getJdbcServices().getSqlExceptionHelper().convert(
 					sqle,
 					"could not load an entity batch: " +
 							MessageHelper.infoString( getEntityPersisters()[0], ids, getFactory() ),
@@ -2329,7 +2318,7 @@ public abstract class Loader {
 			);
 		}
 		catch (SQLException sqle) {
-			throw factory.getSQLExceptionHelper().convert(
+			throw factory.getJdbcServices().getSqlExceptionHelper().convert(
 					sqle,
 					"could not initialize a collection: " +
 							MessageHelper.collectionInfoString( getCollectionPersisters()[0], id, getFactory() ),
@@ -2364,7 +2353,7 @@ public abstract class Loader {
 			);
 		}
 		catch (SQLException sqle) {
-			throw factory.getSQLExceptionHelper().convert(
+			throw factory.getJdbcServices().getSqlExceptionHelper().convert(
 					sqle,
 					"could not initialize a collection batch: " +
 							MessageHelper.collectionInfoString( getCollectionPersisters()[0], ids, getFactory() ),
@@ -2395,7 +2384,7 @@ public abstract class Loader {
 			);
 		}
 		catch (SQLException sqle) {
-			throw factory.getSQLExceptionHelper().convert(
+			throw factory.getJdbcServices().getSqlExceptionHelper().convert(
 					sqle,
 					"could not load collection by subselect: " +
 							MessageHelper.collectionInfoString( getCollectionPersisters()[0], ids, getFactory() ),
@@ -2613,7 +2602,7 @@ public abstract class Loader {
 			result = doQueryAndInitializeNonLazyCollections( session, queryParameters, true, forcedResultTransformer );
 		}
 		catch (SQLException sqle) {
-			throw factory.getSQLExceptionHelper().convert(
+			throw factory.getJdbcServices().getSqlExceptionHelper().convert(
 					sqle,
 					"could not execute query",
 					getSQLString()
@@ -2730,7 +2719,7 @@ public abstract class Loader {
 
 		}
 		catch (SQLException sqle) {
-			throw factory.getSQLExceptionHelper().convert(
+			throw factory.getJdbcServices().getSqlExceptionHelper().convert(
 					sqle,
 					"could not execute query using scroll",
 					getSQLString()

@@ -21,7 +21,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryException;
-import org.hibernate.ScrollableResults;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -73,7 +72,7 @@ public class QueryLoader extends BasicLoader {
 	//private Type[] sqlResultTypes;
 	private Type[] queryReturnTypes;
 
-	private final Map<String, String> sqlAliasByEntityAlias = new HashMap<String, String>( 8 );
+	private final Map<String, String> sqlAliasByEntityAlias = new HashMap<>( 8 );
 
 	private EntityType[] ownerAssociationTypes;
 	private int[] owners;
@@ -167,6 +166,7 @@ public class QueryLoader extends BasicLoader {
 
 			owners[i] = -1; //by default
 			if ( element.isFetch() ) {
+				//noinspection StatementWithEmptyBody
 				if ( element.isCollectionJoin() || element.getQueryableCollection() != null ) {
 					// This is now handled earlier in this method.
 				}

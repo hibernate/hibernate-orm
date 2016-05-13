@@ -93,7 +93,21 @@ public class JavassistProxyFactory implements ProxyFactory, Serializable {
 		javassist.util.proxy.ProxyFactory factory = new javassist.util.proxy.ProxyFactory() {
 			@Override
 			protected ClassLoader getClassLoader() {
-				return persistentClass.getClassLoader();
+				// This classloader does not take into account class space consistency
+				// i.e. if the persistenceClass can see the same interface types via
+				// a different ClassLoader hierarchy. In that case we could try some 
+				// risky magic with loadClass, but using findClass is much safer.
+				return new ClassLoader(persistentClass.getClassLoader()) {
+					@Override
+					protected Class<?> findClass(String name) throws ClassNotFoundException {
+						for(Class iface : interfaces) {
+							if(name.equals(iface.getName())) {
+								return iface;
+							}
+						}
+						return JavassistProxyFactory.class.getClassLoader().loadClass(name);
+					}
+				};
 			}
 		};
 		factory.setSuperclass( interfaces.length == 1 ? persistentClass : null );

@@ -36,6 +36,7 @@ import org.hibernate.internal.util.collections.EmptyIterator;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.query.internal.ParameterMetadataImpl;
+import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.type.Type;
 
 /**
@@ -333,7 +334,7 @@ public class HQLQueryPlan implements Serializable {
 	 *
 	 * @throws HibernateException Indicates a problem performing the query
 	 */
-	public ScrollableResults performScroll(
+	public ScrollableResultsImplementor performScroll(
 			QueryParameters queryParameters,
 			SharedSessionContractImplementor session) throws HibernateException {
 		if ( traceEnabled ) {

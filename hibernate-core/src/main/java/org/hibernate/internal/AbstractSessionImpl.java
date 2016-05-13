@@ -25,8 +25,6 @@ public abstract class AbstractSessionImpl
 		implements Serializable, SharedSessionContractImplementor, JdbcSessionOwner, SessionImplementor, EventSource,
 		Options, WrapperOptions {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( AbstractSessionImpl.class );
-
 	protected AbstractSessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
 	}

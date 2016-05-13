@@ -169,6 +169,7 @@ import org.hibernate.query.criteria.internal.compile.CriteriaCompiler;
 import org.hibernate.query.criteria.internal.expression.CompoundSelectionImpl;
 import org.hibernate.query.internal.CollectionFilterImpl;
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.AfterCompletionAction;
@@ -1525,7 +1526,7 @@ public final class SessionImpl
 	}
 
 	@Override
-	public ScrollableResults scroll(String query, QueryParameters queryParameters) throws HibernateException {
+	public ScrollableResultsImplementor scroll(String query, QueryParameters queryParameters) throws HibernateException {
 		checkOpen();
 		checkTransactionSynchStatus();
 		
@@ -1782,7 +1783,7 @@ public final class SessionImpl
 	}
 
 	@Override
-	public ScrollableResults scroll(Criteria criteria, ScrollMode scrollMode) {
+	public ScrollableResultsImplementor scroll(Criteria criteria, ScrollMode scrollMode) {
 		// TODO: Is this guaranteed to always be CriteriaImpl?
 		CriteriaImpl criteriaImpl = (CriteriaImpl) criteria;
 
@@ -2074,7 +2075,7 @@ public final class SessionImpl
 	}
 
 	@Override
-	public ScrollableResults scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters) {
+	public ScrollableResultsImplementor scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters) {
 		checkOpen();
 //		checkTransactionSynchStatus();
 

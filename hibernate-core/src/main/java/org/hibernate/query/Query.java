@@ -12,6 +12,8 @@ import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Spliterator;
+import java.util.stream.Stream;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.Parameter;
@@ -48,11 +50,25 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, BasicQu
 	/**
 	 * "QueryOptions" is a better name, I think, than "RowSelection" -> 6.0
 	 *
+	 * @todo 6.0 rename RowSelection to QueryOptions
+	 *
 	 * @return Return the encapsulation of this query's options, which includes access to
 	 * firstRow, maxRows, timeout and fetchSize.   Important because this gives access to
 	 * those values in their Integer form rather than the primitive form (int) required by JPA.
 	 */
 	RowSelection getQueryOptions();
+
+	/**
+	 * Retrieve a Stream over the query results.
+	 * <p/>
+	 * In the initial implementation (5.2) this returns a simple sequential Stream.  The plan
+	 * is to return a a smarter stream in 6.0 leveraging the SQM model.
+	 *
+	 * @return The results Stream
+	 *
+	 * @since 5.2
+	 */
+	Stream<R> stream();
 
 	Query<R> setParameter(Parameter<Instant> param, Instant value, TemporalType temporalType);
 

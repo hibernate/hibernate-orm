@@ -33,6 +33,7 @@ import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
+import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
 
@@ -97,7 +98,7 @@ public class CriteriaLoader extends OuterJoinLoader {
 
 	}
 
-	public ScrollableResults scroll(SharedSessionContractImplementor session, ScrollMode scrollMode)
+	public ScrollableResultsImplementor scroll(SharedSessionContractImplementor session, ScrollMode scrollMode)
 			throws HibernateException {
 		QueryParameters qp = translator.getQueryParameters();
 		qp.setScrollMode( scrollMode );

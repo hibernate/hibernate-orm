@@ -18,11 +18,11 @@ import org.hibernate.JDBCException;
  *
  * @author Gavin King
  */
-public interface HibernateIterator extends Iterator, java.io.Closeable {
+public interface HibernateIterator extends Iterator, AutoCloseable {
 	/**
 	 * Close the Hibernate query result iterator
 	 *
 	 * @throws JDBCException Indicates a problem releasing the underlying JDBC resources.
 	 */
-	public void close() throws JDBCException;
+	void close() throws JDBCException;
 }

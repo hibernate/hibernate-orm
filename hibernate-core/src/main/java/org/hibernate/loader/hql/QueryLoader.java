@@ -43,6 +43,7 @@ import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.persister.entity.Queryable;
+import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
@@ -563,7 +564,7 @@ public class QueryLoader extends BasicLoader {
 
 	}
 
-	public ScrollableResults scroll(
+	public ScrollableResultsImplementor scroll(
 			final QueryParameters queryParameters,
 			final SharedSessionContractImplementor session) throws HibernateException {
 		checkQuery( queryParameters );

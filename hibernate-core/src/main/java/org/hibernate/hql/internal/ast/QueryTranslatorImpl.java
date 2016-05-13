@@ -52,6 +52,7 @@ import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.loader.hql.QueryLoader;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.entity.Queryable;
+import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -416,7 +417,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	 * Return the query results, as an instance of <tt>ScrollableResults</tt>
 	 */
 	@Override
-	public ScrollableResults scroll(QueryParameters queryParameters, SharedSessionContractImplementor session)
+	public ScrollableResultsImplementor scroll(QueryParameters queryParameters, SharedSessionContractImplementor session)
 			throws HibernateException {
 		// Delegate to the QueryLoader...
 		errorIfDML();

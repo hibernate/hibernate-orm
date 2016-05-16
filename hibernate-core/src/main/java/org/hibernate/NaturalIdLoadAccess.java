@@ -6,6 +6,9 @@
  */
 package org.hibernate;
 
+import java.io.Serializable;
+import java.util.Optional;
+
 /**
  * Loads an entity by its natural identifier.
  * 
@@ -22,7 +25,7 @@ public interface NaturalIdLoadAccess<T> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public NaturalIdLoadAccess<T> with(LockOptions lockOptions);
+	NaturalIdLoadAccess<T> with(LockOptions lockOptions);
 
 	/**
 	 * Add a NaturalId attribute value.
@@ -32,7 +35,7 @@ public interface NaturalIdLoadAccess<T> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public NaturalIdLoadAccess<T> using(String attributeName, Object value);
+	NaturalIdLoadAccess<T> using(String attributeName, Object value);
 
 	/**
 	 * For entities with mutable natural ids, should Hibernate perform "synchronization" prior to performing
@@ -50,7 +53,7 @@ public interface NaturalIdLoadAccess<T> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public NaturalIdLoadAccess<T> setSynchronizationEnabled(boolean enabled);
+	NaturalIdLoadAccess<T> setSynchronizationEnabled(boolean enabled);
 
 	/**
 	 * Return the persistent instance with the natural id value(s) defined by the call(s) to {@link #using}.  This
@@ -62,7 +65,7 @@ public interface NaturalIdLoadAccess<T> {
 	 *
 	 * @return the persistent instance or proxy
 	 */
-	public T getReference();
+	T getReference();
 
 	/**
 	 * Return the persistent instance with the natural id value(s) defined by the call(s) to {@link #using}, or
@@ -71,6 +74,14 @@ public interface NaturalIdLoadAccess<T> {
 	 *
 	 * @return The persistent instance or {@code null} 
 	 */
-	public T load();
+	T load();
+
+	/**
+	 * Same semantic as {@link #load} except that here {@link Optional} is returned to
+	 * handle nullability.
+	 *
+	 * @return The persistent instance, if one, wrapped in Optional
+	 */
+	Optional<T> loadOptional();
 
 }

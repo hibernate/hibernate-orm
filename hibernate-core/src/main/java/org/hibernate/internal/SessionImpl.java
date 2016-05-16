@@ -3028,13 +3028,15 @@ public final class SessionImpl
 			try {
 				return (T) this.getIdentifierLoadAccess().load( entityId );
 			}
-			catch (EntityNotFoundException enf) {
-				// OK
-			}
-			catch (ObjectNotFoundException nf) {
+			catch (EntityNotFoundException | ObjectNotFoundException enf) {
 				// OK
 			}
 			return null;
+		}
+
+		@Override
+		public Optional<T> loadOptional() {
+			return Optional.ofNullable( load() );
 		}
 	}
 
@@ -3105,6 +3107,11 @@ public final class SessionImpl
 				// OK
 			}
 			return null;
+		}
+
+		@Override
+		public Optional<T> loadOptional(Serializable naturalIdValue) {
+			return Optional.ofNullable( load( naturalIdValue ) );
 		}
 	}
 

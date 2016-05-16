@@ -6,6 +6,8 @@
  */
 package org.hibernate.test.ops.genericApi;
 
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -19,6 +21,11 @@ import org.hibernate.boot.MetadataSources;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 /**
  * @author Steve Ebersole
@@ -137,5 +144,51 @@ public class BasicGetLoadAccessTest extends BaseNonConfigCoreFunctionalTestCase 
 		user = s.byId( User.class ).with( LockOptions.UPGRADE ).getReference( 1 );
 		s.getTransaction().commit();
 		s.close();
+	}
+
+	@Test
+	public void testNullLoadResult() {
+		Session s = openSession();
+		s.beginTransaction();
+
+		assertNull( s.byId( User.class ).load( -1 ) );
+
+		Optional<User> user = s.byId( User.class ).loadOptional( -1 );
+		assertNotNull( user );
+		assertFalse( user.isPresent() );
+		try {
+			user.get();
+			fail( "Expecting call to Optional#get to throw NoSuchElementException" );
+		}
+		catch (NoSuchElementException expected) {
+			// the expected result...
+		}
+
+		s.getTransaction().commit();
+		s.close();
+
+	}
+
+	@Test
+	public void testNullQueryResult() {
+		Session s = openSession();
+		s.beginTransaction();
+
+		assertNull( s.createQuery( "select u from User u where u.id = -1" ).uniqueResult() );
+
+		Optional<User> user = s.createQuery( "select u from User u where u.id = -1" ).uniqueResultOptional();
+		assertNotNull( user );
+		assertFalse( user.isPresent() );
+		try {
+			user.get();
+			fail( "Expecting call to Optional#get to throw NoSuchElementException" );
+		}
+		catch (NoSuchElementException expected) {
+			// the expected result...
+		}
+
+		s.getTransaction().commit();
+		s.close();
+
 	}
 }

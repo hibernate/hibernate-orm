@@ -7,6 +7,7 @@
 package org.hibernate;
 
 import java.io.Serializable;
+import java.util.Optional;
 
 /**
  * Loads an entity by its primary identifier.
@@ -57,4 +58,14 @@ public interface IdentifierLoadAccess<T> {
 	 * @return The persistent instance or {@code null}
 	 */
 	T load(Serializable id);
+
+	/**
+	 * Same semantic as {@link #load} except that here {@link Optional} is returned to
+	 * handle nullability.
+	 *
+	 * @param id The identifier
+	 *
+	 * @return The persistent instance, if one, wrapped in Optional
+	 */
+	Optional<T> loadOptional(Serializable id);
 }

@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -1323,6 +1324,11 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		stream.onClose( scrollableResults::close );
 
 		return stream;
+	}
+
+	@Override
+	public Optional<R> uniqueResultOptional() {
+		return Optional.ofNullable( uniqueResult() );
 	}
 
 	@Override

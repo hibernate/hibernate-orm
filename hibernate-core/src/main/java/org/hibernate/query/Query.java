@@ -12,6 +12,7 @@ import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Optional;
 import java.util.stream.Stream;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
@@ -56,6 +57,8 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 * those values in their Integer form rather than the primitive form (int) required by JPA.
 	 */
 	RowSelection getQueryOptions();
+
+	Optional<R> uniqueResultOptional();
 
 	/**
 	 * Retrieve a Stream over the query results.

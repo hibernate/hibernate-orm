@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
@@ -2730,6 +2731,11 @@ public final class SessionImpl
 					setCacheMode( sessionCacheMode );
 				}
 			}
+		}
+
+		@Override
+		public Optional<T> loadOptional(Serializable id) {
+			return Optional.ofNullable( load( id ) );
 		}
 
 		@SuppressWarnings("unchecked")

@@ -135,7 +135,7 @@ public class SubclassPropertyMapper implements ExtendedPropertyMapper {
 
 	@Override
 	public Map<PropertyData, PropertyMapper> getProperties() {
-		final Map<PropertyData, PropertyMapper> joinedProperties = new HashMap<PropertyData, PropertyMapper>();
+		final Map<PropertyData, PropertyMapper> joinedProperties = new HashMap<>();
 		joinedProperties.putAll( parentMapper.getProperties() );
 		joinedProperties.putAll( main.getProperties() );
 		return joinedProperties;

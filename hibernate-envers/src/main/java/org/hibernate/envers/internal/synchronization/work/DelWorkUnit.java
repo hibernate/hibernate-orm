@@ -46,7 +46,7 @@ public class DelWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 
 	@Override
 	public Map<String, Object> generateData(Object revisionData) {
-		final Map<String, Object> data = new HashMap<String, Object>();
+		final Map<String, Object> data = new HashMap<>();
 		fillDataWithId( data, revisionData );
 
 		if ( enversService.getGlobalConfiguration().isStoreDataAtDelete() ) {

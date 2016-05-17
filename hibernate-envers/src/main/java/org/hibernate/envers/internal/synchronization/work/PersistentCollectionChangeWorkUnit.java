@@ -138,7 +138,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
 			// First building a map from the ids of the collection-entry-entities from the "second" collection changes,
 			// to the PCCD objects. That way, we will be later able to check if an "original" collection change
 			// should be added, or if it is overshadowed by a new one.
-			final Map<Object, PersistentCollectionChangeData> newChangesIdMap = new HashMap<Object, PersistentCollectionChangeData>();
+			final Map<Object, PersistentCollectionChangeData> newChangesIdMap = new HashMap<>();
 			for ( PersistentCollectionChangeData persistentCollectionChangeData : getCollectionChanges() ) {
 				newChangesIdMap.put(
 						getOriginalId( persistentCollectionChangeData ),
@@ -147,7 +147,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
 			}
 
 			// This will be the list with the resulting (merged) changes.
-			final List<PersistentCollectionChangeData> mergedChanges = new ArrayList<PersistentCollectionChangeData>();
+			final List<PersistentCollectionChangeData> mergedChanges = new ArrayList<>();
 
 			// Including only those original changes, which are not overshadowed by new ones.
 			for ( PersistentCollectionChangeData originalCollectionChangeData : original.getCollectionChanges() ) {

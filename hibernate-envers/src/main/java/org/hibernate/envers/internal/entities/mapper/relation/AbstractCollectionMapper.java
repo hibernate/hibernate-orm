@@ -28,7 +28,7 @@ import org.hibernate.envers.internal.entities.mapper.PropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.Initializor;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.ReflectionTools;
-import org.hibernate.envers.internal.tools.Tools;
+import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.property.access.spi.Setter;
 
 /**
@@ -86,7 +86,7 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 	 * @return Map for holding identifier data.
 	 */
 	protected Map<String, Object> createIdMap(int ordinal) {
-		final Map<String, Object> idMap = new HashMap<String, Object>();
+		final Map<String, Object> idMap = new HashMap<>();
 		if ( ordinalInId ) {
 			idMap.put( commonCollectionMapperData.getVerEntCfg().getEmbeddableSetOrdinalPropertyName(), ordinal );
 		}
@@ -99,7 +99,7 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 		int ordinal = 0;
 
 		for ( Object changedObj : changed ) {
-			final Map<String, Object> entityData = new HashMap<String, Object>();
+			final Map<String, Object> entityData = new HashMap<>();
 			final Map<String, Object> originalId = createIdMap( ordinal++ );
 			entityData.put( commonCollectionMapperData.getVerEntCfg().getOriginalIdPropName(), originalId );
 
@@ -134,13 +134,13 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 			return null;
 		}
 
-		final List<PersistentCollectionChangeData> collectionChanges = new ArrayList<PersistentCollectionChangeData>();
+		final List<PersistentCollectionChangeData> collectionChanges = new ArrayList<>();
 
 		// Comparing new and old collection content.
 		final Collection newCollection = getNewCollectionContent( newColl );
 		final Collection oldCollection = getOldCollectionContent( oldColl );
 
-		final Set<Object> added = new HashSet<Object>();
+		final Set<Object> added = new HashSet<>();
 		if ( newColl != null ) {
 			added.addAll( newCollection );
 		}
@@ -152,7 +152,7 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 
 		addCollectionChanges( session, collectionChanges, added, RevisionType.ADD, id );
 
-		final Set<Object> deleted = new HashSet<Object>();
+		final Set<Object> deleted = new HashSet<>();
 		if ( oldColl != null ) {
 			deleted.addAll( oldCollection );
 		}
@@ -186,7 +186,7 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 		if ( propertyData.isUsingModifiedFlag() ) {
 			if ( isNotPersistentCollection( newObj ) || isNotPersistentCollection( oldObj ) ) {
 				// Compare POJOs.
-				data.put( propertyData.getModifiedFlagPropertyName(), !Tools.objectsEqual( newObj, oldObj ) );
+				data.put( propertyData.getModifiedFlagPropertyName(), !EqualsHelper.areEqual( newObj, oldObj ) );
 			}
 			else if ( isFromNullToEmptyOrFromEmptyToNull( (PersistentCollection) newObj, (Serializable) oldObj ) ) {
 				data.put( propertyData.getModifiedFlagPropertyName(), true );

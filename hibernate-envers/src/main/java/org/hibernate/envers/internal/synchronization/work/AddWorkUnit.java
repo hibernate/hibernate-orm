@@ -31,7 +31,7 @@ public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 			Serializable id, EntityPersister entityPersister, Object[] state) {
 		super( sessionImplementor, entityName, enversService, id, RevisionType.ADD );
 
-		this.data = new HashMap<String, Object>();
+		this.data = new HashMap<>();
 		this.state = state;
 		this.enversService.getEntitiesConfigurations().get( getEntityName() ).getPropertyMapper().map(
 				sessionImplementor,
@@ -51,8 +51,8 @@ public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 		super( sessionImplementor, entityName, enversService, id, RevisionType.ADD );
 
 		this.data = data;
-		final String[] propertyNames = sessionImplementor.getFactory()
-				.getEntityPersister( getEntityName() )
+		final String[] propertyNames = sessionImplementor.getFactory().getMetamodel()
+				.entityPersister( getEntityName() )
 				.getPropertyNames();
 		this.state = ArraysTools.mapToArray( data, propertyNames );
 	}

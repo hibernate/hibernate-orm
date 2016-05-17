@@ -20,7 +20,7 @@ import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.StringTools;
-import org.hibernate.envers.internal.tools.Tools;
+import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.property.access.spi.SetterFieldImpl;
 
@@ -57,12 +57,12 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
 			Object oldObj) {
 		data.put( propertyData.getName(), newObj );
 		boolean dbLogicallyDifferent = true;
-		if ( (session.getFactory()
+		if ( (session.getFactory().getJdbcServices()
 				.getDialect() instanceof Oracle8iDialect) && (newObj instanceof String || oldObj instanceof String) ) {
 			// Don't generate new revision when database replaces empty string with NULL during INSERT or UPDATE statements.
 			dbLogicallyDifferent = !(StringTools.isEmpty( newObj ) && StringTools.isEmpty( oldObj ));
 		}
-		return dbLogicallyDifferent && !Tools.objectsEqual( newObj, oldObj );
+		return dbLogicallyDifferent && !EqualsHelper.areEqual( newObj, oldObj );
 	}
 
 	@Override
@@ -72,7 +72,7 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
 			Object newObj,
 			Object oldObj) {
 		if ( propertyData.isUsingModifiedFlag() ) {
-			data.put( propertyData.getModifiedFlagPropertyName(), !Tools.objectsEqual( newObj, oldObj ) );
+			data.put( propertyData.getModifiedFlagPropertyName(), !EqualsHelper.areEqual( newObj, oldObj ) );
 		}
 	}
 

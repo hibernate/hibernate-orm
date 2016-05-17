@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.CrossTypeRevisionChangesReader;
@@ -23,6 +22,7 @@ import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.tools.EntityTools;
 import org.hibernate.envers.query.criteria.internal.RevisionTypeAuditExpression;
 import org.hibernate.envers.tools.Pair;
+import org.hibernate.query.Query;
 
 import static org.hibernate.envers.internal.tools.ArgumentsTools.checkNotNull;
 import static org.hibernate.envers.internal.tools.ArgumentsTools.checkPositive;
@@ -45,7 +45,7 @@ public class CrossTypeRevisionChangesReaderImpl implements CrossTypeRevisionChan
 	@SuppressWarnings({"unchecked"})
 	public List<Object> findEntities(Number revision) throws IllegalStateException, IllegalArgumentException {
 		final Set<Pair<String, Class>> entityTypes = findEntityTypes( revision );
-		final List<Object> result = new ArrayList<Object>();
+		final List<Object> result = new ArrayList<>();
 		for ( Pair<String, Class> type : entityTypes ) {
 			result.addAll(
 					auditReaderImplementor.createQuery().forEntitiesModifiedAtRevision(
@@ -64,7 +64,7 @@ public class CrossTypeRevisionChangesReaderImpl implements CrossTypeRevisionChan
 	public List<Object> findEntities(Number revision, RevisionType revisionType)
 			throws IllegalStateException, IllegalArgumentException {
 		final Set<Pair<String, Class>> entityTypes = findEntityTypes( revision );
-		final List<Object> result = new ArrayList<Object>();
+		final List<Object> result = new ArrayList<>();
 		for ( Pair<String, Class> type : entityTypes ) {
 			result.addAll(
 					auditReaderImplementor.createQuery().forEntitiesModifiedAtRevision(
@@ -83,9 +83,9 @@ public class CrossTypeRevisionChangesReaderImpl implements CrossTypeRevisionChan
 	public Map<RevisionType, List<Object>> findEntitiesGroupByRevisionType(Number revision)
 			throws IllegalStateException, IllegalArgumentException {
 		final Set<Pair<String, Class>> entityTypes = findEntityTypes( revision );
-		final Map<RevisionType, List<Object>> result = new HashMap<RevisionType, List<Object>>();
+		final Map<RevisionType, List<Object>> result = new HashMap<>();
 		for ( RevisionType revisionType : RevisionType.values() ) {
-			result.put( revisionType, new ArrayList<Object>() );
+			result.put( revisionType, new ArrayList<>() );
 			for ( Pair<String, Class> type : entityTypes ) {
 				final List<Object> list = auditReaderImplementor.createQuery()
 						.forEntitiesModifiedAtRevision( type.getSecond(), type.getFirst(), revision )
@@ -108,9 +108,9 @@ public class CrossTypeRevisionChangesReaderImpl implements CrossTypeRevisionChan
 		final Session session = auditReaderImplementor.getSession();
 		final SessionImplementor sessionImplementor = auditReaderImplementor.getSessionImplementor();
 
-		final Set<Number> revisions = new HashSet<Number>( 1 );
+		final Set<Number> revisions = new HashSet<>( 1 );
 		revisions.add( revision );
-		final Criteria query = enversService.getRevisionInfoQueryCreator().getRevisionsQuery( session, revisions );
+		final Query<?> query = enversService.getRevisionInfoQueryCreator().getRevisionsQuery( session, revisions );
 		final Object revisionInfo = query.uniqueResult();
 
 		if ( revisionInfo != null ) {
@@ -118,13 +118,12 @@ public class CrossTypeRevisionChangesReaderImpl implements CrossTypeRevisionChan
 			final Set<String> entityNames = enversService.getModifiedEntityNamesReader().getModifiedEntityNames( revisionInfo );
 			if ( entityNames != null ) {
 				// Generate result that contains entity names and corresponding Java classes.
-				final Set<Pair<String, Class>> result = new HashSet<Pair<String, Class>>();
+				final Set<Pair<String, Class>> result = new HashSet<>();
 				for ( String entityName : entityNames ) {
 					result.add(
 							Pair.make(
 									entityName, EntityTools.getEntityClass(
 									sessionImplementor,
-									session,
 									entityName
 							)
 							)

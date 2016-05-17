@@ -10,15 +10,16 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
+
 import javax.persistence.FlushModeType;
 
-import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Session;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoGenerator;
 import org.hibernate.envers.internal.synchronization.work.AuditWorkUnit;
 import org.hibernate.envers.tools.Pair;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.jboss.logging.Logger;
 
 /**
@@ -41,9 +42,9 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 		this.revisionInfoGenerator = revisionInfoGenerator;
 		this.session = session;
 
-		workUnits = new LinkedList<AuditWorkUnit>();
-		undoQueue = new LinkedList<AuditWorkUnit>();
-		usedIds = new HashMap<Pair<String, Object>, AuditWorkUnit>();
+		workUnits = new LinkedList<>();
+		undoQueue = new LinkedList<>();
+		usedIds = new HashMap<>();
 		entityChangeNotifier = new EntityChangeNotifier( revisionInfoGenerator, session );
 	}
 
@@ -136,10 +137,10 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 		if ( FlushModeType.COMMIT.equals( session.getFlushMode() ) ) {
 			Session temporarySession = null;
 			try {
-				temporarySession = ( (Session) session ).sessionWithOptions()
-						.transactionContext()
+				temporarySession = session.sessionWithOptions()
+						.connection()
 						.autoClose( false )
-						.connectionReleaseMode( ConnectionReleaseMode.AFTER_TRANSACTION )
+						.connectionHandlingMode( PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION )
 						.openSession();
 				executeInSession( temporarySession );
 				temporarySession.flush();
@@ -151,7 +152,7 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 			}
 		}
 		else {
-			executeInSession( (Session) session );
+			executeInSession( session );
 
 			// Explicitly flushing the session, as the auto-flush may have already happened.
 			session.flush();

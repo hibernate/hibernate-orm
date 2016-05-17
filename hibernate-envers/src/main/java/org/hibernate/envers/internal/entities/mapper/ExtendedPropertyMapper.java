@@ -14,7 +14,7 @@ import org.hibernate.engine.spi.SessionImplementor;
  * @author Adam Warski (adam at warski dot org)
  */
 public interface ExtendedPropertyMapper extends PropertyMapper, CompositeMapperBuilder {
-	public boolean map(
+	boolean map(
 			SessionImplementor session,
 			Map<String, Object> data,
 			String[] propertyNames,

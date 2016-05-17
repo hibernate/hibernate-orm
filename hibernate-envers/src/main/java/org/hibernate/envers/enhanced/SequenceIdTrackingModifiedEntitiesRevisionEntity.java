@@ -33,7 +33,7 @@ public class SequenceIdTrackingModifiedEntitiesRevisionEntity extends SequenceId
 	@Column(name = "ENTITYNAME")
 	@Fetch(FetchMode.JOIN)
 	@ModifiedEntityNames
-	private Set<String> modifiedEntityNames = new HashSet<String>();
+	private Set<String> modifiedEntityNames = new HashSet<>();
 
 	@SuppressWarnings("UnusedDeclaration")
 	public Set<String> getModifiedEntityNames() {

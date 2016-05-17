@@ -26,15 +26,15 @@ import org.hibernate.service.ServiceRegistry;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public abstract class ReflectionTools {
-	private static final Map<Pair<Class, String>, Getter> GETTER_CACHE = new ConcurrentReferenceHashMap<Pair<Class, String>, Getter>(
+	private static final Map<Pair<Class, String>, Getter> GETTER_CACHE = new ConcurrentReferenceHashMap<>(
 			10,
 			ConcurrentReferenceHashMap.ReferenceType.SOFT,
 			ConcurrentReferenceHashMap.ReferenceType.SOFT
 	);
-	private static final Map<Pair<Class, String>, Setter> SETTER_CACHE = new ConcurrentReferenceHashMap<Pair<Class, String>, Setter>(
-					10,
-					ConcurrentReferenceHashMap.ReferenceType.SOFT,
-					ConcurrentReferenceHashMap.ReferenceType.SOFT
+	private static final Map<Pair<Class, String>, Setter> SETTER_CACHE = new ConcurrentReferenceHashMap<>(
+			10,
+			ConcurrentReferenceHashMap.ReferenceType.SOFT,
+			ConcurrentReferenceHashMap.ReferenceType.SOFT
 	);
 
 	private static PropertyAccessStrategy getAccessStrategy(Class<?> cls, ServiceRegistry serviceRegistry, String accessorType) {

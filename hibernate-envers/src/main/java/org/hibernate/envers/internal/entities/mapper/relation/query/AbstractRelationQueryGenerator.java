@@ -9,13 +9,13 @@ package org.hibernate.envers.internal.entities.mapper.relation.query;
 import java.util.Collections;
 import java.util.Map;
 
-import org.hibernate.Query;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
 import org.hibernate.envers.internal.entities.mapper.id.QueryParameterData;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
+import org.hibernate.query.Query;
 
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.DEL_REVISION_TYPE_PARAMETER;
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.REVISION_PARAMETER;
@@ -70,7 +70,7 @@ public abstract class AbstractRelationQueryGenerator implements RelationQueryGen
 	}
 
 	protected String queryToString(QueryBuilder query) {
-		return queryToString( query, Collections.<String, Object>emptyMap() );
+		return queryToString( query, Collections.emptyMap() );
 	}
 
 	protected String queryToString(QueryBuilder query, Map<String, Object> queryParamValues) {

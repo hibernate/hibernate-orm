@@ -38,7 +38,7 @@ public class TopologicalSort<R> {
 	}
 
 	public List<R> sort(Collection<Vertex<R>> vertices) {
-		sorted = new ArrayList<R>( vertices.size() );
+		sorted = new ArrayList<>( vertices.size() );
 
 		time = 1;
 

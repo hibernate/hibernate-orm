@@ -6,10 +6,9 @@
  */
 package org.hibernate.envers.query.internal.impl;
 
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
-import org.hibernate.Query;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
@@ -17,6 +16,7 @@ import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.query.criteria.AuditCriterion;
+import org.hibernate.query.Query;
 
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.REFERENCED_ENTITY_ALIAS;
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.REFERENCED_ENTITY_ALIAS_DEF_AUD_STR;
@@ -120,7 +120,7 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
 
 		Query query = buildQuery();
 		// add named parameter (used for ValidityAuditStrategy and association queries)
-		List<String> params = Arrays.asList( query.getNamedParameters() );
+		Collection<String> params = query.getParameterMetadata().getNamedParameterNames();
 		if ( params.contains( REVISION_PARAMETER ) ) {
 			query.setParameter( REVISION_PARAMETER, revision );
 		}

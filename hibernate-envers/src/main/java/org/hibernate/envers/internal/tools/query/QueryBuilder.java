@@ -11,13 +11,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.internal.entities.RevisionTypeType;
 import org.hibernate.envers.internal.tools.MutableInteger;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.envers.internal.tools.Triple;
+import org.hibernate.query.Query;
 import org.hibernate.type.CustomType;
 
 /**
@@ -41,7 +41,7 @@ public class QueryBuilder {
 	/**
 	 * "where" parameters for this query. Each parameter element of the list for one alias from the "from" part.
 	 */
-	private final List<Parameters> parameters = new ArrayList<Parameters>();
+	private final List<Parameters> parameters = new ArrayList<>();
 
 	/**
 	 * A list of triples (from entity name, alias name, whether to select the entity).
@@ -73,9 +73,9 @@ public class QueryBuilder {
 		final Parameters rootParameters = new Parameters( alias, "and", paramCounter );
 		parameters.add( rootParameters );
 
-		froms = new ArrayList<Triple<String, String, Boolean>>();
-		orders = new ArrayList<Triple<String, String, Boolean>>();
-		projections = new ArrayList<String>();
+		froms = new ArrayList<>();
+		orders = new ArrayList<>();
+		projections = new ArrayList<>();
 
 		addFrom( entityName, alias, true );
 	}
@@ -90,9 +90,9 @@ public class QueryBuilder {
 			this.parameters.add( params.deepCopy() );
 		}
 
-		froms = new ArrayList<Triple<String, String, Boolean>>( other.froms );
-		orders = new ArrayList<Triple<String, String, Boolean>>( other.orders );
-		projections = new ArrayList<String>( other.projections );
+		froms = new ArrayList<>( other.froms );
+		orders = new ArrayList<>( other.orders );
+		projections = new ArrayList<>( other.projections );
 	}
 
 	public QueryBuilder deepCopy() {
@@ -209,7 +209,7 @@ public class QueryBuilder {
 	}
 
 	private List<String> getSelectAliasList() {
-		final List<String> aliasList = new ArrayList<String>();
+		final List<String> aliasList = new ArrayList<>();
 		for ( Triple<String, String, Boolean> from : froms ) {
 			if ( from.getThird() ) {
 				aliasList.add( from.getSecond() );
@@ -224,7 +224,7 @@ public class QueryBuilder {
 	}
 
 	private List<String> getFromList() {
-		final List<String> fromList = new ArrayList<String>();
+		final List<String> fromList = new ArrayList<>();
 		for ( Triple<String, String, Boolean> from : froms ) {
 			fromList.add( from.getFirst() + " " + from.getSecond() );
 		}
@@ -233,7 +233,7 @@ public class QueryBuilder {
 	}
 
 	private List<String> getOrderList() {
-		final List<String> orderList = new ArrayList<String>();
+		final List<String> orderList = new ArrayList<>();
 		for ( Triple<String, String, Boolean> order : orders ) {
 			orderList.add( order.getFirst() + "." + order.getSecond() + " " + (order.getThird() ? "asc" : "desc") );
 		}
@@ -243,7 +243,7 @@ public class QueryBuilder {
 
 	public Query toQuery(Session session) {
 		final StringBuilder querySb = new StringBuilder();
-		final Map<String, Object> queryParamValues = new HashMap<String, Object>();
+		final Map<String, Object> queryParamValues = new HashMap<>();
 
 		build( querySb, queryParamValues );
 

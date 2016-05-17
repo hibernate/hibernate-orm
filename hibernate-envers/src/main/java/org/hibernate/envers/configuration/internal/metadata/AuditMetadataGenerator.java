@@ -113,9 +113,9 @@ public final class AuditMetadataGenerator {
 
 		this.auditEntityNameRegister = auditEntityNameRegister;
 
-		entitiesConfigurations = new HashMap<String, EntityConfiguration>();
-		notAuditedEntitiesConfigurations = new HashMap<String, EntityConfiguration>();
-		entitiesJoins = new HashMap<String, Map<Join, Element>>();
+		entitiesConfigurations = new HashMap<>();
+		notAuditedEntitiesConfigurations = new HashMap<>();
+		entitiesJoins = new HashMap<>();
 
 		classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 	}
@@ -439,7 +439,7 @@ public final class AuditMetadataGenerator {
 	@SuppressWarnings({"unchecked"})
 	private void createJoins(PersistentClass pc, Element parent, ClassAuditingData auditingData) {
 		final Iterator<Join> joins = pc.getJoinIterator();
-		final Map<Join, Element> joinElements = new HashMap<Join, Element>();
+		final Map<Join, Element> joinElements = new HashMap<>();
 		entitiesJoins.put( pc.getEntityName(), joinElements );
 
 		while ( joins.hasNext() ) {

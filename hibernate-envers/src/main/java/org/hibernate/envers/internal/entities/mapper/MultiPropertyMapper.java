@@ -99,7 +99,9 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 			Object newObj,
 			Object oldObj) {
 		boolean ret = false;
-		for ( PropertyData propertyData : properties.keySet() ) {
+		for ( Map.Entry<PropertyData, PropertyMapper> entry : properties.entrySet() ) {
+			final PropertyData propertyData = entry.getKey();
+			final PropertyMapper propertyMapper = entry.getValue();
 			Getter getter;
 			if ( newObj != null ) {
 				getter = ReflectionTools.getGetter( newObj.getClass(), propertyData, session.getFactory().getServiceRegistry() );
@@ -110,8 +112,7 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 			else {
 				return false;
 			}
-
-			ret |= properties.get( propertyData ).mapToMapFromEntity(
+			ret |= propertyMapper.mapToMapFromEntity(
 					session, data,
 					newObj == null ? null : getter.get( newObj ),
 					oldObj == null ? null : getter.get( oldObj )
@@ -127,7 +128,9 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 			Map<String, Object> data,
 			Object newObj,
 			Object oldObj) {
-		for ( PropertyData propertyData : properties.keySet() ) {
+		for ( Map.Entry<PropertyData, PropertyMapper> entry : properties.entrySet() ) {
+			final PropertyData propertyData = entry.getKey();
+			final PropertyMapper propertyMapper = entry.getValue();
 			Getter getter;
 			if ( newObj != null ) {
 				getter = ReflectionTools.getGetter( newObj.getClass(), propertyData, session.getFactory().getServiceRegistry() );
@@ -138,8 +141,7 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 			else {
 				return;
 			}
-
-			properties.get( propertyData ).mapModifiedFlagsToMapFromEntity(
+			propertyMapper.mapModifiedFlagsToMapFromEntity(
 					session, data,
 					newObj == null ? null : getter.get( newObj ),
 					oldObj == null ? null : getter.get( oldObj )

@@ -57,7 +57,7 @@ public class AdditionalJaxbMappingProducerImpl implements AdditionalJaxbMappingP
 			return Collections.emptyList();
 		}
 
-		final ArrayList<MappingDocument> additionalMappingDocuments = new ArrayList<MappingDocument>();
+		final ArrayList<MappingDocument> additionalMappingDocuments = new ArrayList<>();
 
 		// atm we do not have distinct origin info for envers
 		final Origin origin = new Origin( SourceType.OTHER, "envers" );

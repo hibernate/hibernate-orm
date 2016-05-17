@@ -12,9 +12,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.persistence.NoResultException;
 
-import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.Session;
@@ -29,6 +29,7 @@ import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.query.AuditQueryCreator;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.query.Query;
 
 import static org.hibernate.envers.internal.tools.ArgumentsTools.checkNotNull;
 import static org.hibernate.envers.internal.tools.ArgumentsTools.checkPositive;
@@ -174,7 +175,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 		checkPositive( revision, "Entity revision" );
 		checkSession();
 
-		final Criteria query = enversService.getRevisionInfoQueryCreator().getRevisionDateQuery( session, revision );
+		final Query<?> query = enversService.getRevisionInfoQueryCreator().getRevisionDateQuery( session, revision );
 
 		try {
 			final Object timestampObject = query.uniqueResult();
@@ -195,7 +196,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 		checkNotNull( date, "Date of revision" );
 		checkSession();
 
-		final Criteria query = enversService.getRevisionInfoQueryCreator().getRevisionNumberForDateQuery( session, date );
+		final Query<?> query = enversService.getRevisionInfoQueryCreator().getRevisionNumberForDateQuery( session, date );
 
 		try {
 			final Number res = (Number) query.uniqueResult();
@@ -219,9 +220,9 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 		checkPositive( revision, "Entity revision" );
 		checkSession();
 
-		final Set<Number> revisions = new HashSet<Number>( 1 );
+		final Set<Number> revisions = new HashSet<>( 1 );
 		revisions.add( revision );
-		final Criteria query = enversService.getRevisionInfoQueryCreator().getRevisionsQuery( session, revisions );
+		final Query<?> query = enversService.getRevisionInfoQueryCreator().getRevisionsQuery( session, revisions );
 
 		try {
 			final T revisionData = (T) query.uniqueResult();
@@ -243,7 +244,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 			throws IllegalArgumentException,
 			IllegalStateException {
 		revisionEntityClass = getTargetClassIfProxied( revisionEntityClass );
-		final Map<Number, T> result = new HashMap<Number, T>( revisions.size() );
+		final Map<Number, T> result = new HashMap<>( revisions.size() );
 
 		for ( Number revision : revisions ) {
 			checkNotNull( revision, "Entity revision" );
@@ -251,13 +252,13 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 		}
 		checkSession();
 
-		final Criteria query = enversService.getRevisionInfoQueryCreator().getRevisionsQuery( session, revisions );
+		final Query<?> query = enversService.getRevisionInfoQueryCreator().getRevisionsQuery( session, revisions );
 
 		try {
-			final List<T> revisionList = query.list();
-			for ( T revision : revisionList ) {
+			final List<?> revisionList = query.getResultList();
+			for ( Object revision : revisionList ) {
 				final Number revNo = enversService.getRevisionInfoNumberReader().getRevisionNumber( revision );
-				result.put( revNo, revision );
+				result.put( revNo, (T) revision );
 			}
 
 			return result;

@@ -17,7 +17,7 @@ import org.hibernate.MappingException;
  * @author Adam Warski (adam at warski dot org)
  */
 public class AuditEntityNameRegister {
-	private final Set<String> auditEntityNames = new HashSet<String>();
+	private final Set<String> auditEntityNames = new HashSet<>();
 
 	/**
 	 * @param auditEntityName Name of the audit entity.

@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.criteria.JoinType;
@@ -18,7 +19,6 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.Query;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
@@ -32,6 +32,7 @@ import org.hibernate.envers.query.criteria.internal.CriteriaTools;
 import org.hibernate.envers.query.order.AuditOrder;
 import org.hibernate.envers.query.projection.AuditProjection;
 import org.hibernate.envers.tools.Pair;
+import org.hibernate.query.Query;
 
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.REFERENCED_ENTITY_ALIAS;
 
@@ -53,9 +54,9 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 	protected final EnversService enversService;
 	protected final AuditReaderImplementor versionsReader;
 
-	protected final List<AuditAssociationQueryImpl<?>> associationQueries = new ArrayList<AuditAssociationQueryImpl<?>>();
-	protected final Map<String, AuditAssociationQueryImpl<AuditQueryImplementor>> associationQueryMap = new HashMap<String, AuditAssociationQueryImpl<AuditQueryImplementor>>();
-	protected final List<Pair<String, AuditProjection>> projections = new ArrayList<Pair<String,AuditProjection>>();
+	protected final List<AuditAssociationQueryImpl<?>> associationQueries = new ArrayList<>();
+	protected final Map<String, AuditAssociationQueryImpl<AuditQueryImplementor>> associationQueryMap = new HashMap<>();
+	protected final List<Pair<String, AuditProjection>> projections = new ArrayList<>();
 
 	protected AbstractAuditQuery(
 			EnversService enversService,
@@ -72,7 +73,7 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 		this.enversService = enversService;
 		this.versionsReader = versionsReader;
 
-		criterions = new ArrayList<AuditCriterion>();
+		criterions = new ArrayList<>();
 		entityInstantiator = new EntityInstantiator( enversService, versionsReader );
 
 		entityClassName = cls.getName();
@@ -160,7 +161,7 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 	public AuditAssociationQuery<? extends AuditQuery> traverseRelation(String associationName, JoinType joinType) {
 		AuditAssociationQueryImpl<AuditQueryImplementor> result = associationQueryMap.get( associationName );
 		if (result == null) {
-			result = new AuditAssociationQueryImpl<AuditQueryImplementor>( enversService, versionsReader, this, qb, entityName, associationName, joinType, REFERENCED_ENTITY_ALIAS );
+			result = new AuditAssociationQueryImpl<>( enversService, versionsReader, this, qb, entityName, associationName, joinType, REFERENCED_ENTITY_ALIAS );
 			associationQueries.add( result );
 			associationQueryMap.put( associationName, result );
 		}

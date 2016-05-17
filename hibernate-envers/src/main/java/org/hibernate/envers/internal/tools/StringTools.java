@@ -63,7 +63,7 @@ public abstract class StringTools {
 	/**
 	 * Capitalizes first letter of the string
 	 *
-	 * @param fieldName
+	 * @param fieldName field name
 	 *
 	 * @return capitalized string
 	 */

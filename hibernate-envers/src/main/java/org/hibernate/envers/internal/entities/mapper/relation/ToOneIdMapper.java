@@ -45,7 +45,7 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 			Map<String, Object> data,
 			Object newObj,
 			Object oldObj) {
-		final HashMap<String, Object> newData = new HashMap<String, Object>();
+		final HashMap<String, Object> newData = new HashMap<>();
 
 		// If this property is originally non-insertable, but made insertable because it is in a many-to-one "fake"
 		// bi-directional relation, we always store the "old", unchaged data, to prevent storing changes made

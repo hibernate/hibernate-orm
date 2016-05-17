@@ -54,7 +54,7 @@ public class DefaultTrackingModifiedEntitiesRevisionInfoGenerator extends Defaul
 		super.entityChanged( entityClass, entityName, entityId, revisionType, revisionEntity );
 		Set<String> modifiedEntityNames = (Set<String>) modifiedEntityNamesGetter.get( revisionEntity );
 		if ( modifiedEntityNames == null ) {
-			modifiedEntityNames = new HashSet<String>();
+			modifiedEntityNames = new HashSet<>();
 			modifiedEntityNamesSetter.set( revisionEntity, modifiedEntityNames, null );
 		}
 		modifiedEntityNames.add( entityName );

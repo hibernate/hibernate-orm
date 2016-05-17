@@ -58,10 +58,10 @@ public class Parameters {
 		this.connective = connective;
 		this.queryParamCounter = queryParamCounter;
 
-		subParameters = new ArrayList<Parameters>();
-		negatedParameters = new ArrayList<Parameters>();
-		expressions = new ArrayList<String>();
-		localQueryParamValues = new HashMap<String, Object>();
+		subParameters = new ArrayList<>();
+		negatedParameters = new ArrayList<>();
+		expressions = new ArrayList<>();
+		localQueryParamValues = new HashMap<>();
 	}
 
 	// Only for deep copy purpose.
@@ -70,16 +70,16 @@ public class Parameters {
 		this.connective = other.connective;
 		this.queryParamCounter = other.queryParamCounter.deepCopy();
 
-		subParameters = new ArrayList<Parameters>( other.subParameters.size() );
+		subParameters = new ArrayList<>( other.subParameters.size() );
 		for ( Parameters p : other.subParameters ) {
 			subParameters.add( p.deepCopy() );
 		}
-		negatedParameters = new ArrayList<Parameters>( other.negatedParameters.size() );
+		negatedParameters = new ArrayList<>( other.negatedParameters.size() );
 		for ( Parameters p : other.negatedParameters ) {
 			negatedParameters.add( p.deepCopy() );
 		}
-		expressions = new ArrayList<String>( other.expressions );
-		localQueryParamValues = new HashMap<String, Object>( other.localQueryParamValues );
+		expressions = new ArrayList<>( other.expressions );
+		localQueryParamValues = new HashMap<>( other.localQueryParamValues );
 	}
 
 	public Parameters deepCopy() {

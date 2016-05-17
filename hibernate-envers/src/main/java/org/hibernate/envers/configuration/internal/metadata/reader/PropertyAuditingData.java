@@ -27,7 +27,7 @@ public class PropertyAuditingData {
 	private String mapKey;
 	private AuditJoinTable joinTable;
 	private String accessType;
-	private final List<AuditOverride> auditJoinTableOverrides = new ArrayList<AuditOverride>( 0 );
+	private final List<AuditOverride> auditJoinTableOverrides = new ArrayList<>( 0 );
 	private RelationTargetAuditMode relationTargetAuditMode;
 	private String auditMappedBy;
 	private String relationMappedBy;

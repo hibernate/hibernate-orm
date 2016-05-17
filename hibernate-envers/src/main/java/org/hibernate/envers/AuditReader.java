@@ -280,5 +280,5 @@ public interface AuditReader {
 	 * marked with {@link ModifiedEntityNames} interface.</li>
 	 * </ul>
 	 */
-	public CrossTypeRevisionChangesReader getCrossTypeRevisionChangesReader() throws AuditException;
+	CrossTypeRevisionChangesReader getCrossTypeRevisionChangesReader() throws AuditException;
 }

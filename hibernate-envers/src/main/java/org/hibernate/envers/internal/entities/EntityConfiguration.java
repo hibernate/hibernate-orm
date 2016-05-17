@@ -41,7 +41,7 @@ public class EntityConfiguration {
 		this.propertyMapper = propertyMapper;
 		this.parentEntityName = parentEntityName;
 
-		this.relations = new HashMap<String, RelationDescription>();
+		this.relations = new HashMap<>();
 	}
 
 	public void addToOneRelation(

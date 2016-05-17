@@ -42,7 +42,7 @@ public class MapCollectionMapper<T extends Map> extends AbstractCollectionMapper
 			Object primaryKey,
 			Number revision,
 			boolean removed) {
-		return new MapCollectionInitializor<T>(
+		return new MapCollectionInitializor<>(
 				enversService,
 				versionsReader,
 				commonCollectionMapperData.getQueryGenerator(),

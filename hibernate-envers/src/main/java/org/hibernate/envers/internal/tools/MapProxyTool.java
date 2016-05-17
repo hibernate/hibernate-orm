@@ -36,16 +36,15 @@ public final class MapProxyTool {
 	}
 
 	/**
+	 * Creates instance of map proxy class. This proxy class will be a java bean with properties from <code>propertyDatas</code>.
+	 * Instance will proxy calls to instance of the map passed as parameter.
+	 *
 	 * @param className Name of the class to construct (should be unique within class loader)
 	 * @param map instance that will be proxied by java bean
 	 * @param propertyDatas properties that should java bean declare
-	 * @param classLoaderService
+	 * @param classLoaderService class loader service
 	 *
 	 * @return new instance of proxy
-	 *
-	 * @author Lukasz Zuchowski (author at zuchos dot com)
-	 * Creates instance of map proxy class. This proxy class will be a java bean with properties from <code>propertyDatas</code>.
-	 * Instance will proxy calls to instance of the map passed as parameter.
 	 */
 	public static Object newInstanceOfBeanProxyForMap(
 			String className,
@@ -66,7 +65,7 @@ public final class MapProxyTool {
 	}
 
 	private static Map<String, Class<?>> prepareProperties(Set<PropertyData> propertyDatas) {
-		Map<String, Class<?>> properties = new HashMap<String, Class<?>>();
+		Map<String, Class<?>> properties = new HashMap<>();
 		for ( PropertyData propertyData : propertyDatas ) {
 			properties.put( propertyData.getBeanName(), Object.class );
 		}
@@ -88,7 +87,7 @@ public final class MapProxyTool {
 	 *
 	 * @param className name of the class that will be generated/loaded
 	 * @param properties list of properties that should be exposed via java bean
-	 * @param classLoaderService
+	 * @param classLoaderService class loader service
 	 *
 	 * @return proxy class that wraps map into java bean
 	 */

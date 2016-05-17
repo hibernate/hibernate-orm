@@ -32,7 +32,7 @@ public class DefaultTrackingModifiedEntitiesRevisionEntity extends DefaultRevisi
 	@Column(name = "ENTITYNAME")
 	@Fetch(FetchMode.JOIN)
 	@ModifiedEntityNames
-	private Set<String> modifiedEntityNames = new HashSet<String>();
+	private Set<String> modifiedEntityNames = new HashSet<>();
 
 	public Set<String> getModifiedEntityNames() {
 		return modifiedEntityNames;

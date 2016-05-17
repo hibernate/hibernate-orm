@@ -11,6 +11,7 @@ import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 
@@ -22,7 +23,7 @@ public abstract class EntityTools {
 		final Object id1 = getIdentifier( session, entityName, obj1 );
 		final Object id2 = getIdentifier( session, entityName, obj2 );
 
-		return Tools.objectsEqual( id1, id2 );
+		return EqualsHelper.areEqual( id1, id2 );
 	}
 
 	public static Object getIdentifier(SessionImplementor session, String entityName, Object obj) {
@@ -85,8 +86,8 @@ public abstract class EntityTools {
 	/**
 	 * @return Java class mapped to specified entity name.
 	 */
-	public static Class getEntityClass(SessionImplementor sessionImplementor, Session session, String entityName) {
-		final EntityPersister entityPersister = sessionImplementor.getFactory().getEntityPersister( entityName );
+	public static Class getEntityClass(SessionImplementor sessionImplementor, String entityName) {
+		final EntityPersister entityPersister = sessionImplementor.getFactory().getMetamodel().entityPersister( entityName );
 		return entityPersister.getMappedClass();
 	}
 }

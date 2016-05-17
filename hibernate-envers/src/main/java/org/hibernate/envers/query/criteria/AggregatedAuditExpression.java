@@ -30,10 +30,10 @@ public class AggregatedAuditExpression implements AuditCriterion, ExtendableCrit
 	public AggregatedAuditExpression(PropertyNameGetter propertyNameGetter, AggregatedMode mode) {
 		this.propertyNameGetter = propertyNameGetter;
 		this.mode = mode;
-		criterions = new ArrayList<AuditCriterion>();
+		criterions = new ArrayList<>();
 	}
 
-	public static enum AggregatedMode {
+	public enum AggregatedMode {
 		MAX,
 		MIN
 	}

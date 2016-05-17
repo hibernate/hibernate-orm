@@ -61,6 +61,6 @@ public class Pair<T1, T2> {
 	}
 
 	public static <T1, T2> Pair<T1, T2> make(T1 obj1, T2 obj2) {
-		return new Pair<T1, T2>( obj1, obj2 );
+		return new Pair<>( obj1, obj2 );
 	}
 }

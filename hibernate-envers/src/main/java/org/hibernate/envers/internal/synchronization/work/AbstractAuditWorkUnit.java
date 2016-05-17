@@ -49,7 +49,7 @@ public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
 	protected void fillDataWithId(Map<String, Object> data, Object revision) {
 		final AuditEntitiesConfiguration entitiesCfg = enversService.getAuditEntitiesConfiguration();
 
-		final Map<String, Object> originalId = new HashMap<String, Object>();
+		final Map<String, Object> originalId = new HashMap<>();
 		originalId.put( entitiesCfg.getRevisionFieldName(), revision );
 
 		enversService.getEntitiesConfigurations().get( getEntityName() ).getIdMapper().mapToMapFromId( originalId, id );

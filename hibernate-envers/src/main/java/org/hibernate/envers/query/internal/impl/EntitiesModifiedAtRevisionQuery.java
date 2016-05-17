@@ -8,12 +8,12 @@ package org.hibernate.envers.query.internal.impl;
 
 import java.util.List;
 
-import org.hibernate.Query;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
 import org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.query.criteria.AuditCriterion;
+import org.hibernate.query.Query;
 
 /**
  * In comparison to {@link EntitiesAtRevisionQuery} this query returns an empty collection if an entity

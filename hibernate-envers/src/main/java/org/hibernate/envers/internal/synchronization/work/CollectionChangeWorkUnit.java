@@ -21,7 +21,7 @@ import org.hibernate.envers.boot.internal.EnversService;
 public class CollectionChangeWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit {
 	private Object entity;
 	private final String collectionPropertyName;
-	private final Map<String, Object> data = new HashMap<String, Object>();
+	private final Map<String, Object> data = new HashMap<>();
 
 	public CollectionChangeWorkUnit(
 			SessionImplementor session,
@@ -44,7 +44,7 @@ public class CollectionChangeWorkUnit extends AbstractAuditWorkUnit implements A
 	@Override
 	public Map<String, Object> generateData(Object revisionData) {
 		fillDataWithId( data, revisionData );
-		final Map<String, Object> preGenerateData = new HashMap<String, Object>( data );
+		final Map<String, Object> preGenerateData = new HashMap<>( data );
 		enversService.getEntitiesConfigurations().get( getEntityName() ).getPropertyMapper().mapToMapFromEntity(
 				sessionImplementor,
 				data,

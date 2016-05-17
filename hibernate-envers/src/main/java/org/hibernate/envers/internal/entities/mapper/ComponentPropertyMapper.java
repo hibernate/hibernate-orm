@@ -77,7 +77,7 @@ public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperB
 		if ( propertyData.isUsingModifiedFlag() ) {
 			data.put(
 					propertyData.getModifiedFlagPropertyName(),
-					delegate.mapToMapFromEntity( session, new HashMap<String, Object>(), newObj, oldObj )
+					delegate.mapToMapFromEntity( session, new HashMap<>(), newObj, oldObj )
 			);
 		}
 	}

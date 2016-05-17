@@ -23,7 +23,7 @@ public class Vertex<R> {
 
 	public Vertex(R representation) {
 		this.representation = representation;
-		this.neighbours = new ArrayList<Vertex<R>>();
+		this.neighbours = new ArrayList<>();
 		this.startTime = 0;
 		this.endTime = 0;
 	}

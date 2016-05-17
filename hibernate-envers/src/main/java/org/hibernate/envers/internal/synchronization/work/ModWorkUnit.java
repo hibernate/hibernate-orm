@@ -39,7 +39,7 @@ public class ModWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 		this.entityPersister = entityPersister;
 		this.oldState = oldState;
 		this.newState = newState;
-		this.data = new HashMap<String, Object>();
+		this.data = new HashMap<>();
 		this.changes = enversService.getEntitiesConfigurations().get( getEntityName() ).getPropertyMapper().map(
 				sessionImplementor,
 				data,

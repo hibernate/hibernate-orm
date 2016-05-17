@@ -83,7 +83,7 @@ public class  AuditEntitiesConfiguration {
 			revisionEndTimestampFieldName = null;
 		}
 
-		customAuditTablesNames = new HashMap<String, String>();
+		customAuditTablesNames = new HashMap<>();
 
 		revisionNumberPath = originalIdPropName + "." + revisionFieldName + ".id";
 		revisionPropBasePath = originalIdPropName + "." + revisionFieldName + ".";

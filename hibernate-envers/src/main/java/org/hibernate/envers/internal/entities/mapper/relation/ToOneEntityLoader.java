@@ -57,7 +57,8 @@ public final class ToOneEntityLoader {
 			EnversService enversService) {
 		final EntityPersister persister = versionsReader.getSessionImplementor()
 				.getFactory()
-				.getEntityPersister( entityName );
+				.getMetamodel()
+				.entityPersister( entityName );
 		return persister.createProxy(
 				(Serializable) entityId,
 				new ToOneDelegateSessionImplementor( versionsReader, entityClass, entityId, revision, removed, enversService )
@@ -78,7 +79,8 @@ public final class ToOneEntityLoader {
 			EnversService enversService) {
 		final EntityPersister persister = versionsReader.getSessionImplementor()
 				.getFactory()
-				.getEntityPersister( entityName );
+				.getMetamodel()
+				.entityPersister( entityName );
 		if ( persister.hasProxy() ) {
 			return createProxy( versionsReader, entityClass, entityName, entityId, revision, removed, enversService );
 		}

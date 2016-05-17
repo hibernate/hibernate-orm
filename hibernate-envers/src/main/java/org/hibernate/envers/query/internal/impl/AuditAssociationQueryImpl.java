@@ -51,10 +51,10 @@ public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
 	private final IdMapper ownerAssociationIdMapper;
 	private final String ownerAlias;
 	private final String alias;
-	private final List<AuditCriterion> criterions = new ArrayList<AuditCriterion>();
+	private final List<AuditCriterion> criterions = new ArrayList<>();
 	private final Parameters parameters;
-	private final List<AuditAssociationQueryImpl<?>> associationQueries = new ArrayList<AuditAssociationQueryImpl<?>>();
-	private final Map<String, AuditAssociationQueryImpl<AuditAssociationQueryImpl<Q>>> associationQueryMap = new HashMap<String, AuditAssociationQueryImpl<AuditAssociationQueryImpl<Q>>>();
+	private final List<AuditAssociationQueryImpl<?>> associationQueries = new ArrayList<>();
+	private final Map<String, AuditAssociationQueryImpl<AuditAssociationQueryImpl<Q>>> associationQueryMap = new HashMap<>();
 	private boolean hasProjections;
 	private boolean hasOrders;
 
@@ -104,7 +104,7 @@ public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
 			JoinType joinType) {
 		AuditAssociationQueryImpl<AuditAssociationQueryImpl<Q>> result = associationQueryMap.get( associationName );
 		if ( result == null ) {
-			result = new AuditAssociationQueryImpl<AuditAssociationQueryImpl<Q>>(
+			result = new AuditAssociationQueryImpl<>(
 					enversService,
 					auditReader,
 					this,

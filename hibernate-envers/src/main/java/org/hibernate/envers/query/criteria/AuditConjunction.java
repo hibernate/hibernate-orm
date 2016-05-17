@@ -21,7 +21,7 @@ public class AuditConjunction implements AuditCriterion, ExtendableCriterion {
 	private List<AuditCriterion> criterions;
 
 	public AuditConjunction() {
-		criterions = new ArrayList<AuditCriterion>();
+		criterions = new ArrayList<>();
 	}
 
 	@Override

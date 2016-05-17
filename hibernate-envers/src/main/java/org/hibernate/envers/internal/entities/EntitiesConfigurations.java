@@ -25,7 +25,7 @@ public class EntitiesConfigurations {
 	private Map<String, EntityConfiguration> notAuditedEntitiesConfigurations;
 
 	// Map versions entity name -> entity name
-	private Map<String, String> entityNamesForVersionsEntityNames = new HashMap<String, String>();
+	private Map<String, String> entityNamesForVersionsEntityNames = new HashMap<>();
 
 	public EntitiesConfigurations(
 			Map<String, EntityConfiguration> entitiesConfigurations,
@@ -38,20 +38,17 @@ public class EntitiesConfigurations {
 	}
 
 	private void generateVersionsEntityToEntityNames() {
-		entityNamesForVersionsEntityNames = new HashMap<String, String>();
-
-		for ( String entityName : entitiesConfigurations.keySet() ) {
-			entityNamesForVersionsEntityNames.put(
-					entitiesConfigurations.get( entityName ).getVersionsEntityName(),
-					entityName
-			);
+		entityNamesForVersionsEntityNames = new HashMap<>();
+		for ( Map.Entry<String, EntityConfiguration> entry : entitiesConfigurations.entrySet() ) {
+			entityNamesForVersionsEntityNames.put( entry.getValue().getVersionsEntityName(), entry.getKey() );
 		}
 	}
 
 	private void generateBidirectionRelationInfo() {
 		// Checking each relation if it is bidirectional. If so, storing that information.
-		for ( String entityName : entitiesConfigurations.keySet() ) {
-			final EntityConfiguration entCfg = entitiesConfigurations.get( entityName );
+		for ( Map.Entry<String, EntityConfiguration> entry : entitiesConfigurations.entrySet() ) {
+			final String entityName = entry.getKey();
+			final EntityConfiguration entCfg = entry.getValue();
 			// Iterating over all relations from that entity
 			for ( RelationDescription relDesc : entCfg.getRelationsIterator() ) {
 				// If this is an "owned" relation, checking the related entity, if it has a relation that has
@@ -116,7 +113,7 @@ public class EntitiesConfigurations {
 
 	private Collection<RelationDescription> getRelationDescriptions(String entityName) {
 		final EntityConfiguration entCfg = entitiesConfigurations.get( entityName );
-		Collection<RelationDescription> descriptions = new ArrayList<RelationDescription>();
+		Collection<RelationDescription> descriptions = new ArrayList<>();
 		if ( entCfg.getParentEntityName() != null ) {
 			// collect descriptions from super classes
 			descriptions.addAll( getRelationDescriptions( entCfg.getParentEntityName() ) );
@@ -137,14 +134,14 @@ public class EntitiesConfigurations {
 	}
 
 	private Set<String> getEntityAndParentsNames(String entityName) {
-		final Set<String> names = new HashSet<String>();
+		final Set<String> names = new HashSet<>();
 		addWithParentEntityNames( entityName, names );
 		return names;
 	}
 
 	public Set<String> getToPropertyNames(String fromEntityName, String fromPropertyName, String toEntityName) {
 		final Set<String> entityAndParentsNames = getEntityAndParentsNames( fromEntityName );
-		final Set<String> toPropertyNames = new HashSet<String>();
+		final Set<String> toPropertyNames = new HashSet<>();
 		for ( RelationDescription relationDescription : getRelationDescriptions( toEntityName ) ) {
 			final String relToEntityName = relationDescription.getToEntityName();
 			final String mappedByPropertyName = relationDescription.getMappedByPropertyName();

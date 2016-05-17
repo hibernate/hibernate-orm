@@ -6,8 +6,8 @@
  */
 package org.hibernate.envers.internal.entities.mapper.relation.query;
 
-import org.hibernate.Query;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
+import org.hibernate.query.Query;
 
 /**
  * TODO: cleanup implementations and extract common code

@@ -19,5 +19,5 @@ public interface PropertyNameGetter {
 	 *
 	 * @return Name of the property, to be used in a query.
 	 */
-	public String get(EnversService enversService);
+	String get(EnversService enversService);
 }

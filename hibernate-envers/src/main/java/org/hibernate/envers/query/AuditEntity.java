@@ -44,7 +44,7 @@ public class AuditEntity {
 	 * @param propertyName Name of the property.
 	 */
 	public static AuditProperty<Object> property(String propertyName) {
-		return new AuditProperty<Object>( new EntityPropertyName( propertyName ) );
+		return new AuditProperty<>( new EntityPropertyName( propertyName ) );
 	}
 
 	/**
@@ -52,7 +52,7 @@ public class AuditEntity {
 	 * audited entity.
 	 */
 	public static AuditProperty<Number> revisionNumber() {
-		return new AuditProperty<Number>( new RevisionNumberPropertyName() );
+		return new AuditProperty<>( new RevisionNumberPropertyName() );
 	}
 
 	/**
@@ -62,7 +62,7 @@ public class AuditEntity {
 	 * @param propertyName Name of the property.
 	 */
 	public static AuditProperty<Object> revisionProperty(String propertyName) {
-		return new AuditProperty<Object>( new RevisionPropertyPropertyName( propertyName ) );
+		return new AuditProperty<>( new RevisionPropertyPropertyName( propertyName ) );
 	}
 
 	/**
@@ -70,7 +70,7 @@ public class AuditEntity {
 	 * audited entity.
 	 */
 	public static AuditProperty<RevisionType> revisionType() {
-		return new AuditProperty<RevisionType>( new RevisionTypePropertyName() );
+		return new AuditProperty<>( new RevisionTypePropertyName() );
 	}
 
 	/**

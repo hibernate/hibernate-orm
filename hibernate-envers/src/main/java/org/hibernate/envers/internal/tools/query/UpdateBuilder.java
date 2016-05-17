@@ -9,9 +9,9 @@ package org.hibernate.envers.internal.tools.query;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.envers.internal.tools.MutableInteger;
+import org.hibernate.query.Query;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
@@ -32,7 +32,7 @@ public class UpdateBuilder {
 		this.alias = alias;
 		this.paramCounter = paramCounter;
 		rootParameters = new Parameters( alias, "and", paramCounter );
-		updates = new HashMap<String, Object>();
+		updates = new HashMap<>();
 	}
 
 	public Parameters getRootParameters() {
@@ -68,7 +68,7 @@ public class UpdateBuilder {
 
 	public Query toQuery(Session session) {
 		final StringBuilder querySb = new StringBuilder();
-		final Map<String, Object> queryParamValues = new HashMap<String, Object>();
+		final Map<String, Object> queryParamValues = new HashMap<>();
 
 		build( querySb, queryParamValues );
 

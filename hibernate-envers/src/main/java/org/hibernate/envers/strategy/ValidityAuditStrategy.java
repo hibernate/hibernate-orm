@@ -128,13 +128,13 @@ public class ValidityAuditStrategy implements AuditStrategy {
 						updateTableName = rootAuditedEntityQueryable.getTableName();
 					}
 
-					final Type revisionInfoIdType = sessionImplementor.getFactory().getEntityPersister( revisionInfoEntityName ).getIdentifierType();
+					final Type revisionInfoIdType = sessionImplementor.getFactory().getMetamodel().entityPersister( revisionInfoEntityName ).getIdentifierType();
 					final String revEndColumnName = rootAuditedEntityQueryable.toColumns( enversService.getAuditEntitiesConfiguration().getRevisionEndFieldName() )[0];
 
 					final boolean isRevisionEndTimestampEnabled = enversService.getAuditEntitiesConfiguration().isRevisionEndTimestampEnabled();
 
 					// update audit_ent set REVEND = ? [, REVEND_TSTMP = ?] where (prod_ent_id) = ? and REV <> ? and REVEND is null
-					final Update update = new Update( sessionImplementor.getFactory().getDialect() ).setTableName( updateTableName );
+					final Update update = new Update( sessionImplementor.getFactory().getJdbcServices().getDialect() ).setTableName( updateTableName );
 					// set REVEND = ?
 					update.addColumn( revEndColumnName );
 					// set [, REVEND_TSTMP = ?]
@@ -156,7 +156,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 					// Now lets execute the sql...
 					final String updateSql = update.toStatementString();
 
-					int rowCount = ( (Session) sessionImplementor ).doReturningWork(
+					int rowCount = sessionImplementor.doReturningWork(
 							new ReturningWork<Integer>() {
 								@Override
 								public Integer execute(Connection connection) throws SQLException {
@@ -206,7 +206,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 												.getJdbcCoordinator().getResultSetReturn().executeUpdate( preparedStatement );
 									}
 									finally {
-										sessionImplementor.getJdbcCoordinator().getResourceRegistry().release(
+										sessionImplementor.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release(
 												preparedStatement
 										);
 										sessionImplementor.getJdbcCoordinator().afterStatementExecution();
@@ -227,7 +227,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 	}
 
 	private Queryable getQueryable(String entityName, SessionImplementor sessionImplementor) {
-		return (Queryable) sessionImplementor.getFactory().getEntityPersister( entityName );
+		return (Queryable) sessionImplementor.getFactory().getMetamodel().entityPersister( entityName );
 	}
 
 	@Override
@@ -258,7 +258,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		}
 
 		final SessionFactoryImplementor sessionFactory = ( (SessionImplementor) session ).getFactory();
-		final Type propertyType = sessionFactory.getEntityPersister( entityName ).getPropertyType( propertyName );
+		final Type propertyType = sessionFactory.getMetamodel().entityPersister( entityName ).getPropertyType( propertyName );
 		if ( propertyType.isCollectionType() ) {
 			CollectionType collectionPropertyType = (CollectionType) propertyType;
 			// Handling collection of components.

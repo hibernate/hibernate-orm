@@ -9,7 +9,6 @@ package org.hibernate.envers.internal.entities.mapper.relation.lazy;
 import java.io.Serializable;
 
 import org.hibernate.HibernateException;
-import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionDelegatorBaseImpl;
 import org.hibernate.engine.spi.SessionImplementor;
 
@@ -18,7 +17,7 @@ import org.hibernate.engine.spi.SessionImplementor;
  */
 public abstract class AbstractDelegateSessionImplementor extends SessionDelegatorBaseImpl implements SessionImplementor {
 	public AbstractDelegateSessionImplementor(SessionImplementor delegate) {
-		super( delegate, (Session) delegate );
+		super( delegate );
 	}
 
 	public abstract Object doImmediateLoad(String entityName);

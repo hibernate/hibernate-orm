@@ -31,8 +31,8 @@ public class ClassesAuditingData {
 			ClassesAuditingData.class.getName()
 	);
 
-	private final Map<String, ClassAuditingData> entityNameToAuditingData = new HashMap<String, ClassAuditingData>();
-	private final Map<PersistentClass, ClassAuditingData> persistentClassToAuditingData = new LinkedHashMap<PersistentClass, ClassAuditingData>();
+	private final Map<String, ClassAuditingData> entityNameToAuditingData = new HashMap<>();
+	private final Map<PersistentClass, ClassAuditingData> persistentClassToAuditingData = new LinkedHashMap<>();
 
 	/**
 	 * Stores information about auditing meta-data for the given class.

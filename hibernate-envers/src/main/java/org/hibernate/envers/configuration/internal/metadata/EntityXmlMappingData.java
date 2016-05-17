@@ -27,7 +27,7 @@ public class EntityXmlMappingData {
 
 	public EntityXmlMappingData() {
 		mainXmlMapping = DocumentHelper.createDocument();
-		additionalXmlMappings = new ArrayList<Document>();
+		additionalXmlMappings = new ArrayList<>();
 	}
 
 	public Document getMainXmlMapping() {

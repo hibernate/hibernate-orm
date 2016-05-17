@@ -46,7 +46,7 @@ public class FakeBidirectionalRelationWorkUnit extends AbstractAuditWorkUnit imp
 		this.nestedWorkUnit = nestedWorkUnit;
 
 		// Adding the change for the relation.
-		fakeRelationChanges = new HashMap<String, FakeRelationChange>();
+		fakeRelationChanges = new HashMap<>();
 		fakeRelationChanges.put(
 				referencingPropertyName, new FakeRelationChange(
 				owningEntity,
@@ -72,7 +72,7 @@ public class FakeBidirectionalRelationWorkUnit extends AbstractAuditWorkUnit imp
 
 		this.nestedWorkUnit = nestedWorkUnit;
 
-		fakeRelationChanges = new HashMap<String, FakeRelationChange>( original.getFakeRelationChanges() );
+		fakeRelationChanges = new HashMap<>( original.getFakeRelationChanges() );
 	}
 
 	public AuditWorkUnit getNestedWorkUnit() {
@@ -92,7 +92,7 @@ public class FakeBidirectionalRelationWorkUnit extends AbstractAuditWorkUnit imp
 	public Map<String, Object> generateData(Object revisionData) {
 		// Generating data with the nested work unit. This data contains all data except the fake relation.
 		// Making a defensive copy not to modify the data held by the nested work unit.
-		final Map<String, Object> nestedData = new HashMap<String, Object>( nestedWorkUnit.generateData( revisionData ) );
+		final Map<String, Object> nestedData = new HashMap<>( nestedWorkUnit.generateData( revisionData ) );
 
 		// Now adding data for all fake relations.
 		for ( FakeRelationChange fakeRelationChange : fakeRelationChanges.values() ) {
@@ -129,8 +129,8 @@ public class FakeBidirectionalRelationWorkUnit extends AbstractAuditWorkUnit imp
 
 		// Now merging the fake relation changes from both work units.
 		final Map<String, FakeRelationChange> secondFakeRelationChanges = second.getFakeRelationChanges();
-		final Map<String, FakeRelationChange> mergedFakeRelationChanges = new HashMap<String, FakeRelationChange>();
-		final Set<String> allPropertyNames = new HashSet<String>( fakeRelationChanges.keySet() );
+		final Map<String, FakeRelationChange> mergedFakeRelationChanges = new HashMap<>();
+		final Set<String> allPropertyNames = new HashSet<>( fakeRelationChanges.keySet() );
 		allPropertyNames.addAll( secondFakeRelationChanges.keySet() );
 
 		for ( String propertyName : allPropertyNames ) {

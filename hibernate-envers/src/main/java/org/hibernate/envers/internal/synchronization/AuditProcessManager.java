@@ -25,7 +25,7 @@ public class AuditProcessManager {
 	private final RevisionInfoGenerator revisionInfoGenerator;
 
 	public AuditProcessManager(RevisionInfoGenerator revisionInfoGenerator) {
-		auditProcesses = new ConcurrentHashMap<Transaction, AuditProcess>();
+		auditProcesses = new ConcurrentHashMap<>();
 
 		this.revisionInfoGenerator = revisionInfoGenerator;
 	}

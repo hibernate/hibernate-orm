@@ -51,7 +51,7 @@ public class EntitiesConfigurator {
 				.iterator();
 
 		final ClassesAuditingData classesAuditingData = new ClassesAuditingData();
-		final Map<PersistentClass, EntityXmlMappingData> xmlMappings = new HashMap<PersistentClass, EntityXmlMappingData>();
+		final Map<PersistentClass, EntityXmlMappingData> xmlMappings = new HashMap<>();
 
 		// Reading metadata from annotations
 		while ( classes.hasNext() ) {

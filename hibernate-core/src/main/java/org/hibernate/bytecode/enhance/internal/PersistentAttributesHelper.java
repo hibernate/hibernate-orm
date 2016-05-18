@@ -381,4 +381,14 @@ public class PersistentAttributesHelper {
 		return false;
 	}
 
+	public static boolean isAssignable(CtField thisCtField, String targetClassName) {
+		try {
+			return isAssignable( thisCtField.getType(), targetClassName );
+		}
+		catch (NotFoundException e) {
+			// keep going
+		}
+		return false;
+	}
+
 }

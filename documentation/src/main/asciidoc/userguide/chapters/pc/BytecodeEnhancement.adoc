@@ -19,15 +19,10 @@ Hibernate supports the enhancement of an application Java domain model for the p
 Think of this as partial loading support.
 Essentially you can tell Hibernate that only part(s) of an entity should be loaded upon fetching from the database and when the other part(s) should be loaded as well.
 Note that this is very much different from proxy-based idea of lazy loading which is entity-centric where the entity's state is loaded at once as needed.
-With bytecode enhancement, individual attributes or groups of attributes are loaded as needed.
-
-Lazy attributes can be designated to be loaded together and this is called a "lazy group".
-By default, all singular attributes are part of a single group, meaning that when one lazy singular attribute is accessed all lazy singular attributes are loaded.
-Lazy plural attributes, by default, are each a lazy group by themselves.
-This behavior is explicitly controllable through the `@org.hibernate.annotations.LazyGroup` annotation.
+With bytecode enhancement, individual attributes are loaded as needed.
 
 [[BytecodeEnhancement-lazy-loading-example]]
-.`@LazyGroup` example
+.Attribute lazy loading example
 ====
 [source, JAVA, indent=0]
 ----
@@ -35,9 +30,8 @@ include::{sourcedir}/BytecodeEnhancementTest.java[tags=BytecodeEnhancement-lazy-
 ----
 ====
 
-In the above example we have 2 lazy attributes: `accountsPayableXrefId` and `image`.
-Each is part of a different fetch group (accountsPayableXrefId is part of the default fetch group),
-which means that accessing `accountsPayableXrefId` will not force the loading of image, and vice-versa.
+In the above example we have 2 lazy attributes: `accountsPayableXrefId` and `image`,
+which means that accessing `accountsPayableXrefId` will not force the loading of `image`, and vice-versa.
 
 [NOTE]
 ====

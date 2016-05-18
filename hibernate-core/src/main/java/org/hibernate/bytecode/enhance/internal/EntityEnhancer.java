@@ -10,6 +10,9 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+
+import javax.persistence.MappedSuperclass;
 
 import javassist.CannotCompileException;
 import javassist.CtClass;
@@ -211,24 +214,33 @@ public class EntityEnhancer extends Enhancer {
 
 	private List<CtField> collectCollectionFields(CtClass managedCtClass) {
 		final List<CtField> collectionList = new LinkedList<CtField>();
-		try {
-			for ( CtField ctField : managedCtClass.getDeclaredFields() ) {
-				// skip static fields and skip fields added by enhancement
-				if ( Modifier.isStatic( ctField.getModifiers() ) || ctField.getName().startsWith( "$$_hibernate_" ) ) {
-					continue;
-				}
-				if ( enhancementContext.isPersistentField( ctField ) ) {
-					for ( CtClass ctClass : ctField.getType().getInterfaces() ) {
-						if ( PersistentAttributesHelper.isAssignable( ctClass, Collection.class.getName() ) ) {
-							collectionList.add( ctField );
-							break;
-						}
-					}
+
+		for ( CtField ctField : managedCtClass.getDeclaredFields() ) {
+			// skip static fields and skip fields added by enhancement
+			if ( Modifier.isStatic( ctField.getModifiers() ) || ctField.getName().startsWith( "$$_hibernate_" ) ) {
+				continue;
+			}
+			if ( enhancementContext.isPersistentField( ctField ) ) {
+				if ( PersistentAttributesHelper.isAssignable( ctField, Collection.class.getName() ) ||
+						PersistentAttributesHelper.isAssignable( ctField, Map.class.getName() ) ) {
+					collectionList.add( ctField );
 				}
 			}
 		}
-		catch (NotFoundException ignored) {
+
+		// HHH-10646 Add fields inherited from @MappedSuperclass
+		for ( CtField ctField : managedCtClass.getDeclaredFields() ) {
+			if ( !ctField.getDeclaringClass().hasAnnotation( MappedSuperclass.class ) || Modifier.isStatic( ctField.getModifiers() ) ) {
+				continue;
+			}
+			if ( enhancementContext.isPersistentField( ctField ) ) {
+				if ( PersistentAttributesHelper.isAssignable( ctField, Collection.class.getName() ) ||
+						PersistentAttributesHelper.isAssignable( ctField, Map.class.getName() ) ) {
+					collectionList.add( ctField );
+				}
+			}
 		}
+
 		return collectionList;
 	}
 

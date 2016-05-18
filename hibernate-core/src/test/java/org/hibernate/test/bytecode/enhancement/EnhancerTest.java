@@ -33,6 +33,7 @@ import org.hibernate.test.bytecode.enhancement.lazy.LazyLoadingIntegrationTestTa
 import org.hibernate.test.bytecode.enhancement.lazy.LazyLoadingTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.basic.LazyBasicFieldAccessTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.basic.LazyBasicPropertyAccessTestTask;
+import org.hibernate.test.bytecode.enhancement.mapped.MappedSuperclassTestTask;
 import org.hibernate.test.bytecode.enhancement.merge.CompositeMergeTestTask;
 import org.hibernate.test.bytecode.enhancement.ondemandload.LazyCollectionWithClearedSessionTestTask;
 import org.hibernate.test.bytecode.enhancement.ondemandload.LazyCollectionWithClosedSessionTestTask;
@@ -115,6 +116,12 @@ public class EnhancerTest extends BaseUnitTestCase {
 		EnhancerTestUtils.runEnhancerTestTask( UnexpectedDeleteOneTestTask.class );
 		EnhancerTestUtils.runEnhancerTestTask( UnexpectedDeleteTwoTestTask.class );
 		EnhancerTestUtils.runEnhancerTestTask( UnexpectedDeleteThreeTestTask.class );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-10646" )
+	public void testMappedSuperclass() {
+		EnhancerTestUtils.runEnhancerTestTask( MappedSuperclassTestTask.class );
 	}
 
 	@Test

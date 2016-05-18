@@ -613,9 +613,8 @@ public class ProcedureCallImpl<R>
 	@Override
 	public ProcedureCallImplementor<R> registerStoredProcedureParameter(String parameterName, Class type, ParameterMode mode) {
 		getProducer().checkOpen( true );
-
 		try {
-			registerParameter( (ParameterRegistrationImplementor) registerParameter( parameterName, type, mode ) );
+			registerParameter( parameterName, type, mode );
 		}
 		catch (HibernateException he) {
 			throw getExceptionConverter().convert( he );

@@ -167,6 +167,6 @@ include::{sourcedir}/ProfileFetchingTest.java[tags=fetching-strategies-dynamic-f
 ----
 ====
 
-Here the `Employee `is obtained by natural-id lookup and the Employee's `Project` data is fetched eagerly.
-If the `Employee `data is resolved from cache, the `Project` data is resolved on its own.
-However, if the `Employee` data is not resolved in cache, the `Employee `and `Project` data is resolved in one SQL query via join as we saw above.
+Here the `Employee` is obtained by natural-id lookup and the Employee's `Project` data is fetched eagerly.
+If the `Employee` data is resolved from cache, the `Project` data is resolved on its own.
+However, if the `Employee` data is not resolved in cache, the `Employee` and `Project` data is resolved in one SQL query via join as we saw above.

@@ -273,6 +273,15 @@ abstract class AbstractReadWriteEhcacheAccessStrategy<T extends EhcacheTransacti
 		public Lock lock(long timeout, UUID uuid, long lockId) {
 			return new Lock( timeout, uuid, lockId, version );
 		}
+
+		@Override
+		public String toString() {
+			return "Item{" +
+					"value=" + value +
+					", version=" + version +
+					", timestamp=" + timestamp +
+					'}';
+		}
 	}
 
 	/**

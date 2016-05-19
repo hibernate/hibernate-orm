@@ -144,6 +144,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 * @return List of aliases separated with comas or {@literal *}.
 	 */
 	protected String fillAliasInSelectClause(StringBuilder sb) {
+		final String separator = System.lineSeparator();
 		final List<String> aliases = new LinkedList<String>();
 		final int startPos = shallowIndexOfPattern( sb, SELECT_PATTERN, 0 );
 		int endPos = shallowIndexOfPattern( sb, FROM_PATTERN, startPos );
@@ -191,9 +192,9 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 			String alias = getAlias( expression );
 			if ( alias == null ) {
 				// Inserting alias. It is unlikely that we would have to add alias, but just in case.
-				endPos = shallowIndexOfPattern( sb, Pattern.compile("(\\s+" + FROM + ")", Pattern.CASE_INSENSITIVE), startPos );
 				alias = StringHelper.generateAlias( "page", unique );
-				sb.insert( endPos, " as " + alias );
+				final boolean endWithSeparator = sb.substring( endPos - separator.length() ).startsWith( separator );
+				sb.insert( endPos - ( endWithSeparator ? 2 : 1 ), " as " + alias );
 			}
 			aliases.add( alias );
 		}
@@ -208,7 +209,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 * @return {@code true} when expression selects multiple columns, {@code false} otherwise.
 	 */
 	private boolean selectsMultipleColumns(String expression) {
-		final String lastExpr = expression.trim().replaceFirst( "(?i)(.)*\\s", "" );
+		final String lastExpr = expression.trim().replaceFirst( "(?i)(.)*\\s", "" ).trim();
 		return "*".equals( lastExpr ) || lastExpr.endsWith( ".*" );
 	}
 

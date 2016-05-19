@@ -23,6 +23,13 @@ ext {
                         'jdbc.pass'  : '',
                         'jdbc.url'   : 'jdbc:hsqldb:mem:test'
                 ],
+                derby : [
+                        'db.dialect' : 'org.hibernate.dialect.DerbyTenSevenDialect',
+                        'jdbc.driver': 'org.apache.derby.jdbc.EmbeddedDriver',
+                        'jdbc.user'  : 'hibernate_orm_test',
+                        'jdbc.pass'  : 'hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:derby:target/tmp/derby/hibernate_orm_test;databaseName=hibernate_orm_test;create=true'
+                ],
                 pgsql : [
                         'db.dialect' : 'org.hibernate.dialect.PostgreSQL94Dialect',
                         'jdbc.driver': 'org.postgresql.Driver',

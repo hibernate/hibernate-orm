@@ -14,6 +14,7 @@ import javax.persistence.Embedded;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
@@ -83,6 +84,16 @@ public class PersistentAttributesEnhancer extends Enhancer {
 			}
 			// skip outer reference in inner classes
 			if ( "this$0".equals( ctField.getName() ) ) {
+				continue;
+			}
+			if ( enhancementContext.isPersistentField( ctField ) ) {
+				persistentFieldList.add( ctField );
+			}
+		}
+		// HHH-10646 Add fields inherited from @MappedSuperclass
+		// CtClass.getFields() does not return private fields, while CtClass.getDeclaredFields() does not return inherit
+		for ( CtField ctField : managedCtClass.getFields() ) {
+			if ( !ctField.getDeclaringClass().hasAnnotation( MappedSuperclass.class ) || Modifier.isStatic( ctField.getModifiers() ) ) {
 				continue;
 			}
 			if ( enhancementContext.isPersistentField( ctField ) ) {

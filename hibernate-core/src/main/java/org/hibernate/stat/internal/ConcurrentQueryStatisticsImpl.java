@@ -95,11 +95,13 @@ public class ConcurrentQueryStatisticsImpl extends CategorizedStatistics impleme
 		writeLock.lock();
 		try {
 			double avgExecutionTime = 0;
-			if (executionCount.get() > 0) {
-				avgExecutionTime = totalExecutionTime.get() / (double) executionCount.get();
+			if ( executionCount.get() > 0 ) {
+				avgExecutionTime = totalExecutionTime.get() / (double) executionCount
+						.get();
 			}
 			return avgExecutionTime;
-		} finally {
+		}
+		finally {
 			writeLock.unlock();
 		}
 	}

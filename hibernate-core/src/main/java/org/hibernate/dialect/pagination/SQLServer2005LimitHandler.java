@@ -191,8 +191,9 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 			String alias = getAlias( expression );
 			if ( alias == null ) {
 				// Inserting alias. It is unlikely that we would have to add alias, but just in case.
+				endPos = shallowIndexOfPattern( sb, Pattern.compile("(\\s+" + FROM + ")", Pattern.CASE_INSENSITIVE), startPos );
 				alias = StringHelper.generateAlias( "page", unique );
-				sb.insert( endPos - 1, " as " + alias );
+				sb.insert( endPos, " as " + alias );
 			}
 			aliases.add( alias );
 		}

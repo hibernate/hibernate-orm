@@ -7,15 +7,16 @@
 package org.hibernate.dialect;
 
 import java.util.Locale;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.RowSelection;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
@@ -74,7 +75,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-8507")
 	public void testGetLimitStringWithNewlineAfterColumnList() {
-		final String query = "select E.fieldA,E.fieldB" + System.lineSeparator() + "FROM Employee E WHERE E.firstName = :firstName";
+		final String query = "select E.fieldA,E.fieldB\r\nFROM Employee E WHERE E.firstName = :firstName";
 		assertEquals(
 				"WITH query AS (SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( " +
 						"select E.fieldA as page0_,E.fieldB as page1_" + System.lineSeparator() +

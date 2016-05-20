@@ -49,7 +49,7 @@ public class DefaultFlushEventListener extends AbstractFlushingEventListener imp
 			postPostFlush( source );
 
 			if ( source.getFactory().getStatistics().isStatisticsEnabled() ) {
-				source.getFactory().getStatisticsImplementor().flush();
+				source.getFactory().getStatistics().flush();
 			}
 		}
 	}

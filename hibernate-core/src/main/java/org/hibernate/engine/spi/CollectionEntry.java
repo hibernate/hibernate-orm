@@ -169,37 +169,43 @@ public final class CollectionEntry implements Serializable {
 			loadedKey = collection.getKey();
 		}
 
-		boolean nonMutableChange = collection.isDirty() &&
-				getLoadedPersister()!=null &&
-				!getLoadedPersister().isMutable();
-		if (nonMutableChange) {
+		boolean nonMutableChange = collection.isDirty()
+				&& getLoadedPersister() != null
+				&& !getLoadedPersister().isMutable();
+		if ( nonMutableChange ) {
 			throw new HibernateException(
 					"changed an immutable collection instance: " +
 					MessageHelper.collectionInfoString( getLoadedPersister().getRole(), getLoadedKey() )
-				);
+			);
 		}
 
-		dirty(collection);
+		dirty( collection );
 
 		if ( LOG.isDebugEnabled() && collection.isDirty() && getLoadedPersister() != null ) {
-			LOG.debugf( "Collection dirty: %s",
-					MessageHelper.collectionInfoString( getLoadedPersister().getRole(), getLoadedKey() ) );
+			LOG.debugf(
+					"Collection dirty: %s",
+					MessageHelper.collectionInfoString( getLoadedPersister().getRole(), getLoadedKey() )
+			);
 		}
 
-		setDoupdate(false);
-		setDoremove(false);
-		setDorecreate(false);
-		setReached(false);
-		setProcessed(false);
+		setReached( false );
+		setProcessed( false );
+
+		setDoupdate( false );
+		setDoremove( false );
+		setDorecreate( false );
 	}
 
 	public void postInitialize(PersistentCollection collection) throws HibernateException {
-		snapshot = getLoadedPersister().isMutable() ?
-				collection.getSnapshot( getLoadedPersister() ) :
-				null;
+		snapshot = getLoadedPersister().isMutable()
+				? collection.getSnapshot( getLoadedPersister() )
+				: null;
 		collection.setSnapshot(loadedKey, role, snapshot);
-		if (getLoadedPersister().getBatchSize() > 1) {
-			((AbstractPersistentCollection) collection).getSession().getPersistenceContext().getBatchFetchQueue().removeBatchLoadableCollection(this); 
+		if ( getLoadedPersister().getBatchSize() > 1 ) {
+			( (AbstractPersistentCollection) collection ).getSession()
+					.getPersistenceContext()
+					.getBatchFetchQueue()
+					.removeBatchLoadableCollection( this );
 		}
 	}
 
@@ -273,7 +279,7 @@ public final class CollectionEntry implements Serializable {
 	}
 
 	void afterDeserialize(SessionFactoryImplementor factory) {
-		loadedPersister = ( factory == null ? null : factory.getCollectionPersister(role) );
+		loadedPersister = ( factory == null ? null : factory.getCollectionPersister( role ) );
 	}
 
 	public boolean wasDereferenced() {

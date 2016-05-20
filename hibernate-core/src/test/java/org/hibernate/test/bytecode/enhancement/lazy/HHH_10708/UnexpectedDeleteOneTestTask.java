@@ -63,7 +63,7 @@ public class UnexpectedDeleteOneTestTask extends AbstractEnhancerTestTask {
 		Foo foo = s.get( Foo.class, fooId );
 
 		// accessing the collection results in an exception
-		foo.bar.size();
+		foo.bars.size();
 
 		s.flush();
 		s.getTransaction().commit();
@@ -88,8 +88,9 @@ public class UnexpectedDeleteOneTestTask extends AbstractEnhancerTestTask {
 		@Id	@GeneratedValue
 		int id;
 
-		@OneToMany(orphanRemoval = true, mappedBy = Bar.FOO, targetEntity = Bar.class) @Cascade(CascadeType.ALL)
-		Set<Bar> bar = new HashSet<>();
+		@OneToMany(orphanRemoval = true, mappedBy = Bar.FOO, targetEntity = Bar.class)
+		@Cascade(CascadeType.ALL)
+		Set<Bar> bars = new HashSet<>();
 	}
 
 }

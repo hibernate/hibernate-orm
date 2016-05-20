@@ -191,6 +191,10 @@ public class Index implements RelationalModel, Exportable, Serializable {
 		return columns.iterator();
 	}
 
+	public java.util.Map<Column, String> getColumnOrderMap() {
+		return Collections.unmodifiableMap( columnOrderMap );
+	}
+
 	public void addColumn(Column column) {
 		if ( !columns.contains( column ) ) {
 			columns.add( column );

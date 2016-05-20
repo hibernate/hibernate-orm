@@ -474,6 +474,7 @@ arguments
 
 castExpression
 	: selectExpr
+	| NULL { out("null"); }
 	;
 
 castTargetType

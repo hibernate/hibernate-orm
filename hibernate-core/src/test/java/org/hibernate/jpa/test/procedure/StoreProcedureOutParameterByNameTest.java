@@ -28,7 +28,6 @@ import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 
@@ -57,7 +56,6 @@ public class StoreProcedureOutParameterByNameTest extends BaseEntityManagerFunct
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-10756")
 	public void testNamedStoredProcedureExecution() {
 		EntityManager em = entityManagerFactory.createEntityManager();
 		em.getTransaction().begin();

@@ -928,6 +928,17 @@ public abstract class AbstractEntityPersister
 					session.getPersistenceContext().addCollectionHolder( collection );
 				}
 
+				// update the "state" of the entity's EntityEntry to over-write UNFETCHED_PROPERTY reference
+				// for the collection to the just loaded collection
+				final EntityEntry ownerEntry = session.getPersistenceContext().getEntry( entity );
+				if ( ownerEntry == null ) {
+					// not good
+					throw new AssertionFailure(
+							"Could not locate EntityEntry for the collection owner in the PersistenceContext"
+					);
+				}
+				ownerEntry.overwriteLoadedStateCollectionValue( fieldName, collection );
+
 				// EARLY EXIT!!!
 				return collection;
 			}

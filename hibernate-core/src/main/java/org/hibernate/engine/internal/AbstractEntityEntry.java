@@ -17,6 +17,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryExtraState;
@@ -330,6 +331,15 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			final int propertyIndex = ( (UniqueKeyLoadable) persister ).getPropertyIndex( propertyName );
 			return loadedState[propertyIndex];
 		}
+	}
+
+	@Override
+	public void overwriteLoadedStateCollectionValue(String propertyName, PersistentCollection collection) {
+		assert propertyName != null;
+		assert loadedState != null;
+
+		final int propertyIndex = ( (UniqueKeyLoadable) persister ).getPropertyIndex( propertyName );
+		loadedState[propertyIndex] = collection;
 	}
 
 	@Override

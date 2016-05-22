@@ -21,8 +21,11 @@ public class AuditId<T> extends AuditProperty<T> {
 	public static final String IDENTIFIER_PLACEHOLDER = "$$id$$";
 	private static final PropertyNameGetter IDENTIFIER_PROPERTY_GETTER = new EntityPropertyName( IDENTIFIER_PLACEHOLDER );
 
-	public AuditId() {
-		super( IDENTIFIER_PROPERTY_GETTER );
+	private final String alias;
+
+	public AuditId(String alias) {
+		super( alias, IDENTIFIER_PROPERTY_GETTER );
+		this.alias = alias;
 	}
 
 	/**
@@ -30,7 +33,7 @@ public class AuditId<T> extends AuditProperty<T> {
 	 */
 	@Override
 	public AuditCriterion eq(Object id) {
-		return new IdentifierEqAuditExpression( id, true );
+		return new IdentifierEqAuditExpression( alias, id, true );
 	}
 
 	/**
@@ -38,7 +41,7 @@ public class AuditId<T> extends AuditProperty<T> {
 	 */
 	@Override
 	public AuditCriterion ne(Object id) {
-		return new IdentifierEqAuditExpression( id, false );
+		return new IdentifierEqAuditExpression( alias, id, false );
 	}
 
 	// Projections

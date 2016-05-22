@@ -6,6 +6,8 @@
  */
 package org.hibernate.envers.query.criteria;
 
+import java.util.Map;
+
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.Parameters;
@@ -18,8 +20,8 @@ public interface AuditCriterion {
 	void addToQuery(
 			EnversService enversService,
 			AuditReaderImplementor versionsReader,
-			String entityName,
-			String alias,
+			Map<String, String> aliasToEntityNameMap,
+			String baseAlias,
 			QueryBuilder qb,
 			Parameters parameters);
 }

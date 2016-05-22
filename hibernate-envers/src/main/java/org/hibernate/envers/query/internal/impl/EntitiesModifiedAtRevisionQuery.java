@@ -45,7 +45,6 @@ public class EntitiesModifiedAtRevisionQuery extends AbstractAuditQuery {
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
 	public List list() {
 		/*
          * The query that we need to create:
@@ -63,7 +62,7 @@ public class EntitiesModifiedAtRevisionQuery extends AbstractAuditQuery {
 			criterion.addToQuery(
 					enversService,
 					versionsReader,
-					entityName,
+					aliasToEntityNameMap,
 					QueryConstants.REFERENCED_ENTITY_ALIAS,
 					qb,
 					qb.getRootParameters()

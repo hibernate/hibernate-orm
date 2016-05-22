@@ -12,25 +12,26 @@ import org.hibernate.envers.internal.entities.RelationDescription;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
-import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.envers.query.internal.property.PropertyNameGetter;
 
 /**
- * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
+ * @since 5.2
  */
-public class RelatedAuditExpression implements AuditCriterion {
+public class RelatedAuditEqualityExpression extends AbstractAtomicExpression {
 	private final PropertyNameGetter propertyNameGetter;
 	private final Object id;
 	private final boolean equals;
 
-	public RelatedAuditExpression(PropertyNameGetter propertyNameGetter, Object id, boolean equals) {
+	public RelatedAuditEqualityExpression(String alias, PropertyNameGetter propertyNameGetter, Object id, boolean equals) {
+		super( alias );
 		this.propertyNameGetter = propertyNameGetter;
 		this.id = id;
 		this.equals = equals;
 	}
 
 	@Override
-	public void addToQuery(
+	protected void addToQuery(
 			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			String entityName,
@@ -52,8 +53,6 @@ public class RelatedAuditExpression implements AuditCriterion {
 							"a relation to another property."
 			);
 		}
-		else {
-			relatedEntity.getIdMapper().addIdEqualsToQuery( parameters, id, null, equals );
-		}
+		relatedEntity.getIdMapper().addIdEqualsToQuery( parameters, id, alias, null, equals );
 	}
 }

@@ -62,7 +62,7 @@ If the entity is already associated with the current running Session, that refer
 If the entity is not loaded in the current Session and the entity supports proxy generation, an uninitialized proxy is generated and returned, otherwise the entity is loaded from the database and returned.
 
 `NaturalIdLoadAccess` allows loading an entity by natural id and at the same time apply a pessimistic lock.
-For additional details on locking, see the <<chapters/locking/locking.adoc#locking,Locking>> chapter.
+For additional details on locking, see the <<chapters/locking/Locking.adoc#locking,Locking>> chapter.
 
 We will discuss the last method available on NaturalIdLoadAccess ( `setSynchronizationEnabled()` ) in <<naturalid-mutability-caching>>.
 

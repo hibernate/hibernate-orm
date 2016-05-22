@@ -119,7 +119,7 @@ This is a Hibernate specific feature.
 Users concerned with JPA provider portability should instead prefer explicit column naming with <<embeddable-multiple-jpa,`@AttributeOverride`>>.
 ====
 
-Hibernate naming strategies are covered in detail in <<naming.adoc#naming,Naming>>.
+Hibernate naming strategies are covered in detail in <<chapters/domain/naming.adoc#naming,Naming>>.
 However, for the purposes of this discussion, Hibernate has the capability to interpret implicit column names in a way that is safe for use with multiple embeddable types.
 
 .Enabling embeddable type safe implicit naming
@@ -144,19 +144,19 @@ You could even develop your own to do special implicit naming.
 ==== Collections of embeddable types
 
 Collections of embeddable types are specifically value collections (as embeddable types are a value type).
-Value collections are covered in detail in <<collection.adoc#collections-value,Collections of value types>>.
+Value collections are covered in detail in <<chapters/domain/collections.adoc#collections-value,Collections of value types>>.
 
 [[embeddable-mapkey]]
 ==== Embeddable types as Map key
 
 Embeddable types can also be used as `Map` keys.
-This topic is converted in detail in <<collection.adoc#collections-map,Map - key>>.
+This topic is converted in detail in <<chapters/domain/collections.adoc#collections-map,Map - key>>.
 
 [[embeddable-identifier]]
 ==== Embeddable types as identifiers
 
 Embeddable types can also be used as entity type identifiers.
-This usage is covered in detail in <chapters/domain/identifiers.adoc#identifiers-composite,Composite identifiers>>.
+This usage is covered in detail in <<chapters/domain/identifiers.adoc#identifiers-composite,Composite identifiers>>.
 
 [IMPORTANT]
 ====

@@ -143,13 +143,13 @@ As long as the type is not primitive, Hibernate takes this to mean that the unde
 `fetch` - FetchType (defaults to EAGER):: Defines whether this attribute should be fetched eagerly or lazily.
 JPA says that EAGER is a requirement to the provider (Hibernate) that the value should be fetched when the owner is fetched, while LAZY is merely a hint that the value be fetched when the attribute is accessed.
 Hibernate ignores this setting for basic types unless you are using bytecode enhancement.
-See the <chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,BytecodeEnhancement>> for additional information on fetching and on bytecode enhancement.
+See the <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,BytecodeEnhancement>> for additional information on fetching and on bytecode enhancement.
 
 [[basic-column-annotation]]
 ==== The `@Column` annotation
 
 JPA defines rules for implicitly determining the name of tables and columns.
-For a detailed discussion of implicit naming see <<naming.adoc#naming,Naming>>.
+For a detailed discussion of implicit naming see <<chapters/domain/naming.adoc#naming,Naming>>.
 
 For basic type attributes, the implicit naming rule is that the column name is the same as the attribute name.
 If that implicit naming rule does not meet your requirements, you can explicitly tell Hibernate (and other providers) the column name to use.

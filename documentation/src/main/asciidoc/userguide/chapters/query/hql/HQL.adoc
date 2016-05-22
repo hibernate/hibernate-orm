@@ -962,7 +962,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-aggregate-functions-example]
 ----
 ====
 
-Aggregations often appear with grouping. For information on grouping see <<hql-grouping>>.
+Aggregations often appear with grouping. For information on grouping see <<hql-group-by>>.
 
 [[hql-exp-functions]]
 === Scalar functions
@@ -1126,7 +1126,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-bit-length-function-example]
 CAST::
 	Performs a SQL cast.
 	The cast target should name the Hibernate mapping type to use.
-	See the <<chapters/domain/basic_types.adoc#[basic-provided,data types>> chapter on for more information.
+	See the <<chapters/domain/basic_types.adoc#basic-provided,data types>> chapter on for more information.
 
 ====
 [source, JAVA, indent=0]

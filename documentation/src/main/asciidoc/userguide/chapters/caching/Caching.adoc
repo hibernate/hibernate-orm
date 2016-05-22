@@ -533,11 +533,12 @@ Traditionally the `transactional` and `read-only` strategy was supported on _tra
 
 * _non-transactional invalidation_ caches are supported as well with `read-write` strategy. The actual setting of cache concurrency mode (`read-write` vs. `transactional`) is not honored, the appropriate strategy is selected based on the cache configuration (_non-transactional_ vs. _transactional_).
 * `read-write` mode is supported on _non-transactional distributed/replicated_ caches, however, eviction should not be used in this configuration. Use of eviction can lead to consistency issues. Expiration (with reasonably long max-idle times) can be used.
-* `nonstrict-read-write` mode is supported on _non-transactional distributed/replicated_ caches, but the eviction should be turned off as well. In addition to that, the entities must use versioning. This mode mildly relaxes the consistency - between DB commit and end of transaction commit a stale read (see <<cache-provider-infinispan-stale-read-example,example>>) may occur in another transaction. However this strategy uses less RPCs and can be more performant than the other ones.
+* `nonstrict-read-write` mode is supported on _non-transactional distributed/replicated_ caches, but the eviction should be turned off as well. In addition to that, the entities must use versioning. This mode mildly relaxes the consistency - between DB commit and end of transaction commit a stale read (see <<caching-provider-infinispan-stale-read-example,example>>) may occur in another transaction. However this strategy uses less RPCs and can be more performant than the other ones.
 * `read-only` mode is supported on both _transactional_ and _non-transactional_ _invalidation_ caches and _non-transactional distributed/replicated_ caches, but use of this mode currently does not bring any performance gains.
 
-The available combinations are summarized in table below
-[[cache-provider-infinispan-compatibility-table]]
+The available combinations are summarized in table below:
+
+[[caching-provider-infinispan-compatibility-table]]
 .Cache concurrency strategy/cache mode compatibility table
 [options="header"]
 |===

@@ -201,7 +201,7 @@ load::
 	Will return the persistent data associated with the given identifier value or null if that identifier does not exist.
 
 Each of these two methods define an overloading variant accepting a `org.hibernate.LockOptions` argument.
-Locking is discussed in a separate <<chapters/locking/locking.adoc#locking,chapter>>.
+Locking is discussed in a separate <<chapters/locking/Locking.adoc#locking,chapter>>.
 
 [[pc-managed-state]]
 === Modifying managed/persistent state

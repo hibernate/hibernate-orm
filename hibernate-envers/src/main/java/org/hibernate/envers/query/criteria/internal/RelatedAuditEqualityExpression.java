@@ -19,19 +19,20 @@ import org.hibernate.envers.query.internal.property.PropertyNameGetter;
  * @author Chris Cranford
  * @since 5.2
  */
-public class RelatedAuditEqualityExpression implements AuditCriterion {
+public class RelatedAuditEqualityExpression extends AbstractAtomicExpression {
 	private final PropertyNameGetter propertyNameGetter;
 	private final Object id;
 	private final boolean equals;
 
-	public RelatedAuditEqualityExpression(PropertyNameGetter propertyNameGetter, Object id, boolean equals) {
+	public RelatedAuditEqualityExpression(String alias, PropertyNameGetter propertyNameGetter, Object id, boolean equals) {
+		super( alias );
 		this.propertyNameGetter = propertyNameGetter;
 		this.id = id;
 		this.equals = equals;
 	}
 
 	@Override
-	public void addToQuery(
+	protected void addToQuery(
 			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			String entityName,
@@ -51,6 +52,6 @@ public class RelatedAuditEqualityExpression implements AuditCriterion {
 					"This criterion can only be used on a property that is a relation to another property."
 			);
 		}
-		relatedEntity.getIdMapper().addIdEqualsToQuery( parameters, id, null, equals );
+		relatedEntity.getIdMapper().addIdEqualsToQuery( parameters, id, alias, null, equals );
 	}
 }

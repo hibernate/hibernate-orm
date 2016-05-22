@@ -8,7 +8,6 @@ package org.hibernate.envers.query.projection.internal;
 
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
-import org.hibernate.envers.internal.tools.Triple;
 import org.hibernate.envers.query.internal.property.PropertyNameGetter;
 import org.hibernate.envers.query.projection.AuditProjection;
 
@@ -16,21 +15,23 @@ import org.hibernate.envers.query.projection.AuditProjection;
  * @author Adam Warski (adam at warski dot org)
  */
 public class PropertyAuditProjection implements AuditProjection {
+	private final String alias;
 	private final PropertyNameGetter propertyNameGetter;
 	private final String function;
 	private final boolean distinct;
 
-	public PropertyAuditProjection(PropertyNameGetter propertyNameGetter, String function, boolean distinct) {
+	public PropertyAuditProjection(String alias, PropertyNameGetter propertyNameGetter, String function, boolean distinct) {
+		this.alias = alias;
 		this.propertyNameGetter = propertyNameGetter;
 		this.function = function;
 		this.distinct = distinct;
 	}
 
 	@Override
-	public Triple<String, String, Boolean> getData(EnversService enversService) {
+	public ProjectionData getData(EnversService enversService) {
 		String propertyName = propertyNameGetter.get( enversService );
-
-		return Triple.make( function, propertyName, distinct );
+		
+		return new ProjectionData( function, alias, propertyName, distinct );
 	}
 
 	@Override

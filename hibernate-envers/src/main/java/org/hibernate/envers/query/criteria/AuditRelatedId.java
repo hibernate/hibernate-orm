@@ -17,9 +17,11 @@ import org.hibernate.envers.query.internal.property.PropertyNameGetter;
  * @author Chris Cranford
  */
 public class AuditRelatedId {
+	private final String alias;
 	private final PropertyNameGetter propertyNameGetter;
 
-	public AuditRelatedId(PropertyNameGetter propertyNameGetter) {
+	public AuditRelatedId(String alias, PropertyNameGetter propertyNameGetter) {
+		this.alias = alias;
 		this.propertyNameGetter = propertyNameGetter;
 	}
 
@@ -30,7 +32,7 @@ public class AuditRelatedId {
 	 * @return the criterion.
 	 */
 	public AuditCriterion eq(Object id) {
-		return new RelatedAuditEqualityExpression( propertyNameGetter, id, true );
+		return new RelatedAuditEqualityExpression( alias, propertyNameGetter, id, true );
 	}
 
 	/**
@@ -40,7 +42,7 @@ public class AuditRelatedId {
 	 * @return the criterion
 	 */
 	public AuditCriterion ne(Object id) {
-		return new RelatedAuditEqualityExpression( propertyNameGetter, id, false );
+		return new RelatedAuditEqualityExpression( alias, propertyNameGetter, id, false );
 	}
 
 	/**
@@ -50,6 +52,6 @@ public class AuditRelatedId {
 *      @return the criterion
 	 */
 	public AuditCriterion in(Object[] values) {
-		return new RelatedAuditInExpression( propertyNameGetter, values );
+		return new RelatedAuditInExpression( alias, propertyNameGetter, values );
 	}
 }

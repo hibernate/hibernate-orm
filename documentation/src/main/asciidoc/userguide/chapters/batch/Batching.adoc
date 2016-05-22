@@ -25,7 +25,7 @@ The following settings control this behavior.
 	It is almost never a good idea to switch from Hibernate's default implementation.
 	But if you wish to, this setting would name the `org.hibernate.engine.jdbc.batch.spi.BatchBuilder` implementation to use.
 
-`hibernate.order_update`::
+`hibernate.order_updates`::
 	Forces Hibernate to order SQL updates by the entity type and the primary key value of the items being updated.
 	This allows for more batching to be used. It will also result in fewer transaction deadlocks in highly concurrent systems.
 	Comes with a performance hit, so benchmark before and after to see if this actually helps or hurts your application.

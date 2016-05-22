@@ -7,7 +7,6 @@
 package org.hibernate.envers.query.order;
 
 import org.hibernate.envers.boot.internal.EnversService;
-import org.hibernate.envers.tools.Pair;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -16,7 +15,34 @@ public interface AuditOrder {
 	/**
 	 * @param enversService The EnversService
 	 *
-	 * @return A pair: (property name, ascending?).
+	 * @return the order data.
 	 */
-	Pair<String, Boolean> getData(EnversService enversService);
+	OrderData getData(EnversService enversService);
+
+	class OrderData {
+
+		private final String alias;
+		private final String propertyName;
+		private final boolean ascending;
+
+		public OrderData(String alias, String propertyName, boolean ascending) {
+			this.alias = alias;
+			this.propertyName = propertyName;
+			this.ascending = ascending;
+		}
+
+		public String getAlias(String baseAlias) {
+			return alias == null ? baseAlias : alias;
+		}
+
+		public String getPropertyName() {
+			return propertyName;
+		}
+
+		public boolean isAscending() {
+			return ascending;
+		}
+
+	}
+
 }

@@ -6,6 +6,8 @@
  */
 package org.hibernate.envers.query;
 
+import javax.persistence.criteria.JoinType;
+
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
@@ -19,6 +21,13 @@ import org.hibernate.envers.query.projection.AuditProjection;
  */
 @Incubating
 public interface AuditAssociationQuery<Q extends AuditQuery> extends AuditQuery {
+
+	@Override
+	AuditAssociationQuery<? extends AuditAssociationQuery<Q>> traverseRelation(String associationName, JoinType joinType);
+
+	@Override
+	AuditAssociationQuery<? extends AuditAssociationQuery<Q>> traverseRelation(String associationName, JoinType joinType,
+			String alias);
 
 	@Override
 	AuditAssociationQuery<Q> add(AuditCriterion criterion);

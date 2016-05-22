@@ -107,7 +107,7 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
 			criterion.addToQuery(
 					enversService,
 					versionsReader,
-					entityName,
+					aliasToEntityNameMap,
 					QueryConstants.REFERENCED_ENTITY_ALIAS,
 					qb,
 					qb.getRootParameters()

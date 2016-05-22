@@ -10,24 +10,25 @@ import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
-import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.envers.query.internal.property.PropertyNameGetter;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class BetweenAuditExpression implements AuditCriterion {
+public class BetweenAuditExpression extends AbstractAtomicExpression {
 	private PropertyNameGetter propertyNameGetter;
 	private Object lo;
 	private Object hi;
 
-	public BetweenAuditExpression(PropertyNameGetter propertyNameGetter, Object lo, Object hi) {
+	public BetweenAuditExpression(String alias, PropertyNameGetter propertyNameGetter, Object lo, Object hi) {
+		super( alias );
 		this.propertyNameGetter = propertyNameGetter;
 		this.lo = lo;
 		this.hi = hi;
 	}
 
-	public void addToQuery(
+	@Override
+	protected void addToQuery(
 			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			String entityName,
@@ -43,7 +44,7 @@ public class BetweenAuditExpression implements AuditCriterion {
 		CriteriaTools.checkPropertyNotARelation( enversService, entityName, propertyName );
 
 		Parameters subParams = parameters.addSubParameters( Parameters.AND );
-		subParams.addWhereWithParam( propertyName, ">=", lo );
-		subParams.addWhereWithParam( propertyName, "<=", hi );
+		subParams.addWhereWithParam( alias, propertyName, ">=", lo );
+		subParams.addWhereWithParam( alias, propertyName, "<=", hi );
 	}
 }

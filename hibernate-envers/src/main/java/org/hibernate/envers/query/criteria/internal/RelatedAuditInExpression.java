@@ -22,17 +22,20 @@ import org.hibernate.envers.query.internal.property.PropertyNameGetter;
  * @author Chris Cranford
  * @since 5.2
  */
-public class RelatedAuditInExpression implements AuditCriterion {
+public class RelatedAuditInExpression extends AbstractAtomicExpression {
 
 	private final PropertyNameGetter propertyNameGetter;
 	private final Object[] ids;
 
-	public RelatedAuditInExpression(PropertyNameGetter propertyNameGetter, Object[] ids) {
+	public RelatedAuditInExpression(String alias, PropertyNameGetter propertyNameGetter, Object[] ids) {
+		super( alias );
 		this.propertyNameGetter = propertyNameGetter;
 		this.ids = ids;
 	}
 
-	public void addToQuery(EnversService enversService,
+	@Override
+	protected void addToQuery(
+			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			String entityName,
 			String alias,
@@ -56,7 +59,7 @@ public class RelatedAuditInExpression implements AuditCriterion {
 		List<QueryParameterData> qpdList = relatedEntity.getIdMapper().mapToQueryParametersFromId( propertyName );
 		if ( qpdList != null ) {
 			QueryParameterData qpd = qpdList.iterator().next();
-			parameters.addWhereWithParams( qpd.getQueryParameterName(), "in (", ids, ")" );
+			parameters.addWhereWithParams( alias, qpd.getQueryParameterName(), "in (", ids, ")" );
 		}
 	}
 }

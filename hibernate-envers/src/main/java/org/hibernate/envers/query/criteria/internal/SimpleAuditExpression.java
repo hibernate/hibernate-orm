@@ -13,7 +13,6 @@ import org.hibernate.envers.internal.entities.RelationDescription;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
-import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.envers.query.internal.property.PropertyNameGetter;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.ComponentType;
@@ -22,18 +21,20 @@ import org.hibernate.type.Type;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class SimpleAuditExpression implements AuditCriterion {
+public class SimpleAuditExpression extends AbstractAtomicExpression {
 	private PropertyNameGetter propertyNameGetter;
 	private Object value;
 	private String op;
 
-	public SimpleAuditExpression(PropertyNameGetter propertyNameGetter, Object value, String op) {
+	public SimpleAuditExpression(String alias, PropertyNameGetter propertyNameGetter, Object value, String op) {
+		super( alias );
 		this.propertyNameGetter = propertyNameGetter;
 		this.value = value;
 		this.op = op;
 	}
 
-	public void addToQuery(
+	@Override
+	protected void addToQuery(
 			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			String entityName,
@@ -64,6 +65,7 @@ public class SimpleAuditExpression implements AuditCriterion {
 				for ( int i = 0; i < componentType.getPropertyNames().length; i++ ) {
 					final Object componentValue = componentType.getPropertyValue( value, i, session );
 					parameters.addWhereWithParam(
+							alias,
 							propertyName + "_" + componentType.getPropertyNames()[ i ],
 							op,
 							componentValue
@@ -71,7 +73,7 @@ public class SimpleAuditExpression implements AuditCriterion {
 				}
 			}
 			else {
-				parameters.addWhereWithParam( propertyName, op, value );
+				parameters.addWhereWithParam( alias, propertyName, op, value );
 			}
 		}
 		else {
@@ -82,7 +84,7 @@ public class SimpleAuditExpression implements AuditCriterion {
 				);
 			}
 			Object id = relatedEntity.getIdMapper().mapToIdFromEntity( value );
-			relatedEntity.getIdMapper().addIdEqualsToQuery( parameters, id, null, "=".equals( op ) );
+			relatedEntity.getIdMapper().addIdEqualsToQuery( parameters, id, alias, null, "=".equals( op ) );
 		}
 	}
 

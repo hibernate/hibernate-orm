@@ -77,17 +77,25 @@ public abstract class AbstractIdMapper implements IdMapper {
 	}
 
 	@Override
-	public void addIdEqualsToQuery(Parameters parameters, Object id, String prefix, boolean equals) {
+	public void addIdEqualsToQuery(Parameters parameters, Object id, String alias, String prefix, boolean equals) {
 		final List<QueryParameterData> paramDatas = mapToQueryParametersFromId( id );
 
 		final Parameters parametersToUse = getParametersToUse( parameters, paramDatas );
 
 		for ( QueryParameterData paramData : paramDatas ) {
 			if ( paramData.getValue() == null ) {
-				handleNullValue( parametersToUse, paramData.getProperty( prefix ), equals );
+				handleNullValue( parametersToUse, alias, paramData.getProperty( prefix ), equals );
+			}
+			else if ( alias == null ) {
+				parametersToUse.addWhereWithParam(
+						paramData.getProperty( prefix ),
+						equals ? "=" : "<>",
+						paramData.getValue()
+				);
 			}
 			else {
 				parametersToUse.addWhereWithParam(
+						alias,
 						paramData.getProperty( prefix ),
 						equals ? "=" : "<>",
 						paramData.getValue()
@@ -111,12 +119,12 @@ public abstract class AbstractIdMapper implements IdMapper {
 		}
 	}
 
-	private void handleNullValue(Parameters parameters, String propertyName, boolean equals) {
+	private void handleNullValue(Parameters parameters, String alias, String propertyName, boolean equals) {
 		if ( equals ) {
-			parameters.addNullRestriction( propertyName, equals );
+			parameters.addNullRestriction( alias, propertyName );
 		}
 		else {
-			parameters.addNotNullRestriction( propertyName, equals );
+			parameters.addNotNullRestriction( alias, propertyName );
 		}
 	}
 }

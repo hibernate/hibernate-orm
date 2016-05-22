@@ -76,7 +76,7 @@ the implementation using the `hibernate.implicit_naming_strategy` configuration 
 
 Secondly, applications and integrations can leverage `org.hibernate.boot.MetadataBuilder#applyImplicitNamingStrategy`
 to specify the ImplicitNamingStrategy to use.  See
-<<chapters/bootstrap/Bootstrap.adoc#Bootstrap,Bootstrap>> for additional details on bootstrapping.
+<<chapters/bootstrap/Bootstrap.adoc#bootstrap,Bootstrap>> for additional details on bootstrapping.
 
 
 
@@ -123,7 +123,7 @@ the implementation using the `hibernate.physical_naming_strategy` configuration 
 * FQN of a class that implements the `org.hibernate.boot.model.naming.PhysicalNamingStrategy` contract
 
 Secondly, applications and integrations can leverage `org.hibernate.boot.MetadataBuilder#applyPhysicalNamingStrategy`.
-See <<chapters/bootstrap/Bootstrap.adoc#Bootstrap,Bootstrap>> for additional details on bootstrapping.
+See <<chapters/bootstrap/Bootstrap.adoc#bootstrap,Bootstrap>> for additional details on bootstrapping.
 
 
 

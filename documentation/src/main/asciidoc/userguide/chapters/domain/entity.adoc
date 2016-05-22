@@ -52,7 +52,7 @@ For the very same reason, you should also avoid declaring persistent attribute g
 ====
 Starting in 5.0 Hibernate offers a more robust version of bytecode enhancement as another means for handling lazy loading.
 Hibernate had some bytecode re-writing capabilities prior to 5.0 but they were very rudimentary.
-See the <chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,BytecodeEnhancement>> for additional information on fetching and on bytecode enhancement.
+See the <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,BytecodeEnhancement>> for additional information on fetching and on bytecode enhancement.
 ====
 
 [[entity-pojo-constructor]]
@@ -257,7 +257,7 @@ include::{sourcedir}/entity/listing9.java[]
 
 As you can see the question of equals/hashCode is not trivial, nor is there a one-size-fits-all solution.
 
-For details on mapping the identifier, see the <<chapters/domain/identifiers.adoc#identiifers,Identifiers>> chapter.
+For details on mapping the identifier, see the <<chapters/domain/identifiers.adoc#identifiers,Identifiers>> chapter.
 
 [[entity-pojo-optlock]]
 ==== Mapping optimistic locking

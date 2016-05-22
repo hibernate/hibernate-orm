@@ -52,7 +52,7 @@ Value types are further classified into three sub-categories:
 
 Basic types:: in mapping the `Contact` table, all attributes except for name would be basic types. Basic types are discussed in detail in <<chapters/domain/basic_types.adoc#basic,_Basic Types_>>
 Embeddable types:: the name attribute is an example of an embeddable type, which is discussed in details in <<chapters/domain/embeddables.adoc#embeddables,_Embeddable Types_>>
-Collection types:: although not featured in the aforementioned example, collection types are also a distinct category among value types. Collection types are further discussed in <<chapters/domain/collection.adoc#collections,_Collections_>>
+Collection types:: although not featured in the aforementioned example, collection types are also a distinct category among value types. Collection types are further discussed in <<chapters/domain/collections.adoc#collections,_Collections_>>
 
 [[categorization-entity]]
 ==== Entity types

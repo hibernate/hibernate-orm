@@ -8,7 +8,6 @@ package org.hibernate.envers.query.projection;
 
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
-import org.hibernate.envers.internal.tools.Triple;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -17,9 +16,9 @@ public interface AuditProjection {
 	/**
 	 * @param enversService The EnversService
 	 *
-	 * @return A triple: (function name - possibly null, property name, add distinct?).
+	 * @return the projection data
 	 */
-	Triple<String, String, Boolean> getData(EnversService enversService);
+	ProjectionData getData(EnversService enversService);
 
 	/**
 	 * @param enversService the Envers service
@@ -36,4 +35,36 @@ public interface AuditProjection {
 			final Number revision,
 			final Object value
 	);
+
+	class ProjectionData {
+
+		private final String function;
+		private final String alias;
+		private final String propertyName;
+		private final boolean distinct;
+
+		public ProjectionData(String function, String alias, String propertyName, boolean distinct) {
+			this.function = function;
+			this.alias = alias;
+			this.propertyName = propertyName;
+			this.distinct = distinct;
+		}
+
+		public String getFunction() {
+			return function;
+		}
+
+		public String getAlias(String baseAlias) {
+			return alias == null ? baseAlias : alias;
+		}
+
+		public String getPropertyName() {
+			return propertyName;
+		}
+
+		public boolean isDistinct() {
+			return distinct;
+		}
+
+	}
 }

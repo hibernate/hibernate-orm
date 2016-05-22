@@ -9,22 +9,23 @@ package org.hibernate.envers.query.order.internal;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.query.internal.property.PropertyNameGetter;
 import org.hibernate.envers.query.order.AuditOrder;
-import org.hibernate.envers.tools.Pair;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 public class PropertyAuditOrder implements AuditOrder {
+	private final String alias;
 	private final PropertyNameGetter propertyNameGetter;
 	private final boolean asc;
 
-	public PropertyAuditOrder(PropertyNameGetter propertyNameGetter, boolean asc) {
+	public PropertyAuditOrder(String alias, PropertyNameGetter propertyNameGetter, boolean asc) {
+		this.alias = alias;
 		this.propertyNameGetter = propertyNameGetter;
 		this.asc = asc;
 	}
 
 	@Override
-	public Pair<String, Boolean> getData(EnversService enversService) {
-		return Pair.make( propertyNameGetter.get( enversService ), asc );
+	public OrderData getData(EnversService enversService) {
+		return new OrderData( alias, propertyNameGetter.get( enversService ), asc );
 	}
 }

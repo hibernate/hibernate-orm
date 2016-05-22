@@ -9,7 +9,10 @@ package org.hibernate.envers.internal.tools.query;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+
+import javax.persistence.criteria.JoinType;
 
 import org.hibernate.Session;
 import org.hibernate.envers.RevisionType;
@@ -46,7 +49,7 @@ public class QueryBuilder {
 	/**
 	 * A list of triples (from entity name, alias name, whether to select the entity).
 	 */
-	private final List<Triple<String, String, Boolean>> froms;
+	private final List<JoinParameter> froms;
 	/**
 	 * A list of triples (alias, property name, order ascending?).
 	 */
@@ -114,19 +117,19 @@ public class QueryBuilder {
 	 * @param select whether the entity should be selected
 	 */
 	public void addFrom(String entityName, String alias, boolean select) {
-		froms.add( Triple.make( entityName, alias, select ) );
+		CrossJoinParameter joinParameter = new CrossJoinParameter( entityName, alias, select );
+		froms.add( joinParameter );
+	}
+
+	public Parameters addJoin(JoinType joinType, String entityName, String alias, boolean select) {
+		Parameters joinConditionParameters = new Parameters( alias, Parameters.AND, paramCounter );
+		InnerOuterJoinParameter joinParameter = new InnerOuterJoinParameter( joinType, entityName, alias, select, joinConditionParameters );
+		froms.add( joinParameter );
+		return joinConditionParameters;
 	}
 
 	public String generateAlias() {
 		return "_e" + aliasCounter.getAndIncrease();
-	}
-
-	/**
-	 * @return A sub-query builder for the same entity (with an auto-generated alias). The sub-query can
-	 *         be later used as a value of a parameter.
-	 */
-	public QueryBuilder newSubQueryBuilder() {
-		return newSubQueryBuilder( entityName, generateAlias() );
 	}
 
 	/**
@@ -185,10 +188,14 @@ public class QueryBuilder {
 			StringTools.append( sb, getSelectAliasList().iterator(), ", " );
 		}
 		sb.append( " from " );
-		// all from entities with aliases, separated with commas
-		StringTools.append( sb, getFromList().iterator(), ", " );
-		// where part - rootParameters
+		// all from entities with aliases
 		boolean first = true;
+		for (final JoinParameter joinParameter : froms) {
+			joinParameter.appendJoin( first, sb, queryParamValues );
+			first = false;
+		}
+		// where part - rootParameters
+		first = true;
 		for (final Parameters params : parameters) {
 			if (!params.isEmpty()) {
 				if (first) {
@@ -210,9 +217,9 @@ public class QueryBuilder {
 
 	private List<String> getSelectAliasList() {
 		final List<String> aliasList = new ArrayList<>();
-		for ( Triple<String, String, Boolean> from : froms ) {
-			if ( from.getThird() ) {
-				aliasList.add( from.getSecond() );
+		for ( JoinParameter from : froms ) {
+			if ( from.isSelect() ) {
+				aliasList.add( from.getAlias() );
 			}
 		}
 
@@ -221,15 +228,6 @@ public class QueryBuilder {
 
 	public String getRootAlias() {
 		return alias;
-	}
-
-	private List<String> getFromList() {
-		final List<String> fromList = new ArrayList<>();
-		for ( Triple<String, String, Boolean> from : froms ) {
-			fromList.add( from.getFirst() + " " + from.getSecond() );
-		}
-
-		return fromList;
 	}
 
 	private List<String> getOrderList() {
@@ -263,4 +261,73 @@ public class QueryBuilder {
 		}
 		return query;
 	}
+
+	private abstract static class JoinParameter {
+
+		private final String alias;
+		private final boolean select;
+
+		protected JoinParameter(String alias, boolean select) {
+			this.alias = alias;
+			this.select = select;
+		}
+
+		public String getAlias() {
+			return alias;
+		}
+
+		public boolean isSelect() {
+			return select;
+		}
+
+		public abstract void appendJoin(boolean firstFromElement, StringBuilder builder, Map<String, Object> queryParamValues);
+
+	}
+
+	private static class CrossJoinParameter extends JoinParameter {
+
+		private final String entityName;
+
+		public CrossJoinParameter(String entityName, String alias, boolean select) {
+			super( alias, select );
+			this.entityName = entityName;
+		}
+
+		@Override
+		public void appendJoin(final boolean firstFromElement, final StringBuilder builder, final Map<String, Object> queryParamValues) {
+			if (!firstFromElement) {
+				builder.append( ", " );
+			}
+			builder.append( entityName ).append( ' ' ).append( getAlias() );
+		}
+
+	}
+
+	private static class InnerOuterJoinParameter extends JoinParameter {
+
+		private final JoinType joinType;
+		private final String entityName;
+		private final Parameters joinConditionParameters;
+
+		public InnerOuterJoinParameter(JoinType joinType, String entityName, String alias, boolean select, Parameters joinConditionParameters) {
+			super(alias, select);
+			this.joinType = joinType;
+			this.entityName = entityName;
+			this.joinConditionParameters = joinConditionParameters;
+		}
+
+		@Override
+		public void appendJoin(boolean firstFromElement, StringBuilder builder, Map<String, Object> queryParamValues) {
+			if (firstFromElement) {
+				throw new IllegalArgumentException( "An inner/outer join cannot come as first 'from element'" );
+			}
+			builder.append( ' ' ).append( joinType.name()
+					.toLowerCase( Locale.US ) ).append( " join " )
+					.append( entityName ).append( ' ' )
+					.append( getAlias() ).append( " on " );
+			joinConditionParameters.build( builder, queryParamValues );
+		}
+
+	}
+
 }

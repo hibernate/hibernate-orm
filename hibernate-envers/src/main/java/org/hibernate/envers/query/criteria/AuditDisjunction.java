@@ -8,6 +8,7 @@ package org.hibernate.envers.query.criteria;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
@@ -34,7 +35,7 @@ public class AuditDisjunction implements AuditCriterion, ExtendableCriterion {
 	public void addToQuery(
 			EnversService enversService,
 			AuditReaderImplementor versionsReader,
-			String entityName,
+			Map<String, String> aliasToEntityNameMap,
 			String alias,
 			QueryBuilder qb,
 			Parameters parameters) {
@@ -45,7 +46,7 @@ public class AuditDisjunction implements AuditCriterion, ExtendableCriterion {
 		}
 		else {
 			for ( AuditCriterion criterion : criterions ) {
-				criterion.addToQuery( enversService, versionsReader, entityName, alias, qb, orParameters );
+				criterion.addToQuery( enversService, versionsReader, aliasToEntityNameMap, alias, qb, orParameters );
 			}
 		}
 	}

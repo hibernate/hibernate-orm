@@ -72,7 +72,7 @@ public class CrossTypeRevisionChangesReaderImpl implements CrossTypeRevisionChan
 							type.getFirst(),
 							revision
 					)
-							.add( new RevisionTypeAuditExpression( revisionType, "=" ) ).getResultList()
+							.add( new RevisionTypeAuditExpression( null, revisionType, "=" ) ).getResultList()
 			);
 		}
 		return result;
@@ -89,7 +89,7 @@ public class CrossTypeRevisionChangesReaderImpl implements CrossTypeRevisionChan
 			for ( Pair<String, Class> type : entityTypes ) {
 				final List<Object> list = auditReaderImplementor.createQuery()
 						.forEntitiesModifiedAtRevision( type.getSecond(), type.getFirst(), revision )
-						.add( new RevisionTypeAuditExpression( revisionType, "=" ) )
+						.add( new RevisionTypeAuditExpression( null, revisionType, "=" ) )
 						.getResultList();
 				result.get( revisionType ).addAll( list );
 			}

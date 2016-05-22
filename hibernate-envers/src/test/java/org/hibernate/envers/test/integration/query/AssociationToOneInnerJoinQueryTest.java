@@ -25,7 +25,8 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Felix Feisst (feisst dot felix at gmail dot com)
  */
-public class AssociationToOneQueryTest extends BaseEnversJPAFunctionalTestCase {
+@SuppressWarnings("unchecked")
+public class AssociationToOneInnerJoinQueryTest extends BaseEnversJPAFunctionalTestCase {
 
 	private Car vw;
 	private Car ford;
@@ -50,7 +51,7 @@ public class AssociationToOneQueryTest extends BaseEnversJPAFunctionalTestCase {
 		em.getTransaction().begin();
 		address1 = new Address( "Freiburgerstrasse", 5 );
 		em.persist( address1 );
-		address2 = new Address( "Hindenburgstrasse", 20 );
+		address2 = new Address( "Hindenburgstrasse", 30 );
 		em.persist( address2 );
 		vwOwner = new Person( "VW owner", 20, address1 );
 		em.persist( vwOwner );
@@ -86,7 +87,7 @@ public class AssociationToOneQueryTest extends BaseEnversJPAFunctionalTestCase {
 		assertEquals( "Unexpected single car at revision 1", ford.getId(), result1.getId() );
 
 		Car result2 = (Car) auditReader.createQuery().forEntitiesAtRevision( Car.class, 1 ).traverseRelation( "owner", JoinType.INNER ).traverseRelation( "address", JoinType.INNER )
-				.add( AuditEntity.property( "number" ).eq( 20 ) ).getSingleResult();
+				.add( AuditEntity.property( "number" ).eq( 30 ) ).getSingleResult();
 		assertEquals( "Unexpected single car at revision 1", toyota.getId(), result2.getId() );
 
 		List<Car> resultList1 = auditReader.createQuery().forEntitiesAtRevision( Car.class, 1 ).traverseRelation( "owner", JoinType.INNER )
@@ -160,6 +161,36 @@ public class AssociationToOneQueryTest extends BaseEnversJPAFunctionalTestCase {
 		assertEquals( "Unexpected number at index 1", Integer.valueOf( 5 ), index1[1] );
 		final Object[] index2 = list4.get( 2 );
 		assertEquals( "Unexpected owner at index 2", toyotaOwner.getId(), ( (Person) index2[0] ).getId() );
-		assertEquals( "Unexpected number at index 2", Integer.valueOf( 20 ), index2[1] );
+		assertEquals( "Unexpected number at index 2", Integer.valueOf( 30 ), index2[1] );
 	}
+
+	@Test
+	public void testDisjunctionOfPropertiesFromDifferentEntities() {
+		AuditReader auditReader = getAuditReader();
+		// all cars where the owner has an age of 20 or lives in an address with number 30.
+		List<Car> resultList = auditReader.createQuery()
+				.forEntitiesAtRevision( Car.class, 1 )
+				.traverseRelation( "owner", JoinType.INNER, "p" )
+				.traverseRelation( "address", JoinType.INNER, "a" )
+				.up().up().add( AuditEntity.disjunction().add(AuditEntity.property( "p", "age" )
+						.eq( 20 ) ).add( AuditEntity.property( "a", "number" ).eq( 30 ) ) )
+				.addOrder( AuditEntity.property( "make" ).asc() ).getResultList();
+		assertEquals( "Expected two cars to be returned, Toyota and VW", 2, resultList.size() );
+		assertEquals( "Unexpected car at index 0", toyota.getId(), resultList.get(0).getId() );
+		assertEquals( "Unexpected car at index 1", vw.getId(), resultList.get(1).getId() );
+	}
+
+	@Test
+	public void testComparisonOfTwoPropertiesFromDifferentEntities() {
+		AuditReader auditReader = getAuditReader();
+		// the car where the owner age is equal to the owner address number.
+		Car result = (Car) auditReader.createQuery()
+				.forEntitiesAtRevision( Car.class, 1 )
+				.traverseRelation( "owner", JoinType.INNER, "p" )
+				.traverseRelation( "address", JoinType.INNER, "a" )
+				.up().up().add(AuditEntity.property( "p", "age" )
+						.eqProperty( "a", "number" ) ).getSingleResult();
+		assertEquals( "Unexpected car returned", toyota.getId(), result.getId() );
+	}
+
 }

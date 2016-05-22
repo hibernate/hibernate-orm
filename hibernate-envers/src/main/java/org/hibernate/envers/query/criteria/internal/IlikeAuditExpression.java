@@ -11,20 +11,21 @@ import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
-import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.envers.query.internal.property.PropertyNameGetter;
 
-public class IlikeAuditExpression implements AuditCriterion {
+public class IlikeAuditExpression extends AbstractAtomicExpression {
 
 	private PropertyNameGetter propertyNameGetter;
 	private String value;
 
-	public IlikeAuditExpression(PropertyNameGetter propertyNameGetter, String value) {
+	public IlikeAuditExpression(String alias, PropertyNameGetter propertyNameGetter, String value) {
+		super( alias );
 		this.propertyNameGetter = propertyNameGetter;
 		this.value = value;
 	}
 
-	public void addToQuery(
+	@Override
+	protected void addToQuery(
 			EnversService enversService,
 			AuditReaderImplementor versionsReader, String entityName,
 			String alias, QueryBuilder qb, Parameters parameters) {
@@ -37,7 +38,7 @@ public class IlikeAuditExpression implements AuditCriterion {
 		);
 		CriteriaTools.checkPropertyNotARelation( enversService, entityName, propertyName );
 
-		parameters.addWhereWithFunction( propertyName, " lower ", " like ", value.toLowerCase( Locale.ROOT ) );
+		parameters.addWhereWithFunction( alias, propertyName, " lower ", " like ", value.toLowerCase( Locale.ROOT ) );
 	}
 
 }

@@ -35,7 +35,11 @@ public class AuditEntity {
 	}
 
 	public static AuditId id() {
-		return new AuditId();
+		return id( null );
+	}
+
+	public static AuditId id(String alias) {
+		return new AuditId( alias );
 	}
 
 	/**
@@ -44,7 +48,17 @@ public class AuditEntity {
 	 * @param propertyName Name of the property.
 	 */
 	public static AuditProperty<Object> property(String propertyName) {
-		return new AuditProperty<>( new EntityPropertyName( propertyName ) );
+		return property( null, propertyName );
+	}
+
+	/**
+	 * Create restrictions, projections and specify order for a property of an audited entity.
+	 *
+	 * @param alias the alias of the entity which owns the property.
+	 * @param propertyName Name of the property.
+	 */
+	public static AuditProperty<Object> property(String alias, String propertyName) {
+		return new AuditProperty<>( alias, new EntityPropertyName( propertyName ) );
 	}
 
 	/**
@@ -52,7 +66,17 @@ public class AuditEntity {
 	 * audited entity.
 	 */
 	public static AuditProperty<Number> revisionNumber() {
-		return new AuditProperty<>( new RevisionNumberPropertyName() );
+		return revisionNumber( null );
+	}
+
+	/**
+	 * Create restrictions, projections and specify order for the revision number, corresponding to an
+	 * audited entity.
+	 *
+	 * @param alias the alias of the entity which owns the revision number.
+	 */
+	public static AuditProperty<Number> revisionNumber(String alias) {
+		return new AuditProperty<>( alias, new RevisionNumberPropertyName() );
 	}
 
 	/**
@@ -62,7 +86,18 @@ public class AuditEntity {
 	 * @param propertyName Name of the property.
 	 */
 	public static AuditProperty<Object> revisionProperty(String propertyName) {
-		return new AuditProperty<>( new RevisionPropertyPropertyName( propertyName ) );
+		return revisionProperty( null, propertyName );
+	}
+
+	/**
+	 * Create restrictions, projections and specify order for a property of the revision entity,
+	 * corresponding to an audited entity.
+	 *
+	 * @param alias the alias of the entity which owns the revision property.
+	 * @param propertyName Name of the property.
+	 */
+	public static AuditProperty<Object> revisionProperty(String alias, String propertyName) {
+		return new AuditProperty<>( alias, new RevisionPropertyPropertyName( propertyName ) );
 	}
 
 	/**
@@ -70,7 +105,17 @@ public class AuditEntity {
 	 * audited entity.
 	 */
 	public static AuditProperty<RevisionType> revisionType() {
-		return new AuditProperty<>( new RevisionTypePropertyName() );
+		return revisionType( null );
+	}
+
+	/**
+	 * Create restrictions, projections and specify order for the revision type, corresponding to an
+	 * audited entity.
+	 *
+	 * @param alias the alias of the entity which owns the revision type.
+	 */
+	public static AuditProperty<RevisionType> revisionType(String alias) {
+		return new AuditProperty<>( alias, new RevisionTypePropertyName() );
 	}
 
 	/**
@@ -79,7 +124,17 @@ public class AuditEntity {
 	 * @param propertyName Name of the property, which is the relation.
 	 */
 	public static AuditRelatedId relatedId(String propertyName) {
-		return new AuditRelatedId( new EntityPropertyName( propertyName ) );
+		return relatedId( null, propertyName );
+	}
+
+	/**
+	 * Create restrictions on an id of a related entity.
+	 *
+	 * @param alias the alias of the entity which owns the relation property.
+	 * @param propertyName Name of the property, which is the relation.
+	 */
+	public static AuditRelatedId relatedId(String alias, String propertyName) {
+		return new AuditRelatedId( alias, new EntityPropertyName( propertyName ) );
 	}
 
 	/**
@@ -123,6 +178,6 @@ public class AuditEntity {
 	 * @param distinct whether to distinct select the entity
 	 */
 	public static AuditProjection selectEntity(boolean distinct) {
-		return new EntityAuditProjection( distinct );
+		return new EntityAuditProjection( null, distinct );
 	}
 }

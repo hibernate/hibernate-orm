@@ -1156,4 +1156,14 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
 		return delegate.remapSqlTypeDescriptor( sqlTypeDescriptor );
 	}
+
+	@Override
+	public Integer getJdbcBatchSize() {
+		return delegate.getJdbcBatchSize();
+	}
+
+	@Override
+	public void setJdbcBatchSize(int jdbcBatchSize) {
+		delegate.setJdbcBatchSize( jdbcBatchSize );
+	}
 }

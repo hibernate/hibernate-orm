@@ -27,7 +27,7 @@ import org.hibernate.service.spi.Manageable;
 public class BatchBuilderImpl implements BatchBuilder, Configurable, Manageable, BatchBuilderMXBean {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BatchBuilderImpl.class );
 
-	private int size;
+	private int jdbcBatchSize;
 
 	/**
 	 * Constructs a BatchBuilderImpl
@@ -38,32 +38,36 @@ public class BatchBuilderImpl implements BatchBuilder, Configurable, Manageable,
 	/**
 	 * Constructs a BatchBuilderImpl
 	 *
-	 * @param size The batch size to use.
+	 * @param jdbcBatchSize The batch jdbcBatchSize to use.
 	 */
-	public BatchBuilderImpl(int size) {
-		this.size = size;
+	public BatchBuilderImpl(int jdbcBatchSize) {
+		this.jdbcBatchSize = jdbcBatchSize;
 	}
 
 	@Override
 	public void configure(Map configurationValues) {
-		size = ConfigurationHelper.getInt( Environment.STATEMENT_BATCH_SIZE, configurationValues, size );
+		jdbcBatchSize = ConfigurationHelper.getInt( Environment.STATEMENT_BATCH_SIZE, configurationValues, jdbcBatchSize );
 	}
 
 	@Override
 	public int getJdbcBatchSize() {
-		return size;
+		return jdbcBatchSize;
 	}
 
 	@Override
-	public void setJdbcBatchSize(int size) {
-		this.size = size;
+	public void setJdbcBatchSize(int jdbcBatchSize) {
+		this.jdbcBatchSize = jdbcBatchSize;
 	}
 
 	@Override
 	public Batch buildBatch(BatchKey key, JdbcCoordinator jdbcCoordinator) {
-		LOG.tracef( "Building batch [size=%s]", size );
-		return size > 1
-				? new BatchingBatch( key, jdbcCoordinator, size )
+		final Integer sessionJdbcBatchSize = jdbcCoordinator.getJdbcSessionOwner()
+				.getJdbcBatchSize();
+		final int jdbcBatchSizeToUse = sessionJdbcBatchSize == null ?
+				this.jdbcBatchSize :
+				sessionJdbcBatchSize;
+		return jdbcBatchSizeToUse > 1
+				? new BatchingBatch( key, jdbcCoordinator, jdbcBatchSizeToUse )
 				: new NonBatchingBatch( key, jdbcCoordinator );
 	}
 

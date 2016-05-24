@@ -51,4 +51,12 @@ public interface JdbcSessionOwner {
 	void afterTransactionCompletion(boolean successful, boolean delayed);
 
 	void flushBeforeTransactionCompletion();
+
+	/**
+	 * Get the Session-level JDBC batch size.
+	 * @return Session-level JDBC batch size
+	 *
+	 * @since 5.2
+	 */
+	Integer getJdbcBatchSize();
 }

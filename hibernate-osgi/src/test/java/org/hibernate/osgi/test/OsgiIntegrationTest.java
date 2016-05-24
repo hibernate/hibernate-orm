@@ -24,7 +24,6 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.osgi.test.client.DataPoint;
-import org.hibernate.osgi.test.client.OsgiTestActivator;
 import org.hibernate.osgi.test.client.SomeService;
 import org.hibernate.osgi.test.client.TestIntegrator;
 import org.hibernate.osgi.test.client.TestStrategyRegistrationProvider;
@@ -55,8 +54,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.CoreOptions.options;
-import static org.ops4j.pax.exam.CoreOptions.repositories;
-import static org.ops4j.pax.exam.CoreOptions.repository;
 import static org.ops4j.pax.exam.CoreOptions.when;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.configureConsole;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.debugConfiguration;
@@ -147,7 +144,7 @@ public class OsgiIntegrationTest {
 		// should be. In an ideal world the JPA tests would packaged in a separate
 		// bundle and have no imports other than javax.persistence...
 		
-		// For now we make sure that javassist and hibernate proxy are not needed.
+		// For now we make sure that javassist.util.proxy and hibernate proxy are not needed.
 
 		// Remove DynamicImport-Package: *
 		probe.setHeader( Constants.DYNAMICIMPORT_PACKAGE, "" );
@@ -168,11 +165,15 @@ public class OsgiIntegrationTest {
 						+ ",org.hibernate"
 						+ ",org.hibernate.annotations"
 						+ ",org.hibernate.boot.model"
+						+ ",org.hibernate.boot.registry"
 						+ ",org.hibernate.boot.registry.selector"
+						+ ",org.hibernate.boot.registry.selector.spi"
 						+ ",org.hibernate.engine.spi"
 						+ ",org.hibernate.integrator.spi"
+						+ ",org.hibernate.query"
 						+ ",org.hibernate.service"
 						+ ",org.hibernate.service.spi"
+						+ ",org.hibernate.type"
 						+ ",org.hibernate.usertype"
 						+ ",org.ops4j.pax.exam.options"
 						+ ",org.ops4j.pax.exam"

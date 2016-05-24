@@ -32,7 +32,7 @@ public class OsgiTestActivator implements BundleActivator {
 			context.registerService( TypeContributor.class, new TestTypeContributor(), new Hashtable() );
 			context.registerService( ServiceContributor.class, new SomeServiceContributor(), new Hashtable() );
 		} catch (Exception e) {
-			System.out.println("test integration service registration failed");
+			System.out.println("Test integration service registration failed");
 			e.printStackTrace();
 			throw e;
 		}

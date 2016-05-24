@@ -100,12 +100,12 @@ public class JavassistProxyFactory implements ProxyFactory, Serializable {
 				return new ClassLoader(persistentClass.getClassLoader()) {
 					@Override
 					protected Class<?> findClass(String name) throws ClassNotFoundException {
-						for(Class iface : interfaces) {
-							if(name.equals(iface.getName())) {
+						for (Class iface : interfaces) {
+							if (name.equals( iface.getName() )) {
 								return iface;
 							}
 						}
-						return JavassistProxyFactory.class.getClassLoader().loadClass(name);
+						return JavassistProxyFactory.class.getClassLoader().loadClass( name );
 					}
 				};
 			}

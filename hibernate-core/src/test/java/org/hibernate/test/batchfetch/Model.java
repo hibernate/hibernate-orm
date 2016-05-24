@@ -18,7 +18,7 @@ public class Model {
 	private String description;
 	private ProductLine productLine;
 	
-	Model() {}
+	public Model() {}
 	
 	public Model(ProductLine pl) {
 		this.productLine = pl;

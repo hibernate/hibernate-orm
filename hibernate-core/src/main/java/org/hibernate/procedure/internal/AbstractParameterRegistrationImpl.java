@@ -273,8 +273,22 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 						);
 					}
 				}
-				for ( int i = 0; i < sqlTypesToUse.length; i++ ) {
-					statement.registerOutParameter( startIndex + i, sqlTypesToUse[i] );
+				// TODO: can sqlTypesToUse.length > 1 for a named parameter?
+				// For now, if sqlTypesToUse.length > 1, then register
+				// the out parameters by position (since we only have one name).
+				// This will cause a failure if there are other parameters bound by
+				// name and the dialect does not support "mixed" named/positional parameters;
+				// e.g., Oracle.
+				// TODO: is there a better way to deal with this; eg., throw exception, log warning?
+				if ( sqlTypesToUse.length == 1 &&
+						procedureCall.getParameterStrategy() == ParameterStrategy.NAMED &&
+						canDoNameParameterBinding() ) {
+					statement.registerOutParameter( getName(), sqlTypesToUse[0] );
+				}
+				else {
+					for ( int i = 0; i < sqlTypesToUse.length; i++ ) {
+						statement.registerOutParameter( startIndex + i, sqlTypesToUse[i] );
+					}
 				}
 			}
 
@@ -374,12 +388,38 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 			throw new ParameterMisuseException( "REF_CURSOR parameters should be accessed via results" );
 		}
 
+		// TODO: can sqlTypes.length > 1 for a named parameter?
+		// For now, if sqlTypes.length > 1 with a named parameter, then extract
+		// parameter values by position (since we only have one name).
+		// TODO: is there a better way to deal with this; eg., throw exception, log warning?
+		final boolean useNamed = sqlTypes.length == 1 &&
+				procedureCall.getParameterStrategy() == ParameterStrategy.NAMED &&
+				canDoNameParameterBinding();
+
 		try {
 			if ( ProcedureParameterExtractionAware.class.isInstance( hibernateType ) ) {
-				return (T) ( (ProcedureParameterExtractionAware) hibernateType ).extract( statement, startIndex, session() );
+				if ( useNamed ) {
+					return (T) ( (ProcedureParameterExtractionAware) hibernateType ).extract(
+							statement,
+							new String[] { getName() },
+							session()
+					);
+				}
+				else {
+					return (T) ( (ProcedureParameterExtractionAware) hibernateType ).extract(
+							statement,
+							startIndex,
+							session()
+					);
+				}
 			}
 			else {
-				return (T) statement.getObject( startIndex );
+				if ( useNamed ) {
+					return (T) statement.getObject( name );
+				}
+				else {
+					return (T) statement.getObject( startIndex );
+				}
 			}
 		}
 		catch (SQLException e) {

@@ -6,6 +6,13 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.CallableStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.List;
+import java.util.Locale;
+
 import org.hibernate.JDBCException;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.annotations.common.util.StringHelper;
@@ -39,13 +46,6 @@ import org.hibernate.sql.OracleJoinFragment;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.BitTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-
-import java.sql.CallableStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.List;
-import java.util.Locale;
 
 /**
  * A dialect for Oracle 8i.
@@ -671,5 +671,10 @@ public class Oracle8iDialect extends Dialect {
 	@Override
 	public boolean canCreateSchema() {
 		return false;
+	}
+
+	@Override
+	public boolean supportsPartitionBy() {
+		return true;
 	}
 }

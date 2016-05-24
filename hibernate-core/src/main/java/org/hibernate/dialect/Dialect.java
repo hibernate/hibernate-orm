@@ -233,6 +233,10 @@ public abstract class Dialect implements ConversionContext {
 		registerHibernateType( Types.CLOB, StandardBasicTypes.CLOB.getName() );
 		registerHibernateType( Types.REAL, StandardBasicTypes.FLOAT.getName() );
 
+		if(supportsPartitionBy()) {
+			registerKeyword( "PARTITION" );
+		}
+
 		uniqueDelegate = new DefaultUniqueDelegate( this );
 	}
 
@@ -2746,5 +2750,16 @@ public abstract class Dialect implements ConversionContext {
 
 	public void augmentRecognizedTableTypes(List<String> tableTypesList) {
 		// noihing to do
+	}
+
+	/**
+	 * Does the underlying database support partition by
+	 *
+	 * @return boolean
+	 *
+	 * @since 5.2
+	 */
+	public boolean supportsPartitionBy() {
+		return false;
 	}
 }

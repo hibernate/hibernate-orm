@@ -158,4 +158,30 @@ public interface SharedSessionContract extends QueryProducer, Serializable {
 	 */
 	@Deprecated
 	Criteria createCriteria(String entityName, String alias);
+
+	/**
+	 * Get the Session-level JDBC batch size for the current Session.
+	 * Overrides the SessionFactory JDBC batch size defined by the {@code hibernate.default_batch_fetch_size} configuration property for the scope of the current {@code Session}.
+	 *
+	 * @return Session-level JDBC batch size
+	 *
+	 * @since 5.2
+	 *
+	 * @see org.hibernate.boot.spi.SessionFactoryOptions#getJdbcBatchSize
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJdbcBatchSize
+	 */
+	Integer getJdbcBatchSize();
+
+	/**
+	 * Set the Session-level JDBC batch size.
+	 * Overrides the SessionFactory JDBC batch size defined by the {@code hibernate.default_batch_fetch_size} configuration property for the scope of the current {@code Session}.
+	 *
+	 * @param jdbcBatchSize Session-level JDBC batch size
+	 *
+	 * @since 5.2
+	 *
+	 * @see org.hibernate.boot.spi.SessionFactoryOptions#getJdbcBatchSize
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJdbcBatchSize
+	 */
+	void setJdbcBatchSize(int jdbcBatchSize);
 }

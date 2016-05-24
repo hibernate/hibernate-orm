@@ -127,6 +127,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	private transient Boolean useStreamForLobBinding;
 	private transient long timestamp;
 
+	private transient Integer jdbcBatchSize;
+
 	protected transient ExceptionConverter exceptionConverter;
 
 	public AbstractSharedSessionContract(SessionFactoryImpl factory, SessionCreationOptions options) {
@@ -955,6 +957,15 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public ExceptionConverter getExceptionConverter(){
 		return exceptionConverter;
+	}
+
+	public Integer getJdbcBatchSize() {
+		return jdbcBatchSize;
+	}
+
+	@Override
+	public void setJdbcBatchSize(int jdbcBatchSize) {
+		this.jdbcBatchSize = jdbcBatchSize;
 	}
 
 	@SuppressWarnings("unused")

@@ -13,6 +13,8 @@ public class Person {
 	
 	private HairColor hairColor;
 
+	private HairColor originalHairColor;
+
 	public static Person person(Gender gender, HairColor hairColor) {
 		Person person = new Person();
 		person.setGender( gender );
@@ -42,5 +44,13 @@ public class Person {
 
 	public void setHairColor(HairColor hairColor) {
 		this.hairColor = hairColor;
+	}
+
+	public HairColor getOriginalHairColor() {
+		return originalHairColor;
+	}
+
+	public void setOriginalHairColor(HairColor originalHairColor) {
+		this.originalHairColor = originalHairColor;
 	}
 }

@@ -25,10 +25,17 @@ public class OsgiTestActivator implements BundleActivator {
 	@Override
 	public void start(BundleContext context) throws Exception {
 		// register example extension point services
-		context.registerService( Integrator.class, new TestIntegrator(), new Hashtable() );
-		context.registerService( StrategyRegistrationProvider.class, new TestStrategyRegistrationProvider(), new Hashtable() );
-		context.registerService( TypeContributor.class, new TestTypeContributor(), new Hashtable() );
-		context.registerService( ServiceContributor.class, new SomeServiceContributor(), new Hashtable() );
+		System.out.println("Registering test integration services");
+		try {
+			context.registerService( Integrator.class, new TestIntegrator(), new Hashtable() );
+			context.registerService( StrategyRegistrationProvider.class, new TestStrategyRegistrationProvider(), new Hashtable() );
+			context.registerService( TypeContributor.class, new TestTypeContributor(), new Hashtable() );
+			context.registerService( ServiceContributor.class, new SomeServiceContributor(), new Hashtable() );
+		} catch (Exception e) {
+			System.out.println("test integration service registration failed");
+			e.printStackTrace();
+			throw e;
+		}
 	}
 
 	@Override

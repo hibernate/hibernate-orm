@@ -156,7 +156,7 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType,Logg
 				return new OrdinalEnumValueMapper();
 			}
 			else if ( isCharacterType( type ) ) {
-				return new OrdinalEnumValueMapper();
+				return new NamedEnumValueMapper();
 			}
 			else {
 				throw new HibernateException(

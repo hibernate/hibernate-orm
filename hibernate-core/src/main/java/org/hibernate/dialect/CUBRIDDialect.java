@@ -347,4 +347,8 @@ public class CUBRIDDialect extends Dialect {
 		return new CUBRIDIdentityColumnSupport();
 	}
 
+	@Override
+	public boolean supportsPartitionBy() {
+		return true;
+	}
 }

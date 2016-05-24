@@ -275,4 +275,8 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		return new AbstractTransactSQLIdentityColumnSupport();
 	}
 
+	@Override
+	public boolean supportsPartitionBy() {
+		return true;
+	}
 }

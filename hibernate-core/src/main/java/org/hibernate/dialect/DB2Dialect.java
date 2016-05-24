@@ -559,4 +559,9 @@ public class DB2Dialect extends Dialect {
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return new DB2IdentityColumnSupport();
 	}
+
+	@Override
+	public boolean supportsPartitionBy() {
+		return true;
+	}
 }

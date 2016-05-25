@@ -9,35 +9,28 @@ public class Person {
     private String ssn;
 
     protected Person() {
-        // ctor for ORM
+        // Constructor for ORM
     }
 
     public Person( String ssn ) {
-        // ctor for app
+        // Constructor for app
         this.ssn = ssn;
     }
 
-    ...
-
     @Override
     public int hashCode() {
-        assert ssn != null;
-        return ssn.hashCode();
+        return Objects.hash( ssn );
     }
 
     @Override
-    public boolean equals() {
+    public boolean equals(Object o) {
         if ( this == o ) {
             return true;
         }
-        if (!( o instanceof Person ) ) {
+        if ( !( o instanceof Person ) ) {
             return false;
         }
-
-        final Person other = ( Person ) o;
-        assert ssn != null;
-        assert other.ssn != null;
-
-        return ssn.equals( other.ssn );
+        Person person = (Person) o;
+        return Objects.equals( ssn, person.ssn );
     }
 }

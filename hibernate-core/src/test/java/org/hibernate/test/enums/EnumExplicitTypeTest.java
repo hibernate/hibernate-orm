@@ -35,10 +35,10 @@ public class EnumExplicitTypeTest extends BaseCoreFunctionalTestCase {
 		s.clear();
 
 		s.getTransaction().begin();
-		Number id = (Number) session.createNativeQuery(
+		Number id = (Number) session.createSQLQuery(
 				"select id from Person where originalHairColor = :color" )
 				.setParameter( "color", HairColor.BLONDE.name() )
-				.getSingleResult();
+				.uniqueResult();
 		assertEquals( 1L, id.longValue() );
 		s.getTransaction().commit();
 		s.close();

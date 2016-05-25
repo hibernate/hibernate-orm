@@ -171,12 +171,18 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public Connection close() {
 		LOG.tracev( "Closing JDBC container [{0}]", this );
-		if ( currentBatch != null ) {
-			LOG.closingUnreleasedBatch();
-			currentBatch.release();
+		Connection connection;
+		try {
+			if ( currentBatch != null ) {
+				LOG.closingUnreleasedBatch();
+				currentBatch.release();
+			}
+			cleanup();
 		}
-		cleanup();
-		return logicalConnection.close();
+		finally {
+			connection = logicalConnection.close();
+		}
+		return connection;
 	}
 
 	@Override

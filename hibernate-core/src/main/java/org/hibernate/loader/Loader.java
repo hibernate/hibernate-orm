@@ -253,7 +253,9 @@ public abstract class Loader {
 			final LockMode lockMode = determineFollowOnLockMode( parameters.getLockOptions() );
 			final LockOptions lockOptions = new LockOptions( lockMode );
 			if ( lockOptions.getLockMode() != LockMode.UPGRADE_SKIPLOCKED ) {
-				LOG.usingFollowOnLocking();
+				if ( lockOptions.getLockMode() != LockMode.NONE ) {
+					LOG.usingFollowOnLocking();
+				}
 				lockOptions.setTimeOut( parameters.getLockOptions().getTimeOut() );
 				lockOptions.setScope( parameters.getLockOptions().getScope() );
 				afterLoadActions.add(
@@ -278,9 +280,13 @@ public abstract class Loader {
 		final LockMode lockModeToUse = lockOptions.findGreatestLockMode();
 
 		if ( lockOptions.hasAliasSpecificLockModes() ) {
-			LOG.aliasSpecificLockingWithFollowOnLocking( lockModeToUse );
+			if ( lockOptions.getLockMode() == LockMode.NONE && lockModeToUse == LockMode.NONE ) {
+				return lockModeToUse;
+			}
+			else {
+				LOG.aliasSpecificLockingWithFollowOnLocking( lockModeToUse );
+			}
 		}
-
 		return lockModeToUse;
 	}
 

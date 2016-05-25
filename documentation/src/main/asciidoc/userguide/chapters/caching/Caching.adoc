@@ -25,7 +25,8 @@ This section defines the settings which control this behavior.
 
 `org.hibernate.cache.spi.RegionFactory` defines the integration between Hibernate and a pluggable caching provider.
 `hibernate.cache.region.factory_class` is used to declare the provider to use.
-Hibernate comes with built-in support for two popular caching libraries: <<caching-provider-ehcache,Ehcache>> and <<caching-provider-infinispan,Infinispan>>.
+Hibernate comes with built-in support for the Java caching standard <<caching-provider-jcache,JCache>>
+and also two popular caching libraries: <<caching-provider-ehcache,Ehcache>> and <<caching-provider-infinispan,Infinispan>>.
 Detailed information is provided later in this chapter.
 
 [[caching-config-properties]]
@@ -462,9 +463,67 @@ include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-statistics-example]
 ----
 ====
 
+[[caching-provider-jcache]]
+=== JCache
+
+[NOTE]
+====
+Use of the build-in integration for https://jcp.org/en/jsr/detail?id=107[JCache] requires that the `hibernate-jcache` module jar (and all of its dependencies) are on the classpath.
+In addition a JCache implementation needs to be added as well.
+A list of compatible implementations can be found https://jcp.org/aboutJava/communityprocess/implementations/jsr107/index.html[on the JCP website].
+An alternative source of compatible implementations can be found through https://github.com/cruftex/jsr107-test-zoo[the JSR-107 test zoo].
+====
+
+[[caching-provider-jcache-region-factory]]
+==== RegionFactory
+
+The `hibernate-jcache` module defines the following region factory: `JCacheRegionFactory`.
+
+To use the `JCacheRegionFactory`, you need to specify the following configuration property:
+
+[[caching-provider-jcache-region-factory-example]]
+.`JCacheRegionFactory` configuration
+====
+[source, XML, indent=0]
+----
+<property
+    name="hibernate.cache.region.factory_class"
+    value="org.hibernate.cache.jcache.JCacheRegionFactory"/>
+----
+====
+
+The `JCacheRegionFactory` configures a `javax.cache.CacheManager`.
+
+[[caching-provider-jcache-cache-manager]]
+==== JCache `CacheManager`
+
+JCache mandates that `CacheManager`{empty}s sharing the same URI and class loader be unique in JVM.
+
+If you do not specify additional properties, the `JCacheRegionFactory` will load the default JCache provider and create the default `CacheManager`.
+Also, `Cache`{empty}s will be created using the default `javax.cache.configuration.MutableConfiguration`.
+
+In order to control which provider to use and specify configuration for the `CacheManager` and `Cache`{empty}s you can use the following two properties:
+
+[[caching-provider-jcache-region-factory-config-example]]
+.JCache configuration
+====
+[source, XML, indent=0]
+----
+<property
+    name="hibernate.javax.cache.provider"
+    value="org.ehcache.jsr107.EhcacheCachingProvider"/>
+<property
+    name="hibernate.javax.cache.uri"
+    value="file:/path/to/ehcache.xml"/>
+----
+====
+
+Only by specifying the second property `hibernate.javax.cache.uri` will you be able to have a `CacheManager` per `SessionFactory`.
 
 [[caching-provider-ehcache]]
 === Ehcache
+
+This integration covers Ehcache 2.x, in order to use Ehcache 3.x as second level cache, refer to the <<caching-provider-jcache,JCache integration>>.
 
 [NOTE]
 ====

@@ -266,7 +266,11 @@ abstract class AbstractReadWriteRegionAccessStrategy<R extends JCacheTransaction
 
 		@Override
 		public String toString() {
-			return value.toString() + " version: " + version;
+			return "Item{" +
+											"value=" + value +
+											", version=" + version +
+											", timestamp=" + timestamp +
+											'}';
 		}
 	}
 

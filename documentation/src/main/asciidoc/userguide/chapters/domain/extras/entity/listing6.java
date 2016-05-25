@@ -5,27 +5,20 @@ public class Person {
     @GeneratedValue
     private Integer id;
 
-    ...
-
     @Override
     public int hashCode() {
-        return id != null ? id.hashCode() : 0;
+        return Objects.hash( id );
     }
 
     @Override
-    public boolean equals() {
+    public boolean equals(Object o) {
         if ( this == o ) {
             return true;
         }
-        if (!( o instanceof Person ) ) {
+        if ( !( o instanceof Person ) ) {
             return false;
         }
-
-        if ( id == null ) {
-            return false;
-        }
-
-        final Person other = ( Person ) o;
-        return id.equals( other.id );
+        Person person = (Person) o;
+        return Objects.equals( id, person.id );
     }
 }

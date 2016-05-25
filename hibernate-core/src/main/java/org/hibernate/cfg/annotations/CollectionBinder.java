@@ -83,6 +83,7 @@ import org.hibernate.cfg.PropertyHolderBuilder;
 import org.hibernate.cfg.PropertyInferredData;
 import org.hibernate.cfg.PropertyPreloadedData;
 import org.hibernate.cfg.SecondPass;
+import org.hibernate.criterion.Junction;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -944,9 +945,29 @@ public abstract class CollectionBinder {
 			}
 		}
 
-		Where where = property.getAnnotation( Where.class );
-		String whereClause = where == null ? null : where.clause();
-		if ( StringHelper.isNotEmpty( whereClause ) ) {
+		Where whereOnClass = property.getElementClass().getAnnotation( Where.class );
+		StringBuilder whereBuffer = new StringBuilder();
+		if ( whereOnClass != null ) {
+			String clause = whereOnClass.clause();
+			if ( StringHelper.isNotEmpty( clause ) ) {
+				whereBuffer.append( clause );
+			}
+		}
+		Where whereOnCollection = property.getAnnotation( Where.class );
+		if ( whereOnCollection != null ) {
+			String clause = whereOnCollection.clause();
+			if ( StringHelper.isNotEmpty( clause ) ) {
+				whereBuffer.append( StringHelper.WHITESPACE );
+				if ( whereBuffer.length() > 0 ) {
+					whereBuffer.append( Junction.Nature.AND.getOperator() );
+					whereBuffer.append( StringHelper.WHITESPACE );
+				}
+				whereBuffer.append( clause );
+			}
+
+		}
+		if ( whereBuffer.length() > 0 ) {
+			String whereClause = whereBuffer.toString();
 			if ( hasAssociationTable ) {
 				collection.setManyToManyWhere( whereClause );
 			}

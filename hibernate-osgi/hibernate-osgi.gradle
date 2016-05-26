@@ -43,6 +43,7 @@ dependencies {
 	}
 
 	compile( project( ':hibernate-core' ) )
+	testCompile( project( ':hibernate-envers' ) )
 
 	// MUST use 4.3.1!  4.3.0 was compiled with "-target jsr14".
 	// http://blog.osgi.org/2012/10/43-companion-code-for-java-7.html
@@ -360,6 +361,7 @@ tasks.test.dependsOn tasks.generatePaxExamEnvironmentFile
 // we also need to make sure that hibernate-core, hibernate-entitymanager and hibernate-osgi
 // are published to maven-local before running tests
 tasks.test.dependsOn rootProject.childProjects.'hibernate-core'.tasks.publishToMavenLocal
+tasks.test.dependsOn rootProject.childProjects.'hibernate-envers'.tasks.publishToMavenLocal
 tasks.test.dependsOn tasks.publishToMavenLocal
 
 publishing {

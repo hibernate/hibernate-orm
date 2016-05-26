@@ -30,10 +30,12 @@ import org.hibernate.osgi.test.client.TestStrategyRegistrationProvider;
 import org.hibernate.osgi.test.client.TestTypeContributor;
 import org.hibernate.type.BasicType;
 
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -54,8 +56,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.CoreOptions.options;
-import static org.ops4j.pax.exam.CoreOptions.repositories;
-import static org.ops4j.pax.exam.CoreOptions.repository;
 import static org.ops4j.pax.exam.CoreOptions.when;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.configureConsole;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.debugConfiguration;
@@ -69,6 +69,7 @@ import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.logLevel;
  * Tests for hibernate-osgi running within a Karaf container via PaxExam.
  *
  * @author Steve Ebersole
+ * @author Brett Meyer
  */
 @RunWith( PaxExam.class )
 @ExamReactorStrategy( PerClass.class )
@@ -112,6 +113,7 @@ public class OsgiIntegrationTest {
 				when( debug ).useOptions( keepRuntimeFolder() ),
 				logLevel( LogLevelOption.LogLevel.INFO ),
 				features( featureXmlUrl( paxExamEnvironment ), "hibernate-orm" ),
+				features( featureXmlUrl( paxExamEnvironment ), "hibernate-envers" ),
 				features( testingFeatureXmlUrl(), "hibernate-osgi-testing" )
 		);
 	}
@@ -190,8 +192,12 @@ public class OsgiIntegrationTest {
 	private BundleContext bundleContext;
 
 	@Test
-	public void testFeatureInstallation() throws Exception {
+	public void testActivation() throws Exception {
 		assertTrue( featuresService.isInstalled( featuresService.getFeature( "hibernate-orm" ) ) );
+		assertTrue( featuresService.isInstalled( featuresService.getFeature( "hibernate-envers" ) ) );
+
+		assertActiveBundle( "org.hibernate.core" );
+		assertActiveBundle( "org.hibernate.envers" );
 	}
 
 	@Test
@@ -304,5 +310,16 @@ public class OsgiIntegrationTest {
 		final SessionFactoryImplementor sfi = (SessionFactoryImplementor) bundleContext.getService( sr );
 
 		assertNotNull( sfi.getServiceRegistry().getService( SomeService.class ) );
+	}
+
+	private void assertActiveBundle(String symbolicName) {
+		for (Bundle bundle : bundleContext.getBundles()) {
+			if (bundle.getSymbolicName().equals( symbolicName )) {
+				Assert.assertEquals(
+						symbolicName + " was found, but not in an ACTIVE state.", Bundle.ACTIVE, bundle.getState());
+				return;
+			}
+		}
+		Assert.fail("Could not find bundle: " + symbolicName);
 	}
 }

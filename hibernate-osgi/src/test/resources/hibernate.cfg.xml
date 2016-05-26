@@ -18,5 +18,6 @@
         <property name="hibernate.hbm2ddl.auto">create-drop</property>
         <property name="hibernate.cache.use_second_level_cache">false</property>
         <mapping class="org.hibernate.osgi.test.client.DataPoint"/>
+        <mapping class="org.hibernate.osgi.test.client.AuditedDataPoint"/>
     </session-factory>
 </hibernate-configuration>

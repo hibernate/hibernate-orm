@@ -159,6 +159,7 @@ public class OsgiIntegrationTest {
 //						+ ",org.h2"
 //						+ ",org.osgi.framework"
 //						+ ",org.hibernate"
+//						+ ",org.hibernate.envers"
 ////						+ ",org.hibernate.boot.model"
 ////						+ ",org.hibernate.boot.registry.selector"
 ////						+ ",org.hibernate.boot.registry.selector.spi"

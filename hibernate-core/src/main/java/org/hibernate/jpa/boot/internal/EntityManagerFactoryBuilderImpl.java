@@ -159,17 +159,24 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	public EntityManagerFactoryBuilderImpl(PersistenceUnitDescriptor persistenceUnit, Map integrationSettings) {
-		this( persistenceUnit, integrationSettings, null );
+		this( persistenceUnit, integrationSettings, null, null );
 	}
 
 	public EntityManagerFactoryBuilderImpl(
 			PersistenceUnitDescriptor persistenceUnit,
 			Map integrationSettings,
 			ClassLoader providedClassLoader ) {
-		this(persistenceUnit,integrationSettings,providedClassLoader,null);
+		this( persistenceUnit, integrationSettings, providedClassLoader, null);
+	}
+
+	public EntityManagerFactoryBuilderImpl(
+			PersistenceUnitDescriptor persistenceUnit,
+			Map integrationSettings,
+			ClassLoaderService providedClassLoaderService ) {
+		this( persistenceUnit, integrationSettings, null, providedClassLoaderService);
 	}
 	
-	public EntityManagerFactoryBuilderImpl(
+	private EntityManagerFactoryBuilderImpl(
 			PersistenceUnitDescriptor persistenceUnit,
 			Map integrationSettings,
 			ClassLoader providedClassLoader,
@@ -321,12 +328,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	 */
 	private BootstrapServiceRegistry buildBootstrapServiceRegistry(
 			Map integrationSettings,
-			ClassLoader providedClassLoader, 
+			ClassLoader providedClassLoader,
 			ClassLoaderService providedClassLoaderService) {
 		final BootstrapServiceRegistryBuilder bsrBuilder = new BootstrapServiceRegistryBuilder();
-		if (providedClassLoaderService != null) {
-			bsrBuilder.applyClassLoaderService(providedClassLoaderService);
-		}
+
 		bsrBuilder.applyIntegrator( new JpaIntegrator() );
 
 		final IntegratorProvider integratorProvider = (IntegratorProvider) integrationSettings.get( INTEGRATOR_PROVIDER );
@@ -346,37 +351,43 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 
 		// ClassLoaders ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// NOTE: See BootstrapServiceRegistryBuilder#build.  providedClassLoaderService and providedClassLoaders are
+		// mutually exclusive concepts, with priority given to the former
 
-		if ( persistenceUnit.getClassLoader() != null ) {
-			bsrBuilder.applyClassLoader( persistenceUnit.getClassLoader() );
-		}
-
-		if ( providedClassLoader != null ) {
-			bsrBuilder.applyClassLoader( providedClassLoader );
-		}
-
-		final ClassLoader appClassLoader = (ClassLoader) integrationSettings.get( org.hibernate.cfg.AvailableSettings.APP_CLASSLOADER );
-		if ( appClassLoader != null ) {
-			LOG.debugf(
-					"Found use of deprecated `%s` setting; use `%s` instead.",
-					org.hibernate.cfg.AvailableSettings.APP_CLASSLOADER,
-					org.hibernate.cfg.AvailableSettings.CLASSLOADERS
-			);
-		}
-		final Object classLoadersSetting = integrationSettings.get( org.hibernate.cfg.AvailableSettings.CLASSLOADERS );
-		if ( classLoadersSetting != null ) {
-			if ( java.util.Collection.class.isInstance( classLoadersSetting ) ) {
-				for ( ClassLoader classLoader : (java.util.Collection<ClassLoader>) classLoadersSetting ) {
-					bsrBuilder.applyClassLoader( classLoader );
-				}
+		if ( providedClassLoaderService != null ) {
+			bsrBuilder.applyClassLoaderService( providedClassLoaderService );
+		} else {
+			if ( persistenceUnit.getClassLoader() != null ) {
+				bsrBuilder.applyClassLoader( persistenceUnit.getClassLoader() );
 			}
-			else if ( classLoadersSetting.getClass().isArray() ) {
-				for ( ClassLoader classLoader : (ClassLoader[]) classLoadersSetting ) {
-					bsrBuilder.applyClassLoader( classLoader );
-				}
+
+			if ( providedClassLoader != null ) {
+				bsrBuilder.applyClassLoader( providedClassLoader );
 			}
-			else if ( ClassLoader.class.isInstance( classLoadersSetting ) ) {
-				bsrBuilder.applyClassLoader( (ClassLoader) classLoadersSetting );
+
+			final ClassLoader appClassLoader = (ClassLoader) integrationSettings.get( org.hibernate.cfg.AvailableSettings.APP_CLASSLOADER );
+			if ( appClassLoader != null ) {
+				LOG.debugf(
+						"Found use of deprecated `%s` setting; use `%s` instead.",
+						org.hibernate.cfg.AvailableSettings.APP_CLASSLOADER,
+						org.hibernate.cfg.AvailableSettings.CLASSLOADERS
+				);
+			}
+			final Object classLoadersSetting = integrationSettings.get( org.hibernate.cfg.AvailableSettings.CLASSLOADERS );
+			if ( classLoadersSetting != null ) {
+				if ( java.util.Collection.class.isInstance( classLoadersSetting ) ) {
+					for ( ClassLoader classLoader : (java.util.Collection<ClassLoader>) classLoadersSetting ) {
+						bsrBuilder.applyClassLoader( classLoader );
+					}
+				}
+				else if ( classLoadersSetting.getClass().isArray() ) {
+					for ( ClassLoader classLoader : (ClassLoader[]) classLoadersSetting ) {
+						bsrBuilder.applyClassLoader( classLoader );
+					}
+				}
+				else if ( ClassLoader.class.isInstance( classLoadersSetting ) ) {
+					bsrBuilder.applyClassLoader( (ClassLoader) classLoadersSetting );
+				}
 			}
 		}
 

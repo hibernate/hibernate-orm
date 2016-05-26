@@ -39,9 +39,8 @@ public final class Bootstrap {
 	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
 			PersistenceUnitDescriptor persistenceUnitDescriptor,
 			Map integration,
-			ClassLoader providedClassLoader,
 			ClassLoaderService providedClassLoaderService) {
-		return new EntityManagerFactoryBuilderImpl( persistenceUnitDescriptor, integration, providedClassLoader, providedClassLoaderService );
+		return new EntityManagerFactoryBuilderImpl( persistenceUnitDescriptor, integration, providedClassLoaderService );
 	}
 
 	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
@@ -60,8 +59,7 @@ public final class Bootstrap {
 	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
 			PersistenceUnitInfo persistenceUnitInfo,
 			Map integration,
-			ClassLoader providedClassLoader,
 			ClassLoaderService providedClassLoaderService) {
-		return getEntityManagerFactoryBuilder( new PersistenceUnitInfoDescriptor( persistenceUnitInfo ), integration, providedClassLoader, providedClassLoaderService );
+		return getEntityManagerFactoryBuilder( new PersistenceUnitInfoDescriptor( persistenceUnitInfo ), integration, providedClassLoaderService );
 	}
 }

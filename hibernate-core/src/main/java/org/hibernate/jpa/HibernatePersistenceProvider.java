@@ -16,8 +16,8 @@ import javax.persistence.spi.PersistenceProvider;
 import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.ProviderUtil;
 
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
-import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
@@ -68,10 +68,21 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	}
 
 	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map properties) {
-		return getEntityManagerFactoryBuilderOrNull( persistenceUnitName, properties, null );
+		return getEntityManagerFactoryBuilderOrNull( persistenceUnitName, properties, null, null );
 	}
 
-	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map properties, ClassLoader providedClassLoader) {
+	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map properties,
+			ClassLoader providedClassLoader) {
+		return getEntityManagerFactoryBuilderOrNull( persistenceUnitName, properties, providedClassLoader, null );
+	}
+
+	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map properties,
+			ClassLoaderService providedClassLoaderService) {
+		return getEntityManagerFactoryBuilderOrNull( persistenceUnitName, properties, null, providedClassLoaderService );
+	}
+
+	private EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map properties,
+			ClassLoader providedClassLoader, ClassLoaderService providedClassLoaderService) {
 		log.tracef( "Attempting to obtain correct EntityManagerFactoryBuilder for persistenceUnitName : %s", persistenceUnitName );
 
 		final Map integration = wrap( properties );
@@ -111,7 +122,11 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 				continue;
 			}
 
-			return getEntityManagerFactoryBuilder( persistenceUnit, integration, providedClassLoader );
+			if (providedClassLoaderService != null) {
+				return getEntityManagerFactoryBuilder( persistenceUnit, integration, providedClassLoaderService );
+			} else {
+				return getEntityManagerFactoryBuilder( persistenceUnit, integration, providedClassLoader );
+			}
 		}
 
 		log.debug( "Found no matching persistence units" );
@@ -156,13 +171,18 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 		return true;
 	}
 
-	private EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(PersistenceUnitInfo info, Map integration) {
-		return getEntityManagerFactoryBuilder( new PersistenceUnitInfoDescriptor( info ), integration, null );
+	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(PersistenceUnitInfo info, Map integration) {
+		return Bootstrap.getEntityManagerFactoryBuilder( info, integration );
 	}
 
 	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(PersistenceUnitDescriptor persistenceUnitDescriptor,
 			Map integration, ClassLoader providedClassLoader) {
 		return Bootstrap.getEntityManagerFactoryBuilder( persistenceUnitDescriptor, integration, providedClassLoader );
+	}
+
+	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(PersistenceUnitDescriptor persistenceUnitDescriptor,
+			Map integration, ClassLoaderService providedClassLoaderService) {
+		return Bootstrap.getEntityManagerFactoryBuilder( persistenceUnitDescriptor, integration, providedClassLoaderService );
 	}
 
 	private final ProviderUtil providerUtil = new ProviderUtil() {

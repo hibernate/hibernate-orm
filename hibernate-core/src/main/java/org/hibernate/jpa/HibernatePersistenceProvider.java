@@ -124,7 +124,8 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 
 			if (providedClassLoaderService != null) {
 				return getEntityManagerFactoryBuilder( persistenceUnit, integration, providedClassLoaderService );
-			} else {
+			}
+			else {
 				return getEntityManagerFactoryBuilder( persistenceUnit, integration, providedClassLoader );
 			}
 		}

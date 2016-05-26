@@ -356,7 +356,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 		if ( providedClassLoaderService != null ) {
 			bsrBuilder.applyClassLoaderService( providedClassLoaderService );
-		} else {
+		}
+		else {
 			if ( persistenceUnit.getClassLoader() != null ) {
 				bsrBuilder.applyClassLoader( persistenceUnit.getClassLoader() );
 			}

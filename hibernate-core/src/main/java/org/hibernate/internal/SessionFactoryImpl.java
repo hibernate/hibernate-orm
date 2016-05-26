@@ -738,8 +738,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		cacheAccess.close();
 		metamodel.close();
 
-		cacheAccess.close();
-
 		queryPlanCache.cleanup();
 
 		if ( delayedDropAction != null ) {

@@ -73,6 +73,7 @@ public class SimpleValue implements KeyValue {
 	private String nullValue;
 	private Table table;
 	private String foreignKeyName;
+	private String foreignKeyDefinition;
 	private boolean alternateUniqueKey;
 	private boolean cascadeDeleteEnabled;
 
@@ -193,7 +194,7 @@ public class SimpleValue implements KeyValue {
 	@Override
 	public void createForeignKeyOfEntity(String entityName) {
 		if ( !hasFormula() && !"none".equals(getForeignKeyName())) {
-			ForeignKey fk = table.createForeignKey( getForeignKeyName(), getConstraintColumns(), entityName );
+			ForeignKey fk = table.createForeignKey( getForeignKeyName(), getConstraintColumns(), entityName, getForeignKeyDefinition() );
 			fk.setCascadeDeleteEnabled(cascadeDeleteEnabled);
 		}
 	}
@@ -346,6 +347,14 @@ public class SimpleValue implements KeyValue {
 
 	public void setForeignKeyName(String foreignKeyName) {
 		this.foreignKeyName = foreignKeyName;
+	}
+	
+	public String getForeignKeyDefinition() {
+		return foreignKeyDefinition;
+	}
+
+	public void setForeignKeyDefinition(String foreignKeyDefinition) {
+		this.foreignKeyDefinition = foreignKeyDefinition;
 	}
 
 	public boolean isAlternateUniqueKey() {

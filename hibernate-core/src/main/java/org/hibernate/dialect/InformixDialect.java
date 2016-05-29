@@ -111,6 +111,17 @@ public class InformixDialect extends Dialect {
 		return result.toString();
 	}
 
+	public String getAddForeignKeyConstraintString(
+			String constraintName,
+			String foreignKeyDefinition) {
+		return new StringBuilder( 30 )
+				.append( " add constraint " )
+				.append( foreignKeyDefinition )
+				.append( " constraint " )
+				.append( constraintName )
+				.toString();
+	}
+
 	/**
 	 * Informix constraint name must be at the end.
 	 * <p/>

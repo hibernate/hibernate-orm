@@ -103,13 +103,18 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 		final StringBuilder buffer = new StringBuilder( "alter table " )
 				.append( sourceTableName )
 				.append(
-						dialect.getAddForeignKeyConstraintString(
-								foreignKey.getName(),
-								columnNames,
-								targetTableName,
-								targetColumnNames,
-								foreignKey.isReferenceToPrimaryKey()
-						)
+						foreignKey.getKeyDefinition() != null ?
+								dialect.getAddForeignKeyConstraintString(
+										foreignKey.getName(),
+										foreignKey.getKeyDefinition()
+								) :
+								dialect.getAddForeignKeyConstraintString(
+										foreignKey.getName(),
+										columnNames,
+										targetTableName,
+										targetColumnNames,
+										foreignKey.isReferenceToPrimaryKey()
+								)
 				);
 
 		if ( dialect.supportsCascadeDelete() ) {

@@ -2051,6 +2051,7 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public String getAddForeignKeyConstraintString(
 			String constraintName,
+			String foreignKeyDefinition,
 			String[] foreignKey,
 			String referencedTable,
 			String[] primaryKey,
@@ -2058,16 +2059,22 @@ public abstract class Dialect implements ConversionContext {
 		final StringBuilder res = new StringBuilder( 30 );
 
 		res.append( " add constraint " )
-				.append( quote( constraintName ) )
-				.append( " foreign key (" )
-				.append( StringHelper.join( ", ", foreignKey ) )
-				.append( ") references " )
-				.append( referencedTable );
-
-		if ( !referencesPrimaryKey ) {
-			res.append( " (" )
-					.append( StringHelper.join( ", ", primaryKey ) )
-					.append( ')' );
+				.append( quote( constraintName ) );
+		
+		if(foreignKeyDefinition != null) {
+			res.append(  " " );
+			res.append(  foreignKeyDefinition );
+		} else {
+			res.append( " foreign key (" )
+					.append( StringHelper.join( ", ", foreignKey ) )
+					.append( ") references " )
+					.append( referencedTable );
+	
+			if ( !referencesPrimaryKey ) {
+				res.append( " (" )
+						.append( StringHelper.join( ", ", primaryKey ) )
+						.append( ')' );
+			}
 		}
 
 		return res.toString();

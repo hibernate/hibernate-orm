@@ -1132,17 +1132,20 @@ public abstract class CollectionBinder {
 					}
 					else {
 						key.setForeignKeyName( StringHelper.nullIfEmpty( collectionTableAnn.foreignKey().name() ) );
+						key.setForeignKeyDefinition( StringHelper.nullIfEmpty( collectionTableAnn.foreignKey().foreignKeyDefinition() ) );
 					}
 				}
 				else {
 					final JoinTable joinTableAnn = property.getAnnotation( JoinTable.class );
 					if ( joinTableAnn != null ) {
 						String foreignKeyName = joinTableAnn.foreignKey().name();
+						String foreignKeyDefinition = joinTableAnn.foreignKey().foreignKeyDefinition();
 						ConstraintMode foreignKeyValue = joinTableAnn.foreignKey().value();
 						if ( joinTableAnn.joinColumns().length != 0 ) {
 							final JoinColumn joinColumnAnn = joinTableAnn.joinColumns()[0];
 							if ( "".equals( foreignKeyName ) ) {
 								foreignKeyName = joinColumnAnn.foreignKey().name();
+								foreignKeyDefinition = joinColumnAnn.foreignKey().foreignKeyDefinition();
 							}
 							if ( foreignKeyValue != ConstraintMode.NO_CONSTRAINT ) {
 								foreignKeyValue = joinColumnAnn.foreignKey().value();
@@ -1153,6 +1156,7 @@ public abstract class CollectionBinder {
 						}
 						else {
 							key.setForeignKeyName( StringHelper.nullIfEmpty( foreignKeyName ) );
+							key.setForeignKeyDefinition( StringHelper.nullIfEmpty( foreignKeyDefinition ) );
 						}
 					}
 					else {
@@ -1163,6 +1167,7 @@ public abstract class CollectionBinder {
 							}
 							else {
 								key.setForeignKeyName( StringHelper.nullIfEmpty( joinColumnAnn.foreignKey().name() ) );
+								key.setForeignKeyDefinition( StringHelper.nullIfEmpty( joinColumnAnn.foreignKey().foreignKeyDefinition() ) );
 							}
 						}
 					}
@@ -1342,11 +1347,13 @@ public abstract class CollectionBinder {
 				final JoinTable joinTableAnn = property.getAnnotation( JoinTable.class );
 				if ( joinTableAnn != null ) {
 					String foreignKeyName = joinTableAnn.inverseForeignKey().name();
+					String foreignKeyDefinition = joinTableAnn.inverseForeignKey().foreignKeyDefinition();
 					ConstraintMode foreignKeyValue = joinTableAnn.foreignKey().value();
 					if ( joinTableAnn.inverseJoinColumns().length != 0 ) {
 						final JoinColumn joinColumnAnn = joinTableAnn.inverseJoinColumns()[0];
 						if ( "".equals( foreignKeyName ) ) {
 							foreignKeyName = joinColumnAnn.foreignKey().name();
+							foreignKeyDefinition = joinColumnAnn.foreignKey().foreignKeyDefinition();
 						}
 						if ( foreignKeyValue != ConstraintMode.NO_CONSTRAINT ) {
 							foreignKeyValue = joinColumnAnn.foreignKey().value();
@@ -1357,6 +1364,7 @@ public abstract class CollectionBinder {
 					}
 					else {
 						element.setForeignKeyName( StringHelper.nullIfEmpty( foreignKeyName ) );
+						element.setForeignKeyDefinition( StringHelper.nullIfEmpty( foreignKeyDefinition ) );
 					}
 				}
 			}

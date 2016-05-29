@@ -724,9 +724,9 @@ public abstract class AbstractHANADialect extends Dialect {
 	 * to work around the issue.
 	 */
 	@Override
-	public String getAddForeignKeyConstraintString(final String constraintName, final String[] foreignKey,
+	public String getAddForeignKeyConstraintString(final String constraintName, String foreignKeyDefinition, final String[] foreignKey,
 			final String referencedTable, final String[] primaryKey, final boolean referencesPrimaryKey) {
-		return super.getAddForeignKeyConstraintString(constraintName, foreignKey, referencedTable, primaryKey, referencesPrimaryKey) + " on update cascade";
+		return super.getAddForeignKeyConstraintString(constraintName, foreignKeyDefinition, foreignKey, referencedTable, primaryKey, referencesPrimaryKey) + (foreignKeyDefinition == null ? " on update cascade" : "");
 	}
 
 	@Override

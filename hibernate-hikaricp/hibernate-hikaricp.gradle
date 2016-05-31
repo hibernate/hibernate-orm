@@ -8,7 +8,6 @@ dependencies {
     compile project( ':hibernate-core' )
     compile( libraries.hikaricp )
     testCompile project( ':hibernate-testing' )
-    testRuntime libraries.slf4j_log4j
 }
 
 mavenPom {

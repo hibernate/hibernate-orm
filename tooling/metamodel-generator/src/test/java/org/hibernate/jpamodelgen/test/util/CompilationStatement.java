@@ -20,9 +20,10 @@ import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
 import org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor;
+
 import org.junit.runners.model.Statement;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import org.jboss.logging.Logger;
 
 import static org.junit.Assert.fail;
 
@@ -35,7 +36,7 @@ import static org.junit.Assert.fail;
  * @author Hardy Ferentschik
  */
 public class CompilationStatement extends Statement {
-	private static final Logger log = LoggerFactory.getLogger( CompilationStatement.class );
+	private static final Logger log = Logger.getLogger( CompilationStatement.class );
 	private static final String PACKAGE_SEPARATOR = ".";
 	private static final String ANNOTATION_PROCESSOR_OPTION_PREFIX = "-A";
 	private static final String SOURCE_BASE_DIR_PROPERTY = "sourceBaseDir";

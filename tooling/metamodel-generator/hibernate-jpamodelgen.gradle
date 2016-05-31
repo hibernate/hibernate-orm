@@ -10,9 +10,7 @@ apply plugin: 'org.hibernate.build.gradle.xjc'
 dependencies {
 	testCompile libraries.junit
     testCompile libraries.jpa
-    testCompile project( ':hibernate-core' ) 
-	testCompile libraries.slf4j_api
-	testCompile libraries.slf4j_log4j
+    testCompile project( ':hibernate-core' )
 }
 
 mavenPom {

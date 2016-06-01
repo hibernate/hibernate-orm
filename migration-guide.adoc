@@ -76,3 +76,4 @@ implement JPA methods now in core I decided to implement more of a composition a
 	and EntityManager#getFlushMode.
 * Setting `hibernate.listeners.envers.autoRegister` has been deprecated in favor of
   `hibernate.envers.autoRegisterListeners`.
+* AuditReader#getCurrentRevision has been deprecated in favor of `org.hibernate.envers.RevisionListener`.

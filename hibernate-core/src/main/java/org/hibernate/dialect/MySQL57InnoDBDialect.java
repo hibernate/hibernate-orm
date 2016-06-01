@@ -31,6 +31,11 @@ public class MySQL57InnoDBDialect extends MySQL5InnoDBDialect {
 		// default).
 		registerColumnType( Types.TIMESTAMP, "datetime(6)" );
 
+		// MySQL 5.7 brings JSON native support with a dedicated datatype.
+		// For more details about MySql new JSON datatype support, see:
+		// https://dev.mysql.com/doc/refman/5.7/en/json.html
+		registerColumnType( Types.JAVA_OBJECT, "json" );
+
 		// MySQL also supports fractional seconds precision for time values
 		// (time(fsp)). According to SQL 1992, the default for <time precision>
 		// is 0. The MySQL default is time(0), there's no need to override

@@ -9,6 +9,7 @@ package org.hibernate.boot.model.source.internal.hbm;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmOnDeleteEnum;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmOneToOneType;
 import org.hibernate.boot.model.JavaTypeDescriptor;
 import org.hibernate.boot.model.source.spi.AttributePath;
@@ -193,7 +194,7 @@ class SingularAttributeSourceOneToOneImpl
 
 	@Override
 	public boolean isCascadeDeleteEnabled() {
-		return false;
+		return JaxbHbmOnDeleteEnum.CASCADE.equals( oneToOneElement.getOnDelete() );
 	}
 
 	@Override

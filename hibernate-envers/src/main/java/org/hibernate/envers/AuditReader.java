@@ -224,7 +224,10 @@ public interface AuditReader {
 	 * @param <T> The type of the revision entity to find
 	 *
 	 * @return The current revision entity, to which any entries in the audit tables will be bound.
+	 * @deprecated (since 5.2), use {@link org.hibernate.envers.RevisionListener} instead.  While this method is
+	 * being deprecated, expect a new API for this in 6.0.
 	 */
+	@Deprecated
 	<T> T getCurrentRevision(Class<T> revisionEntityClass, boolean persist);
 
 	/**

@@ -112,7 +112,7 @@ public class StoreProcedureOutParameterByPositionTest extends BaseEntityManagerF
 						"AS " +
 						"BEGIN " +
 						"  SELECT NAME INTO NAME_PARAM FROM USERS WHERE id = ID_PARAM; " +
-						"END PROC_EXAMPLE; "
+						"END PROC_EXAMPLE_ONE_BASIC_OUT; "
 		);
 
 		createProcedure(
@@ -174,7 +174,7 @@ public class StoreProcedureOutParameterByPositionTest extends BaseEntityManagerF
 			value = {
 					@NamedStoredProcedureQuery(name = "User.findNameById",
 							resultClasses = User.class,
-							procedureName = "PROC_EXAMPLE"
+							procedureName = "PROC_EXAMPLE_ONE_BASIC_OUT"
 							,
 							parameters = {
 									@StoredProcedureParameter(mode = ParameterMode.IN, type = Integer.class),

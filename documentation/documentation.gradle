@@ -69,10 +69,22 @@ dependencies {
 	testCompile( project(':hibernate-testing') )
 	testCompile( project(path: ':hibernate-entitymanager', configuration: 'tests') )
 
+	//Databases
 	testRuntime( libraries.h2 )
 	testRuntime( libraries.hsqldb )
 	testRuntime( libraries.postgresql )
 	testRuntime( libraries.mysql )
+	testRuntime( libraries.mariadb )
+	if (db.equalsIgnoreCase("oracle")) {
+		dependencies {
+			testRuntime( libraries.oracle )
+		}
+	}
+	if (db.equalsIgnoreCase("mssql")) {
+		dependencies {
+			testRuntime( libraries.mssql )
+		}
+	}
 }
 
 processTestResources.doLast( {

@@ -218,19 +218,29 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public String getAddForeignKeyConstraintString(
 			String constraintName,
+			String foreignKeyDefinition,
 			String[] foreignKey,
 			String referencedTable,
 			String[] primaryKey,
 			boolean referencesPrimaryKey) {
-		final String cols = StringHelper.join( ", ", foreignKey );
-		final String referencedCols = StringHelper.join( ", ", primaryKey );
-		return String.format(
-				" add constraint %s foreign key (%s) references %s (%s)",
-				constraintName,
-				cols,
-				referencedTable,
-				referencedCols
-		);
+		StringBuilder result = new StringBuilder();
+		result.append(" add constraint ")
+			.append(constraintName);
+
+		if( foreignKeyDefinition != null ) {
+			result.append(" ");
+			result.append(foreignKeyDefinition);
+		} else {
+			final String cols = StringHelper.join( ", ", foreignKey );
+			final String referencedCols = StringHelper.join( ", ", primaryKey );
+			result.append(String.format(
+					" foreign key (%s) references %s (%s)",
+					cols,
+					referencedTable,
+					referencedCols
+			));
+		}
+		return result.toString();
 	}
 
 	@Override

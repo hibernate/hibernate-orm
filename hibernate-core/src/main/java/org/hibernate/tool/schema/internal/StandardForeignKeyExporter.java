@@ -105,6 +105,7 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 				.append(
 						dialect.getAddForeignKeyConstraintString(
 								foreignKey.getName(),
+								foreignKey.getKeyDefinition(),
 								columnNames,
 								targetTableName,
 								targetColumnNames,

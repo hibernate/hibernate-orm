@@ -7,12 +7,9 @@ dependencies {
     testRuntime( libraries.ehcache3 )
 }
 
-def pomName() {
-    return 'Hibernate/JCache Integration'
-}
-
-def pomDescription() {
-    return 'Integration for javax.cache into Hibernate as a second-level caching service'
+mavenPom {
+    name = 'Hibernate/JCache Integration'
+    description = 'Integration for javax.cache into Hibernate as a second-level caching service'
 }
 
 def osgiDescription() {

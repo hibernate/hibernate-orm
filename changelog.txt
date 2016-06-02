@@ -3,6 +3,100 @@ Hibernate 5.0 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+
+Changes in 5.2.0.Final (June 1, 2016)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/23150/tab/release-report-done
+https://hibernate.atlassian.net/browse/HHH-8507?jql=statusCategory%20%3D%20done%20AND%20project%20%3D%2010031%20AND%20fixVersion%20%3D%2023150%20ORDER%20BY%20priority%20DESC%2C%20key%20ASC
+
+** Bug
+    * [HHH-6781] - Class level @Where annotation is not enforced on collections of that class
+    * [HHH-7355] - Hibernate criteria JOIN + additional condition (with clause) don't work with many-to-many association
+    * [HHH-8507] - SQLServer2005LimitHandler throws "string out of range -1" error
+    * [HHH-9178] - Querying audited entities with embeddables fails with 'org.hibernate.QueryException: could not resolve property:'
+    * [HHH-9602] - Schema validation fails when materialized view is involved
+    * [HHH-9676] - TypeSafeActivator.applyDDL doesn't process composing constraints when @NotNull is present
+    * [HHH-9894] - Support Informix Boolean Type
+    * [HHH-9951] - Formula annotation doesn't properly escape keywords/types
+    * [HHH-10143] - Apache Derby and PostgreSQL - Criteria selectCase with Enum fails without explicit cast
+    * [HHH-10246] - PropertyNotFoundException with Hibernate Envers when using referencedColumn in @JoinColumn and bidirectional @OneTomany
+    * [HHH-10287] - Cache keys no longer include the entity type
+    * [HHH-10290] - org.hibernate.test.cfg.BatchVersionedDataConfigTest does not work properly when hibernate.jdbc.batch_versioned_data is set in environment
+    * [HHH-10365] - Karaf feature hibernate-envers fails to create EntityManagerFactory
+    * [HHH-10373] - Sequence generator for idbag ignores generator parameters
+    * [HHH-10468] - If global "with modified flag" set, you cannot override the value
+    * [HHH-10476] - Getting an entity with composite ID containing a detached entity fails if PersistenceContext contains a managed copy
+    * [HHH-10513] - Follow-on locking WARN message logged when query LockMode is NONE
+    * [HHH-10522] - Invalid reference to naming chapter in user guide
+    * [HHH-10524] - Invalid reference wrt composite identifiers
+    * [HHH-10525] - Invalid reference to bytecode enhancement in User Guide
+    * [HHH-10526] - SchemaCreator does not apply SchemaFilter on foreign keys
+    * [HHH-10535] - Documentation: hibernate.order_updates configuration property
+    * [HHH-10587] - Test NationalizedIgnoreCaseTest.testIgnoreCaseCriteria fails on some databases that don't support nString type
+    * [HHH-10588] - ConnectionsReleaseTest should use H2Dialect
+    * [HHH-10598] - Oracle JDBC driver can't handle entities with a one-character name in some cases
+    * [HHH-10601] - Persistence.generateSchema - the output file contains duplicated DDL statements
+    * [HHH-10605] - HSQLDialect dosn't use "if exists" when dropping sequences
+    * [HHH-10612] - Check for support of RefCursor in Java 8
+    * [HHH-10640] - SchemaCreationTest fails on DB2 due to wrong expected statement
+    * [HHH-10641] - Some tests fail on Oracle due to ORA-00972: identifier is too long
+    * [HHH-10646] - Lazy fetch not properly handled when annotation in @MappedSuperclass
+    * [HHH-10649] - When 2LC enabled, flush session and then refresh entity cause dirty read in another session / transaction
+    * [HHH-10678] - hibernate-mapping's schema is ignored
+    * [HHH-10684] - No target script generated for update action when using schema-generation
+    * [HHH-10688] - Document changes from HHH-10056 in User Documentation
+    * [HHH-10706] - Test case native queries fail with case-sensitive databases dialects.
+    * [HHH-10708] - Accessing a lazy collection in an enhanced class deletes it afterwards
+    * [HHH-10718] - Underscore in table name can result in SchemaExtractionException: More than one table found
+    * [HHH-10734] - Hibernate Envers creates unnecessary audit rows for tables with LOB data
+    * [HHH-10736] - SQLServer dialect issue with native sql
+    * [HHH-10754] - Add support for PARTITION keyword in @Formula
+    * [HHH-10756] - StoredProcedureQuery with OUT param fails with Oracle when using named parameters
+    * [HHH-10757] - "select new ..." with CAST( NULL AS ...) fails with QuerySyntaxException: unexpected AST node: NULL
+    * [HHH-10765] - Some links in the user guide are broken
+    * [HHH-10766] - XML Enum mapping with parameter 'type'
+    * [HHH-10772] - RuntimeException during releaseStatements causes JDBC connection not to be closed
+
+** New Feature
+    * [HHH-8070] - Support "in" expression in AuditRelatedId
+    * [HHH-9339] - java.lang.Optional support
+    * [HHH-10431] - Session-level configurable batch size support
+    * [HHH-10669] - Allow to add SF-scoped services through a ServiceContributor
+    * [HHH-10689] - Fix tests failing when switching to Oracle
+    * [HHH-10691] - Fix tests failing when switching to PostgreSQL
+    * [HHH-10696] - Add a new CatalogFilterTest
+    * [HHH-10762] - Implement left-joins for relation traversion in audit queries
+
+** Task
+    * [HHH-10664] - Prep 5.2 feature branch
+    * [HHH-10670] - Remove deprecated ValidTimeAuditStrategy
+    * [HHH-10760] - Add a getter to org.hibernate.mapping.Index to expose the columnOrderMap
+    * [HHH-10781] - Remove all slf4j dependencies
+
+** Improvement
+    * [HHH-9340] - Streams API for query result processing.
+    * [HHH-9406] - QueryStatistics is useless for really fast queries
+    * [HHH-9570] - Auto-detect SQL Server 2014 when the major version is 12
+    * [HHH-9742] - Allow to strictly adhere to JPA disallowance of restricting a fetched join
+    * [HHH-10049] - References to unmapped classes in from clause should not be allowed with strict JPQL compliance
+    * [HHH-10052] - documentation about hashcode and equals not up to date
+    * [HHH-10085] - Remove cast from SearchedCaseExpression and SimpleCaseExpression
+    * [HHH-10332] - Schema validation: ambiguous table name
+    * [HHH-10382] - GetterFieldImpl creates unnecessary objects
+    * [HHH-10674] - SessionFactoryObserver could use a sessionFactoryAboutToClose method
+    * [HHH-10711] - Null pointers should not be dereferenced
+    * [HHH-10714] - Add support for @Immutable attribute types
+    * [HHH-10726] - Support for Java 8 date/time types as Query parameters
+    * [HHH-10750] - Add stored procedure tests for Oracle, SQL Server, PostgreSQL, and MySQL
+    * [HHH-10752] - ProcedureCallImpl registers every paremeter twice
+    * [HHH-10770] - Add support for JCache-compliant 2nd-level cache providers
+    * [HHH-10780] - Provide a PrimitiveByteArrayTypeDescriptor toString implementation
+
+** Patch
+    * [HHH-1237] - Escaping : with :: in queries
+
+
+
 Changes in 5.1.0.Final (February 10, 2016)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/19355

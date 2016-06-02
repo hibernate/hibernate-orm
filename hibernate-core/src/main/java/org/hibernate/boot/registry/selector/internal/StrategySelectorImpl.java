@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.registry.selector.spi.StrategyCreator;
 import org.hibernate.boot.registry.selector.spi.StrategySelectionException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 
@@ -26,8 +27,20 @@ import org.jboss.logging.Logger;
 public class StrategySelectorImpl implements StrategySelector {
 	private static final Logger log = Logger.getLogger( StrategySelectorImpl.class );
 
-	private final Map<Class,Map<String,Class>> namedStrategyImplementorByStrategyMap
-			= new ConcurrentHashMap<Class, Map<String, Class>>();
+
+	public static StrategyCreator STANDARD_STRATEGY_CREATOR = strategyClass -> {
+		try {
+			return strategyClass.newInstance();
+		}
+		catch (Exception e) {
+			throw new StrategySelectionException(
+					String.format( "Could not instantiate named strategy class [%s]", strategyClass.getName() ),
+					e
+			);
+		}
+	};
+
+	private final Map<Class,Map<String,Class>> namedStrategyImplementorByStrategyMap = new ConcurrentHashMap<>();
 
 	private final ClassLoaderService classLoaderService;
 
@@ -44,7 +57,7 @@ public class StrategySelectorImpl implements StrategySelector {
 	public <T> void registerStrategyImplementor(Class<T> strategy, String name, Class<? extends T> implementation) {
 		Map<String,Class> namedStrategyImplementorMap = namedStrategyImplementorByStrategyMap.get( strategy );
 		if ( namedStrategyImplementorMap == null ) {
-			namedStrategyImplementorMap = new ConcurrentHashMap<String, Class>();
+			namedStrategyImplementorMap = new ConcurrentHashMap<>();
 			namedStrategyImplementorByStrategyMap.put( strategy, namedStrategyImplementorMap );
 		}
 
@@ -126,12 +139,7 @@ public class StrategySelectorImpl implements StrategySelector {
 		return resolveDefaultableStrategy(
 				strategy,
 				strategyReference,
-				new Callable<T>() {
-					@Override
-					public T call() {
-						return defaultValue;
-					}
-				}
+				(Callable<T>) () -> defaultValue
 		);
 	}
 
@@ -141,6 +149,30 @@ public class StrategySelectorImpl implements StrategySelector {
 			Class<T> strategy,
 			Object strategyReference,
 			Callable<T> defaultResolver) {
+		return (T) resolveStrategy( strategy, strategyReference, defaultResolver, STANDARD_STRATEGY_CREATOR );
+	}
+
+	@Override
+	public <T> T resolveStrategy(
+			Class<T> strategy,
+			Object strategyReference,
+			T defaultValue,
+			StrategyCreator<T> creator) {
+		return resolveStrategy(
+				strategy,
+				strategyReference,
+				(Callable<T>) () -> defaultValue,
+				creator
+		);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> T resolveStrategy(
+			Class<T> strategy,
+			Object strategyReference,
+			Callable<T> defaultResolver,
+			StrategyCreator<T> creator) {
 		if ( strategyReference == null ) {
 			try {
 				return defaultResolver.call();
@@ -163,7 +195,7 @@ public class StrategySelectorImpl implements StrategySelector {
 		}
 
 		try {
-			return implementationClass.newInstance();
+			return creator.create( implementationClass );
 		}
 		catch (Exception e) {
 			throw new StrategySelectionException(

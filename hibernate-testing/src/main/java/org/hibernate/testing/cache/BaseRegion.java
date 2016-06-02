@@ -17,22 +17,29 @@ import org.hibernate.cache.spi.Region;
  * @author Strong Liu
  */
 public class BaseRegion implements Region {
-	protected final Map cache = new ConcurrentHashMap();
+	private final CachingRegionFactory cachingRegionFactory;
 	private final String name;
+	protected final Map cache = new ConcurrentHashMap();
+
 	private static int timeout = Timestamper.ONE_MS * 60000;  //60s
 
-	BaseRegion(String name) {
+	BaseRegion(CachingRegionFactory cachingRegionFactory, String name) {
+		this.cachingRegionFactory = cachingRegionFactory;
 		this.name = name;
 	}
 
-	@Override
-	public boolean contains(Object key) {
-		return key != null ? cache.containsKey( key ) : false;
+	public CachingRegionFactory getRegionFactory() {
+		return cachingRegionFactory;
 	}
 
 	@Override
 	public String getName() {
 		return name;
+	}
+
+	@Override
+	public boolean contains(Object key) {
+		return key != null ? cache.containsKey( key ) : false;
 	}
 
 	@Override

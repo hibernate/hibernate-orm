@@ -18,14 +18,17 @@ import org.jboss.logging.Logger;
 /**
  * @author Strong Liu
  */
-class EntityRegionImpl extends BaseTransactionalDataRegion implements EntityRegion {
+public class EntityRegionImpl extends BaseTransactionalDataRegion implements EntityRegion {
 	private static final Logger LOG = Logger.getLogger( EntityRegionImpl.class );
-
 
 	private final SessionFactoryOptions settings;
 
-	EntityRegionImpl(String name, CacheDataDescription metadata, SessionFactoryOptions settings) {
-		super( name, metadata );
+	protected EntityRegionImpl(
+			CachingRegionFactory cachingRegionFactory,
+			String name,
+			CacheDataDescription metadata,
+			SessionFactoryOptions settings) {
+		super( cachingRegionFactory, name, metadata );
 		this.settings = settings;
 
 	}

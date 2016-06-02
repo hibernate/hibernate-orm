@@ -19,9 +19,9 @@ import org.hibernate.service.Service;
  * StrategySelector manages resolution of particular implementation by (possibly short) name via the
  * {@link #selectStrategyImplementor} method, which is the main contract here.  As indicated in the docs of that
  * method the given name might be either a short registered name or the implementation FQN.  As an example, consider
- * resolving the {@link org.hibernate.engine.transaction.spi.TransactionFactory} implementation to use.  To use the
- * JDBC-based TransactionFactory the passed name might be either {@code "jdbc"} or
- * {@code "org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory"} (which is the FQN).
+ * resolving the {@link org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder} implementation to use.  To use the
+ * JDBC-based TransactionCoordinatorBuilder the passed name might be either {@code "jdbc"} or
+ * {@code "org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl"} (which is the FQN).
  * <p/>
  * Strategy implementations can be managed by {@link #registerStrategyImplementor} and
  * {@link #unRegisterStrategyImplementor}.  Originally designed to help the OSGi use case, though no longer used there.
@@ -135,4 +135,8 @@ public interface StrategySelector extends Service {
 	 * @return The strategy instance
 	 */
 	<T> T resolveDefaultableStrategy(Class<T> strategy, Object strategyReference, Callable<T> defaultResolver);
+
+	<T> T resolveStrategy(Class<T> strategy, Object strategyReference, Callable<T> defaultResolver, StrategyCreator<T> creator);
+
+	<T> T resolveStrategy(Class<T> strategy, Object strategyReference, T defaultValue, StrategyCreator<T> creator);
 }

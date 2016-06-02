@@ -15,8 +15,8 @@ import org.hibernate.cache.spi.TransactionalDataRegion;
 class BaseTransactionalDataRegion extends BaseGeneralDataRegion implements TransactionalDataRegion {
 	private final CacheDataDescription metadata;
 
-	BaseTransactionalDataRegion(String name, CacheDataDescription metadata) {
-		super( name );
+	BaseTransactionalDataRegion(CachingRegionFactory cachingRegionFactory, String name, CacheDataDescription metadata) {
+		super( cachingRegionFactory, name );
 		this.metadata = metadata;
 	}
 

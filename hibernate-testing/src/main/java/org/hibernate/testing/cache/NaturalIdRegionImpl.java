@@ -23,8 +23,12 @@ class NaturalIdRegionImpl extends BaseTransactionalDataRegion implements Natural
 
 	private final SessionFactoryOptions settings;
 
-	NaturalIdRegionImpl(String name, CacheDataDescription metadata, SessionFactoryOptions settings) {
-		super( name, metadata );
+	NaturalIdRegionImpl(
+			CachingRegionFactory cachingRegionFactory,
+			String name,
+			CacheDataDescription metadata,
+			SessionFactoryOptions settings) {
+		super( cachingRegionFactory, name, metadata );
 		this.settings = settings;
 	}
 

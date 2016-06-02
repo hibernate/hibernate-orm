@@ -7,7 +7,6 @@
 package org.hibernate.testing.cache;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
@@ -61,11 +60,11 @@ class BaseNaturalIdRegionAccessStrategy extends BaseRegionAccessStrategy impleme
 
 	@Override
 	public Object generateCacheKey(Object[] naturalIdValues, EntityPersister persister, SharedSessionContractImplementor session) {
-		return DefaultCacheKeysFactory.createNaturalIdKey( naturalIdValues, persister, session );
+		return region.getRegionFactory().getCacheKeysFactory().createNaturalIdKey( naturalIdValues, persister, session );
 	}
 
 	@Override
 	public Object[] getNaturalIdValues(Object cacheKey) {
-		return DefaultCacheKeysFactory.getNaturalIdValues( cacheKey );
+		return region.getRegionFactory().getCacheKeysFactory().getNaturalIdValues( cacheKey );
 	}
 }

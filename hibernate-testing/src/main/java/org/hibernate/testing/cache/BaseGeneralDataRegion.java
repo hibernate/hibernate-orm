@@ -18,8 +18,8 @@ import org.jboss.logging.Logger;
 class BaseGeneralDataRegion extends BaseRegion implements GeneralDataRegion {
 	private static final Logger LOG = Logger.getLogger( BaseGeneralDataRegion.class.getName() );
 
-	BaseGeneralDataRegion(String name) {
-		super( name );
+	BaseGeneralDataRegion(CachingRegionFactory cachingRegionFactory, String name) {
+		super( cachingRegionFactory, name );
 	}
 
 	@Override

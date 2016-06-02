@@ -107,11 +107,11 @@ class ReadWriteNaturalIdRegionAccessStrategy extends AbstractReadWriteAccessStra
 
 	@Override
 	public Object generateCacheKey(Object[] naturalIdValues, EntityPersister persister, SharedSessionContractImplementor session) {
-		return DefaultCacheKeysFactory.createNaturalIdKey( naturalIdValues, persister, session );
+		return region.getRegionFactory().getCacheKeysFactory().createNaturalIdKey( naturalIdValues, persister, session );
 	}
 
 	@Override
 	public Object[] getNaturalIdValues(Object cacheKey) {
-		return DefaultCacheKeysFactory.getNaturalIdValues( cacheKey );
+		return region.getRegionFactory().getCacheKeysFactory().getNaturalIdValues( cacheKey );
 	}
 }

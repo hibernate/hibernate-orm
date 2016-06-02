@@ -48,11 +48,11 @@ class ReadWriteCollectionRegionAccessStrategy extends AbstractReadWriteAccessStr
 
 	@Override
 	public Object generateCacheKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
-		return DefaultCacheKeysFactory.createCollectionKey( id, persister, factory, tenantIdentifier );
+		return region.getRegionFactory().getCacheKeysFactory().createCollectionKey( id, persister, factory, tenantIdentifier );
 	}
 
 	@Override
 	public Object getCacheKeyId(Object cacheKey) {
-		return DefaultCacheKeysFactory.getCollectionId( cacheKey );
+		return region.getRegionFactory().getCacheKeysFactory().getCollectionId( cacheKey );
 	}
 }

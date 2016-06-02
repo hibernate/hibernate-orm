@@ -9,7 +9,6 @@ package org.hibernate.testing.cache;
 import java.util.Comparator;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
@@ -107,11 +106,11 @@ class ReadWriteNaturalIdRegionAccessStrategy extends AbstractReadWriteAccessStra
 
 	@Override
 	public Object generateCacheKey(Object[] naturalIdValues, EntityPersister persister, SessionImplementor session) {
-		return DefaultCacheKeysFactory.createNaturalIdKey( naturalIdValues, persister, session );
+		return region.getRegionFactory().getCacheKeysFactory().createNaturalIdKey( naturalIdValues, persister, session );
 	}
 
 	@Override
 	public Object[] getNaturalIdValues(Object cacheKey) {
-		return DefaultCacheKeysFactory.getNaturalIdValues( cacheKey );
+		return region.getRegionFactory().getCacheKeysFactory().getNaturalIdValues( cacheKey );
 	}
 }

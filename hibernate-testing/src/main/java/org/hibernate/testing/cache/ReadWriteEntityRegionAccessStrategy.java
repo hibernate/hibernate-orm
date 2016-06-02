@@ -110,11 +110,11 @@ class ReadWriteEntityRegionAccessStrategy extends AbstractReadWriteAccessStrateg
 
 	@Override
 	public Object generateCacheKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
-		return DefaultCacheKeysFactory.createEntityKey( id, persister, factory, tenantIdentifier );
+		return region.getRegionFactory().getCacheKeysFactory().createEntityKey( id, persister, factory, tenantIdentifier );
 	}
 
 	@Override
 	public Object getCacheKeyId(Object cacheKey) {
-		return DefaultCacheKeysFactory.getEntityId( cacheKey );
+		return region.getRegionFactory().getCacheKeysFactory().getEntityId( cacheKey );
 	}
 }

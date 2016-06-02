@@ -23,8 +23,12 @@ class CollectionRegionImpl extends BaseTransactionalDataRegion implements Collec
 
 	private final SessionFactoryOptions settings;
 
-	CollectionRegionImpl(String name, CacheDataDescription metadata, SessionFactoryOptions settings) {
-		super( name, metadata );
+	CollectionRegionImpl(
+			CachingRegionFactory cachingRegionFactory,
+			String name,
+			CacheDataDescription metadata,
+			SessionFactoryOptions settings) {
+		super( cachingRegionFactory, name, metadata );
 		this.settings = settings;
 	}
 

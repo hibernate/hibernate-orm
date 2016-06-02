@@ -49,6 +49,9 @@ public abstract class AbstractServiceRegistryImpl
 
 	private final ConcurrentServiceBinding<Class,ServiceBinding> serviceBindingMap = new ConcurrentServiceBinding<Class,ServiceBinding>();
 	private ConcurrentServiceBinding<Class,Class> roleXref;
+	// The services stored in initializedServiceByRole are completely initialized
+	// (i.e., configured, dependencies injected, and started)
+	private final ConcurrentServiceBinding<Class,Service> initializedServiceByRole = new ConcurrentServiceBinding<Class, Service>();
 
 	// IMPL NOTE : the list used for ordered destruction.  Cannot used map above because we need to
 	// iterate it in reverse order which is only available through ListIterator
@@ -179,17 +182,26 @@ public abstract class AbstractServiceRegistryImpl
 
 	@Override
 	public <R extends Service> R getService(Class<R> serviceRole) {
+		// TODO: should an exception be thrown if active == false???
+		R service = serviceRole.cast( initializedServiceByRole.get( serviceRole ) );
+		if ( service != null ) {
+			return service;
+		}
+
 		final ServiceBinding<R> serviceBinding = locateServiceBinding( serviceRole );
 		if ( serviceBinding == null ) {
 			throw new UnknownServiceException( serviceRole );
 		}
+		synchronized (this) {
+			service = serviceBinding.getService();
+			if ( service == null ) {
+				service = initializeService( serviceBinding );
+				// add the service only after it is completely initialized
+				initializedServiceByRole.put( serviceRole, service );
+			}
 
-		R service = serviceBinding.getService();
-		if ( service == null ) {
-			service = initializeService( serviceBinding );
+			return service;
 		}
-
-		return service;
 	}
 
 	protected <R extends Service> void registerService(ServiceBinding<R> serviceBinding, R service) {
@@ -346,6 +358,7 @@ public abstract class AbstractServiceRegistryImpl
 				serviceBindingList.clear();
 			}
 			serviceBindingMap.clear();
+			initializedServiceByRole.clear();
 		}
 		finally {
 			parent.deRegisterChild( this );
@@ -355,6 +368,8 @@ public abstract class AbstractServiceRegistryImpl
 	@Override
 	public <R extends Service> void stopService(ServiceBinding<R> binding) {
 		final Service service = binding.getService();
+		// TODO: it would be nice to remove service from initializedServiceByRole,
+		// but ConcurrentServiceBinding does not allow removing an entry.
 		if ( Stoppable.class.isInstance( service ) ) {
 			try {
 				( (Stoppable) service ).stop();

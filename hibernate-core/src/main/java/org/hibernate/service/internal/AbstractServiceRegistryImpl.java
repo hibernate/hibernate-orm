@@ -48,7 +48,7 @@ public abstract class AbstractServiceRegistryImpl
 	private final boolean allowCrawling;
 
 	private final ConcurrentServiceBinding<Class,ServiceBinding> serviceBindingMap = new ConcurrentServiceBinding<Class,ServiceBinding>();
-	private ConcurrentServiceBinding<Class,Class> roleXref;
+	private final ConcurrentServiceBinding<Class,Class> roleXref = new ConcurrentServiceBinding<Class,Class>();
 	// The services stored in initializedServiceByRole are completely initialized
 	// (i.e., configured, dependencies injected, and started)
 	private final ConcurrentServiceBinding<Class,Service> initializedServiceByRole = new ConcurrentServiceBinding<Class, Service>();
@@ -146,11 +146,9 @@ public abstract class AbstractServiceRegistryImpl
 		}
 
 		// look for a previously resolved alternate registration
-		if ( roleXref != null ) {
-			final Class alternative = roleXref.get( serviceRole );
-			if ( alternative != null ) {
-				return serviceBindingMap.get( alternative );
-			}
+		final Class alternative = roleXref.get( serviceRole );
+		if ( alternative != null ) {
+			return serviceBindingMap.get( alternative );
 		}
 
 		// perform a crawl looking for an alternate registration
@@ -174,9 +172,6 @@ public abstract class AbstractServiceRegistryImpl
 	}
 
 	private void registerAlternate(Class alternate, Class target) {
-		if ( roleXref == null ) {
-			roleXref = new ConcurrentServiceBinding<Class,Class>();
-		}
 		roleXref.put( alternate, target );
 	}
 

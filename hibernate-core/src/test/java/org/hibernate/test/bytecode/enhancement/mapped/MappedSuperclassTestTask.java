@@ -33,6 +33,13 @@ public class MappedSuperclassTestTask extends AbstractEnhancerTestTask {
 
 		// Check that both types of class attributes are being dirty tracked
 		EnhancerTestUtils.checkDirtyTracking( charles, "title", "oca" );
+		EnhancerTestUtils.clearDirtyTracking( charles );
+
+		// Let's give charles a promotion, this time using method references
+		charles.setOca( 99 );
+		charles.setTitle( "Manager" );
+
+		EnhancerTestUtils.checkDirtyTracking( charles, "title", "oca" );
 	}
 
 	protected void cleanup() {
@@ -50,6 +57,10 @@ public class MappedSuperclassTestTask extends AbstractEnhancerTestTask {
 		}
 
 		protected Person() {}
+
+		protected void setOca(long l) {
+			this.oca = l;
+		}
 	}
 
 	@Entity private static class Employee extends Person {
@@ -62,5 +73,9 @@ public class MappedSuperclassTestTask extends AbstractEnhancerTestTask {
 		}
 
 		public Employee() {}
+
+		public void setTitle(String title) {
+			this.title = title;
+		}
 	}
 }

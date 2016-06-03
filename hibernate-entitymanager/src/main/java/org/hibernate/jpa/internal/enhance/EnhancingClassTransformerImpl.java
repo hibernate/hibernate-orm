@@ -81,6 +81,11 @@ public class EnhancingClassTransformerImpl implements ClassTransformer {
 		}
 
 		@Override
+		public boolean isMappedSuperclassClass(CtClass classDescriptor) {
+			return wrappedContext.isMappedSuperclassClass( classDescriptor );
+		}
+
+		@Override
 		public boolean doBiDirectionalAssociationManagement(CtField field) {
 			return wrappedContext.doBiDirectionalAssociationManagement( field );
 		}

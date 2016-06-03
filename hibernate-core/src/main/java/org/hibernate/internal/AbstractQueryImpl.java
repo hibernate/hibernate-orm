@@ -900,11 +900,13 @@ public abstract class AbstractQueryImpl implements Query {
 			String namedParam = params[i];
 			final Object object = map.get( namedParam );
 			if ( object == null ) {
-				Type type = parameterMetadata.getNamedParameterDescriptor( namedParam ).getExpectedType();
-				if ( type == null ) {
-					type = StandardBasicTypes.SERIALIZABLE;
+				if ( map.containsKey( namedParam ) ) {
+					Type type = parameterMetadata.getNamedParameterDescriptor( namedParam ).getExpectedType();
+					if ( type == null ) {
+						type = StandardBasicTypes.SERIALIZABLE;
+					}
+					setParameter( namedParam, null, type );
 				}
-				setParameter( namedParam, object, type );
 			}
 			else {
 				Class retType = object.getClass();

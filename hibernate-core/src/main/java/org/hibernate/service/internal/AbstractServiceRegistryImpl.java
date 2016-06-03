@@ -36,6 +36,7 @@ import org.hibernate.service.spi.Stoppable;
  * Basic implementation of the ServiceRegistry and ServiceRegistryImplementor contracts
  *
  * @author Steve Ebersole
+ * @author Sanne Grinovero
  */
 public abstract class AbstractServiceRegistryImpl
 		implements ServiceRegistryImplementor, ServiceBinding.ServiceLifecycleOwner {
@@ -56,9 +57,12 @@ public abstract class AbstractServiceRegistryImpl
 	// IMPL NOTE : the list used for ordered destruction.  Cannot used map above because we need to
 	// iterate it in reverse order which is only available through ListIterator
 	// assume 20 services for initial sizing
+	// All access guarded by synchronization on the serviceBindingList itself.
 	private final List<ServiceBinding> serviceBindingList = CollectionHelper.arrayList( 20 );
 
+	// Guarded by synchronization on this.
 	private boolean autoCloseRegistry;
+	// Guarded by synchronization on this.
 	private Set<ServiceRegistryImplementor> childRegistries;
 
 	@SuppressWarnings( {"UnusedDeclaration"})
@@ -376,7 +380,7 @@ public abstract class AbstractServiceRegistryImpl
 	}
 
 	@Override
-	public void registerChild(ServiceRegistryImplementor child) {
+	public synchronized void registerChild(ServiceRegistryImplementor child) {
 		if ( childRegistries == null ) {
 			childRegistries = new HashSet<ServiceRegistryImplementor>();
 		}
@@ -389,7 +393,7 @@ public abstract class AbstractServiceRegistryImpl
 	}
 
 	@Override
-	public void deRegisterChild(ServiceRegistryImplementor child) {
+	public synchronized void deRegisterChild(ServiceRegistryImplementor child) {
 		if ( childRegistries == null ) {
 			throw new IllegalStateException( "No child ServiceRegistry registrations found" );
 		}

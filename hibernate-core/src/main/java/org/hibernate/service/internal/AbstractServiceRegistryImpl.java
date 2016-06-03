@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.cfg.Environment;
@@ -64,6 +65,8 @@ public abstract class AbstractServiceRegistryImpl
 	private boolean autoCloseRegistry;
 	// Guarded by synchronization on this.
 	private Set<ServiceRegistryImplementor> childRegistries;
+
+	private final AtomicBoolean active = new AtomicBoolean( true );
 
 	@SuppressWarnings( {"UnusedDeclaration"})
 	protected AbstractServiceRegistryImpl() {
@@ -187,11 +190,18 @@ public abstract class AbstractServiceRegistryImpl
 			return service;
 		}
 
-		final ServiceBinding<R> serviceBinding = locateServiceBinding( serviceRole );
-		if ( serviceBinding == null ) {
-			throw new UnknownServiceException( serviceRole );
-		}
-		synchronized (this) {
+		//Any service initialization needs synchronization
+		synchronized ( this ) {
+			// Check again after having acquired the lock:
+			service = serviceRole.cast( initializedServiceByRole.get( serviceRole ) );
+			if ( service != null ) {
+				return service;
+			}
+
+			final ServiceBinding<R> serviceBinding = locateServiceBinding( serviceRole );
+			if ( serviceBinding == null ) {
+				throw new UnknownServiceException( serviceRole );
+			}
 			service = serviceBinding.getService();
 			if ( service == null ) {
 				service = initializeService( serviceBinding );
@@ -331,44 +341,38 @@ public abstract class AbstractServiceRegistryImpl
 		}
 	}
 
-	private boolean active = true;
-
 	public boolean isActive() {
-		return active;
+		return active.get();
 	}
 
 	@Override
 	@SuppressWarnings( {"unchecked"})
-	public void destroy() {
-		if ( !active ) {
-			return;
-		}
-
-		active = false;
-		try {
-			synchronized (serviceBindingList) {
-				ListIterator<ServiceBinding> serviceBindingsIterator = serviceBindingList.listIterator(
-						serviceBindingList.size()
-				);
-				while ( serviceBindingsIterator.hasPrevious() ) {
-					final ServiceBinding serviceBinding = serviceBindingsIterator.previous();
-					serviceBinding.getLifecycleOwner().stopService( serviceBinding );
+	public synchronized void destroy() {
+		if ( active.compareAndSet( true, false ) ) {
+			try {
+				//First thing, make sure that the fast path read is disabled so that
+				//threads not owning the synchronization lock can't get an invalid Service:
+				initializedServiceByRole.clear();
+				synchronized (serviceBindingList) {
+					ListIterator<ServiceBinding> serviceBindingsIterator = serviceBindingList.listIterator(
+							serviceBindingList.size()
+					);
+					while ( serviceBindingsIterator.hasPrevious() ) {
+						final ServiceBinding serviceBinding = serviceBindingsIterator.previous();
+						serviceBinding.getLifecycleOwner().stopService( serviceBinding );
+					}
+					serviceBindingList.clear();
 				}
-				serviceBindingList.clear();
+				serviceBindingMap.clear();
+			} finally {
+				parent.deRegisterChild( this );
 			}
-			serviceBindingMap.clear();
-			initializedServiceByRole.clear();
-		}
-		finally {
-			parent.deRegisterChild( this );
 		}
 	}
 
 	@Override
 	public <R extends Service> void stopService(ServiceBinding<R> binding) {
 		final Service service = binding.getService();
-		// TODO: it would be nice to remove service from initializedServiceByRole,
-		// but ConcurrentServiceBinding does not allow removing an entry.
 		if ( Stoppable.class.isInstance( service ) ) {
 			try {
 				( (Stoppable) service ).stop();

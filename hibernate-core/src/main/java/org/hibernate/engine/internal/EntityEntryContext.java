@@ -181,9 +181,12 @@ public class EntityEntryContext {
 		}
 
 		// if we could not resolve it, just return (it was not associated with this context)
-		if ( managedEntity == null ) {
+		if ( managedEntity == null || managedEntity.$$_hibernate_getEntityEntry() == null) {
 			return null;
 		}
+
+		// TODO: should dirty be set to true only if managedEntity is associtated with this context
+		//       (instead of setting it at the top of this method)?
 
 		// prepare for re-linking...
 		final ManagedEntity previous = managedEntity.$$_hibernate_getPreviousManagedEntity();

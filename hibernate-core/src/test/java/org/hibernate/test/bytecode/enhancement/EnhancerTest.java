@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.bytecode.enhancement;
 
+import org.hibernate.test.bytecode.enhancement.eviction.EvictionTestTask;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils;
@@ -59,6 +60,11 @@ public class EnhancerTest extends BaseUnitTestCase {
 	@Test
 	public void testDirty() {
 		EnhancerTestUtils.runEnhancerTestTask( DirtyTrackingTestTask.class );
+	}
+
+	@Test
+	public void testEviction() {
+		EnhancerTestUtils.runEnhancerTestTask( EvictionTestTask.class );
 	}
 
 	@Test

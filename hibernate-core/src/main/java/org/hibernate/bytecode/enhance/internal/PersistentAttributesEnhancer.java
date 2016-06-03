@@ -14,7 +14,6 @@ import javax.persistence.Embedded;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
-import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
@@ -94,7 +93,11 @@ public class PersistentAttributesEnhancer extends Enhancer {
 		// HHH-10646 Add fields inherited from @MappedSuperclass
 		// CtClass.getFields() does not return private fields, while CtClass.getDeclaredFields() does not return inherit
 		for ( CtField ctField : managedCtClass.getFields() ) {
-			if ( !ctField.getDeclaringClass().hasAnnotation( MappedSuperclass.class ) || Modifier.isStatic( ctField.getModifiers() ) ) {
+			if ( ctField.getDeclaringClass().equals( managedCtClass ) ) {
+				// Already processed above
+				continue;
+			}
+			if ( !enhancementContext.isMappedSuperclassClass( ctField.getDeclaringClass() ) || Modifier.isStatic( ctField.getModifiers() ) ) {
 				continue;
 			}
 			if ( enhancementContext.isPersistentField( ctField ) ) {
@@ -124,7 +127,7 @@ public class PersistentAttributesEnhancer extends Enhancer {
 		}
 	}
 
-	private CtMethod generateFieldReader(
+	protected CtMethod generateFieldReader(
 			CtClass managedCtClass,
 			CtField persistentField,
 			AttributeTypeDescriptor typeDescriptor) {
@@ -165,7 +168,7 @@ public class PersistentAttributesEnhancer extends Enhancer {
 		}
 	}
 
-	private CtMethod generateFieldWriter(
+	protected CtMethod generateFieldWriter(
 			CtClass managedCtClass,
 			CtField persistentField,
 			AttributeTypeDescriptor typeDescriptor) {

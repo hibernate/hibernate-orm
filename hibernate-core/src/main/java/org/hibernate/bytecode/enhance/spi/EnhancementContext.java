@@ -53,6 +53,15 @@ public interface EnhancementContext {
 	public boolean isCompositeClass(CtClass classDescriptor);
 
 	/**
+	 * Does the given class name represent an MappedSuperclass class?
+	 *
+	 * @param classDescriptor The descriptor of the class to check.
+	 *
+	 * @return {@code true} if the class is an mapped super class; {@code false} otherwise.
+	 */
+	public boolean isMappedSuperclassClass(CtClass classDescriptor);
+
+	/**
 	 * Should we manage association of bi-directional persistent attributes for this field?
 	 *
 	 * @param field The field to check.

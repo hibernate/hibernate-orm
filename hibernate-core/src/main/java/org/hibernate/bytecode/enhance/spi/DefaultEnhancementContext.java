@@ -10,6 +10,7 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.ManyToMany;
+import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToMany;
 import javax.persistence.Transient;
 
@@ -42,6 +43,13 @@ public class DefaultEnhancementContext implements EnhancementContext {
 	 */
 	public boolean isCompositeClass(CtClass classDescriptor) {
 		return classDescriptor.hasAnnotation( Embeddable.class );
+	}
+
+	/**
+	 * look for @MappedSuperclass annotation
+	 */
+	public boolean isMappedSuperclassClass(CtClass classDescriptor) {
+		return classDescriptor.hasAnnotation( MappedSuperclass.class );
 	}
 
 	/**

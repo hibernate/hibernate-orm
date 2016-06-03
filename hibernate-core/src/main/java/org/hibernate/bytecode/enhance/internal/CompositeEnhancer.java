@@ -10,7 +10,6 @@ import javassist.CannotCompileException;
 import javassist.CtClass;
 import org.hibernate.bytecode.enhance.internal.tracker.CompositeOwnerTracker;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
-import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.engine.spi.CompositeOwner;
 import org.hibernate.engine.spi.CompositeTracker;
@@ -21,7 +20,7 @@ import org.hibernate.engine.spi.ManagedComposite;
  *
  * @author <a href="mailto:lbarreiro@redhat.com">Luis Barreiro</a>
  */
-public class CompositeEnhancer extends Enhancer {
+public class CompositeEnhancer extends PersistentAttributesEnhancer {
 
 	public CompositeEnhancer(EnhancementContext context) {
 		super( context );
@@ -37,7 +36,7 @@ public class CompositeEnhancer extends Enhancer {
 			addInLineDirtyHandling( managedCtClass );
 		}
 
-		new PersistentAttributesEnhancer( enhancementContext ).enhance( managedCtClass );
+		super.enhance( managedCtClass );
 	}
 
 	/* --- */

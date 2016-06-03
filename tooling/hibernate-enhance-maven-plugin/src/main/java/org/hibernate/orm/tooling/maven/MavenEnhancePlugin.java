@@ -144,7 +144,9 @@ public class MavenEnhancePlugin extends AbstractMojo {
 			}
 
 			if ( !enableLazyInitialization ) {
-				if ( !enhancementContext.isEntityClass( ctClass ) && !enhancementContext.isCompositeClass( ctClass ) ) {
+				if ( !enhancementContext.isEntityClass( ctClass )
+						&& !enhancementContext.isCompositeClass( ctClass )
+						&& !enhancementContext.isMappedSuperclassClass( ctClass ) ) {
 					getLog().info( "Skipping class file [" + file.getAbsolutePath() + "], not an entity nor embeddable" );
 					continue;
 				}

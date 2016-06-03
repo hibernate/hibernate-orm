@@ -133,7 +133,8 @@ public class HibernatePlugin implements Plugin<Project> {
 								final CtClass ctClass = toCtClass( file, classPool );
 
 								if ( !enhancementContext.isEntityClass( ctClass )
-										&& !enhancementContext.isCompositeClass( ctClass ) ) {
+										&& !enhancementContext.isCompositeClass( ctClass )
+										&& !enhancementContext.isMappedSuperclassClass( ctClass ) ) {
 									logger.info( "Skipping class [" + file.getAbsolutePath() + "], not an entity nor embeddable" );
 									continue;
 								}

@@ -12,13 +12,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import javax.persistence.MappedSuperclass;
-
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.CtField;
 import javassist.Modifier;
-import javassist.NotFoundException;
 
 import org.hibernate.bytecode.enhance.internal.tracker.DirtyTracker;
 import org.hibernate.bytecode.enhance.internal.tracker.SimpleCollectionTracker;
@@ -26,7 +23,6 @@ import org.hibernate.bytecode.enhance.internal.tracker.SimpleFieldTracker;
 import org.hibernate.bytecode.enhance.spi.CollectionTracker;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
-import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.engine.spi.EntityEntry;
@@ -39,7 +35,7 @@ import org.hibernate.engine.spi.SelfDirtinessTracker;
  *
  * @author <a href="mailto:lbarreiro@redhat.com">Luis Barreiro</a>
  */
-public class EntityEnhancer extends Enhancer {
+public class EntityEnhancer extends PersistentAttributesEnhancer {
 
 	public EntityEnhancer(EnhancementContext context) {
 		super( context );
@@ -63,7 +59,7 @@ public class EntityEnhancer extends Enhancer {
 			addInLineDirtyHandling( managedCtClass );
 		}
 
-		new PersistentAttributesEnhancer( enhancementContext ).enhance( managedCtClass );
+		super.enhance( managedCtClass );
 	}
 
 	private void addEntityInstanceHandling(CtClass managedCtClass) {
@@ -227,7 +223,7 @@ public class EntityEnhancer extends Enhancer {
 
 		// HHH-10646 Add fields inherited from @MappedSuperclass
 		for ( CtField ctField : managedCtClass.getDeclaredFields() ) {
-			if ( !ctField.getDeclaringClass().hasAnnotation( MappedSuperclass.class ) || Modifier.isStatic( ctField.getModifiers() ) ) {
+			if ( !enhancementContext.isMappedSuperclassClass( ctField.getDeclaringClass() ) || Modifier.isStatic( ctField.getModifiers() ) ) {
 				continue;
 			}
 			if ( enhancementContext.isPersistentField( ctField ) ) {

@@ -31,7 +31,7 @@ public final class ServiceBinding<R extends Service> {
 	private final ServiceLifecycleOwner lifecycleOwner;
 	private final Class<R> serviceRole;
 	private final ServiceInitiator<R> serviceInitiator;
-	private R service;
+	private volatile R service;
 
 	public ServiceBinding(ServiceLifecycleOwner lifecycleOwner, Class<R> serviceRole, R service) {
 		this.lifecycleOwner = lifecycleOwner;

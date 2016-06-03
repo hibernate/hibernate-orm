@@ -742,7 +742,9 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		for ( String paramName : namedParameterNames ) {
 			final Object object = map.get( paramName );
 			if ( object == null ) {
-				setParameter( paramName, null, determineType( paramName, null ) );
+				if ( map.containsKey( paramName ) ) {
+					setParameter( paramName, null, determineType( paramName, null ) );
+				}
 			}
 			else {
 				Class retType = object.getClass();

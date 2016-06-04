@@ -26,7 +26,6 @@ import org.hibernate.service.UnknownServiceException;
 import org.hibernate.service.spi.InjectService;
 import org.hibernate.service.spi.Manageable;
 import org.hibernate.service.spi.ServiceBinding;
-import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -51,9 +50,6 @@ public abstract class AbstractServiceRegistryImpl
 
 	private final ConcurrentServiceBinding<Class,ServiceBinding> serviceBindingMap = new ConcurrentServiceBinding<Class,ServiceBinding>();
 	private final ConcurrentServiceBinding<Class,Class> roleXref = new ConcurrentServiceBinding<Class,Class>();
-	// The services stored in initializedServiceByRole are completely initialized
-	// (i.e., configured, dependencies injected, and started)
-	private final ConcurrentServiceBinding<Class,Service> initializedServiceByRole = new ConcurrentServiceBinding<Class, Service>();
 
 	// IMPL NOTE : the list used for ordered destruction.  Cannot used map above because we need to
 	// iterate it in reverse order which is only available through ListIterator
@@ -111,16 +107,19 @@ public abstract class AbstractServiceRegistryImpl
 
 	@SuppressWarnings({ "unchecked" })
 	protected <R extends Service> void createServiceBinding(ServiceInitiator<R> initiator) {
-		final ServiceBinding serviceBinding = new ServiceBinding( this, initiator );
-		serviceBindingMap.put( initiator.getServiceInitiated(), serviceBinding );
+		if(serviceBindingMap.get( initiator.getServiceInitiated() ) == null) {
+			final ServiceBinding serviceBinding = new ServiceBinding( this, initiator );
+			serviceBindingMap.put( initiator.getServiceInitiated(), serviceBinding );
+		}
 	}
 
 	protected <R extends Service> void createServiceBinding(ProvidedService<R> providedService) {
-		ServiceBinding<R> binding = locateServiceBinding( providedService.getServiceRole(), false );
-		if ( binding == null ) {
-			binding = new ServiceBinding<R>( this, providedService.getServiceRole(), providedService.getService() );
-			serviceBindingMap.put( providedService.getServiceRole(), binding );
-		}
+		ServiceBinding<R> binding = new ServiceBinding<R>(
+				this,
+				providedService.getServiceRole(),
+				providedService.getService()
+		);
+		serviceBindingMap.put( providedService.getServiceRole(), binding );
 		registerService( binding, providedService.getService() );
 	}
 
@@ -167,7 +166,7 @@ public abstract class AbstractServiceRegistryImpl
 				return binding;
 			}
 
-			if ( binding.getService() != null && serviceRole.isInstance( binding.getService() ) ) {
+			if ( binding.isServiceInstanceOf( serviceRole ) ) {
 				// we found an alternate...
 				log.alternateServiceRole( serviceRole.getName(), binding.getServiceRole().getName() );
 				registerAlternate( serviceRole, binding.getServiceRole() );
@@ -184,90 +183,22 @@ public abstract class AbstractServiceRegistryImpl
 
 	@Override
 	public <R extends Service> R getService(Class<R> serviceRole) {
-		// TODO: should an exception be thrown if active == false???
-		R service = serviceRole.cast( initializedServiceByRole.get( serviceRole ) );
-		if ( service != null ) {
-			return service;
+		final ServiceBinding<R> serviceBinding = locateServiceBinding( serviceRole );
+		if ( serviceBinding == null ) {
+			throw new UnknownServiceException( serviceRole );
 		}
-
-		//Any service initialization needs synchronization
-		synchronized ( this ) {
-			// Check again after having acquired the lock:
-			service = serviceRole.cast( initializedServiceByRole.get( serviceRole ) );
-			if ( service != null ) {
-				return service;
-			}
-
-			final ServiceBinding<R> serviceBinding = locateServiceBinding( serviceRole );
-			if ( serviceBinding == null ) {
-				throw new UnknownServiceException( serviceRole );
-			}
-			service = serviceBinding.getService();
-			if ( service == null ) {
-				service = initializeService( serviceBinding );
-			}
-			// add the service only after it is completely initialized
-			initializedServiceByRole.put( serviceRole, service );
-			return service;
-		}
+		return serviceBinding.getService();
 	}
 
-	protected <R extends Service> void registerService(ServiceBinding<R> serviceBinding, R service) {
-		serviceBinding.setService( service );
-		synchronized ( serviceBindingList ) {
+	@Override
+	public <R extends Service> void registerService(ServiceBinding<R> serviceBinding, R service) {
+		synchronized (serviceBindingList) {
 			serviceBindingList.add( serviceBinding );
 		}
 	}
 
-	private <R extends Service> R initializeService(ServiceBinding<R> serviceBinding) {
-		if ( log.isTraceEnabled() ) {
-			log.tracev( "Initializing service [role={0}]", serviceBinding.getServiceRole().getName() );
-		}
-
-		// PHASE 1 : create service
-		R service = createService( serviceBinding );
-		if ( service == null ) {
-			return null;
-		}
-
-		// PHASE 2 : inject service (***potentially recursive***)
-		serviceBinding.getLifecycleOwner().injectDependencies( serviceBinding );
-
-		// PHASE 3 : configure service
-		serviceBinding.getLifecycleOwner().configureService( serviceBinding );
-
-		// PHASE 4 : Start service
-		serviceBinding.getLifecycleOwner().startService( serviceBinding );
-
-		return service;
-	}
-
-	@SuppressWarnings( {"unchecked"})
-	protected <R extends Service> R createService(ServiceBinding<R> serviceBinding) {
-		final ServiceInitiator<R> serviceInitiator = serviceBinding.getServiceInitiator();
-		if ( serviceInitiator == null ) {
-			// this condition should never ever occur
-			throw new UnknownServiceException( serviceBinding.getServiceRole() );
-		}
-
-		try {
-			R service = serviceBinding.getLifecycleOwner().initiateService( serviceInitiator );
-			// IMPL NOTE : the register call here is important to avoid potential stack overflow issues
-			//		from recursive calls through #configureService
-			registerService( serviceBinding, service );
-			return service;
-		}
-		catch ( ServiceException e ) {
-			throw e;
-		}
-		catch ( Exception e ) {
-			throw new ServiceException( "Unable to create requested service [" + serviceBinding.getServiceRole().getName() + "]", e );
-		}
-	}
-
 	@Override
-	public <R extends Service> void injectDependencies(ServiceBinding<R> serviceBinding) {
-		final R service = serviceBinding.getService();
+	public <R extends Service> void injectDependencies( R service) {
 
 		applyInjections( service );
 
@@ -326,16 +257,16 @@ public abstract class AbstractServiceRegistryImpl
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
-	public <R extends Service> void startService(ServiceBinding<R> serviceBinding) {
-		if ( Startable.class.isInstance( serviceBinding.getService() ) ) {
-			( (Startable) serviceBinding.getService() ).start();
+	@SuppressWarnings({"unchecked"})
+	public <R extends Service> void startService(R service, Class<R> serviceRole) {
+		if ( Startable.class.isInstance( service ) ) {
+			((Startable) service).start();
 		}
 
-		if ( Manageable.class.isInstance( serviceBinding.getService() ) ) {
+		if ( Manageable.class.isInstance( service ) ) {
 			getService( JmxService.class ).registerService(
-					(Manageable) serviceBinding.getService(),
-					serviceBinding.getServiceRole()
+					(Manageable) service,
+					serviceRole
 			);
 		}
 	}
@@ -351,14 +282,13 @@ public abstract class AbstractServiceRegistryImpl
 			try {
 				//First thing, make sure that the fast path read is disabled so that
 				//threads not owning the synchronization lock can't get an invalid Service:
-				initializedServiceByRole.clear();
 				synchronized (serviceBindingList) {
 					ListIterator<ServiceBinding> serviceBindingsIterator = serviceBindingList.listIterator(
 							serviceBindingList.size()
 					);
 					while ( serviceBindingsIterator.hasPrevious() ) {
 						final ServiceBinding serviceBinding = serviceBindingsIterator.previous();
-						serviceBinding.getLifecycleOwner().stopService( serviceBinding );
+						serviceBinding.stopService();
 					}
 					serviceBindingList.clear();
 				}
@@ -371,8 +301,7 @@ public abstract class AbstractServiceRegistryImpl
 	}
 
 	@Override
-	public <R extends Service> void stopService(ServiceBinding<R> binding) {
-		final Service service = binding.getService();
+	public <R extends Service> void stopService(R service) {
 		if ( Stoppable.class.isInstance( service ) ) {
 			try {
 				( (Stoppable) service ).stop();

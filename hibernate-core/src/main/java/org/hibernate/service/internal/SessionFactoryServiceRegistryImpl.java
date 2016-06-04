@@ -56,7 +56,7 @@ public class SessionFactoryServiceRegistryImpl extends AbstractServiceRegistryIm
 	}
 
 	@Override
-	public <R extends Service> void configureService(ServiceBinding<R> serviceBinding) {
+	public <R extends Service> void configureService(R service) {
 		//TODO nothing to do here or should we inject SessionFactory properties?
 	}
 }

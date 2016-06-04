@@ -215,9 +215,9 @@ public class BootstrapServiceRegistryImpl
 		destroy( strategySelectorBinding );
 		destroy( integratorServiceBinding );
 	}
-	
+
 	private void destroy(ServiceBinding serviceBinding) {
-		serviceBinding.getLifecycleOwner().stopService( serviceBinding );
+		serviceBinding.stopService();
 	}
 
 	public boolean isActive() {
@@ -235,23 +235,22 @@ public class BootstrapServiceRegistryImpl
 	}
 
 	@Override
-	public <R extends Service> void configureService(ServiceBinding<R> binding) {
+	public <R extends Service> void configureService(R service) {
 		throw new ServiceException( "Boot-strap registry should only contain provided services" );
 	}
 
 	@Override
-	public <R extends Service> void injectDependencies(ServiceBinding<R> binding) {
+	public <R extends Service> void injectDependencies(R service) {
 		throw new ServiceException( "Boot-strap registry should only contain provided services" );
 	}
 
 	@Override
-	public <R extends Service> void startService(ServiceBinding<R> binding) {
+	public <R extends Service> void startService(R service, Class<R> serviceRole) {
 		throw new ServiceException( "Boot-strap registry should only contain provided services" );
 	}
 
 	@Override
-	public <R extends Service> void stopService(ServiceBinding<R> binding) {
-		final Service service = binding.getService();
+	public <R extends Service> void stopService(R service) {
 		if ( Stoppable.class.isInstance( service ) ) {
 			try {
 				( (Stoppable) service ).stop();

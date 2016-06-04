@@ -16,7 +16,6 @@ import org.hibernate.service.Service;
 import org.hibernate.service.internal.AbstractServiceRegistryImpl;
 import org.hibernate.service.internal.ProvidedService;
 import org.hibernate.service.spi.Configurable;
-import org.hibernate.service.spi.ServiceBinding;
 import org.hibernate.service.spi.ServiceInitiator;
 
 /**
@@ -71,14 +70,14 @@ public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl imp
 
 		this.configurationValues = configurationValues;
 
-		// process initiators
-		for ( ServiceInitiator initiator : serviceInitiators ) {
-			createServiceBinding( initiator );
-		}
-
-		// then, explicitly provided service instances
+		//  explicitly provided service instances
 		for ( ProvidedService providedService : providedServices ) {
 			createServiceBinding( providedService );
+		}
+
+		// then,process initiators
+		for ( ServiceInitiator initiator : serviceInitiators ) {
+			createServiceBinding( initiator );
 		}
 	}
 
@@ -89,9 +88,9 @@ public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl imp
 	}
 
 	@Override
-	public <R extends Service> void configureService(ServiceBinding<R> serviceBinding) {
-		if ( Configurable.class.isInstance( serviceBinding.getService() ) ) {
-			( (Configurable) serviceBinding.getService() ).configure( configurationValues );
+	public <R extends Service> void configureService(R service) {
+		if ( Configurable.class.isInstance( service ) ) {
+			( (Configurable) service ).configure( configurationValues );
 		}
 	}
 }

@@ -41,7 +41,13 @@ public class StrategyCreatorRegionFactoryImpl implements StrategyCreator<RegionF
 		catch ( NoSuchMethodException e ) {
 			log.debugf( "RegionFactory impl [%s] did not provide constructor accepting Properties", strategyClass.getName() );
 		}
-		catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
+		catch ( IllegalAccessException e ) {
+			throw new ServiceException( "Unable to call constructor of RegionFactory impl [" + strategyClass.getName() + "]", e );
+		}
+		catch ( InstantiationException e ) {
+			throw new ServiceException( "Unable to call constructor of RegionFactory impl [" + strategyClass.getName() + "]", e );
+		}
+		catch ( InvocationTargetException e ) {
 			throw new ServiceException( "Unable to call constructor of RegionFactory impl [" + strategyClass.getName() + "]", e );
 		}
 
@@ -53,7 +59,13 @@ public class StrategyCreatorRegionFactoryImpl implements StrategyCreator<RegionF
 		catch ( NoSuchMethodException e ) {
 			log.debugf( "RegionFactory impl [%s] did not provide constructor accepting Properties", strategyClass.getName() );
 		}
-		catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
+		catch ( IllegalAccessException e ) {
+			throw new ServiceException( "Unable to call constructor of RegionFactory impl [" + strategyClass.getName() + "]", e );
+		}
+		catch ( InstantiationException e ) {
+			throw new ServiceException( "Unable to call constructor of RegionFactory impl [" + strategyClass.getName() + "]", e );
+		}
+		catch ( InvocationTargetException e ) {
 			throw new ServiceException( "Unable to call constructor of RegionFactory impl [" + strategyClass.getName() + "]", e );
 		}
 
@@ -61,7 +73,10 @@ public class StrategyCreatorRegionFactoryImpl implements StrategyCreator<RegionF
 		try {
 			return strategyClass.newInstance();
 		}
-		catch (IllegalAccessException | InstantiationException e) {
+		catch ( IllegalAccessException e ) {
+			throw new ServiceException( "Unable to call constructor of RegionFactory impl [" + strategyClass.getName() + "]", e );
+		}
+		catch ( InstantiationException e ) {
 			throw new ServiceException( "Unable to call constructor of RegionFactory impl [" + strategyClass.getName() + "]", e );
 		}
 	}

@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.selector.spi.StrategySelectionException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.AvailableSettings;
@@ -61,20 +61,56 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 		// The cache provider is needed when we either have second-level cache enabled
 		// or query cache enabled.  Note that useSecondLevelCache is enabled by default
 		if ( useSecondLevelCache || useQueryCache ) {
-			final Object setting = configurationValues != null
+			final Object strategyReference = configurationValues != null
 					? configurationValues.get( AvailableSettings.CACHE_REGION_FACTORY )
 					: null;
-			regionFactory = registry.getService( StrategySelector.class ).resolveStrategy(
-					RegionFactory.class,
-					setting,
-					NoCachingRegionFactory.INSTANCE,
-					new StrategyCreatorRegionFactoryImpl( p )
+			regionFactory = resolveRegionFactory(
+					registry.getService( StrategySelector.class ),
+					strategyReference,
+					p
 			);
 		}
 
 		LOG.debugf( "Cache region factory : %s", regionFactory.getClass().getName() );
 
 		return regionFactory;
+	}
+
+	@SuppressWarnings("unchecked")
+	private RegionFactory resolveRegionFactory(
+			StrategySelector strategySelector,
+			Object strategyReference,
+			Properties properties) {
+
+		if ( strategyReference == null || RegionFactory.class.isInstance( strategyReference ) ) {
+			// nothing to create; just let strategySelector resolve the RegionFactory
+			return strategySelector.resolveDefaultableStrategy(
+					RegionFactory.class,
+					strategyReference,
+					NoCachingRegionFactory.INSTANCE
+			);
+		}
+
+		final Class<? extends RegionFactory> implementationClass;
+		if ( Class.class.isInstance( strategyReference ) ) {
+			implementationClass = (Class<RegionFactory>) strategyReference;
+		}
+		else {
+			implementationClass = strategySelector.selectStrategyImplementor(
+					RegionFactory.class,
+					strategyReference.toString()
+			);
+		}
+
+		try {
+			return new StrategyCreatorRegionFactoryImpl( properties ).create( implementationClass );
+		}
+		catch (Exception e) {
+			throw new StrategySelectionException(
+					String.format( "Could not instantiate named strategy class [%s]", implementationClass.getName() ),
+					e
+			);
+		}
 	}
 
 	/**

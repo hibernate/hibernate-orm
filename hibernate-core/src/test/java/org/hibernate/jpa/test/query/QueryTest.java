@@ -51,6 +51,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Emmanuel Bernard
  * @author Steve Ebersole
+ * @author Chris Cranford
  */
 public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
@@ -1064,6 +1065,26 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 				// success, expected
 			}
 
+			// using jpa-style, position index specified not in query - test exception type
+			jpaQuery = em.createQuery( "select w from Wallet w " );
+			try {
+				String parameterName = jpaQuery.getParameter( 1 ).getName();
+				fail( "Should fail due to a user error in parameters" );
+			}
+			catch ( IllegalArgumentException e ) {
+				// success, expected.
+			}
+
+			// using jpa-style, position index specified not in query - test exception type
+			jpaQuery = em.createQuery( "select w from Wallet w" );
+			try {
+				Parameter<Integer> parameter = jpaQuery.getParameter( 1, Integer.class );
+				fail( "Should fail due to user error in parameters" );
+			}
+			catch ( IllegalArgumentException e ) {
+				// success, expected.
+			}
+
 			// using hql-style, should be 0-based
 			Query hqlQuery = em.createQuery( "select w from Wallet w where w.brand = ? and w.model = ?" );
 			try {
@@ -1075,6 +1096,46 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 				// success expected
 				e.printStackTrace();
 			}
+		}
+		finally {
+			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
+				em.getTransaction().rollback();
+			}
+			em.close();
+		}
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-10803")
+	public void testNamedParameterWithUserError() throws Exception {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		try {
+			Wallet w = new Wallet();
+			w.setBrand( "Lacoste" );
+			w.setModel( "Minimic" );
+			w.setSerial( "0100202002" );
+			em.persist( w );
+			em.flush();
+
+			Query jpaQuery = em.createQuery( "select w from Wallet w" );
+			try {
+				Parameter<?> parameter = jpaQuery.getParameter( "brand" );
+				fail( "Should fail due to user error in parameters" );
+			}
+			catch ( IllegalArgumentException e ) {
+				// success, expected
+			}
+
+			jpaQuery = em.createQuery( "select w from Wallet w" );
+			try {
+				Parameter<String> parameter = jpaQuery.getParameter( "brand", String.class );
+				fail( "Should fail due to user error in parameters" );
+			}
+			catch ( IllegalArgumentException e ) {
+				// success, expected
+			}
+
 		}
 		finally {
 			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {

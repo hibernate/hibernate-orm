@@ -13,7 +13,8 @@ import java.util.List;
  *
  * @author Dionis Argiri
  */
-public class PostgreSQL93Dialect extends PostgreSQL9Dialect {
+public class PostgreSQL93Dialect extends PostgreSQL92Dialect {
+
 	@Override
 	public void augmentRecognizedTableTypes(List<String> tableTypesList) {
 		super.augmentRecognizedTableTypes( tableTypesList );

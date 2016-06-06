@@ -464,7 +464,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setParameter(String name, Object value) {
 		if ( value instanceof TypedParameterValue ) {
-			final TypedParameterValue  typedValueWrapper = (TypedParameterValue ) value;
+			final TypedParameterValue  typedValueWrapper = (TypedParameterValue) value;
 			setParameter( name, typedValueWrapper.getValue(), typedValueWrapper.getType() );
 		}
 		else if ( value instanceof Collection ) {
@@ -619,21 +619,31 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public Parameter<?> getParameter(String name) {
-		return parameterMetadata.getQueryParameter( name );
+		try {
+			return parameterMetadata.getQueryParameter( name );
+		}
+		catch ( HibernateException e ) {
+			throw getExceptionConverter().convert( e );
+		}
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> Parameter<T> getParameter(String name, Class<T> type) {
-		final QueryParameter parameter = parameterMetadata.getQueryParameter( name );
-		if ( !parameter.getParameterType().isAssignableFrom( type ) ) {
-			throw new IllegalArgumentException(
-					"The type [" + parameter.getParameterType().getName() +
-							"] associated with the parameter corresponding to name [" + name +
-							"] is not assignable to requested Java type [" + type.getName() + "]"
-			);
+		try {
+			final QueryParameter parameter = parameterMetadata.getQueryParameter( name );
+			if ( !parameter.getParameterType().isAssignableFrom( type ) ) {
+				throw new IllegalArgumentException(
+						"The type [" + parameter.getParameterType().getName() +
+								"] associated with the parameter corresponding to name [" + name +
+								"] is not assignable to requested Java type [" + type.getName() + "]"
+				);
+			}
+			return parameter;
 		}
-		return parameter;
+		catch ( HibernateException e ) {
+			throw getExceptionConverter().convert( e );
+		}
 	}
 
 	@Override
@@ -650,25 +660,35 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		// if ParameterMetadata reports that it has any positional-parameters it is talking about the
 		// legacy Hibernate concept.
 		// lookup jpa-based positional parameters first by name.
-		if ( parameterMetadata.getPositionalParameterCount() == 0 ) {
-			return parameterMetadata.getQueryParameter( Integer.toString( position ) );
+		try {
+			if ( parameterMetadata.getPositionalParameterCount() == 0 ) {
+				return parameterMetadata.getQueryParameter( Integer.toString( position ) );
+			}
+			// fallback to oridinal lookup
+			return parameterMetadata.getQueryParameter( position );
 		}
-		// fallback to oridinal lookup
-		return parameterMetadata.getQueryParameter( position );
+		catch ( HibernateException e ) {
+			throw getExceptionConverter().convert( e );
+		}
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> Parameter<T> getParameter(int position, Class<T> type) {
-		final QueryParameter parameter = parameterMetadata.getQueryParameter( position );
-		if ( !parameter.getParameterType().isAssignableFrom( type ) ) {
-			throw new IllegalArgumentException(
-					"The type [" + parameter.getParameterType().getName() +
-							"] associated with the parameter corresponding to position [" + position +
-							"] is not assignable to requested Java type [" + type.getName() + "]"
-			);
+		try {
+			final QueryParameter parameter = parameterMetadata.getQueryParameter( position );
+			if ( !parameter.getParameterType().isAssignableFrom( type ) ) {
+				throw new IllegalArgumentException(
+						"The type [" + parameter.getParameterType().getName() +
+								"] associated with the parameter corresponding to position [" + position +
+								"] is not assignable to requested Java type [" + type.getName() + "]"
+				);
+			}
+			return parameter;
 		}
-		return parameter;
+		catch ( HibernateException e ) {
+			throw getExceptionConverter().convert( e );
+		}
 	}
 
 	@Override

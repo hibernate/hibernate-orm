@@ -1061,18 +1061,18 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 				jpaQuery.setParameter( 2, "Expensive" );
 				fail( "Should fail due to a user error in parameters" );
 			}
-			catch (IllegalArgumentException e) {
-				// success, expected
+			catch (Exception e) {
+				assertTyping( IllegalArgumentException.class, e );
 			}
 
 			// using jpa-style, position index specified not in query - test exception type
 			jpaQuery = em.createQuery( "select w from Wallet w " );
 			try {
-				String parameterName = jpaQuery.getParameter( 1 ).getName();
+				Parameter parameter = jpaQuery.getParameter( 1 );
 				fail( "Should fail due to a user error in parameters" );
 			}
-			catch ( IllegalArgumentException e ) {
-				// success, expected.
+			catch (Exception e) {
+				assertTyping( IllegalArgumentException.class, e );
 			}
 
 			// using jpa-style, position index specified not in query - test exception type
@@ -1081,8 +1081,8 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 				Parameter<Integer> parameter = jpaQuery.getParameter( 1, Integer.class );
 				fail( "Should fail due to user error in parameters" );
 			}
-			catch ( IllegalArgumentException e ) {
-				// success, expected.
+			catch (Exception e) {
+				assertTyping( IllegalArgumentException.class, e );
 			}
 
 			// using hql-style, should be 0-based
@@ -1092,9 +1092,8 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 				hqlQuery.setParameter( 2, "Expensive" );
 				fail( "Should fail due to a user error in parameters" );
 			}
-			catch (IllegalArgumentException e) {
-				// success expected
-				e.printStackTrace();
+			catch (Exception e) {
+				assertTyping( IllegalArgumentException.class, e );
 			}
 		}
 		finally {
@@ -1123,8 +1122,8 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 				Parameter<?> parameter = jpaQuery.getParameter( "brand" );
 				fail( "Should fail due to user error in parameters" );
 			}
-			catch ( IllegalArgumentException e ) {
-				// success, expected
+			catch (Exception e) {
+				assertTyping( IllegalArgumentException.class, e );
 			}
 
 			jpaQuery = em.createQuery( "select w from Wallet w" );
@@ -1132,8 +1131,8 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 				Parameter<String> parameter = jpaQuery.getParameter( "brand", String.class );
 				fail( "Should fail due to user error in parameters" );
 			}
-			catch ( IllegalArgumentException e ) {
-				// success, expected
+			catch (Exception e) {
+				assertTyping( IllegalArgumentException.class, e );
 			}
 
 		}

@@ -10,7 +10,9 @@ import java.util.Properties;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.spi.CacheDataDescription;
+import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.NaturalIdRegion;
@@ -28,17 +30,32 @@ public class CachingRegionFactory implements RegionFactory {
 	private static final Logger LOG = Logger.getLogger( CachingRegionFactory.class.getName() );
 
 	public static String DEFAULT_ACCESSTYPE = "DefaultAccessType";
+
+	private final CacheKeysFactory cacheKeysFactory;
+
 	private SessionFactoryOptions settings;
 	private Properties properties;
 
 	public CachingRegionFactory() {
-		LOG.warn( "CachingRegionFactory should be only used for testing." );
+		this( DefaultCacheKeysFactory.INSTANCE, null );
+	}
+
+	public CachingRegionFactory(CacheKeysFactory cacheKeysFactory) {
+		this( cacheKeysFactory, null );
 	}
 
 	public CachingRegionFactory(Properties properties) {
-		//add here to avoid run into catch
+		this( DefaultCacheKeysFactory.INSTANCE, properties );
+	}
+
+	public CachingRegionFactory(CacheKeysFactory cacheKeysFactory, Properties properties) {
 		LOG.warn( "CachingRegionFactory should be only used for testing." );
+		this.cacheKeysFactory = cacheKeysFactory;
 		this.properties = properties;
+	}
+
+	public CacheKeysFactory getCacheKeysFactory() {
+		return cacheKeysFactory;
 	}
 
 	@Override
@@ -72,43 +89,42 @@ public class CachingRegionFactory implements RegionFactory {
 	@Override
 	public EntityRegion buildEntityRegion(String regionName, Properties properties, CacheDataDescription metadata)
 			throws CacheException {
-		return new EntityRegionImpl( regionName, metadata, settings );
+		return new EntityRegionImpl( this, regionName, metadata, settings );
 	}
 
 	@Override
 	public NaturalIdRegion buildNaturalIdRegion(String regionName, Properties properties, CacheDataDescription metadata)
 			throws CacheException {
-		return new NaturalIdRegionImpl( regionName, metadata, settings );
+		return new NaturalIdRegionImpl( this, regionName, metadata, settings );
 	}
 
 	@Override
 	public CollectionRegion buildCollectionRegion(
 			String regionName,
 			Properties properties,
-			CacheDataDescription metadata)
-			throws CacheException {
-		return new CollectionRegionImpl( regionName, metadata, settings );
+			CacheDataDescription metadata) throws CacheException {
+		return new CollectionRegionImpl( this, regionName, metadata, settings );
 	}
 
 	@Override
 	public QueryResultsRegion buildQueryResultsRegion(String regionName, Properties properties) throws CacheException {
-		return new QueryResultsRegionImpl( regionName );
+		return new QueryResultsRegionImpl( this, regionName );
 	}
 
 	@Override
 	public TimestampsRegion buildTimestampsRegion(String regionName, Properties properties) throws CacheException {
-		return new TimestampsRegionImpl( regionName );
+		return new TimestampsRegionImpl( this, regionName );
 	}
 
 	private static class QueryResultsRegionImpl extends BaseGeneralDataRegion implements QueryResultsRegion {
-		QueryResultsRegionImpl(String name) {
-			super( name );
+		QueryResultsRegionImpl(CachingRegionFactory cachingRegionFactory, String name) {
+			super( cachingRegionFactory, name );
 		}
 	}
 
 	private static class TimestampsRegionImpl extends BaseGeneralDataRegion implements TimestampsRegion {
-		TimestampsRegionImpl(String name) {
-			super( name );
+		TimestampsRegionImpl(CachingRegionFactory cachingRegionFactory, String name) {
+			super( cachingRegionFactory, name );
 		}
 	}
 }

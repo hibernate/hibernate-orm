@@ -668,14 +668,31 @@ public interface AvailableSettings {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * The {@link org.hibernate.cache.spi.RegionFactory} implementation class
+	 * The {@link org.hibernate.cache.spi.RegionFactory} implementation.  Can refer to:<ul>
+	 *     <li>an Object implementing {@link org.hibernate.cache.spi.RegionFactory}</li>
+	 *     <li>a Class implementing {@link org.hibernate.cache.spi.RegionFactory}</li>
+	 *     <li>FQN of a Class implementing {@link org.hibernate.cache.spi.RegionFactory}</li>
+	 * </ul>
 	 */
 	String CACHE_REGION_FACTORY = "hibernate.cache.region.factory_class";
+
+	/**
+	 * Allow control to specify the {@link org.hibernate.cache.spi.CacheKeysFactory} impl to use.
+	 * Can refer to:<ul>
+	 *     <li>an Object implementing {@link org.hibernate.cache.spi.CacheKeysFactory}</li>
+	 *     <li>a Class implementing {@link org.hibernate.cache.spi.CacheKeysFactory}</li>
+	 *     <li>FQN of a Class implementing {@link org.hibernate.cache.spi.CacheKeysFactory}</li>
+	 * </ul>
+	 *
+	 * @since 5.2 - note that currently this is only honored for hibernate-infinispan
+	 */
+	String CACHE_KEYS_FACTORY = "hibernate.cache.keys_factory";
 
 	/**
 	 * The <tt>CacheProvider</tt> implementation class
 	 */
 	String CACHE_PROVIDER_CONFIG = "hibernate.cache.provider_configuration_file_resource_path";
+
 	/**
 	 * Enable the second-level cache (enabled by default)
 	 */

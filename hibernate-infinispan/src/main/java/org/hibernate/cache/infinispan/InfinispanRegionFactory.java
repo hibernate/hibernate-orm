@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.MultiTenancyStrategy;
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
@@ -45,6 +46,7 @@ import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
 
@@ -229,6 +231,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 
 	private Configuration pendingPutsCacheConfiguration;
 
+	private CacheKeysFactory cacheKeysFactory;
 	private EmbeddedCacheManager manager;
 
 	private final Map<String, TypeOverrides> typeOverrides = new HashMap<String, TypeOverrides>();
@@ -257,6 +260,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public CollectionRegion buildCollectionRegion(
 			String regionName,
 			Properties properties,
@@ -265,7 +269,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 			log.debug( "Building collection cache region [" + regionName + "]" );
 		}
 		final AdvancedCache cache = getCache( regionName, COLLECTION_KEY, properties, metadata);
-		final CollectionRegionImpl region = new CollectionRegionImpl( cache, regionName, transactionManager, metadata, this, buildCacheKeysFactory() );
+		final CollectionRegionImpl region = new CollectionRegionImpl( cache, regionName, transactionManager, metadata, this, getCacheKeysFactory() );
 		startRegion( region );
 		return region;
 	}
@@ -282,7 +286,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 			);
 		}
 		final AdvancedCache cache = getCache( regionName, metadata.isMutable() ? ENTITY_KEY : IMMUTABLE_ENTITY_KEY, properties, metadata );
-		final EntityRegionImpl region = new EntityRegionImpl( cache, regionName, transactionManager, metadata, this, buildCacheKeysFactory() );
+		final EntityRegionImpl region = new EntityRegionImpl( cache, regionName, transactionManager, metadata, this, getCacheKeysFactory() );
 		startRegion( region );
 		return region;
 	}
@@ -294,7 +298,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 			log.debug("Building natural id cache region [" + regionName + "]");
 		}
 		final AdvancedCache cache = getCache( regionName, NATURAL_ID_KEY, properties, metadata);
-		final NaturalIdRegionImpl region = new NaturalIdRegionImpl( cache, regionName, transactionManager, metadata, this, buildCacheKeysFactory());
+		final NaturalIdRegionImpl region = new NaturalIdRegionImpl( cache, regionName, transactionManager, metadata, this, getCacheKeysFactory());
 		startRegion( region );
 		return region;
 	}
@@ -318,8 +322,8 @@ public class InfinispanRegionFactory implements RegionFactory {
 	}
 
 	@Override
-	public TimestampsRegion buildTimestampsRegion(String regionName, Properties properties)
-			throws CacheException {
+	@SuppressWarnings("unchecked")
+	public TimestampsRegion buildTimestampsRegion(String regionName, Properties properties) {
 		if ( log.isDebugEnabled() ) {
 			log.debug( "Building timestamps cache region [" + regionName + "]" );
 		}
@@ -339,13 +343,8 @@ public class InfinispanRegionFactory implements RegionFactory {
 		}
 	}
 
-	private CacheKeysFactory buildCacheKeysFactory() {
-		if (settings.getMultiTenancyStrategy() != MultiTenancyStrategy.NONE) {
-			return DefaultCacheKeysFactory.INSTANCE;
-		}
-		else {
-			return SimpleCacheKeysFactory.INSTANCE;
-		}
+	private CacheKeysFactory getCacheKeysFactory() {
+		return cacheKeysFactory;
 	}
 
 	@Override
@@ -374,6 +373,10 @@ public class InfinispanRegionFactory implements RegionFactory {
 	@Override
 	public void start(SessionFactoryOptions settings, Properties properties) throws CacheException {
 		log.debug( "Starting Infinispan region factory" );
+
+		// determine the CacheKeysFactory to use...
+		this.cacheKeysFactory = determineCacheKeysFactory( settings, properties );
+
 		try {
 			transactionManagerlookup = createTransactionManagerLookup( settings, properties );
 			transactionManager = transactionManagerlookup.getTransactionManager();
@@ -414,6 +417,18 @@ public class InfinispanRegionFactory implements RegionFactory {
 		catch (Throwable t) {
 			throw new CacheException( "Unable to start region factory", t );
 		}
+	}
+
+	private CacheKeysFactory determineCacheKeysFactory(SessionFactoryOptions settings, Properties properties) {
+		final CacheKeysFactory implicitFactory = settings.getMultiTenancyStrategy() != MultiTenancyStrategy.NONE
+				? DefaultCacheKeysFactory.INSTANCE
+				: SimpleCacheKeysFactory.INSTANCE;
+
+		return settings.getServiceRegistry().getService( StrategySelector.class ).resolveDefaultableStrategy(
+				CacheKeysFactory.class,
+				properties.get( AvailableSettings.CACHE_KEYS_FACTORY ),
+				implicitFactory
+		);
 	}
 
 	protected org.infinispan.transaction.lookup.TransactionManagerLookup createTransactionManagerLookup(

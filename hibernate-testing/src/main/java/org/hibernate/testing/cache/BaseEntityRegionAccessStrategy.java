@@ -7,7 +7,6 @@
 package org.hibernate.testing.cache;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
@@ -65,11 +64,11 @@ class BaseEntityRegionAccessStrategy extends BaseRegionAccessStrategy implements
 
 	@Override
 	public Object generateCacheKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
-		return DefaultCacheKeysFactory.createEntityKey( id, persister, factory, tenantIdentifier );
+		return region.getRegionFactory().getCacheKeysFactory().createEntityKey( id, persister, factory, tenantIdentifier );
 	}
 
 	@Override
 	public Object getCacheKeyId(Object cacheKey) {
-		return DefaultCacheKeysFactory.getEntityId(cacheKey);
+		return region.getRegionFactory().getCacheKeysFactory().getEntityId( cacheKey );
 	}
 }

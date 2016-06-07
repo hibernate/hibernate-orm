@@ -205,10 +205,9 @@ public abstract class AbstractServiceRegistryImpl
 			service = serviceBinding.getService();
 			if ( service == null ) {
 				service = initializeService( serviceBinding );
-				// add the service only after it is completely initialized
-				initializedServiceByRole.put( serviceRole, service );
 			}
-
+			// add the service only after it is completely initialized
+			initializedServiceByRole.put( serviceRole, service );
 			return service;
 		}
 	}

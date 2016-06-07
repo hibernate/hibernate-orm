@@ -156,6 +156,18 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-find-by-id-native-examp
 
 In both cases null is returned if no matching database row was found.
 
+It's possible to return a Java 8 `Optional` as well:
+
+[[tag::pc-find-optional-by-id-native-example]]
+.Obtaining an Optional entity reference with its data initialized using the `byId()` Hibernate API
+====
+
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-find-optional-by-id-native-example]
+----
+====
+
 [[pc-find-natural-id]]
 === Obtain an entity by natural-id
 
@@ -187,6 +199,17 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-find-by-simple-natural-
 [source, JAVA, indent=0]
 ----
 include::{sourcedir}/PersistenceContextTest.java[tags=pc-find-by-natural-id-example]
+----
+====
+
+We can also use a Java 8 `Optional` to load an entity by its natural id:
+
+[[pc-find-optional-by-simple-natural-id-example]]
+.Load an Optional entity by natural-id
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-find-optional-by-simple-natural-id-example]
 ----
 ====
 

@@ -64,7 +64,7 @@ Internally Hibernate uses a registry of basic types when it needs to resolve a s
 |CharacterArrayNClobType |NCLOB |java.lang.Character[] |N/A
 |=======================================================================================================================================================================================================================================================================================
 
-.BasicTypes added by hibernate-java8
+.Java 8 BasicTypes
 [cols=",,,",options="header",]
 |=================================================================================================
 |Hibernate type (org.hibernate.type package) |JDBC type |Java type |BasicTypeRegistry key(s)
@@ -78,13 +78,7 @@ Internally Hibernate uses a registry of basic types when it needs to resolve a s
 |OffsetTimeType |TIMESTAMP |java.time.ZonedDateTime |ZonedDateTime, java.time.ZonedDateTime
 |=================================================================================================
 
-[NOTE]
-====
-To use these hibernate-java8 types just add the `hibernate-java8` dependency to your classpath and Hibernate will take care of the rest.
-See <<basic-datetime>> for more about Java 8 Date/Time types.
-====
-
-.BasicTypes added by hibernate-spatial
+.Hibernate Spatial BasicTypes
 [cols=",,,",options="header",]
 |=================================================================================================
 |Hibernate type (org.hibernate.spatial package) |JDBC type |Java type |BasicTypeRegistry key(s)
@@ -951,19 +945,6 @@ If the `java.util.Date` marks a point in time, the `java.util.Calendar` takes in
 ===== Mapping Java 8 Date/Time Values
 
 Java 8 came with a new Date/Time API, offering support for instant dates, intervals, local and zoned Date/Time immutable instances, bundled in the `java.time` package.
-Hibernate added support for the new Date/Time API in a new module, which must be included with the following Maven dependency:
-
-.`hibernate-java8` Maven dependency
-====
-[source,xml]
-----
-<dependency>
-    <groupId>org.hibernate</groupId>
-    <artifactId>hibernate-java8</artifactId>
-    <version>${hibernate.version}</version>
-</dependency>
-----
-====
 
 The mapping between the standard SQL Date/Time types and the supported Java 8 Date/Time class types looks as follows;
 

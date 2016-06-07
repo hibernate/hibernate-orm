@@ -14,6 +14,8 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.persistence.FlushModeType;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
@@ -667,7 +669,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap( Session.class );
 			//tag::hql-api-example[]
-			org.hibernate.Query query = session.createQuery(
+			org.hibernate.query.Query query = session.createQuery(
 				"select p " +
 				"from Person p " +
 				"where p.name like :name"
@@ -681,7 +683,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap( Session.class );
 			//tag::hql-api-named-query-example[]
-			org.hibernate.Query query = session.getNamedQuery( "get_person_by_name" );
+			org.hibernate.query.Query query = session.getNamedQuery( "get_person_by_name" );
 			//end::hql-api-named-query-example[]
 		});
 	}
@@ -691,7 +693,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap( Session.class );
 			//tag::hql-api-basic-usage-example[]
-			org.hibernate.Query query = session.createQuery(
+			org.hibernate.query.Query query = session.createQuery(
 				"select p " +
 				"from Person p " +
 				"where p.name like :name" )
@@ -712,7 +714,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap( Session.class );
 			//tag::hql-api-parameter-example[]
-			org.hibernate.Query query = session.createQuery(
+			org.hibernate.query.Query query = session.createQuery(
 				"select p " +
 				"from Person p " +
 				"where p.name like :name" )
@@ -726,7 +728,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap( Session.class );
 			//tag::hql-api-parameter-inferred-type-example[]
-			org.hibernate.Query query = session.createQuery(
+			org.hibernate.query.Query query = session.createQuery(
 				"select p " +
 				"from Person p " +
 				"where p.name like :name" )
@@ -741,13 +743,13 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			Date timestamp = new Date(  );
 			Session session = entityManager.unwrap( Session.class );
 			//tag::hql-api-parameter-short-form-example[]
-			org.hibernate.Query query = session.createQuery(
+			org.hibernate.query.Query query = session.createQuery(
 				"select p " +
 				"from Person p " +
 				"where p.name like :name " +
 				"  and p.createdOn > :timestamp" )
-			.setString( "name", "J%" )
-			.setTimestamp( "timestamp", timestamp );
+			.setParameter( "name", "J%" )
+			.setParameter( "timestamp", timestamp, TemporalType.TIMESTAMP);
 			//end::hql-api-parameter-short-form-example[]
 		});
 	}
@@ -758,7 +760,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			Date timestamp = new Date(  );
 			Session session = entityManager.unwrap( Session.class );
 			//tag::hql-api-positional-parameter-example[]
-			org.hibernate.Query query = session.createQuery(
+			org.hibernate.query.Query query = session.createQuery(
 				"select p " +
 				"from Person p " +
 				"where p.name like ? " )
@@ -776,9 +778,32 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 				"select p " +
 				"from Person p " +
 				"where p.name like :name" )
-			.setString( "name", "J%" )
+			.setParameter( "name", "J%" )
 			.list();
 			//end::hql-api-list-example[]
+		});
+	}
+
+	@Test
+	public void test_hql_api_stream_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			Session session = entityManager.unwrap( Session.class );
+			//tag::hql-api-stream-example[]
+			Stream<Object[]> persons = session.createQuery(
+				"select p " +
+				"from Person p " +
+				"where p.name like :name" )
+			.setParameter( "name", "J%" )
+			.stream();
+
+			Map<Phone, List<Call>> callRegistry = persons
+				.map( row -> Person.class.cast( row[0] ) )
+				.flatMap( person -> person.getPhones().stream() )
+				.flatMap( phone -> phone.getCalls().stream() )
+				.collect(Collectors.groupingBy(Call::getPhone));
+			//end::hql-api-stream-example[]
+
+			assertEquals( 1, callRegistry.size() );
 		});
 	}
 
@@ -791,7 +816,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 				"select p " +
 				"from Person p " +
 				"where p.name like :name" )
-			.setString( "name", "J%" )
+			.setParameter( "name", "J%" )
 			.uniqueResult();
 			//end::hql-api-unique-result-example[]
 		});

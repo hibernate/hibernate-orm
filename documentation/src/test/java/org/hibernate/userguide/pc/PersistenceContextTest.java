@@ -9,6 +9,7 @@ package org.hibernate.userguide.pc;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
@@ -132,6 +133,10 @@ public class PersistenceContextTest extends BaseEntityManagerFunctionalTestCase 
 			Person person = session.byId( Person.class ).load( personId );
 			//end::pc-find-by-id-native-example[]
 
+			//tag::pc-find-optional-by-id-native-example[]
+			Optional<Person> optionalPerson = session.byId( Person.class ).loadOptional( personId );
+			//end::pc-find-optional-by-id-native-example[]
+
 			String isbn = "123-456-7890";
 
 			//tag::pc-find-by-simple-natural-id-example[]
@@ -144,9 +149,19 @@ public class PersistenceContextTest extends BaseEntityManagerFunctionalTestCase 
 			String isbn = "123-456-7890";
 
 			//tag::pc-find-by-natural-id-example[]
-			Book book = session.byNaturalId( Book.class ).using( "isbn", isbn ).load( );
+			Book book = session
+					.byNaturalId( Book.class )
+					.using( "isbn", isbn )
+					.load( );
 			//end::pc-find-by-natural-id-example[]
 			assertNotNull(book);
+
+			//tag::pc-find-optional-by-simple-natural-id-example[]
+			Optional<Book> optionalBook = session
+					.byNaturalId( Book.class )
+					.using( "isbn", isbn )
+					.loadOptional( );
+			//end::pc-find-optional-by-simple-natural-id-example[]
 		} );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {

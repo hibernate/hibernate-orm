@@ -100,18 +100,18 @@ Relying on provider specific hints limits your applications portability to some 
     Attributes that are not specified are treated as `FetchType.LAZY` or `FetchType.EAGER` depending on the attribute's definition in metadata.
     For details, see the EntityGraph discussions in <<chapters/fetching/Fetching.adoc#fetching,Fetching>>.
 `org.hibernate.cacheMode`::
-    Defines the `CacheMode` to use. See `org.hibernate.Query#setCacheMode`.
+    Defines the `CacheMode` to use. See `org.hibernate.query.Query#setCacheMode`.
 `org.hibernate.cacheable`::
-    Defines whether the query is cacheable. true/false. See `org.hibernate.Query#setCacheable`.
+    Defines whether the query is cacheable. true/false. See `org.hibernate.query.Query#setCacheable`.
 `org.hibernate.cacheRegion`::
-    For queries that are cacheable, defines a specific cache region to use. See `org.hibernate.Query#setCacheRegion`.
+    For queries that are cacheable, defines a specific cache region to use. See `org.hibernate.query.Query#setCacheRegion`.
 `org.hibernate.comment`::
-    Defines the comment to apply to the generated SQL. See `org.hibernate.Query#setComment`.
+    Defines the comment to apply to the generated SQL. See `org.hibernate.query.Query#setComment`.
 `org.hibernate.fetchSize`::
-    Defines the JDBC fetch-size to use. See `org.hibernate.Query#setFetchSize`
+    Defines the JDBC fetch-size to use. See `org.hibernate.query.Query#setFetchSize`
 `org.hibernate.flushMode`::
-    Defines the Hibernate-specific `FlushMode` to use. See `org.hibernate.Query#setFlushMode.` If possible, prefer using `javax.persistence.Query#setFlushMode` instead.
-`org.hibernate.readOnly`:: Defines that entities and collections loaded by this query should be marked as read-only. See `org.hibernate.Query#setReadOnly`
+    Defines the Hibernate-specific `FlushMode` to use. See `org.hibernate.query.Query#setFlushMode.` If possible, prefer using `javax.persistence.Query#setFlushMode` instead.
+`org.hibernate.readOnly`:: Defines that entities and collections loaded by this query should be marked as read-only. See `org.hibernate.query.Query#setReadOnly`
 
 The final thing that needs to happen before the query can be executed is to bind the values for any defined parameters.
 JPA defines a simplified set of parameter binding methods.
@@ -170,7 +170,7 @@ include::{sourcedir}/HQLTest.java[tags=jpql-api-single-result-example]
 [[hql-api]]
 === Hibernate Query API
 
-In Hibernate, the HQL query is represented as `org.hibernate.Query` which is obtained from a `Session`.
+In Hibernate, the HQL query is represented as `org.hibernate.query.Query` which is obtained from a `Session`.
 If the HQL is a named query, `Session#getNamedQuery` would be used; otherwise `Session#createQuery` is needed.
 
 [[hql-api-example]]
@@ -293,6 +293,23 @@ In terms of execution, Hibernate offers 4 different methods. The 2 most commonly
 ----
 include::{sourcedir}/HQLTest.java[tags=hql-api-list-example]
 ----
+====
+
+Since 5.2, Hibernate offers support for returning a `Stream` which can be later used to transform the underlying `ResultSet`.
+
+[[hql-api-stream-example]]
+.Hibernate `stream()` result
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-api-stream-example]
+----
+====
+
+[NOTE]
+====
+Internally, the `stream()` behaves like a `Query#scroll` and the underlying result is backed by a `ScrollableResults`.
+For this reason, the `Stream` contains an `Object[]` instead of the actual `Query` result type.
 ====
 
 [[hql-api-unique-result-example]]
@@ -436,7 +453,7 @@ This is a Hibernate specific feature and will not work in a portable manner.
 Custom version types, `org.hibernate.usertype.UserVersionType`, are not allowed in conjunction with a `update versioned` statement.
 ====
 
-An `UPDATE` statement is executed using the `executeUpdate()` of either `org.hibernate.Query` or `javax.persistence.Query`.
+An `UPDATE` statement is executed using the `executeUpdate()` of either `org.hibernate.query.Query` or `javax.persistence.Query`.
 The method is named for those familiar with the JDBC `executeUpdate()` on `java.sql.PreparedStatement`.
 
 The `int` value returned by the `executeUpdate()` method indicates the number of entities effected by the operation.
@@ -476,7 +493,7 @@ include::{extrasdir}/statement_delete_bnf.txt[]
 ----
 ====
 
-A `DELETE` statement is also executed using the `executeUpdate()` method of either `org.hibernate.Query` or `javax.persistence.Query`.
+A `DELETE` statement is also executed using the `executeUpdate()` method of either `org.hibernate.query.Query` or `javax.persistence.Query`.
 
 [[hql-insert]]
 === Insert statements

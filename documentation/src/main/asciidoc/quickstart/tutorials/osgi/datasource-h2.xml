@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+
+<!--
+First install the H2 driver using:
+> install -s mvn:com.h2database/h2/1.3.163
+
+Then copy this file to the deploy folder
+-->
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0">
+  
+  <bean id="dataSource" class="org.h2.jdbcx.JdbcDataSource">
+      <property name="URL" value="jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE"/>
+      <property name="user" value="sa"/>
+      <property name="password" value=""/>
+  </bean>
+  
+  <service interface="javax.sql.DataSource" ref="dataSource">
+    <service-properties>
+            <entry key="osgi.jndi.service.name" value="jdbc/h2ds"/>
+    </service-properties>
+  </service>
+</blueprint>

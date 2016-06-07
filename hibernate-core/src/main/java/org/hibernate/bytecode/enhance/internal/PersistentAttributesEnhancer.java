@@ -18,6 +18,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
 import javassist.CannotCompileException;
+import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtField;
 import javassist.CtMethod;
@@ -422,18 +423,7 @@ public class PersistentAttributesEnhancer extends Enhancer {
 		}
 
 		// make sure to add the CompositeOwner interface
-		managedCtClass.addInterface( classPool.get( CompositeOwner.class.getName() ) );
-
-		if ( enhancementContext.isCompositeClass( managedCtClass ) ) {
-			// if a composite have a embedded field we need to implement the TRACKER_CHANGER_NAME method as well
-			MethodWriter.write(
-					managedCtClass,
-							"public void %1$s(String name) {%n" +
-							"  if (%2$s != null) { %2$s.callOwner(\".\" + name); }%n}",
-					EnhancerConstants.TRACKER_CHANGER_NAME,
-					EnhancerConstants.TRACKER_COMPOSITE_FIELD_NAME
-			);
-		}
+		addCompositeOwnerInterface( managedCtClass );
 
 		// cleanup previous owner
 		fieldWriter.insertBefore(
@@ -459,10 +449,35 @@ public class PersistentAttributesEnhancer extends Enhancer {
 		);
 	}
 
+	private void addCompositeOwnerInterface(CtClass managedCtClass) throws NotFoundException, CannotCompileException {
+		CtClass compositeOwnerCtClass = managedCtClass.getClassPool().get( CompositeOwner.class.getName() );
+
+		// HHH-10540 only add the interface once
+		for ( CtClass i : managedCtClass.getInterfaces() ) {
+			if ( i.subclassOf( compositeOwnerCtClass ) ) {
+				return;
+			}
+		}
+
+		managedCtClass.addInterface( compositeOwnerCtClass );
+
+		if ( enhancementContext.isCompositeClass( managedCtClass ) ) {
+			// if a composite have a embedded field we need to implement the TRACKER_CHANGER_NAME method as well
+			MethodWriter.write(
+					managedCtClass,
+					"public void %1$s(String name) {%n" +
+							"  if (%2$s != null) { %2$s.callOwner(\".\" + name); }%n}",
+					EnhancerConstants.TRACKER_CHANGER_NAME,
+					EnhancerConstants.TRACKER_COMPOSITE_FIELD_NAME
+			);
+		}
+	}
+
 	protected void enhanceAttributesAccess(
 			CtClass managedCtClass,
 			IdentityHashMap<String, PersistentAttributeAccessMethods> attributeDescriptorMap) {
 		final ConstPool constPool = managedCtClass.getClassFile().getConstPool();
+		final ClassPool classPool = managedCtClass.getClassPool();
 
 		for ( Object oMethod : managedCtClass.getClassFile().getMethods() ) {
 			final MethodInfo methodInfo = (MethodInfo) oMethod;
@@ -499,12 +514,12 @@ public class PersistentAttributesEnhancer extends Enhancer {
 
 					if ( op == Opcode.GETFIELD ) {
 						final int methodIndex = MethodWriter.addMethod( constPool, attributeMethods.getReader() );
-						itr.writeByte( Opcode.INVOKESPECIAL, index );
+						itr.writeByte( Opcode.INVOKEVIRTUAL, index );
 						itr.write16bit( methodIndex, index + 1 );
 					}
 					else {
 						final int methodIndex = MethodWriter.addMethod( constPool, attributeMethods.getWriter() );
-						itr.writeByte( Opcode.INVOKESPECIAL, index );
+						itr.writeByte( Opcode.INVOKEVIRTUAL, index );
 						itr.write16bit( methodIndex, index + 1 );
 					}
 				}
@@ -548,6 +563,7 @@ public class PersistentAttributesEnhancer extends Enhancer {
 	 */
 	public void extendedEnhancement(CtClass aCtClass) {
 		final ConstPool constPool = aCtClass.getClassFile().getConstPool();
+		final ClassPool classPool = aCtClass.getClassPool();
 
 		for ( Object oMethod : aCtClass.getClassFile().getMethods() ) {
 			final MethodInfo methodInfo = (MethodInfo) oMethod;
@@ -568,7 +584,7 @@ public class PersistentAttributesEnhancer extends Enhancer {
 					}
 					String fieldName = constPool.getFieldrefName( itr.u16bitAt( index + 1 ) );
 					String fieldClassName = constPool.getClassInfo( constPool.getFieldrefClass( itr.u16bitAt( index + 1 ) ) );
-					CtClass targetCtClass = this.classPool.getCtClass( fieldClassName );
+					CtClass targetCtClass = classPool.getCtClass( fieldClassName );
 
 					if ( !enhancementContext.isEntityClass( targetCtClass ) && !enhancementContext.isCompositeClass( targetCtClass ) ) {
 						continue;

@@ -655,6 +655,13 @@ public final class AnnotationBinder {
 				if ( fk != null && !BinderHelper.isEmptyAnnotationValue( fk.name() ) ) {
 					key.setForeignKeyName( fk.name() );
 				}
+				else {
+					final PrimaryKeyJoinColumn pkJoinColumn = clazzToProcess.getAnnotation( PrimaryKeyJoinColumn.class );
+					if ( pkJoinColumn != null && pkJoinColumn.foreignKey() != null
+							&& !StringHelper.isEmpty( pkJoinColumn.foreignKey().name() ) ) {
+						key.setForeignKeyName( pkJoinColumn.foreignKey().name() );
+					}
+				}
 				if ( onDeleteAnn != null ) {
 					key.setCascadeDeleteEnabled( OnDeleteAction.CASCADE.equals( onDeleteAnn.action() ) );
 				}

@@ -31,11 +31,6 @@
             <artifactId>hibernate-envers</artifactId>
             <version>$version</version>
         </dependency>
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-entitymanager</artifactId>
-            <version>$version</version>
-        </dependency>
     </dependencies>
 
 </project>

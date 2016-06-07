@@ -15,7 +15,7 @@ Hibernate supports three types of configurations within OSGi.
 
 === hibernate-osgi
 
-Rather than embed OSGi capabilities into hibernate-core, hibernate-entitymanager, and sub-modules, hibernate-osgi was created.
+Rather than embed OSGi capabilities into hibernate-core, and sub-modules, hibernate-osgi was created.
 It's purposefully separated, isolating all OSGi dependencies.
 It provides an OSGi-specific `ClassLoader` (aggregates the container's `ClassLoader` with core and `EntityManager` `ClassLoader`s),
 JPA persistence provider, `SessionFactory`/`EntityManagerFactory` bootstrapping, entities/mappings scanner, and service management.
@@ -110,7 +110,7 @@ include::{sourcedir}/blueprint.xml[]
 [[osgi-unmanaged-jpa]]
 === Unmanaged JPA
 
-Hibernate also supports the use of JPA through hibernate-entitymanager, unmanaged by the OSGi container.
+Hibernate also supports the use of JPA, unmanaged by the OSGi container.
 The client bundle is responsible for managing the `EntityManagerFactory` and `EntityManager`s.
 
 === persistence.xml

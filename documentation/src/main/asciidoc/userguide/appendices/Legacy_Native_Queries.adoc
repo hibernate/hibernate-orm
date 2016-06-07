@@ -28,7 +28,7 @@ In this case, you do _not_ need to call `addEntity()` anymore.
 ----
 List people = session
     .getNamedQuery( "persons" )
-    .setString( "namePattern", namePattern )
+    .setParameter( "namePattern", namePattern )
     .setMaxResults( 50 )
     .list();
 ----

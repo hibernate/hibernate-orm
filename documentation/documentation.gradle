@@ -67,7 +67,6 @@ dependencies {
 	testCompile( project(path: ':hibernate-core', configuration: 'tests') )
 
 	testCompile( project(':hibernate-testing') )
-//	testCompile( project(path: ':hibernate-entitymanager', configuration: 'tests') )
 
 	testRuntime( libraries.h2 )
 	testRuntime( libraries.hsqldb )

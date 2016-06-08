@@ -34,6 +34,20 @@ The following settings control this behavior.
 	Forces Hibernate to order inserts to allow for more batching to be used.
 	Comes with a performance hit, so benchmark before and after to see if this actually helps or hurts your application.
 
+[NOTE]
+====
+Since version 5.2, Hibernate allows overriding the global JDBC batch size given by the `hibernate.jdbc.batch_size` configuration property for a given `Session`.
+====
+
+[[batch-session-jdbc-batch-size-example]]
+.Hibernate specific JDBC batch size configuration on a per `Session` basis
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/BatchTest.java[tags=batch-session-jdbc-batch-size-example]
+----
+====
+
 [[batch-session-batch]]
 === Session batching
 

@@ -34,6 +34,7 @@ import org.hibernate.userguide.model.Call;
 import org.hibernate.userguide.model.CreditCardPayment;
 import org.hibernate.userguide.model.Payment;
 import org.hibernate.userguide.model.Person;
+import org.hibernate.userguide.model.PersonNames;
 import org.hibernate.userguide.model.Phone;
 import org.hibernate.userguide.model.PhoneType;
 import org.hibernate.userguide.model.WireTransferPayment;
@@ -804,6 +805,27 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			//end::hql-api-stream-example[]
 
 			assertEquals( 1, callRegistry.size() );
+		});
+	}
+
+	@Test
+	public void test_hql_api_stream_projection_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			Session session = entityManager.unwrap( Session.class );
+			//tag::hql-api-stream-projection-example[]
+			Stream<Object[]> persons = session.createQuery(
+				"select p.name, p.nickName " +
+				"from Person p " +
+				"where p.name like :name" )
+			.setParameter( "name", "J%" )
+			.stream();
+
+			List<PersonNames> personNames = persons
+				.map( row -> new PersonNames( (String) row[0], (String)row[1] ) )
+				.collect(Collectors.toList());
+			//end::hql-api-stream-projection-example[]
+
+			assertEquals( 1, personNames.size() );
 		});
 	}
 

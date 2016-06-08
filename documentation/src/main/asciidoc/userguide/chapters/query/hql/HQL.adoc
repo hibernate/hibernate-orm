@@ -295,10 +295,29 @@ include::{sourcedir}/HQLTest.java[tags=hql-api-list-example]
 ----
 ====
 
+[NOTE]
+====
 Since 5.2, Hibernate offers support for returning a `Stream` which can be later used to transform the underlying `ResultSet`.
 
+Internally, the `stream()` behaves like a `Query#scroll` and the underlying result is backed by a `ScrollableResults`.
+For this reason, the `Stream` contains an `Object[]` instead of the actual `Query` result type.
+====
+
+Fetching a projection using the `Query#stream` method can be done as follows:
+
+[[hql-api-stream-projection-example]]
+.Hibernate `stream()` using a projection result type
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-api-stream-projection-example]
+----
+====
+
+When fetching entities, the `Object[]` must be mapped to the original query result type prior to applying any further transformations.
+
 [[hql-api-stream-example]]
-.Hibernate `stream()` result
+.Hibernate `stream()` using an entity result type
 ====
 [source, JAVA, indent=0]
 ----
@@ -306,11 +325,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-api-stream-example]
 ----
 ====
 
-[NOTE]
-====
-Internally, the `stream()` behaves like a `Query#scroll` and the underlying result is backed by a `ScrollableResults`.
-For this reason, the `Stream` contains an `Object[]` instead of the actual `Query` result type.
-====
+It is also possible to extract a single result from a `Query`.
 
 [[hql-api-unique-result-example]]
 .Hibernate `uniqueResult()`

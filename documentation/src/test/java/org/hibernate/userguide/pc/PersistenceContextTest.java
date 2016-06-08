@@ -150,17 +150,17 @@ public class PersistenceContextTest extends BaseEntityManagerFunctionalTestCase 
 
 			//tag::pc-find-by-natural-id-example[]
 			Book book = session
-					.byNaturalId( Book.class )
-					.using( "isbn", isbn )
-					.load( );
+				.byNaturalId( Book.class )
+				.using( "isbn", isbn )
+				.load( );
 			//end::pc-find-by-natural-id-example[]
 			assertNotNull(book);
 
 			//tag::pc-find-optional-by-simple-natural-id-example[]
 			Optional<Book> optionalBook = session
-					.byNaturalId( Book.class )
-					.using( "isbn", isbn )
-					.loadOptional( );
+				.byNaturalId( Book.class )
+				.using( "isbn", isbn )
+				.loadOptional( );
 			//end::pc-find-optional-by-simple-natural-id-example[]
 		} );
 

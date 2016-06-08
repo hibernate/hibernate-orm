@@ -66,6 +66,15 @@ public class BatchTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			String oldName = "Vlad";
 			String newName = "Alexandru";
+			//tag::batch-session-jdbc-batch-size-example[]
+			entityManager
+				.unwrap( Session.class )
+				.setJdbcBatchSize( 10 );
+			//end::batch-session-jdbc-batch-size-example[]
+		} );
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			String oldName = "Vlad";
+			String newName = "Alexandru";
 			//tag::batch-bulk-jpql-update-example[]
 			int updatedEntities = entityManager.createQuery(
 				"update Person p " +

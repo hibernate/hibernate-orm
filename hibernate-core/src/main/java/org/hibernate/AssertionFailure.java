@@ -6,6 +6,7 @@
  */
 package org.hibernate;
 
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
 import org.jboss.logging.Logger;
@@ -18,10 +19,7 @@ import org.jboss.logging.Logger;
 public class AssertionFailure extends RuntimeException {
 	private static final long serialVersionUID = 1L;
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			AssertionFailure.class.getName()
-	);
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AssertionFailure.class );
 
 	/**
 	 * Creates an instance of AssertionFailure using the given message.

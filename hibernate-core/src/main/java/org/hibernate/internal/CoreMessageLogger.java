@@ -1744,4 +1744,11 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = ERROR)
 	@Message(value = "Unsuccessful: %s", id = 478)
 	void unsuccessfulSchemaManagementCommand(String command);
+
+	@Message(
+			value = "Collection [%s] was not processed by flush()."
+			+ " This is likely due to unsafe use of the session (e.g. used in multiple threads concurrently, updates during entity lifecycle hooks).",
+			id = 479
+	)
+	String collectionNotProcessedByFlush(String role);
 }

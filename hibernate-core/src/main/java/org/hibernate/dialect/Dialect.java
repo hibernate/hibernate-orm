@@ -1228,6 +1228,22 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Get the string to append to SELECT statements to acquire WRITE locks
+	 * for this dialect given the aliases of the columns to be write locked.
+	 * Location of the of the returned string is treated
+	 * the same as getForUpdateString.
+	 *
+	 * @param aliases The columns to be read locked.
+	 * @param timeout in milliseconds, -1 for indefinite wait and 0 for no wait.
+	 * @return The appropriate <tt>LOCK</tt> clause string.
+	 */
+	public String getWriteLockString(String aliases, int timeout) {
+		// by default we simply return the getWriteLockString(timeout) result since
+		// the default is to say no support for "FOR UPDATE OF ..."
+		return getWriteLockString(timeout);
+	}
+
+	/**
+	 * Get the string to append to SELECT statements to acquire READ locks
 	 * for this dialect.  Location of the of the returned string is treated
 	 * the same as getForUpdateString.
 	 *
@@ -1238,6 +1254,21 @@ public abstract class Dialect implements ConversionContext {
 		return getForUpdateString();
 	}
 
+	/**
+	 * Get the string to append to SELECT statements to acquire READ locks
+	 * for this dialect given the aliases of the columns to be read locked.
+	 * Location of the of the returned string is treated
+	 * the same as getForUpdateString.
+	 *
+	 * @param aliases The columns to be read locked.
+	 * @param timeout in milliseconds, -1 for indefinite wait and 0 for no wait.
+	 * @return The appropriate <tt>LOCK</tt> clause string.
+	 */
+	public String getReadLockString(String aliases, int timeout) {
+		// by default we simply return the getReadLockString(timeout) result since
+		// the default is to say no support for "FOR UPDATE OF ..."
+		return getReadLockString(timeout);
+	}
 
 	/**
 	 * Is <tt>FOR UPDATE OF</tt> syntax supported?

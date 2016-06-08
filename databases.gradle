@@ -31,7 +31,7 @@ ext {
                         'jdbc.url'   : 'jdbc:derby:target/tmp/derby/hibernate_orm_test;databaseName=hibernate_orm_test;create=true'
                 ],
                 pgsql : [
-                        'db.dialect' : 'org.hibernate.dialect.PostgreSQL94Dialect',
+                        'db.dialect' : 'org.hibernate.dialect.PostgreSQL95Dialect',
                         'jdbc.driver': 'org.postgresql.Driver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',

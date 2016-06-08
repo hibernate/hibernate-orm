@@ -6,6 +6,13 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.CallableStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Iterator;
+import java.util.Map;
+
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -38,13 +45,6 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-
-import java.sql.CallableStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Iterator;
-import java.util.Map;
 
 /**
  * An SQL dialect for Postgres
@@ -288,7 +288,23 @@ public class PostgreSQL81Dialect extends Dialect {
 				}
 			}
 		}
-		return getForUpdateString( aliases );
+		LockMode lockMode = lockOptions.getLockMode();
+		switch ( lockMode ) {
+			case UPGRADE:
+				return getForUpdateString(aliases);
+			case PESSIMISTIC_READ:
+				return getReadLockString( aliases, lockOptions.getTimeOut() );
+			case PESSIMISTIC_WRITE:
+				return getWriteLockString( aliases, lockOptions.getTimeOut() );
+			case UPGRADE_NOWAIT:
+			case FORCE:
+			case PESSIMISTIC_FORCE_INCREMENT:
+				return getForUpdateNowaitString(aliases);
+			case UPGRADE_SKIPLOCKED:
+				return getForUpdateSkipLockedString(aliases);
+			default:
+				return "";
+		}
 	}
 
 	@Override
@@ -510,12 +526,32 @@ public class PostgreSQL81Dialect extends Dialect {
 	}
 
 	@Override
+	public String getWriteLockString(String aliases, int timeout) {
+		if ( timeout == LockOptions.NO_WAIT ) {
+			return String.format( " for update of %s nowait", aliases );
+		}
+		else {
+			return " for update of " + aliases;
+		}
+	}
+
+	@Override
 	public String getReadLockString(int timeout) {
 		if ( timeout == LockOptions.NO_WAIT ) {
 			return " for share nowait";
 		}
 		else {
 			return " for share";
+		}
+	}
+
+	@Override
+	public String getReadLockString(String aliases, int timeout) {
+		if ( timeout == LockOptions.NO_WAIT ) {
+			return String.format( " for share of %s nowait", aliases );
+		}
+		else {
+			return " for share of " + aliases;
 		}
 	}
 

@@ -170,7 +170,7 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 				}
 
 				if ( start > -1 ) {
-					final String lockHint = appendLockHint( lockMode, alias );
+					final String lockHint = appendLockHint( aliasedLockOptions, alias );
 					buffer.replace( start, end, lockHint );
 					correction += ( lockHint.length() - alias.length() );
 				}

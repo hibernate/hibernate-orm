@@ -490,7 +490,30 @@ public abstract class AbstractHANADialect extends Dialect {
 			return getForUpdateString( lockMode );
 		}
 
-		return getForUpdateString( lockMode ) + " of " + aliases;
+		String clause = getForUpdateString( lockMode ) + " of " + aliases;
+		if(lockOptions.getTimeOut() == LockOptions.NO_WAIT) {
+			clause += " nowait";
+		}
+		return clause;
+	}
+
+	public String getForUpdateNowaitString() {
+		return getForUpdateString() + " nowait";
+	}
+
+	@Override
+	public String getReadLockString(int timeout) {
+		return getWriteLockString( timeout );
+	}
+
+	@Override
+	public String getWriteLockString(int timeout) {
+		if ( timeout == LockOptions.NO_WAIT ) {
+			return getForUpdateNowaitString();
+		}
+		else {
+			return getForUpdateString();
+		}
 	}
 
 	@Override

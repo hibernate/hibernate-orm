@@ -363,7 +363,8 @@ public abstract class AbstractServiceRegistryImpl
 					serviceBindingList.clear();
 				}
 				serviceBindingMap.clear();
-			} finally {
+			}
+			finally {
 				parent.deRegisterChild( this );
 			}
 		}

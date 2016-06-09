@@ -7,6 +7,7 @@
 package org.hibernate.service.spi;
 
 import org.hibernate.service.Service;
+import org.hibernate.service.UnknownServiceException;
 
 import org.jboss.logging.Logger;
 
@@ -18,20 +19,25 @@ import org.jboss.logging.Logger;
 public final class ServiceBinding<R extends Service> {
 	private static final Logger log = Logger.getLogger( ServiceBinding.class );
 
-	public static interface ServiceLifecycleOwner {
-		public <R extends Service> R initiateService(ServiceInitiator<R> serviceInitiator);
+	public interface ServiceLifecycleOwner {
+		<R extends Service> R initiateService(ServiceInitiator<R> serviceInitiator);
 
-		public <R extends Service> void configureService(ServiceBinding<R> binding);
-		public <R extends Service> void injectDependencies(ServiceBinding<R> binding);
-		public <R extends Service> void startService(ServiceBinding<R> binding);
+		<R extends Service> void configureService(R service);
 
-		public <R extends Service> void stopService(ServiceBinding<R> binding);
+		<R extends Service> void injectDependencies(R service);
+
+		<R extends Service> void startService(R service, Class<R> serviceRole);
+
+		<R extends Service> void stopService(R service);
+
+		default <R extends Service> void registerService(ServiceBinding<R> serviceBinding, R service) {
+		}
 	}
 
 	private final ServiceLifecycleOwner lifecycleOwner;
 	private final Class<R> serviceRole;
 	private final ServiceInitiator<R> serviceInitiator;
-	private R service;
+	private volatile R service;
 
 	public ServiceBinding(ServiceLifecycleOwner lifecycleOwner, Class<R> serviceRole, R service) {
 		this.lifecycleOwner = lifecycleOwner;
@@ -46,28 +52,45 @@ public final class ServiceBinding<R extends Service> {
 		this.serviceInitiator = serviceInitiator;
 	}
 
-	public ServiceLifecycleOwner getLifecycleOwner() {
-		return lifecycleOwner;
-	}
-
 	public Class<R> getServiceRole() {
 		return serviceRole;
 	}
 
-	public ServiceInitiator<R> getServiceInitiator() {
-		return serviceInitiator;
-	}
+	public synchronized R getService() {
+		if ( service == null ) {
+			if ( serviceInitiator == null ) {
+				throw new UnknownServiceException( serviceRole );
+			}
+			try {
+				final R tempService = lifecycleOwner.initiateService( serviceInitiator );
 
-	public R getService() {
+				if ( tempService != null ) {
+					lifecycleOwner.injectDependencies( tempService );
+					lifecycleOwner.configureService( tempService );
+					lifecycleOwner.startService( tempService, serviceRole );
+					lifecycleOwner.registerService( this, tempService );
+				}
+
+				service = tempService;
+			}
+			catch (ServiceException e) {
+				throw e;
+			}
+			catch (Exception e) {
+				throw new ServiceException(
+						"Unable to create requested service [" + serviceRole.getName() + "]",
+						e
+				);
+			}
+		}
 		return service;
 	}
 
-	public void setService(R service) {
-		if ( this.service != null ) {
-			if ( log.isDebugEnabled() ) {
-				log.debug( "Overriding existing service binding [" + serviceRole.getName() + "]" );
-			}
-		}
-		this.service = service;
+	public synchronized void  stopService(){
+		lifecycleOwner.stopService( service );
+	}
+
+	public boolean isServiceInstanceOf(Class clazz) {
+		return serviceRole.isInstance( clazz );
 	}
 }

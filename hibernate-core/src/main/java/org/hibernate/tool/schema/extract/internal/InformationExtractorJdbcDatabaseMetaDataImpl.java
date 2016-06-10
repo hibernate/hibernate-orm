@@ -362,7 +362,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 			boolean found = false;
 			TableInformation tableInformation = null;
 			while ( resultSet.next() ) {
-				if ( tableName.equals( identifierHelper().toIdentifier( resultSet.getString( "TABLE_NAME" ) ) ) ) {
+				if ( tableName.equals( identifierHelper().toIdentifier( resultSet.getString( "TABLE_NAME" ), tableName.isQuoted() ) ) ) {
 					if ( found ) {
 						log.multipleTablesFound( tableName.render() );
 						final String catalogName = catalog == null ? "" : catalog.render();

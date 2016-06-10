@@ -103,8 +103,12 @@ public class SqlServer2008SpatialDialect extends SQLServer2008Dialect implements
 				typeContributions,
 				serviceRegistry
 		);
-		typeContributions.contributeType( new GeolatteGeometryType( SqlServer2008GeometryTypeDescriptor.INSTANCE ) );
-		typeContributions.contributeType( new JTSGeometryType( SqlServer2008GeometryTypeDescriptor.INSTANCE ) );
+		typeContributions.contributeType( new GeolatteGeometryType( SqlServer2008GeometryTypeDescriptor.INSTANCE,
+																	typeContributions.getTypeDescriptorRegistryAccess()
+		) );
+		typeContributions.contributeType( new JTSGeometryType( SqlServer2008GeometryTypeDescriptor.INSTANCE,
+															   typeContributions.getTypeDescriptorRegistryAccess()
+		) );
 	}
 
 	@Override

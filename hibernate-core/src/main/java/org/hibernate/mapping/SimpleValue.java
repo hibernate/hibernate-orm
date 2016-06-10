@@ -533,7 +533,7 @@ public class SimpleValue implements KeyValue {
 		// resolve the JavaTypeDescriptor ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// For the JavaTypeDescriptor portion we simply resolve the "entity attribute representation" part of
 		// the AttributeConverter to resolve the corresponding descriptor.
-		final JavaTypeDescriptor entityAttributeJavaTypeDescriptor = JavaTypeDescriptorRegistry.INSTANCE.getDescriptor( entityAttributeJavaType );
+		final JavaTypeDescriptor entityAttributeJavaTypeDescriptor = metadata.getTypeDescriptorRegistryAccess().getJavaTypeDescriptorRegistry().getDescriptor( entityAttributeJavaType );
 
 
 		// build the SqlTypeDescriptor adapter ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -572,12 +572,15 @@ public class SimpleValue implements KeyValue {
 				.getService( JdbcServices.class )
 				.getJdbcEnvironment()
 				.getDialect()
-				.remapSqlTypeDescriptor( SqlTypeDescriptorRegistry.INSTANCE.getDescriptor( jdbcTypeCode ) );
+				.remapSqlTypeDescriptor( metadata.getTypeDescriptorRegistryAccess()
+												 .getSqlTypeDescriptorRegistry()
+												 .getDescriptor( jdbcTypeCode ) );
 
 		// find the JavaTypeDescriptor representing the "intermediate database type representation".  Back to the
 		// 		illustration, this should be the type descriptor for Strings
-		final JavaTypeDescriptor intermediateJavaTypeDescriptor = JavaTypeDescriptorRegistry.INSTANCE.getDescriptor( databaseColumnJavaType );
-
+		final JavaTypeDescriptor intermediateJavaTypeDescriptor = metadata.getTypeDescriptorRegistryAccess()
+				.getJavaTypeDescriptorRegistry()
+				.getDescriptor( databaseColumnJavaType );
 		// and finally construct the adapter, which injects the AttributeConverter calls into the binding/extraction
 		// 		process...
 		final SqlTypeDescriptor sqlTypeDescriptorAdapter = new AttributeConverterSqlTypeDescriptorAdapter(

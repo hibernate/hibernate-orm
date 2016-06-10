@@ -58,7 +58,10 @@ import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.AssociationType;
+import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.Type;
+import org.hibernate.type.TypeResolver;
+import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 
 /**
  * Hibernate implementation of the JPA {@link javax.persistence.metamodel.Metamodel} contract.
@@ -71,35 +74,57 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( MetamodelImpl.class );
 	private static final Object ENTITY_NAME_RESOLVER_MAP_VALUE = new Object();
 
+	// the SessionFactory that scopes this MetamodelImpl
 	private final SessionFactoryImplementor sessionFactory;
 
 	private final Map<String,String> imports = new ConcurrentHashMap<>();
 	private final Map<String,EntityPersister> entityPersisterMap = new ConcurrentHashMap<>();
 	private final Map<Class,String> entityProxyInterfaceMap = new ConcurrentHashMap<>();
-	private final Map<String,CollectionPersister> collectionPersisterMap = new ConcurrentHashMap<>();
-	private final Map<String,Set<String>> collectionRolesByEntityParticipant = new ConcurrentHashMap<>();
 	private final ConcurrentMap<EntityNameResolver,Object> entityNameResolvers = new ConcurrentHashMap<>();
 
+	private final Map<String,CollectionPersister> collectionPersisterMap = new ConcurrentHashMap<>();
+	private final Map<String,Set<String>> collectionRolesByEntityParticipant = new ConcurrentHashMap<>();
 
 	private final Map<Class<?>, EntityTypeImpl<?>> jpaEntityTypeMap = new ConcurrentHashMap<>();
 	private final Map<Class<?>, EmbeddableTypeImpl<?>> jpaEmbeddableTypeMap = new ConcurrentHashMap<>();
 	private final Map<Class<?>, MappedSuperclassType<?>> jpaMappedSuperclassTypeMap = new ConcurrentHashMap<>();
 	private final Map<String, EntityTypeImpl<?>> jpaEntityTypesByEntityName = new ConcurrentHashMap<>();
 
-	private final transient Map<String,EntityGraph> entityGraphMap = new ConcurrentHashMap<>();
+	private final Map<String,EntityGraph> entityGraphMap = new ConcurrentHashMap<>();
 
-	public MetamodelImpl(SessionFactoryImplementor sessionFactory) {
+	private final BasicTypeRegistry basicTypeFactory;
+	private final TypeDescriptorRegistryAccess typeDescriptorRegistryAccess;
+
+	private final TypeResolver typeResolver;
+
+	/**
+	 * Instantiate the MetamodelImpl.
+	 * <p/>
+	 * Note that building a fully-functional MetamodelImpl instance is a 2-step process.  The
+	 * create instance returned here must still be initialized via call to {@link #initialize}
+	 *
+	 * @param sessionFactory The SessionFactory that this MetamodelImpl is scoped to
+	 */
+	public MetamodelImpl(
+			SessionFactoryImplementor sessionFactory,
+			TypeResolver typeResolver,
+			TypeDescriptorRegistryAccess typeDescriptorRegistryAccess) {
 		this.sessionFactory = sessionFactory;
+		this.typeResolver = typeResolver;
+		this.basicTypeFactory = typeResolver.getBasicTypeFactory();
+		this.typeDescriptorRegistryAccess = typeDescriptorRegistryAccess;
 	}
 
 	/**
-	 * Prepare the metamodel using the information from the collection of Hibernate
-	 * {@link PersistentClass} models
+	 * Prepare the MetamodelImpl for use, using the information from the Hibernate mapping model.
 	 *
-	 * @param mappingMetadata The mapping information
+	 * @param mappingMetadata The Hibernate mapping model
 	 * @param jpaMetaModelPopulationSetting Should the JPA Metamodel be built as well?
 	 */
-	public void initialize(MetadataImplementor mappingMetadata, JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting) {
+	public void initialize(
+			MetadataImplementor mappingMetadata,
+			JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting) {
+
 		this.imports.putAll( mappingMetadata.getImports() );
 
 		final PersisterCreationContext persisterCreationContext = new PersisterCreationContext() {
@@ -703,6 +728,20 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 		}
 
 		return results;
+	}
+
+	@Override
+	public BasicTypeRegistry getBasicTypeFactory() {
+		return basicTypeFactory;
+	}
+
+	@Override
+	public TypeDescriptorRegistryAccess getTypeDescriptorRegistryAccess() {
+		return typeDescriptorRegistryAccess;
+	}
+
+	public TypeResolver getTypeResolver() {
+		return typeResolver;
 	}
 
 	@Override

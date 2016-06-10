@@ -18,6 +18,8 @@ import org.hibernate.Metamodel;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.BasicTypeRegistry;
+import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 
 /**
  * @author Steve Ebersole
@@ -128,6 +130,10 @@ public interface MetamodelImplementor extends Metamodel {
 	<T> EntityGraph<T> findEntityGraphByName(String name);
 
 	<T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass);
+
+	BasicTypeRegistry getBasicTypeFactory();
+
+	TypeDescriptorRegistryAccess getTypeDescriptorRegistryAccess();
 
 	void close();
 }

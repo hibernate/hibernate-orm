@@ -41,6 +41,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.TypeFactory;
 import org.hibernate.type.TypeResolver;
+import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
@@ -108,7 +109,7 @@ public class MetadataBuildingProcess {
 	 * @return Token/memento representing all known users resources (classes, packages, mapping files, etc).
 	 */
 	public static MetadataImplementor complete(final ManagedResources managedResources, final MetadataBuildingOptions options) {
-		final BasicTypeRegistry basicTypeRegistry = handleTypes( options );
+		final BasicTypeRegistry basicTypeRegistry = handleTypes( options, options.getTypeDescriptorRegistryAccess() );
 
 		final InFlightMetadataCollectorImpl metadataCollector = new InFlightMetadataCollectorImpl(
 				options,
@@ -320,7 +321,9 @@ public class MetadataBuildingProcess {
 
 
 
-	private static BasicTypeRegistry handleTypes(MetadataBuildingOptions options) {
+	private static BasicTypeRegistry handleTypes(
+			MetadataBuildingOptions options,
+			TypeDescriptorRegistryAccess typeDescriptorRegistryAccess) {
 		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService( ClassLoaderService.class );
 
 		// ultimately this needs to change a little bit to account for HHH-7792
@@ -345,6 +348,11 @@ public class MetadataBuildingProcess {
 			@Override
 			public void contributeType(CompositeUserType type, String[] keys) {
 				basicTypeRegistry.register( type, keys );
+			}
+
+			@Override
+			public TypeDescriptorRegistryAccess getTypeDescriptorRegistryAccess() {
+				return typeDescriptorRegistryAccess;
 			}
 		};
 

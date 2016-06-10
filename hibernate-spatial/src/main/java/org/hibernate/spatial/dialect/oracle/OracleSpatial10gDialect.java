@@ -170,8 +170,12 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements Spatial
 				)
 		);
 
-		typeContributions.contributeType( new GeolatteGeometryType( sdoGeometryTypeDescriptor ) );
-		typeContributions.contributeType( new JTSGeometryType( sdoGeometryTypeDescriptor ) );
+		typeContributions.contributeType( new GeolatteGeometryType( sdoGeometryTypeDescriptor,
+																	typeContributions.getTypeDescriptorRegistryAccess()
+		) );
+		typeContributions.contributeType( new JTSGeometryType( sdoGeometryTypeDescriptor,
+															   typeContributions.getTypeDescriptorRegistryAccess()
+		) );
 
 
 	}

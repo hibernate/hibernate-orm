@@ -15,6 +15,7 @@ import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.type.TypeResolver;
+import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 
 /**
  * The SPI-level Metadata contract.
@@ -34,6 +35,8 @@ public interface MetadataImplementor extends Metadata, Mapping {
 	MetadataBuildingOptions getMetadataBuildingOptions();
 
 	TypeResolver getTypeResolver();
+
+	TypeDescriptorRegistryAccess getTypeDescriptorRegistryAccess();
 
 	NamedQueryRepository buildNamedQueryRepository(SessionFactoryImpl sessionFactory);
 

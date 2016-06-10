@@ -79,8 +79,9 @@ public class GeoDBDialect extends H2Dialect implements SpatialDialect {
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
-		typeContributions.contributeType( new GeolatteGeometryType( GeoDBGeometryTypeDescriptor.INSTANCE ) );
-		typeContributions.contributeType( new JTSGeometryType( GeoDBGeometryTypeDescriptor.INSTANCE ) );
+
+		typeContributions.contributeType( new GeolatteGeometryType( GeoDBGeometryTypeDescriptor.INSTANCE, typeContributions.getTypeDescriptorRegistryAccess() ) );
+		typeContributions.contributeType( new JTSGeometryType( GeoDBGeometryTypeDescriptor.INSTANCE, typeContributions.getTypeDescriptorRegistryAccess() ) );
 	}
 
 	@Override

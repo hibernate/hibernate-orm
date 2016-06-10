@@ -98,6 +98,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.type.TypeResolver;
+import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 
 /**
  * The implementation of the in-flight Metadata collector contract.
@@ -113,6 +114,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	private final MetadataBuildingOptions options;
 	private final TypeResolver typeResolver;
+	private final TypeDescriptorRegistryAccess typeDescriptorRegistryAccess;
 
 	private final AttributeConverterManager attributeConverterManager = new AttributeConverterManager();
 	private final ClassmateContext classmateContext = new ClassmateContext();
@@ -163,6 +165,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		this.uuid = UUID.randomUUID();
 		this.options = options;
 		this.typeResolver = typeResolver;
+		this.typeDescriptorRegistryAccess = options.getTypeDescriptorRegistryAccess();
 
 		this.identifierGeneratorFactory = options.getServiceRegistry().getService( MutableIdentifierGeneratorFactory.class );
 
@@ -194,6 +197,11 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	@Override
 	public TypeResolver getTypeResolver() {
 		return typeResolver;
+	}
+
+	@Override
+	public TypeDescriptorRegistryAccess getTypeDescriptorRegistryAccess() {
+		return typeDescriptorRegistryAccess;
 	}
 
 	@Override
@@ -2170,6 +2178,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 					uuid,
 					options,
 					typeResolver,
+					typeDescriptorRegistryAccess,
 					identifierGeneratorFactory,
 					entityBindingMap,
 					mappedSuperClasses,

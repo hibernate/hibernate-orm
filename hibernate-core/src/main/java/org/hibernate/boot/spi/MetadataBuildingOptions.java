@@ -25,6 +25,7 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 
 import org.jboss.jandex.IndexView;
 
@@ -63,6 +64,8 @@ public interface MetadataBuildingOptions {
 	 * @return The BasicType registrations
 	 */
 	List<BasicTypeRegistration> getBasicTypeRegistrations();
+
+	TypeDescriptorRegistryAccess getTypeDescriptorRegistryAccess();
 
 	/**
 	 * Access to the Jandex index passed by call to

@@ -41,7 +41,6 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
-import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
@@ -74,6 +73,8 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.internal.descriptor.TypeDescriptorRegistryAccessImpl;
+import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
@@ -299,6 +300,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	@Override
 	public void contributeType(CompositeUserType type, String[] keys) {
 		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
+	}
+
+	@Override
+	public TypeDescriptorRegistryAccess getTypeDescriptorRegistryAccess() {
+		return options.typeDescriptorRegistryAccess;
 	}
 
 	@Override
@@ -535,7 +541,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private final StandardServiceRegistry serviceRegistry;
 		private final MappingDefaultsImpl mappingDefaults;
 
-		private ArrayList<BasicTypeRegistration> basicTypeRegistrations = new ArrayList<BasicTypeRegistration>();
+		private final TypeDescriptorRegistryAccess typeDescriptorRegistryAccess = new TypeDescriptorRegistryAccessImpl();
+		private final ArrayList<BasicTypeRegistration> basicTypeRegistrations = new ArrayList<>();
 
 		private IndexView jandexView;
 		private ClassLoader tempClassLoader;
@@ -776,6 +783,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		@Override
 		public List<BasicTypeRegistration> getBasicTypeRegistrations() {
 			return basicTypeRegistrations;
+		}
+
+		@Override
+		public TypeDescriptorRegistryAccess getTypeDescriptorRegistryAccess() {
+			return typeDescriptorRegistryAccess;
 		}
 
 		@Override

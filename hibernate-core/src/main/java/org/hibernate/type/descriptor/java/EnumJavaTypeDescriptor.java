@@ -7,6 +7,7 @@
 package org.hibernate.type.descriptor.java;
 
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 
 /**
  * Describes a Java Enum type.
@@ -15,10 +16,10 @@ import org.hibernate.type.descriptor.WrapperOptions;
  */
 public class EnumJavaTypeDescriptor<T extends Enum> extends AbstractTypeDescriptor<T> {
 	@SuppressWarnings("unchecked")
-	protected EnumJavaTypeDescriptor(Class<T> type) {
+	protected EnumJavaTypeDescriptor(Class<T> type, TypeDescriptorRegistryAccess scope) {
 		super( type, ImmutableMutabilityPlan.INSTANCE );
 
-		JavaTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
+		scope.getJavaTypeDescriptorRegistry().addDescriptor( this );
 	}
 
 	@Override

@@ -48,6 +48,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.type.TypeResolver;
+import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 
 /**
  * Container for configuration data collected during binding the metamodel.
@@ -61,6 +62,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final MetadataBuildingOptions metadataBuildingOptions;
 
 	private final TypeResolver typeResolver;
+	private final TypeDescriptorRegistryAccess typeDescriptorRegistryAccess;
 	private final IdentifierGeneratorFactory identifierGeneratorFactory;
 
 	private final Map<String,PersistentClass> entityBindingMap;
@@ -83,6 +85,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			UUID uuid,
 			MetadataBuildingOptions metadataBuildingOptions,
 			TypeResolver typeResolver,
+			TypeDescriptorRegistryAccess typeDescriptorRegistryAccess,
 			MutableIdentifierGeneratorFactory identifierGeneratorFactory,
 			Map<String, PersistentClass> entityBindingMap,
 			Map<Class, MappedSuperclass> mappedSuperclassMap,
@@ -102,6 +105,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		this.uuid = uuid;
 		this.metadataBuildingOptions = metadataBuildingOptions;
 		this.typeResolver = typeResolver;
+		this.typeDescriptorRegistryAccess = typeDescriptorRegistryAccess;
 		this.identifierGeneratorFactory = identifierGeneratorFactory;
 		this.entityBindingMap = entityBindingMap;
 		this.mappedSuperclassMap = mappedSuperclassMap;
@@ -128,6 +132,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	@Override
 	public TypeResolver getTypeResolver() {
 		return typeResolver;
+	}
+
+	@Override
+	public TypeDescriptorRegistryAccess getTypeDescriptorRegistryAccess() {
+		return typeDescriptorRegistryAccess;
 	}
 
 	@Override

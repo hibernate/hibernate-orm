@@ -9,6 +9,9 @@ package org.hibernate;
 import javax.persistence.metamodel.EntityType;
 
 /**
+ * Defines the Hibernate API extension of the JPA {@link javax.persistence.metamodel.Metamodel}
+ * API.
+ *
  * @author Steve Ebersole
  */
 public interface Metamodel extends javax.persistence.metamodel.Metamodel {
@@ -20,7 +23,7 @@ public interface Metamodel extends javax.persistence.metamodel.Metamodel {
 	SessionFactory getSessionFactory();
 
 	/**
-	 * @deprecated since 5.2
+	 * @deprecated since 5.2 - use {@link #entity(String)} instead
 	 */
 	@Deprecated
 	default EntityType getEntityTypeByName(String entityName) {
@@ -36,6 +39,14 @@ public interface Metamodel extends javax.persistence.metamodel.Metamodel {
 	 */
 	<X> EntityType<X> entity(String entityName);
 
+	/**
+	 * See if the given name (typically encountered in an HQL/JPQL query) has an imported/replacement name.
+	 *
+	 * @param className The encountered class/entity name
+	 *
+	 * @return The imported class name.  May return {@code null} if the given name does not have an import
+	 * replacement and it does not represent a known Class name (Class loading).
+	 */
 	String getImportedClassName(String className);
 
 	/**

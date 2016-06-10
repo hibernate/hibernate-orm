@@ -10,6 +10,7 @@ import com.vividsolutions.jts.geom.Geometry;
 
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 
 /**
  * A {@code Type} that maps between the database geometry type and JTS {@code Geometry}.
@@ -22,9 +23,15 @@ public class JTSGeometryType extends AbstractSingleColumnStandardBasicType<Geome
 	 * Constructs an instance with the specified {@code SqlTypeDescriptor}
 	 *
 	 * @param sqlTypeDescriptor The descriptor for the type used by the database for geometries.
+	 * @param typeDescriptorRegistryAccess
 	 */
-	public JTSGeometryType(SqlTypeDescriptor sqlTypeDescriptor) {
+	public JTSGeometryType(
+			SqlTypeDescriptor sqlTypeDescriptor,
+			TypeDescriptorRegistryAccess typeDescriptorRegistryAccess) {
 		super( sqlTypeDescriptor, JTSGeometryJavaTypeDescriptor.INSTANCE );
+
+		typeDescriptorRegistryAccess.getSqlTypeDescriptorRegistry().addDescriptor( sqlTypeDescriptor );
+		typeDescriptorRegistryAccess.getJavaTypeDescriptorRegistry().addDescriptor( JTSGeometryJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override

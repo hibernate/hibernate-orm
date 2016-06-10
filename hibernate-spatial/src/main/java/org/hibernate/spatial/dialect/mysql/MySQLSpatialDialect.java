@@ -46,8 +46,18 @@ public class MySQLSpatialDialect extends MySQLDialect implements SpatialDialect 
 				typeContributions,
 				serviceRegistry
 		);
-		typeContributions.contributeType( new GeolatteGeometryType( MySQLGeometryTypeDescriptor.INSTANCE ) );
-		typeContributions.contributeType( new JTSGeometryType( MySQLGeometryTypeDescriptor.INSTANCE ) );
+		typeContributions.contributeType(
+				new GeolatteGeometryType(
+						MySQLGeometryTypeDescriptor.INSTANCE,
+						typeContributions.getTypeDescriptorRegistryAccess()
+				)
+		);
+		typeContributions.contributeType(
+				new JTSGeometryType(
+						MySQLGeometryTypeDescriptor.INSTANCE,
+						typeContributions.getTypeDescriptorRegistryAccess()
+				)
+		);
 	}
 
 	@Override

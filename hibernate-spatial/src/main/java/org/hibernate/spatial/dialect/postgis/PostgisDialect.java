@@ -43,8 +43,12 @@ public class PostgisDialect extends PostgreSQL82Dialect implements SpatialDialec
 				serviceRegistry
 		);
 
-		typeContributions.contributeType( new GeolatteGeometryType( PGGeometryTypeDescriptor.INSTANCE ) );
-		typeContributions.contributeType( new JTSGeometryType( PGGeometryTypeDescriptor.INSTANCE ) );
+		typeContributions.contributeType( new GeolatteGeometryType( PGGeometryTypeDescriptor.INSTANCE,
+																	typeContributions.getTypeDescriptorRegistryAccess()
+		) );
+		typeContributions.contributeType( new JTSGeometryType( PGGeometryTypeDescriptor.INSTANCE,
+															   typeContributions.getTypeDescriptorRegistryAccess()
+		) );
 	}
 
 	protected void registerTypesAndFunctions() {

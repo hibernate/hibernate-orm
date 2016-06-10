@@ -93,9 +93,14 @@ public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 		Metadata metadata = new MetadataSources()
 				.addAnnotatedClass( WithGenericCollection.class )
 				.buildMetadata();
-		SessionFactoryImplementor sfi = (SessionFactoryImplementor) metadata.buildSessionFactory();
-		MetamodelImpl metamodel = new MetamodelImpl( sfi );
-		metamodel.initialize( (MetadataImplementor) metadata, JpaMetaModelPopulationSetting.IGNORE_UNSUPPORTED );
+		final SessionFactoryImplementor sfi = (SessionFactoryImplementor) metadata.buildSessionFactory();
+		final MetadataImplementor mappingMetadata = (MetadataImplementor) metadata;
+		final MetamodelImpl metamodel = new MetamodelImpl(
+				sfi,
+				mappingMetadata.getTypeResolver(),
+				mappingMetadata.getTypeDescriptorRegistryAccess()
+		);
+		metamodel.initialize( mappingMetadata, JpaMetaModelPopulationSetting.IGNORE_UNSUPPORTED );
 		sfi.close();
 	}
 

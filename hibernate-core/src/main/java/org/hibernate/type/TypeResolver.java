@@ -54,6 +54,10 @@ public class TypeResolver implements Serializable {
 		return typeFactory;
 	}
 
+	public BasicTypeRegistry getBasicTypeFactory() {
+		return basicTypeRegistry;
+	}
+
 	/**
 	 * Locate a Hibernate {@linkplain BasicType basic type} given (one of) its registration names.
 	 *

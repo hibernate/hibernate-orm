@@ -189,7 +189,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient Map<String, FilterDefinition> filters;
 	private final transient Map<String, FetchProfile> fetchProfiles;
 
-	private final transient TypeResolver typeResolver;
 	private final transient TypeHelper typeHelper;
 
 
@@ -243,9 +242,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			this.observer.addObserver( sessionFactoryObserver );
 		}
 
-		this.typeResolver = metadata.getTypeResolver().scope( this );
-		this.typeHelper = new TypeLocatorImpl( typeResolver );
-
 		this.filters = new HashMap<>();
 		this.filters.putAll( metadata.getFilterDefinitions() );
 
@@ -292,8 +288,13 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 			LOG.debug( "Instantiated session factory" );
 
-			this.metamodel = new MetamodelImpl( this );
+			this.metamodel = new MetamodelImpl(
+					this,
+					metadata.getTypeResolver().scope( this ),
+					metadata.getTypeDescriptorRegistryAccess()
+			);
 			this.metamodel.initialize( metadata, determineJpaMetaModelPopulationSetting( properties ) );
+			this.typeHelper = new TypeLocatorImpl( this.metamodel.getTypeResolver() );
 
 			//Named Queries:
 			this.namedQueryRepository = metadata.buildNamedQueryRepository( this );
@@ -512,7 +513,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	public TypeResolver getTypeResolver() {
-		return typeResolver;
+		return this.metamodel.getTypeResolver();
 	}
 
 	public QueryPlanCache getQueryPlanCache() {

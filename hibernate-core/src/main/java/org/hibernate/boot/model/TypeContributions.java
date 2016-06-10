@@ -7,6 +7,7 @@
 package org.hibernate.boot.model;
 
 import org.hibernate.type.BasicType;
+import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
@@ -23,4 +24,6 @@ public interface TypeContributions {
 	void contributeType(UserType type, String... keys);
 
 	void contributeType(CompositeUserType type, String... keys);
+
+	TypeDescriptorRegistryAccess getTypeDescriptorRegistryAccess();
 }

@@ -18,6 +18,7 @@ import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 
 import org.jboss.logging.Logger;
 
@@ -27,13 +28,15 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class SqlTypeDescriptorRegistry {
-	public static final SqlTypeDescriptorRegistry INSTANCE = new SqlTypeDescriptorRegistry();
-
 	private static final Logger log = Logger.getLogger( SqlTypeDescriptorRegistry.class );
 
-	private ConcurrentHashMap<Integer,SqlTypeDescriptor> descriptorMap = new ConcurrentHashMap<Integer, SqlTypeDescriptor>();
+	private final TypeDescriptorRegistryAccess scope;
 
-	private SqlTypeDescriptorRegistry() {
+	private ConcurrentHashMap<Integer,SqlTypeDescriptor> descriptorMap = new ConcurrentHashMap<>();
+
+	public SqlTypeDescriptorRegistry(TypeDescriptorRegistryAccess scope) {
+		this.scope = scope;
+
 		addDescriptor( BooleanTypeDescriptor.INSTANCE );
 
 		addDescriptor( BitTypeDescriptor.INSTANCE );

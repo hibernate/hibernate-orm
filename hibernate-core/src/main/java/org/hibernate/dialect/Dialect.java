@@ -2813,6 +2813,6 @@ public abstract class Dialect implements ConversionContext {
 	 * @throws SQLException Accessing the DatabaseMetaData can throw it.  Just re-throw and Hibernate will handle.
 	 */
 	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) throws SQLException {
-		return databaseMetaData.supportsNamedParameters();
+		return databaseMetaData != null && databaseMetaData.supportsNamedParameters();
 	}
 }

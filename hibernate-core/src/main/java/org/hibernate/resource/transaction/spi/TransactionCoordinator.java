@@ -121,6 +121,12 @@ public interface TransactionCoordinator {
 
 		void markRollbackOnly();
 
+		default boolean isActive(boolean isMarkedRollbackConsideredActive) {
+			final TransactionStatus status = getStatus();
+			return TransactionStatus.ACTIVE == status
+					|| ( isMarkedRollbackConsideredActive && TransactionStatus.MARKED_ROLLBACK == status );
+		}
+
 		// todo : org.hibernate.Transaction will need access to register local Synchronizations.
 		//		depending on how we integrate TransactionCoordinator/TransactionDriverControl with
 		//		org.hibernate.Transaction that might be best done by:

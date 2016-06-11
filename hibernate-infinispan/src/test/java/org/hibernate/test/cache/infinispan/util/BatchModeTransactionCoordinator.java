@@ -192,6 +192,11 @@ public class BatchModeTransactionCoordinator implements TransactionCoordinator {
 		}
 
 		@Override
+		public boolean isActive(boolean isMarkedRollbackConsideredActive) {
+			return false;
+		}
+
+		@Override
 		public TransactionStatus getStatus() {
 			return transactionDriver.getStatus();
 		}

@@ -103,7 +103,16 @@ public class TransactionImpl implements TransactionImplementor {
 
 	@Override
 	public boolean isActive() {
-		return getStatus() == TransactionStatus.ACTIVE || getStatus() == TransactionStatus.MARKED_ROLLBACK;
+		// old behavior considered TransactionStatus#MARKED_ROLLBACK as active
+		return isActive( true );
+	}
+
+	@Override
+	public boolean isActive(boolean isMarkedForRollbackConsideredActive) {
+		if ( transactionDriverControl == null ) {
+			transactionDriverControl = transactionCoordinator.getTransactionDriverControl();
+		}
+		return transactionDriverControl.isActive( isMarkedForRollbackConsideredActive );
 	}
 
 	@Override

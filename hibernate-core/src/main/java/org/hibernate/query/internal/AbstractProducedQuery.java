@@ -31,6 +31,7 @@ import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
+import javax.persistence.NoResultException;
 import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
 import javax.persistence.TransactionRequiredException;
@@ -464,7 +465,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setParameter(String name, Object value) {
 		if ( value instanceof TypedParameterValue ) {
-			final TypedParameterValue  typedValueWrapper = (TypedParameterValue ) value;
+			final TypedParameterValue  typedValueWrapper = (TypedParameterValue) value;
 			setParameter( name, typedValueWrapper.getValue(), typedValueWrapper.getType() );
 		}
 		else if ( value instanceof Collection ) {
@@ -1376,6 +1377,25 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	@Override
 	public R uniqueResult() {
 		return uniqueElement( list() );
+	}
+
+	@Override
+	public R getSingleResult() {
+		try {
+			final List<R> list = list();
+			if ( list.size() == 0 ) {
+				throw new NoResultException( "No entity found for query" );
+			}
+			return uniqueElement( list );
+		}
+		catch ( HibernateException e ) {
+			if ( getProducer().getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
+				throw getExceptionConverter().convert( e );
+			}
+			else {
+				throw e;
+			}
+		}
 	}
 
 	public static <R> R uniqueElement(List<R> list) throws NonUniqueResultException {

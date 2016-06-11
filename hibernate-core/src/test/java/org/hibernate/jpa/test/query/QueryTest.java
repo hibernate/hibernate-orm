@@ -15,6 +15,7 @@ import java.util.Map;
 import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.Parameter;
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
@@ -41,6 +42,7 @@ import org.junit.Test;
 import junit.framework.Assert;
 
 import static junit.framework.Assert.assertNull;
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -1379,5 +1381,21 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			entityManager.close();
 		}
 
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-10833")
+	public void testGetSingleResultWithNoResultException() {
+		final EntityManager entityManager  = getOrCreateEntityManager();
+		try {
+			entityManager.createQuery( "FROM Item WHERE name = 'bozo'" ).getSingleResult();
+			fail( "Expected NoResultException" );
+		}
+		catch ( Exception e ) {
+			assertTyping( NoResultException.class, e );
+		}
+		finally {
+			entityManager.close();
+		}
 	}
 }

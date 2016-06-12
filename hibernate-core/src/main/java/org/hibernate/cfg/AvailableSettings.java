@@ -1491,4 +1491,12 @@ public interface AvailableSettings {
 	 * The default behavior is to allow access unless the session is bootstrapped via JPA.
 	 */
 	String ALLOW_JTA_TRANSACTION_ACCESS = "hibernate.jta.allowTransactionAccess";
+
+    /**
+   	 * A setting to control whether Hibernate should scan for a static metamodel
+   	 * or not. The default is {@code true}, i.e. Hibernate scans for static metamodel.
+   	 * If you don't use a static metamodel in your project, then you can set this setting
+   	 * to {@code false} to speed up deployment of your project.
+   	 */
+   	String STATIC_METAMODEL_ENABLED = "hibernate.static_metamodel.enabled";
 }

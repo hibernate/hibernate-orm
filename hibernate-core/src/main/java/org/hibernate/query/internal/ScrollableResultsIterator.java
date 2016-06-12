@@ -36,6 +36,11 @@ class ScrollableResultsIterator<T> implements CloseableIterator {
 	@Override
 	@SuppressWarnings("unchecked")
 	public T next() {
-		return (T) scrollableResults.get();
+		if ( scrollableResults.getNumberOfTypes() == 1 ) {
+			return (T) scrollableResults.get()[0];
+		}
+		else {
+			return (T) scrollableResults.get();
+		}
 	}
 }

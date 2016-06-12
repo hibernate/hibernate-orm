@@ -95,6 +95,14 @@ public interface TransactionCoordinator {
 
 	int getTimeOut();
 
+	default boolean isTransactionActive() {
+		return isTransactionActive( true );
+	}
+
+	default boolean isTransactionActive(boolean isMarkedRollbackConsideredActive) {
+		return isJoined() && getTransactionDriverControl().isActive( isMarkedRollbackConsideredActive );
+	}
+
 	/**
 	 * Provides the means for "local transactions" (as transaction drivers) to control the
 	 * underlying "physical transaction" currently associated with the TransactionCoordinator.

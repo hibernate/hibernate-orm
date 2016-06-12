@@ -790,7 +790,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap( Session.class );
 			//tag::hql-api-stream-example[]
-			Stream<Object[]> persons = session.createQuery(
+			Stream<Person> persons = session.createQuery(
 				"select p " +
 				"from Person p " +
 				"where p.name like :name" )
@@ -798,7 +798,6 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			.stream();
 
 			Map<Phone, List<Call>> callRegistry = persons
-				.map( row -> Person.class.cast( row[0] ) )
 				.flatMap( person -> person.getPhones().stream() )
 				.flatMap( phone -> phone.getCalls().stream() )
 				.collect(Collectors.groupingBy(Call::getPhone));

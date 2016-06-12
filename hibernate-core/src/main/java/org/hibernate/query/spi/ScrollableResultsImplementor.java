@@ -17,4 +17,5 @@ import org.hibernate.ScrollableResults;
 @Incubating
 public interface ScrollableResultsImplementor extends ScrollableResults {
 	boolean isClosed();
+	int getNumberOfTypes();
 }

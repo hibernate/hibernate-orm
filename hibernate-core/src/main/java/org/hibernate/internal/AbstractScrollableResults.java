@@ -122,6 +122,11 @@ public abstract class AbstractScrollableResults implements ScrollableResultsImpl
 	}
 
 	@Override
+	public int getNumberOfTypes() {
+		return this.types.length;
+	}
+
+	@Override
 	public final Object[] get() throws HibernateException {
 		if ( closed ) {
 			throw new IllegalStateException( "ScrollableResults is closed" );

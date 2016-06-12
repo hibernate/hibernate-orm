@@ -342,9 +342,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public boolean isTransactionInProgress() {
-		return !isClosed()
-				&& transactionCoordinator.isJoined()
-				&& transactionCoordinator.getTransactionDriverControl().getStatus() == TransactionStatus.ACTIVE;
+		return !isClosed() && transactionCoordinator.isTransactionActive();
 	}
 
 	@Override

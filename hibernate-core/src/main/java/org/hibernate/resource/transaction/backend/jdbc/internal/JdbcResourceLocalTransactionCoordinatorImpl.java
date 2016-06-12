@@ -84,8 +84,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 
 	@Override
 	public boolean isJoined() {
-		return physicalTransactionDelegate != null && physicalTransactionDelegate.getStatus() == TransactionStatus.ACTIVE;
-
+		return physicalTransactionDelegate != null && getTransactionDriverControl().isActive( true );
 	}
 
 	@Override

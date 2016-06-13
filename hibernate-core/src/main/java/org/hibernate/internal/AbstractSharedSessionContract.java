@@ -964,7 +964,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public void setJdbcBatchSize(int jdbcBatchSize) {
+	public void setJdbcBatchSize(Integer jdbcBatchSize) {
 		this.jdbcBatchSize = jdbcBatchSize;
 	}
 

@@ -8,16 +8,8 @@ package org.hibernate.property.access.internal;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-
-import org.hibernate.PropertyNotFoundException;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.access.spi.EnhancedSetterImpl;
-import org.hibernate.property.access.spi.Getter;
-import org.hibernate.property.access.spi.GetterFieldImpl;
-import org.hibernate.property.access.spi.GetterMethodImpl;
-import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.property.access.spi.PropertyAccessBuildingException;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.property.access.spi.SetterFieldImpl;
@@ -29,56 +21,18 @@ import org.hibernate.property.access.spi.SetterFieldImpl;
  * @author Steve Ebersole
  * @author Luis Barreiro
  */
-public class PropertyAccessEnhancedImpl implements PropertyAccess {
-	private final PropertyAccessStrategyEnhancedImpl strategy;
-	private final Getter getter;
-	private final Setter setter;
+public class PropertyAccessEnhancedImpl extends PropertyAccessMixedImpl {
 
 	public PropertyAccessEnhancedImpl(
-			PropertyAccessStrategyEnhancedImpl strategy,
+			PropertyAccessStrategy strategy,
 			Class containerJavaType,
 			String propertyName) {
-		this.strategy = strategy;
-
-		final Field field = fieldOrNull( containerJavaType, propertyName );
-		final Method getterMethod = getterMethodOrNull( containerJavaType, propertyName );
-
-		// need one of field or getterMethod to be non-null
-		if ( field == null && getterMethod == null ) {
-			throw new PropertyAccessBuildingException(
-					String.format(
-							"Could not locate field for property [%s] on bytecode-enhanced Class [%s]",
-							propertyName,
-							containerJavaType.getName()
-					)
-			);
-		}
-		else if ( field != null ) {
-			this.getter = new GetterFieldImpl( containerJavaType, propertyName, field );
-		}
-		else {
-			this.getter = new GetterMethodImpl( containerJavaType, propertyName, getterMethod );
-		}
-
-		this.setter = resolveEnhancedSetterForField( containerJavaType, propertyName, field );
+		super( strategy, containerJavaType, propertyName );
 	}
 
-	private static Field fieldOrNull(Class containerJavaType, String propertyName) {
-		try {
-			return ReflectHelper.findField( containerJavaType, propertyName );
-		}
-		catch (PropertyNotFoundException e) {
-			return null;
-		}
-	}
-
-	private static Method getterMethodOrNull(Class containerJavaType, String propertyName) {
-		try {
-			return ReflectHelper.findGetterMethod( containerJavaType, propertyName );
-		}
-		catch (PropertyNotFoundException e) {
-			return null;
-		}
+	@Override
+	protected Setter fieldSetter(Class<?> containerJavaType, String propertyName, Field field) {
+		return resolveEnhancedSetterForField( containerJavaType, propertyName, field );
 	}
 
 	private static Setter resolveEnhancedSetterForField(Class<?> containerClass, String propertyName, Field field) {
@@ -94,18 +48,4 @@ public class PropertyAccessEnhancedImpl implements PropertyAccess {
 		}
 	}
 
-	@Override
-	public PropertyAccessStrategy getPropertyAccessStrategy() {
-		return strategy;
-	}
-
-	@Override
-	public Getter getGetter() {
-		return getter;
-	}
-
-	@Override
-	public Setter getSetter() {
-		return setter;
-	}
 }

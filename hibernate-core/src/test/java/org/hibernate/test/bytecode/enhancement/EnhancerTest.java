@@ -7,6 +7,7 @@
 package org.hibernate.test.bytecode.enhancement;
 
 import org.hibernate.test.bytecode.enhancement.eviction.EvictionTestTask;
+import org.hibernate.test.bytecode.enhancement.access.MixedAccessTestTask;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils;
@@ -57,6 +58,12 @@ public class EnhancerTest extends BaseUnitTestCase {
 	@TestForIssue( jiraKey = "HHH-9529" )
 	public void testFieldHHH9529() {
 		EnhancerTestUtils.runEnhancerTestTask( HHH9529TestTask.class );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-10851" )
+	public void testAccess() {
+		EnhancerTestUtils.runEnhancerTestTask( MixedAccessTestTask.class );
 	}
 
 	@Test

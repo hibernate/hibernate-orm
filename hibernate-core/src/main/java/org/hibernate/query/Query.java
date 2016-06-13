@@ -26,6 +26,7 @@ import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.RowSelection;
+import org.hibernate.type.Type;
 
 /**
  * Represents an HQL/JPQL query or a compiled Criteria query.  Also acts as the Hibernate
@@ -122,6 +123,9 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 
 	@Override
 	Query<R> setParameter(String name, Object value);
+
+	@Override
+	Query<R> setParameter(String name, Object val, Type type);
 
 	@Override
 	Query<R> setParameter(String name, Calendar value, TemporalType temporalType);

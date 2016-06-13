@@ -183,5 +183,5 @@ public interface SharedSessionContract extends QueryProducer, Serializable {
 	 * @see org.hibernate.boot.spi.SessionFactoryOptions#getJdbcBatchSize
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJdbcBatchSize
 	 */
-	void setJdbcBatchSize(int jdbcBatchSize);
+	void setJdbcBatchSize(Integer jdbcBatchSize);
 }

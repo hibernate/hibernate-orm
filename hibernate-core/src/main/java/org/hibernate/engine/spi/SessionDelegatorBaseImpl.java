@@ -1163,7 +1163,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void setJdbcBatchSize(int jdbcBatchSize) {
+	public void setJdbcBatchSize(Integer jdbcBatchSize) {
 		delegate.setJdbcBatchSize( jdbcBatchSize );
 	}
 }

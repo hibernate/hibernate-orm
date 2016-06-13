@@ -51,7 +51,7 @@ public class LoadGraphFindByIdTest  extends BaseEntityManagerFunctionalTestCase 
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-???")
+	@TestForIssue(jiraKey = "HHH-10842")
 	public void findByPrimaryKeyWithQuery() {
 		EntityManager em = getOrCreateEntityManager();
 		beginTransaction(em);

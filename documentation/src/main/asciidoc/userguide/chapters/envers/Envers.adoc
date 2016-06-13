@@ -809,21 +809,20 @@ Your opinions on the subject are very welcome on the forum! :)
 [[envers-generateschema]]
 === Generating schema with Ant
 
-If you like to generate the database schema file with the Hibernate Tools Ant task,
-you'll probably notice that the generated file doesn't contain definitions of audit tables.
-To generate the audit tables, you simply need to use `org.hibernate.tool.ant.EnversHibernateToolTask`, instead of the usual `org.hibernate.tool.ant.HibernateToolTask`.
-The former class extends the latter, and only adds generation of the version entities, meaning you can use the task just as you are used to.
+If you would like to generate the database schema file with the Hibernate Tools Ant task, you simply need to use the
+`org.hibernate.tool.ant.HibernateToolTask` to do so.  This task will generate the definitions of all entities, both of
+which are audited by Envers and those which are not.
 
 For example:
 
 [source,xml]
 ----
-<target name="schemaexport" depends="build-demo"
-  description="Exports a generated schema to DB and file">
-  <taskdef name="hibernatetool"
-    classname="org.hibernate.tool.ant.EnversHibernateToolTask"
-    classpathref="build.demo.classpath"/>
-
+<target name="schemaexport" depends="build-demo" description="Exports a generated schema to DB and file">
+  <taskdef
+    name="hibernatetool"
+    classname="org.hibernate.tool.ant.HibernateToolTask"
+    classpathref="build.demo.classpath"
+  />
   <hibernatetool destdir=".">
     <classpath>
       <fileset refid="lib.hibernate" />
@@ -835,9 +834,10 @@ For example:
       drop="false"
       create="true"
       export="false"
-      outputfilename="versioning-ddl.sql"
+      outputfilename="entities-ddl.sql"
       delimiter=";"
-      format="true"/>
+      format="true"
+    />
   </hibernatetool>
 </target>
 ----

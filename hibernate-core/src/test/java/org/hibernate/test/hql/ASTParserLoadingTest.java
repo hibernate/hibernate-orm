@@ -2465,11 +2465,11 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		a.setDescription("an animal");
 		s.persist(a);
 		String[] aliases1 = s.createQuery("select a.bodyWeight as abw, a.description from Animal a").getReturnAliases();
-		assertEquals( aliases1[0], "abw" );
-		assertEquals(aliases1[1], "1");
+		assertEquals( "abw", aliases1[0] );
+		assertEquals( null, aliases1[1] );
 		String[] aliases2 = s.createQuery("select count(*), avg(a.bodyWeight) as avg from Animal a").getReturnAliases();
-		assertEquals( aliases2[0], "0" );
-		assertEquals(aliases2[1], "avg");
+		assertEquals( null, aliases2[0] );
+		assertEquals( "avg", aliases2[1] );
 		s.delete(a);
 		t.commit();
 		s.close();

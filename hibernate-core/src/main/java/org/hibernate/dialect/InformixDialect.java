@@ -10,6 +10,8 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Locale;
 
+import org.hibernate.dialect.function.NvlFunction;
+import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.InformixIdentityColumnSupport;
@@ -72,7 +74,11 @@ public class InformixDialect extends Dialect {
 		registerColumnType( Types.VARCHAR, 32739, "lvarchar($l)" );
 
 		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(", "||", ")" ) );
-		
+		registerFunction( "substring", new SQLFunctionTemplate(StandardBasicTypes.STRING, "substring(?1 FROM ?2 FOR ?3)"));
+		registerFunction( "substr", new SQLFunctionTemplate( StandardBasicTypes.STRING, "substr(?1, ?2, ?3)"));
+		registerFunction( "coalesce", new NvlFunction());
+		registerFunction( "nvl", new NvlFunction());
+
 		uniqueDelegate = new InformixUniqueDelegate( this );
 	}
 

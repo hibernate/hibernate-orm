@@ -71,6 +71,13 @@ ext {
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
                         'jdbc.url'   : 'jdbc:sqlserver://localhost;instance=SQLEXPRESS;databaseName=hibernate_orm_test'
+                ],
+                informix : [
+                        'db.dialect' : 'org.hibernate.dialect.InformixDialect',
+                        'jdbc.driver': 'com.informix.jdbc.IfxDriver',
+                        'jdbc.user'  : 'informix',
+                        'jdbc.pass'  : 'in4mix',
+                        'jdbc.url'   : 'jdbc:informix-sqli://192.168.99.100:9088/sysuser:INFORMIXSERVER=dev;user=informix;password=in4mix'
                 ]
         ]
 }

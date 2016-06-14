@@ -52,11 +52,11 @@ ext {
             logging_processor:  'org.jboss.logging:jboss-logging-processor:2.0.0.Final',
 
             // jaxb task
-			jaxb:           'com.sun.xml.bind:jaxb-xjc:2.2.5',
-			jaxb2_basics:   'org.jvnet.jaxb2_commons:jaxb2-basics:0.6.3',
-			jaxb2_ant:      'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.6.3',
-			jaxb2_jaxb:     'org.jvnet.jaxb2_commons:jaxb2-basics-jaxb:2.2.4-1',
-			jaxb2_jaxb_xjc: 'org.jvnet.jaxb2_commons:jaxb2-basics-jaxb-xjc:2.2.4-1',
+            jaxb:           'com.sun.xml.bind:jaxb-xjc:2.2.5',
+            jaxb2_basics:   'org.jvnet.jaxb2_commons:jaxb2-basics:0.6.3',
+            jaxb2_ant:      'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.6.3',
+            jaxb2_jaxb:     'org.jvnet.jaxb2_commons:jaxb2-basics-jaxb:2.2.4-1',
+            jaxb2_jaxb_xjc: 'org.jvnet.jaxb2_commons:jaxb2-basics-jaxb-xjc:2.2.4-1',
 
             // Animal Sniffer Ant Task and Java 1.6 API signature file
             // not using 1.9 for the time being due to MANIMALSNIFFER-34
@@ -80,13 +80,14 @@ ext {
             shrinkwrap_api:  'org.jboss.shrinkwrap:shrinkwrap-api:1.0.0-beta-6',
             shrinkwrap:      'org.jboss.shrinkwrap:shrinkwrap-impl-base:1.0.0-beta-6',
             h2:              "com.h2database:h2:${h2Version}",
-			hsqldb:          "org.hsqldb:hsqldb:2.3.2",
+            hsqldb:          "org.hsqldb:hsqldb:2.3.2",
             derby:           "org.apache.derby:derby:10.11.1.1",
-			postgresql:      'org.postgresql:postgresql:9.4-1202-jdbc41',
-			mysql:			 'mysql:mysql-connector-java:5.1.38',
+            postgresql:      'org.postgresql:postgresql:9.4-1202-jdbc41',
+            mysql:             'mysql:mysql-connector-java:5.1.38',
             mariadb:         'org.mariadb.jdbc:mariadb-java-client:1.1.7',
-			oracle:          'com.oracle.ojdbc:ojdbc7:12.1.0.2.0',
-			mssql:			 'com.microsoft.sqlserver:sqljdbc4:4.0',
+            oracle:          'com.oracle.ojdbc:ojdbc7:12.1.0.2.0',
+            mssql:             'com.microsoft.sqlserver:sqljdbc4:4.0',
+            informix:          'com.ibm.informix:jdbc:4.10.7.20160517',
             jboss_jta:       "org.jboss.jbossts:jbossjta:4.16.4.Final",
             xapool:          "com.experlog:xapool:1.5.0",
             mockito:         'org.mockito:mockito-core:1.9.0',

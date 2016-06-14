@@ -150,6 +150,7 @@ subprojects { subProject ->
 		testRuntime( libraries.postgresql )
 		testRuntime( libraries.mysql )
 		testRuntime( libraries.mariadb )
+		testRuntime( libraries.informix )
 		if (db.equalsIgnoreCase("oracle")) {
 			dependencies {
 				testRuntime( libraries.oracle )

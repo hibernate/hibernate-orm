@@ -72,6 +72,7 @@ public class InformixDialect extends Dialect {
 		registerColumnType( Types.VARCHAR, 32739, "lvarchar($l)" );
 
 		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(", "||", ")" ) );
+		registerFunction("coalesce", new NvlFunction());
 		
 		uniqueDelegate = new InformixUniqueDelegate( this );
 	}

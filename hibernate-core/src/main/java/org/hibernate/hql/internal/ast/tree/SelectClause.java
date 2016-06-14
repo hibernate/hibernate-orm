@@ -393,8 +393,7 @@ public class SelectClause extends SelectExpressionList {
 		if ( aggregatedSelectExpression == null ) {
 			aliases = new String[selectExpressions.length];
 			for ( int i = 0; i < selectExpressions.length; i++ ) {
-				String alias = selectExpressions[i].getAlias();
-				aliases[i] = alias == null ? Integer.toString( i ) : alias;
+				aliases[i] = selectExpressions[i].getAlias();
 			}
 		}
 		else {

@@ -20,7 +20,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.util.EnumSet;
 import java.util.List;
 
 import org.hibernate.boot.MetadataSources;
@@ -28,7 +27,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.hibernate.tool.schema.TargetType;
+import org.hibernate.tool.hbm2ddl.Target;
 
 import org.junit.After;
 import org.junit.Before;
@@ -116,11 +115,11 @@ public class JoinedInheritanceForeignKeyTest extends BaseUnitTestCase {
 		}
 		metadata = (MetadataImplementor) metadataSources.buildMetadata();
 		metadata.validate();
-		new SchemaExport()
+		new SchemaExport( metadata )
 				.setHaltOnError( true )
 				.setOutputFile( output.getAbsolutePath() )
 				.setFormat( false )
-				.create( EnumSet.of( TargetType.SCRIPT ), metadata );
+				.create( Target.SCRIPT  );
 	}
 
 	@Entity(name = "PersonRole")

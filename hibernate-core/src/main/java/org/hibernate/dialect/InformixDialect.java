@@ -73,6 +73,8 @@ public class InformixDialect extends Dialect {
 
 		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(", "||", ")" ) );
 		registerFunction("coalesce", new NvlFunction());
+		registerFunction("substring", new SQLFunctionTemplate(StandardBasicTypes.STRING, "substring(?1 FROM ?2 FOR ?3)"));
+                registerFunction("substr", new SQLFunctionTemplate(StandardBasicTypes.STRING, "substr(?1, ?2, ?3)"));
 		
 		uniqueDelegate = new InformixUniqueDelegate( this );
 	}

@@ -1,4 +1,4 @@
-package org.hibernate.test.util;
+package org.hibernate.test.util.jdbc;
 
 import java.util.LinkedList;
 

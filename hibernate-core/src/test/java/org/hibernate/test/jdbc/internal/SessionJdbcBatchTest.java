@@ -6,6 +6,8 @@
  */
 package org.hibernate.test.jdbc.internal;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.Map;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -14,10 +16,11 @@ import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.util.JdbcStatisticsConnectionProvider;
+import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 /**
  * @author Vlad Mihalcea
@@ -25,7 +28,7 @@ import static org.junit.Assert.assertEquals;
 public class SessionJdbcBatchTest
 		extends BaseNonConfigCoreFunctionalTestCase {
 
-	private JdbcStatisticsConnectionProvider connectionProvider = new JdbcStatisticsConnectionProvider();
+	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -54,26 +57,25 @@ public class SessionJdbcBatchTest
 	private long id;
 
 	@Test
-	public void testSessionFactorySetting() {
+	public void testSessionFactorySetting() throws SQLException {
 		Session session = sessionFactory().openSession();
 		session.beginTransaction();
 		try {
 			addEvents( session );
 		}
 		finally {
-			connectionProvider.getPreparedStatementStatistics().clear();
+			connectionProvider.clear();
 			session.getTransaction().commit();
 			session.close();
 		}
-		JdbcStatisticsConnectionProvider.PreparedStatementStatistics statementStatistics =
-				connectionProvider.getPreparedStatementStatistics().get(
-						"insert into Event (name, id) values (?, ?)" );
-		assertEquals( 5, statementStatistics.getAddBatchCount() );
-		assertEquals( 3, statementStatistics.getExecuteBatchCount() );
+		PreparedStatement preparedStatement = connectionProvider.getPreparedStatement( "insert into Event (name, id) values (?, ?)" );
+		verify(preparedStatement, times( 5 )).addBatch();
+		verify(preparedStatement, times( 3 )).executeBatch();
 	}
 
 	@Test
-	public void testSessionSettingOverridesSessionFactorySetting() {
+	public void testSessionSettingOverridesSessionFactorySetting()
+			throws SQLException {
 		Session session = sessionFactory().openSession();
 		session.setJdbcBatchSize( 3 );
 		session.beginTransaction();
@@ -85,11 +87,10 @@ public class SessionJdbcBatchTest
 			session.getTransaction().commit();
 			session.close();
 		}
-		JdbcStatisticsConnectionProvider.PreparedStatementStatistics statementStatistics =
-				connectionProvider.getPreparedStatementStatistics().get(
-						"insert into Event (name, id) values (?, ?)" );
-		assertEquals( 5, statementStatistics.getAddBatchCount() );
-		assertEquals( 2, statementStatistics.getExecuteBatchCount() );
+
+		PreparedStatement preparedStatement = connectionProvider.getPreparedStatement( "insert into Event (name, id) values (?, ?)" );
+		verify(preparedStatement, times( 5 )).addBatch();
+		verify(preparedStatement, times( 2 )).executeBatch();
 
 		session = sessionFactory().openSession();
 		session.setJdbcBatchSize( null );
@@ -102,11 +103,9 @@ public class SessionJdbcBatchTest
 			session.getTransaction().commit();
 			session.close();
 		}
-		statementStatistics =
-				connectionProvider.getPreparedStatementStatistics().get(
-						"insert into Event (name, id) values (?, ?)" );
-		assertEquals( 5, statementStatistics.getAddBatchCount() );
-		assertEquals( 3, statementStatistics.getExecuteBatchCount() );
+		preparedStatement = connectionProvider.getPreparedStatement( "insert into Event (name, id) values (?, ?)" );
+		verify(preparedStatement, times( 5 )).addBatch();
+		verify(preparedStatement, times( 3 )).executeBatch();
 	}
 
 	private void addEvents(Session session) {
@@ -115,20 +114,6 @@ public class SessionJdbcBatchTest
 			event.id = id++;
 			event.name = "Event " + i;
 			session.persist( event );
-		}
-	}
-
-	@Test
-	public void testSessionJdbcBatchOverridesSessionFactorySetting() {
-
-		Session session = sessionFactory().openSession();
-		session.beginTransaction();
-		try {
-
-		}
-		finally {
-			session.getTransaction().commit();
-			session.close();
 		}
 	}
 

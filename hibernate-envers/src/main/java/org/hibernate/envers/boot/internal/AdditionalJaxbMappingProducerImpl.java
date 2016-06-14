@@ -7,15 +7,21 @@
 package org.hibernate.envers.boot.internal;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.io.OutputFormat;
+import org.dom4j.io.XMLWriter;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
@@ -28,14 +34,8 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.envers.configuration.internal.MappingCollector;
 import org.hibernate.service.ServiceRegistry;
-
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
-
-import org.dom4j.Document;
-import org.dom4j.DocumentException;
-import org.dom4j.io.OutputFormat;
-import org.dom4j.io.XMLWriter;
 
 /**
  * @author Steve Ebersole
@@ -77,8 +77,8 @@ public class AdditionalJaxbMappingProducerImpl implements AdditionalJaxbMappingP
 
 				// this form at least allows us to get better error messages
 				final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				final Writer w = new PrintWriter( baos );
 				try {
+					final Writer w = new BufferedWriter( new OutputStreamWriter( baos, "UTF-8" ) );
 					final XMLWriter xw = new XMLWriter( w, new OutputFormat( " ", true ) );
 					xw.write( document );
 					w.flush();

@@ -39,6 +39,9 @@ import org.hibernate.mapping.SyntheticProperty;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tuple.GeneratedValueGeneration;
+import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.ManyToOneType;
@@ -383,12 +386,26 @@ public final class AuditMetadataGenerator {
 						entityName,
 						xmlMappingData,
 						propertyAuditingData,
-						property.isInsertable(),
+						isPropertyInsertable( property ),
 						firstPass,
 						true
 				);
 			}
 		}
+	}
+
+	private boolean isPropertyInsertable(Property property) {
+		if ( !property.isInsertable() ) {
+			final ValueGeneration generation = property.getValueGenerationStrategy();
+			if ( generation instanceof GeneratedValueGeneration ) {
+				final GeneratedValueGeneration valueGeneration = (GeneratedValueGeneration) generation;
+				if ( GenerationTiming.INSERT == valueGeneration.getGenerationTiming()
+					|| GenerationTiming.ALWAYS == valueGeneration.getGenerationTiming() ) {
+					return true;
+				}
+			}
+		}
+		return property.isInsertable();
 	}
 
 	private boolean checkPropertiesAudited(Iterator<Property> properties, ClassAuditingData auditingData) {

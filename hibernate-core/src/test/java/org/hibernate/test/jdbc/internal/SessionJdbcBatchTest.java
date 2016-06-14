@@ -8,6 +8,7 @@ package org.hibernate.test.jdbc.internal;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Map;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -19,6 +20,7 @@ import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -68,9 +70,10 @@ public class SessionJdbcBatchTest
 			session.getTransaction().commit();
 			session.close();
 		}
-		PreparedStatement preparedStatement = connectionProvider.getPreparedStatement( "insert into Event (name, id) values (?, ?)" );
-		verify(preparedStatement, times( 5 )).addBatch();
-		verify(preparedStatement, times( 3 )).executeBatch();
+		PreparedStatement preparedStatement = connectionProvider.getPreparedStatement(
+				"insert into Event (name, id) values (?, ?)" );
+		verify( preparedStatement, times( 5 ) ).addBatch();
+		verify( preparedStatement, times( 3 ) ).executeBatch();
 	}
 
 	@Test
@@ -103,7 +106,9 @@ public class SessionJdbcBatchTest
 			session.getTransaction().commit();
 			session.close();
 		}
-		preparedStatement = connectionProvider.getPreparedStatement( "insert into Event (name, id) values (?, ?)" );
+		List<PreparedStatement> preparedStatements = connectionProvider.getPreparedStatements();
+		assertEquals(1, preparedStatements.size());
+		preparedStatement = preparedStatements.get( 0 );
 		verify(preparedStatement, times( 5 )).addBatch();
 		verify(preparedStatement, times( 3 )).executeBatch();
 	}

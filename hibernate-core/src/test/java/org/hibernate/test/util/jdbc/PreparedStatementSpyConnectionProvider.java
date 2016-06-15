@@ -10,18 +10,12 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.service.spi.Configurable;
-import org.hibernate.service.spi.ServiceRegistryAwareService;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.mockito.Mockito;
 import org.mockito.internal.util.MockUtil;
@@ -35,60 +29,15 @@ import static org.mockito.Mockito.doAnswer;
  *
  * @author Vlad Mihalcea
  */
-public class PreparedStatementSpyConnectionProvider implements
-		ConnectionProvider,
-		Configurable,
-		ServiceRegistryAwareService {
-
-	private ServiceRegistryImplementor serviceRegistry;
-
-	private ConnectionProvider connectionProvider;
+public class PreparedStatementSpyConnectionProvider
+		extends ConnectionProviderDelegate {
 
 	private final Map<PreparedStatement, String> preparedStatementMap = new LinkedHashMap<>();
 
 	@Override
-	public void configure(Map configurationValues) {
-		@SuppressWarnings("unchecked")
-		Map<String, Object> settings = new HashMap<>( configurationValues );
-		settings.remove( AvailableSettings.CONNECTION_PROVIDER );
-		connectionProvider = ConnectionProviderInitiator.INSTANCE.initiateService(
-				settings,
-				serviceRegistry
-		);
-		if ( connectionProvider instanceof Configurable ) {
-			Configurable configurableConnectionProvider = (Configurable) connectionProvider;
-			configurableConnectionProvider.configure( settings );
-		}
-	}
-
-	@Override
-	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
-		this.serviceRegistry = serviceRegistry;
-	}
-
-	@Override
 	public Connection getConnection() throws SQLException {
-		return spy( connectionProvider.getConnection() );
-	}
-
-	@Override
-	public void closeConnection(Connection conn) throws SQLException {
-		connectionProvider.closeConnection( conn );
-	}
-
-	@Override
-	public boolean supportsAggressiveRelease() {
-		return connectionProvider.supportsAggressiveRelease();
-	}
-
-	@Override
-	public boolean isUnwrappableAs(Class unwrapType) {
-		return connectionProvider.isUnwrappableAs( unwrapType );
-	}
-
-	@Override
-	public <T> T unwrap(Class<T> unwrapType) {
-		return connectionProvider.unwrap( unwrapType );
+		Connection connection = super.getConnection();
+		return spy( connection );
 	}
 
 	private Connection spy(Connection connection) {

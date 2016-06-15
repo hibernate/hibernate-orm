@@ -39,16 +39,6 @@ public interface Transaction extends EntityTransaction {
 	TransactionStatus getStatus();
 
 	/**
-	 * Indicate whether a resource transaction is in progress.
-	 *
-	 * @param isMarkedRollbackConsideredActive whether to consider {@link TransactionStatus#MARKED_ROLLBACK} as active.
-	 *
-	 * @return boolean indicating whether transaction is in progress
-	 * @throws HibernateException if an unexpected error condition is encountered.
-	 */
-	boolean isActive(boolean isMarkedRollbackConsideredActive);
-
-	/**
 	 * Register a user synchronization callback for this transaction.
 	 *
 	 * @param synchronization The Synchronization callback to register.

@@ -6,7 +6,9 @@
  */
 package org.hibernate.engine.transaction.spi;
 
+import org.hibernate.HibernateException;
 import org.hibernate.Transaction;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 /**
  * @author Steve Ebersole
@@ -28,4 +30,14 @@ public interface TransactionImplementor extends Transaction {
 	default void invalidate() {
 		// no-op : see @deprecated note
 	}
+
+	/**
+	 * Indicate whether a resource transaction is in progress.
+	 *
+	 * @param isMarkedRollbackConsideredActive whether to consider {@link TransactionStatus#MARKED_ROLLBACK} as active.
+	 *
+	 * @return boolean indicating whether transaction is in progress
+	 * @throws HibernateException if an unexpected error condition is encountered.
+	 */
+	boolean isActive(boolean isMarkedRollbackConsideredActive);
 }

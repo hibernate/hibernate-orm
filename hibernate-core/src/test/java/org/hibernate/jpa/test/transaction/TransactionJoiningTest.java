@@ -99,6 +99,71 @@ public class TransactionJoiningTest extends BaseEntityManagerFunctionalTestCase 
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-10807")
+	public void testIsJoinedAfterMarkedForRollbackImplict() throws Exception {
+		assertFalse( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
+
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
+		EntityManager entityManager = entityManagerFactory().createEntityManager();
+		SharedSessionContractImplementor session = entityManager.unwrap( SharedSessionContractImplementor.class );
+
+		ExtraAssertions.assertTyping( JtaTransactionCoordinatorImpl.class, session.getTransactionCoordinator() );
+		JtaTransactionCoordinatorImpl transactionCoordinator = (JtaTransactionCoordinatorImpl) session.getTransactionCoordinator();
+
+		assertTrue( transactionCoordinator.isSynchronizationRegistered() );
+		assertTrue( transactionCoordinator.isActive() );
+		assertTrue( transactionCoordinator.isJoined() );
+
+		assertTrue( entityManager.isOpen() );
+		assertTrue( session.isOpen() );
+		transactionCoordinator.getTransactionDriverControl().markRollbackOnly();
+
+		assertTrue( transactionCoordinator.isActive() );
+		assertTrue( transactionCoordinator.isJoined() );
+		assertTrue( entityManager.isJoinedToTransaction() );
+
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().rollback();
+
+		entityManager.close();
+		assertFalse( entityManager.isOpen() );
+		assertFalse( session.isOpen() );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-10807")
+	public void testIsJoinedAfterMarkedForRollbackExplicit() throws Exception {
+
+		assertFalse( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
+
+		EntityManager entityManager = entityManagerFactory().createEntityManager( SynchronizationType.UNSYNCHRONIZED );
+		SharedSessionContractImplementor session = entityManager.unwrap( SharedSessionContractImplementor.class );
+		assertTrue( entityManager.isOpen() );
+		assertTrue( session.isOpen() );
+
+		ExtraAssertions.assertTyping( JtaTransactionCoordinatorImpl.class, session.getTransactionCoordinator() );
+		JtaTransactionCoordinatorImpl transactionCoordinator = (JtaTransactionCoordinatorImpl) session.getTransactionCoordinator();
+
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
+		entityManager.joinTransaction();
+
+		assertTrue( transactionCoordinator.isSynchronizationRegistered() );
+		assertTrue( transactionCoordinator.isActive() );
+		assertTrue( transactionCoordinator.isJoined() );
+
+		transactionCoordinator.getTransactionDriverControl().markRollbackOnly();
+
+		assertTrue( transactionCoordinator.isActive() );
+		assertTrue( transactionCoordinator.isJoined() );
+		assertTrue( entityManager.isJoinedToTransaction() );
+
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().rollback();
+
+		entityManager.close();
+		assertFalse( entityManager.isOpen() );
+		assertFalse( session.isOpen() );
+	}
+
+	@Test
 	public void testCloseAfterCommit() throws Exception {
 		assertFalse( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
 

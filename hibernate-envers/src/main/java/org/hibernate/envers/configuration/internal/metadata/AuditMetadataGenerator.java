@@ -481,6 +481,16 @@ public final class AuditMetadataGenerator {
 			final Element joinElement = MetadataTools.createJoin( parent, auditTableName, schema, catalog );
 			joinElements.put( join, joinElement );
 
+			// HHH-8305 - Fix case when join is considered optional.
+			if ( join.isOptional() ) {
+				joinElement.addAttribute( "optional", "true" );
+			}
+
+			// HHH-8305 - Fix case when join is the inverse side of a mapping.
+			if ( join.isInverse() ) {
+				joinElement.addAttribute( "inverse", "true" );
+			}
+
 			final Element joinKey = joinElement.addElement( "key" );
 			MetadataTools.addColumns( joinKey, join.getKey().getColumnIterator() );
 			MetadataTools.addColumn( joinKey, verEntCfg.getRevisionFieldName(), null, null, null, null, null, null );

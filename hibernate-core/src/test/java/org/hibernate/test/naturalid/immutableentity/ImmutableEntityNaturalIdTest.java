@@ -12,10 +12,13 @@ import org.hibernate.Transaction;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.tuple.entity.EntityMetamodel;
+
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -42,6 +45,17 @@ public class ImmutableEntityNaturalIdTest extends BaseCoreFunctionalTestCase {
 		);
 		int[] propertiesIndex = metaData.getNaturalIdentifierProperties();
 		assertEquals( "Wrong number of elements", 3, propertiesIndex.length );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-10360")
+	public void testNaturalIdNullability() {
+		final EntityPersister persister = sessionFactory().getEntityPersister( Building.class.getName() );
+		final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
+		// nullability is not specified, so they should be nullable by annotations-specific default
+		assertTrue( persister.getPropertyNullability()[entityMetamodel.getPropertyIndex( "address" )] );
+		assertTrue( persister.getPropertyNullability()[entityMetamodel.getPropertyIndex( "city" )] );
+		assertTrue( persister.getPropertyNullability()[entityMetamodel.getPropertyIndex( "state" )] );
 	}
 
 	@Test

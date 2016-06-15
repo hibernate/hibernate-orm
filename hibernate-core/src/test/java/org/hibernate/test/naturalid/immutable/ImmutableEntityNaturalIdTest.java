@@ -12,14 +12,17 @@ import java.lang.reflect.Field;
 import org.junit.Test;
 
 import org.hibernate.FetchMode;
-import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.tuple.entity.EntityMetamodel;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
 /**
@@ -34,6 +37,17 @@ public class ImmutableEntityNaturalIdTest extends BaseCoreFunctionalTestCase {
         cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "true");
         cfg.setProperty(Environment.USE_QUERY_CACHE, "true");
         cfg.setProperty(Environment.GENERATE_STATISTICS, "true");
+    }
+
+    @Test
+    @TestForIssue( jiraKey = "HHH-10360")
+    public void testNaturalIdNullability() {
+        final EntityPersister persister = sessionFactory().getEntityPersister( Child.class.getName() );
+        // nullability is not specified for either properties making up
+        // the natural ID, so they should be non-nullable by hbm-specific default
+        final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
+        assertFalse( persister.getPropertyNullability()[entityMetamodel.getPropertyIndex( "parent" )] );
+        assertFalse( persister.getPropertyNullability()[entityMetamodel.getPropertyIndex( "name" )] );
     }
 
 	@Test

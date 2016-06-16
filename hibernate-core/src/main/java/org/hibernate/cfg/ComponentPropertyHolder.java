@@ -64,7 +64,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	private Component component;
 	private boolean isOrWithinEmbeddedId;
 
-	private boolean virtual;
+//	private boolean virtual;
 	private String embeddedAttributeName;
 	private Map<String,AttributeConversionInfo> attributeConversionInfoMap;
 
@@ -84,14 +84,20 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 						( embeddedXProperty.isAnnotationPresent( Id.class )
 								|| embeddedXProperty.isAnnotationPresent( EmbeddedId.class ) ) );
 
-		this.virtual = embeddedXProperty == null;
-		if ( !virtual ) {
+		if ( embeddedXProperty != null ) {
+//			this.virtual = false;
 			this.embeddedAttributeName = embeddedXProperty.getName();
 			this.attributeConversionInfoMap = processAttributeConversions( embeddedXProperty );
 		}
 		else {
-			embeddedAttributeName = "";
-			this.attributeConversionInfoMap = Collections.emptyMap();
+			// could be either:
+			// 		1) virtual/dynamic component
+			// 		2) collection element/key
+
+			// temp
+//			this.virtual = true;
+			this.embeddedAttributeName = "";
+			this.attributeConversionInfoMap = processAttributeConversions( inferredData.getClassOrElement() );
 		}
 	}
 
@@ -119,30 +125,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		// from the Embedded
 
 		// first apply conversions from the Embeddable...
-		{
-			// @Convert annotation on the Embeddable class level
-			final Convert convertAnnotation = embeddableXClass.getAnnotation( Convert.class );
-			if ( convertAnnotation != null ) {
-				final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, embeddableXClass );
-				if ( StringHelper.isEmpty( info.getAttributeName() ) ) {
-					throw new IllegalStateException( "@Convert placed on @Embeddable must define attributeName" );
-				}
-				infoMap.put( info.getAttributeName(), info );
-			}
-		}
-		{
-			// @Converts annotation on the Embeddable class level
-			final Converts convertsAnnotation = embeddableXClass.getAnnotation( Converts.class );
-			if ( convertsAnnotation != null ) {
-				for ( Convert convertAnnotation : convertsAnnotation.value() ) {
-					final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, embeddableXClass );
-					if ( StringHelper.isEmpty( info.getAttributeName() ) ) {
-						throw new IllegalStateException( "@Converts placed on @Embeddable must define attributeName" );
-					}
-					infoMap.put( info.getAttributeName(), info );
-				}
-			}
-		}
+		processAttributeConversions( embeddableXClass, infoMap );
 
 		// then we can overlay any conversions from the Embedded attribute
 		{
@@ -173,6 +156,39 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		return infoMap;
 	}
 
+	private void processAttributeConversions(XClass embeddableXClass, Map<String, AttributeConversionInfo> infoMap) {
+		{
+			// @Convert annotation on the Embeddable class level
+			final Convert convertAnnotation = embeddableXClass.getAnnotation( Convert.class );
+			if ( convertAnnotation != null ) {
+				final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, embeddableXClass );
+				if ( StringHelper.isEmpty( info.getAttributeName() ) ) {
+					throw new IllegalStateException( "@Convert placed on @Embeddable must define attributeName" );
+				}
+				infoMap.put( info.getAttributeName(), info );
+			}
+		}
+		{
+			// @Converts annotation on the Embeddable class level
+			final Converts convertsAnnotation = embeddableXClass.getAnnotation( Converts.class );
+			if ( convertsAnnotation != null ) {
+				for ( Convert convertAnnotation : convertsAnnotation.value() ) {
+					final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, embeddableXClass );
+					if ( StringHelper.isEmpty( info.getAttributeName() ) ) {
+						throw new IllegalStateException( "@Converts placed on @Embeddable must define attributeName" );
+					}
+					infoMap.put( info.getAttributeName(), info );
+				}
+			}
+		}
+	}
+
+	private Map<String,AttributeConversionInfo> processAttributeConversions(XClass embeddableXClass) {
+		final Map<String,AttributeConversionInfo> infoMap = new HashMap<String, AttributeConversionInfo>();
+		processAttributeConversions( embeddableXClass, infoMap );
+		return infoMap;
+	}
+
 	@Override
 	protected String normalizeCompositePath(String attributeName) {
 		return embeddedAttributeName + '.' + attributeName;
@@ -189,9 +205,9 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 			return;
 		}
 
-		if ( virtual ) {
-			return;
-		}
+//		if ( virtual ) {
+//			return;
+//		}
 
 		// again : the property coming in here *should* be the property on the embeddable (Address#city in the example),
 		// so we just ignore it if there is already an existing conversion info for that path since they would have
@@ -239,7 +255,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 
 	@Override
 	protected AttributeConversionInfo locateAttributeConversionInfo(String path) {
-		final String embeddedPath = embeddedAttributeName + '.' + path;
+		final String embeddedPath = StringHelper.qualifyConditionally( embeddedAttributeName, path );
 		AttributeConversionInfo fromParent = parent.locateAttributeConversionInfo( embeddedPath );
 		if ( fromParent != null ) {
 			return fromParent;

@@ -1437,6 +1437,8 @@ public abstract class CollectionBinder {
 			}
 
 			if ( AnnotatedClassType.EMBEDDABLE.equals( classType ) ) {
+				holder.prepare( property );
+
 				EntityBinder entityBinder = new EntityBinder();
 				PersistentClass owner = collValue.getOwner();
 				boolean isPropertyAnnotated;

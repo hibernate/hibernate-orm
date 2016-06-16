@@ -32,7 +32,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
@@ -68,7 +67,6 @@ public class CollectionCompositeElementExplicitConversionTest extends BaseUnitTe
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-10277" )
 	public void testCollectionOfEmbeddablesWithConvertedAttributes() throws Exception {
 		final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 				.addAnnotatedClass( Disguise.class )

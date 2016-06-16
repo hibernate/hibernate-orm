@@ -269,13 +269,9 @@ public class Ejb3Column {
 		if ( applyNamingStrategy ) {
 			if ( StringHelper.isEmpty( columnName ) ) {
 				if ( propertyName != null ) {
-					/// HHH-6005 magic
-					if ( propertyName.contains( ".collection&&element." ) ) {
-						propertyName = propertyName.replace( "collection&&element.", "" );
-					}
 					final AttributePath attributePath = AttributePath.parse( propertyName );
 
-					final Identifier implicitName = normalizer.normalizeIdentifierQuoting(
+					Identifier implicitName = normalizer.normalizeIdentifierQuoting(
 							implicitNamingStrategy.determineBasicColumnName(
 									new ImplicitBasicColumnNameSource() {
 										@Override
@@ -298,6 +294,12 @@ public class Ejb3Column {
 									}
 							)
 					);
+
+					// HHH-6005 magic
+					if ( implicitName.getText().contains( "_collection&&element_" ) ) {
+						implicitName = Identifier.toIdentifier( implicitName.getText().replace( "_collection&&element_", "_" ),
+								implicitName.isQuoted() );
+					}
 
 					final Identifier physicalName = physicalNamingStrategy.toPhysicalColumnName( implicitName, database.getJdbcEnvironment() );
 					mappingColumn.setName( physicalName.render( database.getDialect() ) );

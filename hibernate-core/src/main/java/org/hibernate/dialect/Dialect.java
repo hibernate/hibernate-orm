@@ -698,7 +698,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @param name The Hibernate {@link org.hibernate.type.Type} name
 	 */
 	protected void registerHibernateType(int code, long capacity, String name) {
-		hibernateTypeNames.put( code, capacity, name);
+		hibernateTypeNames.put( code, capacity, name );
 	}
 
 	/**
@@ -709,7 +709,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @param name The Hibernate {@link org.hibernate.type.Type} name
 	 */
 	protected void registerHibernateType(int code, String name) {
-		hibernateTypeNames.put( code, name);
+		hibernateTypeNames.put( code, name );
 	}
 
 
@@ -1240,7 +1240,7 @@ public abstract class Dialect implements ConversionContext {
 	public String getWriteLockString(String aliases, int timeout) {
 		// by default we simply return the getWriteLockString(timeout) result since
 		// the default is to say no support for "FOR UPDATE OF ..."
-		return getWriteLockString(timeout);
+		return getWriteLockString( timeout );
 	}
 
 	/**
@@ -1268,7 +1268,7 @@ public abstract class Dialect implements ConversionContext {
 	public String getReadLockString(String aliases, int timeout) {
 		// by default we simply return the getReadLockString(timeout) result since
 		// the default is to say no support for "FOR UPDATE OF ..."
-		return getReadLockString(timeout);
+		return getReadLockString( timeout );
 	}
 
 	/**
@@ -1796,7 +1796,7 @@ public abstract class Dialect implements ConversionContext {
 	protected void registerKeyword(String word) {
 		// When tokens are checked for keywords, they are always compared against the lower-case version of the token.
 		// For instance, Template#renderWhereStringTemplate transforms all tokens to lower-case too.
-		sqlKeywords.add(word.toLowerCase(Locale.ROOT));
+		sqlKeywords.add( word.toLowerCase( Locale.ROOT ) );
 	}
 
 	/**
@@ -2407,7 +2407,7 @@ public abstract class Dialect implements ConversionContext {
 			orderByElement.append( " " ).append( order );
 		}
 		if ( nulls != NullPrecedence.NONE ) {
-			orderByElement.append( " nulls " ).append( nulls.name().toLowerCase(Locale.ROOT) );
+			orderByElement.append( " nulls " ).append( nulls.name().toLowerCase( Locale.ROOT ) );
 		}
 		return orderByElement.toString();
 	}
@@ -2650,6 +2650,7 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * @return {@code true} indicates that the dialect requests that locking be applied by subsequent select;
 	 * {@code false} (the default) indicates that locking should be applied to the main SQL statement..
+	 * @deprecated Use {@link #useFollowOnLocking(QueryParameters)} instead.
 	 */
 	@Deprecated
 	public boolean useFollowOnLocking() {

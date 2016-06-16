@@ -12,8 +12,10 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 
 import org.hibernate.boot.TempTableDdlTransactionHandling;
+import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
@@ -73,7 +75,7 @@ public class Helper {
 			try {
 				Statement statement = connection.createStatement();
 				try {
-					statement.executeUpdate( idTableInfo.getIdTableCreationStatement() );
+					statement.executeUpdate( logStatement(factory, idTableInfo.getIdTableCreationStatement()) );
 					factory.getServiceRegistry()
 							.getService( JdbcServices.class )
 							.getSqlExceptionHelper()
@@ -174,7 +176,7 @@ public class Helper {
 			try {
 				Statement statement = connection.createStatement();
 				try {
-					statement.executeUpdate( idTableInfo.getIdTableDropStatement() );
+					statement.executeUpdate( logStatement( factory, idTableInfo.getIdTableDropStatement() ) );
 					factory.getServiceRegistry()
 							.getService( JdbcServices.class )
 							.getSqlExceptionHelper()
@@ -193,5 +195,14 @@ public class Helper {
 				log.warn( "unable to drop temporary id table afterQuery use [" + e.getMessage() + "]" );
 			}
 		}
+	}
+
+	private static String logStatement(SessionFactoryImplementor factory, String sql) {
+		final SqlStatementLogger statementLogger = factory.getServiceRegistry()
+				.getService( JdbcServices.class )
+				.getSqlStatementLogger();
+
+		statementLogger.logStatement( sql, FormatStyle.BASIC.getFormatter() );
+		return sql;
 	}
 }

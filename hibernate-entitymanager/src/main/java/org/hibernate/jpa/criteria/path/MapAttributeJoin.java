@@ -12,6 +12,7 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
+import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.MapAttribute;
 
 import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
@@ -126,17 +127,45 @@ public class MapAttributeJoin<O,K,V>
 
 		@Override
 		public String getAlias() {
-			return original.getAlias();
+			return isCorrelated() ? getCorrelationParent().getAlias() : super.getAlias();
 		}
 
 		@Override
 		public void prepareAlias(RenderingContext renderingContext) {
-			// do nothing...
+			if ( getAlias() == null ) {
+				if ( isCorrelated() ) {
+					setAlias( getCorrelationParent().getAlias() );
+				}
+				else {
+					setAlias( renderingContext.generateAlias() );
+				}
+			}
+		}
+
+		@Override
+		protected void setAlias(String alias) {
+			super.setAlias( alias );
+			original.setAlias( alias );
+		}
+
+		@Override
+		public boolean shouldBeRendered() {
+			if ( getJoins().size() > 0 ) {
+				return true;
+			}
+			else {
+				return false;
+			}
 		}
 
 		@Override
 		public String render(RenderingContext renderingContext) {
 			return "treat(" + original.render( renderingContext ) + " as " + treatAsType.getName() + ")";
+		}
+
+		@Override
+		protected ManagedType<T> locateManagedType() {
+			return criteriaBuilder().getEntityManagerFactory().getMetamodel().managedType( treatAsType );
 		}
 
 		@Override

@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CollectionJoin;
 import javax.persistence.criteria.CompoundSelection;
@@ -1101,31 +1102,31 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <X, T, V extends T> Join<X, V> treat(Join<X, T> join, Class<V> type) {
-		return ( (JoinImplementor) join ).treatAs( type );
+		return treat( join, type, (j, t) -> ((JoinImplementor) j).treatAs( t ) );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <X, T, E extends T> CollectionJoin<X, E> treat(CollectionJoin<X, T> join, Class<E> type) {
-		return ( (CollectionJoinImplementor) join ).treatAs( type );
+		return treat( join, type, (j, t) -> ((CollectionJoinImplementor) j).treatAs( t ) );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <X, T, E extends T> SetJoin<X, E> treat(SetJoin<X, T> join, Class<E> type) {
-		return ( (SetJoinImplementor) join ).treatAs( type );
+		return treat( join, type, (j, t) -> ((SetJoinImplementor) j).treatAs( t ) );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <X, T, E extends T> ListJoin<X, E> treat(ListJoin<X, T> join, Class<E> type) {
-		return ( (ListJoinImplementor) join ).treatAs( type );
+		return treat( join, type, (j, t) -> ((ListJoinImplementor) join).treatAs( type ) );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <X, K, T, V extends T> MapJoin<X, K, V> treat(MapJoin<X, K, T> join, Class<V> type) {
-		return ( (MapJoinImplementor) join ).treatAs( type );
+		return treat( join, type, (j, t) -> ((MapJoinImplementor) join).treatAs( type ) );
 	}
 
 	@Override
@@ -1137,9 +1138,8 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <X, T extends X> Root<T> treat(Root<X> root, Class<T> type) {
-		return ( (RootImpl) root ).treatAs( type );
+		return ((RootImpl) root).treatAs( type );
 	}
-
 
 	// subqueries ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1345,5 +1345,15 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 	@Override
 	public <E, C extends Collection<E>> Predicate isNotMember(Expression<E> eExpression, Expression<C> cExpression) {
 		return isMember(eExpression, cExpression).not();
+	}
+
+	private <X, T, V extends T, K extends JoinImplementor> K treat(
+			Join<X, T> join,
+			Class<V> type,
+			BiFunction<Join<X, T>, Class<V>, K> f) {
+		final Set<Join<X, ?>> joins = join.getParent().getJoins();
+		final K treatAs = f.apply( join, type );
+		joins.add(treatAs);
+		return treatAs;
 	}
 }

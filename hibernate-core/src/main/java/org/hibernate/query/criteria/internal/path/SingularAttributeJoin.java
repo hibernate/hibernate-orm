@@ -133,12 +133,40 @@ public class SingularAttributeJoin<O,X> extends AbstractJoinImpl<O,X> {
 
 		@Override
 		public String getAlias() {
-			return original.getAlias();
+			return isCorrelated() ? getCorrelationParent().getAlias() : super.getAlias();
 		}
 
 		@Override
 		public void prepareAlias(RenderingContext renderingContext) {
-			// do nothing...
+			if ( getAlias() == null ) {
+				if ( isCorrelated() ) {
+					setAlias( getCorrelationParent().getAlias() );
+				}
+				else {
+					setAlias( renderingContext.generateAlias() );
+				}
+			}
+		}
+
+		@Override
+		protected void setAlias(String alias) {
+			super.setAlias( alias );
+			original.setAlias( alias );
+		}
+
+		@Override
+		protected ManagedType<T> locateManagedType() {
+			return criteriaBuilder().getEntityManagerFactory().getMetamodel().managedType( treatAsType );
+		}
+
+		@Override
+		public boolean shouldBeRendered() {
+			if ( getJoins().size() > 0 ) {
+				return true;
+			}
+			else {
+				return false;
+			}
 		}
 
 		@Override

@@ -15,11 +15,15 @@ import org.hibernate.jpa.criteria.compile.RenderingContext;
  * @author Steve Ebersole
  */
 public interface FromImplementor<Z,X> extends PathImplementor<X>, From<Z,X> {
-	public void prepareAlias(RenderingContext renderingContext);
-	public String renderTableExpression(RenderingContext renderingContext);
+	void prepareAlias(RenderingContext renderingContext);
+	String renderTableExpression(RenderingContext renderingContext);
 
 
-	public FromImplementor<Z,X> correlateTo(CriteriaSubqueryImpl subquery);
-	public void prepareCorrelationDelegate(FromImplementor<Z,X> parent);
-	public FromImplementor<Z, X> getCorrelationParent();
+	FromImplementor<Z,X> correlateTo(CriteriaSubqueryImpl subquery);
+	void prepareCorrelationDelegate(FromImplementor<Z,X> parent);
+	FromImplementor<Z, X> getCorrelationParent();
+
+	default boolean shouldBeRendered(){
+		return true;
+	}
 }

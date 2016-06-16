@@ -20,15 +20,14 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.envers.Audited;
 
 /**
- * @author Naros (crancran at gmail dot com)
+ * @author Chris Cranford
  */
 @Entity
 @Audited
 public class GroupMember {
-	
     @Id
-    @GeneratedValue(generator="increment")
-    @GenericGenerator(name="increment", strategy = "increment")
+    @GeneratedValue(generator = "increment")
+    @GenericGenerator(name = "increment", strategy = "increment")
     private Long id;
 
     @ManyToOne
@@ -38,13 +37,39 @@ public class GroupMember {
     @ManyToMany(mappedBy = "members")
     private List<MultiGroup> multiGroups = new ArrayList<MultiGroup>();
 
-    public void addMultiGroup(MultiGroup multiGroup) {
-    	multiGroups.add(multiGroup);     
+    public Long getId() {
+        return id;
     }
-    
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public UniqueGroup getUniqueGroup() {
+        return uniqueGroup;
+    }
+
+    public void setUniqueGroup(UniqueGroup uniqueGroup) {
+        this.uniqueGroup = uniqueGroup;
+    }
+
+    public List<MultiGroup> getMultiGroups() {
+        return multiGroups;
+    }
+
+    public void setMultiGroups(List<MultiGroup> multiGroups) {
+        this.multiGroups = multiGroups;
+    }
+
+    public void addMultiGroup(MultiGroup multiGroup) {
+        multiGroups.add( multiGroup );
+    }
+
     @Override
     public String toString() {
-    	return "GroupMember [id=" + id + ", uniqueGroup=" + uniqueGroup + ", multiGroups.size=" + multiGroups.size() + "]";
+        return "GroupMember [id=" + id
+                + ", uniqueGroup=" + uniqueGroup
+                + ", multiGroups.size=" + multiGroups.size()
+                + "]";
     }
-    
 }

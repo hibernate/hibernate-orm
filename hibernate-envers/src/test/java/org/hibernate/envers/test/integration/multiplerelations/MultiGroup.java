@@ -19,12 +19,11 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.envers.Audited;
 
 /**
- * @author Naros (crancran at gmail dot com)
+ * @author Chris Cranford
  */
 @Entity
 @Audited
 public class MultiGroup {
-	
     @Id
     @GeneratedValue(generator="increment")
     @GenericGenerator(name="increment", strategy = "increment")
@@ -40,7 +39,8 @@ public class MultiGroup {
 
     @Override
     public String toString() {
-    	return "MultiGroup [id=" + id + ", members.size=" + members.size() + "]";
+    	return "MultiGroup [id=" + id
+                + ", members.size=" + members.size()
+                + "]";
     }
-    
 }

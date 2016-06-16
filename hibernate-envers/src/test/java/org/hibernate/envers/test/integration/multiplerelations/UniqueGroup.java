@@ -20,12 +20,11 @@ import org.hibernate.envers.AuditMappedBy;
 import org.hibernate.envers.Audited;
 
 /**
- * @author Naros (crancran at gmail dot com)
+ * @author Chris Cranford
  */
 @Entity
 @Audited
 public class UniqueGroup {
-	
     @Id
     @GeneratedValue(generator="increment")
     @GenericGenerator(name="increment", strategy = "increment")
@@ -46,7 +45,8 @@ public class UniqueGroup {
 
     @Override
     public String toString() {
-    	return "UniqueGroup [id=" + id + ", members.size=" + members.size() + "]";
+    	return "UniqueGroup [id=" + id
+                + ", members.size=" + members.size()
+                + "]";
     }
-    
 }

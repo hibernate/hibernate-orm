@@ -205,3 +205,15 @@ task testJar(type: Jar, dependsOn: testClasses) {
 artifacts {
     tests testJar
 }
+
+if ( JavaVersion.current().isJava9Compatible() ) {
+    // we need to exclude tests using Javassist enhancement, which does not properly support
+    // Java 9 yet - https://issues.jboss.org/browse/JASSIST-261
+    test {
+        // rather than wild-cards, keep an explicit list
+        exclude 'org/hibernate/jpa/test/enhancement/InterceptFieldClassFileTransformerTest.class'
+        exclude 'org/hibernate/jpa/test/enhancement/runtime/JpaRuntimeEnhancementTest.class'
+        exclude 'org/hibernate/test/bytecode/enhancement/EnhancerTest.class'
+        exclude 'org/hibernate/test/bytecode/enhancement/basic/BasicInSessionTest.class'
+    }
+}

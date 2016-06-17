@@ -13,7 +13,7 @@ import org.hibernate.Session;
  *
  * @author Steve Ebersole
  */
-public interface ValueGenerator<T> {
+public interface ValueGenerator<T> extends java.io.Serializable {
 	/**
 	 * Generate the value.
 	 *

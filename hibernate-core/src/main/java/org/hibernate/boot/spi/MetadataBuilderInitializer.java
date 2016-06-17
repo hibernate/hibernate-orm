@@ -20,6 +20,6 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
  *
  * @since 5.0
  */
-public interface MetadataBuilderInitializer {
+public interface MetadataBuilderInitializer extends java.io.Serializable {
 	public void contribute(MetadataBuilder metadataBuilder, StandardServiceRegistry serviceRegistry);
 }

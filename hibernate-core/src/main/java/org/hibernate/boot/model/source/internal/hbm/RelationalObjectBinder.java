@@ -34,7 +34,7 @@ public class RelationalObjectBinder {
 	private final Database database;
 	private final PhysicalNamingStrategy physicalNamingStrategy;
 
-	public interface ColumnNamingDelegate {
+	public interface ColumnNamingDelegate extends java.io.Serializable {
 		Identifier determineImplicitName(LocalMetadataBuildingContext context);
 	}
 

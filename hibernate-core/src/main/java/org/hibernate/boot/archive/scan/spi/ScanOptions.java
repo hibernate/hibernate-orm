@@ -11,7 +11,7 @@ package org.hibernate.boot.archive.scan.spi;
  *
  * @author Steve Ebersole
  */
-public interface ScanOptions {
+public interface ScanOptions extends java.io.Serializable {
 	/**
 	 * Is detection of managed classes from root url allowed?  In strict JPA
 	 * sense, this would be controlled by the {@code <exclude-unlisted-classes/>}

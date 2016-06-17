@@ -41,8 +41,8 @@ public class JPAMetadataProvider implements MetadataProvider {
 
 	private final MetadataProvider delegate = new JavaMetadataProvider();
 
-	private final ClassLoaderAccess classLoaderAccess;
-	private final XMLContext xmlContext;
+	private final transient ClassLoaderAccess classLoaderAccess;
+	private final transient XMLContext xmlContext;
 
 	private Map<Object, Object> defaults;
 	private Map<AnnotatedElement, AnnotationReader> cache = new HashMap<AnnotatedElement, AnnotationReader>(100);

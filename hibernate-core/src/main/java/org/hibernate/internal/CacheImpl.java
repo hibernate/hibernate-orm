@@ -42,27 +42,35 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 /**
  * @author Steve Ebersole
  * @author Strong Liu
  */
-public class CacheImpl implements CacheImplementor {
+public class CacheImpl implements CacheImplementor, Serializable {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( CacheImpl.class );
 
 	private final SessionFactoryImplementor sessionFactory;
 	private final SessionFactoryOptions settings;
-	private final transient RegionFactory regionFactory;
+	private final RegionFactory regionFactory;
 	private final String cacheRegionPrefix;
 
-	private final transient ConcurrentHashMap<String, Region> allRegionsMap = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, Region> allRegionsMap = new ConcurrentHashMap<>();
 
-	private final transient ConcurrentHashMap<String, EntityRegionAccessStrategy> entityRegionAccessStrategyMap = new ConcurrentHashMap<>();
-	private final transient ConcurrentHashMap<String, CollectionRegionAccessStrategy> collectionRegionAccessStrategyMap = new ConcurrentHashMap<>();
-	private final transient ConcurrentHashMap<String, NaturalIdRegionAccessStrategy> naturalIdRegionAccessStrategyMap = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, EntityRegionAccessStrategy> entityRegionAccessStrategyMap = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, CollectionRegionAccessStrategy> collectionRegionAccessStrategyMap = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, NaturalIdRegionAccessStrategy> naturalIdRegionAccessStrategyMap = new ConcurrentHashMap<>();
 
-	private final transient UpdateTimestampsCache updateTimestampsCache;
-	private final transient QueryCache defaultQueryCache;
-	private final transient ConcurrentMap<String, QueryCache> queryCaches;
+	private final UpdateTimestampsCache updateTimestampsCache;
+	private final QueryCache defaultQueryCache;
+	private final ConcurrentMap<String, QueryCache> queryCaches;
 
 	public CacheImpl(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;

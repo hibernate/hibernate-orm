@@ -6,6 +6,8 @@
  */
 package org.hibernate.loader.entity.plan;
 
+import java.io.Serializable;
+
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
@@ -42,7 +44,7 @@ public class EntityLoader extends AbstractLoadPlanBasedEntityLoader  {
 		return new Builder( persister );
 	}
 
-	public static class Builder {
+	public static class Builder implements Serializable {
 		private final OuterJoinLoadable persister;
 		private int batchSize = 1;
 		private LoadQueryInfluencers influencers = LoadQueryInfluencers.NONE;

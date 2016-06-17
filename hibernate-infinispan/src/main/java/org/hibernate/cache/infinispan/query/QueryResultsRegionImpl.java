@@ -6,6 +6,10 @@
  */
 package org.hibernate.cache.infinispan.query;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,14 +39,23 @@ import org.infinispan.transaction.TransactionMode;
  * @author Galder Zamarreño
  * @since 3.5
  */
-public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implements QueryResultsRegion {
+public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implements QueryResultsRegion, Externalizable {
 	private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog( QueryResultsRegionImpl.class );
 
-	private final AdvancedCache evictCache;
-	private final AdvancedCache putCache;
-	private final AdvancedCache getCache;
-	private final ConcurrentMap<SharedSessionContractImplementor, Map> transactionContext = new ConcurrentHashMap<SharedSessionContractImplementor, Map>();
-	private final boolean putCacheRequiresTransaction;
+	private AdvancedCache evictCache;
+	private AdvancedCache putCache;
+	private AdvancedCache getCache;
+	private ConcurrentMap<SharedSessionContractImplementor, Map> transactionContext = new ConcurrentHashMap<SharedSessionContractImplementor, Map>();
+	private boolean putCacheRequiresTransaction;
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		super.readExternal(in);
+		transactionContext = new ConcurrentHashMap<SharedSessionContractImplementor, Map>();
+		initTransients();
+	}
+
+	public QueryResultsRegionImpl() {}
 
 	/**
 	 * Query region constructor
@@ -52,6 +65,10 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
 	 */
 	public QueryResultsRegionImpl(AdvancedCache cache, String name, TransactionManager transactionManager, InfinispanRegionFactory factory) {
 		super( cache, name, transactionManager, null, factory, null );
+		initTransients();
+	}
+
+	private void initTransients() {
 		// If Infinispan is using INVALIDATION for query cache, we don't want to propagate changes.
 		// We use the Timestamps cache to manage invalidation
 		final boolean localOnly = Caches.isInvalidationCache( cache );
@@ -72,7 +89,6 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
 		if (transactional) {
 			log.useNonTransactionalQueryCache();
 		}
-
 	}
 
 	@Override

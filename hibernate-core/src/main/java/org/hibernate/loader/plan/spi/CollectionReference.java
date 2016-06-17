@@ -6,6 +6,8 @@
  */
 package org.hibernate.loader.plan.spi;
 
+import java.io.Serializable;
+
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.collection.CollectionPersister;
 
@@ -14,7 +16,7 @@ import org.hibernate.persister.collection.CollectionPersister;
  *
  * @author Steve Ebersole
  */
-public interface CollectionReference {
+public interface CollectionReference extends Serializable {
 	/**
 	 * Obtain the UID of the QuerySpace (specifically a {@link CollectionQuerySpace}) that this CollectionReference
 	 * refers to.

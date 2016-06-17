@@ -6,12 +6,16 @@
  */
 package org.hibernate.cache.ehcache.internal.regions;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
 import java.util.Properties;
 
 import net.sf.ehcache.Ehcache;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.ehcache.AbstractEhcacheRegionFactory;
 import org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactory;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.EntityRegion;
@@ -28,10 +32,15 @@ import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
  * @author Abhishek Sanoujam
  * @author Alex Snaps
  */
-public class EhcacheEntityRegion extends EhcacheTransactionalDataRegion implements EntityRegion {
+public class EhcacheEntityRegion extends EhcacheTransactionalDataRegion implements EntityRegion,
+																											  Serializable {
+
+	public EhcacheEntityRegion() {}
+
 	/**
 	 * Constructs an EhcacheCollectionRegion around the given underlying cache.
 	 *
+	 * @param regionFactory
 	 * @param accessStrategyFactory The factory for building needed EntityRegionAccessStrategy instance
 	 * @param underlyingCache The ehcache cache instance
 	 * @param settings The Hibernate settings
@@ -39,12 +48,12 @@ public class EhcacheEntityRegion extends EhcacheTransactionalDataRegion implemen
 	 * @param properties Any additional[ properties
 	 */
 	public EhcacheEntityRegion(
-			EhcacheAccessStrategyFactory accessStrategyFactory,
+			AbstractEhcacheRegionFactory regionFactory, EhcacheAccessStrategyFactory accessStrategyFactory,
 			Ehcache underlyingCache,
 			SessionFactoryOptions settings,
 			CacheDataDescription metadata,
 			Properties properties) {
-		super( accessStrategyFactory, underlyingCache, settings, metadata, properties );
+		super( regionFactory, accessStrategyFactory, underlyingCache, settings, metadata, properties );
 	}
 
 	@Override

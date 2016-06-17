@@ -27,6 +27,9 @@ import javax.transaction.TransactionManager;
  * @since 3.5
  */
 public class CollectionRegionImpl extends BaseTransactionalDataRegion implements CollectionRegion {
+
+	public CollectionRegionImpl() {}
+
 	/**
 	 * Construct a collection region
 	 *  @param cache instance to store collection instances

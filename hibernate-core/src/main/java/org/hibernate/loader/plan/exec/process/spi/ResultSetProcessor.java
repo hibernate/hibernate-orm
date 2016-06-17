@@ -24,7 +24,7 @@ import org.hibernate.transform.ResultTransformer;
  *
  * @author Steve Ebersole
  */
-public interface ResultSetProcessor {
+public interface ResultSetProcessor extends java.io.Serializable {
 
 	/**
 	 * Make this go somewhere else.  These aren't really linked this way anymore.  ScrollableResultSetProcessor is

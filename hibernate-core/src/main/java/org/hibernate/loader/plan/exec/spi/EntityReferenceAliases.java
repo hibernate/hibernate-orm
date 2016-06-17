@@ -15,7 +15,7 @@ import org.hibernate.loader.EntityAliases;
  *
  * @author Steve Ebersole
  */
-public interface EntityReferenceAliases {
+public interface EntityReferenceAliases extends java.io.Serializable {
 	/**
 	 * Obtain the table alias used for referencing the table of the EntityReference.
 	 * <p/>

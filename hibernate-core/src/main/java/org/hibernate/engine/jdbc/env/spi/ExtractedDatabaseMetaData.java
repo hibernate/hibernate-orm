@@ -19,7 +19,7 @@ import org.hibernate.engine.jdbc.spi.TypeInfo;
  * @author Steve Ebersole
  */
 @SuppressWarnings( {"UnusedDeclaration"})
-public interface ExtractedDatabaseMetaData {
+public interface ExtractedDatabaseMetaData extends java.io.Serializable {
 	/**
 	 * Obtain the JDBC Environment from which this metadata came.
 	 *

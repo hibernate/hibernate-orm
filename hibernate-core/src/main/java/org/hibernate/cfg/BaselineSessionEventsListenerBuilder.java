@@ -16,7 +16,7 @@ import org.hibernate.engine.internal.StatisticalLoggingSessionEventListener;
 /**
  * @author Steve Ebersole
  */
-public class BaselineSessionEventsListenerBuilder {
+public class BaselineSessionEventsListenerBuilder implements java.io.Serializable {
 	private boolean logSessionMetrics;
 	private Class<? extends SessionEventListener> autoListener;
 

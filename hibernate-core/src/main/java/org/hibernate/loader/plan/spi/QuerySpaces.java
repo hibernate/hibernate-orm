@@ -15,7 +15,7 @@ import java.util.List;
  *
  * @author Steve Ebersole
  */
-public interface QuerySpaces {
+public interface QuerySpaces extends java.io.Serializable {
 	/**
 	 * Gets the root QuerySpace references.
 	 *

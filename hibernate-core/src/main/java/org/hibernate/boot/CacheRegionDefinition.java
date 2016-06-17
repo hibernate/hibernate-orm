@@ -16,7 +16,7 @@ package org.hibernate.boot;
  *
  * @author Steve Ebersole
  */
-public class CacheRegionDefinition {
+public class CacheRegionDefinition implements java.io.Serializable  {
 	public static enum CacheRegionType {
 		ENTITY,
 		COLLECTION,

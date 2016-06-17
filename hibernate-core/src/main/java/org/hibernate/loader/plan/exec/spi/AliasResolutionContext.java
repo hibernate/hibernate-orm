@@ -12,7 +12,7 @@ package org.hibernate.loader.plan.exec.spi;
  * @author Gail Badner
  * @author Steve Ebersole
  */
-public interface AliasResolutionContext {
+public interface AliasResolutionContext extends java.io.Serializable {
 	public String resolveSqlTableAliasFromQuerySpaceUid(String querySpaceUid);
 
 	/**

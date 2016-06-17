@@ -7,6 +7,8 @@
 package org.hibernate.tool.schema.spi;
 
 
+import java.io.Serializable;
+
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.Exportable;
 
@@ -18,7 +20,7 @@ import org.hibernate.boot.model.relational.Exportable;
  *
  * @author Steve Ebersole
  */
-public interface Exporter<T extends Exportable> {
+public interface Exporter<T extends Exportable> extends Serializable {
 	String[] NO_COMMANDS = new String[0];
 
 	/**

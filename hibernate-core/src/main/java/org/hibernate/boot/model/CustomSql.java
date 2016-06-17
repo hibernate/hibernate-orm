@@ -14,7 +14,7 @@ import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
  *
  * @author Steve Ebersole
  */
-public class CustomSql {
+public class CustomSql implements java.io.Serializable {
 	private final String sql;
 	private final boolean isCallable;
 	private final ExecuteUpdateResultCheckStyle checkStyle;

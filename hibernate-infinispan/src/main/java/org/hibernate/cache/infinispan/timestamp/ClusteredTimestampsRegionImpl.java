@@ -6,6 +6,10 @@
  */
 package org.hibernate.cache.infinispan.timestamp;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.transaction.Transaction;
@@ -39,7 +43,15 @@ public class ClusteredTimestampsRegionImpl extends TimestampsRegionImpl {
 	 * cache and updates the local cache accordingly. This approach allows
 	 * timestamp changes to be replicated asynchronously.
 	 */
-	private final Map localCache = new ConcurrentHashMap();
+	private Map localCache = new ConcurrentHashMap();
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		super.readExternal(in);
+		localCache = new ConcurrentHashMap();
+	}
+
+	public ClusteredTimestampsRegionImpl() {}
 
    /**
     * Clustered timestamps region constructor.

@@ -26,7 +26,9 @@ import javax.transaction.TransactionManager;
  * @author Galder Zamarreño
  */
 public class NaturalIdRegionImpl extends BaseTransactionalDataRegion
-		implements NaturalIdRegion {
+		implements NaturalIdRegion, java.io.Externalizable {
+
+	public NaturalIdRegionImpl() {}
 
 	/**
 	 * Constructor for the natural id region.

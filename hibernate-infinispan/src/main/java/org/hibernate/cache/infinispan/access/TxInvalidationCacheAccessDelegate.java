@@ -17,6 +17,9 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class TxInvalidationCacheAccessDelegate extends InvalidationCacheAccessDelegate {
+
+	public TxInvalidationCacheAccessDelegate() {}
+
 	public TxInvalidationCacheAccessDelegate(BaseRegion region, PutFromLoadValidator validator) {
 		super(region, validator);
 	}

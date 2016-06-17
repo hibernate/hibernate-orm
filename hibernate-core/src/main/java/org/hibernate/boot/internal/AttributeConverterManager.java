@@ -26,7 +26,7 @@ import org.jboss.logging.Logger;
 /**
  * @author Steve Ebersole
  */
-public class AttributeConverterManager implements AttributeConverterAutoApplyHandler {
+public class AttributeConverterManager implements AttributeConverterAutoApplyHandler, java.io.Serializable {
 	private static final Logger log = Logger.getLogger( AttributeConverterManager.class );
 
 	private Map<Class, AttributeConverterDescriptor> attributeConverterDescriptorsByClass;

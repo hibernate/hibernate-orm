@@ -12,7 +12,7 @@ import com.fasterxml.classmate.TypeResolver;
 /**
  * @author Steve Ebersole
  */
-public class ClassmateContext {
+public class ClassmateContext implements java.io.Serializable {
 	private TypeResolver typeResolver = new TypeResolver();
 	private MemberResolver memberResolver = new MemberResolver( typeResolver );
 

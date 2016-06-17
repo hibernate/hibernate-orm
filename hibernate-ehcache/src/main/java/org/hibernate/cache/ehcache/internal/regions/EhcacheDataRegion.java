@@ -7,6 +7,13 @@
 
 package org.hibernate.cache.ehcache.internal.regions;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,13 +23,17 @@ import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.constructs.nonstop.NonStopCacheException;
 import net.sf.ehcache.util.Timestamper;
 
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.ehcache.AbstractEhcacheRegionFactory;
 import org.hibernate.cache.ehcache.EhCacheMessageLogger;
 import org.hibernate.cache.ehcache.internal.nonstop.HibernateNonstopCacheExceptionHandler;
 import org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactory;
 import org.hibernate.cache.spi.Region;
 
 import org.jboss.logging.Logger;
+
+import static javafx.scene.input.KeyCode.L;
 
 /**
  * An Ehcache specific data region implementation.
@@ -35,25 +46,32 @@ import org.jboss.logging.Logger;
  * @author Abhishek Sanoujam
  * @author Alex Snaps
  */
-public abstract class EhcacheDataRegion implements Region {
+public abstract class EhcacheDataRegion implements Region,
+																	Externalizable {
 	private static final EhCacheMessageLogger LOG = Logger.getMessageLogger(
 			EhCacheMessageLogger.class,
 			EhcacheDataRegion.class.getName()
 	);
 	private static final String CACHE_LOCK_TIMEOUT_PROPERTY = "net.sf.ehcache.hibernate.cache_lock_timeout";
 	private static final int DEFAULT_CACHE_LOCK_TIMEOUT = 60000;
+	private static final Logger log = Logger.getLogger(EhcacheDataRegion.class);
 
-	private final Ehcache cache;
-	private final EhcacheAccessStrategyFactory accessStrategyFactory;
-	private final int cacheLockTimeout;
+	protected Ehcache cache;
+	private String cacheName;
+	private AbstractEhcacheRegionFactory regionFactory;
+	private EhcacheAccessStrategyFactory accessStrategyFactory;
+	private int cacheLockTimeout;
 
+	public EhcacheDataRegion() {}
 
 	/**
 	 * Create a Hibernate data region backed by the given Ehcache instance.
 	 */
-	EhcacheDataRegion(EhcacheAccessStrategyFactory accessStrategyFactory, Ehcache cache, Properties properties) {
+	EhcacheDataRegion(AbstractEhcacheRegionFactory regionFactory, EhcacheAccessStrategyFactory accessStrategyFactory, Ehcache cache, Properties properties) {
+		this.regionFactory = regionFactory;
 		this.accessStrategyFactory = accessStrategyFactory;
 		this.cache = cache;
+		this.cacheName = cache.getName();
 		final String timeout = properties.getProperty(
 				CACHE_LOCK_TIMEOUT_PROPERTY,
 				Integer.toString( DEFAULT_CACHE_LOCK_TIMEOUT )
@@ -87,7 +105,7 @@ public abstract class EhcacheDataRegion implements Region {
 
 	@Override
 	public String getName() {
-		return getCache().getName();
+		return cacheName;
 	}
 
 	@Override
@@ -195,4 +213,34 @@ public abstract class EhcacheDataRegion implements Region {
 		return getCache().isKeyInCache( key );
 	}
 
+//	void writeObject(ObjectOutputStream oos) throws IOException, ClassNotFoundException {
+//		oos.defaultWriteObject();
+//	}
+//
+//	void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
+//		ois.defaultReadObject();
+//		log.trace("readObject in EhcacheDataRegion thank god");
+//		cache = regionFactory.getManager().getCache(cacheName);
+//	}
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeObject(regionFactory);
+		out.writeObject(accessStrategyFactory);
+		out.writeInt(cacheLockTimeout);
+		out.writeUTF(cacheName);
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		regionFactory = (AbstractEhcacheRegionFactory) in.readObject();
+		accessStrategyFactory = (EhcacheAccessStrategyFactory) in.readObject();
+		cacheLockTimeout = in.readInt();
+		cacheName = in.readUTF();
+		cache = regionFactory.getManager().getCache(cacheName);
+	}
+
+	public void setCache(Ehcache cache) {
+		this.cache = cache;
+	}
 }

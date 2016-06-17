@@ -20,7 +20,7 @@ import org.hibernate.sql.Template;
  * @author Steve Ebersole
  * @author Rob Worsnop
  */
-public class FilterHelper {
+public class FilterHelper implements java.io.Serializable {
 
 	private final String[] filterNames;
 	private final String[] filterConditions;

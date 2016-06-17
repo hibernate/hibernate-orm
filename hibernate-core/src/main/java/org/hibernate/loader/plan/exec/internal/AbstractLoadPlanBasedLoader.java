@@ -6,6 +6,7 @@
  */
 package org.hibernate.loader.plan.exec.internal;
 
+import java.io.Serializable;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -48,7 +49,7 @@ import org.hibernate.type.Type;
 
  * @author Gail Badner
  */
-public abstract class AbstractLoadPlanBasedLoader {
+public abstract class AbstractLoadPlanBasedLoader implements Serializable {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( AbstractLoadPlanBasedLoader.class );
 
 	private final SessionFactoryImplementor factory;

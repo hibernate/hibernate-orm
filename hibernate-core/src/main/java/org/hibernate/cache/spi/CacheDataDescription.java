@@ -15,7 +15,7 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public interface CacheDataDescription {
+public interface CacheDataDescription extends java.io.Serializable {
 	/**
 	 * Is the data marked as being mutable?
 	 *

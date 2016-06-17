@@ -15,7 +15,7 @@ import org.hibernate.engine.jdbc.ColumnNameCache;
  *
  * @author Gail Badner
  */
-public interface ResultSetWrapper {
+public interface ResultSetWrapper extends java.io.Serializable {
 	/**
 	 * Wrap a result set in a "column name cache" wrapper.
 	 *

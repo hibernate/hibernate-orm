@@ -11,7 +11,7 @@ import org.hibernate.type.Type;
 /**
  * @author Steve Ebersole
  */
-public interface CollectionIndexDefinition {
+public interface CollectionIndexDefinition extends java.io.Serializable {
 	/**
 	 * Returns the collection definition.
 	 * @return  the collection definition.

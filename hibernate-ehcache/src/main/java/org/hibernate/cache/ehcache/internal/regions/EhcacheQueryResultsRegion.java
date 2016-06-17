@@ -10,6 +10,7 @@ import java.util.Properties;
 
 import net.sf.ehcache.Ehcache;
 
+import org.hibernate.cache.ehcache.AbstractEhcacheRegionFactory;
 import org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactory;
 import org.hibernate.cache.spi.QueryResultsRegion;
 
@@ -28,10 +29,11 @@ public class EhcacheQueryResultsRegion extends EhcacheGeneralDataRegion implemen
 	 * @param properties Any additional[ properties
 	 */
 	public EhcacheQueryResultsRegion(
+			AbstractEhcacheRegionFactory regionFactory,
 			EhcacheAccessStrategyFactory accessStrategyFactory,
 			Ehcache underlyingCache,
 			Properties properties) {
-		super( accessStrategyFactory, underlyingCache, properties );
+		super( regionFactory, accessStrategyFactory, underlyingCache, properties );
 	}
 
 }

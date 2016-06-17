@@ -11,7 +11,7 @@ package org.hibernate.persister.walking.spi;
  *
  * @author Steve Ebersole
  */
-public interface EntityIdentifierDefinition {
+public interface EntityIdentifierDefinition extends java.io.Serializable {
 	/**
 	 * Is the entity identifier encapsulated?  Meaning, is it represented by a single attribute?
 	 *

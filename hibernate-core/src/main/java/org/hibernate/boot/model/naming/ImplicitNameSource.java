@@ -13,7 +13,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
  *
  * @author Steve Ebersole
  */
-public interface ImplicitNameSource {
+public interface ImplicitNameSource extends java.io.Serializable {
 	/**
 	 * Access to the current building context.
 	 *

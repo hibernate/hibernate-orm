@@ -16,7 +16,7 @@ import org.hibernate.loader.spi.AfterLoadAction;
 /**
  * @author Steve Ebersole
  */
-public interface RowReader {
+public interface RowReader extends java.io.Serializable {
 	// why the context *impl*?
 	Object readRow(ResultSet resultSet, ResultSetProcessingContextImpl context) throws SQLException;
 

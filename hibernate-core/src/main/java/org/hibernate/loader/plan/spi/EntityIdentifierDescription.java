@@ -11,7 +11,7 @@ package org.hibernate.loader.plan.spi;
  *
  * @author Steve Ebersole
  */
-public interface EntityIdentifierDescription {
+public interface EntityIdentifierDescription extends java.io.Serializable {
 	/**
 	 * Can this EntityIdentifierDescription be treated as a FetchSource and if so does it have any
 	 * fetches?

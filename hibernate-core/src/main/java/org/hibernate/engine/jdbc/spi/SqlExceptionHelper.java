@@ -26,7 +26,7 @@ import org.jboss.logging.Logger.Level;
  *
  * @author Steve Ebersole
  */
-public class SqlExceptionHelper {
+public class SqlExceptionHelper implements java.io.Serializable {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
 			SqlExceptionHelper.class.getName()

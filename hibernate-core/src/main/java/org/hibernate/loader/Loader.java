@@ -95,7 +95,7 @@ import org.hibernate.type.VersionType;
  * @author Gavin King
  * @see org.hibernate.persister.entity.Loadable
  */
-public abstract class Loader {
+public abstract class Loader implements Serializable {
 	protected static final CoreMessageLogger LOG = CoreLogging.messageLogger( Loader.class );
 	protected static final boolean DEBUG_ENABLED = LOG.isDebugEnabled();
 

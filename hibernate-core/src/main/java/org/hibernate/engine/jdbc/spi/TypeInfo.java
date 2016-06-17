@@ -6,6 +6,7 @@
  */
 package org.hibernate.engine.jdbc.spi;
 
+import java.io.Serializable;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -22,7 +23,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 @SuppressWarnings("UnusedDeclaration")
-public class TypeInfo {
+public class TypeInfo implements Serializable {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
 			TypeInfo.class.getName()

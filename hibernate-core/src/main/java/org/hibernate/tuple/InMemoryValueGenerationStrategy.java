@@ -6,10 +6,12 @@
  */
 package org.hibernate.tuple;
 
+import java.io.Serializable;
+
 /**
  * @author Steve Ebersole
  */
-public interface InMemoryValueGenerationStrategy {
+public interface InMemoryValueGenerationStrategy extends Serializable {
 	/**
 	 * When is this value generated : NEVER, INSERT, ALWAYS (INSERT+UPDATE)
 	 *

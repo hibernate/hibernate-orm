@@ -17,7 +17,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *
  * @author Steve Ebersole
  */
-public interface LobMergeStrategy {
+public interface LobMergeStrategy extends java.io.Serializable {
 	/**
 	 * Perform merge on {@link Blob} values.
 	 *

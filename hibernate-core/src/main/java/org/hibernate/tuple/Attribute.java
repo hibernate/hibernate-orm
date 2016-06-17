@@ -13,7 +13,7 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public interface Attribute {
+public interface Attribute extends java.io.Serializable {
 	public String getName();
 	public Type getType();
 }

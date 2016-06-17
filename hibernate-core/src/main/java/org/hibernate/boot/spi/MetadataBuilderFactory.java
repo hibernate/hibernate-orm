@@ -16,7 +16,7 @@ import org.hibernate.boot.MetadataSources;
  *
  * @author Gunnar Morling
  */
-public interface MetadataBuilderFactory {
+public interface MetadataBuilderFactory extends java.io.Serializable {
 
 	/**
 	 * Creates a {@link MetadataBuilderImplementor}.

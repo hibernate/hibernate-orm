@@ -12,11 +12,9 @@ import java.util.Properties;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.config.Configuration;
 import net.sf.ehcache.config.ConfigurationFactory;
-
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.util.HibernateEhcacheUtils;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -54,6 +52,7 @@ public class EhCacheRegionFactory extends AbstractEhcacheRegionFactory {
 	@Override
 	public void start(SessionFactoryOptions settings, Properties properties) throws CacheException {
 		this.settings = settings;
+		this.properties = properties;
 		if ( manager != null ) {
 			LOG.attemptToRestartAlreadyStartedEhCacheProvider();
 			return;
@@ -105,5 +104,4 @@ public class EhCacheRegionFactory extends AbstractEhcacheRegionFactory {
 			throw new CacheException( e );
 		}
 	}
-
 }

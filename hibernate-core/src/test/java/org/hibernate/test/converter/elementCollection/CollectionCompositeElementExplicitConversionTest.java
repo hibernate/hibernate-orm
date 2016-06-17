@@ -56,7 +56,7 @@ public class CollectionCompositeElementExplicitConversionTest extends BaseUnitTe
 	@Before
 	public void setUp() throws Exception {
 		ssr = new StandardServiceRegistryBuilder().build();
-		simpleValueAttributeConverterDescriptorField = ReflectHelper.findField( SimpleValue.class, "attributeConverterDescriptor" );
+		simpleValueAttributeConverterDescriptorField = ReflectHelper.findField( SimpleValue.class, "attributeConverterDefinition" );
 	}
 
 	@After

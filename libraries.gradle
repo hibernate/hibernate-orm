@@ -93,7 +93,7 @@ ext {
             mockito:         'org.mockito:mockito-core:1.9.0',
 
 
-            validator:       'org.hibernate:hibernate-validator:5.2.0.CR1',
+            validator:       'org.hibernate:hibernate-validator:5.2.4.Final',
             // EL required by Hibernate Validator at test runtime
             expression_language_api:  "javax.el:javax.el-api:${elVersion}",
             expression_language_impl: "org.glassfish.web:javax.el:${elVersion}",

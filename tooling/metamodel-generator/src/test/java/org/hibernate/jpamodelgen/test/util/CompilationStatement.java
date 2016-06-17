@@ -91,25 +91,18 @@ public class CompilationStatement extends Statement {
 
 	@Override
 	public void evaluate() throws Throwable {
-		try {
-			// some test needs to compile some classes prior to the actual classes under test
-			if ( !preCompileEntities.isEmpty() ) {
-				compile( getCompilationUnits( preCompileEntities ) );
-			}
-
-			// now we compile the actual test classes
-			compile( getCompilationUnits( testEntities ) );
-
-			if ( !ignoreCompilationErrors ) {
-				TestUtil.assertNoCompilationError( compilationDiagnostics );
-			}
+		// some test needs to compile some classes prior to the actual classes under test
+		if ( !preCompileEntities.isEmpty() ) {
+			compile( getCompilationUnits( preCompileEntities ) );
 		}
-		catch ( Exception e ) {
-			StringWriter errors = new StringWriter();
-			e.printStackTrace( new PrintWriter( errors ) );
-			log.debug( errors.toString() );
-			fail( "Unable to process test sources." );
+
+		// now we compile the actual test classes
+		compile( getCompilationUnits( testEntities ) );
+
+		if ( !ignoreCompilationErrors ) {
+			TestUtil.assertNoCompilationError( compilationDiagnostics );
 		}
+
 		originalStatement.evaluate();
 	}
 

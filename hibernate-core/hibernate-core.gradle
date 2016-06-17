@@ -9,7 +9,6 @@ import org.apache.tools.ant.filters.ReplaceTokens
 apply plugin: 'antlr'
 apply plugin: 'hibernate-matrix-testing'
 
-apply plugin: 'version-injection'
 apply plugin: 'org.hibernate.build.gradle.xjc'
 
 configurations {
@@ -35,6 +34,31 @@ dependencies {
     //      3) hibernate-commons-annotations
     compile( libraries.dom4j )
     compile( libraries.commons_annotations )
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Java 9 ftw!
+    if ( JavaVersion.current().isJava9Compatible() ) {
+        // The JDK used to run Gradle is Java 9+, and we assume that that is the same
+        //		JDK for executing tasks
+        xjc( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
+        xjc( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
+        xjc( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
+        xjc( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
+        xjc( 'javax:javaee-api:7.0' )
+
+        testCompile( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
+        testCompile( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
+        testCompile( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
+        testCompile( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
+        testCompile( 'javax:javaee-api:7.0' )
+
+        testRuntime( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
+        testRuntime( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
+        testRuntime( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
+        testRuntime( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
+        testRuntime( 'javax:javaee-api:7.0' )
+    }
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     antlr( libraries.antlr )
 
@@ -81,10 +105,6 @@ mavenPom {
 
 def osgiDescription() {
 	return mavenPom.description
-}
-
-versionInjection {
-    into( 'org.hibernate.Version', 'getVersionString' )
 }
 
 jar {

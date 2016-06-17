@@ -12,10 +12,18 @@ package org.hibernate.jpamodelgen;
  * @author Hardy Ferentschik
  */
 public final class Version {
+	private static String version;
+
 	private Version() {
 	}
 
 	public static String getVersionString() {
-		return "[WORKING]";
+		if ( version == null ) {
+			version = Version.class.getPackage().getImplementationVersion();
+			if ( version == null ) {
+				version = "[WORKING]";
+			}
+		}
+		return version;
 	}
 }

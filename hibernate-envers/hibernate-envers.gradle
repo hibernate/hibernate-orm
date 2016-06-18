@@ -87,3 +87,16 @@ tasks."matrix_mariadb" {
         println "Starting test: " + descriptor
     }
 }
+
+if ( JavaVersion.current().isJava9Compatible() ) {
+    logger.warn( '[WARN] Skipping Javassist-related tests for hibernate-envers due to Javassist JDK 9 incompatibility' )
+
+    // we need to exclude tests using Javassist enhancement, which does not properly support
+    // Java 9 yet - https://issues.jboss.org/browse/JASSIST-261
+    test {
+        // rather than wild-cards, keep an explicit list
+        exclude 'org/hibernate/envers/internal/tools/MapProxyTest.class'
+        exclude 'org/hibernate/envers/test/integration/components/dynamic/AuditedDynamicComponentTest.class'
+        exclude 'org/hibernate/envers/test/integration/components/dynamic/AuditedDynamicComponentsAdvancedCasesTest.class'
+    }
+}

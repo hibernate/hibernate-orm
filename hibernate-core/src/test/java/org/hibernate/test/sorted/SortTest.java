@@ -22,11 +22,16 @@ import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.annotations.SortNatural;
+import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -36,7 +41,7 @@ import static org.junit.Assert.assertTrue;
  * @author Gavin King
  * @author Brett Meyer
  */
-public class SortTest extends BaseCoreFunctionalTestCase {
+public class SortTest extends BaseNonConfigCoreFunctionalTestCase {
 	
 	@Override
 	protected String[] getMappings() {
@@ -46,6 +51,19 @@ public class SortTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] { Owner.class, Cat.class };
+	}
+
+	@Test
+	public void testSortedSetDefinitionInHbmXml() {
+		final PersistentClass entityMapping = metadata().getEntityBinding( Search.class.getName() );
+
+		final Property sortedSetProperty = entityMapping.getProperty( "searchResults" );
+		final Collection sortedSetMapping = assertTyping( Collection.class, sortedSetProperty.getValue()  );
+		assertTrue( "SortedSet mapping not interpreted as sortable", sortedSetMapping.isSorted() );
+
+		final Property sortedMapProperty = entityMapping.getProperty( "tokens" );
+		final Collection sortedMapMapping = assertTyping( Collection.class, sortedMapProperty.getValue()  );
+		assertTrue( "SortedMap mapping not interpreted as sortable", sortedMapMapping.isSorted() );
 	}
 
 	@Test

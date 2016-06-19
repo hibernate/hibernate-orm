@@ -428,7 +428,7 @@ selectExpr
 	| functionCall
 	| count
 	| collectionFunction			// elements() or indices()
-	| literal
+	| constant
 	| arithmeticExpr
 	| logicalExpr
 	| parameter

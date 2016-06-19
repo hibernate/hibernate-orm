@@ -11,9 +11,15 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmMapType;
 import org.hibernate.boot.model.source.spi.AttributeSourceContainer;
 import org.hibernate.boot.model.source.spi.PluralAttributeIndexSource;
 import org.hibernate.boot.model.source.spi.PluralAttributeNature;
+import org.hibernate.boot.model.source.spi.Sortable;
+import org.hibernate.internal.util.StringHelper;
 
-public class PluralAttributeSourceMapImpl extends AbstractPluralAttributeSourceImpl implements IndexedPluralAttributeSource {
+public class PluralAttributeSourceMapImpl
+		extends AbstractPluralAttributeSourceImpl
+		implements IndexedPluralAttributeSource, Sortable {
+	private final String sorting;
 	private final PluralAttributeIndexSource indexSource;
+
 	private final String xmlNodeName;
 
 	public PluralAttributeSourceMapImpl(
@@ -22,6 +28,8 @@ public class PluralAttributeSourceMapImpl extends AbstractPluralAttributeSourceI
 			AttributeSourceContainer container) {
 		super( sourceMappingDocument, jaxbMap, container );
 		this.xmlNodeName = jaxbMap.getNode();
+
+		this.sorting = interpretSorting( jaxbMap.getSort() );
 
 		if (  jaxbMap.getMapKey() != null ) {
 			this.indexSource = new PluralAttributeMapKeySourceBasicImpl( sourceMappingDocument,  jaxbMap.getMapKey() );
@@ -69,6 +77,18 @@ public class PluralAttributeSourceMapImpl extends AbstractPluralAttributeSourceI
 		}
 	}
 
+	private static String interpretSorting(String sort) {
+		if ( StringHelper.isEmpty( sort ) ) {
+			return null;
+		}
+
+		if ( "unsorted".equals( sort ) ) {
+			return null;
+		}
+
+		return sort;
+	}
+
 	@Override
 	public PluralAttributeIndexSource getIndexSource() {
 		return indexSource;
@@ -87,5 +107,15 @@ public class PluralAttributeSourceMapImpl extends AbstractPluralAttributeSourceI
 	@Override
 	public String getXmlNodeName() {
 		return xmlNodeName;
+	}
+
+	@Override
+	public boolean isSorted() {
+		return sorting != null;
+	}
+
+	@Override
+	public String getComparatorName() {
+		return sorting;
 	}
 }

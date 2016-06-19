@@ -110,10 +110,7 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 			selection = ( Selection<? extends T> ) criteriaBuilder().tuple( selections );
 		}
 		else if ( getResultType().isArray() ) {
-			selection = ( Selection<? extends T> )  criteriaBuilder().array(
-					( Class<? extends Object[]> ) getResultType(),
-					selections
-			);
+			selection = criteriaBuilder().array( getResultType(), selections );
 		}
 		else if ( Object.class.equals( getResultType() ) ) {
 			switch ( selections.size() ) {

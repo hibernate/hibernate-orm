@@ -10,13 +10,18 @@ import javax.persistence.EntityManager;
 import javax.persistence.Parameter;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
 
+import java.util.Arrays;
+
 import org.junit.Test;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+
+import org.hibernate.testing.TestForIssue;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.assertEquals;
@@ -112,6 +117,37 @@ public class ParameterTest extends BaseEntityManagerFunctionalTestCase {
 
 		em.getTransaction().commit();
 		em.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-10870")
+	public void testParameterInParameterList2() {
+		EntityManager em = getOrCreateEntityManager();
+		try {
+			em.getTransaction().begin();
+			final CriteriaQuery<MultiTypedBasicAttributesEntity> query = em.getCriteriaBuilder()
+					.createQuery( MultiTypedBasicAttributesEntity.class );
+
+			final Root<MultiTypedBasicAttributesEntity> root = query.from( MultiTypedBasicAttributesEntity.class );
+			root.get( "id" );
+			final ParameterExpression<Iterable> parameter = em.getCriteriaBuilder().parameter( Iterable.class );
+			root.in( new Expression[] {parameter} );
+			query.select( root );
+
+			final TypedQuery<MultiTypedBasicAttributesEntity> query1 = em.createQuery( query );
+			query1.setParameter( parameter, Arrays.asList( 1L, 2L, 3L ) );
+			query1.getResultList();
+
+			em.getTransaction().commit();
+		}
+		catch (Exception e) {
+			if ( em.getTransaction().isActive() ) {
+				em.getTransaction().rollback();
+			}
+		}
+		finally {
+			em.close();
+		}
 	}
 
 	@Override

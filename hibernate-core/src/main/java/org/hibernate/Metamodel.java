@@ -8,6 +8,9 @@ package org.hibernate;
 
 import javax.persistence.metamodel.EntityType;
 
+import org.hibernate.type.BasicTypeRegistry;
+import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
+
 /**
  * Defines the Hibernate API extension of the JPA {@link javax.persistence.metamodel.Metamodel}
  * API.
@@ -54,4 +57,17 @@ public interface Metamodel extends javax.persistence.metamodel.Metamodel {
 	 */
 	String[] getImplementors(String entityName);
 
+	/**
+	 * Obtain access to the Java and SQL descriptor registries
+	 *
+	 * @return The TypeDescriptorRegistryAccess for this metamodel
+	 */
+	TypeDescriptorRegistryAccess getTypeDescriptorRegistryAccess();
+
+	/**
+	 * Obtain the BasicType factory for this metamodel.
+	 *
+	 * @return The BasicType factory for this metamodel.
+	 */
+	BasicTypeRegistry getBasicTypeFactory();
 }

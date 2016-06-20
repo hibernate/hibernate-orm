@@ -1172,6 +1172,11 @@ include::{extrasdir}/basic/mapping-column-read-and-write-composite-type-persiste
 Sometimes, you want the Database to do some computation for you rather than in the JVM, you might also create some kind of virtual column.
 You can use a SQL fragment (aka formula) instead of mapping a property into a column. This kind of property is read only (its value is calculated by your formula fragment)
 
+[NOTE]
+====
+You should be aware that the `@Formula` annotation takes a native SQL clause which can affect database portability.
+====
+
 [[mapping-column-formula-example]]
 .`@Formula` mapping usage
 ====

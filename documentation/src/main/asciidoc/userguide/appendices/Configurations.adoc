@@ -556,7 +556,7 @@ Hibernate historically also accepted `hibernate.hbm2ddl.import_files` for a simi
 Comma-separated names of the optional files containing SQL DML statements executed during the `SessionFactory` creation.
 File order matters, the statements of a give file are executed before the statements of the following one.
 
-These statements are only executed if the schema is created, meaning that `hibernate.hbm2ddl.auto` is set to `create` or `create-drop`.
+These statements are only executed if the schema is created, meaning that `hibernate.hbm2ddl.auto` is set to `create`, `create-drop`, or `update`.
 `javax.persistence.schema-generation.create-script-source` / `javax.persistence.schema-generation.drop-script-source` should be preferred.
 
 |`javax.persistence.sql-load-script-source` | |

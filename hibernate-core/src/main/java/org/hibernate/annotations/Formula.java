@@ -27,7 +27,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * </pre></blockquote>
  *
  * <blockquote><pre>
- *     // call functions
+ *     // call database functions ( e.g. MySQL upper() and substring() )
  *     &#064;Formula( "upper( substring( middle_name, 1 ) )" )
  *     Character getMiddleInitial() { ... }
  * </pre></blockquote>

@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd" >
+
+<hibernate-mapping>
+    <database-object>
+        <create>
+            CREATE OR REPLACE FUNCTION sp_count_books(
+                IN authorId bigint,
+                OUT bookCount bigint)
+                RETURNS bigint AS
+            $BODY$
+                BEGIN
+                    SELECT COUNT(*) INTO bookCount
+                    FROM book
+                    WHERE author_id = authorId;
+                END;
+            $BODY$
+            LANGUAGE plpgsql;
+        </create>
+        <drop></drop>
+        <dialect-scope name="org.hibernate.dialect.PostgreSQL95Dialect" />
+    </database-object>
+</hibernate-mapping>

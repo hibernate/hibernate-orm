@@ -689,7 +689,7 @@ functionCall
 constant
 	: literal
 	| NULL
-	| TRUE { processBoolean(#constant); } 
+	| TRUE { processBoolean(#constant); }
 	| FALSE { processBoolean(#constant); }
 	| JAVA_CONSTANT
 	;

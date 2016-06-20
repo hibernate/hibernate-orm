@@ -191,6 +191,10 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 		}
 	}
 
+	public void processNull(AST constant) {
+		constant.setText( "null" );
+	}
+
 	private void processLiteral(AST constant) {
 		String replacement = (String) walker.getTokenReplacements().get( constant.getText() );
 		if ( replacement != null ) {

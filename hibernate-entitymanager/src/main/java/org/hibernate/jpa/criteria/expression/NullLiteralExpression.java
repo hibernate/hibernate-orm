@@ -11,6 +11,7 @@ import java.io.Serializable;
 import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
 import org.hibernate.jpa.criteria.ParameterRegistry;
 import org.hibernate.jpa.criteria.compile.RenderingContext;
+import org.hibernate.jpa.criteria.expression.function.CastFunction;
 
 /**
  * Represents a <tt>NULL</tt>literal expression.
@@ -27,7 +28,7 @@ public class NullLiteralExpression<T> extends ExpressionImpl<T> implements Seria
 	}
 
 	public String render(RenderingContext renderingContext) {
-		return "null";
+		return CastFunction.CAST_NAME + "( 	null  as " + renderingContext.getCastType( getJavaType() ) + ')';
 	}
 
 	public String renderProjection(RenderingContext renderingContext) {

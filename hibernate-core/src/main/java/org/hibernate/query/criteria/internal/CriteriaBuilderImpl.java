@@ -584,8 +584,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	public <T> ParameterExpression<T> parameter(Class<T> paramClass) {
 		return new ParameterExpressionImpl<T>(
 				this,
-				paramClass,
-				sessionFactory.resolveParameterBindType( paramClass )
+				paramClass
 		);
 	}
 
@@ -594,8 +593,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 		return new ParameterExpressionImpl<T>(
 				this,
 				paramClass,
-				name,
-				sessionFactory.resolveParameterBindType( paramClass )
+				name
 		);
 	}
 

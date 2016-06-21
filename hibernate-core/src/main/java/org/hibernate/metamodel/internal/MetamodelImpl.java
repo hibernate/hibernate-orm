@@ -205,25 +205,27 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 		}
 		collectionPersisterMap.values().forEach( CollectionPersister::postInstantiate );
 
-		MetadataContext context = new MetadataContext(
-				sessionFactory,
-				mappingMetadata.getMappedSuperclassMappingsCopy(),
-				jpaMetaModelPopulationSetting
-		);
 		if ( jpaMetaModelPopulationSetting != JpaMetaModelPopulationSetting.DISABLED ) {
+			MetadataContext context = new MetadataContext(
+					sessionFactory,
+					mappingMetadata.getMappedSuperclassMappingsCopy(),
+					jpaMetaModelPopulationSetting
+			);
+
 			for ( PersistentClass entityBinding : mappingMetadata.getEntityBindings() ) {
 				locateOrBuildEntityType( entityBinding, context );
 			}
 			handleUnusedMappedSuperclasses( context );
+
+			context.wrapUp();
+
+			this.jpaEntityTypeMap.putAll( context.getEntityTypeMap() );
+			this.jpaEmbeddableTypeMap.putAll( context.getEmbeddableTypeMap() );
+			this.jpaMappedSuperclassTypeMap.putAll( context.getMappedSuperclassTypeMap() );
+			this.jpaEntityTypesByEntityName.putAll( context.getEntityTypesByEntityName() );
+
+			applyNamedEntityGraphs( mappingMetadata.getNamedEntityGraphs().values() );
 		}
-		context.wrapUp();
-
-		this.jpaEntityTypeMap.putAll( context.getEntityTypeMap() );
-		this.jpaEmbeddableTypeMap.putAll( context.getEmbeddableTypeMap() );
-		this.jpaMappedSuperclassTypeMap.putAll( context.getMappedSuperclassTypeMap() );
-		this.jpaEntityTypesByEntityName.putAll( context.getEntityTypesByEntityName() );
-
-		applyNamedEntityGraphs( mappingMetadata.getNamedEntityGraphs().values() );
 
 	}
 

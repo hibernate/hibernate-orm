@@ -13,6 +13,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
+import org.hibernate.type.descriptor.java.IncomparableComparator;
 
 /**
  * Standard CacheDataDescription implementation.
@@ -37,6 +38,12 @@ public class CacheDataDescriptionImpl implements CacheDataDescription {
 		this.mutable = mutable;
 		this.versioned = versioned;
 		this.versionComparator = versionComparator;
+		if ( versioned &&
+				( versionComparator == null || IncomparableComparator.class.isInstance( versionComparator ) ) ) {
+			throw new IllegalArgumentException(
+					"versionComparator must not be null or an instance of " + IncomparableComparator.class.getName()
+			);
+		}
 		this.keyType = keyType;
 	}
 

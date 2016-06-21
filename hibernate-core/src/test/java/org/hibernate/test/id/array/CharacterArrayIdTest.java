@@ -19,7 +19,6 @@ import org.junit.Test;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -70,7 +69,6 @@ public class CharacterArrayIdTest extends BaseCoreFunctionalTestCase {
 	 */
 	@Test
 	@TestForIssue(jiraKey = "HHH-8999")
-	@FailureExpected(jiraKey = "HHH-8999")
 	public void testMultipleDeletions() {
 		Session s = openSession();
 		s.getTransaction().begin();
@@ -94,7 +92,6 @@ public class CharacterArrayIdTest extends BaseCoreFunctionalTestCase {
 	 */
 	@Test
 	@TestForIssue(jiraKey = "HHH-8999")
-	@FailureExpected(jiraKey = "HHH-8999")
 	public void testMultipleUpdates() {
 		Session s = openSession();
 		s.getTransaction().begin();

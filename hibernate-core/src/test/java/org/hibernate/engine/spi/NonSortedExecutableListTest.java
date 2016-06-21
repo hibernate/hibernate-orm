@@ -19,6 +19,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.action.spi.Executable;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Assert;
@@ -27,8 +28,9 @@ import org.junit.Test;
 
 /**
  * @author Anton Marsden
+ * @author Gail Badner
  */
-public class ExecutableListTest extends BaseUnitTestCase {
+public class NonSortedExecutableListTest extends BaseUnitTestCase {
 
 	// For testing, we need an Executable that is also Comparable and Serializable
 	private static class AnExecutable implements Executable, Comparable, Serializable {
@@ -86,7 +88,7 @@ public class ExecutableListTest extends BaseUnitTestCase {
 		}
 
 		@Override
-		public void afterDeserialize(SessionImplementor session) {
+		public void afterDeserialize(SharedSessionContractImplementor session) {
 			this.afterDeserializeCalled = true;
 		}
 
@@ -105,7 +107,8 @@ public class ExecutableListTest extends BaseUnitTestCase {
 
 	@Before
 	public void setUp() {
-		l = new ExecutableList<AnExecutable>();
+		// false indicates sorting is not required.
+		l = new ExecutableList<AnExecutable>( false );
 	}
 
 	@After
@@ -125,7 +128,7 @@ public class ExecutableListTest extends BaseUnitTestCase {
 		Assert.assertEquals( action3, l.get( 2 ) );
 		Assert.assertEquals( 3, l.size() );
 	}
-	
+
 	@Test
 	public void testClear() {
 		Assert.assertTrue( l.isEmpty() );
@@ -136,7 +139,7 @@ public class ExecutableListTest extends BaseUnitTestCase {
 		Assert.assertTrue( l.isEmpty() );
 		Assert.assertEquals( 0, l.size() );
 	}
-	
+
 	@Test
 	public void testIterator() {
 		l.add( action1 );
@@ -185,7 +188,7 @@ public class ExecutableListTest extends BaseUnitTestCase {
 		l.remove( 2 );
 		ss2 = l.getQuerySpaces();
 		Assert.assertTrue( ss != ss2 ); // Different Set because it has been rebuilt. This would be incorrect if
-										// Set.clear() was used
+		// Set.clear() was used
 	}
 
 	@Test
@@ -194,13 +197,14 @@ public class ExecutableListTest extends BaseUnitTestCase {
 		l.add( action3 );
 		l.add( action2 );
 		l.add( action1 );
+		// sort should have no affect
 		l.sort();
-		Assert.assertEquals( action1, l.get( 0 ) );
-		Assert.assertEquals( action2, l.get( 1 ) );
-		Assert.assertEquals( action3, l.get( 2 ) );
-		Assert.assertEquals( action4, l.get( 3 ) );
+		Assert.assertEquals( action4, l.get( 0 ) );
+		Assert.assertEquals( action3, l.get( 1 ) );
+		Assert.assertEquals( action2, l.get( 2 ) );
+		Assert.assertEquals( action1, l.get( 3 ) );
 	}
-	
+
 	@Test
 	public void testSerializeDeserialize() throws IOException, ClassNotFoundException {
 		l.add( action4 );
@@ -214,27 +218,38 @@ public class ExecutableListTest extends BaseUnitTestCase {
 		oos.flush();
 		ByteArrayInputStream bin = new ByteArrayInputStream( baos.toByteArray() );
 		ObjectInputStream ois = new ObjectInputStream( bin );
-		l = new ExecutableList<ExecutableListTest.AnExecutable>();
+		l = new ExecutableList<NonSortedExecutableListTest.AnExecutable>( false );
 		l.readExternal( ois );
-		
+
 		Assert.assertEquals( 4, l.size() );
 		Assert.assertEquals( action4, l.get( 0 ) );
 		Assert.assertEquals( action3, l.get( 1 ) );
 		Assert.assertEquals( action2, l.get( 2 ) );
 		Assert.assertEquals( action1, l.get( 3 ) );
-		
-		Assert.assertFalse(l.get(0).afterDeserializeCalled);
-		Assert.assertFalse(l.get(1).afterDeserializeCalled);
-		Assert.assertFalse(l.get(2).afterDeserializeCalled);
-		Assert.assertFalse(l.get(3).afterDeserializeCalled);
+
+		Assert.assertFalse( l.get( 0 ).afterDeserializeCalled );
+		Assert.assertFalse( l.get( 1 ).afterDeserializeCalled );
+		Assert.assertFalse( l.get( 2 ).afterDeserializeCalled );
+		Assert.assertFalse( l.get( 3 ).afterDeserializeCalled );
 
 		l.afterDeserialize( null );
-		
-		Assert.assertTrue(l.get(0).afterDeserializeCalled);
-		Assert.assertTrue(l.get(1).afterDeserializeCalled);
-		Assert.assertTrue(l.get(2).afterDeserializeCalled);
-		Assert.assertTrue(l.get(3).afterDeserializeCalled);
+
+		Assert.assertTrue( l.get( 0 ).afterDeserializeCalled );
+		Assert.assertTrue( l.get( 1 ).afterDeserializeCalled );
+		Assert.assertTrue( l.get( 2 ).afterDeserializeCalled );
+		Assert.assertTrue( l.get( 3 ).afterDeserializeCalled );
+
+		Assert.assertEquals( action4, l.get( 0 ) );
+		Assert.assertEquals( action3, l.get( 1 ) );
+		Assert.assertEquals( action2, l.get( 2 ) );
+		Assert.assertEquals( action1, l.get( 3 ) );
+
+		// sort after deserializing; it should still have no affect
+		l.sort();
+		Assert.assertEquals( action4, l.get( 0 ) );
+		Assert.assertEquals( action3, l.get( 1 ) );
+		Assert.assertEquals( action2, l.get( 2 ) );
+		Assert.assertEquals( action1, l.get( 3 ) );
 	}
-	
 }
 

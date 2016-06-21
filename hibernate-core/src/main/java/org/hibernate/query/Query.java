@@ -153,9 +153,6 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	Query<R> setParameter(String name, Object value);
 
 	@Override
-	Query<R> setParameter(String name, Object val, Type type);
-
-	@Override
 	Query<R> setParameter(String name, Calendar value, TemporalType temporalType);
 
 	@Override

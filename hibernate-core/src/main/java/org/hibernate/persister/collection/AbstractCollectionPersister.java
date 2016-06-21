@@ -1012,6 +1012,7 @@ public abstract class AbstractCollectionPersister
 		return new SimpleSelect( dialect )
 				.setTableName( getTableName() )
 				.addCondition( getKeyColumnNames(), "=?" )
+				.addWhereToken( sqlWhereString )
 				.addColumn( selectValue )
 				.toStatementString();
 	}
@@ -1025,6 +1026,7 @@ public abstract class AbstractCollectionPersister
 				.addCondition( getKeyColumnNames(), "=?" )
 				.addCondition( getIndexColumnNames(), "=?" )
 				.addCondition( indexFormulas, "=?" )
+				.addWhereToken( sqlWhereString )
 				.addColumn( "1" )
 				.toStatementString();
 	}
@@ -1038,6 +1040,7 @@ public abstract class AbstractCollectionPersister
 				.addCondition( getKeyColumnNames(), "=?" )
 				.addCondition( getIndexColumnNames(), "=?" )
 				.addCondition( indexFormulas, "=?" )
+				.addWhereToken( sqlWhereString )
 				.addColumns( getElementColumnNames(), elementColumnAliases )
 				.addColumns( indexFormulas, indexColumnAliases )
 				.toStatementString();
@@ -1049,6 +1052,7 @@ public abstract class AbstractCollectionPersister
 				.addCondition( getKeyColumnNames(), "=?" )
 				.addCondition( getElementColumnNames(), "=?" )
 				.addCondition( elementFormulas, "=?" )
+				.addWhereToken( sqlWhereString )
 				.addColumn( "1" )
 				.toStatementString();
 	}

@@ -25,7 +25,7 @@ import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.LongType;
@@ -142,7 +142,7 @@ public class UserTypeComparableIdTest extends BaseCoreFunctionalTestCase {
 		public Object nullSafeGet(
 				ResultSet resultSet,
 				String[] names,
-				SharedSessionContractImplementor sessionImplementor,
+				SessionImplementor sessionImplementor,
 				Object o) throws HibernateException, SQLException {
 			Long value = resultSet.getLong( names[0] );
 
@@ -154,7 +154,7 @@ public class UserTypeComparableIdTest extends BaseCoreFunctionalTestCase {
 				PreparedStatement preparedStatement,
 				Object value,
 				int index,
-				SharedSessionContractImplementor sessionImplementor) throws HibernateException, SQLException {
+				SessionImplementor sessionImplementor) throws HibernateException, SQLException {
 			CustomId customId = (CustomId) value;
 
 			if ( customId == null ) {

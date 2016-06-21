@@ -299,7 +299,17 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 								procedureCall.getProcedureName(),
 								this
 						);
-						typeToUse.nullSafeSet( statement, null, startIndex, session() );
+						if ( this.procedureCall.getParameterStrategy() == ParameterStrategy.NAMED && canDoNameParameterBinding() ) {
+							((ProcedureParameterNamedBinder) typeToUse ).nullSafeSet(
+									statement,
+									null,
+									this.getName(),
+									session()
+							);
+						}
+						else {
+							typeToUse.nullSafeSet( statement, null, startIndex, session() );
+						}
 					}
 					else {
 						log.debugf(

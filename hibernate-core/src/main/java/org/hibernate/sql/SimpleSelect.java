@@ -96,6 +96,9 @@ public class SimpleSelect {
 	}
 
 	public SimpleSelect addWhereToken(String token) {
+		if (!token.trim().startsWith("and ")) {
+			and();
+		}
 		whereTokens.add( token );
 		return this;
 	}

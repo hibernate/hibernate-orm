@@ -1009,11 +1009,16 @@ public abstract class AbstractCollectionPersister
 		String selectValue = isIntegerIndexed ?
 				"max(" + getIndexColumnNames()[0] + ") + 1" : // lists, arrays
 				"count(" + getElementColumnNames()[0] + ")"; // sets, maps, bags
-		return new SimpleSelect( dialect )
+		SimpleSelect simpleSelect = new SimpleSelect( dialect )
 				.setTableName( getTableName() )
 				.addCondition( getKeyColumnNames(), "=?" )
-				.addColumn( selectValue )
-				.toStatementString();
+				.addColumn( selectValue );
+		
+		if (hasWhere) {
+			simpleSelect = simpleSelect.addWhereToken(sqlWhereString);
+		}
+		
+		return simpleSelect.toStatementString();
 	}
 
 	protected String generateDetectRowByIndexString() {

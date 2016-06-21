@@ -21,6 +21,7 @@ import org.hibernate.property.access.spi.PropertyAccessBuildingException;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.property.access.spi.SetterFieldImpl;
+import org.hibernate.property.access.spi.SetterMethodImpl;
 
 /**
  * A PropertyAccess for byte code enhanced entities. Enhanced setter methods ( if available ) are used for
@@ -42,9 +43,10 @@ public class PropertyAccessEnhancedImpl implements PropertyAccess {
 
 		final Field field = fieldOrNull( containerJavaType, propertyName );
 		final Method getterMethod = getterMethodOrNull( containerJavaType, propertyName );
+		final Method setterMethod = setterMethodOrNull( containerJavaType, propertyName, getterMethod.getReturnType() );
 
-		// need one of field or getterMethod to be non-null
-		if ( field == null && getterMethod == null ) {
+		// need one of field or getterMethod or setterMethod to be non-null
+		if ( field == null && getterMethod == null || field == null && setterMethod == null ) {
 			throw new PropertyAccessBuildingException(
 					String.format(
 							"Could not locate field for property [%s] on bytecode-enhanced Class [%s]",
@@ -55,12 +57,13 @@ public class PropertyAccessEnhancedImpl implements PropertyAccess {
 		}
 		else if ( field != null ) {
 			this.getter = new GetterFieldImpl( containerJavaType, propertyName, field );
+			this.setter = resolveEnhancedSetterForField( containerJavaType, propertyName, field );
 		}
 		else {
 			this.getter = new GetterMethodImpl( containerJavaType, propertyName, getterMethod );
+			this.setter = resolveEnhancedSetterForMethod( containerJavaType, propertyName, setterMethod );
 		}
 
-		this.setter = resolveEnhancedSetterForField( containerJavaType, propertyName, field );
 	}
 
 	private static Field fieldOrNull(Class containerJavaType, String propertyName) {
@@ -80,6 +83,15 @@ public class PropertyAccessEnhancedImpl implements PropertyAccess {
 			return null;
 		}
 	}
+	
+	private static Method setterMethodOrNull(Class containerJavaType, String propertyName, Class propertyType) {
+		try {
+			return ReflectHelper.findSetterMethod(containerJavaType, propertyName, propertyType);
+		}
+		catch (PropertyNotFoundException e) {
+			return null;
+		}
+	}
 
 	private static Setter resolveEnhancedSetterForField(Class<?> containerClass, String propertyName, Field field) {
 		try {
@@ -91,6 +103,19 @@ public class PropertyAccessEnhancedImpl implements PropertyAccess {
 		catch (NoSuchMethodException e) {
 			// enhancedSetter = null --- field not enhanced: fallback to reflection using the field
 			return new SetterFieldImpl( containerClass, propertyName, field );
+		}
+	}
+	
+	private static Setter resolveEnhancedSetterForMethod(Class<?> containerClass, String propertyName, Method setterMethod) {
+		try {
+			String enhancedSetterName = EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + propertyName;
+			Method enhancedSetter = containerClass.getDeclaredMethod( enhancedSetterName, setterMethod.getParameterTypes());
+			enhancedSetter.setAccessible( true );
+			return new EnhancedSetterImpl( containerClass, propertyName, enhancedSetter );
+		}
+		catch (NoSuchMethodException e) {
+			// enhancedSetter = null --- getterMethod not enhanced: fallback to reflection using the getterMethod
+			return new SetterMethodImpl( containerClass, propertyName, setterMethod );
 		}
 	}
 

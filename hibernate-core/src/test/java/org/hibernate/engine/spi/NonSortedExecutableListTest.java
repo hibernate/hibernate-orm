@@ -88,7 +88,7 @@ public class NonSortedExecutableListTest extends BaseUnitTestCase {
 		}
 
 		@Override
-		public void afterDeserialize(SharedSessionContractImplementor session) {
+		public void afterDeserialize(SessionImplementor session) {
 			this.afterDeserializeCalled = true;
 		}
 

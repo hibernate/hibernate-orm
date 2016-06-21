@@ -22,7 +22,6 @@ import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
 import org.hibernate.annotations.common.AssertionFailure;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
@@ -183,9 +182,8 @@ class MetadataContext {
 			LOG.trace( "Wrapping up metadata context..." );
 		}
 
-		boolean staticMetamodelEnabled = Boolean.parseBoolean(
-			sessionFactory.getProperties().getOrDefault(
-				AvailableSettings.STATIC_METAMODEL_ENABLED, "true" ).toString() );
+		boolean staticMetamodelScanEnabled = JpaStaticMetaModelPopulationSetting
+				.determineJpaMetaModelPopulationSetting( sessionFactory.getProperties() ) != JpaStaticMetaModelPopulationSetting.DISABLED;
 
 		//we need to process types from superclasses to subclasses
 		for ( Object mapping : orderedMappings ) {
@@ -218,7 +216,7 @@ class MetadataContext {
 						}
 					}
 					jpa2Mapping.lock();
-					if ( staticMetamodelEnabled ) {
+					if ( staticMetamodelScanEnabled ) {
 						populateStaticMetamodel( jpa2Mapping );
 					}
 				}
@@ -253,7 +251,7 @@ class MetadataContext {
 						}
 					}
 					jpa2Mapping.lock();
-					if ( staticMetamodelEnabled ) {
+					if ( staticMetamodelScanEnabled ) {
 						populateStaticMetamodel( jpa2Mapping );
 					}
 				}
@@ -268,7 +266,7 @@ class MetadataContext {
 			}
 		}
 
-		if ( staticMetamodelEnabled ) {
+		if ( staticMetamodelScanEnabled ) {
 			for ( EmbeddableTypeImpl embeddable : embeddables.values() ) {
 				populateStaticMetamodel( embeddable );
 			}

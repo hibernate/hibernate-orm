@@ -231,22 +231,41 @@ public interface AvailableSettings {
 	String JPA_METAMODEL_GENERATION = "hibernate.ejb.metamodel.generation";
 
 	/**
+	 * Setting that indicates whether to build the JPA types. Accepts
+	 * 3 values:<ul>
+	 *     <li>
+	 *         <b>enabled</b> - Do the build
+	 *     </li>
+	 *     <li>
+	 *         <b>disabled</b> - Do not so the build
+	 *     </li>
+	 *     <li>
+	 *         <b>ignoreUnsupported</b> - Do the build, but ignore any non-JPA features that would otherwise
+	 *         result in a failure.
+	 *     </li>
+	 * </ul>
+	 *
+	 *
+	 */
+	@Deprecated
+	String JPA_METAMODEL_POPULATION = "hibernate.ejb.metamodel.population";
+
+	/**
 	 * Setting that controls whether we seek out JPA "static metamodel" classes and populate them.  Accepts
 	 * 3 values:<ul>
 	 *     <li>
-	 *         <b>enabled</b> - Do the population
+	 *         <b>enabled</b> -Do the population
 	 *     </li>
 	 *     <li>
 	 *         <b>disabled</b> - Do not do the population
 	 *     </li>
 	 *     <li>
-	 *         <b>ignoreUnsupported</b> - Do the population, but ignore any non-JPA features that would otherwise
+	 *         <b>skipUnsupported</b> - Do the population, but ignore any non-JPA features that would otherwise
 	 *         result in the population failing.
 	 *     </li>
 	 * </ul>
-	 *
 	 */
-	String JPA_METAMODEL_POPULATION = "hibernate.ejb.metamodel.population";
+	String STATIC_METAMODEL_POPULATION = "hibernate.jpa.static_metamodel.population";
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1492,11 +1511,4 @@ public interface AvailableSettings {
 	 */
 	String ALLOW_JTA_TRANSACTION_ACCESS = "hibernate.jta.allowTransactionAccess";
 
-    /**
-   	 * A setting to control whether Hibernate should scan for a static metamodel
-   	 * or not. The default is {@code true}, i.e. Hibernate scans for static metamodel.
-   	 * If you don't use a static metamodel in your project, then you can set this setting
-   	 * to {@code false} to speed up deployment of your project.
-   	 */
-   	String STATIC_METAMODEL_ENABLED = "hibernate.static_metamodel.enabled";
 }

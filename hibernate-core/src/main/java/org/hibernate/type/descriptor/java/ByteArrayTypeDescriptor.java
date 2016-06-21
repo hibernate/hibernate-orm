@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Comparator;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.BinaryStream;
@@ -69,6 +70,12 @@ public class ByteArrayTypeDescriptor extends AbstractTypeDescriptor<Byte[]> {
 			bytes[i] = (byte) ( Integer.parseInt( hexStr, 16 ) + Byte.MIN_VALUE );
 		}
 		return bytes;
+	}
+
+	@Override
+	@SuppressWarnings({ "unchecked" })
+	public Comparator<Byte[]> getComparator() {
+		return IncomparableComparator.INSTANCE;
 	}
 
 	@SuppressWarnings({ "unchecked" })

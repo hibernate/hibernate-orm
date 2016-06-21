@@ -24,7 +24,6 @@ import org.hibernate.Session;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.LongType;
@@ -34,7 +33,6 @@ public class UserTypeNonComparableIdTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-8999")
-	@FailureExpected(jiraKey = "HHH-8999")
 	public void testUserTypeId() {
 		Session s = openSession();
 		s.beginTransaction();

@@ -54,6 +54,7 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	private final ArrayList<E> executables;
 
 	private final Sorter<E> sorter;
+	private final boolean requiresSorting;
 	private boolean sorted;
 
 	/**
@@ -77,7 +78,20 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	 * @param initialCapacity The initial capacity for instantiating the internal List
 	 */
 	public ExecutableList(int initialCapacity) {
-		this( initialCapacity, null );
+		// pass true for requiresSorting argument to maintain original behavior
+		this( initialCapacity, true );
+	}
+
+	public ExecutableList(boolean requiresSorting) {
+		this( INIT_QUEUE_LIST_SIZE, requiresSorting );
+	}
+
+	public ExecutableList(int initialCapacity, boolean requiresSorting) {
+		this.sorter = null;
+		this.executables = new ArrayList<E>( initialCapacity );
+		this.querySpaces = null;
+		this.requiresSorting = requiresSorting;
+		this.sorted = requiresSorting;
 	}
 
 	/**
@@ -99,6 +113,8 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 		this.sorter = sorter;
 		this.executables = new ArrayList<E>( initialCapacity );
 		this.querySpaces = null;
+		// require sorting by default, even if sorter is null to maintain original behavior
+		this.requiresSorting = true;
 		this.sorted = true;
 	}
 
@@ -162,7 +178,7 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	public void clear() {
 		executables.clear();
 		querySpaces = null;
-		sorted = true;
+		sorted = requiresSorting;
 	}
 
 	/**
@@ -199,16 +215,18 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 			return false;
 		}
 
-		// see if the addition invalidated the sorting
-		if ( sorter != null ) {
-			// we don't have intrinsic insight into the sorter's algorithm, so invalidate sorting
-			sorted = false;
-		}
-		else {
-			// otherwise, we added to the end of the list.  So check the comparison between the incoming
-			// executable and the one previously at the end of the list using the Comparable contract
-			if ( previousLast != null && previousLast.compareTo( executable ) > 0 ) {
+		// if it was sorted before the addition, then check if the addition invalidated the sorting
+		if ( sorted ) {
+			if ( sorter != null ) {
+				// we don't have intrinsic insight into the sorter's algorithm, so invalidate sorting
 				sorted = false;
+			}
+			else {
+				// otherwise, we added to the end of the list.  So check the comparison between the incoming
+				// executable and the one previously at the end of the list using the Comparable contract
+				if ( previousLast != null && previousLast.compareTo( executable ) > 0 ) {
+					sorted = false;
+				}
 			}
 		}
 
@@ -225,7 +243,8 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	 */
 	@SuppressWarnings("unchecked")
 	public void sort() {
-		if ( sorted ) {
+		if ( sorted || !requiresSorting ) {
+			// nothing to do
 			return;
 		}
 

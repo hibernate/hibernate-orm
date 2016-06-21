@@ -17,7 +17,6 @@ import java.util.Map;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
@@ -31,6 +30,11 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
 		return new String[] { "extralazy/UserGroup.hbm.xml","extralazy/Parent.hbm.xml","extralazy/Child.hbm.xml" };
+	}
+	
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] { School.class, Student.class };
 	}
 
 	@Test
@@ -247,6 +251,39 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 		Child child2 = parent2.getChildren().get(child.getFirstName()); // causes SQLGrammarException because of wrong condition: 	where child0_.PARENT_ID=? and child0_.null=?
 		assertNotNull(child2);
 		session2.close();
+	}
+	
+	@Test
+	@TestForIssue(jiraKey = "HHH-3319")
+	public void testWhereClause() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+
+		School school = new School(1);
+		s.persist(school);
+
+		Student gavin = new Student("gavin", 4);
+		Student turin = new Student("turin", 3);
+		Student mike = new Student("mike", 5);
+		Student fred = new Student("fred", 2);
+		gavin.setSchool(school);
+		turin.setSchool(school);
+		mike.setSchool(school);
+		fred.setSchool(school);
+
+		s.persist(gavin);
+		s.persist(turin);
+		s.persist(mike);
+		s.persist(fred);
+
+		t.commit();
+		s.close();
+
+		s = openSession();
+		School school2 = (School) s.get(School.class, 1);
+		assertEquals(school2.getStudents().size(), 4);
+		assertEquals(school2.getTopStudents().size(), 2);
+		s.close();
 	}
 }
 

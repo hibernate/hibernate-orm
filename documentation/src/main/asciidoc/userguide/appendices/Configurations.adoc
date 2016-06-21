@@ -710,13 +710,24 @@ Otherwise, the persistence context will stay alive till the transaction completi
 
 |`hibernate.ejb.metamodel.population`| `enabled` or `disabled`, or `ignoreUnsupported` (default value) a|
 
+Setting that indicates whether to build the JPA types.
+
+Accepts three values:
+
+enabled:: Do the build
+disabled:: Do not do the build
+ignoreUnsupported:: Do the build, but ignore any non-JPA features that would otherwise result in a failure (e.g. `@Any` annotation).
+
+|`hibernate.jpa.static_metamodel.population` | `enabled` or `disabled`, or `skipUnsupported` (default value) a|
+
 Setting that controls whether we seek out JPA _static metamodel_ classes and populate them.
 
 Accepts three values:
 
 enabled:: Do the population
 disabled:: Do not do the population
-ignoreUnsupported:: Do the population, but ignore any non-JPA features that would otherwise result in the population failing (e.g. `@Any` annotation).
+skipUnsupported:: Do the population, but ignore any non-JPA features that would otherwise result in the population failing (e.g. `@Any` annotation).
+
 
 |`hibernate.delay_cdi_access`| `true` or `false` (default value) | Defines delayed access to CDI `BeanManager`. Starting in 5.1 the preferred means for CDI bootstrapping is through `org.hibernate.jpa.event.spi.jpa.ExtendedBeanManager`.
 |=====================================================================================================================================================================================================================================================

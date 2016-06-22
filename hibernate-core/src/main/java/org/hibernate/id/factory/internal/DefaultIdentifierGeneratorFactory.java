@@ -13,7 +13,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.id.Assigned;
 import org.hibernate.id.Configurable;
@@ -124,19 +127,17 @@ public class DefaultIdentifierGeneratorFactory
 
 	@Override
 	public Class getIdentifierGeneratorClass(String strategy) {
-		if ( "native".equals( strategy ) ) {
-			return getDialect().getNativeIdentifierGeneratorClass();
-		}
-
 		if ( "hilo".equals( strategy ) ) {
 			throw new UnsupportedOperationException( "Support for 'hilo' generator has been removed" );
 		}
+		String resolvedStrategy = "native".equals( strategy ) ?
+				getDialect().getNativeIdentifierGeneratorStrategy() : strategy;
 
-		Class generatorClass = generatorStrategyToClassNameMap.get( strategy );
+		Class generatorClass = generatorStrategyToClassNameMap.get( resolvedStrategy );
 		try {
 			if ( generatorClass == null ) {
 				final ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );
-				generatorClass = cls.classForName( strategy );
+				generatorClass = cls.classForName( resolvedStrategy );
 			}
 		}
 		catch ( ClassLoadingException e ) {
@@ -149,5 +150,16 @@ public class DefaultIdentifierGeneratorFactory
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
 		this.serviceRegistry = serviceRegistry;
 		this.dialect = serviceRegistry.getService( JdbcEnvironment.class ).getDialect();
+		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
+
+		final boolean useNewIdentifierGenerators = configService.getSetting(
+				AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS,
+				StandardConverters.BOOLEAN,
+				true
+		);
+
+		if(!useNewIdentifierGenerators) {
+			register( "sequence", SequenceGenerator.class );
+		}
 	}
 }

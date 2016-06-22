@@ -13,7 +13,6 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
-import javax.persistence.Table;
 
 /**
  * @author Guenther Demetz
@@ -25,6 +24,9 @@ public class Product2 implements Serializable {
 
 	@Column(name = "description", nullable = false)
 	public String description;
+
+	@Column(name = "key", nullable = true)
+	public String key;
 
 	@ManyToOne
 	public Category category;

@@ -55,6 +55,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		registerFunction( "trim", new AnsiTrimEmulationFunction() );
 
 		registerKeyword( "top" );
+		registerKeyword( "key" );
 
 		this.limitHandler = new TopLimitHandler( false, false );
 	}

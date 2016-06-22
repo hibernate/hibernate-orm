@@ -741,13 +741,31 @@ public abstract class Dialect implements ConversionContext {
 	 * Comes into play whenever the user specifies the native generator.
 	 *
 	 * @return The native generator class.
+	 * @deprecated use {@link #getNativeIdentifierGeneratorStrategy()} instead
 	 */
+	@Deprecated
 	public Class getNativeIdentifierGeneratorClass() {
 		if ( getIdentityColumnSupport().supportsIdentityColumns() ) {
 			return IdentityGenerator.class;
 		}
 		else {
 			return SequenceStyleGenerator.class;
+		}
+	}
+
+	/**
+	 * Resolves the native generation strategy associated to this dialect.
+	 * <p/>
+	 * Comes into play whenever the user specifies the native generator.
+	 *
+	 * @return The native generator strategy.
+	 */
+	public String getNativeIdentifierGeneratorStrategy() {
+		if ( getIdentityColumnSupport().supportsIdentityColumns() ) {
+			return "identity";
+		}
+		else {
+			return "sequence";
 		}
 	}
 

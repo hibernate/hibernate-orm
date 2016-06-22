@@ -41,7 +41,7 @@ public class CustomSQLTest extends LegacyTestCase {
     public static class NonIdentityGeneratorChecker implements DialectCheck {
         @Override
         public boolean isMatch(Dialect dialect) {
-            return !PostInsertIdentifierGenerator.class.isAssignableFrom( getDialect().getNativeIdentifierGeneratorClass() );
+            return !"identity".equals( getDialect().getNativeIdentifierGeneratorStrategy() );
         }
     }
 

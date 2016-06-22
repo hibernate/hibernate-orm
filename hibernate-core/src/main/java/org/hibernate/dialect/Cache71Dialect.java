@@ -41,7 +41,6 @@ import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.AfterUseAction;
-import org.hibernate.id.IdentityGenerator;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.sql.CacheJoinFragment;
@@ -466,8 +465,8 @@ public class Cache71Dialect extends Dialect {
 	}
 
 	@Override
-	public Class getNativeIdentifierGeneratorClass() {
-		return IdentityGenerator.class;
+	public String getNativeIdentifierGeneratorStrategy() {
+		return "identity";
 	}
 
 	// IDENTITY support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

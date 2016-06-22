@@ -7,7 +7,7 @@
 package org.hibernate.ejb;
 
 /**
- * @Deprecated use org.hibernate.jpa.AvailableSettings
+ * @deprecated use org.hibernate.jpa.AvailableSettings
  */
 @Deprecated
 public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {

@@ -6,7 +6,7 @@ to applications and other components/libraries.  It is also provides an implemen
 JPA specification, which is the standardized Java specification for ORM.  See 
 [Hibernate.org](http://hibernate.org/orm/) for additional information. 
 
-[![Build Status](http://ci.hibernate.org/job/hibernate-orm-master-h2/badge/icon)](http://ci.hibernate.org/job/hibernate-orm-master-h2/)
+[![Build Status](http://ci.hibernate.org/job/hibernate-orm-master-h2-main/badge/icon)](http://ci.hibernate.org/job/hibernate-orm-master-h2-main/)
 
 
 Quickstart

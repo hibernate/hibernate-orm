@@ -15,8 +15,12 @@ import org.hibernate.LockMode;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntry;
+import org.hibernate.engine.profile.Fetch;
+import org.hibernate.engine.profile.Fetch.Style;
+import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -34,6 +38,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.type.FetchOverrideThreadLocal;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
@@ -116,13 +121,14 @@ public final class TwoPhaseLoad {
 			final Object entity,
 			final boolean readOnly,
 			final SharedSessionContractImplementor session,
-			final PreLoadEvent preLoadEvent) {
+			final PreLoadEvent preLoadEvent,
+			LoadQueryInfluencers loadQueryInfluencers) {
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		final EntityEntry entityEntry = persistenceContext.getEntry( entity );
 		if ( entityEntry == null ) {
 			throw new AssertionFailure( "possible non-threadsafe access to the session" );
 		}
-		doInitializeEntity( entity, entityEntry, readOnly, session, preLoadEvent );
+		doInitializeEntity( entity, entityEntry, readOnly, session, preLoadEvent, loadQueryInfluencers );
 	}
 
 	private static void doInitializeEntity(
@@ -130,7 +136,8 @@ public final class TwoPhaseLoad {
 			final EntityEntry entityEntry,
 			final boolean readOnly,
 			final SharedSessionContractImplementor session,
-			final PreLoadEvent preLoadEvent) throws HibernateException {
+			final PreLoadEvent preLoadEvent,
+			LoadQueryInfluencers loadQueryInfluencers) throws HibernateException {
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		final EntityPersister persister = entityEntry.getPersister();
 		final Serializable id = entityEntry.getId();
@@ -145,10 +152,21 @@ public final class TwoPhaseLoad {
 		}
 
 		final Type[] types = persister.getPropertyTypes();
+		String[] names = persister.getPropertyNames();
 		for ( int i = 0; i < hydratedState.length; i++ ) {
+			boolean fetchOverride = (loadQueryInfluencers == null)?false:isFetchProfileOverride(session, loadQueryInfluencers,persister.getEntityName(),
+					names[i]);
+
 			final Object value = hydratedState[i];
 			if ( value!=LazyPropertyInitializer.UNFETCHED_PROPERTY && value!= PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+				if (fetchOverride) {
+					FetchOverrideThreadLocal.addFetchOverride(types[i]);
+				}
 				hydratedState[i] = types[i].resolve( value, session, entity );
+				if (fetchOverride) {
+					FetchOverrideThreadLocal.removeFetchOverride(types[i]);
+				}
+
 			}
 		}
 
@@ -380,4 +398,20 @@ public final class TwoPhaseLoad {
 				false
 		);
 	}
+	private static boolean isFetchProfileOverride(SharedSessionContractImplementor session, LoadQueryInfluencers loadQueryInfluencers, String entityName, String associationName) {
+
+		for (String fetchProfileName : loadQueryInfluencers.getEnabledFetchProfileNames())
+		{
+			FetchProfile fp = session.getFactory().getFetchProfile(fetchProfileName);
+			Fetch f = fp.getFetchByRole(entityName+"."+associationName);
+			if (f == null) {
+				continue;
+			}
+			if (f.getStyle().equals(Style.JOIN) || f.getStyle().equals(Style.SELECT)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 }

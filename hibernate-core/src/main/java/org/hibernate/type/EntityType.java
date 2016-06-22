@@ -635,11 +635,11 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		boolean isProxyUnwrapEnabled = unwrapProxy &&
 				getAssociatedEntityPersister( session.getFactory() )
 						.isInstrumented();
-
+		boolean fetchOverride = FetchOverrideThreadLocal.hasFetchOverride(this);
 		Object proxyOrEntity = session.internalLoad(
 				getAssociatedEntityName(),
 				id,
-				eager,
+				eager | fetchOverride,
 				isNullable() && !isProxyUnwrapEnabled
 		);
 

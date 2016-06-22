@@ -1437,8 +1437,8 @@ public final class AnnotationBinder {
 	private static void bindFetchProfile(FetchProfile fetchProfileAnnotation, MetadataBuildingContext context) {
 		for ( FetchProfile.FetchOverride fetch : fetchProfileAnnotation.fetchOverrides() ) {
 			org.hibernate.annotations.FetchMode mode = fetch.mode();
-			if ( !mode.equals( org.hibernate.annotations.FetchMode.JOIN ) ) {
-				throw new MappingException( "Only FetchMode.JOIN is currently supported" );
+			if ( !(mode.equals( org.hibernate.annotations.FetchMode.JOIN ) || mode.equals( org.hibernate.annotations.FetchMode.SELECT ))) {
+				throw new MappingException( "Only FetchMode.JOIN or FetchMode.SELECT is currently supported" );
 			}
 
 			context.getMetadataCollector().addSecondPass(

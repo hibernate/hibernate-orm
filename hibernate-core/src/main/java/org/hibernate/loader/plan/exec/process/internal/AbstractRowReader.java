@@ -239,7 +239,7 @@ public abstract class AbstractRowReader implements RowReader {
 					registration.getInstance(),
 					context.isReadOnly(),
 					context.getSession(),
-					preLoadEvent
+					preLoadEvent, context.getSession().getLoadQueryInfluencers()
 			);
 		}
 	}

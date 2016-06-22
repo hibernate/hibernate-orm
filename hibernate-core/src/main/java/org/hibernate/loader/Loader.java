@@ -1137,7 +1137,7 @@ public abstract class Loader {
 			int hydratedObjectsSize = hydratedObjects.size();
 			LOG.tracev( "Total objects hydrated: {0}", hydratedObjectsSize );
 			for ( Object hydratedObject : hydratedObjects ) {
-				TwoPhaseLoad.initializeEntity( hydratedObject, readOnly, session, pre );
+				TwoPhaseLoad.initializeEntity( hydratedObject, readOnly, session, pre, null );
 			}
 		}
 

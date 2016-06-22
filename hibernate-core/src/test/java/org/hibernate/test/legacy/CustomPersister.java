@@ -348,7 +348,7 @@ public class CustomPersister implements EntityPersister {
 					clone,
 					false,
 					session,
-					new PreLoadEvent( (EventSource) session )
+					new PreLoadEvent( (EventSource) session ), null
 			);
 			TwoPhaseLoad.postLoad( clone, session, new PostLoadEvent( (EventSource) session ) );
 		}

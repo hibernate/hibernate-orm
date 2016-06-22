@@ -6,19 +6,7 @@
  */
 package org.hibernate.test.bytecode.enhancement.lazy.HHH_10708;
 
-import java.util.HashSet;
-import java.util.Set;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-
 import org.hibernate.Session;
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 
@@ -29,7 +17,7 @@ public class UnexpectedDeleteOneTestTask extends AbstractEnhancerTestTask {
 	private int fooId;
 
 	public Class<?>[] getAnnotatedClasses() {
-		return new Class[] {Foo.class, Bar.class};
+		return new Class[] {FooOne.class, BarOne.class};
 	}
 
 	public void prepare() {
@@ -41,9 +29,9 @@ public class UnexpectedDeleteOneTestTask extends AbstractEnhancerTestTask {
 		Session s = getFactory().openSession();
 		s.beginTransaction();
 
-		Bar bar1 = new Bar();
-		Bar bar2 = new Bar();
-		Foo foo = new Foo();
+		BarOne bar1 = new BarOne();
+		BarOne bar2 = new BarOne();
+		FooOne foo = new FooOne();
 		s.save( bar1 );
 		s.save( bar2 );
 		s.save( foo );
@@ -60,7 +48,7 @@ public class UnexpectedDeleteOneTestTask extends AbstractEnhancerTestTask {
 		Session s = getFactory().openSession();
 		s.beginTransaction();
 
-		Foo foo = s.get( Foo.class, fooId );
+		FooOne foo = s.get( FooOne.class, fooId );
 
 		// accessing the collection results in an exception
 		foo.bars.size();
@@ -71,26 +59,6 @@ public class UnexpectedDeleteOneTestTask extends AbstractEnhancerTestTask {
 	}
 
 	protected void cleanup() {
-	}
-
-	@Entity static class Bar {
-		static final String FOO = "foo";
-
-		@Id	@GeneratedValue
-		int id;
-
-		@ManyToOne @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-		Foo foo;
-	}
-
-	@Entity static class Foo {
-
-		@Id	@GeneratedValue
-		int id;
-
-		@OneToMany(orphanRemoval = true, mappedBy = Bar.FOO, targetEntity = Bar.class)
-		@Cascade(CascadeType.ALL)
-		Set<Bar> bars = new HashSet<>();
 	}
 
 }

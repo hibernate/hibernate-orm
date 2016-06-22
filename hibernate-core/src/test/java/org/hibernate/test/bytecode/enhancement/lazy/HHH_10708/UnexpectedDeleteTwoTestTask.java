@@ -6,14 +6,6 @@
  */
 package org.hibernate.test.bytecode.enhancement.lazy.HHH_10708;
 
-import java.util.HashSet;
-import java.util.Set;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToMany;
-
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
@@ -24,10 +16,10 @@ import org.junit.Assert;
 
 public class UnexpectedDeleteTwoTestTask extends AbstractEnhancerTestTask {
 
-	private Bar myBar;
+	private BarTwo myBar;
 
 	public Class<?>[] getAnnotatedClasses() {
-		return new Class[] {Foo.class, Bar.class};
+		return new Class[] {FooTwo.class, BarTwo.class};
 	}
 
 	public void prepare() {
@@ -40,9 +32,9 @@ public class UnexpectedDeleteTwoTestTask extends AbstractEnhancerTestTask {
 		Session s = getFactory().openSession();
 		s.beginTransaction();
 
-		Bar bar = new Bar();
-		Foo foo1 = new Foo();
-		Foo foo2 = new Foo();
+		BarTwo bar = new BarTwo();
+		FooTwo foo1 = new FooTwo();
+		FooTwo foo2 = new FooTwo();
 		s.save( bar );
 		s.save( foo1 );
 		s.save( foo2 );
@@ -73,7 +65,7 @@ public class UnexpectedDeleteTwoTestTask extends AbstractEnhancerTestTask {
 		s = getFactory().openSession();
 		s.beginTransaction();
 
-		Bar bar = s.get( Bar.class, myBar.id );
+		BarTwo bar = s.get( BarTwo.class, myBar.id );
 		Assert.assertFalse( bar.foos.isEmpty() );
 
 		s.flush();
@@ -82,21 +74,6 @@ public class UnexpectedDeleteTwoTestTask extends AbstractEnhancerTestTask {
 	}
 
 	protected void cleanup() {
-	}
-
-	@Entity static class Bar {
-
-		@Id	@GeneratedValue
-		int id;
-
-		@ManyToMany(fetch = FetchType.LAZY, targetEntity = Foo.class)
-		Set<Foo> foos = new HashSet<>();
-	}
-
-	@Entity static class Foo {
-
-		@Id	@GeneratedValue
-		int id;
 	}
 
 }

@@ -1343,12 +1343,10 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	}
 
 	protected ScrollableResultsImplementor doScroll(ScrollMode scrollMode) {
+		final String query = queryParameterBindings.expandListValuedParameters( getQueryString(), getProducer() );
 		QueryParameters queryParameters = getQueryParameters();
 		queryParameters.setScrollMode( scrollMode );
-		return getProducer().scroll(
-				queryParameterBindings.expandListValuedParameters( getQueryString(), getProducer() ),
-				queryParameters
-		);
+		return getProducer().scroll( query, queryParameters );
 	}
 
 	@Override

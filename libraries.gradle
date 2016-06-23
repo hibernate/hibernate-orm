@@ -9,7 +9,7 @@
 // use.  In that respect it serves a role similar to <dependencyManagement> in Maven
 ext {
 
-    junitVersion = '4.11'
+    junitVersion = '4.12'
 //    h2Version = '1.2.145'
     h2Version = '1.3.176'
     bytemanVersion = '2.1.2'

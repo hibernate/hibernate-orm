@@ -23,7 +23,7 @@ import org.hibernate.annotations.FetchProfile;
  */
 @Entity
 @FetchProfile(name = "unsupported-fetch-mode", fetchOverrides = {
-		@FetchProfile.FetchOverride(entity = Customer4.class, association = "orders", mode = FetchMode.SELECT)
+		@FetchProfile.FetchOverride(entity = Customer4.class, association = "orders", mode = FetchMode.SUBSELECT)
 })
 public class Customer4 {
 	@Id

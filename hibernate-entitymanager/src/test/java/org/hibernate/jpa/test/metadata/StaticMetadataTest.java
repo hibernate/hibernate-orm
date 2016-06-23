@@ -87,7 +87,7 @@ public class StaticMetadataTest extends BaseEntityManagerFunctionalTestCase {
 		assertFalse( House_.address.isCollection() );
 		assertFalse( House_.address.isAssociation() );
 		assertNotNull( House_.rooms );
-		assertTrue( House_.rooms.isAssociation() );
+		assertFalse( House_.rooms.isAssociation() );
 		assertTrue( House_.rooms.isCollection() );
 		assertEquals( Attribute.PersistentAttributeType.ELEMENT_COLLECTION, House_.rooms.getPersistentAttributeType() );
 		assertEquals( Room.class, House_.rooms.getBindableJavaType() );

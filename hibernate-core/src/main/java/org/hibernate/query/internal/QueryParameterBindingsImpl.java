@@ -197,31 +197,35 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	}
 
 	public QueryParameterBinding getBinding(int position) {
+		int positionAdjustment = 0;
+		if ( !parameterMetadata.isOrdinalParametersZeroBased() ) {
+			positionAdjustment = -1;
+		}
 		QueryParameterBinding binding = null;
 		if ( parameterMetadata != null ) {
-			if ( ! parameterMetadata.hasPositionalParameters() ) {
+			if ( !parameterMetadata.hasPositionalParameters() ) {
 				// no positional parameters, assume jpa named.
 				binding = locateBinding( Integer.toString( position ) );
 			}
 			else {
 				try {
-					if ( position < positionalParameterBindings.size() ) {
-						binding = positionalParameterBindings.get( position );
+					if ( position + positionAdjustment < positionalParameterBindings.size() ) {
+						binding = positionalParameterBindings.get( position + positionAdjustment );
 						if ( binding == null ) {
-							binding = makeBinding( parameterMetadata.getQueryParameter( position ) );
-							positionalParameterBindings.set( position, binding );
+							binding = makeBinding( parameterMetadata.getQueryParameter( position  ) );
+							positionalParameterBindings.set( position + positionAdjustment, binding );
 						}
 					}
 					else {
-						for ( int i = 0; i < position - positionalParameterBindings.size(); i++ ) {
+						for ( int i = 0; i < position + positionAdjustment - positionalParameterBindings.size(); i++ ) {
 							positionalParameterBindings.add( null );
 						}
-						QueryParameter queryParameter = parameterMetadata.getQueryParameter( position );
+						QueryParameter queryParameter = parameterMetadata.getQueryParameter( position  );
 						binding = makeBinding( queryParameter );
 						positionalParameterBindings.add( binding );
 					}
 				}
-				catch ( QueryParameterException e ) {
+				catch (QueryParameterException e) {
 					// treat this as null binding
 				}
 			}
@@ -247,8 +251,18 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			}
 		}
 		// verify position parameters bound
-		for ( int i = 0; i < positionalParameterBindings.size(); i++ ) {
-			final QueryParameterBinding binding = positionalParameterBindings.get( i );
+		int startIndex = 0;
+		if ( !parameterMetadata.isOrdinalParametersZeroBased() ) {
+			startIndex = 1;
+		}
+		for ( int i = startIndex; i < positionalParameterBindings.size(); i++ ) {
+			QueryParameterBinding binding = null;
+			if ( parameterMetadata.isOrdinalParametersZeroBased() ) {
+				binding = positionalParameterBindings.get( i );
+			}
+			else {
+				binding = positionalParameterBindings.get( i - 1 );
+			}
 			if ( binding == null || !binding.isBound() ) {
 				throw new QueryException( "Positional parameter [" + i + "] not set" );
 			}
@@ -282,7 +296,6 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 				if ( bindType == null ) {
 					bindType = SerializableType.INSTANCE;
 				}
-				Object object = binding.getBindValue();
 				positionalValueSpan += bindType.getColumnSpan( sessionFactory );
 			}
 		}

@@ -15,6 +15,7 @@ import javax.persistence.Parameter;
  * @author Steve Ebersole
  */
 public interface ParameterMetadata {
+
 	/**
 	 * Does this parameter set contain any named parameters?
 	 *
@@ -52,4 +53,11 @@ public interface ParameterMetadata {
 	<T> QueryParameter<T> getQueryParameter(Integer position);
 
 	<T> QueryParameter<T> resolve(Parameter<T> param);
+
+	default boolean isOrdinalParametersZeroBased() {
+		return true;
+	}
+
+	default void setOrdinalParametersZeroBased(boolean isZeroBased) {
+	}
 }

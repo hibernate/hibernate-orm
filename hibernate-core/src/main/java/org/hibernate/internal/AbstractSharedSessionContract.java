@@ -824,23 +824,9 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public NativeQueryImplementor createNativeQuery(String sqlString) {
-		checkOpen();
-		checkTransactionSynchStatus();
-		delayedAfterCompletion();
-
-		try {
-			NativeQueryImpl query = new NativeQueryImpl(
-					sqlString,
-					false,
-					this,
-					getFactory().getQueryPlanCache().getSQLParameterMetadata( sqlString )
-			);
-			query.setComment( "dynamic native SQL query" );
-			return query;
-		}
-		catch ( RuntimeException he ) {
-			throw exceptionConverter.convert( he );
-		}
+		final NativeQueryImpl query = (NativeQueryImpl) createSQLQuery( sqlString );
+		query.setZeroBasedParametersIndex( false );
+		return query;
 	}
 
 	@Override
@@ -891,12 +877,31 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public NativeQueryImplementor createSQLQuery(String queryString) {
-		return createNativeQuery( queryString );
+		checkOpen();
+		checkTransactionSynchStatus();
+		delayedAfterCompletion();
+
+		try {
+			NativeQueryImpl query = new NativeQueryImpl(
+					queryString,
+					false,
+					this,
+					getFactory().getQueryPlanCache().getSQLParameterMetadata( queryString )
+			);
+			query.setComment( "dynamic native SQL query" );
+			return query;
+		}
+		catch ( RuntimeException he ) {
+			throw exceptionConverter.convert( he );
+		}
+
 	}
 
 	@Override
 	public NativeQueryImplementor getNamedSQLQuery(String name) {
-		return getNamedNativeQuery( name );
+		final NativeQueryImpl nativeQuery = (NativeQueryImpl) getNamedNativeQuery( name );
+		nativeQuery.setZeroBasedParametersIndex( true );
+		return nativeQuery;
 	}
 
 	@Override

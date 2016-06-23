@@ -10,6 +10,8 @@ import java.util.List;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 import javax.persistence.LockModeType;
 import javax.persistence.NamedQuery;
 import javax.persistence.PersistenceException;
@@ -51,7 +53,10 @@ public class OracleFollowOnLockingTest extends
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {
-				Product.class
+			Product.class,
+			Vehicle.class,
+			SportsCar.class,
+			Truck.class
 		};
 	}
 
@@ -65,6 +70,14 @@ public class OracleFollowOnLockingTest extends
 			product.name = "Product " + i % 10;
 			session.persist( product );
 		}
+
+		Truck truck1 = new Truck();
+		Truck truck2 = new Truck();
+		SportsCar sportsCar1 = new SportsCar();
+		session.persist( truck1 );
+		session.persist( truck2 );
+		session.persist( sportsCar1 );
+
 		session.getTransaction().commit();
 		session.close();
 	}
@@ -430,6 +443,48 @@ public class OracleFollowOnLockingTest extends
 		session.close();
 	}
 
+	@Test
+	public void testPessimisticLockWithUnionThenFollowOnLocking() {
+
+		final Session session = openSession();
+		session.beginTransaction();
+
+
+		sqlStatementInterceptor.getSqlQueries().clear();
+
+		List<Vehicle> vehicles = session.createQuery( "select v from Vehicle v" )
+			.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE ) )
+			.getResultList();
+
+		assertEquals( 3, vehicles.size() );
+		assertEquals( 4, sqlStatementInterceptor.getSqlQueries().size() );
+
+		session.getTransaction().commit();
+		session.close();
+	}
+
+	@Test
+	public void testPessimisticLockWithUnionWhileExplicitlyDisablingFollowOnLockingThenFails() {
+
+		final Session session = openSession();
+		session.beginTransaction();
+
+		sqlStatementInterceptor.getSqlQueries().clear();
+
+		try {
+			List<Vehicle> vehicles = session.createQuery( "select v from Vehicle v" )
+					.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE ).setFollowOnLocking( false ) )
+					.getResultList();
+			fail( "Should throw exception since Oracle does not support UNION if follow on locking is disabled" );
+		}
+		catch ( PersistenceException expected ) {
+			assertEquals(
+					SQLGrammarException.class,
+					expected.getCause().getClass()
+			);
+		}
+	}
+
 	@NamedQuery(
 			name = "product_by_name",
 			query = "select p from Product p where p.name is not null",
@@ -444,5 +499,28 @@ public class OracleFollowOnLockingTest extends
 		private Long id;
 
 		private String name;
+	}
+
+	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+	@Entity(name = "Vehicle")
+	public static class Vehicle {
+
+		@Id
+		@GeneratedValue
+		private Long id;
+
+		private String name;
+	}
+
+	@Entity(name = "SportsCar")
+	public static class SportsCar extends Vehicle {
+
+		private double speed;
+	}
+
+	@Entity(name = "Truck")
+	public static class Truck extends Vehicle {
+
+		private double torque;
 	}
 }

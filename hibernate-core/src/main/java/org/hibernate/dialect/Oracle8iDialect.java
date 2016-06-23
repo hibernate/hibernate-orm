@@ -59,9 +59,11 @@ public class Oracle8iDialect extends Dialect {
 
 	private static final Pattern DISTINCT_KEYWORD_PATTERN = Pattern.compile( "\\bdistinct\\b" );
 
-	private static final Pattern GROUP_BY_KEYWORD_PATTERN = Pattern.compile( "\\bgroup by\\b" );
+	private static final Pattern GROUP_BY_KEYWORD_PATTERN = Pattern.compile( "\\bgroup\\sby\\b" );
 
-	private static final Pattern ORDER_BY_KEYWORD_PATTERN = Pattern.compile( "\\border by\\b" );
+	private static final Pattern ORDER_BY_KEYWORD_PATTERN = Pattern.compile( "\\border\\sby\\b" );
+
+	private static final Pattern UNION_KEYWORD_PATTERN = Pattern.compile( "\\bunion\\b" );
 
 	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
 		@Override
@@ -647,6 +649,7 @@ public class Oracle8iDialect extends Dialect {
 			return
 				DISTINCT_KEYWORD_PATTERN.matcher( lowerCaseSQL ).find() ||
 				GROUP_BY_KEYWORD_PATTERN.matcher( lowerCaseSQL ).find() ||
+				UNION_KEYWORD_PATTERN.matcher( lowerCaseSQL ).find() ||
 				(
 					parameters.hasRowSelection() &&
 						(

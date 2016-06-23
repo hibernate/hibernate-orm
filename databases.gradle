@@ -43,6 +43,27 @@ ext {
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
                         'jdbc.url'   : 'jdbc:mariadb://localhost/hibernate_orm_test'
+                ],
+                postgis : [
+                        'db.dialect' : 'org.hibernate.spatial.dialect.postgis.PostgisDialect',
+                        'jdbc.driver': 'org.postgresql.Driver',
+                        'jdbc.user'  : 'hibernate_orm_test',
+                        'jdbc.pass'  : 'hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:postgresql:hibernate_orm_test'
+                ],
+                oracle : [
+                        'db.dialect' : 'org.hibernate.dialect.Oracle10gDialect',
+                        'jdbc.driver': 'oracle.jdbc.driver.OracleDriver',
+                        'jdbc.user'  : 'hibernate_orm_test',
+                        'jdbc.pass'  : 'hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:oracle:thin:@localhost:1521/xe'
+                ],
+                mssql : [
+                        'db.dialect' : 'org.hibernate.dialect.SQLServer2012Dialect',
+                        'jdbc.driver': 'com.microsoft.sqlserver.jdbc.SQLServerDriver',
+                        'jdbc.user'  : 'hibernate_orm_test',
+                        'jdbc.pass'  : 'hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:sqlserver://localhost;instance=SQLEXPRESS;databaseName=hibernate_orm_test;user=sa;password=adm1n'
                 ]
         ]
 }

@@ -273,7 +273,7 @@ public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 		final EntityType<House> entityType = entityManagerFactory().getMetamodel().entity( House.class );
 		final SetAttribute<House,Room> rooms = entityType.getDeclaredSet( "rooms", Room.class );
 		assertNotNull( rooms );
-		assertTrue( rooms.isAssociation() );
+		assertFalse( rooms.isAssociation() );
 		assertTrue( rooms.isCollection() );
 		assertEquals( Attribute.PersistentAttributeType.ELEMENT_COLLECTION, rooms.getPersistentAttributeType() );
 		assertEquals( Room.class, rooms.getBindableJavaType() );

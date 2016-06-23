@@ -153,7 +153,8 @@ public abstract class PluralAttributeImpl<X, C, E>
 
 	@Override
 	public boolean isAssociation() {
-		return true;
+		return getPersistentAttributeType() == PersistentAttributeType.ONE_TO_MANY
+				|| getPersistentAttributeType() == PersistentAttributeType.MANY_TO_MANY;
 	}
 
 	@Override

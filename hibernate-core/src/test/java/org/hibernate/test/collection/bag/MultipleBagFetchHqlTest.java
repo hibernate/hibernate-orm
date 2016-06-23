@@ -73,10 +73,8 @@ public class MultipleBagFetchHqlTest extends BaseCoreFunctionalTestCase {
 					.uniqueResult();
 			fail("Should throw org.hibernate.loader.MultipleBagFetchException: cannot simultaneously fetch multiple bags");
 		}
-		catch ( IllegalArgumentException expected ) {
+		catch ( MultipleBagFetchException expected ) {
 			session.getTransaction().rollback();
-			// MultipleBagFetchException was converted to IllegalArgumentException
-			assertTrue( MultipleBagFetchException.class.isInstance( expected.getCause() ) );
 		}
 		finally {
 			session.close();

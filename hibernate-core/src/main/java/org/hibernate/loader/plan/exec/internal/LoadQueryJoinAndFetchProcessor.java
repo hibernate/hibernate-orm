@@ -673,7 +673,7 @@ public class LoadQueryJoinAndFetchProcessor {
 			}
 			if ( isJoinFetchedBag( fetch ) ) {
 				if ( joinedBagAttributeFetches == null ) {
-					joinedBagAttributeFetches = new HashSet<>();
+					joinedBagAttributeFetches = new HashSet<CollectionAttributeFetch>();
 				}
 				joinedBagAttributeFetches.add( (CollectionAttributeFetch) fetch );
 			}
@@ -685,8 +685,9 @@ public class LoadQueryJoinAndFetchProcessor {
 		}
 
 		@Override
+		@SuppressWarnings({"unchecked"})
 		public Set<CollectionAttributeFetch> getJoinedBagAttributeFetches() {
-			return joinedBagAttributeFetches == null ? Collections.emptySet() : joinedBagAttributeFetches;
+			return joinedBagAttributeFetches == null ? Collections.EMPTY_SET : joinedBagAttributeFetches;
 		}
 
 		private boolean isJoinFetchedBag(Fetch fetch) {

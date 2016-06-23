@@ -6,6 +6,10 @@
  */
 package org.hibernate.loader.plan.exec.internal;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -41,6 +45,7 @@ import org.hibernate.persister.walking.internal.FetchStrategyHelper;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.AssociationType;
+import org.hibernate.type.BagType;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -657,6 +662,7 @@ public class LoadQueryJoinAndFetchProcessor {
 	 */
 	private static class FetchStatsImpl implements FetchStats {
 		private boolean hasSubselectFetch;
+		private Set<CollectionAttributeFetch> joinedBagAttributeFetches;
 
 		public void processingFetch(Fetch fetch) {
 			if ( ! hasSubselectFetch ) {
@@ -665,11 +671,31 @@ public class LoadQueryJoinAndFetchProcessor {
 					hasSubselectFetch = true;
 				}
 			}
+			if ( isJoinFetchedBag( fetch ) ) {
+				if ( joinedBagAttributeFetches == null ) {
+					joinedBagAttributeFetches = new HashSet<>();
+				}
+				joinedBagAttributeFetches.add( (CollectionAttributeFetch) fetch );
+			}
 		}
 
 		@Override
 		public boolean hasSubselectFetches() {
 			return hasSubselectFetch;
+		}
+
+		@Override
+		public Set<CollectionAttributeFetch> getJoinedBagAttributeFetches() {
+			return joinedBagAttributeFetches == null ? Collections.emptySet() : joinedBagAttributeFetches;
+		}
+
+		private boolean isJoinFetchedBag(Fetch fetch) {
+			if ( FetchStrategyHelper.isJoinFetched( fetch.getFetchStrategy() ) &&
+					CollectionAttributeFetch.class.isInstance( fetch ) ) {
+				final CollectionAttributeFetch collectionAttributeFetch = (CollectionAttributeFetch) fetch;
+				return collectionAttributeFetch.getFetchedType().getClass().isAssignableFrom( BagType.class );
+			}
+			return false;
 		}
 	}
 

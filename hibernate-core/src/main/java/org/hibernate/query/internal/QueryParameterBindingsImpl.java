@@ -6,12 +6,10 @@
  */
 package org.hibernate.query.internal;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -54,7 +52,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 	private Map<QueryParameter, QueryParameterBinding> parameterBindingMap;
 	private Map<QueryParameter, QueryParameterListBinding> parameterListBindingMap;
-	private List<QueryParameterBinding> positionalParameterBindings;
+	private Map<Integer, QueryParameterBinding> positionalParameterBindings;
 
 	public static QueryParameterBindingsImpl from(ParameterMetadata parameterMetadata,
 			SessionFactoryImplementor sessionFactory) {
@@ -75,7 +73,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			ParameterMetadata parameterMetadata) {
 		this.sessionFactory = sessionFactory;
 		this.parameterMetadata = parameterMetadata;
-		this.positionalParameterBindings = new ArrayList<>( 4 );
+		this.positionalParameterBindings = new TreeMap<>(  );
 
 		if ( queryParameters == null || queryParameters.isEmpty() ) {
 			parameterBindingMap = Collections.emptyMap();
@@ -209,20 +207,10 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			}
 			else {
 				try {
-					if ( position + positionAdjustment < positionalParameterBindings.size() ) {
-						binding = positionalParameterBindings.get( position + positionAdjustment );
-						if ( binding == null ) {
-							binding = makeBinding( parameterMetadata.getQueryParameter( position  ) );
-							positionalParameterBindings.set( position + positionAdjustment, binding );
-						}
-					}
-					else {
-						for ( int i = 0; i < position + positionAdjustment - positionalParameterBindings.size(); i++ ) {
-							positionalParameterBindings.add( null );
-						}
-						QueryParameter queryParameter = parameterMetadata.getQueryParameter( position  );
-						binding = makeBinding( queryParameter );
-						positionalParameterBindings.add( binding );
+					binding = positionalParameterBindings.get( position + positionAdjustment );
+					if ( binding == null ) {
+						binding = makeBinding( parameterMetadata.getQueryParameter( position ) );
+						positionalParameterBindings.put( position + positionAdjustment, binding );
 					}
 				}
 				catch (QueryParameterException e) {
@@ -290,7 +278,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 	private int calculatePositionalValueSpan(boolean reserveFirstParameter) {
 		int positionalValueSpan = 0;
-		for ( QueryParameterBinding binding : positionalParameterBindings ) {
+		for ( QueryParameterBinding binding : positionalParameterBindings.values() ) {
 			if ( binding.isBound() ) {
 				Type bindType = binding.getBindType();
 				if ( bindType == null ) {
@@ -329,13 +317,12 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	 */
 	@Deprecated
 	public Type[] collectPositionalBindTypes() {
-		TreeMap<Integer, QueryParameterBinding> positionalParameterBindingMap = collectPositionalParameterBindings();
-		Type[] types = new Type[ positionalParameterBindingMap.size() ];
+		Type[] types = new Type[ positionalParameterBindings.size() ];
 
 		// NOTE : bindings should be ordered by position by nature of a TreeMap...
 		// NOTE : we also assume the contiguity of the positions
 
-		for ( Map.Entry<Integer, QueryParameterBinding> entry : positionalParameterBindingMap.entrySet() ) {
+		for ( Map.Entry<Integer, QueryParameterBinding> entry : positionalParameterBindings.entrySet() ) {
 			final int position = entry.getKey();
 
 			Type type = entry.getValue().getBindType();
@@ -350,27 +337,17 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 		return types;
 	}
 
-	private TreeMap<Integer, QueryParameterBinding> collectPositionalParameterBindings() {
-		final TreeMap<Integer, QueryParameterBinding> bindings = new TreeMap<>();
-		for ( int i = 0; i < positionalParameterBindings.size(); i++ ) {
-			bindings.put( i, positionalParameterBindings.get( i ) );
-		}
-
-		return bindings;
-	}
-
 	/**
 	 * @deprecated (since 5.2) expect a different approach to org.hibernate.engine.spi.QueryParameters in 6.0
 	 */
 	@Deprecated
 	public Object[] collectPositionalBindValues() {
-		TreeMap<Integer, QueryParameterBinding> positionalParameterBindingMap = collectPositionalParameterBindings();
-		Object[] values = new Object[ positionalParameterBindingMap.size() ];
+		Object[] values = new Object[ positionalParameterBindings.size() ];
 
 		// NOTE : bindings should be ordered by position by nature of a TreeMap...
 		// NOTE : we also assume the contiguity of the positions
 
-		for ( Map.Entry<Integer, QueryParameterBinding> entry : positionalParameterBindingMap.entrySet() ) {
+		for ( Map.Entry<Integer, QueryParameterBinding> entry : positionalParameterBindings.entrySet() ) {
 			final int position = entry.getKey();
 			values[ position ] = entry.getValue().getBindValue();
 		}

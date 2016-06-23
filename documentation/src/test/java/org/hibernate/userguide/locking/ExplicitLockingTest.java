@@ -25,6 +25,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.RequiresDialect;
 import org.junit.Test;
@@ -96,7 +97,7 @@ public class ExplicitLockingTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testBuildLockRequest() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			log.info( "testBuildlLockRequest" );
+			log.info( "testBuildLockRequest" );
 			Person person = new Person( "John Doe" );
 			Phone home = new Phone( "123-456-7890" );
 			Phone office = new Phone( "098-765-4321" );
@@ -138,7 +139,7 @@ public class ExplicitLockingTest extends BaseEntityManagerFunctionalTestCase {
 	@RequiresDialect(Oracle8iDialect.class)
 	public void testFollowOnLocking() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			log.info( "testBuildlLockRequest" );
+			log.info( "testBuildLockRequest" );
 			Person person1 = new Person( "John Doe" );
 			Person person2 = new Person( "Mrs. John Doe" );
 
@@ -168,6 +169,19 @@ public class ExplicitLockingTest extends BaseEntityManagerFunctionalTestCase {
 			.setParameter( "persons", persons )
 			.getResultList();
 			//end::locking-follow-on-secondary-query-example[]
+		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::locking-follow-on-explicit-example[]
+			List<Person> persons = entityManager.createQuery(
+				"select p from Person p", Person.class)
+			.setMaxResults( 10 )
+			.unwrap( Query.class )
+			.setLockOptions(
+				new LockOptions( LockMode.PESSIMISTIC_WRITE )
+					.setFollowOnLocking( false ) )
+			.getResultList();
+			//end::locking-follow-on-explicit-example[]
 		} );
 	}
 

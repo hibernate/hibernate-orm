@@ -234,3 +234,28 @@ include::{extrasdir}/locking-follow-on-secondary-query-example.sql[]
 ====
 
 The lock request was moved from the original query to a secondary one which takes the previously fetched entities to lock their associated database records.
+
+Prior to Hibernate 5.2.1, the the follow-on-locking mechanism was applied uniformly to any locking query executing on Oracle.
+Since 5.2.1, the Oracle Dialect tries to figure out if the current query demand the follow-on-locking mechanism.
+
+Even more important is that you can overrule the default follow-on-locking detection logic and explicitly enable or disable it on a per query basis.
+
+[[locking-follow-on-explicit-example]]
+.Disabling the follow-on-locking mechanism explicitly
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/ExplicitLockingTest.java[tags=locking-follow-on-explicit-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/locking-follow-on-explicit-example.sql[]
+----
+====
+
+[NOTE]
+====
+The follow-on-locking mechanism should be explicitly enabled only if the current executing query fails because the `FOR UPDATE` clause cannot be applied, meaning that the Dialect resolving mechanism needs to be further improved.
+====
+

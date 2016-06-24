@@ -57,4 +57,10 @@ public class BytecodeEnhancementMetadataNonPojoImpl implements BytecodeEnhanceme
 	public boolean hasUnFetchedAttributes(Object entity) {
 		return false;
 	}
+
+	@Override
+	public boolean isAttributeLoaded(Object entity, String attributeName) {
+		return true;
+	}
+
 }

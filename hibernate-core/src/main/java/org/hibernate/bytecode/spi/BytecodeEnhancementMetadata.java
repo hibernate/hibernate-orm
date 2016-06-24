@@ -59,4 +59,6 @@ public interface BytecodeEnhancementMetadata {
 	LazyAttributeLoadingInterceptor extractInterceptor(Object entity) throws NotInstrumentedException;
 
 	boolean hasUnFetchedAttributes(Object entity);
+
+	boolean isAttributeLoaded(Object entity, String attributeName);
 }

@@ -67,10 +67,14 @@ public class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhancementM
 
 	@Override
 	public boolean hasUnFetchedAttributes(Object entity) {
-		LazyAttributeLoadingInterceptor interceptor = isEnhancedForLazyLoading()
-				? extractInterceptor( entity )
-				: null;
+		LazyAttributeLoadingInterceptor interceptor = enhancedForLazyLoading ? extractInterceptor( entity ) : null;
 		return interceptor != null && interceptor.hasAnyUninitializedAttributes();
+	}
+
+	@Override
+	public boolean isAttributeLoaded(Object entity, String attributeName) {
+		LazyAttributeLoadingInterceptor interceptor = enhancedForLazyLoading ? extractInterceptor( entity ) : null;
+		return interceptor == null || interceptor.isAttributeLoaded( attributeName );
 	}
 
 	@Override

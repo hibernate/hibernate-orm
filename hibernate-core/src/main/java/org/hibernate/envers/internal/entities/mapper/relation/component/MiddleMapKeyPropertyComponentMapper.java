@@ -34,7 +34,12 @@ public class MiddleMapKeyPropertyComponentMapper implements MiddleComponentMappe
 			EntityInstantiator entityInstantiator, Map<String, Object> data,
 			Object dataObject, Number revision) {
 		// dataObject is not null, as this mapper can only be used in an index.
-		return ReflectionTools.getGetter( dataObject.getClass(), propertyName, accessType, entityInstantiator.getEnversService().getServiceRegistry() ).get( dataObject );
+		return ReflectionTools.getGetter(
+				dataObject.getClass(),
+				propertyName,
+				accessType,
+				entityInstantiator.getAuditReaderImplementor().getSessionImplementor().getSessionFactory().getServiceRegistry()
+		).get( dataObject );
 	}
 
 	@Override

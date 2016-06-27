@@ -36,6 +36,7 @@ import org.hibernate.envers.internal.revisioninfo.RevisionInfoGenerator;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoNumberReader;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoQueryCreator;
 import org.hibernate.envers.internal.tools.MutableBoolean;
+import org.hibernate.internal.util.xml.XMLHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.LongType;
 import org.hibernate.type.Type;
@@ -57,9 +58,11 @@ public class RevisionInfoConfiguration {
 
 	private String revisionPropType;
 	private String revisionPropSqlType;
+	private XMLHelper xmlHelper;
 
 	public RevisionInfoConfiguration(GlobalConfiguration globalCfg) {
 		this.globalCfg = globalCfg;
+		this.xmlHelper = new XMLHelper( globalCfg.getEnversService().getClassLoaderService() );
 		if ( globalCfg.isUseRevisionEntityWithNativeId() ) {
 			revisionInfoEntityName = "org.hibernate.envers.DefaultRevisionEntity";
 		}
@@ -75,7 +78,7 @@ public class RevisionInfoConfiguration {
 	}
 
 	private Document generateDefaultRevisionInfoXmlMapping() {
-		final Document document = globalCfg.getEnversService().getXmlHelper().getDocumentFactory().createDocument();
+		final Document document = xmlHelper.getDocumentFactory().createDocument();
 
 		final Element classMapping = MetadataTools.createEntity(
 				document,
@@ -158,7 +161,7 @@ public class RevisionInfoConfiguration {
 	}
 
 	private Element generateRevisionInfoRelationMapping() {
-		final Document document = globalCfg.getEnversService().getXmlHelper().getDocumentFactory().createDocument();
+		final Document document = xmlHelper.getDocumentFactory().createDocument();
 		final Element revRelMapping = document.addElement( "key-many-to-one" );
 		revRelMapping.addAttribute( "type", revisionPropType );
 		revRelMapping.addAttribute( "class", revisionInfoEntityName );

@@ -247,7 +247,7 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 		final Setter setter = ReflectionTools.getSetter(
 				obj.getClass(),
 				commonCollectionMapperData.getCollectionReferencingPropertyData(),
-				enversService.getServiceRegistry()
+				versionsReader.getSessionImplementor().getSessionFactory().getServiceRegistry()
 		);
 		try {
 			setter.set(

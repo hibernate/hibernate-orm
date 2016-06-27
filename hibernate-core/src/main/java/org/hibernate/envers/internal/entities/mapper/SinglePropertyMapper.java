@@ -92,7 +92,11 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
 			return;
 		}
 
-		final Setter setter = ReflectionTools.getSetter( obj.getClass(), propertyData, enversService.getServiceRegistry() );
+		final Setter setter = ReflectionTools.getSetter(
+				obj.getClass(),
+				propertyData,
+				versionsReader.getSessionImplementor().getSessionFactory().getServiceRegistry()
+		);
 		final Object value = data.get( propertyData.getName() );
 		// We only set a null value if the field is not primite. Otherwise, we leave it intact.
 		if ( value != null || !isPrimitive( setter, propertyData, obj.getClass() ) ) {

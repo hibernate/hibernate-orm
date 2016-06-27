@@ -115,7 +115,11 @@ public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperB
 			return;
 		}
 
-		final Setter setter = ReflectionTools.getSetter( obj.getClass(), propertyData, enversService.getServiceRegistry() );
+		final Setter setter = ReflectionTools.getSetter(
+				obj.getClass(),
+				propertyData,
+				versionsReader.getSessionImplementor().getSessionFactory().getServiceRegistry()
+		);
 
 		// If all properties are null and single, then the component has to be null also.
 		boolean allNullAndSingle = true;

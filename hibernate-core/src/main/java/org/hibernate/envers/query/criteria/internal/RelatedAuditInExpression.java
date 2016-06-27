@@ -6,29 +6,30 @@
  */
 package org.hibernate.envers.query.criteria.internal;
 
+import java.util.List;
+
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.RelationDescription;
+import org.hibernate.envers.internal.entities.mapper.id.QueryParameterData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
-import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.envers.query.internal.property.PropertyNameGetter;
 
 /**
  * @author Chris Cranford
  * @since 5.2
  */
-public class RelatedAuditEqualityExpression extends AbstractAtomicExpression {
-	private final PropertyNameGetter propertyNameGetter;
-	private final Object id;
-	private final boolean equals;
+public class RelatedAuditInExpression extends AbstractAtomicExpression {
 
-	public RelatedAuditEqualityExpression(String alias, PropertyNameGetter propertyNameGetter, Object id, boolean equals) {
+	private final PropertyNameGetter propertyNameGetter;
+	private final Object[] ids;
+
+	public RelatedAuditInExpression(String alias, PropertyNameGetter propertyNameGetter, Object[] ids) {
 		super( alias );
 		this.propertyNameGetter = propertyNameGetter;
-		this.id = id;
-		this.equals = equals;
+		this.ids = ids;
 	}
 
 	@Override
@@ -49,9 +50,15 @@ public class RelatedAuditEqualityExpression extends AbstractAtomicExpression {
 		RelationDescription relatedEntity = CriteriaTools.getRelatedEntity( enversService, entityName, propertyName );
 		if ( relatedEntity == null ) {
 			throw new AuditException(
-					"This criterion can only be used on a property that is a relation to another property."
+					"The criterion can only be used on a property that is a relation to another property."
 			);
 		}
-		relatedEntity.getIdMapper().addIdEqualsToQuery( parameters, id, alias, null, equals );
+
+		// todo: should this throw an error if qpdList is null?  is it possible?
+		List<QueryParameterData> qpdList = relatedEntity.getIdMapper().mapToQueryParametersFromId( propertyName );
+		if ( qpdList != null ) {
+			QueryParameterData qpd = qpdList.iterator().next();
+			parameters.addWhereWithParams( alias, qpd.getQueryParameterName(), "in (", ids, ")" );
+		}
 	}
 }

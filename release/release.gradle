@@ -5,7 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 plugins {
-    id "com.jfrog.bintray" version "1.3.1"
+    id "com.jfrog.bintray" version "1.7"
 }
 
 apply plugin: 'base'
@@ -214,17 +214,28 @@ task uploadBundlesSourceForge(type: Exec, dependsOn: buildBundles) {
 
     doFirst {
         if ( version.endsWith( "SNAPSHOT" ) ) {
-            logger.error( "Cannot perform upload of SNAPSHOT documentation" );
-            throw new RuntimeException( "Cannot perform upload of SNAPSHOT bundles" )
+            logger.error( "Cannot perform upload of SNAPSHOT bundles to SourceForge" );
+            throw new RuntimeException( "Cannot perform upload of SNAPSHOT bundles to SourceForge" )
         }
         else {
-            logger.lifecycle( "Uploading release bundles [${url}]..." )
+            logger.lifecycle( "Uploading release bundles to SourceForge..." )
         }
     }
 
     doLast {
-        logger.lifecycle( 'Done uploading release bundles' )
+        logger.lifecycle( 'Done uploading release bundles to SourceForge' )
     }
+}
+
+configurations {
+    bundles {
+        description = 'Configuration used to group the archives output from the distribution plugin.'
+    }
+}
+
+artifacts {
+    bundles distTar
+    bundles distZip
 }
 
 String binTrayUser = null
@@ -256,26 +267,44 @@ if ( binTrayApiKey == null ) {
     binTrayApiKey = 'UNDEFINED'
 }
 
-
 bintray {
     user = binTrayUser
     key = binTrayApiKey
 
     publish = true
 
-    filesSpec {
-        from "$buildDir/distributions"
-        into '/'
-    }
+    configurations = ['bundles']
 
     pkg {
         userOrg = 'hibernate'
         repo = 'bundles'
         name = 'hibernate-orm'
+
+        version {
+            name = project.version
+            desc = "The ${project.version} release of the Hibernate ORM project"
+
+            gpg {
+                sign = true
+                passphrase = 'hibernate'
+            }
+        }
     }
 }
 
 bintrayUpload.dependsOn buildBundles
+
+bintrayUpload {
+    doFirst {
+        if ( version.endsWith( "SNAPSHOT" ) ) {
+            logger.error( "Cannot perform upload of SNAPSHOT bundles to BinTray" );
+            throw new RuntimeException( "Cannot perform upload of SNAPSHOT bundles to BinTray" )
+        }
+        else {
+            logger.lifecycle( "Uploading release bundles to BinTray..." )
+        }
+    }
+}
 
 task uploadBundles(dependsOn: [bintrayUpload, uploadBundlesSourceForge]) {
     description = 'Performs all release bundle uploads'

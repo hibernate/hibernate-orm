@@ -49,4 +49,22 @@ public class QueryParameterNamedImpl<T> extends QueryParameterImpl<T> implements
 	public boolean isJpaPositionalParameter() {
 		return jpaStyle;
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		QueryParameterNamedImpl<?> that = (QueryParameterNamedImpl<?>) o;
+		return getName().equals( that.getName() );
+	}
+
+	@Override
+	public int hashCode() {
+		return getName().hashCode();
+	}
 }

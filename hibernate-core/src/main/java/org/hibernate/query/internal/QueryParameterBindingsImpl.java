@@ -586,9 +586,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 				);
 				final QueryParameterBinding syntheticBinding = makeBinding( entry.getValue().getBindType() );
 				syntheticBinding.setBindValue( bindValue );
-				if ( parameterBindingMap.put( syntheticParam, syntheticBinding ) != null ) {
-					throw new HibernateException( "Repeated usage of synthetic parameter name [" + syntheticName + "] while expanding list parameter." );
-				}
+				parameterBindingMap.put( syntheticParam, syntheticBinding );
 				i++;
 			}
 

@@ -14,6 +14,7 @@ NOTE: This is still very much a work in progress. <<helping,Help>> is definitely
 ** For (semi-deprecated) bootstrapping of a SessionFactory using the legacy Configuration approach, see the <<bootstrap/LegacyBootstrapping.adoc#,Legacy Bootstrapping Guide>>
 * For information on generated (non-identifier) values, see the <<generated/GeneratedValues.adoc#,Generated Values Guide>>
 * For information on logging, see <<logging/Logging.adoc#,Logging Guide>>
+* For information on how to use the latest version of Hibernate ORM on WildFly, see <<wildfly/Wildfly.adoc#,Using Hibernate ORM on Wildfly>>
 * Others coming soon
 
 == Tooling

@@ -43,12 +43,15 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.BinaryType;
 import org.hibernate.type.CharacterArrayClobType;
 import org.hibernate.type.CharacterArrayNClobType;
 import org.hibernate.type.CharacterNCharType;
 import org.hibernate.type.EnumType;
 import org.hibernate.type.PrimitiveCharacterArrayClobType;
 import org.hibernate.type.PrimitiveCharacterArrayNClobType;
+import org.hibernate.type.RowVersionType;
 import org.hibernate.type.SerializableToBlobType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.StringNVarcharType;
@@ -484,7 +487,13 @@ public class SimpleValueBinder {
 				//explicit type params takes precedence over type def params
 				simpleValue.setTypeParameters( typeParameters );
 			}
+
 			simpleValue.setTypeName( type );
+			if ( isVersion &&
+					BinaryType.class.isInstance( simpleValue.getMetadata().getTypeResolver().basic( type ) ) ) {
+				// Override the version type to be RowVersionType
+				simpleValue.setTypeName( RowVersionType.INSTANCE.getName() );
+			}
 		}
 
 		if ( persistentClassName != null || attributeConverterDescriptor != null ) {

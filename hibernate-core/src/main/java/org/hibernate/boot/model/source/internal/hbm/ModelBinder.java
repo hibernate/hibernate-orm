@@ -140,8 +140,10 @@ import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.Value;
 import org.hibernate.tuple.GeneratedValueGeneration;
 import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.type.BinaryType;
 import org.hibernate.type.DiscriminatorType;
 import org.hibernate.type.ForeignKeyDirection;
+import org.hibernate.type.RowVersionType;
 
 /**
  * Responsible for coordinating the binding of all information inside entity tags ({@code <class/>}, etc).
@@ -999,6 +1001,13 @@ public class ModelBinder {
 				versionAttributeSource.getTypeInformation(),
 				versionValue
 		);
+
+		if ( BinaryType.class.isInstance(
+				sourceDocument.getMetadataCollector().getTypeResolver().basic( versionValue.getTypeName() )
+		) ) {
+			// Override the version type to be RowVersionType
+			versionValue.setTypeName( RowVersionType.INSTANCE.getName() );
+		}
 
 		relationalObjectBinder.bindColumnsAndFormulas(
 				sourceDocument,

@@ -16,6 +16,7 @@ import java.util.Comparator;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
+import org.hibernate.internal.util.compare.RowVersionComparator;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
@@ -25,6 +26,13 @@ import org.hibernate.type.descriptor.WrapperOptions;
  */
 public class PrimitiveByteArrayTypeDescriptor extends AbstractTypeDescriptor<byte[]> {
 	public static final PrimitiveByteArrayTypeDescriptor INSTANCE = new PrimitiveByteArrayTypeDescriptor();
+	public static final PrimitiveByteArrayTypeDescriptor ROW_VALUE_INSTANCE = new PrimitiveByteArrayTypeDescriptor() {
+		@Override
+		@SuppressWarnings({ "unchecked" })
+		public Comparator<byte[]> getComparator() {
+			return RowVersionComparator.INSTANCE;
+		}
+	};
 
 	@SuppressWarnings({ "unchecked" })
 	public PrimitiveByteArrayTypeDescriptor() {

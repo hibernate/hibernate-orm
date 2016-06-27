@@ -22,6 +22,7 @@ import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
 import org.hibernate.annotations.common.AssertionFailure;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
@@ -177,14 +178,23 @@ class MetadataContext {
 
 	@SuppressWarnings({"unchecked"})
 	public void wrapUp() {
-		LOG.trace( "Wrapping up metadata context..." );
+		final boolean traceEnabled = LOG.isTraceEnabled();
+		if ( traceEnabled ) {
+			LOG.trace( "Wrapping up metadata context..." );
+		}
+
+		boolean staticMetamodelEnabled = Boolean.parseBoolean(
+			sessionFactory.getProperties().getOrDefault(
+				AvailableSettings.STATIC_METAMODEL_ENABLED, "true" ).toString() );
 
 		//we need to process types from superclasses to subclasses
 		for ( Object mapping : orderedMappings ) {
 			if ( PersistentClass.class.isAssignableFrom( mapping.getClass() ) ) {
 				@SuppressWarnings("unchecked")
 				final PersistentClass safeMapping = (PersistentClass) mapping;
-				LOG.trace( "Starting entity [" + safeMapping.getEntityName() + "]" );
+				if ( traceEnabled ) {
+					LOG.trace( "Starting entity [" + safeMapping.getEntityName() + ']' );
+				}
 				try {
 					final EntityTypeImpl<?> jpa2Mapping = entityTypesByPersistentClass.get( safeMapping );
 					applyIdMetadata( safeMapping, jpa2Mapping );
@@ -208,16 +218,22 @@ class MetadataContext {
 						}
 					}
 					jpa2Mapping.lock();
-					populateStaticMetamodel( jpa2Mapping );
+					if ( staticMetamodelEnabled ) {
+						populateStaticMetamodel( jpa2Mapping );
+					}
 				}
 				finally {
-					LOG.trace( "Completed entity [" + safeMapping.getEntityName() + "]" );
+					if ( traceEnabled ) {
+						LOG.trace( "Completed entity [" + safeMapping.getEntityName() + ']' );
+					}
 				}
 			}
 			else if ( MappedSuperclass.class.isAssignableFrom( mapping.getClass() ) ) {
 				@SuppressWarnings("unchecked")
 				final MappedSuperclass safeMapping = (MappedSuperclass) mapping;
-				LOG.trace( "Starting mapped superclass [" + safeMapping.getMappedClass().getName() + "]" );
+				if ( traceEnabled ) {
+					LOG.trace( "Starting mapped superclass [" + safeMapping.getMappedClass().getName() + ']' );
+				}
 				try {
 					final MappedSuperclassTypeImpl<?> jpa2Mapping = mappedSuperclassByMappedSuperclassMapping.get(
 							safeMapping
@@ -237,10 +253,14 @@ class MetadataContext {
 						}
 					}
 					jpa2Mapping.lock();
-					populateStaticMetamodel( jpa2Mapping );
+					if ( staticMetamodelEnabled ) {
+						populateStaticMetamodel( jpa2Mapping );
+					}
 				}
 				finally {
-					LOG.trace( "Completed mapped superclass [" + safeMapping.getMappedClass().getName() + "]" );
+					if ( traceEnabled ) {
+						LOG.trace( "Completed mapped superclass [" + safeMapping.getMappedClass().getName() + ']' );
+					}
 				}
 			}
 			else {
@@ -248,8 +268,10 @@ class MetadataContext {
 			}
 		}
 
-		for ( EmbeddableTypeImpl embeddable : embeddables.values() ) {
-			populateStaticMetamodel( embeddable );
+		if ( staticMetamodelEnabled ) {
+			for ( EmbeddableTypeImpl embeddable : embeddables.values() ) {
+				populateStaticMetamodel( embeddable );
+			}
 		}
 	}
 
@@ -331,7 +353,9 @@ class MetadataContext {
 	private <X> Set<SingularAttribute<? super X, ?>> buildIdClassAttributes(
 			AbstractIdentifiableType<X> ownerType,
 			Iterator<Property> propertyIterator) {
-		LOG.trace( "Building old-school composite identifier [" + ownerType.getJavaType().getName() + "]" );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Building old-school composite identifier [" + ownerType.getJavaType().getName() + ']' );
+		}
 		Set<SingularAttribute<? super X, ?>> attributes = new HashSet<SingularAttribute<? super X, ?>>();
 		while ( propertyIterator.hasNext() ) {
 			attributes.add( attributeFactory.buildIdAttribute( ownerType, propertyIterator.next() ) );
@@ -345,7 +369,7 @@ class MetadataContext {
 			// should indicate MAP entity mode, skip...
 			return;
 		}
-		final String metamodelClassName = managedTypeClass.getName() + "_";
+		final String metamodelClassName = managedTypeClass.getName() + '_';
 		try {
 			final Class metamodelClass = Class.forName( metamodelClassName, true, managedTypeClass.getClassLoader() );
 			// we found the class; so populate it...

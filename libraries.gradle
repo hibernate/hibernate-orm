@@ -17,6 +17,12 @@ ext {
     jnpVersion = '5.0.6.CR1'
     elVersion = '2.2.4'
 
+    // Wildfly version targeted by module ZIP; Arquillian/Shrinkwrap versions used for testing the module ZIP
+    wildflyVersion = '10.0.0.Final'
+    arquillianVersion = '1.1.10.Final'
+    shrinkwrapVersion = '2.0.0-alpha-8'
+    wildflyArquillianContainerVersion = '2.0.0.Final'
+
     libraries = [
             // Ant
             ant:            'org.apache.ant:ant:1.8.2',
@@ -114,7 +120,15 @@ ext {
             c3p0:            "com.mchange:c3p0:0.9.2.1",
             ehcache:         "net.sf.ehcache:ehcache:2.10.1",
             proxool:         "proxool:proxool:0.8.3",
-            hikaricp:        "com.zaxxer:HikariCP-java6:2.3.9"
+            hikaricp:        "com.zaxxer:HikariCP-java6:2.3.9",
 
+            // Arquillian etc.
+            arquillian_junit_container: "org.jboss.arquillian.junit:arquillian-junit-container:${arquillianVersion}",
+            arquillian_protocol_servlet: "org.jboss.arquillian.protocol:arquillian-protocol-servlet:${arquillianVersion}",
+
+            shrinkwrap_descriptors_api_javaee: "org.jboss.shrinkwrap.descriptors:shrinkwrap-descriptors-api-javaee:${shrinkwrapVersion}",
+            shrinkwrap_descriptors_impl_javaee: "org.jboss.shrinkwrap.descriptors:shrinkwrap-descriptors-impl-javaee:${shrinkwrapVersion}",
+
+            wildfly_arquillian_container_managed: "org.wildfly.arquillian:wildfly-arquillian-container-managed:${wildflyArquillianContainerVersion}"
         ]
 }

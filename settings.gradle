@@ -25,6 +25,8 @@ include 'hibernate-hikaricp'
 include 'hibernate-ehcache'
 include 'hibernate-infinispan'
 
+include 'hibernate-orm-modules'
+
 include 'documentation'
 include 'release'
 

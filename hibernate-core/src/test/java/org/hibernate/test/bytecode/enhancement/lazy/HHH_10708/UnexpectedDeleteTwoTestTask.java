@@ -84,7 +84,7 @@ public class UnexpectedDeleteTwoTestTask extends AbstractEnhancerTestTask {
 	protected void cleanup() {
 	}
 
-	@Entity static class Bar {
+	@Entity(name = "Bar") static class Bar {
 
 		@Id	@GeneratedValue
 		int id;
@@ -93,7 +93,7 @@ public class UnexpectedDeleteTwoTestTask extends AbstractEnhancerTestTask {
 		Set<Foo> foos = new HashSet<>();
 	}
 
-	@Entity static class Foo {
+	@Entity(name = "Foo") static class Foo {
 
 		@Id	@GeneratedValue
 		int id;

@@ -97,7 +97,7 @@ class HibernateBuildPlugin implements Plugin<Project> {
 
 				// TEMPORARY : currently Gradle Publishing feature is exporting dependencies as 'runtime' scope,
 				//      rather than 'compile'; fix that.
-				if ( asNode().dependencies != null ) {
+				if ( asNode().dependencies != null && asNode().dependencies.size() > 0 ) {
 					asNode().dependencies[0].dependency.each {
 						it.scope[0].value = 'compile'
 					}

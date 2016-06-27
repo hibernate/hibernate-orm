@@ -23,14 +23,15 @@ import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
 
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialect;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 /**
  * @author Vlad Mihalcea
@@ -302,6 +303,7 @@ public class OracleStoredProcedureTest extends BaseEntityManagerFunctionalTestCa
     }
 
     @Test
+    @FailureExpected( jiraKey = "HHH-10898")
     public void testNamedNativeQueryStoredProcedureRefCursor() {
         EntityManager entityManager = createEntityManager();
         entityManager.getTransaction().begin();
@@ -333,7 +335,13 @@ public class OracleStoredProcedureTest extends BaseEntityManagerFunctionalTestCa
             session.doWork( connection -> {
                 try (CallableStatement function = connection.prepareCall(
                         "{ ? = call fn_person_and_phones( ? ) }" )) {
-                    function.registerOutParameter( 1, Types.REF_CURSOR );
+                    try {
+                        function.registerOutParameter( 1, Types.REF_CURSOR );
+                    }
+                    catch ( SQLException e ) {
+                        //OracleTypes.CURSOR
+                        function.registerOutParameter( 1, -10 );
+                    }
                     function.setInt( 2, 1 );
                     function.execute();
                     try (ResultSet resultSet = (ResultSet) function.getObject( 1);) {

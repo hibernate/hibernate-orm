@@ -7,15 +7,13 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
-import static javax.persistence.GenerationType.IDENTITY;
-
 @Entity
 @Table(name = "student")
 public class Student {
 
 	@Id
-	@GeneratedValue(strategy = IDENTITY)
-	private String id;
+	@GeneratedValue
+	private Long id;
 
 	@ManyToOne
 	private School school;
@@ -31,11 +29,11 @@ public class Student {
 		this.gpa = gpa;
 	}
 
-	public String getId() {
+	public Long getId() {
 		return id;
 	}
 
-	public void setId(String id) {
+	public void setId(Long id) {
 		this.id = id;
 	}
 

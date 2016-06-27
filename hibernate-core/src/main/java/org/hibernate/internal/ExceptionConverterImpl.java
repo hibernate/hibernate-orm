@@ -6,6 +6,8 @@
  */
 package org.hibernate.internal;
 
+import java.io.Serializable;
+import java.sql.SQLException;
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.LockTimeoutException;
@@ -16,8 +18,6 @@ import javax.persistence.PersistenceException;
 import javax.persistence.PessimisticLockException;
 import javax.persistence.QueryTimeoutException;
 import javax.persistence.RollbackException;
-import java.io.Serializable;
-import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;

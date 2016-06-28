@@ -1511,4 +1511,17 @@ public interface AvailableSettings {
 	 */
 	String ALLOW_JTA_TRANSACTION_ACCESS = "hibernate.jta.allowTransactionAccess";
 
+	/**
+	 * Setting that allows to perform update operations outside of a transaction boundary.
+	 *
+	 * Since version 5.2 Hibernate conforms with the JPA specification and does not allow anymore
+	 * to flush any update out of a transaction boundary.
+	 * <p/>
+	 * Values are: {@code true} to allow flush operations out of a transaction, {@code false} to disallow.
+	 * <p/>
+	 * The default behavior is {@code false}
+	 *
+	 * @since 5.2
+	 */
+	String ALLOW_UPDATE_OUTSIDE_TRANSACTION = "hibernate.allow_update_outside_transaction";
 }

@@ -201,4 +201,6 @@ public interface SessionFactoryOptions {
 	boolean isPreferUserTransaction();
 
 	boolean isProcedureParameterNullPassingEnabled();
+
+	boolean isAllowOutOfTransactionUpdateOperations();
 }

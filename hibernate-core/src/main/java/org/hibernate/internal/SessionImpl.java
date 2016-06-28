@@ -63,7 +63,6 @@ import org.hibernate.ObjectNotFoundException;
 import org.hibernate.QueryException;
 import org.hibernate.ReplicationMode;
 import org.hibernate.ScrollMode;
-import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
@@ -235,6 +234,7 @@ public final class SessionImpl
 	private transient boolean autoClose;
 
 	private transient int dontFlushFromFind;
+	private transient boolean disallowOutOfTransactionUpdateOperations;
 
 	private transient ExceptionMapper exceptionMapper;
 	private transient ManagedFlushChecker managedFlushChecker;
@@ -253,6 +253,7 @@ public final class SessionImpl
 
 		this.autoClear = options.shouldAutoClear();
 		this.autoClose = options.shouldAutoClose();
+		this.disallowOutOfTransactionUpdateOperations = !factory.getSessionFactoryOptions().isAllowOutOfTransactionUpdateOperations();
 
 		if ( options instanceof SharedSessionCreationOptions && ( (SharedSessionCreationOptions) options ).isTransactionCoordinatorShared() ) {
 			final SharedSessionCreationOptions sharedOptions = (SharedSessionCreationOptions) options;
@@ -3388,7 +3389,7 @@ public final class SessionImpl
 	}
 
 	private void checkTransactionNeeded() {
-		if ( !isTransactionInProgress() ) {
+		if ( disallowOutOfTransactionUpdateOperations && !isTransactionInProgress() ) {
 			throw new TransactionRequiredException( "no transaction is in progress" );
 		}
 	}

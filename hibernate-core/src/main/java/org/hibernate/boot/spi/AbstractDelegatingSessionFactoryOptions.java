@@ -214,6 +214,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public boolean isAllowOutOfTransactionUpdateOperations() {
+		return delegate.isAllowOutOfTransactionUpdateOperations();
+	}
+
+	@Override
 	public boolean isSecondLevelCacheEnabled() {
 		return delegate.isSecondLevelCacheEnabled();
 	}

@@ -63,7 +63,6 @@ import org.hibernate.ObjectNotFoundException;
 import org.hibernate.QueryException;
 import org.hibernate.ReplicationMode;
 import org.hibernate.ScrollMode;
-import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
@@ -3388,7 +3387,8 @@ public final class SessionImpl
 	}
 
 	private void checkTransactionNeeded() {
-		if ( !isTransactionInProgress() ) {
+		if ( !getSessionFactory().getSessionFactoryOptions().isAllowOutOfTransactionUpdateOperations()
+				&& !isTransactionInProgress() ) {
 			throw new TransactionRequiredException( "no transaction is in progress" );
 		}
 	}

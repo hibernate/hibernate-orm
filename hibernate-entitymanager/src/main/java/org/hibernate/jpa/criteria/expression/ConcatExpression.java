@@ -64,9 +64,9 @@ public class ConcatExpression extends ExpressionImpl<String> implements Serializ
 	}
 
 	public String render(RenderingContext renderingContext) {
-		return ( (Renderable) getString1() ).render( renderingContext )
+		return  '(' + ((Renderable) getString1() ).render( renderingContext )
 				+ " || "
-				+ ( (Renderable) getString2() ).render( renderingContext );
+				+ ( (Renderable) getString2() ).render( renderingContext ) + ')' ;
 	}
 
 	public String renderProjection(RenderingContext renderingContext) {

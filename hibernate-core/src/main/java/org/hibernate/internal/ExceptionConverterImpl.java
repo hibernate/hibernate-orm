@@ -191,7 +191,7 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			final Serializable identifier = sose.getIdentifier();
 			if ( identifier != null ) {
 				try {
-					final Object entity = sharedSessionContract.load( sose.getEntityName(), identifier );
+					final Object entity = sharedSessionContract.internalLoad( sose.getEntityName(), identifier, false, true);
 					if ( entity instanceof Serializable ) {
 						//avoid some user errors regarding boundary crossing
 						pe = new OptimisticLockException( e.getMessage(), e, entity );

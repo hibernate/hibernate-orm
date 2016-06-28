@@ -119,7 +119,10 @@ task extractModules(dependsOn: [extractWildFly, createModulesZip], type: Copy) {
     into "$buildDir/wildfly-${wildflyVersion}/modules"
 }
 
-task filterArquillianXml(type: Copy) {
+// Replace properties in arquillian.xml; Actually this should be done by means of configuring
+// the processTestResourcesTask itself, but while that works for resources in src/main/resources,
+// the same failed for src/test/resources; I reckon it's a bug in Gradle
+task filterArquillianXml(dependsOn: processTestResources, type: Copy) {
     into( buildDir.getName() + '/resources/test' )
     expand( buildDir: buildDir.getName(), wildflyVersion: wildflyVersion )
     from 'src/test/resources'

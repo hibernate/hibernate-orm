@@ -287,7 +287,10 @@ public class PostgreSQL81Dialect extends Dialect {
 				}
 			}
 		}
-		LockMode lockMode = lockOptions.getLockMode();
+		LockMode lockMode = lockOptions.getAliasSpecificLockMode( aliases );
+		if (lockMode == null ) {
+			lockMode = lockOptions.getLockMode();
+		}
 		switch ( lockMode ) {
 			case UPGRADE:
 				return getForUpdateString(aliases);

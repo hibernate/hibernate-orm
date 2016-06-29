@@ -99,6 +99,9 @@ public class SimpleValueBinder {
 
 	public void setVersion(boolean isVersion) {
 		this.isVersion = isVersion;
+		if ( isVersion && simpleValue != null ) {
+			simpleValue.makeVersion();
+		}
 	}
 
 	public void setTimestampVersionType(String versionType) {
@@ -399,6 +402,9 @@ public class SimpleValueBinder {
 			table = columns[0].getTable();
 		}
 		simpleValue = new SimpleValue( buildingContext.getMetadataCollector(), table );
+		if ( isVersion ) {
+			simpleValue.makeVersion();
+		}
 		if ( isNationalized ) {
 			simpleValue.makeNationalized();
 		}

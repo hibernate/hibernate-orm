@@ -6,17 +6,22 @@
  */
 package org.hibernate.test.version.sybase;
 
+import javax.persistence.OptimisticLockException;
+
 import org.junit.Test;
 
-import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.BinaryType;
+import org.hibernate.type.RowVersionType;
+import org.hibernate.type.VersionType;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -64,7 +69,7 @@ public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 				t2.commit();
 				fail( "optimistic lock check did not fail" );
 			}
-			catch( HibernateException e ) {
+			catch( OptimisticLockException e ) {
 				// expected...
 				try {
 					t2.rollback();
@@ -214,6 +219,47 @@ public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 		s.delete( s.load( User.class, steve.getId() ) );
 		s.delete( s.load( Permission.class, perm.getId() ) );
 		t.commit();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-10413" )
+	public void testComparableTimestamps() {
+		final VersionType versionType =
+				sessionFactory().getEntityPersister( User.class.getName() ).getVersionType();
+		assertSame( RowVersionType.INSTANCE, versionType );
+
+		Session s = openSession();
+		s.getTransaction().begin();
+		User user = new User();
+		user.setUsername( "n" );
+		s.persist( user );
+		s.getTransaction().commit();
+		s.close();
+
+		byte[] previousTimestamp = user.getTimestamp();
+		for ( int i = 0 ; i < 20 ; i++ ) {
+			try {
+				Thread.sleep(1000);                 //1000 milliseconds is one second.
+			} catch(InterruptedException ex) {
+				Thread.currentThread().interrupt();
+			}
+
+			s = openSession();
+			s.getTransaction().begin();
+			user.setUsername( "n" + i );
+			user = (User) s.merge( user );
+			s.getTransaction().commit();
+			s.close();
+
+			assertTrue( versionType.compare( previousTimestamp, user.getTimestamp() ) < 0 );
+			previousTimestamp = user.getTimestamp();
+		}
+
+		s = openSession();
+		s.getTransaction().begin();
+		s.delete( user );
+		s.getTransaction().commit();
 		s.close();
 	}
 }

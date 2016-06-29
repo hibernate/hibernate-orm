@@ -45,10 +45,19 @@ public @interface Skip {
 		public boolean isMatch();
 	}
 
-	public static class AlwaysSkip implements Matcher {
+	class AlwaysSkip implements Matcher {
 		@Override
 		public boolean isMatch() {
 			return true;
+		}
+	}
+
+	interface OperatingSystem {
+		class Windows implements Matcher {
+			@Override
+			public boolean isMatch() {
+				return System.getProperty("os.name").toLowerCase().contains( "windows" );
+			}
 		}
 	}
 }

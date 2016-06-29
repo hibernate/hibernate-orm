@@ -13,14 +13,16 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import org.hibernate.Query;
+import org.hibernate.Session;
+import org.hibernate.dialect.MySQL5Dialect;
+
+import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.hibernate.Query;
-import org.hibernate.Session;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -29,6 +31,7 @@ import static org.junit.Assert.assertTrue;
  * @author Piotr Krauzowicz <p.krauzowicz@visiona.pl>
  * @author Gail Badner
  */
+@SkipForDialect(value = MySQL5Dialect.class, comment = "BLOB/TEXT column 'id' used in key specification without a key length")
 public class ByteArrayIdTest extends BaseCoreFunctionalTestCase {
 
 	@Override

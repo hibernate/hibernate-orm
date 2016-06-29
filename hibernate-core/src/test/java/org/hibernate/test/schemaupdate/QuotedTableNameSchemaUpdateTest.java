@@ -6,15 +6,15 @@
  */
 package org.hibernate.test.schemaupdate;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.EnumSet;
 import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -25,11 +25,12 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 
+import org.hibernate.testing.Skip;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.hibernate.testing.TestForIssue;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -38,7 +39,7 @@ import static org.junit.Assert.assertThat;
  * @author Andrea Boriero
  */
 
-public class QuotedTableNameSchemaUpdateTest {
+public class QuotedTableNameSchemaUpdateTest extends BaseUnitTestCase {
 
 	private File output;
 	private StandardServiceRegistry ssr;
@@ -59,6 +60,7 @@ public class QuotedTableNameSchemaUpdateTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-10820")
+	@Skip(condition = Skip.OperatingSystem.Windows.class, message = "On Windows, MySQL is case insensitive!")
 	public void testSchemaUpdateWithQuotedTableName() throws Exception {
 		final MetadataSources metadataSources = new MetadataSources( ssr );
 		metadataSources.addAnnotatedClass( QuotedTable.class );

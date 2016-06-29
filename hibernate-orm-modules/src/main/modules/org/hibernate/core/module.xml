@@ -9,8 +9,6 @@
     <resources>
         <resource-root path="hibernate-core-${version}.jar"/>
         <resource-root path="hibernate-envers-${version}.jar"/>
-        <resource-root path="hibernate-entitymanager-${version}.jar"/>
-        <resource-root path="hibernate-java8-${version}.jar"/>
     </resources>
 
     <dependencies>

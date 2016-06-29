@@ -6,13 +6,14 @@
  */
 package org.hibernate.envers.query.projection.internal;
 
-import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.boot.AuditService;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.query.internal.property.PropertyNameGetter;
 import org.hibernate.envers.query.projection.AuditProjection;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public class PropertyAuditProjection implements AuditProjection {
 	private final String alias;
@@ -28,14 +29,13 @@ public class PropertyAuditProjection implements AuditProjection {
 	}
 
 	@Override
-	public ProjectionData getData(EnversService enversService) {
-		String propertyName = propertyNameGetter.get( enversService );
-		
+	public ProjectionData getData(AuditService auditService) {
+		final String propertyName = propertyNameGetter.get( auditService );
 		return new ProjectionData( function, alias, propertyName, distinct );
 	}
 
 	@Override
-	public Object convertQueryResult(EnversService enversService, EntityInstantiator entityInstantiator, String entityName, Number revision, Object value) {
+	public Object convertQueryResult(EntityInstantiator entityInstantiator, String entityName, Number revision, Object value) {
 		return value;
 	}
 }

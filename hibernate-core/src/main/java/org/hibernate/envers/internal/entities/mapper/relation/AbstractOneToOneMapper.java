@@ -12,7 +12,6 @@ import javax.persistence.NoResultException;
 
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
@@ -22,6 +21,7 @@ import org.hibernate.service.ServiceRegistry;
  * Template class for property mappers that manage one-to-one relation.
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public abstract class AbstractOneToOneMapper extends AbstractToOneMapper {
 	private final String entityName;
@@ -39,13 +39,12 @@ public abstract class AbstractOneToOneMapper extends AbstractToOneMapper {
 
 	@Override
 	public void nullSafeMapToEntityFromMap(
-			EnversService enversService,
 			Object obj,
 			Map data,
 			Object primaryKey,
 			AuditReaderImplementor versionsReader,
 			Number revision) {
-		final EntityInfo referencedEntity = getEntityInfo( enversService, referencedEntityName );
+		final EntityInfo referencedEntity = getEntityInfo( versionsReader, referencedEntityName );
 
 		Object value;
 		try {

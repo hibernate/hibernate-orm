@@ -12,11 +12,12 @@ import java.util.Map;
 
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.boot.AuditService;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public class ModWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit {
 	private final Map<String, Object> data;
@@ -29,24 +30,26 @@ public class ModWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 	public ModWorkUnit(
 			SessionImplementor sessionImplementor,
 			String entityName,
-			EnversService enversService,
+			AuditService auditService,
 			Serializable id,
 			EntityPersister entityPersister,
 			Object[] newState,
 			Object[] oldState) {
-		super( sessionImplementor, entityName, enversService, id, RevisionType.MOD );
+		super( sessionImplementor, entityName, auditService, id, RevisionType.MOD );
 
 		this.entityPersister = entityPersister;
 		this.oldState = oldState;
 		this.newState = newState;
 		this.data = new HashMap<>();
-		this.changes = enversService.getEntitiesConfigurations().get( getEntityName() ).getPropertyMapper().map(
-				sessionImplementor,
-				data,
-				entityPersister.getPropertyNames(),
-				newState,
-				oldState
-		);
+
+		this.changes = auditService.getEntityBindings().get( getEntityName() )
+				.getPropertyMapper().map(
+						sessionImplementor,
+						data,
+						entityPersister.getPropertyNames(),
+						newState,
+						oldState
+				);
 	}
 
 	public Map<String, Object> getData() {
@@ -77,7 +80,7 @@ public class ModWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 		return new ModWorkUnit(
 				second.sessionImplementor,
 				second.getEntityName(),
-				second.enversService,
+				second.auditService,
 				second.id,
 				second.entityPersister,
 				second.newState,

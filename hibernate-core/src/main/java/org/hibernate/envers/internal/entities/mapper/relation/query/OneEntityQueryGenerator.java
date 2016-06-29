@@ -6,7 +6,7 @@
  */
 package org.hibernate.envers.internal.entities.mapper.relation.query;
 
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
+import org.hibernate.envers.boot.spi.AuditMetadataBuildingOptions;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.internal.tools.query.Parameters;
@@ -22,16 +22,21 @@ import static org.hibernate.envers.internal.entities.mapper.relation.query.Query
  *
  * @author Adam Warski (adam at warski dot org)
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public final class OneEntityQueryGenerator extends AbstractRelationQueryGenerator {
 	private final String queryString;
 	private final String queryRemovedString;
 
 	public OneEntityQueryGenerator(
-			AuditEntitiesConfiguration verEntCfg, AuditStrategy auditStrategy,
-			String versionsMiddleEntityName, MiddleIdData referencingIdData,
-			boolean revisionTypeInId, MiddleComponentData... componentData) {
-		super( verEntCfg, referencingIdData, revisionTypeInId );
+			AuditMetadataBuildingOptions options,
+			String versionsMiddleEntityName,
+			MiddleIdData referencingIdData,
+			boolean revisionTypeInId,
+			MiddleComponentData... componentData) {
+		super( options, referencingIdData, revisionTypeInId );
+
+		final AuditStrategy auditStrategy = options.getAuditStrategy();
 
 		/*
 		 * The valid query that we need to create:
@@ -52,6 +57,7 @@ public final class OneEntityQueryGenerator extends AbstractRelationQueryGenerato
 		 * (only non-deleted entities and associations)
 		 *     ee.revision_type != DEL
 		 */
+
 		final QueryBuilder commonPart = commonQueryPart( versionsMiddleEntityName );
 		final QueryBuilder validQuery = commonPart.deepCopy();
 		final QueryBuilder removedQuery = commonPart.deepCopy();
@@ -75,7 +81,7 @@ public final class OneEntityQueryGenerator extends AbstractRelationQueryGenerato
 		// ee.originalId.id_ref_ing = :id_ref_ing
 		referencingIdData.getPrefixedMapper().addNamedIdEqualsToQuery(
 				qb.getRootParameters(),
-				verEntCfg.getOriginalIdPropName(),
+				options.getOriginalIdPropName(),
 				true
 		);
 		return qb;
@@ -88,13 +94,13 @@ public final class OneEntityQueryGenerator extends AbstractRelationQueryGenerato
 			AuditStrategy auditStrategy, String versionsMiddleEntityName,
 			QueryBuilder qb, Parameters rootParameters, boolean inclusive,
 			MiddleComponentData... componentData) {
-		final String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
-		final String originalIdPropertyName = verEntCfg.getOriginalIdPropName();
+		final String revisionPropertyPath = options.getRevisionNumberPath();
+		final String originalIdPropertyName = options.getOriginalIdPropName();
 		final String eeOriginalIdPropertyPath = MIDDLE_ENTITY_ALIAS + "." + originalIdPropertyName;
 		// (with ee association at revision :revision)
 		// --> based on auditStrategy (see above)
 		auditStrategy.addAssociationAtRevisionRestriction(
-				qb, rootParameters, revisionPropertyPath, verEntCfg.getRevisionEndFieldName(), true,
+				qb, rootParameters, revisionPropertyPath, options.getRevisionEndFieldName(), true,
 				referencingIdData, versionsMiddleEntityName, eeOriginalIdPropertyPath, revisionPropertyPath,
 				originalIdPropertyName, MIDDLE_ENTITY_ALIAS, inclusive, componentData
 		);
@@ -116,7 +122,7 @@ public final class OneEntityQueryGenerator extends AbstractRelationQueryGenerato
 		// Excluding current revision, because we need to match data valid at the previous one.
 		createValidDataRestrictions( auditStrategy, versionsMiddleEntityName, remQb, valid, false, componentData );
 		// ee.revision = :revision
-		removed.addWhereWithNamedParam( verEntCfg.getRevisionNumberPath(), "=", REVISION_PARAMETER );
+		removed.addWhereWithNamedParam( options.getRevisionNumberPath(), "=", REVISION_PARAMETER );
 		// ee.revision_type = DEL
 		removed.addWhereWithNamedParam( getRevisionTypePath(), "=", DEL_REVISION_TYPE_PARAMETER );
 	}

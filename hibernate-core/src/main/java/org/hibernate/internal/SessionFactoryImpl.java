@@ -84,6 +84,8 @@ import org.hibernate.engine.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
+import org.hibernate.envers.AuditReader;
+import org.hibernate.envers.internal.reader.AuditReaderImpl;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
@@ -234,7 +236,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 				);
 			}
 		}
-		maskOutSensitiveInformation(this.properties);
+		maskOutSensitiveInformation( this.properties );
 		this.sqlFunctionRegistry = new SQLFunctionRegistry( jdbcServices.getJdbcEnvironment().getDialect(), options.getCustomSqlFunctionMap() );
 		this.cacheAccess = this.serviceRegistry.getService( CacheImplementor.class );
 		this.criteriaBuilder = new CriteriaBuilderImpl( this );
@@ -359,7 +361,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 					// then construct the fetch instance...
 					fetchProfile.addFetch( new Association( owner, mappingFetch.getAssociation() ), fetchStyle );
-					((Loadable) owner).registerAffectingFetchProfile( fetchProfile.getName() );
+					( (Loadable) owner ).registerAffectingFetchProfile( fetchProfile.getName() );
 				}
 				fetchProfiles.put( fetchProfile.getName(), fetchProfile );
 			}
@@ -927,7 +929,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	public IdentifierGenerator getIdentifierGenerator(String rootEntityName) {
-		return identifierGenerators.get(rootEntityName);
+		return identifierGenerators.get( rootEntityName );
 	}
 
 	private boolean canAccessTransactionManager() {
@@ -1031,6 +1033,11 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		else {
 			return type;
 		}
+	}
+
+	@Override
+	public AuditReader openAuditReader() {
+		return new AuditReaderImpl( openSession() );
 	}
 
 	public static Interceptor configuredInterceptor(Interceptor interceptor, SessionFactoryOptions options) {

@@ -12,7 +12,6 @@ import java.util.Map;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.MappingTools;
@@ -25,6 +24,7 @@ import org.hibernate.property.access.spi.Getter;
  * @author Adam Warski (adam at warski dot org)
  * @author Michal Skowronek (mskowr at o2 dot pl)
  * @author Lukasz Zuchowski (author at zuchos dot com)
+ * @author Chris Cranford
  */
 public class MultiPropertyMapper implements ExtendedPropertyMapper {
 	protected final Map<PropertyData, PropertyMapper> properties;
@@ -151,14 +151,13 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 
 	@Override
 	public void mapToEntityFromMap(
-			EnversService enversService,
 			Object obj,
 			Map data,
 			Object primaryKey,
 			AuditReaderImplementor versionsReader,
 			Number revision) {
 		for ( PropertyMapper mapper : properties.values() ) {
-			mapper.mapToEntityFromMap( enversService, obj, data, primaryKey, versionsReader, revision );
+			mapper.mapToEntityFromMap( obj, data, primaryKey, versionsReader, revision );
 		}
 	}
 

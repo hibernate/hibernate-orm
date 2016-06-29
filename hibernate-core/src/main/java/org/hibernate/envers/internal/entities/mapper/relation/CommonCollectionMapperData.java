@@ -6,7 +6,7 @@
  */
 package org.hibernate.envers.internal.entities.mapper.relation;
 
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
+import org.hibernate.envers.boot.spi.AuditMetadataBuildingOptions;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.entities.mapper.relation.query.RelationQueryGenerator;
 
@@ -14,27 +14,30 @@ import org.hibernate.envers.internal.entities.mapper.relation.query.RelationQuer
  * Data that is used by all collection mappers, regardless of the type.
  *
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public final class CommonCollectionMapperData {
-	private final AuditEntitiesConfiguration verEntCfg;
+	private final AuditMetadataBuildingOptions options;
 	private final String versionsMiddleEntityName;
 	private final PropertyData collectionReferencingPropertyData;
 	private final MiddleIdData referencingIdData;
 	private final RelationQueryGenerator queryGenerator;
 
 	public CommonCollectionMapperData(
-			AuditEntitiesConfiguration verEntCfg, String versionsMiddleEntityName,
-			PropertyData collectionReferencingPropertyData, MiddleIdData referencingIdData,
+			AuditMetadataBuildingOptions options,
+			String versionsMiddleEntityName,
+			PropertyData collectionReferencingPropertyData,
+			MiddleIdData referencingIdData,
 			RelationQueryGenerator queryGenerator) {
-		this.verEntCfg = verEntCfg;
+		this.options = options;
 		this.versionsMiddleEntityName = versionsMiddleEntityName;
 		this.collectionReferencingPropertyData = collectionReferencingPropertyData;
 		this.referencingIdData = referencingIdData;
 		this.queryGenerator = queryGenerator;
 	}
 
-	public AuditEntitiesConfiguration getVerEntCfg() {
-		return verEntCfg;
+	public AuditMetadataBuildingOptions getOptions() {
+		return options;
 	}
 
 	public String getVersionsMiddleEntityName() {

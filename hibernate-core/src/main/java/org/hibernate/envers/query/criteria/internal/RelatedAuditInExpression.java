@@ -8,7 +8,6 @@ package org.hibernate.envers.query.criteria.internal;
 
 import java.util.List;
 
-import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.RelationDescription;
 import org.hibernate.envers.internal.entities.mapper.id.QueryParameterData;
@@ -34,20 +33,23 @@ public class RelatedAuditInExpression extends AbstractAtomicExpression {
 
 	@Override
 	protected void addToQuery(
-			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			String entityName,
 			String alias,
 			QueryBuilder qb,
 			Parameters parameters) {
 		String propertyName = CriteriaTools.determinePropertyName(
-				enversService,
 				versionsReader,
 				entityName,
 				propertyNameGetter
 		);
 
-		RelationDescription relatedEntity = CriteriaTools.getRelatedEntity( enversService, entityName, propertyName );
+		RelationDescription relatedEntity = CriteriaTools.getRelatedEntity(
+				versionsReader.getAuditService(),
+				entityName,
+				propertyName
+		);
+
 		if ( relatedEntity == null ) {
 			throw new AuditException(
 					"The criterion can only be used on a property that is a relation to another property."

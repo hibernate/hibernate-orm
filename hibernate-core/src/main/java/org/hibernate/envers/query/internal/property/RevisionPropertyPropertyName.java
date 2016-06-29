@@ -6,12 +6,13 @@
  */
 package org.hibernate.envers.query.internal.property;
 
-import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.boot.AuditService;
 
 /**
  * Used for specifying restrictions on a property of the revision entity, which is associated with an audit entity.
  *
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public class RevisionPropertyPropertyName implements PropertyNameGetter {
 	private final String propertyName;
@@ -21,7 +22,7 @@ public class RevisionPropertyPropertyName implements PropertyNameGetter {
 	}
 
 	@Override
-	public String get(EnversService enversService) {
-		return enversService.getAuditEntitiesConfiguration().getRevisionPropPath( propertyName );
+	public String get(AuditService auditService) {
+		return auditService.getRevisionPropertyPath( propertyName );
 	}
 }

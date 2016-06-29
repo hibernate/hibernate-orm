@@ -11,7 +11,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.internal.entities.mapper.relation.query.RelationQueryGenerator;
@@ -22,19 +21,19 @@ import org.hibernate.internal.util.ReflectHelper;
  * Initializes a non-indexed java collection (set or list, eventually sorted).
  *
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public class BasicCollectionInitializor<T extends Collection> extends AbstractCollectionInitializor<T> {
 	protected final Class<? extends T> collectionClass;
 	private final MiddleComponentData elementComponentData;
 
 	public BasicCollectionInitializor(
-			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			RelationQueryGenerator queryGenerator,
 			Object primaryKey, Number revision, boolean removed,
 			Class<? extends T> collectionClass,
 			MiddleComponentData elementComponentData) {
-		super( enversService, versionsReader, queryGenerator, primaryKey, revision, removed );
+		super( versionsReader, queryGenerator, primaryKey, revision, removed );
 
 		this.collectionClass = collectionClass;
 		this.elementComponentData = elementComponentData;

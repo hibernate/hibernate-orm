@@ -6,8 +6,6 @@
  */
 package org.hibernate.envers.configuration.internal.metadata.reader;
 
-import org.hibernate.MappingException;
-import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.envers.AuditTable;
@@ -15,7 +13,7 @@ import org.hibernate.envers.Audited;
 import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.SecondaryAuditTable;
 import org.hibernate.envers.SecondaryAuditTables;
-import org.hibernate.envers.configuration.internal.GlobalConfiguration;
+import org.hibernate.envers.boot.spi.AuditMetadataBuildingOptions;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 
@@ -27,11 +25,13 @@ import java.util.Iterator;
  *
  * @author Adam Warski (adam at warski dot org)
  * @author Sebastian Komander
+ * @author Chris Cranford
  */
 public final class AnnotationsMetadataReader {
-	private final GlobalConfiguration globalCfg;
-	private final ReflectionManager reflectionManager;
+	private final AuditMetadataBuildingOptions options;
 	private final PersistentClass pc;
+	private final ReflectionManager reflectionManager;
+	private final XClass xclass;
 
 	/**
 	 * This object is filled with information read from annotations and returned by the <code>getVersioningData</code>
@@ -40,12 +40,14 @@ public final class AnnotationsMetadataReader {
 	private final ClassAuditingData auditData;
 
 	public AnnotationsMetadataReader(
-			GlobalConfiguration globalCfg, ReflectionManager reflectionManager,
-			PersistentClass pc) {
-		this.globalCfg = globalCfg;
+			AuditMetadataBuildingOptions options,
+			ReflectionManager reflectionManager,
+			PersistentClass pc,
+			XClass xclass) {
+		this.options = options;
 		this.reflectionManager = reflectionManager;
+		this.xclass = xclass;
 		this.pc = pc;
-
 		auditData = new ClassAuditingData();
 	}
 
@@ -92,33 +94,22 @@ public final class AnnotationsMetadataReader {
 	}
 
 	public ClassAuditingData getAuditData() {
-		if ( pc.getClassName() == null ) {
-			return auditData;
+		final ModificationStore defaultStore = getDefaultAudited( xclass );
+		if ( defaultStore != null ) {
+			auditData.setDefaultAudited( true );
 		}
 
-		try {
-			final XClass xclass = reflectionManager.classForName( pc.getClassName() );
+		new AuditedPropertiesReader(
+				defaultStore,
+				new PersistentClassPropertiesSource( xclass ),
+				auditData,
+				options,
+				reflectionManager,
+				""
+		).read();
 
-			final ModificationStore defaultStore = getDefaultAudited( xclass );
-			if ( defaultStore != null ) {
-				auditData.setDefaultAudited( true );
-			}
-
-			new AuditedPropertiesReader(
-					defaultStore,
-					new PersistentClassPropertiesSource( xclass ),
-					auditData,
-					globalCfg,
-					reflectionManager,
-					""
-			).read();
-
-			addAuditTable( xclass );
-			addAuditSecondaryTables( xclass );
-		}
-		catch (ClassLoadingException e) {
-			throw new MappingException( e );
-		}
+		addAuditTable( xclass );
+		addAuditSecondaryTables( xclass );
 
 		return auditData;
 	}

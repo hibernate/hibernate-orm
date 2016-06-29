@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
@@ -20,6 +19,7 @@ import org.hibernate.envers.query.internal.property.PropertyNameGetter;
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public class AggregatedAuditExpression implements AuditCriterion, ExtendableCriterion {
 	private String alias;
@@ -49,7 +49,6 @@ public class AggregatedAuditExpression implements AuditCriterion, ExtendableCrit
 
 	@Override
 	public void addToQuery(
-			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			Map<String, String> aliasToEntityNameMap,
 			String baseAlias,
@@ -58,18 +57,17 @@ public class AggregatedAuditExpression implements AuditCriterion, ExtendableCrit
 		String effectiveAlias = this.alias == null ? baseAlias : this.alias;
 		String entityName = aliasToEntityNameMap.get( effectiveAlias );
 		String propertyName = CriteriaTools.determinePropertyName(
-				enversService,
 				versionsReader,
 				entityName,
 				propertyNameGetter
 		);
 
-		CriteriaTools.checkPropertyNotARelation( enversService, entityName, propertyName );
+		CriteriaTools.checkPropertyNotARelation( versionsReader.getAuditService(), entityName, propertyName );
 
 		// Make sure our conditions are ANDed together even if the parent Parameters have a different connective
 		Parameters subParams = parameters.addSubParameters( Parameters.AND );
 		// This will be the aggregated query, containing all the specified conditions
-		String auditEntityName = enversService.getAuditEntitiesConfiguration().getAuditEntityName( entityName );
+		String auditEntityName = versionsReader.getAuditService().getAuditEntityName( entityName );
 		String subQueryAlias = qb.generateAlias();
 		QueryBuilder subQb = qb.newSubQueryBuilder( auditEntityName, subQueryAlias );
 		aliasToEntityNameMap.put( subQueryAlias, entityName );
@@ -77,8 +75,8 @@ public class AggregatedAuditExpression implements AuditCriterion, ExtendableCrit
 		// Adding all specified conditions both to the main query, as well as to the
 		// aggregated one.
 		for ( AuditCriterion versionsCriteria : criterions ) {
-			versionsCriteria.addToQuery( enversService, versionsReader, aliasToEntityNameMap, effectiveAlias, qb, subParams );
-			versionsCriteria.addToQuery( enversService, versionsReader, aliasToEntityNameMap, subQueryAlias, subQb, subQb.getRootParameters() );
+			versionsCriteria.addToQuery( versionsReader, aliasToEntityNameMap, effectiveAlias, qb, subParams );
+			versionsCriteria.addToQuery( versionsReader, aliasToEntityNameMap, subQueryAlias, subQb, subQb.getRootParameters() );
 		}
 
 		// Setting the desired projection of the aggregated query
@@ -92,12 +90,14 @@ public class AggregatedAuditExpression implements AuditCriterion, ExtendableCrit
 
 		// Correlating subquery with the outer query by entity id. See JIRA HHH-7827.
 		if ( correlate ) {
-			final String originalIdPropertyName = enversService.getAuditEntitiesConfiguration().getOriginalIdPropName();
-			enversService.getEntitiesConfigurations().get( entityName ).getIdMapper().addIdsEqualToQuery(
-					subQb.getRootParameters(),
-					subQb.getRootAlias() + "." + originalIdPropertyName,
-					effectiveAlias + "." + originalIdPropertyName
-			);
+			final String originalIdPropertyName = versionsReader.getAuditService().getOptions().getOriginalIdPropName();
+			versionsReader.getAuditService().getEntityBindings().get( entityName )
+					.getIdMapper()
+					.addIdsEqualToQuery(
+							subQb.getRootParameters(),
+							subQb.getRootAlias() + "." + originalIdPropertyName,
+							effectiveAlias + "." + originalIdPropertyName
+					);
 		}
 
 		// Adding the constrain on the result of the aggregated criteria

@@ -6,18 +6,19 @@
  */
 package org.hibernate.envers.query.order;
 
-import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.boot.AuditService;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public interface AuditOrder {
 	/**
-	 * @param enversService The EnversService
+	 * @param auditService The audit service
 	 *
 	 * @return the order data.
 	 */
-	OrderData getData(EnversService enversService);
+	OrderData getData(AuditService auditService);
 
 	class OrderData {
 

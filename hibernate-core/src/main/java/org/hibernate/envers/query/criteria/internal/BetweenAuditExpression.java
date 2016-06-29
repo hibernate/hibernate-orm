@@ -6,7 +6,6 @@
  */
 package org.hibernate.envers.query.criteria.internal;
 
-import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
@@ -14,6 +13,7 @@ import org.hibernate.envers.query.internal.property.PropertyNameGetter;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public class BetweenAuditExpression extends AbstractAtomicExpression {
 	private PropertyNameGetter propertyNameGetter;
@@ -29,19 +29,17 @@ public class BetweenAuditExpression extends AbstractAtomicExpression {
 
 	@Override
 	protected void addToQuery(
-			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			String entityName,
 			String alias,
 			QueryBuilder qb,
 			Parameters parameters) {
 		String propertyName = CriteriaTools.determinePropertyName(
-				enversService,
 				versionsReader,
 				entityName,
 				propertyNameGetter
 		);
-		CriteriaTools.checkPropertyNotARelation( enversService, entityName, propertyName );
+		CriteriaTools.checkPropertyNotARelation( versionsReader.getAuditService(), entityName, propertyName );
 
 		Parameters subParams = parameters.addSubParameters( Parameters.AND );
 		subParams.addWhereWithParam( alias, propertyName, ">=", lo );

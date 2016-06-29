@@ -10,7 +10,7 @@ import java.io.Serializable;
 import java.util.Set;
 
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.boot.AuditService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.RelationDescription;
 import org.hibernate.envers.internal.entities.RelationType;
@@ -28,16 +28,17 @@ import org.hibernate.proxy.HibernateProxy;
  * @author HernпїЅn Chanfreau
  * @author Steve Ebersole
  * @author Michal Skowronek (mskowr at o2 dot pl)
+ * @author Chris Cranford
  */
 public abstract class BaseEnversEventListener implements EnversListener {
-	private final EnversService enversService;
+	private final AuditService auditService;
 
-	protected BaseEnversEventListener(EnversService enversService) {
-		this.enversService = enversService;
+	protected BaseEnversEventListener(AuditService auditService) {
+		this.auditService = auditService;
 	}
 
-	protected EnversService getEnversService() {
-		return enversService;
+	protected AuditService getAuditService() {
+		return auditService;
 	}
 
 	protected final void generateBidirectionalCollectionChangeWorkUnits(
@@ -47,8 +48,9 @@ public abstract class BaseEnversEventListener implements EnversListener {
 			Object[] newState,
 			Object[] oldState,
 			SessionImplementor session) {
+
 		// Checking if this is enabled in configuration ...
-		if ( !enversService.getGlobalConfiguration().isGenerateRevisionsForCollections() ) {
+		if ( !auditService.getOptions().isRevisionOnCollectionChangeEnabled() ) {
 			return;
 		}
 
@@ -59,7 +61,7 @@ public abstract class BaseEnversEventListener implements EnversListener {
 
 		for ( int i = 0; i < propertyNames.length; i++ ) {
 			final String propertyName = propertyNames[i];
-			final RelationDescription relDesc = enversService.getEntitiesConfigurations().getRelationDescription(
+			final RelationDescription relDesc = auditService.getEntityBindings().getRelationDescription(
 					entityName,
 					propertyName
 			);
@@ -85,8 +87,12 @@ public abstract class BaseEnversEventListener implements EnversListener {
 	}
 
 	private void addCollectionChangeWorkUnit(
-			AuditProcess auditProcess, SessionImplementor session,
-			String fromEntityName, RelationDescription relDesc, Object value) {
+			AuditProcess auditProcess,
+			SessionImplementor session,
+			String fromEntityName,
+			RelationDescription relDesc,
+			Object value) {
+
 		// relDesc.getToEntityName() doesn't always return the entity name of the value - in case
 		// of subclasses, this will be root class, no the actual class. So it can't be used here.
 		String toEntityName;
@@ -106,11 +112,11 @@ public abstract class BaseEnversEventListener implements EnversListener {
 		else {
 			toEntityName = session.guessEntityName( value );
 
-			final IdMapper idMapper = enversService.getEntitiesConfigurations().get( toEntityName ).getIdMapper();
+			final IdMapper idMapper = auditService.getEntityBindings().get( toEntityName ).getIdMapper();
 			id = (Serializable) idMapper.mapToIdFromEntity( value );
 		}
 
-		final Set<String> toPropertyNames = enversService.getEntitiesConfigurations().getToPropertyNames(
+		final Set<String> toPropertyNames = auditService.getEntityBindings().getToPropertyNames(
 				fromEntityName,
 				relDesc.getFromPropertyName(),
 				toEntityName
@@ -122,7 +128,7 @@ public abstract class BaseEnversEventListener implements EnversListener {
 						session,
 						toEntityName,
 						toPropertyName,
-						enversService,
+						auditService,
 						id,
 						value
 				)

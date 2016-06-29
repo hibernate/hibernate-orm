@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.boot.AuditService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.ToOneDelegateSessionImplementor;
@@ -25,13 +25,13 @@ import org.hibernate.proxy.LazyInitializer;
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Hern&aacute;n Chanfreau
+ * @author Chris Cranford
  */
 public class EntityInstantiator {
-	private final EnversService enversService;
+
 	private final AuditReaderImplementor versionsReader;
 
-	public EntityInstantiator(EnversService enversService, AuditReaderImplementor versionsReader) {
-		this.enversService = enversService;
+	public EntityInstantiator(AuditReaderImplementor versionsReader) {
 		this.versionsReader = versionsReader;
 	}
 
@@ -51,7 +51,7 @@ public class EntityInstantiator {
 		}
 
 		// The $type$ property holds the name of the (versions) entity
-		final String type = enversService.getEntitiesConfigurations()
+		final String type = getAuditService().getEntityBindings()
 				.getEntityNameForVersionsEntityName( (String) versionsEntity.get( "$type$" ) );
 
 		if ( type != null ) {
@@ -59,11 +59,8 @@ public class EntityInstantiator {
 		}
 
 		// First mapping the primary key
-		final IdMapper idMapper = enversService.getEntitiesConfigurations().get( entityName ).getIdMapper();
-		final Map originalId = (Map) versionsEntity.get(
-				enversService.getAuditEntitiesConfiguration()
-						.getOriginalIdPropName()
-		);
+		final IdMapper idMapper = getAuditService().getEntityBindings().get( entityName ).getIdMapper();
+		final Map originalId = (Map) versionsEntity.get( getAuditService().getOptions().getOriginalIdPropName() );
 
 		// Fixes HHH-4751 issue (@IdClass with @ManyToOne relation mapping inside)
 		// Note that identifiers are always audited
@@ -80,13 +77,16 @@ public class EntityInstantiator {
 		// If it is not in the cache, creating a new entity instance
 		Object ret;
 		try {
-			EntityConfiguration entCfg = enversService.getEntitiesConfigurations().get( entityName );
+			EntityConfiguration entCfg = getAuditService().getEntityBindings().get( entityName );
 			if ( entCfg == null ) {
 				// a relation marked as RelationTargetAuditMode.NOT_AUDITED
-				entCfg = enversService.getEntitiesConfigurations().getNotVersionEntityConfiguration( entityName );
+				entCfg = getAuditService().getEntityBindings().getNotVersionEntityConfiguration( entityName );
 			}
 
-			final Class<?> cls = ReflectionTools.loadClass( entCfg.getEntityClassName(), enversService.getClassLoaderService() );
+			final Class<?> cls = ReflectionTools.loadClass(
+					entCfg.getEntityClassName(),
+					getAuditService().getClassLoaderService()
+			);
 			ret = ReflectHelper.getDefaultConstructor( cls ).newInstance();
 		}
 		catch (Exception e) {
@@ -97,8 +97,7 @@ public class EntityInstantiator {
 		// relation is present (which is eagerly loaded).
 		versionsReader.getFirstLevelCache().put( entityName, revision, primaryKey, ret );
 
-		enversService.getEntitiesConfigurations().get( entityName ).getPropertyMapper().mapToEntityFromMap(
-				enversService,
+		getAuditService().getEntityBindings().get( entityName ).getPropertyMapper().mapToEntityFromMap(
 				ret,
 				versionsEntity,
 				primaryKey,
@@ -115,7 +114,7 @@ public class EntityInstantiator {
 
 	@SuppressWarnings({"unchecked"})
 	private void replaceNonAuditIdProxies(Map versionsEntity, Number revision) {
-		final Map originalId = (Map) versionsEntity.get( enversService.getAuditEntitiesConfiguration().getOriginalIdPropName() );
+		final Map originalId = (Map) versionsEntity.get( getAuditService().getOptions().getOriginalIdPropName() );
 		for ( Object key : originalId.keySet() ) {
 			final Object value = originalId.get( key );
 			if ( value instanceof HibernateProxy ) {
@@ -123,11 +122,11 @@ public class EntityInstantiator {
 				final LazyInitializer initializer = hibernateProxy.getHibernateLazyInitializer();
 				final String entityName = initializer.getEntityName();
 				final Serializable entityId = initializer.getIdentifier();
-				if ( enversService.getEntitiesConfigurations().isVersioned( entityName ) ) {
-					final String entityClassName = enversService.getEntitiesConfigurations().get( entityName ).getEntityClassName();
+				if ( getAuditService().getEntityBindings().isVersioned( entityName ) ) {
+					final String entityClassName = getAuditService().getEntityBindings().get( entityName ).getEntityClassName();
 					final Class entityClass = ReflectionTools.loadClass(
 							entityClassName,
-							enversService.getClassLoaderService()
+							getAuditService().getClassLoaderService()
 					);
 					final ToOneDelegateSessionImplementor delegate = new ToOneDelegateSessionImplementor(
 							versionsReader,
@@ -135,11 +134,8 @@ public class EntityInstantiator {
 							entityId,
 							revision,
 							RevisionType.DEL.equals(
-									versionsEntity.get(
-											enversService.getAuditEntitiesConfiguration().getRevisionTypePropName()
-									)
-							),
-							enversService
+									versionsEntity.get( getAuditService().getOptions().getRevisionTypePropName() )
+							)
 					);
 					originalId.put(
 							key,
@@ -165,8 +161,8 @@ public class EntityInstantiator {
 		}
 	}
 
-	public EnversService getEnversService() {
-		return enversService;
+	public AuditService getAuditService() {
+		return getAuditReaderImplementor().getAuditService();
 	}
 
 	public AuditReaderImplementor getAuditReaderImplementor() {

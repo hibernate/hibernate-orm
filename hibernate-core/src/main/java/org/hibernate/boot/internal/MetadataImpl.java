@@ -35,6 +35,7 @@ import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
+import org.hibernate.envers.boot.spi.AuditMetadataBuilderImplementor;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.SessionFactoryImpl;
@@ -80,6 +81,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
 	private final Map<String, SQLFunction> sqlFunctionMap;
 	private final Database database;
+	private final AuditMetadataBuilderImplementor auditMetadataBuilder;
 
 	public MetadataImpl(
 			UUID uuid,
@@ -101,7 +103,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			Map<String, ResultSetMappingDefinition> sqlResultSetMappingMap,
 			Map<String, NamedEntityGraphDefinition> namedEntityGraphMap,
 			Map<String, SQLFunction> sqlFunctionMap,
-			Database database) {
+			Database database,
+			AuditMetadataBuilderImplementor auditMetadataBuilder) {
 		this.uuid = uuid;
 		this.metadataBuildingOptions = metadataBuildingOptions;
 		this.typeResolver = typeResolver;
@@ -122,6 +125,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		this.namedEntityGraphMap = namedEntityGraphMap;
 		this.sqlFunctionMap = sqlFunctionMap;
 		this.database = database;
+		this.auditMetadataBuilder = auditMetadataBuilder;
 	}
 
 	@Override
@@ -385,5 +389,10 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			);
 		}
 		return prop.getType();
+	}
+
+	@Override
+	public AuditMetadataBuilderImplementor getAuditMetadataBuilder() {
+		return auditMetadataBuilder;
 	}
 }

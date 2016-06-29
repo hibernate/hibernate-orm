@@ -9,7 +9,6 @@ package org.hibernate.envers.internal.entities.mapper;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.MapProxyTool;
@@ -19,6 +18,7 @@ import org.hibernate.envers.internal.tools.StringTools;
  * Multi mapper for dynamic components (it knows that component is a map, not a class)
  *
  * @author Lukasz Zuchowski (author at zuchos dot com)
+ * @author Chris Cranford
  */
 public class MultiDynamicComponentMapper extends MultiPropertyMapper {
 
@@ -98,7 +98,6 @@ public class MultiDynamicComponentMapper extends MultiPropertyMapper {
 	@Override
 	@SuppressWarnings("unchecked")
 	public void mapToEntityFromMap(
-			EnversService enversService,
 			Object obj,
 			Map data,
 			Object primaryKey,
@@ -108,10 +107,10 @@ public class MultiDynamicComponentMapper extends MultiPropertyMapper {
 				generateClassName( data, dynamicComponentData.getBeanName() ),
 				(Map) obj,
 				properties.keySet(),
-				enversService.getClassLoaderService()
+				versionsReader.getAuditService().getClassLoaderService()
 		);
 		for ( PropertyMapper mapper : properties.values() ) {
-			mapper.mapToEntityFromMap( enversService, mapProxy, data, primaryKey, versionsReader, revision );
+			mapper.mapToEntityFromMap( mapProxy, data, primaryKey, versionsReader, revision );
 		}
 	}
 

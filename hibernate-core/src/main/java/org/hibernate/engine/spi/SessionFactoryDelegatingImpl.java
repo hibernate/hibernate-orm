@@ -44,6 +44,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.query.spi.QueryPlanCache;
+import org.hibernate.envers.AuditReader;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
@@ -325,7 +326,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 
 	@Override
 	public RegionAccessStrategy getSecondLevelCacheRegionAccessStrategy(String regionName) {
-		return delegate.getSecondLevelCacheRegionAccessStrategy(regionName);
+		return delegate.getSecondLevelCacheRegionAccessStrategy( regionName );
 	}
 
 	@Override
@@ -335,7 +336,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 
 	@Override
 	public RegionAccessStrategy getNaturalIdCacheRegionAccessStrategy(String regionName) {
-		return delegate.getNaturalIdCacheRegionAccessStrategy(regionName);
+		return delegate.getNaturalIdCacheRegionAccessStrategy( regionName );
 	}
 
 	@Override
@@ -511,5 +512,10 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public Type resolveParameterBindType(Class clazz) {
 		return delegate.resolveParameterBindType( clazz );
+	}
+
+	@Override
+	public AuditReader openAuditReader() {
+		return delegate.openAuditReader();
 	}
 }

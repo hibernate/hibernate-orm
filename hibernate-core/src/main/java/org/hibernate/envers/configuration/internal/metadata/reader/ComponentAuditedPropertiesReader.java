@@ -10,7 +10,7 @@ import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.ModificationStore;
-import org.hibernate.envers.configuration.internal.GlobalConfiguration;
+import org.hibernate.envers.boot.spi.AuditMetadataBuildingOptions;
 import org.hibernate.envers.configuration.internal.metadata.MetadataTools;
 
 /**
@@ -18,6 +18,7 @@ import org.hibernate.envers.configuration.internal.metadata.MetadataTools;
  *
  * @author Hern&aacut;n Chanfreau
  * @author Michal Skowronek (mskowr at o2 dot pl)
+ * @author Chris Cranford
  */
 public class ComponentAuditedPropertiesReader extends AuditedPropertiesReader {
 
@@ -25,11 +26,12 @@ public class ComponentAuditedPropertiesReader extends AuditedPropertiesReader {
 			ModificationStore defaultStore,
 			PersistentPropertiesSource persistentPropertiesSource,
 			AuditedPropertiesHolder auditedPropertiesHolder,
-			GlobalConfiguration globalCfg, ReflectionManager reflectionManager,
+			AuditMetadataBuildingOptions options,
+			ReflectionManager reflectionManager,
 			String propertyNamePrefix) {
 		super(
 				defaultStore, persistentPropertiesSource, auditedPropertiesHolder,
-				globalCfg, reflectionManager, propertyNamePrefix
+				options, reflectionManager, propertyNamePrefix
 		);
 	}
 

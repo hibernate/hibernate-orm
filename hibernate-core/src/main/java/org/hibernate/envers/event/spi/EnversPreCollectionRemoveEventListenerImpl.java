@@ -9,7 +9,7 @@ package org.hibernate.envers.event.spi;
 import java.io.Serializable;
 
 import org.hibernate.engine.spi.CollectionEntry;
-import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.boot.AuditService;
 import org.hibernate.event.spi.PreCollectionRemoveEvent;
 import org.hibernate.event.spi.PreCollectionRemoveEventListener;
 
@@ -20,13 +20,14 @@ import org.hibernate.event.spi.PreCollectionRemoveEventListener;
  * @author HernпїЅn Chanfreau
  * @author Steve Ebersole
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public class EnversPreCollectionRemoveEventListenerImpl
 		extends BaseEnversCollectionEventListener
 		implements PreCollectionRemoveEventListener {
 
-	public EnversPreCollectionRemoveEventListenerImpl(EnversService enversService) {
-		super( enversService );
+	public EnversPreCollectionRemoveEventListenerImpl(AuditService auditService) {
+		super( auditService );
 	}
 
 	@Override
@@ -43,7 +44,7 @@ public class EnversPreCollectionRemoveEventListenerImpl
 			}
 			else {
 				// HHH-7510 - Avoid LazyInitializationException when global_with_modified_flag = true
-				if ( getEnversService().getGlobalConfiguration().isGlobalWithModifiedFlag() ) {
+				if ( getAuditService().getOptions().isGlobalWithModifiedFlagEnabled() ) {
 					initializeCollection( event );
 				}
 			}

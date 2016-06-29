@@ -9,7 +9,7 @@ package org.hibernate.envers.query.criteria;
 import java.util.Collection;
 
 import org.hibernate.criterion.MatchMode;
-import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.boot.AuditService;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.query.criteria.internal.BetweenAuditExpression;
 import org.hibernate.envers.query.criteria.internal.IlikeAuditExpression;
@@ -30,6 +30,7 @@ import org.hibernate.envers.query.projection.internal.PropertyAuditProjection;
  *
  * @author Adam Warski (adam at warski dot org)
  * @author Michal Skowronek (mskowr at o2 dot pl)
+ * @author Chris Cranford
  */
 @SuppressWarnings({"JavaDoc"})
 public class AuditProperty<T> implements AuditProjection {
@@ -348,8 +349,9 @@ public class AuditProperty<T> implements AuditProjection {
 
 	// Projection on this property
 
-	public ProjectionData getData(EnversService enversService) {
-		return new ProjectionData( null, alias, propertyNameGetter.get( enversService ), false );
+	@Override
+	public ProjectionData getData(AuditService auditService) {
+		return new ProjectionData( null, alias, propertyNameGetter.get( auditService ), false );
 	}
 
 	// Order
@@ -369,7 +371,7 @@ public class AuditProperty<T> implements AuditProjection {
 	}
 	
 	@Override
-	public Object convertQueryResult(EnversService enversService, EntityInstantiator entityInstantiator, String entityName, Number revision, Object value) {
+	public Object convertQueryResult(EntityInstantiator entityInstantiator, String entityName, Number revision, Object value) {
 		return value;
 	}
 	

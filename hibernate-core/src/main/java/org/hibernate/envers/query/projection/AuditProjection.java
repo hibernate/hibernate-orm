@@ -6,22 +6,41 @@
  */
 package org.hibernate.envers.query.projection;
 
+import org.hibernate.envers.boot.AuditService;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public interface AuditProjection {
 	/**
-	 * @param enversService The EnversService
-	 *
+	 * @param auditService The audit service
 	 * @return the projection data
 	 */
-	ProjectionData getData(EnversService enversService);
+	ProjectionData getData(AuditService auditService);
 
 	/**
-	 * @param enversService the Envers service
+	 * @param enversService the EnversService
+	 * @param entityInstantiator the entity instantiator
+	 * @param entityName the name of the entity for which the projection has been added
+	 * @param revision the revision
+	 * @param value the value to convert
+	 * @return the converted value
+	 * @deprecated (since 6.0), use {@link #convertQueryResult(EntityInstantiator, String, Number, Object)}.
+	 */
+	@Deprecated
+	default Object convertQueryResult(
+			final EnversService enversService,
+			final EntityInstantiator entityInstantiator,
+			final String entityName,
+			final Number revision,
+			final Object value) {
+		return convertQueryResult( entityInstantiator, entityName, revision, value );
+	}
+
+	/**
 	 * @param entityInstantiator the entity instantiator
 	 * @param entityName the name of the entity for which the projection has been added
 	 * @param revision the revision
@@ -29,7 +48,6 @@ public interface AuditProjection {
 	 * @return the converted value
 	 */
 	Object convertQueryResult(
-			final EnversService enversService,
 			final EntityInstantiator entityInstantiator,
 			final String entityName,
 			final Number revision,

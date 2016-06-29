@@ -12,7 +12,6 @@ import java.util.Map;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.mapper.PropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.BasicCollectionInitializor;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.Initializor;
@@ -20,6 +19,7 @@ import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public class BasicCollectionMapper<T extends Collection> extends AbstractCollectionMapper<T> implements PropertyMapper {
 	protected final MiddleComponentData elementComponentData;
@@ -37,13 +37,11 @@ public class BasicCollectionMapper<T extends Collection> extends AbstractCollect
 
 	@Override
 	protected Initializor<T> getInitializor(
-			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			Object primaryKey,
 			Number revision,
 			boolean removed) {
 		return new BasicCollectionInitializor<>(
-				enversService,
 				versionsReader,
 				commonCollectionMapperData.getQueryGenerator(),
 				primaryKey,

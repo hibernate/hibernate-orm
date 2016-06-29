@@ -33,7 +33,7 @@ import org.hibernate.envers.Audited;
 import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.NotAudited;
 import org.hibernate.envers.RelationTargetAuditMode;
-import org.hibernate.envers.configuration.internal.GlobalConfiguration;
+import org.hibernate.envers.boot.spi.AuditMetadataBuildingOptions;
 import org.hibernate.envers.configuration.internal.metadata.MetadataTools;
 import org.hibernate.envers.internal.tools.MappingTools;
 import org.hibernate.envers.internal.tools.ReflectionTools;
@@ -56,12 +56,13 @@ import static org.hibernate.envers.internal.tools.Tools.newHashSet;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  * @author Michal Skowronek (mskowr at o2 dot pl)
  * @author Lukasz Zuchowski (author at zuchos dot com)
+ * @author Chris Cranford
  */
 public class AuditedPropertiesReader {
 	protected final ModificationStore defaultStore;
 	private final PersistentPropertiesSource persistentPropertiesSource;
 	private final AuditedPropertiesHolder auditedPropertiesHolder;
-	private final GlobalConfiguration globalCfg;
+	private final AuditMetadataBuildingOptions options;
 	private final ReflectionManager reflectionManager;
 	private final String propertyNamePrefix;
 
@@ -80,13 +81,13 @@ public class AuditedPropertiesReader {
 			ModificationStore defaultStore,
 			PersistentPropertiesSource persistentPropertiesSource,
 			AuditedPropertiesHolder auditedPropertiesHolder,
-			GlobalConfiguration globalCfg,
+			AuditMetadataBuildingOptions options,
 			ReflectionManager reflectionManager,
 			String propertyNamePrefix) {
 		this.defaultStore = defaultStore;
 		this.persistentPropertiesSource = persistentPropertiesSource;
 		this.auditedPropertiesHolder = auditedPropertiesHolder;
-		this.globalCfg = globalCfg;
+		this.options = options;
 		this.reflectionManager = reflectionManager;
 		this.propertyNamePrefix = propertyNamePrefix;
 
@@ -416,7 +417,7 @@ public class AuditedPropertiesReader {
 					propertyValue
 			);
 			final AuditedPropertiesReader audPropReader = new AuditedPropertiesReader(
-					ModificationStore.FULL, componentPropertiesSource, componentData, globalCfg, reflectionManager,
+					ModificationStore.FULL, componentPropertiesSource, componentData, options, reflectionManager,
 					propertyNamePrefix + MappingTools.createComponentPrefix( embeddedName )
 			);
 			audPropReader.read();
@@ -445,7 +446,7 @@ public class AuditedPropertiesReader {
 				ModificationStore.FULL,
 				componentPropertiesSource,
 				componentData,
-				globalCfg,
+				options,
 				reflectionManager,
 				propertyNamePrefix + MappingTools.createComponentPrefix( property.getName() )
 		);
@@ -494,7 +495,7 @@ public class AuditedPropertiesReader {
 		else {
 			// if the optimistic locking field has to be unversioned and the current property
 			// is the optimistic locking field, don't audit it
-			if ( globalCfg.isDoNotAuditOptimisticLockingField() ) {
+			if ( options.isDoNotAuditOptimisticLockingFieldEnabled() ) {
 				final Version jpaVer = property.getAnnotation( Version.class );
 				if ( jpaVer != null ) {
 					return false;
@@ -503,7 +504,7 @@ public class AuditedPropertiesReader {
 		}
 
 		final String propertyName = propertyNamePrefix + property.getName();
-		if ( !this.checkAudited( property, propertyData,propertyName, allClassAudited, globalCfg.getModifiedFlagSuffix() ) ) {
+		if ( !this.checkAudited( property, propertyData,propertyName, allClassAudited, options.getModifiedFlagSuffix() ) ) {
 			return false;
 		}
 
@@ -561,13 +562,13 @@ public class AuditedPropertiesReader {
 
 	protected boolean checkUsingModifiedFlag(Audited aud) {
 		// HHH-10468
-		if ( globalCfg.hasSettingForUsingModifiedFlag() ) {
+		if ( options.hasGlobalWithModifiedFlag() ) {
 			// HHH-10468
 			// Modify behavior so that if the global setting has been set by user properties, then
 			// the audit behavior should be a disjunction between the global setting and the field
 			// annotation.  This allows the annotation to take precedence when the global value is
 			// false and for the global setting to take precedence when true.
-			return globalCfg.isGlobalWithModifiedFlag() || aud.withModifiedFlag();
+			return options.isGlobalWithModifiedFlagEnabled() || aud.withModifiedFlag();
 		}
 		// no global setting enabled, use the annotation's value only.
 		return aud.withModifiedFlag();

@@ -18,7 +18,7 @@ import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.CrossTypeRevisionChangesReader;
 import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.boot.AuditService;
 import org.hibernate.envers.internal.tools.EntityTools;
 import org.hibernate.envers.query.criteria.internal.RevisionTypeAuditExpression;
 import org.hibernate.envers.tools.Pair;
@@ -29,16 +29,13 @@ import static org.hibernate.envers.internal.tools.ArgumentsTools.checkPositive;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public class CrossTypeRevisionChangesReaderImpl implements CrossTypeRevisionChangesReader {
 	private final AuditReaderImplementor auditReaderImplementor;
-	private final EnversService enversService;
 
-	public CrossTypeRevisionChangesReaderImpl(
-			AuditReaderImplementor auditReaderImplementor,
-			EnversService enversService) {
+	public CrossTypeRevisionChangesReaderImpl(AuditReaderImplementor auditReaderImplementor) {
 		this.auditReaderImplementor = auditReaderImplementor;
-		this.enversService = enversService;
 	}
 
 	@Override
@@ -107,15 +104,16 @@ public class CrossTypeRevisionChangesReaderImpl implements CrossTypeRevisionChan
 
 		final Session session = auditReaderImplementor.getSession();
 		final SessionImplementor sessionImplementor = auditReaderImplementor.getSessionImplementor();
+		final AuditService auditService = auditReaderImplementor.getAuditService();
 
 		final Set<Number> revisions = new HashSet<>( 1 );
 		revisions.add( revision );
-		final Query<?> query = enversService.getRevisionInfoQueryCreator().getRevisionsQuery( session, revisions );
+		final Query<?> query = auditService.getRevisionInfoQueryCreator().getRevisionsQuery( session, revisions );
 		final Object revisionInfo = query.uniqueResult();
 
 		if ( revisionInfo != null ) {
 			// If revision exists.
-			final Set<String> entityNames = enversService.getModifiedEntityNamesReader().getModifiedEntityNames( revisionInfo );
+			final Set<String> entityNames = auditService.getModifiedEntityNamesReader().getModifiedEntityNames( revisionInfo );
 			if ( entityNames != null ) {
 				// Generate result that contains entity names and corresponding Java classes.
 				final Set<Pair<String, Class>> result = new HashSet<>();
@@ -141,4 +139,5 @@ public class CrossTypeRevisionChangesReaderImpl implements CrossTypeRevisionChan
 			throw new IllegalStateException( "The associated entity manager is closed!" );
 		}
 	}
+
 }

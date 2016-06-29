@@ -6,7 +6,6 @@
  */
 package org.hibernate.envers.internal.entities.mapper.relation;
 
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
 import org.hibernate.envers.internal.entities.IdMappingData;
 import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
 
@@ -15,6 +14,7 @@ import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
  * when mapping collections.
  *
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public final class MiddleIdData {
 	private final IdMapper originalMapper;
@@ -22,13 +22,15 @@ public final class MiddleIdData {
 	private final String entityName;
 	private final String auditEntityName;
 
-	public MiddleIdData(
-			AuditEntitiesConfiguration verEntCfg, IdMappingData mappingData, String prefix,
-			String entityName, boolean audited) {
+	public MiddleIdData(IdMappingData mappingData, String prefix, String entityName) {
+		this( mappingData, prefix, entityName, null );
+	}
+
+	public MiddleIdData(IdMappingData mappingData, String prefix, String entityName, String auditEntityName) {
 		this.originalMapper = mappingData.getIdMapper();
 		this.prefixedMapper = mappingData.getIdMapper().prefixMappedProperties( prefix );
 		this.entityName = entityName;
-		this.auditEntityName = audited ? verEntCfg.getAuditEntityName( entityName ) : null;
+		this.auditEntityName = auditEntityName;
 	}
 
 	/**

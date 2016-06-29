@@ -8,8 +8,6 @@ package org.hibernate.envers.query.internal.impl;
 
 import java.util.List;
 
-import org.hibernate.envers.boot.internal.EnversService;
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
 import org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.query.criteria.AuditCriterion;
@@ -20,27 +18,26 @@ import org.hibernate.query.Query;
  * of a certain type has not been changed in a given revision.
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  * @see EntitiesAtRevisionQuery
  */
 public class EntitiesModifiedAtRevisionQuery extends AbstractAuditQuery {
 	private final Number revision;
 
 	public EntitiesModifiedAtRevisionQuery(
-			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			Class<?> cls,
 			Number revision) {
-		super( enversService, versionsReader, cls );
+		super( versionsReader, cls );
 		this.revision = revision;
 	}
 
 	public EntitiesModifiedAtRevisionQuery(
-			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			Class<?> cls,
 			String entityName,
 			Number revision) {
-		super( enversService, versionsReader, cls, entityName );
+		super( versionsReader, cls, entityName );
 		this.revision = revision;
 	}
 
@@ -53,14 +50,12 @@ public class EntitiesModifiedAtRevisionQuery extends AbstractAuditQuery {
          * (all specified conditions, transformed, on the "e" entity) AND
          * e.revision = :revision
          */
-		AuditEntitiesConfiguration verEntCfg = enversService.getAuditEntitiesConfiguration();
-		String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
+		String revisionPropertyPath = versionsReader.getAuditService().getOptions().getRevisionNumberPath();
 		qb.getRootParameters().addWhereWithParam( revisionPropertyPath, "=", revision );
 
 		// all specified conditions
 		for ( AuditCriterion criterion : criterions ) {
 			criterion.addToQuery(
-					enversService,
 					versionsReader,
 					aliasToEntityNameMap,
 					QueryConstants.REFERENCED_ENTITY_ALIAS,

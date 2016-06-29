@@ -6,12 +6,13 @@
  */
 package org.hibernate.envers.query.order.internal;
 
-import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.boot.AuditService;
 import org.hibernate.envers.query.internal.property.PropertyNameGetter;
 import org.hibernate.envers.query.order.AuditOrder;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public class PropertyAuditOrder implements AuditOrder {
 	private final String alias;
@@ -25,7 +26,7 @@ public class PropertyAuditOrder implements AuditOrder {
 	}
 
 	@Override
-	public OrderData getData(EnversService enversService) {
-		return new OrderData( alias, propertyNameGetter.get( enversService ), asc );
+	public OrderData getData(AuditService auditService) {
+		return new OrderData( alias, propertyNameGetter.get( auditService ), asc );
 	}
 }

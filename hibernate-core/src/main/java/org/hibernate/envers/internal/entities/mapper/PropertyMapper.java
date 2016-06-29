@@ -12,12 +12,12 @@ import java.util.Map;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Michal Skowronek (mskowr at o2 dot pl)
+ * @author Chris Cranford
  */
 public interface PropertyMapper {
 	/**
@@ -35,7 +35,6 @@ public interface PropertyMapper {
 	/**
 	 * Maps properties from the given map to the given object.
 	 *
-	 * @param enversService The EnversService.
 	 * @param obj Object to map to.
 	 * @param data Data to map from.
 	 * @param primaryKey Primary key of the object to which we map (for relations)
@@ -43,7 +42,6 @@ public interface PropertyMapper {
 	 * @param revision Revision at which the object is read, for reading relations
 	 */
 	void mapToEntityFromMap(
-			EnversService enversService,
 			Object obj,
 			Map data,
 			Object primaryKey,

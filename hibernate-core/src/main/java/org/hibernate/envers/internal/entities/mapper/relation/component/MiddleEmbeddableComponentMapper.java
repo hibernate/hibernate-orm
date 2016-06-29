@@ -21,6 +21,7 @@ import org.hibernate.internal.util.ReflectHelper;
 
 /**
  * @author Kristoffer Lundberg (kristoffer at cambio dot se)
+ * @author Chris Cranford
  */
 public class MiddleEmbeddableComponentMapper implements MiddleComponentMapper, CompositeMapperBuilder {
 	private final MultiPropertyMapper delegate;
@@ -42,7 +43,6 @@ public class MiddleEmbeddableComponentMapper implements MiddleComponentMapper, C
 					? dataObject
 					: ReflectHelper.getDefaultConstructor( componentClass ).newInstance();
 			delegate.mapToEntityFromMap(
-					entityInstantiator.getEnversService(),
 					componentInstance,
 					data,
 					null,

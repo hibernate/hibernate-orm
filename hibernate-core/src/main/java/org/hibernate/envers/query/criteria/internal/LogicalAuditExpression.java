@@ -8,7 +8,6 @@ package org.hibernate.envers.query.criteria.internal;
 
 import java.util.Map;
 
-import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
@@ -16,6 +15,7 @@ import org.hibernate.envers.query.criteria.AuditCriterion;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public class LogicalAuditExpression implements AuditCriterion {
 	private AuditCriterion lhs;
@@ -29,7 +29,6 @@ public class LogicalAuditExpression implements AuditCriterion {
 	}
 
 	public void addToQuery(
-			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			Map<String, String> aliasToEntityNameMap,
 			String alias,
@@ -37,7 +36,7 @@ public class LogicalAuditExpression implements AuditCriterion {
 			Parameters parameters) {
 		Parameters opParameters = parameters.addSubParameters( op );
 
-		lhs.addToQuery( enversService, versionsReader, aliasToEntityNameMap, alias, qb, opParameters.addSubParameters( "and" ) );
-		rhs.addToQuery( enversService, versionsReader, aliasToEntityNameMap, alias, qb, opParameters.addSubParameters( "and" ) );
+		lhs.addToQuery( versionsReader, aliasToEntityNameMap, alias, qb, opParameters.addSubParameters( "and" ) );
+		rhs.addToQuery( versionsReader, aliasToEntityNameMap, alias, qb, opParameters.addSubParameters( "and" ) );
 	}
 }

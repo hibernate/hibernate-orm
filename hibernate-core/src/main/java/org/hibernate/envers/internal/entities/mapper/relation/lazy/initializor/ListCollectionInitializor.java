@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.internal.entities.mapper.relation.query.RelationQueryGenerator;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
@@ -19,13 +18,13 @@ import org.hibernate.envers.internal.reader.AuditReaderImplementor;
  * Initializes a map.
  *
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public class ListCollectionInitializor extends AbstractCollectionInitializor<List> {
 	private final MiddleComponentData elementComponentData;
 	private final MiddleComponentData indexComponentData;
 
 	public ListCollectionInitializor(
-			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			RelationQueryGenerator queryGenerator,
 			Object primaryKey,
@@ -33,7 +32,7 @@ public class ListCollectionInitializor extends AbstractCollectionInitializor<Lis
 			boolean removed,
 			MiddleComponentData elementComponentData,
 			MiddleComponentData indexComponentData) {
-		super( enversService, versionsReader, queryGenerator, primaryKey, revision, removed );
+		super( versionsReader, queryGenerator, primaryKey, revision, removed );
 
 		this.elementComponentData = elementComponentData;
 		this.indexComponentData = indexComponentData;

@@ -6,7 +6,7 @@
  */
 package org.hibernate.envers.event.spi;
 
-import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.boot.AuditService;
 import org.hibernate.envers.internal.synchronization.AuditProcess;
 import org.hibernate.envers.internal.synchronization.work.AddWorkUnit;
 import org.hibernate.envers.internal.synchronization.work.AuditWorkUnit;
@@ -20,25 +20,26 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
  * @author Steve Ebersole
+ * @author Chris Cranford
  */
 public class EnversPostInsertEventListenerImpl extends BaseEnversEventListener implements PostInsertEventListener {
-	public EnversPostInsertEventListenerImpl(EnversService enversService) {
-		super( enversService );
+	public EnversPostInsertEventListenerImpl(AuditService auditService) {
+		super( auditService );
 	}
 
 	@Override
 	public void onPostInsert(PostInsertEvent event) {
 		final String entityName = event.getPersister().getEntityName();
 
-		if ( getEnversService().getEntitiesConfigurations().isVersioned( entityName ) ) {
+		if ( getAuditService().getEntityBindings().isVersioned( entityName ) ) {
 			checkIfTransactionInProgress( event.getSession() );
 
-			final AuditProcess auditProcess = getEnversService().getAuditProcessManager().get( event.getSession() );
+			final AuditProcess auditProcess = getAuditService().getAuditProcess( event.getSession() );
 
 			final AuditWorkUnit workUnit = new AddWorkUnit(
 					event.getSession(),
 					event.getPersister().getEntityName(),
-					getEnversService(),
+					getAuditService(),
 					event.getId(),
 					event.getPersister(),
 					event.getState()
@@ -60,6 +61,6 @@ public class EnversPostInsertEventListenerImpl extends BaseEnversEventListener i
 
 	@Override
 	public boolean requiresPostCommitHanding(EntityPersister persister) {
-		return getEnversService().getEntitiesConfigurations().isVersioned( persister.getEntityName() );
+		return getAuditService().getEntityBindings().isVersioned( persister.getEntityName() );
 	}
 }

@@ -6,13 +6,14 @@
  */
 package org.hibernate.envers.query.internal.property;
 
-import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.boot.AuditService;
 import org.hibernate.envers.configuration.internal.metadata.MetadataTools;
 
 /**
  * PropertyNameGetter for modified flags
  *
  * @author Michal Skowronek (mskowr at o2 dot pl)
+ * @author Chris Cranford
  */
 public class ModifiedFlagPropertyName implements PropertyNameGetter {
 	private final PropertyNameGetter propertyNameGetter;
@@ -21,10 +22,11 @@ public class ModifiedFlagPropertyName implements PropertyNameGetter {
 		this.propertyNameGetter = propertyNameGetter;
 	}
 
-	public String get(EnversService enversService) {
+	@Override
+	public String get(AuditService auditService) {
 		return MetadataTools.getModifiedFlagPropertyName(
-				propertyNameGetter.get( enversService ),
-				enversService.getGlobalConfiguration().getModifiedFlagSuffix()
+				propertyNameGetter.get( auditService ),
+				auditService.getOptions().getModifiedFlagSuffix()
 		);
 	}
 }

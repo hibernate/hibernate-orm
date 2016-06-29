@@ -8,7 +8,6 @@ package org.hibernate.envers.query.criteria.internal;
 
 import java.util.Map;
 
-import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
@@ -16,6 +15,7 @@ import org.hibernate.envers.query.criteria.AuditCriterion;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public class NotAuditExpression implements AuditCriterion {
 	private AuditCriterion criterion;
@@ -25,12 +25,11 @@ public class NotAuditExpression implements AuditCriterion {
 	}
 
 	public void addToQuery(
-			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			Map<String, String> aliasToEntityNameMap,
 			String alias,
 			QueryBuilder qb,
 			Parameters parameters) {
-		criterion.addToQuery( enversService, versionsReader, aliasToEntityNameMap, alias, qb, parameters.addNegatedParameters() );
+		criterion.addToQuery( versionsReader, aliasToEntityNameMap, alias, qb, parameters.addNegatedParameters() );
 	}
 }

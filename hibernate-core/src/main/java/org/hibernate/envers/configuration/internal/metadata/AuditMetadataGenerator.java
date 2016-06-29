@@ -15,8 +15,7 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.envers.RelationTargetAuditMode;
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
-import org.hibernate.envers.configuration.internal.GlobalConfiguration;
+import org.hibernate.envers.boot.spi.AuditMetadataBuildingOptions;
 import org.hibernate.envers.configuration.internal.metadata.reader.ClassAuditingData;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.internal.EnversMessageLogger;
@@ -68,9 +67,7 @@ public final class AuditMetadataGenerator {
 
 	private final MetadataImplementor metadata;
 	private final ServiceRegistry serviceRegistry;
-	private final GlobalConfiguration globalCfg;
-	private final AuditEntitiesConfiguration verEntCfg;
-	private final AuditStrategy auditStrategy;
+	private final AuditMetadataBuildingOptions options;
 	private final Element revisionInfoRelationMapping;
 
 	private final ClassLoaderService classLoaderService;
@@ -97,16 +94,12 @@ public final class AuditMetadataGenerator {
 	public AuditMetadataGenerator(
 			MetadataImplementor metadata,
 			ServiceRegistry serviceRegistry,
-			GlobalConfiguration globalCfg,
-			AuditEntitiesConfiguration verEntCfg,
-			AuditStrategy auditStrategy,
+			AuditMetadataBuildingOptions options,
 			Element revisionInfoRelationMapping,
 			AuditEntityNameRegister auditEntityNameRegister) {
 		this.metadata = metadata;
 		this.serviceRegistry = serviceRegistry;
-		this.globalCfg = globalCfg;
-		this.verEntCfg = verEntCfg;
-		this.auditStrategy = auditStrategy;
+		this.options = options;
 		this.revisionInfoRelationMapping = revisionInfoRelationMapping;
 
 		this.basicMetadataGenerator = new BasicMetadataGenerator();
@@ -143,12 +136,12 @@ public final class AuditMetadataGenerator {
 	 */
 	private Element cloneAndSetupRevisionInfoRelationMapping() {
 		final Element revMapping = (Element) revisionInfoRelationMapping.clone();
-		revMapping.addAttribute( "name", verEntCfg.getRevisionFieldName() );
-		if ( globalCfg.isCascadeDeleteRevision() ) {
+		revMapping.addAttribute( "name", options.getRevisionFieldName() );
+		if ( options.isCascadeDeleteRevisionEnabled() ) {
 			revMapping.addAttribute( "on-delete", "cascade" );
 		}
 
-		MetadataTools.addOrModifyColumn( revMapping, verEntCfg.getRevisionFieldName() );
+		MetadataTools.addOrModifyColumn( revMapping, options.getRevisionFieldName() );
 
 		return revMapping;
 	}
@@ -164,8 +157,8 @@ public final class AuditMetadataGenerator {
 	void addRevisionType(Element anyMapping, Element anyMappingEnd, boolean isKey) {
 		final Element revTypeProperty = MetadataTools.addProperty(
 				anyMapping,
-				verEntCfg.getRevisionTypePropName(),
-				verEntCfg.getRevisionTypePropType(),
+				options.getRevisionTypePropName(),
+				options.getRevisionTypePropType(),
 				true,
 				isKey
 		);
@@ -177,20 +170,21 @@ public final class AuditMetadataGenerator {
 
 	private void addEndRevision(Element anyMapping) {
 		// Add the end-revision field, if the appropriate strategy is used.
+		final AuditStrategy auditStrategy = options.getAuditStrategy();
 		if ( auditStrategy instanceof ValidityAuditStrategy ) {
 			final Element endRevMapping = (Element) revisionInfoRelationMapping.clone();
 			endRevMapping.setName( "many-to-one" );
-			endRevMapping.addAttribute( "name", verEntCfg.getRevisionEndFieldName() );
-			MetadataTools.addOrModifyColumn( endRevMapping, verEntCfg.getRevisionEndFieldName() );
+			endRevMapping.addAttribute( "name", options.getRevisionEndFieldName() );
+			MetadataTools.addOrModifyColumn( endRevMapping, options.getRevisionEndFieldName() );
 
 			anyMapping.add( endRevMapping );
 
-			if ( verEntCfg.isRevisionEndTimestampEnabled() ) {
+			if ( options.isRevisionEndTimestampEnabled() ) {
 				// add a column for the timestamp of the end revision
 				final String revisionInfoTimestampSqlType = TimestampType.INSTANCE.getName();
 				final Element timestampProperty = MetadataTools.addProperty(
 						anyMapping,
-						verEntCfg.getRevisionEndTimestampFieldName(),
+						options.getRevisionEndTimestampFieldName(),
 						revisionInfoTimestampSqlType,
 						true,
 						true,
@@ -198,7 +192,7 @@ public final class AuditMetadataGenerator {
 				);
 				MetadataTools.addColumn(
 						timestampProperty,
-						verEntCfg.getRevisionEndTimestampFieldName(),
+						options.getRevisionEndTimestampFieldName(),
 						null,
 						null,
 						null,
@@ -334,7 +328,7 @@ public final class AuditMetadataGenerator {
 			MetadataTools.addModifiedFlagProperty(
 					parent,
 					propertyAuditingData.getName(),
-					globalCfg.getModifiedFlagSuffix(),
+					options.getModifiedFlagSuffix(),
 					propertyAuditingData.getModifiedFlagName()
 			);
 		}
@@ -426,7 +420,7 @@ public final class AuditMetadataGenerator {
 		String schema = schemaFromAnnotation;
 		// ... if empty, try using the default ...
 		if ( StringTools.isEmpty( schema ) ) {
-			schema = globalCfg.getDefaultSchemaName();
+			schema = options.getDefaultSchemaName();
 
 			// ... if still empty, use the same as the normal table.
 			if ( StringTools.isEmpty( schema ) ) {
@@ -442,7 +436,7 @@ public final class AuditMetadataGenerator {
 		String catalog = catalogFromAnnotation;
 		// ... if empty, try using the default ...
 		if ( StringTools.isEmpty( catalog ) ) {
-			catalog = globalCfg.getDefaultCatalogName();
+			catalog = options.getDefaultCatalogName();
 
 			// ... if still empty, use the same as the normal table.
 			if ( StringTools.isEmpty( catalog ) ) {
@@ -472,7 +466,7 @@ public final class AuditMetadataGenerator {
 			final String originalTableName = join.getTable().getName();
 			String auditTableName = auditingData.getSecondaryTableDictionary().get( originalTableName );
 			if ( auditTableName == null ) {
-				auditTableName = verEntCfg.getAuditEntityName( originalTableName );
+				auditTableName = options.getAuditEntityName( originalTableName );
 			}
 
 			final String schema = getSchema( auditingData.getAuditTable().schema(), join.getTable() );
@@ -493,7 +487,7 @@ public final class AuditMetadataGenerator {
 
 			final Element joinKey = joinElement.addElement( "key" );
 			MetadataTools.addColumns( joinKey, join.getKey().getColumnIterator() );
-			MetadataTools.addColumn( joinKey, verEntCfg.getRevisionFieldName(), null, null, null, null, null, null );
+			MetadataTools.addColumn( joinKey, options.getRevisionFieldName(), null, null, null, null, null, null );
 		}
 	}
 
@@ -557,7 +551,7 @@ public final class AuditMetadataGenerator {
 	private Triple<Element, ExtendedPropertyMapper, String> generateInheritanceMappingData(
 			PersistentClass pc, EntityXmlMappingData xmlMappingData, AuditTableData auditTableData,
 			String inheritanceMappingType) {
-		final String extendsEntityName = verEntCfg.getAuditEntityName( pc.getSuperclass().getEntityName() );
+		final String extendsEntityName = options.getAuditEntityName( pc.getSuperclass().getEntityName() );
 		final Element classMapping = MetadataTools.createSubclassEntity(
 				xmlMappingData.getMainXmlMapping(),
 				inheritanceMappingType,
@@ -628,8 +622,8 @@ public final class AuditMetadataGenerator {
 		final String entityName = pc.getEntityName();
 		LOG.debugf( "Generating first-pass auditing mapping for entity %s", entityName );
 
-		final String auditEntityName = verEntCfg.getAuditEntityName( entityName );
-		final String auditTableName = verEntCfg.getAuditTableName( entityName, pc.getTable().getName() );
+		final String auditEntityName = options.getAuditEntityName( entityName );
+		final String auditTableName = options.getAuditTableName( entityName, pc.getTable().getName() );
 
 		// Registering the audit entity name, now that it is known
 		auditEntityNameRegister.register( auditEntityName );
@@ -742,16 +736,8 @@ public final class AuditMetadataGenerator {
 		return basicMetadataGenerator;
 	}
 
-	GlobalConfiguration getGlobalCfg() {
-		return globalCfg;
-	}
-
-	AuditEntitiesConfiguration getVerEntCfg() {
-		return verEntCfg;
-	}
-
-	AuditStrategy getAuditStrategy() {
-		return auditStrategy;
+	AuditMetadataBuildingOptions getOptions() {
+		return options;
 	}
 
 	AuditEntityNameRegister getAuditEntityNameRegister() {

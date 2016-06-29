@@ -7,12 +7,14 @@
 package org.hibernate.envers.query.criteria.internal;
 
 import java.util.Locale;
-import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
 import org.hibernate.envers.query.internal.property.PropertyNameGetter;
 
+/**
+ * @author Chris Cranford
+ */
 public class IlikeAuditExpression extends AbstractAtomicExpression {
 
 	private PropertyNameGetter propertyNameGetter;
@@ -26,17 +28,18 @@ public class IlikeAuditExpression extends AbstractAtomicExpression {
 
 	@Override
 	protected void addToQuery(
-			EnversService enversService,
-			AuditReaderImplementor versionsReader, String entityName,
-			String alias, QueryBuilder qb, Parameters parameters) {
+			AuditReaderImplementor versionsReader,
+			String entityName,
+			String alias,
+			QueryBuilder qb,
+			Parameters parameters) {
 
 		String propertyName = CriteriaTools.determinePropertyName(
-				enversService,
 				versionsReader,
 				entityName,
 				propertyNameGetter
 		);
-		CriteriaTools.checkPropertyNotARelation( enversService, entityName, propertyName );
+		CriteriaTools.checkPropertyNotARelation( versionsReader.getAuditService(), entityName, propertyName );
 
 		parameters.addWhereWithFunction( alias, propertyName, " lower ", " like ", value.toLowerCase( Locale.ROOT ) );
 	}

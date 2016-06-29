@@ -14,7 +14,7 @@ import java.util.Set;
 
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.boot.AuditService;
 import org.hibernate.envers.internal.entities.RelationDescription;
 
 /**
@@ -22,6 +22,7 @@ import org.hibernate.envers.internal.entities.RelationDescription;
  * {@code @ManyToOne+@Column(insertable=false, updatable=false)}.
  *
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public class FakeBidirectionalRelationWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit {
 	private final Map<String, FakeRelationChange> fakeRelationChanges;
@@ -34,7 +35,7 @@ public class FakeBidirectionalRelationWorkUnit extends AbstractAuditWorkUnit imp
 	public FakeBidirectionalRelationWorkUnit(
 			SessionImplementor sessionImplementor,
 			String entityName,
-			EnversService enversService,
+			AuditService auditService,
 			Serializable id,
 			String referencingPropertyName,
 			Object owningEntity,
@@ -42,7 +43,7 @@ public class FakeBidirectionalRelationWorkUnit extends AbstractAuditWorkUnit imp
 			RevisionType revisionType,
 			Object index,
 			AuditWorkUnit nestedWorkUnit) {
-		super( sessionImplementor, entityName, enversService, id, revisionType );
+		super( sessionImplementor, entityName, auditService, id, revisionType );
 		this.nestedWorkUnit = nestedWorkUnit;
 
 		// Adding the change for the relation.
@@ -61,14 +62,14 @@ public class FakeBidirectionalRelationWorkUnit extends AbstractAuditWorkUnit imp
 			FakeBidirectionalRelationWorkUnit original,
 			Map<String, FakeRelationChange> fakeRelationChanges,
 			AuditWorkUnit nestedWorkUnit) {
-		super( original.sessionImplementor, original.entityName, original.enversService, original.id, original.revisionType );
+		super( original.sessionImplementor, original.entityName, original.auditService, original.id, original.revisionType );
 
 		this.fakeRelationChanges = fakeRelationChanges;
 		this.nestedWorkUnit = nestedWorkUnit;
 	}
 
 	public FakeBidirectionalRelationWorkUnit(FakeBidirectionalRelationWorkUnit original, AuditWorkUnit nestedWorkUnit) {
-		super( original.sessionImplementor, original.entityName, original.enversService, original.id, original.revisionType );
+		super( original.sessionImplementor, original.entityName, original.auditService, original.id, original.revisionType );
 
 		this.nestedWorkUnit = nestedWorkUnit;
 

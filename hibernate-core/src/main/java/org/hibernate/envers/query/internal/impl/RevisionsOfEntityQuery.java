@@ -13,8 +13,6 @@ import java.util.Map;
 import javax.persistence.criteria.JoinType;
 
 import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.boot.internal.EnversService;
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
@@ -26,40 +24,37 @@ import org.hibernate.proxy.HibernateProxy;
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
+ * @author Chris Cranford
  */
 public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 	private final boolean selectEntitiesOnly;
 	private final boolean selectDeletedEntities;
 
 	public RevisionsOfEntityQuery(
-			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			Class<?> cls,
 			boolean selectEntitiesOnly,
 			boolean selectDeletedEntities) {
-		super( enversService, versionsReader, cls );
+		super( versionsReader, cls );
 
 		this.selectEntitiesOnly = selectEntitiesOnly;
 		this.selectDeletedEntities = selectDeletedEntities;
 	}
 
 	public RevisionsOfEntityQuery(
-			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			Class<?> cls, String entityName,
 			boolean selectEntitiesOnly,
 			boolean selectDeletedEntities) {
-		super( enversService, versionsReader, cls, entityName );
+		super( versionsReader, cls, entityName );
 
 		this.selectEntitiesOnly = selectEntitiesOnly;
 		this.selectDeletedEntities = selectDeletedEntities;
 	}
 
 	private Number getRevisionNumber(Map versionsEntity) {
-		AuditEntitiesConfiguration verEntCfg = enversService.getAuditEntitiesConfiguration();
-
-		String originalId = verEntCfg.getOriginalIdPropName();
-		String revisionPropertyName = verEntCfg.getRevisionFieldName();
+		final String originalId = versionsReader.getAuditService().getOptions().getOriginalIdPropName();
+		String revisionPropertyName = versionsReader.getAuditService().getOptions().getRevisionFieldName();
 
 		Object revisionInfoObject = ( (Map) versionsEntity.get( originalId ) ).get( revisionPropertyName );
 
@@ -68,14 +63,12 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 		}
 		else {
 			// Not a proxy - must be read from cache or with a join
-			return enversService.getRevisionInfoNumberReader().getRevisionNumber( revisionInfoObject );
+			return versionsReader.getAuditService().getRevisionInfoNumberReader().getRevisionNumber( revisionInfoObject );
 		}
 	}
 
 	@SuppressWarnings({"unchecked"})
 	public List list() throws AuditException {
-		AuditEntitiesConfiguration verEntCfg = enversService.getAuditEntitiesConfiguration();
-
         /*
 		The query that should be executed in the versions table:
         SELECT e (unless another projection is specified) FROM ent_ver e, rev_entity r WHERE
@@ -86,13 +79,16 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
          */
 		if ( !selectDeletedEntities ) {
 			// e.revision_type != DEL AND
-			qb.getRootParameters().addWhereWithParam( verEntCfg.getRevisionTypePropName(), "<>", RevisionType.DEL );
+			qb.getRootParameters().addWhereWithParam(
+					versionsReader.getAuditService().getOptions().getRevisionTypePropName(),
+					"<>",
+					RevisionType.DEL
+			);
 		}
 
 		// all specified conditions, transformed
 		for ( AuditCriterion criterion : criterions ) {
 			criterion.addToQuery(
-					enversService,
 					versionsReader,
 					aliasToEntityNameMap,
 					QueryConstants.REFERENCED_ENTITY_ALIAS,
@@ -102,14 +98,14 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 		}
 
 		if ( !hasProjection() && !hasOrder ) {
-			String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
+			String revisionPropertyPath = versionsReader.getAuditService().getOptions().getRevisionNumberPath();
 			qb.addOrder( QueryConstants.REFERENCED_ENTITY_ALIAS, revisionPropertyPath, true );
 		}
 
 		if ( !selectEntitiesOnly ) {
-			qb.addFrom( enversService.getAuditEntitiesConfiguration().getRevisionInfoEntityName(), "r", true );
+			qb.addFrom( versionsReader.getAuditService().getOptions().getRevisionInfoEntityName(), "r", true );
 			qb.getRootParameters().addWhere(
-					enversService.getAuditEntitiesConfiguration().getRevisionNumberPath(),
+					versionsReader.getAuditService().getOptions().getRevisionNumberPath(),
 					true,
 					"=",
 					"r.id",
@@ -123,7 +119,7 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 		}
 		else {
 			List entities = new ArrayList();
-			String revisionTypePropertyName = verEntCfg.getRevisionTypePropName();
+			String revisionTypePropertyName = versionsReader.getAuditService().getOptions().getRevisionTypePropName();
 
 			for ( Object resultRow : queryResult ) {
 				Map versionsEntity;

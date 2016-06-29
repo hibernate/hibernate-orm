@@ -12,13 +12,14 @@ import java.util.Map;
 
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.boot.AuditService;
 import org.hibernate.envers.internal.tools.ArraysTools;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit {
 	private final Object[] state;
@@ -27,28 +28,29 @@ public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 	public AddWorkUnit(
 			SessionImplementor sessionImplementor,
 			String entityName,
-			EnversService enversService,
+			AuditService auditService,
 			Serializable id, EntityPersister entityPersister, Object[] state) {
-		super( sessionImplementor, entityName, enversService, id, RevisionType.ADD );
+		super( sessionImplementor, entityName, auditService, id, RevisionType.ADD );
 
 		this.data = new HashMap<>();
 		this.state = state;
-		this.enversService.getEntitiesConfigurations().get( getEntityName() ).getPropertyMapper().map(
-				sessionImplementor,
-				data,
-				entityPersister.getPropertyNames(),
-				state,
-				null
-		);
+		this.auditService.getEntityBindings().get( getEntityName() ).getPropertyMapper()
+				.map(
+						sessionImplementor,
+						data,
+						entityPersister.getPropertyNames(),
+						state,
+						null
+				);
 	}
 
 	public AddWorkUnit(
 			SessionImplementor sessionImplementor,
 			String entityName,
-			EnversService enversService,
+			AuditService enversMetadataService,
 			Serializable id,
 			Map<String, Object> data) {
-		super( sessionImplementor, entityName, enversService, id, RevisionType.ADD );
+		super( sessionImplementor, entityName, enversMetadataService, id, RevisionType.ADD );
 
 		this.data = data;
 		final String[] propertyNames = sessionImplementor.getFactory().getMetamodel()
@@ -79,7 +81,7 @@ public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 
 	@Override
 	public AuditWorkUnit merge(ModWorkUnit second) {
-		return new AddWorkUnit( sessionImplementor, entityName, enversService, id, second.getData() );
+		return new AddWorkUnit( sessionImplementor, entityName, auditService, id, second.getData() );
 	}
 
 	@Override

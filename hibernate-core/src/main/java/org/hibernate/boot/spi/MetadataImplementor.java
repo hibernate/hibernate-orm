@@ -11,6 +11,7 @@ import java.util.Set;
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.envers.boot.spi.AuditMetadataBuilderImplementor;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.query.spi.NamedQueryRepository;
@@ -43,4 +44,6 @@ public interface MetadataImplementor extends Metadata, Mapping {
 	void validate() throws MappingException;
 
 	Set<MappedSuperclass> getMappedSuperclassMappingsCopy();
+
+	AuditMetadataBuilderImplementor getAuditMetadataBuilder();
 }

@@ -15,6 +15,7 @@ import javax.persistence.EntityManagerFactory;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.envers.internal.AuditReaderFactory;
 import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
@@ -36,7 +37,7 @@ import org.hibernate.stat.Statistics;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface SessionFactory extends EntityManagerFactory, HibernateEntityManagerFactory, Referenceable, Serializable, java.io.Closeable {
+public interface SessionFactory extends EntityManagerFactory, HibernateEntityManagerFactory, AuditReaderFactory, Referenceable, Serializable, java.io.Closeable {
 	/**
 	 * Get the special options used to build the factory.
 	 *

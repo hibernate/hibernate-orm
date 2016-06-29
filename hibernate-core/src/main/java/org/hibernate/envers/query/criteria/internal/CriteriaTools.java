@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.boot.AuditService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.RelationDescription;
 import org.hibernate.envers.internal.entities.RelationType;
@@ -23,13 +23,14 @@ import org.hibernate.type.Type;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public abstract class CriteriaTools {
 	public static void checkPropertyNotARelation(
-			EnversService enversService,
+			AuditService auditService,
 			String entityName,
 			String propertyName) throws AuditException {
-		if ( enversService.getEntitiesConfigurations().get( entityName ).isRelation( propertyName ) ) {
+		if ( auditService.getEntityBindings().get( entityName ).isRelation( propertyName ) ) {
 			throw new AuditException(
 					"This criterion cannot be used on a property that is " +
 							"a relation to another property."
@@ -38,10 +39,10 @@ public abstract class CriteriaTools {
 	}
 
 	public static RelationDescription getRelatedEntity(
-			EnversService enversService,
+			AuditService auditService,
 			String entityName,
 			String propertyName) throws AuditException {
-		RelationDescription relationDesc = enversService.getEntitiesConfigurations().getRelationDescription( entityName, propertyName );
+		RelationDescription relationDesc = auditService.getEntityBindings().getRelationDescription( entityName, propertyName );
 
 		if ( relationDesc == null ) {
 			return null;
@@ -58,15 +59,14 @@ public abstract class CriteriaTools {
 	}
 
 	public static String determinePropertyName(
-			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			String entityName,
 			PropertyNameGetter propertyNameGetter) {
-		return determinePropertyName( enversService, versionsReader, entityName, propertyNameGetter.get( enversService ) );
+		final AuditService auditService = versionsReader.getAuditService();
+		return determinePropertyName( versionsReader, entityName, propertyNameGetter.get( auditService ) );
 	}
 
 	/**
-	 * @param enversService The EnversService
 	 * @param versionsReader Versions reader.
 	 * @param entityName Original entity name (not audited).
 	 * @param propertyName Property name or placeholder.
@@ -74,20 +74,21 @@ public abstract class CriteriaTools {
 	 * @return Path to property. Handles identifier placeholder used by {@link org.hibernate.envers.query.criteria.AuditId}.
 	 */
 	public static String determinePropertyName(
-			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			String entityName,
 			String propertyName) {
+
 		final SessionFactoryImplementor sessionFactory = versionsReader.getSessionImplementor().getFactory();
+		final AuditService auditService = versionsReader.getAuditService();
 
 		if ( AuditId.IDENTIFIER_PLACEHOLDER.equals( propertyName ) ) {
 			final String identifierPropertyName = sessionFactory.getMetamodel().entityPersister( entityName ).getIdentifierPropertyName();
-			propertyName = enversService.getAuditEntitiesConfiguration().getOriginalIdPropName() + "." + identifierPropertyName;
+			propertyName = auditService.getOptions().getOriginalIdPropName() + "." + identifierPropertyName;
 		}
 		else {
 			final List<String> identifierPropertyNames = identifierPropertyNames( sessionFactory, entityName );
 			if ( identifierPropertyNames.contains( propertyName ) ) {
-				propertyName = enversService.getAuditEntitiesConfiguration().getOriginalIdPropName() + "." + propertyName;
+				propertyName = auditService.getOptions().getOriginalIdPropName() + "." + propertyName;
 			}
 		}
 

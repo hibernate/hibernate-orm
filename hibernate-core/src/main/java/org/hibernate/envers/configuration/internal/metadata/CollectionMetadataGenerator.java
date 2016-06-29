@@ -166,13 +166,11 @@ public final class CollectionMetadataGenerator {
 	}
 
 	private MiddleIdData createMiddleIdData(IdMappingData idMappingData, String prefix, String entityName) {
-		return new MiddleIdData(
-				mainGenerator.getVerEntCfg(),
-				idMappingData,
-				prefix,
-				entityName,
-				mainGenerator.getEntitiesConfigurations().containsKey( entityName )
-		);
+		if ( mainGenerator.getEntitiesConfigurations().containsKey( entityName ) ) {
+			final String auditEntityName = mainGenerator.getOptions().getAuditEntityName( entityName );
+			return new MiddleIdData( idMappingData, prefix, entityName, auditEntityName );
+		}
+		return new MiddleIdData( idMappingData, prefix, entityName );
 	}
 
 	@SuppressWarnings({"unchecked"})
@@ -219,9 +217,7 @@ public final class CollectionMetadataGenerator {
 
 		// Generating the query generator - it should read directly from the related entity.
 		final RelationQueryGenerator queryGenerator = new OneAuditEntityQueryGenerator(
-				mainGenerator.getGlobalCfg(),
-				mainGenerator.getVerEntCfg(),
-				mainGenerator.getAuditStrategy(),
+				mainGenerator.getOptions(),
 				referencingIdData,
 				referencedEntityName,
 				referencedIdData,
@@ -232,9 +228,11 @@ public final class CollectionMetadataGenerator {
 
 		// Creating common mapper data.
 		final CommonCollectionMapperData commonCollectionMapperData = new CommonCollectionMapperData(
-				mainGenerator.getVerEntCfg(), referencedEntityName,
+				mainGenerator.getOptions(),
+				referencedEntityName,
 				propertyAuditingData.getPropertyData(),
-				referencingIdData, queryGenerator
+				referencingIdData,
+				queryGenerator
 		);
 
 		PropertyMapper fakeBidirectionalRelationMapper;
@@ -352,8 +350,8 @@ public final class CollectionMetadataGenerator {
 		}
 		else {
 			final String middleTableName = getMiddleTableName( propertyValue, referencingEntityName );
-			auditMiddleTableName = mainGenerator.getVerEntCfg().getAuditTableName( null, middleTableName );
-			auditMiddleEntityName = mainGenerator.getVerEntCfg().getAuditEntityName( middleTableName );
+			auditMiddleTableName = mainGenerator.getOptions().getAuditTableName( null, middleTableName );
+			auditMiddleEntityName = mainGenerator.getOptions().getAuditEntityName( middleTableName );
 		}
 
 		LOG.debugf( "Using join table name: %s", auditMiddleTableName );
@@ -419,9 +417,7 @@ public final class CollectionMetadataGenerator {
 		// references some entities (either from the element or index). At the end, this will be used to build
 		// a query generator to read the raw data collection from the middle table.
 		final QueryGeneratorBuilder queryGeneratorBuilder = new QueryGeneratorBuilder(
-				mainGenerator.getGlobalCfg(),
-				mainGenerator.getVerEntCfg(),
-				mainGenerator.getAuditStrategy(),
+				mainGenerator.getOptions(),
 				referencingIdData,
 				auditMiddleEntityName,
 				isEmbeddableElementType()
@@ -461,7 +457,7 @@ public final class CollectionMetadataGenerator {
 
 		// Creating common data
 		final CommonCollectionMapperData commonCollectionMapperData = new CommonCollectionMapperData(
-				mainGenerator.getVerEntCfg(),
+				mainGenerator.getOptions(),
 				auditMiddleEntityName,
 				propertyAuditingData.getPropertyData(),
 				referencingIdData,
@@ -499,7 +495,7 @@ public final class CollectionMetadataGenerator {
 					// The key of the map is the id of the entity.
 					return new MiddleComponentData(
 							new MiddleMapKeyIdComponentMapper(
-									mainGenerator.getVerEntCfg(),
+									mainGenerator.getOptions().getOriginalIdPropName(),
 									referencedIdMapping.getIdMapper()
 							),
 							currentIndex
@@ -599,7 +595,10 @@ public final class CollectionMetadataGenerator {
 			new ComponentAuditedPropertiesReader(
 					ModificationStore.FULL,
 					new AuditedPropertiesReader.ComponentPropertiesSource( reflectionManager, component ),
-					auditData, mainGenerator.getGlobalCfg(), reflectionManager, ""
+					auditData,
+					mainGenerator.getOptions(),
+					reflectionManager,
+					""
 			).read();
 
 			// Emulating first pass.
@@ -636,7 +635,7 @@ public final class CollectionMetadataGenerator {
 			// Add an additional column holding a number to make each entry unique within the set.
 			// Embeddable properties may contain null values, so cannot be stored within composite primary key.
 			if ( propertyValue.isSet() ) {
-				final String setOrdinalPropertyName = mainGenerator.getVerEntCfg()
+				final String setOrdinalPropertyName = mainGenerator.getOptions()
 						.getEmbeddableSetOrdinalPropertyName();
 				final Element ordinalProperty = MetadataTools.addProperty(
 						xmlMapping, setOrdinalPropertyName, "integer", true, true
@@ -670,7 +669,7 @@ public final class CollectionMetadataGenerator {
 			if ( mapped ) {
 				// Simple values are always stored in the first item of the array returned by the query generator.
 				return new MiddleComponentData(
-						new MiddleSimpleComponentMapper( mainGenerator.getVerEntCfg(), prefix ),
+						new MiddleSimpleComponentMapper( mainGenerator.getOptions().getOriginalIdPropName(), prefix ),
 						0
 				);
 			}
@@ -811,7 +810,7 @@ public final class CollectionMetadataGenerator {
 			middleEntityXml.addAttribute( "where", where );
 		}
 
-		middleEntityXmlId.addAttribute( "name", mainGenerator.getVerEntCfg().getOriginalIdPropName() );
+		middleEntityXmlId.addAttribute( "name", mainGenerator.getOptions().getOriginalIdPropName() );
 
 		// Adding the revision number as a foreign key to the revision info entity to the composite id of the
 		// middle table.

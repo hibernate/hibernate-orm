@@ -10,8 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.MappingException;
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
-import org.hibernate.envers.configuration.internal.GlobalConfiguration;
+import org.hibernate.envers.boot.spi.AuditMetadataBuildingOptions;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.internal.entities.mapper.relation.query.OneEntityQueryGenerator;
@@ -19,33 +18,27 @@ import org.hibernate.envers.internal.entities.mapper.relation.query.RelationQuer
 import org.hibernate.envers.internal.entities.mapper.relation.query.ThreeEntityQueryGenerator;
 import org.hibernate.envers.internal.entities.mapper.relation.query.TwoEntityOneAuditedQueryGenerator;
 import org.hibernate.envers.internal.entities.mapper.relation.query.TwoEntityQueryGenerator;
-import org.hibernate.envers.strategy.AuditStrategy;
 
 /**
  * Builds query generators, for reading collection middle tables, along with any related entities.
  * The related entities information can be added gradually, and when complete, the query generator can be built.
  *
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public final class QueryGeneratorBuilder {
-	private final GlobalConfiguration globalCfg;
-	private final AuditEntitiesConfiguration verEntCfg;
-	private final AuditStrategy auditStrategy;
+	private final AuditMetadataBuildingOptions options;
 	private final MiddleIdData referencingIdData;
 	private final String auditMiddleEntityName;
 	private final List<MiddleIdData> idDatas;
 	private final boolean revisionTypeInId;
 
 	QueryGeneratorBuilder(
-			GlobalConfiguration globalCfg,
-			AuditEntitiesConfiguration verEntCfg,
-			AuditStrategy auditStrategy,
+			AuditMetadataBuildingOptions options,
 			MiddleIdData referencingIdData,
 			String auditMiddleEntityName,
 			boolean revisionTypeInId) {
-		this.globalCfg = globalCfg;
-		this.verEntCfg = verEntCfg;
-		this.auditStrategy = auditStrategy;
+		this.options = options;
 		this.referencingIdData = referencingIdData;
 		this.auditMiddleEntityName = auditMiddleEntityName;
 		this.revisionTypeInId = revisionTypeInId;
@@ -60,20 +53,20 @@ public final class QueryGeneratorBuilder {
 	RelationQueryGenerator build(MiddleComponentData... componentDatas) {
 		if ( idDatas.size() == 0 ) {
 			return new OneEntityQueryGenerator(
-					verEntCfg, auditStrategy, auditMiddleEntityName, referencingIdData,
+					options, auditMiddleEntityName, referencingIdData,
 					revisionTypeInId, componentDatas
 			);
 		}
 		else if ( idDatas.size() == 1 ) {
 			if ( idDatas.get( 0 ).isAudited() ) {
 				return new TwoEntityQueryGenerator(
-						globalCfg, verEntCfg, auditStrategy, auditMiddleEntityName, referencingIdData,
+						options, auditMiddleEntityName, referencingIdData,
 						idDatas.get( 0 ), revisionTypeInId, componentDatas
 				);
 			}
 			else {
 				return new TwoEntityOneAuditedQueryGenerator(
-						verEntCfg, auditStrategy, auditMiddleEntityName, referencingIdData,
+						options, auditMiddleEntityName, referencingIdData,
 						idDatas.get( 0 ), revisionTypeInId, componentDatas
 				);
 			}
@@ -87,7 +80,7 @@ public final class QueryGeneratorBuilder {
 			}
 
 			return new ThreeEntityQueryGenerator(
-					globalCfg, verEntCfg, auditStrategy, auditMiddleEntityName, referencingIdData,
+					options, auditMiddleEntityName, referencingIdData,
 					idDatas.get( 0 ), idDatas.get( 1 ), revisionTypeInId, componentDatas
 			);
 		}

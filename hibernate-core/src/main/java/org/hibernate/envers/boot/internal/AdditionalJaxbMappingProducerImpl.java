@@ -39,6 +39,7 @@ import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
+ * @author Chris Cranford
  */
 public class AdditionalJaxbMappingProducerImpl implements AdditionalJaxbMappingProducer {
 	private static final Logger log = Logger.getLogger( AdditionalJaxbMappingProducerImpl.class );
@@ -49,6 +50,9 @@ public class AdditionalJaxbMappingProducerImpl implements AdditionalJaxbMappingP
 			IndexView jandexIndex,
 			final MappingBinder mappingBinder,
 			final MetadataBuildingContext buildingContext) {
+
+		log.infof( "Generating Envers XML mappings." );
+
 		final ServiceRegistry serviceRegistry = metadata.getMetadataBuildingOptions().getServiceRegistry();
 		final EnversService enversService = serviceRegistry.getService( EnversService.class );
 
@@ -96,7 +100,8 @@ public class AdditionalJaxbMappingProducerImpl implements AdditionalJaxbMappingP
 			}
 		};
 
-		enversService.initialize( metadata, mappingCollector );
+		// collect audit metadata into the MetadataImplementor
+		metadata.getAuditMetadataBuilder().applyMappingCollector( mappingCollector );
 
 		return additionalMappingDocuments;
 	}

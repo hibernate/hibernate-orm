@@ -8,13 +8,13 @@ package org.hibernate.envers.internal.entities.mapper.relation;
 
 import java.io.Serializable;
 
-import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.ToOneDelegateSessionImplementor;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public final class ToOneEntityLoader {
 	private ToOneEntityLoader() {
@@ -30,9 +30,8 @@ public final class ToOneEntityLoader {
 			String entityName,
 			Object entityId,
 			Number revision,
-			boolean removed,
-			EnversService enversService) {
-		if ( enversService.getEntitiesConfigurations().getNotVersionEntityConfiguration( entityName ) == null ) {
+			boolean removed) {
+		if ( versionsReader.getAuditService().getEntityBindings().getNotVersionEntityConfiguration( entityName ) == null ) {
 			// Audited relation, look up entity with Envers.
 			// When user traverses removed entities graph, do not restrict revision type of referencing objects
 			// to ADD or MOD (DEL possible). See HHH-5845.
@@ -53,15 +52,14 @@ public final class ToOneEntityLoader {
 			String entityName,
 			Object entityId,
 			Number revision,
-			boolean removed,
-			EnversService enversService) {
+			boolean removed) {
 		final EntityPersister persister = versionsReader.getSessionImplementor()
 				.getFactory()
 				.getMetamodel()
 				.entityPersister( entityName );
 		return persister.createProxy(
 				(Serializable) entityId,
-				new ToOneDelegateSessionImplementor( versionsReader, entityClass, entityId, revision, removed, enversService )
+				new ToOneDelegateSessionImplementor( versionsReader, entityClass, entityId, revision, removed )
 		);
 	}
 
@@ -75,15 +73,14 @@ public final class ToOneEntityLoader {
 			String entityName,
 			Object entityId,
 			Number revision,
-			boolean removed,
-			EnversService enversService) {
+			boolean removed) {
 		final EntityPersister persister = versionsReader.getSessionImplementor()
 				.getFactory()
 				.getMetamodel()
 				.entityPersister( entityName );
 		if ( persister.hasProxy() ) {
-			return createProxy( versionsReader, entityClass, entityName, entityId, revision, removed, enversService );
+			return createProxy( versionsReader, entityClass, entityName, entityId, revision, removed );
 		}
-		return loadImmediate( versionsReader, entityClass, entityName, entityId, revision, removed, enversService );
+		return loadImmediate( versionsReader, entityClass, entityName, entityId, revision, removed );
 	}
 }

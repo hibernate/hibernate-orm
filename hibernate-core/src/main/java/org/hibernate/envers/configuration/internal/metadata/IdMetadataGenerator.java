@@ -33,6 +33,7 @@ import org.dom4j.tree.DefaultElement;
  * Generates metadata for primary identifiers (ids) of versions entities.
  *
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public final class IdMetadataGenerator {
 	private final AuditMetadataGenerator mainGenerator;
@@ -187,7 +188,7 @@ public final class IdMetadataGenerator {
 			);
 		}
 
-		origIdMapping.addAttribute( "name", mainGenerator.getVerEntCfg().getOriginalIdPropName() );
+		origIdMapping.addAttribute( "name", mainGenerator.getOptions().getOriginalIdPropName() );
 
 		// Adding a relation to the revision entity (effectively: the "revision number" property)
 		mainGenerator.addRevisionInfoRelation( origIdMapping );

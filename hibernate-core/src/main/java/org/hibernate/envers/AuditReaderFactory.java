@@ -9,14 +9,12 @@ package org.hibernate.envers;
 import javax.persistence.EntityManager;
 
 import org.hibernate.Session;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.SessionFactory;
 import org.hibernate.envers.exception.AuditException;
-import org.hibernate.envers.internal.reader.AuditReaderImpl;
-import org.hibernate.service.ServiceRegistry;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public class AuditReaderFactory {
 	private AuditReaderFactory() {
@@ -31,20 +29,11 @@ public class AuditReaderFactory {
 	 *         afterQuery the session is closed.
 	 *
 	 * @throws AuditException When the given required listeners aren't installed.
+	 * @deprecated (since 6.0), use {@link SessionFactory#openAuditReader()}.
 	 */
+	@Deprecated
 	public static AuditReader get(Session session) throws AuditException {
-		SessionImplementor sessionImpl;
-		if ( !(session instanceof SessionImplementor) ) {
-			sessionImpl = (SessionImplementor) session.getSessionFactory().getCurrentSession();
-		}
-		else {
-			sessionImpl = (SessionImplementor) session;
-		}
-
-		final ServiceRegistry serviceRegistry = sessionImpl.getFactory().getServiceRegistry();
-		final EnversService enversService = serviceRegistry.getService( EnversService.class );
-
-		return new AuditReaderImpl( enversService, session, sessionImpl );
+		return session.getSessionFactory().openAuditReader();
 	}
 
 	/**
@@ -57,16 +46,12 @@ public class AuditReaderFactory {
 	 *
 	 * @throws AuditException When the given entity manager is not based on Hibernate, or if the required
 	 * listeners aren't installed.
+	 * @deprecated (since 6.0), use
+	 * {@code EntityManager.unwrap(Session.class).getSessionFactory().openAuditReader()} or
+	 * {@code EntityManager.getEntityManagerFactory().unwrap(SessionFactory.class).openAuditReader()}.
 	 */
+	@Deprecated
 	public static AuditReader get(EntityManager entityManager) throws AuditException {
-		if ( entityManager.getDelegate() instanceof Session ) {
-			return get( (Session) entityManager.getDelegate() );
-		}
-
-		if ( entityManager.getDelegate() instanceof EntityManager ) {
-			return get( (EntityManager) entityManager.getDelegate() );
-		}
-
-		throw new AuditException( "Hibernate EntityManager not present!" );
+		return get( entityManager.unwrap( Session.class ) );
 	}
 }

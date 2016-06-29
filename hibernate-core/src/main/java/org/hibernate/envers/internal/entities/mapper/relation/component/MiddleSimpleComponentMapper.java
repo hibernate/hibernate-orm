@@ -9,7 +9,6 @@ package org.hibernate.envers.internal.entities.mapper.relation.component;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.tools.query.Parameters;
 
@@ -18,11 +17,11 @@ import org.hibernate.envers.internal.tools.query.Parameters;
  */
 public final class MiddleSimpleComponentMapper implements MiddleComponentMapper {
 	private final String propertyName;
-	private final AuditEntitiesConfiguration verEntCfg;
+	private final String originalIdPropertyName;
 
-	public MiddleSimpleComponentMapper(AuditEntitiesConfiguration verEntCfg, String propertyName) {
+	public MiddleSimpleComponentMapper(String originalIdPropertyName, String propertyName) {
 		this.propertyName = propertyName;
-		this.verEntCfg = verEntCfg;
+		this.originalIdPropertyName = originalIdPropertyName;
 	}
 
 	@Override
@@ -30,7 +29,7 @@ public final class MiddleSimpleComponentMapper implements MiddleComponentMapper 
 	public Object mapToObjectFromFullMap(
 			EntityInstantiator entityInstantiator, Map<String, Object> data,
 			Object dataObject, Number revision) {
-		return ( (Map<String, Object>) data.get( verEntCfg.getOriginalIdPropName() ) ).get( propertyName );
+		return ( (Map<String, Object>) data.get( originalIdPropertyName ) ).get( propertyName );
 	}
 
 	@Override

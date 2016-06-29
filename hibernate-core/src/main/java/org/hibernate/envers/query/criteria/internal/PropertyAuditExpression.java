@@ -8,7 +8,6 @@ package org.hibernate.envers.query.criteria.internal;
 
 import java.util.Map;
 
-import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
@@ -17,6 +16,7 @@ import org.hibernate.envers.query.internal.property.PropertyNameGetter;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public class PropertyAuditExpression implements AuditCriterion {
 	private String alias;
@@ -41,7 +41,6 @@ public class PropertyAuditExpression implements AuditCriterion {
 
 	@Override
 	public void addToQuery(
-			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			Map<String, String> aliasToEntityNameMap,
 			String baseAlias,
@@ -52,19 +51,18 @@ public class PropertyAuditExpression implements AuditCriterion {
 		String entityName = aliasToEntityNameMap.get( effectiveAlias );
 		String otherEntityName = aliasToEntityNameMap.get( effectiveOtherAlias );
 		String propertyName = CriteriaTools.determinePropertyName(
-				enversService,
 				versionsReader,
 				entityName,
 				propertyNameGetter
 		);
-		CriteriaTools.checkPropertyNotARelation( enversService, entityName, propertyName );
+		CriteriaTools.checkPropertyNotARelation( versionsReader.getAuditService(), entityName, propertyName );
 		/*
 		 * Check that the other property name is not a relation. However, we can only
 		 * do this for audited entities. If the other property belongs to a non-audited
 		 * entity, we have to skip this check.
 		 */
-		if ( enversService.getEntitiesConfigurations().isVersioned( otherEntityName ) ) {
-			CriteriaTools.checkPropertyNotARelation( enversService, otherEntityName, otherPropertyName );
+		if ( versionsReader.getAuditService().getEntityBindings().isVersioned( otherEntityName ) ) {
+			CriteriaTools.checkPropertyNotARelation( versionsReader.getAuditService(), otherEntityName, otherPropertyName );
 		}
 		parameters.addWhere( effectiveAlias, propertyName, op, effectiveOtherAlias, otherPropertyName );
 	}

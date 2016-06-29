@@ -6,7 +6,7 @@
  */
 package org.hibernate.envers.internal.entities.mapper.relation.query;
 
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
+import org.hibernate.envers.boot.spi.AuditMetadataBuildingOptions;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.internal.tools.query.Parameters;
@@ -23,17 +23,20 @@ import static org.hibernate.envers.internal.entities.mapper.relation.query.Query
  *
  * @author Adam Warski (adam at warski dot org)
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public final class TwoEntityOneAuditedQueryGenerator extends AbstractRelationQueryGenerator {
 	private final String queryString;
 	private final String queryRemovedString;
 
 	public TwoEntityOneAuditedQueryGenerator(
-			AuditEntitiesConfiguration verEntCfg, AuditStrategy auditStrategy,
-			String versionsMiddleEntityName, MiddleIdData referencingIdData,
-			MiddleIdData referencedIdData, boolean revisionTypeInId,
+			AuditMetadataBuildingOptions options,
+			String versionsMiddleEntityName,
+			MiddleIdData referencingIdData,
+			MiddleIdData referencedIdData,
+			boolean revisionTypeInId,
 			MiddleComponentData... componentData) {
-		super( verEntCfg, referencingIdData, revisionTypeInId );
+		super( options, referencingIdData, revisionTypeInId );
 
 		/*
 		 * The valid query that we need to create:
@@ -60,10 +63,11 @@ public final class TwoEntityOneAuditedQueryGenerator extends AbstractRelationQue
 		final QueryBuilder commonPart = commonQueryPart(
 				referencedIdData,
 				versionsMiddleEntityName,
-				verEntCfg.getOriginalIdPropName()
+				options.getOriginalIdPropName()
 		);
 		final QueryBuilder validQuery = commonPart.deepCopy();
 		final QueryBuilder removedQuery = commonPart.deepCopy();
+		final AuditStrategy auditStrategy = options.getAuditStrategy();
 		createValidDataRestrictions(
 				auditStrategy, versionsMiddleEntityName, validQuery, validQuery.getRootParameters(), componentData
 		);
@@ -101,13 +105,13 @@ public final class TwoEntityOneAuditedQueryGenerator extends AbstractRelationQue
 	private void createValidDataRestrictions(
 			AuditStrategy auditStrategy, String versionsMiddleEntityName, QueryBuilder qb,
 			Parameters rootParameters, MiddleComponentData... componentData) {
-		final String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
-		final String originalIdPropertyName = verEntCfg.getOriginalIdPropName();
+		final String revisionPropertyPath = options.getRevisionNumberPath();
+		final String originalIdPropertyName = options.getOriginalIdPropName();
 		final String eeOriginalIdPropertyPath = MIDDLE_ENTITY_ALIAS + "." + originalIdPropertyName;
 		// (with ee association at revision :revision)
 		// --> based on auditStrategy (see above)
 		auditStrategy.addAssociationAtRevisionRestriction(
-				qb, rootParameters, revisionPropertyPath, verEntCfg.getRevisionEndFieldName(), true,
+				qb, rootParameters, revisionPropertyPath, options.getRevisionEndFieldName(), true,
 				referencingIdData, versionsMiddleEntityName, eeOriginalIdPropertyPath, revisionPropertyPath,
 				originalIdPropertyName, MIDDLE_ENTITY_ALIAS, true, componentData
 		);
@@ -128,7 +132,7 @@ public final class TwoEntityOneAuditedQueryGenerator extends AbstractRelationQue
 		final Parameters removed = disjoint.addSubParameters( "and" );
 		createValidDataRestrictions( auditStrategy, versionsMiddleEntityName, remQb, valid, componentData );
 		// ee.revision = :revision
-		removed.addWhereWithNamedParam( verEntCfg.getRevisionNumberPath(), "=", REVISION_PARAMETER );
+		removed.addWhereWithNamedParam( options.getRevisionNumberPath(), "=", REVISION_PARAMETER );
 		// ee.revision_type = DEL
 		removed.addWhereWithNamedParam( getRevisionTypePath(), "=", DEL_REVISION_TYPE_PARAMETER );
 	}

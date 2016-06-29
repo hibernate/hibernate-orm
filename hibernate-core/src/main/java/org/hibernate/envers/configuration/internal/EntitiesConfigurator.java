@@ -11,8 +11,11 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.MappingException;
+import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
+import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.envers.boot.spi.AuditMetadataBuilderImplementor;
 import org.hibernate.envers.configuration.internal.metadata.AuditEntityNameRegister;
 import org.hibernate.envers.configuration.internal.metadata.AuditMetadataGenerator;
 import org.hibernate.envers.configuration.internal.metadata.EntityXmlMappingData;
@@ -20,8 +23,6 @@ import org.hibernate.envers.configuration.internal.metadata.reader.AnnotationsMe
 import org.hibernate.envers.configuration.internal.metadata.reader.ClassAuditingData;
 import org.hibernate.envers.internal.entities.EntitiesConfigurations;
 import org.hibernate.envers.internal.tools.StringTools;
-import org.hibernate.envers.internal.tools.graph.GraphTopologicalSort;
-import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.service.ServiceRegistry;
 
@@ -29,59 +30,98 @@ import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 
+import static org.hibernate.envers.internal.tools.graph.GraphTopologicalSort.sort;
+
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public class EntitiesConfigurator {
-	public EntitiesConfigurations configure(
+
+	private final ServiceRegistry serviceRegistry;
+	private final AuditMetadataBuilderImplementor auditMetadataBuilder;
+	private final AuditEntityNameRegister auditEntityNameRegister;
+	private final Map<PersistentClass, EntityXmlMappingData> xmlMappings;
+
+	public EntitiesConfigurator(AuditMetadataBuilderImplementor auditMetadataBuilder) {
+		this.auditMetadataBuilder = auditMetadataBuilder;
+		this.serviceRegistry = auditMetadataBuilder.getAuditMetadataBuildingOptions().getServiceRegistry();
+		this.auditEntityNameRegister = new AuditEntityNameRegister();
+		this.xmlMappings = new HashMap<>();
+	}
+
+	public EntitiesConfigurations build(
 			MetadataImplementor metadata,
-			ServiceRegistry serviceRegistry,
-			ReflectionManager reflectionManager,
 			MappingCollector mappingCollector,
-			GlobalConfiguration globalConfiguration,
-			AuditEntitiesConfiguration auditEntitiesConfiguration,
-			AuditStrategy auditStrategy,
 			Document revisionInfoXmlMapping,
 			Element revisionInfoRelationMapping) {
-		// Creating a name register to capture all audit entity names created.
-		final AuditEntityNameRegister auditEntityNameRegister = new AuditEntityNameRegister();
+		return complete(
+				prepare( metadata ),
+				metadata,
+				mappingCollector,
+				revisionInfoXmlMapping,
+				revisionInfoRelationMapping
+		);
+	}
 
-		// Sorting the persistent class topologically - superclass always beforeQuery subclass
-		final Iterator<PersistentClass> classes = GraphTopologicalSort.sort( new PersistentClassGraphDefiner( metadata ) )
-				.iterator();
-
+	private ClassesAuditingData prepare(MetadataImplementor metadata) {
+		final ReflectionManager reflectionManager = metadata.getMetadataBuildingOptions().getReflectionManager();
 		final ClassesAuditingData classesAuditingData = new ClassesAuditingData();
-		final Map<PersistentClass, EntityXmlMappingData> xmlMappings = new HashMap<>();
-
-		// Reading metadata from annotations
+		final Iterator<PersistentClass> classes = sort( new PersistentClassGraphDefiner( metadata ) ).iterator();
 		while ( classes.hasNext() ) {
-			final PersistentClass pc = classes.next();
-
-			// Ensure we're in POJO, not dynamic model, mapping.
-			if (pc.getClassName() != null) {
-				// Collecting information from annotations on the persistent class pc
-				final AnnotationsMetadataReader annotationsMetadataReader =
-						new AnnotationsMetadataReader( globalConfiguration, reflectionManager, pc );
-				final ClassAuditingData auditData = annotationsMetadataReader.getAuditData();
-
-				classesAuditingData.addClassAuditingData( pc, auditData );
+			final PersistentClass persistentClass = classes.next();
+			if ( persistentClass.getClassName() != null ) {
+				try {
+					final XClass clazz =reflectionManager.classForName( persistentClass.getClassName() );
+					final AnnotationsMetadataReader reader = new AnnotationsMetadataReader(
+							auditMetadataBuilder.getAuditMetadataBuildingOptions(),
+							reflectionManager,
+							persistentClass,
+							clazz
+					);
+					classesAuditingData.addClassAuditingData( persistentClass, reader.getAuditData() );
+				}
+				catch ( ClassLoadingException e ) {
+					// todo: log a warning?
+				}
 			}
 		}
-
-		// Now that all information is read we can update the calculated fields.
 		classesAuditingData.updateCalculatedFields();
+		return classesAuditingData;
+	}
+
+	private EntitiesConfigurations complete(
+			ClassesAuditingData classesAuditingData,
+			MetadataImplementor metadata,
+			MappingCollector mappingCollector,
+			Document revisionInfoXmlMapping,
+			Element revisionInfoRelationMapping) {
 
 		final AuditMetadataGenerator auditMetaGen = new AuditMetadataGenerator(
 				metadata,
 				serviceRegistry,
-				globalConfiguration,
-				auditEntitiesConfiguration,
-				auditStrategy,
+				auditMetadataBuilder.getAuditMetadataBuildingOptions(),
 				revisionInfoRelationMapping,
 				auditEntityNameRegister
 		);
 
-		// First pass
+		firstPass( classesAuditingData, auditMetaGen );
+		secondPass( classesAuditingData, auditMetaGen, mappingCollector, revisionInfoXmlMapping );
+
+		return new EntitiesConfigurations(
+				auditMetaGen.getEntitiesConfigurations(),
+				auditMetaGen.getNotAuditedEntitiesConfigurations()
+		);
+	}
+
+	// pc.getEntityName
+	// pc.getTable
+	// pc.getIdentifierProperty
+	// pc.getIdentifierMapper
+	// pc.getIdentifier
+	// pc.getServiceRegistry
+	// stores xml mapping per pc
+	private void firstPass(final ClassesAuditingData classesAuditingData, final AuditMetadataGenerator generator) {
 		for ( Map.Entry<PersistentClass, ClassAuditingData> pcDatasEntry : classesAuditingData.getAllClassAuditedData() ) {
 			final PersistentClass pc = pcDatasEntry.getKey();
 			final ClassAuditingData auditData = pcDatasEntry.getValue();
@@ -89,24 +129,32 @@ public class EntitiesConfigurator {
 			final EntityXmlMappingData xmlMappingData = new EntityXmlMappingData();
 			if ( auditData.isAudited() ) {
 				if ( !StringTools.isEmpty( auditData.getAuditTable().value() ) ) {
-					auditEntitiesConfiguration.addCustomAuditTableName( pc.getEntityName(), auditData.getAuditTable().value() );
+					auditMetadataBuilder.getAuditMetadataBuildingOptions().addCustomAuditTableName(
+							pc.getEntityName(),
+							auditData.getAuditTable().value()
+					);
 				}
-
-				auditMetaGen.generateFirstPass( pc, auditData, xmlMappingData, true );
+				generator.generateFirstPass( pc, auditData, xmlMappingData, true );
 			}
 			else {
-				auditMetaGen.generateFirstPass( pc, auditData, xmlMappingData, false );
+				generator.generateFirstPass( pc, auditData, xmlMappingData, false );
 			}
 
 			xmlMappings.put( pc, xmlMappingData );
 		}
+	}
 
-		// Second pass
+	// pc.getUnjoinedPropertyIterator
+	// pc.getJoinIterator
+	private void secondPass(
+			final ClassesAuditingData classesAuditingData,
+			final AuditMetadataGenerator generator,
+			final MappingCollector mappingCollector,
+			final Document revisionInfoXmlMapping) {
 		for ( Map.Entry<PersistentClass, ClassAuditingData> pcDatasEntry : classesAuditingData.getAllClassAuditedData() ) {
 			final EntityXmlMappingData xmlMappingData = xmlMappings.get( pcDatasEntry.getKey() );
-
 			if ( pcDatasEntry.getValue().isAudited() ) {
-				auditMetaGen.generateSecondPass( pcDatasEntry.getKey(), pcDatasEntry.getValue(), xmlMappingData );
+				generator.generateSecondPass( pcDatasEntry.getKey(), pcDatasEntry.getValue(), xmlMappingData );
 				try {
 					mappingCollector.addDocument( xmlMappingData.getMainXmlMapping() );
 
@@ -119,9 +167,8 @@ public class EntitiesConfigurator {
 				}
 			}
 		}
-
 		// Only if there are any versioned classes
-		if ( auditMetaGen.getEntitiesConfigurations().size() > 0 ) {
+		if ( generator.getEntitiesConfigurations().size() > 0 ) {
 			try {
 				if ( revisionInfoXmlMapping != null ) {
 					mappingCollector.addDocument( revisionInfoXmlMapping );
@@ -131,10 +178,5 @@ public class EntitiesConfigurator {
 				throw new MappingException( e );
 			}
 		}
-
-		return new EntitiesConfigurations(
-				auditMetaGen.getEntitiesConfigurations(),
-				auditMetaGen.getNotAuditedEntitiesConfigurations()
-		);
 	}
 }

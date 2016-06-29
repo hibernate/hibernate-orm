@@ -10,6 +10,7 @@ package org.hibernate.envers.configuration;
  * Configuration property names.
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public interface EnversSettings {
 	/**
@@ -114,4 +115,11 @@ public interface EnversSettings {
 	 * Exactly one row with {@code null} end date exists for each identifier.
 	 */
 	String ALLOW_IDENTIFIER_REUSE = "org.hibernate.envers.allow_identifier_reuse";
+
+	/**
+	 * While deleting revision entry, remove data of associated audited entities.
+	 * Requires database support for cascade row removal.
+	 * Defaults to {@code false}.
+	 */
+	String CASCADE_DELETE_REVISION = "org.hibernate.envers.cascade_delete_revision";
 }

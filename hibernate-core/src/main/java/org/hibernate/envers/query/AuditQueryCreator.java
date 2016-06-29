@@ -20,13 +20,22 @@ import static org.hibernate.envers.internal.tools.EntityTools.getTargetClassIfPr
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public class AuditQueryCreator {
-	private final EnversService enversService;
 	private final AuditReaderImplementor auditReaderImplementor;
 
+	/**
+	 * @param enversService The EnversService
+	 * @param auditReaderImplementor The AuditReaderImplementor
+	 * @deprecated (since 6.0), use {@link #AuditQueryCreator(AuditReaderImplementor)}.
+	 */
+	@Deprecated
 	public AuditQueryCreator(EnversService enversService, AuditReaderImplementor auditReaderImplementor) {
-		this.enversService = enversService;
+		this( auditReaderImplementor );
+	}
+
+	public AuditQueryCreator(AuditReaderImplementor auditReaderImplementor) {
 		this.auditReaderImplementor = auditReaderImplementor;
 	}
 
@@ -45,7 +54,7 @@ public class AuditQueryCreator {
 		checkNotNull( revision, "Entity revision" );
 		checkPositive( revision, "Entity revision" );
 		c = getTargetClassIfProxied( c );
-		return new EntitiesAtRevisionQuery( enversService, auditReaderImplementor, c, revision, false );
+		return new EntitiesAtRevisionQuery( auditReaderImplementor, c, revision, false );
 	}
 
 	/**
@@ -83,7 +92,6 @@ public class AuditQueryCreator {
 		checkPositive( revision, "Entity revision" );
 		c = getTargetClassIfProxied( c );
 		return new EntitiesAtRevisionQuery(
-				enversService,
 				auditReaderImplementor,
 				c,
 				entityName,
@@ -111,7 +119,7 @@ public class AuditQueryCreator {
 		checkNotNull( revision, "Entity revision" );
 		checkPositive( revision, "Entity revision" );
 		c = getTargetClassIfProxied( c );
-		return new EntitiesModifiedAtRevisionQuery( enversService, auditReaderImplementor, c, entityName, revision );
+		return new EntitiesModifiedAtRevisionQuery( auditReaderImplementor, c, entityName, revision );
 	}
 
 	/**
@@ -132,7 +140,7 @@ public class AuditQueryCreator {
 		checkNotNull( revision, "Entity revision" );
 		checkPositive( revision, "Entity revision" );
 		c = getTargetClassIfProxied( c );
-		return new EntitiesModifiedAtRevisionQuery( enversService, auditReaderImplementor, c, revision );
+		return new EntitiesModifiedAtRevisionQuery( auditReaderImplementor, c, revision );
 	}
 
 	/**
@@ -160,7 +168,6 @@ public class AuditQueryCreator {
 	public AuditQuery forRevisionsOfEntity(Class<?> c, boolean selectEntitiesOnly, boolean selectDeletedEntities) {
 		c = getTargetClassIfProxied( c );
 		return new RevisionsOfEntityQuery(
-				enversService,
 				auditReaderImplementor,
 				c,
 				selectEntitiesOnly,
@@ -198,7 +205,6 @@ public class AuditQueryCreator {
 			boolean selectDeletedEntities) {
 		c = getTargetClassIfProxied( c );
 		return new RevisionsOfEntityQuery(
-				enversService,
 				auditReaderImplementor,
 				c,
 				entityName,

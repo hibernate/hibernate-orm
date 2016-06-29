@@ -11,7 +11,6 @@ import java.util.Map;
 
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
@@ -22,6 +21,7 @@ import org.hibernate.envers.internal.tools.query.Parameters;
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
  * @author Michal Skowronek (mskowr at o2 dot pl)
+ * @author Chris Cranford
  */
 public class ToOneIdMapper extends AbstractToOneMapper {
 	private final IdMapper delegate;
@@ -87,7 +87,6 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 
 	@Override
 	public void nullSafeMapToEntityFromMap(
-			EnversService enversService,
 			Object obj,
 			Map data,
 			Object primaryKey,
@@ -100,12 +99,19 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 				value = versionsReader.getFirstLevelCache().get( referencedEntityName, revision, entityId );
 			}
 			else {
-				final EntityInfo referencedEntity = getEntityInfo( enversService, referencedEntityName );
+				final EntityInfo referencedEntity = getEntityInfo( versionsReader, referencedEntityName );
 				boolean ignoreNotFound = false;
 				if ( !referencedEntity.isAudited() ) {
-					final String referencingEntityName = enversService.getEntitiesConfigurations().getEntityNameForVersionsEntityName( (String) data.get( "$type$" ) );
-					ignoreNotFound = enversService.getEntitiesConfigurations().getRelationDescription( referencingEntityName, getPropertyData().getName() ).isIgnoreNotFound();
+					final String referencingEntityName = versionsReader.getAuditService().getEntityBindings()
+							.getEntityNameForVersionsEntityName( (String) data.get( "$type$" ) );
+					ignoreNotFound = versionsReader.getAuditService().getEntityBindings()
+							.getRelationDescription( referencingEntityName, getPropertyData().getName() )
+							.isIgnoreNotFound();
 				}
+
+				final String revisionTypePropertyName = versionsReader.getAuditService().getOptions()
+						.getRevisionTypePropName();
+
 				if ( ignoreNotFound ) {
 					// Eagerly loading referenced entity to silence potential (in case of proxy)
 					// EntityNotFoundException or ObjectNotFoundException. Assigning null reference.
@@ -115,8 +121,7 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 							referencedEntityName,
 							entityId,
 							revision,
-							RevisionType.DEL.equals( data.get( enversService.getAuditEntitiesConfiguration().getRevisionTypePropName() ) ),
-							enversService
+							RevisionType.DEL.equals( data.get( revisionTypePropertyName ) )
 					);
 				}
 				else {
@@ -126,8 +131,7 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 							referencedEntityName,
 							entityId,
 							revision,
-							RevisionType.DEL.equals( data.get( enversService.getAuditEntitiesConfiguration().getRevisionTypePropName() ) ),
-							enversService
+							RevisionType.DEL.equals( data.get( revisionTypePropertyName ) )
 					);
 				}
 			}

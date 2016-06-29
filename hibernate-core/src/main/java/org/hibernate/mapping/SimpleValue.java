@@ -33,6 +33,8 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.BinaryType;
+import org.hibernate.type.RowVersionType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterSqlTypeDescriptorAdapter;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
@@ -59,6 +61,7 @@ public class SimpleValue implements KeyValue {
 
 	private String typeName;
 	private Properties typeParameters;
+	private boolean isVersion;
 	private boolean isNationalized;
 
 	private Properties identifierGeneratorProperties;
@@ -160,6 +163,13 @@ public class SimpleValue implements KeyValue {
 		this.typeName = typeName;
 	}
 
+	public void makeVersion() {
+		this.isVersion = true;
+	}
+
+	public boolean isVersion() {
+		return isVersion;
+	}
 	public void makeNationalized() {
 		this.isNationalized = true;
 	}
@@ -385,6 +395,12 @@ public class SimpleValue implements KeyValue {
 		}
 
 		Type result = metadata.getTypeResolver().heuristicType( typeName, typeParameters );
+		// if this is a byte[] version/timestamp, then we need to use RowVersionType
+		// instead of BinaryType (HHH-10413)
+		if ( isVersion && BinaryType.class.isInstance( result ) ) {
+			log.debug( "version is BinaryType; changing to RowVersionType" );
+			result = RowVersionType.INSTANCE;
+		}
 		if ( result == null ) {
 			String msg = "Could not determine type for: " + typeName;
 			if ( table != null ) {

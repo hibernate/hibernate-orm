@@ -231,6 +231,14 @@ public final class StandardBasicTypes {
 	public static final WrapperBinaryType WRAPPER_BINARY = WrapperBinaryType.INSTANCE;
 
 	/**
+	 * The standard Hibernate type for mapping {@code byte[]} to JDBC {@link java.sql.Types#VARBINARY VARBINARY},
+	 * specifically for entity versions/timestamps.
+	 *
+	 * @see RowVersionType
+	 */
+	public static final RowVersionType ROW_VERSION = RowVersionType.INSTANCE;
+
+	/**
 	 * The standard Hibernate type for mapping {@code byte[]} to JDBC {@link java.sql.Types#LONGVARBINARY LONGVARBINARY}.
 	 *
 	 * @see ImageType

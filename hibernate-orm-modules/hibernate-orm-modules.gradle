@@ -96,7 +96,7 @@ task copyJars(dependsOn: copyModuleXmls, type: Copy) {
 
 // Creates a ZIP from the output directory
 task createModulesZip(dependsOn: copyJars, type: Zip) {
-    classifier = "wildfly${majorWildflyVersion}-dist"
+    classifier = "wildfly-${majorWildflyVersion}-dist"
     from modulesDirectory
 }
 

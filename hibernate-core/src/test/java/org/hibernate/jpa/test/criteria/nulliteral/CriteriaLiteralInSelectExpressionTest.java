@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.hibernate.testing.TestForIssue;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -75,6 +76,9 @@ public class CriteriaLiteralInSelectExpressionTest extends BaseEntityManagerFunc
 			final List<MyEntityDTO> dtos = entityManager.createQuery( query ).getResultList();
 
 			assertThat( dtos.size(), is( 1 ) );
+			assertThat( dtos.get( 0 ).active, is( false ) );
+			assertThat( dtos.get( 0 ).name, is( "Fab" ) );
+			assertThat( dtos.get( 0 ).surname, nullValue() );
 
 			entityManager.getTransaction().commit();
 		}
@@ -105,6 +109,42 @@ public class CriteriaLiteralInSelectExpressionTest extends BaseEntityManagerFunc
 			final List<MyEntityDTO> dtos = entityManager.createQuery( query ).getResultList();
 
 			assertThat( dtos.size(), is( 1 ) );
+			assertThat( dtos.get( 0 ).active, is( false ) );
+			assertThat( dtos.get( 0 ).name, nullValue() );
+			assertThat( dtos.get( 0 ).surname, nullValue() );
+
+			entityManager.getTransaction().commit();
+		}
+		catch (Exception e) {
+			if ( entityManager.getTransaction().isActive() ) {
+				entityManager.getTransaction().rollback();
+			}
+			throw e;
+		}
+		finally {
+			entityManager.close();
+		}
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-10861")
+	public void testNullLiteralFirst() throws Exception {
+		final EntityManager entityManager = getOrCreateEntityManager();
+		try {
+			entityManager.getTransaction().begin();
+
+			final CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+			final CriteriaQuery<MyEntityDTO> query = criteriaBuilder.createQuery( MyEntityDTO.class );
+			final Root<MyEntity> entity = query.from( MyEntity.class );
+
+			query.multiselect( criteriaBuilder.nullLiteral( String.class ), entity.get( "surname" ) );
+
+			final List<MyEntityDTO> dtos = entityManager.createQuery( query ).getResultList();
+
+			assertThat( dtos.size(), is( 1 ) );
+			assertThat( dtos.get( 0 ).name, nullValue() );
+			assertThat( dtos.get( 0 ).surname, is( "A" ) );
+			assertThat( dtos.get( 0 ).active, is( false ) );
 
 			entityManager.getTransaction().commit();
 		}
@@ -135,6 +175,9 @@ public class CriteriaLiteralInSelectExpressionTest extends BaseEntityManagerFunc
 			final List<MyEntityDTO> dtos = entityManager.createQuery( query ).getResultList();
 
 			assertThat( dtos.size(), is( 1 ) );
+			assertThat( dtos.get( 0 ).name, is( "Leo" ) );
+			assertThat( dtos.get( 0 ).surname, is( "A" ) );
+			assertThat( dtos.get( 0 ).active, is( false ) );
 
 			entityManager.getTransaction().commit();
 		}
@@ -164,6 +207,8 @@ public class CriteriaLiteralInSelectExpressionTest extends BaseEntityManagerFunc
 			final List<Tuple> results = typedQuery.getResultList();
 
 			assertThat( results.size(), is( 1 ) );
+			assertThat( results.get( 0 ).getElements().size(), is( 1 ) );
+			assertThat( results.get( 0 ).get( 0 ), is( false ) );
 		}
 		finally {
 			entityManager.close();

@@ -26,6 +26,8 @@ include 'hibernate-jcache'
 include 'hibernate-ehcache'
 include 'hibernate-infinispan'
 
+include 'hibernate-orm-modules'
+
 include 'documentation'
 include 'release'
 

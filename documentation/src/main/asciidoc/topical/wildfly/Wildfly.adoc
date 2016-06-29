@@ -1,0 +1,53 @@
+= Updating Hibernate ORM within WildFly
+
+The http://wildfly.org/[WildFly application server] comes with Hibernate as the default JPA provider out of the box.
+This means that you don't need to package Hibernate ORM with the applications you deploy on WildFly,
+instead the application server will automatically enable Hibernate support if it detects that your application is using JPA.
+
+There may be times though where a newer version of Hibernate ORM is available than the one coming with a given WildFly release.
+For that case the Hibernate ORM project provides ZIP files containing the required modules to update a WildFly installation to newer versions of Hibernate when they are released.
+Our goal is to provide a module ZIP file targeted at the WildFly version current at the time of the Hibernate release (e.g. WildFly 10 for Hibernate 5.1.x and 5.2.x).
+The module ZIP files are available from https://sourceforge.net/projects/hibernate/files/hibernate-orm/[SourceForge] and https://bintray.com/hibernate/bundles/hibernate-orm[BinTray], alike the full ZIP/TAR.GZ distributions.
+
+Once downloaded, extract the contents of the ZIP file into the _modules_ directory of your WildFly installation
+(shut down the application server before, should it be running).
+Note that the Hibernate ORM modules coming with WildFly will remain untouched,
+i.e. you can switch between the original version and the new version from the ZIP file as needed as a matter of configuration.
+
+The module system of the application server identifies modules using a name and a version.
+By default, the module _org.hibernate:main_ will be used to provide JPA support for given deployments (_main_ representing the Hibernate version coming with WildFly itself).
+In order to use another version specify the identifier of the Hibernate ORM module to use via the following property in the _persistence.xml_ file of your application:
+
+[[wildfly-using-custom-hibernate-orm-version]]
+.Using a specific version of Hibernate ORM
+====
+[source, XML]
+----
+<persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence
+    http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd"
+    version="2.1" >
+
+    <persistence-unit name="examplePu" transaction-type="JTA">
+
+        <!-- ... -->
+
+        <properties>
+            <property name="jboss.as.jpa.providerModule" value="org.hibernate:<%VERSION%>"/>
+        </properties>
+
+        <!-- ... -->
+
+    </persistence-unit>
+</persistence>
+----
+====
+
+For `<%VERSION%>` specify the version of the module ZIP you downloaded, e.g. `5.1.1.Final`.
+Alternatively you can specify just the minor version, e.g. `5.1`.
+That way you can update your WildFly server with further micro updates of the same Hibernate ORM release family as they are released,
+without having to adapt your _persistence.xml_ upon each micro update.
+Note that you can have several micro updates of the same release family next to each other within a WildFly instance
+and switch between them by means of the properties shown above.
+If you are specifying just the minor version, the modules from the ZIP file you unpacked last will be used.

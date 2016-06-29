@@ -98,7 +98,7 @@ public class QueryWithLiteralsInSelectExpressionTest extends BaseEntityManagerFu
 		final EntityManager entityManager = getOrCreateEntityManager();
 		try {
 			final List<Object[]> elements = entityManager.createQuery(
-					"SELECT cast(null as boolean), false, e.name FROM MyEntity e",
+					"SELECT cast(null as char), false, e.name FROM MyEntity e",
 					Object[].class
 			).getResultList();
 			Assert.assertEquals( 1, elements.size() );

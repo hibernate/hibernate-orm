@@ -169,7 +169,7 @@ task aggregateJavadocs(type: Javadoc) {
     Set<String> internalPackages = new HashSet<String>()
     parent.subprojects.each{ Project subProject->
         // skip certain sub-projects
-		if ( ['release','documentation'].contains( subProject.name ) ) {
+		if ( ['release','documentation', 'hibernate-orm-modules'].contains( subProject.name ) ) {
 			return;
 		}
 

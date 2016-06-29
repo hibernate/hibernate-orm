@@ -98,6 +98,10 @@ subprojects { subProject ->
 		return;
 	}
 
+	if ( subProject.name.startsWith( 'hibernate-orm-modules' ) ) {
+		return;
+	}
+
 	// everything below here in the closure applies to java projects
 	apply plugin: 'java'
 	apply plugin: 'maven-publish'

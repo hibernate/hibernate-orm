@@ -4,8 +4,15 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-apply plugin: 'base'
-apply plugin: 'maven'
+apply plugin: 'java'
+apply plugin: 'maven-publish'
+apply plugin: 'maven-publish-auth'
+apply plugin: 'build-dashboard'
+apply plugin: 'project-report'
+apply plugin: org.hibernate.build.HibernateBuildPlugin
+apply plugin: 'idea'
+
+buildDir = "target"
 
 ext {
     // Exact ORM version, e.g. "5.1.1.Final"
@@ -13,15 +20,18 @@ ext {
 
     // Just the minor ORM version, e.g. "5.1"; Is used as an alias for the exact version
     minorSlot = slot.substring( 0, slot.indexOf( ".", slot.indexOf( "." ) + 1) )
-
     majorWildflyVersion = wildflyVersion.substring( 0, wildflyVersion.indexOf( "." ) )
+    artifactClassifier = "wildfly-${majorWildflyVersion}-dist"
 
-    // directory for building the ZIP file from
-    modulesDirectory = "$buildDir/hibernate-orm-modules"
+    modulesXmlDir = "$buildDir/tmp/modules"
+
 }
 
 configurations {
-    jipijapa
+    jipijapa {
+        transitive = false
+    }
+
     wildflyDist
 }
 
@@ -38,16 +48,12 @@ dependencies {
     testCompile libraries.wildfly_arquillian_container_managed
 }
 
-/*************************/
-/*         Main          */
-/*************************/
+task copyModulesXml(type: Copy) {
+    // NOTE : we do a separate Copy task for the modules XML files to apply token-replacements
 
-// Copies all the module.xml descriptors into the output directory
-task copyModuleXmls(type: Copy) {
-    into( modulesDirectory )
+    into modulesXmlDir
     expand( slot: slot, minorSlot: minorSlot, version: rootProject.hibernateTargetVersion, wildflyVersion: wildflyVersion )
 
-    // Actual module.xml files
     into( 'org/hibernate/' + slot ) {
         from 'src/main/modules/org/hibernate/core'
     }
@@ -60,7 +66,7 @@ task copyModuleXmls(type: Copy) {
         from 'src/main/modules/org/hibernate/jipijapa-hibernate5'
     }
 
-    // Aliases
+    // create alias for the short name
     into( 'org/hibernate/' + minorSlot ) {
         from 'src/main/aliases/org/hibernate/core'
     }
@@ -74,15 +80,15 @@ task copyModuleXmls(type: Copy) {
     }
 }
 
-// Copies all the ORM JARs and the JipiJapa JAR into the output directory
-task copyJars(dependsOn: copyModuleXmls, type: Copy) {
-    into( modulesDirectory )
+task createModulesZip(type: Zip, dependsOn: [copyModulesXml]) {
+    baseName = 'hibernate-orm-modules'
+    classifier = artifactClassifier
+
+    from modulesXmlDir
 
     into( 'org/hibernate/' + slot ) {
         from parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
         from parent.project( 'hibernate-envers' ).configurations.archives.allArtifacts.files
-        from parent.project( 'hibernate-entitymanager' ).configurations.archives.allArtifacts.files
-        from parent.project( 'hibernate-java8' ).configurations.archives.allArtifacts.files
     }
 
     into( 'org/hibernate/infinispan/' + slot ) {
@@ -90,15 +96,27 @@ task copyJars(dependsOn: copyModuleXmls, type: Copy) {
     }
 
     into( 'org/hibernate/jipijapa-hibernate5/' + slot ) {
-        from configurations.jipijapa.copy().setTransitive( false )
+        from configurations.jipijapa
     }
 }
 
-// Creates a ZIP from the output directory
-task createModulesZip(dependsOn: copyJars, type: Zip) {
-    classifier = "wildfly-${majorWildflyVersion}-dist"
-    from modulesDirectory
+mavenPom {
+    name = "Hibernate ORM modules for WildFly ${majorWildflyVersion}"
+    description = "Hibernate ORM modules for WildFly ${majorWildflyVersion}"
 }
+
+publishing {
+    publications {
+        mavenZip( MavenPublication ) {
+            artifact( createModulesZip ) {
+                classifier artifactClassifier
+            }
+        }
+    }
+}
+
+build.dependsOn createModulesZip
+
 
 /*************************/
 /*        Testing        */
@@ -119,51 +137,9 @@ task extractModules(dependsOn: [extractWildFly, createModulesZip], type: Copy) {
     into "$buildDir/wildfly-${wildflyVersion}/modules"
 }
 
-// Replace properties in arquillian.xml; Actually this should be done by means of configuring
-// the processTestResourcesTask itself, but while that works for resources in src/main/resources,
-// the same failed for src/test/resources; I reckon it's a bug in Gradle
-task filterArquillianXml(dependsOn: processTestResources, type: Copy) {
-    into( buildDir.getName() + '/resources/test' )
-    expand( buildDir: buildDir.getName(), wildflyVersion: wildflyVersion )
-    from 'src/test/resources'
-}
-
 test.dependsOn extractModules
-test.dependsOn filterArquillianXml
 
-build.dependsOn createModulesZip
-
-// Exclude JAR creation/publication inherited from parent
-afterEvaluate {
-    tasks.withType(PublishToMavenLocal) { task ->
-        if (task.publication.name.equals( 'mavenJava') ) {
-            task.enabled = false
-            task.group = null
-        }
-    }
-
-    tasks.withType(PublishToMavenRepository) { task ->
-        if (task.publication.name.equals( 'mavenJava') ) {
-            task.enabled = false
-            task.group = null
-        }
-    }
-
-    tasks.withType(Jar) { task ->
-        task.enabled = false
-        task.group = null
-    }
+processTestResources {
+    expand( buildDir: buildDir.getName(), wildflyVersion: wildflyVersion )
 }
 
-mavenPom {
-    name = "Hibernate ORM modules for WildFly ${majorWildflyVersion}"
-    description = "Hibernate ORM modules for WildFly ${majorWildflyVersion}"
-}
-
-publishing {
-    publications {
-        mavenZip( MavenPublication ) {
-            artifact createModulesZip
-        }
-    }
-}

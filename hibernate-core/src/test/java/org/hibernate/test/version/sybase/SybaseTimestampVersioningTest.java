@@ -10,6 +10,7 @@ import javax.persistence.OptimisticLockException;
 
 import org.junit.Test;
 
+import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.SybaseASE15Dialect;
@@ -69,7 +70,7 @@ public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 				t2.commit();
 				fail( "optimistic lock check did not fail" );
 			}
-			catch( OptimisticLockException e ) {
+			catch( HibernateException e ) {
 				// expected...
 				try {
 					t2.rollback();

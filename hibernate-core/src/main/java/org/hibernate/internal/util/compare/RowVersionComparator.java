@@ -24,9 +24,11 @@ public final class RowVersionComparator implements Comparator<byte[]> {
 
 		for ( int i = 0 ; i < lengthToCheck ; i++ ) {
 			// must do an unsigned int comparison
+			// Byte#toUnsignedInt is available starting in jdk8,
+			// so directly convert to unsigned int before comparing
 			final int comparison = ComparableComparator.INSTANCE.compare(
-						Byte.toUnsignedInt( o1[i] ),
-						Byte.toUnsignedInt( o2[i] )
+					( (int) o1[i] ) & 0xff,
+					( (int) o2[i] ) & 0xff
 			);
 			if ( comparison != 0 ) {
 				return comparison;

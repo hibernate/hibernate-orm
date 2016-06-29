@@ -363,6 +363,12 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends Abstract
 	}
 
 	@Override
+	public T allowOutOfTransactionUpdateOperations(boolean allow) {
+		delegate.allowOutOfTransactionUpdateOperations( allow );
+		return getThis();
+	}
+
+	@Override
 	@SuppressWarnings("unchecked")
 	public <S extends SessionFactoryBuilder> S unwrap(Class<S> type) {
 		return (S) this;

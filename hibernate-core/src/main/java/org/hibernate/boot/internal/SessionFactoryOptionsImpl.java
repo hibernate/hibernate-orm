@@ -53,6 +53,8 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private final boolean autoCloseSessionEnabled;
 	private boolean jtaTransactionAccessEnabled;
 
+	private boolean allowOutOfTransactionUpdateOperations;
+
 	// transaction handling
 	private final boolean jtaTrackByThread;
 	private final boolean preferUserTransaction;
@@ -126,6 +128,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 
 		this.jpaBootstrap = state.isJpaBootstrap();
 		this.jtaTransactionAccessEnabled = state.isJtaTransactionAccessEnabled();
+		this.allowOutOfTransactionUpdateOperations = state.isAllowOutOfTransactionUpdateOperations();
 		this.sessionFactoryName = state.getSessionFactoryName();
 		this.sessionFactoryNameAlsoJndiName = state.isSessionFactoryNameAlsoJndiName();
 
@@ -361,6 +364,11 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public boolean isProcedureParameterNullPassingEnabled() {
 		return procedureParameterNullPassingEnabled;
+	}
+
+	@Override
+	public boolean isAllowOutOfTransactionUpdateOperations() {
+		return allowOutOfTransactionUpdateOperations;
 	}
 
 	@Override

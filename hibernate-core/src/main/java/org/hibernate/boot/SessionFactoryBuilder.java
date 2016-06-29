@@ -687,6 +687,8 @@ public interface SessionFactoryBuilder {
 	 */
 	SessionFactoryBuilder applySqlFunction(String registrationName, SQLFunction sqlFunction);
 
+	SessionFactoryBuilder allowOutOfTransactionUpdateOperations(boolean allow);
+
 	/**
 	 * Allows unwrapping this builder as another, more specific type.
 	 *

@@ -730,5 +730,15 @@ skipUnsupported:: Do the population, but ignore any non-JPA features that would 
 
 
 |`hibernate.delay_cdi_access`| `true` or `false` (default value) | Defines delayed access to CDI `BeanManager`. Starting in 5.1 the preferred means for CDI bootstrapping is through `org.hibernate.jpa.event.spi.jpa.ExtendedBeanManager`.
+
+|`hibernate.allow_update_outside_transaction` | `true` or `false` (default value) a|
+
+etting that allows to perform update operations outside a transaction boundary.
+
+Accepts three values:
+
+true:: allows to flush an update out of a transaction
+false:: does not allow
+
 |=====================================================================================================================================================================================================================================================
 

@@ -23,8 +23,8 @@
 		</set>
 		<map name="tokens" sort="natural" table="search_tokens">
 			<key column="searchString"/>
-			<map-key column="key" type="string"/>
-			<element column="value" type="string"/>
+			<map-key column="`key`" type="string"/>
+			<element column="`value`" type="string"/>
 		</map>
 	</class>
 	

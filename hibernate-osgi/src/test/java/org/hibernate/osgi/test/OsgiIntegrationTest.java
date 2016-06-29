@@ -198,10 +198,8 @@ public class OsgiIntegrationTest {
 	@Test
 	public void testActivation() throws Exception {
 		assertTrue( featuresService.isInstalled( featuresService.getFeature( "hibernate-orm" ) ) );
-		assertTrue( featuresService.isInstalled( featuresService.getFeature( "hibernate-envers" ) ) );
 
 		assertActiveBundle( "org.hibernate.core" );
-		assertActiveBundle( "org.hibernate.envers" );
 	}
 
 	@Test

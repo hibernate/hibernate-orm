@@ -46,6 +46,7 @@ import org.jboss.logging.Logger;
  * a means to share the old AuditConfiguration.
  *
  * @author Steve Ebersole
+ * @author Chris Cranford
  */
 public class EnversServiceImpl implements EnversService, Configurable, Stoppable {
 	private static final Logger log = Logger.getLogger( EnversServiceImpl.class );
@@ -137,7 +138,8 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 
 		EnversServiceImpl.this.auditEntitiesConfiguration = new AuditEntitiesConfiguration(
 				properties,
-				revInfoCfgResult.getRevisionInfoEntityName()
+				revInfoCfgResult.getRevisionInfoEntityName(),
+				this
 		);
 		this.auditProcessManager = new AuditProcessManager( revInfoCfgResult.getRevisionInfoGenerator() );
 		this.revisionInfoQueryCreator = revInfoCfgResult.getRevisionInfoQueryCreator();

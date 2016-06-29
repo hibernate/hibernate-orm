@@ -10,6 +10,7 @@ import java.io.Serializable;
 
 import org.hibernate.Session;
 import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
 import org.hibernate.envers.configuration.internal.GlobalConfiguration;
 import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentData;
@@ -22,6 +23,7 @@ import org.hibernate.envers.internal.tools.query.QueryBuilder;
  *
  * @author Stephanie Pau
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public interface AuditStrategy {
 	/**
@@ -33,11 +35,40 @@ public interface AuditStrategy {
 	 * @param id Id of the entity.
 	 * @param data Audit data to persist
 	 * @param revision Current revision data
+	 * @deprecated (since 5.2.1), use {@link #perform(Session, String, AuditEntitiesConfiguration, Serializable, Object, Object)}
+	 */
+	@Deprecated
+	default void perform(
+			Session session,
+			String entityName,
+			EnversService enversService,
+			Serializable id,
+			Object data,
+			Object revision) {
+		perform(
+				session,
+				entityName,
+				enversService.getAuditEntitiesConfiguration(),
+				id,
+				data,
+				revision
+		);
+	}
+
+	/**
+	 * Perform the persistence of audited data for regular entities.
+	 *
+	 * @param session Session, which can be used to persist the data.
+	 * @param entityName Name of the entity, in which the audited change happens
+	 * @param auditEntitiesConfiguration The audit entity configuration.
+	 * @param id Id of the entity.
+	 * @param data Audit data to persist.
+	 * @param revision Current revision data.
 	 */
 	void perform(
 			Session session,
 			String entityName,
-			EnversService enversService,
+			AuditEntitiesConfiguration auditEntitiesConfiguration,
 			Serializable id,
 			Object data,
 			Object revision);
@@ -51,15 +82,43 @@ public interface AuditStrategy {
 	 * @param enversService The EnversService
 	 * @param persistentCollectionChangeData Collection change data to be persisted.
 	 * @param revision Current revision data
+	 * @deprecated (since 5.2.1), use {@link #performCollectionChange(Session, String, String, AuditEntitiesConfiguration, PersistentCollectionChangeData, Object)}
 	 */
-	void performCollectionChange(
+	@Deprecated
+	default void performCollectionChange(
 			Session session,
 			String entityName,
 			String propertyName,
 			EnversService enversService,
 			PersistentCollectionChangeData persistentCollectionChangeData,
-			Object revision);
+			Object revision) {
+		performCollectionChange(
+				session,
+				entityName,
+				propertyName,
+				enversService.getAuditEntitiesConfiguration(),
+				persistentCollectionChangeData,
+				revision
+		);
+	}
 
+	/**
+	 * Perform the persistence of audited data for collection ("middle") entities.
+	 *
+	 * @param session Session, which can be used to persist the data.
+	 * @param entityName Name of the entity, in which the audited change happens.
+	 * @param propertyName The name of the property holding the persistent collection
+	 * @param auditEntitiesConfiguration audit entity configuration
+	 * @param persistentCollectionChangeData Collection change data to be persisted.
+	 * @param revision Current revision data
+	 */
+	void performCollectionChange(
+			Session session,
+			String entityName,
+			String propertyName,
+			AuditEntitiesConfiguration auditEntitiesConfiguration,
+			PersistentCollectionChangeData persistentCollectionChangeData,
+			Object revision);
 
 	/**
 	 * Update the rootQueryBuilder with an extra WHERE clause to restrict the revision for a two-entity relation.

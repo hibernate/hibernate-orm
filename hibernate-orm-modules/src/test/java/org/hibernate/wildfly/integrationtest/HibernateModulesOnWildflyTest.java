@@ -9,8 +9,6 @@ package org.hibernate.wildfly.integrationtest;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThat;
 
-import java.util.List;
-
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
@@ -61,6 +59,7 @@ public class HibernateModulesOnWildflyTest {
 							// We want to use the ORM from this build instead of the one coming with WildFly
 							.createProperty().name( "jboss.as.jpa.providerModule" ).value( "org.hibernate:" + ORM_MINOR_VERSION ).up()
 							.createProperty().name( "hibernate.hbm2ddl.auto" ).value( "create-drop" ).up()
+							.createProperty().name( "hibernate.allow_update_outside_transaction" ).value( "true" ).up()
 					.up().up();
 	}
 
@@ -68,7 +67,7 @@ public class HibernateModulesOnWildflyTest {
 	private EntityManager entityManager;
 
 	@Test
-	public void shouldUseHibernateOrm51() {
+	public void shouldUseHibernateOrm52() {
 		Session session = entityManager.unwrap( Session.class );
 
 		Kryptonite kryptonite1 = new Kryptonite();
@@ -76,18 +75,9 @@ public class HibernateModulesOnWildflyTest {
 		kryptonite1.description = "Some Kryptonite";
 		session.persist( kryptonite1 );
 
-		Kryptonite kryptonite2 = new Kryptonite();
-		kryptonite2.id = 2L;
-		kryptonite2.description = "Some more Kryptonite";
-		session.persist( kryptonite2 );
+		// EntityManager methods exposed through Session only as of 5.2
+		Kryptonite loaded = session.find( Kryptonite.class, 1L );
 
-		session.flush();
-		session.clear();
-
-		// multiLoad only introduced in 5.1
-		List<Kryptonite> loaded = session.byMultipleIds( Kryptonite.class )
-			.multiLoad( 1L, 2L );
-
-		assertThat( loaded.size(), equalTo( 2 ) );
+		assertThat( loaded.description, equalTo( "Some Kryptonite" ) );
 	}
 }

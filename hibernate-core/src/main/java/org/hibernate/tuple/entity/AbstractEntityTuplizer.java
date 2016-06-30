@@ -15,6 +15,8 @@ import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
+import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -495,13 +497,16 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
 	@Override
 	public Object[] getPropertyValues(Object entity) throws HibernateException {
-		boolean getAll = shouldGetAllProperties( entity );
 		final int span = entityMetamodel.getPropertySpan();
 		final Object[] result = new Object[span];
+		final BytecodeEnhancementMetadata enhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
+		final LazyAttributeLoadingInterceptor interceptor = enhancementMetadata.isEnhancedForLazyLoading()
+				? enhancementMetadata.extractInterceptor( entity )
+				: null;
 
 		for ( int j = 0; j < span; j++ ) {
 			NonIdentifierAttribute property = entityMetamodel.getProperties()[j];
-			if ( getAll || !property.isLazy() ) {
+			if ( !property.isLazy() || interceptor == null || interceptor.isAttributeLoaded( property.getName() ) ) {
 				result[j] = getters[j].get( entity );
 			}
 			else {

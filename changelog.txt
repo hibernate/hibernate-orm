@@ -3,6 +3,104 @@ Hibernate 5.0 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.2.1.Final (June 30, 2016)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/23950
+
+** Bug
+    * [HHH-7510] - LazyInitializationException thrown when deleting an entity while global_with_modified_flag turned on
+    * [HHH-8305] - Envers auditing OneToOne inserts null in Aud JoinTable in a not stablished relationship
+    * [HHH-8488] - JPA joinList and treat behaviour
+    * [HHH-8999] - NullPointerException when updating or deleting multiple entities of same type with non-comparable IDs
+    * [HHH-9128] - Regression: EnversHibernateToolTask is missing
+    * [HHH-9322] - Updating multiple entities with the same name in the same flush throws a ClassCastException when using a non-Comparable user type as the entity ID
+    * [HHH-9512] - Invalid entity being created when merging with recursive cascading
+    * [HHH-10230] - Using boolean or null literals results in a parser error
+    * [HHH-10238] - Derby MultiTableBulkIdStrategy uses non-existant temporary tables
+    * [HHH-10245] - SelfDirtinessTracker not found
+    * [HHH-10277] - AttributeConverter not applied to attributes of an embeddable used as collection element
+    * [HHH-10299] - After adding "@Audited" to an entity field the warning "Use of DOM4J entity-mode is considered deprecated" appears
+    * [HHH-10334] - @formula annotation javadoc contains database dependent sample usage
+    * [HHH-10341] - Specification violation in Implementation of TupleElement
+    * [HHH-10352] - HBM2DDL does not use described name for foreign key in join inheritance
+    * [HHH-10360] - Natural ID columns are nullable by default (hbm mappings only)
+    * [HHH-10361] - Child module osgi does not exist in hibernate-tutorials
+    * [HHH-10375] - adding an entity at index to list with @OrderColumn in detached Entity
+    * [HHH-10413] - byte[] as the version attribute broken
+    * [HHH-10427] - ServiceRegistry creates multiple service instances and returns uninitialized services
+    * [HHH-10511] - PluralAttribute.getPersistentAttributeType() wrong value with enhanced classes
+    * [HHH-10515] - Stored procedure execution fails to find column
+    * [HHH-10516] - Incorrect coalesce function for InformixDialect
+    * [HHH-10540] - Incorrect bytecode instrumentation when there are multiple @Embedded attributes
+    * [HHH-10562] - ManagedEntity linked list broken when mutable, non-associated enhanced entity is evicted
+    * [HHH-10583] - BytecodeEnhancement's AssociationManagement breaks with entity containing two ToOne relations with the same mappedBy value.
+    * [HHH-10642] - BytecodeEnhancements  PersistentAttributesEnhancer  bytecode error INVOKESPECIAL
+    * [HHH-10643] - Attribute 'foreignKeyDefinition' of @javax.persistence.ForeignKey ignored by schema exporter
+    * [HHH-10644] - Enhancement cause Exception if property field not present
+    * [HHH-10648] - No MultipleBagFetchException is thrown when fetching two bags eagerly
+    * [HHH-10679] - Subselect fetching is not used for collections if their entity owners are initialized in a batch
+    * [HHH-10712] - Subselect fetches are not detected by load plans
+    * [HHH-10729] - Issue with CriteriaBuilder.literal(boolean) in my select expression?
+    * [HHH-10774] - SortedMap defined in .hbm.xml are not sortable
+    * [HHH-10796] - org.hibernate.query.Query<R> setProperties(Map map); set to null parameters not contained in the map
+    * [HHH-10797] - PostgreSQL81Dialect does not honor the lock timeout settings
+    * [HHH-10801] - Bytecode enhancement of @MappedSuperclass
+    * [HHH-10802] - Attempt to resolve foreign key metadata from JDBC metadata failed to find column mappings for foreign key
+    * [HHH-10803] - JPA specification violation in Query.getParameter(int) in HIbernate 5.2
+    * [HHH-10805] - PostgreSQL Dialect v 9.4 Doesn't support materialized view validation
+    * [HHH-10807] - Flushing EntityManager with rollback only transcation causes error
+    * [HHH-10811] - Envers can't start when some audited field has accented letters
+    * [HHH-10820] - InformationExtractorJdbcDatabaseMetaDataImpl quoted table names
+    * [HHH-10824] - Query.stream() generic element type is wrong
+    * [HHH-10826] - Auxiliary Database Object no longer documented
+    * [HHH-10833] - NoResultException does not thrown after updating to 5.2
+    * [HHH-10841] - Field marked as @Generated not being audited.
+    * [HHH-10843] - QuerySyntaxException when use CriteriaBuilder.concat in selectCase expression
+    * [HHH-10846] - InformixDialect has incorrect substring function
+    * [HHH-10851] - PropertyAccessMixed not aware of Access annotation
+    * [HHH-10860] - Query#scroll() throws NPE
+    * [HHH-10863] - Improve consistency of how we call implicitNamingStrategy.determineBasicColumnName with element collections
+    * [HHH-10865] - Join table of lazy loading many-to-many relation not saved when lazy initialization bytecode enhancement is active
+    * [HHH-10870] - Parameter lookup for Iterable fails on Criteria API
+    * [HHH-10876] - DefaultIdentifierGeneratorFactory does not consider the hibernate.id.new_generator_mappings setting
+    * [HHH-10885] - JPA Native Queries with ordinal parameter are zero based
+    * [HHH-10886] - The follow-on-locking Oracle mechanism should consider UNION as well
+    * [HHH-10889] - Fix unit tests failing on Oracle
+    * [HHH-10890] - PostgreSQL does not consider alias-specific LockMode
+    * [HHH-10893] - Reusing Query but changing collection parameters returns wrong result
+    * [HHH-10904] - Fix tests failing when switching to MySQL
+
+
+** New Feature
+    * [HHH-10816] - SQLServer2005Dialect does not use NOWAIT for aliases
+    * [HHH-10817] - AbstractHANADialect should support the NOWAIT directive in the FOR UPDATE clause
+    * [HHH-10837] - Add new setting to disable/enable scanning for the static metamodel.
+    * [HHH-10877] - Introduce a configuration option to allow out of transaction updates
+
+** Task
+    * [HHH-10799] - Add PostgreSQL 9.5 Dialect which supports the SKIP LOCKED clause
+    * [HHH-10808] - Update documentation according to 5.2 changes
+    * [HHH-10864] - Allow ORM to be built with Java 9
+    * [HHH-10867] - Updating Hibernate Validator to 5.2.4.Final
+    * [HHH-10899] - Provide module ZIP file for upgrading WildFly to latest Hibernate
+
+** Improvement
+    * [HHH-1594] - Add on-delete="cascade" support to unidirectional *ToOne relationships.
+    * [HHH-9021] - Select expression in JPA doesn't work
+    * [HHH-9486] - Envers ValidityAuditStrategy triggers "HHH000444: Encountered request for locking ..." warning on Oracle
+    * [HHH-10786] - Add MySQL 5.7 JSON datatype support
+    * [HHH-10822] - Wrong signature for SharedSessionContract#setJdbcBatchSize
+    * [HHH-10823] - Consider adding hibernate-entitymanager again
+    * [HHH-10835] - The hash code calculation of the EntityKey should also include the hash code of the root entity name.
+    * [HHH-10839] - Restore some lost backwards compatibility of the legacy org.hibernate.Query
+    * [HHH-10861] - JPA Constructor Expressions fails with nullLiteral passed to constructor
+    * [HHH-10883] - Restore the Maven artifact hibernate-java8 as an empty placeholder
+
+
+** Deprecation
+    * [HHH-10906] - Remove passing EnversService in AuditStrategy.
+
+
 
 Changes in 5.2.0.Final (June 1, 2016)
 ------------------------------------------------------------------------------------------------------------------------

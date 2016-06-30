@@ -73,7 +73,7 @@ public class ComponentNamingStrategyTest extends BaseUnitTestCase {
 			SimpleValue elementValue = assertTyping(  SimpleValue.class, value.getElement() );
 			assertEquals( 1, elementValue.getColumnSpan() );
 			Column column = assertTyping( Column.class, elementValue.getColumnIterator().next() );
-			assertEquals( column.getName(), "items_name" );
+			assertEquals( "items_name", column.getName() );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );

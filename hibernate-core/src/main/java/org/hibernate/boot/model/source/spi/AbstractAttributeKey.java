@@ -12,6 +12,8 @@ import org.hibernate.internal.util.StringHelper;
  * @author Steve Ebersole
  */
 public abstract class AbstractAttributeKey {
+	private static final String COLLECTION_ELEMENT = "collection&&element";
+
 	private final AbstractAttributeKey parent;
 	private final String property;
 	private final String fullPath;
@@ -76,6 +78,13 @@ public abstract class AbstractAttributeKey {
 
 	public boolean isRoot() {
 		return parent == null;
+	}
+
+	/**
+	 * @return true if the current property is a collection element marker
+	 */
+	public boolean isCollectionElement() {
+		return COLLECTION_ELEMENT.equals( property );
 	}
 
 	@Override

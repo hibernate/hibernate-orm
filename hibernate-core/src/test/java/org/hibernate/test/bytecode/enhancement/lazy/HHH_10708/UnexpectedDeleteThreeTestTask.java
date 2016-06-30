@@ -12,12 +12,6 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.test.bytecode.enhancement.AbstractEnhancerTestTask;
 import org.junit.Assert;
 
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.ManyToMany;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -26,7 +20,7 @@ public class UnexpectedDeleteThreeTestTask extends AbstractEnhancerTestTask {
 
 	@Override
 	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Parent.class, Child.class };
+		return new Class[] { Parent.class, Child.class };
 	}
 
 	@Override
@@ -94,59 +88,4 @@ public class UnexpectedDeleteThreeTestTask extends AbstractEnhancerTestTask {
 	@Override
 	protected void cleanup() {
 	}
-
-	// --- //
-
-	@Entity public static class Child {
-
-		private Long id;
-
-		@Id
-		@Column(name = "id", unique = true, nullable = false)
-		public Long getId() {
-			return id;
-		}
-
-		public void setId(Long id)
-		{
-			this.id = id;
-		}
-
-	}
-
-	@Entity public static class Parent {
-
-		private Long id;
-		private Set<String> names;
-		private Set<Child> children;
-
-		@Id @Column(name = "id", unique = true, nullable = false)
-		public Long getId() {
-			return id;
-		}
-
-		public void setId(Long id) {
-			this.id = id;
-		}
-
-		@ElementCollection
-		public Set<String> getNames() {
-			return names;
-		}
-
-		public void setNames(Set<String> secrets) {
-			this.names = secrets;
-		}
-
-		@ManyToMany(fetch = FetchType.LAZY, targetEntity = Child.class)
-		public Set<Child> getChildren() {
-			return children;
-		}
-
-		public void setChildren(Set<Child> children) {
-			this.children = children;
-		}
-
-	}
-
 }

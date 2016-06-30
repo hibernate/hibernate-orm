@@ -6,5 +6,22 @@
  */
 package org.hibernate.test.bytecode.enhancement.lazy.HHH_10708;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+
+@Entity
 public class Child {
+	private Long id;
+
+	@Id
+	@Column(name = "id", unique = true, nullable = false)
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id)
+	{
+		this.id = id;
+	}
 }

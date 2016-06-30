@@ -104,10 +104,6 @@ public class PropertyAccessMixedImpl implements PropertyAccess {
 	}
 
 	protected static AccessType getAccessType(Class<?> containerJavaType, String propertyName) {
-		AccessType classAccessType = getAccessTypeOrNull( containerJavaType );
-		if ( classAccessType != null ) {
-			return classAccessType;
-		}
 		Field field = fieldOrNull( containerJavaType, propertyName );
 		AccessType fieldAccessType = getAccessTypeOrNull( field );
 		if ( fieldAccessType != null ) {
@@ -116,6 +112,11 @@ public class PropertyAccessMixedImpl implements PropertyAccess {
 		AccessType methodAccessType = getAccessTypeOrNull( getterMethodOrNull( containerJavaType, propertyName ) );
 		if ( methodAccessType != null ) {
 			return methodAccessType;
+		}
+		// No @Access on property or field; check to see if containerJavaType has an explicit @Access
+		AccessType classAccessType = getAccessTypeOrNull( containerJavaType );
+		if ( classAccessType != null ) {
+			return classAccessType;
 		}
 		return field != null ? AccessType.FIELD : AccessType.PROPERTY;
 	}

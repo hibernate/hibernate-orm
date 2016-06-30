@@ -28,7 +28,7 @@ public class MixedAccessTestTask extends AbstractEnhancerTestTask {
 	private static boolean cleanup = false;
 
 	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[]{TestEntity.class};
+		return new Class<?>[]{TestEntity.class, TestOtherEntity.class};
 	}
 
 	public void prepare() {
@@ -44,6 +44,10 @@ public class MixedAccessTestTask extends AbstractEnhancerTestTask {
 		testEntity.setParamsAsString( "{\"paramName\":\"paramValue\"}" );
 		s.persist( testEntity );
 
+		TestOtherEntity testOtherEntity = new TestOtherEntity( "foo" );
+		testOtherEntity.setParamsAsString( "{\"paramName\":\"paramValue\"}" );
+		s.persist( testOtherEntity );
+
 		s.getTransaction().commit();
 		s.clear();
 		s.close();
@@ -56,10 +60,13 @@ public class MixedAccessTestTask extends AbstractEnhancerTestTask {
 		TestEntity testEntity = s.get( TestEntity.class, "foo" );
 		Assert.assertEquals( "{\"paramName\":\"paramValue\"}", testEntity.getParamsAsString() );
 
+		TestOtherEntity testOtherEntity = s.get( TestOtherEntity.class, "foo" );
+		Assert.assertEquals( "{\"paramName\":\"paramValue\"}", testOtherEntity.getParamsAsString() );
+
 		// Clean parameters
 		cleanup = true;
 		testEntity.setParamsAsString( "{}" );
-		s.persist( testEntity );
+		testOtherEntity.setParamsAsString( "{}" );
 
 		s.getTransaction().commit();
 		s.clear();
@@ -72,6 +79,9 @@ public class MixedAccessTestTask extends AbstractEnhancerTestTask {
 
 		TestEntity testEntity = s.get( TestEntity.class, "foo" );
 		Assert.assertTrue( testEntity.getParams().isEmpty() );
+
+		TestOtherEntity testOtherEntity = s.get( TestOtherEntity.class, "foo" );
+		Assert.assertTrue( testOtherEntity.getParams().isEmpty() );
 
 		s.getTransaction().commit();
 		s.clear();
@@ -93,6 +103,58 @@ public class MixedAccessTestTask extends AbstractEnhancerTestTask {
 		}
 
 		protected TestEntity() {
+		}
+
+		public Map<String, String> getParams() {
+			return params;
+		}
+
+		public void setParams(Map<String, String> params) {
+			this.params = params;
+		}
+
+		@Column( name = "params", length = 4000 )
+		@Access( AccessType.PROPERTY )
+		public String getParamsAsString() {
+			if ( params.size() > 0 ) {
+				// Convert to JSON
+				return "{" + params.entrySet().stream().map(
+						e -> "\"" + e.getKey() + "\":\"" + e.getValue() + "\""
+				).collect( Collectors.joining( "," ) ) + "}";
+			}
+			return null;
+		}
+
+		public void setParamsAsString(String string) {
+			params.clear();
+
+			try {
+				params.putAll( (Map<String, String>) engine.eval( "Java.asJSONCompatible(" + string + ")" ) );
+			} catch ( ScriptException ignore ) {
+				// JDK 8u60 required --- use hard coded values to pass the test
+				if ( !cleanup ) {
+					params.put( "paramName", "paramValue" );
+				}
+			}
+		}
+	}
+
+	@Entity
+	@Access( AccessType.FIELD )
+	private static class TestOtherEntity {
+
+		@Id
+		String name;
+
+		@Transient
+		Map<String, String> params = new LinkedHashMap<>();
+
+		public TestOtherEntity(String name) {
+			this();
+			this.name = name;
+		}
+
+		protected TestOtherEntity() {
 		}
 
 		public Map<String, String> getParams() {

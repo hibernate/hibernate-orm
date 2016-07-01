@@ -127,19 +127,6 @@ public class AuditedPropertiesReader {
 	 * @param clazz Class that is being processed. Currently mapped entity shall be passed during first invocation.
 	 */
 	private void readAuditOverrides(XClass clazz) {
-		/* TODO: Code to remove with @Audited.auditParents - start. */
-		final Audited allClassAudited = clazz.getAnnotation( Audited.class );
-		if ( allClassAudited != null && allClassAudited.auditParents().length > 0 ) {
-			for ( Class c : allClassAudited.auditParents() ) {
-				final XClass parentClass = reflectionManager.toXClass( c );
-				checkSuperclass( clazz, parentClass );
-				if ( !overriddenNotAuditedClasses.contains( parentClass ) ) {
-					// If the class has not been marked as not audited by the subclass.
-					overriddenAuditedClasses.add( parentClass );
-				}
-			}
-		}
-		/* TODO: Code to remove with @Audited.auditParents - finish. */
 		final List<AuditOverride> auditOverrides = computeAuditOverrides( clazz );
 		for ( AuditOverride auditOverride : auditOverrides ) {
 			if ( auditOverride.forClass() != void.class ) {
@@ -666,11 +653,6 @@ public class AuditedPropertiesReader {
 		@Override
 		public RelationTargetAuditMode targetAuditMode() {
 			return RelationTargetAuditMode.AUDITED;
-		}
-
-		@Override
-		public Class[] auditParents() {
-			return new Class[0];
 		}
 
 		@Override

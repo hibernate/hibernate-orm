@@ -235,6 +235,9 @@ if ( JavaVersion.current().isJava9Compatible() ) {
         // need to be excluded because WildFly does not yet work with Java 9
         exclude 'org/hibernate/test/wf/ddl/**'
         exclude 'org/hibernate/jpa/test/cdi/**'
+        exclude 'org/hibernate/envers/internal/tools/MapProxyTest.class'
+        exclude 'org/hibernate/envers/test/integration/components/dynamic/AuditedDynamicComponentTest.class'
+        exclude 'org/hibernate/envers/test/integration/components/dynamic/AuditedDynamicComponentsAdvancedCasesTest.class'
     }
 }
 

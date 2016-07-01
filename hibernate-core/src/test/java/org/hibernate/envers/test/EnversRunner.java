@@ -76,7 +76,7 @@ public class EnversRunner extends Suite {
 
 		@Override
 		protected String getName() {
-			return String.format( "[%s]", fParameterSetNumber );
+			return String.format( "[%s]", getStrategyClassName() );
 		}
 
 		@Override
@@ -87,21 +87,27 @@ public class EnversRunner extends Suite {
 			);
 		}
 
+		private String getStrategyClassName() {
+			Object name = fParameterList.get( fParameterSetNumber )[ 0 ];
+			return ( name != null ? name.toString() : "SystemDefault" );
+		}
+
 		@Override
 		protected void sortMethods(List<FrameworkMethod> computedTestMethods) {
 			super.sortMethods( computedTestMethods );
 			Collections.sort(
-					computedTestMethods, new Comparator<FrameworkMethod>() {
-				private int getPriority(FrameworkMethod fm) {
-					Priority p = fm.getAnnotation( Priority.class );
-					return p == null ? 0 : p.value();
-				}
+					computedTestMethods,
+					new Comparator<FrameworkMethod>() {
+						private int getPriority(FrameworkMethod fm) {
+							Priority p = fm.getAnnotation( Priority.class );
+							return p == null ? 0 : p.value();
+						}
 
-				@Override
-				public int compare(FrameworkMethod fm1, FrameworkMethod fm2) {
-					return getPriority( fm2 ) - getPriority( fm1 );
-				}
-			}
+						@Override
+						public int compare(FrameworkMethod fm1, FrameworkMethod fm2) {
+							return getPriority( fm2 ) - getPriority( fm1 );
+						}
+					}
 			);
 		}
 	}

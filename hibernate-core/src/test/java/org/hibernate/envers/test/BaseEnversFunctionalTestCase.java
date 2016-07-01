@@ -14,6 +14,7 @@ import org.hibernate.Session;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.configuration.EnversSettings;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -66,6 +67,10 @@ public abstract class BaseEnversFunctionalTestCase extends BaseNonConfigCoreFunc
 		super.addSettings( settings );
 
 		settings.put( EnversSettings.USE_REVISION_ENTITY_WITH_NATIVE_ID, "false" );
+
+		if ( StringHelper.isNotEmpty( getAuditStrategy() ) ) {
+			settings.put( EnversSettings.AUDIT_STRATEGY, getAuditStrategy() );
+		}
 	}
 
 	@Override

@@ -5,12 +5,11 @@ import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Version;
 
-import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
-import org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils;
 import org.hibernate.test.bytecode.enhancement.AbstractEnhancerTestTask;
+import org.hibernate.test.bytecode.enhancement.EnhancerTestUtils;
 
 /**
  * @author Luis Barreiro

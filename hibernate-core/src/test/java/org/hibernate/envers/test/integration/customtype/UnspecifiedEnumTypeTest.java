@@ -15,6 +15,8 @@ import java.util.Map;
 import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.envers.configuration.EnversSettings;
+import org.hibernate.envers.strategy.DefaultAuditStrategy;
 import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.customtype.UnspecifiedEnumTypeEntity;
@@ -43,6 +45,10 @@ public class UnspecifiedEnumTypeTest extends BaseEnversFunctionalTestCase {
 		super.addSettings( settings );
 
 		settings.put( Environment.HBM2DDL_AUTO, "" );
+
+		// due to nature of this test, forcing both executions to use the DefaultAuditStrategy
+		settings.put( EnversSettings.AUDIT_STRATEGY, DefaultAuditStrategy.class.getName() );
+
 	}
 
 	@Test

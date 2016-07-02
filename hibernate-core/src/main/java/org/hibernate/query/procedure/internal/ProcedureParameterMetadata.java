@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Set;
 import javax.persistence.Parameter;
 
+import org.hibernate.QueryParameterException;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.procedure.ProcedureParameter;
@@ -26,6 +27,10 @@ public class ProcedureParameterMetadata implements ParameterMetadata {
 
 	private boolean hasNamed;
 	private int ordinalParamCount;
+
+	public ProcedureParameterMetadata() {
+		parameters = new ArrayList<>(  );
+	}
 
 	public void registerParameter(ProcedureParameterImplementor parameter) {
 		if ( parameters == null ) {
@@ -91,16 +96,19 @@ public class ProcedureParameterMetadata implements ParameterMetadata {
 	@SuppressWarnings("unchecked")
 	public <T> QueryParameter<T> getQueryParameter(String name) {
 		assert name != null;
-
+		QueryParameter<T> result = null;
 		if ( hasNamed ) {
 			for ( ProcedureParameter parameter : parameters ) {
 				if ( name.equals( parameter.getName() ) ) {
-					return parameter;
+					result = parameter;
+					break;
 				}
 			}
 		}
-
-		return null;
+		if ( result != null ) {
+			return result;
+		}
+		throw new QueryParameterException( "could not locate named parameter [" + name + "]" );
 	}
 
 	@Override
@@ -115,8 +123,7 @@ public class ProcedureParameterMetadata implements ParameterMetadata {
 				}
 			}
 		}
-
-		return null;
+		throw new QueryParameterException( "could not locate parameter at position [" + position + "]" );
 	}
 
 	@Override

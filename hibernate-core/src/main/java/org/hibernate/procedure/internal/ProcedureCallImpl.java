@@ -51,6 +51,8 @@ import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.AbstractProducedQuery;
+import org.hibernate.query.procedure.internal.ProcedureParameterImpl;
+import org.hibernate.query.procedure.internal.ProcedureParameterMetadata;
 import org.hibernate.result.NoMoreReturnsException;
 import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
@@ -94,7 +96,7 @@ public class ProcedureCallImpl<R>
 	 * @param procedureName The name of the procedure to call
 	 */
 	public ProcedureCallImpl(SharedSessionContractImplementor session, String procedureName) {
-		super( session, null );
+		super( session, new ProcedureParameterMetadata() );
 		this.procedureName = procedureName;
 		this.globalParameterPassNullsSetting = session.getFactory().getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();
 
@@ -109,7 +111,7 @@ public class ProcedureCallImpl<R>
 	 * @param resultClasses The classes making up the result
 	 */
 	public ProcedureCallImpl(final SharedSessionContractImplementor session, String procedureName, Class... resultClasses) {
-		super( session, null );
+		super( session, new ProcedureParameterMetadata() );
 		this.procedureName = procedureName;
 		this.globalParameterPassNullsSetting = session.getFactory().getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();
 
@@ -148,7 +150,7 @@ public class ProcedureCallImpl<R>
 	 * @param resultSetMappings The names of the result set mappings making up the result
 	 */
 	public ProcedureCallImpl(final SharedSessionContractImplementor session, String procedureName, String... resultSetMappings) {
-		super( session, null );
+		super( session, new ProcedureParameterMetadata() );
 		this.procedureName = procedureName;
 		this.globalParameterPassNullsSetting = session.getFactory().getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();
 
@@ -192,7 +194,7 @@ public class ProcedureCallImpl<R>
 	 */
 	@SuppressWarnings("unchecked")
 	ProcedureCallImpl(SharedSessionContractImplementor session, ProcedureCallMementoImpl memento) {
-		super( session, null );
+		super( session, new ProcedureParameterMetadata() );
 		this.procedureName = memento.getProcedureName();
 		this.globalParameterPassNullsSetting = session.getFactory().getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();
 
@@ -250,6 +252,7 @@ public class ProcedureCallImpl<R>
 						storedRegistration.isPassNullsEnabled()
 				);
 			}
+			getParameterMetadata().registerParameter( new ProcedureParameterImpl( registration ) );
 			parameterRegistrations.add( registration );
 		}
 		this.registeredParameters = parameterRegistrations;
@@ -257,6 +260,11 @@ public class ProcedureCallImpl<R>
 		for ( Map.Entry<String, Object> entry : memento.getHintsMap().entrySet() ) {
 			setHint( entry.getKey(), entry.getValue() );
 		}
+	}
+
+	@Override
+	public ProcedureParameterMetadata getParameterMetadata() {
+		return (ProcedureParameterMetadata) super.getParameterMetadata();
 	}
 
 	@Override
@@ -286,6 +294,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> ParameterRegistration<T> registerParameter(int position, Class<T> type, ParameterMode mode) {
+
 		final PositionalParameterRegistration parameterRegistration =
 				new PositionalParameterRegistration( this, position, mode, type, globalParameterPassNullsSetting );
 		registerParameter( parameterRegistration );
@@ -309,6 +318,8 @@ public class ProcedureCallImpl<R>
 		else {
 			throw new IllegalArgumentException( "Given parameter did not define name or position [" + parameter + "]" );
 		}
+		((ProcedureParameterMetadata)getParameterMetadata()).registerParameter( new ProcedureParameterImpl( parameter ) );
+
 		registeredParameters.add( parameter );
 	}
 

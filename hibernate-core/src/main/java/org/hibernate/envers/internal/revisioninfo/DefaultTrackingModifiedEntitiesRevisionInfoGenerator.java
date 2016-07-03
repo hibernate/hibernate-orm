@@ -22,6 +22,7 @@ import org.hibernate.service.ServiceRegistry;
  * Automatically adds entity names, that have been changed during current revision, to revision entity.
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  *
  * @see org.hibernate.envers.ModifiedEntityNames
  * @see org.hibernate.envers.DefaultTrackingModifiedEntitiesRevisionEntity
@@ -34,11 +35,10 @@ public class DefaultTrackingModifiedEntitiesRevisionInfoGenerator extends Defaul
 			String revisionInfoEntityName,
 			Class<?> revisionInfoClass,
 			Class<? extends RevisionListener> listenerClass,
-			PropertyData revisionInfoTimestampData,
-			boolean timestampAsDate,
+			RevisionTimestampValueResolver timestampValueResolver,
 			PropertyData modifiedEntityNamesData,
 			ServiceRegistry serviceRegistry) {
-		super( revisionInfoEntityName, revisionInfoClass, listenerClass, revisionInfoTimestampData, timestampAsDate, serviceRegistry );
+		super( revisionInfoEntityName, revisionInfoClass, listenerClass, timestampValueResolver );
 		modifiedEntityNamesSetter = ReflectionTools.getSetter( revisionInfoClass, modifiedEntityNamesData, serviceRegistry );
 		modifiedEntityNamesGetter = ReflectionTools.getGetter( revisionInfoClass, modifiedEntityNamesData, serviceRegistry );
 	}

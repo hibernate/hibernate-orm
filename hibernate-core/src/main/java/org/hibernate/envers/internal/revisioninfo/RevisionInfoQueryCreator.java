@@ -6,6 +6,7 @@
  */
 package org.hibernate.envers.internal.revisioninfo;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Set;
 
@@ -27,23 +28,22 @@ public class RevisionInfoQueryCreator {
 
 	private final String revisionInfoEntityName;
 	private final String revisionInfoIdName;
-	private final String revisionInfoTimestampName;
-	private final boolean timestampAsDate;
+	private final RevisionTimestampValueResolver timestampValueResolver;
 
 	public RevisionInfoQueryCreator(
-			String revisionInfoEntityName, String revisionInfoIdName,
-			String revisionInfoTimestampName, boolean timestampAsDate) {
+			String revisionInfoEntityName,
+			String revisionInfoIdName,
+			RevisionTimestampValueResolver timestampValueResolver) {
 		this.revisionInfoEntityName = revisionInfoEntityName;
 		this.revisionInfoIdName = revisionInfoIdName;
-		this.revisionInfoTimestampName = revisionInfoTimestampName;
-		this.timestampAsDate = timestampAsDate;
+		this.timestampValueResolver = timestampValueResolver;
 	}
 
 	public Query<?> getRevisionDateQuery(Session session, Number revision) {
 		return session.createQuery(
 				String.format(
 						REVISION_DATE_QUERY,
-						revisionInfoTimestampName,
+						timestampValueResolver.getName(),
 						revisionInfoEntityName,
 						revisionInfoIdName
 				)
@@ -56,9 +56,20 @@ public class RevisionInfoQueryCreator {
 						REVISION_NUMBER_FOR_DATE_QUERY,
 						revisionInfoIdName,
 						revisionInfoEntityName,
-						revisionInfoTimestampName
+						timestampValueResolver.getName()
 				)
-		).setParameter( REVISION_NUMBER_FOR_DATE_QUERY_PARAMETER, timestampAsDate ? date : date.getTime() );
+		).setParameter( REVISION_NUMBER_FOR_DATE_QUERY_PARAMETER, timestampValueResolver.resolveByValue( date ) );
+	}
+
+	public Query<?> getRevisionNumberForDateQuery(Session session, LocalDateTime localDateTime) {
+		return session.createQuery(
+				String.format(
+						REVISION_NUMBER_FOR_DATE_QUERY,
+						revisionInfoIdName,
+						revisionInfoEntityName,
+						timestampValueResolver.getName()
+				)
+		).setParameter( REVISION_NUMBER_FOR_DATE_QUERY_PARAMETER, timestampValueResolver.resolveByValue( localDateTime ) );
 	}
 
 	public Query<?> getRevisionsQuery(Session session, Set<Number> revisions) {
@@ -66,4 +77,5 @@ public class RevisionInfoQueryCreator {
 				String.format( REVISIONS_QUERY, revisionInfoEntityName, revisionInfoIdName )
 		).setParameter( REVISIONS_QUERY_PARAMETER, revisions );
 	}
+
 }

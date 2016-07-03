@@ -6,6 +6,7 @@
  */
 package org.hibernate.envers.configuration.internal;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Set;
 import javax.persistence.Column;
@@ -33,17 +34,18 @@ import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
 import org.hibernate.envers.enhanced.SequenceIdTrackingModifiedEntitiesRevisionEntity;
 import org.hibernate.envers.internal.EnversMessageLogger;
 import org.hibernate.envers.internal.entities.PropertyData;
+import org.hibernate.envers.internal.entities.RevisionTimestampData;
 import org.hibernate.envers.internal.revisioninfo.DefaultRevisionInfoGenerator;
 import org.hibernate.envers.internal.revisioninfo.DefaultTrackingModifiedEntitiesRevisionInfoGenerator;
 import org.hibernate.envers.internal.revisioninfo.ModifiedEntityNamesReader;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoGenerator;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoNumberReader;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoQueryCreator;
+import org.hibernate.envers.internal.revisioninfo.RevisionTimestampValueResolver;
 import org.hibernate.envers.internal.tools.MutableBoolean;
 import org.hibernate.internal.util.xml.XMLHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.LongType;
-import org.hibernate.type.Type;
 
 import org.dom4j.Document;
 import org.dom4j.Element;
@@ -68,9 +70,8 @@ public class RevisionInfoConfigurationBuilder {
 
 	private String revisionInfoEntityName;
 	private PropertyData revisionInfoIdData;
-	private PropertyData revisionInfoTimestampData;
+	private RevisionTimestampData revisionInfoTimestampData;
 	private PropertyData modifiedEntityNamesData;
-	private Type revisionInfoTimestampType;
 
 	private String revisionPropType;
 	private String revisionPropSqlType;
@@ -92,9 +93,8 @@ public class RevisionInfoConfigurationBuilder {
 		}
 
 		revisionInfoIdData = new PropertyData( "id", "id", "field", null );
-		revisionInfoTimestampData = new PropertyData( "timestamp", "timestamp", "field", null );
+		revisionInfoTimestampData = new RevisionTimestampData( "timestamp", "timestamp", "field", null, new LongType() );
 		modifiedEntityNamesData = new PropertyData( "modifiedEntityNames", "modifiedEntityNames", "field", null );
-		revisionInfoTimestampType = new LongType();
 		revisionPropType = "integer";
 	}
 
@@ -102,6 +102,7 @@ public class RevisionInfoConfigurationBuilder {
 		boolean revisionEntityFound = false;
 		RevisionInfoGenerator revisionInfoGenerator = null;
 		Class<?> revisionInfoClass = null;
+		RevisionTimestampValueResolver timestampValueResolver = null;
 
 		for ( PersistentClass persistentClass : metadata.getEntityBindings() ) {
 			// Ensure we're in POJO, not dynamic model, mapping.
@@ -134,6 +135,7 @@ public class RevisionInfoConfigurationBuilder {
 
 					searchForRevisionInfoCfg(
 							clazz,
+							persistentClass,
 							reflectionManager,
 							revisionNumberFound,
 							revisionTimestampFound,
@@ -157,34 +159,46 @@ public class RevisionInfoConfigurationBuilder {
 					revisionInfoEntityName = persistentClass.getEntityName();
 					revisionInfoClass = persistentClass.getMappedClass();
 					final Class<? extends RevisionListener> revisionListenerClass = getRevisionListenerClass( revisionEntity.value() );
-					revisionInfoTimestampType = persistentClass.getProperty( revisionInfoTimestampData.getName() ).getType();
+
 					if ( options.isTrackEntitiesChangedInRevisionEnabled()
 							|| ( options.isUseRevisionEntityWithNativeIdEnabled() && DefaultTrackingModifiedEntitiesRevisionEntity.class
 							.isAssignableFrom( revisionInfoClass ) )
 							|| ( !options.isUseRevisionEntityWithNativeIdEnabled() && SequenceIdTrackingModifiedEntitiesRevisionEntity.class
 							.isAssignableFrom( revisionInfoClass ) )
 							|| modifiedEntityNamesFound.isSet() ) {
+
+						timestampValueResolver = new RevisionTimestampValueResolver(
+								revisionInfoClass,
+								revisionInfoTimestampData,
+								metadata.getMetadataBuildingOptions().getServiceRegistry()
+						);
+
 						// If tracking modified entities parameter is enabled, custom revision info entity is a subtype
 						// of DefaultTrackingModifiedEntitiesRevisionEntity class, or @ModifiedEntityNames annotation is used.
 						revisionInfoGenerator = new DefaultTrackingModifiedEntitiesRevisionInfoGenerator(
 								revisionInfoEntityName,
 								revisionInfoClass,
 								revisionListenerClass,
-								revisionInfoTimestampData,
-								isTimestampAsDate(),
+								timestampValueResolver,
 								modifiedEntityNamesData,
 								metadata.getMetadataBuildingOptions().getServiceRegistry()
 						);
+
 						auditMetadataBuilder.applyTrackEntitiesChangedInRevision( true );
 					}
 					else {
+
+						timestampValueResolver = new RevisionTimestampValueResolver(
+								revisionInfoClass,
+								revisionInfoTimestampData,
+								metadata.getMetadataBuildingOptions().getServiceRegistry()
+						);
+
 						revisionInfoGenerator = new DefaultRevisionInfoGenerator(
 								revisionInfoEntityName,
 								revisionInfoClass,
 								revisionListenerClass,
-								revisionInfoTimestampData,
-								isTimestampAsDate(),
-								metadata.getMetadataBuildingOptions().getServiceRegistry()
+								timestampValueResolver
 						);
 					}
 				}
@@ -202,12 +216,18 @@ public class RevisionInfoConfigurationBuilder {
 						? DefaultTrackingModifiedEntitiesRevisionEntity.class
 						: SequenceIdTrackingModifiedEntitiesRevisionEntity.class;
 				revisionInfoEntityName = revisionInfoClass.getName();
+
+				timestampValueResolver = new RevisionTimestampValueResolver(
+						revisionInfoClass,
+						revisionInfoTimestampData,
+						metadata.getMetadataBuildingOptions().getServiceRegistry()
+				);
+
 				revisionInfoGenerator = new DefaultTrackingModifiedEntitiesRevisionInfoGenerator(
 						revisionInfoEntityName,
 						revisionInfoClass,
 						revisionListenerClass,
-						revisionInfoTimestampData,
-						isTimestampAsDate(),
+						timestampValueResolver,
 						modifiedEntityNamesData,
 						metadata.getMetadataBuildingOptions().getServiceRegistry()
 				);
@@ -216,13 +236,19 @@ public class RevisionInfoConfigurationBuilder {
 				revisionInfoClass = options.isUseRevisionEntityWithNativeIdEnabled()
 						? DefaultRevisionEntity.class
 						: SequenceIdRevisionEntity.class;
+
+				timestampValueResolver = new RevisionTimestampValueResolver(
+						revisionInfoClass,
+						revisionInfoTimestampData,
+						metadata.getMetadataBuildingOptions().getServiceRegistry()
+				);
+
+
 				revisionInfoGenerator = new DefaultRevisionInfoGenerator(
 						revisionInfoEntityName,
 						revisionInfoClass,
 						revisionListenerClass,
-						revisionInfoTimestampData,
-						isTimestampAsDate(),
-						metadata.getMetadataBuildingOptions().getServiceRegistry()
+						timestampValueResolver
 				);
 			}
 			revisionInfoXmlMapping = generateDefaultRevisionInfoXmlMapping();
@@ -233,8 +259,9 @@ public class RevisionInfoConfigurationBuilder {
 		return new RevisionInfoConfiguration(
 				revisionInfoGenerator, revisionInfoXmlMapping,
 				new RevisionInfoQueryCreator(
-						revisionInfoEntityName, revisionInfoIdData.getName(),
-						revisionInfoTimestampData.getName(), isTimestampAsDate()
+						revisionInfoEntityName,
+						revisionInfoIdData.getName(),
+						timestampValueResolver
 				),
 				generateRevisionInfoRelationMapping(),
 				new RevisionInfoNumberReader( revisionInfoClass, revisionInfoIdData, metadata.getMetadataBuildingOptions().getServiceRegistry() ),
@@ -247,6 +274,7 @@ public class RevisionInfoConfigurationBuilder {
 
 	private void searchForRevisionInfoCfgInProperties(
 			XClass clazz,
+			PersistentClass persistentClass,
 			ReflectionManager reflectionManager,
 			MutableBoolean revisionNumberFound,
 			MutableBoolean revisionTimestampFound,
@@ -297,23 +325,20 @@ public class RevisionInfoConfigurationBuilder {
 					throw new MappingException( "Only one property may be annotated with @RevisionTimestamp!" );
 				}
 
-				final XClass revisionTimestampClass = property.getType();
-				if ( reflectionManager.equals( revisionTimestampClass, Long.class ) ||
-						reflectionManager.equals( revisionTimestampClass, Long.TYPE ) ||
-						reflectionManager.equals( revisionTimestampClass, Date.class ) ||
-						reflectionManager.equals( revisionTimestampClass, java.sql.Date.class ) ) {
-					revisionInfoTimestampData = new PropertyData(
+				if ( isValidTimestampProperty( property.getType(), reflectionManager ) ) {
+					revisionInfoTimestampData = new RevisionTimestampData(
 							property.getName(),
 							property.getName(),
 							accessType,
-							null
+							null,
+							persistentClass.getProperty( property.getName() ).getType()
 					);
 					revisionTimestampFound.set();
 				}
 				else {
 					throw new MappingException(
 							"The field annotated with @RevisionTimestamp must be of type " +
-									"long, Long, java.util.Date or java.sql.Date"
+									"long, Long, LocalDateTime, java.util.Date or java.sql.Date"
 					);
 				}
 			}
@@ -343,13 +368,17 @@ public class RevisionInfoConfigurationBuilder {
 	}
 
 	private void searchForRevisionInfoCfg(
-			XClass clazz, ReflectionManager reflectionManager,
-			MutableBoolean revisionNumberFound, MutableBoolean revisionTimestampFound,
+			XClass clazz,
+			PersistentClass persistentClass,
+			ReflectionManager reflectionManager,
+			MutableBoolean revisionNumberFound,
+			MutableBoolean revisionTimestampFound,
 			MutableBoolean modifiedEntityNamesFound) {
 		final XClass superclazz = clazz.getSuperclass();
 		if ( !"java.lang.Object".equals( superclazz.getName() ) ) {
 			searchForRevisionInfoCfg(
 					superclazz,
+					persistentClass,
 					reflectionManager,
 					revisionNumberFound,
 					revisionTimestampFound,
@@ -358,18 +387,31 @@ public class RevisionInfoConfigurationBuilder {
 		}
 
 		searchForRevisionInfoCfgInProperties(
-				clazz, reflectionManager, revisionNumberFound, revisionTimestampFound,
-				modifiedEntityNamesFound, "field"
+				clazz,
+				persistentClass,
+				reflectionManager,
+				revisionNumberFound,
+				revisionTimestampFound,
+				modifiedEntityNamesFound,
+				"field"
 		);
 		searchForRevisionInfoCfgInProperties(
-				clazz, reflectionManager, revisionNumberFound, revisionTimestampFound,
-				modifiedEntityNamesFound, "property"
+				clazz,
+				persistentClass,
+				reflectionManager,
+				revisionNumberFound,
+				revisionTimestampFound,
+				modifiedEntityNamesFound,
+				"property"
 		);
 	}
 
-	private boolean isTimestampAsDate() {
-		final String typename = revisionInfoTimestampType.getName();
-		return "date".equals( typename ) || "time".equals( typename ) || "timestamp".equals( typename );
+	private boolean isValidTimestampProperty(XClass revisionTimestampClass, ReflectionManager reflectionManager) {
+		return reflectionManager.equals( revisionTimestampClass, Long.class )
+				|| reflectionManager.equals( revisionTimestampClass, Long.TYPE )
+				|| reflectionManager.equals( revisionTimestampClass, Date.class )
+				|| reflectionManager.equals( revisionTimestampClass, java.sql.Date.class )
+				|| reflectionManager.equals( revisionTimestampClass, LocalDateTime.class );
 	}
 
 	/**
@@ -409,7 +451,7 @@ public class RevisionInfoConfigurationBuilder {
 		final Element timestampProperty = MetadataTools.addProperty(
 				classMapping,
 				revisionInfoTimestampData.getName(),
-				revisionInfoTimestampType.getName(),
+				revisionInfoTimestampData.getType().getName(),
 				true,
 				false
 		);
@@ -481,4 +523,5 @@ public class RevisionInfoConfigurationBuilder {
 
 		return revRelMapping;
 	}
+
 }

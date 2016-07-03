@@ -8,44 +8,35 @@ package org.hibernate.envers.internal.revisioninfo;
 
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Date;
 
 import org.hibernate.MappingException;
 import org.hibernate.Session;
 import org.hibernate.envers.EntityTrackingRevisionListener;
 import org.hibernate.envers.RevisionListener;
 import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.synchronization.SessionCacheCleaner;
-import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.property.access.spi.Setter;
-import org.hibernate.service.ServiceRegistry;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
 	private final String revisionInfoEntityName;
 	private final RevisionListener listener;
-	private final Setter revisionTimestampSetter;
-	private final boolean timestampAsDate;
 	private final Class<?> revisionInfoClass;
 	private final SessionCacheCleaner sessionCacheCleaner;
+	private final RevisionTimestampValueResolver timestampValueResolver;
 
 	public DefaultRevisionInfoGenerator(
 			String revisionInfoEntityName,
 			Class<?> revisionInfoClass,
 			Class<? extends RevisionListener> listenerClass,
-			PropertyData revisionInfoTimestampData,
-			boolean timestampAsDate,
-			ServiceRegistry serviceRegistry) {
+			RevisionTimestampValueResolver timestampValueResolver) {
 		this.revisionInfoEntityName = revisionInfoEntityName;
 		this.revisionInfoClass = revisionInfoClass;
-		this.timestampAsDate = timestampAsDate;
-
-		revisionTimestampSetter = ReflectionTools.getSetter( revisionInfoClass, revisionInfoTimestampData, serviceRegistry );
+		this.timestampValueResolver = timestampValueResolver;
 
 		if ( !listenerClass.equals( RevisionListener.class ) ) {
 			// This is not the default value.
@@ -86,8 +77,7 @@ public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
 			throw new RuntimeException( e );
 		}
 
-		final long timestamp = System.currentTimeMillis();
-		revisionTimestampSetter.set( revisionInfo, timestampAsDate ? new Date( timestamp ) : timestamp, null );
+		timestampValueResolver.resolveNow( revisionInfo );
 
 		if ( listener != null ) {
 			listener.newRevision( revisionInfo );

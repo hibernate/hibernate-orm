@@ -356,13 +356,13 @@ public class DelayedCdiTest extends BaseCdiIntegrationTest {
 		}
 
 		@Override
-		public <X> ProducerFactory<X> getProducerFactory(AnnotatedField<? super X> field) {
-			return getDelegate().getProducerFactory( field );
+		public <X> ProducerFactory<X> getProducerFactory(AnnotatedField<? super X> field, Bean<X> declaringBean) {
+			return getDelegate().getProducerFactory( field, declaringBean );
 		}
 
 		@Override
-		public <X> ProducerFactory<X> getProducerFactory(AnnotatedMethod<? super X> method) {
-			return getDelegate().getProducerFactory( method );
+		public <X> ProducerFactory<X> getProducerFactory(AnnotatedMethod<? super X> method, Bean<X> declaringBean) {
+			return getDelegate().getProducerFactory( method, declaringBean );
 		}
 
 		@Override
@@ -381,7 +381,7 @@ public class DelayedCdiTest extends BaseCdiIntegrationTest {
 		}
 
 		@Override
-		public <T> Bean<T> createBean(BeanAttributes<T> attributes, Class<?> beanClass, ProducerFactory<T> producerFactory) {
+		public <T, X> Bean<T> createBean(BeanAttributes<T> attributes, Class<X> beanClass, ProducerFactory<X> producerFactory) {
 			return getDelegate().createBean( attributes, beanClass, producerFactory );
 		}
 

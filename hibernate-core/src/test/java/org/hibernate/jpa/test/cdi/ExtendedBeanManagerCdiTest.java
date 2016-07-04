@@ -358,12 +358,12 @@ public class ExtendedBeanManagerCdiTest extends BaseCdiIntegrationTest {
 		}
 
 		@Override
-		public <X> ProducerFactory<X> getProducerFactory(AnnotatedField<? super X> field) {
+		public <X> ProducerFactory<X> getProducerFactory(AnnotatedField<? super X> field, Bean<X> declaringBean) {
 			throw new UnsupportedOperationException( "ExtendedBeanManagerImpl here just to gainn access to BeanManager lazily" );
 		}
 
 		@Override
-		public <X> ProducerFactory<X> getProducerFactory(AnnotatedMethod<? super X> method) {
+		public <X> ProducerFactory<X> getProducerFactory(AnnotatedMethod<? super X> method, Bean<X> declaringBean) {
 			throw new UnsupportedOperationException( "ExtendedBeanManagerImpl here just to gainn access to BeanManager lazily" );
 		}
 
@@ -383,7 +383,7 @@ public class ExtendedBeanManagerCdiTest extends BaseCdiIntegrationTest {
 		}
 
 		@Override
-		public <T> Bean<T> createBean(BeanAttributes<T> attributes, Class<?> beanClass, ProducerFactory<T> producerFactory) {
+		public <T, X> Bean<T> createBean(BeanAttributes<T> attributes, Class<X> beanClass, ProducerFactory<X> producerFactory) {
 			throw new UnsupportedOperationException( "ExtendedBeanManagerImpl here just to gainn access to BeanManager lazily" );
 		}
 

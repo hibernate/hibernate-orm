@@ -23,7 +23,9 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.envers.boot.AuditService;
 import org.hibernate.envers.boot.internal.EnversIntegrator;
+import org.hibernate.envers.boot.spi.AuditServiceOptions;
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.AvailableSettings;
@@ -286,5 +288,16 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 		}
 		em = entityManagerFactory.createEntityManager( properties );
 		return em;
+	}
+
+	protected AuditServiceOptions getAuditServiceOptions() {
+		return getAuditService().getOptions();
+	}
+
+	private AuditService getAuditService() {
+		EntityManager entityManager = getEntityManager();
+		SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
+		SessionFactoryImplementor sessionFactory = session.getSessionFactory();
+		return sessionFactory.getServiceRegistry().getService( AuditService.class );
 	}
 }

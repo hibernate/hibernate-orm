@@ -12,9 +12,12 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.testing.junit4.CustomRunner;
+import org.hibernate.testing.junit4.Helper;
 import org.junit.runner.Runner;
 import org.junit.runner.manipulation.NoTestsRemainException;
+import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Suite;
 import org.junit.runners.model.FrameworkMethod;
@@ -58,6 +61,29 @@ public class EnversRunner extends Suite {
 			return testInstance;
 		}
 
+		@Override
+		protected void runChild(FrameworkMethod method, RunNotifier notifier) {
+			final RequiresAuditStrategy auditStrategyAnn = Helper.locateAnnotation(
+					RequiresAuditStrategy.class,
+					method,
+					getTestClass()
+			);
+			if ( auditStrategyAnn != null ) {
+				boolean foundMatch = false;
+				for ( Class<? extends AuditStrategy> strategy : auditStrategyAnn.value() ) {
+					foundMatch = strategy.getName().equals( getStrategyClassName() );
+					if ( foundMatch ) {
+						break;
+					}
+				}
+				if ( !foundMatch ) {
+					notifier.fireTestIgnored( describeChild( method ) );
+					return;
+				}
+			}
+			super.runChild( method, notifier );
+		}
+
 		private Object[] computeParams() throws Exception {
 			try {
 				return fParameterList.get( fParameterSetNumber );
@@ -89,7 +115,7 @@ public class EnversRunner extends Suite {
 
 		private String getStrategyClassName() {
 			Object name = fParameterList.get( fParameterSetNumber )[ 0 ];
-			return ( name != null ? name.toString() : "SystemDefault" );
+			return ( name != null ? name.toString() : AuditStrategy.getDefaultStrategyName() );
 		}
 
 		@Override

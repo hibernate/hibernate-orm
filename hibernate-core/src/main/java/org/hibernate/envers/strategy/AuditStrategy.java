@@ -141,4 +141,12 @@ public interface AuditStrategy {
 			String alias1,
 			boolean inclusive,
 			MiddleComponentData... componentDatas);
+
+	/**
+	 * Get the default audit strategy name.
+	 * @return the default audit strategy class name.
+	 */
+	static String getDefaultStrategyName() {
+		return DefaultAuditStrategy.class.getName();
+	}
 }

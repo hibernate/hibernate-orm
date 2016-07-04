@@ -29,7 +29,6 @@ import org.hibernate.envers.configuration.internal.RevisionInfoConfiguration;
 import org.hibernate.envers.internal.entities.EntitiesConfigurations;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.strategy.AuditStrategy;
-import org.hibernate.envers.strategy.DefaultAuditStrategy;
 import org.hibernate.envers.strategy.ValidityAuditStrategy;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -262,7 +261,7 @@ public class AuditMetadataBuilderImpl implements AuditMetadataBuilderImplementor
 			this.auditStrategyName = ConfigurationHelper.getString(
 					EnversSettings.AUDIT_STRATEGY,
 					properties,
-					DefaultAuditStrategy.class.getName()
+					AuditStrategy.getDefaultStrategyName()
 			);
 
 			this.originalIdPropertyName = "originalId";

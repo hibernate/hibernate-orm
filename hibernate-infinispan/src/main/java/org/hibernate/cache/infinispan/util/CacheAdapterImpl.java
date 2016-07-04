@@ -219,8 +219,12 @@ public class CacheAdapterImpl implements CacheAdapter {
 
    @Override
    public void broadcastEvictAll() {
-      EvictAllCommand cmd = cacheCmdInitializer.buildEvictAllCommand(cache.getName());
-      cache.getRpcManager().broadcastRpcCommand(cmd, isSync);
+       // SEEBURGER backport of https://hibernate.atlassian.net/browse/HHH-7016
+       RpcManager rpcManager = cache.getRpcManager();
+       if (rpcManager != null) {
+         EvictAllCommand cmd = this.cacheCmdInitializer.buildEvictAllCommand(this.cache.getName());
+         rpcManager.broadcastRpcCommand(cmd, this.isSync);
+       }
    }
 
    @Override

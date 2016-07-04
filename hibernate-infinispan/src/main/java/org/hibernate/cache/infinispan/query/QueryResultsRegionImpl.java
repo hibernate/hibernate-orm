@@ -37,6 +37,7 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
    public void evictAll() throws CacheException {
       Transaction tx = suspend();
       try {
+         invalidateRegion(); // Invalidate the local region and then go remote SEEBURGER backport of https://hibernate.atlassian.net/browse/HHH-7127
          cacheAdapter.broadcastEvictAll();
       } finally {
          resume(tx);

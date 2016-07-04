@@ -18,10 +18,11 @@ ext {
     elVersion = '2.2.4'
     cdiVersion = '1.1'
 
-    // Wildfly version targeted by module ZIP; Arquillian/Shrinkwrap versions used for testing the module ZIP
+    // Wildfly version targeted by module ZIP; Arquillian/Shrinkwrap versions used for CDI testing and testing the module ZIP
     wildflyVersion = '10.0.0.Final'
     arquillianVersion = '1.1.10.Final'
-    shrinkwrapVersion = '2.0.0-alpha-8'
+    shrinkwrapVersion = '1.2.6'
+    shrinkwrapDescriptorsVersion = '2.0.0-alpha-8'
     wildflyArquillianContainerVersion = '2.0.0.Final'
 
     libraries = [
@@ -84,8 +85,6 @@ ext {
             byteman:         "org.jboss.byteman:byteman:${bytemanVersion}",
             byteman_install: "org.jboss.byteman:byteman-install:${bytemanVersion}",
             byteman_bmunit:  "org.jboss.byteman:byteman-bmunit:${bytemanVersion}",
-            shrinkwrap_api:  'org.jboss.shrinkwrap:shrinkwrap-api:1.0.0-beta-6',
-            shrinkwrap:      'org.jboss.shrinkwrap:shrinkwrap-impl-base:1.0.0-beta-6',
             h2:              "com.h2database:h2:${h2Version}",
             hsqldb:          "org.hsqldb:hsqldb:2.3.2",
             derby:           "org.apache.derby:derby:10.11.1.1",
@@ -123,12 +122,15 @@ ext {
             proxool:         "proxool:proxool:0.8.3",
             hikaricp:        "com.zaxxer:HikariCP-java6:2.3.9",
 
-            // Arquillian etc.
+            // Arquillian/Shrinkwrap
             arquillian_junit_container: "org.jboss.arquillian.junit:arquillian-junit-container:${arquillianVersion}",
             arquillian_protocol_servlet: "org.jboss.arquillian.protocol:arquillian-protocol-servlet:${arquillianVersion}",
 
-            shrinkwrap_descriptors_api_javaee: "org.jboss.shrinkwrap.descriptors:shrinkwrap-descriptors-api-javaee:${shrinkwrapVersion}",
-            shrinkwrap_descriptors_impl_javaee: "org.jboss.shrinkwrap.descriptors:shrinkwrap-descriptors-impl-javaee:${shrinkwrapVersion}",
+            shrinkwrap_api: "org.jboss.shrinkwrap:shrinkwrap-api:${shrinkwrapVersion}",
+            shrinkwrap: "org.jboss.shrinkwrap:shrinkwrap-impl-base:${shrinkwrapVersion}",
+
+            shrinkwrap_descriptors_api_javaee: "org.jboss.shrinkwrap.descriptors:shrinkwrap-descriptors-api-javaee:${shrinkwrapDescriptorsVersion}",
+            shrinkwrap_descriptors_impl_javaee: "org.jboss.shrinkwrap.descriptors:shrinkwrap-descriptors-impl-javaee:${shrinkwrapDescriptorsVersion}",
 
             wildfly_arquillian_container_managed: "org.wildfly.arquillian:wildfly-arquillian-container-managed:${wildflyArquillianContainerVersion}"
         ]

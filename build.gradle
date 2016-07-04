@@ -110,8 +110,8 @@ subprojects { subProject ->
 
     defaultTasks 'build'
 
-    group = 'org.hibernate'
-    version = '4.0.1.Final'
+    group = 'com.seeburger.fork'
+    version = '4.0.1.SEE1'
 
     // minimize changes, at least for now (gradle uses 'build' by default)..
     buildDir = "target"
@@ -298,8 +298,8 @@ subprojects { subProject ->
                 name = 'jbossDeployer'
                 configuration = configurations.deployerJars
                 pom.project pomConfig
-                repository(id: "jboss-releases-repository", url: "https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/")
-                snapshotRepository(id: "jboss-snapshots-repository", url: "https://repository.jboss.org/nexus/content/repositories/snapshots")
+                repository(id: "jboss-releases-repository", url: "https://repo.seeburger.de/archiva/repository/release/")
+                snapshotRepository(id: "jboss-snapshots-repository", url: "https://repo.seeburger.de/archiva/repository/snapshot/")
             }
         }
 

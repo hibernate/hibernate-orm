@@ -16,6 +16,7 @@ ext {
     infinispanVersion = '8.1.0.Final'
     jnpVersion = '5.0.6.CR1'
     elVersion = '2.2.4'
+    cdiVersion = '1.1'
 
     // Wildfly version targeted by module ZIP; Arquillian/Shrinkwrap versions used for testing the module ZIP
     wildflyVersion = '10.0.0.Final'

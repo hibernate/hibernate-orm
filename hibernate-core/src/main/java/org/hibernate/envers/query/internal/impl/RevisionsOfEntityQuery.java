@@ -9,6 +9,7 @@ package org.hibernate.envers.query.internal.impl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.persistence.criteria.JoinType;
 
@@ -29,27 +30,32 @@ import org.hibernate.proxy.HibernateProxy;
 public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 	private final boolean selectEntitiesOnly;
 	private final boolean selectDeletedEntities;
+	private final boolean selectRevisionInfoOnly;
 
 	public RevisionsOfEntityQuery(
 			AuditReaderImplementor versionsReader,
 			Class<?> cls,
 			boolean selectEntitiesOnly,
-			boolean selectDeletedEntities) {
+			boolean selectDeletedEntities,
+			boolean selectRevisionInfoOnly) {
 		super( versionsReader, cls );
 
 		this.selectEntitiesOnly = selectEntitiesOnly;
 		this.selectDeletedEntities = selectDeletedEntities;
+		this.selectRevisionInfoOnly = selectRevisionInfoOnly && !selectEntitiesOnly;
 	}
 
 	public RevisionsOfEntityQuery(
 			AuditReaderImplementor versionsReader,
 			Class<?> cls, String entityName,
 			boolean selectEntitiesOnly,
-			boolean selectDeletedEntities) {
+			boolean selectDeletedEntities,
+			boolean selectRevisionInfoOnly) {
 		super( versionsReader, cls, entityName );
 
 		this.selectEntitiesOnly = selectEntitiesOnly;
 		this.selectDeletedEntities = selectDeletedEntities;
+		this.selectRevisionInfoOnly = selectRevisionInfoOnly && !selectEntitiesOnly;
 	}
 
 	private Number getRevisionNumber(Map versionsEntity) {
@@ -116,6 +122,9 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 		List<Object> queryResult = buildAndExecuteQuery();
 		if ( hasProjection() ) {
 			return queryResult;
+		}
+		else if ( selectRevisionInfoOnly ) {
+			return queryResult.stream().map( e -> ( (Object[]) e )[1] ).collect( Collectors.toList() );
 		}
 		else {
 			List entities = new ArrayList();

@@ -122,6 +122,12 @@ build.dependsOn createModulesZip
 /*        Testing        */
 /*************************/
 
+if ( JavaVersion.current().isJava9Compatible() ) {
+    logger.lifecycle( "WARNING - Skipping hibernate-orm-modules tests for Java 9" )
+    // WildFly has problems booting in Java 9
+    test.enabled = false
+}
+
 // Unzip Wildfly Dist
 task extractWildFly(type: Copy) {
     from {

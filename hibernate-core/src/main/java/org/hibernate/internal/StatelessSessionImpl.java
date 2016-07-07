@@ -178,8 +178,9 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public Object get(String entityName, Serializable id, LockMode lockMode) {
 		checkOpen();
+
 		Object result = getFactory().getMetamodel().entityPersister( entityName )
-				.load( id, null, lockMode, this );
+				.load( id, null, getNullSafeLockMode( lockMode ), this );
 		if ( temporaryPersistenceContext.isLoadFinished() ) {
 			temporaryPersistenceContext.clear();
 		}
@@ -227,7 +228,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		Object result = null;
 		try {
 			this.getLoadQueryInfluencers().setInternalFetchProfile( "refresh" );
-			result = persister.load( id, entity, lockMode, this );
+			result = persister.load( id, entity, getNullSafeLockMode( lockMode ), this );
 		}
 		finally {
 			this.getLoadQueryInfluencers().setInternalFetchProfile( previousFetchProfile );
@@ -668,5 +669,9 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	private JtaPlatform getJtaPlatform() {
 		return getFactory().getServiceRegistry().getService( JtaPlatform.class );
+	}
+
+	private LockMode getNullSafeLockMode(LockMode lockMode) {
+		return lockMode == null ? LockMode.NONE : lockMode;
 	}
 }

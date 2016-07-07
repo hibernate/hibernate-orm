@@ -23,7 +23,7 @@ public class LatestAndGreatestConnectionProviderImpl
 
 	@Override
 	public void stop() {
-		available = true;
+		available = false;
 
 		// stop the underlying pool
 		lagPool.shutdown();

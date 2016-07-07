@@ -11,8 +11,10 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 
 /**
  * @author Steve Ebersole
+ * @author Dmytro Bondar
  */
-public interface ImplicitIndexColumnNameSource {
-	public AttributePath getPluralAttributePath();
-	public MetadataBuildingContext getBuildingContext();
+public interface ImplicitIndexColumnNameSource extends ImplicitNameSource {
+
+	AttributePath getPluralAttributePath();
+
 }

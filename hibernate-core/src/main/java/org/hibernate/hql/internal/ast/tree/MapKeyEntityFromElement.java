@@ -88,7 +88,7 @@ public class MapKeyEntityFromElement extends FromElement {
 		);
 		join.setJoinSequence( joinSequence );
 
-		join.setOrigin( collectionFromElement, collectionPersister.isManyToMany() );
+		join.setOrigin( collectionFromElement, true );
 		join.setColumns( joinColumns );
 
 		join.setUseFromFragment( collectionFromElement.useFromFragment() );

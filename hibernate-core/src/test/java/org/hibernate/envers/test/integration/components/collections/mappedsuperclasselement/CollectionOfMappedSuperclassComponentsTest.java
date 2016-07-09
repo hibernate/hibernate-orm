@@ -13,7 +13,6 @@ import javax.persistence.EntityManager;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
@@ -67,7 +66,6 @@ public class CollectionOfMappedSuperclassComponentsTest extends BaseEnversJPAFun
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-9193")
 	public void testHistoryOfId1() {
 		MappedSuperclassComponentSetTestEntity entity = getAuditReader().find(
 				MappedSuperclassComponentSetTestEntity.class,
@@ -79,13 +77,12 @@ public class CollectionOfMappedSuperclassComponentsTest extends BaseEnversJPAFun
 
 		entity = getAuditReader().find( MappedSuperclassComponentSetTestEntity.class, id1, 2 );
 
-		// TODO: what is the expectation here? The collection is audited, but the embeddable class
-		// has no data and it extends a mapped-superclass that is not audited.
-		// currently the collection has 1 element that has value AbstractCode.UNDEFINED
-		// (which seems wrong). I changed the expected size to 0 which currently fails; is that what
-		// should be expected?
+		// The collection is audited and while the embeddable has no data and extended a non-audited
+		// mapped superclass, the collection will hold 1 element where the state of each element in
+		// the collection is that all properties will have their default values.
 		Set<Code> comps1 = entity.getComps();
-		assertEquals( 0, comps1.size() );
+		assertEquals( 1, comps1.size() );
+		assertEquals( AbstractCode.UNDEFINED, comps1.iterator().next().getCode() );
 
 		// The contents of entity.getCompsNotAudited() is unspecified, so no need to test.
 	}

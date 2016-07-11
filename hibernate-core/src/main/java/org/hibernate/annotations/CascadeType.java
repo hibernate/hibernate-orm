@@ -61,7 +61,7 @@ public enum CascadeType {
 	@Deprecated
 	EVICT,
 	/**
-	 * Corresponds to {@link javax.persistence.CascadeType#REFRESH}.
+	 * Corresponds to {@link javax.persistence.CascadeType#DETACH}.
 	 */
 	DETACH
 }

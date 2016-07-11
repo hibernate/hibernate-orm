@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import org.hibernate.HibernateException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
@@ -18,7 +19,8 @@ import org.hibernate.internal.CoreMessageLogger;
  */
 public class PooledConnections {
 
-	private ConcurrentLinkedQueue<Connection> connections = new ConcurrentLinkedQueue<Connection>();
+	private final ConcurrentLinkedQueue<Connection> allConnections = new ConcurrentLinkedQueue<Connection>();
+	private final ConcurrentLinkedQueue<Connection> availableConnections = new ConcurrentLinkedQueue<Connection>();
 
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( DriverManagerConnectionProviderImpl.class );
 
@@ -65,35 +67,50 @@ public class PooledConnections {
 	public void add(Connection conn) throws SQLException {
 		conn.setAutoCommit( true );
 		conn.clearWarnings();
-		connections.offer( conn );
+		availableConnections.offer( conn );
 	}
 
 	public Connection poll() throws SQLException {
-		Connection conn = connections.poll();
+		Connection conn = availableConnections.poll();
 		if ( conn == null ) {
-			return null;
+			synchronized (allConnections) {
+				if(allConnections.size() < maxSize) {
+					addConnections( 1 );
+					return poll();
+				}
+			}
+			throw new HibernateException( "The internal connection pool has reached its maximum size and no connection is currently available!" );
 		}
 		conn.setAutoCommit( autoCommit );
 		return conn;
 	}
 
 	public void close() throws SQLException {
-		for ( Connection connection : connections ) {
-			connection.close();
+		try {
+			int allocationCount = allConnections.size() - availableConnections.size();
+			if(allocationCount > 0) {
+				log.error( "Collection leak detected: there are " + allocationCount + " unclosed connections upon shutting down pool " + getUrl());
+			}
+		}
+		finally {
+			for ( Connection connection : allConnections ) {
+				connection.close();
+			}
 		}
 	}
 
 	public int size() {
-		return connections.size();
+		return availableConnections.size();
 	}
 
 	protected void removeConnections(int numberToBeRemoved) {
 		for ( int i = 0; i < numberToBeRemoved; i++ ) {
-			Connection connection = connections.poll();
+			Connection connection = availableConnections.poll();
 			try {
 				if ( connection != null ) {
 					connection.close();
 				}
+				allConnections.remove( connection );
 			}
 			catch (SQLException e) {
 				log.unableToCloseConnection( e );
@@ -103,8 +120,14 @@ public class PooledConnections {
 
 	protected void addConnections(int numberOfConnections) {
 		for ( int i = 0; i < numberOfConnections; i++ ) {
-			connections.add( connectionCreator.createConnection() );
+			Connection connection = connectionCreator.createConnection();
+			allConnections.add( connection );
+			availableConnections.add( connection );
 		}
+	}
+
+	public String getUrl() {
+		return connectionCreator.getUrl();
 	}
 
 	public static class Builder {

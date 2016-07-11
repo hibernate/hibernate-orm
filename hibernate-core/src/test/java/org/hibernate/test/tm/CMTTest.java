@@ -521,5 +521,9 @@ public class CMTTest extends BaseNonConfigCoreFunctionalTestCase {
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 	}
 
+	protected boolean rebuildSessionFactoryOnError() {
+		return false;
+	}
+
 }
 

@@ -52,7 +52,6 @@ public class DriverManagerConnectionProviderImpl
 
 	private boolean active = true;
 
-	private ConnectionCreator connectionCreator;
 	private ScheduledExecutorService executorService;
 	private PooledConnections pool;
 
@@ -70,7 +69,6 @@ public class DriverManagerConnectionProviderImpl
 	public void configure(Map configurationValues) {
 		log.usingHibernateBuiltInConnectionPool();
 
-		connectionCreator = buildCreator( configurationValues );
 		pool = buildPool( configurationValues );
 
 		final long validationInterval = ConfigurationHelper.getLong( VALIDATION_INTERVAL, configurationValues, 30 );
@@ -99,6 +97,7 @@ public class DriverManagerConnectionProviderImpl
 		final int maxSize = ConfigurationHelper.getInt( AvailableSettings.POOL_SIZE, configurationValues, 20 );
 		final int initialSize = ConfigurationHelper.getInt( INITIAL_SIZE, configurationValues, minSize );
 
+		ConnectionCreator connectionCreator = buildCreator( configurationValues );
 		PooledConnections.Builder pooledConnectionBuilder = new PooledConnections.Builder(
 				connectionCreator,
 				autoCommit
@@ -184,11 +183,7 @@ public class DriverManagerConnectionProviderImpl
 			throw new HibernateException( "Connection pool is no longer active" );
 		}
 
-		Connection conn = pool.poll();
-		if ( conn == null ) {
-			conn = connectionCreator.createConnection();
-		}
-		return conn;
+		return pool.poll();
 	}
 
 	@Override
@@ -232,7 +227,7 @@ public class DriverManagerConnectionProviderImpl
 			return;
 		}
 
-		log.cleaningUpConnectionPool( connectionCreator.getUrl() );
+		log.cleaningUpConnectionPool( pool.getUrl() );
 
 		active = false;
 

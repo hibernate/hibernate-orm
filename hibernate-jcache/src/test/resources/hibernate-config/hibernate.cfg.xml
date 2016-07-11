@@ -23,7 +23,7 @@
         <property name="connection.password"></property>
 
         <!-- JDBC connection pool (use the built-in) -->
-        <property name="connection.pool_size">1</property>
+        <property name="connection.pool_size">5</property>
 
         <!-- SQL dialect -->
         <property name="dialect">

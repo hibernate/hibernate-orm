@@ -26,6 +26,7 @@ package org.hibernate.dialect;
 import org.junit.Test;
 
 import java.sql.SQLException;
+
 import org.hibernate.JDBCException;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.exception.LockAcquisitionException;
@@ -34,35 +35,54 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
+
+import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 
 /**
- * Testing of patched support for PostgreSQL Lock error detection. HHH-7251
+ * Testing of PostgreSQL81Dialect. HHH-7251 HHH-8687
  *
  * @author Bryan Varner
+ * @author Dmytro Bondar
  */
-@TestForIssue( jiraKey = "HHH-7251" )
 public class PostgreSQL81DialectTestCase extends BaseUnitTestCase {
-	
+
+
 	@Test
 	public void testDeadlockException() {
 		PostgreSQL81Dialect dialect = new PostgreSQL81Dialect();
 		SQLExceptionConversionDelegate delegate = dialect.buildSQLExceptionConversionDelegate();
-		assertNotNull(delegate);
-		
-		JDBCException exception = delegate.convert(new SQLException("Deadlock Detected", "40P01"), "", "");
-		assertTrue(exception instanceof LockAcquisitionException);
+		assertNotNull( delegate );
+
+		JDBCException exception = delegate.convert( new SQLException( "Deadlock Detected", "40P01" ), "", "" );
+		assertTrue( exception instanceof LockAcquisitionException );
 	}
-	
+
 	@Test
 	public void testTimeoutException() {
 		PostgreSQL81Dialect dialect = new PostgreSQL81Dialect();
 		SQLExceptionConversionDelegate delegate = dialect.buildSQLExceptionConversionDelegate();
-		assertNotNull(delegate);
-		
-		JDBCException exception = delegate.convert(new SQLException("Lock Not Available", "55P03"), "", "");
-		assertTrue(exception instanceof PessimisticLockException);
+		assertNotNull( delegate );
+
+		JDBCException exception = delegate.convert( new SQLException( "Lock Not Available", "55P03" ), "", "" );
+		assertTrue( exception instanceof PessimisticLockException );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-8687")
+	public void testMessageException() throws SQLException {
+		PostgreSQL81Dialect dialect = new PostgreSQL81Dialect();
+		String expectMessage = "PostgreSQL only supports accessing REF_CURSOR parameters by position";
+		try {
+			dialect.getResultSet( null, null );
+			fail( "Expected exception" );
+		}
+		catch (Exception e) {
+			assertTrue( e instanceof UnsupportedOperationException );
+			assertEquals( expectMessage, e.getMessage() );
+		}
 	}
 }

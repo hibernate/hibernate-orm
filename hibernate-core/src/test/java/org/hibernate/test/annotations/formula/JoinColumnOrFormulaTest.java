@@ -15,7 +15,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.JoinColumnOrFormula;
-import org.hibernate.annotations.JoinColumnsOrFormulas;
 import org.hibernate.annotations.JoinFormula;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
@@ -70,9 +69,7 @@ public class JoinColumnOrFormulaTest extends BaseUnitTestCase {
 		public Integer id;
 
 		@OneToMany
-		@JoinColumnsOrFormulas({
-				@JoinColumnOrFormula(formula = @JoinFormula(value = "idA", referencedColumnName = "idA"))
-		})
+		@JoinColumnOrFormula(formula = @JoinFormula(value = "idA", referencedColumnName = "idA"))
 		Set<D> ds = new HashSet<D>();
 	}
 

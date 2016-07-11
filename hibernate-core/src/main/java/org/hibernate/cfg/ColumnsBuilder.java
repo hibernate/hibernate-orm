@@ -18,6 +18,7 @@ import javax.persistence.OneToOne;
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Formula;
+import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinColumnsOrFormulas;
 import org.hibernate.annotations.JoinFormula;
 import org.hibernate.annotations.common.reflection.XProperty;
@@ -31,6 +32,7 @@ import org.hibernate.internal.util.StringHelper;
  * Also hosts some convenient methods related to column processing
  *
  * @author Emmanuel Bernard
+ * @author Brett Meyer
  */
 class ColumnsBuilder {
 	private PropertyHolder propertyHolder;
@@ -184,56 +186,73 @@ class ColumnsBuilder {
 
 	Ejb3JoinColumn[] buildExplicitJoinColumns(XProperty property, PropertyData inferredData) {
 		//process @JoinColumn(s) beforeQuery @Column(s) to handle collection of entities properly
-		Ejb3JoinColumn[] joinColumns = null;
-		{
-			JoinColumn[] anns = null;
+		JoinColumn[] joinColumnAnnotations = null;
 
-			if ( property.isAnnotationPresent( JoinColumn.class ) ) {
-				anns = new JoinColumn[] { property.getAnnotation( JoinColumn.class ) };
-			}
-			else if ( property.isAnnotationPresent( JoinColumns.class ) ) {
-				JoinColumns ann = property.getAnnotation( JoinColumns.class );
-				anns = ann.value();
-				int length = anns.length;
-				if ( length == 0 ) {
-					throw new AnnotationException( "Cannot bind an empty @JoinColumns" );
-				}
-			}
-			if ( anns != null ) {
-				joinColumns = Ejb3JoinColumn.buildJoinColumns(
-						anns,
-						null,
-						entityBinder.getSecondaryTables(),
-						propertyHolder,
-						inferredData.getPropertyName(),
-						buildingContext
-				);
-			}
-			else if ( property.isAnnotationPresent( JoinColumnsOrFormulas.class ) ) {
-				JoinColumnsOrFormulas ann = property.getAnnotation( JoinColumnsOrFormulas.class );
-				joinColumns = Ejb3JoinColumn.buildJoinColumnsOrFormulas(
-						ann,
-						null,
-						entityBinder.getSecondaryTables(),
-						propertyHolder,
-						inferredData.getPropertyName(),
-						buildingContext
-				);
-			}
-			else if (property.isAnnotationPresent( JoinFormula.class)) {
-				JoinFormula ann = property.getAnnotation( JoinFormula.class );
-				joinColumns = new Ejb3JoinColumn[1];
-				joinColumns[0] = Ejb3JoinColumn.buildJoinFormula(
-						ann,
-						null,
-						entityBinder.getSecondaryTables(),
-						propertyHolder,
-						inferredData.getPropertyName(),
-						buildingContext
-				);
+		if ( property.isAnnotationPresent( JoinColumn.class ) ) {
+			joinColumnAnnotations = new JoinColumn[] { property.getAnnotation( JoinColumn.class ) };
+		}
+		else if ( property.isAnnotationPresent( JoinColumns.class ) ) {
+			JoinColumns joinColumnAnnotation = property.getAnnotation( JoinColumns.class );
+			joinColumnAnnotations = joinColumnAnnotation.value();
+			int length = joinColumnAnnotations.length;
+			if ( length == 0 ) {
+				throw new AnnotationException( "Cannot bind an empty @JoinColumns" );
 			}
 		}
-		return joinColumns;
+
+		if ( joinColumnAnnotations != null ) {
+			return Ejb3JoinColumn.buildJoinColumns(
+					joinColumnAnnotations,
+					null,
+					entityBinder.getSecondaryTables(),
+					propertyHolder,
+					inferredData.getPropertyName(),
+					buildingContext
+			);
+		}
+
+		JoinColumnOrFormula[] joinColumnOrFormulaAnnotations = null;
+
+		if ( property.isAnnotationPresent( JoinColumnOrFormula.class ) ) {
+			joinColumnOrFormulaAnnotations = new JoinColumnOrFormula[] {
+					property.getAnnotation( JoinColumnOrFormula.class ) };
+		}
+		else if ( property.isAnnotationPresent( JoinColumnsOrFormulas.class ) ) {
+			JoinColumnsOrFormulas joinColumnsOrFormulasAnnotations = property.getAnnotation(
+					JoinColumnsOrFormulas.class );
+			joinColumnOrFormulaAnnotations = joinColumnsOrFormulasAnnotations.value();
+			int length = joinColumnOrFormulaAnnotations.length;
+			if ( length == 0 ) {
+				throw new AnnotationException( "Cannot bind an empty @JoinColumnsOrFormulas" );
+			}
+		}
+
+		if (joinColumnOrFormulaAnnotations != null) {
+			return Ejb3JoinColumn.buildJoinColumnsOrFormulas(
+					joinColumnOrFormulaAnnotations,
+					null,
+					entityBinder.getSecondaryTables(),
+					propertyHolder,
+					inferredData.getPropertyName(),
+					buildingContext
+			);
+		}
+
+		if (property.isAnnotationPresent( JoinFormula.class)) {
+			JoinFormula ann = property.getAnnotation( JoinFormula.class );
+			Ejb3JoinColumn[] ejb3JoinColumns = new Ejb3JoinColumn[1];
+			ejb3JoinColumns[0] = Ejb3JoinColumn.buildJoinFormula(
+					ann,
+					null,
+					entityBinder.getSecondaryTables(),
+					propertyHolder,
+					inferredData.getPropertyName(),
+					buildingContext
+			);
+			return ejb3JoinColumns;
+		}
+
+		return null;
 	}
 
 	Ejb3Column[] overrideColumnFromMapperOrMapsIdProperty(boolean isId) {

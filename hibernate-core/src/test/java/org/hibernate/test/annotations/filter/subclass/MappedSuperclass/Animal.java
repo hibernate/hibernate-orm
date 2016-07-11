@@ -13,14 +13,11 @@ import javax.persistence.MappedSuperclass;
 
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ParamDef;
 
 @MappedSuperclass
 @FilterDef(name = "nameFilter", parameters = @ParamDef(name = "name", type = "string"))
-@Filters({
-				 @Filter(name = "nameFilter", condition = ":name = ANIMAL_NAME")
-		 })
+@Filter(name = "nameFilter", condition = ":name = ANIMAL_NAME")
 public abstract class Animal {
 	@Id
 	@GeneratedValue

@@ -134,16 +134,15 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	}
 
 	public static Ejb3JoinColumn[] buildJoinColumnsOrFormulas(
-			JoinColumnsOrFormulas anns,
+			JoinColumnOrFormula[] anns,
 			String mappedBy,
 			Map<String, Join> joins,
 			PropertyHolder propertyHolder,
 			String propertyName,
 			MetadataBuildingContext buildingContext) {
-		JoinColumnOrFormula [] ann = anns.value();
-		Ejb3JoinColumn [] joinColumns = new Ejb3JoinColumn[ann.length];
-		for (int i = 0; i < ann.length; i++) {
-			JoinColumnOrFormula join = ann[i];
+		Ejb3JoinColumn [] joinColumns = new Ejb3JoinColumn[anns.length];
+		for (int i = 0; i < anns.length; i++) {
+			JoinColumnOrFormula join = anns[i];
 			JoinFormula formula = join.formula();
 			if (formula.value() != null && !formula.value().equals("")) {
 				joinColumns[i] = buildJoinFormula(

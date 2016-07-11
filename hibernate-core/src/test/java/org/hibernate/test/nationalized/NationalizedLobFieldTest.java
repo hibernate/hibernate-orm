@@ -6,6 +6,11 @@
  */
 package org.hibernate.test.nationalized;
 
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Lob;
+import javax.persistence.Table;
+
 import org.hibernate.Session;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.cfg.AvailableSettings;
@@ -17,16 +22,9 @@ import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.SkipForDialects;
-import org.junit.Test;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.Table;
+import org.junit.Test;
 
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.fail;
@@ -37,12 +35,10 @@ import static org.junit.Assert.assertThat;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-10364")
-@SkipForDialects({
-        @SkipForDialect(value = DB2Dialect.class, comment = "DB2 jdbc driver doesn't support getNClob"),
-        @SkipForDialect(value = MySQLDialect.class, comment = "MySQL/MariadB doesn't support nclob"),
-        @SkipForDialect(value = PostgreSQL81Dialect.class, comment = "PostgreSQL doesn't support nclob"),
-        @SkipForDialect(value = SybaseDialect.class, comment = "Sybase doesn't support nclob")
-})
+@SkipForDialect(value = DB2Dialect.class, comment = "DB2 jdbc driver doesn't support getNClob")
+@SkipForDialect(value = MySQLDialect.class, comment = "MySQL/MariadB doesn't support nclob")
+@SkipForDialect(value = PostgreSQL81Dialect.class, comment = "PostgreSQL doesn't support nclob")
+@SkipForDialect(value = SybaseDialect.class, comment = "Sybase doesn't support nclob")
 public class NationalizedLobFieldTest extends BaseCoreFunctionalTestCase {
 
 	@Override

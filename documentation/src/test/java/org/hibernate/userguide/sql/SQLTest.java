@@ -34,7 +34,6 @@ import org.hibernate.userguide.model.PhoneType;
 import org.hibernate.userguide.model.WireTransferPayment;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.RequiresDialects;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -397,7 +396,9 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialects({@RequiresDialect(H2Dialect.class), @RequiresDialect(Oracle8iDialect.class), @RequiresDialect(PostgreSQL82Dialect.class)})
+	@RequiresDialect(H2Dialect.class)
+	@RequiresDialect(Oracle8iDialect.class)
+	@RequiresDialect(PostgreSQL82Dialect.class)
 	public void test_sql_jpa_entity_associations_query_one_to_many_join_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::sql-jpa-entity-associations-query-one-to-many-join-example[]
@@ -442,7 +443,9 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialects({@RequiresDialect(H2Dialect.class), @RequiresDialect(Oracle8iDialect.class), @RequiresDialect(PostgreSQL82Dialect.class)})
+	@RequiresDialect(H2Dialect.class)
+	@RequiresDialect(Oracle8iDialect.class)
+	@RequiresDialect(PostgreSQL82Dialect.class)
 	public void test_sql_hibernate_entity_associations_query_one_to_many_join_example_2() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap( Session.class );
@@ -701,7 +704,9 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialects({@RequiresDialect(H2Dialect.class), @RequiresDialect(Oracle8iDialect.class), @RequiresDialect(PostgreSQL82Dialect.class)})
+	@RequiresDialect(H2Dialect.class)
+	@RequiresDialect(Oracle8iDialect.class)
+	@RequiresDialect(PostgreSQL82Dialect.class)
 	public void test_sql_jpa_entity_associations_named_query_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::sql-jpa-entity-associations_named-query-example[]
@@ -720,7 +725,9 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialects({@RequiresDialect(H2Dialect.class), @RequiresDialect(Oracle8iDialect.class), @RequiresDialect(PostgreSQL82Dialect.class)})
+	@RequiresDialect(H2Dialect.class)
+	@RequiresDialect(Oracle8iDialect.class)
+	@RequiresDialect(PostgreSQL82Dialect.class)
 	public void test_sql_hibernate_entity_associations_named_query_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap( Session.class );

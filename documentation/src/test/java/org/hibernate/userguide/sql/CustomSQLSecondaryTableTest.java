@@ -27,7 +27,6 @@ import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.RequiresDialects;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -40,7 +39,8 @@ import static org.junit.Assert.assertNull;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialects(value = {@RequiresDialect(H2Dialect.class), @RequiresDialect(PostgreSQL82Dialect.class)})
+@RequiresDialect(H2Dialect.class)
+@RequiresDialect(PostgreSQL82Dialect.class)
 public class CustomSQLSecondaryTableTest extends BaseEntityManagerFunctionalTestCase {
 
 	private static final Logger log = Logger.getLogger( CustomSQLSecondaryTableTest.class );

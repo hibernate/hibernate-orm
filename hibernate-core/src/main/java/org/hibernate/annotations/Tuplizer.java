@@ -6,6 +6,7 @@
  */
 package org.hibernate.annotations;
 
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 
 import org.hibernate.EntityMode;
@@ -22,6 +23,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @java.lang.annotation.Target( {TYPE, FIELD, METHOD} )
 @Retention( RUNTIME )
+@Repeatable(Tuplizers.class)
 public @interface Tuplizer {
 	/**
 	 * Tuplizer implementation.

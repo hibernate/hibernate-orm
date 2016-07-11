@@ -7,6 +7,7 @@
 
 
 package org.hibernate.test.annotations.manytoonewithformula;
+
 import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -15,7 +16,6 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
 import org.hibernate.annotations.JoinColumnOrFormula;
-import org.hibernate.annotations.JoinColumnsOrFormulas;
 import org.hibernate.annotations.JoinFormula;
 
 /**
@@ -58,11 +58,8 @@ public class Message implements Serializable {
 	}
 		
 	@ManyToOne
-	@JoinColumnsOrFormulas(
-	{ 
-		@JoinColumnOrFormula(formula=@JoinFormula(value="UPPER(lang_code)"))
-		//@JoinColumnOrFormula(formula=@JoinFormula(value="(select l.code from Language l where l.name = lang_name)"))
-	})
+	@JoinColumnOrFormula(formula=@JoinFormula(value="UPPER(lang_code)"))
+	//@JoinColumnOrFormula(formula=@JoinFormula(value="(select l.code from Language l where l.name = lang_name)"))
 	public Language getLanguage() {
 		return language;
 	}

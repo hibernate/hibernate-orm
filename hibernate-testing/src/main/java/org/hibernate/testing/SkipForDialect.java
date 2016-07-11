@@ -7,6 +7,7 @@
 package org.hibernate.testing;
 
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -24,6 +25,7 @@ import org.hibernate.dialect.Dialect;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD, ElementType.TYPE })
+@Repeatable(SkipForDialects.class)
 public @interface SkipForDialect {
 	/**
 	 * The dialects against which to skip the test

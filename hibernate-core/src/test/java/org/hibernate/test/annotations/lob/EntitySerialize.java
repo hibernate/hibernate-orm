@@ -13,13 +13,12 @@ import javax.persistence.Lob;
 
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
-import org.hibernate.annotations.TypeDefs;
 
 /**
  * @author Janario Oliveira
  */
 @Entity
-@TypeDefs({ @TypeDef(typeClass = ImplicitSerializableType.class, defaultForType = ImplicitSerializable.class) })
+@TypeDef(typeClass = ImplicitSerializableType.class, defaultForType = ImplicitSerializable.class)
 public class EntitySerialize {
 	@Id
 	@GeneratedValue

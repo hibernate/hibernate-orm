@@ -16,15 +16,13 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.criterion.Restrictions;
-
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.SkipForDialects;
-import org.junit.Test;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
@@ -32,10 +30,8 @@ import static org.junit.Assert.assertEquals;
  * @author Chris Cranford (aka Naros)
  */
 @TestForIssue( jiraKey = "HHH-8657" )
-@SkipForDialects({
-		@SkipForDialect(value = DB2Dialect.class, comment = "DB2 jdbc driver doesn't support setNString"),
-		@SkipForDialect(value = PostgreSQL81Dialect.class, comment = "PostgreSQL jdbc driver doesn't support setNString"),
-})
+@SkipForDialect(value = DB2Dialect.class, comment = "DB2 jdbc driver doesn't support setNString")
+@SkipForDialect(value = PostgreSQL81Dialect.class, comment = "PostgreSQL jdbc driver doesn't support setNString")
 public class NationalizedIgnoreCaseTest extends BaseCoreFunctionalTestCase {
 	
 	@Override

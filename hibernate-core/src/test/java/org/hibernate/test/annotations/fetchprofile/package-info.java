@@ -7,18 +7,16 @@
 
 // $Id$
 
-@FetchProfiles({
-		@FetchProfile(name = "package-profile-1", fetchOverrides = {
-				@FetchProfile.FetchOverride(entity = Customer.class, association = "orders", mode = FetchMode.JOIN)
-		}),
-		@FetchProfile(name = "package-profile-2", fetchOverrides = {
-				@FetchProfile.FetchOverride(entity = Customer.class, association = "tickets", mode = FetchMode.JOIN)
-		})
+@FetchProfile(name = "package-profile-1", fetchOverrides = {
+		@FetchProfile.FetchOverride(entity = Customer.class, association = "orders", mode = FetchMode.JOIN)
+})
+@FetchProfile(name = "package-profile-2", fetchOverrides = {
+		@FetchProfile.FetchOverride(entity = Customer.class, association = "tickets", mode = FetchMode.JOIN)
 })
 package org.hibernate.test.annotations.fetchprofile;
+
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfile;
-import org.hibernate.annotations.FetchProfiles;
 
 
 

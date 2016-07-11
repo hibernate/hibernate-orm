@@ -24,5 +24,5 @@ public @interface JoinColumnsOrFormulas {
 	/**
 	 * The aggregated values.
 	 */
-	JoinColumnOrFormula [] value();
+	JoinColumnOrFormula[] value();
 }

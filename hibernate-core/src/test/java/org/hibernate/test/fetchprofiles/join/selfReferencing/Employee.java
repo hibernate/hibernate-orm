@@ -6,31 +6,28 @@
  */
 package org.hibernate.test.fetchprofiles.join.selfReferencing;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import java.util.ArrayList;
-import java.util.Collection;
 
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfile;
-import org.hibernate.annotations.FetchProfiles;
 
 /**
  * @author Steve Ebersole
  */
 @Entity
-@FetchProfiles(
-		@FetchProfile(
-				name = Employee.FETCH_PROFILE_TREE,
-				fetchOverrides = {
-						@FetchProfile.FetchOverride(entity = Employee.class, association = "manager", mode = FetchMode.JOIN),
-						@FetchProfile.FetchOverride(entity = Employee.class, association = "minions", mode = FetchMode.JOIN)
-				}
-		)
+@FetchProfile(
+		name = Employee.FETCH_PROFILE_TREE,
+		fetchOverrides = {
+				@FetchProfile.FetchOverride(entity = Employee.class, association = "manager", mode = FetchMode.JOIN),
+				@FetchProfile.FetchOverride(entity = Employee.class, association = "minions", mode = FetchMode.JOIN)
+		}
 )
 public class Employee {
 	public final static String FETCH_PROFILE_TREE = "locationTree";

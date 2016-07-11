@@ -9,7 +9,7 @@ package org.hibernate.userguide.mapping.basic.any;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
-import static org.hibernate.userguide.util.TransactionUtil.doInHibernate;
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 

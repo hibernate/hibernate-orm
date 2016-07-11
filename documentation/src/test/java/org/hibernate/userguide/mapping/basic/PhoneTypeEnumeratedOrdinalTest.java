@@ -17,7 +17,7 @@ import org.hibernate.userguide.model.PhoneType;
 
 import org.junit.Test;
 
-import static org.hibernate.userguide.util.TransactionUtil.doInJPA;
+import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 /**
  * @author Vlad Mihalcea

@@ -25,7 +25,7 @@ import com.vividsolutions.jts.geom.Polygon;
 
 import static org.junit.Assert.assertEquals;
 
-import static org.hibernate.userguide.util.TransactionUtil.doInJPA;
+import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 /**
  * @author Vlad Mihalcea

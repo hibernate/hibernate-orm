@@ -54,6 +54,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private boolean jtaTransactionAccessEnabled;
 
 	private boolean allowOutOfTransactionUpdateOperations;
+	private boolean releaseResourcesOnCloseEnabled;
 
 	// transaction handling
 	private final boolean jtaTrackByThread;
@@ -369,6 +370,11 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public boolean isAllowOutOfTransactionUpdateOperations() {
 		return allowOutOfTransactionUpdateOperations;
+	}
+
+	@Override
+	public boolean isReleaseResourcesOnCloseEnabled() {
+		return releaseResourcesOnCloseEnabled;
 	}
 
 	@Override

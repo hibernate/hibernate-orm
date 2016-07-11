@@ -203,4 +203,6 @@ public interface SessionFactoryOptions {
 	boolean isProcedureParameterNullPassingEnabled();
 
 	boolean isAllowOutOfTransactionUpdateOperations();
+
+	boolean isReleaseResourcesOnCloseEnabled();
 }

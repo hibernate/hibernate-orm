@@ -242,6 +242,8 @@ public final class SessionImpl
 
 	private transient LoadEvent loadEvent; //cached LoadEvent instance
 
+	private transient boolean discardOnClose;
+
 	public SessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
 
@@ -254,6 +256,7 @@ public final class SessionImpl
 		this.autoClear = options.shouldAutoClear();
 		this.autoClose = options.shouldAutoClose();
 		this.disallowOutOfTransactionUpdateOperations = !factory.getSessionFactoryOptions().isAllowOutOfTransactionUpdateOperations();
+		this.discardOnClose = getFactory().getSessionFactoryOptions().isReleaseResourcesOnCloseEnabled();
 
 		if ( options instanceof SharedSessionCreationOptions && ( (SharedSessionCreationOptions) options ).isTransactionCoordinatorShared() ) {
 			final SharedSessionCreationOptions sharedOptions = (SharedSessionCreationOptions) options;
@@ -302,6 +305,7 @@ public final class SessionImpl
 
 	private void applyEntityManagerSpecificProperties() {
 		for ( String key : ENTITY_MANAGER_SPECIFIC_PROPERTIES ) {
+			final Map<String, Object> properties = getFactory().getProperties();
 			if ( getFactory().getProperties().containsKey( key ) ) {
 				this.properties.put( key, getFactory().getProperties().get( key ) );
 			}
@@ -398,28 +402,26 @@ public final class SessionImpl
 
 		// todo : we want this check if usage is JPA, but not native Hibernate usage
 		if ( getSessionFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
+			// Original hibernate-entitymanager EM#close behavior
+			checkSessionFactoryOpen();
 			checkOpen();
+			if ( discardOnClose || !isTransactionInProgress() ) {
+				super.close();
+			}
+			else {
+				//Otherwise, session auto-close will be enabled by shouldAutoCloseSession().
+				waitingForAutoClose = true;
+				closed = true;
+			}
 		}
+		else {
 
-		super.close();
+			super.close();
 
-		if ( getFactory().getStatistics().isStatisticsEnabled() ) {
-			getFactory().getStatistics().closeSession();
+			if ( getFactory().getStatistics().isStatisticsEnabled() ) {
+				getFactory().getStatistics().closeSession();
+			}
 		}
-
-// Original hibernate-entitymanager EM#close behavior
-// does any of this need to be integrated?
-//		checkSessionFactoryOpen();
-//		checkOpen();
-//
-//		if ( discardOnClose || !isTransactionInProgress() ) {
-//			//close right now
-//			if ( session != null ) {
-//				session.close();
-//			}
-//		}
-//		// Otherwise, session auto-close will be enabled by shouldAutoCloseSession().
-//		open = false;
 	}
 
 	@Override
@@ -446,7 +448,7 @@ public final class SessionImpl
 		checkSessionFactoryOpen();
 		checkTransactionSynchStatus();
 		try {
-			return !isClosed();
+			return !isClosed() && !waitingForAutoClose ;
 		}
 		catch (HibernateException he) {
 			throw exceptionConverter.convert( he );
@@ -465,17 +467,20 @@ public final class SessionImpl
 	}
 
 	private void managedFlush() {
-		if ( isClosed() ) {
+		if ( isClosed() && !waitingForAutoClose ) {
 			log.trace( "Skipping auto-flush due to session closed" );
 			return;
 		}
 		log.trace( "Automatically flushing session" );
-		flush();
+		doFlush();
 	}
 
 	@Override
 	public boolean shouldAutoClose() {
-		if ( isClosed() ) {
+		if ( waitingForAutoClose ) {
+			return true;
+		}
+		else if ( isClosed() ) {
 			return false;
 		}
 		else if ( sessionOwner != null ) {
@@ -1383,9 +1388,12 @@ public final class SessionImpl
 	@Override
 	public void flush() throws HibernateException {
 		checkOpen();
+		doFlush();
+	}
+
+	private void doFlush() {
 		checkTransactionNeeded();
 		checkTransactionSynchStatus();
-
 
 		try {
 			if ( persistenceContext.getCascadeLevel() > 0 ) {
@@ -2224,14 +2232,18 @@ public final class SessionImpl
 
 	@Override
 	public ActionQueue getActionQueue() {
-		checkOpen();
+		if ( !waitingForAutoClose ) {
+			checkOpen();
+		}
 //		checkTransactionSynchStatus();
 		return actionQueue;
 	}
 
 	@Override
 	public PersistenceContext getPersistenceContext() {
-		checkOpen();
+		if ( !waitingForAutoClose ) {
+			checkOpen();
+		}
 //		checkTransactionSynchStatus();
 		return persistenceContext;
 	}
@@ -3124,8 +3136,7 @@ public final class SessionImpl
 
 	@Override
 	public void flushBeforeTransactionCompletion() {
-		final boolean doFlush = ! isClosed()
-				&& isTransactionFlushable()
+		final boolean doFlush = isTransactionFlushable()
 				&& getHibernateFlushMode() != FlushMode.MANUAL;
 
 		try {

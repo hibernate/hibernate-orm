@@ -12,7 +12,10 @@ import org.hibernate.Interceptor;
 
 /**
  * @author Steve Ebersole
+ *
+ * @deprecated (since 5.2) since consolidating hibernate-entitymanager into hibernate-core
  */
+@Deprecated
 public interface Settings {
 	public PersistenceUnitTransactionType getTransactionType();
 

@@ -18,8 +18,15 @@ import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.test.bytecode.enhancement.AbstractEnhancerTestTask;
+import org.hibernate.tuple.NonIdentifierAttribute;
+import org.hibernate.tuple.entity.EntityMetamodel;
+
 import org.junit.Assert;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Gail Badner
@@ -56,6 +63,17 @@ public class LazyBasicFieldNotInitializedTestTask extends AbstractEnhancerTestTa
 		s.beginTransaction();
 		Entity entity = s.get( Entity.class, entityId );
 		Assert.assertFalse( Hibernate.isPropertyInitialized( entity, "description" ) );
+		final EntityMetamodel entityMetamodel =
+				( ( SessionFactoryImplementor) getFactory() )
+						.getEntityPersister( Entity.class.getName() )
+						.getEntityMetamodel();
+		final boolean[] propertyLaziness = entityMetamodel.getPropertyLaziness();
+		assertEquals( 1, propertyLaziness.length );
+		assertTrue( propertyLaziness[0] );
+		// Make sure NonIdentifierAttribute#isLazy is consistent (HHH-10551)
+		final NonIdentifierAttribute[] properties = entityMetamodel.getProperties();
+		assertEquals( 1, properties.length );
+		assertTrue( properties[0].isLazy() );
 		s.getTransaction().commit();
 		s.close();
 	}

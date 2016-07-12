@@ -16,6 +16,9 @@ import org.hibernate.dialect.Dialect;
 
 import org.hibernate.testing.jdbc.JdbcProperties;
 
+/**
+ * @author Vlad Mihalcea
+ */
 public class ConnectionLeakUtil {
 
 	private JdbcProperties jdbcProperties = JdbcProperties.INSTANCE;

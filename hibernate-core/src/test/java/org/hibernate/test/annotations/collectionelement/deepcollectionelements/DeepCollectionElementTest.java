@@ -6,24 +6,34 @@
  */
 package org.hibernate.test.annotations.collectionelement.deepcollectionelements;
 
-import org.junit.Test;
-
+import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.Configuration;
+
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
  */
 @FailureExpected( jiraKey = "HHH-3157" )
 public class DeepCollectionElementTest extends BaseUnitTestCase {
+
 	@Test
 	public void testInitialization() throws Exception {
 		Configuration configuration = new Configuration();
 		configuration.addAnnotatedClass( A.class );
 		configuration.addAnnotatedClass( B.class );
 		configuration.addAnnotatedClass( C.class );
-		configuration.buildSessionFactory( ServiceRegistryBuilder.buildServiceRegistry( configuration.getProperties() ) ).close();
+		StandardServiceRegistryImpl serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( configuration.getProperties() );
+		try {
+			SessionFactory sessionFactory = configuration.buildSessionFactory( serviceRegistry );
+			sessionFactory.close();
+		}
+		finally {
+			serviceRegistry.destroy();
+		}
 	}
 }

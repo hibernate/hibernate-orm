@@ -37,7 +37,7 @@ public class CollectionAsBasicTest extends BaseUnitTestCase {
 	public void testCollectionAsBasic() {
 		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
 		try {
-			Metadata metadata = new MetadataSources().addAnnotatedClass( Post.class )
+			Metadata metadata = new MetadataSources(ssr).addAnnotatedClass( Post.class )
 					.getMetadataBuilder().applyBasicType( new DelimitedStringsType() )
 					.build();
 			PersistentClass postBinding = metadata.getEntityBinding( Post.class.getName() );

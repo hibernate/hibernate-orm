@@ -6,20 +6,14 @@
  */
 package org.hibernate.jpa.test.cdi;
 
-import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.URL;
-
-import org.hibernate.HibernateException;
-import org.hibernate.bytecode.spi.ByteCodeHelper;
-
-import org.junit.Rule;
-import org.junit.Test;
+import javax.persistence.EntityManagerFactory;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.junit4.ClassLoadingIsolater;
-import org.hibernate.testing.junit4.ExtraAssertions;
+import org.junit.Rule;
+import org.junit.Test;
 
 import static org.junit.Assert.fail;
 
@@ -71,7 +65,15 @@ public class NoCdiAvailableTest extends BaseUnitTestCase {
 				"org.hibernate.jpa.test.cdi.NoCdiAvailableTestDelegate"
 		);
 		Method mainMethod = delegateClass.getMethod( "passingNoBeanManager" );
-		mainMethod.invoke( null );
+		EntityManagerFactory entityManagerFactory = null;
+		try {
+			entityManagerFactory = (EntityManagerFactory) mainMethod.invoke( null );
+		}
+		finally {
+			if (entityManagerFactory != null ) {
+				entityManagerFactory.close();
+			}
+		}
 	}
 
 	@Test
@@ -80,12 +82,18 @@ public class NoCdiAvailableTest extends BaseUnitTestCase {
 				"org.hibernate.jpa.test.cdi.NoCdiAvailableTestDelegate"
 		);
 		Method mainMethod = delegateClass.getMethod( "passingBeanManager" );
+		EntityManagerFactory entityManagerFactory = null;
 		try {
-			mainMethod.invoke( null );
+			entityManagerFactory = (EntityManagerFactory) mainMethod.invoke( null );
 			fail( "Expecting failure from missing CDI classes" );
 		}
 		catch (InvocationTargetException expected) {
 			// hard to assert specific exception types due to classloader trickery
+		}
+		finally {
+			if (entityManagerFactory != null ) {
+				entityManagerFactory.close();
+			}
 		}
 	}
 }

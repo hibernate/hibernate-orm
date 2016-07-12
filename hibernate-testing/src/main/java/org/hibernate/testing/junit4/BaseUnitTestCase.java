@@ -10,11 +10,10 @@ import javax.transaction.SystemException;
 
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 
+import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.jdbc.leak.ConnectionLeakUtil;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.rules.TestRule;
 import org.junit.rules.Timeout;
@@ -34,21 +33,21 @@ public abstract class BaseUnitTestCase {
 	private static boolean enableConnectionLeakDetection = Boolean.TRUE.toString()
 			.equals( System.getenv( "HIBERNATE_CONNECTION_LEAK_DETECTION" ) );
 
-	private static ConnectionLeakUtil connectionLeakUtil;
+	private ConnectionLeakUtil connectionLeakUtil;
 
 	@Rule
 	public TestRule globalTimeout = new Timeout( 30 * 60 * 1000 ); // no test should run longer than 30 minutes
 
-	@BeforeClass
-	public static void initConnectionLeakUtility() {
+	public BaseUnitTestCase() {
 		if ( enableConnectionLeakDetection ) {
 			connectionLeakUtil = new ConnectionLeakUtil();
 		}
 	}
 
-	@AfterClass
-	public static void assertNoLeaks() {
+	@AfterClassOnce
+	public void assertNoLeaks() {
 		if ( enableConnectionLeakDetection ) {
+			log.info( "Assert no leaks!" );
 			connectionLeakUtil.assertNoLeaks();
 		}
 	}

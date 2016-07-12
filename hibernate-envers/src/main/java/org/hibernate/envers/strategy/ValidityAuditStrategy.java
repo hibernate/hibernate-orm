@@ -246,10 +246,13 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		);
 		final String revisionFieldName = auditEntitiesConfiguration.getRevisionFieldName();
 		final String revisionTypePropName = auditEntitiesConfiguration.getRevisionTypePropName();
+		final String ordinalPropName = auditEntitiesConfiguration.getEmbeddableSetOrdinalPropertyName();
 
 		// Adding a parameter for each id component, except the rev number and type.
 		for ( Map.Entry<String, Object> originalIdEntry : originalId.entrySet() ) {
-			if ( !revisionFieldName.equals( originalIdEntry.getKey() ) && !revisionTypePropName.equals( originalIdEntry.getKey() ) ) {
+			if ( !revisionFieldName.equals( originalIdEntry.getKey() )
+					&& !revisionTypePropName.equals( originalIdEntry.getKey() )
+					&& !ordinalPropName.equals( originalIdEntry.getKey() ) ) {
 				qb.getRootParameters().addWhereWithParam(
 						originalIdPropName + "." + originalIdEntry.getKey(),
 						true, "=", originalIdEntry.getValue()

@@ -219,6 +219,28 @@ artifacts {
     tests testJar
 }
 
+task generateEnversStaticMetamodel(
+        type: JavaCompile,
+        description: "Generate the Hibernate Envers revision entity static metamodel classes." ) {
+    source = sourceSets.main.java
+    // we only want to include these specific classes for metamodel generation.
+    // if envers adds any additional revision entity classes, they must be listed here.
+    include 'org/hibernate/envers/DefaultRevisionEntity.java'
+    include 'org/hibernate/envers/DefaultTrackingModifiedEntitiesRevisionEntity.java'
+    include 'org/hibernate/envers/enhanced/SequenceIdRevisionEntity.java'
+    include 'org/hibernate/envers/enhanced/SequenceIdTrackingModifiedEntitiesRevisionEntity.java'
+
+    classpath = sourceSets.main.runtimeClasspath + sourceSets.test.compileClasspath
+    options.compilerArgs = [
+            "-proc:only",
+            "-processor",
+            "org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor"
+    ]
+
+    // put static metamodel classes back out to the source tree since they're version controlled.
+    destinationDir = new File( "${projectDir}/src/main/java" )
+}
+
 if ( JavaVersion.current().isJava9Compatible() ) {
     logger.warn( '[WARN] Skipping Javassist-related tests for hibernate-core due to Javassist JDK 9 incompatibility' )
 

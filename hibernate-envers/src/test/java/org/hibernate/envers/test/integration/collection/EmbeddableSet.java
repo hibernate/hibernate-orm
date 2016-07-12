@@ -6,17 +6,16 @@
  */
 package org.hibernate.envers.test.integration.collection;
 
-import static org.junit.Assert.assertEquals;
-
 import javax.persistence.EntityManager;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.entities.collection.EmbeddableSetEntity;
 import org.hibernate.envers.test.entities.components.Component3;
 import org.hibernate.envers.test.tools.TestTools;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Felix Feisst (feisst dot felix at gmail dot com)
@@ -30,7 +29,6 @@ public class EmbeddableSet extends BaseEnversJPAFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-9199")
-	@FailureExpected(jiraKey = "HHH-9199")
 	public void testRemoval() {
 		EntityManager em = getEntityManager();
 

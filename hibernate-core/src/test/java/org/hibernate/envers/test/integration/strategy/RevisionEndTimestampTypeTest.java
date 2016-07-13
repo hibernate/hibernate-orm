@@ -43,11 +43,11 @@ public class RevisionEndTimestampTypeTest extends BaseEnversJPAFunctionalTestCas
 	}
 
 	@Test
-	public void testRevisionEndTimestampIsLongType() {
+	public void testRevisionEndTimestampIsTimestampType() {
 		// get the entity and verify the revision end timestamp property exists
 		final PersistentClass clazz = metadata().getEntityBinding( StrTestEntity.class.getName() + "_AUD" );
 		assertTrue( clazz.hasProperty( getAuditServiceOptions().getRevisionEndTimestampFieldName() ) );
-		// get the revision end timestamp property and confirm it is of Long type.
+		// get the revision end timestamp property and confirm it is of Timestamp type.
 		final Property property = clazz.getProperty( getAuditServiceOptions().getRevisionEndTimestampFieldName() );
 		assertTyping( TimestampType.class, property.getType() );
 	}

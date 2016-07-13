@@ -20,9 +20,9 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.spi.descriptor.WrapperOptions;
+import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**

@@ -11,10 +11,10 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import org.hibernate.internal.CoreLogging;
-import org.hibernate.type.descriptor.JdbcTypeNameMapper;
-import org.hibernate.type.descriptor.ValueBinder;
-import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.internal.descriptor.JdbcTypeNameMapper;
+import org.hibernate.type.spi.descriptor.ValueBinder;
+import org.hibernate.type.spi.descriptor.WrapperOptions;
+import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
 

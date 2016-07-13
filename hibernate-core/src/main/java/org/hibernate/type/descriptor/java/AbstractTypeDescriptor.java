@@ -12,6 +12,8 @@ import java.util.Comparator;
 import org.hibernate.HibernateException;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.internal.util.compare.EqualsHelper;
+import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
 
 /**
  * Abstract adapter for Java type descriptors.

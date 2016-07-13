@@ -10,7 +10,7 @@ import java.io.Serializable;
 import java.util.UUID;
 
 import org.hibernate.internal.util.BytesHelper;
-import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.spi.descriptor.WrapperOptions;
 
 /**
  * Descriptor for {@link UUID} handling.

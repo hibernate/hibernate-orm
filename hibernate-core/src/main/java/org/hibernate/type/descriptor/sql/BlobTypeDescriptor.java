@@ -14,9 +14,9 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.engine.jdbc.BinaryStream;
-import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.descriptor.ValueExtractor;
+import org.hibernate.type.spi.descriptor.WrapperOptions;
+import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Descriptor for {@link Types#BLOB BLOB} handling.

@@ -1,79 +1,24 @@
-= 5.2 Migration Guide
+= 6.0 Migration Guide
 :toc:
 
-This guide discusses migration from Hibernate ORM version 5.1 to version 5.2.  For migration from
+This guide discusses migration from Hibernate ORM version 5.2 to version 6.0.  For migration from
 earlier versions, see any other pertinent migration guides as well.
 
 == Background
 
-Lots of work has been done for 6.0.  One of the things 6.0 will need is a unified view of "type systems"
-including its own type system (Type, EntityPersister, CollectionPersister, etc) and JPA's type system - which
-would mean unifying all of this in hibernate-core.  Because of this and the other large changes slated for 6.0
-we decided to release a 5.2 that showed a clear migration path to the changes in 6.0 but that still supported the
-older calls and expectations as much as possible.
+6.0 introduces major (and related) changes, such as:
 
+* refactoring Hibernate's Type contract to unify Hibernate ORM, JPA and SQM type systems
+* migration to SQM for query interpretation/representation
+** HQL/JPQL
+** (JPA) criteria queries
 
-== Move to Java 8 for baseline
-
-Hibernate 5.2 is built using Java 8 JDK and will require Java 8 JRE at runtime (we are investigating whether
-Java 9 will also work).  This has a number of implications:
-
-* The hibernate-java8 module has been merged into hibernate-core and the Java 8 date/time types are now natively
-	supported.
-* (todo) support for Java 8 Optional
-* (todo) support for other Java 8 features?
-
-
-== hibernate-entitymanager merged into hibernate-core
-
-The hibernate-entitymanager module has also been merged into hibernate-core.
-
-* `org.hibernate.SessionFactory` now extends `javax.persistence.EntityManagerFactory` - temporarily it
-	technically extends `org.hibernate.jpa.HibernateEntityManagerFactory` (which in turn extends
-	`javax.persistence.EntityManagerFactory`) for backwards compatibility.  `HibernateEntityManagerFactory`
-	is deprecated.
-* `org.hibernate.Session` now extends `javax.persistence.EntityManager` - temporarily it
-	technically extends `org.hibernate.jpa.HibernateEntityManager` (which in turn extends
-	`javax.persistence.EntityManager`) for backwards compatibility.  `HibernateEntityManager` is deprecated.
-* `org.hibernate.Query` (deprecated in favor of new `org.hibernate.query.Query`) now extends the JPA contracts
-	`javax.persistence.Query` and `javax.persistence.TypedQuery`.  `ProcedureCall` and `StoredProcedureQuery` as well.
-* `org.hibernate.HibernateException` now extends `javax.persistence.PersistenceExceptions`.  Hibernate methods
-	that "override" methods from their JPA counterparts now will also throw various JDK defined RuntimeExceptions
-	(such as `IllegalArgumentException`, `IllegalStateException`, etc) as required by the JPA contract.
-* Persister/type access is now exposed through `org.hibernate.Metamodel`, which extends
-	`javax.persistence.metamodel.Metamodel`.  MetamodelImpl now manages all aspects of type system (see below).
-* Cache management has also been consolidated.  `org.hibernate.Cache` now extends `javax.persistence.Cache`.  CacheImpl
-	now manages all aspects of cache regions (see below).
-
-
-== SessionFactory hierarchy cleanup
-
-As part of merging hibernate-entitymanager into hibernate-core, I also wanted to take a moment to clean up
-some of these very old contracts,  In conjunction with the move to Java 8 (default methods) and needing to
-implement JPA methods now in core I decided to implement more of a composition approach here, thus:
-
-* SessionFactoryImplementor used to have a number of methods pertaining to managing and accessing entity and collection persisters.
-	Since we need to deal with JPA Metamodel contract anyway, I went ahead and moved all of that code into our new
-	`org.hibernate.metamodel.spi.MetamodelImplementor`
-* SessionFactory and SessionFactoryImplementor each had a number of methods dealing with cache regions.
-	Many of these methods have been deprecated since 5.0 and those will be removed.  However, the functionality
-	has been moved into the `org.hibernate.Cache` and `org.hibernate.engine.spi.CacheImplementor` contracts
-	helping implement JPA's `javax.persistence.Cache` role.
-
+Additionally, `hibernate-envers` has been made part of `hibernate-core` and better integrated
+from an API perspective.
 
 == Misc
 
-* QueryCacheFactory contract changed
-* RegionFactory contract changes
-* todo : merge AvailableSettings together
-* org.hibernate.Transaction now extends JPA's EntityTransaction and follows its pre- and post- assertions.
-	e.g. begin() now throws an exception if transaction is already active.
-* (todo) following the above one, JPA also says that only PersistenceUnitTransactionType#JTA EntiytManagers
-	are allowed to access EntityTransactions.  Need a strategy to handle this
-* Session#getFlushMode and Query#getFlushMode clash in terms of Hibernate (FlushMode) and JPA (FlushModeType)
-	returns.  #getFlushMode has been altered to return JPA's FlushModeType.  The Hibernate FlushMode
-	is still available via #getHibernateFlushMode and #setHibernateFlushMode.  Same for Session#getFlushMode
-	and EntityManager#getFlushMode.
-* Setting `hibernate.listeners.envers.autoRegister` has been deprecated in favor of
-  `hibernate.envers.autoRegisterListeners`.
-* AuditReader#getCurrentRevision has been deprecated in favor of `org.hibernate.envers.RevisionListener`.
+* removed `org.hibernate.type.TypeHelper` and `org.hibernate.type.TypeResolver`, as well as methods exposing
+access to them.  For the most part, replace with calls to `org.hibernate.Metamodel`
+and/or `org.hibernate.type.spi.TypeConfiguration`.
+* removed `org.hibernate.type.TypeFactory` in favor of `TypeConfiguration`

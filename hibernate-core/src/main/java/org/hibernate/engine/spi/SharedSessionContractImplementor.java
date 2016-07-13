@@ -33,7 +33,7 @@ import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder.Options;
-import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.spi.descriptor.WrapperOptions;
 
 /**
  * Defines the internal contract shared between {@link org.hibernate.Session} and
@@ -56,7 +56,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  *         {@link org.hibernate.engine.jdbc.LobCreationContext} to act as the context for JDBC LOB instance creation
  *     </li>
  *     <li>
- *         {@link org.hibernate.type.descriptor.WrapperOptions} to fulfill the behavior needed while
+ *         {@link WrapperOptions} to fulfill the behavior needed while
  *         binding/extracting values to/from JDBC as part of the Type contracts
  *     </li>
  * </ul>

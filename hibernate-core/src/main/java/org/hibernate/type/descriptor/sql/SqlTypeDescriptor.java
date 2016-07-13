@@ -8,9 +8,10 @@ package org.hibernate.type.descriptor.sql;
 
 import java.io.Serializable;
 
-import org.hibernate.type.descriptor.ValueBinder;
-import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.descriptor.ValueBinder;
+import org.hibernate.type.spi.descriptor.ValueExtractor;
+import org.hibernate.type.spi.descriptor.WrapperOptions;
+import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Descriptor for the <tt>SQL</tt>/<tt>JDBC</tt> side of a value mapping.
@@ -33,7 +34,7 @@ public interface SqlTypeDescriptor extends Serializable {
 	 *
 	 * @return {@code true} indicates this descriptor can be remapped; otherwise, {@code false}
 	 *
-	 * @see org.hibernate.type.descriptor.WrapperOptions#remapSqlTypeDescriptor
+	 * @see WrapperOptions#remapSqlTypeDescriptor
 	 * @see org.hibernate.dialect.Dialect#remapSqlTypeDescriptor
 	 */
 	public boolean canBeRemapped();

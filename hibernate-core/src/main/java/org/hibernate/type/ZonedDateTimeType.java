@@ -14,7 +14,7 @@ import java.util.Locale;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ZonedDateTimeComparator;
-import org.hibernate.type.descriptor.java.ZonedDateTimeJavaDescriptor;
+import org.hibernate.type.spi.descriptor.java.ZonedDateTimeJavaDescriptor;
 import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
 
 /**

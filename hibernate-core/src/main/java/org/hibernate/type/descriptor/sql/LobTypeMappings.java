@@ -11,7 +11,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
-import org.hibernate.type.descriptor.JdbcTypeNameMapper;
+import org.hibernate.type.internal.descriptor.JdbcTypeNameMapper;
 
 import org.jboss.logging.Logger;
 

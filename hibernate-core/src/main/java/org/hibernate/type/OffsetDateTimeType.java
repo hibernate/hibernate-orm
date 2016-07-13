@@ -13,7 +13,7 @@ import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.descriptor.java.OffsetDateTimeJavaDescriptor;
+import org.hibernate.type.spi.descriptor.java.OffsetDateTimeJavaDescriptor;
 import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
 
 /**

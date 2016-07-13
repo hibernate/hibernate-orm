@@ -100,6 +100,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.type.TypeResolver;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 
 /**
@@ -115,7 +116,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( InFlightMetadataCollectorImpl.class );
 
 	private final MetadataBuildingOptions options;
-	private final TypeResolver typeResolver;
+	private final TypeConfiguration typeConfiguration;
 	private final TypeDescriptorRegistryAccess typeDescriptorRegistryAccess;
 
 	private final AttributeConverterManager attributeConverterManager = new AttributeConverterManager();
@@ -124,33 +125,33 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	private final UUID uuid;
 	private final MutableIdentifierGeneratorFactory identifierGeneratorFactory;
 
-	private final Map<String,PersistentClass> entityBindingMap = new HashMap<String, PersistentClass>();
-	private final Map<String,Collection> collectionBindingMap = new HashMap<String,Collection>();
+	private final Map<String,PersistentClass> entityBindingMap = new HashMap<>();
+	private final Map<String,Collection> collectionBindingMap = new HashMap<>();
 
-	private final Map<String, TypeDefinition> typeDefinitionMap = new HashMap<String, TypeDefinition>();
-	private final Map<String, FilterDefinition> filterDefinitionMap = new HashMap<String, FilterDefinition>();
-	private final Map<String, String> imports = new HashMap<String, String>();
+	private final Map<String, TypeDefinition> typeDefinitionMap = new HashMap<>();
+	private final Map<String, FilterDefinition> filterDefinitionMap = new HashMap<>();
+	private final Map<String, String> imports = new HashMap<>();
 
 	private Database database;
 
-	private final Map<String, NamedQueryDefinition> namedQueryMap = new HashMap<String, NamedQueryDefinition>();
-	private final Map<String, NamedSQLQueryDefinition> namedNativeQueryMap = new HashMap<String, NamedSQLQueryDefinition>();
-	private final Map<String, NamedProcedureCallDefinition> namedProcedureCallMap = new HashMap<String, NamedProcedureCallDefinition>();
-	private final Map<String, ResultSetMappingDefinition> sqlResultSetMappingMap = new HashMap<String, ResultSetMappingDefinition>();
+	private final Map<String, NamedQueryDefinition> namedQueryMap = new HashMap<>();
+	private final Map<String, NamedSQLQueryDefinition> namedNativeQueryMap = new HashMap<>();
+	private final Map<String, NamedProcedureCallDefinition> namedProcedureCallMap = new HashMap<>();
+	private final Map<String, ResultSetMappingDefinition> sqlResultSetMappingMap = new HashMap<>();
 
-	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap = new HashMap<String, NamedEntityGraphDefinition>();
-	private final Map<String, FetchProfile> fetchProfileMap = new HashMap<String, FetchProfile>();
-	private final Map<String, IdentifierGeneratorDefinition> idGeneratorDefinitionMap = new HashMap<String, IdentifierGeneratorDefinition>();
+	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap = new HashMap<>();
+	private final Map<String, FetchProfile> fetchProfileMap = new HashMap<>();
+	private final Map<String, IdentifierGeneratorDefinition> idGeneratorDefinitionMap = new HashMap<>();
 
 	private Map<String, SQLFunction> sqlFunctionMap;
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// All the annotation-processing-specific state :(
-	private final Set<String> defaultIdentifierGeneratorNames = new HashSet<String>();
-	private final Set<String> defaultNamedQueryNames = new HashSet<String>();
-	private final Set<String> defaultNamedNativeQueryNames = new HashSet<String>();
-	private final Set<String> defaultSqlResultSetMappingNames = new HashSet<String>();
-	private final Set<String> defaultNamedProcedureNames = new HashSet<String>();
+	private final Set<String> defaultIdentifierGeneratorNames = new HashSet<>();
+	private final Set<String> defaultNamedQueryNames = new HashSet<>();
+	private final Set<String> defaultNamedNativeQueryNames = new HashSet<>();
+	private final Set<String> defaultSqlResultSetMappingNames = new HashSet<>();
+	private final Set<String> defaultNamedProcedureNames = new HashSet<>();
 	private Map<String, AnyMetaDef> anyMetaDefs;
 	private Map<Class, MappedSuperclass> mappedSuperClasses;
 	private Map<XClass, Map<String, PropertyData>> propertiesAnnotatedWithMapsId;
@@ -163,12 +164,10 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	private AuditMetadataBuilderImpl auditMetadataBuilder;
 
-	public InFlightMetadataCollectorImpl(
-			MetadataBuildingOptions options,
-			TypeResolver typeResolver) {
+	public InFlightMetadataCollectorImpl(MetadataBuildingOptions options) {
 		this.uuid = UUID.randomUUID();
 		this.options = options;
-		this.typeResolver = typeResolver;
+		this.typeConfiguration = new TypeConfiguration( this );
 		this.typeDescriptorRegistryAccess = options.getTypeDescriptorRegistryAccess();
 
 		this.identifierGeneratorFactory = options.getServiceRegistry().getService( MutableIdentifierGeneratorFactory.class );
@@ -201,7 +200,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	@Override
 	public TypeResolver getTypeResolver() {
-		return typeResolver;
+		return typeConfiguration.getT;
 	}
 
 	@Override

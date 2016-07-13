@@ -6,7 +6,7 @@
  */
 package org.hibernate.type;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
-import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
 
 /**
  * Optimize a mutable type, if the user promises not to mutable the

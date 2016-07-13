@@ -19,7 +19,8 @@ import org.hibernate.engine.jdbc.BlobImplementer;
 import org.hibernate.engine.jdbc.BlobProxy;
 import org.hibernate.engine.jdbc.WrappedBlob;
 import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
-import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.spi.descriptor.WrapperOptions;
+import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
 
 /**
  * Descriptor for {@link Blob} handling.

@@ -6,8 +6,8 @@
  */
 package org.hibernate.type.spi.descriptor;
 
-import org.hibernate.type.descriptor.java.JavaTypeDescriptorRegistry;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorRegistry;
+import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptorRegistry;
+import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptorRegistry;
 
 /**
  * Defines combined access to a {@link JavaTypeDescriptorRegistry} and

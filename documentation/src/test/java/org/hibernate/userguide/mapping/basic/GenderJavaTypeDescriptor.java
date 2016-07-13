@@ -1,6 +1,6 @@
 package org.hibernate.userguide.mapping.basic;
 
-import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
 import org.hibernate.type.descriptor.java.CharacterTypeDescriptor;
 

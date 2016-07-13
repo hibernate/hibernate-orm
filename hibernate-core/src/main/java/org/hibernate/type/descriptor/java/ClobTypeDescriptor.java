@@ -18,7 +18,8 @@ import org.hibernate.engine.jdbc.ClobImplementer;
 import org.hibernate.engine.jdbc.ClobProxy;
 import org.hibernate.engine.jdbc.WrappedClob;
 import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
-import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.spi.descriptor.WrapperOptions;
+import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
 
 /**
  * Descriptor for {@link Clob} handling.

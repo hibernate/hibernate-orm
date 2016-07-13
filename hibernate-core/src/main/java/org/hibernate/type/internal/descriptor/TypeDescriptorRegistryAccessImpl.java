@@ -6,8 +6,8 @@
  */
 package org.hibernate.type.internal.descriptor;
 
-import org.hibernate.type.descriptor.java.JavaTypeDescriptorRegistry;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorRegistry;
+import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptorRegistry;
+import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptorRegistry;
 import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 
 /**
@@ -17,16 +17,31 @@ import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
  * @author Steve Ebersole
  */
 public class TypeDescriptorRegistryAccessImpl implements TypeDescriptorRegistryAccess {
-	private final JavaTypeDescriptorRegistry javaTypeDescriptorRegistry = new JavaTypeDescriptorRegistry( this );
-	private final SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry = new SqlTypeDescriptorRegistry( this );
+	private final JavaTypeDescriptorRegistry javaTypeDescriptorRegistry;
+	private final SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry;
+
+	private boolean initialized = false;
+
+	public TypeDescriptorRegistryAccessImpl() {
+		this.javaTypeDescriptorRegistry = new JavaTypeDescriptorRegistry( this );
+		this.sqlTypeDescriptorRegistry = new SqlTypeDescriptorRegistry( this );
+
+		this.initialized = true;
+	}
 
 	@Override
 	public JavaTypeDescriptorRegistry getJavaTypeDescriptorRegistry() {
+		if ( !initialized ) {
+			throw new IllegalStateException( "TypeDescriptorRegistryAccess initialization incomplete; not yet ready for access" );
+		}
 		return javaTypeDescriptorRegistry;
 	}
 
 	@Override
 	public SqlTypeDescriptorRegistry getSqlTypeDescriptorRegistry() {
+		if ( !initialized ) {
+			throw new IllegalStateException( "TypeDescriptorRegistryAccess initialization incomplete; not yet ready for access" );
+		}
 		return sqlTypeDescriptorRegistry;
 	}
 }

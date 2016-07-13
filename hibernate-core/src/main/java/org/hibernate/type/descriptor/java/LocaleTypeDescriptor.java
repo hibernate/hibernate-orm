@@ -9,7 +9,7 @@ package org.hibernate.type.descriptor.java;
 import java.util.Comparator;
 import java.util.Locale;
 
-import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.spi.descriptor.WrapperOptions;
 
 /**
  * Descriptor for {@link Locale} handling.

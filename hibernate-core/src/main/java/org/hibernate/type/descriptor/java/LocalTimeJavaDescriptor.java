@@ -19,7 +19,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 
 import org.hibernate.type.LocalTimeType;
-import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.spi.descriptor.WrapperOptions;
 
 /**
  * Java type descriptor for the LocalDateTime type.

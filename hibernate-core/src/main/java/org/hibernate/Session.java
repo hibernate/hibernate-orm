@@ -1040,8 +1040,14 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 * Equivalent to calling {@link #getSessionFactory()}.{@link SessionFactory#getTypeHelper getTypeHelper()}
 	 *
 	 * @return The {@link TypeHelper} associated with this session's {@link SessionFactory}
+	 *
+	 * @deprecated (since 6.0) TypeHelper itself is deprecated in favor of Hibernate's {@link Metamodel}
+	 * extension of the JPA {@link javax.persistence.metamodel.Metamodel} contract.  See {@link #getMetamodel()}
 	 */
-	TypeHelper getTypeHelper();
+	@Deprecated
+	default TypeHelper getTypeHelper() {
+		return getSessionFactory().getTypeHelper();
+	}
 
 	/**
 	 * Retrieve this session's helper/delegate for creating LOB instances.

@@ -9,7 +9,7 @@ import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.Clob;
 
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 
 import org.junit.Before;
 import org.junit.Test;

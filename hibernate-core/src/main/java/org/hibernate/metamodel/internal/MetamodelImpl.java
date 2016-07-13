@@ -58,10 +58,9 @@ import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.AssociationType;
-import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
-import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Hibernate implementation of the JPA {@link javax.persistence.metamodel.Metamodel} contract.
@@ -74,8 +73,8 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( MetamodelImpl.class );
 	private static final Object ENTITY_NAME_RESOLVER_MAP_VALUE = new Object();
 
-	// the SessionFactory that scopes this MetamodelImpl
 	private final SessionFactoryImplementor sessionFactory;
+	private final TypeConfiguration typeConfiguration;
 
 	private final Map<String,String> imports = new ConcurrentHashMap<>();
 	private final Map<String,EntityPersister> entityPersisterMap = new ConcurrentHashMap<>();
@@ -92,27 +91,17 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 	private final Map<String,EntityGraph> entityGraphMap = new ConcurrentHashMap<>();
 
-	private final BasicTypeRegistry basicTypeFactory;
-	private final TypeDescriptorRegistryAccess typeDescriptorRegistryAccess;
-
-	private final TypeResolver typeResolver;
-
 	/**
 	 * Instantiate the MetamodelImpl.
 	 * <p/>
 	 * Note that building a fully-functional MetamodelImpl instance is a 2-step process.  The
 	 * create instance returned here must still be initialized via call to {@link #initialize}
 	 *
-	 * @param sessionFactory The SessionFactory that this MetamodelImpl is scoped to
+	 * @param typeConfiguration The TypeConfiguration to use for this Metamodel
 	 */
-	public MetamodelImpl(
-			SessionFactoryImplementor sessionFactory,
-			TypeResolver typeResolver,
-			TypeDescriptorRegistryAccess typeDescriptorRegistryAccess) {
+	public MetamodelImpl(SessionFactoryImplementor sessionFactory, TypeConfiguration typeConfiguration) {
 		this.sessionFactory = sessionFactory;
-		this.typeResolver = typeResolver;
-		this.basicTypeFactory = typeResolver.getBasicTypeFactory();
-		this.typeDescriptorRegistryAccess = typeDescriptorRegistryAccess;
+		this.typeConfiguration = typeConfiguration;
 	}
 
 	/**
@@ -130,7 +119,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 		final PersisterCreationContext persisterCreationContext = new PersisterCreationContext() {
 			@Override
 			public SessionFactoryImplementor getSessionFactory() {
-				return sessionFactory;
+				return MetamodelImpl.this.getSessionFactory();
 			}
 
 			@Override
@@ -139,14 +128,14 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 			}
 		};
 
-		final PersisterFactory persisterFactory = sessionFactory.getServiceRegistry().getService( PersisterFactory.class );
+		final PersisterFactory persisterFactory = getSessionFactory().getServiceRegistry().getService( PersisterFactory.class );
 
 		for ( final PersistentClass model : mappingMetadata.getEntityBindings() ) {
-			final EntityRegionAccessStrategy accessStrategy = sessionFactory.getCache().determineEntityRegionAccessStrategy(
+			final EntityRegionAccessStrategy accessStrategy = getSessionFactory().getCache().determineEntityRegionAccessStrategy(
 					model
 			);
 
-			final NaturalIdRegionAccessStrategy naturalIdAccessStrategy = sessionFactory.getCache().determineNaturalIdRegionAccessStrategy(
+			final NaturalIdRegionAccessStrategy naturalIdAccessStrategy = getSessionFactory().getCache().determineNaturalIdRegionAccessStrategy(
 					model
 			);
 
@@ -189,7 +178,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 		}
 
 		for ( final Collection model : mappingMetadata.getCollectionBindings() ) {
-			final CollectionRegionAccessStrategy accessStrategy = sessionFactory.getCache().determineCollectionRegionAccessStrategy(
+			final CollectionRegionAccessStrategy accessStrategy = getSessionFactory().getCache().determineCollectionRegionAccessStrategy(
 					model
 			);
 
@@ -201,7 +190,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 			collectionPersisterMap.put( model.getRole(), persister );
 			Type indexType = persister.getIndexType();
 			if ( indexType != null && indexType.isAssociationType() && !indexType.isAnyType() ) {
-				String entityName = ( (AssociationType) indexType ).getAssociatedEntityName( sessionFactory );
+				String entityName = ( (AssociationType) indexType ).getAssociatedEntityName( getSessionFactory() );
 				Set<String> roles = collectionRolesByEntityParticipant.get( entityName );
 				if ( roles == null ) {
 					roles = new HashSet<>();
@@ -211,7 +200,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 			}
 			Type elementType = persister.getElementType();
 			if ( elementType.isAssociationType() && !elementType.isAnyType() ) {
-				String entityName = ( ( AssociationType ) elementType ).getAssociatedEntityName( sessionFactory );
+				String entityName = ( ( AssociationType ) elementType ).getAssociatedEntityName( getSessionFactory() );
 				Set<String> roles = collectionRolesByEntityParticipant.get( entityName );
 				if ( roles == null ) {
 					roles = new HashSet<>();
@@ -232,7 +221,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 		if ( jpaMetaModelPopulationSetting != JpaMetaModelPopulationSetting.DISABLED ) {
 			MetadataContext context = new MetadataContext(
-					sessionFactory,
+					getSessionFactory(),
 					mappingMetadata.getMappedSuperclassMappingsCopy(),
 					jpaMetaModelPopulationSetting
 			);
@@ -252,6 +241,9 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 			applyNamedEntityGraphs( mappingMetadata.getNamedEntityGraphs().values() );
 		}
 
+		applyNamedEntityGraphs( mappingMetadata.getNamedEntityGraphs().values() );
+
+		typeConfiguration.scope( sessionFactory );
 	}
 
 	@SuppressWarnings("unchecked")
@@ -468,9 +460,14 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 //		this.entityTypesByEntityName = entityTypesByEntityName;
 //	}
 
+
 	@Override
+	public TypeConfiguration getTypeConfiguration() {
+		return typeConfiguration;
+	}
+
 	public SessionFactoryImplementor getSessionFactory() {
-		return sessionFactory;
+		return getTypeConfiguration().getSessionFactory();
 	}
 
 	@Override
@@ -514,7 +511,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 		final int setSize = CollectionHelper.determineProperSizing(
 				jpaEntityTypeMap.size() + jpaMappedSuperclassTypeMap.size() + jpaEmbeddableTypeMap.size()
 		);
-		final Set<ManagedType<?>> managedTypes = new HashSet<ManagedType<?>>( setSize );
+		final Set<ManagedType<?>> managedTypes = new HashSet<>( setSize );
 		managedTypes.addAll( jpaEntityTypeMap.values() );
 		managedTypes.addAll( jpaMappedSuperclassTypeMap.values() );
 		managedTypes.addAll( jpaEmbeddableTypeMap.values() );
@@ -542,7 +539,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 		String result = imports.get( className );
 		if ( result == null ) {
 			try {
-				sessionFactory.getServiceRegistry().getService( ClassLoaderService.class ).classForName( className );
+				getSessionFactory().getServiceRegistry().getService( ClassLoaderService.class ).classForName( className );
 				imports.put( className, className );
 				return className;
 			}
@@ -728,20 +725,6 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 		}
 
 		return results;
-	}
-
-	@Override
-	public BasicTypeRegistry getBasicTypeFactory() {
-		return basicTypeFactory;
-	}
-
-	@Override
-	public TypeDescriptorRegistryAccess getTypeDescriptorRegistryAccess() {
-		return typeDescriptorRegistryAccess;
-	}
-
-	public TypeResolver getTypeResolver() {
-		return typeResolver;
 	}
 
 	@Override

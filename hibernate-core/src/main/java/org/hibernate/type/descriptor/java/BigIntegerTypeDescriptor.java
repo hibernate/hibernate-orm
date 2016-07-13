@@ -9,7 +9,7 @@ package org.hibernate.type.descriptor.java;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
-import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.spi.descriptor.WrapperOptions;
 
 /**
  * Descriptor for {@link BigInteger} handling.

@@ -8,8 +8,10 @@ package org.hibernate;
 
 import java.util.Properties;
 
-import org.hibernate.type.BasicType;
-import org.hibernate.type.Type;
+import javax.persistence.metamodel.EntityType;
+
+import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.spi.Type;
 
 /**
  * Provides access to the various {@link Type} instances associated with the {@link SessionFactory}.
@@ -17,7 +19,11 @@ import org.hibernate.type.Type;
  * This is intended for use by application developers.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated (since 6.0) Use {@link Metamodel} instead, which is an extension of the JPA
+ * {@link javax.persistence.metamodel.Metamodel} contract.
  */
+@Deprecated
 public interface TypeHelper {
 	// todo : deprecate all these BasicType methods with overloaded forms taking:
 	//		* Java type
@@ -32,7 +38,7 @@ public interface TypeHelper {
 	 *
 	 * @return The basic type, or null.
 	 */
-	public BasicType basic(String name);
+	<T> BasicType<T> basic(String name);
 
 	/**
 	 * Convenience form of {@link #basic(String)}.  The intended use of this is something like
@@ -74,7 +80,7 @@ public interface TypeHelper {
 	 *
 	 * @return The type, or null
 	 */
-	public Type entity(String entityName);
+	<X> EntityType<X> entity(String entityName);
 
 	/**
 	 * Retrieve the type for the given user-type class ({@link org.hibernate.usertype.UserType} or

@@ -33,6 +33,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Convenience base class for custom implementors of {@link MetadataImplementor} using delegation.
@@ -204,8 +205,8 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	}
 
 	@Override
-	public TypeResolver getTypeResolver() {
-		return delegate.getTypeResolver();
+	public TypeConfiguration getTypeConfiguration() {
+		return delegate.getTypeConfiguration();
 	}
 
 	@Override

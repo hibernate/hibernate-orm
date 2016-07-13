@@ -17,8 +17,8 @@ import org.geolatte.geom.Geometry;
 import org.geolatte.geom.codec.db.oracle.Decoders;
 import org.geolatte.geom.codec.db.oracle.SDOGeometry;
 
-import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.descriptor.WrapperOptions;
+import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BasicExtractor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 

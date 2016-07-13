@@ -10,8 +10,8 @@ import javax.persistence.AttributeConverter;
 
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 import org.jboss.logging.Logger;

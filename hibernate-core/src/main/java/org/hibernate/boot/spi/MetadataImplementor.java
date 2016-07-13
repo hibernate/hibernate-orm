@@ -15,8 +15,7 @@ import org.hibernate.envers.boot.spi.AuditMetadataBuilderImplementor;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.query.spi.NamedQueryRepository;
-import org.hibernate.type.TypeResolver;
-import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * The SPI-level Metadata contract.
@@ -35,9 +34,7 @@ public interface MetadataImplementor extends Metadata, Mapping {
 	 */
 	MetadataBuildingOptions getMetadataBuildingOptions();
 
-	TypeResolver getTypeResolver();
-
-	TypeDescriptorRegistryAccess getTypeDescriptorRegistryAccess();
+	TypeConfiguration getTypeConfiguration();
 
 	NamedQueryRepository buildNamedQueryRepository(SessionFactoryImpl sessionFactory);
 

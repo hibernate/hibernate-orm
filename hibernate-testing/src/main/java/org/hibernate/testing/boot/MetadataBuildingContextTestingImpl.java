@@ -37,7 +37,7 @@ public class MetadataBuildingContextTestingImpl implements MetadataBuildingConte
 	public MetadataBuildingContextTestingImpl(StandardServiceRegistry serviceRegistry) {
 		buildingOptions = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
 		mappingDefaults = new MetadataBuilderImpl.MappingDefaultsImpl( serviceRegistry );
-		metadataCollector = new InFlightMetadataCollectorImpl( buildingOptions, new TypeResolver() );
+		metadataCollector = new InFlightMetadataCollectorImpl( buildingOptions );
 		classLoaderAccess = new ClassLoaderAccessImpl( null, serviceRegistry );
 
 		objectNameNormalizer = new ObjectNameNormalizer() {

@@ -8,8 +8,7 @@ package org.hibernate;
 
 import javax.persistence.metamodel.EntityType;
 
-import org.hibernate.type.BasicTypeRegistry;
-import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Defines the Hibernate API extension of the JPA {@link javax.persistence.metamodel.Metamodel}
@@ -17,21 +16,13 @@ import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
  *
  * @author Steve Ebersole
  */
-public interface Metamodel extends javax.persistence.metamodel.Metamodel {
+public interface Metamodel extends javax.persistence.metamodel.Metamodel, TypeHelper {
 	/**
-	 * Access to the SessionFactory that this Metamodel instance is bound to.
+	 * Access to the TypeConfiguration in effect for this SessionFactory/Metamodel
 	 *
-	 * @return The SessionFactory
+	 * @return Access to the TypeConfiguration
 	 */
-	SessionFactory getSessionFactory();
-
-	/**
-	 * @deprecated since 5.2 - use {@link #entity(String)} instead
-	 */
-	@Deprecated
-	default EntityType getEntityTypeByName(String entityName) {
-		return entity( entityName );
-	}
+	TypeConfiguration getTypeConfiguration();
 
 	/**
 	 * Access to an entity supporting Hibernate's entity-name feature
@@ -56,18 +47,4 @@ public interface Metamodel extends javax.persistence.metamodel.Metamodel {
 	 * Get the names of all persistent classes that implement/extend the given interface/class
 	 */
 	String[] getImplementors(String entityName);
-
-	/**
-	 * Obtain access to the Java and SQL descriptor registries
-	 *
-	 * @return The TypeDescriptorRegistryAccess for this metamodel
-	 */
-	TypeDescriptorRegistryAccess getTypeDescriptorRegistryAccess();
-
-	/**
-	 * Obtain the BasicType factory for this metamodel.
-	 *
-	 * @return The BasicType factory for this metamodel.
-	 */
-	BasicTypeRegistry getBasicTypeFactory();
 }

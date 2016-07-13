@@ -13,7 +13,7 @@ import java.util.GregorianCalendar;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.compare.CalendarComparator;
-import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.spi.descriptor.WrapperOptions;
 
 /**
  * Descriptor for {@link java.util.Calendar} handling, but just for the time portion.

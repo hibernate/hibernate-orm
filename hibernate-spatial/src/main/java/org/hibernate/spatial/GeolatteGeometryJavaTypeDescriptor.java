@@ -11,9 +11,8 @@ import org.geolatte.geom.Geometry;
 import org.geolatte.geom.codec.Wkt;
 import org.geolatte.geom.jts.JTS;
 
-import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptorRegistry;
 
 /**
  * Descriptor for geolatte-geom {@code Geometry}s.

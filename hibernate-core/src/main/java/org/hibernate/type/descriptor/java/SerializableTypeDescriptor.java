@@ -17,7 +17,8 @@ import org.hibernate.annotations.Immutable;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
 import org.hibernate.internal.util.SerializationHelper;
-import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.spi.descriptor.WrapperOptions;
+import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
 
 /**
  * Descriptor for general {@link Serializable} handling.

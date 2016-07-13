@@ -12,6 +12,7 @@ import java.util.Properties;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
@@ -19,26 +20,20 @@ import org.hibernate.usertype.UserType;
  * Acts as the contract for getting types and as the mediator between {@link BasicTypeRegistry} and {@link TypeFactory}.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated (since 6.0) Use Hibernate's {@link org.hibernate.Metamodel} extension of the JPA
+ * {@link javax.persistence.metamodel.Metamodel} contract instead.
  */
+@Deprecated
 public class TypeResolver implements Serializable {
-	private final BasicTypeRegistry basicTypeRegistry;
-	private final TypeFactory typeFactory;
+	private final TypeConfiguration typeConfiguration;
 
-	public TypeResolver() {
-		this(  new BasicTypeRegistry(), new TypeFactory() );
-	}
-
-	public TypeResolver(BasicTypeRegistry basicTypeRegistry, TypeFactory typeFactory) {
-		this.basicTypeRegistry = basicTypeRegistry;
-		this.typeFactory = typeFactory;
-	}
-
-	public TypeResolver scope(SessionFactoryImplementor factory) {
-		typeFactory.injectSessionFactory( factory );
-		return new TypeResolver( basicTypeRegistry.shallowCopy(), typeFactory );
+	public TypeResolver(TypeConfiguration typeConfiguration) {
+		this.typeConfiguration = typeConfiguration;
 	}
 
 	public void registerTypeOverride(BasicType type) {
+		typeConfiguration.getBasicTypeRegistry().re
 		basicTypeRegistry.register( type );
 	}
 

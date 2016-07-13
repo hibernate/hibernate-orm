@@ -49,6 +49,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.type.TypeResolver;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 
 /**
@@ -61,6 +62,8 @@ import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final UUID uuid;
 	private final MetadataBuildingOptions metadataBuildingOptions;
+
+	private final TypeConfiguration typeConfiguration;
 
 	private final TypeResolver typeResolver;
 	private final TypeDescriptorRegistryAccess typeDescriptorRegistryAccess;

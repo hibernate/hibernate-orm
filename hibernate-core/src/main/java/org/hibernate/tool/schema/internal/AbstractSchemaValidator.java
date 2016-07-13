@@ -27,7 +27,7 @@ import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.SchemaValidator;
-import org.hibernate.type.descriptor.JdbcTypeNameMapper;
+import org.hibernate.type.internal.descriptor.JdbcTypeNameMapper;
 
 import org.jboss.logging.Logger;
 

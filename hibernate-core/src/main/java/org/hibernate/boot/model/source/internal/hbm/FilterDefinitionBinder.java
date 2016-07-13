@@ -74,7 +74,7 @@ public class FilterDefinitionBinder {
 
 				parameterMap.put(
 						jaxbParameterMapping.getParameterName(),
-						context.getMetadataCollector().getTypeResolver().heuristicType( jaxbParameterMapping.getParameterValueTypeName() )
+						context.getMetadataCollector().getTypeConfiguration().heuristicType( jaxbParameterMapping.getParameterValueTypeName() )
 				);
 			}
 		}

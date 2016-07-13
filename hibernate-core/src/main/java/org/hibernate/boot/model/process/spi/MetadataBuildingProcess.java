@@ -41,6 +41,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.TypeFactory;
 import org.hibernate.type.TypeResolver;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;

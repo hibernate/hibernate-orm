@@ -9,7 +9,7 @@ package org.hibernate.type;
 import java.time.Duration;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.descriptor.java.DurationJavaDescriptor;
+import org.hibernate.type.spi.descriptor.java.DurationJavaDescriptor;
 import org.hibernate.type.descriptor.sql.BigIntTypeDescriptor;
 
 /**

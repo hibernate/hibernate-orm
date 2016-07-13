@@ -7,7 +7,7 @@
 package org.hibernate.type.descriptor.java;
 import org.hibernate.HibernateException;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.spi.descriptor.WrapperOptions;
 
 /**
  * Descriptor for {@link Class} handling.

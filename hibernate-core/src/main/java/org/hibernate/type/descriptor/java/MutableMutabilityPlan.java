@@ -8,6 +8,8 @@ package org.hibernate.type.descriptor.java;
 
 import java.io.Serializable;
 
+import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
+
 /**
  * Mutability plan for mutable objects
  *

@@ -18,7 +18,8 @@ import org.hibernate.engine.jdbc.NClobImplementer;
 import org.hibernate.engine.jdbc.NClobProxy;
 import org.hibernate.engine.jdbc.WrappedNClob;
 import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
-import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.spi.descriptor.WrapperOptions;
+import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
 
 /**
  * Descriptor for {@link java.sql.NClob} handling.

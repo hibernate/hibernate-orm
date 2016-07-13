@@ -122,4 +122,15 @@ public interface EnversSettings {
 	 * Defaults to {@code false}.
 	 */
 	String CASCADE_DELETE_REVISION = "org.hibernate.envers.cascade_delete_revision";
+
+	/**
+	 * When the {@link #AUDIT_STRATEGY_VALIDITY_STORE_REVEND_TIMESTAMP} is {@code true}, the validity audit strategy
+	 * will store the revision end timestamp in each audit table.
+	 *
+	 * The default data type of this field is {@code timestamp}.  There may be situations where the default is not
+	 * desirable and the use of a {@code long} makes sense.  Enabling this will use a {@code long} data type instead.
+	 *
+	 * Defaults to {@code false}.
+	 */
+	String USE_NUMERIC_REVEND_TIMESTAMP_FIELD_TYPE = "org.hibernate.envers.use_numeric_revend_timestamp_field_type";
 }

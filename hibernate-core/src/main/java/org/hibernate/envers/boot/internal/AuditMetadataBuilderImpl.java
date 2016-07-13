@@ -151,6 +151,7 @@ public class AuditMetadataBuilderImpl implements AuditMetadataBuilderImplementor
 		private final String revisionEndFieldName;
 		private final String revisionEndTimestampFieldName;
 		private final boolean revisionEndTimestampEnabled;
+		private final boolean numericRevisionEndTimestampEnabled;
 		private final String embeddableSetOrdinalPropertyName;
 
 		private boolean trackEntitiesChangedInRevision;
@@ -292,6 +293,17 @@ public class AuditMetadataBuilderImpl implements AuditMetadataBuilderImplementor
 					false
 			);
 
+			if ( this.revisionEndTimestampEnabled ) {
+				this.numericRevisionEndTimestampEnabled = ConfigurationHelper.getBoolean(
+						EnversSettings.USE_NUMERIC_REVEND_TIMESTAMP_FIELD_TYPE,
+						properties,
+						false
+				);
+			}
+			else {
+				this.numericRevisionEndTimestampEnabled = false;
+			}
+
 			this.embeddableSetOrdinalPropertyName = ConfigurationHelper.getString(
 					EnversSettings.EMBEDDABLE_SET_ORDINAL_FIELD_NAME,
 					properties,
@@ -417,6 +429,11 @@ public class AuditMetadataBuilderImpl implements AuditMetadataBuilderImplementor
 		@Override
 		public String getRevisionEndTimestampFieldName() {
 			return revisionEndTimestampFieldName;
+		}
+
+		@Override
+		public boolean isNumericRevisionEndTimestampEnabled() {
+			return numericRevisionEndTimestampEnabled;
 		}
 
 		@Override

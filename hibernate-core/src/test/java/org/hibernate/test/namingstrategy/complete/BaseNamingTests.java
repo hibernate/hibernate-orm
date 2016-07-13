@@ -9,11 +9,14 @@ package org.hibernate.test.namingstrategy.complete;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
@@ -26,23 +29,32 @@ import static org.junit.Assert.assertNotNull;
  * @author Steve Ebersole
  */
 public abstract class BaseNamingTests extends BaseUnitTestCase {
+
 	@Test
 	public void doTest() {
 		final MetadataSources metadataSources = new MetadataSources();
-		applySources( metadataSources );
+		try {
+			applySources( metadataSources );
 
-		final Metadata metadata = metadataSources.getMetadataBuilder()
-				.applyImplicitNamingStrategy( getImplicitNamingStrategyToUse() )
-				.build();
+			final Metadata metadata = metadataSources.getMetadataBuilder()
+					.applyImplicitNamingStrategy( getImplicitNamingStrategyToUse() )
+					.build();
 
-		validateCustomer( metadata );
-		validateOrder( metadata );
-		validateZipCode( metadata );
+			validateCustomer( metadata );
+			validateOrder( metadata );
+			validateZipCode( metadata );
 
-		validateCustomerRegisteredTrademarks( metadata );
-		validateCustomerAddresses( metadata );
-		validateCustomerOrders( metadata );
-		validateCustomerIndustries( metadata );
+			validateCustomerRegisteredTrademarks( metadata );
+			validateCustomerAddresses( metadata );
+			validateCustomerOrders( metadata );
+			validateCustomerIndustries( metadata );
+		}
+		finally {
+			ServiceRegistry metaServiceRegistry = metadataSources.getServiceRegistry();
+			if(metaServiceRegistry instanceof BootstrapServiceRegistry ) {
+				BootstrapServiceRegistryBuilder.destroy( metaServiceRegistry );
+			}
+		}
 	}
 
 	protected abstract void applySources(MetadataSources metadataSources);

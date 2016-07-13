@@ -36,7 +36,7 @@ import org.hibernate.test.util.DdlTransactionIsolatorTestingImpl;
  */
 @RequiresDialect(H2Dialect.class)
 public class SuppliedConnectionTest extends ConnectionManagementTestCase {
-	private ConnectionProvider cp = ConnectionProviderBuilder.buildConnectionProvider();
+	private ConnectionProvider cp;
 	private Connection connectionUnderTest;
 
 	@BeforeClassOnce

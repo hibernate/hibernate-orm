@@ -227,10 +227,10 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		this.name = sfName;
 		try {
-			uuid = (String) UUID_GENERATOR.generate(null, null);
+			uuid = (String) UUID_GENERATOR.generate( null, null );
 		}
 		catch (Exception e) {
-			throw new AssertionFailure("Could not generate UUID");
+			throw new AssertionFailure( "Could not generate UUID" );
 		}
 
 		this.properties = new Properties();
@@ -273,260 +273,286 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 		final IntegratorObserver integratorObserver = new IntegratorObserver();
 		this.observer.addObserver( integratorObserver );
-		for ( Integrator integrator : serviceRegistry.getService( IntegratorService.class ).getIntegrators() ) {
-			integrator.integrate( metadata, this, this.serviceRegistry );
-			integratorObserver.integrators.add( integrator );
-		}
 
-		//Generators:
-
-		this.identifierGenerators = new HashMap<String, IdentifierGenerator>();
-		for ( PersistentClass model : metadata.getEntityBindings() ) {
-			if ( !model.isInherited() ) {
-				IdentifierGenerator generator = model.getIdentifier().createIdentifierGenerator(
-						metadata.getIdentifierGeneratorFactory(),
-						getDialect(),
-						settings.getDefaultCatalogName(),
-						settings.getDefaultSchemaName(),
-						(RootClass) model
-				);
-				identifierGenerators.put( model.getEntityName(), generator );
-			}
-		}
-
-		this.imports = new HashMap<String,String>( metadata.getImports() );
-
-		///////////////////////////////////////////////////////////////////////
-		// Prepare persisters and link them up with their cache
-		// region/access-strategy
-
-		final PersisterCreationContext persisterCreationContext = new PersisterCreationContext() {
-			@Override
-			public SessionFactoryImplementor getSessionFactory() {
-				return SessionFactoryImpl.this;
+		try {
+			for ( Integrator integrator : serviceRegistry.getService( IntegratorService.class ).getIntegrators() ) {
+				integrator.integrate( metadata, this, this.serviceRegistry );
+				integratorObserver.integrators.add( integrator );
 			}
 
-			@Override
-			public MetadataImplementor getMetadata() {
-				return metadata;
-			}
-		};
+			//Generators:
 
-		final RegionFactory regionFactory = cacheAccess.getRegionFactory();
-		final String cacheRegionPrefix = settings.getCacheRegionPrefix() == null ? "" : settings.getCacheRegionPrefix() + ".";
-		final PersisterFactory persisterFactory = serviceRegistry.getService( PersisterFactory.class );
-
-		// todo : consider removing this silliness and just have EntityPersister directly implement ClassMetadata
-		//		EntityPersister.getClassMetadata() for the internal impls simply "return this";
-		//		collapsing those would allow us to remove this "extra" Map
-		//
-		// todo : similar for CollectionPersister/CollectionMetadata
-
-		this.entityPersisters = new HashMap<String,EntityPersister>();
-		Map<String,ClassMetadata> inFlightClassMetadataMap = new HashMap<String,ClassMetadata>();
-		this.entityProxyInterfaceMap = CollectionHelper.concurrentMap( metadata.getEntityBindings().size() );
-		for ( final PersistentClass model : metadata.getEntityBindings() ) {
-			final String cacheRegionName = cacheRegionPrefix + model.getRootClass().getCacheRegionName();
-			// cache region is defined by the root-class in the hierarchy...
-			final EntityRegionAccessStrategy accessStrategy = determineEntityRegionAccessStrategy(
-					regionFactory,
-					cacheAccessStrategiesMap,
-					model,
-					cacheRegionName
-			);
-
-			final NaturalIdRegionAccessStrategy naturalIdAccessStrategy = determineNaturalIdRegionAccessStrategy(
-					regionFactory,
-					cacheRegionPrefix,
-					cacheAccessStrategiesMap,
-					model
-			);
-
-			final EntityPersister cp = persisterFactory.createEntityPersister(
-					model,
-					accessStrategy,
-					naturalIdAccessStrategy,
-					persisterCreationContext
-			);
-			entityPersisters.put( model.getEntityName(), cp );
-			inFlightClassMetadataMap.put( model.getEntityName(), cp.getClassMetadata() );
-
-			if ( cp.getConcreteProxyClass() != null
-					&& cp.getConcreteProxyClass().isInterface()
-					&& !Map.class.isAssignableFrom( cp.getConcreteProxyClass() )
-					&& cp.getMappedClass() != cp.getConcreteProxyClass() ) {
-				// IMPL NOTE : we exclude Map based proxy interfaces here because that should
-				//		indicate MAP entity mode.0
-
-				if ( cp.getMappedClass().equals( cp.getConcreteProxyClass() ) ) {
-					// this part handles an odd case in the Hibernate test suite where we map an interface
-					// as the class and the proxy.  I cannot think of a real life use case for that
-					// specific test, but..
-					LOG.debugf( "Entity [%s] mapped same interface [%s] as class and proxy", cp.getEntityName(), cp.getMappedClass() );
+			this.identifierGenerators = new HashMap<String, IdentifierGenerator>();
+			for ( PersistentClass model : metadata.getEntityBindings() ) {
+				if ( !model.isInherited() ) {
+					IdentifierGenerator generator = model.getIdentifier().createIdentifierGenerator(
+							metadata.getIdentifierGeneratorFactory(),
+							getDialect(),
+							settings.getDefaultCatalogName(),
+							settings.getDefaultSchemaName(),
+							(RootClass) model
+					);
+					identifierGenerators.put( model.getEntityName(), generator );
 				}
-				else {
-					final String old = entityProxyInterfaceMap.put( cp.getConcreteProxyClass(), cp.getEntityName() );
-					if ( old != null ) {
-						throw new HibernateException(
-								String.format(
-										Locale.ENGLISH,
-										"Multiple entities [%s, %s] named the same interface [%s] as their proxy which is not supported",
-										old,
-										cp.getEntityName(),
-										cp.getConcreteProxyClass().getName()
-								)
+			}
+
+			this.imports = new HashMap<String, String>( metadata.getImports() );
+
+			///////////////////////////////////////////////////////////////////////
+			// Prepare persisters and link them up with their cache
+			// region/access-strategy
+
+			final PersisterCreationContext persisterCreationContext = new PersisterCreationContext() {
+				@Override
+				public SessionFactoryImplementor getSessionFactory() {
+					return SessionFactoryImpl.this;
+				}
+
+				@Override
+				public MetadataImplementor getMetadata() {
+					return metadata;
+				}
+			};
+
+			final RegionFactory regionFactory = cacheAccess.getRegionFactory();
+			final String cacheRegionPrefix = settings.getCacheRegionPrefix() == null ?
+					"" :
+					settings.getCacheRegionPrefix() + ".";
+			final PersisterFactory persisterFactory = serviceRegistry.getService( PersisterFactory.class );
+
+			// todo : consider removing this silliness and just have EntityPersister directly implement ClassMetadata
+			//		EntityPersister.getClassMetadata() for the internal impls simply "return this";
+			//		collapsing those would allow us to remove this "extra" Map
+			//
+			// todo : similar for CollectionPersister/CollectionMetadata
+
+			this.entityPersisters = new HashMap<String, EntityPersister>();
+			Map<String, ClassMetadata> inFlightClassMetadataMap = new HashMap<String, ClassMetadata>();
+			this.entityProxyInterfaceMap = CollectionHelper.concurrentMap( metadata.getEntityBindings().size() );
+			for ( final PersistentClass model : metadata.getEntityBindings() ) {
+				final String cacheRegionName = cacheRegionPrefix + model.getRootClass().getCacheRegionName();
+				// cache region is defined by the root-class in the hierarchy...
+				final EntityRegionAccessStrategy accessStrategy = determineEntityRegionAccessStrategy(
+						regionFactory,
+						cacheAccessStrategiesMap,
+						model,
+						cacheRegionName
+				);
+
+				final NaturalIdRegionAccessStrategy naturalIdAccessStrategy = determineNaturalIdRegionAccessStrategy(
+						regionFactory,
+						cacheRegionPrefix,
+						cacheAccessStrategiesMap,
+						model
+				);
+
+				final EntityPersister cp = persisterFactory.createEntityPersister(
+						model,
+						accessStrategy,
+						naturalIdAccessStrategy,
+						persisterCreationContext
+				);
+				entityPersisters.put( model.getEntityName(), cp );
+				inFlightClassMetadataMap.put( model.getEntityName(), cp.getClassMetadata() );
+
+				if ( cp.getConcreteProxyClass() != null
+						&& cp.getConcreteProxyClass().isInterface()
+						&& !Map.class.isAssignableFrom( cp.getConcreteProxyClass() )
+						&& cp.getMappedClass() != cp.getConcreteProxyClass() ) {
+					// IMPL NOTE : we exclude Map based proxy interfaces here because that should
+					//		indicate MAP entity mode.0
+
+					if ( cp.getMappedClass().equals( cp.getConcreteProxyClass() ) ) {
+						// this part handles an odd case in the Hibernate test suite where we map an interface
+						// as the class and the proxy.  I cannot think of a real life use case for that
+						// specific test, but..
+						LOG.debugf(
+								"Entity [%s] mapped same interface [%s] as class and proxy",
+								cp.getEntityName(),
+								cp.getMappedClass()
 						);
 					}
-				}
-			}
-		}
-		this.classMetadata = Collections.unmodifiableMap( inFlightClassMetadataMap );
-
-		this.collectionPersisters = new HashMap<String,CollectionPersister>();
-		Map<String,Set<String>> inFlightEntityToCollectionRoleMap = new HashMap<String,Set<String>>();
-		Map<String,CollectionMetadata> tmpCollectionMetadata = new HashMap<String,CollectionMetadata>();
-		for ( final Collection model : metadata.getCollectionBindings() ) {
-			final String cacheRegionName = cacheRegionPrefix + model.getCacheRegionName();
-			final CollectionRegionAccessStrategy accessStrategy = determineCollectionRegionAccessStrategy(
-					regionFactory, 
-					cacheAccessStrategiesMap, 
-					model, 
-					cacheRegionName);
-
-			final CollectionPersister persister = persisterFactory.createCollectionPersister(
-					model,
-					accessStrategy,
-					persisterCreationContext
-			);
-			collectionPersisters.put( model.getRole(), persister );
-			tmpCollectionMetadata.put( model.getRole(), persister.getCollectionMetadata() );
-			Type indexType = persister.getIndexType();
-			if ( indexType != null && indexType.isAssociationType() && !indexType.isAnyType() ) {
-				String entityName = ( ( AssociationType ) indexType ).getAssociatedEntityName( this );
-				Set<String> roles = inFlightEntityToCollectionRoleMap.get( entityName );
-				if ( roles == null ) {
-					roles = new HashSet<String>();
-					inFlightEntityToCollectionRoleMap.put( entityName, roles );
-				}
-				roles.add( persister.getRole() );
-			}
-			Type elementType = persister.getElementType();
-			if ( elementType.isAssociationType() && !elementType.isAnyType() ) {
-				String entityName = ( ( AssociationType ) elementType ).getAssociatedEntityName( this );
-				Set<String> roles = inFlightEntityToCollectionRoleMap.get( entityName );
-				if ( roles == null ) {
-					roles = new HashSet<String>();
-					inFlightEntityToCollectionRoleMap.put( entityName, roles );
-				}
-				roles.add( persister.getRole() );
-			}
-		}
-
-		this.collectionMetadata = Collections.unmodifiableMap( tmpCollectionMetadata );
-
-		for ( Map.Entry<String,Set<String>> entityToCollectionRoleMapEntry : inFlightEntityToCollectionRoleMap.entrySet() ) {
-			entityToCollectionRoleMapEntry.setValue(
-					Collections.unmodifiableSet( entityToCollectionRoleMapEntry.getValue() )
-			);
-		}
-		this.collectionRolesByEntityParticipant = Collections.unmodifiableMap( inFlightEntityToCollectionRoleMap );
-
-		//Named Queries:
-		this.namedQueryRepository = metadata.buildNamedQueryRepository( this );
-
-		// after *all* persisters and named queries are registered
-		for ( EntityPersister persister : entityPersisters.values() ) {
-			persister.generateEntityDefinition();
-		}
-
-		for ( EntityPersister persister : entityPersisters.values() ) {
-			persister.postInstantiate();
-			registerEntityNameResolvers( persister );
-		}
-		for ( CollectionPersister persister : collectionPersisters.values() ) {
-			persister.postInstantiate();
-		}
-
-		LOG.debug( "Instantiated session factory" );
-
-		settings.getMultiTableBulkIdStrategy().prepare(
-				jdbcServices,
-				buildLocalConnectionAccess(),
-				metadata,
-				sessionFactoryOptions
-		);
-
-		SchemaManagementToolCoordinator.process(
-				metadata,
-				serviceRegistry,
-				properties,
-				new DelayedDropRegistry() {
-					@Override
-					public void registerOnCloseAction(DelayedDropAction action) {
-						SessionFactoryImpl.this.delayedDropAction = action;
+					else {
+						final String old = entityProxyInterfaceMap.put(
+								cp.getConcreteProxyClass(),
+								cp.getEntityName()
+						);
+						if ( old != null ) {
+							throw new HibernateException(
+									String.format(
+											Locale.ENGLISH,
+											"Multiple entities [%s, %s] named the same interface [%s] as their proxy which is not supported",
+											old,
+											cp.getEntityName(),
+											cp.getConcreteProxyClass().getName()
+									)
+							);
+						}
 					}
 				}
-		);
+			}
+			this.classMetadata = Collections.unmodifiableMap( inFlightClassMetadataMap );
 
-		currentSessionContext = buildCurrentSessionContext();
+			this.collectionPersisters = new HashMap<String, CollectionPersister>();
+			Map<String, Set<String>> inFlightEntityToCollectionRoleMap = new HashMap<String, Set<String>>();
+			Map<String, CollectionMetadata> tmpCollectionMetadata = new HashMap<String, CollectionMetadata>();
+			for ( final Collection model : metadata.getCollectionBindings() ) {
+				final String cacheRegionName = cacheRegionPrefix + model.getCacheRegionName();
+				final CollectionRegionAccessStrategy accessStrategy = determineCollectionRegionAccessStrategy(
+						regionFactory,
+						cacheAccessStrategiesMap,
+						model,
+						cacheRegionName
+				);
 
-		//checking for named queries
-		if ( settings.isNamedQueryStartupCheckingEnabled() ) {
-			final Map<String,HibernateException> errors = checkNamedQueries();
-			if ( ! errors.isEmpty() ) {
-				StringBuilder failingQueries = new StringBuilder( "Errors in named queries: " );
-				String sep = "";
-				for ( Map.Entry<String,HibernateException> entry : errors.entrySet() ) {
-					LOG.namedQueryError( entry.getKey(), entry.getValue() );
-					failingQueries.append( sep ).append( entry.getKey() );
-					sep = ", ";
+				final CollectionPersister persister = persisterFactory.createCollectionPersister(
+						model,
+						accessStrategy,
+						persisterCreationContext
+				);
+				collectionPersisters.put( model.getRole(), persister );
+				tmpCollectionMetadata.put( model.getRole(), persister.getCollectionMetadata() );
+				Type indexType = persister.getIndexType();
+				if ( indexType != null && indexType.isAssociationType() && !indexType.isAnyType() ) {
+					String entityName = ( (AssociationType) indexType ).getAssociatedEntityName( this );
+					Set<String> roles = inFlightEntityToCollectionRoleMap.get( entityName );
+					if ( roles == null ) {
+						roles = new HashSet<String>();
+						inFlightEntityToCollectionRoleMap.put( entityName, roles );
+					}
+					roles.add( persister.getRole() );
 				}
-				throw new HibernateException( failingQueries.toString() );
+				Type elementType = persister.getElementType();
+				if ( elementType.isAssociationType() && !elementType.isAnyType() ) {
+					String entityName = ( (AssociationType) elementType ).getAssociatedEntityName( this );
+					Set<String> roles = inFlightEntityToCollectionRoleMap.get( entityName );
+					if ( roles == null ) {
+						roles = new HashSet<String>();
+						inFlightEntityToCollectionRoleMap.put( entityName, roles );
+					}
+					roles.add( persister.getRole() );
+				}
+			}
+
+			this.collectionMetadata = Collections.unmodifiableMap( tmpCollectionMetadata );
+
+			for ( Map.Entry<String, Set<String>> entityToCollectionRoleMapEntry : inFlightEntityToCollectionRoleMap.entrySet() ) {
+				entityToCollectionRoleMapEntry.setValue(
+						Collections.unmodifiableSet( entityToCollectionRoleMapEntry.getValue() )
+				);
+			}
+			this.collectionRolesByEntityParticipant = Collections.unmodifiableMap( inFlightEntityToCollectionRoleMap );
+
+			//Named Queries:
+			this.namedQueryRepository = metadata.buildNamedQueryRepository( this );
+
+			// after *all* persisters and named queries are registered
+			for ( EntityPersister persister : entityPersisters.values() ) {
+				persister.generateEntityDefinition();
+			}
+
+			for ( EntityPersister persister : entityPersisters.values() ) {
+				persister.postInstantiate();
+				registerEntityNameResolvers( persister );
+			}
+			for ( CollectionPersister persister : collectionPersisters.values() ) {
+				persister.postInstantiate();
+			}
+
+			LOG.debug( "Instantiated session factory" );
+
+			settings.getMultiTableBulkIdStrategy().prepare(
+					jdbcServices,
+					buildLocalConnectionAccess(),
+					metadata,
+					sessionFactoryOptions
+			);
+
+			SchemaManagementToolCoordinator.process(
+					metadata,
+					serviceRegistry,
+					properties,
+					new DelayedDropRegistry() {
+						@Override
+						public void registerOnCloseAction(DelayedDropAction action) {
+							SessionFactoryImpl.this.delayedDropAction = action;
+						}
+					}
+			);
+
+			currentSessionContext = buildCurrentSessionContext();
+
+			//checking for named queries
+			if ( settings.isNamedQueryStartupCheckingEnabled() ) {
+				final Map<String, HibernateException> errors = checkNamedQueries();
+				if ( !errors.isEmpty() ) {
+					StringBuilder failingQueries = new StringBuilder( "Errors in named queries: " );
+					String sep = "";
+					for ( Map.Entry<String, HibernateException> entry : errors.entrySet() ) {
+						LOG.namedQueryError( entry.getKey(), entry.getValue() );
+						failingQueries.append( sep ).append( entry.getKey() );
+						sep = ", ";
+					}
+					throw new HibernateException( failingQueries.toString() );
+				}
+			}
+
+			// this needs to happen after persisters are all ready to go...
+			this.fetchProfiles = new HashMap<String, FetchProfile>();
+			for ( org.hibernate.mapping.FetchProfile mappingProfile : metadata.getFetchProfiles() ) {
+				final FetchProfile fetchProfile = new FetchProfile( mappingProfile.getName() );
+				for ( org.hibernate.mapping.FetchProfile.Fetch mappingFetch : mappingProfile.getFetches() ) {
+					// resolve the persister owning the fetch
+					final String entityName = getImportedClassName( mappingFetch.getEntity() );
+					final EntityPersister owner = entityName == null
+							? null
+							: entityPersisters.get( entityName );
+					if ( owner == null ) {
+						throw new HibernateException(
+								"Unable to resolve entity reference [" + mappingFetch.getEntity()
+										+ "] in fetch profile [" + fetchProfile.getName() + "]"
+						);
+					}
+
+					// validate the specified association fetch
+					Type associationType = owner.getPropertyType( mappingFetch.getAssociation() );
+					if ( associationType == null || !associationType.isAssociationType() ) {
+						throw new HibernateException( "Fetch profile [" + fetchProfile.getName() + "] specified an invalid association" );
+					}
+
+					// resolve the style
+					final Fetch.Style fetchStyle = Fetch.Style.parse( mappingFetch.getStyle() );
+
+					// then construct the fetch instance...
+					fetchProfile.addFetch( new Association( owner, mappingFetch.getAssociation() ), fetchStyle );
+					( (Loadable) owner ).registerAffectingFetchProfile( fetchProfile.getName() );
+				}
+				fetchProfiles.put( fetchProfile.getName(), fetchProfile );
+			}
+
+			this.observer.sessionFactoryCreated( this );
+
+			SessionFactoryRegistry.INSTANCE.addSessionFactory(
+					uuid,
+					name,
+					settings.isSessionFactoryNameAlsoJndiName(),
+					this,
+					serviceRegistry.getService( JndiService.class )
+			);
+		}
+		catch (Exception e) {
+			for ( Integrator integrator : serviceRegistry.getService( IntegratorService.class ).getIntegrators() ) {
+				integrator.disintegrate( this, serviceRegistry );
+				integratorObserver.integrators.remove( integrator );
+			}
+			serviceRegistry.destroy();
+			if ( RuntimeException.class.isInstance( e ) ) {
+				throw (RuntimeException) e;
+			}
+			else {
+				throw new HibernateException( e );
 			}
 		}
-
-		// this needs to happen after persisters are all ready to go...
-		this.fetchProfiles = new HashMap<String,FetchProfile>();
-		for ( org.hibernate.mapping.FetchProfile mappingProfile : metadata.getFetchProfiles() ) {
-			final FetchProfile fetchProfile = new FetchProfile( mappingProfile.getName() );
-			for ( org.hibernate.mapping.FetchProfile.Fetch mappingFetch : mappingProfile.getFetches() ) {
-				// resolve the persister owning the fetch
-				final String entityName = getImportedClassName( mappingFetch.getEntity() );
-				final EntityPersister owner = entityName == null
-						? null
-						: entityPersisters.get( entityName );
-				if ( owner == null ) {
-					throw new HibernateException(
-							"Unable to resolve entity reference [" + mappingFetch.getEntity()
-									+ "] in fetch profile [" + fetchProfile.getName() + "]"
-					);
-				}
-
-				// validate the specified association fetch
-				Type associationType = owner.getPropertyType( mappingFetch.getAssociation() );
-				if ( associationType == null || !associationType.isAssociationType() ) {
-					throw new HibernateException( "Fetch profile [" + fetchProfile.getName() + "] specified an invalid association" );
-				}
-
-				// resolve the style
-				final Fetch.Style fetchStyle = Fetch.Style.parse( mappingFetch.getStyle() );
-
-				// then construct the fetch instance...
-				fetchProfile.addFetch( new Association( owner, mappingFetch.getAssociation() ), fetchStyle );
-				((Loadable) owner).registerAffectingFetchProfile( fetchProfile.getName() );
-			}
-			fetchProfiles.put( fetchProfile.getName(), fetchProfile );
-		}
-
-		this.observer.sessionFactoryCreated( this );
-
-		SessionFactoryRegistry.INSTANCE.addSessionFactory(
-				uuid,
-				name,
-				settings.isSessionFactoryNameAlsoJndiName(),
-				this,
-				serviceRegistry.getService( JndiService.class )
-		);
 	}
 
 	private void applyCfgXmlValues(LoadedConfig aggregatedConfig, SessionFactoryServiceRegistry serviceRegistry) {

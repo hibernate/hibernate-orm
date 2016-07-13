@@ -2,6 +2,7 @@ package org.hibernate.test.hbm.query;
 
 import java.io.StringReader;
 
+import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.jdbc.ReaderInputStream;
 import org.hibernate.testing.TestForIssue;
@@ -32,7 +33,8 @@ public class NamedQueryTest extends BaseUnitTestCase {
 		Configuration cfg = new Configuration();		
 		cfg.setProperty("hibernate.dialect", "org.hibernate.dialect.HSQLDialect");
 		cfg.addInputStream(new ReaderInputStream(new StringReader(NAMED_QUERY_HBM_XML)));
-		cfg.buildSessionFactory();
+		SessionFactory sessionFactory = cfg.buildSessionFactory();
+		sessionFactory.close();
 	}
 	
 	public class Bar {

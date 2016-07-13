@@ -6,8 +6,10 @@
  */
 package org.hibernate.test.hbm.version;
 
-import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
@@ -18,8 +20,17 @@ import org.junit.Test;
 public class GeneratedVersionBindingTest extends BaseUnitTestCase {
 	@Test
 	public void testIt() {
-		final Metadata metadata = new MetadataSources()
-				.addResource("org/hibernate/test/hbm/version/Mappings.hbm.xml")
-				.buildMetadata();
+		MetadataSources metadataSources = new MetadataSources()
+			.addResource("org/hibernate/test/hbm/version/Mappings.hbm.xml");
+
+		try {
+			metadataSources.buildMetadata();
+		}
+		finally {
+			ServiceRegistry metaServiceRegistry = metadataSources.getServiceRegistry();
+			if(metaServiceRegistry instanceof BootstrapServiceRegistry ) {
+				BootstrapServiceRegistryBuilder.destroy( metaServiceRegistry );
+			}
+		}
 	}
 }

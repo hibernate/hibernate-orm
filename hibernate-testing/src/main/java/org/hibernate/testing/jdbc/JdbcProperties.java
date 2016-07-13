@@ -21,8 +21,6 @@ public class JdbcProperties {
 
 	private final String password;
 
-	private final Integer poolSize;
-
 	public JdbcProperties() {
 		Properties connectionProperties = new Properties();
 		InputStream inputStream = null;
@@ -34,8 +32,6 @@ public class JdbcProperties {
 				connectionProperties.load( inputStream );
 				url = connectionProperties.getProperty(
 						"hibernate.connection.url" );
-				poolSize = Integer.valueOf( connectionProperties.getProperty(
-						"hibernate.connection.pool_size" ) );
 				user = connectionProperties.getProperty(
 						"hibernate.connection.username" );
 				password = connectionProperties.getProperty(
@@ -67,9 +63,5 @@ public class JdbcProperties {
 
 	public String getPassword() {
 		return password;
-	}
-
-	public Integer getPoolSize() {
-		return poolSize;
 	}
 }

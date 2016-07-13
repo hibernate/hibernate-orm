@@ -188,6 +188,8 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 		}
 		finally {
 			new SchemaDropperImpl( serviceRegistry ).doDrop( metadata, false, schemaGenerator );
+			serviceRegistry.destroy();
+			connectionProvider.stop();
 		}
 	}
 
@@ -241,6 +243,8 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 		}
 		finally {
 			new SchemaDropperImpl( serviceRegistry ).doDrop( metadata, false, schemaGenerator );
+			serviceRegistry.destroy();
+			connectionProvider.stop();
 		}
 	}
 

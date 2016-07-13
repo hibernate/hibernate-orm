@@ -29,11 +29,13 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.service.spi.Stoppable;
 import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
 
+import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.test.util.DdlTransactionIsolatorTestingImpl;
 import org.junit.Test;
@@ -68,6 +70,16 @@ public abstract class AbstractMultiTenancyTest extends BaseUnitTestCase {
         sessionFactory = sessionFactory(settings);
     }
     //end::multitenacy-hibernate-MultiTenantConnectionProvider-example[]
+
+    @AfterClassOnce
+    public void destroy() {
+        sessionFactory.close();
+        for ( ConnectionProvider connectionProvider : connectionProviderMap.values() ) {
+            if ( connectionProvider instanceof Stoppable ) {
+                ( (Stoppable) connectionProvider ).stop();
+            }
+        }
+    }
 
     //tag::multitenacy-hibernate-MultiTenantConnectionProvider-example[]
 

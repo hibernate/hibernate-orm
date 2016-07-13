@@ -214,6 +214,15 @@ public class BootstrapServiceRegistryImpl
 		destroy( classLoaderServiceBinding );
 		destroy( strategySelectorBinding );
 		destroy( integratorServiceBinding );
+
+		if ( childRegistries != null ) {
+			for(ServiceRegistry serviceRegistry : childRegistries) {
+				if(serviceRegistry instanceof ServiceRegistryImplementor) {
+					ServiceRegistryImplementor serviceRegistryImplementor = (ServiceRegistryImplementor) serviceRegistry;
+					serviceRegistryImplementor.destroy();
+				}
+			}
+		}
 	}
 	
 	private void destroy(ServiceBinding serviceBinding) {

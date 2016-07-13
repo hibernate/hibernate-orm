@@ -7,6 +7,9 @@
 package org.hibernate.test.util.dtd;
 
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
@@ -21,8 +24,17 @@ public class EntityResolverTest extends BaseUnitTestCase {
 		//		<!ENTITY child SYSTEM "classpath://org/hibernate/test/util/dtd/child.xml">
 		// which we are expecting the Hibernate custom entity resolver to be able to resolve
 		// locally via classpath lookup.
-		new MetadataSources()
-				.addResource( "org/hibernate/test/util/dtd/Parent.hbm.xml" )
-				.buildMetadata();
+		final MetadataSources metadataSources = new MetadataSources()
+			.addResource( "org/hibernate/test/util/dtd/Parent.hbm.xml" );
+
+		try {
+			metadataSources.buildMetadata();
+		}
+		finally {
+			ServiceRegistry metaServiceRegistry = metadataSources.getServiceRegistry();
+			if(metaServiceRegistry instanceof BootstrapServiceRegistry ) {
+				BootstrapServiceRegistryBuilder.destroy( metaServiceRegistry );
+			}
+		}
 	}
 }

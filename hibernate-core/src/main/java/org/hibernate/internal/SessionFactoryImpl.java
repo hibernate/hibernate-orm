@@ -271,13 +271,12 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 		final IntegratorObserver integratorObserver = new IntegratorObserver();
 		this.observer.addObserver( integratorObserver );
-		for ( Integrator integrator : serviceRegistry.getService( IntegratorService.class ).getIntegrators() ) {
-			integrator.integrate( metadata, this, this.serviceRegistry );
-			integratorObserver.integrators.add( integrator );
-		}
 		try {
+			for ( Integrator integrator : serviceRegistry.getService( IntegratorService.class ).getIntegrators() ) {
+				integrator.integrate( metadata, this, this.serviceRegistry );
+				integratorObserver.integrators.add( integrator );
+			}
 			//Generators:
-
 			this.identifierGenerators = new HashMap<>();
 			metadata.getEntityBindings().stream().filter( model -> !model.isInherited() ).forEach( model -> {
 				IdentifierGenerator generator = model.getIdentifier().createIdentifierGenerator(
@@ -377,6 +376,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 				integrator.disintegrate( this, serviceRegistry );
 				integratorObserver.integrators.remove( integrator );
 			}
+			serviceRegistry.destroy();
 			throw e;
 		}
 	}

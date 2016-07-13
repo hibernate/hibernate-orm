@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.annotations.entity;
 
-import javax.persistence.OptimisticLockException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Currency;
@@ -16,6 +15,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import javax.persistence.OptimisticLockException;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.Hibernate;
@@ -23,6 +23,7 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.TeradataDialect;
 
@@ -709,19 +710,26 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 	
 	@Test
 	public void testTypeDefWithoutNameAndDefaultForTypeAttributes() {
-		SessionFactory sf=null;
+		SessionFactory sf = null;
+		StandardServiceRegistryImpl ssr = null;
 		try {
 			Configuration config = new Configuration();
-			config.addAnnotatedClass(LocalContactDetails.class);
-			sf = config.buildSessionFactory( ServiceRegistryBuilder.buildServiceRegistry( config.getProperties() ) );
-			fail("Did not throw expected exception");
+			config.addAnnotatedClass( LocalContactDetails.class );
+			ssr = ServiceRegistryBuilder.buildServiceRegistry( config.getProperties() );
+			sf = config.buildSessionFactory( ssr );
+			fail( "Did not throw expected exception" );
 		}
-		catch( AnnotationException ex ) {
+		catch ( AnnotationException ex ) {
 			assertEquals(
-					"Either name or defaultForType (or both) attribute should be set in TypeDef having typeClass org.hibernate.test.annotations.entity.PhoneNumberType", 
-					ex.getMessage());
-		} finally {
-			if( sf != null){
+					"Either name or defaultForType (or both) attribute should be set in TypeDef having typeClass org.hibernate.test.annotations.entity.PhoneNumberType",
+					ex.getMessage()
+			);
+		}
+		finally {
+			if ( ssr != null ) {
+				ssr.destroy();
+			}
+			if ( sf != null ) {
 				sf.close();
 			}
 		}

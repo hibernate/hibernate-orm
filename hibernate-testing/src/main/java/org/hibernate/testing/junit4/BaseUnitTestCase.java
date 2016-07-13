@@ -47,7 +47,6 @@ public abstract class BaseUnitTestCase {
 	@AfterClassOnce
 	public void assertNoLeaks() {
 		if ( enableConnectionLeakDetection ) {
-			log.info( "Assert no leaks!" );
 			connectionLeakUtil.assertNoLeaks();
 		}
 	}

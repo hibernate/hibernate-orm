@@ -1,11 +1,8 @@
 package org.hibernate.test.bytecode.enhancement.access;
 
-import org.hibernate.Session;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.test.bytecode.enhancement.AbstractEnhancerTestTask;
-import org.junit.Assert;
-
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 import javax.persistence.Access;
 import javax.persistence.AccessType;
 import javax.persistence.Column;
@@ -15,9 +12,13 @@ import javax.persistence.Transient;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
+
+import org.hibernate.Session;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
+
+import org.hibernate.test.bytecode.enhancement.AbstractEnhancerTestTask;
+import org.junit.Assert;
 
 /**
  * @author Luis Barreiro
@@ -40,52 +41,73 @@ public class MixedAccessTestTask extends AbstractEnhancerTestTask {
 		Session s = getFactory().openSession();
 		s.beginTransaction();
 
-		TestEntity testEntity = new TestEntity( "foo" );
-		testEntity.setParamsAsString( "{\"paramName\":\"paramValue\"}" );
-		s.persist( testEntity );
+		try {
+			TestEntity testEntity = new TestEntity( "foo" );
+			testEntity.setParamsAsString( "{\"paramName\":\"paramValue\"}" );
+			s.persist( testEntity );
 
-		TestOtherEntity testOtherEntity = new TestOtherEntity( "foo" );
-		testOtherEntity.setParamsAsString( "{\"paramName\":\"paramValue\"}" );
-		s.persist( testOtherEntity );
+			TestOtherEntity testOtherEntity = new TestOtherEntity( "foo" );
+			testOtherEntity.setParamsAsString( "{\"paramName\":\"paramValue\"}" );
+			s.persist( testOtherEntity );
 
-		s.getTransaction().commit();
-		s.clear();
-		s.close();
+			s.getTransaction().commit();
+		}
+		catch ( Exception e ) {
+			s.getTransaction().rollback();
+			throw e;
+		}
+		finally {
+			s.close();
+		}
 	}
 
 	public void execute() {
 		Session s = getFactory().openSession();
 		s.beginTransaction();
 
-		TestEntity testEntity = s.get( TestEntity.class, "foo" );
-		Assert.assertEquals( "{\"paramName\":\"paramValue\"}", testEntity.getParamsAsString() );
+		try {
+			TestEntity testEntity = s.get( TestEntity.class, "foo" );
+			Assert.assertEquals( "{\"paramName\":\"paramValue\"}", testEntity.getParamsAsString() );
 
-		TestOtherEntity testOtherEntity = s.get( TestOtherEntity.class, "foo" );
-		Assert.assertEquals( "{\"paramName\":\"paramValue\"}", testOtherEntity.getParamsAsString() );
+			TestOtherEntity testOtherEntity = s.get( TestOtherEntity.class, "foo" );
+			Assert.assertEquals( "{\"paramName\":\"paramValue\"}", testOtherEntity.getParamsAsString() );
 
-		// Clean parameters
-		cleanup = true;
-		testEntity.setParamsAsString( "{}" );
-		testOtherEntity.setParamsAsString( "{}" );
+			// Clean parameters
+			cleanup = true;
+			testEntity.setParamsAsString( "{}" );
+			testOtherEntity.setParamsAsString( "{}" );
 
-		s.getTransaction().commit();
-		s.clear();
-		s.close();
+			s.getTransaction().commit();
+		}
+		catch ( RuntimeException e ) {
+			s.getTransaction().rollback();
+			throw e;
+		}
+		finally {
+			s.close();
+		}
 	}
 
 	protected void cleanup() {
 		Session s = getFactory().openSession();
 		s.beginTransaction();
 
-		TestEntity testEntity = s.get( TestEntity.class, "foo" );
-		Assert.assertTrue( testEntity.getParams().isEmpty() );
+		try {
+			TestEntity testEntity = s.get( TestEntity.class, "foo" );
+			Assert.assertTrue( testEntity.getParams().isEmpty() );
 
-		TestOtherEntity testOtherEntity = s.get( TestOtherEntity.class, "foo" );
-		Assert.assertTrue( testOtherEntity.getParams().isEmpty() );
+			TestOtherEntity testOtherEntity = s.get( TestOtherEntity.class, "foo" );
+			Assert.assertTrue( testOtherEntity.getParams().isEmpty() );
 
-		s.getTransaction().commit();
-		s.clear();
-		s.close();
+			s.getTransaction().commit();
+		}
+		catch ( RuntimeException e ) {
+			s.getTransaction().rollback();
+			throw e;
+		}
+		finally {
+			s.close();
+		}
 	}
 
 	@Entity

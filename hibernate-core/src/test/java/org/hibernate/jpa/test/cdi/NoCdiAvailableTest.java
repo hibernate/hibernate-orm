@@ -82,18 +82,12 @@ public class NoCdiAvailableTest extends BaseUnitTestCase {
 				"org.hibernate.jpa.test.cdi.NoCdiAvailableTestDelegate"
 		);
 		Method mainMethod = delegateClass.getMethod( "passingBeanManager" );
-		EntityManagerFactory entityManagerFactory = null;
 		try {
-			entityManagerFactory = (EntityManagerFactory) mainMethod.invoke( null );
+			mainMethod.invoke( null );
 			fail( "Expecting failure from missing CDI classes" );
 		}
 		catch (InvocationTargetException expected) {
 			// hard to assert specific exception types due to classloader trickery
-		}
-		finally {
-			if (entityManagerFactory != null ) {
-				entityManagerFactory.close();
-			}
 		}
 	}
 }

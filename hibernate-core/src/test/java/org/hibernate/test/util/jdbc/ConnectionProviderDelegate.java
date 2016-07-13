@@ -17,6 +17,7 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.service.spi.Stoppable;
 
 /**
  * This {@link ConnectionProvider} extends any other ConnectionProvider
@@ -27,7 +28,8 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 public class ConnectionProviderDelegate implements
 		ConnectionProvider,
 		Configurable,
-		ServiceRegistryAwareService {
+		ServiceRegistryAwareService,
+		Stoppable {
 
 	private ServiceRegistryImplementor serviceRegistry;
 
@@ -76,5 +78,12 @@ public class ConnectionProviderDelegate implements
 	@Override
 	public <T> T unwrap(Class<T> unwrapType) {
 		return connectionProvider.unwrap( unwrapType );
+	}
+
+	@Override
+	public void stop() {
+		if ( connectionProvider instanceof Stoppable ) {
+			( (Stoppable) connectionProvider ).stop();
+		}
 	}
 }

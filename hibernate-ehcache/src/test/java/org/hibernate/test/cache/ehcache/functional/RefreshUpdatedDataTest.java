@@ -20,6 +20,9 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -47,6 +50,9 @@ public class RefreshUpdatedDataTest extends BaseNonConfigCoreFunctionalTestCase 
 	@SuppressWarnings("unchecked")
 	protected void addSettings(Map settings) {
 		super.addSettings( settings );
+		if ( H2Dialect.class.equals( Dialect.getDialect().getClass() ) ) {
+			settings.put( Environment.URL, "jdbc:h2:mem:db-mvcc;MVCC=true" );
+		}
 		settings.put( AvailableSettings.GENERATE_STATISTICS, "true" );
 	}
 

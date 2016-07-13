@@ -42,8 +42,11 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyHbmImpl;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
@@ -60,50 +63,75 @@ import static org.junit.Assert.assertSame;
  * @author Alessandro Polverini
  */
 public class CollectionJoinTableNamingTest extends BaseUnitTestCase {
+
 	@Test
 	@TestForIssue( jiraKey = "HHH-9908" )
 	public void testCollectionJoinTableNamingBase() {
 		// really the same as the JPA compliant tests; here we just pick up the default ImplicitNamingStrategy
 		final MetadataSources metadataSources = new MetadataSources();
-		metadataSources.addAnnotatedClass( Input.class );
-		metadataSources.addAnnotatedClass( Ptx.class );
+		try {
+			metadataSources.addAnnotatedClass( Input.class );
+			metadataSources.addAnnotatedClass( Ptx.class );
 
-		final Metadata metadata = metadataSources.getMetadataBuilder()
-				.build();
+			final Metadata metadata = metadataSources.getMetadataBuilder()
+					.build();
 
-		assertSameTableUsed( metadata );
+			assertSameTableUsed( metadata );
+		}
+		finally {
+			ServiceRegistry metaServiceRegistry = metadataSources.getServiceRegistry();
+			if(metaServiceRegistry instanceof BootstrapServiceRegistry ) {
+				BootstrapServiceRegistryBuilder.destroy( metaServiceRegistry );
+			}
+		}
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9908" )
 	public void testCollectionJoinTableNamingLegacyJpaStrategy() {
 		final MetadataSources metadataSources = new MetadataSources();
-		metadataSources.addAnnotatedClass( Input.class );
-		metadataSources.addAnnotatedClass( Ptx.class );
+		try {
+			metadataSources.addAnnotatedClass( Input.class );
+			metadataSources.addAnnotatedClass( Ptx.class );
 
-		final Metadata metadata = metadataSources.getMetadataBuilder()
-				.applyImplicitNamingStrategy( ImplicitNamingStrategyLegacyJpaImpl.INSTANCE )
-				.build();
+			final Metadata metadata = metadataSources.getMetadataBuilder()
+					.applyImplicitNamingStrategy( ImplicitNamingStrategyLegacyJpaImpl.INSTANCE )
+					.build();
 
-		assertSameTableUsed( metadata );
+			assertSameTableUsed( metadata );
+		}
+		finally {
+			ServiceRegistry metaServiceRegistry = metadataSources.getServiceRegistry();
+			if(metaServiceRegistry instanceof BootstrapServiceRegistry ) {
+				BootstrapServiceRegistryBuilder.destroy( metaServiceRegistry );
+			}
+		}
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9908" )
 	public void testCollectionJoinTableNamingLegacyHbmStrategy() {
 		final MetadataSources metadataSources = new MetadataSources();
-		metadataSources.addAnnotatedClass( Input.class );
-		metadataSources.addAnnotatedClass( Ptx.class );
+		try {
+			metadataSources.addAnnotatedClass( Input.class );
+			metadataSources.addAnnotatedClass( Ptx.class );
 
-		final Metadata metadata = metadataSources.getMetadataBuilder()
-				.applyImplicitNamingStrategy( ImplicitNamingStrategyLegacyHbmImpl.INSTANCE )
-				.build();
+			final Metadata metadata = metadataSources.getMetadataBuilder()
+					.applyImplicitNamingStrategy( ImplicitNamingStrategyLegacyHbmImpl.INSTANCE )
+					.build();
 
-		Collection inputs1Mapping = metadata.getCollectionBinding( Ptx.class.getName() + ".inputs1" );
-		assertEquals( "ptx_inputs1", inputs1Mapping.getCollectionTable().getName() );
+			Collection inputs1Mapping = metadata.getCollectionBinding( Ptx.class.getName() + ".inputs1" );
+			assertEquals( "ptx_inputs1", inputs1Mapping.getCollectionTable().getName() );
 
-		Collection inputs2Mapping = metadata.getCollectionBinding( Ptx.class.getName() + ".inputs2" );
-		assertEquals( "ptx_inputs2", inputs2Mapping.getCollectionTable().getName() );
+			Collection inputs2Mapping = metadata.getCollectionBinding( Ptx.class.getName() + ".inputs2" );
+			assertEquals( "ptx_inputs2", inputs2Mapping.getCollectionTable().getName() );
+		}
+		finally {
+			ServiceRegistry metaServiceRegistry = metadataSources.getServiceRegistry();
+			if(metaServiceRegistry instanceof BootstrapServiceRegistry ) {
+				BootstrapServiceRegistryBuilder.destroy( metaServiceRegistry );
+			}
+		}
 	}
 
 	@Test
@@ -112,14 +140,22 @@ public class CollectionJoinTableNamingTest extends BaseUnitTestCase {
 		// Even in 4.3, with JPA compliant naming, Hibernate creates an unusable table...
 
 		final MetadataSources metadataSources = new MetadataSources();
-		metadataSources.addAnnotatedClass( Input.class );
-		metadataSources.addAnnotatedClass( Ptx.class );
+		try {
+			metadataSources.addAnnotatedClass( Input.class );
+			metadataSources.addAnnotatedClass( Ptx.class );
 
-		final Metadata metadata = metadataSources.getMetadataBuilder()
-				.applyImplicitNamingStrategy( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE )
-				.build();
+			final Metadata metadata = metadataSources.getMetadataBuilder()
+					.applyImplicitNamingStrategy( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE )
+					.build();
 
-		assertSameTableUsed( metadata );
+			assertSameTableUsed( metadata );
+		}
+		finally {
+			ServiceRegistry metaServiceRegistry = metadataSources.getServiceRegistry();
+			if(metaServiceRegistry instanceof BootstrapServiceRegistry ) {
+				BootstrapServiceRegistryBuilder.destroy( metaServiceRegistry );
+			}
+		}
 	}
 
 	private void assertSameTableUsed(Metadata metadata) {

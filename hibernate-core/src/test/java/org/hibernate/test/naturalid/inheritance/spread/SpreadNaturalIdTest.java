@@ -8,6 +8,9 @@ package org.hibernate.test.naturalid.inheritance.spread;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -23,14 +26,21 @@ public class SpreadNaturalIdTest extends BaseUnitTestCase {
 	@Test
 	@SuppressWarnings("EmptyCatchBlock")
 	public void testSpreadNaturalIdDeclarationGivesMappingException() {
+		final MetadataSources metadataSources = new MetadataSources()
+			.addAnnotatedClass( Principal.class )
+			.addAnnotatedClass( User.class );
 		try {
-			new MetadataSources()
-					.addAnnotatedClass( Principal.class )
-					.addAnnotatedClass( User.class )
-					.buildMetadata();
+
+			metadataSources.buildMetadata();
 			fail( "Expected binders to throw an exception" );
 		}
 		catch (AnnotationException expected) {
+		}
+		finally {
+			ServiceRegistry metaServiceRegistry = metadataSources.getServiceRegistry();
+			if(metaServiceRegistry instanceof BootstrapServiceRegistry ) {
+				BootstrapServiceRegistryBuilder.destroy( metaServiceRegistry );
+			}
 		}
 	}
 }

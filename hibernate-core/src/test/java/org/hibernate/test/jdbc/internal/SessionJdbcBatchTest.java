@@ -47,6 +47,12 @@ public class SessionJdbcBatchTest
 	}
 
 	@Override
+	protected void releaseResources() {
+		super.releaseResources();
+		connectionProvider.stop();
+	}
+
+	@Override
 	protected boolean rebuildSessionFactoryOnError() {
 		return false;
 	}

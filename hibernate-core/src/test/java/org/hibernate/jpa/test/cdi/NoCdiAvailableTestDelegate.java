@@ -8,6 +8,8 @@ package org.hibernate.jpa.test.cdi;
 
 import java.util.Collections;
 
+import javax.persistence.EntityManagerFactory;
+
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.test.PersistenceUnitInfoAdapter;
@@ -16,8 +18,8 @@ import org.hibernate.jpa.test.PersistenceUnitInfoAdapter;
  * @author Steve Ebersole
  */
 public class NoCdiAvailableTestDelegate {
-	public static void passingNoBeanManager() {
-		new HibernatePersistenceProvider().createContainerEntityManagerFactory(
+	public static EntityManagerFactory passingNoBeanManager() {
+		return new HibernatePersistenceProvider().createContainerEntityManagerFactory(
 				new PersistenceUnitInfoAdapter(),
 				Collections.emptyMap()
 		);

@@ -151,6 +151,7 @@ public abstract class AbstractCollectionPersister
 	protected final String[] indexColumnNames;
 	protected final String[] indexFormulaTemplates;
 	protected final String[] indexFormulas;
+	protected final boolean[] indexColumnIsGettable;
 	protected final boolean[] indexColumnIsSettable;
 	protected final String[] elementColumnNames;
 	protected final String[] elementColumnWriters;
@@ -375,10 +376,13 @@ public abstract class AbstractCollectionPersister
 			IndexedCollection indexedCollection = (IndexedCollection) collectionBinding;
 			indexType = indexedCollection.getIndex().getType();
 			int indexSpan = indexedCollection.getIndex().getColumnSpan();
+			boolean[] indexColumnInsertability = indexedCollection.getIndex().getColumnInsertability();
+			boolean[] indexColumnUpdatability = indexedCollection.getIndex().getColumnUpdateability();
 			iter = indexedCollection.getIndex().getColumnIterator();
 			indexColumnNames = new String[indexSpan];
 			indexFormulaTemplates = new String[indexSpan];
 			indexFormulas = new String[indexSpan];
+			indexColumnIsGettable = new boolean[indexSpan];
 			indexColumnIsSettable = new boolean[indexSpan];
 			indexColumnAliases = new String[indexSpan];
 			int i = 0;
@@ -395,7 +399,8 @@ public abstract class AbstractCollectionPersister
 				else {
 					Column indexCol = (Column) s;
 					indexColumnNames[i] = indexCol.getQuotedName( dialect );
-					indexColumnIsSettable[i] = true;
+					indexColumnIsGettable[i] = true;
+					indexColumnIsSettable[i] = indexColumnInsertability[i] || indexColumnUpdatability[i];
 				}
 				i++;
 			}
@@ -405,6 +410,7 @@ public abstract class AbstractCollectionPersister
 		}
 		else {
 			indexContainsFormula = false;
+			indexColumnIsGettable = null;
 			indexColumnIsSettable = null;
 			indexFormulaTemplates = null;
 			indexFormulas = null;
@@ -1076,8 +1082,8 @@ public abstract class AbstractCollectionPersister
 
 	protected void appendIndexColumns(SelectFragment frag, String alias) {
 		if ( hasIndex ) {
-			for ( int i = 0; i < indexColumnIsSettable.length; i++ ) {
-				if ( indexColumnIsSettable[i] ) {
+			for ( int i = 0; i < indexColumnIsGettable.length; i++ ) {
+				if ( indexColumnIsGettable[i] ) {
 					frag.addColumn( alias, indexColumnNames[i], indexColumnAliases[i] );
 				}
 				else {

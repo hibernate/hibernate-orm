@@ -8,6 +8,7 @@ package org.hibernate.test.bytecode.enhancement;
 
 import org.hibernate.test.bytecode.enhancement.eviction.EvictionTestTask;
 import org.hibernate.test.bytecode.enhancement.access.MixedAccessTestTask;
+import org.hibernate.test.bytecode.enhancement.otherentityentrycontext.OtherEntityEntryContextTestTask;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils;
@@ -74,6 +75,11 @@ public class EnhancerTest extends BaseUnitTestCase {
 	@Test
 	public void testEviction() {
 		EnhancerTestUtils.runEnhancerTestTask( EvictionTestTask.class );
+	}
+
+	@Test
+	public void testOtherPersistenceContext() {
+		EnhancerTestUtils.runEnhancerTestTask( OtherEntityEntryContextTestTask.class );
 	}
 
 	@Test

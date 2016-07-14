@@ -279,10 +279,10 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			( (SelfDirtinessTracker) entity ).$$_hibernate_clearDirtyAttributes();
 		}
 
-		getPersistenceContext().getSession()
+		persistenceContext.getSession()
 				.getFactory()
 				.getCustomEntityDirtinessStrategy()
-				.resetDirty( entity, getPersister(), (Session) getPersistenceContext().getSession() );
+				.resetDirty( entity, getPersister(), (Session) persistenceContext.getSession() );
 	}
 
 	@Override
@@ -343,9 +343,9 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 		}
 
 		final CustomEntityDirtinessStrategy customEntityDirtinessStrategy =
-				getPersistenceContext().getSession().getFactory().getCustomEntityDirtinessStrategy();
-		if ( customEntityDirtinessStrategy.canDirtyCheck( entity, getPersister(), (Session) getPersistenceContext().getSession() ) ) {
-			return ! customEntityDirtinessStrategy.isDirty( entity, getPersister(), (Session) getPersistenceContext().getSession() );
+				persistenceContext.getSession().getFactory().getCustomEntityDirtinessStrategy();
+		if ( customEntityDirtinessStrategy.canDirtyCheck( entity, getPersister(), (Session) persistenceContext.getSession() ) ) {
+			return ! customEntityDirtinessStrategy.isDirty( entity, getPersister(), (Session) persistenceContext.getSession() );
 		}
 
 		if ( getPersister().hasMutableProperties() ) {
@@ -399,7 +399,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			}
 			setStatus( Status.MANAGED );
 			loadedState = getPersister().getPropertyValues( entity );
-			getPersistenceContext().getNaturalIdHelper().manageLocalNaturalIdCrossReference(
+			persistenceContext.getNaturalIdHelper().manageLocalNaturalIdCrossReference(
 					persister,
 					id,
 					loadedState,

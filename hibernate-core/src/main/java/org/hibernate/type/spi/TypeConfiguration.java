@@ -11,11 +11,14 @@ import org.hibernate.Incubating;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
+import org.hibernate.sqm.domain.*;
+import org.hibernate.sqm.domain.BasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
 import org.hibernate.type.internal.descriptor.TypeDescriptorRegistryAccessImpl;
@@ -110,6 +113,10 @@ public class TypeConfiguration implements SessionFactoryObserver {
 		scope.unsetSessionFactory( factory );
 	}
 
+	public BasicType resolveCastTargetType(String name) {
+		throw new NotYetImplementedException(  );
+	}
+
 
 	/**
 	 * Encapsulation of lifecycle concerns for a TypeConfiguration, mainly in regards to
@@ -117,6 +124,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	 */
 	private static class Scope {
 		private transient Mapping mapping;
+
 
 		private String sessionFactoryName;
 		private String sessionFactoryUuid;

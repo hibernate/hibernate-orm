@@ -16,7 +16,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public interface Metamodel extends javax.persistence.metamodel.Metamodel, TypeHelper {
+public interface Metamodel extends javax.persistence.metamodel.Metamodel {
 	/**
 	 * Access to the TypeConfiguration in effect for this SessionFactory/Metamodel
 	 *

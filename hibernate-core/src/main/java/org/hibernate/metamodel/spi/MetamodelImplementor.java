@@ -17,6 +17,7 @@ import org.hibernate.MappingException;
 import org.hibernate.Metamodel;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sqm.domain.DomainMetamodel;
 
 /**
  * @author Steve Ebersole
@@ -129,6 +130,8 @@ public interface MetamodelImplementor extends Metamodel {
 	<T> EntityGraph<T> findEntityGraphByName(String name);
 
 	<T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass);
+
+	DomainMetamodel getSqmDomainMetamodel();
 
 	void close();
 }

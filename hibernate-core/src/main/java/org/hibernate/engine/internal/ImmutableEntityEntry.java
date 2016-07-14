@@ -60,8 +60,7 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 				existsInDatabase,
 				persister,
 				disableVersionIncrement,
-				// purposefully do not pass along the session/persistence-context : HHH-10251
-				null
+				persistenceContext
 		);
 	}
 
@@ -87,8 +86,7 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 				existsInDatabase,
 				persister,
 				disableVersionIncrement,
-				// purposefully do not pass along the session/persistence-context : HHH-10251
-				null
+				persistenceContext
 		);
 	}
 

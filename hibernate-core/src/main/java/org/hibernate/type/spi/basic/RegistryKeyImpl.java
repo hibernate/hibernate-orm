@@ -8,6 +8,7 @@ package org.hibernate.type.spi.basic;
 
 import javax.persistence.AttributeConverter;
 
+import org.hibernate.type.spi.RegistryKey;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
 
@@ -15,8 +16,9 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  * Designed to act as a key in the registry of basic type instances in {@link BasicTypeRegistry}
  *
  * @author Steve Ebersole
+ * @author Chris Cranford
  */
-class RegistryKey {
+class RegistryKeyImpl implements RegistryKey {
 	private final Class javaTypeClass;
 	private final int jdbcCode;
 	private final Class attributeConverterClass;
@@ -34,14 +36,14 @@ class RegistryKey {
 				converterClass = converterReference.getClass();
 			}
 		}
-		return new RegistryKey(
+		return new RegistryKeyImpl(
 				javaTypeDescriptor.getJavaTypeClass(),
 				sqlTypeDescriptor.getSqlType(),
 				converterClass
 		);
 	}
 
-	private RegistryKey(Class javaTypeClass, int jdbcCode, Class attributeConverterClass) {
+	private RegistryKeyImpl(Class javaTypeClass, int jdbcCode, Class attributeConverterClass) {
 		assert javaTypeClass != null;
 
 		this.javaTypeClass = javaTypeClass;
@@ -58,7 +60,7 @@ class RegistryKey {
 			return false;
 		}
 
-		final RegistryKey that = (RegistryKey) o;
+		final RegistryKeyImpl that = (RegistryKeyImpl) o;
 		return jdbcCode == that.jdbcCode
 				&& javaTypeClass.equals( that.javaTypeClass )
 				&& sameConversion( attributeConverterClass, that.attributeConverterClass );

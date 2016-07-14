@@ -6,10 +6,12 @@
  */
 package org.hibernate.boot.model;
 
-import org.hibernate.type.BasicType;
+import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.spi.RegistryKey;
 import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
+
 
 /**
  * Defines the target contributing types, whether via dialects or {@link TypeContributor}
@@ -17,9 +19,7 @@ import org.hibernate.usertype.UserType;
  * @author Steve Ebersole
  */
 public interface TypeContributions {
-	void contributeType(BasicType type);
-
-	void contributeType(BasicType type, String... keys);
+	void contributeType(BasicType type, RegistryKey key);
 
 	void contributeType(UserType type, String... keys);
 

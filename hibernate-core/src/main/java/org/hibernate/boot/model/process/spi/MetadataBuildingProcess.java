@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.HibernateException;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
@@ -37,10 +38,7 @@ import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.BasicTypeRegistry;
-import org.hibernate.type.TypeFactory;
-import org.hibernate.type.TypeResolver;
+import org.hibernate.type.spi.RegistryKey;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 import org.hibernate.usertype.CompositeUserType;
@@ -110,12 +108,9 @@ public class MetadataBuildingProcess {
 	 * @return Token/memento representing all known users resources (classes, packages, mapping files, etc).
 	 */
 	public static MetadataImplementor complete(final ManagedResources managedResources, final MetadataBuildingOptions options) {
-		final BasicTypeRegistry basicTypeRegistry = handleTypes( options, options.getTypeDescriptorRegistryAccess() );
+		final InFlightMetadataCollectorImpl metadataCollector = new InFlightMetadataCollectorImpl( options );
+		handleTypes( options, metadataCollector.getTypeConfiguration() );
 
-		final InFlightMetadataCollectorImpl metadataCollector = new InFlightMetadataCollectorImpl(
-				options,
-				new TypeResolver( basicTypeRegistry, new TypeFactory() )
-		);
 		for ( AttributeConverterDefinition attributeConverterDefinition : managedResources.getAttributeConverterDefinitions() ) {
 			metadataCollector.addAttributeConverter( attributeConverterDefinition );
 		}
@@ -322,59 +317,43 @@ public class MetadataBuildingProcess {
 
 
 
-	private static BasicTypeRegistry handleTypes(
-			MetadataBuildingOptions options,
-			TypeDescriptorRegistryAccess typeDescriptorRegistryAccess) {
+	private static void handleTypes(MetadataBuildingOptions options, TypeConfiguration typeConfiguration) {
 		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService( ClassLoaderService.class );
-
-		// ultimately this needs to change a little bit to account for HHH-7792
-		final BasicTypeRegistry basicTypeRegistry = new BasicTypeRegistry();
 
 		final TypeContributions typeContributions = new TypeContributions() {
 			@Override
-			public void contributeType(org.hibernate.type.BasicType type) {
-				basicTypeRegistry.register( type );
+			public void contributeType(org.hibernate.type.spi.BasicType type, RegistryKey registryKey) {
+				typeConfiguration.getBasicTypeRegistry().register( type, registryKey );
 			}
 
 			@Override
-			public void contributeType(BasicType type, String... keys) {
-				basicTypeRegistry.register( type, keys );
+			public void contributeType(UserType type, String... keys) {
+				throw new HibernateException( "UserType cannot be registered." );
 			}
 
 			@Override
-			public void contributeType(UserType type, String[] keys) {
-				basicTypeRegistry.register( type, keys );
-			}
-
-			@Override
-			public void contributeType(CompositeUserType type, String[] keys) {
-				basicTypeRegistry.register( type, keys );
+			public void contributeType(CompositeUserType type, String... keys) {
+				throw new HibernateException( "CompositeUserType cannot be registered." );
 			}
 
 			@Override
 			public TypeDescriptorRegistryAccess getTypeDescriptorRegistryAccess() {
-				return typeDescriptorRegistryAccess;
+				return options.getTypeDescriptorRegistryAccess();
 			}
 		};
 
-		// add Dialect contributed types
 		final Dialect dialect = options.getServiceRegistry().getService( JdbcServices.class ).getDialect();
 		dialect.contributeTypes( typeContributions, options.getServiceRegistry() );
 
-		// add TypeContributor contributed types.
 		for ( TypeContributor contributor : classLoaderService.loadJavaServices( TypeContributor.class ) ) {
 			contributor.contribute( typeContributions, options.getServiceRegistry() );
 		}
 
-		// add explicit application registered types
 		for ( BasicTypeRegistration basicTypeRegistration : options.getBasicTypeRegistrations() ) {
-			basicTypeRegistry.register(
+			typeConfiguration.getBasicTypeRegistry().register(
 					basicTypeRegistration.getBasicType(),
-					basicTypeRegistration.getRegistrationKeys()
+					basicTypeRegistration.getRegistryKey()
 			);
 		}
-
-		return basicTypeRegistry;
 	}
-
 }

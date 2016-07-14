@@ -6,9 +6,9 @@
  */
 package org.hibernate.boot.spi;
 
-import org.hibernate.type.BasicType;
-import org.hibernate.type.CompositeCustomType;
-import org.hibernate.type.CustomType;
+import org.hibernate.HibernateException;
+import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.spi.RegistryKey;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
@@ -17,30 +17,26 @@ import org.hibernate.usertype.UserType;
  */
 public class BasicTypeRegistration {
 	private final BasicType basicType;
-	private final String[] registrationKeys;
+	private final RegistryKey registryKey;
 
-	public BasicTypeRegistration(BasicType basicType) {
-		this( basicType, basicType.getRegistrationKeys() );
-	}
-
-	public BasicTypeRegistration(BasicType basicType, String[] registrationKeys) {
+	public BasicTypeRegistration(BasicType basicType, RegistryKey registryKey) {
 		this.basicType = basicType;
-		this.registrationKeys = registrationKeys;
+		this.registryKey = registryKey;
 	}
 
 	public BasicTypeRegistration(UserType type, String[] keys) {
-		this( new CustomType( type, keys ), keys );
+		throw new HibernateException( "BasicTypeRegistration does not support UserType" );
 	}
 
 	public BasicTypeRegistration(CompositeUserType type, String[] keys) {
-		this( new CompositeCustomType( type, keys ), keys );
+		throw new HibernateException( "BasicTypeRegistration does not support CompositeUserType" );
 	}
 
 	public BasicType getBasicType() {
 		return basicType;
 	}
 
-	public String[] getRegistrationKeys() {
-		return registrationKeys;
+	public RegistryKey getRegistryKey() {
+		return registryKey;
 	}
 }

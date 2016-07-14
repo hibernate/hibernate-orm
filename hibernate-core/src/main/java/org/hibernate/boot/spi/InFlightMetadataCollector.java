@@ -44,8 +44,6 @@ import org.hibernate.mapping.Join;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
-import org.hibernate.type.TypeResolver;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * An in-flight representation of Metadata while Metadata is being built.
@@ -202,8 +200,6 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject);
 
 	void addFetchProfile(FetchProfile profile);
-
-	TypeResolver getTypeResolver();
 
 	Database getDatabase();
 

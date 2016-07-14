@@ -10,6 +10,7 @@ import java.sql.Types;
 import java.util.Comparator;
 import javax.persistence.AttributeConverter;
 
+import org.hibernate.type.spi.ColumnMapping;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
@@ -112,7 +113,7 @@ public class TemporalTypeImpl<T,D> extends BasicTypeImpl<T,D> implements Tempora
 
 				@Override
 				public Class<?> getJdbcType() {
-					return TemporalTypeImpl.this.getSqlTypeDescriptor().getJdbcRecommendedJavaTypeMapping(
+					return getColumnMapping().getSqlTypeDescriptor().getJdbcRecommendedJavaTypeMapping(
 							basicTypeRegistry.getTypeDescriptorRegistryAccess() ).getJavaTypeClass();
 				}
 			};

@@ -28,6 +28,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  * @author Brett meyer
  */
 public class SerializableTypeDescriptor<T extends Serializable> extends AbstractTypeDescriptor<T> {
+	public static final SerializableTypeDescriptor<Serializable> INSTANCE = new SerializableTypeDescriptor<>( Serializable.class );
 
 	// unfortunately the param types cannot be the same so use something other than 'T' here to make that obvious
 	public static class SerializableMutabilityPlan<S extends Serializable> extends MutableMutabilityPlan<S> {

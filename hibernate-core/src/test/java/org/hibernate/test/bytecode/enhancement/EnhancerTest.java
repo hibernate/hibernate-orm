@@ -6,11 +6,12 @@
  */
 package org.hibernate.test.bytecode.enhancement;
 
-import org.hibernate.test.bytecode.enhancement.eviction.EvictionTestTask;
-import org.hibernate.test.bytecode.enhancement.access.MixedAccessTestTask;
+import javassist.CtClass;
+
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.test.bytecode.enhancement.access.MixedAccessTestTask;
 import org.hibernate.test.bytecode.enhancement.association.ManyToManyAssociationTestTask;
 import org.hibernate.test.bytecode.enhancement.association.OneToManyAssociationTestTask;
 import org.hibernate.test.bytecode.enhancement.association.OneToOneAssociationTestTask;
@@ -18,6 +19,7 @@ import org.hibernate.test.bytecode.enhancement.basic.BasicEnhancementTestTask;
 import org.hibernate.test.bytecode.enhancement.basic.HHH9529TestTask;
 import org.hibernate.test.bytecode.enhancement.cascade.CascadeDeleteTestTask;
 import org.hibernate.test.bytecode.enhancement.dirty.DirtyTrackingTestTask;
+import org.hibernate.test.bytecode.enhancement.eviction.EvictionTestTask;
 import org.hibernate.test.bytecode.enhancement.extended.ExtendedAssociationManagementTestTasK;
 import org.hibernate.test.bytecode.enhancement.extended.ExtendedEnhancementTestTask;
 import org.hibernate.test.bytecode.enhancement.join.HHH3949TestTask1;
@@ -31,6 +33,7 @@ import org.hibernate.test.bytecode.enhancement.lazy.LazyBasicFieldNotInitialized
 import org.hibernate.test.bytecode.enhancement.lazy.LazyCollectionLoadingTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.LazyLoadingIntegrationTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.LazyLoadingTestTask;
+import org.hibernate.test.bytecode.enhancement.lazy.LazyProxyOnEnhancedEntityTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.basic.LazyBasicFieldAccessTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.basic.LazyBasicPropertyAccessTestTask;
 import org.hibernate.test.bytecode.enhancement.mapped.MappedSuperclassTestTask;
@@ -87,6 +90,17 @@ public class EnhancerTest extends BaseUnitTestCase {
 
 		EnhancerTestUtils.runEnhancerTestTask( LazyBasicPropertyAccessTestTask.class );
 		EnhancerTestUtils.runEnhancerTestTask( LazyBasicFieldAccessTestTask.class );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-10922" )
+	public void testLazyProxyOnEnhancedEntity() {
+		EnhancerTestUtils.runEnhancerTestTask( LazyProxyOnEnhancedEntityTestTask.class, new EnhancerTestContext() {
+			@Override
+			public boolean hasLazyLoadableAttributes(CtClass classDescriptor) {
+				return false;
+			}
+		} );
 	}
 
 	@Test

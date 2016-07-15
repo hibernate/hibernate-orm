@@ -177,7 +177,7 @@ By default, that includes just:
 
 revision number:: An integral value (`int/Integer` or `long/Long`). Essentially the primary key of the revision
 
-revision timestamp:: either a `long/Long` or `java.util.Date` value representing the instant at which the revision was made.
+revision timestamp:: either a `long/Long`, `java.util.Date`, or `java.time.LocalDateTime` value representing the instant at which the revision was made.
    When using a `java.util.Date`, instead of a `long/Long` for the revision timestamp, take care not to store it to a column data type which will loose precision.
 
 Envers handles this information as an entity.

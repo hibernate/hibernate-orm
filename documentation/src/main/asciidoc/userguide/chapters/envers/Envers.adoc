@@ -440,7 +440,7 @@ Please note, that queries on the audited data will be in many cases much slower 
 Queries are improved both in terms of speed and possibilities, when using the valid-time audit strategy, that is when storing both start and end revisions for entities. See <<envers-configuration>>.
 
 [[entities-at-revision]]
-=== Querying for entities of a class at a given revision
+==== Querying for entities of a class at a given revision
 
 The entry point for this type of queries is:
 
@@ -487,7 +487,7 @@ List personsAtAddress = getAuditReader().createQuery()
 ----
 
 [[revisions-of-entity]]
-=== Querying for revisions, at which entities of a given class changed
+==== Querying for revisions, at which entities of a given class changed
 
 The entry point for this type of queries is:
 
@@ -555,7 +555,7 @@ You probably also noticed that there are two boolean parameters, passed when cre
   If yes, such entities will have the revision type `DEL` and all fields, except the id, `null`.
 
 [[envers-tracking-properties-changes-queries]]
-=== Querying for revisions of entity that modified given property
+==== Querying for revisions of entity that modified given property
 
 For the two types of queries described above it's possible to use special `Audit` criteria called `hasChanged()` and `hasNotChanged()`
 that makes use of the functionality described in <<envers-tracking-properties-changes>>.
@@ -599,7 +599,7 @@ AuditQuery query = getAuditReader().createQuery()
 ----
 
 [[envers-tracking-modified-entities-queries]]
-=== Querying for entities modified in a given revision
+==== Querying for entities modified in a given revision
 
 The basic query allows retrieving entity names and corresponding Java classes changed in a specified revision:
 
@@ -627,7 +627,7 @@ Other queries (also accessible from `org.hibernate.envers.CrossTypeRevisionChang
 Note that methods described above can be legally used only when the default mechanism of tracking changed entity names is enabled (see <<envers-tracking-modified-entities-revchanges>>).
 
 [[envers-querying-entity-relation-jobs]]
-=== Querying for entities using entity relation joins
+==== Querying for entities using entity relation joins
 
 Audit queries support the ability to apply constraints, projections, and sort operations based on entity relations.  In order
 to traverse entity relations through an audit query, you must use the relation traversal API with a join type.
@@ -738,6 +738,31 @@ AuditQuery query = getAuditReader().createQuery()
     .up()
     .add( AuditEntity.property( "p", "age" ).eqProperty( "a", "streetNumber" ) );
 ----
+
+[[envers-querying-revision-entities]]
+=== Querying for revision information without loading entities
+
+It may sometimes be useful to load information about revisions to find out who performed specific revisions or
+to know what entity names were modified but the change log about the related audited entities isn't needed.
+This API allows an efficient way to get the revision information entity log without instantiating the actual
+entities themselves.
+
+Here is a simple example:
+
+[source,java]
+----
+AuditQuery query = getAuditReader().createQuery()
+    .forRevisionsOfEntity( DefaultRevisionEntity.class, true )
+    .add( AuditEntity.revisionNumber().between( 1, 25 ) );
+----
+
+This query will return all revision information entities for revisions between 1 and 25 including those which are
+related to deletions.  If deletions are not of interest, you would pass `false` as the second argument.
+
+Note this this query uses the `DefaultRevisionEntity` class type.  The class provided will vary depending on the
+configuration properties used to configure Envers or if you supply your own revision entity.  Typically users who
+will use this API will likely be providing a custom revision entity implementation to obtain custom information
+being maintained per revision.
 
 === Conditional auditing
 

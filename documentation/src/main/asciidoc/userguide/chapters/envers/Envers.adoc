@@ -146,11 +146,6 @@ The hereby solution causes implicit eager loading of to-one relations.
 If you'd like to audit properties of a superclass of an entity, which are not explicitly audited (they don't have the `@Audited` annotation on any properties or on the class),
 you can set the `@AuditOverride( forClass = SomeEntity.class, isAudited = true/false )` annotation.
 
-[NOTE]
-====
-The `@Audited` annotation also features an `auditParents` attribute but it's now deprecated in favor of `@AuditOverride`,
-====
-
 === Choosing an audit strategy
 
 After the basic configuration, it is important to choose the audit strategy that will be used to persist and retrieve audit information.

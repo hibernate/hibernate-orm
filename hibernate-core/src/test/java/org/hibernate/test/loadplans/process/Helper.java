@@ -17,7 +17,7 @@ import org.hibernate.loader.plan.exec.query.internal.QueryBuildingParametersImpl
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
 import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.loader.plan.spi.LoadPlan;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 /**
  * @author Steve Ebersole

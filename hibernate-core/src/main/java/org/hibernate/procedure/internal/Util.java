@@ -16,7 +16,7 @@ import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.custom.sql.SQLQueryReturnProcessor;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.procedure.UnknownSqlResultSetMappingException;
 
 import org.jboss.logging.Logger;

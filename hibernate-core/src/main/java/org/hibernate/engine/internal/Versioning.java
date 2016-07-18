@@ -8,7 +8,7 @@ package org.hibernate.engine.internal;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.type.VersionType;
 
 import org.jboss.logging.Logger;

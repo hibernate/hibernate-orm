@@ -12,7 +12,7 @@ import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
 import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;

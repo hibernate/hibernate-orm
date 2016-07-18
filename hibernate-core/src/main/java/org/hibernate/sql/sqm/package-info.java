@@ -6,7 +6,7 @@
  */
 
 /**
- * Represents Hibernate's SQL generation and execution based on SQM its own (converted) "SQL AST"<ul>
+ * Package defining Hibernate's SQL generation and execution based on SQM and its own "SQL AST" (converted from SQM)<ul>
  *     <li>{@link org.hibernate.sql.sqm.ast} represents the actual "SQL AST" definitions</li>
  *     <li>{@link org.hibernate.sql.sqm.convert} represents the conversion from an SQM into a "SQL AST" plus other needed goodies</li>
  *     <li>{@link org.hibernate.sql.sqm.exec} contains the actual JDBC/SQL execution</li>

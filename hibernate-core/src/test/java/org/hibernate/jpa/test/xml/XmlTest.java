@@ -13,7 +13,7 @@ import javax.persistence.SharedCacheMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 import org.junit.Test;
 import junit.framework.Assert;

@@ -20,6 +20,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.compare.EqualsHelper;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.type.AbstractType;
 import org.hibernate.type.Type;
 

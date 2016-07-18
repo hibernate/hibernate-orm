@@ -10,7 +10,7 @@ import java.util.Iterator;
 
 import org.hibernate.HibernateException;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 

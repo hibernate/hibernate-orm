@@ -9,8 +9,15 @@ package org.hibernate.persister.entity.spi;
 /**
  * @author Steve Ebersole
  */
-public enum InheritanceType {
+public enum InheritanceStrategy {
+	/**
+	 * No inheritance.  Similar to {@link #DISCRIMINATOR} (single table) but with
+	 * no discriminator column/formula.
+	 */
 	NONE,
+	/**
+	 * An inher
+	 */
 	DISCRIMINATOR,
 	UNION,
 	JOINED

@@ -9,7 +9,7 @@ package org.hibernate.cache.spi.access;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 /**
  * Contract for managing transactional and concurrent access to cached naturalId

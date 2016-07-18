@@ -8,14 +8,13 @@
 package org.hibernate.engine.internal;
 
 import java.io.Serializable;
-import java.util.Set;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 /**
  * Factory for the safe approach implementation of {@link org.hibernate.engine.spi.EntityEntry}.

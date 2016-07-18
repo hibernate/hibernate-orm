@@ -12,7 +12,7 @@ import org.hibernate.loader.plan.build.spi.ExpandingEntityQuerySpace;
 import org.hibernate.loader.plan.spi.CompositeAttributeFetch;
 import org.hibernate.loader.plan.spi.EntityIdentifierDescription;
 import org.hibernate.loader.plan.spi.EntityReference;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.EncapsulatedEntityIdentifierDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;

@@ -18,6 +18,9 @@ import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
 
 /**
  * Base contract in the Hibernate "(mapping) type system".
+ * <p/>
+ * It is important to understand that a Type logically models the information
+ * for a Java type and one or more SQL types.
  *
  * @author Steve Ebersole
  *
@@ -35,7 +38,7 @@ public interface Type<T> extends org.hibernate.sqm.domain.Type, javax.persistenc
 		BASIC( PersistenceType.BASIC ),
 		/**
 		 * Represents composite values (what JPA calls embedded/embeddable).  Types classified as
-		 * COMPOSITE will be castable to {@link CompositeType}
+		 * COMPOSITE will be castable to {@link EmbeddableType}
 		 */
 		COMPOSITE( PersistenceType.EMBEDDABLE ),
 		/**

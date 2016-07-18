@@ -9,7 +9,7 @@ package org.hibernate.action.internal;
 import java.io.Serializable;
 
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 public final class OrphanRemovalAction extends EntityDeleteAction {
 

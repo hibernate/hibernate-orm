@@ -10,7 +10,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.plan.build.internal.spaces.CompositePropertyMapping;
 import org.hibernate.loader.plan.spi.QuerySpaces;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 /**
  * Models a collection of {@link org.hibernate.loader.plan.spi.QuerySpace} references and

@@ -6,7 +6,7 @@
  */
 package org.hibernate.persister.walking.spi;
 
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 /**
  * Defines the contract for walking the attributes defined by an entity

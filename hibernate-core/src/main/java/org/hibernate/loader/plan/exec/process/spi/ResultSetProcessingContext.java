@@ -14,7 +14,7 @@ import org.hibernate.loader.plan.exec.spi.LockModeResolver;
 import org.hibernate.loader.plan.spi.EntityReference;
 import org.hibernate.loader.plan.spi.Fetch;
 import org.hibernate.loader.plan.spi.LoadPlan;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 /**
  * @author Steve Ebersole

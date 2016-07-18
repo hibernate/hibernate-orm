@@ -10,7 +10,6 @@ import org.hibernate.persister.common.spi.AbstractTable;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.IdentifiableTypeImplementor;
 import org.hibernate.persister.common.spi.SqmTypeImplementor;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.sqm.ast.from.AbstractTableGroup;
 import org.hibernate.sql.sqm.ast.from.EntityTableGroup;
 import org.hibernate.sql.sqm.ast.from.TableSpace;
@@ -35,7 +34,7 @@ public interface ImprovedEntityPersister extends EntityType, IdentifiableTypeImp
 	EntityPersister getEntityPersister();
 
 	@Override
-	IdentifierDescriptorImplementor getIdentifierDescriptor();
+	EntityIdentifier getIdentifierDescriptor();
 
 	AbstractTable getRootTable();
 

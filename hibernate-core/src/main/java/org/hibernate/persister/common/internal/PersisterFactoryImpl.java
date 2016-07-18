@@ -24,9 +24,9 @@ import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.common.spi.IdentifiableTypeImplementor;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.internal.ImprovedEntityPersisterImpl;
-import org.hibernate.persister.entity.spi.InheritanceType;
+import org.hibernate.persister.entity.spi.InheritanceStrategy;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
@@ -98,7 +98,7 @@ public class PersisterFactoryImpl implements PersisterFactory, ServiceRegistryAw
 		}
 
 		final TypeHierarchyNode superTypeNode = interpretSuperTypeNode( entityBinding );
-		final InheritanceType inheritanceType = interpretInheritanceType( entityBinding );
+		final InheritanceStrategy inheritanceStrategy = interpretInheritanceType( entityBinding );
 
 		ImprovedEntityPersisterImpl improvedPersister = new ImprovedEntityPersisterImpl( legacyPersister );
 		typeHierarchyNode.setType( improvedPersister );
@@ -115,10 +115,10 @@ public class PersisterFactoryImpl implements PersisterFactory, ServiceRegistryAw
 		return legacyPersister;
 	}
 
-	private InheritanceType interpretInheritanceType(PersistentClass entityBinding) {
+	private InheritanceStrategy interpretInheritanceType(PersistentClass entityBinding) {
 		if ( entityBinding instanceof RootClass ) {
 			if ( !entityBinding.hasSubclasses() ) {
-				return InheritanceType.NONE;
+				return InheritanceStrategy.NONE;
 			}
 			return interpret( (Subclass) entityBinding.getDirectSubclasses().next() );
 		}
@@ -127,15 +127,15 @@ public class PersisterFactoryImpl implements PersisterFactory, ServiceRegistryAw
 		}
 	}
 
-	private InheritanceType interpret(Subclass subEntityBinding) {
+	private InheritanceStrategy interpret(Subclass subEntityBinding) {
 		if ( subEntityBinding instanceof UnionSubclass ) {
-			return InheritanceType.UNION;
+			return InheritanceStrategy.UNION;
 		}
 		else if ( subEntityBinding instanceof JoinedSubclass ) {
-			return InheritanceType.JOINED;
+			return InheritanceStrategy.JOINED;
 		}
 		else {
-			return InheritanceType.DISCRIMINATOR;
+			return InheritanceStrategy.DISCRIMINATOR;
 		}
 	}
 

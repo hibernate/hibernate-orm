@@ -13,7 +13,7 @@ import org.hibernate.event.spi.DeleteEvent;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.jpa.event.spi.jpa.CallbackRegistryConsumer;
 import org.hibernate.jpa.event.spi.jpa.CallbackRegistry;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 /**
  * Overrides the LifeCycle OnSave call to call the PreRemove operation

@@ -17,7 +17,7 @@ import javax.persistence.criteria.Selection;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.query.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
@@ -26,7 +26,7 @@ import org.hibernate.type.spi.descriptor.WrapperOptions;
 
 /**
  * Defines the "internal contract" for {@link Session} and other parts of Hibernate such as
- * {@link org.hibernate.type.Type}, {@link org.hibernate.persister.entity.EntityPersister}
+ * {@link org.hibernate.type.Type}, {@link EntityPersister}
  * and {@link org.hibernate.persister.collection.CollectionPersister} implementations.
  *
  * A Session, through this interface and SharedSessionContractImplementor, implements:<ul>

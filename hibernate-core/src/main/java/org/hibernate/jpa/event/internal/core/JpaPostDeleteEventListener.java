@@ -11,7 +11,7 @@ import org.hibernate.event.spi.PostDeleteEventListener;
 import org.hibernate.jpa.event.spi.jpa.CallbackRegistryConsumer;
 import org.hibernate.jpa.event.spi.jpa.CallbackRegistry;
 import org.hibernate.jpa.event.spi.jpa.CallbackType;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 /**
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>

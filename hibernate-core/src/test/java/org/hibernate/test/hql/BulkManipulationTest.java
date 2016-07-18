@@ -26,7 +26,7 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.jdbc.Work;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;

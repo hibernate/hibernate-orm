@@ -15,7 +15,7 @@ import org.hibernate.event.internal.DefaultFlushEntityEventListener;
 import org.hibernate.jpa.event.spi.jpa.CallbackRegistryConsumer;
 import org.hibernate.jpa.event.spi.jpa.CallbackRegistry;
 import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.type.Type;
 
 /**

@@ -11,28 +11,26 @@ import org.hibernate.persister.common.spi.SingularAttributeImplementor;
 import org.hibernate.sqm.domain.IdentifierDescriptorSingleAttribute;
 import org.hibernate.sqm.domain.ManagedType;
 import org.hibernate.sqm.domain.SingularAttribute;
+import org.hibernate.type.spi.BasicType;
 
 /**
  * @author Steve Ebersole
  */
-public class IdentifierSimple
-		implements IdentifierDescriptorImplementor, SingularAttributeImplementor, IdentifierDescriptorSingleAttribute {
+public class EntityIdentifierSimple
+		implements EntityIdentifier, SingularAttributeImplementor, IdentifierDescriptorSingleAttribute {
 	private final ManagedType declaringType;
 	private final String attributeName;
-	private final org.hibernate.type.BasicType ormType;
-	private final org.hibernate.sqm.domain.BasicType sqmType;
+	private final BasicType type;
 	private final Column[] columns;
 
-	public IdentifierSimple(
+	public EntityIdentifierSimple(
 			ManagedType declaringType,
 			String attributeName,
-			org.hibernate.type.BasicType ormType,
-			org.hibernate.sqm.domain.BasicType sqmType,
+			BasicType type,
 			Column[] columns) {
 		this.declaringType = declaringType;
 		this.attributeName = attributeName;
-		this.ormType = ormType;
-		this.sqmType = sqmType;
+		this.type = type;
 		this.columns = columns;
 	}
 
@@ -52,18 +50,13 @@ public class IdentifierSimple
 	}
 
 	@Override
-	public org.hibernate.type.BasicType getOrmType() {
-		return ormType;
+	public BasicType getIdType() {
+		return type;
 	}
 
 	@Override
-	public org.hibernate.sqm.domain.BasicType getIdType() {
-		return sqmType;
-	}
-
-	@Override
-	public org.hibernate.sqm.domain.BasicType getType() {
-		return sqmType;
+	public BasicType getType() {
+		return getIdType();
 	}
 
 	@Override
@@ -92,8 +85,8 @@ public class IdentifierSimple
 	}
 
 	@Override
-	public org.hibernate.sqm.domain.BasicType getBoundType() {
-		return sqmType;
+	public BasicType getBoundType() {
+		return getIdType();
 	}
 
 	@Override

@@ -16,6 +16,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.sql.Template;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CompositeType;

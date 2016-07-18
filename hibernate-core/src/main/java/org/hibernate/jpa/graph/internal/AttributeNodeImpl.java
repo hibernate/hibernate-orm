@@ -22,7 +22,7 @@ import org.hibernate.jpa.spi.HibernateEntityManagerFactoryAware;
 import org.hibernate.metamodel.internal.Helper;
 import org.hibernate.metamodel.internal.PluralAttributeImpl;
 import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;

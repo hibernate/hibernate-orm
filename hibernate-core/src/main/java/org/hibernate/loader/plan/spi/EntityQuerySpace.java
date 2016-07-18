@@ -6,7 +6,7 @@
  */
 package org.hibernate.loader.plan.spi;
 
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 /**
  * Models a QuerySpace specific to an entity (EntityPersister).

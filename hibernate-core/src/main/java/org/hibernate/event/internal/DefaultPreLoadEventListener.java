@@ -8,7 +8,7 @@ package org.hibernate.event.internal;
 
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 /**
  * Called beforeQuery injecting property values into a newly

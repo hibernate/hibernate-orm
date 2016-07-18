@@ -9,7 +9,7 @@ package org.hibernate.action.internal;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 /**
  * A BeforeTransactionCompletionProcess impl to verify and increment an entity version as party

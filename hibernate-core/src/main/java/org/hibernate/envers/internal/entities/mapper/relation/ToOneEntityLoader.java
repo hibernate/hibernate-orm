@@ -10,7 +10,7 @@ import java.io.Serializable;
 
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.ToOneDelegateSessionImplementor;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

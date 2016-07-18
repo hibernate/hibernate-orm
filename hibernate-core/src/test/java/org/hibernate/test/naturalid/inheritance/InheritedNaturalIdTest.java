@@ -9,7 +9,7 @@ package org.hibernate.test.naturalid.inheritance;
 import org.junit.Test;
 
 import org.hibernate.Session;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.tuple.entity.EntityMetamodel;

@@ -9,7 +9,7 @@ package org.hibernate.persister.common.internal;
 import org.hibernate.persister.common.spi.AbstractAttributeImpl;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.SingularAttributeImplementor;
-import org.hibernate.persister.embeddable.EmbeddablePersister;
+import org.hibernate.persister.embeddable.spi.EmbeddablePersister;
 import org.hibernate.sqm.domain.ManagedType;
 import org.hibernate.sqm.domain.SingularAttribute;
 import org.hibernate.type.Type;

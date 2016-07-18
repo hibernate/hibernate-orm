@@ -7,19 +7,18 @@
 package org.hibernate.persister.entity.spi;
 
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.embeddable.EmbeddablePersister;
-import org.hibernate.persister.entity.spi.IdentifierDescriptorImplementor;
+import org.hibernate.persister.embeddable.spi.EmbeddablePersister;
 import org.hibernate.sqm.domain.Type;
 
 /**
  * @author Steve Ebersole
  */
-public class IdentifierCompositeNonAggregated implements IdentifierDescriptorImplementor {
+public class EntityIdentifierCompositeNonAggregated implements EntityIdentifier {
 	// todo : IdClass handling eventually
 
 	private final EmbeddablePersister embeddablePersister;
 
-	public IdentifierCompositeNonAggregated(EmbeddablePersister embeddablePersister) {
+	public EntityIdentifierCompositeNonAggregated(EmbeddablePersister embeddablePersister) {
 		this.embeddablePersister = embeddablePersister;
 	}
 

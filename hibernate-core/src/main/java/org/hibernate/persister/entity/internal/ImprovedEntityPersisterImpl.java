@@ -16,14 +16,14 @@ import org.hibernate.persister.common.spi.AbstractAttributeImpl;
 import org.hibernate.persister.common.spi.AbstractTable;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.IdentifiableTypeImplementor;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
-import org.hibernate.persister.entity.spi.IdentifierCompositeAggregated;
-import org.hibernate.persister.entity.spi.IdentifierCompositeNonAggregated;
-import org.hibernate.persister.entity.spi.IdentifierDescriptorImplementor;
-import org.hibernate.persister.entity.spi.IdentifierSimple;
+import org.hibernate.persister.entity.spi.EntityIdentifierCompositeAggregated;
+import org.hibernate.persister.entity.spi.EntityIdentifierCompositeNonAggregated;
+import org.hibernate.persister.entity.spi.EntityIdentifier;
+import org.hibernate.persister.entity.spi.EntityIdentifierSimple;
 import org.hibernate.persister.entity.spi.ImprovedEntityPersister;
 import org.hibernate.sql.ast.expression.ColumnBindingExpression;
 import org.hibernate.sql.ast.from.AbstractTableGroup;
@@ -60,7 +60,7 @@ public class ImprovedEntityPersisterImpl implements ImprovedEntityPersister, Ent
 	private AbstractTable[] tables;
 
 	private IdentifiableTypeImplementor superType;
-	private IdentifierDescriptorImplementor identifierDescriptor;
+	private EntityIdentifier identifierDescriptor;
 
 	private final Map<String, AbstractAttributeImpl> attributeMap = new HashMap<String, AbstractAttributeImpl>();
 
@@ -111,7 +111,7 @@ public class ImprovedEntityPersisterImpl implements ImprovedEntityPersister, Ent
 		);
 
 		if ( persister.getIdentifierType() instanceof BasicType ) {
-			identifierDescriptor = new IdentifierSimple(
+			identifierDescriptor = new EntityIdentifierSimple(
 					this,
 					persister.getIdentifierPropertyName(),
 					(BasicType) persister.getIdentifierType(),
@@ -123,7 +123,7 @@ public class ImprovedEntityPersisterImpl implements ImprovedEntityPersister, Ent
 			final CompositeType cidType = (CompositeType) persister.getIdentifierType();
 			// todo : need to pass along that any built sub attributes are part of the id
 			if ( persister.hasIdentifierProperty() ) {
-				identifierDescriptor = new IdentifierCompositeAggregated(
+				identifierDescriptor = new EntityIdentifierCompositeAggregated(
 						this,
 						persister.getIdentifierPropertyName(),
 						Helper.INSTANCE.buildEmbeddablePersister(
@@ -136,7 +136,7 @@ public class ImprovedEntityPersisterImpl implements ImprovedEntityPersister, Ent
 				);
 			}
 			else {
-				identifierDescriptor = new IdentifierCompositeNonAggregated(
+				identifierDescriptor = new EntityIdentifierCompositeNonAggregated(
 						Helper.INSTANCE.buildEmbeddablePersister(
 								databaseModel,
 								domainMetamodel,
@@ -323,7 +323,7 @@ public class ImprovedEntityPersisterImpl implements ImprovedEntityPersister, Ent
 	}
 
 	@Override
-	public IdentifierDescriptorImplementor getIdentifierDescriptor() {
+	public EntityIdentifier getIdentifierDescriptor() {
 		return identifierDescriptor;
 	}
 

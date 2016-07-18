@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.persister.entity;
+package org.hibernate.persister.entity.spi;
 
 import java.io.Serializable;
 import java.util.List;
@@ -29,7 +29,17 @@ import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.common.spi.Table;
+import org.hibernate.persister.entity.MultiLoadOptions;
 import org.hibernate.persister.walking.spi.EntityDefinition;
+import org.hibernate.sql.sqm.ast.from.EntityTableGroup;
+import org.hibernate.sql.sqm.ast.from.TableGroup;
+import org.hibernate.sql.sqm.ast.from.TableSpace;
+import org.hibernate.sql.sqm.convert.internal.FromClauseIndex;
+import org.hibernate.sql.sqm.convert.internal.SqlAliasBaseManager;
+import org.hibernate.sqm.query.JoinType;
+import org.hibernate.sqm.query.from.FromElement;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.Type;
@@ -67,6 +77,87 @@ import org.hibernate.type.VersionType;
  * @see org.hibernate.persister.spi.PersisterClassResolver
  */
 public interface EntityPersister extends OptimisticCacheSource, EntityDefinition {
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Redesigned contract
+
+	/**
+	 * Return the SessionFactory to which this persister "belongs".
+	 *
+	 * @return The owning SessionFactory.
+	 */
+	SessionFactoryImplementor getFactory();
+
+	/**
+	 * Access to information about the entity's inheritance hierarchy.
+	 *
+	 * @return The hierarchy information
+	 *
+	 * @since 6.0
+	 */
+	EntityHierarchy getHierarchy();
+
+	/**
+	 * The entity name which this persister maps.
+	 *
+	 * @return The name of the entity which this persister maps.
+	 */
+	String getEntityName();
+
+	/**
+	 * Get the EntityEntryFactory indicated for the entity mapped by this persister.
+	 *
+	 * @return The proper EntityEntryFactory.
+	 */
+	EntityEntryFactory getEntityEntryFactory();
+
+	/**
+	 * Access to information about bytecode enhancement for this entity.
+	 *
+	 * @return The bytecode enhancement information
+	 */
+	BytecodeEnhancementMetadata getBytecodeEnhancementMetadata();
+
+	/**
+	 * Access to the root table for this entity.
+	 *
+	 * @return The root table for this entity
+	 */
+	Table getRootTable();
+
+	/**
+	 * Build the EntityTableGroup for this entity.  This method is called
+	 * when the entity is a root in the query.
+	 *
+	 * @param fromElement The SQM FromElement
+	 * @param tableSpace The SQL-AST TableSpace we are building
+	 * @param sqlAliasBaseManager Access to the SQL alias manager
+	 * @param fromClauseIndex The SQL-AST FromClause index
+	 *
+	 * @return The populated EntityTableGroup
+	 */
+	EntityTableGroup buildTableGroup(
+			FromElement fromElement,
+			TableSpace tableSpace,
+			SqlAliasBaseManager sqlAliasBaseManager,
+			FromClauseIndex fromClauseIndex);
+
+	/**
+	 * Populate a previously built TableGroup with this entity's table(s).  This
+	 * method is generally called to handle cases where the entity is part of a
+	 * collection bound to a query
+	 *
+	 * @param group The TableGroup to which we should add our joins
+	 * @param joinType The type of join we should use (at least to the root table).
+	 * @param fkColumns The left-hand side join columns
+	 * @param fkTargetColumns The right-hand side join columns
+	 */
+	void addTableJoins(TableGroup group, JoinType joinType, Column[] fkColumns, Column[] fkTargetColumns);
+
+
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Legacy contract (sans methods moved to above "Redesigned contract") section
 
 	/**
 	 * The property name of the "special" identifier property in HQL
@@ -90,24 +181,10 @@ public interface EntityPersister extends OptimisticCacheSource, EntityDefinition
 	 */
 	void postInstantiate() throws MappingException;
 
-	/**
-	 * Return the SessionFactory to which this persister "belongs".
-	 *
-	 * @return The owning SessionFactory.
-	 */
-	SessionFactoryImplementor getFactory();
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // stuff that is persister-centric and/or EntityInfo-centric ~~~~~~~~~~~~~~
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	/**
-	 * Get the EntityEntryFactory indicated for the entity mapped by this persister.
-	 *
-	 * @return The proper EntityEntryFactory.
-	 */
-	EntityEntryFactory getEntityEntryFactory();
 
 	/**
 	 * Returns an object that identifies the space in which identifiers of
@@ -116,13 +193,6 @@ public interface EntityPersister extends OptimisticCacheSource, EntityDefinition
 	 * @return The root entity name.
 	 */
 	String getRootEntityName();
-
-	/**
-	 * The entity name which this persister maps.
-	 *
-	 * @return The name of the entity which this persister maps.
-	 */
-	String getEntityName();
 
 	/**
 	 * Retrieve the underlying entity metamodel instance...
@@ -788,8 +858,6 @@ public interface EntityPersister extends OptimisticCacheSource, EntityDefinition
 
 	EntityMode getEntityMode();
 	EntityTuplizer getEntityTuplizer();
-
-	BytecodeEnhancementMetadata getInstrumentationMetadata();
 	
 	FilterAliasGenerator getFilterAliasGenerator(final String rootAlias);
 

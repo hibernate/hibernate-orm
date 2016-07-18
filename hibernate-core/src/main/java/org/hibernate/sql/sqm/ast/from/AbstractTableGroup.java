@@ -18,7 +18,7 @@ import org.hibernate.persister.common.internal.SingularAttributeEntity;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.SingularAttributeImplementor;
 import org.hibernate.persister.common.spi.Table;
-import org.hibernate.persister.entity.spi.IdentifierSimple;
+import org.hibernate.persister.entity.spi.EntityIdentifierSimple;
 import org.hibernate.persister.entity.spi.ImprovedEntityPersister;
 import org.hibernate.sql.sqm.ast.expression.AttributeReference;
 import org.hibernate.sql.sqm.ast.expression.EntityReference;
@@ -89,8 +89,8 @@ public abstract class AbstractTableGroup implements TableGroup {
 		else if ( attribute instanceof SingularAttributeEmbedded ) {
 			columns = ( (SingularAttributeEmbedded) attribute ).asManagedType().collectColumns();
 		}
-		else if ( attribute instanceof IdentifierSimple ) {
-			columns = ( (IdentifierSimple) attribute ).getColumns();
+		else if ( attribute instanceof EntityIdentifierSimple ) {
+			columns = ( (EntityIdentifierSimple) attribute ).getColumns();
 		}
 		else {
 			throw new NotYetImplementedException( "resolveBindings() : " + attribute );

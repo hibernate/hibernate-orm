@@ -7,7 +7,7 @@
 package org.hibernate.tuple.entity;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.tuple.BaselineAttributeInformation;
 import org.hibernate.tuple.component.AbstractCompositionAttribute;

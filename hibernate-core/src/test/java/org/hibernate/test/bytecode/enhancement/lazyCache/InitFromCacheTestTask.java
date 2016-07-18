@@ -9,7 +9,7 @@ package org.hibernate.test.bytecode.enhancement.lazyCache;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 import org.hibernate.testing.cache.BaseRegion;
 

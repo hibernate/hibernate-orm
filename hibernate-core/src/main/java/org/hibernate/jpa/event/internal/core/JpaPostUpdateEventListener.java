@@ -20,7 +20,7 @@ import org.hibernate.event.spi.PostUpdateEventListener;
 import org.hibernate.jpa.event.spi.jpa.CallbackRegistryConsumer;
 import org.hibernate.jpa.event.spi.jpa.CallbackRegistry;
 import org.hibernate.jpa.event.spi.jpa.CallbackType;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 /**
  * Implementation of the post update listeners.

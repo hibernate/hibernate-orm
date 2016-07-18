@@ -17,7 +17,7 @@ import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Proxy;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 import org.junit.Test;
 

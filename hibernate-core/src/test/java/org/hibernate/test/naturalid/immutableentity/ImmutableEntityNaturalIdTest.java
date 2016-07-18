@@ -12,7 +12,7 @@ import org.hibernate.Transaction;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.TestForIssue;

@@ -13,7 +13,7 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 /**
  * Defines an event class for the resolving of an entity id from the entity's natural-id

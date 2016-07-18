@@ -14,6 +14,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.entity.UniqueEntityLoader;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.query.internal.AbstractProducedQuery;
 
 /**

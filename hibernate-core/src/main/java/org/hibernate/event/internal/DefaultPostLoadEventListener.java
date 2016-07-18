@@ -14,7 +14,7 @@ import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 /**
  * We do 2 things here:<ul>

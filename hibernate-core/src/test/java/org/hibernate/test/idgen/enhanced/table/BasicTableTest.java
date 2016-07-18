@@ -10,7 +10,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.id.enhanced.TableGenerator;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;

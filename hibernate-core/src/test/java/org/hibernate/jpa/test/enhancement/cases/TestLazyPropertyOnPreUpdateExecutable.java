@@ -11,7 +11,7 @@ import javax.persistence.EntityManager;
 
 import org.hibernate.Hibernate;
 import org.hibernate.jpa.test.enhancement.cases.domain.EntityWithLazyProperty;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

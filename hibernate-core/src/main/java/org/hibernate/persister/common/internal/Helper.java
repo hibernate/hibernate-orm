@@ -19,9 +19,9 @@ import org.hibernate.persister.collection.internal.ImprovedCollectionPersisterIm
 import org.hibernate.persister.common.spi.AbstractAttributeImpl;
 import org.hibernate.persister.common.spi.AbstractTable;
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.embeddable.EmbeddablePersister;
+import org.hibernate.persister.embeddable.spi.EmbeddablePersister;
 import org.hibernate.persister.entity.AbstractEntityPersister;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.spi.ImprovedEntityPersister;
 import org.hibernate.sql.sqm.convert.spi.NotYetImplementedException;
 import org.hibernate.sqm.domain.ManagedType;
@@ -33,7 +33,7 @@ import org.hibernate.type.BagType;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.CollectionType;
 import org.hibernate.type.spi.ColumnMapping;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddableType;
 import org.hibernate.type.IdentifierBagType;
 import org.hibernate.type.ListType;
 import org.hibernate.type.MapType;
@@ -240,7 +240,7 @@ public class Helper {
 							databaseModel,
 							domainMetamodel,
 							source.getTypeName() + '.' + attributeName,
-							(CompositeType) attributeType,
+							(EmbeddableType) attributeType,
 							columns
 					)
 			);
@@ -279,12 +279,12 @@ public class Helper {
 			DatabaseModel databaseModel,
 			DomainMetamodelImpl domainMetamodel,
 			String role,
-			CompositeType compositeType,
+			EmbeddableType embeddableType,
 			Column[] columns) {
 		return new EmbeddablePersister(
-				extractEmbeddableName( compositeType ),
+				extractEmbeddableName( embeddableType ),
 				role,
-				compositeType,
+				embeddableType,
 				databaseModel,
 				domainMetamodel,
 				columns
@@ -472,7 +472,7 @@ public class Helper {
 	}
 
 	public static SingularAttribute.Classification interpretIdentifierClassification(Type ormIdType) {
-		return ormIdType instanceof CompositeType
+		return ormIdType instanceof EmbeddableType
 				? SingularAttribute.Classification.EMBEDDED
 				: SingularAttribute.Classification.BASIC;
 	}

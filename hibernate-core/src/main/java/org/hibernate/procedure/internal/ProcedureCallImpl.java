@@ -39,7 +39,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.procedure.NoSuchParameterException;
 import org.hibernate.procedure.ParameterRegistration;
 import org.hibernate.procedure.ParameterStrategyException;

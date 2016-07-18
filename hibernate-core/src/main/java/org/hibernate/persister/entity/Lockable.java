@@ -7,6 +7,8 @@
 package org.hibernate.persister.entity;
 
 
+import org.hibernate.persister.entity.spi.EntityPersister;
+
 /**
  * Contract for things that can be locked via a {@link org.hibernate.dialect.lock.LockingStrategy}.
  * <p/>

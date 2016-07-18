@@ -6,7 +6,7 @@
  */
 package org.hibernate.loader.plan.spi;
 
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 /**
  * Represents a reference to an entity either as a return, fetch, or collection element or index.

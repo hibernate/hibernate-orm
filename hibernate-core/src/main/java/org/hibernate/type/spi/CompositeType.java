@@ -6,8 +6,11 @@
  */
 package org.hibernate.type.spi;
 
+import org.hibernate.persister.embeddable.EmbeddablePersister;
+
 /**
  * @author Steve Ebersole
  */
 public interface CompositeType extends Type, org.hibernate.sqm.domain.EmbeddableType {
+	EmbeddablePersister getEmbeddablePersister();
 }

@@ -18,7 +18,7 @@ import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
 import org.hibernate.envers.internal.synchronization.AuditProcess;
 import org.hibernate.envers.internal.synchronization.work.CollectionChangeWorkUnit;
 import org.hibernate.envers.internal.tools.EntityTools;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 
 /**

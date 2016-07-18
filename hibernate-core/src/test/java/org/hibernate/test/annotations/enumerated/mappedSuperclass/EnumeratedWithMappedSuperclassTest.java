@@ -25,7 +25,7 @@ import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
 

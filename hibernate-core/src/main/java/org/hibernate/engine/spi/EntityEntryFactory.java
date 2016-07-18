@@ -9,7 +9,7 @@ package org.hibernate.engine.spi;
 import java.io.Serializable;
 
 import org.hibernate.LockMode;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 /**
  * Contract to build {@link org.hibernate.engine.spi.EntityEntry}

@@ -19,7 +19,7 @@ import org.hibernate.loader.plan.spi.CollectionReference;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.CollectionPropertyNames;
 import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;

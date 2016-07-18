@@ -8,7 +8,7 @@ package org.hibernate.boot.internal;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.Session;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 /**
  * The default implementation of {@link org.hibernate.CustomEntityDirtinessStrategy} which does nada.

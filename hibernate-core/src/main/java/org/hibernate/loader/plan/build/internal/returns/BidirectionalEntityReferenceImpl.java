@@ -12,7 +12,7 @@ import org.hibernate.loader.plan.spi.BidirectionalEntityReference;
 import org.hibernate.loader.plan.spi.EntityIdentifierDescription;
 import org.hibernate.loader.plan.spi.EntityReference;
 import org.hibernate.loader.plan.spi.Fetch;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 
 /**

@@ -10,7 +10,7 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 /**
  * Contract for managing transactional and concurrent access to cached entity

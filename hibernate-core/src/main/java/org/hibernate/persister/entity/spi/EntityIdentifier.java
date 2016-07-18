@@ -8,10 +8,14 @@ package org.hibernate.persister.entity.spi;
 
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.sqm.domain.IdentifierDescriptor;
+import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole
  */
-public interface IdentifierDescriptorImplementor extends IdentifierDescriptor {
+public interface EntityIdentifier extends IdentifierDescriptor {
+	@Override
+	Type getIdType();
+
 	Column[] getColumns();
 }

@@ -8,7 +8,7 @@ package org.hibernate.persister.collection.internal;
 
 import org.hibernate.persister.collection.spi.PluralAttributeIndex;
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.embeddable.EmbeddablePersister;
+import org.hibernate.persister.embeddable.spi.EmbeddablePersister;
 import org.hibernate.sqm.domain.EmbeddableType;
 import org.hibernate.type.CompositeType;
 

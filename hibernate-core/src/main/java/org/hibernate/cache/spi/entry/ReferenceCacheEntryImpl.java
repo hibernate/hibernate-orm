@@ -8,7 +8,7 @@ package org.hibernate.cache.spi.entry;
 
 import java.io.Serializable;
 
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 /**
  * Specialized CacheEntry for storing direct references to entity instances.

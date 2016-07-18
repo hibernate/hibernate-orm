@@ -12,7 +12,7 @@ import org.hibernate.envers.internal.synchronization.work.AddWorkUnit;
 import org.hibernate.envers.internal.synchronization.work.AuditWorkUnit;
 import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 /**
  * Envers-specific entity (post) insertion event listener

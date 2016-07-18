@@ -17,12 +17,13 @@ import org.hibernate.sqm.domain.Attribute;
 import org.hibernate.sqm.domain.EmbeddableType;
 import org.hibernate.sqm.domain.ManagedType;
 import org.hibernate.sqm.domain.Type;
-import org.hibernate.type.CompositeType;
 
 /**
  * @author Steve Ebersole
  */
 public class EmbeddablePersister implements EmbeddableType {
+	// todo : move to org.hibernate.persister.embeddable.spi
+
 	private final String compositeName;
 	private final String roleName;
 	private final CompositeType ormType;

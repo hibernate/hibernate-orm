@@ -16,6 +16,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -45,6 +46,7 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 	}
 
 	@Test
+	@FailureExpected( jiraKey = "HHH-10795", message = "reference caching is not supported with enhanced, immutable entities")
 	public void testUseOfDirectReferencesInCache() throws Exception {
 		EntityPersister persister = (EntityPersister) sessionFactory().getClassMetadata( MyEnhancedReferenceData.class );
 		assertFalse( persister.isMutable() );

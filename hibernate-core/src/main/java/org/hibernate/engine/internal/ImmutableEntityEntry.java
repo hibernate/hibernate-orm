@@ -77,7 +77,7 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 			final PersistenceContext persistenceContext) {
 
 		super(
-				status,
+ 				status,
 				loadedState,
 				rowId,
 				id,

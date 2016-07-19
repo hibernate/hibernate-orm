@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.bytecode.enhancement.otherentityentrycontext;
 
+import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -14,6 +15,7 @@ import org.hibernate.test.bytecode.enhancement.AbstractEnhancerTestTask;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * This task tests ManagedEntity objects that are already associated with a different PersistenceContext.
@@ -21,7 +23,6 @@ import static org.junit.Assert.assertTrue;
  * @author Gail Badner
  */
 public class OtherEntityEntryContextTestTask extends AbstractEnhancerTestTask {
-
 
 	public Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {Parent.class};
@@ -51,17 +52,23 @@ public class OtherEntityEntryContextTestTask extends AbstractEnhancerTestTask {
 		Session s2 = getFactory().openSession();
 		s2.beginTransaction();
 
-		// s2 contains no entities, but
-		// commenting out the following because it fails
-		// assertFalse( s2.contains( p ) );
+		// s2 should contains no entities
+		assertFalse( s2.contains( p ) );
 
 		// the following fails because EntityEntryContext.count < 0
 		s2.evict( p );
 
 		assertFalse( s2.contains( p ) );
 
-		s2.getTransaction().commit();
-		s2.close();
+		try {
+			s2.update( p );
+			fail( "should have failed because p is already associated with a PersistenceContext that is still open." );
+		}
+		catch (HibernateException expected) {
+			// expected
+			s2.getTransaction().rollback();
+			s2.close();
+		}
 
 		s1.getTransaction().commit();
 		s1.close();

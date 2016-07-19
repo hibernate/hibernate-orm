@@ -7,7 +7,6 @@
 package org.hibernate.test.bytecode.enhancement.lazy;
 
 import javax.persistence.Entity;
-import javax.persistence.EntityManager;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -15,13 +14,16 @@ import javax.persistence.Id;
 import javax.persistence.OneToOne;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.engine.spi.CascadingAction;
+import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.event.internal.DefaultFlushEventListener;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
-import org.hibernate.jpa.event.internal.core.JpaFlushEventListener;
 
 import org.hibernate.test.bytecode.enhancement.AbstractEnhancerTestTask;
 
@@ -39,36 +41,49 @@ public class LazyProxyOnEnhancedEntityTestTask extends AbstractEnhancerTestTask 
 	public void prepare() {
 		super.prepare( new Configuration() );
 
-		EntityManager em = getFactory().createEntityManager();
-		em.getTransaction().begin();
+		Session s = getFactory().openSession();
+		s.getTransaction().begin();
 
 		Child c = new Child();
-		em.persist( c );
+		s.persist( c );
 
 		Parent parent = new Parent();
 		parent.setChild( c );
-		em.persist( parent );
+		s.persist( parent );
 		parentID = parent.getId();
 
-		em.getTransaction().commit();
-		em.clear();
-		em.close();
+		s.getTransaction().commit();
+		s.clear();
+		s.close();
 
 	}
 
 	public void execute() {
-		EventListenerRegistry registry = getFactory().unwrap( SessionFactoryImplementor.class ).getServiceRegistry().getService( EventListenerRegistry.class );
-		registry.prependListeners( EventType.FLUSH, new JpaFlushEventListener() );
+		EventListenerRegistry registry = ( (SessionFactoryImplementor) getFactory() ).getServiceRegistry().getService( EventListenerRegistry.class );
+
+		// The 5.2 version of this test uses JpaFlushEventListener and EntityManager to reproduce the issue.
+		// EntityManager and JpaFlushEventListener is not available in hibernate-core 5.0/5.1.
+		// This issue can be reproduced for 5.0/5.1 in hibernate-core by overriding DefaultFlushEventListener to use
+		// CascadingActions.PERSIST_ON_FLUSH.
+		registry.prependListeners(
+				EventType.FLUSH,
+				new DefaultFlushEventListener() {
+					@Override
+					protected CascadingAction getCascadingAction() {
+						return CascadingActions.PERSIST_ON_FLUSH;}
+
+				}
+		);
 		registry.prependListeners( EventType.LOAD, new ImmediateLoadTrap() );
 
-		EntityManager em = getFactory().createEntityManager();
-		em.getTransaction().begin();
+		Session s = getFactory().openSession();
+		s.getTransaction().begin();
 
-		Parent p = em.find(Parent.class, parentID);
-		em.flush(); // unwanted lazy load occurs here
+		Parent p = s.get( Parent.class, parentID );
+		s.flush(); // unwanted lazy load occurs here
 
-		em.getTransaction().commit();
-		em.close();
+		s.getTransaction().commit();
+		s.close();
 	}
 
 	protected void cleanup() {

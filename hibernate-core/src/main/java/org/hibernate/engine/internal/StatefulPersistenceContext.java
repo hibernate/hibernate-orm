@@ -162,7 +162,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		);
 		entitySnapshotsByKey = new HashMap<>( INIT_COLL_SIZE );
 
-		entityEntryContext = new EntityEntryContext();
+		entityEntryContext = new EntityEntryContext( this );
 //		entityEntries = IdentityMap.instantiateSequenced( INIT_COLL_SIZE );
 		collectionEntries = IdentityMap.instantiateSequenced( INIT_COLL_SIZE );
 		parentsByChild = new IdentityHashMap<>( INIT_COLL_SIZE );

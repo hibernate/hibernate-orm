@@ -815,6 +815,12 @@ public abstract class AbstractEntityPersister
 			}
 		}
 
+		if ( refCacheEntries && entityMetamodel.isInstrumented() ) {
+			throw new UnsupportedOperationException(
+					"Direct reference caching is not supported with immutable entities that are enhanced."
+			);
+		}
+
 		useReferenceCacheEntries = refCacheEntries;
 
 		this.cacheEntryHelper = buildCacheEntryHelper();

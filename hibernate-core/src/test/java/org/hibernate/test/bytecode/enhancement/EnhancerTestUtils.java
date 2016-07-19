@@ -124,7 +124,7 @@ public abstract class EnhancerTestUtils extends BaseUnitTestCase {
 		}
 	}
 
-	private static ClassLoader getEnhancerClassLoader(EnhancementContext context, String packageName) {
+	private static ClassLoader getEnhancerClassLoader(final EnhancementContext context, final String packageName) {
 		return new ClassLoader() {
 			@Override
 			public Class<?> loadClass(String name) throws ClassNotFoundException {

@@ -310,7 +310,7 @@ public class PersistentAttributesHelper {
 
 	private static String inferFieldTypeName(CtField field) {
 		try {
-			if ( field.getFieldInfo().getAttribute( SignatureAttribute.tag ) == null ){
+			if ( field.getFieldInfo2().getAttribute( SignatureAttribute.tag ) == null ) {
 				return field.getType().getName();
 			}
 			return inferGenericTypeName(
@@ -328,7 +328,7 @@ public class PersistentAttributesHelper {
 
 	private static String inferMethodTypeName(CtMethod method) {
 		try {
-			if ( method.getMethodInfo().getAttribute( SignatureAttribute.tag ) == null ){
+			if ( method.getMethodInfo2().getAttribute( SignatureAttribute.tag ) == null ) {
 				return method.getReturnType().getName();
 			}
 			return inferGenericTypeName(

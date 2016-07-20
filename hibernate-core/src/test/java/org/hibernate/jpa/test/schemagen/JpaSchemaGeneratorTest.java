@@ -8,10 +8,11 @@ package org.hibernate.jpa.test.schemagen;
 
 import java.net.URL;
 import java.util.Map;
+import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
@@ -23,18 +24,20 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
- * Basic tests for JPA 2.1 schema export
- *
- * @author Christian Beikov
- * @author Steve Ebersole
+ * @author Vlad Mihalcea
  */
 @RequiresDialect( H2Dialect.class )
 public class JpaSchemaGeneratorTest extends BaseEntityManagerFunctionalTestCase {
-	private static final String LOAD_SQL = "org/hibernate/jpa/test/schemagen/load-script-source.sql";
-	private static final String CREATE_SQL = "org/hibernate/jpa/test/schemagen/create-script-source.sql";
-	private static final String DROP_SQL = "org/hibernate/jpa/test/schemagen/drop-script-source.sql";
+
+	private final String LOAD_SQL = getScriptFolderPath() + "load-script-source.sql";
+	private final String CREATE_SQL = getScriptFolderPath() + "create-script-source.sql";
+	private final String DROP_SQL = getScriptFolderPath() + "drop-script-source.sql";
 
 	private static int schemagenNumber = 0;
+
+	public String getScriptFolderPath() {
+		return "org/hibernate/jpa/test/schemagen/";
+	}
 
 	@Override
 	public Class[] getAnnotatedClasses() {
@@ -46,8 +49,8 @@ public class JpaSchemaGeneratorTest extends BaseEntityManagerFunctionalTestCase 
 	@TestForIssue(jiraKey = "HHH-8271")
 	public void testSqlLoadScriptSourceClasspath() throws Exception {
 		Map settings = buildSettings();
-		settings.put( AvailableSettings.SCHEMA_GEN_DATABASE_ACTION, "drop-and-create" );
-		settings.put( AvailableSettings.SCHEMA_GEN_LOAD_SCRIPT_SOURCE, LOAD_SQL );
+		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, "drop-and-create" );
+		settings.put( AvailableSettings.HBM2DDL_LOAD_SCRIPT_SOURCE, getLoadSqlScript() );
 		doTest( settings );
 	}
 
@@ -57,12 +60,12 @@ public class JpaSchemaGeneratorTest extends BaseEntityManagerFunctionalTestCase 
 	@TestForIssue(jiraKey = "HHH-8271")
 	public void testSqlLoadScriptSourceUrl() throws Exception {
 		Map settings = buildSettings();
-		settings.put( AvailableSettings.SCHEMA_GEN_DATABASE_ACTION, "drop-and-create" );
-		settings.put( AvailableSettings.SCHEMA_GEN_LOAD_SCRIPT_SOURCE, getResourceUrlString( LOAD_SQL ) );
+		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, "drop-and-create" );
+		settings.put( AvailableSettings.HBM2DDL_LOAD_SCRIPT_SOURCE, getResourceUrlString( getLoadSqlScript() ) );
 		doTest( settings );
 	}
 
-	private String getResourceUrlString(String resource) {
+	protected String getResourceUrlString(String resource) {
 		final URL url = getClass().getClassLoader().getResource( resource );
 		if ( url == null ) {
 			throw new RuntimeException( "Unable to locate requested resource [" + resource + "]" );
@@ -75,9 +78,9 @@ public class JpaSchemaGeneratorTest extends BaseEntityManagerFunctionalTestCase 
 	@TestForIssue(jiraKey = "HHH-8271")
 	public void testSqlCreateScriptSourceClasspath() throws Exception {
 		Map settings = buildSettings();
-		settings.put( AvailableSettings.SCHEMA_GEN_DATABASE_ACTION, "drop-and-create" );
-		settings.put( AvailableSettings.SCHEMA_GEN_CREATE_SOURCE, "metadata-then-script" );
-		settings.put( AvailableSettings.SCHEMA_GEN_CREATE_SCRIPT_SOURCE, CREATE_SQL );
+		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, "drop-and-create" );
+		settings.put( AvailableSettings.HBM2DDL_CREATE_SOURCE, "metadata-then-script" );
+		settings.put( AvailableSettings.HBM2DDL_CREATE_SCRIPT_SOURCE, getCreateSqlScript() );
 		doTest( settings );
 	}
 
@@ -86,9 +89,9 @@ public class JpaSchemaGeneratorTest extends BaseEntityManagerFunctionalTestCase 
 	@TestForIssue(jiraKey = "HHH-8271")
 	public void testSqlCreateScriptSourceUrl() throws Exception {
 		Map settings = buildSettings();
-		settings.put( AvailableSettings.SCHEMA_GEN_DATABASE_ACTION, "drop-and-create" );
-		settings.put( AvailableSettings.SCHEMA_GEN_CREATE_SOURCE, "metadata-then-script" );
-		settings.put( AvailableSettings.SCHEMA_GEN_CREATE_SCRIPT_SOURCE, getResourceUrlString( CREATE_SQL ) );
+		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, "drop-and-create" );
+		settings.put( AvailableSettings.HBM2DDL_CREATE_SOURCE, "metadata-then-script" );
+		settings.put( AvailableSettings.HBM2DDL_CREATE_SCRIPT_SOURCE, getResourceUrlString( getCreateSqlScript() ) );
 		doTest( settings );
 	}
 
@@ -98,9 +101,9 @@ public class JpaSchemaGeneratorTest extends BaseEntityManagerFunctionalTestCase 
 	@TestForIssue(jiraKey = "HHH-8271")
 	public void testSqlDropScriptSourceClasspath() throws Exception {
 		Map settings = buildSettings();
-		settings.put( AvailableSettings.SCHEMA_GEN_DROP_SOURCE, "metadata-then-script" );
-		settings.put( AvailableSettings.SCHEMA_GEN_DATABASE_ACTION, "drop" );
-		settings.put( AvailableSettings.SCHEMA_GEN_DROP_SCRIPT_SOURCE, DROP_SQL );
+		settings.put( AvailableSettings.HBM2DDL_DROP_SOURCE, "metadata-then-script" );
+		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, "drop" );
+		settings.put( AvailableSettings.HBM2DDL_DROP_SCRIPT_SOURCE, getDropSqlScript() );
 		doTest( settings );
 	}
 
@@ -109,10 +112,22 @@ public class JpaSchemaGeneratorTest extends BaseEntityManagerFunctionalTestCase 
 	@TestForIssue(jiraKey = "HHH-8271")
 	public void testSqlDropScriptSourceUrl() throws Exception {
 		Map settings = buildSettings();
-		settings.put( AvailableSettings.SCHEMA_GEN_DROP_SOURCE, "metadata-then-script" );
-		settings.put( AvailableSettings.SCHEMA_GEN_DATABASE_ACTION, "drop" );
-		settings.put( AvailableSettings.SCHEMA_GEN_DROP_SCRIPT_SOURCE, getResourceUrlString( DROP_SQL ) );
+		settings.put( AvailableSettings.HBM2DDL_DROP_SOURCE, "metadata-then-script" );
+		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, "drop" );
+		settings.put( AvailableSettings.HBM2DDL_DROP_SCRIPT_SOURCE, getResourceUrlString( getDropSqlScript() ) );
 		doTest( settings );
+	}
+
+	protected String getLoadSqlScript() {
+		return LOAD_SQL;
+	}
+
+	protected String getCreateSqlScript() {
+		return CREATE_SQL;
+	}
+
+	protected String getDropSqlScript() {
+		return DROP_SQL;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -125,8 +140,13 @@ public class JpaSchemaGeneratorTest extends BaseEntityManagerFunctionalTestCase 
 																					 settings );
 		EntityManagerFactory emf = emfb.build();
 		try {
-			Assert.assertNotNull( emf.createEntityManager().find( Item.class, "schemagen-test" ) );
-
+			EntityManager em = emf.createEntityManager();
+			try {
+				Assert.assertNotNull( em.find( Item.class, encodedName() ) );
+			}
+			finally {
+				em.close();
+			}
 		}
 		finally {
 			emf.close();
@@ -144,4 +164,7 @@ public class JpaSchemaGeneratorTest extends BaseEntityManagerFunctionalTestCase 
 		return false;
 	}
 
+	protected String encodedName() {
+		return "sch" + (char) 233 +"magen-test";
+	}
 }

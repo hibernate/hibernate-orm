@@ -41,7 +41,10 @@ import org.jboss.logging.Logger;
 public class Helper {
 	private static final Logger log = Logger.getLogger( Helper.class );
 
-	public static ScriptSourceInput interpretScriptSourceSetting(Object scriptSourceSetting, ClassLoaderService classLoaderService) {
+	public static ScriptSourceInput interpretScriptSourceSetting(
+			Object scriptSourceSetting,
+			ClassLoaderService classLoaderService,
+			String charsetName ) {
 		if ( Reader.class.isInstance( scriptSourceSetting ) ) {
 			return new ScriptSourceInputFromReader( (Reader) scriptSourceSetting );
 		}
@@ -58,16 +61,19 @@ public class Helper {
 			// ClassLoaderService.locateResource() first tries the given resource name as url form...
 			final URL url = classLoaderService.locateResource( scriptSourceSettingString );
 			if ( url != null ) {
-				return new ScriptSourceInputFromUrl( url );
+				return new ScriptSourceInputFromUrl( url, charsetName );
 			}
 
 			// assume it is a File path
 			final File file = new File( scriptSourceSettingString );
-			return new ScriptSourceInputFromFile( file );
+			return new ScriptSourceInputFromFile( file, charsetName );
 		}
 	}
 
-	public static ScriptTargetOutput interpretScriptTargetSetting(Object scriptTargetSetting, ClassLoaderService classLoaderService) {
+	public static ScriptTargetOutput interpretScriptTargetSetting(
+			Object scriptTargetSetting,
+			ClassLoaderService classLoaderService,
+			String charsetName ) {
 		if ( scriptTargetSetting == null ) {
 			return null;
 		}
@@ -87,12 +93,12 @@ public class Helper {
 			// ClassLoaderService.locateResource() first tries the given resource name as url form...
 			final URL url = classLoaderService.locateResource( scriptTargetSettingString );
 			if ( url != null ) {
-				return new ScriptTargetOutputToUrl( url );
+				return new ScriptTargetOutputToUrl( url, charsetName );
 			}
 
 			// assume it is a File path
 			final File file = new File( scriptTargetSettingString );
-			return new ScriptTargetOutputToFile( file );
+			return new ScriptTargetOutputToFile( file, charsetName );
 		}
 	}
 

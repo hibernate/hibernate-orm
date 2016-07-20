@@ -58,6 +58,7 @@ import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.SourceDescriptor;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
+import static org.hibernate.cfg.AvailableSettings.HBM2DDL_CHARSET_NAME;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_LOAD_SCRIPT_SOURCE;
 import static org.hibernate.tool.schema.internal.Helper.interpretScriptSourceSetting;
 
@@ -457,8 +458,10 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		final Formatter formatter = FormatStyle.NONE.getFormatter();
 
 		final Object importScriptSetting = options.getConfigurationValues().get( HBM2DDL_LOAD_SCRIPT_SOURCE );
+		String charsetName = (String) options.getConfigurationValues().get( HBM2DDL_CHARSET_NAME );
+
 		if ( importScriptSetting != null ) {
-			final ScriptSourceInput importScriptInput = interpretScriptSourceSetting( importScriptSetting, classLoaderService );
+			final ScriptSourceInput importScriptInput = interpretScriptSourceSetting( importScriptSetting, classLoaderService, charsetName );
 			log.executingImportScript( importScriptInput.toString() );
 			importScriptInput.prepare();
 			try {
@@ -479,7 +482,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 
 		for ( String currentFile : importFiles.split( "," ) ) {
 			final String resourceName = currentFile.trim();
-			final ScriptSourceInput importScriptInput = interpretLegacyImportScriptSetting( resourceName, classLoaderService );
+			final ScriptSourceInput importScriptInput = interpretLegacyImportScriptSetting( resourceName, classLoaderService, charsetName );
 			importScriptInput.prepare();
 			try {
 				log.executingImportScript( importScriptInput.toString() );
@@ -495,14 +498,15 @@ public class SchemaCreatorImpl implements SchemaCreator {
 
 	private ScriptSourceInput interpretLegacyImportScriptSetting(
 			String resourceName,
-			ClassLoaderService classLoaderService) {
+			ClassLoaderService classLoaderService,
+			String charsetName) {
 		try {
 			final URL resourceUrl = classLoaderService.locateResource( resourceName );
 			if ( resourceUrl == null ) {
 				return ScriptSourceInputNonExistentImpl.INSTANCE;
 			}
 			else {
-				return new ScriptSourceInputFromUrl( resourceUrl );
+				return new ScriptSourceInputFromUrl( resourceUrl, charsetName );
 			}
 		}
 		catch (Exception e) {

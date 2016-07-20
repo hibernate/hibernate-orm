@@ -325,7 +325,8 @@ public class SchemaExport {
 			}
 			scriptTarget = Helper.interpretScriptTargetSetting(
 					outputFile,
-					serviceRegistry.getService( ClassLoaderService.class )
+					serviceRegistry.getService( ClassLoaderService.class ),
+					(String) serviceRegistry.getService( ConfigurationService.class ).getSettings().get( AvailableSettings.HBM2DDL_CHARSET_NAME )
 			);
 		}
 		else {

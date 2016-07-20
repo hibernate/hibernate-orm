@@ -11,6 +11,7 @@ import java.util.Map;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.SourceType;
@@ -208,7 +209,11 @@ public class SchemaManagementToolCoordinator {
 		}
 
 		final ScriptSourceInput scriptSourceInput = includesScripts
-				? Helper.interpretScriptSourceSetting( scriptSourceSetting, serviceRegistry.getService( ClassLoaderService.class ) )
+				? Helper.interpretScriptSourceSetting( scriptSourceSetting,
+													   serviceRegistry.getService(
+															   ClassLoaderService.class ),
+													   (String) configurationValues
+															   .get( AvailableSettings.HBM2DDL_CHARSET_NAME ) )
 				: null;
 
 		return new JpaTargetAndSourceDescriptor() {
@@ -332,13 +337,16 @@ public class SchemaManagementToolCoordinator {
 			);
 		}
 
+		String charsetName = (String) configurationValues.get( AvailableSettings.HBM2DDL_CHARSET_NAME );
+
 		final ScriptSourceInput scriptSourceInput = includesScripts
-				? Helper.interpretScriptSourceSetting( scriptSourceSetting, serviceRegistry.getService( ClassLoaderService.class ) )
+				? Helper.interpretScriptSourceSetting( scriptSourceSetting, serviceRegistry.getService( ClassLoaderService.class ), charsetName )
 				: null;
 
 		final ScriptTargetOutput scriptTargetOutput = Helper.interpretScriptTargetSetting(
 				settingSelector.getScriptTargetSetting( configurationValues ),
-				serviceRegistry.getService( ClassLoaderService.class )
+				serviceRegistry.getService( ClassLoaderService.class ),
+				charsetName
 		);
 
 		return new JpaTargetAndSourceDescriptor() {

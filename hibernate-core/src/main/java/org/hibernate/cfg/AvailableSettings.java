@@ -712,6 +712,8 @@ public interface AvailableSettings {
 
 	/**
 	 * Default JDBC TimeZone. Unless specified, the JVM default TimeZone is going to be used by the underlying JDBC Driver.
+	 *
+	 * @since 5.2.3
 	 */
 	String JDBC_TIME_ZONE = "hibernate.jdbc.time_zone";
 
@@ -1312,6 +1314,13 @@ public interface AvailableSettings {
 	 * Identifies the delimiter to use to separate schema management statements in script outputs
 	 */
 	String HBM2DDL_DELIMITER = "hibernate.hbm2ddl.delimiter";
+
+	/**
+	 * The name of the charset used by the schema generation resource. Without specifying this configuration property, the JVM default charset is used.
+	 *
+	 * @since 5.2.3
+	 */
+	String HBM2DDL_CHARSET_NAME = "hibernate.hbm2ddl.charset_name";
 
 
 	String JMX_ENABLED = "hibernate.jmx.enabled";

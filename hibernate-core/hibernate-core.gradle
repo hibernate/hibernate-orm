@@ -250,3 +250,7 @@ processTestResources {
 }
 
 test.dependsOn ":hibernate-orm-modules:prepareWildFlyForTests"
+
+test {
+    systemProperty "file.encoding", "utf-8"
+}

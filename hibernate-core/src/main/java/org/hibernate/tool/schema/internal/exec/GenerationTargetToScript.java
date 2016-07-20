@@ -15,10 +15,13 @@ import org.hibernate.tool.schema.spi.ScriptTargetOutput;
  * @author Steve Ebersole
  */
 public class GenerationTargetToScript implements GenerationTarget {
+
 	private final ScriptTargetOutput scriptTarget;
 	private final String delimiter;
 
-	public GenerationTargetToScript(ScriptTargetOutput scriptTarget, String delimiter) {
+	public GenerationTargetToScript(
+			ScriptTargetOutput scriptTarget,
+			String delimiter) {
 		if ( scriptTarget == null ) {
 			throw new SchemaManagementException( "ScriptTargetOutput cannot be null" );
 		}

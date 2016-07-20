@@ -1,1 +1,1 @@
-INSERT INTO Item(name) VALUES('schemagen-test');
+INSERT INTO Item(name) VALUES('schémagen-test');

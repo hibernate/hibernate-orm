@@ -27,10 +27,19 @@ public class ScriptTargetOutputToUrl extends AbstractScriptTargetOutput implemen
 	private static final Logger log = CoreLogging.logger( ScriptTargetOutputToUrl.class );
 
 	private final URL url;
+	private final String charsetName;
+
 	private Writer writer;
 
-	public ScriptTargetOutputToUrl(URL url) {
+	/**
+	 * Constructs a ScriptTargetOutputToUrl instance
+	 *
+	 * @param url The url to read from
+	 * @param charsetName The charset name
+	 */
+	public ScriptTargetOutputToUrl(URL url, String charsetName) {
 		this.url = url;
+		this.charsetName = charsetName;
 	}
 
 	@Override
@@ -44,7 +53,7 @@ public class ScriptTargetOutputToUrl extends AbstractScriptTargetOutput implemen
 	@Override
 	public void prepare() {
 		super.prepare();
-		this.writer = toWriter( url );
+		this.writer = toWriter( url, charsetName );
 	}
 
 	@Override
@@ -58,12 +67,12 @@ public class ScriptTargetOutputToUrl extends AbstractScriptTargetOutput implemen
 	}
 
 
-	private static Writer toWriter(URL url) {
+	private static Writer toWriter( URL url, String charsetName ) {
 		log.debug( "Attempting to resolve writer for URL : " + url );
 		// technically only "strings corresponding to file URLs" are supported, which I take to mean URLs whose
 		// protocol is "file"
 		try {
-			return ScriptTargetOutputToFile.toFileWriter( new File( url.toURI() ) );
+			return ScriptTargetOutputToFile.toFileWriter( new File( url.toURI() ), charsetName );
 		}
 		catch (URISyntaxException e) {
 			throw new SchemaManagementException(

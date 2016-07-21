@@ -697,11 +697,14 @@ public class Configuration {
 		if ( getSessionFactoryObserver() != null ) {
 			sessionFactoryBuilder.addSessionFactoryObservers( getSessionFactoryObserver() );
 		}
-		if ( entityNotFoundDelegate != null ) {
-			sessionFactoryBuilder.applyEntityNotFoundDelegate( entityNotFoundDelegate );
+		if ( getCurrentTenantIdentifierResolver() != null ) {
+			sessionFactoryBuilder.applyCurrentTenantIdentifierResolver( getCurrentTenantIdentifierResolver() );
 		}
-		if ( entityTuplizerFactory != null ) {
-			sessionFactoryBuilder.applyEntityTuplizerFactory( entityTuplizerFactory );
+		if ( getEntityNotFoundDelegate() != null ) {
+			sessionFactoryBuilder.applyEntityNotFoundDelegate( getEntityNotFoundDelegate() );
+		}
+		if ( getEntityTuplizerFactory() != null ) {
+			sessionFactoryBuilder.applyEntityTuplizerFactory( getEntityTuplizerFactory() );
 		}
 
 		return sessionFactoryBuilder.build();

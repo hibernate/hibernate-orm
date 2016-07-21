@@ -213,4 +213,12 @@ public interface Type<T> extends org.hibernate.sqm.domain.Type, javax.persistenc
 	 * @return The semi-resolved type
 	 */
 	Type getSemiResolvedType(SessionFactoryImplementor factory);
+
+	/**
+	 * How many columns are used to persist this type.
+	 * *
+	 * @return The number of columns
+	 *
+	 */
+	int getColumnSpan();
 }

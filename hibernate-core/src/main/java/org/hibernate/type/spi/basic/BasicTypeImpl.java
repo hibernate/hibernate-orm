@@ -151,4 +151,9 @@ public class BasicTypeImpl<T,D> implements BasicType<T> {
 			return converter.convertToEntityAttribute( databaseValue );
 		}
 	}
+
+	@Override
+	public int getColumnSpan() {
+		return 1;
+	}
 }

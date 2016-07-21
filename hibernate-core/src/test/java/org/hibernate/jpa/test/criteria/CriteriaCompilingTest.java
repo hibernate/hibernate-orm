@@ -11,6 +11,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+import java.util.Arrays;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.TypedQuery;
@@ -19,10 +20,16 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.EntityType;
 
-import org.junit.Assert;
-import org.junit.Test;
-
-import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.CacheMode;
+import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
+import org.hibernate.Session;
+import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.jpa.test.callbacks.RemoteControl;
+import org.hibernate.jpa.test.callbacks.Television;
+import org.hibernate.jpa.test.callbacks.VideoSystem;
+import org.hibernate.jpa.test.inheritance.Fruit;
+import org.hibernate.jpa.test.inheritance.Strawberry;
 import org.hibernate.jpa.test.metamodel.Address;
 import org.hibernate.jpa.test.metamodel.Alias;
 import org.hibernate.jpa.test.metamodel.Country;
@@ -35,15 +42,10 @@ import org.hibernate.jpa.test.metamodel.Phone;
 import org.hibernate.jpa.test.metamodel.Product;
 import org.hibernate.jpa.test.metamodel.ShelfLife;
 import org.hibernate.jpa.test.metamodel.Spouse;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.jpa.test.callbacks.RemoteControl;
-import org.hibernate.jpa.test.callbacks.Television;
-import org.hibernate.jpa.test.callbacks.VideoSystem;
-import org.hibernate.jpa.test.inheritance.Fruit;
-import org.hibernate.jpa.test.inheritance.Strawberry;
 
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.TestForIssue;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
@@ -189,6 +191,31 @@ public class CriteriaCompilingTest extends BaseEntityManagerFunctionalTestCase {
 		criteria = serializeDeserialize( criteria );
 
 		em.createQuery( criteria ).getResultList();
+
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-10960")
+	public void testDeprecation() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		Session session = em.unwrap( Session.class );
+		CriteriaBuilder builder = session.getCriteriaBuilder();
+		CriteriaQuery<Order> query = builder.createQuery( Order.class );
+		Root<Order> from = query.from( Order.class );
+		query.orderBy( builder.desc( from.get( "totalPrice" )));
+		TypedQuery<Order> jpaQuery = session.createQuery( query );
+		org.hibernate.query.Query<?> hibQuery = jpaQuery.unwrap( org.hibernate.query.Query.class );
+
+		ScrollableResults sr = hibQuery.scroll( ScrollMode.FORWARD_ONLY );
+
+		hibQuery.setCacheMode( CacheMode.IGNORE ).scroll( ScrollMode.FORWARD_ONLY );
+
+		org.hibernate.query.Query<Order> anotherQuery = session.createQuery( "select o from Order o where totalPrice in :totalPrices", Order.class );
+		anotherQuery.setParameterList( "totalPrices", Arrays.asList(12.5d, 14.6d) );
 
 		em.getTransaction().commit();
 		em.close();

@@ -17,7 +17,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.type.CompositeType;
+import org.hibernate.type.spi.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.spi.Type;
 

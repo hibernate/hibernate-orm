@@ -9,7 +9,7 @@ package org.hibernate.loader.plan.build.internal.spaces;
 import org.hibernate.QueryException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.PropertyMapping;
-import org.hibernate.type.CompositeType;
+import org.hibernate.type.spi.CompositeType;
 import org.hibernate.type.spi.Type;
 
 /**

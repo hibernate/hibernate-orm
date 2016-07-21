@@ -10,7 +10,7 @@ import org.hibernate.persister.collection.spi.PluralAttributeElement;
 import org.hibernate.persister.embeddable.spi.EmbeddablePersister;
 import org.hibernate.sqm.domain.EmbeddableType;
 import org.hibernate.sqm.domain.PluralAttribute;
-import org.hibernate.type.CompositeType;
+import org.hibernate.type.spi.CompositeType;
 
 /**
  * @author Steve Ebersole

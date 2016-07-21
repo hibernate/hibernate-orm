@@ -38,7 +38,7 @@ import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.CompositeType;
+import org.hibernate.type.spi.CompositeType;
 import org.hibernate.type.IntegerType;
 import org.hibernate.type.LongType;
 import org.hibernate.type.PostgresUUIDType;

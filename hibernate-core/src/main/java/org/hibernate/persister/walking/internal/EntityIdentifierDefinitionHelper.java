@@ -14,7 +14,7 @@ import org.hibernate.persister.walking.spi.EncapsulatedEntityIdentifierDefinitio
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.persister.walking.spi.NonEncapsulatedEntityIdentifierDefinition;
-import org.hibernate.type.CompositeType;
+import org.hibernate.type.spi.CompositeType;
 import org.hibernate.type.spi.Type;
 
 /**

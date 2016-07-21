@@ -12,7 +12,7 @@ import javax.persistence.metamodel.ManagedType;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.type.CompositeType;
+import org.hibernate.type.spi.CompositeType;
 import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;

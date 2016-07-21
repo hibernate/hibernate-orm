@@ -41,7 +41,7 @@ import org.hibernate.tuple.PropertyFactory;
 import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.ValueGenerator;
 import org.hibernate.type.AssociationType;
-import org.hibernate.type.CompositeType;
+import org.hibernate.type.spi.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.spi.Type;
 

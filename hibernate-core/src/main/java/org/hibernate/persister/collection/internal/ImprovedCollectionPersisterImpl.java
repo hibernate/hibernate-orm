@@ -32,7 +32,7 @@ import org.hibernate.sqm.domain.Type;
 import org.hibernate.sqm.query.from.JoinedFromElement;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.CompositeType;
+import org.hibernate.type.spi.CompositeType;
 import org.hibernate.type.EntityType;
 
 /**

@@ -17,7 +17,7 @@ import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.CompositeType;
+import org.hibernate.type.spi.CompositeType;
 import org.hibernate.type.spi.Type;
 
 /**

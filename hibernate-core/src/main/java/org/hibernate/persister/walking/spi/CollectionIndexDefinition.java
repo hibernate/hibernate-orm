@@ -37,7 +37,7 @@ public interface CollectionIndexDefinition {
 	public EntityDefinition toEntityDefinition();
 	/**
 	 * If the index type returned by {@link #getType()} is a
-	 * {@link org.hibernate.type.CompositeType}, then the composite
+	 * {@link org.hibernate.type.spi.CompositeType}, then the composite
 	 * index definition for the collection index is returned;
 	 * otherwise, IllegalStateException is thrown.
 	 *
@@ -45,7 +45,7 @@ public interface CollectionIndexDefinition {
 	 *
 	 * @throws IllegalStateException if the collection index type
 	 * returned by {@link #getType()} is not of type
-	 * {@link org.hibernate.type.CompositeType}.
+	 * {@link org.hibernate.type.spi.CompositeType}.
 	 */
 	public CompositionDefinition toCompositeDefinition();
 

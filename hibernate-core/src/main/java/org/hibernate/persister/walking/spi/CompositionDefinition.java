@@ -6,7 +6,7 @@
  */
 package org.hibernate.persister.walking.spi;
 
-import org.hibernate.type.CompositeType;
+import org.hibernate.type.spi.CompositeType;
 
 /**
  * @author Steve Ebersole

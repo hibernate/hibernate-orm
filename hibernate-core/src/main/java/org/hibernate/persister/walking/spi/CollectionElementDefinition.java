@@ -57,7 +57,7 @@ public interface CollectionElementDefinition {
 
 	/**
 	 * If the element type returned by {@link #getType()} is a
-	 * {@link org.hibernate.type.CompositeType}, then the composite
+	 * {@link org.hibernate.type.spi.CompositeType}, then the composite
 	 * element definition for the collection element is returned;
 	 * otherwise, IllegalStateException is thrown.
 	 *
@@ -65,7 +65,7 @@ public interface CollectionElementDefinition {
 	 *
 	 * @throws IllegalStateException if the collection element type
 	 * returned by {@link #getType()} is not of type
-	 * {@link org.hibernate.type.CompositeType}.
+	 * {@link org.hibernate.type.spi.CompositeType}.
 	 */
 	public CompositeCollectionElementDefinition toCompositeElementDefinition();
 }

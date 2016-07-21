@@ -13,7 +13,7 @@ import org.hibernate.loader.plan.build.spi.ExpandingQuerySpaces;
 import org.hibernate.loader.plan.spi.JoinDefinedByMetadata;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.PropertyMapping;
-import org.hibernate.type.CompositeType;
+import org.hibernate.type.spi.CompositeType;
 
 /**
  * @author Steve Ebersole

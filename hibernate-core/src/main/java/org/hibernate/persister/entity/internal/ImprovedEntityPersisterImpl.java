@@ -45,7 +45,7 @@ import org.hibernate.sqm.domain.Type;
 import org.hibernate.sqm.query.JoinType;
 import org.hibernate.sqm.query.from.FromElement;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.CompositeType;
+import org.hibernate.type.spi.CompositeType;
 
 import org.jboss.logging.Logger;
 

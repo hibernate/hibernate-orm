@@ -9,7 +9,7 @@ package org.hibernate.loader.plan.build.internal.returns;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.loader.plan.build.spi.ExpandingCompositeQuerySpace;
 import org.hibernate.loader.plan.spi.EntityReference;
-import org.hibernate.type.CompositeType;
+import org.hibernate.type.spi.CompositeType;
 
 /**
  * Models a composite entity identifier that is non-encapsulated (meaning there is no composite class, no

@@ -10,7 +10,7 @@ import org.hibernate.loader.PropertyPath;
 import org.hibernate.loader.plan.build.spi.ExpandingCompositeQuerySpace;
 import org.hibernate.loader.plan.build.spi.ExpandingEntityIdentifierDescription;
 import org.hibernate.loader.plan.spi.EntityReference;
-import org.hibernate.type.CompositeType;
+import org.hibernate.type.spi.CompositeType;
 
 /**
  * Models a composite entity identifier that is encapsulated (meaning there is a composite class and a single

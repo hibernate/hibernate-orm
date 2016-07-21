@@ -21,7 +21,7 @@ import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.tuple.AbstractNonIdentifierAttribute;
 import org.hibernate.tuple.BaselineAttributeInformation;
 import org.hibernate.type.AssociationType;
-import org.hibernate.type.CompositeType;
+import org.hibernate.type.spi.CompositeType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.spi.Type;
 

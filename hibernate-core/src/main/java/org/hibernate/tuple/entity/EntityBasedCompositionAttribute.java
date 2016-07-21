@@ -11,7 +11,7 @@ import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.tuple.BaselineAttributeInformation;
 import org.hibernate.tuple.component.AbstractCompositionAttribute;
-import org.hibernate.type.CompositeType;
+import org.hibernate.type.spi.CompositeType;
 
 /**
  * @author Steve Ebersole

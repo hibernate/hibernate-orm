@@ -16,7 +16,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.pojo.BasicLazyInitializer;
-import org.hibernate.type.CompositeType;
+import org.hibernate.type.spi.CompositeType;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 

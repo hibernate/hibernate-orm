@@ -12,7 +12,7 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.CompositeType;
+import org.hibernate.type.spi.CompositeType;
 
 /**
  * Contract for run-time, proxy-based lazy initialization proxies.
@@ -38,7 +38,7 @@ public interface ProxyFactory {
 	 * @param setIdentifierMethod Reference to the identifier setter method;
 	 * invocation on this method should not force initialization
 	 * @param componentIdType For composite identifier types, a reference to
-	 * the {@link org.hibernate.type.CompositeType type} of the identifier
+	 * the {@link org.hibernate.type.spi.CompositeType type} of the identifier
 	 * property; again accessing the id should generally not cause
 	 * initialization - but need to bear in mind <key-many-to-one/>
 	 * mappings.

@@ -24,6 +24,9 @@ import org.hibernate.bytecode.enhance.internal.MappedSuperclassEnhancer;
 import org.hibernate.bytecode.enhance.internal.PersistentAttributesEnhancer;
 import org.hibernate.bytecode.enhance.internal.PersistentAttributesHelper;
 import org.hibernate.engine.spi.Managed;
+import org.hibernate.engine.spi.ManagedComposite;
+import org.hibernate.engine.spi.ManagedEntity;
+import org.hibernate.engine.spi.ManagedMappedSuperclass;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.internal.CoreLogging;
@@ -117,7 +120,7 @@ public class Enhancer {
 			return;
 		}
 		// skip already enhanced classes
-		if ( PersistentAttributesHelper.isAssignable( managedCtClass, Managed.class.getName() ) ) {
+		if ( alreadyEnhanced( managedCtClass ) ) {
 			log.debugf( "Skipping enhancement of [%s]: already enhanced", managedCtClass.getName() );
 			return;
 		}
@@ -141,6 +144,16 @@ public class Enhancer {
 		else {
 			log.debugf( "Skipping enhancement of [%s]: not entity or composite", managedCtClass.getName() );
 		}
+	}
+
+	private boolean alreadyEnhanced(CtClass managedCtClass) {
+		if ( !PersistentAttributesHelper.isAssignable( managedCtClass, Managed.class.getName() ) ) {
+			return false;
+		}
+		// HHH-10977 - When a mapped superclass gets enhanced before a subclassing entity, the entity does not get enhanced, but it implements the Managed interface
+		return enhancementContext.isEntityClass( managedCtClass ) && PersistentAttributesHelper.isAssignable( managedCtClass, ManagedEntity.class.getName() )
+				|| enhancementContext.isCompositeClass( managedCtClass ) && PersistentAttributesHelper.isAssignable( managedCtClass, ManagedComposite.class.getName() )
+				|| enhancementContext.isMappedSuperclassClass( managedCtClass ) && PersistentAttributesHelper.isAssignable( managedCtClass, ManagedMappedSuperclass.class.getName() );
 	}
 
 	private byte[] getByteCode(CtClass managedCtClass) {

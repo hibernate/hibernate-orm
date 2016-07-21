@@ -18,7 +18,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Use Hibernate metadata to ignore cascade on entities.

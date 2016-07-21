@@ -22,7 +22,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMixedImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.type.PrimitiveType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Utility class for various reflection operations.

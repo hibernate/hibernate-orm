@@ -13,7 +13,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.antlr.HqlTokenTypes;
 import org.hibernate.param.ParameterSpecification;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import antlr.SemanticException;
 import antlr.collections.AST;
@@ -69,7 +69,7 @@ public class InLogicOperatorNode extends BinaryLogicOperatorNode implements Bina
 		if ( lhsType == null ) {
 			return;
 		}
-		final int lhsColumnSpan = lhsType.getColumnSpan( sessionFactory );
+		final int lhsColumnSpan = lhsType.getColumnSpan();
 
 		final Node rhsNode = (Node) inList.getFirstChild();
 		if ( !isNodeAcceptable( rhsNode ) ) {
@@ -88,7 +88,7 @@ public class InLogicOperatorNode extends BinaryLogicOperatorNode implements Bina
 			if ( rhsType == null ) {
 				return;
 			}
-			rhsColumnSpan = rhsType.getColumnSpan( sessionFactory );
+			rhsColumnSpan = rhsType.getColumnSpan();
 		}
 
 		if ( lhsColumnSpan > 1 && rhsColumnSpan > 1 ) {

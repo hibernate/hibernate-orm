@@ -154,7 +154,7 @@ public final class CollectionEntry implements Serializable {
 				!collection.isDirty() && //optimization
 				getLoadedPersister() != null &&
 				getLoadedPersister().isMutable() && //optimization
-				( collection.isDirectlyAccessible() || getLoadedPersister().getElementType().isMutable() ) && //optimization
+				( collection.isDirectlyAccessible() || getLoadedPersister().getElementType().getMutabilityPlan().isMutable() ) && //optimization
 				!collection.equalsSnapshot( getLoadedPersister() );
 
 		if ( forceDirty ) {

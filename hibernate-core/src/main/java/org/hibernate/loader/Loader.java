@@ -78,7 +78,7 @@ import org.hibernate.transform.CacheableResultTransformer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.EntityType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 import org.hibernate.type.VersionType;
 
 /**
@@ -2050,7 +2050,7 @@ public abstract class Loader {
 		int span = 0;
 		for ( int i = 0; i < values.length; i++ ) {
 			types[i].nullSafeSet( statement, values[i], startIndex + span, session );
-			span += types[i].getColumnSpan( getFactory() );
+			span += types[i].getColumnSpan();
 		}
 		return span;
 	}
@@ -2087,7 +2087,7 @@ public abstract class Loader {
 
 		for ( String name : namedParams.keySet() ) {
 			TypedValue typedValue = namedParams.get( name );
-			int columnSpan = typedValue.getType().getColumnSpan( getFactory() );
+			int columnSpan = typedValue.getType().getColumnSpan();
 			int[] locs = getNamedParameterLocs( name );
 			for ( int loc : locs ) {
 				if ( DEBUG_ENABLED ) {

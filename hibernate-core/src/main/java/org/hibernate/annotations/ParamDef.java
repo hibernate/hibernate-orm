@@ -25,7 +25,7 @@ public @interface ParamDef {
 	String name();
 
 	/**
-	 * The type being defined,  Typically this is the fully-qualified name of the {@link org.hibernate.type.Type},
+	 * The type being defined,  Typically this is the fully-qualified name of the {@link org.hibernate.type.spi.Type},
 	 * {@link org.hibernate.usertype.UserType} or {@link org.hibernate.usertype.CompositeUserType} implementation
 	 * class.
 	 */

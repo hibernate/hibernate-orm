@@ -23,7 +23,7 @@ import org.hibernate.loader.OuterJoinLoader;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.transform.ResultTransformer;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
 

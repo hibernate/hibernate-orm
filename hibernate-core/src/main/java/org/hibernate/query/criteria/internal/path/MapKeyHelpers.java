@@ -187,7 +187,7 @@ public class MapKeyHelpers {
 			implements SingularAttribute<Map<K,?>,K>, Bindable<K>, Serializable {
 		private final MapAttribute<?,K,?> attribute;
 		private final CollectionPersister mapPersister;
-		private final org.hibernate.type.Type mapKeyType;
+		private final org.hibernate.type.spi.Type mapKeyType;
 		private final Type<K> jpaType;
 		private final BindableType jpaBindableType;
 		private final Class<K> jpaBinableJavaType;

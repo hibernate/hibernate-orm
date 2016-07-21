@@ -34,7 +34,7 @@ import org.hibernate.persister.walking.spi.WalkingException;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CompositeType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * A helper for getting attributes from a composition that is known
@@ -124,7 +124,7 @@ public final class CompositionSingularSubAttributesHelper {
 						final Type type = compositeType.getSubtypes()[subAttributeNumber];
 
 						final int columnPosition = currentColumnPosition;
-						final int columnSpan = type.getColumnSpan( ownerEntityPersister.getFactory() );
+						final int columnSpan = type.getColumnSpan();
 						final String[] subAttributeLhsColumns = ArrayHelper.slice( lhsColumns, columnPosition, columnSpan );
 
 

@@ -47,7 +47,7 @@ import org.hibernate.type.LongType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.OneToOneType;
 import org.hibernate.type.TimestampType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 import org.jboss.logging.Logger;
 
 /**

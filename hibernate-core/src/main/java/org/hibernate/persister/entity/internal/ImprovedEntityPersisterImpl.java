@@ -153,7 +153,7 @@ public class ImprovedEntityPersisterImpl implements ImprovedEntityPersister, Ent
 			final String attributeName = ojlPersister.getSubclassPropertyName( attributeNumber );
 			log.tracef( "Starting building of Entity attribute : %s#%s", persister.getEntityName(), attributeName );
 
-			final org.hibernate.type.Type attributeType = ojlPersister.getSubclassPropertyType( attributeNumber );
+			final org.hibernate.type.spi.Type attributeType = ojlPersister.getSubclassPropertyType( attributeNumber );
 
 			final AbstractTable containingTable = tables[ Helper.INSTANCE.getSubclassPropertyTableNumber( persister, attributeNumber ) ];
 			final String [] columns = Helper.INSTANCE.getSubclassPropertyColumnExpressions( persister, attributeNumber );
@@ -363,7 +363,7 @@ public class ImprovedEntityPersisterImpl implements ImprovedEntityPersister, Ent
 	}
 
 	@Override
-	public org.hibernate.type.Type getOrmType() {
+	public org.hibernate.type.spi.Type getOrmType() {
 		return getEntityPersister().getEntityMetamodel().getEntityType();
 	}
 }

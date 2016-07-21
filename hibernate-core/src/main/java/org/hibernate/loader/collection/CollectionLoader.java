@@ -14,7 +14,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.OuterJoinLoader;
 import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Superclass for loaders that initialize collections

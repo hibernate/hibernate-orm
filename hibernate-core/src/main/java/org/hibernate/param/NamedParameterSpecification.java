@@ -51,7 +51,7 @@ public class NamedParameterSpecification extends AbstractExplicitParameterSpecif
 			int position) throws SQLException {
 		TypedValue typedValue = qp.getNamedParameters().get( name );
 		typedValue.getType().nullSafeSet( statement, typedValue.getValue(), position, session );
-		return typedValue.getType().getColumnSpan( session.getFactory() );
+		return typedValue.getType().getColumnSpan();
 	}
 
 	@Override

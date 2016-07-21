@@ -7,7 +7,7 @@
 package org.hibernate.criterion;
 
 import org.hibernate.Criteria;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * A single-column projection that may be aliased
@@ -82,7 +82,7 @@ public abstract class SimpleProjection implements EnhancedProjection {
 		final Type[] types = getTypes( criteria, criteriaQuery );
 		int count = 0;
 		for ( Type type : types ) {
-			count += type.getColumnSpan( criteriaQuery.getFactory() );
+			count += type.getColumnSpan();
 		}
 		return count;
 	}

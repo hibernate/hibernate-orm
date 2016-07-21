@@ -10,7 +10,7 @@ import java.io.Serializable;
 
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * An object-oriented representation of a query result set projection  in a {@link Criteria} query.

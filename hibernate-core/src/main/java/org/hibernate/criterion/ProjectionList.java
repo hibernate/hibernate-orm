@@ -12,7 +12,7 @@ import java.util.List;
 
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * A projection that wraps other projections to allow selecting multiple values.

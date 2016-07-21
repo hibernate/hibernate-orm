@@ -90,7 +90,7 @@ public final class JoinHelper {
 				return ArrayHelper.slice(
 						toColumns( lhsPersister, columnQualifier, propertyIndex ),
 						begin,
-						associationType.getColumnSpan( mapping )
+						associationType.getColumnSpan()
 				);
 			}
 			else {
@@ -147,7 +147,7 @@ public final class JoinHelper {
 								? lhsPersister.getIdentifierColumnNames()
 								: lhsPersister.getSubclassPropertyColumnNames( property ),
 						begin,
-						type.getColumnSpan( mapping )
+						type.getColumnSpan()
 				);
 			}
 			else {

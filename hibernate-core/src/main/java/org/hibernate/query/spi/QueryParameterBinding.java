@@ -9,7 +9,7 @@ package org.hibernate.query.spi;
 import javax.persistence.TemporalType;
 
 import org.hibernate.Incubating;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * The value/type binding information for a particular query parameter.

@@ -22,7 +22,7 @@ import org.hibernate.sql.SelectFragment;
 import org.hibernate.transform.BasicTransformerAdapter;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.EntityType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import antlr.SemanticException;
 

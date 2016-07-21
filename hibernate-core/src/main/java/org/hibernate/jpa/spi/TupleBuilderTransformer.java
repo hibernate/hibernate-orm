@@ -14,7 +14,7 @@ import javax.persistence.TupleElement;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.transform.BasicTransformerAdapter;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * ResultTransformer adapter for handling Tuple results from HQL/JPQL queries

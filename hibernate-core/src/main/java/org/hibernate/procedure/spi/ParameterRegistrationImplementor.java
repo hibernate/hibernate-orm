@@ -10,7 +10,7 @@ import java.sql.CallableStatement;
 import java.sql.SQLException;
 
 import org.hibernate.procedure.ParameterRegistration;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Additional internal contract for ParameterRegistration

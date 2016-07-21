@@ -19,7 +19,6 @@ import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.InvalidPathException;
-import org.hibernate.hql.internal.ast.tree.BooleanLiteralNode;
 import org.hibernate.hql.internal.ast.tree.DotNode;
 import org.hibernate.hql.internal.ast.tree.FromClause;
 import org.hibernate.hql.internal.ast.tree.IdentNode;
@@ -29,13 +28,12 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.InFragment;
 import org.hibernate.type.LiteralType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
 
 import antlr.SemanticException;
 import antlr.collections.AST;
-import java.util.Locale;
 
 /**
  * A delegate that handles literals and constants for HqlSqlWalker, performing the token replacement functions and

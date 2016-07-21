@@ -7,7 +7,7 @@
 package org.hibernate.hql.internal.classic;
 import org.hibernate.QueryException;
 import org.hibernate.persister.collection.CollectionPropertyNames;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 public class FromPathExpressionParser extends PathExpressionParser {
 

@@ -20,7 +20,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 
 /**
@@ -77,7 +77,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	public Serializable getSnapshot(CollectionPersister persister) throws HibernateException {
 		final HashMap clonedSet = new HashMap( set.size() );
 		for ( Object aSet : set ) {
-			final Object copied = persister.getElementType().deepCopy( aSet, persister.getFactory() );
+			final Object copied = persister.getElementType().getMutabilityPlan().deepCopy( aSet );
 			clonedSet.put( copied, copied );
 		}
 		return clonedSet;
@@ -125,7 +125,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 		final int size = array.length;
 		beforeInitialize( persister, size );
 		for ( Serializable arrayElement : array ) {
-			final Object assembledArrayElement = persister.getElementType().assemble( arrayElement, getSession(), owner );
+			final Object assembledArrayElement = persister.getElementType().getMutabilityPlan().assemble( arrayElement );
 			if ( assembledArrayElement != null ) {
 				set.add( assembledArrayElement );
 			}
@@ -343,7 +343,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 		final Iterator itr = set.iterator();
 		int i=0;
 		while ( itr.hasNext() ) {
-			result[i++] = persister.getElementType().disassemble( itr.next(), getSession(), null );
+			result[i++] = persister.getElementType().getMutabilityPlan().disassemble( itr.next() );
 		}
 		return result;
 	}

@@ -6,9 +6,11 @@
  */
 package org.hibernate.persister.common.spi;
 
+import org.hibernate.type.spi.Type;
+
 /**
  * @author Steve Ebersole
  */
 public interface SqmTypeImplementor extends org.hibernate.sqm.domain.Type {
-	org.hibernate.type.Type getOrmType();
+	Type getOrmType();
 }

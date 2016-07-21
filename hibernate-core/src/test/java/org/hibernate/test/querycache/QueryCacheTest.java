@@ -30,7 +30,7 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.stat.EntityStatistics;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.transform.Transformers;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;

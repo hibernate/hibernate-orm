@@ -6,7 +6,7 @@
  */
 package org.hibernate.cache.infinispan;
 
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 import org.infinispan.commons.equivalence.Equivalence;
 
 /**

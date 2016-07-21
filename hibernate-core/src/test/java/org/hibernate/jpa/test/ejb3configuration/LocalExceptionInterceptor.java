@@ -11,7 +11,7 @@ package org.hibernate.jpa.test.ejb3configuration;
 import java.io.Serializable;
 
 import org.hibernate.CallbackException;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * @author Emmanuel Bernard

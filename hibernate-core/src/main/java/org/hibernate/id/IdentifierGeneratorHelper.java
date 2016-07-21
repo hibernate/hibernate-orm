@@ -20,7 +20,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.CustomType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Factory and helper methods for {@link IdentifierGenerator} framework.

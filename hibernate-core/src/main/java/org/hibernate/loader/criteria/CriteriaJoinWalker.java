@@ -28,7 +28,7 @@ import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.AssociationType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * A <tt>JoinWalker</tt> for <tt>Criteria</tt> queries.

@@ -17,7 +17,7 @@ import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.HolderInstantiator;
 import org.hibernate.loader.Loader;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Standard ScrollableResults implementation.

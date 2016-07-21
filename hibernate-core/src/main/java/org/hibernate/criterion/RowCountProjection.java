@@ -12,7 +12,7 @@ import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * A row count

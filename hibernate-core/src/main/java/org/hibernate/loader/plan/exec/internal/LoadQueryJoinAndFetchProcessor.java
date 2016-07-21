@@ -46,7 +46,7 @@ import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.BagType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
 

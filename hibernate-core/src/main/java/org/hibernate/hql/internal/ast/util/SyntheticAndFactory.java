@@ -21,7 +21,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.param.CollectionFilterKeyParameterSpecification;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinFragment;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import antlr.collections.AST;
 

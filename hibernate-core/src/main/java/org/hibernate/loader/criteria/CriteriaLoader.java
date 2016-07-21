@@ -34,7 +34,7 @@ import org.hibernate.persister.entity.Lockable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.transform.ResultTransformer;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * A <tt>Loader</tt> for <tt>Criteria</tt> queries. Note that criteria queries are
@@ -152,7 +152,7 @@ public class CriteriaLoader extends OuterJoinLoader {
 			result = new Object[types.length];
 			String[] columnAliases = translator.getProjectedColumnAliases();
 			for ( int i = 0, pos = 0; i < result.length; i++ ) {
-				int numColumns = types[i].getColumnSpan( session.getFactory() );
+				int numColumns = types[i].getColumnSpan();
 				if ( numColumns > 1 ) {
 					String[] typeColumnAliases = ArrayHelper.slice( columnAliases, pos, numColumns );
 					result[i] = types[i].nullSafeGet( rs, typeColumnAliases, session, null );

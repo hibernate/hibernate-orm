@@ -11,7 +11,7 @@ import java.util.List;
 
 import org.hibernate.sql.sqm.convert.spi.SqlTreeWalker;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Represents a call to a function other than one of the standardized ones.

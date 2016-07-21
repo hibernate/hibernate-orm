@@ -22,11 +22,12 @@ import org.hibernate.query.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
+import org.hibernate.type.spi.Type;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 
 /**
  * Defines the "internal contract" for {@link Session} and other parts of Hibernate such as
- * {@link org.hibernate.type.Type}, {@link EntityPersister}
+ * {@link Type}, {@link EntityPersister}
  * and {@link org.hibernate.persister.collection.CollectionPersister} implementations.
  *
  * A Session, through this interface and SharedSessionContractImplementor, implements:<ul>

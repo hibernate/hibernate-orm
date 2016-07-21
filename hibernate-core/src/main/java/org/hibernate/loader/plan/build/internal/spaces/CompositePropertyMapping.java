@@ -10,7 +10,7 @@ import org.hibernate.QueryException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.type.CompositeType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * A PropertyMapping for handling composites!  Woohoo!

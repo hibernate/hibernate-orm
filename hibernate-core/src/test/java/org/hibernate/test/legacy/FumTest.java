@@ -21,7 +21,6 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -51,11 +50,10 @@ import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.TimesTenDialect;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.transform.Transformers;
-import org.hibernate.type.CalendarType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.StringType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 import org.junit.Test;
 
 public class FumTest extends LegacyTestCase {

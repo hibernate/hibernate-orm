@@ -81,7 +81,7 @@ public class PessimisticReadUpdateLockingStrategy implements LockingStrategy {
 					int offset = 2;
 
 					lockable.getIdentifierType().nullSafeSet( st, id, offset, session );
-					offset += lockable.getIdentifierType().getColumnSpan( factory );
+					offset += lockable.getIdentifierType().getColumnSpan();
 
 					if ( lockable.isVersioned() ) {
 						lockable.getVersionType().nullSafeSet( st, version, offset, session );

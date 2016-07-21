@@ -26,7 +26,7 @@ import org.hibernate.type.CalendarTimeType;
 import org.hibernate.type.CalendarType;
 import org.hibernate.type.ProcedureParameterExtractionAware;
 import org.hibernate.type.ProcedureParameterNamedBinder;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
 

@@ -43,7 +43,7 @@ import org.hibernate.tuple.ValueGenerator;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
@@ -284,7 +284,7 @@ public class EntityMetamodel implements Serializable {
 				foundCollection = true;
 			}
 
-			if ( propertyTypes[i].isMutable() && propertyCheckability[i] ) {
+			if ( propertyTypes[i].getMutabilityPlan().isMutable() && propertyCheckability[i] ) {
 				foundMutable = true;
 			}
 
@@ -438,7 +438,7 @@ public class EntityMetamodel implements Serializable {
 			SessionFactoryImplementor sessionFactoryImplementor,
 			Property mappingProperty,
 			ValueGeneration valueGeneration) {
-		final int numberOfMappedColumns = mappingProperty.getType().getColumnSpan( sessionFactoryImplementor );
+		final int numberOfMappedColumns = mappingProperty.getType().getColumnSpan();
 		if ( numberOfMappedColumns == 1 ) {
 			return new InDatabaseValueGenerationStrategyImpl(
 					valueGeneration.getGenerationTiming(),

@@ -14,10 +14,11 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.internal.util.compare.EqualsHelper;
+import org.hibernate.type.spi.Type;
 
 /**
  * Models the information pertaining to a custom type definition supplied by the user.  Used
- * to delay instantiation of the actual {@link org.hibernate.type.Type} instance.
+ * to delay instantiation of the actual {@link Type} instance.
  *
  * Generally speaking this information would come from annotations
  * ({@link org.hibernate.annotations.TypeDef}) or XML mappings.  An alternative form of

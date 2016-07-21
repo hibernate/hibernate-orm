@@ -19,7 +19,7 @@ import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.query.criteria.AuditId;
 import org.hibernate.envers.query.internal.property.PropertyNameGetter;
 import org.hibernate.type.EmbeddedComponentType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * @author Adam Warski (adam at warski dot org)

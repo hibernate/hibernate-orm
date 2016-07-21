@@ -9,7 +9,7 @@ import java.util.Properties;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Contract for a <tt>factory</tt> of {@link IdentifierGenerator} instances.

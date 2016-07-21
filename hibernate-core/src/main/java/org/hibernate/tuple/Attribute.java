@@ -6,7 +6,7 @@
  */
 package org.hibernate.tuple;
 
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Contract for attributes

@@ -86,7 +86,7 @@ import org.hibernate.sqm.query.select.DynamicInstantiationTarget;
 import org.hibernate.sqm.query.select.SelectClause;
 import org.hibernate.sqm.query.select.Selection;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole

@@ -8,7 +8,7 @@ package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * A value which is "typed" by reference to some other

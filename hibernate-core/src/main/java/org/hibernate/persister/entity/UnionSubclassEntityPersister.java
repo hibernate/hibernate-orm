@@ -42,7 +42,7 @@ import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Implementation of the "table-per-concrete-class" or "roll-down" mapping

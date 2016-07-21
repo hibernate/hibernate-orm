@@ -19,7 +19,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import org.junit.Before;
 import org.junit.Test;

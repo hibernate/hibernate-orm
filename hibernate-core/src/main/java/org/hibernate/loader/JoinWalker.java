@@ -40,7 +40,7 @@ import org.hibernate.type.AssociationType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Walks the metamodel, searching for joins, and collecting
@@ -635,7 +635,7 @@ public class JoinWalker {
 						currentDepth
 				);
 			}
-			begin += types[i].getColumnSpan( getFactory() );
+			begin += types[i].getColumnSpan();
 		}
 
 	}
@@ -655,7 +655,7 @@ public class JoinWalker {
 		String[] propertyNames = compositeType.getPropertyNames();
 		int begin = 0;
 		for ( int i = 0; i < types.length; i++ ) {
-			int length = types[i].getColumnSpan( getFactory() );
+			int length = types[i].getColumnSpan();
 			String[] lhsColumns = ArrayHelper.slice( cols, begin, length );
 
 			if ( types[i].isAssociationType() ) {

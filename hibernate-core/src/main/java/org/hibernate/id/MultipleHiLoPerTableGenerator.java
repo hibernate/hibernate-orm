@@ -43,7 +43,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * A hilo <tt>IdentifierGenerator</tt> that returns a <tt>Long</tt>, constructed using

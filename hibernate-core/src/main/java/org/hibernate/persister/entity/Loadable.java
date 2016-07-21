@@ -13,7 +13,7 @@ import java.sql.SQLException;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Implemented by a <tt>EntityPersister</tt> that may be loaded

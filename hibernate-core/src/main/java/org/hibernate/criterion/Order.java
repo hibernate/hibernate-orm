@@ -13,7 +13,7 @@ import java.util.Locale;
 import org.hibernate.Criteria;
 import org.hibernate.NullPrecedence;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Represents an ordering imposed upon the results of a Criteria

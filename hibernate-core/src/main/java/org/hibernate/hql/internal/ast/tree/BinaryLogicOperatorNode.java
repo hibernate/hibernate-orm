@@ -18,7 +18,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.type.OneToOneType;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import antlr.SemanticException;
 import antlr.collections.AST;
@@ -89,9 +89,9 @@ public class BinaryLogicOperatorNode extends AbstractSelectExpression implements
 	}
 
 	private int getColumnSpan(Type type, SessionFactoryImplementor sfi) {
-		int columnSpan = type.getColumnSpan( sfi );
+		int columnSpan = type.getColumnSpan();
 		if ( columnSpan == 0 && type instanceof OneToOneType ) {
-			columnSpan = ( (OneToOneType) type ).getIdentifierOrUniqueKeyType( sfi ).getColumnSpan( sfi );
+			columnSpan = ( (OneToOneType) type ).getIdentifierOrUniqueKeyType( sfi ).getColumnSpan();
 		}
 		return columnSpan;
 	}

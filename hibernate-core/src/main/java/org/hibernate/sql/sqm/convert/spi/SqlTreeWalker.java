@@ -60,7 +60,7 @@ import org.hibernate.sql.sqm.ast.select.SelectClause;
 import org.hibernate.sql.sqm.ast.select.Selection;
 import org.hibernate.sql.sqm.exec.results.spi.ReturnReader;
 import org.hibernate.type.LiteralType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
 
@@ -379,7 +379,7 @@ public class SqlTreeWalker {
 
 		final Type type = Helper.resolveType( namedParameter, parameterBindings );
 
-		final int columnCount = type.getColumnSpan( sessionFactory );
+		final int columnCount = type.getColumnSpan();
 		final boolean needsParens = currentlyInPredicate && columnCount > 1;
 
 		if ( needsParens ) {
@@ -426,7 +426,7 @@ public class SqlTreeWalker {
 
 		final Type type = Helper.resolveType( positionalParameter, parameterBindings );
 
-		final int columnCount = type.getColumnSpan( sessionFactory );
+		final int columnCount = type.getColumnSpan();
 		final boolean needsParens = currentlyInPredicate && columnCount > 1;
 
 		if ( needsParens ) {
@@ -450,7 +450,7 @@ public class SqlTreeWalker {
 			// handle literals via parameter binding if they occur outside the select
 			parameterBinders.add( queryLiteral );
 
-			final int columnCount = queryLiteral.getType().getColumnSpan( sessionFactory );
+			final int columnCount = queryLiteral.getType().getColumnSpan();
 			final boolean needsParens = currentlyInPredicate && columnCount > 1;
 
 			if ( needsParens ) {

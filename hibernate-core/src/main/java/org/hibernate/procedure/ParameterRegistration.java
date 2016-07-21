@@ -9,7 +9,7 @@ package org.hibernate.procedure;
 import javax.persistence.ParameterMode;
 import javax.persistence.TemporalType;
 
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Describes a registered procedure/function parameter.

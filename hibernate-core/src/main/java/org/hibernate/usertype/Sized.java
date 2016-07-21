@@ -7,9 +7,10 @@
 package org.hibernate.usertype;
 
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.type.spi.Type;
 
 /**
- * Extends dictated/default column size declarations from {@link org.hibernate.type.Type} to the {@link UserType}
+ * Extends dictated/default column size declarations from {@link Type} to the {@link UserType}
  * hierarchy as well via an optional interface.
  *
  * @author Steve Ebersole
@@ -23,7 +24,7 @@ public interface Sized {
 	 *
 	 * @return The dictated sizes.
 	 *
-	 * @see org.hibernate.type.Type#dictatedSizes
+	 * @see Type#dictatedSizes
 	 */
 	public Size[] dictatedSizes();
 
@@ -35,7 +36,7 @@ public interface Sized {
 	 *
 	 * @return The default sizes.
 	 *
-	 * @see org.hibernate.type.Type#defaultSizes
+	 * @see Type#defaultSizes
 	 */
 	public Size[] defaultSizes();
 }

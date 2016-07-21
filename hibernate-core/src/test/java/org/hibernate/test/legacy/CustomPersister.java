@@ -52,7 +52,7 @@ import org.hibernate.tuple.entity.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 import org.hibernate.type.VersionType;
 
 public class CustomPersister implements EntityPersister {

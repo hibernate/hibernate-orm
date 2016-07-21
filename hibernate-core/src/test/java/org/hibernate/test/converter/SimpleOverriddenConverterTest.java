@@ -13,7 +13,7 @@ import javax.persistence.MappedSuperclass;
 
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.type.StringType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;

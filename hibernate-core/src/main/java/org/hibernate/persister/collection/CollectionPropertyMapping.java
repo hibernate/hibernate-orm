@@ -9,7 +9,7 @@ package org.hibernate.persister.collection;
 import org.hibernate.QueryException;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * @author Gavin King

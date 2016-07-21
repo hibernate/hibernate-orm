@@ -20,7 +20,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Implements subselect fetching for a one to many association

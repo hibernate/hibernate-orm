@@ -99,6 +99,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.query.spi.NamedQueryRepository;
+import org.hibernate.type.spi.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 
@@ -772,7 +773,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	// Mapping impl
 
 	@Override
-	public org.hibernate.type.Type getIdentifierType(String entityName) throws MappingException {
+	public Type getIdentifierType(String entityName) throws MappingException {
 		final PersistentClass pc = entityBindingMap.get( entityName );
 		if ( pc == null ) {
 			throw new MappingException( "persistent class not known: " + entityName );
@@ -793,7 +794,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	@Override
-	public org.hibernate.type.Type getReferencedPropertyType(String entityName, String propertyName) throws MappingException {
+	public Type getReferencedPropertyType(String entityName, String propertyName) throws MappingException {
 		final PersistentClass pc = entityBindingMap.get( entityName );
 		if ( pc == null ) {
 			throw new MappingException( "persistent class not known: " + entityName );

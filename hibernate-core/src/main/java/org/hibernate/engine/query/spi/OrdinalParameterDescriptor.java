@@ -8,7 +8,7 @@ package org.hibernate.engine.query.spi;
 
 import org.hibernate.Incubating;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Descriptor regarding an ordinal parameter.

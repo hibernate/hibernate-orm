@@ -19,7 +19,7 @@ import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Defines the contract of an HQL->SQL translator.

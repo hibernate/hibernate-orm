@@ -28,7 +28,7 @@ import org.hibernate.sql.JoinType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import antlr.SemanticException;
 import antlr.collections.AST;
@@ -319,7 +319,7 @@ public class SessionFactoryHelper {
 	 * @return The number of columns.
 	 */
 	public int getColumnSpan(Type type) {
-		return type.getColumnSpan( sfi );
+		return type.getColumnSpan();
 	}
 
 	/**

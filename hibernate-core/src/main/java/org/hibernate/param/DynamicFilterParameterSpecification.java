@@ -13,7 +13,7 @@ import java.util.Iterator;
 
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * A specialized ParameterSpecification impl for dealing with a dynamic filter parameters.
@@ -49,7 +49,7 @@ public class DynamicFilterParameterSpecification implements ParameterSpecificati
 			QueryParameters qp,
 			SharedSessionContractImplementor session,
 			int start) throws SQLException {
-		final int columnSpan = definedParameterType.getColumnSpan( session.getFactory() );
+		final int columnSpan = definedParameterType.getColumnSpan();
 		final Object value = session.getLoadQueryInfluencers().getFilterParameterValue( filterName + '.' + parameterName );
 		if ( Collection.class.isInstance( value ) ) {
 			int positions = 0;

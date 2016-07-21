@@ -26,7 +26,6 @@ import org.hibernate.boot.internal.AttributeConverterDescriptorNonAutoApplicable
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -37,7 +36,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.type.AbstractStandardBasicType;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
@@ -53,7 +52,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
 /**
- * Tests the principle of adding "AttributeConverter" to the mix of {@link org.hibernate.type.Type} resolution
+ * Tests the principle of adding "AttributeConverter" to the mix of {@link Type} resolution
  *
  * @author Steve Ebersole
  */

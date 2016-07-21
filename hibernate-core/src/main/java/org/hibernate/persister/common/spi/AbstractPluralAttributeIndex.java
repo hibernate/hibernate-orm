@@ -7,11 +7,12 @@
 package org.hibernate.persister.common.spi;
 
 import org.hibernate.persister.collection.spi.PluralAttributeIndex;
+import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractPluralAttributeIndex<O extends org.hibernate.type.Type, S extends org.hibernate.sqm.domain.Type>
+public abstract class AbstractPluralAttributeIndex<O extends Type, S extends org.hibernate.sqm.domain.Type>
 		implements PluralAttributeIndex<O,S> {
 
 	private final O ormType;

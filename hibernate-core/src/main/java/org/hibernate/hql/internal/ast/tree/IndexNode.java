@@ -21,7 +21,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import antlr.RecognitionException;
 import antlr.SemanticException;

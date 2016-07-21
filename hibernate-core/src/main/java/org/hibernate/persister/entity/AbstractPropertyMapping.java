@@ -21,7 +21,7 @@ import org.hibernate.sql.Template;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Basic implementation of the {@link PropertyMapping} contract.
@@ -160,7 +160,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 		assert columns != null : "Incoming columns should not be null : " + path;
 		assert type != null : "Incoming type should not be null : " + path;
 
-		if ( columns.length != type.getColumnSpan( factory ) ) {
+		if ( columns.length != type.getColumnSpan() ) {
 			throw new MappingException(
 					"broken column mapping for: " + path +
 							" of: " + getEntityName()
@@ -284,7 +284,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 		for ( int i = 0; i < properties.length; i++ ) {
 			String subpath = extendPath( path, properties[i] );
 			try {
-				int length = types[i].getColumnSpan( factory );
+				int length = types[i].getColumnSpan();
 				String[] columnSlice = ArrayHelper.slice( columns, begin, length );
 				String[] columnReaderSlice = ArrayHelper.slice( columnReaders, begin, length );
 				String[] columnReaderTemplateSlice = ArrayHelper.slice( columnReaderTemplates, begin, length );

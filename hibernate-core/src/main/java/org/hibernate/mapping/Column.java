@@ -16,6 +16,7 @@ import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.sql.Template;
+import org.hibernate.type.spi.Type;
 
 /**
  * A column of a relational database table
@@ -188,7 +189,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 	}
 
 	public int getSqlTypeCode(Mapping mapping) throws MappingException {
-		org.hibernate.type.Type type = getValue().getType();
+		Type type = getValue().getType();
 		try {
 			int sqlTypeCode = type.sqlTypes( mapping )[getTypeIndex()];
 			if ( getSqlTypeCode() != null && getSqlTypeCode() != sqlTypeCode ) {

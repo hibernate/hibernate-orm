@@ -26,7 +26,7 @@ import org.hibernate.engine.spi.CacheImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 import org.hibernate.type.TypeHelper;
 
 /**
@@ -127,7 +127,7 @@ public class StandardQueryCache implements QueryCache {
 		final boolean isSingleResult = returnTypes.length == 1;
 		for ( Object aResult : result ) {
 			final Serializable cacheItem = isSingleResult
-					? returnTypes[0].disassemble( aResult, session, null )
+					? returnTypes[0].disassemble( aResult )
 					: TypeHelper.disassemble( (Object[]) aResult, returnTypes, null, session, null );
 			cacheable.add( cacheItem );
 			if ( TRACING ) {
@@ -205,7 +205,7 @@ public class StandardQueryCache implements QueryCache {
 			final List result = new ArrayList( cacheable.size() - 1 );
 			if ( singleResult ) {
 				for ( int i = 1; i < cacheable.size(); i++ ) {
-					result.add( returnTypes[0].assemble( (Serializable) cacheable.get( i ), session, null ) );
+					result.add( returnTypes[0].getMutabilityPlan().assemble( (Serializable) cacheable.get( i ) ) );
 				}
 			}
 			else {

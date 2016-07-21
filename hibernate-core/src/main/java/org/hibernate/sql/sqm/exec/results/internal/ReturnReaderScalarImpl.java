@@ -13,11 +13,12 @@ import java.sql.Types;
 import org.hibernate.EntityMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.sqm.exec.results.spi.ResultSetProcessingOptions;
 import org.hibernate.sql.sqm.exec.results.spi.ReturnReader;
 import org.hibernate.sql.sqm.exec.results.spi.RowProcessingState;
 import org.hibernate.type.CompositeType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
@@ -61,10 +62,10 @@ public class ReturnReaderScalarImpl implements ReturnReader {
 		// for now we assume basic types with no attribute conversion etc.
 		// a more correct implementation requires the "positional read" changes to Type.
 
-		final SessionImplementor session = processingState.getResultSetProcessingState().getSession();
+		final SharedSessionContractImplementor session = processingState.getResultSetProcessingState().getSession();
 		final ResultSet resultSet = processingState.getResultSetProcessingState().getResultSet();
 
-		final int columnSpan = returnType.getColumnSpan( session.getFactory() );
+		final int columnSpan = returnType.getColumnSpan();
 		final int[] jdbcTypes = returnType.sqlTypes( session.getFactory() );
 		if ( columnSpan > 1 ) {
 			// has to be a CompositeType for now (and a very basic, one-level one)...
@@ -87,7 +88,7 @@ public class ReturnReaderScalarImpl implements ReturnReader {
 		}
 	}
 
-	private Object readResultValue(ResultSet resultSet, int position, int jdbcType, SessionImplementor session) throws SQLException {
+	private Object readResultValue(ResultSet resultSet, int position, int jdbcType, SharedSessionContractImplementor session) throws SQLException {
 		final TypeDescriptorRegistryAccess typeDescriptorRegistryAccess = session.getFactory()
 				.getMetamodel()
 				.getTypeConfiguration()

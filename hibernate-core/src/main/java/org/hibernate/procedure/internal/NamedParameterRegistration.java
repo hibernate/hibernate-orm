@@ -8,7 +8,7 @@ package org.hibernate.procedure.internal;
 
 import javax.persistence.ParameterMode;
 
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Represents a registered named parameter

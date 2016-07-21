@@ -18,7 +18,7 @@ import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.EntityType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * <b>foreign</b><br>

@@ -11,7 +11,7 @@ import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.sqm.ast.expression.NamedParameter;
 import org.hibernate.sql.sqm.ast.expression.PositionalParameter;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole

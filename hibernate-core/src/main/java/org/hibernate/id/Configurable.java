@@ -10,7 +10,7 @@ import java.util.Properties;
 
 import org.hibernate.MappingException;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * An {@link IdentifierGenerator} that supports "configuration".

@@ -8,7 +8,7 @@ package org.hibernate.tuple;
 
 import org.hibernate.FetchMode;
 import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Represents a non-identifier property within the Hibernate runtime-metamodel.

@@ -22,7 +22,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Insert;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * A generator which combines sequence generation with immediate retrieval

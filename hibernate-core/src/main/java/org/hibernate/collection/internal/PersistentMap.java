@@ -21,7 +21,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 
 /**
@@ -74,7 +74,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 		final HashMap clonedMap = new HashMap( map.size() );
 		for ( Object o : map.entrySet() ) {
 			final Entry e = (Entry) o;
-			final Object copy = persister.getElementType().deepCopy( e.getValue(), persister.getFactory() );
+			final Object copy = persister.getElementType().getMutabilityPlan().deepCopy( e.getValue() );
 			clonedMap.put( e.getKey(), copy );
 		}
 		return clonedMap;
@@ -460,8 +460,8 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 		beforeInitialize( persister, size );
 		for ( int i = 0; i < size; i+=2 ) {
 			map.put(
-					persister.getIndexType().assemble( array[i], getSession(), owner ),
-					persister.getElementType().assemble( array[i+1], getSession(), owner )
+					persister.getIndexType().getMutabilityPlan().assemble( array[i] ),
+					persister.getElementType().getMutabilityPlan().assemble( array[i+1] )
 			);
 		}
 	}
@@ -474,8 +474,8 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 		int i=0;
 		while ( itr.hasNext() ) {
 			final Map.Entry e = (Map.Entry) itr.next();
-			result[i++] = persister.getIndexType().disassemble( e.getKey(), getSession(), null );
-			result[i++] = persister.getElementType().disassemble( e.getValue(), getSession(), null );
+			result[i++] = persister.getIndexType().getMutabilityPlan().disassemble( e.getKey() );
+			result[i++] = persister.getElementType().getMutabilityPlan().disassemble( e.getValue() );
 		}
 		return result;
 

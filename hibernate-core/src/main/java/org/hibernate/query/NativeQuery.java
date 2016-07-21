@@ -17,7 +17,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.MappingException;
 import org.hibernate.SQLQuery;
 import org.hibernate.SynchronizeableQuery;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole

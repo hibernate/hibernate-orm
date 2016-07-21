@@ -15,7 +15,7 @@ import java.util.Set;
 import org.hibernate.Filter;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.FilterImpl;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Allows cached queries to be keyed by enabled filters.

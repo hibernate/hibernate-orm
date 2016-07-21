@@ -13,7 +13,7 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * A one-to-one association mapping

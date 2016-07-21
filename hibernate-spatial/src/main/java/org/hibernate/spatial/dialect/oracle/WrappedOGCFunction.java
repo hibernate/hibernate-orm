@@ -12,7 +12,7 @@ import java.util.List;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.spatial.Spatial;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * An HQL function that is implemented using Oracle's OGC compliance

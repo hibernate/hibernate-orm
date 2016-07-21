@@ -59,7 +59,7 @@ import org.hibernate.sql.QuerySelect;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.EntityType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * An instance of <tt>QueryTranslator</tt> translates a Hibernate

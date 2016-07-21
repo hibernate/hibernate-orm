@@ -22,7 +22,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.type.AbstractType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * TODO : javadoc
@@ -95,7 +95,7 @@ public class DiscriminatorType extends AbstractType {
 		return value == null ? "[null]" : value.toString();
 	}
 
-	public Object deepCopy(Object value, SessionFactoryImplementor factory)
+	public Object deepCopy(Object value)
 			throws HibernateException {
 		return value;
 	}
@@ -133,7 +133,7 @@ public class DiscriminatorType extends AbstractType {
 		return underlyingType.defaultSizes( mapping );
 	}
 
-	public int getColumnSpan(Mapping mapping) throws MappingException {
-		return underlyingType.getColumnSpan( mapping );
+	public int getColumnSpan() throws MappingException {
+		return underlyingType.getColumnSpan();
 	}
 }

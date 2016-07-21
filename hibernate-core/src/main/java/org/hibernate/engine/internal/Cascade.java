@@ -30,7 +30,7 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Delegate responsible for, in conjunction with the various

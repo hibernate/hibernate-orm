@@ -11,7 +11,7 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.Incubating;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Represents a "parameter list" binding: aka the binding of a collection of values for a single

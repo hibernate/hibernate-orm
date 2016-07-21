@@ -9,17 +9,14 @@ package org.hibernate.jpa.spi;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.LockModeType;
-import javax.persistence.PersistenceException;
 import javax.persistence.criteria.Selection;
 
-import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
-import org.hibernate.StaleStateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jpa.HibernateEntityManager;
 import org.hibernate.query.Query;
 import org.hibernate.query.criteria.internal.ValueHandlerFactory;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Additional internal contracts for the Hibernate {@link javax.persistence.EntityManager} implementation.

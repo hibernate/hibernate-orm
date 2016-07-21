@@ -11,6 +11,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.type.spi.Type;
 
 /**
  * Second level cache providers now have the option to use custom key implementations.
@@ -25,7 +26,7 @@ import org.hibernate.persister.entity.spi.EntityPersister;
  * to use the primary id only, skipping the role or entity name.
  * <p/>
  * Even with multiple types sharing the same cache, their identifiers could be of the same
- * {@link org.hibernate.type.Type}; in this case the cache container could
+ * {@link Type}; in this case the cache container could
  * use a single type reference to implement a custom equality function without having
  * to look it up on each equality check: that's a small optimisation but the
  * equality function is often invoked extremely frequently.
@@ -33,8 +34,8 @@ import org.hibernate.persister.entity.spi.EntityPersister;
  * Another reason is to make it more convenient to implement custom serialization protocols when the
  * implementation supports clustering.
  *
- * @see org.hibernate.type.Type#getHashCode(Object, SessionFactoryImplementor)
- * @see org.hibernate.type.Type#isEqual(Object, Object)
+ * @see Type#getHashCode(Object, SessionFactoryImplementor)
+ * @see Type#isEqual(Object, Object)
  * @author Sanne Grinovero
  * @since 5.0
  */

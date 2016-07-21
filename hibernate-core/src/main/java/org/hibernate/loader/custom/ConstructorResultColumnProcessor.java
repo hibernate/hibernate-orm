@@ -15,7 +15,7 @@ import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.type.PrimitiveWrapperHelper;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Represents a {@link javax.persistence.ConstructorResult} within the custom query.

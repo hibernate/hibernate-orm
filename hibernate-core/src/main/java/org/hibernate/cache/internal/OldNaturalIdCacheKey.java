@@ -16,7 +16,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.type.EntityType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Defines a key for caching natural identifier resolutions into the second level cache.
@@ -75,7 +75,7 @@ public class OldNaturalIdCacheKey implements Serializable {
 				this.naturalIdValues[i] = (Serializable) value;
 			}
 			else {
-				this.naturalIdValues[i] = type.disassemble( value, session, null );
+				this.naturalIdValues[i] = type.getMutabilityPlan().disassemble( value );
 			}
 		}
 

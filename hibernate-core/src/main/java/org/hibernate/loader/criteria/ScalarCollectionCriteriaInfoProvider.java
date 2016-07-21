@@ -11,7 +11,7 @@ import java.io.Serializable;
 import org.hibernate.hql.internal.ast.util.SessionFactoryHelper;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.PropertyMapping;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * @author David Mansfield

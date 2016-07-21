@@ -6,7 +6,7 @@
  */
 package org.hibernate.persister.entity;
 import org.hibernate.QueryException;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * @author Gavin King

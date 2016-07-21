@@ -19,7 +19,7 @@ import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.transform.CacheableResultTransformer;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * A key that identifies a particular query with bound parameter values.  This is the object Hibernate uses
@@ -71,7 +71,7 @@ public class QueryKey implements Serializable {
 		final Object[] values = new Object[positionalParameterCount];
 		for ( int i = 0; i < positionalParameterCount; i++ ) {
 			types[i] = queryParameters.getPositionalParameterTypes()[i];
-			values[i] = types[i].disassemble( queryParameters.getPositionalParameterValues()[i], session, null );
+			values[i] = types[i].getMutabilityPlan().disassemble( queryParameters.getPositionalParameterValues()[i] );
 		}
 
 		// disassemble named parameters
@@ -86,10 +86,8 @@ public class QueryKey implements Serializable {
 						namedParameterEntry.getKey(),
 						new TypedValue(
 								namedParameterEntry.getValue().getType(),
-								namedParameterEntry.getValue().getType().disassemble(
-										namedParameterEntry.getValue().getValue(),
-										session,
-										null
+								namedParameterEntry.getValue().getType().getMutabilityPlan().disassemble(
+										namedParameterEntry.getValue().getValue()
 								)
 						)
 				);

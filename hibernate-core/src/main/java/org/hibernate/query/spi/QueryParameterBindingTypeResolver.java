@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.spi;
 
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * A resolver for Type based on a parameter value being bound, when no

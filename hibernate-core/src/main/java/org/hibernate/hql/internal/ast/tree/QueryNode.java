@@ -12,7 +12,7 @@ import org.hibernate.hql.internal.ast.util.ASTUtil;
 import org.hibernate.hql.internal.ast.util.ColumnHelper;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import antlr.SemanticException;
 import antlr.collections.AST;

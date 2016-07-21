@@ -9,7 +9,7 @@ package org.hibernate;
 import java.io.Serializable;
 import java.util.Iterator;
 
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Allows user code to inspect and/or change property values.

@@ -23,7 +23,7 @@ import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * A strategy for persisting a collection role. Defines a contract between

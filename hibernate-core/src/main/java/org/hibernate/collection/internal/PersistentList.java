@@ -19,7 +19,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * A persistent wrapper for a <tt>java.util.List</tt>. Underlying
@@ -64,7 +64,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	public Serializable getSnapshot(CollectionPersister persister) throws HibernateException {
 		final ArrayList clonedList = new ArrayList( list.size() );
 		for ( Object element : list ) {
-			final Object deepCopy = persister.getElementType().deepCopy( element, persister.getFactory() );
+			final Object deepCopy = persister.getElementType().getMutabilityPlan().deepCopy( element );
 			clonedList.add( deepCopy );
 		}
 		return clonedList;
@@ -394,7 +394,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 		final int size = array.length;
 		beforeInitialize( persister, size );
 		for ( Serializable arrayElement : array ) {
-			list.add( persister.getElementType().assemble( arrayElement, getSession(), owner ) );
+			list.add( persister.getElementType().getMutabilityPlan().assemble( arrayElement ) );
 		}
 	}
 
@@ -404,7 +404,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 		final int length = list.size();
 		final Serializable[] result = new Serializable[length];
 		for ( int i=0; i<length; i++ ) {
-			result[i] = persister.getElementType().disassemble( list.get( i ), getSession(), null );
+			result[i] = persister.getElementType().getMutabilityPlan().disassemble( list.get( i ) );
 		}
 		return result;
 	}

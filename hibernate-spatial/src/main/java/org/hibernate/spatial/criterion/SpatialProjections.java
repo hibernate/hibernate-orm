@@ -15,7 +15,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.spatial.SpatialAggregate;
 import org.hibernate.spatial.SpatialDialect;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * A factory for spatial projections.

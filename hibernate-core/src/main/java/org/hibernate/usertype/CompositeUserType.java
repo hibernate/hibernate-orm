@@ -12,7 +12,7 @@ import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * A <tt>UserType</tt> that may be dereferenced in a query.
@@ -33,7 +33,7 @@ import org.hibernate.type.Type;
  * representation.
  *
  * @see UserType for more simple cases
- * @see org.hibernate.type.Type
+ * @see Type
  * @author Gavin King
  */
 public interface CompositeUserType {

@@ -33,7 +33,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.param.DynamicFilterParameterSpecification;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.JoinType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Performs the post-processing of the join information gathered during semantic analysis.
@@ -221,7 +221,7 @@ public class JoinProcessor implements SqlTokenTypes {
 						",",
 						ArrayHelper.fillArray(
 								"?",
-								type.getColumnSpan( walker.getSessionFactoryHelper().getFactory() )
+								type.getColumnSpan()
 						)
 				);
 				final String bindFragment;

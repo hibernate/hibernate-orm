@@ -23,7 +23,7 @@ import org.hibernate.tuple.BaselineAttributeInformation;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.ForeignKeyDirection;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import static org.hibernate.engine.internal.JoinHelper.getLHSColumnNames;
 import static org.hibernate.engine.internal.JoinHelper.getLHSTableName;
@@ -81,7 +81,7 @@ public abstract class AbstractCompositionAttribute
 						final Type type = getType().getSubtypes()[subAttributeNumber];
 
 						int columnPosition = currentColumnPosition;
-						currentColumnPosition += type.getColumnSpan( sessionFactory() );
+						currentColumnPosition += type.getColumnSpan();
 
 						if ( type.isAssociationType() ) {
 							// we build the association-key here because of the "goofiness" with 'currentColumnPosition'

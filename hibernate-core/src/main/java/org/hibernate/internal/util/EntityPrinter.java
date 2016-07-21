@@ -17,7 +17,7 @@ import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Renders entities and query parameters to a nicely readable string.

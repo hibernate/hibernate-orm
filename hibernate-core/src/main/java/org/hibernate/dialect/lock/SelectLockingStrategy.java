@@ -61,7 +61,7 @@ public class SelectLockingStrategy extends AbstractSelectLockingStrategy {
 					getLockable().getVersionType().nullSafeSet(
 							st,
 							version,
-							getLockable().getIdentifierType().getColumnSpan( factory ) + 1,
+							getLockable().getIdentifierType().getColumnSpan() + 1,
 							session
 					);
 				}

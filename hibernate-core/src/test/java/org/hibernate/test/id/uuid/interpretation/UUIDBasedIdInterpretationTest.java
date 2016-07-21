@@ -26,7 +26,7 @@ import org.hibernate.dialect.PostgreSQL94Dialect;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.type.PostgresUUIDType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 import org.hibernate.type.UUIDBinaryType;
 
 import org.hibernate.testing.RequiresDialect;

@@ -8,7 +8,7 @@ package org.hibernate.cache.spi;
 
 import java.util.Comparator;
 
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Describes attributes regarding the type of data to be cached.

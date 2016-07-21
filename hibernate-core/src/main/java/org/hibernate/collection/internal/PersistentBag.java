@@ -19,7 +19,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * An unordered, unkeyed collection that can contain the same element
@@ -143,7 +143,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 			throws HibernateException {
 		final ArrayList clonedList = new ArrayList( bag.size() );
 		for ( Object item : bag ) {
-			clonedList.add( persister.getElementType().deepCopy( item, persister.getFactory() ) );
+			clonedList.add( persister.getElementType().getMutabilityPlan().deepCopy( item ) );
 		}
 		return clonedList;
 	}
@@ -160,7 +160,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 		final int length = bag.size();
 		final Serializable[] result = new Serializable[length];
 		for ( int i=0; i<length; i++ ) {
-			result[i] = persister.getElementType().disassemble( bag.get( i ), getSession(), null );
+			result[i] = persister.getElementType().getMutabilityPlan().disassemble( bag.get( i ) );
 		}
 		return result;
 	}
@@ -173,7 +173,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 		final int size = array.length;
 		beforeInitialize( persister, size );
 		for ( Serializable item : array ) {
-			final Object element = persister.getElementType().assemble( item, getSession(), owner );
+			final Object element = persister.getElementType().getMutabilityPlan().assemble( item );
 			if ( element != null ) {
 				bag.add( element );
 			}

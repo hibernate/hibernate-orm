@@ -21,7 +21,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * An <tt>IdentifierBag</tt> implements "bag" semantics more efficiently than
@@ -87,9 +87,9 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 		for ( int i = 0; i < size; i+=2 ) {
 			identifiers.put(
 				(i/2),
-				persister.getIdentifierType().assemble( array[i], getSession(), owner )
+				persister.getIdentifierType().getMutabilityPlan().assemble( array[i] )
 			);
-			values.add( persister.getElementType().assemble( array[i+1], getSession(), owner ) );
+			values.add( persister.getElementType().getMutabilityPlan().assemble( array[i+1] ) );
 		}
 	}
 
@@ -220,8 +220,8 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 		int i = 0;
 		for ( int j=0; j< values.size(); j++ ) {
 			final Object value = values.get( j );
-			result[i++] = persister.getIdentifierType().disassemble( identifiers.get( j ), getSession(), null );
-			result[i++] = persister.getElementType().disassemble( value, getSession(), null );
+			result[i++] = persister.getIdentifierType().getMutabilityPlan().disassemble( identifiers.get( j ) );
+			result[i++] = persister.getElementType().getMutabilityPlan().disassemble( value );
 		}
 		return result;
 	}
@@ -351,7 +351,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 			final Object value = iter.next();
 			map.put(
 					identifiers.get( i++ ),
-					persister.getElementType().deepCopy( value, persister.getFactory() )
+					persister.getElementType().getMutabilityPlan().deepCopy( value )
 			);
 		}
 		return map;

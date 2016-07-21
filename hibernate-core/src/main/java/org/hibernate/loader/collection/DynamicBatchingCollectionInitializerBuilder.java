@@ -29,7 +29,7 @@ import org.hibernate.loader.Loader;
 import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * A BatchingCollectionInitializerBuilder that builds CollectionInitializer instances capable of dynamically building

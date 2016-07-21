@@ -9,7 +9,7 @@ package org.hibernate;
 import java.io.Serializable;
 import java.util.Iterator;
 
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * An interceptor that does nothing.  May be used as a base class for application-defined custom interceptors.

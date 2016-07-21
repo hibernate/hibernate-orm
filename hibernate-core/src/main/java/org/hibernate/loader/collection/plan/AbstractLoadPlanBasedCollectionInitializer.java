@@ -27,7 +27,7 @@ import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * An abstract {@link CollectionInitializer} implementation based on using LoadPlans

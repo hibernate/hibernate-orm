@@ -16,7 +16,7 @@ import org.hibernate.engine.spi.VersionValue;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.type.IdentifierType;
 import org.hibernate.type.PrimitiveType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 import org.hibernate.type.VersionType;
 
 /**

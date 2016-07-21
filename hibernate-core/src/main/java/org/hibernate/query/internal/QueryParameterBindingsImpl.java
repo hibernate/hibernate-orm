@@ -35,7 +35,7 @@ import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterListBinding;
 import org.hibernate.type.SerializableType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Manages the group of QueryParameterBinding for a particular query.
@@ -284,7 +284,8 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 				if ( bindType == null ) {
 					bindType = SerializableType.INSTANCE;
 				}
-				positionalValueSpan += bindType.getColumnSpan( sessionFactory );
+				Object object = binding.getBindValue();
+				positionalValueSpan += bindType.getColumnSpan();
 			}
 		}
 		return positionalValueSpan;

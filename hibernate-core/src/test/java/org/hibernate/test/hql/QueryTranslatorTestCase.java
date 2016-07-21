@@ -28,7 +28,7 @@ import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.hql.spi.QueryTranslatorFactory;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

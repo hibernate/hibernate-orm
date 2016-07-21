@@ -6,8 +6,7 @@
  */
 package org.hibernate.loader.plan.spi;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Represent a simple scalar return within a query result.  Generally this would be values of basic (String, Integer,

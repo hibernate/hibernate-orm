@@ -24,7 +24,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.custom.CustomQuery;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Defines a query execution plan for a native-SQL query.
@@ -97,7 +97,7 @@ public class NativeSQLQueryPlan implements Serializable {
 		int span = 0;
 		for (int i = 0; i < values.length; i++) {
 			types[i].nullSafeSet( st, values[i], start + span, session );
-			span += types[i].getColumnSpan( session.getFactory() );
+			span += types[i].getColumnSpan();
 		}
 		return span;
 	}

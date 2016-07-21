@@ -6,7 +6,7 @@
  */
 package org.hibernate.persister.walking.spi;
 
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Represents a collection element.

@@ -7,6 +7,7 @@
 package org.hibernate.boot.model.source.spi;
 
 import org.hibernate.boot.model.source.internal.hbm.XmlElementMetadata;
+import org.hibernate.type.spi.Type;
 
 /**
  * Contract for sources of persistent attribute descriptions.
@@ -45,7 +46,7 @@ public interface AttributeSource extends ToolingHintContextContainer {
 	public AttributeRole getAttributeRole();
 
 	/**
-	 * Obtain information about the Hibernate type ({@link org.hibernate.type.Type}) for this attribute.
+	 * Obtain information about the Hibernate type ({@link Type}) for this attribute.
 	 *
 	 * @return The Hibernate type information
 	 */

@@ -12,7 +12,7 @@ import java.io.Serializable;
 
 import org.hibernate.CallbackException;
 import org.hibernate.EmptyInterceptor;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * @author Emmanuel Bernard

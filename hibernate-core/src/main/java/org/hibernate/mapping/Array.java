@@ -12,6 +12,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.PrimitiveType;
+import org.hibernate.type.spi.Type;
 
 /**
  * An array mapping has a primary key consisting of the key columns + index column.
@@ -27,7 +28,7 @@ public class Array extends List {
 
 	public Class getElementClass() throws MappingException {
 		if ( elementClassName == null ) {
-			org.hibernate.type.Type elementType = getElement().getType();
+			Type elementType = getElement().getType();
 			return isPrimitiveArray()
 					? ( (PrimitiveType) elementType ).getPrimitiveClass()
 					: elementType.getReturnedClass();

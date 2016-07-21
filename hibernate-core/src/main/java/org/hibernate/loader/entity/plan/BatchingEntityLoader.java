@@ -18,7 +18,7 @@ import org.hibernate.loader.Loader;
 import org.hibernate.loader.entity.UniqueEntityLoader;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
 

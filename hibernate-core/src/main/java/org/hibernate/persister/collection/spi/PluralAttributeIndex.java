@@ -7,11 +7,12 @@
 package org.hibernate.persister.collection.spi;
 
 import org.hibernate.persister.common.spi.Column;
+import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole
  */
-public interface PluralAttributeIndex<O extends org.hibernate.type.Type, S extends org.hibernate.sqm.domain.Type> {
+public interface PluralAttributeIndex<O extends Type, S extends org.hibernate.sqm.domain.Type> {
 	O getOrmType();
 
 	S getSqmType();

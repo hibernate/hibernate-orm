@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * A ResultTransformer that is used to transform tuples to a value(s)

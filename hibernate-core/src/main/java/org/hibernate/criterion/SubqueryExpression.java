@@ -16,7 +16,7 @@ import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.loader.criteria.CriteriaJoinWalker;
 import org.hibernate.loader.criteria.CriteriaQueryTranslator;
 import org.hibernate.persister.entity.OuterJoinLoadable;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * A criterion that involves a subquery

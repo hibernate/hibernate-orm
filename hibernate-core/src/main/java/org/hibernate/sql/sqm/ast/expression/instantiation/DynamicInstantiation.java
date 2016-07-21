@@ -16,6 +16,7 @@ import org.hibernate.sql.sqm.ast.expression.Expression;
 import org.hibernate.sql.sqm.exec.results.spi.ReturnReader;
 import org.hibernate.sql.sqm.convert.spi.SqlTreeWalker;
 import org.hibernate.sqm.query.expression.Compatibility;
+import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
 
@@ -74,7 +75,7 @@ public class DynamicInstantiation<T> implements Expression {
 	}
 
 	@Override
-	public org.hibernate.type.Type getType() {
+	public Type getType() {
 		return null;
 	}
 

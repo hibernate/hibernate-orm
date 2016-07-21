@@ -16,7 +16,7 @@ import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
 
@@ -100,7 +100,7 @@ public class ParameterBinder {
 		int span = 0;
 		for ( int i = 0; i < values.length; i++ ) {
 			types[i].nullSafeSet( st, values[i], start + span, session );
-			span += types[i].getColumnSpan( session.getFactory() );
+			span += types[i].getColumnSpan();
 		}
 		return span;
 	}

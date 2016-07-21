@@ -33,12 +33,13 @@ import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder.Options;
+import org.hibernate.type.spi.Type;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 
 /**
  * Defines the internal contract shared between {@link org.hibernate.Session} and
  * {@link org.hibernate.StatelessSession} as used by other parts of Hibernate (such as
- * {@link org.hibernate.type.Type}, {@link EntityPersister} and
+ * {@link Type}, {@link EntityPersister} and
  * {@link org.hibernate.persister.collection.CollectionPersister} implementors
  *
  * A Session, through this interface and SharedSessionContractImplementor, implements:<ul>

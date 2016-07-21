@@ -11,7 +11,7 @@ import java.sql.SQLException;
 
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 import org.hibernate.type.VersionType;
 
 /**

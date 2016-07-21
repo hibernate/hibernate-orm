@@ -48,6 +48,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.query.spi.NamedQueryRepository;
+import org.hibernate.type.spi.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -347,7 +348,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public org.hibernate.type.Type getIdentifierType(String entityName) throws MappingException {
+	public Type getIdentifierType(String entityName) throws MappingException {
 		final PersistentClass pc = entityBindingMap.get( entityName );
 		if ( pc == null ) {
 			throw new MappingException( "persistent class not known: " + entityName );
@@ -368,7 +369,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public org.hibernate.type.Type getReferencedPropertyType(String entityName, String propertyName) throws MappingException {
+	public Type getReferencedPropertyType(String entityName, String propertyName) throws MappingException {
 		final PersistentClass pc = entityBindingMap.get( entityName );
 		if ( pc == null ) {
 			throw new MappingException( "persistent class not known: " + entityName );

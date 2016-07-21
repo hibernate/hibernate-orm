@@ -11,7 +11,7 @@ import org.hibernate.loader.plan.spi.CompositeAttributeFetch;
 import org.hibernate.loader.plan.spi.EntityReference;
 import org.hibernate.loader.plan.spi.FetchSource;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole

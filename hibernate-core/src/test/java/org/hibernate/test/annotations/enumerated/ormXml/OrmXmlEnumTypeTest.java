@@ -11,7 +11,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.TestForIssue;

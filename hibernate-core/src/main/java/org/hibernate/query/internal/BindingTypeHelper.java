@@ -21,7 +21,7 @@ import org.hibernate.type.InstantType;
 import org.hibernate.type.OffsetDateTimeType;
 import org.hibernate.type.OffsetTimeType;
 import org.hibernate.type.TimestampType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 import org.hibernate.type.ZonedDateTimeType;
 
 /**

@@ -7,7 +7,7 @@
 package org.hibernate.hql.internal.ast.tree;
 
 import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Tree node representing reference to the value of a Map association.

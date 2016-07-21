@@ -27,7 +27,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.ComponentType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
 

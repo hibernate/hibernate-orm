@@ -452,7 +452,7 @@ public class AttributeFactory {
 		LOG.trace( "    Determined member [" + member + "]" );
 
 		final Value value = attributeContext.getPropertyMapping().getValue();
-		final org.hibernate.type.Type type = value.getType();
+		final org.hibernate.type.spi.Type type = value.getType();
 		LOG.trace( "    Determined type [name=" + type.getName() + ", class=" + type.getClass().getName() + "]" );
 
 		if ( type.isAnyType() ) {
@@ -479,7 +479,7 @@ public class AttributeFactory {
 			if ( value instanceof Collection ) {
 				final Collection collValue = (Collection) value;
 				final Value elementValue = collValue.getElement();
-				final org.hibernate.type.Type elementType = elementValue.getType();
+				final org.hibernate.type.spi.Type elementType = elementValue.getType();
 
 				// First, determine the type of the elements and use that to help determine the
 				// collection type)
@@ -514,7 +514,7 @@ public class AttributeFactory {
 				// Finally, we determine the type of the map key (if needed)
 				if ( value instanceof Map ) {
 					final Value keyValue = ( (Map) value ).getIndex();
-					final org.hibernate.type.Type keyType = keyValue.getType();
+					final org.hibernate.type.spi.Type keyType = keyValue.getType();
 
 					if ( keyType.isAnyType() ) {
 						if ( context.isIgnoreUnsupported() ) {
@@ -966,7 +966,7 @@ public class AttributeFactory {
 			if ( !entityMetamodel.getIdentifierProperty().isVirtual() ) {
 				throw new IllegalArgumentException( "expecting IdClass mapping" );
 			}
-			org.hibernate.type.Type type = entityMetamodel.getIdentifierProperty().getType();
+			org.hibernate.type.spi.Type type = entityMetamodel.getIdentifierProperty().getType();
 			if ( !EmbeddedComponentType.class.isInstance( type ) ) {
 				throw new IllegalArgumentException( "expecting IdClass mapping" );
 			}

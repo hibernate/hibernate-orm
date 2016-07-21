@@ -24,7 +24,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.type.ManyToOneType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import org.dom4j.Element;
 import org.dom4j.tree.DefaultElement;

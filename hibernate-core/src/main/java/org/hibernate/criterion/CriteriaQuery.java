@@ -10,7 +10,7 @@ import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.TypedValue;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * An instance of <tt>CriteriaQuery</tt> is passed to criterion, 

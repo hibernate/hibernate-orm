@@ -16,7 +16,7 @@ import java.io.ObjectOutputStream;
 
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 import org.junit.Test;
 
 /**

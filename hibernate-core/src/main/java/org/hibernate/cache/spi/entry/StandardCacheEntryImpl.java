@@ -20,6 +20,7 @@ import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.type.TypeHelper;
+import org.hibernate.type.spi.Type;
 
 /**
  * Standard representation of entity cached data using the "disassembled state".
@@ -124,8 +125,8 @@ public class StandardCacheEntryImpl implements CacheEntry {
 	 *
 	 * @throws HibernateException Indicates a problem performing assembly or calling the PreLoadEventListeners.
 	 *
-	 * @see org.hibernate.type.Type#assemble
-	 * @see org.hibernate.type.Type#disassemble
+	 * @see org.hibernate.type.spi.descriptor.java.MutabilityPlan#assemble
+	 * @see org.hibernate.type.spi.descriptor.java.MutabilityPlan#disassemble
 	 */
 	public Object[] assemble(
 			final Object instance,

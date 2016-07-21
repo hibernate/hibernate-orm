@@ -10,7 +10,7 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.query.procedure.spi.ProcedureParameterBindingImplementor;
 import org.hibernate.query.procedure.spi.ProcedureParameterImplementor;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole

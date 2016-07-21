@@ -16,7 +16,7 @@ import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.sql.ConditionFragment;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Base expression implementation for (not) emptiness checking of collection properties

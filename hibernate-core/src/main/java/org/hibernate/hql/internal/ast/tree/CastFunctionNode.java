@@ -10,7 +10,7 @@ import org.hibernate.QueryException;
 import org.hibernate.dialect.function.CastFunction;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.internal.ast.util.ColumnHelper;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import antlr.SemanticException;
 

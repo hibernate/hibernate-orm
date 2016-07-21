@@ -11,7 +11,7 @@ import java.sql.SQLException;
 
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Parameter bind specification for an explicit  positional (or ordinal) parameter.
@@ -49,7 +49,7 @@ public class PositionalParameterSpecification extends AbstractExplicitParameterS
 		Object value = qp.getPositionalParameterValues()[hqlPosition];
 
 		type.nullSafeSet( statement, value, position, session );
-		return type.getColumnSpan( session.getFactory() );
+		return type.getColumnSpan();
 	}
 
 	@Override

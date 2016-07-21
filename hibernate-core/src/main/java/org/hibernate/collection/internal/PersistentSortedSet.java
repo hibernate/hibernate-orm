@@ -13,7 +13,6 @@ import java.util.TreeMap;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.BasicCollectionPersister;
 
@@ -59,7 +58,7 @@ public class PersistentSortedSet extends PersistentSet implements SortedSet {
 			throws HibernateException {
 		final TreeMap clonedSet = new TreeMap( comparator );
 		for ( Object setElement : set ) {
-			final Object copy = persister.getElementType().deepCopy( setElement, persister.getFactory() );
+			final Object copy = persister.getElementType().getMutabilityPlan().deepCopy( setElement );
 			clonedSet.put( copy, copy );
 		}
 		return clonedSet;

@@ -60,7 +60,7 @@ import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.sqm.domain.DomainMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.AssociationType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**

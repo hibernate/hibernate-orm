@@ -12,12 +12,12 @@ import java.io.Serializable;
 
 import org.hibernate.EntityMode;
 import org.hibernate.internal.util.ValueHolder;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * An ordered pair of a value and its Hibernate type.
  * 
- * @see org.hibernate.type.Type
+ * @see Type
  * @author Gavin King
  */
 public final class TypedValue implements Serializable {

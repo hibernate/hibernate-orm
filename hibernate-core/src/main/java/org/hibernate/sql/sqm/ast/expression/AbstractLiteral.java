@@ -12,7 +12,7 @@ import java.sql.SQLException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.sqm.convert.spi.ParameterBinder;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /*
  * We classify literals different based on their source so that we can handle then differently
@@ -47,6 +47,6 @@ public abstract class AbstractLiteral extends SelfReadingExpressionSupport imple
 			QueryParameterBindings queryParameterBindings,
 			SessionImplementor session) throws SQLException {
 		getType().nullSafeSet( statement, getValue(), startPosition, session );
-		return getType().getColumnSpan( session.getFactory() );
+		return getType().getColumnSpan();
 	}
 }

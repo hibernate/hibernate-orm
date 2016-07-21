@@ -140,7 +140,7 @@ public class ImprovedCollectionPersisterImpl extends AbstractAttributeImpl imple
 	private PluralAttributeElement buildElementDescriptor(
 			DatabaseModel databaseModel,
 			DomainMetamodelImpl domainMetamodel) {
-		final org.hibernate.type.Type elementType = persister.getElementType();
+		final org.hibernate.type.spi.Type elementType = persister.getElementType();
 
 		if ( elementType.isAnyType() ) {
 			assert separateCollectionTable != null;

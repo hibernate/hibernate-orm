@@ -9,7 +9,7 @@ package org.hibernate.loader.plan.build.internal.spaces;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.plan.spi.JoinDefinedByMetadata;
 import org.hibernate.loader.plan.spi.QuerySpace;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole

@@ -22,7 +22,6 @@ import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.dialect.Oracle12cDialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.Oracle9iDialect;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.BinaryType;
 import org.hibernate.type.BlobType;
@@ -30,7 +29,7 @@ import org.hibernate.type.CharArrayType;
 import org.hibernate.type.ClobType;
 import org.hibernate.type.MaterializedBlobType;
 import org.hibernate.type.PrimitiveCharacterArrayClobType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;

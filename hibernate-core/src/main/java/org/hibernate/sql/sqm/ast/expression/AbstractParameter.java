@@ -13,7 +13,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.sql.sqm.convert.spi.ParameterBinder;
 import org.hibernate.sql.sqm.convert.spi.ParameterSpec;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
 
@@ -75,7 +75,7 @@ public abstract class AbstractParameter extends SelfReadingExpressionSupport imp
 		}
 
 		bindType.nullSafeSet( statement, bindValue, startPosition, session );
-		return bindType.getColumnSpan( session.getFactory() );
+		return bindType.getColumnSpan();
 	}
 
 	protected abstract void warnNoBinding();

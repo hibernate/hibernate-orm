@@ -10,7 +10,7 @@ import java.util.Collection;
 import javax.persistence.TemporalType;
 
 import org.hibernate.query.spi.QueryParameterListBinding;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole

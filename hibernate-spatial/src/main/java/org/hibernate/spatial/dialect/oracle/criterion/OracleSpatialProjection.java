@@ -13,7 +13,7 @@ import org.hibernate.criterion.SimpleProjection;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.spatial.SpatialDialect;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Template class for Spatial Projections

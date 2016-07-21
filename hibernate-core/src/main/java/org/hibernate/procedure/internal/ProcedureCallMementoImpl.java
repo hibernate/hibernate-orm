@@ -17,7 +17,7 @@ import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.procedure.spi.ParameterStrategy;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Implementation of ProcedureCallMemento

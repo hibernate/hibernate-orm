@@ -16,7 +16,7 @@ import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Implementation of FilterImpl.  FilterImpl implements the user's

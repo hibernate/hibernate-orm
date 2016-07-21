@@ -10,7 +10,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import antlr.collections.AST;
 
@@ -32,7 +32,7 @@ public abstract class AbstractNullnessCheckNode extends UnaryLogicOperatorNode {
 			return;
 		}
 		SessionFactoryImplementor sessionFactory = getSessionFactoryHelper().getFactory();
-		int operandColumnSpan = operandType.getColumnSpan( sessionFactory );
+		int operandColumnSpan = operandType.getColumnSpan();
 		if ( operandColumnSpan > 1 ) {
 			mutateRowValueConstructorSyntax( operandColumnSpan );
 		}

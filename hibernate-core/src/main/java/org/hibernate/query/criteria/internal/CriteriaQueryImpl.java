@@ -33,7 +33,7 @@ import org.hibernate.query.criteria.internal.compile.ImplicitParameterBinding;
 import org.hibernate.query.criteria.internal.compile.InterpretedParameterMetadata;
 import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
 

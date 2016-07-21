@@ -42,7 +42,7 @@ import org.hibernate.sqm.query.JoinType;
 import org.hibernate.sqm.query.from.FromElement;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 import org.hibernate.type.VersionType;
 
 /**

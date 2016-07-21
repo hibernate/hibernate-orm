@@ -8,7 +8,7 @@ package org.hibernate.dialect.function;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Analogous to {@link org.hibernate.dialect.function.StandardSQLFunction}

@@ -19,7 +19,7 @@ import org.hibernate.engine.query.spi.OrdinalParameterDescriptor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Encapsulates metadata about parameters encountered within a query.

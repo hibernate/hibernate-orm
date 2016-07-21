@@ -19,7 +19,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.CompositeCustomType;
 import org.hibernate.type.CustomType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 import org.hibernate.type.UUIDBinaryType;
 import org.hibernate.type.UUIDCharType;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;

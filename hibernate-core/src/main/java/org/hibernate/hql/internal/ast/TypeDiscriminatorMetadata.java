@@ -5,7 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.hql.internal.ast;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Essentially a wrapper around a {@link org.hibernate.persister.entity.DiscriminatorMetadata}

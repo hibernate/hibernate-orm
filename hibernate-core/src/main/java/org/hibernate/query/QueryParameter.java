@@ -7,7 +7,7 @@
 package org.hibernate.query;
 
 import org.hibernate.Incubating;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * NOTE: Consider this contract (and its sub-contracts) as incubating as we transition to 6.0 and SQM

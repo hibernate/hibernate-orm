@@ -6,7 +6,7 @@
  */
 package org.hibernate.criterion;
 
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Factory for Criterion objects.  Deprecated!

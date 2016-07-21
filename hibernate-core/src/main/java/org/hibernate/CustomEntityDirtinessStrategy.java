@@ -7,7 +7,7 @@
 package org.hibernate;
 
 import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * During a flush cycle, Hibernate needs to determine which of the entities associated with a {@link Session}.

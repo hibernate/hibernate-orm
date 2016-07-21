@@ -22,7 +22,7 @@ import org.hibernate.query.criteria.internal.ValueHandlerFactory;
 import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.criteria.internal.expression.LiteralExpression;
 import org.hibernate.query.criteria.internal.expression.ParameterExpressionImpl;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Models an <tt>[NOT] IN</tt> restriction

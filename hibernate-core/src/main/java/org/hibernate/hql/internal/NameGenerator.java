@@ -7,7 +7,7 @@
 package org.hibernate.hql.internal;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Provides utility methods for generating HQL / SQL names.   Shared by both the 'classic' and 'new' query translators.
@@ -24,7 +24,7 @@ public final class NameGenerator {
 	public static String[][] generateColumnNames(Type[] types, SessionFactoryImplementor f) throws MappingException {
 		String[][] columnNames = new String[types.length][];
 		for ( int i = 0; i < types.length; i++ ) {
-			int span = types[i].getColumnSpan( f );
+			int span = types[i].getColumnSpan();
 			columnNames[i] = new String[span];
 			for ( int j = 0; j < span; j++ ) {
 				columnNames[i][j] = NameGenerator.scalarName( i, j );

@@ -7,7 +7,7 @@
 package org.hibernate.hql.internal.ast.tree;
 
 import org.hibernate.hql.internal.ast.util.ColumnHelper;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import antlr.SemanticException;
 

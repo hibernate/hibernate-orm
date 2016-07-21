@@ -13,7 +13,7 @@ import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.TypedValue;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * superclass for "simple" comparisons (with SQL binary operators)

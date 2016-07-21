@@ -6,7 +6,7 @@
  */
 package org.hibernate.hql.internal.ast.tree;
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Identifies a node which models a SQL function.

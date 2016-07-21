@@ -11,7 +11,7 @@ import java.sql.SQLException;
 
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * A specialized ParameterSpecification impl for dealing with a collection-key as part of a collection filter
@@ -46,7 +46,7 @@ public class CollectionFilterKeyParameterSpecification implements ParameterSpeci
 			int position) throws SQLException {
 		Object value = qp.getPositionalParameterValues()[queryParameterPosition];
 		keyType.nullSafeSet( statement, value, position, session );
-		return keyType.getColumnSpan( session.getFactory() );
+		return keyType.getColumnSpan();
 	}
 
 	@Override

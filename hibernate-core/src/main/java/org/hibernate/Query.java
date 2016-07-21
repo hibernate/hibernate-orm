@@ -42,7 +42,7 @@ import org.hibernate.type.StringType;
 import org.hibernate.type.TextType;
 import org.hibernate.type.TimeType;
 import org.hibernate.type.TimestampType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Represents an HQL/JPQL query or a compiled Criteria query

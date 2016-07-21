@@ -20,7 +20,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
 
@@ -77,7 +77,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 //			final Object elt = (array==null) ? tempList.get( i ) : Array.get( array, i );
 			final Object elt = Array.get( array, i );
 			try {
-				Array.set( result, i, persister.getElementType().deepCopy( elt, persister.getFactory() ) );
+				Array.set( result, i, persister.getElementType().getMutabilityPlan().deepCopy( elt ) );
 			}
 			catch (IllegalArgumentException iae) {
 				LOG.invalidArrayElementType( iae.getMessage() );
@@ -203,7 +203,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 		array = Array.newInstance( persister.getElementClass(), cached.length );
 
 		for ( int i=0; i<cached.length; i++ ) {
-			Array.set( array, i, persister.getElementType().assemble( cached[i], getSession(), owner ) );
+			Array.set( array, i, persister.getElementType().getMutabilityPlan().assemble( cached[i] ) );
 		}
 	}
 
@@ -212,7 +212,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 		final int length = Array.getLength( array );
 		final Serializable[] result = new Serializable[length];
 		for ( int i=0; i<length; i++ ) {
-			result[i] = persister.getElementType().disassemble( Array.get( array,i ), getSession(), null );
+			result[i] = persister.getElementType().getMutabilityPlan().disassemble( Array.get( array,i ) );
 		}
 
 		return result;

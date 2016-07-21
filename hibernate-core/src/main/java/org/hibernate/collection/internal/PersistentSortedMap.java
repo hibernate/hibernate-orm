@@ -16,7 +16,6 @@ import java.util.TreeMap;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.BasicCollectionPersister;
 
@@ -62,7 +61,7 @@ public class PersistentSortedMap extends PersistentMap implements SortedMap {
 		final TreeMap clonedMap = new TreeMap( comparator );
 		for ( Object o : map.entrySet() ) {
 			final Entry e = (Entry) o;
-			clonedMap.put( e.getKey(), persister.getElementType().deepCopy( e.getValue(), persister.getFactory() ) );
+			clonedMap.put( e.getKey(), persister.getElementType().getMutabilityPlan().deepCopy( e.getValue() ) );
 		}
 		return clonedMap;
 	}

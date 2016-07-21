@@ -10,7 +10,7 @@ package org.hibernate.test.interceptor;
 import java.io.Serializable;
 
 import org.hibernate.EmptyInterceptor;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 public class CollectionInterceptor extends EmptyInterceptor {
 

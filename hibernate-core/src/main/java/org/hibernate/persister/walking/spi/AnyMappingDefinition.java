@@ -7,7 +7,7 @@
 package org.hibernate.persister.walking.spi;
 
 import org.hibernate.type.AnyType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Describes an ANY mapping

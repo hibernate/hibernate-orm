@@ -7,7 +7,7 @@
 package org.hibernate.criterion;
 
 import org.hibernate.Criteria;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * A wrappedProjection that is a wrapper around other projections to apply distinction.

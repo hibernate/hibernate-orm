@@ -8,14 +8,14 @@ package org.hibernate.engine.spi;
 
 import org.hibernate.MappingException;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Defines operations common to "compiled" mappings (ie. <tt>SessionFactory</tt>)
  * and "uncompiled" mappings (ie. <tt>Configuration</tt>) that are used by
  * implementors of <tt>Type</tt>.
  *
- * @see org.hibernate.type.Type
+ * @see Type
  * @see org.hibernate.internal.SessionFactoryImpl
  * @see org.hibernate.cfg.Configuration
  * @author Gavin King

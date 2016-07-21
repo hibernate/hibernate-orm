@@ -7,7 +7,7 @@
 package org.hibernate.persister.collection.spi;
 
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole

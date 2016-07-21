@@ -10,7 +10,7 @@ import java.io.Serializable;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.compare.EqualsHelper;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Allows multiple entity classes / collection roles to be stored in the same cache region. Also allows for composite

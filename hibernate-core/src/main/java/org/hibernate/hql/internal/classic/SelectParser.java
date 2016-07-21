@@ -18,7 +18,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.internal.QuerySplitter;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Parsers the select clause of a Hibernate query.

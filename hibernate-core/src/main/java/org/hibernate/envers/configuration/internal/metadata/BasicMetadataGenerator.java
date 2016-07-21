@@ -16,7 +16,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
 import org.hibernate.type.SerializableToBlobType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import org.dom4j.Element;
 

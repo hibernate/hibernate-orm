@@ -14,7 +14,7 @@ import java.util.Map;
 import org.hibernate.persister.walking.spi.AnyMappingDefinition;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.MetaType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole

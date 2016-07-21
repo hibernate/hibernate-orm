@@ -38,7 +38,7 @@ import org.hibernate.loader.plan.exec.query.spi.NamedParameterContext;
 import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.transform.ResultTransformer;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * A superclass for loader implementations based on using LoadPlans.
@@ -361,7 +361,7 @@ public abstract class AbstractLoadPlanBasedLoader {
 		int span = 0;
 		for ( int i = 0; i < values.length; i++ ) {
 			types[i].nullSafeSet( statement, values[i], startIndex + span, session );
-			span += types[i].getColumnSpan( getFactory() );
+			span += types[i].getColumnSpan();
 		}
 		return span;
 	}

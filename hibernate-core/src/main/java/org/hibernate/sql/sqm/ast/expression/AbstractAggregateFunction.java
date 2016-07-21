@@ -7,7 +7,7 @@
 package org.hibernate.sql.sqm.ast.expression;
 
 import org.hibernate.type.BasicType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole

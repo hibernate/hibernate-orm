@@ -9,7 +9,7 @@ package org.hibernate.criterion;
 import java.util.Collection;
 import java.util.Map;
 
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * The <tt>criterion</tt> package may be used by applications as a framework for building

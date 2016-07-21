@@ -13,7 +13,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.OuterJoinLoadable;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Loads an entity instance using outerjoin fetching to fetch associated entities.

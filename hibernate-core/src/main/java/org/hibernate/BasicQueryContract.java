@@ -7,7 +7,7 @@
 package org.hibernate;
 
 import org.hibernate.query.CommonQueryContract;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Defines the aspects of query definition that apply to all forms of querying.

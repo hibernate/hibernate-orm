@@ -26,7 +26,7 @@ import org.hibernate.sql.ordering.antlr.ColumnReference;
 import org.hibernate.sql.ordering.antlr.SqlValueReference;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import static org.junit.Assert.assertEquals;
 

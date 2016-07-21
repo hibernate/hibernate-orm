@@ -6,7 +6,7 @@
  */
 package org.hibernate.engine.query.spi.sql;
 
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Describes a scalar return in a native SQL query.

@@ -360,6 +360,70 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 	}
 
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-10879")
+	public void testKeyReserverKeyword() throws Exception {
+		Session s = openSession();
+		s.beginTransaction();
+
+		final Product2 kit = new Product2();
+		kit.id = 4000;
+		kit.description = "m";
+		kit.key = "0001";
+		s.persist( kit );
+		s.getTransaction().commit();
+		final Transaction tx = s.beginTransaction();
+
+
+		Session s2 = openSession();
+
+		Transaction tx2 = s2.beginTransaction();
+
+		Product2 kit2 = (Product2) s2.byId( Product2.class ).load( kit.id );
+
+		kit.description = "change!";
+		s.flush(); // creates write lock on kit until we end the transaction
+
+		Thread thread = new Thread(
+				new Runnable() {
+					@Override
+					public void run() {
+						try {
+							Thread.sleep( 3000 );
+						}
+						catch ( InterruptedException e ) {
+							e.printStackTrace();
+						}
+						tx.commit();
+					}
+				}
+		);
+
+		LockOptions opt = new LockOptions( LockMode.UPGRADE_NOWAIT );
+		opt.setTimeOut( 0 ); // seems useless
+		long start = System.currentTimeMillis();
+		thread.start();
+		try {
+			s2.buildLockRequest( opt ).lock( kit2 );
+		}
+		catch ( LockTimeoutException e ) {
+			// OK
+		}
+		long end = System.currentTimeMillis();
+		thread.join();
+		long differenceInMillisecs = end - start;
+		assertTrue(
+				"Lock NoWait blocked for " + differenceInMillisecs + " ms, this is definitely to much for Nowait",
+				differenceInMillisecs < 2000
+		);
+
+		s2.getTransaction().rollback();
+		s.getTransaction().begin();
+		s.delete( kit );
+		s.getTransaction().commit();
+	}
+
 	@Override
 	protected java.lang.Class<?>[] getAnnotatedClasses() {
 		return new java.lang.Class[] {

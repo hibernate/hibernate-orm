@@ -29,7 +29,7 @@ public class MappedSuperclassTestTask extends AbstractEnhancerTestTask {
 
 	public void execute() {
 		Employee charles = new Employee( "Charles", "Engineer" );
-		charles.oca = 1002;
+		charles.setOca( 1002 );
 
 		// Check that both types of class attributes are being dirty tracked
 		EnhancerTestUtils.checkDirtyTracking( charles, "title", "oca" );
@@ -47,9 +47,9 @@ public class MappedSuperclassTestTask extends AbstractEnhancerTestTask {
 
 	@MappedSuperclass private static class Person {
 
-		@Id String name;
+		@Id private String name;
 
-		@Version long oca;
+		@Version private long oca;
 
 		public Person(String name) {
 			this();

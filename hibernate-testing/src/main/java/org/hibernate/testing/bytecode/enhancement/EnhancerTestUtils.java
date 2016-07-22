@@ -126,6 +126,9 @@ public abstract class EnhancerTestUtils extends BaseUnitTestCase {
 
 	private static ClassLoader getEnhancerClassLoader(EnhancementContext context, String packageName) {
 		return new ClassLoader() {
+
+			private Enhancer enhancer = new Enhancer( context );
+
 			@SuppressWarnings("ResultOfMethodCallIgnored")
 			@Override
 			public Class<?> loadClass(String name) throws ClassNotFoundException {
@@ -146,7 +149,7 @@ public abstract class EnhancerTestUtils extends BaseUnitTestCase {
 					byte[] original = new byte[is.available()];
 					new BufferedInputStream( is ).read( original );
 
-					byte[] enhanced = new Enhancer( context ).enhance( name, original );
+					byte[] enhanced = enhancer.enhance( name, original );
 
 					File f = new File( workingDir + File.separator + name.replace( ".", File.separator ) + ".class" );
 					f.getParentFile().mkdirs();

@@ -5,7 +5,17 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
-Changes in version 4.2.23 (2015.04.12)
+Changes in version 4.2.24 (2016.07.21)
+------------------------------------------------------------------------------------------------------------------------
+
+** Bug
+    [HHH-10679] - Subselect fetching is not used for collections if their entity owners are initialized in a batch
+    [HHH-10757] - "select new ..." with CAST( NULL AS ...) fails with QuerySyntaxException: unexpected AST node: NULL    
+
+** Improvement
+    [HHH-9021] - Fix Issue with literals in select expression
+
+Changes in version 4.2.23 (2016.04.12)
 ------------------------------------------------------------------------------------------------------------------------
 
 ** Bug

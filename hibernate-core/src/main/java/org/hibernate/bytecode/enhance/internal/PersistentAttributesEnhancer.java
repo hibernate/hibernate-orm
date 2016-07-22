@@ -6,6 +6,10 @@
  */
 package org.hibernate.bytecode.enhance.internal;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -76,42 +80,60 @@ public class PersistentAttributesEnhancer extends Enhancer {
 	}
 
 	private CtField[] collectPersistentFields(CtClass managedCtClass) {
-		final List<CtField> persistentFieldList = new LinkedList<CtField>();
+		List<CtField> persistentFieldList = new ArrayList<CtField>();
 		for ( CtField ctField : managedCtClass.getDeclaredFields() ) {
-			// skip static fields and skip fields added by enhancement
-			if ( Modifier.isStatic( ctField.getModifiers() ) || ctField.getName().startsWith( "$$_hibernate_" ) ) {
+			// skip static fields and skip fields added by enhancement and  outer reference in inner classes
+			if ( ctField.getName().startsWith( "$$_hibernate_" ) || "this$0".equals( ctField.getName() ) ) {
 				continue;
 			}
-			// skip outer reference in inner classes
-			if ( "this$0".equals( ctField.getName() ) ) {
-				continue;
-			}
-			if ( enhancementContext.isPersistentField( ctField ) ) {
+			if ( !Modifier.isStatic( ctField.getModifiers() ) && enhancementContext.isPersistentField( ctField ) ) {
 				persistentFieldList.add( ctField );
 			}
 		}
 		// HHH-10646 Add fields inherited from @MappedSuperclass
-		// CtClass.getFields() does not return private fields, while CtClass.getDeclaredFields() does not return inherit
-		for ( CtField ctField : managedCtClass.getFields() ) {
-			if ( ctField.getDeclaringClass().equals( managedCtClass ) ) {
-				// Already processed above
-				continue;
-			}
-			if ( !enhancementContext.isMappedSuperclassClass( ctField.getDeclaringClass() ) || Modifier.isStatic( ctField.getModifiers() ) ) {
-				continue;
-			}
-			if ( enhancementContext.isPersistentField( ctField ) ) {
-				persistentFieldList.add( ctField );
-			}
+		// HHH-10981 There is no need to do it for @MappedSuperclass
+		if ( !enhancementContext.isMappedSuperclassClass( managedCtClass ) ) {
+			persistentFieldList.addAll( collectInheritPersistentFields( managedCtClass ) );
 		}
-		return enhancementContext.order( persistentFieldList.toArray( new CtField[persistentFieldList.size()] ) );
+
+		CtField[] orderedFields = enhancementContext.order( persistentFieldList.toArray( new CtField[0] ) );
+		log.debugf( "Persistent fields for entity %s: %s", managedCtClass.getName(), Arrays.toString( orderedFields ));
+		return orderedFields;
 	}
 
-	private PersistentAttributeAccessMethods enhancePersistentAttribute(
-			CtClass managedCtClass,
-			CtField persistentField) {
+	private Collection<CtField> collectInheritPersistentFields(CtClass managedCtClass) {
+		if ( managedCtClass == null || Object.class.getName().equals( managedCtClass.getName() ) ) {
+			return Collections.emptyList();
+		}
 		try {
-			final AttributeTypeDescriptor typeDescriptor = AttributeTypeDescriptor.resolve( persistentField );
+			CtClass managedCtSuperclass = managedCtClass.getSuperclass();
+
+			if ( !enhancementContext.isMappedSuperclassClass( managedCtSuperclass ) ) {
+				return collectInheritPersistentFields( managedCtSuperclass );
+			}
+			log.debugf( "Found @MappedSuperclass %s to collectPersistenceFields", managedCtSuperclass.getName() );
+			List<CtField> persistentFieldList = new ArrayList<CtField>();
+
+			for ( CtField ctField : managedCtSuperclass.getDeclaredFields() ) {
+				if ( ctField.getName().startsWith( "$$_hibernate_" ) || "this$0".equals( ctField.getName() ) ) {
+					continue;
+				}
+				if ( !Modifier.isStatic( ctField.getModifiers() ) && enhancementContext.isPersistentField( ctField ) ) {
+					persistentFieldList.add( ctField );
+				}
+			}
+			persistentFieldList.addAll( collectInheritPersistentFields( managedCtSuperclass ) );
+			return persistentFieldList;
+		}
+		catch ( NotFoundException nfe ) {
+			log.warnf( "Could not find the superclass of %s", managedCtClass );
+			return Collections.emptyList();
+		}
+	}
+
+	private PersistentAttributeAccessMethods enhancePersistentAttribute( CtClass managedCtClass, CtField persistentField) {
+		try {
+			AttributeTypeDescriptor typeDescriptor = AttributeTypeDescriptor.resolve( managedCtClass, persistentField );
 			return new PersistentAttributeAccessMethods(
 					generateFieldReader( managedCtClass, persistentField, typeDescriptor ),
 					generateFieldWriter( managedCtClass, persistentField, typeDescriptor )
@@ -131,24 +153,57 @@ public class PersistentAttributesEnhancer extends Enhancer {
 			CtClass managedCtClass,
 			CtField persistentField,
 			AttributeTypeDescriptor typeDescriptor) {
-		final String fieldName = persistentField.getName();
-		final String readerName = EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + fieldName;
-
-		// read attempts only have to deal lazy-loading support, not dirty checking;
-		// so if the field is not enabled as lazy-loadable return a plain simple getter as the reader
-		if ( !enhancementContext.hasLazyLoadableAttributes( managedCtClass )
-				|| !enhancementContext.isLazyLoadable( persistentField ) ) {
-			return MethodWriter.addGetter( managedCtClass, fieldName, readerName );
-		}
+		String fieldName = persistentField.getName();
+		String readerName = EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + fieldName;
+		String writerName = EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + fieldName;
+		CtMethod tmpSuperReader = null;
+		CtMethod tmpSuperWriter = null;
+		CtMethod reader = null;
 
 		try {
-			return MethodWriter.write(
-					managedCtClass, "public %s %s() {%n%s%n  return this.%s;%n}",
-					persistentField.getType().getName(),
-					readerName,
-					typeDescriptor.buildReadInterceptionBodyFragment( fieldName ),
-					fieldName
-			);
+			boolean declared = persistentField.getDeclaringClass().equals( managedCtClass );
+			String declaredReadFragment = "this." + fieldName + "";
+			String superReadFragment = "super." + readerName + "()";
+
+			if (!declared) {
+				// create a temporary getter on the supper entity to be able to compile our code
+				try {
+					persistentField.getDeclaringClass().getDeclaredMethod( readerName );
+					persistentField.getDeclaringClass().getDeclaredMethod( writerName );
+				}
+				catch (NotFoundException nfe){
+					tmpSuperReader = MethodWriter.addGetter( persistentField.getDeclaringClass(), persistentField.getName(), readerName );
+					tmpSuperWriter = MethodWriter.addSetter( persistentField.getDeclaringClass(), persistentField.getName(), writerName );
+				}
+			}
+
+			// read attempts only have to deal lazy-loading support, not dirty checking;
+			// so if the field is not enabled as lazy-loadable return a plain simple getter as the reader
+			if ( !enhancementContext.hasLazyLoadableAttributes( managedCtClass )
+					|| !enhancementContext.isLazyLoadable( persistentField ) ) {
+				reader = MethodWriter.write(
+						managedCtClass, "public %s %s() {  return %s;%n}",
+						persistentField.getType().getName(),
+						readerName,
+						declared ? declaredReadFragment : superReadFragment
+				);
+			}
+			else {
+				reader = MethodWriter.write(
+						managedCtClass, "public %s %s() {%n%s%n  return %s;%n}",
+						persistentField.getType().getName(),
+						readerName,
+						typeDescriptor.buildReadInterceptionBodyFragment( fieldName ),
+						declared ? declaredReadFragment : superReadFragment
+				);
+			}
+			if ( tmpSuperReader != null ) {
+				persistentField.getDeclaringClass().removeMethod( tmpSuperReader );
+			}
+			if ( tmpSuperWriter != null ) {
+				persistentField.getDeclaringClass().removeMethod( tmpSuperWriter );
+			}
+			return reader;
 		}
 		catch (CannotCompileException cce) {
 			final String msg = String.format(
@@ -172,15 +227,39 @@ public class PersistentAttributesEnhancer extends Enhancer {
 			CtClass managedCtClass,
 			CtField persistentField,
 			AttributeTypeDescriptor typeDescriptor) {
-		final String fieldName = persistentField.getName();
-		final String writerName = EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + fieldName;
+		String fieldName = persistentField.getName();
+		String readerName = EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + fieldName;
+		String writerName = EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + fieldName;
+		CtMethod tmpSuperReader = null;
+		CtMethod tmpSuperWriter = null;
+		CtMethod writer;
 
 		try {
-			final CtMethod writer;
+			boolean declared = persistentField.getDeclaringClass().equals( managedCtClass );
+			String declaredWriteFragment = "this." + fieldName + "=" + fieldName + ";";
+			String superWriteFragment =	"super." + writerName + "(" + fieldName + ");";
 
-			if ( !enhancementContext.hasLazyLoadableAttributes( managedCtClass )
-					|| !enhancementContext.isLazyLoadable( persistentField ) ) {
-				writer = MethodWriter.addSetter( managedCtClass, fieldName, writerName );
+			if (!declared) {
+				// create a temporary setter on the supper entity to be able to compile our code
+				try {
+					persistentField.getDeclaringClass().getDeclaredMethod( readerName );
+					persistentField.getDeclaringClass().getDeclaredMethod( writerName );
+				}
+				catch (NotFoundException nfe){
+					tmpSuperReader = MethodWriter.addGetter( persistentField.getDeclaringClass(), persistentField.getName(), readerName );
+					tmpSuperWriter = MethodWriter.addSetter( persistentField.getDeclaringClass(), persistentField.getName(), writerName );
+				}
+			}
+
+			if ( !enhancementContext.hasLazyLoadableAttributes( managedCtClass ) || !enhancementContext.isLazyLoadable( persistentField ) ) {
+				writer = MethodWriter.write(
+						managedCtClass,
+						"public void %s(%s %s) {%n  %s%n}",
+						writerName,
+						persistentField.getType().getName(),
+						fieldName,
+						declared ? declaredWriteFragment : superWriteFragment
+				);
 			}
 			else {
 				writer = MethodWriter.write(
@@ -203,12 +282,7 @@ public class PersistentAttributesEnhancer extends Enhancer {
 					);
 				}
 				else {
-					writer.insertBefore(
-							typeDescriptor.buildInLineDirtyCheckingBodyFragment(
-									enhancementContext,
-									persistentField
-							)
-					);
+					writer.insertBefore( typeDescriptor.buildInLineDirtyCheckingBodyFragment( enhancementContext, persistentField ) );
 				}
 
 				handleCompositeField( managedCtClass, persistentField, writer );
@@ -216,6 +290,13 @@ public class PersistentAttributesEnhancer extends Enhancer {
 
 			if ( enhancementContext.doBiDirectionalAssociationManagement( persistentField ) ) {
 				handleBiDirectionalAssociation( managedCtClass, persistentField, writer );
+			}
+
+			if ( tmpSuperReader != null ) {
+				persistentField.getDeclaringClass().removeMethod( tmpSuperReader );
+			}
+			if ( tmpSuperWriter != null ) {
+				persistentField.getDeclaringClass().removeMethod( tmpSuperWriter );
 			}
 			return writer;
 		}

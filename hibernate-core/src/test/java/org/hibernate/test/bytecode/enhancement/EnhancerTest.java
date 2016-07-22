@@ -172,6 +172,13 @@ public class EnhancerTest extends BaseUnitTestCase {
 	@TestForIssue( jiraKey = "HHH-10646" )
 	public void testMappedSuperclass() {
 		EnhancerTestUtils.runEnhancerTestTask( MappedSuperclassTestTask.class );
+		EnhancerTestUtils.runEnhancerTestTask( MappedSuperclassTestTask.class, new EnhancerTestContext() {
+			@Override
+			public boolean hasLazyLoadableAttributes(CtClass classDescriptor) {
+				// HHH-10981 - Without lazy loading, the generation of getters and setters has a different code path
+				return false;
+			}
+		} );
 	}
 
 	@Test

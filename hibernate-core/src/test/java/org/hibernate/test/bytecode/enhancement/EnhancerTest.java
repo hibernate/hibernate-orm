@@ -8,6 +8,7 @@ package org.hibernate.test.bytecode.enhancement;
 
 import javassist.CtClass;
 
+import org.hibernate.test.bytecode.enhancement.otherentityentrycontext.OtherEntityEntryContextTestTask;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -75,6 +76,11 @@ public class EnhancerTest extends BaseUnitTestCase {
 	@Test
 	public void testEviction() {
 		EnhancerTestUtils.runEnhancerTestTask( EvictionTestTask.class );
+	}
+
+	@Test
+	public void testOtherPersistenceContext() {
+		EnhancerTestUtils.runEnhancerTestTask( OtherEntityEntryContextTestTask.class );
 	}
 
 	@Test

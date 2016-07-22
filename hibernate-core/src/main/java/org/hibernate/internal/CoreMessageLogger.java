@@ -1734,4 +1734,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Executing import script '%s'", id = 476)
 	void executingImportScript(String scriptName);
 
+	@LogMessage(level = WARN)
+	@Message(value = "A ManagedEntity was associated with a stale PersistenceContext. A ManagedEntity may only be associated with one PersistenceContext at a time; %s", id = 480)
+	void stalePersistenceContextInEntityEntry(String msg);
 }

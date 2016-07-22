@@ -18,6 +18,7 @@ import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * @author Gavin King
+ * @author Myeonghyeon-Lee mhyeon.lee@navercorp.com
  */
 public interface EventSource extends SessionImplementor {
 	
@@ -36,6 +37,11 @@ public interface EventSource extends SessionImplementor {
 	 * Force an immediate flush
 	 */
 	void forceFlush(EntityEntry e) throws HibernateException;
+
+	/**
+	 * Do flush if required
+	 */
+	boolean autoFlushIfRequired(Set querySpaces);
 
 	/**
 	 * Cascade merge an entity instance

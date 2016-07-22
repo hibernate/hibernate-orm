@@ -199,6 +199,7 @@ import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
  * @author Steve Ebersole
  * @author Brett Meyer
  * @author Chris Cranford
+ * @author Myeonghyeon-Lee mhyeon.lee@navercorp.com
  */
 public final class SessionImpl
 		extends AbstractSessionImpl
@@ -1349,7 +1350,8 @@ public final class SessionImpl
 	 * detect in-memory changes, determine if the changes are to tables
 	 * named in the query and, if so, complete execution the flush
 	 */
-	protected boolean autoFlushIfRequired(Set querySpaces) throws HibernateException {
+	@Override
+	public boolean autoFlushIfRequired(Set querySpaces) throws HibernateException {
 		checkOpen();
 		if ( !isTransactionInProgress() ) {
 			// do not auto-flush while outside a transaction

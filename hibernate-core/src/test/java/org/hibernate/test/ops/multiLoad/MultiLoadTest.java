@@ -36,6 +36,7 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
+ * @author Myeonghyeon-Lee mhyeon.lee@navercorp.com
  */
 public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
@@ -111,6 +112,32 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 		assertEquals( 56, list.size() );
 		// no checking session's results will not put first existing managed entities
 		assertNotSame( third, list.get( 0 ) );
+		session.getTransaction().commit();
+		session.close();
+	}
+
+	@Test
+	public void testBasicMultiLoadWithManagedButRemovedAndChecking() {
+		Session session = openSession();
+		session.getTransaction().begin();
+		SimpleEntity third = session.byId( SimpleEntity.class ).load( 3 );
+		session.remove(third);
+		List<SimpleEntity> list = session.byMultipleIds(SimpleEntity.class).multiLoad( ids(56) );
+		// removed entity excluded in results
+		assertEquals( 55, list.size() );
+		session.getTransaction().commit();
+		session.close();
+	}
+
+	@Test
+	public void testBasicMultiLoadWithNonFlushedAndNoChecking() {
+		Session session = openSession();
+		session.getTransaction().begin();
+		session.save( new SimpleEntity( 100, "Entity #" + 100 ) );
+		Integer[] ids = { 1, 2, 3, 100 };
+		List<SimpleEntity> list = session.byMultipleIds(SimpleEntity.class).enableSessionCheck(false).multiLoad( ids );
+		// should include saved(non-flushed) entities in results depends on FlushMode
+		assertEquals( 4, list.size() );
 		session.getTransaction().commit();
 		session.close();
 	}

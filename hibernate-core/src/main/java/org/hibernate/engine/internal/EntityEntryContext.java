@@ -6,12 +6,14 @@
  */
 package org.hibernate.engine.internal;
 
+import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.jboss.logging.Logger;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -37,7 +39,11 @@ import java.util.Map;
  * @author Steve Ebersole
  */
 public class EntityEntryContext {
-	private static final Logger log = Logger.getLogger( EntityEntryContext.class );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( EntityEntryContext.class );
+
+	private transient PersistenceContext persistenceContext;
+
+	private transient IdentityHashMap<ManagedEntity,ImmutableManagedEntityHolder> immutableManagedEntityXref;
 
 	private transient ManagedEntity head;
 	private transient ManagedEntity tail;
@@ -52,7 +58,8 @@ public class EntityEntryContext {
 	/**
 	 * Constructs a EntityEntryContext
 	 */
-	public EntityEntryContext() {
+	public EntityEntryContext(PersistenceContext persistenceContext) {
+		this.persistenceContext = persistenceContext;
 	}
 
 	/**
@@ -69,33 +76,47 @@ public class EntityEntryContext {
 		// any addition (even the double one described above) should invalidate the cross-ref array
 		dirty = true;
 
-		// determine the appropriate ManagedEntity instance to use based on whether the entity is enhanced or not.
-		// also track whether the entity was already associated with the context
-		final ManagedEntity managedEntity;
-		final boolean alreadyAssociated;
-		if ( ManagedEntity.class.isInstance( entity ) ) {
-			managedEntity = (ManagedEntity) entity;
-			alreadyAssociated = managedEntity.$$_hibernate_getEntityEntry() != null;
+		assert AbstractEntityEntry.class.isInstance( entityEntry );
+
+		// We only need to check a mutable EntityEntry is associated with the same PersistenceContext.
+		// Immutable EntityEntry can be associated with multiple PersistenceContexts, so no need to check.
+		// ImmutableEntityEntry#getPersistenceContext() throws an exception (HHH-10251).
+		if ( entityEntry.getPersister().isMutable() ) {
+			assert AbstractEntityEntry.class.cast( entityEntry ).getPersistenceContext() == persistenceContext;
 		}
-		else {
-			ManagedEntity wrapper = null;
-			if ( nonEnhancedEntityXref == null ) {
-				nonEnhancedEntityXref = new IdentityHashMap<Object, ManagedEntity>();
+
+		// Determine the appropriate ManagedEntity instance to use based on whether the entity is enhanced or not.
+		// Throw an exception if entity is a mutable ManagedEntity that is associated with a different
+		// PersistenceContext.
+		ManagedEntity managedEntity = getAssociatedManagedEntity( entity );
+		final boolean alreadyAssociated = managedEntity != null;
+		if ( !alreadyAssociated ) {
+			if ( ManagedEntity.class.isInstance( entity ) ) {
+				if ( entityEntry.getPersister().isMutable() ) {
+					managedEntity = (ManagedEntity) entity;
+					// We know that managedEntity is not associated with the same PersistenceContext.
+					// Check if managedEntity is associated with a different PersistenceContext.
+					checkNotAssociatedWithOtherPersistenceContextIfMutable( managedEntity );
+				}
+				else {
+					// Create a holder for PersistenceContext-related data.
+					managedEntity = new ImmutableManagedEntityHolder( (ManagedEntity) entity );
+					if ( immutableManagedEntityXref == null ) {
+						immutableManagedEntityXref = new IdentityHashMap<ManagedEntity, ImmutableManagedEntityHolder>();
+					}
+					immutableManagedEntityXref.put(
+							(ManagedEntity) entity,
+							(ImmutableManagedEntityHolder) managedEntity
+					);
+				}
 			}
 			else {
-				wrapper = nonEnhancedEntityXref.get( entity );
+				if ( nonEnhancedEntityXref == null ) {
+					nonEnhancedEntityXref = new IdentityHashMap<Object, ManagedEntity>();
+				}
+				managedEntity = new ManagedEntityImpl( entity );
+				nonEnhancedEntityXref.put( entity, managedEntity );
 			}
-
-			if ( wrapper == null ) {
-				wrapper = new ManagedEntityImpl( entity );
-				nonEnhancedEntityXref.put( entity, wrapper );
-				alreadyAssociated = false;
-			}
-			else {
-				alreadyAssociated = true;
-			}
-
-			managedEntity = wrapper;
 		}
 
 		// associate the EntityEntry with the entity
@@ -106,9 +127,14 @@ public class EntityEntryContext {
 			return;
 		}
 
+		// TODO: can dirty be set to true here?
+
 		// finally, set up linking and count
 		if ( tail == null ) {
 			assert head == null;
+			// Protect against stale data in the ManagedEntity and nullify previous/next references.
+			managedEntity.$$_hibernate_setPreviousManagedEntity( null );
+			managedEntity.$$_hibernate_setNextManagedEntity( null );
 			head = managedEntity;
 			tail = head;
 			count = 1;
@@ -116,8 +142,62 @@ public class EntityEntryContext {
 		else {
 			tail.$$_hibernate_setNextManagedEntity( managedEntity );
 			managedEntity.$$_hibernate_setPreviousManagedEntity( tail );
+			// Protect against stale data left in the ManagedEntity nullify next reference.
+			managedEntity.$$_hibernate_setNextManagedEntity( null );
 			tail = managedEntity;
 			count++;
+		}
+	}
+
+	private ManagedEntity getAssociatedManagedEntity(Object entity) {
+		if ( ManagedEntity.class.isInstance( entity ) ) {
+			final ManagedEntity managedEntity = (ManagedEntity) entity;
+			if ( managedEntity.$$_hibernate_getEntityEntry() == null ) {
+				// it is not associated
+				return null;
+			}
+			final AbstractEntityEntry entityEntry = (AbstractEntityEntry) managedEntity.$$_hibernate_getEntityEntry();
+
+			if ( entityEntry.getPersister().isMutable() ) {
+				return entityEntry.getPersistenceContext() == persistenceContext
+						? managedEntity // it is associated
+						: null;
+			}
+			else {
+				// if managedEntity is associated with this EntityEntryContext, then
+				// it will have an entry in immutableManagedEntityXref and its
+				// holder will be returned.
+				return immutableManagedEntityXref != null
+						? immutableManagedEntityXref.get( managedEntity )
+						: null;
+			}
+		}
+		else {
+			return nonEnhancedEntityXref != null
+					? nonEnhancedEntityXref.get( entity )
+					: null;
+		}
+	}
+
+	private void checkNotAssociatedWithOtherPersistenceContextIfMutable(ManagedEntity managedEntity) {
+		// we only have to check mutable managedEntity
+		final AbstractEntityEntry entityEntry = (AbstractEntityEntry) managedEntity.$$_hibernate_getEntityEntry();
+		if ( entityEntry == null ||
+				!entityEntry.getPersister().isMutable() ||
+				entityEntry.getPersistenceContext() == null ||
+				entityEntry.getPersistenceContext() == persistenceContext ) {
+			return;
+		}
+		if ( entityEntry.getPersistenceContext().getSession().isOpen() ) {
+			// NOTE: otherPersistenceContext may be operating on the entityEntry in a different thread.
+			//       it is not safe to associate entityEntry with this EntityEntryContext.
+			throw new HibernateException(
+					"Illegal attempt to associate a ManagedEntity with two open persistence contexts. " + entityEntry
+			);
+		}
+		else {
+			// otherPersistenceContext is associated with a closed PersistenceContext
+			log.stalePersistenceContextInEntityEntry( entityEntry.toString() );
 		}
 	}
 
@@ -140,17 +220,8 @@ public class EntityEntryContext {
 	 * @return The associated EntityEntry
 	 */
 	public EntityEntry getEntityEntry(Object entity) {
-		// essentially resolve the entity to a ManagedEntity...
-		final ManagedEntity managedEntity;
-		if ( ManagedEntity.class.isInstance( entity ) ) {
-			managedEntity = (ManagedEntity) entity;
-		}
-		else if ( nonEnhancedEntityXref == null ) {
-			managedEntity = null;
-		}
-		else {
-			managedEntity = nonEnhancedEntityXref.get( entity );
-		}
+		// locate a ManagedEntity for the entity, but only if it is associated with the same PersistenceContext.
+		final ManagedEntity managedEntity = getAssociatedManagedEntity( entity );
 
 		// and get/return the EntityEntry from the ManagedEntry
 		return managedEntity == null
@@ -166,27 +237,24 @@ public class EntityEntryContext {
 	 * @return Tjee EntityEntry
 	 */
 	public EntityEntry removeEntityEntry(Object entity) {
-		dirty = true;
-
-		// again, resolve the entity to a ManagedEntity (which may not be possible for non-enhanced)...
-		final ManagedEntity managedEntity;
-		if ( ManagedEntity.class.isInstance( entity ) ) {
-			managedEntity = (ManagedEntity) entity;
-		}
-		else if ( nonEnhancedEntityXref == null ) {
-			managedEntity = null;
-		}
-		else {
-			managedEntity = nonEnhancedEntityXref.remove( entity );
-		}
-
-		// if we could not resolve it, just return (it was not associated with this context)
-		if ( managedEntity == null || managedEntity.$$_hibernate_getEntityEntry() == null) {
+		// locate a ManagedEntity for the entity, but only if it is associated with the same PersistenceContext.
+		// no need to check if the entity is a ManagedEntity that is associated with a different PersistenceContext
+		final ManagedEntity managedEntity = getAssociatedManagedEntity( entity );
+		if ( managedEntity == null ) {
+			// not associated with this EntityEntryContext, so nothing to do.
 			return null;
 		}
 
-		// TODO: should dirty be set to true only if managedEntity is associtated with this context
-		//       (instead of setting it at the top of this method)?
+		dirty = true;
+
+		if ( ImmutableManagedEntityHolder.class.isInstance( managedEntity ) ) {
+			assert entity == ( (ImmutableManagedEntityHolder) managedEntity ).managedEntity;
+			immutableManagedEntityXref.remove( (ManagedEntity) entity );
+
+		}
+		else if ( !ManagedEntity.class.isInstance( entity ) ) {
+			nonEnhancedEntityXref.remove( entity );
+		}
 
 		// prepare for re-linking...
 		final ManagedEntity previous = managedEntity.$$_hibernate_getPreviousManagedEntity();
@@ -228,10 +296,7 @@ public class EntityEntryContext {
 
 		// finally clean out the ManagedEntity and return the associated EntityEntry
 		final EntityEntry theEntityEntry = managedEntity.$$_hibernate_getEntityEntry();
-		// need to think about implications for memory leaks here if we don't removed reference to EntityEntry
-		if( canClearEntityEntryReference(managedEntity) ){
-			managedEntity.$$_hibernate_setEntityEntry( null );
-		}
+		managedEntity.$$_hibernate_setEntityEntry( null );
 		return theEntityEntry;
 	}
 
@@ -270,14 +335,16 @@ public class EntityEntryContext {
 		while ( node != null ) {
 			final ManagedEntity nextNode = node.$$_hibernate_getNextManagedEntity();
 
-			if( canClearEntityEntryReference(node) ){
-				node.$$_hibernate_setEntityEntry( null );
-			}
+			node.$$_hibernate_setEntityEntry( null );
 
 			node.$$_hibernate_setPreviousManagedEntity( null );
 			node.$$_hibernate_setNextManagedEntity( null );
 
 			node = nextNode;
+		}
+
+		if ( immutableManagedEntityXref != null ) {
+			immutableManagedEntityXref.clear();
 		}
 
 		if ( nonEnhancedEntityXref != null ) {
@@ -351,7 +418,7 @@ public class EntityEntryContext {
 		final int count = ois.readInt();
 		log.tracef( "Starting deserialization of [%s] EntityEntry entries", count );
 
-		final EntityEntryContext context = new EntityEntryContext();
+		final EntityEntryContext context = new EntityEntryContext( rtn );
 		context.count = count;
 		context.dirty = true;
 
@@ -376,7 +443,21 @@ public class EntityEntryContext {
 
 			final ManagedEntity managedEntity;
 			if ( isEnhanced ) {
-				managedEntity = (ManagedEntity) entity;
+				if ( entry.getPersister().isMutable() ) {
+					managedEntity = (ManagedEntity) entity;
+				}
+				else {
+					managedEntity = new ImmutableManagedEntityHolder( (ManagedEntity) entity );
+					if ( context.immutableManagedEntityXref == null ) {
+						context.immutableManagedEntityXref =
+								new IdentityHashMap<ManagedEntity, ImmutableManagedEntityHolder>();
+					}
+					context.immutableManagedEntityXref.put(
+							(ManagedEntity) entity,
+							(ImmutableManagedEntityHolder) managedEntity
+
+					);
+				}
 			}
 			else {
 				managedEntity = new ManagedEntityImpl( entity );
@@ -431,25 +512,6 @@ public class EntityEntryContext {
 		return count;
 	}
 
-	/*
-	Check instance type of EntityEntry and if type is ImmutableEntityEntry, check to see if entity is referenced cached in the second level cache
-	 */
-	private boolean canClearEntityEntryReference(ManagedEntity managedEntity){
-
-		if( managedEntity.$$_hibernate_getEntityEntry() == null ) {
-			return true;
-		}
-
-		if( !(managedEntity.$$_hibernate_getEntityEntry() instanceof ImmutableEntityEntry) ) {
-			return true;
-		}
-		else if( managedEntity.$$_hibernate_getEntityEntry().getPersister().canUseReferenceCacheEntries() ) {
-			return false;
-		}
-
-		return true;
-
-	}
 	/**
 	 * The wrapper for entity classes which do not implement ManagedEntity
 	 */
@@ -496,6 +558,96 @@ public class EntityEntryContext {
 		@Override
 		public void $$_hibernate_setPreviousManagedEntity(ManagedEntity previous) {
 			this.previous = previous;
+		}
+	}
+
+	private static class ImmutableManagedEntityHolder implements ManagedEntity {
+		private ManagedEntity managedEntity;
+		private ManagedEntity previous;
+		private ManagedEntity next;
+
+		public ImmutableManagedEntityHolder(ManagedEntity immutableManagedEntity) {
+			this.managedEntity = immutableManagedEntity;
+		}
+
+		@Override
+		public Object $$_hibernate_getEntityInstance() {
+			return managedEntity.$$_hibernate_getEntityInstance();
+		}
+
+		@Override
+		public EntityEntry $$_hibernate_getEntityEntry() {
+			return managedEntity.$$_hibernate_getEntityEntry();
+		}
+
+		@Override
+		public void $$_hibernate_setEntityEntry(EntityEntry entityEntry) {
+			// need to think about implications for memory leaks here if we don't removed reference to EntityEntry
+			if ( entityEntry == null ) {
+				if ( canClearEntityEntryReference() ) {
+					managedEntity.$$_hibernate_setEntityEntry( null );
+				}
+				// otherwise, do nothing.
+			}
+			else {
+				// TODO: we may want to do something different here if
+				// managedEntity is in the process of being deleted.
+				// An immutable ManagedEntity can be associated with
+				// multiple PersistenceContexts. Changing the status
+				// to DELETED probably should not happen directly
+				// in the ManagedEntity because that would affect all
+				// PersistenceContexts to which the ManagedEntity is
+				// associated.
+				managedEntity.$$_hibernate_setEntityEntry( entityEntry );
+			}
+		}
+
+		@Override
+		public ManagedEntity $$_hibernate_getPreviousManagedEntity() {
+			// previous reference cannot be stored in an immutable ManagedEntity;
+			// previous reference is maintained by this ManagedEntityHolder.
+			return previous;
+		}
+
+		@Override
+		public void $$_hibernate_setPreviousManagedEntity(ManagedEntity previous) {
+			// previous reference cannot be stored in an immutable ManagedEntity;
+			// previous reference is maintained by this ManagedEntityHolder.
+			this.previous = previous;
+		}
+
+		@Override
+		public ManagedEntity $$_hibernate_getNextManagedEntity() {
+			// next reference cannot be stored in an immutable ManagedEntity;
+			// next reference is maintained by this ManagedEntityHolder.
+			return next;
+		}
+
+		@Override
+		public void $$_hibernate_setNextManagedEntity(ManagedEntity next) {
+			// next reference cannot be stored in an immutable ManagedEntity;
+			// next reference is maintained by this ManagedEntityHolder.
+			this.next = next;
+		}
+
+		/*
+		Check instance type of EntityEntry and if type is ImmutableEntityEntry, check to see if entity is referenced cached in the second level cache
+		 */
+		private boolean canClearEntityEntryReference(){
+
+			if( managedEntity.$$_hibernate_getEntityEntry() == null ) {
+				return true;
+			}
+
+			if( !(managedEntity.$$_hibernate_getEntityEntry() instanceof ImmutableEntityEntry) ) {
+				return true;
+			}
+			else if( managedEntity.$$_hibernate_getEntityEntry().getPersister().canUseReferenceCacheEntries() ) {
+				return false;
+			}
+
+			return true;
+
 		}
 	}
 

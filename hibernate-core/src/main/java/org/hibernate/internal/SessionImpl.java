@@ -199,6 +199,7 @@ import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
  * @author Steve Ebersole
  * @author Brett Meyer
  * @author Chris Cranford
+ * @author Myeonghyeon-Lee mhyeon.lee@navercorp.com
  */
 public final class SessionImpl
 		extends AbstractSessionImpl
@@ -1349,7 +1350,8 @@ public final class SessionImpl
 	 * detect in-memory changes, determine if the changes are to tables
 	 * named in the query and, if so, complete execution the flush
 	 */
-	protected boolean autoFlushIfRequired(Set querySpaces) throws HibernateException {
+	@Override
+	public boolean autoFlushIfRequired(Set querySpaces) throws HibernateException {
 		checkOpen();
 		if ( !isTransactionInProgress() ) {
 			// do not auto-flush while outside a transaction
@@ -2768,7 +2770,7 @@ public final class SessionImpl
 		private LockOptions lockOptions;
 		private CacheMode cacheMode;
 		private Integer batchSize;
-		private boolean sessionCheckingEnabled;
+		private boolean sessionCheckingEnabled = true;
 
 		public MultiIdentifierLoadAccessImpl(EntityPersister entityPersister) {
 			this.entityPersister = entityPersister;
@@ -2846,26 +2848,7 @@ public final class SessionImpl
 		@Override
 		@SuppressWarnings("unchecked")
 		public <K extends Serializable> List<T> multiLoad(List<K> ids) {
-			CacheMode sessionCacheMode = getCacheMode();
-			boolean cacheModeChanged = false;
-			if ( cacheMode != null ) {
-				// naive check for now...
-				// todo : account for "conceptually equal"
-				if ( cacheMode != sessionCacheMode ) {
-					setCacheMode( cacheMode );
-					cacheModeChanged = true;
-				}
-			}
-
-			try {
-				return entityPersister.multiLoad( ids.toArray( new Serializable[ ids.size() ] ), SessionImpl.this, this );
-			}
-			finally {
-				if ( cacheModeChanged ) {
-					// change it back
-					setCacheMode( sessionCacheMode );
-				}
-			}
+			return multiLoad(ids.toArray( new Serializable[ ids.size() ] ));
 		}
 	}
 

@@ -13,11 +13,14 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -25,6 +28,8 @@ import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.Status;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -41,6 +46,7 @@ import org.jboss.logging.Logger;
  * its batch-fetch SQL based on the actual number of entity ids waiting to be fetched.
  *
  * @author Steve Ebersole
+ * @author Myeonghyeon-Lee mhyeon.lee@navercorp.com
  */
 public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuilder {
 	private static final Logger log = Logger.getLogger( DynamicBatchingEntityLoaderBuilder.class );
@@ -68,7 +74,11 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 				final Object managedEntity = session.getPersistenceContext().getEntity( entityKey );
 				if ( managedEntity != null ) {
 					foundAnyManagedEntities = true;
-					result.add( managedEntity );
+					EntityEntry entityEntry = session.getPersistenceContext().getEntry( managedEntity );
+					Status status = entityEntry.getStatus();
+					if ( status != Status.DELETED && status != Status.GONE ) {
+						result.add(managedEntity);
+					}
 				}
 				else {
 					nonManagedIds.add( id );
@@ -90,6 +100,14 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 							)
 					);
 				}
+			}
+		}
+		else {
+			// if sessionChecking disabled need to flush queries for consistence result if required
+			if( session.isEventSource() ) {
+				EventSource eventSource = (EventSource) session;
+				Set<Serializable> querySpaces = new HashSet<>( Arrays.asList(persister.getQuerySpaces()) );
+				eventSource.autoFlushIfRequired(querySpaces);
 			}
 		}
 

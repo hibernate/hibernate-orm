@@ -2768,7 +2768,7 @@ public final class SessionImpl
 		private LockOptions lockOptions;
 		private CacheMode cacheMode;
 		private Integer batchSize;
-		private boolean sessionCheckingEnabled;
+		private boolean sessionCheckingEnabled = true;
 
 		public MultiIdentifierLoadAccessImpl(EntityPersister entityPersister) {
 			this.entityPersister = entityPersister;

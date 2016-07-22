@@ -89,28 +89,28 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testBasicMultiLoadWithManagedAndNoChecking() {
+	public void testBasicMultiLoadWithManagedAndChecking() {
 		Session session = openSession();
 		session.getTransaction().begin();
 		SimpleEntity third = session.byId( SimpleEntity.class ).load( 3 );
-		List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( ids(56) );
+		List<SimpleEntity> list = session.byMultipleIds(SimpleEntity.class).multiLoad( ids(56) );
 		assertEquals( 56, list.size() );
-		// no checking session's results will not put first existing managed entities
-		assertNotSame( third, list.get( 0 ) );
+		// this check is HIGHLY specific to implementation in the batch loader
+		// which puts existing managed entities first...
+		assertSame( third, list.get( 0 ) );
 		session.getTransaction().commit();
 		session.close();
 	}
 
 	@Test
-	public void testBasicMultiLoadWithManagedAndChecking() {
+	public void testBasicMultiLoadWithManagedAndNoChecking() {
 		Session session = openSession();
 		session.getTransaction().begin();
 		SimpleEntity third = session.byId( SimpleEntity.class ).load( 3 );
-		List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).enableSessionCheck( true ).multiLoad( ids(56) );
+		List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).enableSessionCheck( false ).multiLoad( ids(56) );
 		assertEquals( 56, list.size() );
-		// this check is HIGHLY specific to implementation in the batch loader
-		// which puts existing managed entities first...
-		assertSame( third, list.get( 0 ) );
+		// no checking session's results will not put first existing managed entities
+		assertNotSame( third, list.get( 0 ) );
 		session.getTransaction().commit();
 		session.close();
 	}

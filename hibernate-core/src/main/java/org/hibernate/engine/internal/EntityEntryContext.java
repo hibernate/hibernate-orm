@@ -43,8 +43,6 @@ public class EntityEntryContext {
 
 	private transient PersistenceContext persistenceContext;
 
-	private transient IdentityHashMap<ManagedEntity,ImmutableManagedEntityHolder> immutableManagedEntityXref;
-
 	private transient ManagedEntity head;
 	private transient ManagedEntity tail;
 	private transient int count;
@@ -101,13 +99,6 @@ public class EntityEntryContext {
 				else {
 					// Create a holder for PersistenceContext-related data.
 					managedEntity = new ImmutableManagedEntityHolder( (ManagedEntity) entity );
-					if ( immutableManagedEntityXref == null ) {
-						immutableManagedEntityXref = new IdentityHashMap<ManagedEntity, ImmutableManagedEntityHolder>();
-					}
-					immutableManagedEntityXref.put(
-							(ManagedEntity) entity,
-							(ImmutableManagedEntityHolder) managedEntity
-					);
 				}
 			}
 			else {
@@ -164,12 +155,17 @@ public class EntityEntryContext {
 						: null;
 			}
 			else {
-				// if managedEntity is associated with this EntityEntryContext, then
-				// it will have an entry in immutableManagedEntityXref and its
-				// holder will be returned.
-				return immutableManagedEntityXref != null
-						? immutableManagedEntityXref.get( managedEntity )
-						: null;
+				// search through list
+				ManagedEntity managedEntityInList = head;
+				while ( managedEntityInList != null ) {
+					if ( managedEntityInList.$$_hibernate_getEntityInstance() == managedEntity ) {
+						// found
+						return managedEntityInList;
+					}
+					managedEntityInList = managedEntityInList.$$_hibernate_getNextManagedEntity();
+				}
+				// not found
+				return null;
 			}
 		}
 		else {
@@ -249,8 +245,6 @@ public class EntityEntryContext {
 
 		if ( ImmutableManagedEntityHolder.class.isInstance( managedEntity ) ) {
 			assert entity == ( (ImmutableManagedEntityHolder) managedEntity ).managedEntity;
-			immutableManagedEntityXref.remove( (ManagedEntity) entity );
-
 		}
 		else if ( !ManagedEntity.class.isInstance( entity ) ) {
 			nonEnhancedEntityXref.remove( entity );
@@ -341,10 +335,6 @@ public class EntityEntryContext {
 			node.$$_hibernate_setNextManagedEntity( null );
 
 			node = nextNode;
-		}
-
-		if ( immutableManagedEntityXref != null ) {
-			immutableManagedEntityXref.clear();
 		}
 
 		if ( nonEnhancedEntityXref != null ) {
@@ -448,15 +438,6 @@ public class EntityEntryContext {
 				}
 				else {
 					managedEntity = new ImmutableManagedEntityHolder( (ManagedEntity) entity );
-					if ( context.immutableManagedEntityXref == null ) {
-						context.immutableManagedEntityXref =
-								new IdentityHashMap<ManagedEntity, ImmutableManagedEntityHolder>();
-					}
-					context.immutableManagedEntityXref.put(
-							(ManagedEntity) entity,
-							(ImmutableManagedEntityHolder) managedEntity
-
-					);
 				}
 			}
 			else {

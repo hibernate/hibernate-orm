@@ -1,12 +1,12 @@
 
 package org.hibernate.type.descriptor.java;
 
+import java.math.BigInteger;
 import java.sql.SQLException;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
-
 
 /**
  * Java array type descriptor for the Long type.
@@ -148,6 +148,16 @@ public class LongArrayJavaDescriptor extends AbstractArrayTypeDescriptor<Long[]>
 			Long[] result = new Long[ intarr.length ];
 			for (int i = 0; i < intarr.length; i++) {
 				Integer orig = intarr[i];
+				result[i] = orig == null ? null : new Long( orig.longValue() );
+			}
+			return result;
+		}
+
+		if ( value instanceof BigInteger[]) {
+			BigInteger[] intarr = (BigInteger[]) value;
+			Long[] result = new Long[ intarr.length ];
+			for (int i = 0; i < intarr.length; i++) {
+				BigInteger orig = intarr[i];
 				result[i] = orig == null ? null : new Long( orig.longValue() );
 			}
 			return result;

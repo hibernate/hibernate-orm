@@ -44,5 +44,4 @@ public class IntegerArrayType
 		return sb.toString();
 	}
 
-	
 }

@@ -195,20 +195,31 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 		assertSame( myReferenceData, s2.get( MyEnhancedReferenceData.class, myReferenceData.getId() ) );
 		assertSame( myOtherReferenceData, s2.get( MyEnhancedReferenceData.class, myOtherReferenceData.getId() ) );
 
+		assertEquals( Status.READ_ONLY, myReferenceData.$$_hibernate_getEntityEntry().getStatus() );
+		assertEquals( Status.READ_ONLY, myOtherReferenceData.$$_hibernate_getEntityEntry().getStatus() );
+
 		// delete myReferenceData from s1
 		s1.delete( myReferenceData );
 
+		assertEquals( Status.DELETED, myReferenceData.$$_hibernate_getEntityEntry().getStatus() );
+		assertEquals( Status.READ_ONLY, myOtherReferenceData.$$_hibernate_getEntityEntry().getStatus() );
+
 		// delete myOtherReferenceData from s2
 		s2.delete( myOtherReferenceData );
+
+		assertEquals( Status.DELETED, myReferenceData.$$_hibernate_getEntityEntry().getStatus() );
+		assertEquals( Status.DELETED, myOtherReferenceData.$$_hibernate_getEntityEntry().getStatus() );
 
 		s1.getTransaction().commit();
 		s1.close();
 
 		assertEquals( Status.GONE, myReferenceData.$$_hibernate_getEntityEntry().getStatus() );
+		assertEquals( Status.DELETED, myOtherReferenceData.$$_hibernate_getEntityEntry().getStatus() );
 
 		s2.getTransaction().commit();
 		s2.close();
 
+		assertEquals( Status.GONE, myReferenceData.$$_hibernate_getEntityEntry().getStatus() );
 		assertEquals( Status.GONE, myOtherReferenceData.$$_hibernate_getEntityEntry().getStatus() );
 	}
 

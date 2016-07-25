@@ -74,14 +74,18 @@ public class AttributeConverterSqlTypeDescriptorAdapter implements SqlTypeDescri
 			@Override
 			public void bind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
 				final Object convertedValue;
-				try {
-					convertedValue = converter.convertToDatabaseColumn( value );
-				}
-				catch (PersistenceException pe) {
-					throw pe;
-				}
-				catch (RuntimeException re) {
-					throw new PersistenceException( "Error attempting to apply AttributeConverter", re );
+				if ( intermediateJavaTypeDescriptor.getJavaTypeClass().isInstance( value ) ) {
+					convertedValue = value;
+				} else {
+					try {
+						convertedValue = converter.convertToDatabaseColumn( value );
+					}
+					catch (PersistenceException pe) {
+						throw pe;
+					}
+					catch (RuntimeException re) {
+						throw new PersistenceException( "Error attempting to apply AttributeConverter", re );
+					}
 				}
 
 				log.debugf( "Converted value on binding : %s -> %s", value, convertedValue );
@@ -91,14 +95,18 @@ public class AttributeConverterSqlTypeDescriptorAdapter implements SqlTypeDescri
 			@Override
 			public void bind(CallableStatement st, X value, String name, WrapperOptions options) throws SQLException {
 				final Object convertedValue;
-				try {
-					convertedValue = converter.convertToDatabaseColumn( value );
-				}
-				catch (PersistenceException pe) {
-					throw pe;
-				}
-				catch (RuntimeException re) {
-					throw new PersistenceException( "Error attempting to apply AttributeConverter", re );
+				if ( intermediateJavaTypeDescriptor.getJavaTypeClass().isInstance( value ) ) {
+					convertedValue = value;
+				} else {
+					try {
+						convertedValue = converter.convertToDatabaseColumn( value );
+					}
+					catch (PersistenceException pe) {
+						throw pe;
+					}
+					catch (RuntimeException re) {
+						throw new PersistenceException( "Error attempting to apply AttributeConverter", re );
+					}
 				}
 
 				log.debugf( "Converted value on binding : %s -> %s", value, convertedValue );

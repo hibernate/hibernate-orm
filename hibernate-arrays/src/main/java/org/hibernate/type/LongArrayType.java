@@ -6,7 +6,7 @@
 package org.hibernate.type;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.descriptor.java.IntegerArrayJavaDescriptor;
+import org.hibernate.type.descriptor.java.LongArrayJavaDescriptor;
 import org.hibernate.type.descriptor.sql.ArrayTypeDescriptor;
 
 /**
@@ -14,18 +14,18 @@ import org.hibernate.type.descriptor.sql.ArrayTypeDescriptor;
  * @author jordan
  */
 public class LongArrayType 
-		extends AbstractSingleColumnStandardBasicType<Integer[]>
-		implements LiteralType<Integer[]> {
+		extends AbstractSingleColumnStandardBasicType<Long[]>
+		implements LiteralType<Long[]> {
 
 	public static final LongArrayType INSTANCE = new LongArrayType();
 
 	public LongArrayType() {
-		super(ArrayTypeDescriptor.INSTANCE, IntegerArrayJavaDescriptor.INSTANCE);
+		super(ArrayTypeDescriptor.INSTANCE, LongArrayJavaDescriptor.INSTANCE);
 	}
 
 	@Override
 	public String getName() {
-		return Integer[].class.getName();
+		return Long[].class.getName();
 	}
 
 	@Override
@@ -34,9 +34,9 @@ public class LongArrayType
 	}
 
 	@Override
-	public String objectToSQLString(Integer[] value, Dialect dialect) throws Exception {
+	public String objectToSQLString(Long[] value, Dialect dialect) throws Exception {
 		StringBuilder sb = new StringBuilder("{");
-		for (Integer i : value) {
+		for (Long i : value) {
 			sb.append(i).append(',');
 		}
 		sb.deleteCharAt(sb.length()-1);

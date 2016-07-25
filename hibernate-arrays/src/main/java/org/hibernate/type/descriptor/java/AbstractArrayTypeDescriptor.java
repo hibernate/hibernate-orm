@@ -322,7 +322,7 @@ public abstract class AbstractArrayTypeDescriptor<T> extends AbstractTypeDescrip
 	}
 
 	
-	protected final Integer[] objectToLongArray(Object o) {
+	protected final Long[] objectToLongArray(Object o) {
 		Class clz = o.getClass().getComponentType();
 
 		if ( ! clz.isAssignableFrom( Number.class ) ) {
@@ -334,12 +334,12 @@ public abstract class AbstractArrayTypeDescriptor<T> extends AbstractTypeDescrip
 		This is because Long[] does not extend Number[].
 		*/
 		int length = java.lang.reflect.Array.getLength(o);
-		Integer[] result = new Integer[length];
+		Long[] result = new Long[length];
 		Number n;
 		Object[] orig = (Object[]) o;
 		for (int i = 0; i < length; i++) {
 			n = (Number) orig[i];
-			result[i] = new Integer(n.intValue());
+			result[i] = new Long(n.longValue());
 		}
 		return result;
 	}

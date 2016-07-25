@@ -11,17 +11,17 @@ import org.hibernate.type.descriptor.WrapperOptions;
 /**
  * Java array type descriptor for the Long type.
  */
-public class LongArrayJavaDescriptor extends AbstractArrayTypeDescriptor<Integer[]> {
+public class LongArrayJavaDescriptor extends AbstractArrayTypeDescriptor<Long[]> {
 
 	public static final LongArrayJavaDescriptor INSTANCE = new LongArrayJavaDescriptor();
 
 	@SuppressWarnings("unchecked")
 	public LongArrayJavaDescriptor() {
-		super( Integer[].class, ArrayMutabilityPlan.INSTANCE );
+		super( Long[].class, ArrayMutabilityPlan.INSTANCE );
 	}
 
 	@Override
-	public String toString(Integer[] value) {
+	public String toString(Long[] value) {
 		if (value == null) {
 			return "null";
 		}
@@ -29,20 +29,20 @@ public class LongArrayJavaDescriptor extends AbstractArrayTypeDescriptor<Integer
 	}
 
 	@Override
-	public Integer[] fromString(String string) {
+	public Long[] fromString(String string) {
 		if (string == null) {
 			return null;
 		}
 		String[] numberStrings = string.split("\\s*,\\s*");
-		Integer[] numbers = new Integer[numberStrings.length];
+		Long[] numbers = new Long[numberStrings.length];
 		for (int i = 0; i < numberStrings.length; i++) {
-			numbers[i] = new Integer(numberStrings[i]);
+			numbers[i] = new Long(numberStrings[i]);
 		}
 		return numbers;
 	}
 
 	@Override
-	public <X> X unwrap(Integer[] value, Class<X> type, WrapperOptions options) {
+	public <X> X unwrap(Long[] value, Class<X> type, WrapperOptions options) {
 		// function used for PreparedStatement binding
 
 		if ( value == null ) {
@@ -60,7 +60,7 @@ public class LongArrayJavaDescriptor extends AbstractArrayTypeDescriptor<Integer
 			try {
 				conn = sess.getJdbcConnectionAccess().obtainConnection();
 
-				String typeName = sqlDialect.getTypeName(java.sql.Types.INTEGER);
+				String typeName = sqlDialect.getTypeName(java.sql.Types.BIGINT);
 				return (X) conn.createArrayOf(typeName, value);
 			}
 			catch (SQLException ex) {
@@ -71,23 +71,10 @@ public class LongArrayJavaDescriptor extends AbstractArrayTypeDescriptor<Integer
 
 		// I doubt anything below in this function will ever come into play
 
-		if ( Integer[].class.isAssignableFrom( type ) ) {
-			return (X) value;
-		}
-
-		if ( int[].class.isAssignableFrom( type ) ) {
-			int[] result = new int[ value.length ];
-			for (int i = 0; i < value.length; i++) {
-				Integer orig = value[i];
-				result[i] = orig == null ? 0 : orig;
-			}
-			return (X) result;
-		}
-
 		if ( Long[].class.isAssignableFrom( type ) ) {
 			Long[] result = new Long[ value.length ];
 			for (int i = 0; i < value.length; i++) {
-				Integer orig = value[i];
+				Long orig = value[i];
 				result[i] = orig == null ? null : new Long( orig.longValue() );
 			}
 			return (X) result;
@@ -96,8 +83,21 @@ public class LongArrayJavaDescriptor extends AbstractArrayTypeDescriptor<Integer
 		if ( long[].class.isAssignableFrom( type ) ) {
 			long[] result = new long[ value.length ];
 			for (int i = 0; i < value.length; i++) {
-				Integer orig = value[i];
+				Long orig = value[i];
 				result[i] = orig == null ? 0 : orig;
+			}
+			return (X) result;
+		}
+
+		if ( Integer[].class.isAssignableFrom( type ) ) {
+			return (X) value;
+		}
+
+		if ( int[].class.isAssignableFrom( type ) ) {
+			int[] result = new int[ value.length ];
+			for (int i = 0; i < value.length; i++) {
+				Long orig = value[i];
+				result[i] = orig == null ? 0 : orig.intValue();
 			}
 			return (X) result;
 		}
@@ -105,7 +105,7 @@ public class LongArrayJavaDescriptor extends AbstractArrayTypeDescriptor<Integer
 		if ( Short[].class.isAssignableFrom( type ) ) {
 			Short[] result = new Short[ value.length ];
 			for (int i = 0; i < value.length; i++) {
-				Integer orig = value[i];
+				Long orig = value[i];
 				result[i] = orig == null ? null : new Short( orig.shortValue() );
 			}
 			return (X) result;
@@ -114,7 +114,7 @@ public class LongArrayJavaDescriptor extends AbstractArrayTypeDescriptor<Integer
 		if ( short[].class.isAssignableFrom( type ) ) {
 			short[] result = new short[ value.length ];
 			for (int i = 0; i < value.length; i++) {
-				Integer orig = value[i];
+				Long orig = value[i];
 				result[i] = (short) (orig == null ? 0 : orig);
 			}
 			return (X) result;
@@ -132,15 +132,25 @@ public class LongArrayJavaDescriptor extends AbstractArrayTypeDescriptor<Integer
 	}
 
 	@Override
-	public <X> Integer[] wrap(X value, WrapperOptions options) {
+	public <X> Long[] wrap(X value, WrapperOptions options) {
 		// function used for ResultSet extraction
 
 		if ( value == null ) {
 			return null;
 		}
 
+		if ( value instanceof Long[]) {
+			return (Long[]) value;
+		}
+
 		if ( value instanceof Integer[]) {
-			return (Integer[]) value;
+			Integer[] intarr = (Integer[]) value;
+			Long[] result = new Long[ intarr.length ];
+			for (int i = 0; i < intarr.length; i++) {
+				Integer orig = intarr[i];
+				result[i] = orig == null ? null : new Long( orig.longValue() );
+			}
+			return result;
 		}
 
 		if ( ! ( value instanceof java.sql.Array ) ) {
@@ -154,7 +164,7 @@ public class LongArrayJavaDescriptor extends AbstractArrayTypeDescriptor<Integer
 			if (clz == null || clz.isArray()) {
 				throw unknownWrap ( clz );
 			}
-			return clz.isPrimitive() ? primitiveToIntegerArray(raw) : objectToIntegerArray(raw);
+			return clz.isPrimitive() ? primitiveToLongArray(raw) : objectToLongArray(raw);
 		}
 		catch (SQLException ex) {
 			// This basically shouldn't happen unless you've lost connection

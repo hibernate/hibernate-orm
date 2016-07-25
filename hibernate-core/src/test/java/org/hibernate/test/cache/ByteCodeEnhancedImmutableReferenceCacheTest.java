@@ -15,7 +15,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedEntity;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.TestForIssue;
@@ -129,11 +129,11 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 
 		assertSame(
 				myReferenceData.$$_hibernate_getEntityEntry(),
-				( (SharedSessionContractImplementor) s1 ).getPersistenceContext().getEntry( myReferenceData )
+				( (SessionImplementor) s1 ).getPersistenceContext().getEntry( myReferenceData )
 		);
 		assertSame(
 				myOtherReferenceData.$$_hibernate_getEntityEntry(),
-				( (SharedSessionContractImplementor) s1 ).getPersistenceContext().getEntry( myOtherReferenceData )
+				( (SessionImplementor) s1 ).getPersistenceContext().getEntry( myOtherReferenceData )
 		);
 
 		Session s2 = openSession();
@@ -143,8 +143,8 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 		assertFalse( s2.contains( myReferenceData ) );
 		assertFalse( s2.contains( myOtherReferenceData ) );
 
-		assertNull( ( (SharedSessionContractImplementor) s2 ).getPersistenceContext().getEntry( myReferenceData ) );
-		assertNull( ( (SharedSessionContractImplementor) s2 ).getPersistenceContext().getEntry( myOtherReferenceData ) );
+		assertNull( ( (SessionImplementor) s2 ).getPersistenceContext().getEntry( myReferenceData ) );
+		assertNull( ( (SessionImplementor) s2 ).getPersistenceContext().getEntry( myOtherReferenceData ) );
 
 		// evict should do nothing, since p is not associated with s2
 		s2.evict( myReferenceData );

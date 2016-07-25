@@ -11,7 +11,7 @@ import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.ManagedEntity;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.test.bytecode.enhancement.AbstractEnhancerTestTask;
 
 import static org.junit.Assert.assertEquals;
@@ -66,7 +66,7 @@ public class OtherEntityEntryContextTestTask extends AbstractEnhancerTestTask {
 
 		assertFalse( s2.contains( p ) );
 
-		assertNull( ( (SharedSessionContractImplementor) s2 ).getPersistenceContext().getEntry( p ) );
+		assertNull( ( (SessionImplementor) s2 ).getPersistenceContext().getEntry( p ) );
 
 		try {
 			s2.update( p );

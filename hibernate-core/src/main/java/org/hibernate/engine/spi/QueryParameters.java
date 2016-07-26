@@ -26,6 +26,7 @@ import org.hibernate.internal.util.EntityPrinter;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
 import org.hibernate.transform.ResultTransformer;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -535,7 +536,6 @@ public final class QueryParameters {
 			StringBuilder result = new StringBuilder();
 			List parameters = new ArrayList();
 			List parameterTypes = new ArrayList();
-
 			int positionalIndex = 0;
 			while ( tokens.hasMoreTokens() ) {
 				final String token = tokens.nextToken();
@@ -564,18 +564,45 @@ public final class QueryParameters {
 					}
 				}
 				else {
+					result.append( token );
 					if ( "?".equals( token ) && positionalIndex < getPositionalParameterValues().length ) {
+						final Type type = getPositionalParameterTypes()[positionalIndex];
+						if ( type.isComponentType() ) {
+							// should process tokens till reaching the number of "?" corresponding to the
+							// numberOfParametersCoveredBy of the compositeType
+							int paramIndex = 1;
+							final int numberOfParametersCoveredBy = getNumberOfParametersCoveredBy( ((ComponentType) type).getSubtypes() );
+							while ( paramIndex < numberOfParametersCoveredBy ) {
+								final String nextToken = tokens.nextToken();
+								if ( "?".equals( nextToken ) ) {
+									paramIndex++;
+								}
+								result.append( nextToken );
+							}
+						}
 						parameters.add( getPositionalParameterValues()[positionalIndex] );
-						parameterTypes.add( getPositionalParameterTypes()[positionalIndex] );
+						parameterTypes.add( type );
 						positionalIndex++;
 					}
-					result.append( token );
 				}
 			}
 			processedPositionalParameterValues = parameters.toArray();
 			processedPositionalParameterTypes = ( Type[] ) parameterTypes.toArray( new Type[parameterTypes.size()] );
 			processedSQL = result.toString();
 		}
+	}
+
+	private int getNumberOfParametersCoveredBy(Type[] subtypes) {
+		int numberOfParameters = 0;
+		for ( Type type : subtypes ) {
+			if ( type.isComponentType() ) {
+				numberOfParameters = numberOfParameters + getNumberOfParametersCoveredBy( ((ComponentType) type).getSubtypes() );
+			}
+			else {
+				numberOfParameters++;
+			}
+		}
+		return numberOfParameters;
 	}
 
 	public String getFilteredSQL() {

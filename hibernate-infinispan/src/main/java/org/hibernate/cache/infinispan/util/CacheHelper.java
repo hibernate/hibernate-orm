@@ -29,7 +29,7 @@ import javax.transaction.TransactionManager;
 
 /**
  * Helper for dealing with Infinisan cache instances.
- * 
+ *
  * @author Galder Zamarreño
  * @since 3.5
  */
@@ -41,17 +41,32 @@ public class CacheHelper {
    private CacheHelper() {
    }
 
+
    public static <T> T withinTx(TransactionManager tm, Callable<T> c) throws Exception {
-      tm.begin();
-      try {
-         return c.call();
-      } catch (Exception e) {
-         tm.setRollbackOnly();
-         throw e;
-      } finally {
-         if (tm.getStatus() == Status.STATUS_ACTIVE) tm.commit();
-         else tm.rollback();
-      }
-   }
+        if ( tm == null ) {
+            try {
+                return c.call();
+            }
+            catch ( Exception e ) {
+                throw e;
+            }
+        }
+        else {
+            tm.begin();
+            try {
+                return c.call();
+            }
+            catch ( Exception e ) {
+                tm.setRollbackOnly();
+                throw e;
+            }
+            finally {
+                if ( tm.getStatus() == Status.STATUS_ACTIVE )
+                    tm.commit();
+                else
+                    tm.rollback();
+            }
+        }
+    }
 
 }

@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.hibernate.type.descriptor.java;
 
 import java.io.Serializable;
@@ -10,31 +5,28 @@ import java.lang.reflect.Array;
 import java.sql.SQLException;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.SessionImpl;
+import org.hibernate.type.AbstractStandardBasicType;
 import org.hibernate.type.descriptor.WrapperOptions;
 
-/**
- *
- * @author jordan
- */
 public class GenericArrayTypeDescriptor<T> extends AbstractArrayTypeDescriptor<T[]> {
 
-	private final AbstractTypeDescriptor<T> componentDescriptor;
+	private final JavaTypeDescriptor<T> componentDescriptor;
 	private final Class<T> componentClass;
 	private final MutabilityPlan<T[]> mutaplan;
+	private final int sqlType;
 
-	public GenericArrayTypeDescriptor(AbstractTypeDescriptor<T> baseDescriptor) {
-		super( (Class<T[]>) Array.newInstance(baseDescriptor.getJavaTypeClass(), 0).getClass() );
-		this.componentDescriptor = baseDescriptor;
-		this.componentClass = baseDescriptor.getJavaTypeClass();
-		this.mutaplan = ArrayMutabilityPlan.INSTANCE;
-	}
-
-	public GenericArrayTypeDescriptor(AbstractTypeDescriptor<T> baseDescriptor,  MutabilityPlan<T> mutabilityPlan) {
-		super( (Class<T[]>) Array.newInstance(baseDescriptor.getJavaTypeClass(), 0).getClass() );
-		this.componentDescriptor = baseDescriptor;
-		this.componentClass = baseDescriptor.getJavaTypeClass();
-		this.mutaplan = new LocalArrayMutabilityPlan(baseDescriptor.getMutabilityPlan());
+	public GenericArrayTypeDescriptor(AbstractStandardBasicType<T> baseDescriptor) {
+		super( (Class<T[]>) Array.newInstance(baseDescriptor.getJavaTypeDescriptor().getJavaTypeClass(), 0).getClass() );
+		this.componentDescriptor = baseDescriptor.getJavaTypeDescriptor();
+		this.componentClass = baseDescriptor.getJavaTypeDescriptor().getJavaTypeClass();
+		if (this.componentClass.isArray()) {
+			this.mutaplan = new LocalArrayMutabilityPlan(this.componentDescriptor.getMutabilityPlan());
+		}
+		else {
+			this.mutaplan = ArrayMutabilityPlan.INSTANCE;
+		}
+		this.sqlType = baseDescriptor.getSqlTypeDescriptor().getSqlType();
 	}
 
 	private class LocalArrayMutabilityPlan implements MutabilityPlan<T[]> {
@@ -202,14 +194,20 @@ public class GenericArrayTypeDescriptor<T> extends AbstractArrayTypeDescriptor<T
 		if ( java.sql.Array.class.isAssignableFrom( type ) ) {
 			Dialect sqlDialect;
 			java.sql.Connection conn;
-			if (!(options instanceof SharedSessionContractImplementor)) {
+			if (!(options instanceof SessionImpl)) {
 				throw new IllegalStateException("You can't handle the truth! I mean arrays...");
 			}
-			SharedSessionContractImplementor sess = (SharedSessionContractImplementor) options;
+			SessionImpl sess = (SessionImpl) options;
 			sqlDialect = sess.getJdbcServices().getDialect();
 			try {
 				conn = sess.getJdbcConnectionAccess().obtainConnection();
-				String typeName = sqlDialect.getTypeName(java.sql.Types.LONGVARCHAR);
+				String typeName = sqlDialect.getTypeName(sqlType);
+				int cutIndex = typeName.indexOf('(');
+				if (cutIndex > 0) {
+					// getTypeName for this case required length, etc, parameters.
+					// Cut them out and use database defaults.
+					typeName = typeName.substring(0, cutIndex);
+				}
 				return (X) conn.createArrayOf(typeName, value);
 			}
 			catch (SQLException ex) {

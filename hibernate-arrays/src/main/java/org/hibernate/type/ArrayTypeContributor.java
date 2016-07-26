@@ -17,9 +17,11 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptorRegistry;
  * @author Steve Ebersole
  */
 public class ArrayTypeContributor implements TypeContributor {
+
 	@Override
-	public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		// register the Java type descriptors
+	public void contribute( TypeContributions typeContributions, ServiceRegistry serviceRegistry ) {
+
+		// Do we really need all these types?
 		JavaTypeDescriptorRegistry.INSTANCE.addDescriptor( ArrayTypes.BOOLEAN.getJavaTypeDescriptor() );
 		JavaTypeDescriptorRegistry.INSTANCE.addDescriptor( ArrayTypes.NUMERIC_BOOLEAN.getJavaTypeDescriptor() );
 		JavaTypeDescriptorRegistry.INSTANCE.addDescriptor( ArrayTypes.TRUE_FALSE.getJavaTypeDescriptor() );

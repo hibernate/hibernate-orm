@@ -31,6 +31,7 @@ import org.hibernate.test.bytecode.enhancement.lazy.HHH_10708.UnexpectedDeleteTh
 import org.hibernate.test.bytecode.enhancement.lazy.HHH_10708.UnexpectedDeleteTwoTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.LazyBasicFieldNotInitializedTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.LazyCollectionLoadingTestTask;
+import org.hibernate.test.bytecode.enhancement.lazy.LazyCollectionNoTransactionLoadingTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.LazyLoadingIntegrationTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.LazyLoadingTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.LazyProxyOnEnhancedEntityTestTask;
@@ -113,6 +114,11 @@ public class EnhancerTest extends BaseUnitTestCase {
 	@TestForIssue( jiraKey = "HHH-10055" )
 	public void testLazyCollectionHandling() {
 		EnhancerTestUtils.runEnhancerTestTask( LazyCollectionLoadingTestTask.class );
+	}
+
+	@Test
+	public void testLazyCollectionNoTransactionHandling() {
+		EnhancerTestUtils.runEnhancerTestTask( LazyCollectionNoTransactionLoadingTestTask.class );
 	}
 
 	@Test(timeout = 10000)

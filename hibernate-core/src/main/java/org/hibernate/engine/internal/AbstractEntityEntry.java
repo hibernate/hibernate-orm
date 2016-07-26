@@ -323,11 +323,14 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 
 	@Override
 	public void overwriteLoadedStateCollectionValue(String propertyName, PersistentCollection collection) {
-		assert propertyName != null;
-		assert loadedState != null;
+		// nothing to do if status is READ_ONLY
+		if ( getStatus() != Status.READ_ONLY ) {
+			assert propertyName != null;
+			assert loadedState != null;
 
-		final int propertyIndex = ( (UniqueKeyLoadable) persister ).getPropertyIndex( propertyName );
-		loadedState[propertyIndex] = collection;
+			final int propertyIndex = ( (UniqueKeyLoadable) persister ).getPropertyIndex( propertyName );
+			loadedState[propertyIndex] = collection;
+		}
 	}
 
 	@Override

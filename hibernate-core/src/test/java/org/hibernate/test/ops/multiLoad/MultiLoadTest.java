@@ -23,13 +23,17 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionImplementor;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
@@ -79,12 +83,70 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	public void testBasicMultiLoad() {
-		Session session = openSession();
-		session.getTransaction().begin();
-		List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( ids(56) );
-		assertEquals( 56, list.size() );
-		session.getTransaction().commit();
-		session.close();
+		doInHibernate(
+				this::sessionFactory, session -> {
+					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( ids(56) );
+					assertEquals( 56, list.size() );
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-10984" )
+	public void testUnflushedDeleteAndThenMultiLoad() {
+		doInHibernate(
+				this::sessionFactory, session -> {
+					// delete one of them (but do not flush)...
+					session.delete( session.load( SimpleEntity.class, 5 ) );
+
+					// as a baseline, assert based on how load() handles it
+					SimpleEntity s5 = session.load( SimpleEntity.class, 5 );
+					assertNotNull( s5 );
+
+					// and then, assert how get() handles it
+					s5 = session.get( SimpleEntity.class, 5 );
+					assertNull( s5 );
+
+					// finally assert how multiLoad handles it
+					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( ids(56) );
+					assertEquals( 56, list.size() );
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-10617" )
+	public void testDuplicatedRequestedIds() {
+		doInHibernate(
+				this::sessionFactory, session -> {
+					// ordered multiLoad
+					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( 1, 2, 3, 2, 2 );
+					assertEquals( 5, list.size() );
+					assertSame( list.get( 1 ), list.get( 3 ) );
+					assertSame( list.get( 1 ), list.get( 4 ) );
+
+					// un-ordered multiLoad
+					list = session.byMultipleIds( SimpleEntity.class ).enableOrderedReturn( false ).multiLoad( 1, 2, 3, 2, 2 );
+					assertEquals( 3, list.size() );
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-10617" )
+	public void testNonExistentIdRequest() {
+		doInHibernate(
+				this::sessionFactory, session -> {
+					// ordered multiLoad
+					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( 1, 699, 2 );
+					assertEquals( 3, list.size() );
+					assertNull( list.get( 1 ) );
+
+					// un-ordered multiLoad
+					list = session.byMultipleIds( SimpleEntity.class ).enableOrderedReturn( false ).multiLoad( 1, 699, 2 );
+					assertEquals( 2, list.size() );
+				}
+		);
 	}
 
 	@Test

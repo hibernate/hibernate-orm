@@ -121,7 +121,10 @@ class MetadataContext {
 	}
 
 	/*package*/ void registerEntityType(PersistentClass persistentClass, EntityTypeImpl<?> entityType) {
-		entityTypes.put( entityType.getBindableJavaType(), entityType );
+		// HHH-10968 - Skip EntityMode.MAP entities when ignore unsupported enabled.
+		if ( !( entityType.getBindableJavaType() == null && ignoreUnsupported ) ) {
+			entityTypes.put( entityType.getBindableJavaType(), entityType );
+		}
 		entityTypesByEntityName.put( persistentClass.getEntityName(), entityType );
 		entityTypesByPersistentClass.put( persistentClass, entityType );
 		orderedMappings.add( persistentClass );

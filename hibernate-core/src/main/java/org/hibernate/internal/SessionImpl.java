@@ -2769,6 +2769,8 @@ public final class SessionImpl
 		private CacheMode cacheMode;
 		private Integer batchSize;
 		private boolean sessionCheckingEnabled;
+		private boolean returnOfDeletedEntitiesEnabled;
+		private boolean orderedReturnEnabled = true;
 
 		public MultiIdentifierLoadAccessImpl(EntityPersister entityPersister) {
 			this.entityPersister = entityPersister;
@@ -2815,6 +2817,28 @@ public final class SessionImpl
 		@Override
 		public MultiIdentifierLoadAccess<T> enableSessionCheck(boolean enabled) {
 			this.sessionCheckingEnabled = enabled;
+			return this;
+		}
+
+		@Override
+		public boolean isReturnOfDeletedEntitiesEnabled() {
+			return returnOfDeletedEntitiesEnabled;
+		}
+
+		@Override
+		public MultiIdentifierLoadAccess<T> enableReturnOfDeletedEntities(boolean enabled) {
+			this.returnOfDeletedEntitiesEnabled = enabled;
+			return this;
+		}
+
+		@Override
+		public boolean isOrderReturnEnabled() {
+			return orderedReturnEnabled;
+		}
+
+		@Override
+		public MultiIdentifierLoadAccess<T> enableOrderedReturn(boolean enabled) {
+			this.orderedReturnEnabled = enabled;
 			return this;
 		}
 

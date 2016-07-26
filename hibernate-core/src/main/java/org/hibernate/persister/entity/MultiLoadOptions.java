@@ -15,6 +15,8 @@ import org.hibernate.LockOptions;
  */
 public interface MultiLoadOptions {
 	boolean isSessionCheckingEnabled();
+	boolean isReturnOfDeletedEntitiesEnabled();
+	boolean isOrderReturnEnabled();
 
 	LockOptions getLockOptions();
 

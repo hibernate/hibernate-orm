@@ -46,6 +46,7 @@ import org.hibernate.testing.cache.CachingRegionFactory;
 import org.junit.After;
 import org.junit.Before;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.fail;
 
 /**
@@ -373,20 +374,11 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	protected void cleanupTestData() throws Exception {
-		Session s = openSession();
-		Transaction transaction = s.beginTransaction();
-		try {
-			s.createQuery( "delete from java.lang.Object" ).executeUpdate();
-			transaction.commit();
-		}
-		catch (Exception e) {
-			if ( transaction.getStatus().canRollback() ) {
-				transaction.rollback();
-			}
-		}
-		finally {
-			s.close();
-		}
+		// Because of https://hibernate.atlassian.net/browse/HHH-5529,
+		// we can'trely on a Bulk Delete query which will not clear the link tables in @ElementCollection or unidirectional collections
+		doInHibernate( this::sessionFactory, s -> {
+			s.createQuery( "from java.lang.Object" ).list().forEach( s::remove );
+		} );
 	}
 
 	private void cleanupSession() {

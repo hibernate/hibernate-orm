@@ -138,14 +138,6 @@ public class CollectionMapWithComponentValueTest extends BaseCoreFunctionalTestC
 		return true;
 	}
 
-	protected void cleanupTestData() {
-		doInHibernate( this::sessionFactory, s -> {
-			s.createQuery( "from TestEntity" )
-				.list()
-				.forEach( te -> s.delete( te ) );
-		} );
-	}
-
 	@Entity(name = "TestEntity")
 	@Table(name = "TEST_ENTITY")
 	public static class TestEntity {

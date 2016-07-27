@@ -1,7 +1,8 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.type.descriptor.sql;
 
@@ -40,27 +41,29 @@ public class ArrayTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
-	public <X> ValueBinder<X> getBinder( final JavaTypeDescriptor<X> javaTypeDescriptor ) {
+	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return new BasicBinder<X>( javaTypeDescriptor, this ) {
 
 			@Override
-			protected void doBind( PreparedStatement st, X value, int index, WrapperOptions options ) throws SQLException {
+			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
 				final java.sql.Array arr = javaTypeDescriptor.unwrap( value, java.sql.Array.class, options );
 				st.setArray( index, arr );
 			}
 
-			private Method nameBinder = null;
-			private boolean checkedBinder = false;
+			private Method nameBinder;
+			private boolean checkedBinder;
 
 			@Override
-			protected void doBind( CallableStatement st, X value, String name, WrapperOptions options )
+			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
 				if (  ! checkedBinder ) {
 					Class clz = st.getClass();
 					try {
 						nameBinder = clz.getMethod( "setArray", String.class, java.sql.Array.class );
-					} catch ( Exception ex ) {
-						// TODO: add logging. Did we get NoSuchMethodException or SecurityException?
+					}
+					catch ( Exception ex ) {
+						// add logging? Did we get NoSuchMethodException or SecurityException?
+						// Doesn't matter which. We can't use it.
 					}
 					checkedBinder = true;
 				}
@@ -73,7 +76,8 @@ public class ArrayTypeDescriptor implements SqlTypeDescriptor {
 				final java.sql.Array arr = javaTypeDescriptor.unwrap( value, java.sql.Array.class, options );
 				try {
 					nameBinder.invoke( st, name, arr );
-				} catch ( Throwable t ) {
+				}
+				catch ( Throwable t ) {
 					throw new HibernateException( t );
 				}
 			}
@@ -81,20 +85,20 @@ public class ArrayTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor( final JavaTypeDescriptor<X> javaTypeDescriptor ) {
+	public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 			@Override
-			protected X doExtract( ResultSet rs, String name, WrapperOptions options ) throws SQLException {
+			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
 				return javaTypeDescriptor.wrap( rs.getArray( name ), options );
 			}
 
 			@Override
-			protected X doExtract( CallableStatement statement, int index, WrapperOptions options ) throws SQLException {
+			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
 				return javaTypeDescriptor.wrap( statement.getArray( index ), options );
 			}
 
 			@Override
-			protected X doExtract( CallableStatement statement, String name, WrapperOptions options ) throws SQLException {
+			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
 				return javaTypeDescriptor.wrap( statement.getArray( name ), options );
 			}
 		};

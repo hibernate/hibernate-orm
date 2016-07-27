@@ -1,39 +1,15 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
 package org.hibernate.type;
+
+import java.util.ArrayList;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.GenericArrayTypeDescriptor;
-import org.hibernate.type.BigIntegerType;
-import org.hibernate.type.BooleanType;
-import org.hibernate.type.CalendarType;
-import org.hibernate.type.CurrencyType;
-import org.hibernate.type.DateType;
-import org.hibernate.type.DoubleType;
-import org.hibernate.type.DurationType;
-import org.hibernate.type.FloatType;
-import org.hibernate.type.ImageType;
-import org.hibernate.type.InstantType;
-import org.hibernate.type.IntegerType;
-import org.hibernate.type.LocalDateTimeType;
-import org.hibernate.type.LocalDateType;
-import org.hibernate.type.LocalTimeType;
-import org.hibernate.type.LocaleType;
-import org.hibernate.type.LongType;
-import org.hibernate.type.NClobType;
-import org.hibernate.type.NTextType;
-import org.hibernate.type.NumericBooleanType;
-import org.hibernate.type.OffsetDateTimeType;
-import org.hibernate.type.OffsetTimeType;
-import org.hibernate.type.SerializableType;
-import org.hibernate.type.ShortType;
-import org.hibernate.type.StringNVarcharType;
-import org.hibernate.type.StringType;
-import org.hibernate.type.TextType;
-import org.hibernate.type.TimeType;
-import org.hibernate.type.TimestampType;
-import org.hibernate.type.TrueFalseType;
-import org.hibernate.type.ZonedDateTimeType;
-import org.hibernate.type.UrlType;
-import org.hibernate.type.YesNoType;
 import org.hibernate.type.descriptor.sql.ArrayTypeDescriptor;
 
 public class ArrayTypes<T>
@@ -95,13 +71,42 @@ public class ArrayTypes<T>
 	// Shouldn't this type be deprecated in SQL already?
 	public static final ArrayTypes STRING_N_VARCHAR = new ArrayTypes<>( StringNVarcharType.INSTANCE );
 
-	public ArrayTypes( AbstractStandardBasicType<T> baseDescriptor ) {
+	private final AbstractStandardBasicType<T> baseDescriptor;
+	private final String name;
+	private final String[] regKeys;
+
+	public ArrayTypes(AbstractStandardBasicType<T> baseDescriptor) {
 		super( ArrayTypeDescriptor.INSTANCE, new GenericArrayTypeDescriptor<>( baseDescriptor ) );
+		this.baseDescriptor = baseDescriptor;
+		this.name = baseDescriptor.getName() + "[]";
+		String[] baseKeys = baseDescriptor.getRegistrationKeys();
+		ArrayList<String> keys = new ArrayList<>( baseKeys.length );
+		for ( String bk : baseKeys ) {
+			try {
+				Class c = Class.forName( bk );
+				bk = c.getName();
+				if ( c.isPrimitive() || c.isArray() ) {
+					keys.add( "[" + bk );
+				}
+				else {
+					keys.add( "[L" + bk + ";" );
+				}
+			}
+			catch ( ClassNotFoundException ex ) {
+				// Ignore. Not real class.
+			}
+		}
+		this.regKeys = keys.toArray( new String[ keys.size() ] );
 	}
 
 	@Override
 	public String getName() {
-		return Integer[].class.getName();
+		return name;
+	}
+
+	@Override
+	public String[] getRegistrationKeys() {
+		return (String[]) regKeys.clone();
 	}
 
 	@Override
@@ -110,12 +115,13 @@ public class ArrayTypes<T>
 	}
 
 	@Override
-	public String objectToSQLString( T[] value, Dialect dialect ) throws Exception {
+	public String objectToSQLString(T[] value, Dialect dialect) throws Exception {
 		StringBuilder sb = new StringBuilder( "{" );
 		for ( T i : value ) {
 			if ( i == null ) {
 				sb.append( "null" );
-			} else {
+			}
+			else {
 				sb.append( dialect.quote( i.toString() ) );
 			}
 			sb.append( ',' );

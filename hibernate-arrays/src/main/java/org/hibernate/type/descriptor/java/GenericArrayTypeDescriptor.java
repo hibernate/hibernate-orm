@@ -1,3 +1,9 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
 package org.hibernate.type.descriptor.java;
 
 import java.io.Serializable;
@@ -17,13 +23,14 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 	private final MutabilityPlan<T[]> mutaplan;
 	private final int sqlType;
 
-	public GenericArrayTypeDescriptor( AbstractStandardBasicType<T> baseDescriptor ) {
-		super( ( Class<T[]> ) Array.newInstance( baseDescriptor.getJavaTypeDescriptor().getJavaTypeClass(), 0 ).getClass() );
+	public GenericArrayTypeDescriptor(AbstractStandardBasicType<T> baseDescriptor) {
+		super( (Class<T[]>) Array.newInstance( baseDescriptor.getJavaTypeDescriptor().getJavaTypeClass(), 0 ).getClass() );
 		this.componentDescriptor = baseDescriptor.getJavaTypeDescriptor();
 		this.componentClass = baseDescriptor.getJavaTypeDescriptor().getJavaTypeClass();
 		if ( this.componentClass.isArray() ) {
 			this.mutaplan = new LocalArrayMutabilityPlan( this.componentDescriptor.getMutabilityPlan() );
-		} else {
+		}
+		else {
 			this.mutaplan = ArrayMutabilityPlan.INSTANCE;
 		}
 		this.sqlType = baseDescriptor.getSqlTypeDescriptor().getSqlType();
@@ -33,7 +40,7 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 
 		MutabilityPlan<T> superplan;
 
-		public LocalArrayMutabilityPlan( MutabilityPlan<T> superplan ) {
+		public LocalArrayMutabilityPlan(MutabilityPlan<T> superplan) {
 			this.superplan = superplan;
 		}
 
@@ -43,11 +50,11 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 		}
 
 		@Override
-		public T[] deepCopy( T[] value ) {
+		public T[] deepCopy(T[] value) {
 			if ( value == null ) {
 				return null;
 			}
-			T[] copy = ( T[] ) Array.newInstance( componentClass, value.length );
+			T[] copy = (T[]) Array.newInstance( componentClass, value.length );
 			for ( int i = 0; i < value.length; i ++ ) {
 				copy[ i ] = superplan.deepCopy( value[ i ] );
 			}
@@ -55,13 +62,13 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 		}
 
 		@Override
-		public Serializable disassemble( T[] value ) {
-			return ( Serializable ) deepCopy( value );
+		public Serializable disassemble(T[] value) {
+			return (Serializable) deepCopy( value );
 		}
 
 		@Override
-		public T[] assemble( Serializable cached ) {
-			return deepCopy( ( T[] ) cached );
+		public T[] assemble(Serializable cached) {
+			return deepCopy( (T[]) cached );
 		}
 
 	}
@@ -72,7 +79,7 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 	}
 
 	@Override
-	public String toString( T[] value ) {
+	public String toString(T[] value) {
 		if ( value == null ) {
 			return "null";
 		}
@@ -96,7 +103,7 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 	}
 
 	@Override
-	public T[] fromString( String string ) {
+	public T[] fromString(String string) {
 		if ( string == null ) {
 			return null;
 		}
@@ -125,37 +132,44 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 			int cp = string.codePointAt( i );
 			char quote;
 			if ( cp == '\'' || cp == '\"' || cp == '`' ) {
-				quote = ( char ) cp;
-			} else if ( cp == lastchar ) {
+				quote = (char) cp;
+			}
+			else if ( cp == lastchar ) {
 				// treat no-value between commas to mean null
 				if ( sb == null ) {
 					lst.add( null );
 				}
 				break;
-			} else if ( Character.isWhitespace( cp ) ) {
+			}
+			else if ( Character.isWhitespace( cp ) ) {
 				continue;
-			} else if ( cp == ',' ) {
+			}
+			else if ( cp == ',' ) {
 				// treat no-value between commas to mean null
 				if ( sb == null ) {
 					lst.add( null );
-				} else {
+				}
+				else {
 					sb = null;
 				}
 				continue;
-			} else if ( "null".equalsIgnoreCase( string.substring( i, i + 4 ) ) ) {
+			}
+			else if ( "null".equalsIgnoreCase( string.substring( i, i + 4 ) ) ) {
 				// skip some possible whitespace
 				int j = 5;
 				do {
 					cp = string.codePointAt( i + j );
 					j ++;
-				} while ( Character.isWhitespace( cp ) );
+				}
+				while ( Character.isWhitespace( cp ) );
 				// check if this was the last entry
 				if ( cp == lastchar || cp == ',' ) {
 					lst.add( null );
 					continue;
 				}
 				throw new IllegalArgumentException( "Cannot parse given string into array of strings" );
-			} else {
+			}
+			else {
 				throw new IllegalArgumentException( "Cannot parse given string into array of strings" );
 			}
 			sb = new StringBuilder();
@@ -171,7 +185,7 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 			}
 			lst.add( sb.toString() );
 		}
-		T[] result = ( T[] ) Array.newInstance( componentClass, lst.size() );
+		T[] result = (T[]) Array.newInstance( componentClass, lst.size() );
 		for ( int i = 0; i < result.length; i ++ ) {
 			result[ i ] = componentDescriptor.fromString( lst.get( i ) );
 		}
@@ -179,7 +193,7 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 	}
 
 	@Override
-	public <X> X unwrap( T[] value, Class<X> type, WrapperOptions options ) {
+	public <X> X unwrap(T[] value, Class<X> type, WrapperOptions options) {
 		// function used for PreparedStatement binding
 
 		if ( value == null ) {
@@ -192,7 +206,7 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 			if (  ! ( options instanceof SessionImpl ) ) {
 				throw new IllegalStateException( "You can't handle the truth! I mean arrays..." );
 			}
-			SessionImpl sess = ( SessionImpl ) options;
+			SessionImpl sess = (SessionImpl) options;
 			sqlDialect = sess.getJdbcServices().getDialect();
 			try {
 				conn = sess.getJdbcConnectionAccess().obtainConnection();
@@ -203,8 +217,9 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 					// Cut them out and use database defaults.
 					typeName = typeName.substring( 0, cutIndex );
 				}
-				return ( X ) conn.createArrayOf( typeName, value );
-			} catch ( SQLException ex ) {
+				return (X) conn.createArrayOf( typeName, value );
+			}
+			catch ( SQLException ex ) {
 				// This basically shouldn't happen unless you've lost connection to the database.
 				throw new HibernateException( ex );
 			}
@@ -214,7 +229,7 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 	}
 
 	@Override
-	public <X> T[] wrap( X value, WrapperOptions options ) {
+	public <X> T[] wrap(X value, WrapperOptions options) {
 		// function used for ResultSet extraction
 
 		if ( value == null ) {
@@ -225,15 +240,16 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 			throw unknownWrap( value.getClass() );
 		}
 
-		java.sql.Array original = ( java.sql.Array ) value;
+		java.sql.Array original = (java.sql.Array) value;
 		try {
 			Object raw = original.getArray();
 			Class clz = raw.getClass().getComponentType();
 			if ( clz == null ||  ! clz.getName().equals( componentClass.getName() ) ) {
 				throw unknownWrap( raw.getClass() );
 			}
-			return ( T[] ) raw;
-		} catch ( SQLException ex ) {
+			return (T[]) raw;
+		}
+		catch ( SQLException ex ) {
 			// This basically shouldn't happen unless you've lost connection to the database.
 			throw new HibernateException( ex );
 		}

@@ -128,6 +128,10 @@ if ( JavaVersion.current().isJava9Compatible() ) {
     test.enabled = false
 }
 
+test {
+    systemProperties['jboss.socket.binding.port-offset'] = 137
+}
+
 // Unzip Wildfly Dist
 task extractWildFly(type: Copy) {
     from {

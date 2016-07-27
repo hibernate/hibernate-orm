@@ -23,7 +23,7 @@
         <container qualifier="container.active-1" mode="suite" default="true">
             <configuration>
                 <property name="jbossHome">${buildDir}/wildfly-${wildflyVersion}</property>
-                <property name="javaVmArguments">-Djava.net.preferIPv4Stack=true -Djgroups.bind_addr=127.0.0.1</property>
+                <property name="javaVmArguments">-Djava.net.preferIPv4Stack=true -Djgroups.bind_addr=127.0.0.1 -Djboss.socket.binding.port-offset=137</property>
 
                 <!-- Uncomment for Remote debugging Wildfly -->
                 <!--

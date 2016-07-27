@@ -157,18 +157,6 @@ public class CollectionMapWithComponentValueTest extends BaseCoreFunctionalTestC
 		return true;
 	}
 
-	protected void cleanupTestData() {
-		Session s = openSession();
-		s.getTransaction().begin();
-		{
-			s.createQuery( "from TestEntity" )
-				.list()
-				.forEach( te -> s.delete( te ) );
-		}
-		s.getTransaction().commit();
-		s.close();
-	}
-
 	@Entity(name = "TestEntity")
 	@Table(name = "TEST_ENTITY")
 	public static class TestEntity {

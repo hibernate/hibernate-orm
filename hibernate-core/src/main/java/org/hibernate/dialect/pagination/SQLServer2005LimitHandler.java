@@ -28,13 +28,16 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	private static final String DISTINCT = "distinct";
 	private static final String ORDER_BY = "order by";
 
-	private static final Pattern SELECT_PATTERN = buildShallowIndexPattern( SELECT + "(.)*" );
-	private static final Pattern FROM_PATTERN = buildShallowIndexPattern( FROM );
-	private static final Pattern DISTINCT_PATTERN = buildShallowIndexPattern( DISTINCT );
-	private static final Pattern ORDER_BY_PATTERN = buildShallowIndexPattern( ORDER_BY );
-	private static final Pattern COMMA_PATTERN = buildShallowIndexPattern( "," );
+	final String SELECT_DISTINCT_SPACE = "select distinct ";
+	final String SELECT_SPACE = "select ";
 
-	private static final Pattern ALIAS_PATTERN = Pattern.compile( "(?i)\\sas\\s(.)+$" );
+	private static final Pattern SELECT_PATTERN = buildShallowIndexPattern( SELECT + "(.*)", true );
+	private static final Pattern FROM_PATTERN = buildShallowIndexPattern( FROM, true );
+	private static final Pattern DISTINCT_PATTERN = buildShallowIndexPattern( DISTINCT, true );
+	private static final Pattern ORDER_BY_PATTERN = buildShallowIndexPattern( ORDER_BY, true );
+	private static final Pattern COMMA_PATTERN = buildShallowIndexPattern( ",", false );
+	private static final Pattern ALIAS_PATTERN =
+			Pattern.compile( "\\S+\\s*(\\s(?i)as\\s)\\s*(\\S+)*\\s*$|\\s+(\\S+)$" );
 
 	// Flag indicating whether TOP(?) expression has been added to the original query.
 	private boolean topAdded;
@@ -146,7 +149,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	protected String fillAliasInSelectClause(StringBuilder sb) {
 		final String separator = System.lineSeparator();
 		final List<String> aliases = new LinkedList<String>();
-		final int startPos = shallowIndexOfPattern( sb, SELECT_PATTERN, 0 );
+		final int startPos = getSelectColumnsStartPosition( sb );
 		int endPos = shallowIndexOfPattern( sb, FROM_PATTERN, startPos );
 
 		int nextComa = startPos;
@@ -204,6 +207,35 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	}
 
 	/**
+	 * Get the start position for where the column list begins.
+	 *
+	 * @param sb the string builder sql.
+	 * @return the start position where the column list begins.
+	 */
+	private int getSelectColumnsStartPosition(StringBuilder sb) {
+		final int startPos = getSelectStartPosition( sb );
+		// adjustment for 'select distinct ' and 'select '.
+		final String sql = sb.toString().substring( startPos ).toLowerCase();
+		if ( sql.startsWith( SELECT_DISTINCT_SPACE ) ) {
+			return ( startPos + SELECT_DISTINCT_SPACE.length() );
+		}
+		else if ( sql.startsWith( SELECT_SPACE ) ) {
+			return ( startPos + SELECT_SPACE.length() );
+		}
+		return startPos;
+	}
+
+	/**
+	 * Get the select start position.
+	 *
+	 * @param sb the string builder sql.
+	 * @return the position where {@code select} is found.
+	 */
+	private int getSelectStartPosition(StringBuilder sb) {
+		return shallowIndexOfPattern( sb, SELECT_PATTERN, 0 );
+	}
+
+	/**
 	 * @param expression Select expression.
 	 *
 	 * @return {@code true} when expression selects multiple columns, {@code false} otherwise.
@@ -222,11 +254,17 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 * @return Column alias.
 	 */
 	private String getAlias(String expression) {
+		// remove any function arguments, if any exist.
+		// 'cast(tab1.col1 as varchar(255)) as col1' -> 'cast as col1'
+		// 'cast(tab1.col1 as varchar(255)) col1 -> 'cast col1'
+		// 'cast(tab1.col1 as varchar(255))' -> 'cast'
+		expression = expression.replaceFirst( "(\\((.)*\\))", "" ).trim();
+
+		// This will match any text provided with:
+		// 		columnName [[as] alias]
 		final Matcher matcher = ALIAS_PATTERN.matcher( expression );
-		if ( matcher.find() ) {
-			// Taking advantage of Java regular expressions greedy behavior while extracting the last AS keyword.
-			// Note that AS keyword can appear in CAST operator, e.g. 'cast(tab1.col1 as varchar(255)) as col1'.
-			return matcher.group( 0 ).replaceFirst( "(?i)(.)*\\sas\\s", "" ).trim();
+		if ( matcher.find() && matcher.groupCount() > 1 ) {
+			return matcher.group( 1 ) != null ? matcher.group( 2 ) : matcher.group( 3 );
 		}
 		return null;
 	}
@@ -294,9 +332,16 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 * based on the search pattern that is not enclosed in parenthesis.
 	 *
 	 * @param pattern String search pattern.
+	 * @param wordBoundardy whether to apply a word boundary restriction.
 	 * @return Compiled {@link Pattern}.
 	 */
-	private static Pattern buildShallowIndexPattern(String pattern) {
-		return Pattern.compile( "(\\b" + pattern + ")(?![^\\(]*\\))", Pattern.CASE_INSENSITIVE );
+	private static Pattern buildShallowIndexPattern(String pattern, boolean wordBoundardy) {
+		return Pattern.compile(
+				"(" +
+				( wordBoundardy ? "\\b" : "" ) +
+				pattern +
+				")(?![^\\(]*\\))",
+				Pattern.CASE_INSENSITIVE
+		);
 	}
 }

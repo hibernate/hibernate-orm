@@ -30,6 +30,7 @@ bin
 
 # NetBeans specific files/directories
 .nbattrs
+.nb-gradle-properties
 
 # Miscellaneous
 *.log

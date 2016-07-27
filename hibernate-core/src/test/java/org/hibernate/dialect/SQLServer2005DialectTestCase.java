@@ -25,6 +25,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Valotasion Yoryos
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	private SQLServer2005Dialect dialect;
@@ -116,6 +117,18 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-10994")
+	public void testGetLimitStringAliasGenerationWithAliasesNoAs() {
+		final String aliasedSQLNoAs = "select column1 c1, column c2, column c3, column c4 from table1";
+		assertEquals(
+				"WITH query AS (SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( " +
+						"select column1 c1, column c2, column c3, column c4 from table1 ) inner_query ) " +
+						"SELECT c1, c2, c3, c4 FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
+				dialect.getLimitHandler().processSql( aliasedSQLNoAs, toRowSelection( 3, 5 ) )
+		);
+	}
+
+	@Test
 	@TestForIssue(jiraKey = "HHH-7019")
 	public void testGetLimitStringWithSubselect() {
 		final String subselectInSelectClauseSQL = "select persistent0_.id as col_0_0_, " +
@@ -166,6 +179,32 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-10994")
+	public void testGetLimitStringDistinctWithinAggregationWithoutAlias() {
+		final String distinctInAggregateSQL = "select aggregate_function(distinct p.n) from table849752 p order by f1";
+
+		assertEquals(
+				"WITH query AS (SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( " +
+						"select TOP(?) aggregate_function(distinct p.n) as page0_ from table849752 p order by f1 ) inner_query ) " +
+						"SELECT page0_ FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
+				dialect.getLimitHandler().processSql( distinctInAggregateSQL, toRowSelection( 2, 5 ) )
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-10994")
+	public void testGetLimitStringDistinctWithinAggregationWithAliasNoAs() {
+		final String distinctInAggregateSQL = "select aggregate_function(distinct p.n) f1 from table849752 p order by f1";
+
+		assertEquals(
+				"WITH query AS (SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( " +
+						"select TOP(?) aggregate_function(distinct p.n) f1 from table849752 p order by f1 ) inner_query ) " +
+						"SELECT f1 FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
+				dialect.getLimitHandler().processSql( distinctInAggregateSQL, toRowSelection( 2, 5 ) )
+		);
+	}
+
+	@Test
 	@TestForIssue(jiraKey = "HHH-7370")
 	public void testGetLimitStringWithMaxOnly() {
 		final String query = "select product2x0_.id as id0_, product2x0_.description as descript2_0_ " +
@@ -198,6 +237,36 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 						"select TOP(?) cast(lc302_doku6_.redniBrojStavke as varchar(255)) as col_0_0_, lc302_doku6_.dokumentiID as col_1_0_ " +
 						"from LC302_Dokumenti lc302_doku6_ order by lc302_doku6_.dokumentiID DESC ) inner_query ) " +
 						"SELECT col_0_0_, col_1_0_ FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
+				dialect.getLimitHandler().processSql( query, toRowSelection( 1, 3 ) )
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-10994")
+	public void testGetLimitStringWithCastOperatorWithAliasNoAs() {
+		final String query = "select cast(lc302_doku6_.redniBrojStavke as varchar(255)) f1, lc302_doku6_.dokumentiID f2 " +
+				"from LC302_Dokumenti lc302_doku6_ order by lc302_doku6_.dokumentiID DESC";
+
+		assertEquals(
+				"WITH query AS (SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( " +
+						"select TOP(?) cast(lc302_doku6_.redniBrojStavke as varchar(255)) f1, lc302_doku6_.dokumentiID f2 " +
+						"from LC302_Dokumenti lc302_doku6_ order by lc302_doku6_.dokumentiID DESC ) inner_query ) " +
+						"SELECT f1, f2 FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
+				dialect.getLimitHandler().processSql( query, toRowSelection( 1, 3 ) )
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-10994")
+	public void testGetLimitStringWithCastOperatorWithoutAliases() {
+		final String query = "select cast(lc302_doku6_.redniBrojStavke as varchar(255)), lc302_doku6_.dokumentiID " +
+				"from LC302_Dokumenti lc302_doku6_ order by lc302_doku6_.dokumentiID DESC";
+
+		assertEquals(
+				"WITH query AS (SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( " +
+						"select TOP(?) cast(lc302_doku6_.redniBrojStavke as varchar(255)) as page0_, lc302_doku6_.dokumentiID as page1_ " +
+						"from LC302_Dokumenti lc302_doku6_ order by lc302_doku6_.dokumentiID DESC ) inner_query ) " +
+						"SELECT page0_, page1_ FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
 				dialect.getLimitHandler().processSql( query, toRowSelection( 1, 3 ) )
 		);
 	}

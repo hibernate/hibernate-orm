@@ -1186,7 +1186,7 @@ include::{extrasdir}/basic/mapping-column-read-and-write-composite-type-persiste
 ====
 
 [[mapping-column-formula]]
-==== Formula
+==== @Formula
 
 Sometimes, you want the Database to do some computation for you rather than in the JVM, you might also create some kind of virtual column.
 You can use a SQL fragment (aka formula) instead of mapping a property into a column. This kind of property is read only (its value is calculated by your formula fragment)
@@ -1224,6 +1224,140 @@ include::{extrasdir}/basic/mapping-column-formula-persistence-example.sql[]
 [NOTE]
 ====
 The SQL fragment can be as complex as you want and even include subselects.
+====
+
+[[mapping-column-where]]
+==== @Where
+
+Sometimes, you want to filter out entities or collections using a custom SQL criteria.
+This can be achieved using the `@Where` annotation, which can be applied to entities and collections.
+
+[[mapping-where-example]]
+.`@Where` mapping usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/WhereTest.java[tags=mapping-where-example]
+----
+====
+
+If the database contains the following entities:
+
+[[mapping-where-persistence-example]]
+.Persisting an fetching entities with a `@Where` mapping
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/WhereTest.java[tags=mapping-where-persistence-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-where-persistence-example.sql[]
+----
+====
+
+When executing an `Account` entity query, Hibernate is going to filter out all records that are not active.
+
+[[mapping-where-entity-query-example]]
+.Query entities mapped with `@Where`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/WhereTest.java[tags=mapping-where-entity-query-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-where-entity-query-example.sql[]
+----
+====
+
+When fetching the `debitAccounts` or the `creditAccounts` collections, Hibernate is going to apply the `@Where` clause filtering criteria to the associated child entities.
+
+[[mapping-where-collection-query-example]]
+.Traversing collections mapped with `@Where`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/WhereTest.java[tags=mapping-where-collection-query-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-where-collection-query-example.sql[]
+----
+====
+
+[[mapping-column-filter]]
+==== @Filter
+
+The `@Filter` annotation is another way to filter out entities or collections using a custom SQL criteria, for both entities and collections.
+Unlike the `@Where` annotation, `@Filter` allows you to parameterize the filter clause at runtime.
+
+[[mapping-filter-example]]
+.`@Filter` mapping usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/FilterTest.java[tags=mapping-filter-example]
+----
+====
+
+If the database contains the following entities:
+
+[[mapping-filter-persistence-example]]
+.Persisting an fetching entities with a `@Filter` mapping
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/FilterTest.java[tags=mapping-filter-persistence-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-filter-persistence-example.sql[]
+----
+====
+
+By default, without explicitly enabling the filter, Hibernate is going to fetch all `Account` entities.
+If the filter is enabled and the filter parameter value is provided,
+then Hibernate is going to apply the filtering criteria to the associated `Account` entities.
+
+[[mapping-filter-entity-query-example]]
+.Query entities mapped with `@Filter`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/FilterTest.java[tags=mapping-filter-entity-query-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-filter-entity-query-example.sql[]
+----
+====
+
+Jut like with entities, collections can be filtered as well, but only if the filter is explicilty enabled on the currently running Hibernate `Session`.
+This way, when fetching the `accounts` collections, Hibernate is going to apply the `@Filter` clause filtering criteria to the associated collection entries.
+
+[[mapping-filter-collection-query-example]]
+.Traversing collections mapped with `@Filter`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/FilterTest.java[tags=mapping-filter-collection-query-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-filter-collection-query-example.sql[]
+----
+====
+
+[NOTE]
+====
+The main advantage of `@Filter` over teh `@Where` clause is that the filtering criteria can be customized at runtime.
 ====
 
 [[mapping-column-any]]

@@ -25,24 +25,25 @@ import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.internal.exec.GenerationTarget;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
-import org.hibernate.tool.schema.internal.exec.JdbcConnectionAccessConnectionProviderImpl;
-import org.hibernate.tool.schema.internal.exec.JdbcConnectionContextNonSharedImpl;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
 import org.hibernate.tool.schema.spi.CommandAcceptanceException;
 import org.hibernate.tool.schema.spi.DelayedDropAction;
@@ -447,14 +448,9 @@ public class SchemaDropperImpl implements SchemaDropper {
 		if ( targets == null || targets.length == 0 ) {
 			final JdbcContext jdbcContext = tool.resolveJdbcContext( settings );
 			targets = new GenerationTarget[] {
-					new GenerationTargetToDatabase(
-							new JdbcConnectionContextNonSharedImpl(
-									jdbcContext.getJdbcConnectionAccess(),
-									jdbcContext.getSqlStatementLogger(),
-									true
-							)
-							, serviceRegistry.getService( JdbcEnvironment.class ).getSqlExceptionHelper()
-					)
+				new GenerationTargetToDatabase(
+						serviceRegistry.getService( TransactionCoordinatorBuilder.class ).buildDdlTransactionIsolator( jdbcContext )
+				)
 			};
 		}
 
@@ -522,22 +518,11 @@ public class SchemaDropperImpl implements SchemaDropper {
 		public void perform(ServiceRegistry serviceRegistry) {
 			log.startingDelayedSchemaDrop();
 
-			final ConnectionProvider connectionProvider = serviceRegistry.getService( ConnectionProvider.class );
-			if ( connectionProvider == null ) {
-				// todo : log or error?
-				throw new SchemaManagementException(
-						"Could not build JDBC Connection context to drop schema on SessionFactory close"
-				);
-			}
-
+			final JdbcContext jdbcContext = new JdbcContextDelayedDropImpl( serviceRegistry );
 			final GenerationTargetToDatabase target = new GenerationTargetToDatabase(
-					new JdbcConnectionContextNonSharedImpl(
-							new JdbcConnectionAccessConnectionProviderImpl( connectionProvider ),
-							serviceRegistry.getService( JdbcServices.class ).getSqlStatementLogger(),
-							true
-					)
-					, serviceRegistry.getService( JdbcEnvironment.class ).getSqlExceptionHelper()
+					serviceRegistry.getService( TransactionCoordinatorBuilder.class ).buildDdlTransactionIsolator( jdbcContext )
 			);
+
 			target.prepare();
 			try {
 				for ( String command : commands ) {
@@ -554,6 +539,49 @@ public class SchemaDropperImpl implements SchemaDropper {
 			}
 			finally {
 				target.release();
+			}
+		}
+
+		private class JdbcContextDelayedDropImpl implements JdbcContext {
+			private final ServiceRegistry serviceRegistry;
+			private final JdbcServices jdbcServices;
+			private final JdbcConnectionAccess jdbcConnectionAccess;
+
+			public JdbcContextDelayedDropImpl(ServiceRegistry serviceRegistry) {
+				this.serviceRegistry = serviceRegistry;
+				this.jdbcServices = serviceRegistry.getService( JdbcServices.class );
+				this.jdbcConnectionAccess = jdbcServices.getBootstrapJdbcConnectionAccess();
+				if ( jdbcConnectionAccess == null ) {
+					// todo : log or error?
+					throw new SchemaManagementException(
+							"Could not build JDBC Connection context to drop schema on SessionFactory close"
+					);
+				}
+			}
+
+			@Override
+			public JdbcConnectionAccess getJdbcConnectionAccess() {
+				return jdbcConnectionAccess;
+			}
+
+			@Override
+			public Dialect getDialect() {
+				return jdbcServices.getJdbcEnvironment().getDialect();
+			}
+
+			@Override
+			public SqlStatementLogger getSqlStatementLogger() {
+				return jdbcServices.getSqlStatementLogger();
+			}
+
+			@Override
+			public SqlExceptionHelper getSqlExceptionHelper() {
+				return jdbcServices.getSqlExceptionHelper();
+			}
+
+			@Override
+			public ServiceRegistry getServiceRegistry() {
+				return serviceRegistry;
 			}
 		}
 	}

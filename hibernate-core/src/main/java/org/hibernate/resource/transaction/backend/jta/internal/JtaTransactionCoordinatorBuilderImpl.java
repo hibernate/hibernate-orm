@@ -7,9 +7,11 @@
 package org.hibernate.resource.transaction.backend.jta.internal;
 
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
+import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
+import org.hibernate.tool.schema.internal.exec.JdbcContext;
 
 /**
  * Concrete builder for JTA-based TransactionCoordinator instances.
@@ -37,5 +39,10 @@ public class JtaTransactionCoordinatorBuilderImpl implements TransactionCoordina
 	public PhysicalConnectionHandlingMode getDefaultConnectionHandlingMode() {
 		// todo : I want to change this to PhysicalConnectionHandlingMode#IMMEDIATE_ACQUISITION_AND_HOLD
 		return PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT;
+	}
+
+	@Override
+	public DdlTransactionIsolator buildDdlTransactionIsolator(JdbcContext jdbcContext) {
+		return new DdlTransactionIsolatorJtaImpl( jdbcContext );
 	}
 }

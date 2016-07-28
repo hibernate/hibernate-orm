@@ -29,15 +29,14 @@ import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
+import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.tool.hbm2ddl.UniqueConstraintSchemaUpdateStrategy;
-import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.ForeignKeyInformation;
 import org.hibernate.tool.schema.extract.spi.IndexInformation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
 import org.hibernate.tool.schema.internal.exec.GenerationTarget;
-import org.hibernate.tool.schema.internal.exec.JdbcConnectionContextSharedImpl;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
 import org.hibernate.tool.schema.spi.CommandAcceptanceException;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
@@ -87,22 +86,22 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 
 		final JdbcContext jdbcContext = tool.resolveJdbcContext( options.getConfigurationValues() );
 
-		final JdbcConnectionContextSharedImpl connectionContext = new JdbcConnectionContextSharedImpl(
-				jdbcContext.getJdbcConnectionAccess(),
-				jdbcContext.getSqlStatementLogger(),
-				targetDescriptor.getTargetTypes().contains( TargetType.DATABASE )
-		);
+		final DdlTransactionIsolator ddlTransactionIsolator = tool.getDdlTransactionIsolator( jdbcContext );
 
 		try {
+			ddlTransactionIsolator.prepare();
+
+			final DdlTransactionIsolator sharedDdlTransactionIsolator = new DdlTransactionIsolatorSharedImpl( ddlTransactionIsolator );
+
 			final DatabaseInformation databaseInformation = Helper.buildDatabaseInformation(
 					tool.getServiceRegistry(),
-					connectionContext,
+					sharedDdlTransactionIsolator,
 					metadata.getDatabase().getDefaultNamespace().getName()
 			);
 
 			final GenerationTarget[] targets = tool.buildGenerationTargets(
 					targetDescriptor,
-					connectionContext,
+					sharedDdlTransactionIsolator,
 					options.getConfigurationValues()
 			);
 
@@ -119,7 +118,7 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 			}
 		}
 		finally {
-			connectionContext.reallyRelease();
+			ddlTransactionIsolator.release();
 		}
 	}
 

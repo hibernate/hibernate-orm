@@ -88,14 +88,6 @@ public class WhereTest extends BaseEntityManagerFunctionalTestCase {
 			assertEquals( 2, accounts.size());
 		} );
 		//end::mapping-where-entity-query-example[]
-
-		//tag::mapping-where-collection-query-example[]
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Client client = entityManager.find( Client.class, 1L );
-			assertEquals( 1, client.getCreditAccounts().size() );
-			assertEquals( 1, client.getDebitAccounts().size() );
-		} );
-		//end::mapping-where-collection-query-example[]
 	}
 
 	//tag::mapping-where-example[]
@@ -112,11 +104,9 @@ public class WhereTest extends BaseEntityManagerFunctionalTestCase {
 
 		private String name;
 
-		@Where( clause = "account_type = 'DEBIT'")
 		@OneToMany(mappedBy = "client")
 		private List<Account> debitAccounts = new ArrayList<>( );
 
-		@Where( clause = "account_type = 'CREDIT'")
 		@OneToMany(mappedBy = "client")
 		private List<Account> creditAccounts = new ArrayList<>( );
 

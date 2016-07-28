@@ -7,4 +7,4 @@ SELECT
     a.account_type as account_5_0_
 FROM
     Account a
-WHERE ( a.active = 1 )
+WHERE ( a.active = true )

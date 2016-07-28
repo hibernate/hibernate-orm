@@ -9,7 +9,7 @@ SELECT
     c.account_type as account_5_0_1_
 FROM
     Account c
-WHERE ( c.active = 1 and c.account_type = 'CREDIT' ) AND c.client_id = 1
+WHERE ( c.active = true and c.account_type = 'CREDIT' ) AND c.client_id = 1
 
 SELECT
     d.client_id as client_i6_0_0_,
@@ -22,4 +22,4 @@ SELECT
     d.account_type as account_5_0_1_
 FROM
     Account d
-WHERE ( d.active = 1 and d.account_type = 'DEBIT' ) AND d.client_id = 1
+WHERE ( d.active = true and d.account_type = 'DEBIT' ) AND d.client_id = 1

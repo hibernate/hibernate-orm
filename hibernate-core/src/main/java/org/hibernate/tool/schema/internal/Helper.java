@@ -18,10 +18,10 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.internal.exec.ImprovedDatabaseInformationImpl;
-import org.hibernate.tool.schema.internal.exec.JdbcConnectionContext;
 import org.hibernate.tool.schema.internal.exec.ScriptSourceInputFromFile;
 import org.hibernate.tool.schema.internal.exec.ScriptSourceInputFromReader;
 import org.hibernate.tool.schema.internal.exec.ScriptSourceInputFromUrl;
@@ -119,14 +119,14 @@ public class Helper {
 
 	public static DatabaseInformation buildDatabaseInformation(
 			ServiceRegistry serviceRegistry,
-			JdbcConnectionContext connectionContext,
+			DdlTransactionIsolator ddlTransactionIsolator,
 			Namespace.Name defaultNamespace) {
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 		try {
 			return new ImprovedDatabaseInformationImpl(
 					serviceRegistry,
 					jdbcEnvironment,
-					connectionContext,
+					ddlTransactionIsolator,
 					defaultNamespace
 			);
 		}

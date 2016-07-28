@@ -10,7 +10,10 @@ import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
+
+import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
+import org.hibernate.tool.schema.internal.exec.JdbcContext;
 
 /**
  * Concrete builder for JTA-based TransactionCoordinator instances.
@@ -42,5 +45,10 @@ public class JtaTransactionCoordinatorBuilderImpl implements TransactionCoordina
 	@Override
 	public ConnectionAcquisitionMode getDefaultConnectionAcquisitionMode() {
 		return ConnectionAcquisitionMode.AS_NEEDED;
+	}
+
+	@Override
+	public DdlTransactionIsolator buildDdlTransactionIsolator(JdbcContext jdbcContext) {
+		return new DdlTransactionIsolatorJtaImpl( jdbcContext );
 	}
 }

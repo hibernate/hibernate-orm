@@ -28,16 +28,14 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
-import org.hibernate.tool.schema.internal.exec.JdbcConnectionContextNonSharedImpl;
 
-import org.hibernate.testing.boot.JdbcConnectionAccessImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.test.util.DdlTransactionIsolatorTestingImpl;
 import org.junit.Test;
 
 /**
@@ -138,18 +136,16 @@ public abstract class AbstractMultiTenancyTest extends BaseUnitTestCase {
         tool.injectServices( serviceRegistry );
 
         final GenerationTargetToDatabase frontEndSchemaGenerator =  new GenerationTargetToDatabase(
-            new JdbcConnectionContextNonSharedImpl(
-                new JdbcConnectionAccessImpl( connectionProviderMap.get( FRONT_END_TENANT ) ),
-                new SqlStatementLogger( false, true ),
-                true
-            )
+                new DdlTransactionIsolatorTestingImpl(
+                        serviceRegistry,
+                        connectionProviderMap.get( FRONT_END_TENANT )
+                )
         );
         final GenerationTargetToDatabase backEndSchemaGenerator = new GenerationTargetToDatabase(
-            new JdbcConnectionContextNonSharedImpl(
-                new JdbcConnectionAccessImpl( connectionProviderMap.get( BACK_END_TENANT ) ),
-                new SqlStatementLogger( false, true ),
-                true
-            )
+                new DdlTransactionIsolatorTestingImpl(
+                        serviceRegistry,
+                        connectionProviderMap.get( BACK_END_TENANT )
+                )
         );
 
         new SchemaDropperImpl( serviceRegistry ).doDrop(

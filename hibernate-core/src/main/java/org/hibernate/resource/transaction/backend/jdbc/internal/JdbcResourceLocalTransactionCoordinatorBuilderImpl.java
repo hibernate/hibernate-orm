@@ -12,7 +12,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransactionAccess;
+import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
+import org.hibernate.tool.schema.internal.exec.JdbcContext;
 
 /**
  * Concrete builder for resource-local TransactionCoordinator instances.
@@ -51,5 +53,10 @@ public class JdbcResourceLocalTransactionCoordinatorBuilderImpl implements Trans
 	@Override
 	public ConnectionAcquisitionMode getDefaultConnectionAcquisitionMode() {
 		return ConnectionAcquisitionMode.AS_NEEDED;
+	}
+
+	@Override
+	public DdlTransactionIsolator buildDdlTransactionIsolator(JdbcContext jdbcContext) {
+		return new DdlTransactionIsolatorNonJtaImpl( jdbcContext );
 	}
 }

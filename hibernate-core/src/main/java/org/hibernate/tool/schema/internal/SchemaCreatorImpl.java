@@ -287,11 +287,15 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				}
 				checkExportIdentifier( sequence, exportIdentifiers );
 				applySqlStrings(
-						dialect.getCreateSequenceStrings(
-								jdbcEnvironment.getQualifiedObjectNameFormatter().format( sequence.getName(), dialect ),
-								sequence.getInitialValue(),
-								sequence.getIncrementSize()
+						dialect.getSequenceExporter().getSqlCreateStrings(
+								sequence,
+								metadata
 						),
+//						dialect.getCreateSequenceStrings(
+//								jdbcEnvironment.getQualifiedObjectNameFormatter().format( sequence.getName(), dialect ),
+//								sequence.getInitialValue(),
+//								sequence.getIncrementSize()
+//						),
 						formatter,
 						options,
 						targets

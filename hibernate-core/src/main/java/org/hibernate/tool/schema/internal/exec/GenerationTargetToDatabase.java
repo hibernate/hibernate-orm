@@ -10,11 +10,11 @@ import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
 
-import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+import org.hibernate.engine.jdbc.internal.DDLFormatterImpl;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.tool.schema.spi.CommandAcceptanceException;
-import org.hibernate.tool.schema.spi.SchemaManagementException;
 
 /**
  * GenerationTarget implementation for handling generation directly to the database
@@ -24,35 +24,34 @@ import org.hibernate.tool.schema.spi.SchemaManagementException;
 public class GenerationTargetToDatabase implements GenerationTarget {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( GenerationTargetToDatabase.class );
 
-	private final SqlExceptionHelper sqlExceptionHelper;
-	private final JdbcConnectionContext jdbcConnectionContext;
+	private final DdlTransactionIsolator ddlTransactionIsolator;
 
 	private Statement jdbcStatement;
 
-	public GenerationTargetToDatabase(JdbcConnectionContext jdbcConnectionContext) {
-		this( jdbcConnectionContext, new SqlExceptionHelper( true ) );
-	}
-
-	public GenerationTargetToDatabase(JdbcConnectionContext jdbcConnectionContext, SqlExceptionHelper sqlExceptionHelper) {
-		this.jdbcConnectionContext = jdbcConnectionContext;
-		this.sqlExceptionHelper = sqlExceptionHelper;
+	public GenerationTargetToDatabase(DdlTransactionIsolator ddlTransactionIsolator) {
+		this.ddlTransactionIsolator = ddlTransactionIsolator;
 	}
 
 	@Override
 	public void prepare() {
+		ddlTransactionIsolator.prepare();
 	}
 
 	@Override
 	public void accept(String command) {
-		try {
-			jdbcConnectionContext.logSqlStatement( command );
+		ddlTransactionIsolator.getJdbcContext().getSqlStatementLogger().logStatement(
+				command,
+				DDLFormatterImpl.INSTANCE
+		);
 
+		try {
 			final Statement jdbcStatement = jdbcStatement();
 			jdbcStatement.execute( command );
+
 			try {
 				SQLWarning warnings = jdbcStatement.getWarnings();
 				if ( warnings != null) {
-					sqlExceptionHelper.logAndClearWarnings( jdbcStatement );
+					ddlTransactionIsolator.getJdbcContext().getSqlExceptionHelper().logAndClearWarnings( jdbcStatement );
 				}
 			}
 			catch( SQLException e ) {
@@ -61,22 +60,19 @@ public class GenerationTargetToDatabase implements GenerationTarget {
 		}
 		catch (SQLException e) {
 			throw new CommandAcceptanceException(
-					"Unable to execute command [" + command + "]",
+					"Error executing DDL via JDBC Statement",
 					e
 			);
 		}
 	}
 
-	protected Statement jdbcStatement() {
+	private Statement jdbcStatement() {
 		if ( jdbcStatement == null ) {
 			try {
-				jdbcStatement = jdbcConnectionContext.getConnection().createStatement();
+				this.jdbcStatement = ddlTransactionIsolator.getIsolatedConnection().createStatement();
 			}
 			catch (SQLException e) {
-				throw new SchemaManagementException(
-						"Unable to create JDBC Statement for schema management target",
-						e
-				);
+				throw ddlTransactionIsolator.getJdbcContext().getSqlExceptionHelper().convert( e, "Unable to create JDBC Statement for DDL execution" );
 			}
 		}
 
@@ -85,16 +81,6 @@ public class GenerationTargetToDatabase implements GenerationTarget {
 
 	@Override
 	public void release() {
-		if ( jdbcStatement != null ) {
-			try {
-				jdbcStatement.close();
-			}
-			catch (SQLException e) {
-				log.debug( "Unable to close JDBC statement after JPA schema generation : " + e.toString() );
-			}
-		}
-		jdbcStatement = null;
-
-		jdbcConnectionContext.release();
+		ddlTransactionIsolator.release();
 	}
 }

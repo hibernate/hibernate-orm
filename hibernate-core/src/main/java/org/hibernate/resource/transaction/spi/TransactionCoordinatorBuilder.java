@@ -9,7 +9,10 @@ package org.hibernate.resource.transaction.spi;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
+import org.hibernate.resource.transaction.backend.jdbc.internal.DdlTransactionIsolatorNonJtaImpl;
+import org.hibernate.resource.transaction.backend.jta.internal.DdlTransactionIsolatorJtaImpl;
 import org.hibernate.service.Service;
+import org.hibernate.tool.schema.internal.exec.JdbcContext;
 
 /**
  * Builder for TransactionCoordinator instances
@@ -51,5 +54,9 @@ public interface TransactionCoordinatorBuilder extends Service {
 	@Deprecated
 	default ConnectionReleaseMode getDefaultConnectionReleaseMode() {
 		return getDefaultConnectionHandlingMode().getReleaseMode();
+	}
+
+	default DdlTransactionIsolator buildDdlTransactionIsolator(JdbcContext jdbcContext) {
+		return isJta() ? new DdlTransactionIsolatorJtaImpl( jdbcContext ) : new DdlTransactionIsolatorNonJtaImpl( jdbcContext );
 	}
 }

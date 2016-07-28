@@ -14,7 +14,7 @@ import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
  *         First to allow the coordinator to determine if its owner is still active (open, etc).
  *     </li>
  *     <li>
- *         Second is to allow the coordinator to dispatch beforeQuery and afterQuery completion events to the owner
+ *         Second is to allow the coordinator to dispatch before and after completion events to the owner
  *     </li>
  * </ul>
  *

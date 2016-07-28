@@ -15,6 +15,7 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.extract.internal.InformationExtractorJdbcDatabaseMetaDataImpl;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
@@ -37,14 +38,14 @@ public class ImprovedDatabaseInformationImpl
 	public ImprovedDatabaseInformationImpl(
 			ServiceRegistry serviceRegistry,
 			JdbcEnvironment jdbcEnvironment,
-			JdbcConnectionContext connectionContext,
+			DdlTransactionIsolator ddlTransactionIsolator,
 			Namespace.Name defaultNamespace) throws SQLException {
 		this.jdbcEnvironment = jdbcEnvironment;
 
 		this.extractionContext = new ImprovedExtractionContextImpl(
 				serviceRegistry,
 				jdbcEnvironment,
-				connectionContext,
+				ddlTransactionIsolator,
 				defaultNamespace.getCatalog(),
 				defaultNamespace.getSchema(),
 				this

@@ -58,7 +58,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J> {
 						)
 				);
 			}
-			st.setNull( index, sqlDescriptor.getSqlType() );
+			st.setNull( index, java.sql.Types.NULL );
 		}
 		else {
 			if ( traceEnabled ) {

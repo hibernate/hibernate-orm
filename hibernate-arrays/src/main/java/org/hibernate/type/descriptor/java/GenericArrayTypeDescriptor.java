@@ -208,6 +208,13 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 			}
 			SessionImpl sess = (SessionImpl) options;
 			sqlDialect = sess.getJdbcServices().getDialect();
+			Object[] unwrapped = new Object[value.length];
+			Class cls = value.getClass().getComponentType();
+			for (int i = 0; i < value.length; i++) {
+				unwrapped[i] = componentClass.isAssignableFrom(cls)
+						? value[i]
+						: componentDescriptor.unwrap(value[i], componentClass, options);
+			}
 			try {
 				conn = sess.getJdbcConnectionAccess().obtainConnection();
 				String typeName = sqlDialect.getTypeName( sqlType );
@@ -217,7 +224,7 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 					// Cut them out and use database defaults.
 					typeName = typeName.substring( 0, cutIndex );
 				}
-				return (X) conn.createArrayOf( typeName, value );
+				return (X) conn.createArrayOf( typeName, unwrapped );
 			}
 			catch ( SQLException ex ) {
 				// This basically shouldn't happen unless you've lost connection to the database.
@@ -236,18 +243,40 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 			return null;
 		}
 
+		Class cls = value.getClass();
+
+		if ( cls.isArray() ) {
+			if ( componentClass.isAssignableFrom(cls.getComponentType()) ) {
+				Object[] raw = (Object[]) value;
+				T[] wrapped = (T[]) java.lang.reflect.Array.newInstance(componentClass, raw.length);
+				for (int i = 0; i < raw.length; i++) {
+					wrapped[i] = (T) raw[i];
+				}
+				return wrapped;
+			}
+			Object[] raw = (Object[]) value;
+			T[] wrapped = (T[]) java.lang.reflect.Array.newInstance(componentClass, raw.length);
+			for (int i = 0; i < raw.length; i++) {
+				wrapped[i] = componentDescriptor.wrap(raw[i], options);
+			}
+			return wrapped;
+		}
+
 		if (  ! ( value instanceof java.sql.Array ) ) {
 			throw unknownWrap( value.getClass() );
 		}
 
 		java.sql.Array original = (java.sql.Array) value;
 		try {
-			Object raw = original.getArray();
-			Class clz = raw.getClass().getComponentType();
-			if ( clz == null ||  ! clz.getName().equals( componentClass.getName() ) ) {
-				throw unknownWrap( raw.getClass() );
+			Object[] raw = (Object[]) original.getArray();
+			if (raw == null) {
+				return null;
 			}
-			return (T[]) raw;
+			T[] wrapped = (T[]) java.lang.reflect.Array.newInstance(componentClass, raw.length);
+			for (int i = 0; i < raw.length; i++) {
+				wrapped[i] = componentDescriptor.wrap(raw[i], options);
+			}
+			return (T[]) wrapped;
 		}
 		catch ( SQLException ex ) {
 			// This basically shouldn't happen unless you've lost connection to the database.

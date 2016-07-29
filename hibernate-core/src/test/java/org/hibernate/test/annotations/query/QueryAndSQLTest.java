@@ -52,10 +52,17 @@ import static org.junit.Assert.fail;
  * @author Emmanuel Bernard
  */
 public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
+
 	@Override
 	protected boolean isCleanupTestDataRequired() {
 		return true;
 	}
+
+	@Override
+	protected boolean isCleanupTestDataUsingBulkDelete() {
+		return true;
+	}
+
 	@Test
 	public void testNativeQueryWithFormulaAttribute() {
 		SQLFunction dateFunction = getDialect().getFunctions().get( "current_date" );

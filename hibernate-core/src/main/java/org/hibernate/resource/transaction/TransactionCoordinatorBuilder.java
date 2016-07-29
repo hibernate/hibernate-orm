@@ -7,11 +7,8 @@
 package org.hibernate.resource.transaction;
 
 import org.hibernate.ConnectionReleaseMode;
-import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
-
 import org.hibernate.service.Service;
-import org.hibernate.tool.schema.internal.exec.JdbcContext;
 
 import org.hibernate.ConnectionAcquisitionMode;
 
@@ -42,6 +39,4 @@ public interface TransactionCoordinatorBuilder extends Service {
 	ConnectionReleaseMode getDefaultConnectionReleaseMode();
 
 	ConnectionAcquisitionMode getDefaultConnectionAcquisitionMode();
-
-	DdlTransactionIsolator buildDdlTransactionIsolator(JdbcContext jdbcContext);
 }

@@ -20,8 +20,10 @@ import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
+import org.hibernate.resource.transaction.backend.jdbc.internal.DdlTransactionIsolatorNonJtaImpl;
+import org.hibernate.resource.transaction.backend.jta.internal.DdlTransactionIsolatorJtaImpl;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
-import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -157,7 +159,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		if ( jdbcContext.getJdbcConnectionAccess() instanceof JdbcConnectionAccessProvidedConnectionImpl ) {
 			return new DdlTransactionIsolatorProvidedConnectionImpl( jdbcContext );
 		}
-		return serviceRegistry.getService( TransactionCoordinatorBuilder.class ).buildDdlTransactionIsolator( jdbcContext );
+		return Helper.buildDefaultDdlTransactionIsolator( jdbcContext );
 	}
 
 	public JdbcContext resolveJdbcContext(Map configurationValues) {

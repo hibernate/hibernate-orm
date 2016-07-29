@@ -67,6 +67,7 @@ dependencies {
 	testCompile( project(':hibernate-spatial') )
 
 	testCompile( project(':hibernate-testing') )
+	testCompile( project(path: ':hibernate-core', configuration: 'tests') )
 	testCompile( project(path: ':hibernate-entitymanager', configuration: 'tests') )
 
 	//Databases

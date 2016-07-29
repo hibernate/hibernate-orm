@@ -18,10 +18,14 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
+import org.hibernate.resource.transaction.backend.jdbc.internal.DdlTransactionIsolatorNonJtaImpl;
+import org.hibernate.resource.transaction.backend.jta.internal.DdlTransactionIsolatorJtaImpl;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.internal.exec.ImprovedDatabaseInformationImpl;
+import org.hibernate.tool.schema.internal.exec.JdbcContext;
 import org.hibernate.tool.schema.internal.exec.ScriptSourceInputFromFile;
 import org.hibernate.tool.schema.internal.exec.ScriptSourceInputFromReader;
 import org.hibernate.tool.schema.internal.exec.ScriptSourceInputFromUrl;
@@ -133,5 +137,13 @@ public class Helper {
 		catch (SQLException e) {
 			throw jdbcEnvironment.getSqlExceptionHelper().convert( e, "Unable to build DatabaseInformation" );
 		}
+	}
+
+	public static DdlTransactionIsolator buildDefaultDdlTransactionIsolator(JdbcContext jdbcContext) {
+		final TransactionCoordinatorBuilder builder =
+				jdbcContext.getServiceRegistry().getService( TransactionCoordinatorBuilder.class );
+		return builder.isJta()
+				? new DdlTransactionIsolatorJtaImpl( jdbcContext )
+				: new DdlTransactionIsolatorNonJtaImpl( jdbcContext );
 	}
 }

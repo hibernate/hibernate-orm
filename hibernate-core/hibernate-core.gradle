@@ -10,6 +10,12 @@ apply plugin: 'hibernate-matrix-testing'
 apply plugin: 'version-injection'
 apply plugin: 'org.hibernate.build.gradle.xjc'
 
+configurations {
+    tests {
+        description = 'Configuration for the produced test jar'
+    }
+}
+
 dependencies {
     compile( libraries.jpa )
     compile( libraries.javassist )
@@ -145,3 +151,14 @@ tasks."matrix_mariadb" {
         println "Starting test: " + descriptor
     }
 }
+
+// create an artifact configuration composed of the test classes so that documentation tests can access core test classes
+task testJar(type: Jar, dependsOn: testClasses) {
+    classifier = 'test'
+    from sourceSets.test.output
+}
+
+artifacts {
+    tests testJar
+}
+

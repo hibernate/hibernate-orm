@@ -17,9 +17,11 @@ import java.util.Set;
 import javax.persistence.JoinColumn;
 import javax.persistence.MapKey;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderColumn;
 import javax.persistence.Version;
 
 import org.hibernate.MappingException;
+import org.hibernate.annotations.IndexColumn;
 import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
@@ -520,6 +522,7 @@ public class AuditedPropertiesReader {
 		addPropertyMapKey( property, propertyData );
 		setPropertyAuditMappedBy( property, propertyData );
 		setPropertyRelationMappedBy( property, propertyData );
+		setPropertyIndexed( property, propertyData );
 
 		return true;
 	}
@@ -587,6 +590,12 @@ public class AuditedPropertiesReader {
 			if ( !"".equals( auditMappedBy.positionMappedBy() ) ) {
 				propertyData.setPositionMappedBy( auditMappedBy.positionMappedBy() );
 			}
+		}
+	}
+
+	private void setPropertyIndexed(XProperty property, PropertyAuditingData propertyData) {
+		if ( property.isAnnotationPresent( OrderColumn.class ) || property.isAnnotationPresent( IndexColumn.class ) ) {
+			propertyData.setIndexed( true );
 		}
 	}
 

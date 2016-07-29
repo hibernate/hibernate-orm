@@ -152,6 +152,19 @@ public final class CollectionMetadataGenerator {
 		final boolean owningManyToOneWithJoinTableBidirectional = (value instanceof ManyToOne) && (propertyAuditingData.getRelationMappedBy() != null);
 		final boolean fakeOneToManyBidirectional = (value instanceof OneToMany) && (propertyAuditingData.getAuditMappedBy() != null);
 
+		// HHH-7940
+		// When a @OneToMany(mappedBy="..") is mapped with a @ManyToOne without a join table and the @OneToMany
+		// uses an @IndexColumn/@OrderColumn annotation, a mapping exception is thrown to indicate how to
+		// properly map this relation as it needs to be considered a 'fakeOneToManyBidirectional' mapping.
+		if ( propertyAuditingData.isIndexed() ) {
+			if ( oneToManyAttachedType && inverseOneToMany && !fakeOneToManyBidirectional && !owningManyToOneWithJoinTableBidirectional ) {
+				throw new MappingException(
+						"Mapping failure for [" + referencingEntityConfiguration.getEntityClassName() + "#" + propertyName + "]: " +
+								"An indexed @OneToMany should be mapped by also using @JoinColumn and @AuditMappedBy."
+				);
+			}
+		}
+
 		if ( oneToManyAttachedType && (inverseOneToMany || fakeOneToManyBidirectional || owningManyToOneWithJoinTableBidirectional) ) {
 			// A one-to-many relation mapped using @ManyToOne and @OneToMany(mappedBy="...")
 			addOneToManyAttached( fakeOneToManyBidirectional );

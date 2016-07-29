@@ -372,6 +372,10 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		return false;
 	}
 
+	protected boolean isCleanupTestDataUsingBulkDelete() {
+		return false;
+	}
+
 	protected void cleanupTestData() throws Exception {
 		// Because of https://hibernate.atlassian.net/browse/HHH-5529,
 		// we can'trely on a Bulk Delete query which will not clear the link tables in @ElementCollection or unidirectional collections
@@ -379,8 +383,14 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		Transaction transaction = s.beginTransaction();
 		s.getTransaction().begin();
 		try {
-			for ( Object o : s.createQuery( "from java.lang.Object" ).list() ) {
-				s.delete( o );
+			if(isCleanupTestDataUsingBulkDelete()) {
+				s.createQuery( "delete from java.lang.Object" ).executeUpdate();
+
+			}
+			else {
+				for ( Object o : s.createQuery( "from java.lang.Object" ).list() ) {
+					s.delete( o );
+				}
 			}
 		}
 		catch (Exception e) {

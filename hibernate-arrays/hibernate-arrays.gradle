@@ -9,11 +9,6 @@ dependencies {
     testCompile( project(':hibernate-testing') )
 }
 
-// resources inherently exclude sources
-sourceSets.test.resources {
-    setSrcDirs( ['src/test/java','src/test/resources'] )
-}
-
 mavenPom {
     name = 'SQL array datatype provider'
     description = 'Datatype provider for SQL arrays'

@@ -382,7 +382,8 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			doInHibernate( this::sessionFactory, s -> {
 				s.createQuery( "delete from java.lang.Object" ).executeUpdate();
 			} );
-		} else {
+		}
+		else {
 			// Because of https://hibernate.atlassian.net/browse/HHH-5529,
 			// we can'trely on a Bulk Delete query which will not clear the link tables in @ElementCollection or unidirectional collections
 			doInHibernate( this::sessionFactory, s -> {

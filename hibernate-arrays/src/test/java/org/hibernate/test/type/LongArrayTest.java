@@ -48,22 +48,18 @@ public class LongArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 			em.persist( new TableWithLongArrays( 1L, new Long[]{} ) );
 
 			em.persist( new TableWithLongArrays( 2L, new Long[]{ 4L, 8L, 15L, 16L, 23L, 42L } ) );
+
+			em.persist( new TableWithLongArrays( 3L, null ) );
+
 			Query q;
-
 			q = em.createNamedQuery( "TableWithLongArrays.Native.insert" );
-			q.setParameter( "id", 3L );
+			q.setParameter( "id", 4L );
 			q.setParameter( "data", new Long[]{ 4L, 8L, 15L, 16L, null, 23L, 42L } );
-			q.executeUpdate();
-
-			// unnamed queries
-			q = em.createNativeQuery( "INSERT INTO table_with_bigint_arrays(id, the_array) VALUES ( ?1 , ?2 )" );
-			q.setParameter( 1, 4L );
-			q.setParameter( 2, null );
 			q.executeUpdate();
 
 			q = em.createNativeQuery( "INSERT INTO table_with_bigint_arrays(id, the_array) VALUES ( :id , :data )" );
 			q.setParameter( "id", 5L );
-			q.setParameter( "data", null );
+			q.setParameter( "data", new Long[]{ 4L, 8L, null, 16L, null, 23L, 42L } );
 			q.executeUpdate();
 
 			et.commit();
@@ -80,8 +76,8 @@ public class LongArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testLongArrays() {
-		final org.hibernate.internal.SessionImpl em = (org.hibernate.internal.SessionImpl) openSession();
+	public void testArrays() {
+		final EntityManager em = openSession();
 		try {
 			TableWithLongArrays tableRecord;
 			tableRecord = em.find( TableWithLongArrays.class, 1L );
@@ -97,7 +93,7 @@ public class LongArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 			tq = em.createNamedQuery( "TableWithLongArrays.JPQL.getByData", TableWithLongArrays.class );
 			tq.setParameter( "data", new Long[]{ 4L, 8L, 15L, 16L, null, 23L, 42L } );
 			tableRecord = tq.getSingleResult();
-			assertThat( tableRecord.getId(), is( 3L ) );
+			assertThat( tableRecord.getId(), is( 4L ) );
 
 			tq = em.createNamedQuery( "TableWithLongArrays.Native.getById", TableWithLongArrays.class );
 			tq.setParameter( "id", 2L );
@@ -107,7 +103,7 @@ public class LongArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 			tq = em.createNamedQuery( "TableWithLongArrays.Native.getByData", TableWithLongArrays.class );
 			tq.setParameter( "data", new Long[]{ 4L, 8L, 15L, 16L, null, 23L, 42L } );
 			tableRecord = tq.getSingleResult();
-			assertThat( tableRecord.getId(), is( 3L ) );
+			assertThat( tableRecord.getId(), is( 4L ) );
 
 			// Standard SQL demands we use "IS NULL" instead of the more generic "= ?"
 			// where we can bind any value, including null.
@@ -117,19 +113,19 @@ public class LongArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 			// But MySQL doesn't even have arrays yet, so this test doesn't apply to it.
 			Query q = em.createNativeQuery( "SELECT * FROM table_with_bigint_arrays t WHERE the_array IS NULL ORDER BY id ASC", TableWithLongArrays.class );
 			List<TableWithLongArrays> list = (List<TableWithLongArrays>) q.getResultList();
-			assertThat( list.size(), is( 2 ) );
+			assertThat( list.size(), is( 1 ) );
 			tableRecord = list.get( 0 );
-			assertThat( tableRecord.getId(), is( 4L ) );
+			assertThat( tableRecord.getId(), is( 3L ) );
 
 			// unnamed queries
 			tableRecord = em.find( TableWithLongArrays.class, 2L );
 			assertThat( tableRecord.getTheArray(), is( new Long[]{ 4L, 8L, 15L, 16L, 23L, 42L } ) );
 
-			tableRecord = em.find( TableWithLongArrays.class, 3L );
+			tableRecord = em.find( TableWithLongArrays.class, 4L );
 			assertThat( tableRecord.getTheArray(), is( new Long[]{ 4L, 8L, 15L, 16L, null, 23L, 42L } ) );
 
 			tableRecord = em.find( TableWithLongArrays.class, 5L );
-			assertThat( tableRecord.getTheArray(), is( (Object) null ) );
+			assertThat( tableRecord.getTheArray(), is( new Long[]{ 4L, 8L, null, 16L, null, 23L, 42L } ) );
 		}
 		finally {
 			em.close();

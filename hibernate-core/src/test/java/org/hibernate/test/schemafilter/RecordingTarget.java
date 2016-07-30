@@ -13,7 +13,9 @@ class RecordingTarget implements GenerationTarget {
 		SCHEMA_CREATE( Pattern.compile( "create schema (.*)" ) ),
 		SCHEMA_DROP( Pattern.compile( "drop schema (.*)" ) ),
 		TABLE_CREATE( Pattern.compile( "create table (\\S+) .*" ) ),
-		TABLE_DROP( Pattern.compile( "drop table (.*)" ) );
+		TABLE_DROP( Pattern.compile( "drop table (.*)" ) ),
+		SEQUENCE_CREATE(Pattern.compile( "create sequence (.*) start (.*)" )),
+		SEQUENCE_DROP(Pattern.compile( "drop sequence if exists (.*)" ));
 
 		private final Pattern pattern;
 

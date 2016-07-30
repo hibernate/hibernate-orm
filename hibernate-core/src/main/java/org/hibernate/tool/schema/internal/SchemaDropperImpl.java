@@ -241,6 +241,9 @@ public class SchemaDropperImpl implements SchemaDropper {
 			}
 
 			for ( Sequence sequence : namespace.getSequences() ) {
+				if ( !schemaFilter.includeSequence( sequence ) ) {
+					return;
+				}
 				checkExportIdentifier( sequence, exportIdentifiers );
 				applySqlStrings( dialect.getSequenceExporter().getSqlDropStrings( sequence, metadata ), formatter, options, targets );
 			}

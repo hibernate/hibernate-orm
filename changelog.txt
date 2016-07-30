@@ -34,6 +34,7 @@ https://hibernate.atlassian.net/projects/HHH/versions/23950
     * [HHH-10540] - Incorrect bytecode instrumentation when there are multiple @Embedded attributes
     * [HHH-10562] - ManagedEntity linked list broken when mutable, non-associated enhanced entity is evicted
     * [HHH-10583] - BytecodeEnhancement's AssociationManagement breaks with entity containing two ToOne relations with the same mappedBy value.
+    * [HHH-10592] - Query with literal parameter and fails with attribute converter
     * [HHH-10642] - BytecodeEnhancements  PersistentAttributesEnhancer  bytecode error INVOKESPECIAL
     * [HHH-10643] - Attribute 'foreignKeyDefinition' of @javax.persistence.ForeignKey ignored by schema exporter
     * [HHH-10644] - Enhancement cause Exception if property field not present

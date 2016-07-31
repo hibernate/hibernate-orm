@@ -8,6 +8,8 @@ package org.hibernate.envers.internal.entities.mapper.relation.query;
 
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
 import org.hibernate.envers.configuration.internal.GlobalConfiguration;
+import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
+import org.hibernate.envers.internal.entities.mapper.id.MultipleIdMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
@@ -23,16 +25,34 @@ import static org.hibernate.envers.internal.entities.mapper.relation.query.Query
  *
  * @author Adam Warski (adam at warski dot org)
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public final class OneAuditEntityQueryGenerator extends AbstractRelationQueryGenerator {
 	private final String queryString;
 	private final String queryRemovedString;
+	private final String mappedBy;
+	private final boolean multipleIdMapperKey;
 
 	public OneAuditEntityQueryGenerator(
-			GlobalConfiguration globalCfg, AuditEntitiesConfiguration verEntCfg,
-			AuditStrategy auditStrategy, MiddleIdData referencingIdData,
-			String referencedEntityName, MiddleIdData referencedIdData, boolean revisionTypeInId) {
+			GlobalConfiguration globalCfg,
+			AuditEntitiesConfiguration verEntCfg,
+			AuditStrategy auditStrategy,
+			MiddleIdData referencingIdData,
+			String referencedEntityName,
+			MiddleIdData referencedIdData,
+			boolean revisionTypeInId,
+			String mappedBy,
+			boolean mappedByKey) {
 		super( verEntCfg, referencingIdData, revisionTypeInId );
+
+		this.mappedBy = mappedBy;
+
+		if ( ( referencedIdData.getOriginalMapper() instanceof MultipleIdMapper ) && mappedByKey ) {
+			multipleIdMapperKey = true;
+		}
+		else {
+			multipleIdMapperKey = false;
+		}
 
 		/*
 		 * The valid query that we need to create:
@@ -72,8 +92,17 @@ public final class OneAuditEntityQueryGenerator extends AbstractRelationQueryGen
 		final QueryBuilder qb = new QueryBuilder( versionsReferencedEntityName, REFERENCED_ENTITY_ALIAS );
 		qb.addProjection( null, REFERENCED_ENTITY_ALIAS, null, false );
 		// WHERE
-		// e.id_ref_ed = :id_ref_ed
-		referencingIdData.getPrefixedMapper().addNamedIdEqualsToQuery( qb.getRootParameters(), null, true );
+		if ( multipleIdMapperKey ) {
+			// HHH-7625
+			// support @OneToMany(mappedBy) to @ManyToOne @IdClass attribute.
+			// e.originalId.id_ref_ed.id = :id_ref_ed
+			final IdMapper mapper = getMultipleIdPrefixedMapper();
+			mapper.addNamedIdEqualsToQuery( qb.getRootParameters(), null, referencingIdData.getPrefixedMapper(), true );
+		}
+		else {
+			// e.id_ref_ed = :id_ref_ed
+			referencingIdData.getPrefixedMapper().addNamedIdEqualsToQuery( qb.getRootParameters(), null, true );
+		}
 		return qb;
 	}
 
@@ -123,5 +152,10 @@ public final class OneAuditEntityQueryGenerator extends AbstractRelationQueryGen
 	@Override
 	protected String getQueryRemovedString() {
 		return queryRemovedString;
+	}
+
+	private IdMapper getMultipleIdPrefixedMapper() {
+		final String prefix = verEntCfg.getOriginalIdPropName() + "." + mappedBy + ".";
+		return referencingIdData.getOriginalMapper().prefixMappedProperties( prefix );
 	}
 }

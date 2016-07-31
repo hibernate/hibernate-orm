@@ -15,8 +15,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+
 import javax.persistence.JoinColumn;
 
+import org.dom4j.Element;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.envers.ModificationStore;
@@ -68,6 +70,7 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.type.BagType;
@@ -79,16 +82,14 @@ import org.hibernate.type.SetType;
 import org.hibernate.type.SortedMapType;
 import org.hibernate.type.SortedSetType;
 import org.hibernate.type.Type;
-
 import org.jboss.logging.Logger;
-
-import org.dom4j.Element;
 
 /**
  * Generates metadata for a collection-valued property.
  *
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
+ * @author Chris Cranford
  */
 public final class CollectionMetadataGenerator {
 	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
@@ -123,8 +124,10 @@ public final class CollectionMetadataGenerator {
 	 */
 	public CollectionMetadataGenerator(
 			AuditMetadataGenerator mainGenerator,
-			Collection propertyValue, CompositeMapperBuilder currentMapper,
-			String referencingEntityName, EntityXmlMappingData xmlMappingData,
+			Collection propertyValue,
+			CompositeMapperBuilder currentMapper,
+			String referencingEntityName,
+			EntityXmlMappingData xmlMappingData,
 			PropertyAuditingData propertyAuditingData) {
 		this.mainGenerator = mainGenerator;
 		this.propertyValue = propertyValue;
@@ -164,7 +167,10 @@ public final class CollectionMetadataGenerator {
 
 	private MiddleIdData createMiddleIdData(IdMappingData idMappingData, String prefix, String entityName) {
 		return new MiddleIdData(
-				mainGenerator.getVerEntCfg(), idMappingData, prefix, entityName,
+				mainGenerator.getVerEntCfg(),
+				idMappingData,
+				prefix,
+				entityName,
 				mainGenerator.getEntitiesConfigurations().containsKey( entityName )
 		);
 	}
@@ -219,7 +225,9 @@ public final class CollectionMetadataGenerator {
 				referencingIdData,
 				referencedEntityName,
 				referencedIdData,
-				isEmbeddableElementType()
+				isEmbeddableElementType(),
+				mappedBy,
+				isMappedByKey( propertyValue, mappedBy )
 		);
 
 		// Creating common mapper data.
@@ -300,7 +308,8 @@ public final class CollectionMetadataGenerator {
 	 */
 	@SuppressWarnings({"unchecked"})
 	private void addRelatedToXmlMapping(
-			Element xmlMapping, String prefix,
+			Element xmlMapping,
+			String prefix,
 			MetadataTools.ColumnNameIterator columnNameIterator,
 			IdMappingData relatedIdMapping) {
 		final Element properties = (Element) relatedIdMapping.getXmlRelationMapping().clone();
@@ -827,17 +836,16 @@ public final class CollectionMetadataGenerator {
 	}
 
 	private String getMappedBy(Collection collectionValue) {
-		PersistentClass referencedClass = null;
-		if ( collectionValue.getElement() instanceof OneToMany ) {
-			final OneToMany oneToManyValue = (OneToMany) collectionValue.getElement();
-			referencedClass = oneToManyValue.getAssociatedClass();
-		}
-		else if ( collectionValue.getElement() instanceof ManyToOne ) {
-			// Case for bi-directional relation with @JoinTable on the owning @ManyToOne side.
-			final ManyToOne manyToOneValue = (ManyToOne) collectionValue.getElement();
-			referencedClass = manyToOneValue.getMetadata().getEntityBinding( manyToOneValue.getReferencedEntityName() );
-		}
+		final PersistentClass referencedClass = getReferenceCollectionClass( collectionValue );
+		final ValueHolder valueHolder = new ValueHolder( collectionValue );
+		return getMappedBy( referencedClass, valueHolder );
+	}
 
+	private String getMappedBy(Table collectionTable, PersistentClass referencedClass) {
+		return getMappedBy( referencedClass, new ValueHolder( collectionTable ) );
+	}
+
+	private String getMappedBy(PersistentClass referencedClass, ValueHolder valueHolder) {
 		// If there's an @AuditMappedBy specified, returning it directly.
 		final String auditMappedBy = propertyAuditingData.getAuditMappedBy();
 		if ( auditMappedBy != null ) {
@@ -845,7 +853,7 @@ public final class CollectionMetadataGenerator {
 		}
 
 		// searching in referenced class
-		String mappedBy = this.searchMappedBy( referencedClass, collectionValue );
+		String mappedBy = this.searchMappedBy( referencedClass, valueHolder );
 
 		if ( mappedBy == null ) {
 			LOG.debugf(
@@ -855,9 +863,9 @@ public final class CollectionMetadataGenerator {
 			);
 
 			PersistentClass tempClass = referencedClass;
-			while ( (mappedBy == null) && (tempClass.getSuperclass() != null) ) {
+			while ( mappedBy == null && tempClass.getSuperclass() != null ) {
 				LOG.debugf( "Searching in superclass: %s", tempClass.getSuperclass().getClassName() );
-				mappedBy = this.searchMappedBy( tempClass.getSuperclass(), collectionValue );
+				mappedBy = this.searchMappedBy( tempClass.getSuperclass(), valueHolder );
 				tempClass = tempClass.getSuperclass();
 			}
 		}
@@ -870,6 +878,13 @@ public final class CollectionMetadataGenerator {
 		}
 
 		return mappedBy;
+	}
+
+	private String searchMappedBy(PersistentClass persistentClass, ValueHolder valueHolder) {
+		if ( valueHolder.getCollection() != null ) {
+			return searchMappedBy( persistentClass, valueHolder.getCollection() );
+		}
+		return searchMappedBy( persistentClass, valueHolder.getTable() );
 	}
 
 	@SuppressWarnings({"unchecked"})
@@ -885,43 +900,9 @@ public final class CollectionMetadataGenerator {
 				return property.getName();
 			}
 		}
-		return null;
-	}
-
-	private String getMappedBy(Table collectionTable, PersistentClass referencedClass) {
-		// If there's an @AuditMappedBy specified, returning it directly.
-		final String auditMappedBy = propertyAuditingData.getAuditMappedBy();
-		if ( auditMappedBy != null ) {
-			return auditMappedBy;
-		}
-
-		// searching in referenced class
-		String mappedBy = this.searchMappedBy( referencedClass, collectionTable );
-
-		// not found on referenced class, searching on superclasses
-		if ( mappedBy == null ) {
-			LOG.debugf(
-					"Going to search the mapped by attribute for %s in superclasses of entity: %s",
-					propertyName,
-					referencedClass.getClassName()
-			);
-
-			PersistentClass tempClass = referencedClass;
-			while ( (mappedBy == null) && (tempClass.getSuperclass() != null) ) {
-				LOG.debugf( "Searching in superclass: %s", tempClass.getSuperclass().getClassName() );
-				mappedBy = this.searchMappedBy( tempClass.getSuperclass(), collectionTable );
-				tempClass = tempClass.getSuperclass();
-			}
-		}
-
-		if ( mappedBy == null ) {
-			throw new MappingException(
-					"Unable to read the mapped by attribute for " + propertyName + " in "
-							+ referencedClass.getClassName() + "!"
-			);
-		}
-
-		return mappedBy;
+		// HHH-7625
+		// Support ToOne relations with mappedBy that point to an @IdClass key property.
+		return searchMappedByKey( referencedClass, collectionValue );
 	}
 
 	@SuppressWarnings({"unchecked"})
@@ -940,4 +921,69 @@ public final class CollectionMetadataGenerator {
 		return null;
 	}
 
+	@SuppressWarnings({"unchecked"})
+	private String searchMappedByKey(PersistentClass referencedClass, Collection collectionValue) {
+		final Iterator<Value> assocIdClassProps = referencedClass.getKeyClosureIterator();
+		while ( assocIdClassProps.hasNext() ) {
+			final Value value = assocIdClassProps.next();
+			// make sure its a 'Component' because IdClass is registered as this type.
+			if ( value instanceof Component ) {
+				final Component component = (Component) value;
+				final Iterator<Property> componentPropertyIterator = component.getPropertyIterator();
+				while ( componentPropertyIterator.hasNext() ) {
+					final Property property = componentPropertyIterator.next();
+					final Iterator<Selectable> propertySelectables = property.getValue().getColumnIterator();
+					final Iterator<Selectable> collectionSelectables = collectionValue.getKey().getColumnIterator();
+					if ( Tools.iteratorsContentEqual( propertySelectables, collectionSelectables ) ) {
+						return property.getName();
+					}
+				}
+			}
+		}
+		return null;
+	}
+
+	private PersistentClass getReferenceCollectionClass(Collection collectionValue) {
+		PersistentClass referencedClass = null;
+		if ( collectionValue.getElement() instanceof OneToMany ) {
+			final OneToMany oneToManyValue = (OneToMany) collectionValue.getElement();
+			referencedClass = oneToManyValue.getAssociatedClass();
+		}
+		else if ( collectionValue.getElement() instanceof ManyToOne ) {
+			// Case for bi-directional relation with @JoinTable on the owning @ManyToOne side.
+			final ManyToOne manyToOneValue = (ManyToOne) collectionValue.getElement();
+			referencedClass = manyToOneValue.getMetadata().getEntityBinding( manyToOneValue.getReferencedEntityName() );
+		}
+		return referencedClass;
+	}
+
+	private boolean isMappedByKey(Collection collectionValue, String mappedBy) {
+		final PersistentClass referencedClass = getReferenceCollectionClass( collectionValue );
+		if ( referencedClass != null ) {
+			final String keyMappedBy = searchMappedByKey( referencedClass, collectionValue );
+			return mappedBy.equals( keyMappedBy );
+		}
+		return false;
+	}
+
+	private class ValueHolder {
+		private Collection collection;
+		private Table table;
+
+		public ValueHolder(Collection collection) {
+			this.collection = collection;
+		}
+
+		public ValueHolder(Table table) {
+			this.table = table;
+		}
+
+		public Collection getCollection() {
+			return collection;
+		}
+
+		public Table getTable() {
+			return table;
+		}
+	}
 }

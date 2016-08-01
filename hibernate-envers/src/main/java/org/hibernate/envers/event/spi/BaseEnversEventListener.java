@@ -94,10 +94,14 @@ public abstract class BaseEnversEventListener implements EnversListener {
 
 		if ( value instanceof HibernateProxy ) {
 			final HibernateProxy hibernateProxy = (HibernateProxy) value;
-			toEntityName = session.bestGuessEntityName( value );
 			id = hibernateProxy.getHibernateLazyInitializer().getIdentifier();
 			// We've got to initialize the object from the proxy to later read its state.
 			value = EntityTools.getTargetFromProxy( session.getFactory(), hibernateProxy );
+			// HHH-7249
+			// This call must occur after the proxy has been initialized or the returned name will
+			// be to the base class which will impact the discriminator value chosen when using an
+			// inheritance strategy with discriminators.
+			toEntityName = session.bestGuessEntityName( value );
 		}
 		else {
 			toEntityName = session.guessEntityName( value );

@@ -23,6 +23,7 @@ import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.param.DynamicFilterParameterSpecification;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.DiscriminatorMetadata;
@@ -678,23 +679,50 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 
 	// ParameterContainer impl ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private List<ParameterSpecification> embeddedParameters;
+	private List<ParameterSpecification> embeddedFilterParameters;
 
 	@Override
 	public void addEmbeddedParameter(ParameterSpecification specification) {
-		if ( embeddedParameters == null ) {
-			embeddedParameters = new ArrayList<ParameterSpecification>();
+		if ( specification instanceof DynamicFilterParameterSpecification ) {
+			if ( embeddedFilterParameters == null ) {
+				embeddedFilterParameters = new ArrayList<ParameterSpecification>();
+			}
+			embeddedFilterParameters.add( specification );
 		}
-		embeddedParameters.add( specification );
+		else {
+			if ( embeddedParameters == null ) {
+				embeddedParameters = new ArrayList<ParameterSpecification>();
+			}
+			embeddedParameters.add( specification );
+
+		}
 	}
 
 	@Override
 	public boolean hasEmbeddedParameters() {
-		return embeddedParameters != null && ! embeddedParameters.isEmpty();
+		final boolean b = (embeddedParameters != null && !embeddedParameters.isEmpty())
+				|| (embeddedFilterParameters != null && !embeddedFilterParameters.isEmpty());
+		return b;
 	}
 
 	@Override
 	public ParameterSpecification[] getEmbeddedParameters() {
-		return embeddedParameters.toArray( new ParameterSpecification[ embeddedParameters.size() ] );
+		final List<ParameterSpecification> parameterSpecification = getParameterSpecification();
+		return parameterSpecification.toArray( new ParameterSpecification[ parameterSpecification.size() ] );
+	}
+
+	private List<ParameterSpecification> getParameterSpecification() {
+		if ( embeddedFilterParameters != null && !embeddedFilterParameters.isEmpty() ) {
+			final List<ParameterSpecification> parametersSpecifications = new ArrayList<ParameterSpecification>(
+					embeddedFilterParameters );
+			if ( embeddedParameters != null && !embeddedParameters.isEmpty() ) {
+				parametersSpecifications.addAll( embeddedParameters );
+			}
+			return parametersSpecifications;
+		}
+		else {
+			return embeddedParameters;
+		}
 	}
 
 	public ParameterSpecification getIndexCollectionSelectorParamSpec() {

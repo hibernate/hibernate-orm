@@ -35,7 +35,6 @@ public class PropertyAuditingData {
 	private boolean forceInsertable;
 	private boolean usingModifiedFlag;
 	private String modifiedFlagName;
-	private boolean indexed;
 
 	public PropertyAuditingData() {
 	}
@@ -160,14 +159,6 @@ public class PropertyAuditingData {
 
 	public void setModifiedFlagName(String modifiedFlagName) {
 		this.modifiedFlagName = modifiedFlagName;
-	}
-
-	public boolean isIndexed() {
-		return indexed;
-	}
-
-	public void setIndexed(boolean indexed) {
-		this.indexed = indexed;
 	}
 
 	public void addAuditingOverride(AuditOverride annotation) {

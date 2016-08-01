@@ -25,7 +25,6 @@ import org.junit.runners.MethodSorters;
 @TestForIssue(jiraKey = "HHH-11005")
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class MappedSuperclassMapTest extends BaseNonConfigCoreFunctionalTestCase {
-	private static SessionFactory sessionFactory;
 	
 	private static final String SKU001 = "SKU001";
 	private static final String SKU002 = "SKU002";
@@ -48,23 +47,6 @@ public class MappedSuperclassMapTest extends BaseNonConfigCoreFunctionalTestCase
 	}
 
 
-/*	
-	@AfterClass
-	public static void tearDown() {
-		if (sessionFactory != null) {
-			sessionFactory.close();
-		}
-	}
-
-	@BeforeClass
-	public static void setUp() {
-		System.out.println("STARTING TEST ... LOADING SESSION FACTORY ...");
-		
-		sessionFactory = new Configuration().configure().buildSessionFactory();
-		
-		System.out.println("SESSION FACTORY LOADED ...");
-	}
-*/	
 	@Test
 	public void t01_createEntities_joined() {
 		_createEntities(new EntityFactory(InheritanceType.JOINED));
@@ -270,8 +252,8 @@ public class MappedSuperclassMapTest extends BaseNonConfigCoreFunctionalTestCase
 	}
 
 	
-	public static void transact(Work work) {
-		Session sess = sessionFactory.openSession();
+	public void transact(Work work) {
+		Session sess = openSession();
 		Transaction tx = sess.beginTransaction();
 		work.work(sess);
 		tx.commit();

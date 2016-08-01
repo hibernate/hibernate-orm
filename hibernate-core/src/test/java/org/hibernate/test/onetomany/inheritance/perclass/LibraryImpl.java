@@ -19,6 +19,8 @@ import org.hibernate.test.onetomany.inheritance.Library;
 @Table(name="LIBRARYPC")
 @Access(AccessType.FIELD)
 public class LibraryImpl implements Library {
+	private static final long serialVersionUID = 1L;
+
 	@Id
 	@GeneratedValue
 	private int entid;

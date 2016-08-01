@@ -12,12 +12,13 @@ import javax.persistence.Table;
 
 import org.hibernate.test.onetomany.inheritance.Product;
 
-//@MappedSuperclass
 @Entity
 @Table(name="PRODTABJO")
 @Access(AccessType.FIELD)
 @Inheritance(strategy=InheritanceType.JOINED)
 public abstract class ProductImpl implements Product {
+	private static final long serialVersionUID = 1L;
+
 	@Id
 	@GeneratedValue
 	private int entid;

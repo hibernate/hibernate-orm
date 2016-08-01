@@ -14,6 +14,7 @@ import org.hibernate.test.onetomany.inheritance.Library;
 @Table(name="BOOKTABJO")
 @Access(AccessType.FIELD)
 public class BookImpl extends ProductImpl implements Book {
+	private static final long serialVersionUID = 1L;
 
 	private String isbn;
 	

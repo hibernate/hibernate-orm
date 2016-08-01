@@ -8,7 +8,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
-import javax.persistence.MappedSuperclass;
 import javax.persistence.Table;
 
 import org.hibernate.test.onetomany.inheritance.Product;
@@ -18,6 +17,8 @@ import org.hibernate.test.onetomany.inheritance.Product;
 @Access(AccessType.FIELD)
 @Inheritance(strategy=InheritanceType.SINGLE_TABLE)
 public abstract class ProductImpl implements Product {
+	private static final long serialVersionUID = 1L;
+
 	@Id
 	@GeneratedValue
 	private int entid;

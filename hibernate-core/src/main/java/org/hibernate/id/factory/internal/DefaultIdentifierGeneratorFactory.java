@@ -130,8 +130,22 @@ public class DefaultIdentifierGeneratorFactory
 		if ( "hilo".equals( strategy ) ) {
 			throw new UnsupportedOperationException( "Support for 'hilo' generator has been removed" );
 		}
-		String resolvedStrategy = "native".equals( strategy ) ?
-				getDialect().getNativeIdentifierGeneratorStrategy() : strategy;
+		String resolvedStrategy = strategy;
+		if ( "auto".equals( strategy ) ) {
+			if ( getDialect().supportsSequences() ) {
+				resolvedStrategy = "sequence";
+			}
+			else if ( getDialect().getIdentityColumnSupport()
+					.supportsIdentityColumns() ) {
+				resolvedStrategy = "identity";
+			}
+			else {
+				resolvedStrategy = SequenceStyleGenerator.class.getName();
+			}
+		}
+		else if ( "native".equals( strategy ) ) {
+			resolvedStrategy = getDialect().getNativeIdentifierGeneratorStrategy();
+		}
 
 		Class generatorClass = generatorStrategyToClassNameMap.get( resolvedStrategy );
 		try {

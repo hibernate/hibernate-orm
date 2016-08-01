@@ -39,6 +39,14 @@ abstract public class DialectChecks {
 		}
 	}
 
+	public static class SupportsOnlyIdentityColumns implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect.getIdentityColumnSupport()
+					.supportsIdentityColumns() &&
+					!dialect.supportsSequences();
+		}
+	}
+
 	public static class SupportsColumnCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
 			return dialect.supportsColumnCheck();

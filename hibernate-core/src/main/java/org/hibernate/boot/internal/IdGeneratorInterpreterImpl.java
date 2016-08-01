@@ -222,7 +222,7 @@ public class IdGeneratorInterpreterImpl implements IdGeneratorStrategyInterprete
 						return UUIDGenerator.class.getName();
 					}
 					else {
-						return org.hibernate.id.enhanced.SequenceStyleGenerator.class.getName();
+						return "auto";
 					}
 				}
 			}

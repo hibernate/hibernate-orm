@@ -11,9 +11,12 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Bindable;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
+import javax.persistence.metamodel.MappedSuperclassType;
 import javax.persistence.metamodel.PluralAttribute;
+import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.PathSource;
@@ -44,39 +47,73 @@ public class PluralAttributePath<X> extends AbstractPathImpl<X> implements Seria
 	}
 
 	private String resolveRole(PluralAttribute attribute) {
-		Class<?> roleOwnerType = attribute.getDeclaringType().getJavaType();
-		if ( attribute.getDeclaringType().getPersistenceType() == Type.PersistenceType.MAPPED_SUPERCLASS ) {
-			// the attribute is declared in a mappedsuperclass
-			if ( getPathSource().getModel().getBindableType() == Bindable.BindableType.ENTITY_TYPE ) {
-				// the role will be assigned to the "nearest" EnityType subclass of the MappedSuperclassType
-				EntityType entityTypeNearestDeclaringType = (EntityType) getPathSource().getModel();
-				IdentifiableType superType = entityTypeNearestDeclaringType.getSupertype();
-				IdentifiableType previousType = entityTypeNearestDeclaringType;
-				while ( superType != attribute.getDeclaringType() ) {
-					if ( superType == null ) {
-						throw new IllegalStateException(
-								String.format(
-									"Cannot determine nearest EntityType extending mapped superclass [%s]; [%s] extends [%s], but supertype of [%s] is null",
-										attribute.getDeclaringType().getJavaType().getName(),
-										( (EntityType) getPathSource().getModel() ).getJavaType().getName(),
-										previousType.getJavaType().getName(),
-										previousType.getJavaType().getName()
-								)
-						);
-					}
-					if ( superType.getPersistenceType() == Type.PersistenceType.ENTITY ) {
-						entityTypeNearestDeclaringType = (EntityType) superType;
-					}
-					previousType = superType;
-					superType = superType.getSupertype();
-				}
-				roleOwnerType = entityTypeNearestDeclaringType.getJavaType();
+		switch ( attribute.getDeclaringType().getPersistenceType() ) {
+			case ENTITY: {
+				return attribute.getDeclaringType().getJavaType().getName() + '.' + attribute.getName();
 			}
-			// else throw an exception?
+			case MAPPED_SUPERCLASS: {
+				// the attribute is declared in a mappedsuperclass
+				if ( getPathSource().getModel().getBindableType() == Bindable.BindableType.ENTITY_TYPE ) {
+					// the role will be assigned to the "nearest" EnityType subclass of the MappedSuperclassType
+					final EntityType entityTypeNearestDeclaringType = locateNearestSubclassEntity(
+							(MappedSuperclassType) attribute.getDeclaringType(),
+							(EntityType) getPathSource().getModel()
+					);
+					return entityTypeNearestDeclaringType.getJavaType().getName() + '.' + attribute.getName();
+				}
+				else {
+					throw new AssertionFailure(
+							String.format(
+									"Unexpected BindableType; expected [%s]; instead got [%s]",
+									Bindable.BindableType.ENTITY_TYPE,
+									getPathSource().getModel().getBindableType()
+							)
+					);
+				}
+			}
+			case EMBEDDABLE: {
+				// initialize role to '.' + <plural_attribute_name>
+				StringBuilder role = new StringBuilder().append( '.' ).append( attribute.getName() );
+				PathSource parentPath = getPathSource();
+				SingularAttribute singularAttribute;
+				do {
+					final SingularAttributePath singularAttributePath = (SingularAttributePath) parentPath;
+					singularAttribute = singularAttributePath.getAttribute();
+					// insert '.' + <parent_embeddable_attribute_name> at start of role
+					role.insert( 0, '.' );
+					role.insert( 1, singularAttributePath.getAttribute().getName() );
+					parentPath = singularAttributePath.getPathSource();
+				} while ( ( SingularAttributePath.class.isInstance( parentPath ) ) );
+				final EntityType entityType;
+				if ( singularAttribute.getDeclaringType().getPersistenceType() == Type.PersistenceType.ENTITY ) {
+					entityType = (EntityType) singularAttribute.getDeclaringType();
+				}
+				else if ( singularAttribute.getDeclaringType().getPersistenceType() == Type.PersistenceType.MAPPED_SUPERCLASS ){
+					// find the "nearest" EnityType subclass of the MappedSuperclassType
+					entityType = locateNearestSubclassEntity(
+							(MappedSuperclassType) singularAttribute.getDeclaringType(),
+							(EntityType) parentPath.getModel()
+					);
+				}
+				else {
+					throw new AssertionFailure(
+							String.format(
+									"Unexpected PersistenceType: [%s]",
+									singularAttribute.getDeclaringType().getPersistenceType()
+							)
+					);
+				}
+				// insert <entity_name> at start of role
+				return role.insert( 0, entityType.getJavaType().getName() ).toString();
+			}
+			default:
+				throw new AssertionFailure(
+						String.format(
+								"Unexpected PersistenceType: [%s]",
+								attribute.getDeclaringType().getPersistenceType()
+						)
+				);
 		}
-		// TODO: still need to deal with a plural attribute declared in an embeddable (HHH-6562)
-		return roleOwnerType.getName() +
-				'.' + attribute.getName();
 	}
 
 	public PluralAttribute<?,X,?> getAttribute() {
@@ -114,5 +151,27 @@ public class PluralAttributePath<X> extends AbstractPathImpl<X> implements Seria
 				"Plural attribute path [" + getPathSource().getPathIdentifier() + '.'
 						+ attribute.getName() + "] cannot be dereferenced"
 		);
+	}
+
+	private EntityType locateNearestSubclassEntity(MappedSuperclassType mappedSuperclassType, EntityType entityTypeTop) {
+		EntityType entityTypeNearestDeclaringType = entityTypeTop;
+		IdentifiableType superType = entityTypeNearestDeclaringType.getSupertype();
+		while ( superType != mappedSuperclassType ) {
+			if ( superType == null ) {
+				throw new IllegalStateException(
+						String.format(
+								"Cannot determine nearest EntityType extending mapped superclass [%s] starting from [%s]; a supertype of [%s] is null",
+								mappedSuperclassType.getJavaType().getName(),
+								entityTypeTop.getJavaType().getName(),
+								entityTypeTop.getJavaType().getName()
+						)
+				);
+			}
+			if ( superType.getPersistenceType() == Type.PersistenceType.ENTITY ) {
+				entityTypeNearestDeclaringType = (EntityType) superType;
+			}
+			superType = superType.getSupertype();
+		}
+		return entityTypeNearestDeclaringType;
 	}
 }

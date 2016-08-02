@@ -9,6 +9,8 @@ package org.hibernate.internal.log;
 import java.sql.SQLException;
 import java.util.Properties;
 
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
+
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.Cause;
@@ -31,7 +33,7 @@ public interface ConnectionPoolingLogger extends BasicLogger {
 	 */
 	public static final ConnectionPoolingLogger CONNECTIONS_LOGGER = Logger.getMessageLogger(
 			ConnectionPoolingLogger.class,
-			"org.hibernate.orm.connections"
+			"org.hibernate.orm.connections.pooling"
 	);
 
 	@LogMessage(level = INFO)

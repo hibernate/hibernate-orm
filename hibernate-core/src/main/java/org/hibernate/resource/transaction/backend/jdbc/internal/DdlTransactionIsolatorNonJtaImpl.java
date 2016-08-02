@@ -9,6 +9,8 @@ package org.hibernate.resource.transaction.backend.jdbc.internal;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import org.hibernate.internal.log.ConnectionAccessLogger;
+import org.hibernate.internal.log.ConnectionPoolingLogger;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
 
@@ -40,6 +42,29 @@ public class DdlTransactionIsolatorNonJtaImpl implements DdlTransactionIsolator 
 		if ( jdbcConnection == null ) {
 			try {
 				this.jdbcConnection = jdbcContext.getJdbcConnectionAccess().obtainConnection();
+
+				try {
+					if ( !jdbcConnection.getAutoCommit() ) {
+						ConnectionAccessLogger.INSTANCE.informConnectionLocalTransactionForNonJtaDdl( jdbcContext.getJdbcConnectionAccess() );
+
+						try {
+							jdbcConnection.commit();
+							jdbcConnection.setAutoCommit( true );
+						}
+						catch (SQLException e) {
+							throw jdbcContext.getSqlExceptionHelper().convert(
+									e,
+									"Unable to set JDBC Connection into auto-commit mode in preparation for DDL execution"
+							);
+						}
+					}
+				}
+				catch (SQLException e) {
+					throw jdbcContext.getSqlExceptionHelper().convert(
+							e,
+							"Unable to check JDBC Connection auto-commit in preparation for DDL execution"
+					);
+				}
 			}
 			catch (SQLException e) {
 				throw jdbcContext.getSqlExceptionHelper().convert(

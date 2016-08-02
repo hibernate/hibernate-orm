@@ -51,4 +51,9 @@ public class PostgreSQL82Dialect extends PostgreSQL81Dialect {
 				null
 		);
 	}
+
+	@Override
+	public String getDropSequenceString(String sequenceName) {
+		return "drop sequence if exists " + sequenceName;
+	}
 }

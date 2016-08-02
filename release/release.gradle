@@ -38,8 +38,8 @@ task assembleDocumentation(type: Task, dependsOn: [rootProject.project( 'documen
 
         // Integrations Guide
         copy {
-            from "${rootProject.project( 'documentation' ).buildDir}/docbook/publish/integrationsGuide/en-US"
-            into "${documentationDir}/integrationsGuide"
+            from "${rootProject.project( 'documentation' ).buildDir}/asciidoc/integrationguide"
+            into "${documentationDir}/integrationguide"
         }
 
         // Getting-started Guide

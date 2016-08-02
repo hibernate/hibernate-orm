@@ -583,7 +583,7 @@ public class CriteriaQueryTypeQueryAdapter<X> implements QueryImplementor<X> {
 	}
 
 	@Override
-	public <P> org.hibernate.Query<X> setParameter(QueryParameter<P> parameter, P value, Type type) {
+	public <P> QueryImplementor<X> setParameter(QueryParameter<P> parameter, P value, Type type) {
 		final ExplicitParameterInfo parameterInfo = resolveParameterInfo( parameter );
 		if ( parameterInfo.isNamed() ) {
 			jpqlQuery.setParameter( parameterInfo.getName(), value, type );

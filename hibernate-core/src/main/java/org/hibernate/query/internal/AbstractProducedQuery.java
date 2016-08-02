@@ -127,6 +127,8 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	private Serializable optionalId;
 	private String optionalEntityName;
 
+	private Boolean passDistinctThrough;
+
 	public AbstractProducedQuery(
 			SharedSessionContractImplementor producer,
 			ParameterMetadata parameterMetadata) {
@@ -999,6 +1001,9 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			else if ( HINT_FOLLOW_ON_LOCKING.equals( hintName ) ) {
 				applied = applyFollowOnLockingHint( ConfigurationHelper.getBoolean( value ) );
 			}
+			else if ( QueryHints.HINT_PASS_DISTINCT_THROUGH.equals( hintName ) ) {
+				applied = applyPassDistinctThrough( ConfigurationHelper.getBoolean( value ) );
+			}
 			else {
 				log.ignoringUnrecognizedQueryHint( hintName );
 			}
@@ -1194,6 +1199,16 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	}
 
 	/**
+	 * Apply the follow-on-locking hint.
+	 *
+	 * @param passDistinctThrough the query passes {@code distinct} to the database
+	 */
+	protected boolean applyPassDistinctThrough(boolean passDistinctThrough) {
+		this.passDistinctThrough = passDistinctThrough;
+		return true;
+	}
+
+	/**
 	 * Is the query represented here a native (SQL) query?
 	 *
 	 * @return {@code true} if it is a native query; {@code false} otherwise
@@ -1264,6 +1279,9 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 				resultTransformer
 		);
 		queryParameters.setQueryPlan( entityGraphHintedQueryPlan );
+		if ( passDistinctThrough != null ) {
+			queryParameters.setPassDistinctThrough( passDistinctThrough );
+		}
 		return queryParameters;
 	}
 

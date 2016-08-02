@@ -60,6 +60,7 @@ public final class QueryParameters {
 	private boolean callable;
 	private boolean autodiscovertypes;
 	private boolean isNaturalKeyLookup;
+	private boolean passDistinctThrough = true;
 
 	private final ResultTransformer resultTransformer; // why is all others non final ?
 
@@ -499,6 +500,22 @@ public final class QueryParameters {
 
 	public boolean hasAutoDiscoverScalarTypes() {
 		return autodiscovertypes;
+	}
+
+	/**
+	 * Check if this query should pass the {@code distinct} to the database.
+	 * @return the query passes {@code distinct} to the database
+	 */
+	public boolean isPassDistinctThrough() {
+		return passDistinctThrough;
+	}
+
+	/**
+	 * Set if this query should pass the {@code distinct} to the database.
+	 * @param passDistinctThrough the query passes {@code distinct} to the database
+	 */
+	public void setPassDistinctThrough(boolean passDistinctThrough) {
+		this.passDistinctThrough = passDistinctThrough;
 	}
 
 	public void processFilters(String sql, SharedSessionContractImplementor session) {

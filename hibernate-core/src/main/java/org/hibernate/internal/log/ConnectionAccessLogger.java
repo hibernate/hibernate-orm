@@ -21,7 +21,7 @@ import static org.jboss.logging.Logger.Level.INFO;
  * @author Steve Ebersole
  */
 @MessageLogger( projectCode = "HHH" )
-@ValidIdRange( min = 10001501, max = 10001500 )
+@ValidIdRange( min = 10001501, max = 10002000 )
 public interface ConnectionAccessLogger extends BasicLogger {
 	String LOGGER_NAME = "org.hibernate.orm.connections.access";
 

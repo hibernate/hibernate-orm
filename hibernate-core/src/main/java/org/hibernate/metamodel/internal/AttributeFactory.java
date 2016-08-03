@@ -83,7 +83,7 @@ public class AttributeFactory {
 		}
 		final SingularAttributeMetadata<X, Y> singularAttributeMetadata = (SingularAttributeMetadata<X, Y>) attributeMetadata;
 		final Type<Y> metaModelType = getMetaModelType( singularAttributeMetadata.getValueContext() );
-		return new SingularAttributeImpl<X, Y>(
+		return new SingularAttributeImpl<>(
 				attributeMetadata.getName(),
 				attributeMetadata.getJavaType(),
 				ownerType,
@@ -215,6 +215,7 @@ public class AttributeFactory {
 				final EmbeddableTypeImpl<Y> embeddableType = new EmbeddableTypeImpl<Y>(
 						typeContext.getBindableType(),
 						typeContext.getAttributeMetadata().getOwnerType(),
+						typeContext.getAttributeMetadata().getName(),
 						(ComponentType) typeContext.getValue().getType()
 				);
 				context.registerEmbeddedableType( embeddableType );

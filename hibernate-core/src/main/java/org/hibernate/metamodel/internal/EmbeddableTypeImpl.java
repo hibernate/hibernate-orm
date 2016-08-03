@@ -19,11 +19,13 @@ public class EmbeddableTypeImpl<X>
 		implements EmbeddableType<X>, Serializable {
 
 	private final AbstractManagedType parent;
+	private final String attributeName;
 	private final ComponentType hibernateType;
 
-	public EmbeddableTypeImpl(Class<X> javaType, AbstractManagedType parent, ComponentType hibernateType) {
+	public EmbeddableTypeImpl(Class<X> javaType, AbstractManagedType parent,String attributeName, ComponentType hibernateType) {
 		super( javaType, null, null );
 		this.parent = parent;
+		this.attributeName = attributeName;
 		this.hibernateType = hibernateType;
 	}
 
@@ -37,5 +39,13 @@ public class EmbeddableTypeImpl<X>
 
 	public ComponentType getHibernateType() {
 		return hibernateType;
+	}
+
+	public String resolveRole() {
+		if ( EmbeddableTypeImpl.class.isInstance( getParent() ) ) {
+			final EmbeddableTypeImpl embeddableParent = (EmbeddableTypeImpl) parent;
+			return embeddableParent.resolveRole() + '.' + attributeName;
+		}
+		return parent.getTypeName() + '.' + attributeName;
 	}
 }

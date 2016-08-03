@@ -9,11 +9,13 @@ package in.from;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 /**
  * @author Andrea Boriero
  */
 @Entity
+@Table(name = "`ANY`")
 public class Any {
 	@Id
 	@GeneratedValue

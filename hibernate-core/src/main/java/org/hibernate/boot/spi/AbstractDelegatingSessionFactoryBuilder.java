@@ -369,6 +369,12 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends Abstract
 	}
 
 	@Override
+	public SessionFactoryBuilder enableReleaseResourcesOnCloseEnabled(boolean enable) {
+		delegate.enableReleaseResourcesOnCloseEnabled( enable );
+		return getThis();
+	}
+
+	@Override
 	@SuppressWarnings("unchecked")
 	public <S extends SessionFactoryBuilder> S unwrap(Class<S> type) {
 		return (S) this;

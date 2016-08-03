@@ -114,7 +114,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	private CacheMode cacheMode;
 
-	private boolean closed;
+	protected boolean closed;
+	protected boolean waitingForAutoClose;
 
 	// transient & non-final for Serialization purposes - ugh
 	private transient SessionEventListenerManagerImpl sessionEventsManager = new SessionEventListenerManagerImpl();
@@ -306,6 +307,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	protected void setClosed() {
 		closed = true;
+		waitingForAutoClose = false;
 		cleanupOnClose();
 	}
 
@@ -342,6 +344,9 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public boolean isTransactionInProgress() {
+		if ( waitingForAutoClose ) {
+			return transactionCoordinator.isTransactionActive();
+		}
 		return !isClosed() && transactionCoordinator.isTransactionActive();
 	}
 

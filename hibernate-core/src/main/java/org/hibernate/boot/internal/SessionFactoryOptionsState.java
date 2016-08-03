@@ -50,6 +50,8 @@ public interface SessionFactoryOptionsState {
 
 	boolean isAllowOutOfTransactionUpdateOperations();
 
+	boolean isReleaseResourcesOnCloseEnabled();
+
 	Object getBeanManagerReference();
 
 	Object getValidatorFactoryReference();

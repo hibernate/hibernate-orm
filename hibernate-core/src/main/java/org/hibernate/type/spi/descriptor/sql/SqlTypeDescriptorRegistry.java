@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.type.internal.descriptor.JdbcTypeNameMapper;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.ValueBinder;
 import org.hibernate.type.spi.descriptor.ValueExtractor;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
@@ -33,7 +34,7 @@ public class SqlTypeDescriptorRegistry {
 
 	private ConcurrentHashMap<Integer, SqlTypeDescriptor> descriptorMap = new ConcurrentHashMap<>();
 
-	public SqlTypeDescriptorRegistry(TypeDescriptorRegistryAccess scope) {
+	public SqlTypeDescriptorRegistry(TypeConfiguration typeConfiguration) {
 		addDescriptor( BooleanTypeDescriptor.INSTANCE );
 
 		addDescriptor( BitTypeDescriptor.INSTANCE );

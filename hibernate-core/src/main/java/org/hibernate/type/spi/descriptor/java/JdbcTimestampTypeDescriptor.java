@@ -27,7 +27,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class JdbcTimestampTypeDescriptor extends AbstractTypeDescriptor<Date> implements TemporalTypeDescriptor<Date> {
+public class JdbcTimestampTypeDescriptor extends AbstractTypeDescriptorBasicImpl<Date> implements TemporalTypeDescriptor<Date> {
 	public static final JdbcTimestampTypeDescriptor INSTANCE = new JdbcTimestampTypeDescriptor();
 	public static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
@@ -100,7 +100,7 @@ public class JdbcTimestampTypeDescriptor extends AbstractTypeDescriptor<Date> im
 
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
-		return context.getTypeDescriptorRegistryAccess().getSqlTypeDescriptorRegistry().getDescriptor( Types.TIMESTAMP );
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.TIMESTAMP );
 	}
 
 	@Override

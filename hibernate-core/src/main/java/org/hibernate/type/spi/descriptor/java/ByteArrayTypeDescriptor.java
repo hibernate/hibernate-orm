@@ -25,7 +25,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class ByteArrayTypeDescriptor extends AbstractTypeDescriptor<Byte[]> {
+public class ByteArrayTypeDescriptor extends AbstractTypeDescriptorBasicImpl<Byte[]> {
 	public static final ByteArrayTypeDescriptor INSTANCE = new ByteArrayTypeDescriptor();
 
 	@SuppressWarnings({ "unchecked" })
@@ -48,7 +48,7 @@ public class ByteArrayTypeDescriptor extends AbstractTypeDescriptor<Byte[]> {
 			jdbcCode = Types.LONGVARBINARY;
 		}
 
-		return context.getTypeDescriptorRegistryAccess().getSqlTypeDescriptorRegistry().getDescriptor( jdbcCode );
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( jdbcCode );
 	}
 
 	@Override

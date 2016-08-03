@@ -17,7 +17,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class CurrencyTypeDescriptor extends AbstractTypeDescriptor<Currency> {
+public class CurrencyTypeDescriptor extends AbstractTypeDescriptorBasicImpl<Currency> {
 	public static final CurrencyTypeDescriptor INSTANCE = new CurrencyTypeDescriptor();
 
 	public CurrencyTypeDescriptor() {

@@ -18,7 +18,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class CharacterTypeDescriptor extends AbstractTypeDescriptor<Character> {
+public class CharacterTypeDescriptor extends AbstractTypeDescriptorBasicImpl<Character> {
 	public static final CharacterTypeDescriptor INSTANCE = new CharacterTypeDescriptor();
 
 	public CharacterTypeDescriptor() {
@@ -27,7 +27,7 @@ public class CharacterTypeDescriptor extends AbstractTypeDescriptor<Character> {
 
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
-		return context.getTypeDescriptorRegistryAccess().getSqlTypeDescriptorRegistry().getDescriptor( Types.CHAR );
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.CHAR );
 	}
 
 	@Override

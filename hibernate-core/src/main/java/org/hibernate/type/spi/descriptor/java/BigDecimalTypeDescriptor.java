@@ -19,7 +19,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class BigDecimalTypeDescriptor extends AbstractTypeDescriptor<BigDecimal> {
+public class BigDecimalTypeDescriptor extends AbstractTypeDescriptorBasicImpl<BigDecimal> {
 	public static final BigDecimalTypeDescriptor INSTANCE = new BigDecimalTypeDescriptor();
 
 	public BigDecimalTypeDescriptor() {
@@ -41,7 +41,7 @@ public class BigDecimalTypeDescriptor extends AbstractTypeDescriptor<BigDecimal>
 
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
-		return context.getTypeDescriptorRegistryAccess().getSqlTypeDescriptorRegistry().getDescriptor( Types.NUMERIC );
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.NUMERIC );
 	}
 
 	@Override

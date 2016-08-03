@@ -23,9 +23,7 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.type.BasicType;
-import org.hibernate.usertype.CompositeUserType;
-import org.hibernate.usertype.UserType;
+import org.hibernate.type.spi.basic.RegistryKey;
 
 import org.jboss.jandex.IndexView;
 
@@ -306,38 +304,16 @@ public interface MetadataBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	MetadataBuilder applyBasicType(BasicType type);
+	MetadataBuilder applyBasicType(org.hibernate.type.spi.BasicType type);
 
 	/**
-	 * Specify an additional or overridden basic type mapping supplying specific
-	 * registration keys.
+	 * Specify an additional or overridden basic type mapping.
 	 *
 	 * @param type The type addition or override.
-	 * @param keys The keys under which to register the basic type.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	MetadataBuilder applyBasicType(BasicType type, String... keys);
-
-	/**
-	 * Register an additional or overridden custom type mapping.
-	 *
-	 * @param type The custom type
-	 * @param keys The keys under which to register the custom type.
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	MetadataBuilder applyBasicType(UserType type, String... keys);
-
-	/**
-	 * Register an additional or overridden composite custom type mapping.
-	 *
-	 * @param type The composite custom type
-	 * @param keys The keys under which to register the composite custom type.
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	MetadataBuilder applyBasicType(CompositeUserType type, String... keys);
+	MetadataBuilder applyBasicType(org.hibernate.type.spi.BasicType type, RegistryKey registryKey);
 
 	/**
 	 * Apply an explicit TypeContributor (implicit application via ServiceLoader will still happen too)

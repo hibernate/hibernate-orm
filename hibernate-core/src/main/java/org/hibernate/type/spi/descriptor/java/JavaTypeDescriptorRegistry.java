@@ -7,11 +7,17 @@
 package org.hibernate.type.spi.descriptor.java;
 
 import java.io.Serializable;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.persistence.metamodel.Type;
+
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.Immutable;
+import org.hibernate.type.internal.descriptor.java.JavaTypeDescriptorBasicAdaptorImpl;
+import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.type.spi.TypeConfigurationAware;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
@@ -27,12 +33,12 @@ import org.jboss.logging.Logger;
 public class JavaTypeDescriptorRegistry {
 	private static final Logger log = Logger.getLogger( JavaTypeDescriptorRegistry.class );
 
-	private final TypeDescriptorRegistryAccess scope;
+	private final TypeDescriptorRegistryAccess typeConfiguration;
 
 	private ConcurrentHashMap<Class,JavaTypeDescriptor> descriptorsByClass = new ConcurrentHashMap<>();
 
-	public JavaTypeDescriptorRegistry(TypeDescriptorRegistryAccess scope) {
-		this.scope = scope;
+	public JavaTypeDescriptorRegistry(TypeConfiguration typeConfiguration) {
+		this.typeConfiguration = typeConfiguration;
 
 		addDescriptorInternal( ByteTypeDescriptor.INSTANCE );
 		addDescriptorInternal( BooleanTypeDescriptor.INSTANCE );
@@ -66,9 +72,9 @@ public class JavaTypeDescriptorRegistry {
 
 		addDescriptorInternal( CalendarTypeDescriptor.INSTANCE );
 		addDescriptorInternal( DateTypeDescriptor.INSTANCE );
-		descriptorsByClass.put( java.sql.Date.class, JdbcDateTypeDescriptor.INSTANCE );
-		descriptorsByClass.put( java.sql.Time.class, JdbcTimeTypeDescriptor.INSTANCE );
-		descriptorsByClass.put( java.sql.Timestamp.class, JdbcTimestampTypeDescriptor.INSTANCE );
+		addDescriptorInternal( java.sql.Date.class, JdbcDateTypeDescriptor.INSTANCE );
+		addDescriptorInternal( java.sql.Time.class, JdbcTimeTypeDescriptor.INSTANCE );
+		addDescriptorInternal( java.sql.Timestamp.class, JdbcTimestampTypeDescriptor.INSTANCE );
 		addDescriptorInternal( TimeZoneTypeDescriptor.INSTANCE );
 
 		addDescriptorInternal( ClassTypeDescriptor.INSTANCE );
@@ -79,17 +85,34 @@ public class JavaTypeDescriptorRegistry {
 		addDescriptorInternal( UUIDTypeDescriptor.INSTANCE );
 	}
 
-	private JavaTypeDescriptor addDescriptorInternal(JavaTypeDescriptor descriptor) {
-		return descriptorsByClass.put( descriptor.getJavaTypeClass(), descriptor );
+	/**
+	 * Adds this Java type descriptor to the internal registry under it's reported
+	 * {@link JavaTypeDescriptor#getJavaTypeClass()}
+	 *
+	 * @param descriptor The descriptor to register.
+	 *
+	 * @return The return the old registry entry, if one, for this descriptor's Java type; otherwise, returns {@code null}
+	 */
+	private void addDescriptorInternal(JavaTypeDescriptor descriptor) {
+		addDescriptorInternal( descriptor.getJavaTypeClass(), descriptor );
 	}
 
 	/**
-	 * Adds the given descriptor to this registry
 	 *
-	 * @param descriptor The descriptor to add.
+	 * Adds this Java type descriptor to the internal registry under the given javaType.
+	 *
+	 * @param javaType The Java type to register the descriptor under.
+	 * @param descriptor The descriptor to register.
+	 *
+	 * @return The return the old registry entry, if one, for this javaType; otherwise, returns {@code null}
 	 */
-	public void addDescriptor(JavaTypeDescriptor descriptor) {
-		JavaTypeDescriptor old = addDescriptorInternal( descriptor );
+	private void addDescriptorInternal(Class javaType, JavaTypeDescriptor descriptor) {
+		if ( descriptor instanceof TypeConfigurationAware ) {
+			// would be nice to make the JavaTypeDescriptor for an entity, e.g., aware of the the TypeConfiguration
+			( (TypeConfigurationAware) descriptor ).setTypeConfiguration( typeConfiguration.getTypeConfiguration() );
+		}
+
+		final JavaTypeDescriptor old = descriptorsByClass.put( javaType, descriptor );
 		if ( old != null ) {
 			log.debugf(
 					"JavaTypeDescriptorRegistry entry replaced : %s -> %s (was %s)",
@@ -98,6 +121,61 @@ public class JavaTypeDescriptorRegistry {
 					old
 			);
 		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T> JavaTypeDescriptor<T> makeBasicTypeDescriptor(Class<T> javaType) {
+		if ( javaType == null ) {
+			throw new IllegalArgumentException( "Class passed to locate Java type descriptor cannot be null" );
+		}
+
+		JavaTypeDescriptor<T> typeDescriptor = descriptorsByClass.get( javaType );
+		if ( typeDescriptor != null ) {
+			if ( typeDescriptor.getPersistenceType() != Type.PersistenceType.BASIC ) {
+				throw new HibernateException(
+						"JavaTypeDescriptor was already registered for " + javaType.getName() +
+								" as a non-BasicType (" + typeDescriptor.getPersistenceType().name() + ")"
+				);
+			}
+		}
+		else {
+			typeDescriptor = new JavaTypeDescriptorBasicAdaptorImpl( javaType );
+			addDescriptorInternal( javaType, typeDescriptor );
+		}
+
+		return typeDescriptor;
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T> JavaTypeDescriptor<T> makeBasicTypeDescriptor(Class<T> javaType, MutabilityPlan<T> mutabilityPlan, Comparator comparator) {
+		if ( javaType == null ) {
+			throw new IllegalArgumentException( "Class passed to locate Java type descriptor cannot be null" );
+		}
+
+		JavaTypeDescriptor<T> typeDescriptor = descriptorsByClass.get( javaType );
+		if ( typeDescriptor != null ) {
+			if ( typeDescriptor.getPersistenceType() != Type.PersistenceType.BASIC ) {
+				throw new HibernateException(
+						"JavaTypeDescriptor was already registered for " + javaType.getName() +
+								" as a non-BasicType (" + typeDescriptor.getPersistenceType().name() + ")"
+				);
+			}
+		}
+		else {
+			typeDescriptor = new JavaTypeDescriptorBasicAdaptorImpl( javaType, mutabilityPlan, comparator );
+			addDescriptorInternal( javaType, typeDescriptor );
+		}
+
+		return typeDescriptor;
+	}
+
+	/**
+	 * Adds the given descriptor to this registry
+	 *
+	 * @param descriptor The descriptor to add.
+	 */
+	public void addDescriptor(JavaTypeDescriptor descriptor) {
+		addDescriptorInternal( descriptor );
 	}
 
 	@SuppressWarnings("unchecked")
@@ -112,7 +190,7 @@ public class JavaTypeDescriptorRegistry {
 		}
 
 		if ( cls.isEnum() ) {
-			descriptor = new EnumJavaTypeDescriptor( cls, scope );
+			descriptor = new EnumJavaTypeDescriptor( cls, typeConfiguration );
 			descriptorsByClass.put( cls, descriptor );
 			return descriptor;
 		}
@@ -134,7 +212,7 @@ public class JavaTypeDescriptorRegistry {
 	}
 
 
-	public static class FallbackJavaTypeDescriptor<T> extends AbstractTypeDescriptor<T> {
+	public static class FallbackJavaTypeDescriptor<T> extends AbstractTypeDescriptorBasicImpl<T> {
 		protected FallbackJavaTypeDescriptor(final Class<T> type) {
 			super(type, createMutabilityPlan(type));
 		}

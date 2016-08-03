@@ -20,7 +20,7 @@ import static java.lang.Boolean.TRUE;
  *
  * @author Steve Ebersole
  */
-public class BooleanTypeDescriptor extends AbstractTypeDescriptor<Boolean> {
+public class BooleanTypeDescriptor extends AbstractTypeDescriptorBasicImpl<Boolean> {
 	public static final BooleanTypeDescriptor INSTANCE = new BooleanTypeDescriptor();
 
 	private final char characterValueTrue;
@@ -48,7 +48,7 @@ public class BooleanTypeDescriptor extends AbstractTypeDescriptor<Boolean> {
 
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
-		return context.getTypeDescriptorRegistryAccess().getSqlTypeDescriptorRegistry().getDescriptor( Types.BOOLEAN );
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.BOOLEAN );
 	}
 
 	@Override

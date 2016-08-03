@@ -31,7 +31,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class LocalDateJavaDescriptor extends AbstractTypeDescriptor<LocalDate> implements TemporalTypeDescriptor<LocalDate> {
+public class LocalDateJavaDescriptor extends AbstractTypeDescriptorBasicImpl<LocalDate> implements TemporalTypeDescriptor<LocalDate> {
 	/**
 	 * Singleton access
 	 */
@@ -44,7 +44,7 @@ public class LocalDateJavaDescriptor extends AbstractTypeDescriptor<LocalDate> i
 
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
-		return context.getTypeDescriptorRegistryAccess().getSqlTypeDescriptorRegistry().getDescriptor( Types.DATE );
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.DATE );
 	}
 
 	@Override

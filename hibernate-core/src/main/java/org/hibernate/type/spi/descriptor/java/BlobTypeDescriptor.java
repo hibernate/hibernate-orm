@@ -33,7 +33,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  * @author Steve Ebersole
  * @author Brett Meyer
  */
-public class BlobTypeDescriptor extends AbstractTypeDescriptor<Blob> {
+public class BlobTypeDescriptor extends AbstractTypeDescriptorBasicImpl<Blob> {
 	public static final BlobTypeDescriptor INSTANCE = new BlobTypeDescriptor();
 
 	public static class BlobMutabilityPlan implements MutabilityPlan<Blob> {
@@ -83,7 +83,7 @@ public class BlobTypeDescriptor extends AbstractTypeDescriptor<Blob> {
 
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
-		return context.getTypeDescriptorRegistryAccess().getSqlTypeDescriptorRegistry().getDescriptor( Types.BLOB );
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.BLOB );
 	}
 
 	@Override

@@ -19,7 +19,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class LongTypeDescriptor extends AbstractTypeDescriptor<Long> {
+public class LongTypeDescriptor extends AbstractTypeDescriptorBasicImpl<Long> {
 	public static final LongTypeDescriptor INSTANCE = new LongTypeDescriptor();
 
 	public LongTypeDescriptor() {
@@ -28,7 +28,7 @@ public class LongTypeDescriptor extends AbstractTypeDescriptor<Long> {
 
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
-		return context.getTypeDescriptorRegistryAccess().getSqlTypeDescriptorRegistry().getDescriptor( Types.INTEGER );
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.INTEGER );
 	}
 
 	@Override

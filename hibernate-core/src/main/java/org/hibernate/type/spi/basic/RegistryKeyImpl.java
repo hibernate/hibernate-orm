@@ -8,7 +8,8 @@ package org.hibernate.type.spi.basic;
 
 import javax.persistence.AttributeConverter;
 
-import org.hibernate.type.spi.RegistryKey;
+import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
 
@@ -18,10 +19,18 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  * @author Steve Ebersole
  * @author Chris Cranford
  */
-class RegistryKeyImpl implements RegistryKey {
+public class RegistryKeyImpl implements RegistryKey {
 	private final Class javaTypeClass;
 	private final int jdbcCode;
 	private final Class attributeConverterClass;
+
+	public static RegistryKey from(BasicType type, TypeConfiguration typeConfiguration) {
+		return from(
+				type.getJavaTypeDescriptor(),
+				type.getJavaTypeDescriptor().getJdbcRecommendedSqlType( typeConfiguration.getBasicTypeRegistry().getBaseJdbcRecommendedSqlTypeMappingContext() ),
+				null
+		);
+	}
 
 	static RegistryKey from(
 			JavaTypeDescriptor javaTypeDescriptor,

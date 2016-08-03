@@ -17,7 +17,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class ShortTypeDescriptor extends AbstractTypeDescriptor<Short> {
+public class ShortTypeDescriptor extends AbstractTypeDescriptorBasicImpl<Short> {
 	public static final ShortTypeDescriptor INSTANCE = new ShortTypeDescriptor();
 
 	public ShortTypeDescriptor() {

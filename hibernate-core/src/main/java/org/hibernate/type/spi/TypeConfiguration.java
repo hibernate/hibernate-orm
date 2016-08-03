@@ -19,9 +19,10 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.sqm.domain.BasicType;
 import org.hibernate.type.TypeResolver;
-import org.hibernate.type.internal.descriptor.TypeDescriptorRegistryAccessImpl;
 import org.hibernate.type.spi.basic.BasicTypeRegistry;
 import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
+import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptorRegistry;
+import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptorRegistry;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
@@ -44,12 +45,16 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  * @since 6.0
  */
 @Incubating
-public class TypeConfiguration implements SessionFactoryObserver {
+public class TypeConfiguration implements SessionFactoryObserver, TypeDescriptorRegistryAccess {
 	private static final CoreMessageLogger log = messageLogger( Scope.class );
 
 	private final Scope scope;
-	private final TypeDescriptorRegistryAccess typeDescriptorRegistryAccess;
+
+	private final JavaTypeDescriptorRegistry javaTypeDescriptorRegistry;
+	private final SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry;
 	private final BasicTypeRegistry basicTypeRegistry;
+
+	private boolean initialized = false;
 
 	// temporarily needed to support deprecations
 	private final TypeResolver typeResolver;
@@ -60,10 +65,13 @@ public class TypeConfiguration implements SessionFactoryObserver {
 
 	public TypeConfiguration(Mapping mapping) {
 		this.scope = new Scope( mapping );
-		this.typeDescriptorRegistryAccess = new TypeDescriptorRegistryAccessImpl();
-		this.basicTypeRegistry = new BasicTypeRegistry( this, typeDescriptorRegistryAccess );
+		this.javaTypeDescriptorRegistry = new JavaTypeDescriptorRegistry( this );
+		this.sqlTypeDescriptorRegistry = new SqlTypeDescriptorRegistry( this );
+		this.basicTypeRegistry = new BasicTypeRegistry( this );
 
 		this.typeResolver = new TypeResolver( this );
+
+		this.initialized = true;
 	}
 
 	/**
@@ -92,7 +100,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	}
 
 	public TypeDescriptorRegistryAccess getTypeDescriptorRegistryAccess() {
-		return typeDescriptorRegistryAccess;
+		return this;
 	}
 
 	public BasicTypeRegistry getBasicTypeRegistry() {
@@ -216,5 +224,26 @@ public class TypeConfiguration implements SessionFactoryObserver {
 		public Type getReferencedPropertyType(String className, String propertyName) {
 			throw invalidAccess();
 		}
+	}
+
+	@Override
+	public TypeConfiguration getTypeConfiguration() {
+		return this;
+	}
+
+	@Override
+	public JavaTypeDescriptorRegistry getJavaTypeDescriptorRegistry() {
+		if ( !initialized ) {
+			throw new IllegalStateException( "TypeDescriptorRegistryAccess (TypeConfiguration) initialization incomplete; not yet ready for access" );
+		}
+		return javaTypeDescriptorRegistry;
+	}
+
+	@Override
+	public SqlTypeDescriptorRegistry getSqlTypeDescriptorRegistry() {
+		if ( !initialized ) {
+			throw new IllegalStateException( "TypeDescriptorRegistryAccess (TypeConfiguration) initialization incomplete; not yet ready for access" );
+		}
+		return sqlTypeDescriptorRegistry;
 	}
 }

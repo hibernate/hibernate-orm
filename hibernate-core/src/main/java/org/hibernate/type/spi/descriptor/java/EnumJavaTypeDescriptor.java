@@ -19,7 +19,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class EnumJavaTypeDescriptor<T extends Enum> extends AbstractTypeDescriptor<T> {
+public class EnumJavaTypeDescriptor<T extends Enum> extends AbstractTypeDescriptorBasicImpl<T> {
 	@SuppressWarnings("unchecked")
 	protected EnumJavaTypeDescriptor(Class<T> type, TypeDescriptorRegistryAccess typeDescriptorRegistryAccess) {
 		super( type, ImmutableMutabilityPlan.INSTANCE );
@@ -32,11 +32,11 @@ public class EnumJavaTypeDescriptor<T extends Enum> extends AbstractTypeDescript
 		final int jdbcCode;
 		if ( context.getEnumeratedType() != null && context.getEnumeratedType() == EnumType.STRING ) {
 			return context.isNationalized()
-					? context.getTypeDescriptorRegistryAccess().getSqlTypeDescriptorRegistry().getDescriptor( Types.NVARCHAR )
-					: context.getTypeDescriptorRegistryAccess().getSqlTypeDescriptorRegistry().getDescriptor( Types.VARCHAR );
+					? context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.NVARCHAR )
+					: context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.VARCHAR );
 		}
 		else {
-			return context.getTypeDescriptorRegistryAccess().getSqlTypeDescriptorRegistry().getDescriptor( Types.INTEGER );
+			return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.INTEGER );
 		}
 	}
 

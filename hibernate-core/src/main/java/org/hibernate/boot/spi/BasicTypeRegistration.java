@@ -8,7 +8,7 @@ package org.hibernate.boot.spi;
 
 import org.hibernate.HibernateException;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.RegistryKey;
+import org.hibernate.type.spi.basic.RegistryKey;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 

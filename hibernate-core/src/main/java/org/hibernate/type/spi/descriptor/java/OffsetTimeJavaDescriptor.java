@@ -34,7 +34,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class OffsetTimeJavaDescriptor extends AbstractTypeDescriptor<OffsetTime> implements TemporalTypeDescriptor<OffsetTime> {
+public class OffsetTimeJavaDescriptor extends AbstractTypeDescriptorBasicImpl<OffsetTime> implements TemporalTypeDescriptor<OffsetTime> {
 	/**
 	 * Singleton access
 	 */
@@ -47,7 +47,7 @@ public class OffsetTimeJavaDescriptor extends AbstractTypeDescriptor<OffsetTime>
 
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
-		return context.getTypeDescriptorRegistryAccess().getSqlTypeDescriptorRegistry().getDescriptor( Types.TIME );
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.TIME );
 	}
 
 	@Override

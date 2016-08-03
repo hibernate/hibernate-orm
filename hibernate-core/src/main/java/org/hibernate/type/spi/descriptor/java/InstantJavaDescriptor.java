@@ -31,7 +31,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class InstantJavaDescriptor extends AbstractTypeDescriptor<Instant> implements TemporalTypeDescriptor<Instant> {
+public class InstantJavaDescriptor extends AbstractTypeDescriptorBasicImpl<Instant> implements TemporalTypeDescriptor<Instant> {
 	/**
 	 * Singleton access
 	 */
@@ -44,7 +44,7 @@ public class InstantJavaDescriptor extends AbstractTypeDescriptor<Instant> imple
 
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
-		return context.getTypeDescriptorRegistryAccess().getSqlTypeDescriptorRegistry().getDescriptor( Types.TIMESTAMP );
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.TIMESTAMP );
 	}
 
 	@Override

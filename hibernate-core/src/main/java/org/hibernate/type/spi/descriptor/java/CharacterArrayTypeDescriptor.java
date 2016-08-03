@@ -22,7 +22,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class CharacterArrayTypeDescriptor extends AbstractTypeDescriptor<Character[]> {
+public class CharacterArrayTypeDescriptor extends AbstractTypeDescriptorBasicImpl<Character[]> {
 	public static final CharacterArrayTypeDescriptor INSTANCE = new CharacterArrayTypeDescriptor();
 
 	@SuppressWarnings({ "unchecked" })

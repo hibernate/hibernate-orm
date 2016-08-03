@@ -31,7 +31,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class ClobTypeDescriptor extends AbstractTypeDescriptor<Clob> {
+public class ClobTypeDescriptor extends AbstractTypeDescriptorBasicImpl<Clob> {
 	public static final ClobTypeDescriptor INSTANCE = new ClobTypeDescriptor();
 
 	public static class ClobMutabilityPlan implements MutabilityPlan<Clob> {
@@ -75,7 +75,7 @@ public class ClobTypeDescriptor extends AbstractTypeDescriptor<Clob> {
 		else {
 			jdbcCode = Types.CLOB;
 		}
-		return context.getTypeDescriptorRegistryAccess().getSqlTypeDescriptorRegistry().getDescriptor( jdbcCode );
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( jdbcCode );
 	}
 
 	@Override

@@ -32,7 +32,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class LocalDateTimeJavaDescriptor extends AbstractTypeDescriptor<LocalDateTime> implements TemporalTypeDescriptor<LocalDateTime > {
+public class LocalDateTimeJavaDescriptor extends AbstractTypeDescriptorBasicImpl<LocalDateTime> implements TemporalTypeDescriptor<LocalDateTime > {
 	private static final Logger log = Logger.getLogger( LocalDateTimeJavaDescriptor.class );
 
 	/**
@@ -47,7 +47,7 @@ public class LocalDateTimeJavaDescriptor extends AbstractTypeDescriptor<LocalDat
 
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
-		return context.getTypeDescriptorRegistryAccess().getSqlTypeDescriptorRegistry().getDescriptor( Types.TIMESTAMP );
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.TIMESTAMP );
 	}
 
 	@Override

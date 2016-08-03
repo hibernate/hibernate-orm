@@ -32,7 +32,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class OffsetDateTimeJavaDescriptor extends AbstractTypeDescriptor<OffsetDateTime> implements TemporalTypeDescriptor<OffsetDateTime> {
+public class OffsetDateTimeJavaDescriptor extends AbstractTypeDescriptorBasicImpl<OffsetDateTime> implements TemporalTypeDescriptor<OffsetDateTime> {
 	private static final Logger log = Logger.getLogger( OffsetDateTimeJavaDescriptor.class );
 
 	/**
@@ -47,7 +47,7 @@ public class OffsetDateTimeJavaDescriptor extends AbstractTypeDescriptor<OffsetD
 
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
-		return context.getTypeDescriptorRegistryAccess().getSqlTypeDescriptorRegistry().getDescriptor( Types.TIMESTAMP );
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.TIMESTAMP );
 	}
 
 	@Override

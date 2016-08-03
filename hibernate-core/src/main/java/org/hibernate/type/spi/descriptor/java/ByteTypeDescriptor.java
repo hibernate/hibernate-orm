@@ -17,7 +17,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  * @author Steve Ebersole
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class ByteTypeDescriptor extends AbstractTypeDescriptor<Byte> {
+public class ByteTypeDescriptor extends AbstractTypeDescriptorBasicImpl<Byte> {
 	public static final ByteTypeDescriptor INSTANCE = new ByteTypeDescriptor();
 
 	public ByteTypeDescriptor() {
@@ -26,7 +26,7 @@ public class ByteTypeDescriptor extends AbstractTypeDescriptor<Byte> {
 
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
-		return context.getTypeDescriptorRegistryAccess().getSqlTypeDescriptorRegistry().getDescriptor( Types.TINYINT );
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.TINYINT );
 	}
 
 	@Override

@@ -19,7 +19,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class FloatTypeDescriptor extends AbstractTypeDescriptor<Float> {
+public class FloatTypeDescriptor extends AbstractTypeDescriptorBasicImpl<Float> {
 	public static final FloatTypeDescriptor INSTANCE = new FloatTypeDescriptor();
 
 	public FloatTypeDescriptor() {
@@ -28,7 +28,7 @@ public class FloatTypeDescriptor extends AbstractTypeDescriptor<Float> {
 
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
-		return context.getTypeDescriptorRegistryAccess().getSqlTypeDescriptorRegistry().getDescriptor( Types.FLOAT );
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.FLOAT );
 	}
 
 	@Override

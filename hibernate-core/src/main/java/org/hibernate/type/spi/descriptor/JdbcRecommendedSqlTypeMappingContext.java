@@ -8,6 +8,8 @@ package org.hibernate.type.spi.descriptor;
 
 import javax.persistence.EnumType;
 
+import org.hibernate.type.spi.TypeConfiguration;
+
 /**
  * More-or-less a parameter-object intended for use in determining the SQL/JDBC type recommended
  * by the JDBC spec (explicitly or implicitly) for a given Java type.
@@ -39,9 +41,9 @@ public interface JdbcRecommendedSqlTypeMappingContext {
 	EnumType getEnumeratedType();
 
 	/**
-	 * Provides access to the TypeDescriptorRegistryAccess for recommendation mapping
+	 * Provides access to the TypeConfiguration for access to various type-system registries.
 	 *
 	 * @return The TypeDescriptorRegistryAccess to use
 	 */
-	TypeDescriptorRegistryAccess getTypeDescriptorRegistryAccess();
+	TypeConfiguration getTypeConfiguration();
 }

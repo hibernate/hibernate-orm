@@ -50,7 +50,6 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
-import org.hibernate.boot.spi.BasicTypeRegistration;
 import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware;
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuilderImplementor;
@@ -72,11 +71,11 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.internal.descriptor.TypeDescriptorRegistryAccessImpl;
-import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
-import org.hibernate.usertype.CompositeUserType;
-import org.hibernate.usertype.UserType;
+import org.hibernate.type.spi.basic.RegistryKey;
+import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.type.spi.basic.RegistryKeyImpl;
+import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
 
 import org.jboss.jandex.IndexView;
 
@@ -253,26 +252,13 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public MetadataBuilder applyBasicType(BasicType type) {
-		options.basicTypeRegistrations.add( new BasicTypeRegistration( type ) );
-		return this;
+	public MetadataBuilder applyBasicType(org.hibernate.type.spi.BasicType type) {
+		return applyBasicType( type, RegistryKeyImpl.from( type, options.typeConfiguration ) );
 	}
 
 	@Override
-	public MetadataBuilder applyBasicType(BasicType type, String... keys) {
-		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
-		return this;
-	}
-
-	@Override
-	public MetadataBuilder applyBasicType(UserType type, String... keys) {
-		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
-		return this;
-	}
-
-	@Override
-	public MetadataBuilder applyBasicType(CompositeUserType type, String... keys) {
-		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
+	public MetadataBuilder applyBasicType(org.hibernate.type.spi.BasicType type, RegistryKey registryKey) {
+		options.typeConfiguration.getBasicTypeRegistry().register( type, registryKey );
 		return this;
 	}
 
@@ -283,28 +269,23 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public void contributeType(BasicType type) {
-		options.basicTypeRegistrations.add( new BasicTypeRegistration( type ) );
+	public void contributeJavaTypeDescriptor(JavaTypeDescriptor descriptor) {
+		options.typeConfiguration.getJavaTypeDescriptorRegistry().addDescriptor( descriptor );
 	}
 
 	@Override
-	public void contributeType(BasicType type, String... keys) {
-		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
+	public void contributeSqlTypeDescriptor(SqlTypeDescriptor descriptor) {
+		options.typeConfiguration.getSqlTypeDescriptorRegistry().addDescriptor( descriptor );
 	}
 
 	@Override
-	public void contributeType(UserType type, String[] keys) {
-		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
+	public void contributeType(org.hibernate.type.spi.BasicType type, RegistryKey key) {
+		options.typeConfiguration.getBasicTypeRegistry().register( type, key );
 	}
 
 	@Override
-	public void contributeType(CompositeUserType type, String[] keys) {
-		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
-	}
-
-	@Override
-	public TypeDescriptorRegistryAccess getTypeDescriptorRegistryAccess() {
-		return options.typeDescriptorRegistryAccess;
+	public TypeConfiguration getTypeConfiguration() {
+		return options.getTypeConfiguration();
 	}
 
 	@Override
@@ -541,8 +522,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private final StandardServiceRegistry serviceRegistry;
 		private final MappingDefaultsImpl mappingDefaults;
 
-		private final TypeDescriptorRegistryAccess typeDescriptorRegistryAccess = new TypeDescriptorRegistryAccessImpl();
-		private final ArrayList<BasicTypeRegistration> basicTypeRegistrations = new ArrayList<>();
+		private final TypeConfiguration typeConfiguration = new TypeConfiguration();
 
 		private IndexView jandexView;
 		private ClassLoader tempClassLoader;
@@ -781,13 +761,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		@Override
-		public List<BasicTypeRegistration> getBasicTypeRegistrations() {
-			return basicTypeRegistrations;
-		}
-
-		@Override
-		public TypeDescriptorRegistryAccess getTypeDescriptorRegistryAccess() {
-			return typeDescriptorRegistryAccess;
+		public TypeConfiguration getTypeConfiguration() {
+			return typeConfiguration;
 		}
 
 		@Override

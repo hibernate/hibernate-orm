@@ -24,7 +24,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class PrimitiveByteArrayTypeDescriptor extends AbstractTypeDescriptor<byte[]> {
+public class PrimitiveByteArrayTypeDescriptor extends AbstractTypeDescriptorBasicImpl<byte[]> {
 	public static final PrimitiveByteArrayTypeDescriptor INSTANCE = new PrimitiveByteArrayTypeDescriptor();
 
 	@SuppressWarnings({ "unchecked" })

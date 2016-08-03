@@ -22,7 +22,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class StringTypeDescriptor extends AbstractTypeDescriptor<String> {
+public class StringTypeDescriptor extends AbstractTypeDescriptorBasicImpl<String> {
 	public static final StringTypeDescriptor INSTANCE = new StringTypeDescriptor();
 
 	public StringTypeDescriptor() {

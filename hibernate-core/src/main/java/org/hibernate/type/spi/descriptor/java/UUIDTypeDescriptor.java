@@ -19,7 +19,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class UUIDTypeDescriptor extends AbstractTypeDescriptor<UUID> {
+public class UUIDTypeDescriptor extends AbstractTypeDescriptorBasicImpl<UUID> {
 	public static final UUIDTypeDescriptor INSTANCE = new UUIDTypeDescriptor();
 
 	public static class UUIDComparator implements Comparator<UUID> {

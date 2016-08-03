@@ -12,7 +12,6 @@ import java.sql.Types;
 
 import org.hibernate.EntityMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.sqm.exec.results.spi.ResultSetProcessingOptions;
 import org.hibernate.sql.sqm.exec.results.spi.ReturnReader;

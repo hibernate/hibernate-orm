@@ -7,23 +7,27 @@
 package org.hibernate.boot.model;
 
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.RegistryKey;
+import org.hibernate.type.spi.basic.RegistryKey;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
-import org.hibernate.usertype.CompositeUserType;
-import org.hibernate.usertype.UserType;
-
+import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
 
 /**
- * Defines the target contributing types, whether via dialects or {@link TypeContributor}
+ * Defines the target of contributing types, whether via dialects or {@link TypeContributor}
  *
  * @author Steve Ebersole
  */
 public interface TypeContributions {
+	void contributeJavaTypeDescriptor(JavaTypeDescriptor descriptor);
+
+	void contributeSqlTypeDescriptor(SqlTypeDescriptor descriptor);
+
 	void contributeType(BasicType type, RegistryKey key);
 
-	void contributeType(UserType type, String... keys);
+	TypeConfiguration getTypeConfiguration();
 
-	void contributeType(CompositeUserType type, String... keys);
-
-	TypeDescriptorRegistryAccess getTypeDescriptorRegistryAccess();
+	default TypeDescriptorRegistryAccess getTypeDescriptorRegistryAccess() {
+		return getTypeConfiguration().getTypeDescriptorRegistryAccess();
+	}
 }

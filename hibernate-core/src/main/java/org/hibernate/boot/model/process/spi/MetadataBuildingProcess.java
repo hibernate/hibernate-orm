@@ -10,7 +10,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.hibernate.HibernateException;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
@@ -29,7 +28,6 @@ import org.hibernate.boot.model.source.internal.hbm.ModelBinder;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.AdditionalJaxbMappingProducer;
-import org.hibernate.boot.spi.BasicTypeRegistration;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataContributor;
@@ -38,11 +36,10 @@ import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.type.spi.RegistryKey;
+import org.hibernate.type.spi.basic.RegistryKey;
 import org.hibernate.type.spi.TypeConfiguration;
-import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
-import org.hibernate.usertype.CompositeUserType;
-import org.hibernate.usertype.UserType;
+import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
 
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
@@ -322,23 +319,23 @@ public class MetadataBuildingProcess {
 
 		final TypeContributions typeContributions = new TypeContributions() {
 			@Override
+			public void contributeJavaTypeDescriptor(JavaTypeDescriptor descriptor) {
+				typeConfiguration.getJavaTypeDescriptorRegistry().addDescriptor( descriptor );
+			}
+
+			@Override
+			public void contributeSqlTypeDescriptor(SqlTypeDescriptor descriptor) {
+				typeConfiguration.getSqlTypeDescriptorRegistry().addDescriptor( descriptor );
+			}
+
+			@Override
 			public void contributeType(org.hibernate.type.spi.BasicType type, RegistryKey registryKey) {
 				typeConfiguration.getBasicTypeRegistry().register( type, registryKey );
 			}
 
 			@Override
-			public void contributeType(UserType type, String... keys) {
-				throw new HibernateException( "UserType cannot be registered." );
-			}
-
-			@Override
-			public void contributeType(CompositeUserType type, String... keys) {
-				throw new HibernateException( "CompositeUserType cannot be registered." );
-			}
-
-			@Override
-			public TypeDescriptorRegistryAccess getTypeDescriptorRegistryAccess() {
-				return options.getTypeDescriptorRegistryAccess();
+			public TypeConfiguration getTypeConfiguration() {
+				return options.getTypeConfiguration();
 			}
 		};
 
@@ -349,11 +346,5 @@ public class MetadataBuildingProcess {
 			contributor.contribute( typeContributions, options.getServiceRegistry() );
 		}
 
-		for ( BasicTypeRegistration basicTypeRegistration : options.getBasicTypeRegistrations() ) {
-			typeConfiguration.getBasicTypeRegistry().register(
-					basicTypeRegistration.getBasicType(),
-					basicTypeRegistration.getRegistryKey()
-			);
-		}
 	}
 }

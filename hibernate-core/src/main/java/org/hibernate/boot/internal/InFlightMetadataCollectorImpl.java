@@ -117,7 +117,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	private final MetadataBuildingOptions options;
 	private final TypeConfiguration typeConfiguration;
-	private final TypeDescriptorRegistryAccess typeDescriptorRegistryAccess;
 
 	private final AttributeConverterManager attributeConverterManager = new AttributeConverterManager();
 	private final ClassmateContext classmateContext = new ClassmateContext();
@@ -167,8 +166,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	public InFlightMetadataCollectorImpl(MetadataBuildingOptions options) {
 		this.uuid = UUID.randomUUID();
 		this.options = options;
-		this.typeConfiguration = new TypeConfiguration( this );
-		this.typeDescriptorRegistryAccess = options.getTypeDescriptorRegistryAccess();
+		this.typeConfiguration = options.getTypeConfiguration();
 
 		this.identifierGeneratorFactory = options.getServiceRegistry().getService( MutableIdentifierGeneratorFactory.class );
 

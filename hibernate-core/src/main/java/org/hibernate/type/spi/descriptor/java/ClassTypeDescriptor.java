@@ -16,7 +16,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class ClassTypeDescriptor extends AbstractTypeDescriptor<Class> {
+public class ClassTypeDescriptor extends AbstractTypeDescriptorBasicImpl<Class> {
 	public static final ClassTypeDescriptor INSTANCE = new ClassTypeDescriptor();
 
 	public ClassTypeDescriptor() {

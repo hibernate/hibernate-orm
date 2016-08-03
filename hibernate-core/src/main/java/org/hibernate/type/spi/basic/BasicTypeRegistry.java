@@ -13,7 +13,6 @@ import javax.persistence.EnumType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.RegistryKey;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
@@ -88,12 +87,10 @@ public class BasicTypeRegistry {
 	private final Map<RegistryKey,BasicType> registrations = new HashMap<>();
 
 	private final TypeConfiguration typeConfiguration;
-	private final TypeDescriptorRegistryAccess context;
 	private final JdbcRecommendedSqlTypeMappingContext baseJdbcRecommendedSqlTypeMappingContext;
 
-	public BasicTypeRegistry(TypeConfiguration typeConfiguration, TypeDescriptorRegistryAccess context) {
+	public BasicTypeRegistry(TypeConfiguration typeConfiguration) {
 		this.typeConfiguration = typeConfiguration;
-		this.context = context;
 		this.baseJdbcRecommendedSqlTypeMappingContext = new JdbcRecommendedSqlTypeMappingContext() {
 			@Override
 			public boolean isNationalized() {
@@ -111,15 +108,15 @@ public class BasicTypeRegistry {
 			}
 
 			@Override
-			public TypeDescriptorRegistryAccess getTypeDescriptorRegistryAccess() {
-				return context;
+			public TypeConfiguration getTypeConfiguration() {
+				return typeConfiguration;
 			}
 		};
 		registerBasicTypes();
 	}
 
 	public TypeDescriptorRegistryAccess getTypeDescriptorRegistryAccess() {
-		return context;
+		return typeConfiguration;
 	}
 
 	public JdbcRecommendedSqlTypeMappingContext getBaseJdbcRecommendedSqlTypeMappingContext() {
@@ -155,7 +152,7 @@ public class BasicTypeRegistry {
 			if ( sqlTypeDescriptor == null ) {
 				throw new IllegalArgumentException( "BasicTypeParameters must define either a JavaTypeDescriptor or a SqlTypeDescriptor (if not providing AttributeConverter)" );
 			}
-			javaTypeDescriptor = sqlTypeDescriptor.getJdbcRecommendedJavaTypeMapping( jdbcTypeResolutionContext.getTypeDescriptorRegistryAccess() );
+			javaTypeDescriptor = sqlTypeDescriptor.getJdbcRecommendedJavaTypeMapping( jdbcTypeResolutionContext.getTypeConfiguration() );
 		}
 
 		if ( sqlTypeDescriptor == null ) {
@@ -286,10 +283,10 @@ public class BasicTypeRegistry {
 		assert parameters != null;
 		assert parameters.getAttributeConverterDefinition() != null;
 
-		final JavaTypeDescriptor converterDefinedDomainTypeDescriptor = context.getJavaTypeDescriptorRegistry().getDescriptor(
+		final JavaTypeDescriptor converterDefinedDomainTypeDescriptor = typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor(
 				parameters.getAttributeConverterDefinition().getDomainType()
 		);
-		final JavaTypeDescriptor converterDefinedJdbcTypeDescriptor = context.getJavaTypeDescriptorRegistry().getDescriptor(
+		final JavaTypeDescriptor converterDefinedJdbcTypeDescriptor = typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor(
 				parameters.getAttributeConverterDefinition().getJdbcType()
 		);
 

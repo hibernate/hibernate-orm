@@ -9,18 +9,15 @@ package org.hibernate.type.spi.descriptor.java;
 import java.sql.Types;
 import java.time.Duration;
 
-import javax.persistence.TemporalType;
-
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
-import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class DurationJavaDescriptor extends AbstractTypeDescriptor<Duration> {
+public class DurationJavaDescriptor extends AbstractTypeDescriptorBasicImpl<Duration> {
 	/**
 	 * Singleton access
 	 */
@@ -33,7 +30,7 @@ public class DurationJavaDescriptor extends AbstractTypeDescriptor<Duration> {
 
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
-		return context.getTypeDescriptorRegistryAccess().getSqlTypeDescriptorRegistry().getDescriptor( Types.BIGINT );
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.BIGINT );
 	}
 
 	@Override

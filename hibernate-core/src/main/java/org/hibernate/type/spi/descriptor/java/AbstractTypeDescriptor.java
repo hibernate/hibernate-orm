@@ -43,11 +43,19 @@ public abstract class AbstractTypeDescriptor<T> implements JavaTypeDescriptor<T>
 	 */
 	@SuppressWarnings({ "unchecked" })
 	protected AbstractTypeDescriptor(Class<T> type, MutabilityPlan<T> mutabilityPlan) {
+		this(
+				type,
+				mutabilityPlan,
+				Comparable.class.isAssignableFrom( type )
+						? (Comparator<T>) ComparableComparator.INSTANCE
+						: null
+		);
+	}
+
+	public AbstractTypeDescriptor(Class<T> type, MutabilityPlan<T> mutabilityPlan, Comparator<T> comparator) {
 		this.type = type;
 		this.mutabilityPlan = mutabilityPlan;
-		this.comparator = Comparable.class.isAssignableFrom( type )
-				? (Comparator<T>) ComparableComparator.INSTANCE
-				: null;
+		this.comparator = comparator;
 	}
 
 	@Override

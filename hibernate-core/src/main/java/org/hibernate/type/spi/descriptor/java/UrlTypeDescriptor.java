@@ -19,7 +19,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class UrlTypeDescriptor extends AbstractTypeDescriptor<URL> {
+public class UrlTypeDescriptor extends AbstractTypeDescriptorBasicImpl<URL> {
 	public static final UrlTypeDescriptor INSTANCE = new UrlTypeDescriptor();
 
 	public UrlTypeDescriptor() {

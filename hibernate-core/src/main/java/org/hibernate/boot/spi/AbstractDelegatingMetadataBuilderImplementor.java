@@ -25,9 +25,8 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.type.BasicType;
-import org.hibernate.usertype.CompositeUserType;
-import org.hibernate.usertype.UserType;
+import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.spi.basic.RegistryKey;
 
 import org.jboss.jandex.IndexView;
 
@@ -164,25 +163,13 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Abs
 	@Override
 	public MetadataBuilder applyBasicType(BasicType type) {
 		delegate.applyBasicType( type );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyBasicType(BasicType type, String... keys) {
-		delegate.applyBasicType( type, keys );
-		return getThis();
-	}
-
-	@Override
-	public MetadataBuilder applyBasicType(UserType type, String... keys) {
-		delegate.applyBasicType( type, keys );
-		return getThis();
-	}
-
-	@Override
-	public MetadataBuilder applyBasicType(CompositeUserType type, String... keys) {
-		delegate.applyBasicType( type, keys );
-		return getThis();
+	public MetadataBuilder applyBasicType(BasicType type, RegistryKey registryKey) {
+		delegate.applyBasicType( type, registryKey );
+		return this;
 	}
 
 	@Override

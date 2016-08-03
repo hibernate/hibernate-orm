@@ -10,6 +10,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Comparator;
 
+import javax.persistence.metamodel.Type.PersistenceType;
+
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -26,7 +28,7 @@ import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
  *
  * @since 6.0
  */
-public interface Type<T> extends org.hibernate.sqm.domain.Type, javax.persistence.metamodel.Type<T> {
+public interface Type<T> extends org.hibernate.sqm.domain.Type {
 	/**
 	 * Enumerated values for the classification of the Type.
 	 */
@@ -38,7 +40,7 @@ public interface Type<T> extends org.hibernate.sqm.domain.Type, javax.persistenc
 		BASIC( PersistenceType.BASIC ),
 		/**
 		 * Represents composite values (what JPA calls embedded/embeddable).  Types classified as
-		 * COMPOSITE will be castable to {@link EmbeddableType}
+		 * COMPOSITE will be castable to {@link CompositeType}
 		 */
 		COMPOSITE( PersistenceType.EMBEDDABLE ),
 		/**
@@ -95,11 +97,6 @@ public interface Type<T> extends org.hibernate.sqm.domain.Type, javax.persistenc
 	 * @return The Type's classification/categorization
 	 */
 	Classification getClassification();
-
-	@Override
-	default PersistenceType getPersistenceType() {
-		return this.getClassification().getJpaPersistenceType();
-	}
 
 	/**
 	 * Returns the abbreviated name of the Type.  Mostly used historically for short-name

@@ -25,7 +25,7 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.jandex.IndexView;
 
@@ -52,20 +52,7 @@ public interface MetadataBuildingOptions {
 	 */
 	MappingDefaults getMappingDefaults();
 
-	/**
-	 * Access the list of BasicType registrations.  These are the BasicTypes explicitly
-	 * registered via calls to:<ul>
-	 *     <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(org.hibernate.type.BasicType)}</li>
-	 *     <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(org.hibernate.type.BasicType, String[])}</li>
-	 *     <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(org.hibernate.usertype.UserType, java.lang.String[])}</li>
-	 *     <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(org.hibernate.usertype.CompositeUserType, java.lang.String[])}</li>
-	 * </ul>
-	 *
-	 * @return The BasicType registrations
-	 */
-	List<BasicTypeRegistration> getBasicTypeRegistrations();
-
-	TypeDescriptorRegistryAccess getTypeDescriptorRegistryAccess();
+	TypeConfiguration getTypeConfiguration();
 
 	/**
 	 * Access to the Jandex index passed by call to

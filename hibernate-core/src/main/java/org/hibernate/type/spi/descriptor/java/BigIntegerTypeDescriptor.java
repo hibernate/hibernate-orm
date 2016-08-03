@@ -19,7 +19,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class BigIntegerTypeDescriptor extends AbstractTypeDescriptor<BigInteger> {
+public class BigIntegerTypeDescriptor extends AbstractTypeDescriptorBasicImpl<BigInteger> {
 	public static final BigIntegerTypeDescriptor INSTANCE = new BigIntegerTypeDescriptor();
 
 	public BigIntegerTypeDescriptor() {
@@ -38,7 +38,7 @@ public class BigIntegerTypeDescriptor extends AbstractTypeDescriptor<BigInteger>
 
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
-		return context.getTypeDescriptorRegistryAccess().getSqlTypeDescriptorRegistry().getDescriptor( Types.BIGINT );
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.BIGINT );
 	}
 
 	@Override

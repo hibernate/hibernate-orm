@@ -19,7 +19,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class IntegerTypeDescriptor extends AbstractTypeDescriptor<Integer> {
+public class IntegerTypeDescriptor extends AbstractTypeDescriptorBasicImpl<Integer> {
 	public static final IntegerTypeDescriptor INSTANCE = new IntegerTypeDescriptor();
 
 	public IntegerTypeDescriptor() {
@@ -28,7 +28,7 @@ public class IntegerTypeDescriptor extends AbstractTypeDescriptor<Integer> {
 
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
-		return context.getTypeDescriptorRegistryAccess().getSqlTypeDescriptorRegistry().getDescriptor( Types.INTEGER );
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.INTEGER );
 	}
 
 	@Override

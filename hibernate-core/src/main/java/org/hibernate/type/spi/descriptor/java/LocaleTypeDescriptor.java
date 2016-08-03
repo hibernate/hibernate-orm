@@ -18,7 +18,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  * 
  * @author Steve Ebersole
  */
-public class LocaleTypeDescriptor extends AbstractTypeDescriptor<Locale> {
+public class LocaleTypeDescriptor extends AbstractTypeDescriptorBasicImpl<Locale> {
 	public static final LocaleTypeDescriptor INSTANCE = new LocaleTypeDescriptor();
 
 	public static class LocaleComparator implements Comparator<Locale> {

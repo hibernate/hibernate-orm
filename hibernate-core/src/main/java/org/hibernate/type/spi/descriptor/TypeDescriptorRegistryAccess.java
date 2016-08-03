@@ -6,6 +6,7 @@
  */
 package org.hibernate.type.spi.descriptor;
 
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptorRegistry;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptorRegistry;
 
@@ -16,6 +17,13 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptorRegistry;
  * @author Steve Ebersole
  */
 public interface TypeDescriptorRegistryAccess {
+	/**
+	 * Access to the TypeConfiguration that scopes this access
+	 *
+	 * @return The TypeConfiguration
+	 */
+	TypeConfiguration getTypeConfiguration();
+
 	/**
 	 * Access to the contained JavaTypeDescriptorRegistry.
 	 *

@@ -27,7 +27,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  * @author Steve Ebersole
  * @author Brett meyer
  */
-public class SerializableTypeDescriptor<T extends Serializable> extends AbstractTypeDescriptor<T> {
+public class SerializableTypeDescriptor<T extends Serializable> extends AbstractTypeDescriptorBasicImpl<T> {
 	public static final SerializableTypeDescriptor<Serializable> INSTANCE = new SerializableTypeDescriptor<>( Serializable.class );
 
 	// unfortunately the param types cannot be the same so use something other than 'T' here to make that obvious
@@ -80,7 +80,7 @@ public class SerializableTypeDescriptor<T extends Serializable> extends Abstract
 
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
-		return context.getTypeDescriptorRegistryAccess().getSqlTypeDescriptorRegistry().getDescriptor( Types.VARBINARY );
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.VARBINARY );
 	}
 
 	@Override

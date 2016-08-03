@@ -18,7 +18,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class TimeZoneTypeDescriptor extends AbstractTypeDescriptor<TimeZone> {
+public class TimeZoneTypeDescriptor extends AbstractTypeDescriptorBasicImpl<TimeZone> {
 	public static final TimeZoneTypeDescriptor INSTANCE = new TimeZoneTypeDescriptor();
 
 	public static class TimeZoneComparator implements Comparator<TimeZone> {

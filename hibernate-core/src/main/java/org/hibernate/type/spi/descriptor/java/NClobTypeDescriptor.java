@@ -32,7 +32,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class NClobTypeDescriptor extends AbstractTypeDescriptor<NClob> {
+public class NClobTypeDescriptor extends AbstractTypeDescriptorBasicImpl<NClob> {
 	public static final NClobTypeDescriptor INSTANCE = new NClobTypeDescriptor();
 
 	public static class NClobMutabilityPlan implements MutabilityPlan<NClob> {
@@ -76,7 +76,7 @@ public class NClobTypeDescriptor extends AbstractTypeDescriptor<NClob> {
 		else {
 			jdbcCode = Types.CLOB;
 		}
-		return context.getTypeDescriptorRegistryAccess().getSqlTypeDescriptorRegistry().getDescriptor( jdbcCode );
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( jdbcCode );
 	}
 
 	@Override

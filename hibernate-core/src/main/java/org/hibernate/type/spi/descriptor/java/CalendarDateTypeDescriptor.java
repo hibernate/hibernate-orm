@@ -26,7 +26,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class CalendarDateTypeDescriptor extends AbstractTypeDescriptor<Calendar> implements TemporalTypeDescriptor<Calendar> {
+public class CalendarDateTypeDescriptor extends AbstractTypeDescriptorBasicImpl<Calendar> implements TemporalTypeDescriptor<Calendar> {
 	public static final CalendarDateTypeDescriptor INSTANCE = new CalendarDateTypeDescriptor();
 
 	protected CalendarDateTypeDescriptor() {
@@ -68,7 +68,7 @@ public class CalendarDateTypeDescriptor extends AbstractTypeDescriptor<Calendar>
 
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
-		return context.getTypeDescriptorRegistryAccess().getSqlTypeDescriptorRegistry().getDescriptor( Types.DATE );
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.DATE );
 	}
 
 	@Override

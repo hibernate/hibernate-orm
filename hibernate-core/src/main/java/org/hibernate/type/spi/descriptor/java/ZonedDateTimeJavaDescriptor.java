@@ -28,7 +28,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class ZonedDateTimeJavaDescriptor extends AbstractTypeDescriptor<ZonedDateTime> implements TemporalTypeDescriptor<ZonedDateTime> {
+public class ZonedDateTimeJavaDescriptor extends AbstractTypeDescriptorBasicImpl<ZonedDateTime> implements TemporalTypeDescriptor<ZonedDateTime> {
 	/**
 	 * Singleton access
 	 */

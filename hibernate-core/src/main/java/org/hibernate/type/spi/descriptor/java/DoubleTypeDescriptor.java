@@ -19,7 +19,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class DoubleTypeDescriptor extends AbstractTypeDescriptor<Double> {
+public class DoubleTypeDescriptor extends AbstractTypeDescriptorBasicImpl<Double> {
 	public static final DoubleTypeDescriptor INSTANCE = new DoubleTypeDescriptor();
 
 	public DoubleTypeDescriptor() {
@@ -28,7 +28,7 @@ public class DoubleTypeDescriptor extends AbstractTypeDescriptor<Double> {
 
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
-		return context.getTypeDescriptorRegistryAccess().getSqlTypeDescriptorRegistry().getDescriptor( Types.DOUBLE );
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.DOUBLE );
 	}
 
 	@Override

@@ -9,6 +9,8 @@ package org.hibernate.type.spi.descriptor.java;
 import java.io.Serializable;
 import java.util.Comparator;
 
+import javax.persistence.metamodel.Type;
+
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
@@ -18,13 +20,18 @@ import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
  *
  * @author Steve Ebersole
  */
-public interface JavaTypeDescriptor<T> extends Serializable {
+public interface JavaTypeDescriptor<T> extends Type<T>, Serializable {
 	/**
 	 * Retrieve the Java type handled here.
 	 *
 	 * @return The Java type.
 	 */
 	Class<T> getJavaTypeClass();
+
+	@Override
+	default Class<T> getJavaType() {
+		return getJavaTypeClass();
+	}
 
 	/**
 	 * Retrieve the mutability plan for this Java type.

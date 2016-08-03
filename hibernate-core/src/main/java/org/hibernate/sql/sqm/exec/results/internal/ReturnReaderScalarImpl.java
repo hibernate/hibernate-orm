@@ -38,12 +38,12 @@ public class ReturnReaderScalarImpl implements ReturnReader {
 
 	@Override
 	public Class getReturnedJavaType() {
-		return returnType.getReturnedClass();
+		return returnType.getJavaTypeDescriptor().getJavaTypeClass();
 	}
 
 	@Override
 	public int getNumberOfColumnsRead(SessionFactoryImplementor sessionFactory) {
-		return returnType.sqlTypes( sessionFactory ).length;
+		return returnType.getColumnSpan();
 	}
 
 	@Override

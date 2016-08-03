@@ -191,6 +191,8 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 					persisterCreationContext
 			);
 			collectionPersisterMap.put( model.getRole(), persister );
+
+			// todo : this should use whatever org.hibernate.persister.collection.spi.ImprovedCollectionPersister.getIndexDescriptor() eventually becomes
 			Type indexType = persister.getIndexType();
 			if ( indexType != null && indexType.isAssociationType() && !indexType.isAnyType() ) {
 				String entityName = ( (AssociationType) indexType ).getAssociatedEntityName( getSessionFactory() );

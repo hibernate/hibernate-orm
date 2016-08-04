@@ -54,7 +54,7 @@ allprojects {
 }
 
 ext {
-	hibernateTargetVersion = '5.2.2.Final'
+	hibernateTargetVersion = '5.2.3-SNAPSHOT'
 	expectedGradleVersion = '3.0-milestone-1'
 	baselineJavaVersion = '1.8'
 

@@ -91,7 +91,10 @@ public class PersistentAttributesEnhancer extends Enhancer {
 			}
 		}
 		// HHH-10646 Add fields inherited from @MappedSuperclass
-		persistentFieldList.addAll( collectInheritPersistentFields( managedCtClass ) );
+		// HHH-10981 There is no need to do it for @MappedSuperclass
+		if ( !enhancementContext.isMappedSuperclassClass( managedCtClass ) ) {
+			persistentFieldList.addAll( collectInheritPersistentFields( managedCtClass ) );
+		}
 
 		CtField[] orderedFields = enhancementContext.order( persistentFieldList.toArray( new CtField[0] ) );
 		log.debugf( "Persistent fields for entity %s: %s", managedCtClass.getName(), Arrays.toString( orderedFields ));

@@ -225,7 +225,11 @@ public class EntityEnhancer extends PersistentAttributesEnhancer {
 		}
 
 		// HHH-10646 Add fields inherited from @MappedSuperclass
-		collectionList.addAll( collectInheritCollectionFields( managedCtClass ) );
+		// HHH-10981 There is no need to do it for @MappedSuperclass
+		if ( !enhancementContext.isMappedSuperclassClass( managedCtClass ) ) {
+			collectionList.addAll( collectInheritCollectionFields( managedCtClass ) );
+		}
+
 		return collectionList;
 	}
 

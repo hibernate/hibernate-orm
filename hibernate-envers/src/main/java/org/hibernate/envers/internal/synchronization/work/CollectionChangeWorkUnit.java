@@ -13,6 +13,8 @@ import java.util.Map;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.internal.entities.EntityConfiguration;
+import org.hibernate.envers.internal.entities.mapper.PropertyMapper;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -45,22 +47,14 @@ public class CollectionChangeWorkUnit extends AbstractAuditWorkUnit implements A
 	public Map<String, Object> generateData(Object revisionData) {
 		fillDataWithId( data, revisionData );
 		final Map<String, Object> preGenerateData = new HashMap<>( data );
-		enversService.getEntitiesConfigurations().get( getEntityName() ).getPropertyMapper().mapToMapFromEntity(
-				sessionImplementor,
-				data,
-				entity,
-				null
-		);
-		enversService.getEntitiesConfigurations().get( getEntityName() ).getPropertyMapper().mapModifiedFlagsToMapFromEntity(
-				sessionImplementor,
-				data,
-				entity,
-				entity
-		);
-		enversService.getEntitiesConfigurations().get( getEntityName() ).getPropertyMapper().mapModifiedFlagsToMapForCollectionChange(
-				collectionPropertyName,
-				data
-		);
+
+		final EntityConfiguration entityConfig = enversService.getEntitiesConfigurations().get( getEntityName() );
+		final PropertyMapper propertyMapper = entityConfig.getPropertyMapper();
+		// HHH-7681 - Use entity as 'oldObj' so fake bidirectional non-insertable fields are tracked properly.
+		propertyMapper.mapToMapFromEntity( sessionImplementor, data, entity, entity );
+		propertyMapper.mapModifiedFlagsToMapFromEntity( sessionImplementor, data, entity, entity );
+		propertyMapper.mapModifiedFlagsToMapForCollectionChange( collectionPropertyName, data );
+
 		data.putAll( preGenerateData );
 		return data;
 	}

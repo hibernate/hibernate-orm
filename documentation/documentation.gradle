@@ -290,9 +290,6 @@ task renderMappingGuide(type: AsciidoctorTask, group: 'Documentation') {
     }
 }
 
-final String[] versionComponents = version.split( '\\.' );
-final String majorMinorVersion = versionComponents[0] + '.' + versionComponents[1];
-
 // User Guide ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {
@@ -302,7 +299,7 @@ task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {
     backends "html5"
     separateOutputDirs false
     options logDocuments: true
-    attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true, stylesheet: "css/hibernate.css", majorMinorVersion: majorMinorVersion
+    attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true, stylesheet: "css/hibernate.css", majorMinorVersion: rootProject.hibernateMajorMinorVersion
     resources {
         from('src/main/asciidoc/userguide/') {
             include 'images/**'
@@ -325,7 +322,7 @@ task renderIntegrationGuide(type: AsciidoctorTask, group: 'Documentation') {
 	backends "html5"
 	separateOutputDirs false
 	options logDocuments: true
-	attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true, stylesheet: "css/hibernate.css", majorMinorVersion: majorMinorVersion
+	attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true, stylesheet: "css/hibernate.css", majorMinorVersion: rootProject.hibernateMajorMinorVersion
 	resources {
 		from('src/main/asciidoc/integrationguide/') {
 			include 'images/**'

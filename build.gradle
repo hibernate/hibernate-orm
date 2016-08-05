@@ -59,6 +59,11 @@ ext {
 	baselineJavaVersion = '1.8'
 
     osgiExportVersion = hibernateTargetVersion.replaceAll( '-SNAPSHOT', '.SNAPSHOT' )
+
+	final String[] versionComponents = hibernateTargetVersion.split( '\\.' );
+	hibernateFullVersion = hibernateTargetVersion
+	hibernateMajorMinorVersion = versionComponents[0] + '.' + versionComponents[1]
+	hibernateMajorVersion = versionComponents[0]
 }
 
 idea {

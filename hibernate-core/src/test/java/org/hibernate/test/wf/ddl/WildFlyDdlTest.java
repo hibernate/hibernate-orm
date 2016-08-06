@@ -63,7 +63,7 @@ public class WildFlyDdlTest {
 		final PersistenceDescriptor pd = Descriptors.create( PersistenceDescriptor.class )
 				.version( "2.1" )
 				.createPersistenceUnit().name( PERSISTENCE_UNIT_NAME ).transactionType( PersistenceUnitTransactionType._JTA )
-				.nonJtaDataSource( "java:jboss/datasources/ExampleDS" )
+				.jtaDataSource( "java:jboss/datasources/ExampleDS" )
 				.clazz( WildFlyDdlEntity.class.getName() )
 				.excludeUnlistedClasses( true )
 				.getOrCreateProperties().createProperty().name( "jboss.as.jpa.providerModule" ).value( "org.hibernate:5.2" ).up().up()

@@ -32,6 +32,7 @@ public class StandardJtaPlatformResolver implements JtaPlatformResolver {
 		// Initially look for a JtaPlatformProvider
 		for ( JtaPlatformProvider provider : classLoaderService.loadJavaServices( JtaPlatformProvider.class ) ) {
 			final JtaPlatform providedPlatform = provider.getProvidedJtaPlatform();
+			log.tracef( "Located JtaPlatformProvider [%s] provided JtaPlaform : %s", provider, providedPlatform );
 			if ( providedPlatform!= null ) {
 				return providedPlatform;
 			}

@@ -248,10 +248,10 @@ subprojects { subProject ->
 			into sourceSets.test.output.classesDir
 		}
 		copy {
-			ext.targetDir = file( "${buildDir}/resources/test" )
 			from file('src/test/resources')
-			into targetDir
-			filter( ReplaceTokens, tokens: dbBundle[db] );
+			into file( "${buildDir}/resources/test" )
+			exclude 'src/test/resources/arquillian.xml'
+			filter( ReplaceTokens, tokens: dbBundle[db] )
 		}
 	} )
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -29,7 +29,16 @@ ext {
 
     moduleXmlStagingDir = file( "$buildDir/tmp/modules" )
 
-    wildFlyInstallDir = file( "${rootProject.buildDir}/" )
+    wildFlyInstallDirBase = rootProject.buildDir
+    wildFlyInstallDir = "${rootProject.buildDir.absolutePath}/wildfly-${wildflyVersion}"
+
+    expandedModuleProperties = [
+            slot: slot,
+            minorSlot: minorSlot,
+            version: rootProject.hibernateTargetVersion,
+            wildflyVersion: wildflyVersion,
+            javassistVersion: javassistVersion
+    ];
 }
 
 mavenPom {
@@ -43,11 +52,14 @@ configurations {
     }
 
     wildflyDist
+
+    javassist
 }
 
 dependencies {
     jipijapa "org.wildfly:jipijapa-hibernate5:${wildflyVersion}"
     wildflyDist "org.wildfly:wildfly-dist:${wildflyVersion}@zip"
+    javassist libraries.javassist
 
     testCompile project( ":hibernate-core" )
     testCompile libraries.junit
@@ -65,8 +77,10 @@ dependencies {
 task copyAndExpandModuleXml(type: Copy) {
     description 'Performs a copy of the XML files defining the module into a staging directory for the purpose of performing token-replacement'
 
+    inputs.properties( expandedModuleProperties as Map )
+
     into moduleXmlStagingDir
-    expand( slot: slot, minorSlot: minorSlot, version: rootProject.hibernateTargetVersion, wildflyVersion: wildflyVersion )
+    expand( expandedModuleProperties as Map )
 
     into( 'org/hibernate/' + slot ) {
         from 'src/main/modules/org/hibernate/core'
@@ -103,6 +117,9 @@ task createModulesZip(type: Zip, dependsOn: [copyAndExpandModuleXml]) {
     into( 'org/hibernate/' + slot ) {
         from parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
         from parent.project( 'hibernate-envers' ).configurations.archives.allArtifacts.files
+
+        // also need Javassist's jar
+        from configurations.javassist
     }
 
     into( 'org/hibernate/infinispan/' + slot ) {
@@ -143,21 +160,21 @@ task installWildFly(type: Copy) {
     from {
         configurations.wildflyDist.collect { zipTree(it) }
     }
-    into wildFlyInstallDir
+    into wildFlyInstallDirBase
 }
 
 task installHibernateModule( type:Copy, dependsOn: [createModulesZip, installWildFly]) {
     duplicatesStrategy DuplicatesStrategy.EXCLUDE
     from zipTree( createModulesZip.archivePath )
-    into "${wildFlyInstallDir}/wildfly-${wildflyVersion}/modules"
+    into "${wildFlyInstallDir}/modules"
 }
 
-task prepareWildFlyForTests( dependsOn: [installWildFly, installHibernateModule])
+task prepareWildFlyForTests( dependsOn: [installWildFly, installHibernateModule] )
 
 test.dependsOn prepareWildFlyForTests
 
 processTestResources {
-    expand( buildDir: wildFlyInstallDir, wildflyVersion: wildflyVersion )
+    expand( wildFlyInstallDir: wildFlyInstallDir, arquillianDeploymentExportDir: "${rootProject.buildDir.absolutePath}/arquillian-deployments" )
 }
 
 

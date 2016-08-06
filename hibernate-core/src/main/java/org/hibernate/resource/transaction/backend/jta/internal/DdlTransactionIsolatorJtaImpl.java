@@ -10,11 +10,14 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
+import javax.transaction.TransactionManager;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
+
+import org.jboss.logging.Logger;
 
 /**
  * DdlExecutor for use in JTA environments
@@ -22,6 +25,8 @@ import org.hibernate.tool.schema.internal.exec.JdbcContext;
  * @author Steve Ebersole
  */
 public class DdlTransactionIsolatorJtaImpl implements DdlTransactionIsolator {
+	private static final Logger log = Logger.getLogger( DdlTransactionIsolatorJtaImpl.class );
+
 	private final JdbcContext jdbcContext;
 
 	private Transaction suspendedTransaction;
@@ -39,7 +44,20 @@ public class DdlTransactionIsolatorJtaImpl implements DdlTransactionIsolator {
 	@Override
 	public void prepare() {
 		try {
-			this.suspendedTransaction = jdbcContext.getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().suspend();
+			final JtaPlatform jtaPlatform = jdbcContext.getServiceRegistry().getService( JtaPlatform.class );
+			log.tracef( "DdlTransactionIsolatorJtaImpl#prepare: JtaPlatform -> %s", jtaPlatform );
+
+			final TransactionManager tm = jtaPlatform.retrieveTransactionManager();
+			if ( tm == null ) {
+				throw new HibernateException(
+						"DdlTransactionIsolatorJtaImpl could not locate TransactionManager to suspend any current transaction; " +
+								"base JtaPlatform impl (" + jtaPlatform.toString() + ")?"
+				);
+			}
+			log.tracef( "DdlTransactionIsolatorJtaImpl#prepare: TransactionManager -> %s", tm );
+
+			this.suspendedTransaction = tm.suspend();
+			log.tracef( "DdlTransactionIsolatorJtaImpl#prepare: suspended Transaction -> %s", this.suspendedTransaction );
 		}
 		catch (SystemException e) {
 			throw new HibernateException( "Unable to suspend current JTA transaction in preparation for DDL execution" );

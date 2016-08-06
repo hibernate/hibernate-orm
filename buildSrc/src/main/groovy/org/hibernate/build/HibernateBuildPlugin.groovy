@@ -10,13 +10,22 @@ import org.gradle.api.GradleException
 import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.api.tasks.testing.Test
+
+import org.hibernate.build.gradle.testing.database.DatabaseProfile
+import org.hibernate.build.gradle.testing.database.DatabaseProfilePlugin
+import org.hibernate.build.gradle.testing.matrix.MatrixTestingPlugin
 
 /**
  * @author Steve Ebersole
  */
 class HibernateBuildPlugin implements Plugin<Project> {
+	private static final Logger log = Logging.getLogger( MatrixTestingPlugin.class);
+
 	@Override
 	void apply(Project project) {
 		if ( !JavaVersion.current().java8Compatible ) {
@@ -27,6 +36,35 @@ class HibernateBuildPlugin implements Plugin<Project> {
 
 		project.afterEvaluate {
 			applyPublishing( publishingExtension, project )
+
+			applyMatrixTestTaskDependencies( project )
+		}
+	}
+
+	def applyMatrixTestTaskDependencies(Project project) {
+		final MatrixTestingPlugin matrixTestingPlugin = project.plugins.findPlugin( MatrixTestingPlugin )
+		if ( matrixTestingPlugin == null ) {
+			// matrix testing was not applied on this project
+			return;
+		}
+
+		final DatabaseProfilePlugin databaseProfilePlugin = project.rootProject.plugins.apply( DatabaseProfilePlugin );
+		if ( databaseProfilePlugin.databaseProfiles == null || databaseProfilePlugin.databaseProfiles.isEmpty() ) {
+			// no db profiles defined -> nothing to do
+			return;
+		}
+
+		log.debug( "Project [${project.name}] applied matrix-testing and had db-profiles; checking test task for dependencies" )
+
+		// for each db profile, find its execution task and transfer any dependencies from test to it
+		Test testTask = project.tasks.test
+		if ( testTask.dependsOn.isEmpty() ) {
+			return;
+		}
+
+		databaseProfilePlugin.databaseProfiles.each { DatabaseProfile profile ->
+			log.debug( "db-profile [${profile.name}] on project [${project.name}] : transfering dependencies from test task -> ${testTask.dependsOn}" )
+			project.tasks.getByPath( "matrix_${profile.name}" ).dependsOn( testTask.dependsOn )
 		}
 	}
 

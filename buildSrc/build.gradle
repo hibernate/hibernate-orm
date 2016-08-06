@@ -25,4 +25,5 @@ dependencies {
 	compile localGroovy()
 
 	compile 'org.hibernate.build.gradle:gradle-animalSniffer-plugin:1.0.1.Final'
+	compile 'org.hibernate.build.gradle:hibernate-matrix-testing:2.0.0-SNAPSHOT'
 }

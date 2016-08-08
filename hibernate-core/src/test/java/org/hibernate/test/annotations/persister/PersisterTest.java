@@ -51,6 +51,19 @@ public class PersisterTest extends BaseCoreFunctionalTestCase {
 		assertEquals( "Incorrect Persister class for " + persistentClass.getMappedClass(),
 				SingleTableEntityPersister.class, persistentClass.getEntityPersisterClass() );
 	}
+	
+	@Test
+	public void testSchemaNotReplacedInCustomSQL() throws Exception {
+		PersistentClass persistentClass = configuration().getClassMapping( CardWithCustomSQL.class.getName() );
+		assertEquals( "Incorrect custom SQL for insert" + persistentClass.getMappedClass(),
+				"INSERT INTO {h-schema}FOO", persistentClass.getCustomSQLInsert() );
+		
+		assertEquals( "Incorrect custom SQL for delete" + persistentClass.getMappedClass(),
+				"DELETE FROM {h-schema}FOO", persistentClass.getCustomSQLDelete() );
+		
+		assertEquals( "Incorrect custom SQL " + persistentClass.getMappedClass(),
+				"UPDATE {h-schema}FOO", persistentClass.getCustomSQLUpdate() );
+	}
 
 	@Test
 	public void testCollectionPersisterSpecified() throws Exception {
@@ -64,7 +77,8 @@ public class PersisterTest extends BaseCoreFunctionalTestCase {
 	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Card.class,
-				Deck.class
+				Deck.class,
+				CardWithCustomSQL.class
 		};
 	}
 }

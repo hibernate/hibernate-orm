@@ -17,7 +17,7 @@ public class SQLCustomOperationQueryParser extends SQLQueryParser{
 	
 	@Override
 	public String process() {
-		return substituteBrackets( originalQueryString );
+		return substituteBrackets( getOriginalQueryString() );
 	}
 
 }

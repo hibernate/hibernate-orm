@@ -7,12 +7,9 @@ import java.io.Serializable;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 
 import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLUpdate;
 
@@ -28,8 +25,4 @@ import org.hibernate.annotations.SQLUpdate;
 public class CardWithCustomSQL implements Serializable {
 	@Id
 	public Integer id;
-
-	@ManyToOne()
-	@JoinColumn()
-	public Deck deck;
 }

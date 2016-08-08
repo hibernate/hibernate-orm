@@ -61,8 +61,7 @@ public class ManualFlushConversationalPersistenceContextExtendedTest {
 	@TestForIssue( jiraKey = "HHH-11019" )
 	public void testIt() throws Exception {
 		Event event = eventManager.saveEvent( "Untold" );
-		//This is going to be fixed by HHH-11019 since we could rely on FlushMode to implement long conversations properly
-		assertEquals(1, ((Number) em.createNativeQuery( "select count(*) from Event" ).getSingleResult()).intValue());
+		assertEquals(0, ((Number) em.createNativeQuery( "select count(*) from Event" ).getSingleResult()).intValue());
 		eventManager.endConversation();
 		assertEquals(1, ((Number) em.createNativeQuery( "select count(*) from Event" ).getSingleResult()).intValue());
 	}

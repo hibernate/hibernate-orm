@@ -138,7 +138,7 @@ public final class ForeignKeys {
 				}
 				else {
 					//unwrap it
-					object = li.getImplementation();
+					object = li.getImplementation( session );
 				}
 			}
 

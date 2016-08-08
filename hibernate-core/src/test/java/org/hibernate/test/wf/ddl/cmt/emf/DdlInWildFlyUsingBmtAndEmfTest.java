@@ -4,16 +4,14 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.wf.ddl;
+package org.hibernate.test.wf.ddl.cmt.emf;
 
 import java.net.URL;
 import java.util.Collections;
-import javax.annotation.Resource;
 import javax.naming.InitialContext;
 import javax.persistence.EntityManagerFactory;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
-import javax.transaction.UserTransaction;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -23,6 +21,7 @@ import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
 import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 
+import org.hibernate.test.wf.ddl.WildFlyDdlEntity;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -42,27 +41,28 @@ import static org.junit.Assert.assertNotNull;
  * @author Steve Ebersole
  */
 @RunWith( Arquillian.class )
-public class WildFlyDdlTest {
+public class DdlInWildFlyUsingBmtAndEmfTest {
 
 	public static final String PERSISTENCE_XML_RESOURCE_NAME = "pu-wf-ddl/persistence.xml";
 	public static final String PERSISTENCE_UNIT_NAME = "pu-wf-ddl";
 
 	@Deployment
 	public static WebArchive buildDeployment() {
-		WebArchive jar = ShrinkWrap.create( WebArchive.class )
+		WebArchive war = ShrinkWrap.create( WebArchive.class )
 				.setManifest( "org/hibernate/test/wf/ddl/manifest.mf" )
 				.addClass( WildFlyDdlEntity.class )
 //				.addAsManifestResource( EmptyAsset.INSTANCE, "beans.xml")
 				.addAsResource( new StringAsset( persistenceXml().exportAsString() ), PERSISTENCE_XML_RESOURCE_NAME )
 				.addAsResource( "org/hibernate/test/wf/ddl/log4j.properties", "log4j.properties" );
-		System.out.println( jar.toString(true) );
-		return jar;
+		System.out.println( war.toString(true) );
+		return war;
 	}
 
 	private static PersistenceDescriptor persistenceXml() {
 		final PersistenceDescriptor pd = Descriptors.create( PersistenceDescriptor.class )
 				.version( "2.1" )
-				.createPersistenceUnit().name( PERSISTENCE_UNIT_NAME ).transactionType( PersistenceUnitTransactionType._JTA )
+				.createPersistenceUnit().name( PERSISTENCE_UNIT_NAME )
+				.transactionType( PersistenceUnitTransactionType._JTA )
 				.jtaDataSource( "java:jboss/datasources/ExampleDS" )
 				.clazz( WildFlyDdlEntity.class.getName() )
 				.excludeUnlistedClasses( true )

@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.wf.ddl;
+package org.hibernate.test.wf.ddl.cmt.sf;
 
 /**
  * @author Andrea Boriero
@@ -19,15 +19,17 @@ import javax.ejb.TransactionManagementType;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 
+import org.hibernate.test.wf.ddl.WildFlyDdlEntity;
+
 
 @Stateful
 @TransactionManagement(TransactionManagementType.CONTAINER)
-public class SFSBHibernateSessionFactory {
+public class CmtSfStatefulBean {
 
 	private static SessionFactory sessionFactory;
 
 	@TransactionAttribute(TransactionAttributeType.NEVER)
-	public void setupConfig() {
+	public void start() {
 		try {
 			Configuration configuration = new Configuration();
 			configuration = configuration.configure( "hibernate.cfg.xml" );
@@ -41,7 +43,8 @@ public class SFSBHibernateSessionFactory {
 		}
 	}
 
-	public void cleanup() {
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void stop() {
 		sessionFactory.close();
 	}
 }

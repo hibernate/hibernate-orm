@@ -30,7 +30,7 @@ public class SQLQueryParser {
 	private static final String SCHEMA_PLACEHOLDER = "h-schema";
 
 	private final SessionFactoryImplementor factory;
-	protected final String originalQueryString;
+	private final String originalQueryString;
 	private final ParserContext context;
 
 	private final Map namedParameters = new HashMap();
@@ -58,6 +58,10 @@ public class SQLQueryParser {
 
 	public boolean queryHasAliases() {
 		return aliasesFound>0;
+	}
+
+	protected String getOriginalQueryString() {
+		return originalQueryString;
 	}
 
 	public String process() {

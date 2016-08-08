@@ -95,6 +95,8 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
+import org.hibernate.loader.custom.sql.SQLCustomOperationQueryParser;
+import org.hibernate.loader.custom.sql.SQLQueryParser;
 import org.hibernate.loader.entity.BatchingEntityLoaderBuilder;
 import org.hibernate.loader.entity.CascadeEntityLoader;
 import org.hibernate.loader.entity.EntityLoader;
@@ -3970,16 +3972,16 @@ public abstract class AbstractEntityPersister
 		for ( int j = 0; j < joinSpan; j++ ) {
 			sqlInsertStrings[j] = customSQLInsert[j] == null ?
 					generateInsertString( getPropertyInsertability(), j ) :
-					customSQLInsert[j];
+						parseCustomSQLQuery(customSQLInsert[j]);
 			sqlUpdateStrings[j] = customSQLUpdate[j] == null ?
 					generateUpdateString( getPropertyUpdateability(), j, false ) :
-					customSQLUpdate[j];
+						parseCustomSQLQuery(customSQLUpdate[j]);
 			sqlLazyUpdateStrings[j] = customSQLUpdate[j] == null ?
 					generateUpdateString( getNonLazyPropertyUpdateability(), j, false ) :
-					customSQLUpdate[j];
+						parseCustomSQLQuery(customSQLUpdate[j]);
 			sqlDeleteStrings[j] = customSQLDelete[j] == null ?
 					generateDeleteString( j ) :
-					customSQLDelete[j];
+						parseCustomSQLQuery(customSQLDelete[j]);
 		}
 
 		tableHasColumns = new boolean[joinSpan];
@@ -4009,6 +4011,11 @@ public abstract class AbstractEntityPersister
 		}
 
 		logStaticSQL();
+	}
+	
+	private String parseCustomSQLQuery(String sql) {
+		SQLQueryParser queryParser = new SQLCustomOperationQueryParser(sql, getFactory());
+		return queryParser.process();
 	}
 
 	public final void postInstantiate() throws MappingException {

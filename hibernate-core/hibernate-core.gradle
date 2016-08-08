@@ -227,6 +227,11 @@ if ( JavaVersion.current().isJava9Compatible() ) {
         exclude 'org/hibernate/jpa/test/enhancement/runtime/JpaRuntimeEnhancementTest.class'
         exclude 'org/hibernate/test/bytecode/enhancement/EnhancerTest.class'
         exclude 'org/hibernate/test/bytecode/enhancement/basic/BasicInSessionTest.class'
+
+        // also, any tests using Arquillian for in-container testing with WildFly currently
+        // need to be excluded because WildFly does not yet work with Java 9
+        exclude 'org/hibernate/test/wf/ddl/**'
+        exclude 'org/hibernate/jpa/test/cdi/**'
     }
 }
 

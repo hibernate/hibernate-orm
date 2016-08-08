@@ -70,7 +70,6 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.PersistenceContext.NaturalIdHelper;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
-import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
@@ -87,6 +86,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
+import org.hibernate.loader.custom.sql.SQLQueryParser;
 import org.hibernate.loader.entity.BatchingEntityLoaderBuilder;
 import org.hibernate.loader.entity.CascadeEntityLoader;
 import org.hibernate.loader.entity.DynamicBatchingEntityLoaderBuilder;
@@ -3927,16 +3927,16 @@ public abstract class AbstractEntityPersister
 		for ( int j = 0; j < joinSpan; j++ ) {
 			sqlInsertStrings[j] = customSQLInsert[j] == null ?
 					generateInsertString( getPropertyInsertability(), j ) :
-					customSQLInsert[j];
+						substituteBrackets( customSQLInsert[j]);
 			sqlUpdateStrings[j] = customSQLUpdate[j] == null ?
 					generateUpdateString( getPropertyUpdateability(), j, false ) :
-					customSQLUpdate[j];
+						substituteBrackets( customSQLUpdate[j]);
 			sqlLazyUpdateStrings[j] = customSQLUpdate[j] == null ?
 					generateUpdateString( getNonLazyPropertyUpdateability(), j, false ) :
-					customSQLUpdate[j];
+						substituteBrackets( customSQLUpdate[j]);
 			sqlDeleteStrings[j] = customSQLDelete[j] == null ?
 					generateDeleteString( j ) :
-					customSQLDelete[j];
+						substituteBrackets( customSQLDelete[j]);
 		}
 
 		tableHasColumns = new boolean[joinSpan];
@@ -3959,13 +3959,17 @@ public abstract class AbstractEntityPersister
 					.getInsertGeneratedIdentifierDelegate( this, getFactory().getDialect(), useGetGeneratedKeys() );
 			sqlIdentityInsertString = customSQLInsert[0] == null
 					? generateIdentityInsertString( getPropertyInsertability() )
-					: customSQLInsert[0];
+					: substituteBrackets( customSQLInsert[0] );
 		}
 		else {
 			sqlIdentityInsertString = null;
 		}
 
 		logStaticSQL();
+	}
+
+	private String substituteBrackets(String sql) {
+		return new SubstituteBracketSQLQueryParser( sql, getFactory() ).process();
 	}
 
 	public final void postInstantiate() throws MappingException {
@@ -5559,5 +5563,15 @@ public abstract class AbstractEntityPersister
 //		};
 	}
 
+	private static class SubstituteBracketSQLQueryParser extends SQLQueryParser {
 
+		SubstituteBracketSQLQueryParser(String queryString, SessionFactoryImplementor factory) {
+			super( queryString, null, factory );
+		}
+
+		@Override
+		public String process() {
+			return substituteBrackets( getOriginalQueryString() );
+		}
+	}
 }

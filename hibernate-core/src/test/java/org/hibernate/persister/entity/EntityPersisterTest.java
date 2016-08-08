@@ -21,14 +21,14 @@ public class EntityPersisterTest extends BaseCoreFunctionalTestCase {
 		String insertQuery = persister.getSQLInsertStrings()[0];
 		String updateQuery = persister.getSQLUpdateStrings()[0];
 		String deleteQuery = persister.getSQLDeleteStrings()[0];
-		assertEquals( "Incorrect custom SQL for insert" + className,
-				"INSERT INTO {h-schema}FOO", insertQuery );
+		assertEquals( "Incorrect custom SQL for insert in  Entity: " + className,
+				"INSERT INTO FOO", insertQuery );
 		
-		assertEquals( "Incorrect custom SQL for delete" + className,
-				"DELETE FROM {h-schema}FOO", deleteQuery );
+		assertEquals( "Incorrect custom SQL for delete in  Entity: " + className,
+				"DELETE FROM FOO", deleteQuery );
 		
-		assertEquals( "Incorrect custom SQL " + className,
-				"UPDATE {h-schema}FOO", updateQuery );
+		assertEquals( "Incorrect custom SQL for update in  Entity: " + className,
+				"UPDATE FOO", updateQuery );
 	}
 	
 	@Override

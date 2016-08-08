@@ -30,7 +30,7 @@ public class SQLQueryParser {
 	private static final String SCHEMA_PLACEHOLDER = "h-schema";
 
 	private final SessionFactoryImplementor factory;
-	private final String originalQueryString;
+	protected final String originalQueryString;
 	private final ParserContext context;
 
 	private final Map namedParameters = new HashMap();
@@ -68,7 +68,7 @@ public class SQLQueryParser {
 
 	// TODO: should "record" how many properties we have reffered to - and if we 
 	//       don't get'em'all we throw an exception! Way better than trial and error ;)
-	private String substituteBrackets(String sqlQuery) throws QueryException {
+	protected String substituteBrackets(String sqlQuery) throws QueryException {
 
 		StringBuilder result = new StringBuilder( sqlQuery.length() + 20 );
 		int left, right;

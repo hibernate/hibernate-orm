@@ -34,6 +34,7 @@ public class TableInformationImpl implements TableInformation {
 	private PrimaryKeyInformation primaryKey;
 	private Map<Identifier, ForeignKeyInformation> foreignKeys;
 	private Map<Identifier, IndexInformation> indexes;
+	private Map<Identifier, ColumnInformation> columns;
 
 	private boolean wasPrimaryKeyLoaded = false; // to avoid multiple db reads since primary key can be null.
 
@@ -65,7 +66,13 @@ public class TableInformationImpl implements TableInformation {
 
 	@Override
 	public ColumnInformation getColumn(Identifier columnIdentifier) {
-		return extractor.getColumn( this, columnIdentifier );
+		if ( columns == null ) {
+			columns = extractor.getColumns( this );
+		}
+		if ( columnIdentifier.isQuoted() ) {
+			return columns.get( new Identifier( columnIdentifier.getText(), false ) );
+		}
+		return columns.get( columnIdentifier );
 	}
 
 	@Override

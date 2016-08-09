@@ -6,6 +6,8 @@
  */
 package org.hibernate.tool.schema.extract.spi;
 
+import java.util.Map;
+
 import org.hibernate.Incubating;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.tool.schema.extract.internal.TableInformationImpl;
@@ -56,15 +58,14 @@ public interface InformationExtractor {
 	TableInformation getTable(Identifier catalog, Identifier schema, Identifier tableName);
 
 	/**
-	 * Return information about column for the given table.  Typically called from the TableInformation itself
+	 * Return information about columns for the given table.  Typically called from the TableInformation itself
 	 * as part of on-demand initialization of its state.
 	 *
 	 * @param tableInformation table info for the matching table
-	 * @param columnIdentifier The column identifier for which to locate column
 	 *
-	 * @return The extracted column information
+	 * @return A Map where the key is the column {@link Identifier} and the value the corresponding {@link ColumnInformation}
 	 */
-	ColumnInformation getColumn(TableInformation tableInformation, Identifier columnIdentifier);
+	Map<Identifier, ColumnInformation> getColumns(TableInformation tableInformation);
 
 	/**
 	 * Extract information about the given table's primary key.

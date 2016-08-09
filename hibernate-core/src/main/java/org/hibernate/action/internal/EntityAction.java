@@ -142,6 +142,7 @@ public abstract class EntityAction
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public int compareTo(Object other) {
 		final EntityAction action = (EntityAction) other;
 		//sort first by entity name
@@ -151,7 +152,7 @@ public abstract class EntityAction
 		}
 		else {
 			//then by id
-			return persister.getIdentifierType().compare( id, action.id );
+			return persister.getIdentifierType().getComparator().compare( id, action.id );
 		}
 	}
 

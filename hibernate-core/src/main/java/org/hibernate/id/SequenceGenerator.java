@@ -141,7 +141,9 @@ public class SequenceGenerator
 	}
 
 	protected IntegralDataTypeHolder buildHolder() {
-		return IdentifierGeneratorHelper.getIntegralDataTypeHolder( identifierType.getReturnedClass() );
+		return IdentifierGeneratorHelper.getIntegralDataTypeHolder(
+				identifierType.getJavaTypeDescriptor().getJavaType()
+		);
 	}
 
 	@Override

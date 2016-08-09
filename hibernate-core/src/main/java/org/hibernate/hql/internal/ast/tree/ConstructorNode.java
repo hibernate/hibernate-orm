@@ -189,7 +189,7 @@ public class ConstructorNode extends SelectExpressionList implements AggregatedS
 		for ( int j = 0; j < constructorArgumentTypes.length; j++ ) {
 			params[j] = constructorArgumentTypes[j] instanceof PrimitiveType
 					? ( (PrimitiveType) constructorArgumentTypes[j] ).getPrimitiveClass().getName()
-					: constructorArgumentTypes[j].getReturnedClass().getName();
+					: constructorArgumentTypes[j].getJavaTypeDescriptor().getJavaType().getName();
 		}
 		String formattedList = params.length == 0 ? "no arguments constructor" : StringHelper.join( ", ", params );
 		return String.format(

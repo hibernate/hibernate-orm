@@ -63,7 +63,7 @@ public class OrdinalParameterDescriptor implements QueryParameter {
 
 	@Override
 	public Class getParameterType() {
-		return expectedType == null ? null : expectedType.getReturnedClass();
+		return expectedType == null ? null : expectedType.getJavaTypeDescriptor().getJavaType();
 	}
 
 	@Override

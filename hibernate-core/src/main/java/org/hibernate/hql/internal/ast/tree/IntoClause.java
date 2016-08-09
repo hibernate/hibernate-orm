@@ -222,6 +222,7 @@ public class IntoClause extends HqlSqlWalkerNode implements DisplayableNode {
 	 *
 	 * @return True if they are assignment compatible.
 	 */
+	@SuppressWarnings("unchecked")
 	private boolean areCompatible(Type target, Type source) {
 		if ( target.equals( source ) ) {
 			// if the types report logical equivalence, return true...
@@ -230,7 +231,7 @@ public class IntoClause extends HqlSqlWalkerNode implements DisplayableNode {
 
 		// otherwise, doAfterTransactionCompletion a "deep equivalence" check...
 
-		if ( !target.getReturnedClass().isAssignableFrom( source.getReturnedClass() ) ) {
+		if ( !target.getJavaTypeDescriptor().getJavaType().isAssignableFrom( source.getJavaTypeDescriptor().getJavaType() ) ) {
 			return false;
 		}
 

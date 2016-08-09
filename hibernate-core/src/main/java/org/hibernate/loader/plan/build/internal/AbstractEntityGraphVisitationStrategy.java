@@ -153,7 +153,7 @@ public abstract class AbstractEntityGraphVisitationStrategy
 			attributeNode = attributeMap.get( attrName );
 			//here we need to check if there is a subgraph (or sub key graph if it is an indexed attribute )
 			Map<Class, Subgraph> subGraphs = attributeNode.getSubgraphs();
-			Class javaType = attributeDefinition.getType().getReturnedClass();
+			Class javaType = attributeDefinition.getType().getJavaTypeDescriptor().getJavaType();
 			if ( !subGraphs.isEmpty() && subGraphs.containsKey( javaType ) ) {
 				subGraphNode = (GraphNodeImplementor) subGraphs.get( javaType );
 			}
@@ -179,7 +179,7 @@ public abstract class AbstractEntityGraphVisitationStrategy
 		AttributeNodeImplementor attributeNode = attributeStack.peekLast();
 		GraphNodeImplementor subGraphNode = NON_EXIST_SUBGRAPH_NODE;
 		Map<Class, Subgraph> subGraphs = attributeNode.getSubgraphs();
-		Class javaType = elementDefinition.getType().getReturnedClass();
+		Class javaType = elementDefinition.getType().getJavaTypeDescriptor().getJavaType();
 		if ( !subGraphs.isEmpty() && subGraphs.containsKey( javaType ) ) {
 			subGraphNode = (GraphNodeImplementor) subGraphs.get( javaType );
 		}
@@ -200,7 +200,7 @@ public abstract class AbstractEntityGraphVisitationStrategy
 		AttributeNodeImplementor attributeNode = attributeStack.peekLast();
 		GraphNodeImplementor subGraphNode = NON_EXIST_SUBGRAPH_NODE;
 		Map<Class, Subgraph> subGraphs = attributeNode.getKeySubgraphs();
-		Class javaType = indexDefinition.getType().getReturnedClass();
+		Class javaType = indexDefinition.getType().getJavaTypeDescriptor().getJavaType();
 		if ( !subGraphs.isEmpty() && subGraphs.containsKey( javaType ) ) {
 			subGraphNode = (GraphNodeImplementor) subGraphs.get( javaType );
 		}

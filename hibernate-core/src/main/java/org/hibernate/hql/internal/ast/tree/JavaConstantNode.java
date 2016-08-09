@@ -65,7 +65,7 @@ public class JavaConstantNode extends Node implements ExpectedTypeAwareNode, Ses
 	public String getRenderText(SessionFactoryImplementor sessionFactory) {
 		final Type type = expectedType == null
 				? heuristicType
-				: Number.class.isAssignableFrom( heuristicType.getReturnedClass() )
+				: Number.class.isAssignableFrom( heuristicType.getJavaTypeDescriptor().getJavaType() )
 				? heuristicType
 				: expectedType;
 		try {

@@ -31,7 +31,7 @@ public class Array extends List {
 			Type elementType = getElement().getType();
 			return isPrimitiveArray()
 					? ( (PrimitiveType) elementType ).getPrimitiveClass()
-					: elementType.getReturnedClass();
+					: elementType.getJavaTypeDescriptor().getJavaType();
 		}
 		else {
 			try {

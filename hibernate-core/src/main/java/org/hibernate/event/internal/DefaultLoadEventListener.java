@@ -81,7 +81,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			throw new HibernateException( "Unable to locate persister: " + event.getEntityClassName() );
 		}
 
-		final Class idClass = persister.getIdentifierType().getReturnedClass();
+		final Class idClass = persister.getIdentifierType().getJavaTypeDescriptor().getJavaType();
 		if ( idClass != null && !idClass.isInstance( event.getEntityId() ) ) {
 			checkIdClass( persister, event, loadType, idClass );
 		}
@@ -147,7 +147,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 					if ( singleSubType.getClassification().equals( Type.Classification.ENTITY ) ) {
 						final EntityType dependentParentType = (EntityType) singleSubType;
 						final Type dependentParentIdType = dependentParentType.getIdentifierOrUniqueKeyType( event.getSession().getFactory() );
-						if ( dependentParentIdType.getReturnedClass().isInstance( event.getEntityId() ) ) {
+						if ( dependentParentIdType.getJavaTypeDescriptor().getJavaType().isInstance( event.getEntityId() ) ) {
 							// yep that's what we have...
 							loadByDerivedIdentitySimplePkValue(
 									event,

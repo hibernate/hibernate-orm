@@ -86,7 +86,7 @@ public class ComponentJoin extends FromElement {
 
 	@Override
 	public String getDisplayText() {
-		return "ComponentJoin{path=" + getComponentPath() + ", type=" + componentType.getReturnedClass() + "}";
+		return "ComponentJoin{path=" + getComponentPath() + ", type=" + componentType.getJavaTypeDescriptor().getJavaType() + "}";
 	}
 
 	public class ComponentFromElementType extends FromElementType {

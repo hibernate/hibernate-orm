@@ -255,7 +255,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 
 	@SuppressWarnings({"StatementWithEmptyBody", "deprecation"})
 	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
-		returnClass = type.getReturnedClass();
+		returnClass = type.getJavaTypeDescriptor().getJavaType();
 
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 

@@ -77,7 +77,7 @@ public class TupleBuilderTransformer extends BasicTransformerAdapter {
 
 		@Override
 		public Class getJavaType() {
-			return hibernateType.getReturnedClass();
+			return hibernateType.getJavaTypeDescriptor().getJavaType();
 		}
 
 		@Override

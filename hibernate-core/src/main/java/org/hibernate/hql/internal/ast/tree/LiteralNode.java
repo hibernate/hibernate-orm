@@ -90,7 +90,7 @@ public class LiteralNode extends AbstractSelectExpression implements HqlSqlToken
 
 	@SuppressWarnings("unchecked")
 	protected String determineConvertedValue(AttributeConverterTypeAdapter converterTypeAdapter, Object literalValue) {
-		if ( getDataType().getReturnedClass().equals( converterTypeAdapter.getModelType() ) ) {
+		if ( getDataType().getJavaTypeDescriptor().getJavaType().equals( converterTypeAdapter.getModelType() ) ) {
 			// apply the converter
 			final AttributeConverter converter = converterTypeAdapter.getAttributeConverter();
 			final Object converted = converter.convertToDatabaseColumn( getLiteralValue() );
@@ -101,7 +101,7 @@ public class LiteralNode extends AbstractSelectExpression implements HqlSqlToken
 				return converted.toString();
 			}
 		}
-		else if ( getDataType().getReturnedClass().equals( converterTypeAdapter.getJdbcType() ) ) {
+		else if ( getDataType().getJavaTypeDescriptor().getJavaType().equals( converterTypeAdapter.getJdbcType() ) ) {
 			if ( isCharacterData( converterTypeAdapter.sqlType() ) ) {
 				return "'" + literalValue.toString() + "'";
 			}
@@ -116,7 +116,7 @@ public class LiteralNode extends AbstractSelectExpression implements HqlSqlToken
 							"AttributeConverter domain-model attribute type [%s] and JDBC type [%s] did not match query literal type [%s]",
 							converterTypeAdapter.getModelType().getName(),
 							converterTypeAdapter.getJdbcType().getName(),
-							getDataType().getReturnedClass().getName()
+							getDataType().getJavaTypeDescriptor().getJavaType().getName()
 					)
 			);
 		}

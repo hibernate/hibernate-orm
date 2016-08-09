@@ -56,7 +56,7 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 
 	@Override
 	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
-		returnClass = type.getReturnedClass();
+		returnClass = type.getJavaTypeDescriptor().getJavaType();
 
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 		final ObjectNameNormalizer normalizer =

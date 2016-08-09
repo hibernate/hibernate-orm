@@ -77,7 +77,7 @@ public class ConstructorResultColumnProcessor implements ResultColumnProcessor {
 
 			boolean allMatched = true;
 			for ( int i = 0; i < argumentTypes.length; i++ ) {
-				if ( ! areAssignmentCompatible( argumentTypes[i], types.get( i ).getReturnedClass() ) ) {
+				if ( ! areAssignmentCompatible( argumentTypes[i], types.get( i ).getJavaTypeDescriptor().getJavaType() ) ) {
 					allMatched = false;
 					break;
 				}

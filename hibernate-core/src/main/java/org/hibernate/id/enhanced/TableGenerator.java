@@ -366,7 +366,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 		);
 		optimizer = OptimizerFactory.buildOptimizer(
 				optimizationStrategy,
-				identifierType.getReturnedClass(),
+				identifierType.getJavaTypeDescriptor().getJavaType(),
 				incrementSize,
 				ConfigurationHelper.getInt( INITIAL_PARAM, params, -1 )
 		);
@@ -513,7 +513,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	}
 
 	private IntegralDataTypeHolder makeValue() {
-		return IdentifierGeneratorHelper.getIntegralDataTypeHolder( identifierType.getReturnedClass() );
+		return IdentifierGeneratorHelper.getIntegralDataTypeHolder( identifierType.getJavaTypeDescriptor().getJavaType() );
 	}
 
 	@Override

@@ -46,7 +46,7 @@ public class SequenceHiLoGenerator extends SequenceGenerator {
 
 		if ( maxLo >= 1 ) {
 			hiloOptimizer = new LegacyHiLoAlgorithmOptimizer(
-					getIdentifierType().getReturnedClass(),
+					getIdentifierType().getJavaTypeDescriptor().getJavaType(),
 					maxLo
 			);
 		}

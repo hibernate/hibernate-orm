@@ -83,17 +83,18 @@ public class UUIDGenerator implements IdentifierGenerator, Configurable {
 			strategy = StandardRandomStrategy.INSTANCE;
 		}
 
-		if ( UUID.class.isAssignableFrom( type.getReturnedClass() ) ) {
+		if ( UUID.class.isAssignableFrom( type.getJavaTypeDescriptor().getJavaType() ) ) {
 			valueTransformer = UUIDTypeDescriptor.PassThroughTransformer.INSTANCE;
 		}
-		else if ( String.class.isAssignableFrom( type.getReturnedClass() ) ) {
+		else if ( String.class.isAssignableFrom( type.getJavaTypeDescriptor().getJavaType() ) ) {
 			valueTransformer = UUIDTypeDescriptor.ToStringTransformer.INSTANCE;
 		}
-		else if ( byte[].class.isAssignableFrom( type.getReturnedClass() ) ) {
+		else if ( byte[].class.isAssignableFrom( type.getJavaTypeDescriptor().getJavaType() ) ) {
 			valueTransformer = UUIDTypeDescriptor.ToBytesTransformer.INSTANCE;
 		}
 		else {
-			throw new HibernateException( "Unanticipated return type [" + type.getReturnedClass().getName() + "] for UUID conversion" );
+			throw new HibernateException( "Unanticipated return type [" +
+					type.getJavaTypeDescriptor().getJavaType().getName() + "] for UUID conversion" );
 		}
 	}
 

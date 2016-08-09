@@ -726,7 +726,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		//		2) collection owner key
 		// these 2 are not always the same.  Same is true in the case of ToOne associations with property-ref...
 		final EntityPersister ownerPersister = collectionPersister.getOwnerEntityPersister();
-		if ( ownerPersister.getIdentifierType().getReturnedClass().isInstance( key ) ) {
+		if ( ownerPersister.getIdentifierType().getJavaTypeDescriptor().getJavaType().isInstance( key ) ) {
 			return getEntity( session.generateEntityKey( key, collectionPersister.getOwnerEntityPersister() ) );
 		}
 

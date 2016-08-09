@@ -37,7 +37,7 @@ public class PersisterTest extends BaseNonConfigCoreFunctionalTestCase {
 	
 	@Test
 	public void testSchemaNotReplacedInCustomSQL() throws Exception {
-		PersistentClass persistentClass = configuration().getClassMapping( CardWithCustomSQL.class.getName() );
+		PersistentClass persistentClass = metadata().getEntityBinding( CardWithCustomSQL.class.getName() );
 		assertEquals( "Incorrect custom SQL for insert" + persistentClass.getMappedClass(),
 				"INSERT INTO {h-schema}FOO", persistentClass.getCustomSQLInsert() );
 		

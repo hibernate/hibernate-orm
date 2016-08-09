@@ -19,7 +19,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.mapping.ValueVisitor;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.BasicType;
+import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.Type;
 
 /**

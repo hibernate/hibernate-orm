@@ -13,7 +13,7 @@ import org.hibernate.loader.plan.spi.EntityReference;
 import org.hibernate.loader.plan.spi.FetchSource;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
-import org.hibernate.type.AnyType;
+import org.hibernate.type.spi.AnyType;
 
 /**
  * @author Steve Ebersole

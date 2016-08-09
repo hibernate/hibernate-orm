@@ -7,7 +7,7 @@
 package org.hibernate.sql.sqm.ast.expression;
 
 import org.hibernate.sql.sqm.convert.spi.SqlTreeWalker;
-import org.hibernate.type.BasicType;
+import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.Type;
 
 /**

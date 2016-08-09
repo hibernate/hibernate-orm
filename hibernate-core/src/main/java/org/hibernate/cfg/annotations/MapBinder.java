@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Random;
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
+import javax.persistence.InheritanceType;
 import javax.persistence.MapKeyClass;
 
 import org.hibernate.AnnotationException;
@@ -30,6 +31,7 @@ import org.hibernate.cfg.CollectionPropertyHolder;
 import org.hibernate.cfg.CollectionSecondPass;
 import org.hibernate.cfg.Ejb3Column;
 import org.hibernate.cfg.Ejb3JoinColumn;
+import org.hibernate.cfg.InheritanceState;
 import org.hibernate.cfg.PropertyData;
 import org.hibernate.cfg.PropertyHolderBuilder;
 import org.hibernate.cfg.PropertyPreloadedData;
@@ -121,8 +123,13 @@ public class MapBinder extends CollectionBinder {
 				);
 			}
 			org.hibernate.mapping.Map map = (org.hibernate.mapping.Map) this.collection;
+			// HHH-11005 - if InheritanceType.JOINED then need to find class defining the column
+			InheritanceState inheritanceState = inheritanceStatePerClass.get( collType );
+			PersistentClass targetPropertyDefiningClass = InheritanceType.JOINED.equals( inheritanceState.getType() ) ?
+					mapProperty.getPersistentClass() : 
+					associatedClass;
 			Value indexValue = createFormulatedValue(
-					mapProperty.getValue(), map, targetPropertyName, associatedClass, buildingContext
+					mapProperty.getValue(), map, targetPropertyName, associatedClass, targetPropertyDefiningClass, buildingContext
 			);
 			map.setIndex( indexValue );
 		}
@@ -305,6 +312,7 @@ public class MapBinder extends CollectionBinder {
 			Collection collection,
 			String targetPropertyName,
 			PersistentClass associatedClass,
+			PersistentClass targetPropertyDefiningClass,
 			MetadataBuildingContext buildingContext) {
 		Value element = collection.getElement();
 		String fromAndWhere = null;
@@ -345,6 +353,28 @@ public class MapBinder extends CollectionBinder {
 			}
 			fromAndWhere = fromAndWhereSb.substring( 0, fromAndWhereSb.length() - 5 );
 		}
+		else {
+			// HHH-11005 - only if we are OneToMany and location of map key property is at a different level, need to add a select
+			if ( !associatedClass.equals( targetPropertyDefiningClass ) ) {
+				Iterator referencedEntityColumns;
+				referencedEntityColumns = associatedClass.getIdentifier().getColumnIterator();
+				
+				String alias = "$alias$";
+				StringBuilder fromAndWhereSb = new StringBuilder( " from " )
+						.append( targetPropertyDefiningClass.getTable().getQualifiedName(null, null, null) )
+								//.append(" as ") //Oracle doesn't support it in subqueries
+						.append( " " )
+						.append( alias ).append( " where " );
+				Iterator collectionTableColumns = element.getColumnIterator();
+				while ( collectionTableColumns.hasNext() ) {
+					Column colColumn = (Column) collectionTableColumns.next();
+					Column refColumn = (Column) referencedEntityColumns.next();
+					fromAndWhereSb.append( alias ).append( '.' ).append( refColumn.getQuotedName() )
+							.append( '=' ).append( colColumn.getQuotedName() ).append( " and " );
+				}
+				fromAndWhere = fromAndWhereSb.substring( 0, fromAndWhereSb.length() - 5 );
+			}
+		}
 
 		if ( value instanceof Component ) {
 			Component component = (Component) value;
@@ -368,7 +398,7 @@ public class MapBinder extends CollectionBinder {
 				newProperty.setSelectable( current.isSelectable() );
 				newProperty.setValue(
 						createFormulatedValue(
-								current.getValue(), collection, targetPropertyName, associatedClass, buildingContext
+								current.getValue(), collection, targetPropertyName, associatedClass, associatedClass, buildingContext
 						)
 				);
 				indexComponent.addProperty( newProperty );

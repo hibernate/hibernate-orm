@@ -203,7 +203,7 @@ public class FromElementFactory implements SqlTokenTypes {
 		}
 
 		Type elementType = queryableCollection.getElementType();
-		if ( elementType.isEntityType() ) {
+		if ( elementType.getClassification().equals( Type.Classification.ENTITY ) ) {
 			// A collection of entities...
 			elem = createEntityAssociation( role, roleAlias, joinType );
 		}
@@ -299,7 +299,7 @@ public class FromElementFactory implements SqlTokenTypes {
 		implied = true; //TODO: always true for now, but not if we later decide to support elements() in the from clause
 		inElementsFunction = true;
 		Type elementType = queryableCollection.getElementType();
-		if ( !elementType.isEntityType() ) {
+		if ( !elementType.getClassification().equals( Type.Classification.ENTITY ) ) {
 			throw new IllegalArgumentException( "Cannot create element join for a collection of non-entities!" );
 		}
 		this.queryableCollection = queryableCollection;
@@ -355,7 +355,7 @@ public class FromElementFactory implements SqlTokenTypes {
 		AST ast = createFromElement( text );
 		FromElement destination = (FromElement) ast;
 		Type elementType = queryableCollection.getElementType();
-		if ( elementType.isCollectionType() ) {
+		if ( elementType.getClassification().equals( Type.Classification.COLLECTION ) ) {
 			throw new SemanticException( "Collections of collections are not supported!" );
 		}
 		destination.initializeCollection( fromClause, classAlias, tableAlias );

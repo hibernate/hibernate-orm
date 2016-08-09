@@ -401,14 +401,14 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		final CollectionReference collectionReference = currentCollection();
 		final CollectionFetchableIndex indexGraph = collectionReference.getIndexGraph();
 
-		if ( indexType.isEntityType() || indexType.isComponentType() ) {
+		if ( indexType.getClassification().equals( Type.Classification.ENTITY ) || indexType.isComponentType() ) {
 			if ( indexGraph == null ) {
 				throw new WalkingException(
 						"CollectionReference did not return an expected index graph : " +
 								indexDefinition.getCollectionDefinition().getCollectionPersister().getRole()
 				);
 			}
-			if ( !indexType.isAnyType() ) {
+			if ( !indexType.getClassification().equals( Type.Classification.ANY ) ) {
 				pushToStack( (ExpandingFetchSource) indexGraph );
 			}
 		}
@@ -426,10 +426,10 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 	public void finishingCollectionIndex(CollectionIndexDefinition indexDefinition) {
 		final Type indexType = indexDefinition.getType();
 
-		if ( indexType.isAnyType() ) {
+		if ( indexType.getClassification().equals( Type.Classification.ANY ) ) {
 			// nothing to do because the index graph was not pushed in #startingCollectionIndex.
 		}
-		else if ( indexType.isEntityType() || indexType.isComponentType() ) {
+		else if ( indexType.getClassification().equals( Type.Classification.ENTITY ) || indexType.isComponentType() ) {
 			// todo : validate the stack?
 			final ExpandingFetchSource fetchSource = popFromStack();
 			if ( !CollectionFetchableIndex.class.isInstance( fetchSource ) ) {
@@ -466,7 +466,7 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 								elementDefinition.getCollectionDefinition().getCollectionPersister().getRole()
 				);
 			}
-			if ( !elementType.isAnyType() ) {
+			if ( !elementType.getClassification().equals( Type.Classification.ANY ) ) {
 				pushToStack( (ExpandingFetchSource) elementGraph );
 			}
 		}
@@ -484,7 +484,7 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 	public void finishingCollectionElements(CollectionElementDefinition elementDefinition) {
 		final Type elementType = elementDefinition.getType();
 
-		if ( elementType.isAnyType() ) {
+		if ( elementType.getClassification().equals( Type.Classification.ANY ) ) {
 			// nothing to do because the element graph was not pushed in #startingCollectionElement..
 		}
 		else if ( elementType.isComponentType() || elementType.isAssociationType()) {
@@ -574,10 +574,10 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		if ( attributeType.isAssociationType() ) {
 			final AssociationAttributeDefinition associationAttributeDefinition =
 					(AssociationAttributeDefinition) attributeDefinition;
-			if ( attributeType.isAnyType() ) {
+			if ( attributeType.getClassification().equals( Type.Classification.ANY ) ) {
 				// Nothing to do because AnyFetch does not implement ExpandingFetchSource (i.e., it cannot be pushed/popped).
 			}
-			else if ( attributeType.isEntityType() ) {
+			else if ( attributeType.getClassification().equals( Type.Classification.ENTITY ) ) {
 				final ExpandingFetchSource source = currentSource();
 				// One way to find out if the fetch was pushed is to check the fetch strategy; rather than recomputing
 				// the fetch strategy, simply check if current source's fetched attribute definition matches
@@ -588,7 +588,7 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 					checkPoppedEntity( popped, associationAttributeDefinition.toEntityDefinition() );
 				}
 			}
-			else if ( attributeType.isCollectionType() ) {
+			else if ( attributeType.getClassification().equals( Type.Classification.COLLECTION ) ) {
 				final CollectionReference currentCollection = currentCollection();
 				// One way to find out if the fetch was pushed is to check the fetch strategy; rather than recomputing
 				// the fetch strategy, simply check if current collection's fetched attribute definition matches

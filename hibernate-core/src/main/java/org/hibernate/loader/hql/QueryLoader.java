@@ -170,7 +170,7 @@ public class QueryLoader extends BasicLoader {
 				if ( element.isCollectionJoin() || element.getQueryableCollection() != null ) {
 					// This is now handled earlier in this method.
 				}
-				else if ( element.getDataType().isEntityType() ) {
+				else if ( element.getDataType().getClassification().equals( Type.Classification.ENTITY ) ) {
 					EntityType entityType = (EntityType) element.getDataType();
 					if ( entityType.isOneToOne() ) {
 						owners[i] = fromElementList.indexOf( element.getOrigin() );

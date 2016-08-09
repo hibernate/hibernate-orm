@@ -78,7 +78,7 @@ public final class ForeignKeys {
 			if ( value == null ) {
 				return null;
 			}
-			else if ( type.isEntityType() ) {
+			else if ( type.getClassification().equals( Type.Classification.ENTITY ) ) {
 				final EntityType entityType = (EntityType) type;
 				if ( entityType.isOneToOne() ) {
 					return value;
@@ -88,7 +88,7 @@ public final class ForeignKeys {
 					return isNullifiable( entityName, value ) ? null : value;
 				}
 			}
-			else if ( type.isAnyType() ) {
+			else if ( type.getClassification().equals( Type.Classification.ANY ) ) {
 				return isNullifiable( null, value ) ? null : value;
 			}
 			else if ( type.isComponentType() ) {
@@ -339,7 +339,7 @@ public final class ForeignKeys {
 			return;
 		}
 
-		if ( type.isEntityType() ) {
+		if ( type.getClassification().equals( Type.Classification.ENTITY ) ) {
 			final EntityType entityType = (EntityType) type;
 			if ( !isNullable
 					&& !entityType.isOneToOne()
@@ -347,7 +347,7 @@ public final class ForeignKeys {
 				nonNullableTransientEntities.add( propertyName, value );
 			}
 		}
-		else if ( type.isAnyType() ) {
+		else if ( type.getClassification().equals( Type.Classification.ANY )) {
 			if ( !isNullable && nullifier.isNullifiable( null, value ) ) {
 				nonNullableTransientEntities.add( propertyName, value );
 			}

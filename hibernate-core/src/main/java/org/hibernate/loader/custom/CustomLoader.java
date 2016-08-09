@@ -167,7 +167,7 @@ public class CustomLoader extends Loader {
 				collectionAliases.add( collRtn.getCollectionAliases() );
 				// determine if the collection elements are entities...
 				Type elementType = persister.getElementType();
-				if ( elementType.isEntityType() ) {
+				if ( elementType.getClassification().equals( Type.Classification.ENTITY ) ) {
 					Queryable elementPersister = (Queryable) ( (EntityType) elementType ).getAssociatedJoinable( factory );
 					entityPersisters.add( elementPersister );
 					entityOwners.add( -1 );
@@ -208,7 +208,7 @@ public class CustomLoader extends Loader {
 				collectionAliases.add( fetchRtn.getCollectionAliases() );
 				// determine if the collection elements are entities...
 				Type elementType = persister.getElementType();
-				if ( elementType.isEntityType() ) {
+				if ( elementType.getClassification().equals( Type.Classification.ENTITY ) ) {
 					Queryable elementPersister = (Queryable) ( (EntityType) elementType ).getAssociatedJoinable( factory );
 					entityPersisters.add( elementPersister );
 					entityOwners.add( ownerIndex );
@@ -274,12 +274,12 @@ public class CustomLoader extends Loader {
 			FetchReturn fetchRtn = (FetchReturn) ownerDescriptor;
 			Queryable persister = determineAppropriateOwnerPersister( fetchRtn.getOwner() );
 			Type ownerType = persister.getPropertyType( fetchRtn.getOwnerProperty() );
-			if ( ownerType.isEntityType() ) {
+			if ( ownerType.getClassification().equals( Type.Classification.ENTITY ) ) {
 				entityName = ( (EntityType) ownerType ).getAssociatedEntityName( getFactory() );
 			}
-			else if ( ownerType.isCollectionType() ) {
+			else if ( ownerType.getClassification().equals( Type.Classification.COLLECTION ) ) {
 				Type ownerCollectionElementType = ( (CollectionType) ownerType ).getElementType( getFactory() );
-				if ( ownerCollectionElementType.isEntityType() ) {
+				if ( ownerCollectionElementType.getClassification().equals( Type.Classification.ENTITY ) ) {
 					entityName = ( (EntityType) ownerCollectionElementType ).getAssociatedEntityName( getFactory() );
 				}
 			}

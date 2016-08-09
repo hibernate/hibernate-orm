@@ -49,7 +49,7 @@ public class MapKeyEntityFromElement extends FromElement {
 		if ( indexType == null ) {
 			throw new IllegalArgumentException( "Given collection is not indexed" );
 		}
-		if ( !indexType.isEntityType() ) {
+		if ( !indexType.getClassification().equals( Type.Classification.ENTITY ) ) {
 			throw new IllegalArgumentException( "Given collection does not have an entity index" );
 		}
 

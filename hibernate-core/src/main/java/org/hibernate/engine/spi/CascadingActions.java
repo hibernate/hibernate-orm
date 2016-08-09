@@ -367,7 +367,7 @@ public class CascadingActions {
 				EntityPersister persister,
 				Type propertyType,
 				int propertyIndex) {
-			if ( propertyType.isEntityType() ) {
+			if ( propertyType.getClassification().equals( Type.Classification.ENTITY ) ) {
 				Object child = persister.getPropertyValue( parent, propertyIndex );
 				String childEntityName = ((EntityType) propertyType).getAssociatedEntityName( session.getFactory() );
 

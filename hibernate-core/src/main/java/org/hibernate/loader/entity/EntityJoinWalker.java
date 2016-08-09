@@ -149,7 +149,7 @@ public class EntityJoinWalker extends AbstractEntityJoinWalker {
 
 		private boolean hasAssociation(CompositeType componentType) {
 			for ( Type subType : componentType.getSubtypes() ) {
-				if ( subType.isEntityType() ) {
+				if ( subType.getClassification().equals( Type.Classification.ENTITY ) ) {
 					return true;
 				}
 				else if ( subType.isComponentType() && hasAssociation( ( (CompositeType) subType ) ) ) {
@@ -201,7 +201,7 @@ public class EntityJoinWalker extends AbstractEntityJoinWalker {
 				OuterJoinableAssociation joinWithCompositeId,
 				CompositeType componentType) {
 			for ( Type subType : componentType.getSubtypes() ) {
-				if ( subType.isEntityType() ) {
+				if ( subType.getClassification().equals( Type.Classification.ENTITY ) ) {
 					Integer index = locateKeyManyToOneTargetIndex( joinWithCompositeId, (EntityType) subType );
 					if ( index != null ) {
 						keyManyToOneTargetIndices.add( index );

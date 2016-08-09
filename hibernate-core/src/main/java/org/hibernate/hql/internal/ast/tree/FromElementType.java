@@ -545,7 +545,7 @@ class FromElementType {
 			return collectionPropertyMapping;
 		}
 
-		if ( queryableCollection.getElementType().isAnyType() ) {
+		if ( queryableCollection.getElementType().getClassification().equals( Type.Classification.ANY ) ) {
 			// collection of <many-to-any/> mappings...
 			// used to circumvent the component-collection check below...
 			return queryableCollection;
@@ -564,7 +564,7 @@ class FromElementType {
 	public boolean isCollectionOfValuesOrComponents() {
 		return persister == null
 				&& queryableCollection != null
-				&& !queryableCollection.getElementType().isEntityType();
+				&& !queryableCollection.getElementType().getClassification().equals( Type.Classification.ENTITY );
 	}
 
 	public boolean isEntity() {

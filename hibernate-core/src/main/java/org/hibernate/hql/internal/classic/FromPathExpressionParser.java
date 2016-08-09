@@ -14,12 +14,12 @@ public class FromPathExpressionParser extends PathExpressionParser {
 	public void end(QueryTranslatorImpl q) throws QueryException {
 		if ( !isCollectionValued() ) {
 			Type type = getPropertyType();
-			if ( type.isEntityType() ) {
+			if ( type.getClassification().equals( Type.Classification.ENTITY ) ) {
 				// "finish off" the join
 				token( ".", q );
 				token( null, q );
 			}
-			else if ( type.isCollectionType() ) {
+			else if ( type.getClassification().equals( Type.Classification.COLLECTION ) ) {
 				// default to element set if no elements() specified
 				token( ".", q );
 				token( CollectionPropertyNames.COLLECTION_ELEMENTS, q );

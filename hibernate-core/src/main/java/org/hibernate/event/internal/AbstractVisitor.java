@@ -99,11 +99,11 @@ public abstract class AbstractVisitor {
 	 */
 	final Object processValue(Object value, Type type) throws HibernateException {
 
-		if ( type.isCollectionType() ) {
+		if ( type.getClassification().equals( Type.Classification.COLLECTION ) ) {
 			//even process null collections
 			return processCollection( value, (CollectionType) type );
 		}
-		else if ( type.isEntityType() ) {
+		else if ( type.getClassification().equals( Type.Classification.ENTITY ) ) {
 			return processEntity( value, (EntityType) type );
 		}
 		else if ( type.isComponentType() ) {

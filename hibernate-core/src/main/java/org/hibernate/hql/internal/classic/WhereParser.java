@@ -181,7 +181,7 @@ public class WhereParser implements Parser {
 		}
 		else {
 			Type type = element.elementType;
-			if ( type.isEntityType() ) { //ie. a many-to-many
+			if ( type.getClassification().equals( Type.Classification.ENTITY ) ) { //ie. a many-to-many
 				String entityName = ( ( EntityType ) type ).getAssociatedEntityName();
 				name = pathExpressionParser.continueFromManyToMany( entityName, element.elementColumns, q );
 			}

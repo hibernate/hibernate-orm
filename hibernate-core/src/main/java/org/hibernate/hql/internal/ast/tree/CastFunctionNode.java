@@ -47,13 +47,13 @@ public class CastFunctionNode extends AbstractSelectExpression implements Functi
 		if ( SqlNode.class.isInstance( expressionNode ) ) {
 			final Type expressionType = ( (SqlNode) expressionNode ).getDataType();
 			if ( expressionType != null ) {
-				if ( expressionType.isEntityType() ) {
+				if ( expressionType.getClassification().equals( Type.Classification.ENTITY ) ) {
 					throw new QueryException( "Expression to CAST cannot be an entity : " + expressionNode.getText() );
 				}
 				if ( expressionType.isComponentType() ) {
 					throw new QueryException( "Expression to CAST cannot be a composite : " + expressionNode.getText() );
 				}
-				if ( expressionType.isCollectionType() ) {
+				if ( expressionType.getClassification().equals( Type.Classification.COLLECTION ) ) {
 					throw new QueryException( "Expression to CAST cannot be a collection : " + expressionNode.getText() );
 				}
 			}
@@ -69,13 +69,13 @@ public class CastFunctionNode extends AbstractSelectExpression implements Functi
 		if ( castType == null ) {
 			throw new QueryException( "Could not resolve requested type for CAST : " + typeName );
 		}
-		if ( castType.isEntityType() ) {
+		if ( castType.getClassification().equals( Type.Classification.ENTITY ) ) {
 			throw new QueryException( "CAST target type cannot be an entity : " + expressionNode.getText() );
 		}
 		if ( castType.isComponentType() ) {
 			throw new QueryException( "CAST target type cannot be a composite : " + expressionNode.getText() );
 		}
-		if ( castType.isCollectionType() ) {
+		if ( castType.getClassification().equals( Type.Classification.COLLECTION ) ) {
 			throw new QueryException( "CAST target type cannot be a collection : " + expressionNode.getText() );
 		}
 		setDataType( castType );

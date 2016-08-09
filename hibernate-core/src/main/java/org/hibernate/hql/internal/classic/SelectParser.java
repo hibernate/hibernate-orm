@@ -201,7 +201,7 @@ public class SelectParser implements Parser {
 				q.addCollection( pathExpressionParser.getCollectionName(),
 						pathExpressionParser.getCollectionRole() );
 			}
-			else if ( pathExpressionParser.getWhereColumnType().isEntityType() ) {
+			else if ( pathExpressionParser.getWhereColumnType().getClassification().equals( Type.Classification.ENTITY ) ) {
 				q.addSelectClass( pathExpressionParser.getSelectName() );
 			}
 			q.appendScalarSelectTokens( pathExpressionParser.getWhereColumns() );

@@ -70,7 +70,7 @@ public class FetchProfile {
 	public void addFetch(final Fetch fetch) {
 		final String fetchAssociactionRole = fetch.getAssociation().getRole();
 		final Type associationType = fetch.getAssociation().getOwner().getPropertyType( fetch.getAssociation().getAssociationPath() );
-		if ( associationType.isCollectionType() ) {
+		if ( associationType.getClassification().equals( Type.Classification.COLLECTION ) ) {
 			LOG.tracev( "Handling request to add collection fetch [{0}]", fetchAssociactionRole );
 
 			// couple of things for which to account in the case of collection

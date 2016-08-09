@@ -98,7 +98,7 @@ public class Property implements Serializable, MetaAttributable {
 		if ( type.isComponentType() ) {
 			return getCompositeCascadeStyle( (CompositeType) type, cascade );
 		}
-		else if ( type.isCollectionType() ) {
+		else if ( type.getClassification().equals( Type.Classification.COLLECTION ) ) {
 			return getCollectionCascadeStyle( ( (Collection) value ).getElement().getType(), cascade );
 		}
 		else {
@@ -107,7 +107,7 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	private static CascadeStyle getCompositeCascadeStyle(CompositeType compositeType, String cascade) {
-		if ( compositeType.isAnyType() ) {
+		if ( compositeType.getClassification().equals( Type.Classification.ANY ) ) {
 			return getCascadeStyle( cascade );
 		}
 		int length = compositeType.getSubtypes().length;

@@ -54,7 +54,7 @@ public abstract class AbstractCollectionReference implements CollectionReference
 		// Hibernate cannot currently support eager joining of associations within a component (@Embeddable) as an index.
 		if ( shouldIncludeJoins &&
 				collectionQuerySpace.getCollectionPersister().hasIndex() &&
-				collectionQuerySpace.getCollectionPersister().getIndexType().isEntityType()  ) {
+				collectionQuerySpace.getCollectionPersister().getIndexType().getClassification().equals( Type.Classification.ENTITY ) ) {
 			final String[] indexFormulas =
 					( (QueryableCollection) collectionQuerySpace.getCollectionPersister() ).getIndexFormulas();
 			final int nNonNullFormulas = ArrayHelper.countNonNull( indexFormulas );
@@ -74,7 +74,7 @@ public abstract class AbstractCollectionReference implements CollectionReference
 		if ( persister.hasIndex() ) {
 			final Type type = persister.getIndexType();
 			if ( type.isAssociationType() ) {
-				if ( type.isEntityType() ) {
+				if ( type.getClassification().equals( Type.Classification.ENTITY ) ) {
 					final EntityPersister indexPersister = persister.getFactory().getEntityPersister(
 							( (EntityType) type ).getAssociatedEntityName()
 					);
@@ -90,7 +90,7 @@ public abstract class AbstractCollectionReference implements CollectionReference
 					);
 					return new CollectionFetchableIndexEntityGraph( this, entityQuerySpace );
 				}
-				else if ( type.isAnyType() ) {
+				else if ( type.getClassification().equals( Type.Classification.ANY ) ) {
 					return new CollectionFetchableIndexAnyGraph( this );
 				}
 			}
@@ -119,7 +119,7 @@ public abstract class AbstractCollectionReference implements CollectionReference
 		final CollectionPersister persister = collectionQuerySpace.getCollectionPersister();
 		final Type type = persister.getElementType();
 		if ( type.isAssociationType() ) {
-			if ( type.isEntityType() ) {
+			if ( type.getClassification().equals( Type.Classification.ENTITY ) ) {
 				final EntityPersister elementPersister = persister.getFactory().getEntityPersister(
 						( (EntityType) type ).getAssociatedEntityName()
 				);
@@ -134,7 +134,7 @@ public abstract class AbstractCollectionReference implements CollectionReference
 				);
 				return new CollectionFetchableElementEntityGraph( this, entityQuerySpace );
 			}
-			else if ( type.isAnyType() ) {
+			else if ( type.getClassification().equals( Type.Classification.ANY ) ) {
 				return new CollectionFetchableElementAnyGraph( this );
 			}
 		}

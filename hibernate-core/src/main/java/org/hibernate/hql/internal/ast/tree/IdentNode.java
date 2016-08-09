@@ -58,7 +58,7 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 		}
 
 		String propertyName = getOriginalText();
-		if (!getDataType().isCollectionType()) {
+		if ( !getDataType().getClassification().equals( Type.Classification.COLLECTION ) ) {
 			throw new SemanticException("Collection expected; [" + propertyName + "] does not refer to a collection property");
 		}
 

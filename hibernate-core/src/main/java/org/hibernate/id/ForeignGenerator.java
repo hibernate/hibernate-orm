@@ -87,7 +87,7 @@ public class ForeignGenerator implements IdentifierGenerator, Configurable {
 
 		final EntityType foreignValueSourceType;
 		final Type propertyType = persister.getPropertyType( propertyName );
-		if ( propertyType.isEntityType() ) {
+		if ( propertyType.getClassification().equals( Type.Classification.ENTITY ) ) {
 			// the normal case
 			foreignValueSourceType = (EntityType) propertyType;
 		}

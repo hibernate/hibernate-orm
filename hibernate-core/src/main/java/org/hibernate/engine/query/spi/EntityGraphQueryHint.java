@@ -102,7 +102,7 @@ public class EntityGraphQueryHint {
 				FromElement fromElement = explicitFetches.get( role );
 				boolean explicitFromElement = false;
 				if ( fromElement == null ) {
-					if ( propertyType.isEntityType() ) {
+					if ( propertyType.getClassification().equals( Type.Classification.ENTITY ) ) {
 						final EntityType entityType = (EntityType) propertyType;
 
 						final String[] columns = origin.toColumns( originTableAlias, attributeName, false );
@@ -128,7 +128,7 @@ public class EntityGraphQueryHint {
 								null
 						);
 					}
-					else if ( propertyType.isCollectionType() ) {
+					else if ( propertyType.getClassification().equals( Type.Classification.COLLECTION ) ) {
 						CollectionType collectionType = (CollectionType) propertyType;
 						final String[] columns = origin.toColumns( originTableAlias, attributeName, false );
 

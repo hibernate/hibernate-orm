@@ -68,7 +68,7 @@ public abstract class AbstractEmptinessExpression implements Criterion {
 			SessionFactoryImplementor factory) throws HibernateException {
 		final PropertyMapping ownerMapping = (PropertyMapping) factory.getEntityPersister( entityName );
 		final Type type = ownerMapping.toType( propertyName );
-		if ( !type.isCollectionType() ) {
+		if ( !type.getClassification().equals( Type.Classification.COLLECTION ) ) {
 			throw new MappingException(
 					"Property path [" + entityName + "." + propertyName + "] does not reference a collection"
 			);

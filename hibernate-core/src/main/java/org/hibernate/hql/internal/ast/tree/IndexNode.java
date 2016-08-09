@@ -75,7 +75,7 @@ public class IndexNode extends FromReferenceNode {
 		collectionNode.resolveIndex( this );        // Fully resolve the map reference, create implicit joins.
 
 		Type type = collectionNode.getDataType();
-		if ( !type.isCollectionType() ) {
+		if ( !type.getClassification().equals( Type.Classification.COLLECTION ) ) {
 			throw new SemanticException( "The [] operator cannot be applied to type " + type.toString() );
 		}
 		String collectionRole = ( (CollectionType) type ).getRole();

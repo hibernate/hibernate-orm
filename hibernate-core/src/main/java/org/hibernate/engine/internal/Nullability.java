@@ -126,7 +126,7 @@ public final class Nullability {
 			return checkComponentNullability( value, (CompositeType) propertyType );
 		}
 
-		if ( propertyType.isCollectionType() ) {
+		if ( propertyType.getClassification().equals( Type.Classification.COLLECTION ) ) {
 			// persistent collections may have components
 			final CollectionType collectionType = (CollectionType) propertyType;
 			final Type collectionElementType = collectionType.getElementType( session.getFactory() );
@@ -167,7 +167,7 @@ public final class Nullability {
 		//
 		// The more correct fix would be to cascade saves of the many-to-any elements beforeQuery the Nullability checking
 
-		if ( compositeType.isAnyType() ) {
+		if ( compositeType.getClassification().equals( Type.Classification.ANY ) ) {
 			return null;
 		}
 

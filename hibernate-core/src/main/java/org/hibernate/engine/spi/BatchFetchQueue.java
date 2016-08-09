@@ -174,6 +174,7 @@ public class BatchFetchQueue {
 	 * @param batchSize The maximum number of keys to return
 	 * @return an array of identifiers, of length batchSize (possibly padded with nulls)
 	 */
+	@SuppressWarnings("unchecked")
 	public Serializable[] getEntityBatch(
 			final EntityPersister persister,
 			final Serializable id,
@@ -194,7 +195,7 @@ public class BatchFetchQueue {
 					//the first id found afterQuery the given id
 					return ids;
 				}
-				if ( persister.getIdentifierType().isEqual( id, key.getIdentifier() ) ) {
+				if ( persister.getIdentifierType().getJavaTypeDescriptor().areEqual( id, key.getIdentifier() ) ) {
 					end = i;
 				}
 				else {

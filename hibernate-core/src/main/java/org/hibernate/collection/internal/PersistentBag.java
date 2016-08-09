@@ -125,12 +125,13 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 		return ( (Collection) snapshot ).isEmpty();
 	}
 
+	@SuppressWarnings("unchecked")
 	private int countOccurrences(Object element, List list, Type elementType)
 			throws HibernateException {
 		final Iterator iter = list.iterator();
 		int result = 0;
 		while ( iter.hasNext() ) {
-			if ( elementType.isSame( element, iter.next() ) ) {
+			if ( elementType.getJavaTypeDescriptor().areEqual( element, iter.next() ) ) {
 				result++;
 			}
 		}
@@ -206,7 +207,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 			final Object old = olditer.next();
 			final Iterator newiter = bag.iterator();
 			boolean found = false;
-			if ( bag.size()>i && elementType.isSame( old, bag.get( i++ ) ) ) {
+			if ( bag.size()>i && elementType.getJavaTypeDescriptor().areEqual( old, bag.get( i++ ) ) ) {
 			//a shortcut if its location didn't change!
 				found = true;
 			}
@@ -214,7 +215,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 				//search for it
 				//note that this code is incorrect for other than one-to-many
 				while ( newiter.hasNext() ) {
-					if ( elementType.isSame( old, newiter.next() ) ) {
+					if ( elementType.getJavaTypeDescriptor().areEqual( old, newiter.next() ) ) {
 						found = true;
 						break;
 					}
@@ -228,9 +229,10 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public boolean needsInserting(Object entry, int i, Type elemType) throws HibernateException {
 		final List sn = (List) getSnapshot();
-		if ( sn.size() > i && elemType.isSame( sn.get( i ), entry ) ) {
+		if ( sn.size() > i && elemType.getJavaTypeDescriptor().areEqual( sn.get( i ), entry ) ) {
 			//a shortcut if its location didn't change!
 			return false;
 		}
@@ -238,7 +240,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 			//search for it
 			//note that this code is incorrect for other than one-to-many
 			for ( Object old : sn ) {
-				if ( elemType.isSame( old, entry ) ) {
+				if ( elemType.getJavaTypeDescriptor().areEqual( old, entry ) ) {
 					return false;
 				}
 			}

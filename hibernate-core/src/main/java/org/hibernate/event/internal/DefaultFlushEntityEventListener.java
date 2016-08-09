@@ -69,6 +69,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 	}
 
+	@SuppressWarnings("unchecked")
 	private void checkNaturalId(
 			EntityPersister persister,
 			EntityEntry entry,
@@ -98,7 +99,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				}
 
 				final Type propertyType = propertyTypes[naturalIdentifierPropertyIndex];
-				if ( !propertyType.isEqual( current[naturalIdentifierPropertyIndex], snapshot[i] ) ) {
+				if ( !propertyType.getJavaTypeDescriptor().areEqual( current[naturalIdentifierPropertyIndex], snapshot[i] ) ) {
 					throw new HibernateException(
 							String.format(
 									"An immutable natural identifier of entity %s was altered from %s to %s",

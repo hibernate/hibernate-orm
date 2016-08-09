@@ -55,6 +55,7 @@ public class JpaFlushEntityEventListener extends DefaultFlushEntityEventListener
 		return super.invokeInterceptor( session, entity, entry, values, persister ) || isDirty;
 	}
 
+	@SuppressWarnings("unchecked")
 	private boolean copyState(Object entity, Type[] types, Object[] state, SessionFactory sf) {
 		// copy the entity state into the state array and return true if the state has changed
 		ClassMetadata metadata = sf.getClassMetadata( entity.getClass() );
@@ -64,7 +65,8 @@ public class JpaFlushEntityEventListener extends DefaultFlushEntityEventListener
 		for ( int index = 0; index < size ; index++ ) {
 			if ( ( state[index] == LazyPropertyInitializer.UNFETCHED_PROPERTY &&
 					newState[index] != LazyPropertyInitializer.UNFETCHED_PROPERTY ) ||
-					( state[index] != newState[index] && !types[index].isEqual( state[index], newState[index] ) ) ) {
+					( state[index] != newState[index] &&
+							!types[index].getJavaTypeDescriptor().areEqual( state[index], newState[index] ) ) ) {
 				isDirty = true;
 				state[index] = newState[index];
 			}

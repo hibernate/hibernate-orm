@@ -251,8 +251,8 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 			// 2) look in default namespace
 			if ( extractionContext.getDefaultCatalog() != null || extractionContext.getDefaultSchema() != null ) {
 				tableInfo = locateTableInNamespace(
-						extractionContext.getJdbcEnvironment().getCurrentCatalog(),
-						extractionContext.getJdbcEnvironment().getCurrentSchema(),
+						extractionContext.getDefaultCatalog(),
+						extractionContext.getDefaultSchema(),
 						tableName
 				);
 

@@ -53,7 +53,7 @@ import org.jboss.logging.Logger;
 @SuppressWarnings("unchecked")
 public class TableBinder {
 	//TODO move it to a getter/setter strategy
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, TableBinder.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, TableBinder.class.getName() );
 
 	MetadataBuildingContext buildingContext;
 
@@ -487,10 +487,10 @@ public class TableBinder {
 			MetadataBuildingContext buildingContext,
 			String subselect,
 			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
-		schema = BinderHelper.isEmptyAnnotationValue( schema )
+		schema = BinderHelper.isEmptyOrNullAnnotationValue( schema )
 				? extract( buildingContext.getMetadataCollector().getDatabase().getDefaultNamespace().getPhysicalName().getSchema() )
 				: schema;
-		catalog = BinderHelper.isEmptyAnnotationValue( catalog )
+		catalog = BinderHelper.isEmptyOrNullAnnotationValue( catalog )
 				? extract( buildingContext.getMetadataCollector().getDatabase().getDefaultNamespace().getPhysicalName().getCatalog() )
 				: catalog;
 
@@ -668,7 +668,8 @@ public class TableBinder {
 					//explicit referencedColumnName
 					Iterator idColItr = referencedEntity.getKey().getColumnIterator();
 					org.hibernate.mapping.Column col;
-					Table table = referencedEntity.getTable(); //works cause the pk has to be on the primary table
+					//works cause the pk has to be on the primary table
+					Table table = referencedEntity.getTable();
 					if ( !idColItr.hasNext() ) {
 						LOG.debug( "No column in the identifier!" );
 					}

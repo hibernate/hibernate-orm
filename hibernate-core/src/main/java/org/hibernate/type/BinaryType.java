@@ -9,8 +9,9 @@ package org.hibernate.type;
 import java.util.Comparator;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
-import org.hibernate.type.descriptor.sql.VarbinaryTypeDescriptor;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.descriptor.java.PrimitiveByteArrayTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.VarbinaryTypeDescriptor;
 
 /**
  * A type that maps between a {@link java.sql.Types#VARBINARY VARBINARY} and {@code byte[]}
@@ -21,9 +22,7 @@ import org.hibernate.type.descriptor.sql.VarbinaryTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class BinaryType
-		extends AbstractSingleColumnStandardBasicType<byte[]>
-		implements VersionType<byte[]> {
+public class BinaryType extends AbstractSingleColumnStandardBasicType<byte[]> implements org.hibernate.type.spi.VersionType<byte[]> {
 
 	public static final BinaryType INSTANCE = new BinaryType();
 
@@ -36,19 +35,6 @@ public class BinaryType
 	}
 
 	@Override
-	public String[] getRegistrationKeys() {
-		return new String[] { getName(), "byte[]", byte[].class.getName() };
-	}
-
-	/**
-	 * Generate an initial version.
-	 *
-	 * @param session The session from which this request originates.
-	 * @return an instance of the type
-	 * @deprecated use {@link RowVersionType} for binary entity versions/timestamps
-	 */
-	@Override
-	@Deprecated
 	public byte[] seed(SharedSessionContractImplementor session) {
 		// Note : simply returns null for seed() and next() as the only known
 		// 		application of binary types for versioning is for use with the
@@ -81,5 +67,11 @@ public class BinaryType
 	@Deprecated
 	public Comparator<byte[]> getComparator() {
 		return PrimitiveByteArrayTypeDescriptor.INSTANCE.getComparator();
+	}
+
+	@Override
+	public JdbcLiteralFormatter<byte[]> getJdbcLiteralFormatter() {
+		// no support for binary literals
+		return null;
 	}
 }

@@ -7,7 +7,7 @@
 package org.hibernate.test.type.descriptor.java;
 import java.math.BigDecimal;
 
-import org.hibernate.type.descriptor.java.BigDecimalTypeDescriptor;
+import org.hibernate.type.spi.descriptor.java.BigDecimalTypeDescriptor;
 
 /**
  * @author Steve Ebersole

@@ -5,8 +5,10 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.type;
-import org.hibernate.type.descriptor.java.StringTypeDescriptor;
-import org.hibernate.type.descriptor.sql.LongVarcharTypeDescriptor;
+
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.descriptor.java.StringTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.LongVarcharTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#LONGVARCHAR LONGVARCHAR} and {@link String}
@@ -26,4 +28,9 @@ public class TextType extends AbstractSingleColumnStandardBasicType<String> {
 		return "text";
 	}
 
+	@Override
+	public JdbcLiteralFormatter<String> getJdbcLiteralFormatter() {
+		// no literal support for long/lob character data
+		return null;
+	}
 }

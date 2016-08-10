@@ -9,10 +9,11 @@ package org.hibernate.type;
 import java.sql.NClob;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.descriptor.java.NClobTypeDescriptor;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.descriptor.java.NClobTypeDescriptor;
 
 /**
- * A type that maps between {@link java.sql.Types#CLOB CLOB} and {@link java.sql.Clob}
+ * A type that maps between {@link java.sql.Types#NCLOB NCLOB} and {@link java.sql.NClob}
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -20,8 +21,8 @@ import org.hibernate.type.descriptor.java.NClobTypeDescriptor;
 public class NClobType extends AbstractSingleColumnStandardBasicType<NClob> {
 	public static final NClobType INSTANCE = new NClobType();
 
-	public NClobType() {
-		super( org.hibernate.type.descriptor.sql.NClobTypeDescriptor.DEFAULT, NClobTypeDescriptor.INSTANCE );
+	protected NClobType() {
+		super( org.hibernate.type.spi.descriptor.sql.NClobTypeDescriptor.DEFAULT, NClobTypeDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -30,13 +31,13 @@ public class NClobType extends AbstractSingleColumnStandardBasicType<NClob> {
 	}
 
 	@Override
-	protected boolean registerUnderJavaType() {
-		return true;
-	}
-
-	@Override
-	protected NClob getReplacement(NClob original, NClob target, SharedSessionContractImplementor session) {
+	public NClob getReplacement(NClob original, NClob target, SharedSessionContractImplementor session) {
 		return session.getJdbcServices().getJdbcEnvironment().getDialect().getLobMergeStrategy().mergeNClob( original, target, session );
 	}
 
+	@Override
+	public JdbcLiteralFormatter<NClob> getJdbcLiteralFormatter() {
+		// no literal support for NCLOB
+		return null;
+	}
 }

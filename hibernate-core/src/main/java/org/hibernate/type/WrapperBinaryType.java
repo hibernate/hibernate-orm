@@ -5,8 +5,10 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.type;
-import org.hibernate.type.descriptor.java.ByteArrayTypeDescriptor;
-import org.hibernate.type.descriptor.sql.VarbinaryTypeDescriptor;
+
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.descriptor.java.ByteArrayTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.VarbinaryTypeDescriptor;
 
 /**
  * A type mapping {@link java.sql.Types#VARBINARY VARBINARY} and {@link Byte Byte[]}
@@ -21,13 +23,14 @@ public class WrapperBinaryType extends AbstractSingleColumnStandardBasicType<Byt
 		super( VarbinaryTypeDescriptor.INSTANCE, ByteArrayTypeDescriptor.INSTANCE );
 	}
 
-	@Override
-	public String[] getRegistrationKeys() {
-		return new String[] { getName(), "Byte[]", Byte[].class.getName() };
-	}
-
 	public String getName() {
 		//TODO find a decent name beforeQuery documenting
 		return "wrapper-binary";
+	}
+
+	@Override
+	public JdbcLiteralFormatter<Byte[]> getJdbcLiteralFormatter() {
+		// no literal support for binary data
+		return null;
 	}
 }

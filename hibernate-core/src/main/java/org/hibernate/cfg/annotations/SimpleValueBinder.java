@@ -8,8 +8,10 @@ package org.hibernate.cfg.annotations;
 
 import java.io.Serializable;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Properties;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
@@ -29,7 +31,9 @@ import org.hibernate.annotations.Type;
 import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.model.type.spi.BasicTypeProducer;
+import org.hibernate.boot.model.type.spi.BasicTypeSiteContext;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.AttributeConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
@@ -42,6 +46,7 @@ import org.hibernate.cfg.SetSimpleValueTypeSecondPass;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
@@ -55,6 +60,11 @@ import org.hibernate.type.SerializableToBlobType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.StringNVarcharType;
 import org.hibernate.type.WrappedMaterializedBlobType;
+import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.type.spi.basic.AttributeConverterDefinition;
+import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
+import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.usertype.DynamicParameterizedType;
 
 import org.jboss.logging.Logger;
@@ -76,6 +86,8 @@ public class SimpleValueBinder {
 	private Properties typeParameters = new Properties();
 	private boolean isNationalized;
 	private boolean isLob;
+	private javax.persistence.EnumType enumType;
+	private TemporalType temporalPrecision;
 
 	private Table table;
 	private SimpleValue simpleValue;
@@ -189,8 +201,8 @@ public class SimpleValueBinder {
 								+ StringHelper.qualify( persistentClassName, propertyName )
 				);
 			}
-			final TemporalType temporalType = getTemporalType( property );
-			switch ( temporalType ) {
+			temporalPrecision = getTemporalType( property );
+			switch ( temporalPrecision ) {
 				case DATE:
 					type = isDate ? "date" : "calendar_date";
 					break;
@@ -207,7 +219,7 @@ public class SimpleValueBinder {
 					type = isDate ? "timestamp" : "calendar";
 					break;
 				default:
-					throw new AssertionFailure( "Unknown temporal type: " + temporalType );
+					throw new AssertionFailure( "Unknown temporal type: " + temporalPrecision );
 			}
 			explicitType = type;
 		}
@@ -272,6 +284,14 @@ public class SimpleValueBinder {
 						)
 				);
 			}
+
+			if ( key ) {
+				enumType = property.getAnnotation( MapKeyEnumerated.class ).value();
+			}
+			else {
+				enumType = property.getAnnotation( Enumerated.class ).value();
+			}
+
 			type = EnumType.class.getName();
 			explicitType = type;
 		}
@@ -453,7 +473,9 @@ public class SimpleValueBinder {
 
 	public void fillSimpleValue() {
 		LOG.debugf( "Starting fillSimpleValue for %s", propertyName );
-                
+
+		final BasicTypeProducer producer;
+
 		if ( attributeConverterDescriptor != null ) {
 			if ( ! BinderHelper.isEmptyAnnotationValue( explicitType ) ) {
 				throw new AnnotationException(
@@ -471,39 +493,111 @@ public class SimpleValueBinder {
 					persistentClassName,
 					propertyName
 			);
+
+			producer = buildingContext.getMetadataCollector().getBasicTypeProducerRegistry().makeUnregisteredProducer();
 			simpleValue.setJpaAttributeConverterDescriptor( attributeConverterDescriptor );
 		}
 		else {
-			String type;
-			TypeDefinition typeDef;
-
 			if ( !BinderHelper.isEmptyAnnotationValue( explicitType ) ) {
-				type = explicitType;
-				typeDef = buildingContext.getMetadataCollector().getTypeDefinition( type );
+				producer = buildingContext.getMetadataCollector().getBasicTypeProducerRegistry().resolve( explicitType );
 			}
 			else {
-				// try implicit type
-				TypeDefinition implicitTypeDef = buildingContext.getMetadataCollector().getTypeDefinition( returnedClassName );
-				if ( implicitTypeDef != null ) {
-					typeDef = implicitTypeDef;
-					type = returnedClassName;
+				BasicTypeProducer test = buildingContext.getMetadataCollector().getBasicTypeProducerRegistry().resolve( returnedClassName );
+				if ( test != null ) {
+					producer = test;
 				}
 				else {
-					typeDef = buildingContext.getMetadataCollector().getTypeDefinition( defaultType );
-					type = defaultType;
+					test = buildingContext.getMetadataCollector().getBasicTypeProducerRegistry().resolve( defaultType );
+
+					if ( test != null ) {
+						producer = test;
+					}
+					else {
+						producer = buildingContext.getMetadataCollector().getBasicTypeProducerRegistry().makeUnregisteredProducer();
+					}
 				}
 			}
-
-			if ( typeDef != null ) {
-				type = typeDef.getTypeImplementorClass().getName();
-				simpleValue.setTypeParameters( typeDef.getParametersAsProperties() );
-			}
-			if ( typeParameters != null && typeParameters.size() != 0 ) {
-				//explicit type params takes precedence over type def params
-				simpleValue.setTypeParameters( typeParameters );
-			}
-			simpleValue.setTypeName( type );
 		}
+
+		simpleValue.setBasicTypeProducer( producer );
+
+		producer.injectBasicTypeSiteContext(
+				new BasicTypeSiteContext() {
+					@Override
+					public JavaTypeDescriptor getJavaTypeDescriptor() {
+						if ( persistentClassName != null || attributeConverterDescriptor != null ) {
+							final Class javaType = ReflectHelper.reflectedPropertyClass( persistentClassName, propertyName, buildingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class ) );
+							return buildingContext.getMetadataCollector().getTypeConfiguration().getJavaTypeDescriptorRegistry().getDescriptor( javaType );
+						}
+						else if ( returnedClassName != null ) {
+							final Class javaType = buildingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class ).classForName( returnedClassName );
+							return buildingContext.getMetadataCollector().getTypeConfiguration().getJavaTypeDescriptorRegistry().getDescriptor( javaType );
+						}
+						return null;
+					}
+
+					@Override
+					public SqlTypeDescriptor getSqlTypeDescriptor() {
+						return null;
+					}
+
+					@Override
+					public AttributeConverterDefinition getAttributeConverterDefinition() {
+						return attributeConverterDescriptor;
+					}
+
+					@Override
+					public MutabilityPlan getMutabilityPlan() {
+						// todo : based on @Immutable?
+						return null;
+					}
+
+					@Override
+					public Comparator getComparator() {
+						return null;
+					}
+
+					@Override
+					public TemporalType getTemporalPrecision() {
+						return temporalPrecision;
+					}
+
+					@Override
+					public Map getLocalTypeParameters() {
+						return typeParameters;
+					}
+
+					@Override
+					public boolean isId() {
+						return SimpleValueBinder.this.key;
+					}
+
+					@Override
+					public boolean isVersion() {
+						return SimpleValueBinder.this.isVersion();
+					}
+
+					@Override
+					public boolean isNationalized() {
+						return SimpleValueBinder.this.isNationalized;
+					}
+
+					@Override
+					public boolean isLob() {
+						return SimpleValueBinder.this.isLob;
+					}
+
+					@Override
+					public javax.persistence.EnumType getEnumeratedType() {
+						return enumType;
+					}
+
+					@Override
+					public TypeConfiguration getTypeConfiguration() {
+						return buildingContext.getMetadataCollector().getTypeConfiguration();
+					}
+				}
+		);
 
 		if ( persistentClassName != null || attributeConverterDescriptor != null ) {
 			try {
@@ -532,7 +626,7 @@ public class SimpleValueBinder {
 		}
 		
 		if ( simpleValue.getTypeName() != null && simpleValue.getTypeName().length() > 0
-				&& simpleValue.getMetadata().getTypeResolver().basic( simpleValue.getTypeName() ) == null ) {
+				&& simpleValue.getMetadata().basicType( simpleValue.getTypeName() ) == null ) {
 			try {
 				Class typeClass = buildingContext.getClassLoaderAccess().classForName( simpleValue.getTypeName() );
 

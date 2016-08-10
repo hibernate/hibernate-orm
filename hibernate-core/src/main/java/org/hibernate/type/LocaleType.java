@@ -9,8 +9,9 @@ package org.hibernate.type;
 import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.descriptor.java.LocaleTypeDescriptor;
-import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.descriptor.java.LocaleTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.VarcharTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#VARCHAR VARCHAR} and @link Locale}
@@ -18,8 +19,7 @@ import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class LocaleType extends AbstractSingleColumnStandardBasicType<Locale>
-		implements LiteralType<Locale> {
+public class LocaleType extends AbstractSingleColumnStandardBasicType<Locale> implements JdbcLiteralFormatter<Locale> {
 
 	public static final LocaleType INSTANCE = new LocaleType();
 
@@ -32,11 +32,12 @@ public class LocaleType extends AbstractSingleColumnStandardBasicType<Locale>
 	}
 
 	@Override
-	protected boolean registerUnderJavaType() {
-		return true;
+	public JdbcLiteralFormatter<Locale> getJdbcLiteralFormatter() {
+		return this;
 	}
 
-	public String objectToSQLString(Locale value, Dialect dialect) throws Exception {
-		return StringType.INSTANCE.objectToSQLString( toString( value ), dialect );
+	@Override
+	public String toJdbcLiteral(Locale value, Dialect dialect) {
+		return StringType.INSTANCE.toJdbcLiteral( toString( value ), dialect );
 	}
 }

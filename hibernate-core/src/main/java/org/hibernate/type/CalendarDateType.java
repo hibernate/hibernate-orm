@@ -8,8 +8,11 @@ package org.hibernate.type;
 
 import java.util.Calendar;
 
-import org.hibernate.type.descriptor.java.CalendarDateTypeDescriptor;
-import org.hibernate.type.descriptor.sql.DateTypeDescriptor;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.type.internal.descriptor.DateTimeUtils;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.descriptor.java.CalendarDateTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.DateTypeDescriptor;
 
 /**
  * A type mapping {@link java.sql.Types#DATE DATE} and {@link Calendar}
@@ -17,7 +20,9 @@ import org.hibernate.type.descriptor.sql.DateTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class CalendarDateType extends AbstractSingleColumnStandardBasicType<Calendar> {
+public class CalendarDateType
+		extends AbstractSingleColumnStandardBasicType<Calendar>
+		implements JdbcLiteralFormatter<Calendar> {
 	public static final CalendarDateType INSTANCE = new CalendarDateType();
 
 	public CalendarDateType() {
@@ -28,4 +33,13 @@ public class CalendarDateType extends AbstractSingleColumnStandardBasicType<Cale
 		return "calendar_date";
 	}
 
+	@Override
+	public JdbcLiteralFormatter<Calendar> getJdbcLiteralFormatter() {
+		return this;
+	}
+
+	@Override
+	public String toJdbcLiteral(Calendar value, Dialect dialect) {
+		return DateTimeUtils.formatAsJdbcLiteralDate( value );
+	}
 }

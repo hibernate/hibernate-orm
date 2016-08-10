@@ -32,6 +32,8 @@ public interface DynamicParameterizedType extends ParameterizedType {
 
 	public static interface ParameterType {
 
+		// todo : give access to Database, TypeConfiguration and other InFlightMetadataCollector objects (or maybe just the InFlightMetadataCollector itself)
+
 		public Class getReturnedClass();
 
 		public Annotation[] getAnnotationsMethod();

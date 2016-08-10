@@ -6,11 +6,10 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
-
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.descriptor.java.CharacterTypeDescriptor;
-import org.hibernate.type.descriptor.sql.NCharTypeDescriptor;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.descriptor.java.CharacterTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.NCharTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#NCHAR NCHAR(1)} and {@link Character}
@@ -19,8 +18,7 @@ import org.hibernate.type.descriptor.sql.NCharTypeDescriptor;
  * @author Steve Ebersole
  */
 public class CharacterNCharType
-		extends AbstractSingleColumnStandardBasicType<Character>
-		implements PrimitiveType<Character>, DiscriminatorType<Character> {
+		extends AbstractSingleColumnStandardBasicType<Character> implements JdbcLiteralFormatter<Character> {
 
 	public static final CharacterNCharType INSTANCE = new CharacterNCharType();
 
@@ -32,20 +30,13 @@ public class CharacterNCharType
 		return "ncharacter";
 	}
 
-	public Serializable getDefaultValue() {
-		throw new UnsupportedOperationException( "not a valid id type" );
+	@Override
+	public JdbcLiteralFormatter<Character> getJdbcLiteralFormatter() {
+		return this;
 	}
 
-	public Class getPrimitiveClass() {
-		return char.class;
+	@Override
+	public String toJdbcLiteral(Character value, Dialect dialect) {
+		return StringType.INSTANCE.toJdbcLiteral( toString( value ), dialect );
 	}
-
-	public String objectToSQLString(Character value, Dialect dialect) {
-		return '\'' + toString( value ) + '\'';
-	}
-
-	public Character stringToObject(String xml) {
-		return fromString( xml );
-	}
-
 }

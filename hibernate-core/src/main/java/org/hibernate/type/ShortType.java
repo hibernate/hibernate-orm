@@ -11,8 +11,10 @@ import java.util.Comparator;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.descriptor.java.ShortTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SmallIntTypeDescriptor;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.VersionType;
+import org.hibernate.type.spi.descriptor.java.ShortTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.SmallIntTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#SMALLINT SMALLINT} and {@link Short}
@@ -22,7 +24,7 @@ import org.hibernate.type.descriptor.sql.SmallIntTypeDescriptor;
  */
 public class ShortType
 		extends AbstractSingleColumnStandardBasicType<Short>
-		implements PrimitiveType<Short>, DiscriminatorType<Short>, VersionType<Short> {
+		implements VersionType<Short>,JdbcLiteralFormatter<Short> {
 
 	public static final ShortType INSTANCE = new ShortType();
 
@@ -35,31 +37,6 @@ public class ShortType
 	@Override
 	public String getName() {
 		return "short";
-	}
-
-	@Override
-	public String[] getRegistrationKeys() {
-		return new String[] {getName(), short.class.getName(), Short.class.getName()};
-	}
-
-	@Override
-	public Serializable getDefaultValue() {
-		return ZERO;
-	}
-
-	@Override
-	public Class getPrimitiveClass() {
-		return short.class;
-	}
-
-	@Override
-	public String objectToSQLString(Short value, Dialect dialect) throws Exception {
-		return value.toString();
-	}
-
-	@Override
-	public Short stringToObject(String xml) throws Exception {
-		return Short.valueOf( xml );
 	}
 
 	@Override
@@ -77,4 +54,17 @@ public class ShortType
 		return getJavaTypeDescriptor().getComparator();
 	}
 
+	public Serializable getDefaultValue() {
+		return ZERO;
+	}
+
+	@Override
+	public JdbcLiteralFormatter<Short> getJdbcLiteralFormatter() {
+		return this;
+	}
+
+	@Override
+	public String toJdbcLiteral(Short value, Dialect dialect) {
+		return toString( value );
+	}
 }

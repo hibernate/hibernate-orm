@@ -7,37 +7,40 @@
 package org.hibernate.type;
 
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
-import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ZonedDateTimeComparator;
+import org.hibernate.type.internal.descriptor.DateTimeUtils;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.VersionType;
 import org.hibernate.type.spi.descriptor.java.ZonedDateTimeJavaDescriptor;
-import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class ZonedDateTimeType
 		extends AbstractSingleColumnStandardBasicType<ZonedDateTime>
-		implements VersionType<ZonedDateTime>, LiteralType<ZonedDateTime> {
+		implements VersionType<ZonedDateTime>, JdbcLiteralFormatter<ZonedDateTime> {
 
 	/**
 	 * Singleton access
 	 */
 	public static final ZonedDateTimeType INSTANCE = new ZonedDateTimeType();
 
-	public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss.S VV", Locale.ENGLISH );
-
-	public ZonedDateTimeType() {
+	/**
+	 * NOTE: protected access to allow for sub-classing
+	 */
+	@SuppressWarnings("WeakerAccess")
+	protected ZonedDateTimeType() {
 		super( TimestampTypeDescriptor.INSTANCE, ZonedDateTimeJavaDescriptor.INSTANCE );
 	}
 
 	@Override
-	public String objectToSQLString(ZonedDateTime value, Dialect dialect) throws Exception {
-		return "{ts '" + FORMATTER.format( value ) + "'}";
+	public String getName() {
+		return ZonedDateTime.class.getSimpleName();
 	}
 
 	@Override
@@ -57,12 +60,17 @@ public class ZonedDateTimeType
 	}
 
 	@Override
-	public String getName() {
-		return ZonedDateTime.class.getSimpleName();
+	public JdbcLiteralFormatter<ZonedDateTime> getJdbcLiteralFormatter() {
+		return this;
 	}
 
 	@Override
-	protected boolean registerUnderJavaType() {
-		return true;
+	public String toJdbcLiteral(ZonedDateTime value, Dialect dialect) {
+		return toJdbcLiteral( value );
+	}
+
+	@SuppressWarnings("WeakerAccess")
+	public String toJdbcLiteral(ZonedDateTime value) {
+		return DateTimeUtils.formatAsJdbcLiteralTimestamp( value );
 	}
 }

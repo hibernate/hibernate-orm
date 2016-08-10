@@ -6,7 +6,7 @@ earlier versions, see any other pertinent migration guides as well.
 
 == Background
 
-6.0 introduces major (and related) changes, such as:
+6.0 introduces major changes, such as:
 
 * refactoring Hibernate's Type contract to unify Hibernate ORM, JPA and SQM type systems
 * migration to SQM for query interpretation/representation

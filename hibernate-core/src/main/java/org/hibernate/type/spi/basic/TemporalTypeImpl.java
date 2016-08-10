@@ -10,8 +10,6 @@ import java.sql.Types;
 import java.util.Comparator;
 import javax.persistence.AttributeConverter;
 
-import org.hibernate.type.spi.ColumnMapping;
-import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
@@ -25,28 +23,25 @@ public class TemporalTypeImpl<T,D> extends BasicTypeImpl<T,D> implements Tempora
 	private final javax.persistence.TemporalType precision;
 
 	public TemporalTypeImpl(
-			TypeConfiguration typeConfiguration,
 			TemporalTypeDescriptor<T> domainJavaType,
 			SqlTypeDescriptor sqlType,
 			MutabilityPlan<T> mutabilityPlan,
 			Comparator<T> comparator) {
-		super( typeConfiguration, domainJavaType, sqlType, mutabilityPlan, comparator );
+		super( domainJavaType, sqlType, mutabilityPlan, comparator );
 		this.precision = domainJavaType.getPrecision();
 	}
 
 	public TemporalTypeImpl(
-			TypeConfiguration typeConfiguration,
 			TemporalTypeDescriptor<T> domainJavaType,
 			SqlTypeDescriptor sqlType,
 			MutabilityPlan<T> mutabilityPlan,
 			Comparator<T> comparator,
 			javax.persistence.TemporalType precision) {
-		super( typeConfiguration, domainJavaType, sqlType, mutabilityPlan, comparator );
+		super( domainJavaType, sqlType, mutabilityPlan, comparator );
 		this.precision = precision;
 	}
 
 	public TemporalTypeImpl(
-			TypeConfiguration typeConfiguration,
 			TemporalTypeDescriptor<T> domainJavaType,
 			SqlTypeDescriptor sqlType,
 			MutabilityPlan<T> mutabilityPlan,
@@ -54,19 +49,18 @@ public class TemporalTypeImpl<T,D> extends BasicTypeImpl<T,D> implements Tempora
 			AttributeConverter<T, D> attributeConverter,
 			JavaTypeDescriptor intermediateJavaType,
 			javax.persistence.TemporalType precision) {
-		super( typeConfiguration, domainJavaType, sqlType, mutabilityPlan, comparator, attributeConverter, intermediateJavaType );
+		super( domainJavaType, sqlType, mutabilityPlan, comparator, attributeConverter, intermediateJavaType );
 		this.precision = precision;
 	}
 
 	public TemporalTypeImpl(
-			TypeConfiguration typeConfiguration,
 			TemporalTypeDescriptor<T> javaTypeDescriptor,
 			SqlTypeDescriptor sqlTypeDescriptor,
 			MutabilityPlan<T> mutabilityPlan,
 			Comparator<T> comparator,
 			AttributeConverter<T,D> attributeConverter,
 			JavaTypeDescriptor intermediateJavaType) {
-		this( typeConfiguration, javaTypeDescriptor, sqlTypeDescriptor, mutabilityPlan, comparator, attributeConverter, intermediateJavaType, javaTypeDescriptor.getPrecision() );
+		this( javaTypeDescriptor, sqlTypeDescriptor, mutabilityPlan, comparator, attributeConverter, intermediateJavaType, javaTypeDescriptor.getPrecision() );
 	}
 
 	@Override
@@ -114,7 +108,7 @@ public class TemporalTypeImpl<T,D> extends BasicTypeImpl<T,D> implements Tempora
 				@Override
 				public Class<?> getJdbcType() {
 					return getColumnMapping().getSqlTypeDescriptor().getJdbcRecommendedJavaTypeMapping(
-							basicTypeRegistry.getTypeDescriptorRegistryAccess() ).getJavaTypeClass();
+							basicTypeRegistry.getTypeDescriptorRegistryAccess().getTypeConfiguration() ).getJavaTypeClass();
 				}
 			};
 		}

@@ -14,10 +14,10 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.engine.jdbc.CharacterStream;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.ValueBinder;
 import org.hibernate.type.spi.descriptor.ValueExtractor;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
-import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -69,8 +69,8 @@ public abstract class ClobTypeDescriptor implements SqlTypeDescriptor {
 
 	public static final ClobTypeDescriptor DEFAULT = new ClobTypeDescriptor() {
 		@Override
-		public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeDescriptorRegistryAccess typeDescriptorRegistryAccess) {
-			return typeDescriptorRegistryAccess.getJavaTypeDescriptorRegistry().getDescriptor( Clob.class );
+		public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+			return typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Clob.class );
 		}
 
 		@Override
@@ -103,8 +103,8 @@ public abstract class ClobTypeDescriptor implements SqlTypeDescriptor {
 
 	public static final ClobTypeDescriptor CLOB_BINDING = new ClobTypeDescriptor() {
 		@Override
-		public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeDescriptorRegistryAccess typeDescriptorRegistryAccess) {
-			return typeDescriptorRegistryAccess.getJavaTypeDescriptorRegistry().getDescriptor( Clob.class );
+		public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+			return typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Clob.class );
 		}
 
 		@Override
@@ -127,8 +127,8 @@ public abstract class ClobTypeDescriptor implements SqlTypeDescriptor {
 
 	public static final ClobTypeDescriptor STREAM_BINDING = new ClobTypeDescriptor() {
 		@Override
-		public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeDescriptorRegistryAccess typeDescriptorRegistryAccess) {
-			return typeDescriptorRegistryAccess.getJavaTypeDescriptorRegistry().getDescriptor( String.class );
+		public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+			return typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( String.class );
 		}
 
 		@Override
@@ -161,8 +161,8 @@ public abstract class ClobTypeDescriptor implements SqlTypeDescriptor {
 
 	public static final ClobTypeDescriptor STREAM_BINDING_EXTRACTING = new ClobTypeDescriptor() {
 		@Override
-		public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeDescriptorRegistryAccess typeDescriptorRegistryAccess) {
-			return typeDescriptorRegistryAccess.getJavaTypeDescriptorRegistry().getDescriptor( String.class );
+		public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+			return typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( String.class );
 		}
 
 		@Override

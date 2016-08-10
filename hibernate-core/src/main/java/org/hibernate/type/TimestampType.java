@@ -7,14 +7,15 @@
 package org.hibernate.type;
 
 import java.sql.Timestamp;
-import java.util.Comparator;
 import java.util.Date;
 
-import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.descriptor.java.JdbcTimestampTypeDescriptor;
-import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
+import org.hibernate.type.internal.descriptor.DateTimeUtils;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.VersionType;
+import org.hibernate.type.spi.descriptor.java.JdbcTimestampTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link java.sql.Timestamp}
@@ -24,7 +25,7 @@ import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
  */
 public class TimestampType
 		extends AbstractSingleColumnStandardBasicType<Date>
-		implements VersionType<Date>, LiteralType<Date> {
+		implements VersionType<Date>,JdbcLiteralFormatter<Date> {
 
 	public static final TimestampType INSTANCE = new TimestampType();
 
@@ -38,11 +39,6 @@ public class TimestampType
 	}
 
 	@Override
-	public String[] getRegistrationKeys() {
-		return new String[] { getName(), Timestamp.class.getName(), java.util.Date.class.getName() };
-	}
-
-	@Override
 	public Date next(Date current, SharedSessionContractImplementor session) {
 		return seed( session );
 	}
@@ -53,21 +49,12 @@ public class TimestampType
 	}
 
 	@Override
-	public Comparator<Date> getComparator() {
-		return getJavaTypeDescriptor().getComparator();
+	public JdbcLiteralFormatter<Date> getJdbcLiteralFormatter() {
+		return this;
 	}
 
 	@Override
-	public String objectToSQLString(Date value, Dialect dialect) throws Exception {
-		final Timestamp ts = Timestamp.class.isInstance( value )
-				? ( Timestamp ) value
-				: new Timestamp( value.getTime() );
-		// TODO : use JDBC date literal escape syntax? -> {d 'date-string'} in yyyy-mm-dd hh:mm:ss[.f...] format
-		return StringType.INSTANCE.objectToSQLString( ts.toString(), dialect );
-	}
-
-	@Override
-	public Date fromStringValue(String xml) throws HibernateException {
-		return fromString( xml );
+	public String toJdbcLiteral(Date value, Dialect dialect) {
+		return DateTimeUtils.formatAsJdbcLiteralTimestamp( value );
 	}
 }

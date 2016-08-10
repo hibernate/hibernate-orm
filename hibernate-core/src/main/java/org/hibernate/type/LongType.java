@@ -6,13 +6,16 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
 import java.util.Comparator;
+import java.util.Map;
 
+import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.descriptor.java.LongTypeDescriptor;
-import org.hibernate.type.descriptor.sql.BigIntTypeDescriptor;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.VersionType;
+import org.hibernate.type.spi.descriptor.java.LongTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.BigIntTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#BIGINT BIGINT} and {@link Long}
@@ -22,7 +25,7 @@ import org.hibernate.type.descriptor.sql.BigIntTypeDescriptor;
  */
 public class LongType
 		extends AbstractSingleColumnStandardBasicType<Long>
-		implements PrimitiveType<Long>, DiscriminatorType<Long>, VersionType<Long> {
+		implements VersionType<Long>,JdbcLiteralFormatter<Long> {
 
 	public static final LongType INSTANCE = new LongType();
 
@@ -35,26 +38,6 @@ public class LongType
 	@Override
 	public String getName() {
 		return "long";
-	}
-
-	@Override
-	public String[] getRegistrationKeys() {
-		return new String[] { getName(), long.class.getName(), Long.class.getName() };
-	}
-
-	@Override
-	public Serializable getDefaultValue() {
-		return ZERO;
-	}
-
-	@Override
-	public Class getPrimitiveClass() {
-		return long.class;
-	}
-
-	@Override
-	public Long stringToObject(String xml) throws Exception {
-		return Long.valueOf( xml );
 	}
 
 	@Override
@@ -73,7 +56,12 @@ public class LongType
 	}
 
 	@Override
-	public String objectToSQLString(Long value, Dialect dialect) throws Exception {
+	public JdbcLiteralFormatter<Long> getJdbcLiteralFormatter() {
+		return this;
+	}
+
+	@Override
+	public String toJdbcLiteral(Long value, Dialect dialect) {
 		return value.toString();
 	}
 }

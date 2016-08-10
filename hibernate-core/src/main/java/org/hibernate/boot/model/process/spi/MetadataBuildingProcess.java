@@ -330,6 +330,7 @@ public class MetadataBuildingProcess {
 
 			@Override
 			public void contributeType(org.hibernate.type.spi.BasicType type, RegistryKey registryKey) {
+				// todo : hook this in with BasicTypeProducerRegistry for "registration keys" handling
 				typeConfiguration.getBasicTypeRegistry().register( type, registryKey );
 			}
 

@@ -9,28 +9,30 @@ package org.hibernate.type;
 import java.net.URL;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.descriptor.java.UrlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.descriptor.java.UrlTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.VarcharTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#VARCHAR VARCHAR} and {@link URL}
  *
  * @author Steve Ebersole
  */
-public class UrlType extends AbstractSingleColumnStandardBasicType<URL> implements DiscriminatorType<URL> {
+public class UrlType extends AbstractSingleColumnStandardBasicType<URL> implements JdbcLiteralFormatter<URL> {
 	public static final UrlType INSTANCE = new UrlType();
 
 	public UrlType() {
 		super( VarcharTypeDescriptor.INSTANCE, UrlTypeDescriptor.INSTANCE );
 	}
 
+	@Override
 	public String getName() {
 		return "url";
 	}
 
 	@Override
-	protected boolean registerUnderJavaType() {
-		return true;
+	public JdbcLiteralFormatter<URL> getJdbcLiteralFormatter() {
+		return this;
 	}
 
 	@Override
@@ -38,11 +40,8 @@ public class UrlType extends AbstractSingleColumnStandardBasicType<URL> implemen
 		return UrlTypeDescriptor.INSTANCE.toString( value );
 	}
 
-	public String objectToSQLString(URL value, Dialect dialect) throws Exception {
-		return StringType.INSTANCE.objectToSQLString( toString( value ), dialect );
-	}
-
-	public URL stringToObject(String xml) throws Exception {
-		return UrlTypeDescriptor.INSTANCE.fromString( xml );
+	@Override
+	public String toJdbcLiteral(URL value, Dialect dialect) {
+		return StringType.INSTANCE.toJdbcLiteral( toString( value ), dialect );
 	}
 }

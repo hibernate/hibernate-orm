@@ -24,10 +24,10 @@ public class RegistryKeyImpl implements RegistryKey {
 	private final int jdbcCode;
 	private final Class attributeConverterClass;
 
-	public static RegistryKey from(BasicType type, TypeConfiguration typeConfiguration) {
+	public static RegistryKey from(BasicType type) {
 		return from(
 				type.getJavaTypeDescriptor(),
-				type.getJavaTypeDescriptor().getJdbcRecommendedSqlType( typeConfiguration.getBasicTypeRegistry().getBaseJdbcRecommendedSqlTypeMappingContext() ),
+				type.getColumnMapping().getSqlTypeDescriptor(),
 				null
 		);
 	}

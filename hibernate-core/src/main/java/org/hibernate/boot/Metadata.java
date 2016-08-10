@@ -146,15 +146,6 @@ public interface Metadata extends Mapping {
 	Map<String, ResultSetMappingDefinition> getResultSetMappingDefinitions();
 
 	/**
-	 * Retrieve a type definition by name.
-	 *
-	 * @param typeName The name of the type definition to retrieve.
-	 *
-	 * @return The named type definition, or {@code null}
-	 */
-	TypeDefinition getTypeDefinition(String typeName);
-
-	/**
 	 * Retrieves the complete map of filter definitions.
 	 *
 	 * Returned map is immutable

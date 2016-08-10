@@ -6,11 +6,10 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
-
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
-import org.hibernate.type.descriptor.sql.CharTypeDescriptor;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.descriptor.java.BooleanTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.CharTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#CHAR CHAR(1)} and {@link Boolean} (using 'Y' and 'N')
@@ -18,33 +17,26 @@ import org.hibernate.type.descriptor.sql.CharTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class YesNoType
-		extends AbstractSingleColumnStandardBasicType<Boolean>
-		implements PrimitiveType<Boolean>, DiscriminatorType<Boolean> {
+public class YesNoType extends AbstractSingleColumnStandardBasicType<Boolean> implements JdbcLiteralFormatter<Boolean> {
 
 	public static final YesNoType INSTANCE = new YesNoType();
 
-	public YesNoType() {
+	protected YesNoType() {
 		super( CharTypeDescriptor.INSTANCE, BooleanTypeDescriptor.INSTANCE );
 	}
+
 	@Override
 	public String getName() {
 		return "yes_no";
 	}
+
 	@Override
-	public Class getPrimitiveClass() {
-		return boolean.class;
+	public JdbcLiteralFormatter<Boolean> getJdbcLiteralFormatter() {
+		return this;
 	}
+
 	@Override
-	public Boolean stringToObject(String xml) throws Exception {
-		return fromString( xml );
-	}
-	@Override
-	public Serializable getDefaultValue() {
-		return Boolean.FALSE;
-	}
-	@Override
-	public String objectToSQLString(Boolean value, Dialect dialect) throws Exception {
-		return StringType.INSTANCE.objectToSQLString( value ? "Y" : "N", dialect );
+	public String toJdbcLiteral(Boolean value, Dialect dialect) {
+		return StringType.INSTANCE.toJdbcLiteral( value ? "Y" : "N", dialect );
 	}
 }

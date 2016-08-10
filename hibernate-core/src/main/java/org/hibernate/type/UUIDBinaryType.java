@@ -6,17 +6,22 @@
  */
 package org.hibernate.type;
 
+import java.util.Map;
 import java.util.UUID;
 
-import org.hibernate.type.descriptor.java.UUIDTypeDescriptor;
-import org.hibernate.type.descriptor.sql.BinaryTypeDescriptor;
+import org.hibernate.HibernateException;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.descriptor.java.UUIDTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.BinaryTypeDescriptor;
 
 /**
  * A type mapping {@link java.sql.Types#BINARY} and {@link UUID}
  *
  * @author Steve Ebersole
  */
-public class UUIDBinaryType extends AbstractSingleColumnStandardBasicType<UUID> {
+public class UUIDBinaryType extends AbstractSingleColumnStandardBasicType<UUID> implements JdbcLiteralFormatter<UUID> {
 	public static final UUIDBinaryType INSTANCE = new UUIDBinaryType();
 
 	public UUIDBinaryType() {
@@ -28,7 +33,13 @@ public class UUIDBinaryType extends AbstractSingleColumnStandardBasicType<UUID> 
 	}
 
 	@Override
-	protected boolean registerUnderJavaType() {
-		return true;
+	public JdbcLiteralFormatter<UUID> getJdbcLiteralFormatter() {
+		return this;
+	}
+
+	@Override
+	public String toJdbcLiteral(UUID value, Dialect dialect) {
+		// no literal support for binary data
+		return null;
 	}
 }

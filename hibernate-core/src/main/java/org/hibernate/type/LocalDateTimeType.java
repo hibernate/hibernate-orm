@@ -14,8 +14,11 @@ import java.util.Locale;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.ComparableComparator;
+import org.hibernate.type.internal.descriptor.DateTimeUtils;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.VersionType;
 import org.hibernate.type.spi.descriptor.java.LocalDateTimeJavaDescriptor;
-import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link LocalDateTime}.
@@ -24,7 +27,7 @@ import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
  */
 public class LocalDateTimeType
 		extends AbstractSingleColumnStandardBasicType<LocalDateTime>
-		implements VersionType<LocalDateTime>, LiteralType<LocalDateTime> {
+		implements VersionType<LocalDateTime>, JdbcLiteralFormatter<LocalDateTime> {
 	/**
 	 * Singleton access
 	 */
@@ -32,23 +35,17 @@ public class LocalDateTimeType
 
 	public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss.S", Locale.ENGLISH );
 
-	public LocalDateTimeType() {
+	/**
+	 * NOTE: protected access to allow for sub-classing
+	 */
+	@SuppressWarnings("WeakerAccess")
+	protected LocalDateTimeType() {
 		super( TimestampTypeDescriptor.INSTANCE, LocalDateTimeJavaDescriptor.INSTANCE );
 	}
 
 	@Override
 	public String getName() {
 		return LocalDateTime.class.getSimpleName();
-	}
-
-	@Override
-	protected boolean registerUnderJavaType() {
-		return true;
-	}
-
-	@Override
-	public String objectToSQLString(LocalDateTime value, Dialect dialect) throws Exception {
-		return "{ts '" + FORMATTER.format( value ) + "'}";
 	}
 
 	@Override
@@ -65,5 +62,20 @@ public class LocalDateTimeType
 	@SuppressWarnings("unchecked")
 	public Comparator<LocalDateTime> getComparator() {
 		return ComparableComparator.INSTANCE;
+	}
+
+	@Override
+	public JdbcLiteralFormatter<LocalDateTime> getJdbcLiteralFormatter() {
+		return this;
+	}
+
+	@Override
+	public String toJdbcLiteral(LocalDateTime value, Dialect dialect) {
+		return toJdbcLiteral( value );
+	}
+
+	@SuppressWarnings("WeakerAccess")
+	public String toJdbcLiteral(LocalDateTime value) {
+		return DateTimeUtils.formatAsJdbcLiteralTimestamp( value );
 	}
 }

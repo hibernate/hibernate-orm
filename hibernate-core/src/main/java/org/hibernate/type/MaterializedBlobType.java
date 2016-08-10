@@ -5,8 +5,10 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.type;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
-import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
+
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.descriptor.java.PrimitiveByteArrayTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.BlobTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#BLOB BLOB} and {@code byte[]}
@@ -25,5 +27,11 @@ public class MaterializedBlobType extends AbstractSingleColumnStandardBasicType<
 
 	public String getName() {
 		return "materialized_blob";
+	}
+
+	@Override
+	public JdbcLiteralFormatter<byte[]> getJdbcLiteralFormatter() {
+		// no literal support for BLOB
+		return null;
 	}
 }

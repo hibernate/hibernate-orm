@@ -34,6 +34,20 @@ public interface JavaTypeDescriptor<T> extends Type<T>, Serializable {
 	}
 
 	/**
+	 * Get the type name.  This is useful for detyped models which either will not have
+	 * a Java type ({@link #getJavaTypeClass()} returns null) or {@link #getJavaTypeClass()}
+	 * returns a non-indicative value ({@code java.util.Map.class} for a composite value in
+	 * {@link org.hibernate.EntityMode#MAP} EntityMode, e.g.).
+	 * <p/>
+	 * For typed models, this generally returns {@link #getJavaTypeClass()}.{@linkplain Class#getName() getName}
+	 *
+	 * @return The Java type name.
+	 */
+	default String getTypeName() {
+		return getJavaTypeClass().getName();
+	}
+
+	/**
 	 * Retrieve the mutability plan for this Java type.
 	 *
 	 * @return The mutability plan

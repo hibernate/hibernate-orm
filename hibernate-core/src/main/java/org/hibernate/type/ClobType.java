@@ -9,7 +9,8 @@ package org.hibernate.type;
 import java.sql.Clob;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.descriptor.java.ClobTypeDescriptor;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.descriptor.java.ClobTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#CLOB CLOB} and {@link Clob}
@@ -21,7 +22,7 @@ public class ClobType extends AbstractSingleColumnStandardBasicType<Clob> {
 	public static final ClobType INSTANCE = new ClobType();
 
 	public ClobType() {
-		super( org.hibernate.type.descriptor.sql.ClobTypeDescriptor.DEFAULT, ClobTypeDescriptor.INSTANCE );
+		super( org.hibernate.type.spi.descriptor.sql.ClobTypeDescriptor.DEFAULT, ClobTypeDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -30,13 +31,13 @@ public class ClobType extends AbstractSingleColumnStandardBasicType<Clob> {
 	}
 
 	@Override
-	protected boolean registerUnderJavaType() {
-		return true;
-	}
-
-	@Override
-	protected Clob getReplacement(Clob original, Clob target, SharedSessionContractImplementor session) {
+	public Clob getReplacement(Clob original, Clob target, SharedSessionContractImplementor session) {
 		return session.getJdbcServices().getJdbcEnvironment().getDialect().getLobMergeStrategy().mergeClob( original, target, session );
 	}
 
+	@Override
+	public JdbcLiteralFormatter<Clob> getJdbcLiteralFormatter() {
+		// no support for CLOB literals
+		return null;
+	}
 }

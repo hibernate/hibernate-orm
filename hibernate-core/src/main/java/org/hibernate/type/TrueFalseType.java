@@ -9,8 +9,9 @@ package org.hibernate.type;
 import java.io.Serializable;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
-import org.hibernate.type.descriptor.sql.CharTypeDescriptor;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.descriptor.java.BooleanTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.CharTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#CHAR CHAR(1)} and {@link Boolean} (using 'T' and 'F')
@@ -18,34 +19,27 @@ import org.hibernate.type.descriptor.sql.CharTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class TrueFalseType
-		extends AbstractSingleColumnStandardBasicType<Boolean>
-		implements PrimitiveType<Boolean>, DiscriminatorType<Boolean> {
+public class TrueFalseType extends AbstractSingleColumnStandardBasicType<Boolean>
+		implements JdbcLiteralFormatter<Boolean> {
 
 	public static final TrueFalseType INSTANCE = new TrueFalseType();
 
 	public TrueFalseType() {
 		super( CharTypeDescriptor.INSTANCE, new BooleanTypeDescriptor( 'T', 'F' ) );
 	}
+
 	@Override
 	public String getName() {
 		return "true_false";
 	}
+
 	@Override
-	public Class getPrimitiveClass() {
-		return boolean.class;
-	}
-	@Override
-	public Boolean stringToObject(String xml) throws Exception {
-		return fromString( xml );
-	}
-	@Override
-	public Serializable getDefaultValue() {
-		return Boolean.FALSE;
-	}
-	@Override
-	public String objectToSQLString(Boolean value, Dialect dialect) throws Exception {
-		return StringType.INSTANCE.objectToSQLString( value ? "T" : "F", dialect );
+	public JdbcLiteralFormatter<Boolean> getJdbcLiteralFormatter() {
+		return this;
 	}
 
+	@Override
+	public String toJdbcLiteral(Boolean value, Dialect dialect) {
+		return StringType.INSTANCE.toJdbcLiteral( value ? "T" : "F", dialect );
+	}
 }

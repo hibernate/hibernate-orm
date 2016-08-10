@@ -11,17 +11,17 @@ import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.descriptor.java.LocalTimeJavaDescriptor;
-import org.hibernate.type.descriptor.sql.TimeTypeDescriptor;
+import org.hibernate.type.internal.descriptor.DateTimeUtils;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.descriptor.java.LocalTimeJavaDescriptor;
+import org.hibernate.type.spi.descriptor.sql.TimeTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link java.time.LocalDateTime}.
  *
  * @author Steve Ebersole
  */
-public class LocalTimeType
-		extends AbstractSingleColumnStandardBasicType<LocalTime>
-		implements LiteralType<LocalTime> {
+public class LocalTimeType extends AbstractSingleColumnStandardBasicType<LocalTime> implements JdbcLiteralFormatter<LocalTime> {
 	/**
 	 * Singleton access
 	 */
@@ -29,7 +29,11 @@ public class LocalTimeType
 
 	public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern( "HH:mm:ss", Locale.ENGLISH );
 
-	public LocalTimeType() {
+	/**
+	 * NOTE: protected access to allow for sub-classing
+	 */
+	@SuppressWarnings("WeakerAccess")
+	protected LocalTimeType() {
 		super( TimeTypeDescriptor.INSTANCE, LocalTimeJavaDescriptor.INSTANCE );
 	}
 
@@ -39,12 +43,17 @@ public class LocalTimeType
 	}
 
 	@Override
-	protected boolean registerUnderJavaType() {
-		return true;
+	public JdbcLiteralFormatter<LocalTime> getJdbcLiteralFormatter() {
+		return this;
 	}
 
 	@Override
-	public String objectToSQLString(LocalTime value, Dialect dialect) throws Exception {
-		return "{t '" + FORMATTER.format( value ) + "'}";
+	public String toJdbcLiteral(LocalTime value, Dialect dialect) {
+		return toJdbcLiteral( value );
+	}
+
+	@SuppressWarnings("WeakerAccess")
+	public String toJdbcLiteral(LocalTime value) {
+		return DateTimeUtils.formatAsJdbcLiteralTime( value );
 	}
 }

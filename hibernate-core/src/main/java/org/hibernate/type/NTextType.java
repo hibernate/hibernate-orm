@@ -6,8 +6,9 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.type.descriptor.java.StringTypeDescriptor;
-import org.hibernate.type.descriptor.sql.LongNVarcharTypeDescriptor;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.descriptor.java.StringTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.LongNVarcharTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#LONGNVARCHAR LONGNVARCHAR} and {@link String}
@@ -27,4 +28,9 @@ public class NTextType extends AbstractSingleColumnStandardBasicType<String> {
 		return "ntext";
 	}
 
+	@Override
+	public JdbcLiteralFormatter<String> getJdbcLiteralFormatter() {
+		// no literal support for LONGNVARCHAR
+		return null;
+	}
 }

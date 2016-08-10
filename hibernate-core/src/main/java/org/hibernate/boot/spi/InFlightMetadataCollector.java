@@ -24,6 +24,7 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
+import org.hibernate.boot.model.type.spi.BasicTypeProducerRegistry;
 import org.hibernate.cfg.AnnotatedClassType;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.JPAIndexHolder;
@@ -44,6 +45,7 @@ import org.hibernate.mapping.Join;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.type.spi.BasicType;
 
 /**
  * An in-flight representation of Metadata while Metadata is being built.
@@ -53,6 +55,7 @@ import org.hibernate.mapping.Table;
  * @since 5.0
  */
 public interface InFlightMetadataCollector extends Mapping, MetadataImplementor {
+	BasicTypeProducerRegistry getBasicTypeProducerRegistry();
 
 	/**
 	 * Add the PersistentClass for an entity mapping.
@@ -276,6 +279,12 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	void registerNaturalIdUniqueKeyBinder(String entityName, NaturalIdUniqueKeyBinder ukBinder);
 
 	ClassmateContext getClassmateContext();
+
+	/**
+	 * Performs the same function as the legacy TypeResolver#basic, essentially performing
+	 * a resolution for BasicType using "registry keys".
+	 */
+	<T> BasicType<T> basicType(String registrationKey);
 
 	interface DelayedPropertyReferenceHandler extends Serializable {
 		void process(InFlightMetadataCollector metadataCollector);

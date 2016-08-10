@@ -45,6 +45,10 @@ import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.type.internal.BasicTypeProducerRegistryImpl;
+import org.hibernate.boot.model.type.internal.TypeInformationAliasRegistryImpl;
+import org.hibernate.boot.model.type.spi.BasicTypeProducerRegistry;
+import org.hibernate.boot.model.type.spi.TypeInformationAliasRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -71,6 +75,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.basic.RegistryKey;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.basic.RegistryKeyImpl;
@@ -523,6 +528,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private final MappingDefaultsImpl mappingDefaults;
 
 		private final TypeConfiguration typeConfiguration = new TypeConfiguration();
+		private final BasicTypeProducerRegistry typeInformationAliasRegistry = new BasicTypeProducerRegistryImpl();
 
 		private IndexView jandexView;
 		private ClassLoader tempClassLoader;
@@ -562,6 +568,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 		public MetadataBuildingOptionsImpl(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
+
+			initializeTypes();
 
 			final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
 			final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
@@ -702,6 +710,10 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			this.reflectionManager = generateDefaultReflectionManager();
 		}
 
+		private void initializeTypes() {
+			StandardBasicTypes.prime( typeConfiguration, getBasicTypeProducerRegistry() );
+		}
+
 		private ArrayList<MetadataSourceType> resolveInitialSourceProcessOrdering(ConfigurationService configService) {
 			final ArrayList<MetadataSourceType> initialSelections = new ArrayList<MetadataSourceType>();
 
@@ -763,6 +775,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		@Override
 		public TypeConfiguration getTypeConfiguration() {
 			return typeConfiguration;
+		}
+
+		@Override
+		public BasicTypeProducerRegistry getBasicTypeProducerRegistry() {
+			return typeInformationAliasRegistry;
 		}
 
 		@Override

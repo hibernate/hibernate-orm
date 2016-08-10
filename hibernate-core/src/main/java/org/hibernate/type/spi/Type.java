@@ -6,15 +6,19 @@
  */
 package org.hibernate.type.spi;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Comparator;
-
+import java.util.Locale;
+import java.util.Map;
 import javax.persistence.metamodel.Type.PersistenceType;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
 
@@ -35,28 +39,49 @@ public interface Type<T> extends org.hibernate.sqm.domain.Type {
 	enum Classification {
 		/**
 		 * Represents basic types (Strings, Integers, enums, etc).  Types classified as
-		 * BASIC will be castable to {@link BasicType}
+		 * BASIC will be castable to {@link BasicType}.
+		 * <p/>
+		 * Corresponds to the JPA {@link PersistenceType#BASIC} classification
 		 */
 		BASIC( PersistenceType.BASIC ),
+
 		/**
 		 * Represents composite values (what JPA calls embedded/embeddable).  Types classified as
 		 * COMPOSITE will be castable to {@link CompositeType}
+		 * <p/>
+		 * Corresponds to the JPA {@link PersistenceType#EMBEDDABLE} classification
 		 */
 		COMPOSITE( PersistenceType.EMBEDDABLE ),
+
 		/**
 		 * Represents reverse-discriminated values (where the discriminator is on the FK side of the association).
 		 * Types classified as ANY will be castable to {@link AnyType}
+		 * <p/>
+		 * Has no corresponding JPA classification.  JPA simply has no such concept.
 		 */
 		ANY( null ),
+
 		/**
 		 * Represents an entity value (either as a root, one-to-one or many-to-one).  Types classified
 		 * as ENTITY will be castable to {@link EntityType}
+		 * <p/>
+		 * Corresponds to the JPA {@link PersistenceType#ENTITY} classification
 		 */
 		ENTITY( PersistenceType.ENTITY ),
+
+		/**
+		 * Generally an abstract idea, represents a "mapped superclass" in the inheritance hierarchy.
+		 * <p/>
+		 * Corresponds to the JPA {@link PersistenceType#MAPPED_SUPERCLASS} classification
+		 */
 		MAPPED_SUPERCLASS( PersistenceType.MAPPED_SUPERCLASS ),
+
 		/**
 		 * Represents a plural attribute, including the FK.   Types classified as COLLECTION
 		 * will be castable to {@link CollectionType}
+		 * <p/>
+		 * Has no corresponding JPA classification.  JPA handles this via PluralAttribute and the
+		 * fact that support for Collection types in JPA is extremely narrow.
 		 */
 		COLLECTION( null );
 
@@ -98,13 +123,16 @@ public interface Type<T> extends org.hibernate.sqm.domain.Type {
 	 */
 	Classification getClassification();
 
+
 	/**
 	 * Returns the abbreviated name of the Type.  Mostly used historically for short-name
 	 * referencing of the Type in {@code hbm.xml} mappings.
 	 *
 	 * @return The Type name
 	 */
-	String getName();
+	default String getName() {
+		return String.format( Locale.ROOT, "%s[%s]", getClassification().name(), getJavaTypeDescriptor().getTypeName() );
+	}
 
 	/**
 	 * Obtain a descriptor for the Java side of a value mapping.
@@ -143,8 +171,102 @@ public interface Type<T> extends org.hibernate.sqm.domain.Type {
 
 
 
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// "read" and "write" contracts...
+	//
+	//		- for now we simply use the method sigs from the legacy Type contract,
+	//			especially in regards to name-based reads rather than position-based.
+	//			Eventually we will transition that over to position based reads,
+	//			but for now, in the interest of hopefully getting to a compilable
+	//			and testable state sooner, we will put that transition off
+	//			into its own work unit.
+	//
+	//		- this stuff is highly volatile atm, and for sure will change as
+	//			we move to position-based reads (rather than name-based)
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * Extract a value of the {@link #getReturnedClass() mapped class} from the JDBC result set. Implementors
+	 * should handle possibility of null values.
+	 * <p/>
+	 * This is a form that could complete go away.
+	 *
+	 * @param rs The result set from which to extract value.
+	 * @param names the column names making up this type value (use to read from result set)
+	 * @param session The originating session
+	 * @param owner the parent entity
+	 *
+	 * @return The extracted value
+	 *
+	 * @throws HibernateException An error from Hibernate
+	 * @throws SQLException An error from the JDBC driver
+	 *
+	 * @see org.hibernate.type.Type#hydrate(ResultSet, String[], SharedSessionContractImplementor, Object) alternative, 2-phase property initialization
+	 */
+	Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
+			throws HibernateException, SQLException;
+
+	/**
+	 * Extract a value of the {@link #getReturnedClass() mapped class} from the JDBC result set. Implementors
+	 * should handle possibility of null values.  This form might be called if the type is known to be a
+	 * single-column type.
+	 *
+	 * @param rs The result set from which to extract value.
+	 * @param name the column name making up this type value (use to read from result set)
+	 * @param session The originating session
+	 * @param owner the parent entity
+	 *
+	 * @return The extracted value
+	 *
+	 * @throws HibernateException An error from Hibernate
+	 * @throws SQLException An error from the JDBC driver
+	 */
+	Object nullSafeGet(ResultSet rs, String name, SharedSessionContractImplementor session, Object owner)
+			throws HibernateException, SQLException;
+
+	/**
+	 * Bind a value represented by an instance of the {@link #getReturnedClass() mapped class} to the JDBC prepared
+	 * statement, ignoring some columns as dictated by the 'settable' parameter.  Implementors should handle the
+	 * possibility of null values.  A multi-column type should bind parameters starting from <tt>index</tt>.
+	 *
+	 * @param st The JDBC prepared statement to which to bind
+	 * @param value the object to write
+	 * @param index starting parameter bind index
+	 * @param settable an array indicating which columns to bind/ignore
+	 * @param session The originating session
+	 *
+	 * @throws HibernateException An error from Hibernate
+	 * @throws SQLException An error from the JDBC driver
+	 */
+	void nullSafeSet(
+			PreparedStatement st,
+			Object value,
+			int index,
+			boolean[] settable,
+			SharedSessionContractImplementor session)
+			throws HibernateException, SQLException;
+
+	/**
+	 * Bind a value represented by an instance of the {@link #getReturnedClass() mapped class} to the JDBC prepared
+	 * statement.  Implementors should handle possibility of null values.  A multi-column type should bind parameters
+	 * starting from <tt>index</tt>.
+	 *
+	 * @param st The JDBC prepared statement to which to bind
+	 * @param value the object to write
+	 * @param index starting parameter bind index
+	 * @param session The originating session
+	 *
+	 * @throws HibernateException An error from Hibernate
+	 * @throws SQLException An error from the JDBC driver
+	 */
+	void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
+			throws HibernateException, SQLException;
 
 	/**
 	 * Extract a value from the JDBC result set.  This is useful for 2-phase property initialization - the second
@@ -166,7 +288,7 @@ public interface Type<T> extends org.hibernate.sqm.domain.Type {
 	 *
 	 * @see #resolve
 	 */
-	Object hydrate(ResultSet rs, String[] names, SessionImplementor session, Object owner)
+	Object hydrate(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException, SQLException;
 
 	/**
@@ -183,7 +305,7 @@ public interface Type<T> extends org.hibernate.sqm.domain.Type {
 	 *
 	 * @see #hydrate
 	 */
-	Object resolve(Object value, SessionImplementor session, Object owner) throws HibernateException;
+	Object resolve(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException;
 
 	/**
 	 * Given a hydrated, but unresolved value, return a value that may be used to reconstruct property-ref
@@ -197,7 +319,7 @@ public interface Type<T> extends org.hibernate.sqm.domain.Type {
 	 *
 	 * @throws HibernateException An error from Hibernate
 	 */
-	Object semiResolve(Object value, SessionImplementor session, Object owner)
+	Object semiResolve(Object value, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException;
 
 	/**
@@ -218,4 +340,150 @@ public interface Type<T> extends org.hibernate.sqm.domain.Type {
 	 *
 	 */
 	int getColumnSpan();
+
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// temporary inclusions from the legacy Type contract
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	default boolean isAssociationType() {
+		return getClassification() == Classification.ENTITY
+				|| getClassification() == Classification.MAPPED_SUPERCLASS
+				|| getClassification() == Classification.ANY;
+	}
+
+	default boolean isCollectionType() {
+		return getClassification() == Classification.COLLECTION;
+	}
+
+	default boolean isEntityType() {
+		return getClassification() == Classification.ENTITY
+				|| getClassification() == Classification.MAPPED_SUPERCLASS;
+	}
+
+	default boolean isAnyType() {
+		return getClassification() == Classification.ANY;
+	}
+
+	default boolean isComponentType() {
+		return getClassification() == Classification.COMPOSITE;
+	}
+
+	default Class getReturnedClass() {
+		return getJavaTypeDescriptor().getJavaTypeClass();
+	}
+
+	boolean[] toColumnNullness(Object value);
+
+	/**
+	 * Compare two instances of the class mapped by this type for persistence "equality" (equality of persistent
+	 * state).
+	 * <p/>
+	 * This should always equate to some form of comparison of the value's internal state.  As an example, for
+	 * something like a date the comparison should be based on its internal "time" state based on the specific portion
+	 * it is meant to represent (timestamp, date, time).
+	 *
+	 * @param x The first value
+	 * @param y The second value
+	 *
+	 * @return True if there are considered equal (see discussion above).
+	 *
+	 * @throws HibernateException A problem occurred performing the comparison
+	 */
+	boolean isEqual(T x, T y) throws HibernateException;
+
+	/**
+	 * Compare two instances of the class mapped by this type for persistence "equality" (equality of persistent
+	 * state).
+	 * <p/>
+	 * This should always equate to some form of comparison of the value's internal state.  As an example, for
+	 * something like a date the comparison should be based on its internal "time" state based on the specific portion
+	 * it is meant to represent (timestamp, date, time).
+	 *
+	 * @param x The first value
+	 * @param y The second value
+	 * @param factory The session factory
+	 *
+	 * @return True if there are considered equal (see discussion above).
+	 *
+	 * @throws HibernateException A problem occurred performing the comparison
+	 */
+	boolean isEqual(T x, T y, SessionFactoryImplementor factory) throws HibernateException;
+
+	/**
+	 * Are objects of this type mutable. (With respect to the referencing object ...
+	 * entities and collections are considered immutable because they manage their
+	 * own internal state.)
+	 *
+	 * @return boolean
+	 */
+	boolean isMutable();
+
+	/**
+	 * Return a deep copy of the persistent state, stopping at entities and at collections.
+	 *
+	 * @param value The value to be copied
+	 * @param factory The session factory
+	 *
+	 * @return The deep copy
+	 *
+	 * @throws HibernateException An error from Hibernate
+	 */
+	T deepCopy(T value, SessionFactoryImplementor factory);
+
+	/**
+	 * During merge, replace the existing (target) value in the entity we are merging to
+	 * with a new (original) value from the detached entity we are merging. For immutable
+	 * objects, or null values, it is safe to simply return the first parameter. For
+	 * mutable objects, it is safe to return a copy of the first parameter. For objects
+	 * with component values, it might make sense to recursively replace component values.
+	 *
+	 * @param original the value from the detached entity being merged
+	 * @param target the value in the managed entity
+	 * @param session The originating session
+	 * @param owner The owner of the value
+	 * @param copyCache The cache of already copied/replaced values
+	 *
+	 * @return the value to be merged
+	 *
+	 * @throws HibernateException An error from Hibernate
+	 */
+	T replace(
+			T original,
+			T target,
+			SharedSessionContractImplementor session,
+			Object owner,
+			Map copyCache) throws HibernateException;
+
+	/**
+	 * During merge, replace the existing (target) value in the entity we are merging to
+	 * with a new (original) value from the detached entity we are merging. For immutable
+	 * objects, or null values, it is safe to simply return the first parameter. For
+	 * mutable objects, it is safe to return a copy of the first parameter. For objects
+	 * with component values, it might make sense to recursively replace component values.
+	 *
+	 * @param original the value from the detached entity being merged
+	 * @param target the value in the managed entity
+	 * @param session The originating session
+	 * @param owner The owner of the value
+	 * @param copyCache The cache of already copied/replaced values
+	 * @param foreignKeyDirection For associations, which direction does the foreign key point?
+	 *
+	 * @return the value to be merged
+	 *
+	 * @throws HibernateException An error from Hibernate
+	 */
+	T replace(
+			T original,
+			T target,
+			SharedSessionContractImplementor session,
+			Object owner,
+			Map copyCache,
+			ForeignKeyDirection foreignKeyDirection) throws HibernateException;
+
 }

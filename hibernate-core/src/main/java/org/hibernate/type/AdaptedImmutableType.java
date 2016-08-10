@@ -5,7 +5,8 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.type;
-import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
+
+import org.hibernate.type.spi.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
 
 /**
@@ -16,20 +17,20 @@ import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
  * @author Steve Ebersole
  */
 public class AdaptedImmutableType<T> extends AbstractSingleColumnStandardBasicType<T> {
-	private final AbstractStandardBasicType<T> baseMutableType;
+	private final String name;
 
-	public AdaptedImmutableType(AbstractStandardBasicType<T> baseMutableType) {
-		super( baseMutableType.getSqlTypeDescriptor(), baseMutableType.getJavaTypeDescriptor() );
-		this.baseMutableType = baseMutableType;
+	public AdaptedImmutableType(AbstractSingleColumnStandardBasicType<T> baseMutableType) {
+		super( baseMutableType.getColumnMapping().getSqlTypeDescriptor(), baseMutableType.getJavaTypeDescriptor() );
+		this.name = "imm_" + baseMutableType.getName();
 	}
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
-	protected MutabilityPlan<T> getMutabilityPlan() {
+	public MutabilityPlan<T> getMutabilityPlan() {
 		return ImmutableMutabilityPlan.INSTANCE;
 	}
 
 	public String getName() {
-		return "imm_" + baseMutableType.getName();
+		return name;
 	}
 }

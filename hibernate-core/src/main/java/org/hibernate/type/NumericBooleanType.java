@@ -6,11 +6,10 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
-
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
-import org.hibernate.type.descriptor.sql.IntegerTypeDescriptor;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.descriptor.java.BooleanTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.IntegerTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#INTEGER INTEGER} and {@link Boolean} (using 1 and 0)
@@ -18,32 +17,27 @@ import org.hibernate.type.descriptor.sql.IntegerTypeDescriptor;
  * @author Steve Ebersole
  */
 public class NumericBooleanType 
-		extends AbstractSingleColumnStandardBasicType<Boolean>
-		implements PrimitiveType<Boolean>, DiscriminatorType<Boolean> {
+		extends AbstractSingleColumnStandardBasicType<Boolean> implements JdbcLiteralFormatter<Boolean> {
 
 	public static final NumericBooleanType INSTANCE = new NumericBooleanType();
 
-	public NumericBooleanType() {
+	protected NumericBooleanType() {
 		super( IntegerTypeDescriptor.INSTANCE, BooleanTypeDescriptor.INSTANCE );
 	}
+
 	@Override
 	public String getName() {
 		return "numeric_boolean";
 	}
+
 	@Override
-	public Class getPrimitiveClass() {
-		return boolean.class;
+	public JdbcLiteralFormatter<Boolean> getJdbcLiteralFormatter() {
+		return this;
 	}
+
 	@Override
-	public Serializable getDefaultValue() {
-		return Boolean.FALSE;
-	}
-	@Override
-	public Boolean stringToObject(String string) {
-		return fromString( string );
-	}
-	@Override
-	public String objectToSQLString(Boolean value, Dialect dialect) {
+	public String toJdbcLiteral(Boolean value, Dialect dialect) {
+		// See note on BooleanType#toJdbcLiteral
 		return value ? "1" : "0";
 	}
 }

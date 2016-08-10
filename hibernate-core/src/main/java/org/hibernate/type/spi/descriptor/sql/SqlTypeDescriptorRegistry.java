@@ -19,7 +19,6 @@ import org.hibernate.type.spi.descriptor.ValueBinder;
 import org.hibernate.type.spi.descriptor.ValueExtractor;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.sql.JdbcTypeFamilyInformation;
-import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
@@ -125,7 +124,7 @@ public class SqlTypeDescriptorRegistry {
 		}
 
 		@Override
-		public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeDescriptorRegistryAccess typeDescriptorRegistryAccess) {
+		public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
 			throw new UnsupportedOperationException( "No recommended Java-type mapping known for JDBC type code [" + jdbcTypeCode + "]" );
 		}
 

@@ -9,27 +9,24 @@ package org.hibernate.type;
 import java.time.Duration;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.descriptor.java.DurationJavaDescriptor;
-import org.hibernate.type.descriptor.sql.BigIntTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.BigIntTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class DurationType
 		extends AbstractSingleColumnStandardBasicType<Duration>
-		implements LiteralType<Duration> {
+		implements JdbcLiteralFormatter<Duration> {
+
 	/**
 	 * Singleton access
 	 */
 	public static final DurationType INSTANCE = new DurationType();
 
-	public DurationType() {
+	protected DurationType() {
 		super( BigIntTypeDescriptor.INSTANCE, DurationJavaDescriptor.INSTANCE );
-	}
-
-	@Override
-	public String objectToSQLString(Duration value, Dialect dialect) throws Exception {
-		return String.valueOf( value.toNanos() );
 	}
 
 	@Override
@@ -38,7 +35,12 @@ public class DurationType
 	}
 
 	@Override
-	protected boolean registerUnderJavaType() {
-		return true;
+	public JdbcLiteralFormatter<Duration> getJdbcLiteralFormatter() {
+		return this;
+	}
+
+	@Override
+	public String toJdbcLiteral(Duration value, Dialect dialect) {
+		return LongType.INSTANCE.toJdbcLiteral( value.toNanos(), dialect );
 	}
 }

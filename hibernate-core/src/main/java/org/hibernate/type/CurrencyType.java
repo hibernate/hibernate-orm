@@ -9,8 +9,9 @@ package org.hibernate.type;
 import java.util.Currency;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.descriptor.java.CurrencyTypeDescriptor;
-import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.descriptor.java.CurrencyTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.VarcharTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#VARCHAR VARCHAR} and {@link Currency}
@@ -18,26 +19,27 @@ import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class CurrencyType
-		extends AbstractSingleColumnStandardBasicType<Currency>
-		implements LiteralType<Currency> {
+public class CurrencyType extends AbstractSingleColumnStandardBasicType<Currency>
+		implements JdbcLiteralFormatter<Currency> {
 
 	public static final CurrencyType INSTANCE = new CurrencyType();
 
-	public CurrencyType() {
+	protected CurrencyType() {
 		super( VarcharTypeDescriptor.INSTANCE, CurrencyTypeDescriptor.INSTANCE );
 	}
 
+	@Override
 	public String getName() {
 		return "currency";
 	}
 
 	@Override
-	protected boolean registerUnderJavaType() {
-		return true;
+	public JdbcLiteralFormatter<Currency> getJdbcLiteralFormatter() {
+		return this;
 	}
 
-	public String objectToSQLString(Currency value, Dialect dialect) throws Exception {
-		return "\'" + toString(  value ) + "\'";
+	@Override
+	public String toJdbcLiteral(Currency value, Dialect dialect) {
+		return StringType.INSTANCE.toJdbcLiteral( toString( value ), dialect );
 	}
 }

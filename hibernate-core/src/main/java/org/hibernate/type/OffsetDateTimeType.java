@@ -7,36 +7,39 @@
 package org.hibernate.type;
 
 import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
-import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.internal.descriptor.DateTimeUtils;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.VersionType;
 import org.hibernate.type.spi.descriptor.java.OffsetDateTimeJavaDescriptor;
-import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class OffsetDateTimeType
 		extends AbstractSingleColumnStandardBasicType<OffsetDateTime>
-		implements VersionType<OffsetDateTime>, LiteralType<OffsetDateTime> {
+		implements VersionType<OffsetDateTime>, JdbcLiteralFormatter<OffsetDateTime> {
 
 	/**
 	 * Singleton access
 	 */
 	public static final OffsetDateTimeType INSTANCE = new OffsetDateTimeType();
 
-	public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss.S xxxxx", Locale.ENGLISH );
-
-	public OffsetDateTimeType() {
+	/**
+	 * NOTE: protected access to allow for sub-classing
+	 */
+	@SuppressWarnings("WeakerAccess")
+	protected OffsetDateTimeType() {
 		super( TimestampTypeDescriptor.INSTANCE, OffsetDateTimeJavaDescriptor.INSTANCE );
 	}
 
 	@Override
-	public String objectToSQLString(OffsetDateTime value, Dialect dialect) throws Exception {
-		return "{ts '" + FORMATTER.format( value ) + "'}";
+	public String getName() {
+		return OffsetDateTime.class.getSimpleName();
 	}
 
 	@Override
@@ -56,12 +59,18 @@ public class OffsetDateTimeType
 	}
 
 	@Override
-	public String getName() {
-		return OffsetDateTime.class.getSimpleName();
+	public JdbcLiteralFormatter<OffsetDateTime> getJdbcLiteralFormatter() {
+		return this;
 	}
 
 	@Override
-	protected boolean registerUnderJavaType() {
-		return true;
+	public String toJdbcLiteral(OffsetDateTime value, Dialect dialect) {
+		return toJdbcLiteral( value );
 	}
+
+	@SuppressWarnings("WeakerAccess")
+	public String toJdbcLiteral(OffsetDateTime value) {
+		return DateTimeUtils.formatAsJdbcLiteralTimestamp( value );
+	}
+
 }

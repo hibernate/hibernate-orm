@@ -9,8 +9,9 @@ package org.hibernate.type;
 import java.util.TimeZone;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.descriptor.java.TimeZoneTypeDescriptor;
-import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.descriptor.java.TimeZoneTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.VarcharTypeDescriptor;
 
 /**
  * A type mapping {@link java.sql.Types#VARCHAR VARCHAR} and {@link TimeZone}
@@ -19,8 +20,7 @@ import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
  * @author Steve Ebersole
  */
 public class TimeZoneType
-		extends AbstractSingleColumnStandardBasicType<TimeZone>
-		implements LiteralType<TimeZone> {
+		extends AbstractSingleColumnStandardBasicType<TimeZone> implements JdbcLiteralFormatter<TimeZone> {
 
 	public static final TimeZoneType INSTANCE = new TimeZoneType();
 
@@ -33,12 +33,12 @@ public class TimeZoneType
 	}
 
 	@Override
-	protected boolean registerUnderJavaType() {
-		return true;
+	public JdbcLiteralFormatter<TimeZone> getJdbcLiteralFormatter() {
+		return this;
 	}
 
-	public String objectToSQLString(TimeZone value, Dialect dialect) throws Exception {
-		return StringType.INSTANCE.objectToSQLString( value.getID(), dialect );
+	@Override
+	public String toJdbcLiteral(TimeZone value, Dialect dialect) {
+		return StringType.INSTANCE.toJdbcLiteral( value.getID(), dialect );
 	}
-
 }

@@ -6,10 +6,9 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
-
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.descriptor.java.FloatTypeDescriptor;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.descriptor.java.FloatTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#FLOAT FLOAT} and {@link Float}
@@ -17,13 +16,13 @@ import org.hibernate.type.descriptor.java.FloatTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class FloatType extends AbstractSingleColumnStandardBasicType<Float> implements PrimitiveType<Float> {
+public class FloatType extends AbstractSingleColumnStandardBasicType<Float> implements JdbcLiteralFormatter<Float> {
 	public static final FloatType INSTANCE = new FloatType();
 
 	public static final Float ZERO = 0.0f;
 
 	public FloatType() {
-		super( org.hibernate.type.descriptor.sql.FloatTypeDescriptor.INSTANCE, FloatTypeDescriptor.INSTANCE );
+		super( org.hibernate.type.spi.descriptor.sql.FloatTypeDescriptor.INSTANCE, FloatTypeDescriptor.INSTANCE );
 	}
 	@Override
 	public String getName() {
@@ -31,19 +30,12 @@ public class FloatType extends AbstractSingleColumnStandardBasicType<Float> impl
 	}
 
 	@Override
-	public String[] getRegistrationKeys() {
-		return new String[] { getName(), float.class.getName(), Float.class.getName() };
+	public JdbcLiteralFormatter<Float> getJdbcLiteralFormatter() {
+		return this;
 	}
+
 	@Override
-	public Serializable getDefaultValue() {
-		return ZERO;
-	}
-	@Override
-	public Class getPrimitiveClass() {
-		return float.class;
-	}
-	@Override
-	public String objectToSQLString(Float value, Dialect dialect) throws Exception {
-		return toString( value );
+	public String toJdbcLiteral(Float value, Dialect dialect) {
+		return value.toString();
 	}
 }

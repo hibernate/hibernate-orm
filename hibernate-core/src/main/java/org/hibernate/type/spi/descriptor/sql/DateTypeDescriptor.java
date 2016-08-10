@@ -14,10 +14,10 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Calendar;
 
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.ValueBinder;
 import org.hibernate.type.spi.descriptor.ValueExtractor;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
-import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -42,8 +42,8 @@ public class DateTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
-	public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeDescriptorRegistryAccess typeDescriptorRegistryAccess) {
-		return typeDescriptorRegistryAccess.getJavaTypeDescriptorRegistry().getDescriptor( Date.class );
+	public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+		return typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Date.class );
 	}
 
 	@Override

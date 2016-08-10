@@ -11,7 +11,7 @@ import java.util.Calendar;
 import java.util.TimeZone;
 
 import org.hibernate.engine.jdbc.LobCreator;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * Gives binding (nullSafeSet) and extracting (nullSafeGet) code access to options.

@@ -10,7 +10,9 @@ import java.sql.Time;
 import java.util.Date;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.descriptor.java.JdbcTimeTypeDescriptor;
+import org.hibernate.type.internal.descriptor.DateTimeUtils;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.descriptor.java.JdbcTimeTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#TIME TIME} and {@link Time}
@@ -18,14 +20,12 @@ import org.hibernate.type.descriptor.java.JdbcTimeTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class TimeType
-		extends AbstractSingleColumnStandardBasicType<Date>
-		implements LiteralType<Date> {
+public class TimeType extends AbstractSingleColumnStandardBasicType<Date> implements JdbcLiteralFormatter<Date> {
 
 	public static final TimeType INSTANCE = new TimeType();
 
 	public TimeType() {
-		super( org.hibernate.type.descriptor.sql.TimeTypeDescriptor.INSTANCE, JdbcTimeTypeDescriptor.INSTANCE );
+		super( org.hibernate.type.spi.descriptor.sql.TimeTypeDescriptor.INSTANCE, JdbcTimeTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {
@@ -33,23 +33,12 @@ public class TimeType
 	}
 
 	@Override
-	public String[] getRegistrationKeys() {
-		return new String[] {
-				getName(),
-				java.sql.Time.class.getName()
-		};
+	public JdbcLiteralFormatter<Date> getJdbcLiteralFormatter() {
+		return this;
 	}
 
-	//	@Override
-//	protected boolean registerUnderJavaType() {
-//		return true;
-//	}
-
-	public String objectToSQLString(Date value, Dialect dialect) throws Exception {
-		Time jdbcTime = Time.class.isInstance( value )
-				? ( Time ) value
-				: new Time( value.getTime() );
-		// TODO : use JDBC time literal escape syntax? -> {t 'time-string'} in hh:mm:ss format
-		return StringType.INSTANCE.objectToSQLString( jdbcTime.toString(), dialect );
+	@Override
+	public String toJdbcLiteral(Date value, Dialect dialect) {
+		return DateTimeUtils.formatAsJdbcLiteralTime( value );
 	}
 }

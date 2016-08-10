@@ -6,11 +6,12 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.type.descriptor.java.StringTypeDescriptor;
-import org.hibernate.type.descriptor.sql.NClobTypeDescriptor;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.descriptor.java.StringTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.NClobTypeDescriptor;
 
 /**
- * A type that maps between {@link java.sql.Types#CLOB CLOB} and {@link String}
+ * A type that maps between {@link java.sql.Types#NCLOB NCLOB} and {@link String}
  *
  * @author Gavin King
  * @author Gail Badner
@@ -25,5 +26,11 @@ public class MaterializedNClobType extends AbstractSingleColumnStandardBasicType
 
 	public String getName() {
 		return "materialized_nclob";
+	}
+
+	@Override
+	public JdbcLiteralFormatter<String> getJdbcLiteralFormatter() {
+		// no literal support for NCLOB
+		return null;
 	}
 }

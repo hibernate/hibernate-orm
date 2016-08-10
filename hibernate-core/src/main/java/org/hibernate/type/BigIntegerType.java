@@ -9,9 +9,9 @@ package org.hibernate.type;
 import java.math.BigInteger;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.descriptor.java.BigIntegerTypeDescriptor;
-import org.hibernate.type.descriptor.sql.BigIntTypeDescriptor;
-import org.hibernate.type.descriptor.sql.NumericTypeDescriptor;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.descriptor.java.BigIntegerTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.NumericTypeDescriptor;
 
 /**
  * A type that maps between a {@link java.sql.Types#NUMERIC NUMERIC} and {@link BigInteger}.
@@ -21,7 +21,7 @@ import org.hibernate.type.descriptor.sql.NumericTypeDescriptor;
  */
 public class BigIntegerType
 		extends AbstractSingleColumnStandardBasicType<BigInteger>
-		implements DiscriminatorType<BigInteger> {
+		implements JdbcLiteralFormatter<BigInteger> {
 
 	public static final BigIntegerType INSTANCE = new BigIntegerType();
 
@@ -35,17 +35,12 @@ public class BigIntegerType
 	}
 
 	@Override
-	protected boolean registerUnderJavaType() {
-		return true;
+	public JdbcLiteralFormatter<BigInteger> getJdbcLiteralFormatter() {
+		return this;
 	}
 
 	@Override
-	public String objectToSQLString(BigInteger value, Dialect dialect) {
-		return BigIntegerTypeDescriptor.INSTANCE.toString( value );
-	}
-
-	@Override
-	public BigInteger stringToObject(String string) {
-		return BigIntegerTypeDescriptor.INSTANCE.fromString( string );
+	public String toJdbcLiteral(BigInteger value, Dialect dialect) {
+		return value.toString();
 	}
 }

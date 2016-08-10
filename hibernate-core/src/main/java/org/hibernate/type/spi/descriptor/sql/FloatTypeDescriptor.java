@@ -8,7 +8,7 @@ package org.hibernate.type.spi.descriptor.sql;
 
 import java.sql.Types;
 
-import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -28,7 +28,7 @@ public class FloatTypeDescriptor extends RealTypeDescriptor {
 	}
 
 	@Override
-	public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeDescriptorRegistryAccess typeDescriptorRegistryAccess) {
-		return typeDescriptorRegistryAccess.getJavaTypeDescriptorRegistry().getDescriptor( Double.class );
+	public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+		return typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Double.class );
 	}
 }

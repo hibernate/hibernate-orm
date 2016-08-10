@@ -9,7 +9,8 @@ package org.hibernate.type;
 import java.sql.Blob;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.descriptor.java.BlobTypeDescriptor;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.descriptor.java.BlobTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#BLOB BLOB} and {@link Blob}
@@ -21,7 +22,7 @@ public class BlobType extends AbstractSingleColumnStandardBasicType<Blob> {
 	public static final BlobType INSTANCE = new BlobType();
 
 	public BlobType() {
-		super( org.hibernate.type.descriptor.sql.BlobTypeDescriptor.DEFAULT, BlobTypeDescriptor.INSTANCE );
+		super( org.hibernate.type.spi.descriptor.sql.BlobTypeDescriptor.DEFAULT, BlobTypeDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -30,13 +31,14 @@ public class BlobType extends AbstractSingleColumnStandardBasicType<Blob> {
 	}
 
 	@Override
-	protected boolean registerUnderJavaType() {
-		return true;
+	public Blob getReplacement(Blob original, Blob target, SharedSessionContractImplementor session) {
+		return session.getJdbcServices().getJdbcEnvironment().getDialect().getLobMergeStrategy().mergeBlob( original, target, session );
 	}
 
 	@Override
-	protected Blob getReplacement(Blob original, Blob target, SharedSessionContractImplementor session) {
-		return session.getJdbcServices().getJdbcEnvironment().getDialect().getLobMergeStrategy().mergeBlob( original, target, session );
+	public JdbcLiteralFormatter<Blob> getJdbcLiteralFormatter() {
+		// no literal support for BLOB data
+		return null;
 	}
 
 }

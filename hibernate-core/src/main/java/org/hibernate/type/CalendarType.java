@@ -10,9 +10,13 @@ import java.util.Calendar;
 import java.util.Comparator;
 import java.util.GregorianCalendar;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.descriptor.java.CalendarTypeDescriptor;
-import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
+import org.hibernate.type.internal.descriptor.DateTimeUtils;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.descriptor.java.CalendarTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
+import org.hibernate.type.spi.VersionType;
 
 /**
  * A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link Calendar}
@@ -22,7 +26,7 @@ import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
  */
 public class CalendarType
 		extends AbstractSingleColumnStandardBasicType<Calendar>
-		implements VersionType<Calendar> {
+		implements VersionType<Calendar>,JdbcLiteralFormatter<Calendar> {
 
 	public static final CalendarType INSTANCE = new CalendarType();
 
@@ -33,11 +37,6 @@ public class CalendarType
 	@Override
 	public String getName() {
 		return "calendar";
-	}
-
-	@Override
-	public String[] getRegistrationKeys() {
-		return new String[] { getName(), Calendar.class.getName(), GregorianCalendar.class.getName() };
 	}
 
 	@Override
@@ -53,5 +52,15 @@ public class CalendarType
 	@Override
 	public Comparator<Calendar> getComparator() {
 		return getJavaTypeDescriptor().getComparator();
+	}
+
+	@Override
+	public JdbcLiteralFormatter<Calendar> getJdbcLiteralFormatter() {
+		return this;
+	}
+
+	@Override
+	public String toJdbcLiteral(Calendar value, Dialect dialect) {
+		return DateTimeUtils.formatAsJdbcLiteralTimestamp( value );
 	}
 }

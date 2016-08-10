@@ -112,7 +112,7 @@ public class BasicTypeRegistry {
 				return typeConfiguration;
 			}
 		};
-		registerBasicTypes();
+//		registerBasicTypes();
 	}
 
 	public TypeDescriptorRegistryAccess getTypeDescriptorRegistryAccess() {
@@ -121,6 +121,10 @@ public class BasicTypeRegistry {
 
 	public JdbcRecommendedSqlTypeMappingContext getBaseJdbcRecommendedSqlTypeMappingContext() {
 		return baseJdbcRecommendedSqlTypeMappingContext;
+	}
+
+	public <T> BasicType<T> getRegisteredBasicType(RegistryKey registryKey) {
+		return registrations.get( registryKey );
 	}
 
 	@SuppressWarnings("unchecked")
@@ -173,10 +177,10 @@ public class BasicTypeRegistry {
 			}
 
 			if ( TemporalTypeDescriptor.class.isInstance( javaTypeDescriptor ) ) {
-				impl = new TemporalTypeImpl( typeConfiguration, (TemporalTypeDescriptor) javaTypeDescriptor, sqlTypeDescriptor, mutabilityPlan, comparator );
+				impl = new TemporalTypeImpl( (TemporalTypeDescriptor) javaTypeDescriptor, sqlTypeDescriptor, mutabilityPlan, comparator );
 			}
 			else {
-				impl = new BasicTypeImpl( typeConfiguration, javaTypeDescriptor, sqlTypeDescriptor, mutabilityPlan, comparator );
+				impl = new BasicTypeImpl( javaTypeDescriptor, sqlTypeDescriptor, mutabilityPlan, comparator );
 			}
 
 			registrations.put( key, impl );
@@ -322,7 +326,6 @@ public class BasicTypeRegistry {
 		final BasicType<T> impl;
 		if ( TemporalTypeDescriptor.class.isInstance( javaTypeDescriptor ) ) {
 			impl = new TemporalTypeImpl(
-					typeConfiguration,
 					(TemporalTypeDescriptor) javaTypeDescriptor,
 					sqlTypeDescriptor,
 					mutabilityPlan,
@@ -333,7 +336,6 @@ public class BasicTypeRegistry {
 		}
 		else {
 			impl = new BasicTypeImpl(
-					typeConfiguration,
 					javaTypeDescriptor,
 					sqlTypeDescriptor,
 					mutabilityPlan,
@@ -441,7 +443,6 @@ public class BasicTypeRegistry {
 			SqlTypeDescriptor sqlTypeDescriptor,
 			MutabilityPlan mutabilityPlan) {
 		final BasicType type = new BasicTypeImpl(
-				typeConfiguration,
 				javaTypeDescriptor,
 				sqlTypeDescriptor,
 				mutabilityPlan,
@@ -459,7 +460,6 @@ public class BasicTypeRegistry {
 			SqlTypeDescriptor sqlTypeDescriptor,
 			MutabilityPlan mutabilityPlan) {
 		final TemporalType type = new TemporalTypeImpl(
-				typeConfiguration,
 				temporalTypeDescriptor,
 				sqlTypeDescriptor,
 				mutabilityPlan,

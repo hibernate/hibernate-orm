@@ -6,10 +6,9 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
-
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.descriptor.java.DoubleTypeDescriptor;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.descriptor.java.DoubleTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#DOUBLE DOUBLE} and {@link Double}
@@ -17,33 +16,27 @@ import org.hibernate.type.descriptor.java.DoubleTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class DoubleType extends AbstractSingleColumnStandardBasicType<Double> implements PrimitiveType<Double> {
+public class DoubleType extends AbstractSingleColumnStandardBasicType<Double> implements JdbcLiteralFormatter<Double> {
 	public static final DoubleType INSTANCE = new DoubleType();
 
 	public static final Double ZERO = 0.0;
 
 	public DoubleType() {
-		super( org.hibernate.type.descriptor.sql.DoubleTypeDescriptor.INSTANCE, DoubleTypeDescriptor.INSTANCE );
+		super( org.hibernate.type.spi.descriptor.sql.DoubleTypeDescriptor.INSTANCE, DoubleTypeDescriptor.INSTANCE );
 	}
+
 	@Override
 	public String getName() {
 		return "double";
 	}
 
 	@Override
-	public String[] getRegistrationKeys() {
-		return new String[] { getName(), double.class.getName(), Double.class.getName() };
+	public JdbcLiteralFormatter<Double> getJdbcLiteralFormatter() {
+		return this;
 	}
+
 	@Override
-	public Serializable getDefaultValue() {
-		return ZERO;
-	}
-	@Override
-	public Class getPrimitiveClass() {
-		return double.class;
-	}
-	@Override
-	public String objectToSQLString(Double value, Dialect dialect) throws Exception {
-		return toString( value );
+	public String toJdbcLiteral(Double value, Dialect dialect) {
+		return value.toString();
 	}
 }

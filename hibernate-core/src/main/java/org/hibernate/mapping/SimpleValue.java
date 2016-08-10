@@ -20,9 +20,11 @@ import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.internal.AttributeConverterDescriptorNonAutoApplicableImpl;
+import org.hibernate.boot.model.type.spi.BasicTypeProducer;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.AttributeConverterDescriptor;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
@@ -48,7 +50,7 @@ import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.JdbcTypeJavaClassMappings;
 import org.hibernate.type.descriptor.sql.LobTypeMappings;
 import org.hibernate.type.descriptor.sql.NationalizedTypeMappings;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.usertype.DynamicParameterizedType;
 
 /**
@@ -60,7 +62,7 @@ public class SimpleValue implements KeyValue {
 
 	public static final String DEFAULT_ID_GEN_STRATEGY = "assigned";
 
-	private final MetadataImplementor metadata;
+	private final InFlightMetadataCollector metadata;
 
 	private final List<Selectable> columns = new ArrayList<Selectable>();
 	private final List<Boolean> insertability = new ArrayList<Boolean>();
@@ -83,17 +85,18 @@ public class SimpleValue implements KeyValue {
 
 	private AttributeConverterDescriptor attributeConverterDescriptor;
 	private Type type;
+	private BasicTypeProducer basicTypeProducer;
 
-	public SimpleValue(MetadataImplementor metadata) {
+	public SimpleValue(InFlightMetadataCollector metadata) {
 		this.metadata = metadata;
 	}
 
-	public SimpleValue(MetadataImplementor metadata, Table table) {
+	public SimpleValue(InFlightMetadataCollector metadata, Table table) {
 		this( metadata );
 		this.table = table;
 	}
 
-	public MetadataImplementor getMetadata() {
+	public InFlightMetadataCollector getMetadata() {
 		return metadata;
 	}
 
@@ -421,28 +424,15 @@ public class SimpleValue implements KeyValue {
 	}
 
 	public Type getType() throws MappingException {
-		if ( type != null ) {
-			return type;
+		if ( type == null ) {
+			if ( basicTypeProducer == null ) {
+				throw new MappingException( "Access to Type was requested, but Type is not yet resolved and no BasicTypeProducer was injected" );
+			}
+
+			type = basicTypeProducer.produceBasicType();
 		}
 
-		if ( typeName == null ) {
-			throw new MappingException( "No type name" );
-		}
-
-		if ( typeParameters != null
-				&& Boolean.valueOf( typeParameters.getProperty( DynamicParameterizedType.IS_DYNAMIC ) )
-				&& typeParameters.get( DynamicParameterizedType.PARAMETER_TYPE ) == null ) {
-			createParameterImpl();
-		}
-
-		Type result = metadata.getTypeResolver().heuristicType( typeName, typeParameters );
-		// if this is a byte[] version/timestamp, then we need to use RowVersionType
-		// instead of BinaryType (HHH-10413)
-		if ( isVersion && BinaryType.class.isInstance( result ) ) {
-			log.debug( "version is BinaryType; changing to RowVersionType" );
-			result = RowVersionType.INSTANCE;
-		}
-		if ( result == null ) {
+		if ( type == null ) {
 			String msg = "Could not determine type for: " + typeName;
 			if ( table != null ) {
 				msg += ", at table: " + table.getName();
@@ -453,7 +443,7 @@ public class SimpleValue implements KeyValue {
 			throw new MappingException( msg );
 		}
 
-		return result;
+		return type;
 	}
 
 	public void setTypeUsingReflection(String className, String propertyName) throws MappingException {
@@ -531,7 +521,7 @@ public class SimpleValue implements KeyValue {
 		// resolve the JavaTypeDescriptor ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// For the JavaTypeDescriptor portion we simply resolve the "entity attribute representation" part of
 		// the AttributeConverter to resolve the corresponding descriptor.
-		final JavaTypeDescriptor entityAttributeJavaTypeDescriptor = metadata.getTypeDescriptorRegistryAccess().getJavaTypeDescriptorRegistry().getDescriptor( entityAttributeJavaType );
+		final JavaTypeDescriptor entityAttributeJavaTypeDescriptor = metadata.getTypeConfiguration().getJavaTypeDescriptorRegistry().getDescriptor( entityAttributeJavaType );
 
 
 		// build the SqlTypeDescriptor adapter ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -564,21 +554,11 @@ public class SimpleValue implements KeyValue {
 		if ( isNationalized() ) {
 			jdbcTypeCode = NationalizedTypeMappings.INSTANCE.getCorrespondingNationalizedCode( jdbcTypeCode );
 		}
-
-		// find the standard SqlTypeDescriptor for that JDBC type code (allow itr to be remapped if needed!)
-		final SqlTypeDescriptor sqlTypeDescriptor = metadata.getMetadataBuildingOptions().getServiceRegistry()
-				.getService( JdbcServices.class )
-				.getJdbcEnvironment()
-				.getDialect()
-				.remapSqlTypeDescriptor( metadata.getTypeDescriptorRegistryAccess()
-												 .getSqlTypeDescriptorRegistry()
-												 .getDescriptor( jdbcTypeCode ) );
-
+		// find the standard SqlTypeDescriptor for that JDBC type code.
+		final SqlTypeDescriptor sqlTypeDescriptor = metadata.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( jdbcTypeCode );
 		// find the JavaTypeDescriptor representing the "intermediate database type representation".  Back to the
 		// 		illustration, this should be the type descriptor for Strings
-		final JavaTypeDescriptor intermediateJavaTypeDescriptor = metadata.getTypeDescriptorRegistryAccess()
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( databaseColumnJavaType );
+		final JavaTypeDescriptor intermediateJavaTypeDescriptor = metadata.getTypeConfiguration().getJavaTypeDescriptorRegistry().getDescriptor( databaseColumnJavaType );
 		// and finally construct the adapter, which injects the AttributeConverter calls into the binding/extraction
 		// 		process...
 		final SqlTypeDescriptor sqlTypeDescriptorAdapter = new AttributeConverterSqlTypeDescriptorAdapter(
@@ -695,6 +675,10 @@ public class SimpleValue implements KeyValue {
 		}
 	}
 
+	public void setBasicTypeProducer(BasicTypeProducer basicTypeProducer) {
+		this.basicTypeProducer = basicTypeProducer;
+	}
+
 	private static final class ParameterTypeImpl implements DynamicParameterizedType.ParameterType {
 
 		private final Class returnedClass;
@@ -705,8 +689,14 @@ public class SimpleValue implements KeyValue {
 		private final boolean primaryKey;
 		private final String[] columns;
 
-		private ParameterTypeImpl(Class returnedClass, Annotation[] annotationsMethod, String catalog, String schema,
-				String table, boolean primaryKey, String[] columns) {
+		private ParameterTypeImpl(
+				Class returnedClass,
+				Annotation[] annotationsMethod,
+				String catalog,
+				String schema,
+				String table,
+				boolean primaryKey,
+				String[] columns) {
 			this.returnedClass = returnedClass;
 			this.annotationsMethod = annotationsMethod;
 			this.catalog = catalog;

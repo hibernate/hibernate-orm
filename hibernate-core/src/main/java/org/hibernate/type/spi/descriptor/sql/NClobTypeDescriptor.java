@@ -14,10 +14,10 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.engine.jdbc.CharacterStream;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.ValueBinder;
 import org.hibernate.type.spi.descriptor.ValueExtractor;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
-import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -69,8 +69,8 @@ public abstract class NClobTypeDescriptor implements SqlTypeDescriptor {
 
 	public static final NClobTypeDescriptor DEFAULT = new NClobTypeDescriptor() {
 		@Override
-		public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeDescriptorRegistryAccess typeDescriptorRegistryAccess) {
-			return typeDescriptorRegistryAccess.getJavaTypeDescriptorRegistry().getDescriptor( NClob.class );
+		public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+			return typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( NClob.class );
 		}
 
 		@Override
@@ -103,8 +103,8 @@ public abstract class NClobTypeDescriptor implements SqlTypeDescriptor {
 
 	public static final NClobTypeDescriptor NCLOB_BINDING = new NClobTypeDescriptor() {
 		@Override
-		public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeDescriptorRegistryAccess typeDescriptorRegistryAccess) {
-			return typeDescriptorRegistryAccess.getJavaTypeDescriptorRegistry().getDescriptor( NClob.class );
+		public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+			return typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( NClob.class );
 		}
 
 		@Override
@@ -127,7 +127,7 @@ public abstract class NClobTypeDescriptor implements SqlTypeDescriptor {
 
 	public static final NClobTypeDescriptor STREAM_BINDING = new NClobTypeDescriptor() {
 		@Override
-		public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeDescriptorRegistryAccess typeDescriptorRegistryAccess) {
+		public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
 			return null;
 		}
 

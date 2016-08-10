@@ -9,6 +9,8 @@ package org.hibernate.dialect;
 import java.io.FilterReader;
 import java.io.Reader;
 import java.sql.CallableStatement;
+import java.sql.Clob;
+import java.sql.NClob;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -43,14 +45,15 @@ import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.BasicBinder;
-import org.hibernate.type.descriptor.sql.BitTypeDescriptor;
-import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.NClobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SmallIntTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.BasicBinder;
+import org.hibernate.type.spi.descriptor.sql.BitTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.ClobTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.NClobTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.SmallIntTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * An abstract base class for HANA dialects. <br/>
@@ -96,13 +99,18 @@ public abstract class AbstractHANADialect extends Dialect {
 	// changed from the standard ones. The HANA JDBC driver currently closes any
 	// stream passed in via
 	// PreparedStatement.setCharacterStream(int,Reader,long)
-	// afterQuery the stream has been processed. this causes problems later if we are
+	// after the stream has been processed. this causes problems later if we are
 	// using non-contexual lob creation and HANA then closes our StringReader.
 	// see test case LobLocatorTest
 
 	private static final ClobTypeDescriptor HANA_CLOB_STREAM_BINDING = new ClobTypeDescriptor() {
 		/** serial version uid. */
 		private static final long serialVersionUID = -379042275442752102L;
+
+		@Override
+		public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+			return typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Clob.class );
+		}
 
 		@Override
 		public <X> BasicBinder<X> getClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
@@ -148,6 +156,11 @@ public abstract class AbstractHANADialect extends Dialect {
 	};
 
 	private static final NClobTypeDescriptor HANA_NCLOB_STREAM_BINDING = new NClobTypeDescriptor() {
+		@Override
+		public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+			return typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( NClob.class );
+		}
+
 		/** serial version uid. */
 		private static final long serialVersionUID = 5651116091681647859L;
 

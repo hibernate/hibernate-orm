@@ -8,8 +8,9 @@ package org.hibernate.type;
 
 import java.io.Serializable;
 
-import org.hibernate.type.descriptor.java.SerializableTypeDescriptor;
-import org.hibernate.type.descriptor.sql.VarbinaryTypeDescriptor;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.descriptor.java.SerializableTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.VarbinaryTypeDescriptor;
 
 /**
  * A type that maps between a {@link java.sql.Types#VARBINARY VARBINARY} and {@link Serializable} classes.
@@ -37,5 +38,11 @@ public class SerializableType<T extends Serializable> extends AbstractSingleColu
 
 	public String getName() {
 		return (serializableClass==Serializable.class) ? "serializable" : serializableClass.getName();
+	}
+
+	@Override
+	public JdbcLiteralFormatter<T> getJdbcLiteralFormatter() {
+		// no literal support for binary data
+		return null;
 	}
 }

@@ -11,15 +11,17 @@ import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.type.internal.descriptor.DateTimeUtils;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.descriptor.java.LocalDateJavaDescriptor;
-import org.hibernate.type.descriptor.sql.DateTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.DateTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class LocalDateType
 		extends AbstractSingleColumnStandardBasicType<LocalDate>
-		implements LiteralType<LocalDate> {
+		implements JdbcLiteralFormatter<LocalDate> {
 
 	/**
 	 * Singleton access
@@ -28,7 +30,11 @@ public class LocalDateType
 
 	public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern( "yyyy-MM-dd", Locale.ENGLISH );
 
-	public LocalDateType() {
+	/**
+	 * NOTE: protected access to allow for sub-classing
+	 */
+	@SuppressWarnings("WeakerAccess")
+	protected LocalDateType() {
 		super( DateTypeDescriptor.INSTANCE, LocalDateJavaDescriptor.INSTANCE );
 	}
 
@@ -38,12 +44,17 @@ public class LocalDateType
 	}
 
 	@Override
-	protected boolean registerUnderJavaType() {
-		return true;
+	public JdbcLiteralFormatter<LocalDate> getJdbcLiteralFormatter() {
+		return this;
 	}
 
 	@Override
-	public String objectToSQLString(LocalDate value, Dialect dialect) throws Exception {
-		return "{d '" + FORMATTER.format( value ) + "'}";
+	public String toJdbcLiteral(LocalDate value, Dialect dialect) {
+		return toJdbcLiteral( value );
+	}
+
+	@SuppressWarnings("WeakerAccess")
+	public String toJdbcLiteral(LocalDate value) {
+		return DateTimeUtils.formatAsJdbcLiteralDate( value );
 	}
 }

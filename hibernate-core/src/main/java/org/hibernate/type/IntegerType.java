@@ -11,7 +11,9 @@ import java.util.Comparator;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.descriptor.java.IntegerTypeDescriptor;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.VersionType;
+import org.hibernate.type.spi.descriptor.java.IntegerTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#INTEGER INTEGER} and @link Integer}
@@ -20,44 +22,19 @@ import org.hibernate.type.descriptor.java.IntegerTypeDescriptor;
  * @author Steve Ebersole
  */
 public class IntegerType extends AbstractSingleColumnStandardBasicType<Integer>
-		implements PrimitiveType<Integer>, DiscriminatorType<Integer>, VersionType<Integer> {
+		implements VersionType<Integer>,JdbcLiteralFormatter<Integer> {
 
 	public static final IntegerType INSTANCE = new IntegerType();
 
 	public static final Integer ZERO = 0;
 
 	public IntegerType() {
-		super( org.hibernate.type.descriptor.sql.IntegerTypeDescriptor.INSTANCE, IntegerTypeDescriptor.INSTANCE );
+		super( org.hibernate.type.spi.descriptor.sql.IntegerTypeDescriptor.INSTANCE, IntegerTypeDescriptor.INSTANCE );
 	}
 
 	@Override
 	public String getName() {
 		return "integer";
-	}
-
-	@Override
-	public String[] getRegistrationKeys() {
-		return new String[] {getName(), int.class.getName(), Integer.class.getName()};
-	}
-
-	@Override
-	public Serializable getDefaultValue() {
-		return ZERO;
-	}
-
-	@Override
-	public Class getPrimitiveClass() {
-		return int.class;
-	}
-
-	@Override
-	public String objectToSQLString(Integer value, Dialect dialect) throws Exception {
-		return toString( value );
-	}
-
-	@Override
-	public Integer stringToObject(String xml) {
-		return fromString( xml );
 	}
 
 	@Override
@@ -71,7 +48,12 @@ public class IntegerType extends AbstractSingleColumnStandardBasicType<Integer>
 	}
 
 	@Override
-	public Comparator<Integer> getComparator() {
-		return getJavaTypeDescriptor().getComparator();
+	public JdbcLiteralFormatter<Integer> getJdbcLiteralFormatter() {
+		return this;
+	}
+
+	@Override
+	public String toJdbcLiteral(Integer value, Dialect dialect) {
+		return toString( value );
 	}
 }

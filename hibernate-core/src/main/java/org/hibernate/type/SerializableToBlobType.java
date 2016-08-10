@@ -11,8 +11,10 @@ import java.util.Properties;
 
 import org.hibernate.MappingException;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.type.descriptor.java.SerializableTypeDescriptor;
-import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.descriptor.java.SerializableTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.BlobTypeDescriptor;
 import org.hibernate.usertype.DynamicParameterizedType;
 
 /**
@@ -24,6 +26,8 @@ public class SerializableToBlobType<T extends Serializable> extends AbstractSing
 	
 	private static final long serialVersionUID = 1L;
 
+	private JavaTypeDescriptor javaTypeDescriptor;
+
 	public SerializableToBlobType() {
 		super( BlobTypeDescriptor.DEFAULT, new SerializableTypeDescriptor( Serializable.class ) );
 	}
@@ -34,11 +38,16 @@ public class SerializableToBlobType<T extends Serializable> extends AbstractSing
 	}
 
 	@Override
+	public JavaTypeDescriptor<T> getJavaTypeDescriptor() {
+		return javaTypeDescriptor == null ? super.getJavaTypeDescriptor() : javaTypeDescriptor;
+	}
+
+	@Override
 	@SuppressWarnings("unchecked")
 	public void setParameterValues(Properties parameters) {
 		ParameterType reader = (ParameterType) parameters.get( PARAMETER_TYPE );
 		if ( reader != null ) {
-			setJavaTypeDescriptor( new SerializableTypeDescriptor<T>( reader.getReturnedClass() ) );
+			javaTypeDescriptor = new SerializableTypeDescriptor<T>( reader.getReturnedClass() );
 		}
 		else {
 			String className = parameters.getProperty( CLASS_NAME );
@@ -46,11 +55,17 @@ public class SerializableToBlobType<T extends Serializable> extends AbstractSing
 				throw new MappingException( "No class name defined for type: " + SerializableToBlobType.class.getName() );
 			}
 			try {
-				setJavaTypeDescriptor( new SerializableTypeDescriptor<T>( ReflectHelper.classForName( className ) ) );
+				javaTypeDescriptor = new SerializableTypeDescriptor<T>( ReflectHelper.classForName( className ) );
 			}
 			catch ( ClassNotFoundException e ) {
 				throw new MappingException( "Unable to load class from " + CLASS_NAME + " parameter", e );
 			}
 		}
+	}
+
+	@Override
+	public JdbcLiteralFormatter<T> getJdbcLiteralFormatter() {
+		// no literal support for BLOB
+		return null;
 	}
 }

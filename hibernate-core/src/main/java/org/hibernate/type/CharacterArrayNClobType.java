@@ -6,8 +6,9 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.type.descriptor.java.CharacterArrayTypeDescriptor;
-import org.hibernate.type.descriptor.sql.NClobTypeDescriptor;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.descriptor.java.CharacterArrayTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.NClobTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#NCLOB NCLOB} and {@link Character Character[]}
@@ -29,4 +30,9 @@ public class CharacterArrayNClobType extends AbstractSingleColumnStandardBasicTy
 		return null;
 	}
 
+	@Override
+	public JdbcLiteralFormatter<Character[]> getJdbcLiteralFormatter() {
+		// no support for CLOB literals
+		return null;
+	}
 }

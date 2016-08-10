@@ -34,12 +34,12 @@ import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.type.AbstractStandardBasicType;
+import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.spi.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
+import org.hibernate.type.spi.Type;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -106,7 +106,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			if ( !AttributeConverterTypeAdapter.class.isInstance( type ) ) {
 				fail( "AttributeConverter not applied" );
 			}
-			AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
+			AbstractSingleColumnStandardBasicType basicType = assertTyping( AbstractSingleColumnStandardBasicType.class, type );
 			assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
 			assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getSqlType() );
 		}
@@ -161,7 +161,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			if ( !AttributeConverterTypeAdapter.class.isInstance( type ) ) {
 				fail( "AttributeConverter not applied" );
 			}
-			AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
+			AbstractSingleColumnStandardBasicType basicType = assertTyping( AbstractSingleColumnStandardBasicType.class, type );
 			assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
 			assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getSqlType() );
 		}
@@ -218,7 +218,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			if ( AttributeConverterTypeAdapter.class.isInstance( type ) ) {
 				fail( "AttributeConverter applied (should not have been)" );
 			}
-			AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
+			AbstractSingleColumnStandardBasicType basicType = assertTyping( AbstractSingleColumnStandardBasicType.class, type );
 			assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
 			assertEquals( Types.VARCHAR, basicType.getSqlTypeDescriptor().getSqlType() );
 		}
@@ -332,7 +332,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			if ( !AttributeConverterTypeAdapter.class.isInstance( type ) ) {
 				fail( "AttributeConverter not applied" );
 			}
-			AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
+			AttributeConverterTypeAdapter basicType = assertTyping( AttributeConverterTypeAdapter.class, type );
 			assertTyping( EnumJavaTypeDescriptor.class, basicType.getJavaTypeDescriptor() );
 			assertEquals( Types.VARCHAR, basicType.getSqlTypeDescriptor().getSqlType() );
 

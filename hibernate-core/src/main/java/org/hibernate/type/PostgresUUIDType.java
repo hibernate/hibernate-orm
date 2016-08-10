@@ -13,14 +13,16 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.UUID;
 
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.ValueBinder;
 import org.hibernate.type.spi.descriptor.ValueExtractor;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.UUIDTypeDescriptor;
-import org.hibernate.type.descriptor.sql.BasicBinder;
-import org.hibernate.type.descriptor.sql.BasicExtractor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.spi.descriptor.java.UUIDTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.BasicBinder;
+import org.hibernate.type.spi.descriptor.sql.BasicExtractor;
+import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * Specialized type mapping for {@link UUID} and the Postgres UUID data type (which is mapped as OTHER in its
@@ -40,12 +42,6 @@ public class PostgresUUIDType extends AbstractSingleColumnStandardBasicType<UUID
 		return "pg-uuid";
 	}
 
-	@Override
-	protected boolean registerUnderJavaType() {
-		// register this type under UUID when it is added to the basic type registry
-		return true;
-	}
-
 	public static class PostgresUUIDSqlTypeDescriptor implements SqlTypeDescriptor {
 		public static final PostgresUUIDSqlTypeDescriptor INSTANCE = new PostgresUUIDSqlTypeDescriptor();
 
@@ -57,6 +53,11 @@ public class PostgresUUIDType extends AbstractSingleColumnStandardBasicType<UUID
 		@Override
 		public boolean canBeRemapped() {
 			return true;
+		}
+
+		@Override
+		public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+			return UUIDTypeDescriptor.INSTANCE;
 		}
 
 		public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
@@ -92,5 +93,11 @@ public class PostgresUUIDType extends AbstractSingleColumnStandardBasicType<UUID
 				}
 			};
 		}
+	}
+
+	@Override
+	public JdbcLiteralFormatter<UUID> getJdbcLiteralFormatter() {
+		// not sure of the specific support in PostgreSQL for UUID literals
+		return null;
 	}
 }

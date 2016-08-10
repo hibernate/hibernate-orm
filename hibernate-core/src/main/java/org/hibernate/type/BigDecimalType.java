@@ -8,8 +8,10 @@ package org.hibernate.type;
 
 import java.math.BigDecimal;
 
-import org.hibernate.type.descriptor.java.BigDecimalTypeDescriptor;
-import org.hibernate.type.descriptor.sql.NumericTypeDescriptor;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.descriptor.java.BigDecimalTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.NumericTypeDescriptor;
 
 /**
  * A type that maps between a {@link java.sql.Types#NUMERIC NUMERIC} and {@link BigDecimal}.
@@ -17,7 +19,9 @@ import org.hibernate.type.descriptor.sql.NumericTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class BigDecimalType extends AbstractSingleColumnStandardBasicType<BigDecimal> {
+public class BigDecimalType
+		extends AbstractSingleColumnStandardBasicType<BigDecimal>
+		implements JdbcLiteralFormatter<BigDecimal> {
 	public static final BigDecimalType INSTANCE = new BigDecimalType();
 
 	public BigDecimalType() {
@@ -30,7 +34,12 @@ public class BigDecimalType extends AbstractSingleColumnStandardBasicType<BigDec
 	}
 
 	@Override
-	protected boolean registerUnderJavaType() {
-		return true;
+	public JdbcLiteralFormatter<BigDecimal> getJdbcLiteralFormatter() {
+		return this;
+	}
+
+	@Override
+	public String toJdbcLiteral(BigDecimal value, Dialect dialect) {
+		return value.toString();
 	}
 }

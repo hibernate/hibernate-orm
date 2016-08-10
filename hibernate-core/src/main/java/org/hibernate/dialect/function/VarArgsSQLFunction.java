@@ -11,7 +11,7 @@ import java.util.List;
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Support for slightly more general templating than {@link StandardSQLFunction}, with an unlimited number of arguments.

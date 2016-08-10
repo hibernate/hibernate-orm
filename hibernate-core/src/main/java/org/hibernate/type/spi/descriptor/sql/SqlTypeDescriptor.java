@@ -6,31 +6,41 @@
  */
 package org.hibernate.type.spi.descriptor.sql;
 
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.ValueBinder;
 import org.hibernate.type.spi.descriptor.ValueExtractor;
-import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 
 /**
+ * Describes a JDBC/SQL type.
+ *
  * @author Steve Ebersole
  */
 public interface SqlTypeDescriptor {
 
 	/**
-	 * Return the {@linkplain java.sql.Types JDBC type-code} for the column mapped by this type.
+	 * Retrieve the JDBC/SQL type-code that this descriptor represents.
+	 * <p/>
+	 * For a "standard" type that would match the corresponding value in
+	 * {@link java.sql.Types}.
 	 *
-	 * @return typeCode The JDBC type-code
+	 * @return typeCode The JDBC/SQL type-code
 	 */
 	int getSqlType();
 
 	/**
 	 * Is this descriptor available for remapping?
+	 * <p/>
+	 * Mainly this comes into play as part of Dialect SqlTypeDescriptor remapping,
+	 * which is how we handle LOB binding e.g. But some types should not allow themselves
+	 * to be remapped.
 	 *
 	 * @return {@code true} indicates this descriptor can be remapped; otherwise, {@code false}
 	 *
 	 * @see WrapperOptions#remapSqlTypeDescriptor
 	 * @see org.hibernate.dialect.Dialect#remapSqlTypeDescriptor
+	 * @see org.hibernate.dialect.Dialect#getSqlTypeDescriptorOverride
 	 */
 	boolean canBeRemapped();
 
@@ -39,9 +49,11 @@ public interface SqlTypeDescriptor {
 	 * given JDBC/SQL type.  The standard implementations honor the JDBC recommended mapping as per
 	 * http://docs.oracle.com/javase/1.5.0/docs/guide/jdbc/getstart/mapping.html
 	 *
+	 * @param typeConfiguration Access to Hibernate's current TypeConfiguration (type information)
+	 *
 	 * @return the recommended Java type descriptor.
 	 */
-	JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeDescriptorRegistryAccess typeDescriptorRegistryAccess);
+	JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration);
 
 	/**
 	 * Get the binder (setting JDBC in-going parameter values) capable of handling values of the type described by the

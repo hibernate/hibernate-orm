@@ -10,13 +10,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Comparator;
 import javax.persistence.AttributeConverter;
-import javax.persistence.metamodel.Type;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.ColumnMapping;
-import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
@@ -25,8 +23,6 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  * @author Steve Ebersole
  */
 public class BasicTypeImpl<T,D> implements BasicType<T> {
-	private final TypeConfiguration typeConfiguration;
-
 	private final ColumnMapping columnMapping;
 
 	private final JavaTypeDescriptor<T> domainJavaType;
@@ -40,7 +36,6 @@ public class BasicTypeImpl<T,D> implements BasicType<T> {
 	/**
 	 * Constructor form for building a basic type without an AttributeConverter
 	 *
-	 * @param typeConfiguration The TypeFactory that this Type is scoped to
 	 * @param domainJavaType The descriptor for the domain model Java type.
 	 * @param sqlType The descriptor for the JDBC type.
 	 * @param mutabilityPlan The Type-specific MutabilityPlan.  May be {@code null} indicating to
@@ -49,12 +44,11 @@ public class BasicTypeImpl<T,D> implements BasicType<T> {
 	 * use the Comparator as defined by {@link JavaTypeDescriptor#getComparator()} ()}
 	 */
 	public BasicTypeImpl(
-			TypeConfiguration typeConfiguration,
 			JavaTypeDescriptor<T> domainJavaType,
 			SqlTypeDescriptor sqlType,
 			MutabilityPlan<T> mutabilityPlan,
 			Comparator<T> comparator) {
-		this( typeConfiguration, domainJavaType, sqlType, mutabilityPlan, comparator, null, null );
+		this( domainJavaType, sqlType, mutabilityPlan, comparator, null, null );
 	}
 
 	/**
@@ -66,7 +60,6 @@ public class BasicTypeImpl<T,D> implements BasicType<T> {
 	 * {@code sqlType} + {@code intermediateJavaType}.  We then pass that value along to the AttributeConverter
 	 * to convert to the domain Java type.
 	 *
-	 * @param typeConfiguration The TypeFactory that this Type is scoped to
 	 * @param domainJavaType The descriptor for the domain model Java type.
 	 * @param sqlType The descriptor for the JDBC type.
 	 * @param mutabilityPlan The Type-specific MutabilityPlan.  May be {@code null} indicating to
@@ -77,15 +70,12 @@ public class BasicTypeImpl<T,D> implements BasicType<T> {
 	 * @param intermediateJavaType The Java type we use to talk to JDBC.
 	 */
 	public BasicTypeImpl(
-			TypeConfiguration typeConfiguration,
 			JavaTypeDescriptor<T> domainJavaType,
 			SqlTypeDescriptor sqlType,
 			MutabilityPlan<T> mutabilityPlan,
 			Comparator<T> comparator,
 			AttributeConverter<T,D> attributeConverter,
 			JavaTypeDescriptor intermediateJavaType) {
-		this.typeConfiguration = typeConfiguration;
-
 		this.domainJavaType = domainJavaType;
 
 		this.columnMapping = new ColumnMapping( sqlType );
@@ -129,10 +119,10 @@ public class BasicTypeImpl<T,D> implements BasicType<T> {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Object hydrate(
+	public T hydrate(
 			ResultSet rs,
 			String[] names,
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Object owner) throws HibernateException, SQLException {
 		if ( converter == null ) {
 			return getColumnMapping().getSqlTypeDescriptor().getExtractor( domainJavaType ).extract(

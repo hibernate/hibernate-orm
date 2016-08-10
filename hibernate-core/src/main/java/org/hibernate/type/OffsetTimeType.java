@@ -7,34 +7,29 @@
 package org.hibernate.type;
 
 import java.time.OffsetTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.type.internal.descriptor.DateTimeUtils;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.descriptor.java.OffsetTimeJavaDescriptor;
-import org.hibernate.type.descriptor.sql.TimeTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.TimeTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class OffsetTimeType
-		extends AbstractSingleColumnStandardBasicType<OffsetTime>
-		implements LiteralType<OffsetTime> {
+public class OffsetTimeType extends AbstractSingleColumnStandardBasicType<OffsetTime> implements JdbcLiteralFormatter<OffsetTime> {
 
 	/**
 	 * Singleton access
 	 */
 	public static final OffsetTimeType INSTANCE = new OffsetTimeType();
 
-	public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern( "HH:mm:ss.S xxxxx", Locale.ENGLISH );
-
-	public OffsetTimeType() {
+	/**
+	 * NOTE: protected access to allow for sub-classing
+	 */
+	@SuppressWarnings("WeakerAccess")
+	protected OffsetTimeType() {
 		super( TimeTypeDescriptor.INSTANCE, OffsetTimeJavaDescriptor.INSTANCE );
-	}
-
-	@Override
-	public String objectToSQLString(OffsetTime value, Dialect dialect) throws Exception {
-		return "{t '" + FORMATTER.format( value ) + "'}";
 	}
 
 	@Override
@@ -43,7 +38,17 @@ public class OffsetTimeType
 	}
 
 	@Override
-	protected boolean registerUnderJavaType() {
-		return true;
+	public JdbcLiteralFormatter<OffsetTime> getJdbcLiteralFormatter() {
+		return this;
+	}
+
+	@Override
+	public String toJdbcLiteral(OffsetTime value, Dialect dialect) {
+		return toJdbcLiteral( value );
+	}
+
+	@SuppressWarnings("WeakerAccess")
+	public String toJdbcLiteral(OffsetTime value) {
+		return DateTimeUtils.formatAsJdbcLiteralTime( value );
 	}
 }

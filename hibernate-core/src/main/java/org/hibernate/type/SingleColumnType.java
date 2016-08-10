@@ -18,7 +18,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *
  * @author Steve Ebersole
  */
-public interface SingleColumnType<T> extends Type {
+public interface SingleColumnType<T> extends org.hibernate.type.spi.Type<T> {
 
 	int sqlType();
 

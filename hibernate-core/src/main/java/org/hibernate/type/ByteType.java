@@ -6,13 +6,14 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
 import java.util.Comparator;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.descriptor.java.ByteTypeDescriptor;
-import org.hibernate.type.descriptor.sql.TinyIntTypeDescriptor;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.VersionType;
+import org.hibernate.type.spi.descriptor.java.ByteTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.TinyIntTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#TINYINT TINYINT} and {@link Byte}
@@ -22,13 +23,13 @@ import org.hibernate.type.descriptor.sql.TinyIntTypeDescriptor;
  */
 public class ByteType
 		extends AbstractSingleColumnStandardBasicType<Byte>
-		implements PrimitiveType<Byte>, DiscriminatorType<Byte>, VersionType<Byte> {
+		implements VersionType<Byte>,JdbcLiteralFormatter<Byte> {
 
 	public static final ByteType INSTANCE = new ByteType();
 
 	private static final Byte ZERO = (byte) 0;
 
-	public ByteType() {
+	protected ByteType() {
 		super( TinyIntTypeDescriptor.INSTANCE, ByteTypeDescriptor.INSTANCE );
 	}
 
@@ -38,33 +39,17 @@ public class ByteType
 	}
 
 	@Override
-	public String[] getRegistrationKeys() {
-		return new String[] {getName(), byte.class.getName(), Byte.class.getName()};
+	public JdbcLiteralFormatter<Byte> getJdbcLiteralFormatter() {
+		return this;
 	}
 
 	@Override
-	public Serializable getDefaultValue() {
-		return ZERO;
+	public String toJdbcLiteral(Byte value, Dialect dialect) {
+		return toJdbcLiteral( value );
 	}
 
-	@Override
-	public Class getPrimitiveClass() {
-		return byte.class;
-	}
-
-	@Override
-	public String objectToSQLString(Byte value, Dialect dialect) {
+	public String toJdbcLiteral(Byte value) {
 		return toString( value );
-	}
-
-	@Override
-	public Byte stringToObject(String xml) {
-		return fromString( xml );
-	}
-
-	@Override
-	public Byte fromStringValue(String xml) {
-		return fromString( xml );
 	}
 
 	@Override

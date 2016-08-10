@@ -5,8 +5,9 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.type;
-import org.hibernate.type.descriptor.java.PrimitiveCharacterArrayTypeDescriptor;
-import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.descriptor.java.PrimitiveCharacterArrayTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.ClobTypeDescriptor;
 
 /**
  * Map a char[] to a Clob
@@ -22,6 +23,12 @@ public class PrimitiveCharacterArrayClobType extends AbstractSingleColumnStandar
 
 	public String getName() {
 		// todo name these annotation types for addition to the registry
+		return null;
+	}
+
+	@Override
+	public JdbcLiteralFormatter<char[]> getJdbcLiteralFormatter() {
+		// no literal support for CLOB
 		return null;
 	}
 }

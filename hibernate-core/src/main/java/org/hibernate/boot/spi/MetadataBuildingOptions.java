@@ -20,6 +20,7 @@ import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.type.spi.BasicTypeProducerRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AttributeConverterDefinition;
@@ -53,6 +54,8 @@ public interface MetadataBuildingOptions {
 	MappingDefaults getMappingDefaults();
 
 	TypeConfiguration getTypeConfiguration();
+
+	BasicTypeProducerRegistry getBasicTypeProducerRegistry();
 
 	/**
 	 * Access to the Jandex index passed by call to

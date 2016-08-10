@@ -123,6 +123,10 @@ public class TypeConfiguration implements SessionFactoryObserver, TypeDescriptor
 		throw new NotYetImplementedException(  );
 	}
 
+	public <T> org.hibernate.type.spi.BasicType<T> basic(String typeName) {
+		return null;
+	}
+
 
 	/**
 	 * Encapsulation of lifecycle concerns for a TypeConfiguration, mainly in regards to

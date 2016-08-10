@@ -6,8 +6,9 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.type.descriptor.java.PrimitiveCharacterArrayTypeDescriptor;
-import org.hibernate.type.descriptor.sql.NClobTypeDescriptor;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.descriptor.java.PrimitiveCharacterArrayTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.NClobTypeDescriptor;
 
 /**
  * Map a char[] to a NClob
@@ -23,6 +24,12 @@ public class PrimitiveCharacterArrayNClobType extends AbstractSingleColumnStanda
 
 	public String getName() {
 		// todo name these annotation types for addition to the registry
+		return null;
+	}
+
+	@Override
+	public JdbcLiteralFormatter<char[]> getJdbcLiteralFormatter() {
+		// no literal support for CLOB
 		return null;
 	}
 }

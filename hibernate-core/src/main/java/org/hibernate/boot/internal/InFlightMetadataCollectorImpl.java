@@ -46,6 +46,8 @@ import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
+import org.hibernate.boot.model.type.spi.BasicTypeProducer;
+import org.hibernate.boot.model.type.spi.BasicTypeProducerRegistry;
 import org.hibernate.boot.spi.AttributeConverterAutoApplyHandler;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -99,9 +101,9 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.query.spi.NamedQueryRepository;
+import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.spi.TypeConfiguration;
-import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 
 /**
  * The implementation of the in-flight Metadata collector contract.
@@ -117,6 +119,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	private final MetadataBuildingOptions options;
 	private final TypeConfiguration typeConfiguration;
+	private final BasicTypeProducerRegistry basicTypeProducerRegistry;
 
 	private final AttributeConverterManager attributeConverterManager = new AttributeConverterManager();
 	private final ClassmateContext classmateContext = new ClassmateContext();
@@ -127,7 +130,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	private final Map<String,PersistentClass> entityBindingMap = new HashMap<>();
 	private final Map<String,Collection> collectionBindingMap = new HashMap<>();
 
-	private final Map<String, TypeDefinition> typeDefinitionMap = new HashMap<>();
 	private final Map<String, FilterDefinition> filterDefinitionMap = new HashMap<>();
 	private final Map<String, String> imports = new HashMap<>();
 
@@ -167,6 +169,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		this.uuid = UUID.randomUUID();
 		this.options = options;
 		this.typeConfiguration = options.getTypeConfiguration();
+		this.basicTypeProducerRegistry = options.getBasicTypeProducerRegistry();
 
 		this.identifierGeneratorFactory = options.getServiceRegistry().getService( MutableIdentifierGeneratorFactory.class );
 
@@ -199,6 +202,11 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return typeConfiguration;
+	}
+
+	@Override
+	public BasicTypeProducerRegistry getBasicTypeProducerRegistry() {
+		return basicTypeProducerRegistry;
 	}
 
 	@Override
@@ -311,43 +319,28 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	// Hibernate Type handling
 
 	@Override
-	public TypeDefinition getTypeDefinition(String registrationKey) {
-		return typeDefinitionMap.get( registrationKey );
-	}
-
-	@Override
 	public void addTypeDefinition(TypeDefinition typeDefinition) {
 		if ( typeDefinition == null ) {
 			throw new IllegalArgumentException( "Type definition is null" );
 		}
 
-		// Need to register both by name and registration keys.
-		if ( !StringHelper.isEmpty( typeDefinition.getName() ) ) {
-			addTypeDefinition( typeDefinition.getName(), typeDefinition );
-		}
-
-		if ( typeDefinition.getRegistrationKeys() != null ) {
-			for ( String registrationKey : typeDefinition.getRegistrationKeys() ) {
-				addTypeDefinition( registrationKey, typeDefinition );
-			}
-		}
-	}
-
-	private void addTypeDefinition(String registrationKey, TypeDefinition typeDefinition) {
-		final TypeDefinition previous = typeDefinitionMap.put(
-				registrationKey, typeDefinition );
-		if ( previous != null ) {
-			log.debugf(
-					"Duplicate typedef name [%s] now -> %s",
-					registrationKey,
-					typeDefinition.getTypeImplementorClass().getName()
-			);
-		}
+		basicTypeProducerRegistry.register( typeDefinition );
 	}
 
 	@Override
 	public ClassmateContext getClassmateContext() {
 		return classmateContext;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> BasicType<T> basicType(String registrationKey) {
+		final BasicTypeProducer typeProducer = basicTypeProducerRegistry.resolve( registrationKey );
+		if ( typeProducer == null ) {
+			return null;
+		}
+
+		return typeProducer.produceBasicType();
 	}
 
 
@@ -2184,7 +2177,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 					entityBindingMap,
 					mappedSuperClasses,
 					collectionBindingMap,
-					typeDefinitionMap,
+					null,
 					filterDefinitionMap,
 					fetchProfileMap,
 					imports,
@@ -2201,6 +2194,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 		finally {
 			classmateContext.release();
+			basicTypeProducerRegistry.release();
 		}
 	}
 

@@ -11,8 +11,9 @@ import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * TODO : javadoc
@@ -20,16 +21,25 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  * @author Steve Ebersole
  */
 public abstract class AbstractSingleColumnStandardBasicType<T>
-		extends AbstractStandardBasicType<T>
+		extends BasicTypeImpl<T,Object>
 		implements SingleColumnType<T> {
 
 	public AbstractSingleColumnStandardBasicType(SqlTypeDescriptor sqlTypeDescriptor, JavaTypeDescriptor<T> javaTypeDescriptor) {
-		super( sqlTypeDescriptor, javaTypeDescriptor );
+		super(
+				javaTypeDescriptor,
+				sqlTypeDescriptor,
+				javaTypeDescriptor.getMutabilityPlan(),
+				javaTypeDescriptor.getComparator()
+		);
 	}
 
 	@Override
 	public final int sqlType() {
 		return getSqlTypeDescriptor().getSqlType();
+	}
+
+	public SqlTypeDescriptor getSqlTypeDescriptor() {
+		return getColumnMapping().getSqlTypeDescriptor();
 	}
 
 	@Override

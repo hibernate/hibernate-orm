@@ -59,7 +59,7 @@ public class BinderHelper {
 
 	public static final String ANNOTATION_STRING_DEFAULT = "";
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, BinderHelper.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, BinderHelper.class.getName() );
 
 	private BinderHelper() {
 	}
@@ -237,7 +237,9 @@ public class BinderHelper {
 			boolean inverse,
 			MetadataBuildingContext context) {
 		//associated entity only used for more precise exception, yuk!
-		if ( columns[0].isImplicit() || StringHelper.isNotEmpty( columns[0].getMappedBy() ) ) return;
+		if ( columns[0].isImplicit() || StringHelper.isNotEmpty( columns[0].getMappedBy() ) ) {
+			return;
+		}
 		int fkEnum = Ejb3JoinColumn.checkReferencedColumnsType( columns, ownerEntity, context );
 		PersistentClass associatedClass = columns[0].getPropertyHolder() != null ?
 				columns[0].getPropertyHolder().getPersistentClass() :
@@ -407,13 +409,18 @@ public class BinderHelper {
 					break;
 				}
 			}
-			if ( !found ) return null; //have to find it the hard way
+			if ( !found ) {
+				//have to find it the hard way
+				return null;
+			}
 		}
 		return orderedProperties;
 	}
 
 	private static void matchColumnsByProperty(Property property, Map<Column, Set<Property>> columnsToProperty) {
-		if ( property == null ) return;
+		if ( property == null ) {
+			return;
+		}
 		if ( "noop".equals( property.getPropertyAccessorName() )
 				|| "embedded".equals( property.getPropertyAccessorName() ) ) {
 			return;
@@ -428,7 +435,8 @@ public class BinderHelper {
 		else {
 			Iterator columnIt = property.getColumnIterator();
 			while ( columnIt.hasNext() ) {
-				Object column = columnIt.next(); //can be a Formula so we don't cast
+				//can be a Formula so we don't cast
+				Object column = columnIt.next();
 				//noinspection SuspiciousMethodCalls
 				if ( columnsToProperty.containsKey( column ) ) {
 					columnsToProperty.get( column ).add( property );
@@ -464,7 +472,9 @@ public class BinderHelper {
 						property = associatedClass.getProperty( element );
 					}
 					else {
-						if ( !property.isComposite() ) return null;
+						if ( !property.isComposite() ) {
+							return null;
+						}
 						property = ( (Component) property.getValue() ).getProperty( element );
 					}
 				}
@@ -473,7 +483,9 @@ public class BinderHelper {
 		catch (MappingException e) {
 			try {
 				//if we do not find it try to check the identifier mapper
-				if ( associatedClass.getIdentifierMapper() == null ) return null;
+				if ( associatedClass.getIdentifierMapper() == null ) {
+					return null;
+				}
 				StringTokenizer st = new StringTokenizer( propertyName, ".", false );
 				while ( st.hasMoreElements() ) {
 					String element = (String) st.nextElement();
@@ -481,7 +493,9 @@ public class BinderHelper {
 						property = associatedClass.getIdentifierMapper().getProperty( element );
 					}
 					else {
-						if ( !property.isComposite() ) return null;
+						if ( !property.isComposite() ) {
+							return null;
+						}
 						property = ( (Component) property.getValue() ).getProperty( element );
 					}
 				}
@@ -512,7 +526,9 @@ public class BinderHelper {
 						property = component.getProperty( element );
 					}
 					else {
-						if ( !property.isComposite() ) return null;
+						if ( !property.isComposite() ) {
+							return null;
+						}
 						property = ( (Component) property.getValue() ).getProperty( element );
 					}
 				}
@@ -521,7 +537,9 @@ public class BinderHelper {
 		catch (MappingException e) {
 			try {
 				//if we do not find it try to check the identifier mapper
-				if ( component.getOwner().getIdentifierMapper() == null ) return null;
+				if ( component.getOwner().getIdentifierMapper() == null ) {
+					return null;
+				}
 				StringTokenizer st = new StringTokenizer( propertyName, ".", false );
 				while ( st.hasMoreElements() ) {
 					String element = (String) st.nextElement();
@@ -529,7 +547,9 @@ public class BinderHelper {
 						property = component.getOwner().getIdentifierMapper().getProperty( element );
 					}
 					else {
-						if ( !property.isComposite() ) return null;
+						if ( !property.isComposite() ) {
+							return null;
+						}
 						property = ( (Component) property.getValue() ).getProperty( element );
 					}
 				}
@@ -542,7 +562,9 @@ public class BinderHelper {
 	}
 
 	public static String getRelativePath(PropertyHolder propertyHolder, String propertyName) {
-		if ( propertyHolder == null ) return propertyName;
+		if ( propertyHolder == null ) {
+			return propertyName;
+		}
 		String path = propertyHolder.getPath();
 		String entityName = propertyHolder.getPersistentClass().getEntityName();
 		if ( path.length() == entityName.length() ) {
@@ -562,7 +584,8 @@ public class BinderHelper {
 			String columnName,
 			MetadataBuildingContext context) {
 		if ( StringHelper.isEmpty( columnName ) ) {
-			return persistentClass; //shortcut for implicit referenced column names
+			//shortcut for implicit referenced column names
+			return persistentClass;
 		}
 		PersistentClass current = persistentClass;
 		Object result;
@@ -656,7 +679,9 @@ public class BinderHelper {
 				params.setProperty( (String) elt.getKey(), (String) elt.getValue() );
 			}
 		}
-		if ( "assigned".equals( generatorType ) ) id.setNullValue( "undefined" );
+		if ( "assigned".equals( generatorType ) ) {
+			id.setNullValue( "undefined" );
+		}
 		id.setIdentifierGeneratorProperties( params );
 	}
 
@@ -677,6 +702,10 @@ public class BinderHelper {
 	public static boolean isEmptyAnnotationValue(String annotationString) {
 		return annotationString != null && annotationString.length() == 0;
 		//equivalent to (but faster) ANNOTATION_STRING_DEFAULT.equals( annotationString );
+	}
+
+	public static boolean isEmptyOrNullAnnotationValue(String annotationString) {
+		return annotationString == null || annotationString.length() == 0;
 	}
 
 	public static Any buildAnyValue(
@@ -722,7 +751,9 @@ public class BinderHelper {
 					throw new MappingException( "could not interpret metaValue", e );
 				}
 			}
-			if ( !values.isEmpty() ) value.setMetaValues( values );
+			if ( !values.isEmpty() ) {
+				value.setMetaValues( values );
+			}
 		}
 		else {
 			throw new AnnotationException( "Unable to find @AnyMetaDef for an @(ManyTo)Any mapping: "
@@ -792,7 +823,8 @@ public class BinderHelper {
 
 	private static void bindAnyMetaDef(AnyMetaDef defAnn, MetadataBuildingContext context) {
 		if ( isEmptyAnnotationValue( defAnn.name() ) ) {
-			return; //don't map not named definitions
+			//don't map not named definitions
+			return;
 		}
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Binding Any Meta definition: %s", defAnn.name() );
@@ -863,9 +895,9 @@ public class BinderHelper {
 	
 	public static Map<String,String> toAliasTableMap(SqlFragmentAlias[] aliases){
 		Map<String,String> ret = new HashMap<String,String>();
-		for (int i = 0; i < aliases.length; i++){
-			if (StringHelper.isNotEmpty(aliases[i].table())){
-				ret.put(aliases[i].alias(), aliases[i].table());
+		for ( int i = 0; i < aliases.length; i++ ){
+			if ( StringHelper.isNotEmpty( aliases[i].table() ) ){
+				ret.put( aliases[i].alias(), aliases[i].table() );
 }
 		}
 		return ret;
@@ -875,7 +907,7 @@ public class BinderHelper {
 		Map<String,String> ret = new HashMap<String,String>();
 		for (int i = 0; i < aliases.length; i++){
 			if (aliases[i].entity() != void.class){
-				ret.put(aliases[i].alias(), aliases[i].entity().getName());
+				ret.put( aliases[i].alias(), aliases[i].entity().getName() );
 			}
 		}
 		return ret;

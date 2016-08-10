@@ -1007,15 +1007,26 @@ include::{extrasdir}/basic/basic-jpa-convert-period-string-converter-sql-example
 ==== SQL quoted identifiers
 
 You can force Hibernate to quote an identifier in the generated SQL by enclosing the table or column name in backticks in the mapping document.
-Hibernate will use the correct quotation style for the SQL `Dialect`.
-This is usually double quotes, but the SQL Server uses brackets and MySQL uses backticks.
+While traditionally, Hibernate used backticks for escaping SQL reserved keywords, JPA uses double quotes instead.
+
+Once the reserved keywords are escaped, Hibernate will use the correct quotation style for the SQL `Dialect`.
+This is usually double quotes, but SQL Server uses brackets and MySQL uses backticks.
 
 [[basic-quoting-example]]
-.Quoting column names
+.Hibernate legacy quoting
 ====
 [source, JAVA, indent=0]
 ----
 include::{sourcedir}/basic/QuotingTest.java[tags=basic-quoting-example]
+----
+====
+
+[[basic-jpa-quoting-example]]
+.JPA quoting
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/JpaQuotingTest.java[tags=basic-jpa-quoting-example]
 ----
 ====
 
@@ -1029,10 +1040,52 @@ When saving teh following `Product entity`, Hibernate generates the following SQ
 [source, JAVA, indent=0]
 ----
 include::{sourcedir}/basic/QuotingTest.java[tags=basic-quoting-persistence-example, indent=0]
+----
 
+[source, SQL, indent=0]
+----
 include::{extrasdir}/basic/basic-quoting-persistence-example.sql[indent=0]
 ----
 ====
+
+[[mapping-global-quoted-identifiers]]
+===== Global quoting
+
+Hibernate can also quote all identifiers (e.g. table, columns) using the following configuration property:
+
+====
+[source,xml]
+----
+<property
+    name="hibernate.globally_quoted_identifiers"
+    value="true"
+/>
+----
+====
+
+This way, we don't need to manually quote any identifier:
+
+[[basic-auto-quoting-example]]
+.JPA quoting
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/AutoQuotingTest.java[tags=basic-auto-quoting-example]
+----
+====
+
+When persisting a `Product` entity, Hibernate is going to quote all identifiers as in the following example:
+
+====
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/basic-auto-quoting-persistence-example.sql[indent=0]
+----
+====
+
+As you can see, both the table name and all the column have been quoted.
+
+For more about quoting-related configuration properties, checkout the <<appendices/Configurations.adoc#configurations-mapping,Mapping configurations>> section as well.
 
 [[mapping-generated]]
 ==== Generated properties

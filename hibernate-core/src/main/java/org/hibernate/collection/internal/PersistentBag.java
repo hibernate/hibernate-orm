@@ -11,9 +11,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -111,16 +113,46 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 		if ( sn.size() != bag.size() ) {
 			return false;
 		}
-		for ( Object elt : bag ) {
-			final boolean unequal = countOccurrences( elt, bag, elementType ) != countOccurrences( elt, sn, elementType );
-			if ( unequal ) {
-				return false;
-			}
-		}
+		
+		Map instanceCountBag = getInstanceCounts(bag, elementType);
+		Map instanceCountSn = getInstanceCounts(bag, elementType);
+				
+        for ( Object elt : bag ) {
+            List candidatesBag = (List)instanceCountBag.get(elt);
+            List candidatesSn = (List)instanceCountSn.get(elt);
+            
+            final boolean unequal = 
+                    countOccurrences(elt, candidatesBag, elementType) != 
+                    countOccurrences(elt, candidatesSn, elementType);
+            if ( unequal ) {
+                return false;
+            }
+        }
 		return true;
 	}
 
-	@Override
+	/**
+	 * Groups items in searchedBag according to persistence "equality"
+	 * as defined in Type.isSame and Type.getHashCode
+	 * @param searchedBag
+	 * @return Map of "eqality" hashCode to List of objects
+	 */
+	private Map getInstanceCounts(List searchedBag, Type elementType) {
+	    //First group objects by equality hash
+        Map objectsByEqualityHash = new HashMap();
+        
+        for (Object i : searchedBag) {
+            int hcode = elementType.getHashCode(i);
+            if (!objectsByEqualityHash.containsKey(hcode))
+                objectsByEqualityHash.put(hcode, new ArrayList());
+            
+            ((List)objectsByEqualityHash.get(hcode)).add(i);
+        }
+        
+        return objectsByEqualityHash;
+    }
+
+    @Override
 	public boolean isSnapshotEmpty(Serializable snapshot) {
 		return ( (Collection) snapshot ).isEmpty();
 	}

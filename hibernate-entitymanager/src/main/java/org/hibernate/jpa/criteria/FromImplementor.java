@@ -23,7 +23,5 @@ public interface FromImplementor<Z,X> extends PathImplementor<X>, From<Z,X> {
 	void prepareCorrelationDelegate(FromImplementor<Z,X> parent);
 	FromImplementor<Z, X> getCorrelationParent();
 
-	default boolean shouldBeRendered(){
-		return true;
-	}
+	boolean shouldBeRendered();
 }

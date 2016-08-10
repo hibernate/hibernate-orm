@@ -7,7 +7,6 @@
 package org.hibernate.test.schemavalidation;
 
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 
 import javax.persistence.Entity;
@@ -28,7 +27,8 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
-import org.hibernate.tool.schema.TargetType;
+import org.hibernate.tool.hbm2ddl.Target;
+
 import org.junit.Test;
 
 /**
@@ -52,14 +52,14 @@ public class JoinTableWithDefaultSchemaTest extends BaseUnitTestCase {
 			metadata.validate();
 
 			// first create the schema...
-			new SchemaExport().create( EnumSet.of( TargetType.DATABASE ), metadata );
+			new SchemaExport( metadata ).create(Target.EXPORT );
 			try {
 				// validate the schema
-				new SchemaValidator().validate( metadata );
+				new SchemaValidator( metadata ).validate();
 			}
 			finally {
 				// cleanup
-				new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), metadata );
+				new SchemaExport( metadata ).drop( Target.EXPORT );
 			}
 		}
 		finally {

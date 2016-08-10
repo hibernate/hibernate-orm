@@ -829,6 +829,11 @@ public abstract class CollectionBinder {
 		if ( debugEnabled ) {
 			LOG.debugf( "Binding a OneToMany: %s.%s through a foreign key", propertyHolder.getEntityName(), propertyName );
 		}
+		if ( buildingContext == null ) {
+			throw new AssertionFailure(
+					"CollectionSecondPass for oneToMany should not be called with null mappings"
+			);
+		}
 		org.hibernate.mapping.OneToMany oneToMany = new org.hibernate.mapping.OneToMany( buildingContext.getMetadataCollector(), collection.getOwner() );
 		collection.setElement( oneToMany );
 		oneToMany.setReferencedEntityName( collectionType.getName() );
@@ -846,16 +851,11 @@ public abstract class CollectionBinder {
 				collection.setOrderBy( orderByFragment );
 			}
 		}
-
-		if ( buildingContext == null ) {
-			throw new AssertionFailure(
-					"CollectionSecondPass for oneToMany should not be called with null mappings"
-			);
-		}
 		Map<String, Join> joins = buildingContext.getMetadataCollector().getJoins( assocClass );
 		if ( associatedClass == null ) {
 			throw new MappingException(
-					"Association references unmapped class: " + assocClass
+					String.format("Association [%s] for entity [%s] references unmapped class [%s]",
+							propertyName, propertyHolder.getClassName(), assocClass)
 			);
 		}
 		oneToMany.setAssociatedClass( associatedClass );

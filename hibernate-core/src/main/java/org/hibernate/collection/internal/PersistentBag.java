@@ -11,9 +11,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -104,23 +107,47 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 		this.bag = (List) persister.getCollectionType().instantiate( anticipatedSize );
 	}
 
-	@Override
-	public boolean equalsSnapshot(CollectionPersister persister) throws HibernateException {
-		final Type elementType = persister.getElementType();
-		final List sn = (List) getSnapshot();
-		if ( sn.size() != bag.size() ) {
-			return false;
-		}
-		for ( Object elt : bag ) {
-			final boolean unequal = countOccurrences( elt, bag, elementType ) != countOccurrences( elt, sn, elementType );
-			if ( unequal ) {
-				return false;
-			}
-		}
-		return true;
-	}
+    @Override
+    public boolean equalsSnapshot(CollectionPersister persister) throws HibernateException {
+        final Type elementType = persister.getElementType();
+        final List<Object> sn = (List<Object>) getSnapshot();
+        if (sn.size() != bag.size()) {
+            return false;
+        }
 
-	@Override
+        Map<Integer, List<Object>> instanceCountBag = groupByEqualityHash(bag, elementType);
+        Map<Integer, List<Object>> instanceCountSn = groupByEqualityHash(sn, elementType);
+
+        for (Object elt : bag) {
+            List<Object> candidatesBag = getItemsWithSameHash(instanceCountBag, elt, elementType);
+            List<Object> candidatesSn = getItemsWithSameHash(instanceCountSn, elt, elementType);
+
+            final boolean unequal = countOccurrences(elt, candidatesBag, elementType) 
+                    != countOccurrences(elt, candidatesSn, elementType);
+            if (unequal) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private List<Object> getItemsWithSameHash(Map<Integer, List<Object>> instanceCountBag, 
+            Object elt, Type elementType) {
+        return instanceCountBag.getOrDefault(elementType.getHashCode(elt), new ArrayList<>());
+    }
+
+    /**
+     * Groups items in searchedBag according to persistence "equality" as
+     * defined in Type.isSame and Type.getHashCode
+     * 
+     * @param searchedBag
+     * @return Map of "equality" hashCode to List of objects
+     */
+    private Map<Integer, List<Object>> groupByEqualityHash(List<Object> searchedBag, Type elementType) {
+        return searchedBag.stream().collect(Collectors.groupingBy(elementType::getHashCode));
+    }
+
+    @Override
 	public boolean isSnapshotEmpty(Serializable snapshot) {
 		return ( (Collection) snapshot ).isEmpty();
 	}

@@ -855,7 +855,8 @@ public abstract class CollectionBinder {
 		Map<String, Join> joins = buildingContext.getMetadataCollector().getJoins( assocClass );
 		if ( associatedClass == null ) {
 			throw new MappingException(
-					"Association references unmapped class: " + assocClass
+					String.format("Association %s for table %s references unmapped class: %s", 
+							oneToMany.getReferencedEntityName(), oneToMany.getTable().getName(), assocClass)
 			);
 		}
 		oneToMany.setAssociatedClass( associatedClass );

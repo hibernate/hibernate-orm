@@ -30,7 +30,6 @@ import java.util.TimeZone;
 import java.util.UUID;
 
 import org.hibernate.boot.model.type.spi.BasicTypeProducerRegistry;
-import org.hibernate.boot.model.type.spi.TypeInformationAliasRegistry;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;

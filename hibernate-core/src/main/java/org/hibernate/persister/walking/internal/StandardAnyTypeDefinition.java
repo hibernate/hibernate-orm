@@ -13,7 +13,7 @@ import java.util.Map;
 
 import org.hibernate.persister.walking.spi.AnyMappingDefinition;
 import org.hibernate.type.AnyType;
-import org.hibernate.type.MetaType;
+import org.hibernate.type.AnyDiscriminatorMappingType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -32,11 +32,11 @@ public class StandardAnyTypeDefinition implements AnyMappingDefinition {
 
 	private static List<DiscriminatorMapping> interpretDiscriminatorMappings(AnyType anyType) {
 		final Type discriminatorType = anyType.getDiscriminatorType();
-		if ( ! MetaType.class.isInstance( discriminatorType ) ) {
+		if ( ! AnyDiscriminatorMappingType.class.isInstance( discriminatorType ) ) {
 			return Collections.emptyList();
 		}
 
-		final MetaType metaType = (MetaType) discriminatorType;
+		final AnyDiscriminatorMappingType metaType = (AnyDiscriminatorMappingType) discriminatorType;
 		final List<DiscriminatorMapping> discriminatorMappings = new ArrayList<DiscriminatorMapping>();
 		for ( final Map.Entry<Object,String> entry : metaType.getDiscriminatorValuesToEntityNameMap().entrySet() ) {
 			discriminatorMappings.add(

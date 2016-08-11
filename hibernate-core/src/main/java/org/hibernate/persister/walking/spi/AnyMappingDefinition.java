@@ -6,6 +6,7 @@
  */
 package org.hibernate.persister.walking.spi;
 
+import org.hibernate.type.AnyDiscriminatorMappingType;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.spi.Type;
 
@@ -42,7 +43,7 @@ public interface AnyMappingDefinition {
 	 * Access to the type of the value that makes up the discriminator portion of the AnyType.  The discriminator is
 	 * historically called the "meta".
 	 * <p/>
-	 * NOTE : If explicit discriminator mappings are given, the type here will be a {@link org.hibernate.type.MetaType}.
+	 * NOTE : If explicit discriminator mappings are given, the type here will be a {@link AnyDiscriminatorMappingType}.
 	 *
 	 * @return The discriminator type
 	 *

@@ -7,6 +7,7 @@
 package org.hibernate.boot.spi;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -46,6 +47,7 @@ import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.spi.Type;
 
 /**
  * An in-flight representation of Metadata while Metadata is being built.
@@ -285,6 +287,23 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	 * a resolution for BasicType using "registry keys".
 	 */
 	<T> BasicType<T> basicType(String registrationKey);
+
+	/**
+	 * Performs the same function as the legacy TypeResolver#heuristicType.
+	 */
+	default Type heuristicType(String typeName) {
+		return heuristicType( typeName, null );
+	}
+
+	/**
+	 * Performs the same function as the legacy TypeResolver#heuristicType.
+	 */
+	Type heuristicType(String typeName, Map parameters);
+
+	/**
+	 * Performs same function as the legacy TypeFactory#any
+	 */
+	Type any(BasicType identifierType, BasicType discriminatorType, Map discriminatorValues);
 
 	interface DelayedPropertyReferenceHandler extends Serializable {
 		void process(InFlightMetadataCollector metadataCollector);

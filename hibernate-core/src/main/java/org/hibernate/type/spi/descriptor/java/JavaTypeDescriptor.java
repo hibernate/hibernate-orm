@@ -23,18 +23,26 @@ import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 public interface JavaTypeDescriptor<T> extends Type<T>, Serializable {
 	/**
 	 * Retrieve the Java type handled here.
+	 * <p/>
+	 * May be {@code null} in the case of dynamic models ({@link org.hibernate.EntityMode#MAP} e.g.).
 	 *
-	 * @return The Java type.
+	 * @return The Java type, or {@code null}
 	 */
 	Class<T> getJavaTypeClass();
 
+	/**
+	 * Note that implementations may return {@code null} in the case of dynamic models
+	 * ({@link org.hibernate.EntityMode#MAP} e.g.).
+	 *
+	 * {@inheritDoc}
+	 */
 	@Override
 	default Class<T> getJavaType() {
 		return getJavaTypeClass();
 	}
 
 	/**
-	 * Get the type name.  This is useful for detyped models which either will not have
+	 * Get the type name.  This is useful for dynamic models which either will not have
 	 * a Java type ({@link #getJavaTypeClass()} returns null) or {@link #getJavaTypeClass()}
 	 * returns a non-indicative value ({@code java.util.Map.class} for a composite value in
 	 * {@link org.hibernate.EntityMode#MAP} EntityMode, e.g.).
@@ -48,13 +56,6 @@ public interface JavaTypeDescriptor<T> extends Type<T>, Serializable {
 	}
 
 	/**
-	 * Retrieve the mutability plan for this Java type.
-	 *
-	 * @return The mutability plan
-	 */
-	MutabilityPlan<T> getMutabilityPlan();
-
-	/**
 	 * Obtain the "recommended" SQL type descriptor for this Java type.  The recommended
 	 * aspect comes from the JDBC spec (mostly).
 	 *
@@ -63,6 +64,13 @@ public interface JavaTypeDescriptor<T> extends Type<T>, Serializable {
 	 * @return The recommended SQL type descriptor
 	 */
 	SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context);
+
+	/**
+	 * Retrieve the mutability plan for this Java type.
+	 *
+	 * @return The mutability plan
+	 */
+	MutabilityPlan<T> getMutabilityPlan();
 
 	/**
 	 * Retrieve the natural comparator for this type.

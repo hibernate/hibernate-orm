@@ -18,7 +18,6 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.sqm.domain.BasicType;
-import org.hibernate.type.TypeResolver;
 import org.hibernate.type.spi.basic.BasicTypeRegistry;
 import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptorRegistry;
@@ -56,9 +55,6 @@ public class TypeConfiguration implements SessionFactoryObserver, TypeDescriptor
 
 	private boolean initialized = false;
 
-	// temporarily needed to support deprecations
-	private final TypeResolver typeResolver;
-
 	public TypeConfiguration() {
 		this( new EolScopeMapping() );
 	}
@@ -68,8 +64,6 @@ public class TypeConfiguration implements SessionFactoryObserver, TypeDescriptor
 		this.javaTypeDescriptorRegistry = new JavaTypeDescriptorRegistry( this );
 		this.sqlTypeDescriptorRegistry = new SqlTypeDescriptorRegistry( this );
 		this.basicTypeRegistry = new BasicTypeRegistry( this );
-
-		this.typeResolver = new TypeResolver( this );
 
 		this.initialized = true;
 	}
@@ -123,10 +117,6 @@ public class TypeConfiguration implements SessionFactoryObserver, TypeDescriptor
 		throw new NotYetImplementedException(  );
 	}
 
-	public <T> org.hibernate.type.spi.BasicType<T> basic(String typeName) {
-		return null;
-	}
-
 
 	/**
 	 * Encapsulation of lifecycle concerns for a TypeConfiguration, mainly in regards to
@@ -134,7 +124,6 @@ public class TypeConfiguration implements SessionFactoryObserver, TypeDescriptor
 	 */
 	private static class Scope {
 		private transient Mapping mapping;
-
 
 		private String sessionFactoryName;
 		private String sessionFactoryUuid;

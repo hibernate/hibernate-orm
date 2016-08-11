@@ -46,9 +46,7 @@ import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.type.internal.BasicTypeProducerRegistryImpl;
-import org.hibernate.boot.model.type.internal.TypeInformationAliasRegistryImpl;
 import org.hibernate.boot.model.type.spi.BasicTypeProducerRegistry;
-import org.hibernate.boot.model.type.spi.TypeInformationAliasRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -76,8 +74,8 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.spi.basic.RegistryKey;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.type.spi.basic.RegistryKey;
 import org.hibernate.type.spi.basic.RegistryKeyImpl;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
@@ -258,7 +256,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	@Override
 	public MetadataBuilder applyBasicType(org.hibernate.type.spi.BasicType type) {
-		return applyBasicType( type, RegistryKeyImpl.from( type, options.typeConfiguration ) );
+		return applyBasicType( type, RegistryKeyImpl.from( type ) );
 	}
 
 	@Override
@@ -528,7 +526,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private final MappingDefaultsImpl mappingDefaults;
 
 		private final TypeConfiguration typeConfiguration = new TypeConfiguration();
-		private final BasicTypeProducerRegistry typeInformationAliasRegistry = new BasicTypeProducerRegistryImpl();
+		private final BasicTypeProducerRegistry typeInformationAliasRegistry = new BasicTypeProducerRegistryImpl( typeConfiguration );
 
 		private IndexView jandexView;
 		private ClassLoader tempClassLoader;

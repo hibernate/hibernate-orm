@@ -15,6 +15,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -48,6 +49,7 @@ import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
 import org.hibernate.boot.model.type.spi.BasicTypeProducer;
 import org.hibernate.boot.model.type.spi.BasicTypeProducerRegistry;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.AttributeConverterAutoApplyHandler;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -83,6 +85,7 @@ import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryImpl;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -101,9 +104,12 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.query.spi.NamedQueryRepository;
+import org.hibernate.type.internal.descriptor.AnyTypeImpl;
+import org.hibernate.type.spi.AnyType;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.usertype.ParameterizedType;
 
 /**
  * The implementation of the in-flight Metadata collector contract.
@@ -341,6 +347,81 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 
 		return typeProducer.produceBasicType();
+	}
+
+	@Override
+	public Type heuristicType(String typeName, Map parameters) {
+		Type type = basicType( typeName );
+		if ( type != null ) {
+			return type;
+		}
+
+		return resolveTypeByName( typeName, parameters );
+	}
+
+	@Override
+	public AnyType any(BasicType identifierType, BasicType discriminatorType, Map discriminatorValues) {
+		return new AnyTypeImpl( identifierType, discriminatorType, discriminatorValues );
+
+	}
+
+	private Type resolveTypeByName(String typeName, Map parameters) {
+		try {
+			final Class namedClass = getMetadataBuildingOptions().getServiceRegistry()
+					.getService( ClassLoaderService.class )
+					.classForName( typeName );
+
+			if ( Type.class.isAssignableFrom( namedClass ) ) {
+				return resolveTypeFromClass( namedClass, parameters );
+			}
+		}
+		catch (Exception ignore) {
+		}
+
+		return null;
+
+	}
+
+	private Type resolveTypeFromClass(Class<? extends Type> typeClass, Map parameters) {
+		try {
+			Type type = typeClass.newInstance();
+			injectParameters( type, parameters );
+			return type;
+		}
+		catch (Exception e) {
+			throw new MappingException( "Could not instantiate Type: " + typeClass.getName(), e );
+		}
+	}
+
+	// todo : can a Properties be wrapped in unmodifiable in any way?
+	private final static Properties EMPTY_PROPERTIES = new Properties();
+
+	private static void injectParameters(Object type, Map parameters) {
+		if ( ParameterizedType.class.isInstance( type ) ) {
+			if ( parameters == null ) {
+				( (ParameterizedType) type ).setParameterValues( EMPTY_PROPERTIES );
+			}
+			else {
+				( (ParameterizedType) type ).setParameterValues( asProperties( parameters ) );
+			}
+		}
+		else if ( parameters != null && !parameters.isEmpty() ) {
+			throw new MappingException( "type is not parameterized: " + type.getClass().getName() );
+		}
+	}
+
+	private static Properties asProperties(Map parameters) {
+		if ( parameters instanceof Properties ) {
+			return (Properties) parameters;
+		}
+		else if ( CollectionHelper.isNotEmpty( parameters ) ) {
+			final Properties properties = new Properties();
+			properties.putAll( parameters );
+			return properties;
+		}
+		else {
+			return EMPTY_PROPERTIES;
+		}
 	}
 
 

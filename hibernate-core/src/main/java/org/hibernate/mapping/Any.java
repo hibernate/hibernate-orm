@@ -6,11 +6,13 @@
  */
 package org.hibernate.mapping;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.type.MetaType;
+import org.hibernate.boot.model.type.spi.BasicTypeProducer;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.type.AnyDiscriminatorMappingType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -21,9 +23,13 @@ import org.hibernate.type.spi.Type;
 public class Any extends SimpleValue {
 	private String identifierTypeName;
 	private String metaTypeName = "string";
-	private Map metaValues;
 
-	public Any(MetadataImplementor metadata, Table table) {
+	private BasicTypeProducer keyTypeProducer;
+
+	private BasicTypeProducer discriminatorTypeProducer;
+	private Map<Object,String> discriminatorMap;
+
+	public Any(InFlightMetadataCollector metadata, Table table) {
 		super( metadata, table );
 	}
 
@@ -36,11 +42,10 @@ public class Any extends SimpleValue {
 	}
 
 	public Type getType() throws MappingException {
-		final Type metaType = getMetadata().getTypeResolver().heuristicType( metaTypeName );
-
-		return getMetadata().getTypeResolver().getTypeFactory().any(
-				metaValues == null ? metaType : new MetaType( metaValues, metaType ),
-				getMetadata().getTypeResolver().heuristicType( identifierTypeName )
+		return getMetadata().any(
+				keyTypeProducer.produceBasicType(),
+				discriminatorTypeProducer.produceBasicType(),
+				discriminatorMap
 		);
 	}
 
@@ -55,11 +60,11 @@ public class Any extends SimpleValue {
 	}
 
 	public Map getMetaValues() {
-		return metaValues;
+		return discriminatorMap;
 	}
 
-	public void setMetaValues(Map metaValues) {
-		this.metaValues = metaValues;
+	public void setMetaValues(Map<Object,String> discriminatorMap) {
+		this.discriminatorMap = discriminatorMap;
 	}
 
 	public void setTypeUsingReflection(String className, String propertyName)
@@ -68,5 +73,20 @@ public class Any extends SimpleValue {
 
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
+	}
+
+	public void setIdentifierTypeProducer(BasicTypeProducer keyTypeProducer) {
+		this.keyTypeProducer = keyTypeProducer;
+	}
+
+	public void setDiscriminatorTypeProducer(BasicTypeProducer discriminatorTypeProducer) {
+		this.discriminatorTypeProducer = discriminatorTypeProducer;
+	}
+
+	public void addDiscriminatorMapping(Object discriminatorValue, String mappedEntityName) {
+		if ( discriminatorMap == null ) {
+			discriminatorMap = new HashMap<>();
+		}
+		discriminatorMap.put( discriminatorValue, mappedEntityName );
 	}
 }

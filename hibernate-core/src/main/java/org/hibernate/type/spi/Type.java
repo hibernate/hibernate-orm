@@ -169,6 +169,14 @@ public interface Type<T> extends org.hibernate.sqm.domain.Type {
 	 */
 	String toLoggableString(Object value, SessionFactoryImplementor factory);
 
+	/**
+	 * If values of this type can be rendered as literals into SQL, access
+	 * the formatter capable of doing that rendering.
+	 *
+	 * @return The JDBC/SQL literal formatter, or {@code null} if values
+	 * of this type cannot be rendered as a literal.
+	 */
+	JdbcLiteralFormatter getJdbcLiteralFormatter();
 
 
 
@@ -226,6 +234,8 @@ public interface Type<T> extends org.hibernate.sqm.domain.Type {
 	 *
 	 * @throws HibernateException An error from Hibernate
 	 * @throws SQLException An error from the JDBC driver
+	 *
+	 * todo : this form needs to go away.  Any form taking just one column name
 	 */
 	Object nullSafeGet(ResultSet rs, String name, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException, SQLException;

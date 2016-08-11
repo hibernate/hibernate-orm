@@ -7,6 +7,7 @@
 package org.hibernate.boot.model.type.internal;
 
 import org.hibernate.boot.model.type.spi.AbstractBasicTypeProducer;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A BasicTypeProducer intended for use in cases where the producer will not be registered.
@@ -14,6 +15,10 @@ import org.hibernate.boot.model.type.spi.AbstractBasicTypeProducer;
  * @author Steve Ebersole
  */
 public class BasicTypeProducerUnregisteredImpl extends AbstractBasicTypeProducer {
+	public BasicTypeProducerUnregisteredImpl(TypeConfiguration typeConfiguration) {
+		super( typeConfiguration );
+	}
+
 	@Override
 	public String getName() {
 		return null;

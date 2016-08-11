@@ -6,6 +6,7 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
 
@@ -18,10 +19,12 @@ import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
  */
 public class AdaptedImmutableType<T> extends AbstractSingleColumnStandardBasicType<T> {
 	private final String name;
+	private final JdbcLiteralFormatter<T> jdbcLiteralFormatter;
 
 	public AdaptedImmutableType(AbstractSingleColumnStandardBasicType<T> baseMutableType) {
 		super( baseMutableType.getColumnMapping().getSqlTypeDescriptor(), baseMutableType.getJavaTypeDescriptor() );
 		this.name = "imm_" + baseMutableType.getName();
+		this.jdbcLiteralFormatter = baseMutableType.getJdbcLiteralFormatter();
 	}
 
 	@Override
@@ -32,5 +35,10 @@ public class AdaptedImmutableType<T> extends AbstractSingleColumnStandardBasicTy
 
 	public String getName() {
 		return name;
+	}
+
+	@Override
+	public JdbcLiteralFormatter<T> getJdbcLiteralFormatter() {
+		return jdbcLiteralFormatter;
 	}
 }

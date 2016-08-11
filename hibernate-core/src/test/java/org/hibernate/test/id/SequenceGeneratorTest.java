@@ -10,28 +10,20 @@ import java.util.Map;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.SQLServer2012Dialect;
-
+import org.hibernate.id.SequenceGenerator;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.util.jdbc.SQLStatementInterceptor;
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
 
 public class SequenceGeneratorTest extends BaseNonConfigCoreFunctionalTestCase {
-
-	private SQLStatementInterceptor sqlStatementInterceptor;
-
-	@Override
-	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
-		sqlStatementInterceptor = new SQLStatementInterceptor( sfb );
-	}
 
 	@Override
 	public String[] getMappings() {
@@ -62,11 +54,9 @@ public class SequenceGeneratorTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.close();
 
 		assertTrue( person.getId() > 0 );
-		assertTrue( sqlStatementInterceptor.getSqlQueries()
-							.stream()
-							.filter( sql -> sql.contains( "product_sequence" ) )
-							.findFirst()
-							.isPresent() );
+
+		final EntityPersister persister = sessionFactory().getEntityPersister( Person.class.getName() );
+		assertTrue( SequenceGenerator.class.isInstance( persister.getIdentifierGenerator() ) );
 	}
 
 }

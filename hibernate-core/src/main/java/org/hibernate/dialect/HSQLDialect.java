@@ -675,4 +675,9 @@ public class HSQLDialect extends Dialect {
 	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) throws SQLException {
 		return false;
 	}
+
+	@Override
+	public boolean hasArrayDatatypes() {
+		return true;
+	}
 }

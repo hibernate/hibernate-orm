@@ -201,4 +201,11 @@ abstract public class DialectChecks {
 			return dialect.supportsPartitionBy();
 		}
 	}
+
+	public static class HasArrayDatatypes implements DialectCheck {
+		@Override
+		public boolean isMatch(Dialect dialect) {
+			return dialect.hasArrayDatatypes();
+		}
+	}
 }

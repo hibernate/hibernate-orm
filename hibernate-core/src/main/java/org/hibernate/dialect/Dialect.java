@@ -2850,4 +2850,13 @@ public abstract class Dialect implements ConversionContext {
 	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) throws SQLException {
 		return databaseMetaData != null && databaseMetaData.supportsNamedParameters();
 	}
+
+	/**
+	 * Database has native support for arrays.
+	 *
+	 * @return boolean
+	 */
+	public boolean hasArrayDatatypes() {
+		return false;
+	}
 }

@@ -599,4 +599,9 @@ public class PostgreSQL81Dialect extends Dialect {
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return new PostgreSQL81IdentityColumnSupport();
 	}
+
+	@Override
+	public boolean hasArrayDatatypes() {
+		return true;
+	}
 }

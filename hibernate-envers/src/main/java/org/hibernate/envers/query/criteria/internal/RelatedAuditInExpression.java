@@ -19,7 +19,7 @@ import org.hibernate.envers.query.internal.property.PropertyNameGetter;
 
 /**
  * @author Chris Cranford
- * @since 5.2
+ * @since 5.1.1
  */
 public class RelatedAuditInExpression extends AbstractAtomicExpression {
 

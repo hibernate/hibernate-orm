@@ -2039,7 +2039,13 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 
 		if ( unbound.size() > 0 || unboundNoLogical.size() > 0 ) {
-			StringBuilder sb = new StringBuilder( "Unable to create unique key constraint (" );
+			StringBuilder sb = new StringBuilder( "Unable to create " );
+			if ( unique ) {
+				sb.append( "unique key constraint (" );
+			}
+			else {
+				sb.append( "index (" );
+			}
 			for ( String columnName : columnNames ) {
 				sb.append( columnName ).append( ", " );
 			}

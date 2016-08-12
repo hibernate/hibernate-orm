@@ -119,21 +119,20 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 			final TypeElement collectionElement = (TypeElement) context.getTypeUtils()
 					.asElement( collectionElementType );
 			AccessTypeInformation accessTypeInfo = context.getAccessTypeInfo(
-					collectionElement.getQualifiedName()
-							.toString()
-			);
+					collectionElementType.toString() );
 			if ( accessTypeInfo == null ) {
-				AccessType explicitAccessType = TypeUtils.determineAnnotationSpecifiedAccessType(
+				AccessType explicitAccessType = null;
+				if ( collectionElement != null ) {
+					explicitAccessType = TypeUtils.determineAnnotationSpecifiedAccessType(
 						collectionElement
-				);
+					);
+				}
 				accessTypeInfo = new AccessTypeInformation(
-						collectionElement.getQualifiedName().toString(),
+						collectionElementType.toString(),
 						explicitAccessType,
 						entity.getEntityAccessTypeInfo().getAccessType()
 				);
-				context.addAccessTypeInformation(
-						collectionElement.getQualifiedName().toString(), accessTypeInfo
-				);
+				context.addAccessTypeInformation( collectionElementType.toString(), accessTypeInfo );
 			}
 			else {
 				accessTypeInfo.setDefaultAccessType( entity.getEntityAccessTypeInfo().getAccessType() );

@@ -145,7 +145,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	private final StandardServiceRegistry standardServiceRegistry;
 	private final ManagedResources managedResources;
 	private final MetadataBuilderImplementor metamodelBuilder;
-	private final SettingsImpl settings;
 
 	private static class JpaEntityNotFoundDelegate implements EntityNotFoundDelegate, Serializable {
 		/**
@@ -200,7 +199,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 		// Build the "standard" service registry
 		ssrBuilder.applySettings( configurationValues );
-		this.settings = configure( ssrBuilder );
+		configure( ssrBuilder );
 		this.standardServiceRegistry = ssrBuilder.build();
 		configure( standardServiceRegistry, mergedSettings );
 
@@ -580,21 +579,15 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		return new CacheRegionDefinition( cacheType, role, usage, region, lazyProperty );
 	}
 
-	private SettingsImpl configure(StandardServiceRegistryBuilder ssrBuilder) {
-		final SettingsImpl settings = new SettingsImpl();
+	private void configure(StandardServiceRegistryBuilder ssrBuilder) {
 
 		applyJdbcConnectionProperties( ssrBuilder );
-		applyTransactionProperties( ssrBuilder, settings );
+		applyTransactionProperties( ssrBuilder );
 
 		// flush beforeQuery completion validation
 		if ( "true".equals( configurationValues.get( Environment.FLUSH_BEFORE_COMPLETION ) ) ) {
 			ssrBuilder.applySetting( Environment.FLUSH_BEFORE_COMPLETION, "false" );
 			LOG.definingFlushBeforeCompletionIgnoredInHem( Environment.FLUSH_BEFORE_COMPLETION );
-		}
-
-		final Object value = configurationValues.get( DISCARD_PC_ON_CLOSE );
-		if ( value != null ) {
-			settings.setReleaseResourcesOnCloseEnabled( "true".equals( value ) );
 		}
 
 //		final StrategySelector strategySelector = ssrBuilder.getBootstrapServiceRegistry().getService( StrategySelector.class );
@@ -604,8 +597,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 //					loadSessionInterceptorClass( interceptorSetting, strategySelector )
 //			);
 //		}
-
-		return settings;
 	}
 
 	private void applyJdbcConnectionProperties(StandardServiceRegistryBuilder ssrBuilder) {
@@ -646,7 +637,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 	}
 
-	private void applyTransactionProperties(StandardServiceRegistryBuilder ssrBuilder, SettingsImpl settings) {
+	private void applyTransactionProperties(StandardServiceRegistryBuilder ssrBuilder) {
 		PersistenceUnitTransactionType txnType = PersistenceUnitTransactionTypeHelper.interpretTransactionType(
 				configurationValues.get( JPA_TRANSACTION_TYPE )
 		);
@@ -657,7 +648,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			// is it more appropriate to have this be based on bootstrap entry point (EE vs SE)?
 			txnType = PersistenceUnitTransactionType.RESOURCE_LOCAL;
 		}
-		settings.setTransactionType( txnType );
 		boolean hasTxStrategy = configurationValues.containsKey( TRANSACTION_COORDINATOR_STRATEGY );
 		if ( hasTxStrategy ) {
 			LOG.overridingTransactionStrategyDangerous( TRANSACTION_COORDINATOR_STRATEGY );

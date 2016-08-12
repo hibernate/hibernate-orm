@@ -54,11 +54,16 @@ allprojects {
 }
 
 ext {
-	hibernateTargetVersion = '5.2.2-SNAPSHOT'
+	hibernateTargetVersion = '5.2.3-SNAPSHOT'
 	expectedGradleVersion = '3.0-milestone-1'
 	baselineJavaVersion = '1.8'
 
     osgiExportVersion = hibernateTargetVersion.replaceAll( '-SNAPSHOT', '.SNAPSHOT' )
+
+	final String[] versionComponents = hibernateTargetVersion.split( '\\.' );
+	hibernateFullVersion = hibernateTargetVersion
+	hibernateMajorMinorVersion = versionComponents[0] + '.' + versionComponents[1]
+	hibernateMajorVersion = versionComponents[0]
 }
 
 idea {
@@ -243,10 +248,10 @@ subprojects { subProject ->
 			into sourceSets.test.output.classesDir
 		}
 		copy {
-			ext.targetDir = file( "${buildDir}/resources/test" )
 			from file('src/test/resources')
-			into targetDir
-			filter( ReplaceTokens, tokens: dbBundle[db] );
+			into file( "${buildDir}/resources/test" )
+			exclude 'src/test/resources/arquillian.xml'
+			filter( ReplaceTokens, tokens: dbBundle[db] )
 		}
 	} )
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

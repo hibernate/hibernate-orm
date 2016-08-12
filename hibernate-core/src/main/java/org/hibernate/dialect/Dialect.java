@@ -2852,6 +2852,15 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
+	 * Does this dialect supports Nationalized Types
+	 *
+	 * @return boolean
+	 */
+	public boolean supportsNationalizedTypes() {
+		return true;
+	}
+
+	/**
 	 * Database has native support for arrays.
 	 *
 	 * @return boolean

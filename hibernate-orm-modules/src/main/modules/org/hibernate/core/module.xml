@@ -9,6 +9,7 @@
     <resources>
         <resource-root path="hibernate-core-${version}.jar"/>
         <resource-root path="hibernate-envers-${version}.jar"/>
+        <resource-root path="javassist-${javassistVersion}.jar"/>
     </resources>
 
     <dependencies>
@@ -23,6 +24,9 @@
         <module name="javax.xml.bind.api"/>
         <module name="org.antlr"/>
         <module name="org.dom4j"/>
+        <!-- Javassist is handled directly as a resource in order to account for
+        the likely conflict in Javassist versions
+        -->
         <module name="org.javassist"/>
         <module name="org.jboss.as.jpa.spi"/>
         <module name="org.jboss.jandex"/>

@@ -6,56 +6,93 @@
  */
 package org.hibernate.jpa.test.cdi;
 
-import javax.inject.Inject;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.EntityManager;
-import javax.persistence.Id;
-import javax.persistence.PrePersist;
-import javax.persistence.Table;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import javax.annotation.Resource;
+import javax.inject.Inject;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Id;
+import javax.persistence.PersistenceUnit;
+import javax.persistence.PrePersist;
+import javax.persistence.Table;
+import javax.transaction.TransactionManager;
+import javax.transaction.UserTransaction;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import org.jboss.arquillian.container.test.api.Deployment;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.shrinkwrap.api.Archive;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.asset.EmptyAsset;
+import org.jboss.shrinkwrap.api.asset.StringAsset;
+import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.jboss.shrinkwrap.descriptor.api.Descriptors;
+import org.jboss.shrinkwrap.descriptor.api.persistence21.PersistenceDescriptor;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Steve Ebersole
  */
-public class BasicCdiTest extends BaseCdiIntegrationTest {
+@RunWith(Arquillian.class)
+public class BasicCdiTest {
+	@Deployment
+	public static Archive<?> buildDeployment() {
+		return ShrinkWrap.create( JavaArchive.class, "test.jar" )
+				.addClass( MyEntity.class )
+				.addClass( EventQueue.class )
+				.addClass( Event.class )
+				.addClass( Monitor.class )
+				.addAsManifestResource( EmptyAsset.INSTANCE, "beans.xml" )
+				.addAsManifestResource( new StringAsset( persistenceXml().exportAsString() ), "persistence.xml" );
+	}
+
+	private static PersistenceDescriptor persistenceXml() {
+		return Descriptors.create( PersistenceDescriptor.class )
+				.createPersistenceUnit().name( "pu-cdi-basic" )
+				.clazz( MyEntity.class.getName() )
+				.excludeUnlistedClasses( true )
+				.nonJtaDataSource( "java:jboss/datasources/ExampleDS" )
+				.getOrCreateProperties().createProperty().name( "jboss.as.jpa.providerModule" ).value( "org.hibernate:5.2" ).up().up()
+				.getOrCreateProperties().createProperty().name( "hibernate.delay_cdi_access" ).value( "true" ).up().up()
+				.getOrCreateProperties().createProperty().name( "hibernate.hbm2ddl.auto" ).value( "create-drop" ).up().up().up();
+	}
+
+	@PersistenceUnit
+	EntityManagerFactory emf;
+
+	@Resource
+	private UserTransaction utx;
+
+
 	private static int count;
-
-	@Override
-	public Class[] getCdiBeans() {
-		return new Class[] { EventQueue.class };
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { MyEntity.class };
-	}
 
 	@Test
 	@SuppressWarnings("unchecked")
-	public void testIt() {
+	public void testIt() throws Exception {
 		count = 0;
 
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
+		utx.begin();
+		EntityManager em = emf.createEntityManager();
 		em.persist( new MyEntity( 1 ) );
-		em.getTransaction().commit();
-		em.close();
+		utx.commit();
 
 		assertEquals( 1, count );
 
-		em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		em.remove( em.getReference( MyEntity.class, 1 ) );
-		em.getTransaction().commit();
-		em.close();
+		utx.begin();
+		em = emf.createEntityManager();
+		MyEntity it = em.find( MyEntity.class, 1 );
+		assertNotNull( it );
+		em.remove( it );
+		utx.commit();
 	}
 
 	@Entity
@@ -129,7 +166,7 @@ public class BasicCdiTest extends BaseCdiIntegrationTest {
 	public static class Monitor {
 		private final EventQueue eventQueue;
 
-		@Inject
+		@javax.inject.Inject
 		public Monitor(EventQueue eventQueue) {
 			this.eventQueue = eventQueue;
 		}

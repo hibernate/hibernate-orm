@@ -15,20 +15,24 @@
     <!-- Uncomment in order to inspect deployments -->
     <!--
     <engine>
-        <property name="deploymentExportPath">target/deployments</property>
+        <property name="deploymentExportPath">${arquillianDeploymentExportDir}</property>
     </engine>
     -->
 
     <group qualifier="Grid" default="true">
         <container qualifier="container.active-1" mode="suite" default="true">
             <configuration>
-                <property name="jbossHome">${buildDir}/wildfly-${wildflyVersion}</property>
-                <property name="javaVmArguments">-Djava.net.preferIPv4Stack=true -Djgroups.bind_addr=127.0.0.1 -Djboss.socket.binding.port-offset=137</property>
+                <property name="jbossHome">${wildFlyInstallDir}</property>
+                <property name="javaVmArguments">
+                    -Djava.net.preferIPv4Stack=true
+                    -Djgroups.bind_addr=127.0.0.1
+                    -Djboss.socket.binding.port-offset=137
 
-                <!-- Uncomment for Remote debugging Wildfly -->
-                <!--
-                <property name="javaVmArguments">-Djava.net.preferIPv4Stack=true -Djgroups.bind_addr=127.0.0.1 -Xrunjdwp:transport=dt_socket,address=5005,server=y,suspend=y</property>
-                -->
+                    <!-- Uncomment for Remote debugging Wildfly -->
+                    <!--
+                    -Xrunjdwp:transport=dt_socket,address=5005,server=y,suspend=y
+                    -->
+                </property>
             </configuration>
         </container>
     </group>

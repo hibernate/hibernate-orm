@@ -3,6 +3,77 @@ Hibernate 5.0 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.2.2.Final (August 04, 2016)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/24150
+
+** Bug
+    * [HHH-5393] - MappingException when @MapKeyColumn refers to a column mapped in embeddable map value
+    * [HHH-7249] - Discrimator values in versioned entities in one to many relations could cause problems when deleting relation
+    * [HHH-7625] - Inverse OneToMany with a CompositeKey fails
+    * [HHH-9199] - ValidityAuditStrategy: Collection of embeddables is not audited correctly
+    * [HHH-10027] - Dynamic filter parameter can be bound in wrong order when applied to OneToMany collections
+    * [HHH-10617] - multiLoad behavior
+    * [HHH-10725] - Hibernate Integrations Guide: an incorrect example LatestAndGreatestConnectionProviderImpl
+    * [HHH-10795] - StatefulPersistenceContext.entityEntryContext does not work properly for ManagedEntity associated with a different StatefulPersistenceContext
+    * [HHH-10810] - ImplicitIndexColumnNameSource should extend ImplicitNameSource.
+    * [HHH-10879] - SqlServer dialect doesn't respect "key" reserved keyword
+    * [HHH-10888] - PluralAttribute#isAssociation returns true for @ElementCollection
+    * [HHH-10896] - Exception thrown when dropping schema with a managed connection
+    * [HHH-10900] - ExceptionConverter throws an exception if the Proxy is no longer reachable
+    * [HHH-10907] - Fix connection leak problem in hibernate-core tests
+    * [HHH-10915] - NullPointerException from AbstractProducedQuery.getParameters()
+    * [HHH-10919] - HQL: Sql syntax exception when joining a Map<Entity,Component>
+    * [HHH-10920] - Joined inheritance : Same super class field name in embedded type causes embedded field to be ignored
+    * [HHH-10922] - flush triggers load when using enableDirtyTracking
+    * [HHH-10937] - The generation of the drop schema does not filter sequence with schemaFilter
+    * [HHH-10942] - Session not flushing  starting from 5.2.0 in Karaf + Aries JPA & JTA
+    * [HHH-10944] - org.hibernate.test.mappingexception.MappingExceptionTest#testNotFound failure
+    * [HHH-10950] - uniqueResultOptional fails for Query created from CriteriaQuery
+    * [HHH-10952] - Tests leaving transactions opened cause PostgreSQL to hang
+    * [HHH-10953] - HQL update statement fails if entity is inside a package of format in.mycomany.domain.Entity
+    * [HHH-10955] - PessimisticWriteLockTimeoutTest#testSkipLocked should run only on PostgreSQL 9.5
+    * [HHH-10959] - Methods in org.hibernate.query.Query should not return the deprecated org.hibernate.Query
+    * [HHH-10964] - Fix missing currentTenantIdentifierResolver
+    * [HHH-10973] - hibernate-enhance-maven-plugin won't enhance entities with bidirectional relationships
+    * [HHH-10977] - entity not enhanced when mapped superclass enhanced before
+    * [HHH-10987] - Cannot save JTS geometry with SRID 3857 into SRID 3857 column
+    * [HHH-10991] - Wrong order parameter binding when filters are used in conjunction with component type parameters and subqueries
+    * [HHH-10993] - NPE when Lazy loading collection without transaction for bytecode enhanced entitie
+    * [HHH-10994] - Limit Handler for SQL server doesn't support queries with alias( without 'as' keyboard ) in select clause.
+    * [HHH-11009] - org.hibernate.AnnotationException: Unable to create unique key constraint - if column not found
+    * [HHH-11013] - The release task creates two documentation folders for UserGuide
+    * [HHH-11016] - Hibernate Schema Management Tool does not properly drop sequences for PostgresSQL 8.2+
+
+
+** New Feature
+    * [HHH-10965] - Add new Query Hint to avoid passing DISTINCT from entity queries to SQL statements
+    * [HHH-10966] - Document @DiscriminatorValue NULL and NOT_NULL options
+    * [HHH-10971] - Document flush operation order
+
+** Task
+    * [HHH-10948] - Upgrade Byteman to 3.0.6
+
+** Improvement
+    * [HHH-8687] - Better exception message for PostgreSQL81Dialect and named REF_CURSOR parameter binding
+    * [HHH-10531] - JaxbHbmTuplizerType marshalling does not conform hibernate-mapping-4.0.xsd
+    * [HHH-10532] - Cannot marshall JaxbHbmBasicAttributeType to xml if the "generated" attribute is not specified
+    * [HHH-10800] - InformixDialect: add support for coalesce(), current_timestamp(), current_date()
+    * [HHH-10905] - NullPointerException when StatelessSession.get(Class, Serializable, LockMode) called with null LockMode, instead of defaulting to LockMode.NONE
+    * [HHH-10923] - Upgrade CDI 1.1 and related dependencies to Final
+    * [HHH-10924] - Replace ConcurrentServiceBinding by ConcurrentHashMap
+    * [HHH-10943] - Driver Manager Connection Pool should close leaked connections upon shutting down
+    * [HHH-10945] - Move TransactionUtil from documentation to hibernate-testing
+    * [HHH-10946] - Add utility to detect connection leaks during testing
+    * [HHH-10947] - Add @Repeatable to Hibernate-owned annotations
+    * [HHH-10949] - Upgrade Infinispan to 8.2.3.Final
+    * [HHH-10984] - Have multiLoad not return (unflushed) DELETED entities
+    * [HHH-10996] - The cleanupTestData utility has issues with link tables
+    * [HHH-11000] - Fix the port stealing issue between Arquillian and NVidia Windows driver
+    * [HHH-11002] - Add documentation section about Filter and FilterDef
+    * [HHH-11017] - Migrate Integration Guide to AsciiDoctor
+
+
 Changes in 5.2.1.Final (June 30, 2016)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/23950
@@ -34,6 +105,7 @@ https://hibernate.atlassian.net/projects/HHH/versions/23950
     * [HHH-10540] - Incorrect bytecode instrumentation when there are multiple @Embedded attributes
     * [HHH-10562] - ManagedEntity linked list broken when mutable, non-associated enhanced entity is evicted
     * [HHH-10583] - BytecodeEnhancement's AssociationManagement breaks with entity containing two ToOne relations with the same mappedBy value.
+    * [HHH-10592] - Query with literal parameter and fails with attribute converter
     * [HHH-10642] - BytecodeEnhancements  PersistentAttributesEnhancer  bytecode error INVOKESPECIAL
     * [HHH-10643] - Attribute 'foreignKeyDefinition' of @javax.persistence.ForeignKey ignored by schema exporter
     * [HHH-10644] - Enhancement cause Exception if property field not present

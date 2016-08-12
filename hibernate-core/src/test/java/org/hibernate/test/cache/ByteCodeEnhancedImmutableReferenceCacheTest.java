@@ -15,7 +15,10 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedEntity;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.Status;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -24,8 +27,11 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Transient;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -89,6 +95,132 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 		s.delete( myReferenceData );
 		s.getTransaction().commit();
 		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-10795")
+	public void testAssociatedWithMultiplePersistenceContexts() {
+		MyEnhancedReferenceData myReferenceData = new MyEnhancedReferenceData( 1, "first item", "abc" );
+		MyEnhancedReferenceData myOtherReferenceData = new MyEnhancedReferenceData( 2, "second item", "def" );
+
+		// save a reference in one session
+		Session s1 = openSession();
+		s1.beginTransaction();
+		s1.save( myReferenceData );
+		s1.save( myOtherReferenceData );
+		s1.getTransaction().commit();
+		s1.close();
+
+		assertNotNull( myReferenceData.$$_hibernate_getEntityEntry() );
+		assertNotNull( myOtherReferenceData.$$_hibernate_getEntityEntry() );
+
+		// now associate myReferenceData with 2 sessions
+		s1 = openSession();
+		s1.beginTransaction();
+		myReferenceData = s1.get( MyEnhancedReferenceData.class, myReferenceData.getId() );
+	    myOtherReferenceData = s1.get( MyEnhancedReferenceData.class, myOtherReferenceData.getId() );
+		assertTrue( s1.contains( myReferenceData ) );
+		assertTrue( s1.contains( myOtherReferenceData ) );
+		// prev/next references should be null; entityEntry should be non-null;
+		assertNull( myReferenceData.$$_hibernate_getPreviousManagedEntity() );
+		assertNull( myReferenceData.$$_hibernate_getNextManagedEntity() );
+		assertNull( myOtherReferenceData.$$_hibernate_getPreviousManagedEntity() );
+		assertNull( myOtherReferenceData.$$_hibernate_getNextManagedEntity() );
+
+		assertSame(
+				myReferenceData.$$_hibernate_getEntityEntry(),
+				( (SharedSessionContractImplementor) s1 ).getPersistenceContext().getEntry( myReferenceData )
+		);
+		assertSame(
+				myOtherReferenceData.$$_hibernate_getEntityEntry(),
+				( (SharedSessionContractImplementor) s1 ).getPersistenceContext().getEntry( myOtherReferenceData )
+		);
+
+		Session s2 = openSession();
+		s2.beginTransaction();
+
+		// s2 should contains no entities
+		assertFalse( s2.contains( myReferenceData ) );
+		assertFalse( s2.contains( myOtherReferenceData ) );
+
+		assertNull( ( (SharedSessionContractImplementor) s2 ).getPersistenceContext().getEntry( myReferenceData ) );
+		assertNull( ( (SharedSessionContractImplementor) s2 ).getPersistenceContext().getEntry( myOtherReferenceData ) );
+
+		// evict should do nothing, since p is not associated with s2
+		s2.evict( myReferenceData );
+		s2.evict( myOtherReferenceData );
+
+		assertSame( myReferenceData, s2.get( MyEnhancedReferenceData.class, myReferenceData.getId() ) );
+		assertSame( myOtherReferenceData, s2.get( MyEnhancedReferenceData.class, myOtherReferenceData.getId() ) );
+
+		assertTrue( s2.contains( myReferenceData ) );
+		assertTrue( s2.contains( myOtherReferenceData ) );
+
+		// still associated with s1
+		assertTrue( s1.contains( myReferenceData ) );
+		assertTrue( s1.contains( myOtherReferenceData ) );
+
+		s2.evict( myReferenceData );
+		s2.evict( myOtherReferenceData );
+
+		assertFalse( s2.contains( myReferenceData ) );
+		assertFalse( s2.contains( myOtherReferenceData ) );
+
+		s2.getTransaction().commit();
+		s2.close();
+
+		// still associated with s1
+		assertTrue( s1.contains( myReferenceData ) );
+		assertTrue( s1.contains( myOtherReferenceData ) );
+
+		s1.clear();
+
+		assertFalse( s1.contains( myReferenceData ) );
+		assertFalse( s1.contains( myOtherReferenceData ) );
+
+		s1.close();
+
+		// EntityEntry should still be set
+		assertNotNull( myReferenceData.$$_hibernate_getEntityEntry() );
+		assertNotNull( myOtherReferenceData.$$_hibernate_getEntityEntry() );
+
+		// load them into 2 sessions
+		s1 = openSession();
+		s1.getTransaction().begin();
+		assertSame( myReferenceData, s1.get( MyEnhancedReferenceData.class, myReferenceData.getId() ) );
+		assertSame( myOtherReferenceData, s1.get( MyEnhancedReferenceData.class, myOtherReferenceData.getId() ) );
+
+		s2 = openSession();
+		s2.getTransaction().begin();
+		assertSame( myReferenceData, s2.get( MyEnhancedReferenceData.class, myReferenceData.getId() ) );
+		assertSame( myOtherReferenceData, s2.get( MyEnhancedReferenceData.class, myOtherReferenceData.getId() ) );
+
+		assertEquals( Status.READ_ONLY, myReferenceData.$$_hibernate_getEntityEntry().getStatus() );
+		assertEquals( Status.READ_ONLY, myOtherReferenceData.$$_hibernate_getEntityEntry().getStatus() );
+
+		// delete myReferenceData from s1
+		s1.delete( myReferenceData );
+
+		assertEquals( Status.DELETED, myReferenceData.$$_hibernate_getEntityEntry().getStatus() );
+		assertEquals( Status.READ_ONLY, myOtherReferenceData.$$_hibernate_getEntityEntry().getStatus() );
+
+		// delete myOtherReferenceData from s2
+		s2.delete( myOtherReferenceData );
+
+		assertEquals( Status.DELETED, myReferenceData.$$_hibernate_getEntityEntry().getStatus() );
+		assertEquals( Status.DELETED, myOtherReferenceData.$$_hibernate_getEntityEntry().getStatus() );
+
+		s1.getTransaction().commit();
+		s1.close();
+
+		assertEquals( Status.GONE, myReferenceData.$$_hibernate_getEntityEntry().getStatus() );
+		assertEquals( Status.DELETED, myOtherReferenceData.$$_hibernate_getEntityEntry().getStatus() );
+
+		s2.getTransaction().commit();
+		s2.close();
+
+		assertEquals( Status.GONE, myReferenceData.$$_hibernate_getEntityEntry().getStatus() );
+		assertEquals( Status.GONE, myOtherReferenceData.$$_hibernate_getEntityEntry().getStatus() );
 	}
 
 	@Entity(name = "MyEnhancedReferenceData")

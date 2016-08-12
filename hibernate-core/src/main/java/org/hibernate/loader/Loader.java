@@ -96,6 +96,10 @@ import org.hibernate.type.VersionType;
  * @see org.hibernate.persister.entity.Loadable
  */
 public abstract class Loader {
+
+	public static final String SELECT = "select";
+	public static final String SELECT_DISTINCT = "select distinct";
+
 	protected static final CoreMessageLogger LOG = CoreLogging.messageLogger( Loader.class );
 	protected static final boolean DEBUG_ENABLED = LOG.isDebugEnabled();
 
@@ -238,6 +242,8 @@ public abstract class Loader {
 		if ( parameters.getQueryHints() != null && parameters.getQueryHints().size() > 0 ) {
 			sql = dialect.getQueryHintString( sql, parameters.getQueryHints() );
 		}
+
+		sql = processDistinctKeyword( sql, parameters);
 
 		return getFactory().getSessionFactoryOptions().isCommentsEnabled()
 				? prependComment( sql, parameters )
@@ -2785,5 +2791,22 @@ public abstract class Loader {
 		public Statement getStatement() {
 			return statement;
 		}
+	}
+
+	/**
+	 * Remove distinct keyword from SQL statement if the query should not pass it through.
+	 * @param sql SQL string
+	 * @param parameters SQL parameters
+	 * @return SQL string
+	 */
+	protected String processDistinctKeyword(
+			String sql,
+			QueryParameters parameters) {
+		if ( !parameters.isPassDistinctThrough() ) {
+			if ( sql.startsWith( SELECT_DISTINCT ) ) {
+				return SELECT + sql.substring( SELECT_DISTINCT.length() );
+			}
+		}
+		return sql;
 	}
 }

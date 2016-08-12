@@ -6,22 +6,40 @@
  */
 package org.hibernate.query.criteria.internal.compile;
 
+import java.io.Serializable;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
 import javax.persistence.criteria.ParameterExpression;
 
+import org.hibernate.CacheMode;
+import org.hibernate.FlushMode;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.query.Query;
-import org.hibernate.query.internal.AbstractProducedQuery;
+import org.hibernate.query.ParameterMetadata;
+import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.spi.QueryProducerImplementor;
+import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
 
 /**
@@ -36,7 +54,7 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public class CriteriaQueryTypeQueryAdapter<X> extends AbstractProducedQuery<X> implements QueryImplementor<X> {
+public class CriteriaQueryTypeQueryAdapter<X> implements QueryImplementor<X> {
 	private final SessionImplementor entityManager;
 	private final QueryImplementor<X> jpqlQuery;
 	private final Map<ParameterExpression<?>, ExplicitParameterInfo<?>> explicitParameterInfoMap;
@@ -45,7 +63,6 @@ public class CriteriaQueryTypeQueryAdapter<X> extends AbstractProducedQuery<X> i
 			SessionImplementor entityManager,
 			QueryImplementor<X> jpqlQuery,
 			Map<ParameterExpression<?>, ExplicitParameterInfo<?>> explicitParameterInfoMap) {
-		super( entityManager, jpqlQuery.getParameterMetadata() );
 		this.entityManager = entityManager;
 		this.jpqlQuery = jpqlQuery;
 		this.explicitParameterInfoMap = explicitParameterInfoMap;
@@ -55,16 +72,57 @@ public class CriteriaQueryTypeQueryAdapter<X> extends AbstractProducedQuery<X> i
 		return jpqlQuery.getResultList();
 	}
 
+	@Override
+	public X uniqueResult() {
+		return jpqlQuery.uniqueResult();
+	}
+
+	@Override
+	public Optional<X> uniqueResultOptional() {
+		return jpqlQuery.uniqueResultOptional();
+	}
+
+	@Override
+	public Stream<X> stream() {
+		return jpqlQuery.stream();
+	}
+
+	@Override
+	public List<X> list() {
+		return jpqlQuery.list();
+	}
+
+	@Override
+	public QueryImplementor<X> setCacheMode(CacheMode cacheMode) {
+		jpqlQuery.setCacheMode( cacheMode );
+		return this;
+	}
+
+	@Override
+	public boolean isCacheable() {
+		return jpqlQuery.isCacheable();
+	}
+
 	public X getSingleResult() {
 		return jpqlQuery.getSingleResult();
+	}
+
+	@Override
+	public ParameterMetadata getParameterMetadata() {
+		return jpqlQuery.getParameterMetadata();
+	}
+
+	@Override
+	public String[] getNamedParameters() {
+		return jpqlQuery.getNamedParameters();
 	}
 
 	public int getMaxResults() {
 		return jpqlQuery.getMaxResults();
 	}
 
-	public QueryImplementor<X> setMaxResults(int i) {
-		jpqlQuery.setMaxResults( i );
+	public QueryImplementor<X> setMaxResults(int maxResult) {
+		jpqlQuery.setMaxResults( maxResult );
 		return this;
 	}
 
@@ -86,7 +144,6 @@ public class CriteriaQueryTypeQueryAdapter<X> extends AbstractProducedQuery<X> i
 		return this;
 	}
 
-	@Override
 	protected boolean isNativeQuery() {
 		return false;
 	}
@@ -96,8 +153,19 @@ public class CriteriaQueryTypeQueryAdapter<X> extends AbstractProducedQuery<X> i
 		return jpqlQuery.getQueryString();
 	}
 
+	@Override
+	public FlushMode getHibernateFlushMode() {
+		return jpqlQuery.getHibernateFlushMode();
+	}
+
+	@Override
 	public FlushModeType getFlushMode() {
 		return jpqlQuery.getFlushMode();
+	}
+
+	@Override
+	public CacheMode getCacheMode() {
+		return jpqlQuery.getCacheMode();
 	}
 
 	@Override
@@ -105,46 +173,168 @@ public class CriteriaQueryTypeQueryAdapter<X> extends AbstractProducedQuery<X> i
 		return jpqlQuery.getReturnTypes();
 	}
 
+	@Override
+	public LockOptions getLockOptions() {
+		return jpqlQuery.getLockOptions();
+	}
+
+	@Override
+	public RowSelection getQueryOptions() {
+		return jpqlQuery.getQueryOptions();
+	}
+
+	@Override
 	public QueryImplementor<X> setFlushMode(FlushModeType flushModeType) {
 		jpqlQuery.setFlushMode( flushModeType );
 		return this;
 	}
 
+	@Override
+	public QueryImplementor setFlushMode(FlushMode flushMode) {
+		jpqlQuery.setFlushMode( flushMode );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<X> setHibernateFlushMode(FlushMode flushMode) {
+		jpqlQuery.setHibernateFlushMode( flushMode );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor setCacheable(boolean cacheable) {
+		jpqlQuery.setCacheable( cacheable );
+		return this;
+	}
+
+	@Override
+	public String getCacheRegion() {
+		return jpqlQuery.getCacheRegion();
+	}
+
+	@Override
+	public QueryImplementor setCacheRegion(String cacheRegion) {
+		jpqlQuery.setCacheRegion( cacheRegion );
+		return this;
+	}
+
+	@Override
+	public Integer getTimeout() {
+		return jpqlQuery.getTimeout();
+	}
+
+	@Override
+	public QueryImplementor setTimeout(int timeout) {
+		jpqlQuery.setTimeout( timeout );
+		return this;
+	}
+
+	@Override
+	public Integer getFetchSize() {
+		return jpqlQuery.getFetchSize();
+	}
+
+	@Override
+	public QueryImplementor setLockOptions(LockOptions lockOptions) {
+		jpqlQuery.setLockOptions( lockOptions );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor setLockMode(String alias, LockMode lockMode) {
+		jpqlQuery.setLockMode( alias, lockMode );
+		return this;
+	}
+
+	@Override
+	public String getComment() {
+		return jpqlQuery.getComment();
+	}
+
+	@Override
+	public QueryImplementor setComment(String comment) {
+		jpqlQuery.setComment( comment );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor addQueryHint(String hint) {
+		jpqlQuery.addQueryHint( hint );
+		return this;
+	}
+
+	@Override
+	public Iterator<X> iterate() {
+		return jpqlQuery.iterate();
+	}
+
+	@Override
+	public ScrollableResults scroll() {
+		return jpqlQuery.scroll();
+	}
+
+	@Override
+	public ScrollableResults scroll(ScrollMode scrollMode) {
+		return jpqlQuery.scroll( scrollMode );
+	}
+
+	@Override
+	public QueryImplementor setFetchSize(int fetchSize) {
+		jpqlQuery.setFetchSize( fetchSize );
+		return this;
+	}
+
+	@Override
+	public boolean isReadOnly() {
+		return jpqlQuery.isReadOnly();
+	}
+
+	@Override
 	public LockModeType getLockMode() {
 		return jpqlQuery.getLockMode();
 	}
 
+	@Override
 	public QueryImplementor<X> setLockMode(LockModeType lockModeType) {
 		jpqlQuery.setLockMode( lockModeType );
 		return this;
 	}
 
 	@Override
-	public Query<X> setEntity(int position, Object val) {
-		return null;
+	public QueryImplementor setReadOnly(boolean readOnly) {
+		jpqlQuery.setReadOnly( readOnly );
+		return this;
 	}
 
 	@Override
-	public Query<X> setEntity(String name, Object val) {
-		return null;
+	public Type determineProperBooleanType(int position, Object value, Type defaultType) {
+		return jpqlQuery.determineProperBooleanType( position, value, defaultType );
+	}
+
+	@Override
+	public Type determineProperBooleanType(String name, Object value, Type defaultType) {
+		return jpqlQuery.determineProperBooleanType( name, value, defaultType );
 	}
 
 	@Override
 	public String[] getReturnAliases() {
-		return new String[0];
+		return jpqlQuery.getReturnAliases();
 	}
 
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public Set<Parameter<?>> getParameters() {
 		entityManager.checkOpen( false );
 		return new HashSet( explicitParameterInfoMap.values() );
 	}
 
+	@Override
 	public boolean isBound(Parameter<?> param) {
 		entityManager.checkOpen( false );
 		return jpqlQuery.isBound( param );
 	}
 
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <T> T getParameterValue(Parameter<T> param) {
 		entityManager.checkOpen( false );
@@ -177,6 +367,7 @@ public class CriteriaQueryTypeQueryAdapter<X> extends AbstractProducedQuery<X> i
 		throw new IllegalArgumentException( "Unable to locate parameter [" + param + "] in query" );
 	}
 
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <T> QueryImplementor<X> setParameter(Parameter<T> param, T t) {
 		entityManager.checkOpen( false );
@@ -190,6 +381,7 @@ public class CriteriaQueryTypeQueryAdapter<X> extends AbstractProducedQuery<X> i
 		return this;
 	}
 
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public QueryImplementor<X> setParameter(Parameter<Calendar> param, Calendar calendar, TemporalType temporalType) {
 		entityManager.checkOpen( false );
@@ -203,6 +395,7 @@ public class CriteriaQueryTypeQueryAdapter<X> extends AbstractProducedQuery<X> i
 		return this;
 	}
 
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public QueryImplementor<X> setParameter(Parameter<Date> param, Date date, TemporalType temporalType) {
 		entityManager.checkOpen( false );
@@ -216,10 +409,12 @@ public class CriteriaQueryTypeQueryAdapter<X> extends AbstractProducedQuery<X> i
 		return this;
 	}
 
+	@Override
 	public <T> T unwrap(Class<T> cls) {
 		return jpqlQuery.unwrap( cls );
 	}
 
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public Object getParameterValue(String name) {
 		entityManager.checkOpen( false );
@@ -236,11 +431,21 @@ public class CriteriaQueryTypeQueryAdapter<X> extends AbstractProducedQuery<X> i
 		throw new IllegalArgumentException( "Unable to locate parameter registered with that name [" + name + "]" );
 	}
 
+	private ExplicitParameterInfo locateParameterByPosition(int position) {
+		for ( ExplicitParameterInfo parameterInfo : explicitParameterInfoMap.values() ) {
+			if ( parameterInfo.getPosition() == position ) {
+				return parameterInfo;
+			}
+		}
+		throw new IllegalArgumentException( "Unable to locate parameter registered at position [" + position + "]" );
+	}
+
 	public Parameter<?> getParameter(String name) {
 		entityManager.checkOpen( false );
 		return locateParameterByName( name );
 	}
 
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <T> Parameter<T> getParameter(String name, Class<T> type) {
 		entityManager.checkOpen( false );
@@ -254,6 +459,7 @@ public class CriteriaQueryTypeQueryAdapter<X> extends AbstractProducedQuery<X> i
 		);
 	}
 
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public QueryImplementor<X> setParameter(String name, Object value) {
 		entityManager.checkOpen( true );
@@ -263,6 +469,7 @@ public class CriteriaQueryTypeQueryAdapter<X> extends AbstractProducedQuery<X> i
 		return this;
 	}
 
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public QueryImplementor<X> setParameter(String name, Calendar calendar, TemporalType temporalType) {
 		entityManager.checkOpen( true );
@@ -272,6 +479,7 @@ public class CriteriaQueryTypeQueryAdapter<X> extends AbstractProducedQuery<X> i
 		return this;
 	}
 
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public QueryImplementor<X> setParameter(String name, Date date, TemporalType temporalType) {
 		entityManager.checkOpen( true );
@@ -281,29 +489,313 @@ public class CriteriaQueryTypeQueryAdapter<X> extends AbstractProducedQuery<X> i
 		return this;
 	}
 
+	@Override
+	public QueryImplementor<X> setEntity(String name, Object val) {
+		ExplicitParameterInfo parameterInfo = locateParameterByName( name );
+		parameterInfo.validateDateBind();
+		jpqlQuery.setEntity( name, val );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<X> setParameter(String name, Object val, Type type) {
+		ExplicitParameterInfo parameterInfo = locateParameterByName( name );
+		parameterInfo.validateDateBind();
+		jpqlQuery.setParameter( name, val, type );
+		return this;
+	}
+
+	@Override
+	public <T> QueryImplementor<X> setParameter(QueryParameter<T> parameter, T val) {
+		final ExplicitParameterInfo parameterInfo = resolveParameterInfo( parameter );
+		if ( parameterInfo.isNamed() ) {
+			jpqlQuery.setParameter( parameterInfo.getName(), val );
+		}
+		else {
+			jpqlQuery.setParameter( parameterInfo.getPosition(), val );
+		}
+		return this;
+	}
+
+	@Override
+	public <P> QueryImplementor<X> setParameter(
+			QueryParameter<P> parameter, P val, TemporalType temporalType) {
+		final ExplicitParameterInfo parameterInfo = resolveParameterInfo( parameter );
+		if ( parameterInfo.isNamed() ) {
+			jpqlQuery.setParameter( parameterInfo.getName(), val, temporalType );
+		}
+		else {
+			jpqlQuery.setParameter( parameterInfo.getPosition(), val, temporalType );
+		}
+		return this;
+	}
+
+	@Override
+	public <P> QueryImplementor<X> setParameter(String name, P val, TemporalType temporalType) {
+		ExplicitParameterInfo parameterInfo = locateParameterByName( name );
+		parameterInfo.validateDateBind();
+		jpqlQuery.setParameter( name, val, temporalType );
+		return this;
+	}
+
+	@Override
+	public <P> QueryImplementor<X> setParameterList(QueryParameter<P> parameter, Collection<P> values) {
+		final ExplicitParameterInfo parameterInfo = resolveParameterInfo( parameter );
+		if ( parameterInfo.isNamed() ) {
+			jpqlQuery.setParameter( parameterInfo.getName(), values );
+		}
+		else {
+			jpqlQuery.setParameter( parameterInfo.getPosition(), values );
+		}
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<X> setParameterList(String name, Collection values) {
+		ExplicitParameterInfo parameterInfo = locateParameterByName( name );
+		parameterInfo.validateDateBind();
+		jpqlQuery.setParameter( name, values );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<X> setParameterList(String name, Collection values, Type type) {
+		ExplicitParameterInfo parameterInfo = locateParameterByName( name );
+		parameterInfo.validateDateBind();
+		jpqlQuery.setParameter( name, values, type );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<X> setParameterList(String name, Object[] values, Type type) {
+		ExplicitParameterInfo parameterInfo = locateParameterByName( name );
+		parameterInfo.validateDateBind();
+		jpqlQuery.setParameter( name, values, type );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<X> setParameterList(String name, Object[] values) {
+		ExplicitParameterInfo parameterInfo = locateParameterByName( name );
+		parameterInfo.validateDateBind();
+		jpqlQuery.setParameter( name, values );
+		return this;
+	}
+
+	@Override
+	public <P> QueryImplementor<X> setParameter(QueryParameter<P> parameter, P value, Type type) {
+		final ExplicitParameterInfo parameterInfo = resolveParameterInfo( parameter );
+		if ( parameterInfo.isNamed() ) {
+			jpqlQuery.setParameter( parameterInfo.getName(), value, type );
+		}
+		else {
+			jpqlQuery.setParameter( parameterInfo.getPosition(), value, type );
+		}
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<X> setParameter(Parameter<Instant> param, Instant value, TemporalType temporalType){
+		final ExplicitParameterInfo parameterInfo = resolveParameterInfo( param );
+		if ( parameterInfo.isNamed() ) {
+			jpqlQuery.setParameter( parameterInfo.getName(), value, temporalType );
+		}
+		else {
+			jpqlQuery.setParameter( parameterInfo.getPosition(), value, temporalType );
+		}
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<X> setParameter(Parameter<LocalDateTime> param, LocalDateTime value, TemporalType temporalType){
+		final ExplicitParameterInfo parameterInfo = resolveParameterInfo( param );
+		if ( parameterInfo.isNamed() ) {
+			jpqlQuery.setParameter( parameterInfo.getName(), value, temporalType );
+		}
+		else {
+			jpqlQuery.setParameter( parameterInfo.getPosition(), value, temporalType );
+		}
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<X> setParameter(Parameter<ZonedDateTime> param, ZonedDateTime value, TemporalType temporalType){
+		final ExplicitParameterInfo parameterInfo = resolveParameterInfo( param );
+		if ( parameterInfo.isNamed() ) {
+			jpqlQuery.setParameter( parameterInfo.getName(), value, temporalType );
+		}
+		else {
+			jpqlQuery.setParameter( parameterInfo.getPosition(), value, temporalType );
+		}
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<X> setParameter(Parameter<OffsetDateTime> param, OffsetDateTime value, TemporalType temporalType){
+		final ExplicitParameterInfo parameterInfo = resolveParameterInfo( param );
+		if ( parameterInfo.isNamed() ) {
+			jpqlQuery.setParameter( parameterInfo.getName(), value, temporalType );
+		}
+		else {
+			jpqlQuery.setParameter( parameterInfo.getPosition(), value, temporalType );
+		}
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<X> setParameter(String name, Instant value, TemporalType temporalType){
+		ExplicitParameterInfo parameterInfo = locateParameterByName( name );
+		parameterInfo.validateCalendarBind();
+		jpqlQuery.setParameter( name, value, temporalType );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<X> setParameter(String name, LocalDateTime value, TemporalType temporalType){
+		ExplicitParameterInfo parameterInfo = locateParameterByName( name );
+		parameterInfo.validateCalendarBind();
+		jpqlQuery.setParameter( name, value, temporalType );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<X> setParameter(String name, ZonedDateTime value, TemporalType temporalType){
+		ExplicitParameterInfo parameterInfo = locateParameterByName( name );
+		parameterInfo.validateCalendarBind();
+		jpqlQuery.setParameter( name, value, temporalType );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<X> setParameter(String name, OffsetDateTime value, TemporalType temporalType){
+		ExplicitParameterInfo parameterInfo = locateParameterByName( name );
+		parameterInfo.validateCalendarBind();
+		jpqlQuery.setParameter( name, value, temporalType );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<X> setResultTransformer(ResultTransformer transformer) {
+		jpqlQuery.setResultTransformer( transformer );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<X> setProperties(Object bean) {
+		jpqlQuery.setProperties( bean );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor setProperties(Map map) {
+		jpqlQuery.setProperties( map );
+		return this;
+	}
+
+	@Override
+	public QueryProducerImplementor getProducer() {
+		return jpqlQuery.getProducer();
+	}
+
+	@Override
+	public void setOptionalId(Serializable id) {
+		jpqlQuery.setOptionalId( id );
+	}
+
+	@Override
+	public void setOptionalEntityName(String entityName) {
+		jpqlQuery.setOptionalEntityName( entityName );
+	}
+
+	@Override
+	public void setOptionalObject(Object optionalObject) {
+		jpqlQuery.setOptionalObject( optionalObject );
+	}
+
+	@Override
+	public QueryImplementor<X> setParameter(int position, LocalDateTime value, TemporalType temporalType) {
+		final ExplicitParameterInfo explicitParameterInfo = locateParameterByPosition( position );
+		explicitParameterInfo.validateDateBind();
+		jpqlQuery.setParameter( position, value, temporalType );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<X> setParameter(int position, Instant value, TemporalType temporalType) {
+		final ExplicitParameterInfo explicitParameterInfo = locateParameterByPosition( position );
+		explicitParameterInfo.validateDateBind();
+		jpqlQuery.setParameter( position, value, temporalType );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<X> setParameter(int position, ZonedDateTime value, TemporalType temporalType) {
+		final ExplicitParameterInfo explicitParameterInfo = locateParameterByPosition( position );
+		explicitParameterInfo.validateDateBind();
+		jpqlQuery.setParameter( position, value, temporalType );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<X> setParameter(int position, OffsetDateTime value, TemporalType temporalType) {
+		final ExplicitParameterInfo explicitParameterInfo = locateParameterByPosition( position );
+		explicitParameterInfo.validateDateBind();
+		jpqlQuery.setParameter( position, value, temporalType );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<X> setParameter(int position, Object val, Type type) {
+		final ExplicitParameterInfo explicitParameterInfo = locateParameterByPosition( position );
+		explicitParameterInfo.validateDateBind();
+		jpqlQuery.setParameter( position, val, type );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<X> setEntity(int position, Object val) {
+		final ExplicitParameterInfo explicitParameterInfo = locateParameterByPosition( position );
+		explicitParameterInfo.validateDateBind();
+		jpqlQuery.setParameter( position, val );
+		return this;
+	}
+
+	@Override
+	public <P> QueryImplementor<X> setParameter(int position, P val, TemporalType temporalType) {
+		final ExplicitParameterInfo explicitParameterInfo = locateParameterByPosition( position );
+		explicitParameterInfo.validateDateBind();
+		jpqlQuery.setParameter( position, val, temporalType );
+		return this;
+	}
 
 	// unsupported stuff ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	@Override
 	public int executeUpdate() {
 		throw new IllegalStateException( "Typed criteria queries do not support executeUpdate" );
 	}
 
+	@Override
 	public QueryImplementor<X> setParameter(int i, Object o) {
 		throw new IllegalArgumentException( "Criteria queries do not support positioned parameters" );
 	}
 
+	@Override
 	public QueryImplementor<X> setParameter(int i, Calendar calendar, TemporalType temporalType) {
 		throw new IllegalArgumentException( "Criteria queries do not support positioned parameters" );
 	}
 
+	@Override
 	public QueryImplementor<X> setParameter(int i, Date date, TemporalType temporalType) {
 		throw new IllegalArgumentException( "Criteria queries do not support positioned parameters" );
 	}
 
+	@Override
 	public Object getParameterValue(int position) {
 		throw new IllegalArgumentException( "Criteria queries do not support positioned parameters" );
 	}
 
+	@Override
 	public Parameter<?> getParameter(int position) {
 		throw new IllegalArgumentException( "Criteria queries do not support positioned parameters" );
 	}

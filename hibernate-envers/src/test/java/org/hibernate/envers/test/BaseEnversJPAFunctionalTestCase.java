@@ -261,28 +261,10 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 	}
 
 	protected AuditReader getAuditReader() {
-		EntityManager entityManager = getOrCreateEntityManager();
-		SessionImplementor sessionImplementor = entityManager.unwrap( SessionImplementor.class );
-
-		if ( sessionImplementor.getTransactionCoordinator().getTransactionCoordinatorBuilder().isJta() ) {
-			if ( !JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) ) {
-				try {
-					TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-				}
-				catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}
-		else if ( !entityManager.getTransaction().isActive() ) {
-			entityManager.getTransaction().begin();
-		}
-
 		if ( auditReader != null ) {
 			return auditReader;
 		}
-
-		return auditReader = AuditReaderFactory.get( entityManager );
+		return auditReader = AuditReaderFactory.get( getOrCreateEntityManager() );
 	}
 
 	protected EntityManager createIsolatedEntityManager() {

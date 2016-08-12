@@ -21,7 +21,6 @@ import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
-import org.hibernate.tool.schema.internal.exec.JdbcConnectionContextNonSharedImpl;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaFilter;
@@ -55,11 +54,7 @@ public class SchemaValidatorImpl implements SchemaValidator {
 
 		final DatabaseInformation databaseInformation = Helper.buildDatabaseInformation(
 				tool.getServiceRegistry(),
-				new JdbcConnectionContextNonSharedImpl(
-						jdbcContext.getJdbcConnectionAccess(),
-						jdbcContext.getSqlStatementLogger(),
-						false
-				),
+				tool.getDdlTransactionIsolator( jdbcContext ),
 				metadata.getDatabase().getDefaultNamespace().getName()
 		);
 

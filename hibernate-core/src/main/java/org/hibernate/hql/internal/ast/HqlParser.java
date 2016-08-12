@@ -366,6 +366,30 @@ public final class HqlParser extends HqlBaseParser {
 	}
 
 	@Override
+	public void matchOptionalFrom() throws RecognitionException, TokenStreamException {
+		returnAST = null;
+		ASTPair currentAST = new ASTPair();
+		AST optionalFrom_AST = null;
+
+		if ( LA( 1 ) == FROM ) {
+			if ( LA( 2 ) != DOT ) {
+				match( FROM );
+				optionalFrom_AST = (AST) currentAST.root;
+				returnAST = optionalFrom_AST;
+			}
+		}
+	}
+
+	@Override
+	public void firstPathTokenWeakKeywords() throws TokenStreamException {
+		int t = LA( 1 );
+		switch ( t ){
+			case DOT:
+				LT(0).setType( IDENT );
+		}
+	}
+
+	@Override
 	public void weakKeywords() throws TokenStreamException {
 
 		int t = LA( 1 );

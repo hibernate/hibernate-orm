@@ -75,8 +75,8 @@ dependencies {
     testCompile( libraries.classmate )
     testCompile( libraries.mockito )
     testCompile( 'joda-time:joda-time:2.3' )
-    testCompile( "org.jboss.weld:weld-core:2.3.4.Final" )
-    testCompile( "org.jboss.arquillian.container:arquillian-weld-ee-embedded-1.1:1.0.0.CR9" )
+//    testCompile( "org.jboss.weld:weld-core:2.3.4.Final" )
+//    testCompile( "org.jboss.arquillian.container:arquillian-weld-ee-embedded-1.1:1.0.0.CR9" )
     compile( "javax.enterprise:cdi-api:${cdiVersion}" ) {
         // we need to force it to make sure we influence the one coming from arquillian
         force=true
@@ -95,7 +95,17 @@ dependencies {
     testRuntime( libraries.expression_language_impl )
     testRuntime( 'jaxen:jaxen:1.1' )
     testRuntime( libraries.javassist )
+
     testCompile( project( ':hibernate-jpamodelgen' ) )
+
+    testCompile libraries.arquillian_junit_container
+    testCompile libraries.arquillian_protocol_servlet
+    testCompile libraries.shrinkwrap_descriptors_api_javaee
+    testCompile libraries.shrinkwrap_descriptors_impl_javaee
+    testCompile libraries.wildfly_arquillian_container_managed
+
+    testCompile libraries.jboss_ejb_spec_jar
+    testCompile libraries.jboss_annotation_spec_jar
 }
 
 mavenPom {
@@ -217,5 +227,26 @@ if ( JavaVersion.current().isJava9Compatible() ) {
         exclude 'org/hibernate/jpa/test/enhancement/runtime/JpaRuntimeEnhancementTest.class'
         exclude 'org/hibernate/test/bytecode/enhancement/EnhancerTest.class'
         exclude 'org/hibernate/test/bytecode/enhancement/basic/BasicInSessionTest.class'
+
+        // also, any tests using Arquillian for in-container testing with WildFly currently
+        // need to be excluded because WildFly does not yet work with Java 9
+        exclude 'org/hibernate/test/wf/ddl/**'
+        exclude 'org/hibernate/jpa/test/cdi/**'
     }
 }
+
+processTestResources {
+    doLast {
+        copy {
+            from file( 'src/test/resources' )
+            into file( "${buildDir}/resources/test" )
+            include 'arquillian.xml'
+            include 'org/hibernate/test/wf/ddl/manifest.mf'
+            expand wildFlyInstallDir: "${rootProject.buildDir.absolutePath}/wildfly-${wildflyVersion}",
+                   hibernateMajorMinorVersion: "${rootProject.hibernateMajorMinorVersion}",
+                   arquillianDeploymentExportDir: "${rootProject.buildDir.absolutePath}/arquillian-deployments"
+        }
+    }
+}
+
+test.dependsOn ":hibernate-orm-modules:prepareWildFlyForTests"

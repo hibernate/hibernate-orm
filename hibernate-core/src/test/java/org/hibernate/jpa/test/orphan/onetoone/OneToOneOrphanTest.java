@@ -41,14 +41,19 @@ public class OneToOneOrphanTest extends BaseEntityManagerFunctionalTestCase {
 
 		a.setB(b);
 		try {
-			em.persist(a);
+			em.persist( a );
 			em.flush();
 			em.getTransaction().commit();
-			fail("should have raised an IllegalStateException");
+			fail( "should have raised an IllegalStateException" );
 		}
 		catch (IllegalStateException ex) {
+			if ( em.getTransaction().isActive() ) {
+				em.getTransaction().rollback();
+			}
 			// IllegalStateException caught as expected
 		}
-		em.close();
+		finally {
+			em.close();
+		}
 	}
 }

@@ -19,6 +19,7 @@ import static org.hibernate.annotations.QueryHints.FLUSH_MODE;
 import static org.hibernate.annotations.QueryHints.FOLLOW_ON_LOCKING;
 import static org.hibernate.annotations.QueryHints.LOADGRAPH;
 import static org.hibernate.annotations.QueryHints.NATIVE_LOCKMODE;
+import static org.hibernate.annotations.QueryHints.PASS_DISTINCT_THROUGH;
 import static org.hibernate.annotations.QueryHints.READ_ONLY;
 import static org.hibernate.annotations.QueryHints.TIMEOUT_HIBERNATE;
 import static org.hibernate.annotations.QueryHints.TIMEOUT_JPA;
@@ -101,6 +102,8 @@ public class QueryHints {
 	public static final String HINT_LOADGRAPH = LOADGRAPH;
 
 	public static final String HINT_FOLLOW_ON_LOCKING = FOLLOW_ON_LOCKING;
+
+	public static final String HINT_PASS_DISTINCT_THROUGH = PASS_DISTINCT_THROUGH;
 
 	private static final Set<String> HINTS = buildHintsSet();
 

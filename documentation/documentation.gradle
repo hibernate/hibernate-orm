@@ -18,13 +18,11 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath "org.jboss.jdocbook:gradle-jdocbook:1.2.2"
         classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.2'
     }
 }
 
 apply plugin: "java"
-apply plugin: "jdocbook"
 apply plugin: 'org.asciidoctor.convert'
 
 apply plugin: 'hibernate-matrix-testing'
@@ -51,10 +49,6 @@ dependencies {
 
 	//	asciidoctor 'org.asciidoctor:asciidoctorj:1.5.2'
 	asciidoclet 'org.asciidoctor:asciidoclet:0.+'
-
-	jdocbookXsl "org.jboss.pressgang:pressgang-xslt-ns:${pressgangVersion}"
-	jdocbookXsl "org.jboss.pressgang:pressgang-fonts:${pressgangVersion}"
-	jdocbookStyles "org.jboss.pressgang:pressgang-jdocbook-style:${pressgangVersion}"
 
 	compile( libraries.jpa )
 	compile( project( ':hibernate-jpamodelgen' ) )
@@ -230,54 +224,6 @@ task aggregateJavadocs(type: Javadoc) {
     }
 }
 
-
-// jDocBook ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-jdocbook {
-    // shared config
-    format('html_single') {
-        finalName = "index.html"
-        stylesheet = "classpath:/xslt/org/hibernate/jdocbook/xslt/xhtml-single.xsl"
-    }
-    format('html') {
-        finalName = "index.html"
-        stylesheet = "classpath:/xslt/org/hibernate/jdocbook/xslt/xhtml.xsl"
-    }
-
-    // book-specific config
-    userGuide {
-        masterSourceDocumentName = 'Hibernate_User_Guide.xml'
-    }
-    integrationsGuide {
-        masterSourceDocumentName = 'Hibernate_Integrations_Guide.xml'
-    }
-    mappingGuide {
-        masterSourceDocumentName = 'Hibernate_Mapping_Guide.xml'
-    }
-}
-
-[ 'integrationsGuide', 'userGuide', 'mappingGuide'].each { bookName ->
-    task "stageLocalStyles_$bookName"(type: Copy) {
-        into project.file( "target/docbook/stage/$bookName" )
-        from project.file( 'src/main/style' )
-        includeEmptyDirs = false
-    }
-
-	tasks[ "stageStyles_$bookName" ].dependsOn "stageLocalStyles_$bookName"
-
-    tasks[ "stageStyles_$bookName" ].doLast {
-        logger.lifecycle( "Staging devguide-specific style resources")
-        copy {
-            into project.file( "target/docbook/stage/$bookName/images" )
-            from project.file( "src/main/docbook/$bookName/en-US" )
-            include '**/images/*.png'
-            include '**/images/*.svg'
-            includeEmptyDirs = false
-        }
-    }
-}
-
-
 asciidoctor {
 	// we do not want it creating its "default task"
 	enabled = false
@@ -344,10 +290,7 @@ task renderMappingGuide(type: AsciidoctorTask, group: 'Documentation') {
     }
 }
 
-// User Guides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-final String[] versionComponents = version.split( '\\.' );
-final String majorMinorVersion = versionComponents[0] + '.' + versionComponents[1];
+// User Guide ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {
     description = 'Renders the User Guides in HTML format using Asciidoctor.'
@@ -356,7 +299,7 @@ task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {
     backends "html5"
     separateOutputDirs false
     options logDocuments: true
-    attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true, stylesheet: "css/hibernate.css", majorMinorVersion: majorMinorVersion
+    attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true, stylesheet: "css/hibernate.css", majorMinorVersion: rootProject.hibernateMajorMinorVersion
     resources {
         from('src/main/asciidoc/userguide/') {
             include 'images/**'
@@ -370,6 +313,28 @@ task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {
     }
 }
 
+// Integration Guide ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+task renderIntegrationGuide(type: AsciidoctorTask, group: 'Documentation') {
+	description = 'Renders the User Guides in HTML format using Asciidoctor.'
+	sourceDir = file( 'src/main/asciidoc/integrationguide' )
+	outputDir = new File("$buildDir/asciidoc/integrationguide/html_single")
+	backends "html5"
+	separateOutputDirs false
+	options logDocuments: true
+	attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true, stylesheet: "css/hibernate.css", majorMinorVersion: rootProject.hibernateMajorMinorVersion
+	resources {
+		from('src/main/asciidoc/integrationguide/') {
+			include 'images/**'
+		}
+		from('src/main/style/asciidoctor') {
+			include 'images/**'
+		}
+		from('src/main/style/asciidoctor') {
+			include 'css/**'
+		}
+	}
+}
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // grouping tasks
@@ -379,13 +344,10 @@ buildDocs.dependsOn aggregateJavadocs
 buildDocs.dependsOn renderTopicalGuides
 buildDocs.dependsOn renderGettingStartedGuides
 buildDocs.dependsOn renderUserGuide
-// the jDocBook plugin already adds its main task as a dependency of the buildDocs task
-
+buildDocs.dependsOn renderIntegrationGuide
 
 buildDocsForPublishing.dependsOn aggregateJavadocs
 buildDocsForPublishing.dependsOn renderTopicalGuides
 buildDocsForPublishing.dependsOn renderGettingStartedGuides
 buildDocsForPublishing.dependsOn renderUserGuide
-// only html-single to match what Asciidoctor currently offers
-//buildDocsForPublishing.dependsOn 'renderDocBook_integrationsGuide_en-US_html_single '
-buildDocsForPublishing.dependsOn renderDocBook_integrationsGuide
+buildDocsForPublishing.dependsOn renderIntegrationGuide

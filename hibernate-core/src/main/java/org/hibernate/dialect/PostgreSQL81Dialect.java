@@ -601,6 +601,11 @@ public class PostgreSQL81Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsNationalizedTypes() {
+		return false;
+	}
+
+	@Override
 	public boolean hasArrayDatatypes() {
 		return true;
 	}

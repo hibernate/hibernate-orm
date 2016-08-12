@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -175,7 +176,7 @@ public class PersistentMapTest extends BaseCoreFunctionalTestCase {
 		User user = new User();
 		UserData userData = new UserData();
 		userData.user = user;
-		user.userDatas.put( "foo", userData );
+		user.userDatas.put( userData.name, userData );
 		s.persist( user );
 		
 		s.getTransaction().commit();
@@ -242,7 +243,7 @@ public class PersistentMapTest extends BaseCoreFunctionalTestCase {
 		private Integer id;
 		
 		@OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.ALL)
-		@MapKeyColumn(name = "name", nullable = true)
+		@MapKeyColumn(name = "name", insertable = false, updatable = false)
 		private Map<String, UserData> userDatas = new HashMap<String, UserData>();
 	}
 	
@@ -251,6 +252,9 @@ public class PersistentMapTest extends BaseCoreFunctionalTestCase {
 	private static class UserData {
 		@Id @GeneratedValue
 		private Integer id;
+
+		@Column(name = "name")
+		private String name = "name";
 		
 		@ManyToOne
 		@JoinColumn(name = "userId")

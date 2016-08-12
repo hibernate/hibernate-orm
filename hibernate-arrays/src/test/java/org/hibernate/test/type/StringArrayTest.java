@@ -23,6 +23,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -30,6 +32,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Jordan Gigov
  */
+@RequiresDialectFeature(DialectChecks.HasArrayDatatypes.class)
 public class StringArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
@@ -139,7 +142,7 @@ public class StringArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 		@Id
 		private Long id;
 
-		@Column( name = "the_array", columnDefinition = "varchar[]" )
+		@Column( name = "the_array", columnDefinition = "varchar(255) ARRAY" )
 		private String[] theArray;
 
 		public TableWithStringArrays() {

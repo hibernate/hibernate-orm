@@ -22,7 +22,11 @@ import javax.persistence.Query;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -30,6 +34,8 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Jordan Gigov
  */
+@RequiresDialectFeature(DialectChecks.HasArrayDatatypes.class)
+@SkipForDialect(value = HSQLDialect.class, comment = "HSQL does not support TEXT type by default")
 public class TextArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
@@ -140,7 +146,7 @@ public class TextArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 		@Id
 		private Long id;
 
-		@Column( name = "the_array", columnDefinition = "text[]" )
+		@Column( name = "the_array", columnDefinition = "text ARRAY" )
 		private String[] theArray;
 
 		public TableWithTextArrays() {

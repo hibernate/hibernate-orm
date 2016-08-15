@@ -17,13 +17,18 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.type.CharacterArrayType;
 import org.hibernate.type.CharacterNCharType;
+import org.hibernate.type.CharacterType;
+import org.hibernate.type.MaterializedClobType;
 import org.hibernate.type.MaterializedNClobType;
 import org.hibernate.type.NClobType;
 import org.hibernate.type.NTextType;
 import org.hibernate.type.StringNVarcharType;
+import org.hibernate.type.StringType;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
@@ -76,11 +81,20 @@ public class SimpleNationalizedTest extends BaseUnitTestCase {
 			assertNotNull( pc );
 
 			Property prop = pc.getProperty( "nvarcharAtt" );
-			assertSame( StringNVarcharType.INSTANCE, prop.getType() );
+			if(metadata.getDatabase().getDialect() instanceof PostgreSQL81Dialect ){
+				// See issue HHH-10693
+				assertSame( StringType.INSTANCE, prop.getType() );
+			}else{
+				assertSame( StringNVarcharType.INSTANCE, prop.getType() );
+			}
 
 			prop = pc.getProperty( "materializedNclobAtt" );
-			assertSame( MaterializedNClobType.INSTANCE, prop.getType() );
-
+			if(metadata.getDatabase().getDialect() instanceof PostgreSQL81Dialect ){
+				// See issue HHH-10693
+				assertSame( MaterializedClobType.INSTANCE, prop.getType() );
+			}else {
+				assertSame( MaterializedNClobType.INSTANCE, prop.getType() );
+			}
 			prop = pc.getProperty( "nclobAtt" );
 			assertSame( NClobType.INSTANCE, prop.getType() );
 
@@ -88,10 +102,21 @@ public class SimpleNationalizedTest extends BaseUnitTestCase {
 			assertSame( NTextType.INSTANCE, prop.getType() );
 
 			prop = pc.getProperty( "ncharArrAtt" );
-			assertSame( StringNVarcharType.INSTANCE, prop.getType() );
+			if(metadata.getDatabase().getDialect() instanceof PostgreSQL81Dialect ){
+				// See issue HHH-10693
+				assertSame( CharacterArrayType.INSTANCE, prop.getType() );
+			}else {
+				assertSame( StringNVarcharType.INSTANCE, prop.getType() );
+			}
 
 			prop = pc.getProperty( "ncharacterAtt" );
-			assertSame( CharacterNCharType.INSTANCE, prop.getType() );
+			if ( metadata.getDatabase().getDialect() instanceof PostgreSQL81Dialect ) {
+				// See issue HHH-10693
+				assertSame( CharacterType.INSTANCE, prop.getType() );
+			}
+			else {
+				assertSame( CharacterNCharType.INSTANCE, prop.getType() );
+			}
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );

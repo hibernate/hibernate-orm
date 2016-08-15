@@ -1614,13 +1614,15 @@ public final class AnnotationBinder {
 			MetadataBuildingContext context,
 			Map<XClass, InheritanceState> inheritanceStatePerClass) throws MappingException {
 
-		if ( entityBinder.isPropertyDefinedInSuperHierarchy( inferredData.getPropertyName() ) ) {
-			LOG.debugf(
-					"Skipping attribute [%s : %s] as it was already processed as part of super hierarchy",
-					inferredData.getClassOrElementName(),
-					inferredData.getPropertyName()
-			);
-			return;
+		if ( !propertyHolder.isComponent() ) {
+			if ( entityBinder.isPropertyDefinedInSuperHierarchy( inferredData.getPropertyName() ) ) {
+				LOG.debugf(
+						"Skipping attribute [%s : %s] as it was already processed as part of super hierarchy",
+						inferredData.getClassOrElementName(),
+						inferredData.getPropertyName()
+				);
+				return;
+			}
 		}
 
 		/**

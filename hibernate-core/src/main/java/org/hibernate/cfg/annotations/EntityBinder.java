@@ -175,9 +175,7 @@ public class EntityBinder {
 		if ( persistentClass == null ) {
 			return false;
 		}
-
-		return inheritanceState.getType() != InheritanceType.JOINED
-				&& persistentClass.isPropertyDefinedInSuperHierarchy( name );
+		return persistentClass.isPropertyDefinedInSuperHierarchy( name );
 	}
 
 	@SuppressWarnings("SimplifiableConditionalExpression")

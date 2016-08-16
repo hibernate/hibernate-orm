@@ -8,7 +8,9 @@ package org.hibernate.service.internal;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.service.Service;
+import org.hibernate.service.UnknownServiceException;
 import org.hibernate.service.spi.ServiceBinding;
 import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -22,6 +24,7 @@ public class SessionFactoryServiceRegistryImpl extends AbstractServiceRegistryIm
 
 	private final SessionFactoryOptions sessionFactoryOptions;
 	private final SessionFactoryImplementor sessionFactory;
+	private EventListenerRegistry cachedEventListenerRegistry;
 
 	@SuppressWarnings( {"unchecked"})
 	public SessionFactoryServiceRegistryImpl(
@@ -50,4 +53,19 @@ public class SessionFactoryServiceRegistryImpl extends AbstractServiceRegistryIm
 	public <R extends Service> void configureService(ServiceBinding<R> serviceBinding) {
 		//TODO nothing to do here or should we inject SessionFactory properties?
 	}
+
+	@Override
+	public <R extends Service> R getService(Class<R> serviceRole) {
+
+		//HHH-11051 cache EventListenerRegistry
+		if ( serviceRole.equals( EventListenerRegistry.class ) ) {
+			if ( cachedEventListenerRegistry == null ) {
+				cachedEventListenerRegistry = (EventListenerRegistry) super.getService( serviceRole );
+			}
+			return (R) cachedEventListenerRegistry;
+		}
+
+		return super.getService( serviceRole );
+	}
+
 }

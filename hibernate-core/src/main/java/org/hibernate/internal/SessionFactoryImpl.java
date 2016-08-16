@@ -206,6 +206,8 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient SessionFactoryOptions sessionFactoryOptions;
 	private final transient Map<String, RegionAccessStrategy> cacheAccessStrategiesMap = new HashMap();
 
+	private transient StatisticsImplementor statisticsImplementor;
+
 	public SessionFactoryImpl(final MetadataImplementor metadata, SessionFactoryOptions options) {
 		LOG.debug( "Building session factory" );
 
@@ -1170,7 +1172,10 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	public StatisticsImplementor getStatisticsImplementor() {
-		return serviceRegistry.getService( StatisticsImplementor.class );
+		if ( statisticsImplementor == null ) {
+			statisticsImplementor = serviceRegistry.getService( StatisticsImplementor.class );
+		}
+		return statisticsImplementor;
 	}
 
 	public FilterDefinition getFilterDefinition(String filterName) throws HibernateException {

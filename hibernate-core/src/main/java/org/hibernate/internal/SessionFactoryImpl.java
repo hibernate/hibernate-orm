@@ -191,6 +191,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	private final transient TypeResolver typeResolver;
 	private final transient TypeHelper typeHelper;
+	private transient StatisticsImplementor statisticsImplementor;
 
 
 	public SessionFactoryImpl(final MetadataImplementor metadata, SessionFactoryOptions options) {

@@ -32,10 +32,9 @@ import java.util.Set;
 
 import org.junit.Test;
 
+import org.hibernate.Session;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 /**
  * @author Andrea Boriero
@@ -49,23 +48,29 @@ public class TablePerClassWithEmbeddableTest extends BaseCoreFunctionalTestCase 
 
 	@Test
 	public void testSelectFromEmbeddedField() {
-		doInHibernate( this::sessionFactory, session -> {
-			session.createNativeQuery( "select * from employee_embeddable_person_map" ).getResultList();
-		} );
+		Session session = openSession();
+		session.getTransaction().begin();
+		session.createSQLQuery( "select * from employee_embeddable_person_map" ).list();
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Test
 	public void testSelectFromSubclass() {
-		doInHibernate( this::sessionFactory, session -> {
-			session.createNativeQuery( "select * from embeddable_person_map" ).getResultList();
-		} );
+		Session session = openSession();
+		session.getTransaction().begin();
+		session.createSQLQuery( "select * from embeddable_person_map" ).list();
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Test
 	public void testSelectFromParent() {
-		doInHibernate( this::sessionFactory, session -> {
-			session.createNativeQuery( "select * from person_map" ).getResultList();
-		} );
+		Session session = openSession();
+		session.getTransaction().begin();
+		session.createSQLQuery( "select * from person_map" ).list();
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Entity

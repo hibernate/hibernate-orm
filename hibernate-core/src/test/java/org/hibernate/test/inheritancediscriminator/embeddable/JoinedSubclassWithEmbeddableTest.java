@@ -40,7 +40,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-10037")
+@TestForIssue(jiraKey = "HHH-11037")
 public class JoinedSubclassWithEmbeddableTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

@@ -25,16 +25,21 @@ public class GenerationTargetToDatabase implements GenerationTarget {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( GenerationTargetToDatabase.class );
 
 	private final DdlTransactionIsolator ddlTransactionIsolator;
+	private final boolean releaseAfterUse;
 
 	private Statement jdbcStatement;
 
 	public GenerationTargetToDatabase(DdlTransactionIsolator ddlTransactionIsolator) {
+		this( ddlTransactionIsolator, true );
+	}
+
+	public GenerationTargetToDatabase(DdlTransactionIsolator ddlTransactionIsolator, boolean releaseAfterUse) {
 		this.ddlTransactionIsolator = ddlTransactionIsolator;
+		this.releaseAfterUse = releaseAfterUse;
 	}
 
 	@Override
 	public void prepare() {
-		ddlTransactionIsolator.prepare();
 	}
 
 	@Override
@@ -81,6 +86,8 @@ public class GenerationTargetToDatabase implements GenerationTarget {
 
 	@Override
 	public void release() {
-		ddlTransactionIsolator.release();
+		if ( releaseAfterUse ) {
+			ddlTransactionIsolator.release();
+		}
 	}
 }

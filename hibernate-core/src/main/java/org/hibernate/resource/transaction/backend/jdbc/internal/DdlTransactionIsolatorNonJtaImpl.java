@@ -10,7 +10,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.hibernate.internal.log.ConnectionAccessLogger;
-import org.hibernate.internal.log.ConnectionPoolingLogger;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
 

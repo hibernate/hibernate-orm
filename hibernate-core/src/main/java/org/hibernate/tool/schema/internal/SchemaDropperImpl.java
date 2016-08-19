@@ -37,7 +37,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
-import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
@@ -452,7 +451,8 @@ public class SchemaDropperImpl implements SchemaDropper {
 			final JdbcContext jdbcContext = tool.resolveJdbcContext( settings );
 			targets = new GenerationTarget[] {
 				new GenerationTargetToDatabase(
-						Helper.buildDefaultDdlTransactionIsolator( jdbcContext )
+						Helper.buildDefaultDdlTransactionIsolator( jdbcContext ),
+						true
 				)
 			};
 		}
@@ -523,7 +523,8 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 			final JdbcContext jdbcContext = new JdbcContextDelayedDropImpl( serviceRegistry );
 			final GenerationTargetToDatabase target = new GenerationTargetToDatabase(
-					Helper.buildDefaultDdlTransactionIsolator( jdbcContext )
+					Helper.buildDefaultDdlTransactionIsolator( jdbcContext ),
+					true
 			);
 
 			target.prepare();

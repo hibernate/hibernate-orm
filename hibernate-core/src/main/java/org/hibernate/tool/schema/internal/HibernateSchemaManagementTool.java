@@ -119,7 +119,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		}
 
 		if ( targetDescriptor.getTargetTypes().contains( TargetType.DATABASE ) ) {
-			targets[index] = new GenerationTargetToDatabase( getDdlTransactionIsolator( jdbcContext ) );
+			targets[index] = new GenerationTargetToDatabase( getDdlTransactionIsolator( jdbcContext ), true );
 		}
 
 		return targets;
@@ -149,7 +149,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		}
 
 		if ( targetDescriptor.getTargetTypes().contains( TargetType.DATABASE ) ) {
-			targets[index] = new GenerationTargetToDatabase( ddlTransactionIsolator );
+			targets[index] = new GenerationTargetToDatabase( ddlTransactionIsolator, false );
 		}
 
 		return targets;

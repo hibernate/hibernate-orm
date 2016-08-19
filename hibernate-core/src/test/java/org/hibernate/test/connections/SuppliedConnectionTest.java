@@ -116,7 +116,8 @@ public class SuppliedConnectionTest extends ConnectionManagementTestCase {
 
 			try {
 				final GenerationTargetToDatabase target = new GenerationTargetToDatabase(
-						new DdlTransactionIsolatorTestingImpl( serviceRegistry(), conn )
+						new DdlTransactionIsolatorTestingImpl( serviceRegistry(), conn ),
+						true
 				);
 				new SchemaCreatorImpl( serviceRegistry() ).doCreation(
 						metadata(),
@@ -143,7 +144,8 @@ public class SuppliedConnectionTest extends ConnectionManagementTestCase {
 						new DdlTransactionIsolatorTestingImpl(
 								serviceRegistry(),
 								conn
-						)
+						),
+						true
 				);
 				new SchemaDropperImpl( serviceRegistry() ).doDrop( metadata(), false, target );
 			}

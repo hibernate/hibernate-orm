@@ -20,6 +20,12 @@ import org.hibernate.tool.schema.internal.exec.JdbcContext;
 public interface DdlTransactionIsolator {
 	JdbcContext getJdbcContext();
 
+	/**
+	 * In general a DdlTransactionIsolator should be returned from
+	 * {@link TransactionCoordinatorBuilder#buildDdlTransactionIsolator}
+	 * already prepared for use (until {@link #release} is called).
+	 */
+	@Deprecated
 	void prepare();
 
 	/**

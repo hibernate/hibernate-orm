@@ -89,19 +89,15 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 		final DdlTransactionIsolator ddlTransactionIsolator = tool.getDdlTransactionIsolator( jdbcContext );
 
 		try {
-			ddlTransactionIsolator.prepare();
-
-			final DdlTransactionIsolator sharedDdlTransactionIsolator = new DdlTransactionIsolatorSharedImpl( ddlTransactionIsolator );
-
 			final DatabaseInformation databaseInformation = Helper.buildDatabaseInformation(
 					tool.getServiceRegistry(),
-					sharedDdlTransactionIsolator,
+					ddlTransactionIsolator,
 					metadata.getDatabase().getDefaultNamespace().getName()
 			);
 
 			final GenerationTarget[] targets = tool.buildGenerationTargets(
 					targetDescriptor,
-					sharedDdlTransactionIsolator,
+					ddlTransactionIsolator,
 					options.getConfigurationValues()
 			);
 

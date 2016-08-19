@@ -34,15 +34,7 @@ public class DdlTransactionIsolatorJtaImpl implements DdlTransactionIsolator {
 
 	public DdlTransactionIsolatorJtaImpl(JdbcContext jdbcContext) {
 		this.jdbcContext = jdbcContext;
-	}
 
-	@Override
-	public JdbcContext getJdbcContext() {
-		return jdbcContext;
-	}
-
-	@Override
-	public void prepare() {
 		try {
 			final JtaPlatform jtaPlatform = jdbcContext.getServiceRegistry().getService( JtaPlatform.class );
 			log.tracef( "DdlTransactionIsolatorJtaImpl#prepare: JtaPlatform -> %s", jtaPlatform );
@@ -76,6 +68,15 @@ public class DdlTransactionIsolatorJtaImpl implements DdlTransactionIsolator {
 		catch (SQLException e) {
 			throw jdbcContext.getSqlExceptionHelper().convert( e, "Unable set JDBC Connection for DDL execution to autocommit" );
 		}
+	}
+
+	@Override
+	public JdbcContext getJdbcContext() {
+		return jdbcContext;
+	}
+
+	@Override
+	public void prepare() {
 	}
 
 	@Override

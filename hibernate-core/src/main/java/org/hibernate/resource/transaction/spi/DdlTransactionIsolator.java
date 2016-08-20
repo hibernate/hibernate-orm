@@ -24,6 +24,10 @@ public interface DdlTransactionIsolator {
 	 * In general a DdlTransactionIsolator should be returned from
 	 * {@link TransactionCoordinatorBuilder#buildDdlTransactionIsolator}
 	 * already prepared for use (until {@link #release} is called).
+	 *
+	 * @deprecated Instances should be returned from
+	 * {@link TransactionCoordinatorBuilder#buildDdlTransactionIsolator}
+	 * already prepared for use
 	 */
 	@Deprecated
 	void prepare();

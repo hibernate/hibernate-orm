@@ -4172,6 +4172,7 @@ public abstract class AbstractEntityPersister
 				current,
 				old,
 				propertyColumnUpdateable,
+				getPropertyUpdateability(),
 				hasUninitializedLazyProperties( entity ),
 				session
 		);

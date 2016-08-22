@@ -34,6 +34,7 @@ import org.hibernate.type.Type;
  * Furthermore, there is no reason to use <tt>inverse="true"</tt>.
  *
  * @author Gavin King
+ * @author Daniel Strobusch
  */
 public class PersistentIdentifierBag extends AbstractPersistentCollection implements List {
 	protected List<Object> values;
@@ -140,7 +141,8 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	@Override
 	public Iterator iterator() {
 		read();
-		return new IteratorProxy( values.iterator() );
+		// use a list iterator to be able to call beforeRemove on calls to Iterator.remove()
+		return new IteratorProxy( values.listIterator() );
 	}
 
 	@Override
@@ -488,4 +490,80 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 		//TODO: if we are using identity columns, fetch the identifier
 	}
 
+	/**
+	 * Iterator proxy which keeps track of the last returned index employed to call beforeRemove.
+	 */
+	protected class IteratorProxy implements Iterator {
+		protected final ListIterator itr;
+		protected int lastReturnedIndex = -1;
+
+		protected IteratorProxy(ListIterator itr) {
+			this.itr = itr;
+		}
+
+		@Override
+		public boolean hasNext() {
+			return itr.hasNext();
+		}
+
+		@Override
+		public Object next() {
+			lastReturnedIndex = itr.nextIndex();
+			return itr.next();
+		}
+
+		@Override
+		public void remove() {
+			write();
+			// call beforeRemove only if a valid index was set, otherwise error handling is done by itr.remove() below
+            if (lastReturnedIndex >= 0) {
+				beforeRemove(lastReturnedIndex);
+				// reset to -1, since remove must not be called twice on the same index.
+				lastReturnedIndex = -1;
+			}
+			itr.remove();
+		}
+	}
+
+	protected class ListIteratorProxy extends IteratorProxy implements ListIterator{
+
+		protected ListIteratorProxy(ListIterator itr) {
+		    super(itr);
+		}
+
+		@Override
+		@SuppressWarnings({"unchecked"})
+		public void add(Object o) {
+			write();
+			itr.add( o );
+		}
+
+		@Override
+		public boolean hasPrevious() {
+			return itr.hasPrevious();
+		}
+
+		@Override
+		public int nextIndex() {
+			return itr.nextIndex();
+		}
+
+		@Override
+		public Object previous() {
+		    lastReturnedIndex = itr.previousIndex();
+			return itr.previous();
+		}
+
+		@Override
+		public int previousIndex() {
+			return itr.previousIndex();
+		}
+
+		@Override
+		@SuppressWarnings({"unchecked"})
+		public void set(Object o) {
+			write();
+			itr.set( o );
+		}
+	}
 }

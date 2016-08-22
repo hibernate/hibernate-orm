@@ -8,6 +8,7 @@ package org.hibernate.test.collection.idbag;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.ListIterator;
 
 import org.hibernate.Session;
 import org.hibernate.collection.internal.PersistentIdentifierBag;
@@ -22,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Tests related to operations on a PersistentIdentifierBag
  *
+ * @author Daniel Strobusch
  * @author Steve Ebersole
  */
 public class PersistentIdBagTest extends BaseCoreFunctionalTestCase {
@@ -74,14 +76,7 @@ public class PersistentIdBagTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-10875")
 	public void testDeleteViaIterator() {
-		IdbagOwner parent = new IdbagOwner( "root" );
-		IdbagOwner c1 = new IdbagOwner( "c1" );
-		parent.getChildren().add( c1 );
-		IdbagOwner c2 = new IdbagOwner( "c2" );
-		parent.getChildren().add( c2 );
-		IdbagOwner c3 = new IdbagOwner( "c3" );
-		parent.getChildren().add( c3 );
-
+		IdbagOwner parent = createParentWithThreeChildren();
 
 		Session session = openSession();
 		session.beginTransaction();
@@ -100,8 +95,73 @@ public class PersistentIdBagTest extends BaseCoreFunctionalTestCase {
 		iterator.next();
 		iterator.remove();
 
-		session.getTransaction().commit();
+        // flush session to make sure that the constraint is not violated
+		session.flush();
+
+		session.getTransaction().rollback();
 		session.close();
 
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-10875")
+	public void testDeleteViaListIteratorNext() {
+		IdbagOwner parent = createParentWithThreeChildren();
+
+		Session session = openSession();
+		session.beginTransaction();
+		session.save( parent );
+		session.flush();
+		// at this point, the list on parent has now been replaced with a PersistentBag...
+		PersistentIdentifierBag children = ( PersistentIdentifierBag ) parent.getChildren();
+
+        // Make sure PersistentIdentifierBag#beforeRemove is not called on deletion.
+		ListIterator iterator = children.listIterator();
+		iterator.next();
+		iterator.remove();
+
+		// flush session to make sure that the constraint is not violated
+		session.flush();
+
+		session.getTransaction().rollback();
+		session.close();
+
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-10875")
+	public void testDeleteViaListIteratorPrevious() {
+		IdbagOwner parent = createParentWithThreeChildren();
+
+		Session session = openSession();
+		session.beginTransaction();
+		session.save( parent );
+		session.flush();
+		// at this point, the list on parent has now been replaced with a PersistentBag...
+		PersistentIdentifierBag children = ( PersistentIdentifierBag ) parent.getChildren();
+
+		// Make sure PersistentIdentifierBag#beforeRemove is not called on deletion.
+		ListIterator iterator = children.listIterator();
+		iterator.next();
+		iterator.previous();
+		iterator.remove();
+
+		// flush session to make sure that the constraint is not violated
+		session.flush();
+
+		session.getTransaction().rollback();
+		session.close();
+
+	}
+
+	private IdbagOwner createParentWithThreeChildren() {
+		IdbagOwner parent = new IdbagOwner( "root" );
+		IdbagOwner c1 = new IdbagOwner( "c1" );
+		parent.getChildren().add( c1 );
+		IdbagOwner c2 = new IdbagOwner( "c2" );
+		parent.getChildren().add( c2 );
+		IdbagOwner c3 = new IdbagOwner( "c3" );
+		parent.getChildren().add( c3 );
+		return parent;
 	}
 }

@@ -45,11 +45,19 @@ with 5.0 the new contract is `org.hibernate.resource.transaction.TransactionCoor
 JavaDocs for additional details.
 
 The following short-names are recognized:
-`jdbc`::(the default) says to use JDBC-based transactions (`org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl`)
+`jdbc`::(the default for non-JPA applications) says to use JDBC-based transactions (`org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl`)
 `jta`::says to use JTA-based transactions (`org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl`)
 
-See the User Guide for additional details.
+If a JPA application does not provide a setting for `hibernate.transaction.coordinator_class`, Hibernate will 
+automatically build the proper transaction coordinator based on the transaction type for the persistence unit.
 
+If a non-JPA application does not provide a setting for `hibernate.transaction.coordinator_class`, Hibernate 
+will use `jdbc` as the default. This default will cause problems if the application actually uses JTA-based transactions.
+A non-JPA application that uses JTA-based transactions should explicitly set `hibernate.transaction.coordinator_class=jta` 
+or provide a custom `org.hibernate.resource.transaction.TransactionCoordinatorBuilder` that builds a 
+`org.hibernate.resource.transaction.TransactionCoordinator` that properly coordinates with JTA-based transactions. 
+
+See the User Guide for additional details.
 
 == Type handling
 

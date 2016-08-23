@@ -235,7 +235,12 @@ public abstract class AbstractEntityGraphVisitationStrategy
 	@Override
 	protected FetchStrategy determineFetchStrategy(
 			final AssociationAttributeDefinition attributeDefinition) {
-		return attributeStack.peekLast() != NON_EXIST_ATTRIBUTE_NODE ? DEFAULT_EAGER : resolveImplicitFetchStrategyFromEntityGraph(
+		FetchStrategy fetchStrategy = attributeDefinition.determineFetchPlan(
+				loadQueryInfluencers,
+				currentPropertyPath
+		);
+		FetchStrategy immediateFetchStrategy = new FetchStrategy( FetchTiming.IMMEDIATE, fetchStrategy.getStyle() );
+		return attributeStack.peekLast() != NON_EXIST_ATTRIBUTE_NODE ? immediateFetchStrategy : resolveImplicitFetchStrategyFromEntityGraph(
 				attributeDefinition
 		);
 	}

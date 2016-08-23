@@ -431,7 +431,21 @@ Can be
 
 * `TransactionCoordinatorBuilder` instance
 * `TransactionCoordinatorBuilder` implementation `Class` reference
-* `TransactionCoordinatorBuilder` implementation class name (fully-qualified name) or short-name
+* `TransactionCoordinatorBuilder` implementation class name (fully-qualified name) or short name
+
+The following short names are defined for this setting:
+
+`jdbc`:: Manages transactions via calls to `java.sql.Connection` (default for non-JPA applications)
+`jta`:: Manages transactions via JTA. See <<chapters/bootstrap/Bootstrap.adoc#bootstrap-jpa-compliant,Java EE bootstrapping>>
+
+If a JPA application does not provide a setting for `hibernate.transaction.coordinator_class`, Hibernate will 
+automatically build the proper transaction coordinator based on the transaction type for the persistence unit.
+
+If a non-JPA application does not provide a setting for `hibernate.transaction.coordinator_class`, Hibernate 
+will use `jdbc` as the default. This default will cause problems if the application actually uses JTA-based transactions.
+A non-JPA application that uses JTA-based transactions should explicitly set `hibernate.transaction.coordinator_class=jta` 
+or provide a custom `org.hibernate.resource.transaction.TransactionCoordinatorBuilder` that builds a 
+`org.hibernate.resource.transaction.TransactionCoordinator` that properly coordinates with JTA-based transactions. 
 
 |`hibernate.jta.track_by_thread` | `true` (default value) or `false` |
 

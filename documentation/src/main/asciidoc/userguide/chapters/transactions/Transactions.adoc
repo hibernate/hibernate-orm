@@ -25,8 +25,17 @@ which are built by the `org.hibernate.resource.transaction.spi.TransactionCoordi
 `TransactionCoordinatorBuilder` represents a strategy for dealing with transactions whereas TransactionCoordinator represents one instance of that strategy related to a Session.
 Which `TransactionCoordinatorBuilder` implementation to use is defined by the `hibernate.transaction.coordinator_class` setting.
 
-`jdbc` (the default):: Manages transactions via calls to `java.sql.Connection`
+`jdbc` (the default for non-JPA applications):: Manages transactions via calls to `java.sql.Connection`
 `jta`:: Manages transactions via JTA. See <<chapters/bootstrap/Bootstrap.adoc#bootstrap-jpa-compliant,Java EE bootstrapping>>
+
+If a JPA application does not provide a setting for `hibernate.transaction.coordinator_class`, Hibernate will 
+automatically build the proper transaction coordinator based on the transaction type for the persistence unit.
+
+If a non-JPA application does not provide a setting for `hibernate.transaction.coordinator_class`, Hibernate 
+will use `jdbc` as the default. This default will cause problems if the application actually uses JTA-based transactions.
+A non-JPA application that uses JTA-based transactions should explicitly set `hibernate.transaction.coordinator_class=jta` 
+or provide a custom `org.hibernate.resource.transaction.TransactionCoordinatorBuilder` that builds a 
+`org.hibernate.resource.transaction.TransactionCoordinator` that properly coordinates with JTA-based transactions. 
 
 [NOTE]
 ====

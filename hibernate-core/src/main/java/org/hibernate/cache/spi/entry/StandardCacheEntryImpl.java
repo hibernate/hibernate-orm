@@ -134,7 +134,7 @@ public class StandardCacheEntryImpl implements CacheEntry {
 		//assembled state gets put in a new array (we read from cache by value!)
 		final Object[] assembledProps = TypeHelper.assemble(
 				disassembledState,
-				persister.getPropertyTypes(),
+				persister,
 				session, instance
 		);
 

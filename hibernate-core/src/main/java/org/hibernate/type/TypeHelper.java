@@ -10,7 +10,9 @@ import java.io.Serializable;
 import java.util.Map;
 
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.tuple.NonIdentifierAttribute;
 
@@ -73,6 +75,56 @@ public class TypeHelper {
 			}
 		}
 	}
+
+	/**
+	 * Apply the {@link Type#assemble} operation across a series of values
+	 * for an owner that is an entity.
+	 *
+	 * @param row The values
+	 * @param ownerPersister The entity persister for owner
+	 * @param session The originating session
+	 * @param owner The entity "owning" the values
+	 * @return The assembled state
+	 */
+	public static Object[] assemble(
+			final Serializable[] row,
+			final EntityPersister ownerPersister,
+			final SharedSessionContractImplementor session,
+			final Object owner) {
+		final Object[] assembled = new Object[row.length];
+		final String[] propertyNames = ownerPersister.getPropertyNames();
+		final Type[] types = ownerPersister.getPropertyTypes();
+		for ( int i = 0; i < types.length; i++ ) {
+			if ( row[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY || row[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+				assembled[i] = row[i];
+			}
+			else {
+				if ( row[i] != null && types[i].isEntityType() ) {
+					final EntityType entityType = (EntityType) types[i];
+					if ( !entityType.isOneToOne() && entityType.isLogicalOneToOne() ) {
+						// This is a special case of a unique many-to-one association.
+						// Stash the owner in the persistence context by its EntityUniqueKey.
+						// If the association is bidirectional and eager on the opposite side,
+						// then it will be possible to look up owner by EntityUniqueKey when
+						// assembling the opposite side of the association. This will
+						// avoid having to load owner by unique ID from the database.
+						EntityUniqueKey euk = new EntityUniqueKey(
+								ownerPersister.getEntityName(),
+								propertyNames[i],
+								row[i],
+								entityType,
+								ownerPersister.getEntityMetamodel().getEntityMode(),
+								session.getFactory()
+						);
+						session.getPersistenceContext().addEntity( euk, owner );
+					}
+				}
+				assembled[i] = types[i].assemble( row[i], session, owner );
+			}
+		}
+		return assembled;
+	}
+
 
 	/**
 	 * Apply the {@link Type#assemble} operation across a series of values.

@@ -65,6 +65,7 @@ import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.Mapping;
@@ -2266,10 +2267,10 @@ public abstract class AbstractEntityPersister
 		propertyMapping.initPropertyPaths(
 				ENTITY_CLASS,
 				getDiscriminatorType(),
-				new String[] {getDiscriminatorColumnName()},
-				new String[] {getDiscriminatorColumnReaders()},
-				new String[] {getDiscriminatorColumnReaderTemplate()},
-				new String[] {getDiscriminatorFormulaTemplate()},
+				new String[] { getDiscriminatorColumnName() },
+				new String[] { getDiscriminatorColumnReaders() },
+				new String[] { getDiscriminatorColumnReaderTemplate() },
+				new String[] { getDiscriminatorFormulaTemplate() },
 				getFactory()
 		);
 	}
@@ -2773,6 +2774,26 @@ public abstract class AbstractEntityPersister
 								propertyColumnAliases[i] :
 								suffixedPropertyColumns[i];
 						values[i] = types[i].hydrate( propertyResultSet, cols, session, object );
+						if ( values[i] != null && types[i].isEntityType() ) {
+							final EntityType entityType = (EntityType) types[i];
+							if ( !entityType.isOneToOne() && entityType.isLogicalOneToOne() ) {
+								// This is a special case of a unique many-to-one association.
+								// Stash the owner in the persistence context by its EntityUniqueKey.
+								// If the association is bidirectional and eager on the opposite side,
+								// then it will be possible to look up owner by EntityUniqueKey when
+								// hydrating the opposite side of the association. This will
+								// avoid having to load owner by unique ID from the database.
+								EntityUniqueKey euk = new EntityUniqueKey(
+										getEntityName(),
+										propNames[i],
+										entityType.semiResolve( values[i], session, object ),
+										entityType,
+										getEntityMode(),
+										getFactory()
+								);
+								session.getPersistenceContext().addEntity( euk, object );
+							}
+						}
 					}
 				}
 				else {

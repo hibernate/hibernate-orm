@@ -690,6 +690,9 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		Object result = persistenceContext.getEntity( euk );
 		if ( result == null ) {
 			result = persister.loadByUniqueKey( uniqueKeyPropertyName, key, session );
+			if ( result != null ) {
+				persistenceContext.addEntity( euk, result );
+			}
 		}
 		return result == null ? null : persistenceContext.proxyFor( result );
 	}

@@ -188,7 +188,7 @@ public final class EntityUpdateAction extends EntityAction {
 			if ( persister.isCacheInvalidationRequired() || entry.getStatus()!= Status.MANAGED ) {
 				persister.getCacheAccessStrategy().remove( session, ck);
 			}
-			else {
+			else if ( session.getCacheMode().isPutEnabled() ) {
 				//TODO: inefficient if that cache is just going to ignore the updated state!
 				final CacheEntry ce = persister.buildCacheEntry( instance,state, nextVersion, getSession() );
 				cacheEntry = persister.getCacheEntryStructure().structure( ce );
@@ -320,7 +320,10 @@ public final class EntityUpdateAction extends EntityAction {
 					
 			);
 
-			if ( success && cacheEntry!=null /*!persister.isCacheInvalidationRequired()*/ ) {
+			if ( success &&
+					cacheEntry != null &&
+					!persister.isCacheInvalidationRequired() &&
+					session.getCacheMode().isPutEnabled() ) {
 				final boolean put = cacheAfterUpdate( cache, ck );
 
 				if ( put && getSession().getFactory().getStatistics().isStatisticsEnabled() ) {

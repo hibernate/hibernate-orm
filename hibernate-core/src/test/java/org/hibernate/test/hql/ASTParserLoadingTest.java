@@ -236,7 +236,15 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		session.getTransaction().commit();
 
 		assertEquals( 1, Constructor.getConstructorExecutionCount() );
-		assertEquals( new Constructor( constructor.getId(), true, true, constructor.getId() + 1, constructor.getId() + "foo" ), result );
+		assertEquals(
+				new Constructor(
+						constructor.getId(),
+						true,
+						true,
+						constructor.getId() + 1,
+						constructor.getId() + "foo"
+				), result
+		);
 
 		session.close();
 	}
@@ -574,7 +582,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 			Long count = (Long) s.createQuery( "select count(*) from Human h where VALUE(h.family) = :joe" ).setParameter( "joe", joe ).uniqueResult();
 			// ACTUALLY EXACTLY THE SAME AS:
 			// select count(*) from Human h where h.family = :joe
-			assertEquals( (Long)1L, count );
+			assertEquals( (Long) 1L, count );
 			s.getTransaction().commit();
 			s.close();
 		}
@@ -586,7 +594,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 			Long count = (Long) s.createQuery( "select count(*) from Human h join h.family f where value(f) = :joe" ).setParameter( "joe", joe ).uniqueResult();
 			// ACTUALLY EXACTLY THE SAME AS:
 			// select count(*) from Human h join h.family f where f = :joe
-			assertEquals( (Long)1L, count );
+			assertEquals( (Long) 1L, count );
 			s.getTransaction().commit();
 			s.close();
 		}
@@ -700,7 +708,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 				.setParameter( "name", null )
 				.list();
 		assertEquals( 1, results.size() );
-		results = s.createQuery( "from Human where name.first = :firstName and ( :name is null or name.last = :name )" )
+		results = s.createQuery( "from Human where name.first = :firstName and ( :name is null  or name.last = cast(:name as string) )" )
 				.setParameter( "firstName", "Bono" )
 				.setParameter( "name", null )
 				.list();
@@ -720,7 +728,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 				.setParameter( "intVal", null )
 				.list();
 		assertEquals( 5, results.size() );
-		results = s.createQuery( "from Human where :intVal is null or intValue = :intVal" )
+		results = s.createQuery( "from Human where :intVal is null or intValue is null" )
 				.setParameter( "intVal", null )
 				.list();
 		assertEquals( 5, results.size() );
@@ -1052,7 +1060,11 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		// resolved to a "id short cut" when part of the order by clause -> no inner join = no weeding out...
 		checkCounts( "from SimpleAssociatedEntity e order by e.owner", 2, "implicit-join in order-by clause" );
 		// resolved to a "id short cut" when part of the group by clause -> no inner join = no weeding out...
-		checkCounts( "select e.owner.id, count(*) from SimpleAssociatedEntity e group by e.owner", 2, "implicit-join in select and group-by clauses" );
+		checkCounts(
+				"select e.owner.id, count(*) from SimpleAssociatedEntity e group by e.owner",
+				2,
+				"implicit-join in select and group-by clauses"
+		);
 
 	 	s = openSession();
 		s.beginTransaction();
@@ -1206,9 +1218,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		Object [] result = ( Object [] ) s.createQuery( "from User u, Human h where u.human = h" ).uniqueResult();
 		assertNotNull( result );
-		assertEquals( u.getUserName(), ( ( User ) result[ 0 ] ).getUserName() );
-		assertEquals( h.getName().getFirst(), ((Human) result[1]).getName().getFirst() );
-		assertSame( ((User) result[0]).getHuman(), result[1] );
+		assertEquals( u.getUserName(), ( (User) result[0] ).getUserName() );
+		assertEquals( h.getName().getFirst(), ( (Human) result[1] ).getName().getFirst() );
+		assertSame( ( (User) result[0] ).getHuman(), result[1] );
 		s.createQuery( "delete User" ).executeUpdate();
 		s.createQuery( "delete Human" ).executeUpdate();
 		s.getTransaction().commit();
@@ -1747,6 +1759,21 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		catch( QueryException expected ) {
 			// expected behavior
 		}
+		s.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-1830")
+	public void testAggregatedJoinAlias() {
+		Session s = openSession();
+		s.getTransaction().begin();
+		s.createQuery(
+			"select p.id, size( descendants ) " +
+			"from Animal p " +
+			"left outer join p.offspring descendants " +
+			"group by p.id" )
+		.list();
+		s.getTransaction().commit();
 		s.close();
 	}
 

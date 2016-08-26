@@ -622,7 +622,7 @@ class FromElementType {
 
 				Map enabledFilters = fromElement.getWalker().getEnabledFilters();
 				String subquery = CollectionSubqueryFactory.createCollectionSubquery(
-						joinSequence.copy().setUseThetaStyle( true ),
+						joinSequence.copyForCollectionProperty().setUseThetaStyle( true ),
 						enabledFilters,
 						collectionPropertyMapping.toColumns( tableAlias, propertyName )
 				);

@@ -17,10 +17,12 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -74,11 +76,21 @@ public class ThreadLocalCurrentSessionTest extends ConnectionManagementTestCase 
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-11067")
+	public void testEqualityChecking() {
+		Session session1 = sessionFactory().getCurrentSession();
+		Session session2 = sessionFactory().getCurrentSession();
+
+		assertSame( "== check", session1, session2 );
+		assertEquals( "#equals check", session1, session2 );
+	}
+
+	@Test
 	public void testTransactionProtection() {
 		Session session = sessionFactory().getCurrentSession();
 		try {
 			session.createQuery( "from Silly" );
-			fail( "method other than beginTransaction{} allowed" );
+			fail( "method other than beginTransaction() allowed" );
 		}
 		catch ( HibernateException e ) {
 			// ok

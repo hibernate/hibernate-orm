@@ -15,6 +15,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import javax.transaction.Synchronization;
 
@@ -291,17 +292,33 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 		}
 
 		@Override
+		@SuppressWarnings("SimplifiableIfStatement")
 		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-			final String methodName = method.getName(); 
+			final String methodName = method.getName();
+
+			// first check methods calls that we handle completely locally:
+			if ( "equals".equals( methodName ) && method.getParameterCount() == 1 ) {
+				if ( args[0] == null
+						|| !Proxy.isProxyClass( args[0].getClass() ) ) {
+					return false;
+				}
+				return this.equals( Proxy.getInvocationHandler( args[0] ) );
+			}
+			else if ( "hashCode".equals( methodName ) && method.getParameterCount() == 0 ) {
+				return this.hashCode();
+			}
+			else if ( "toString".equals( methodName ) && method.getParameterCount() == 0 ) {
+				return String.format( Locale.ROOT, "ThreadLocalSessionContext.TransactionProtectionWrapper[%s]", realSession );
+			}
+
+
+			// then check method calls that we need to delegate to the real Session
 			try {
 				// If close() is called, guarantee unbind()
 				if ( "close".equals( methodName ) ) {
 					unbind( realSession.getSessionFactory() );
 				}
-				else if ( "toString".equals( methodName )
-						|| "equals".equals( methodName )
-						|| "hashCode".equals( methodName )
-						|| "getStatistics".equals( methodName )
+				else if ( "getStatistics".equals( methodName )
 						|| "isOpen".equals( methodName )
 						|| "getListeners".equals( methodName ) ) {
 					// allow these to go through the the real session no matter what

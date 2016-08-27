@@ -8,57 +8,114 @@ package org.hibernate.tuple;
 
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.MonthDay;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.Year;
+import java.time.YearMonth;
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
-import org.hibernate.Session;
+import org.hibernate.HibernateException;
 
 /**
  * Generators for obtaining the current VM timestamp in different representations.
  *
  * @author Gunnar Morling
  */
-/* package */ interface TimestampGenerators {
+/* package */ final class TimestampGenerators {
 
-	class CurrentDateGenerator implements ValueGenerator<Date> {
+	private static final Map<Class<?>, ValueGenerator<?>> generators;
 
-		@Override
-		public Date generateValue(Session session, Object owner) {
-			return new Date();
-		}
+	private TimestampGenerators() {
 	}
 
-	class CurrentCalendarGenerator implements ValueGenerator<Calendar> {
+	static {
+		generators = new HashMap<>();
+		generators.put(
+				Date.class,
+				(session, owner) -> new Date()
+		);
+		generators.put(
+				Calendar.class,
+				(session, owner) -> {
+					Calendar calendar = Calendar.getInstance();
+					calendar.setTime( new Date() );
+					return calendar;
+				}
+		);
+		generators.put(
+				java.sql.Date.class,
+				(session, owner) -> new java.sql.Date( System.currentTimeMillis() )
+		);
 
-		@Override
-		public Calendar generateValue(Session session, Object owner) {
-			Calendar calendar = Calendar.getInstance();
-			calendar.setTime( new Date() );
-			return calendar;
-		}
+		generators.put(
+				Time.class,
+				(session, owner) -> new Time( System.currentTimeMillis() )
+		);
+		generators.put(
+				Timestamp.class,
+				(session, owner) -> new Timestamp( System.currentTimeMillis() )
+		);
+		generators.put(
+				Instant.class,
+				(session, owner) -> Instant.now()
+		);
+		generators.put(
+				LocalDate.class,
+				(session, owner) -> LocalDate.now()
+		);
+		generators.put(
+				LocalDateTime.class,
+				(session, owner) -> LocalDateTime.now()
+		);
+		generators.put(
+				LocalTime.class,
+				(session, owner) -> LocalTime.now()
+		);
+		generators.put(
+				MonthDay.class,
+				(session, owner) -> MonthDay.now()
+		);
+		generators.put(
+				OffsetDateTime.class,
+				(session, owner) -> OffsetDateTime.now()
+		);
+		generators.put(
+				OffsetTime.class,
+				(session, owner) -> OffsetTime.now()
+		);
+		generators.put(
+				Year.class,
+				(session, owner) -> Year.now()
+		);
+		generators.put(
+				YearMonth.class,
+				(session, owner) -> YearMonth.now()
+		);
+		generators.put(
+				ZonedDateTime.class,
+				(session, owner) -> ZonedDateTime.now()
+		);
 	}
 
-	class CurrentSqlDateGenerator implements ValueGenerator<java.sql.Date> {
-
-		@Override
-		public java.sql.Date generateValue(Session session, Object owner) {
-			return new java.sql.Date( new Date().getTime() );
+	@SuppressWarnings("unchecked")
+	public static <T> ValueGenerator<T> get(final Class<T> type) {
+		final ValueGenerator<?> valueGeneratorSupplier = generators.get(
+				type );
+		if ( Objects.isNull( valueGeneratorSupplier ) ) {
+			throw new HibernateException(
+					"Unsupported property type [" + type.getName() + "] for @CreationTimestamp or @UpdateTimestamp generator annotation" );
 		}
-	}
 
-	class CurrentSqlTimeGenerator implements ValueGenerator<Time> {
-
-		@Override
-		public Time generateValue(Session session, Object owner) {
-			return new Time( new Date().getTime() );
-		}
-	}
-
-	class CurrentSqlTimestampGenerator implements ValueGenerator<Timestamp> {
-
-		@Override
-		public Timestamp generateValue(Session session, Object owner) {
-			return new Timestamp( new Date().getTime() );
-		}
+		return (ValueGenerator<T>) valueGeneratorSupplier;
 	}
 }

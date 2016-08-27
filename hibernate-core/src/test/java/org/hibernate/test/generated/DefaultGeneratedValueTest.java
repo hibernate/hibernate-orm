@@ -8,6 +8,16 @@ package org.hibernate.test.generated;
 
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.MonthDay;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.Year;
+import java.time.YearMonth;
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
 import javax.persistence.Column;
@@ -59,6 +69,17 @@ public class DefaultGeneratedValueTest extends BaseCoreFunctionalTestCase {
 		assertNull( theEntity.vmCreatedSqlDate );
 		assertNull( theEntity.vmCreatedSqlTime );
 		assertNull( theEntity.vmCreatedSqlTimestamp );
+
+		assertNull( theEntity.vmCreatedSqlLocalDate );
+		assertNull( theEntity.vmCreatedSqlLocalTime );
+		assertNull( theEntity.vmCreatedSqlLocalDateTime );
+		assertNull( theEntity.vmCreatedSqlMonthDay );
+		assertNull( theEntity.vmCreatedSqlOffsetDateTime );
+		assertNull( theEntity.vmCreatedSqlOffsetTime );
+		assertNull( theEntity.vmCreatedSqlYear );
+		assertNull( theEntity.vmCreatedSqlYearMonth );
+		assertNull( theEntity.vmCreatedSqlZonedDateTime );
+
 		assertNull( theEntity.name );
 		s.save( theEntity );
 		//TODO: Actually the values should be non-null afterQuery save
@@ -68,6 +89,15 @@ public class DefaultGeneratedValueTest extends BaseCoreFunctionalTestCase {
 		assertNull( theEntity.vmCreatedSqlDate );
 		assertNull( theEntity.vmCreatedSqlTime );
 		assertNull( theEntity.vmCreatedSqlTimestamp );
+		assertNull( theEntity.vmCreatedSqlLocalDate );
+		assertNull( theEntity.vmCreatedSqlLocalTime );
+		assertNull( theEntity.vmCreatedSqlLocalDateTime );
+		assertNull( theEntity.vmCreatedSqlMonthDay );
+		assertNull( theEntity.vmCreatedSqlOffsetDateTime );
+		assertNull( theEntity.vmCreatedSqlOffsetTime );
+		assertNull( theEntity.vmCreatedSqlYear );
+		assertNull( theEntity.vmCreatedSqlYearMonth );
+		assertNull( theEntity.vmCreatedSqlZonedDateTime );
 		assertNull( theEntity.name );
 		s.getTransaction().commit();
 		s.close();
@@ -85,6 +115,15 @@ public class DefaultGeneratedValueTest extends BaseCoreFunctionalTestCase {
 		assertNotNull( theEntity.vmCreatedSqlDate );
 		assertNotNull( theEntity.vmCreatedSqlTime );
 		assertNotNull( theEntity.vmCreatedSqlTimestamp );
+		assertNotNull( theEntity.vmCreatedSqlLocalDate );
+		assertNotNull( theEntity.vmCreatedSqlLocalTime );
+		assertNotNull( theEntity.vmCreatedSqlLocalDateTime );
+		assertNotNull( theEntity.vmCreatedSqlMonthDay );
+		assertNotNull( theEntity.vmCreatedSqlOffsetDateTime );
+		assertNotNull( theEntity.vmCreatedSqlOffsetTime );
+		assertNotNull( theEntity.vmCreatedSqlYear );
+		assertNotNull( theEntity.vmCreatedSqlYearMonth );
+		assertNotNull( theEntity.vmCreatedSqlZonedDateTime );
 		assertEquals( "Bob", theEntity.name );
 
 		theEntity.lastName = "Smith";
@@ -172,6 +211,36 @@ public class DefaultGeneratedValueTest extends BaseCoreFunctionalTestCase {
 
 		@CreationTimestamp
 		private Timestamp vmCreatedSqlTimestamp;
+
+		@CreationTimestamp
+		private Instant vmCreatedSqlInstant;
+
+		@CreationTimestamp
+		private LocalDate vmCreatedSqlLocalDate;
+
+		@CreationTimestamp
+		private LocalTime vmCreatedSqlLocalTime;
+
+		@CreationTimestamp
+		private LocalDateTime vmCreatedSqlLocalDateTime;
+
+		@CreationTimestamp
+		private MonthDay vmCreatedSqlMonthDay;
+
+		@CreationTimestamp
+		private OffsetDateTime vmCreatedSqlOffsetDateTime;
+
+		@CreationTimestamp
+		private OffsetTime vmCreatedSqlOffsetTime;
+
+		@CreationTimestamp
+		private Year vmCreatedSqlYear;
+
+		@CreationTimestamp
+		private YearMonth vmCreatedSqlYearMonth;
+
+		@CreationTimestamp
+		private ZonedDateTime vmCreatedSqlZonedDateTime;
 
 		@UpdateTimestamp
 		private Timestamp updated;

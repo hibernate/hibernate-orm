@@ -8,6 +8,16 @@ package org.hibernate.tuple;
 
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.MonthDay;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.Year;
+import java.time.YearMonth;
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -39,6 +49,36 @@ public class UpdateTimestampGeneration implements AnnotationValueGeneration<Upda
 		}
 		else if ( Calendar.class.isAssignableFrom( propertyType ) ) {
 			generator = new TimestampGenerators.CurrentCalendarGenerator();
+		}
+		else if ( Instant.class.isAssignableFrom( propertyType ) ) {
+			generator = new TimestampGenerators.CurrentInstantGenerator();
+		}
+		else if ( LocalDate.class.isAssignableFrom( propertyType ) ) {
+			generator = new TimestampGenerators.CurrentLocalDateGenerator();
+		}
+		else if ( LocalDateTime.class.isAssignableFrom( propertyType ) ) {
+			generator = new TimestampGenerators.CurrentLocalDateTimeGenerator();
+		}
+		else if ( LocalTime.class.isAssignableFrom( propertyType ) ) {
+			generator = new TimestampGenerators.CurrentLocalTimeGenerator();
+		}
+		else if ( MonthDay.class.isAssignableFrom( propertyType ) ) {
+			generator = new TimestampGenerators.CurrentMonthDayGenerator();
+		}
+		else if ( OffsetDateTime.class.isAssignableFrom( propertyType ) ) {
+			generator = new TimestampGenerators.CurrentOffsetDateTimeGenerator();
+		}
+		else if ( OffsetTime.class.isAssignableFrom( propertyType ) ) {
+			generator = new TimestampGenerators.CurrentOffsetTimeGenerator();
+		}
+		else if ( Year.class.isAssignableFrom( propertyType ) ) {
+			generator = new TimestampGenerators.CurrentYearGenerator();
+		}
+		else if ( YearMonth.class.isAssignableFrom( propertyType ) ) {
+			generator = new TimestampGenerators.CurrentYearMonthGenerator();
+		}
+		else if ( ZonedDateTime.class.isAssignableFrom( propertyType ) ) {
+			generator = new TimestampGenerators.CurrentZonedDateTimeGenerator();
 		}
 		else {
 			throw new HibernateException( "Unsupported property type for generator annotation @UpdateTimestamp" );

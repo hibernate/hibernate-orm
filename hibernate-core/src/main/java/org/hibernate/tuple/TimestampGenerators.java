@@ -8,6 +8,16 @@ package org.hibernate.tuple;
 
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.MonthDay;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.Year;
+import java.time.YearMonth;
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -61,4 +71,85 @@ import org.hibernate.Session;
 			return new Timestamp( new Date().getTime() );
 		}
 	}
+
+	class CurrentInstantGenerator implements ValueGenerator<Instant> {
+
+		@Override
+		public Instant generateValue(Session session, Object owner) {
+			return Instant.now();
+		}
+	}
+
+	class CurrentLocalDateGenerator implements ValueGenerator<LocalDate> {
+
+		@Override
+		public LocalDate generateValue(Session session, Object owner) {
+			return LocalDate.now();
+		}
+	}
+
+	class CurrentLocalDateTimeGenerator implements ValueGenerator<LocalDateTime> {
+
+		@Override
+		public LocalDateTime generateValue(Session session, Object owner) {
+			return LocalDateTime.now();
+		}
+	}
+
+	class CurrentLocalTimeGenerator implements ValueGenerator<LocalTime> {
+
+		@Override
+		public LocalTime generateValue(Session session, Object owner) {
+			return LocalTime.now();
+		}
+	}
+
+	class CurrentMonthDayGenerator implements ValueGenerator<MonthDay> {
+
+		@Override
+		public MonthDay generateValue(Session session, Object owner) {
+			return MonthDay.now();
+		}
+	}
+
+	class CurrentOffsetDateTimeGenerator implements ValueGenerator<OffsetDateTime> {
+
+		@Override
+		public OffsetDateTime generateValue(Session session, Object owner) {
+			return OffsetDateTime.now();
+		}
+	}
+
+	class CurrentOffsetTimeGenerator implements ValueGenerator<OffsetTime> {
+
+		@Override
+		public OffsetTime generateValue(Session session, Object owner) {
+			return OffsetTime.now();
+		}
+	}
+
+	class CurrentYearGenerator implements ValueGenerator<Year> {
+
+		@Override
+		public Year generateValue(Session session, Object owner) {
+			return Year.now();
+		}
+	}
+
+	class CurrentYearMonthGenerator implements ValueGenerator<YearMonth> {
+
+		@Override
+		public YearMonth generateValue(Session session, Object owner) {
+			return YearMonth.now();
+		}
+	}
+
+	class CurrentZonedDateTimeGenerator implements ValueGenerator<ZonedDateTime> {
+
+		@Override
+		public ZonedDateTime generateValue(Session session, Object owner) {
+			return ZonedDateTime.now();
+		}
+	}
+
 }

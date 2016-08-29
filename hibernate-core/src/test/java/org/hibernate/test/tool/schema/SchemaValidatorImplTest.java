@@ -26,6 +26,7 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.tool.schema.internal.DefaultSchemaFilter;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
 import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
@@ -112,7 +113,9 @@ public class SchemaValidatorImplTest extends BaseUnitTestCase {
 		metadata.validate();
 
 		try {
-			new SchemaValidatorImpl( tool ).doValidation( metadata, executionOptions );
+			new SchemaValidatorImpl()
+					.configure( tool, DefaultSchemaFilter.INSTANCE )
+					.doValidation( metadata, executionOptions );
 			Assert.fail( "SchemaManagementException expected" );
 		}
 		catch (SchemaManagementException e) {
@@ -129,7 +132,9 @@ public class SchemaValidatorImplTest extends BaseUnitTestCase {
 		metadata.validate();
 
 		try {
-			new SchemaValidatorImpl( tool ).doValidation( metadata, executionOptions );
+			new SchemaValidatorImpl()
+					.configure( tool, DefaultSchemaFilter.INSTANCE )
+					.doValidation( metadata, executionOptions );
 			Assert.fail( "SchemaManagementException expected" );
 		}
 		catch (SchemaManagementException e) {
@@ -178,7 +183,9 @@ public class SchemaValidatorImplTest extends BaseUnitTestCase {
 			metadata.validate();
 
 			try {
-				new SchemaValidatorImpl( tool ).doValidation( metadata, executionOptions );
+				new SchemaValidatorImpl()
+						.configure( tool, DefaultSchemaFilter.INSTANCE )
+						.doValidation( metadata, executionOptions );
 				Assert.fail( "SchemaManagementException expected" );
 			}
 			catch (SchemaManagementException e) {
@@ -233,7 +240,9 @@ public class SchemaValidatorImplTest extends BaseUnitTestCase {
 			metadata.validate();
 
 			try {
-				new SchemaValidatorImpl( tool ).doValidation( metadata, executionOptions );
+				new SchemaValidatorImpl()
+						.configure( tool, DefaultSchemaFilter.INSTANCE )
+						.doValidation( metadata, executionOptions );
 				Assert.fail( "SchemaManagementException expected" );
 			}
 			catch (SchemaManagementException e) {

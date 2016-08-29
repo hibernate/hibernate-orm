@@ -11,14 +11,15 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
-import org.hibernate.tool.schema.extract.spi.TableInformation;
+import org.hibernate.tool.schema.extract.spi.NameSpaceTablesInformation;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 
 /**
  * @author Andrea Boriero
  */
-public class SchemaValidatorImpl extends AbstractSchemaValidator {
-	public SchemaValidatorImpl(){
+public class ImprovedSchemaValidatorImpl extends AbstractSchemaValidator {
+
+	public ImprovedSchemaValidatorImpl(){
 	}
 
 	@Override
@@ -26,14 +27,18 @@ public class SchemaValidatorImpl extends AbstractSchemaValidator {
 			Metadata metadata,
 			DatabaseInformation databaseInformation,
 			ExecutionOptions options,
-			Dialect dialect,
-			Namespace namespace) {
+			Dialect dialect, Namespace namespace) {
+
+		final NameSpaceTablesInformation tables = databaseInformation.getTablesInformation( namespace );
 		for ( Table table : namespace.getTables() ) {
 			if ( schemaFilter.includeTable( table ) && table.isPhysicalTable() ) {
-				final TableInformation tableInformation = databaseInformation.getTableInformation(
-						table.getQualifiedTableName()
+				validateTable(
+						table,
+						tables.getTableInformation( table ),
+						metadata,
+						options,
+						dialect
 				);
-				validateTable( table, tableInformation, metadata, options, dialect );
 			}
 		}
 	}

@@ -1311,6 +1311,20 @@ public interface AvailableSettings {
 	String HBM2DDL_FILTER_PROVIDER = "hibernate.hbm2ddl.schema_filter_provider";
 
 	/**
+	 * Used to specify the {@link org.hibernate.tool.schema.spi.SchemaMigrator} to be used to
+	 * perform a schema migration (update) of the database schema.
+	 *
+	 */
+	String HBM2DDL_SCHEMA_MIGRATOR = "hibernate.hbm2ddl.schema_migrator";
+
+	/**
+	 * Used to specify the {@link org.hibernate.tool.schema.spi.SchemaValidator} to be used to
+	 * validate a database schema.
+	 *
+	 */
+	String HBM2DDL_SCHEMA_VALIDATOR = "hibernate.hbm2ddl.schema_validator";
+
+	/**
 	 * Identifies the delimiter to use to separate schema management statements in script outputs
 	 */
 	String HBM2DDL_DELIMITER = "hibernate.hbm2ddl.delimiter";

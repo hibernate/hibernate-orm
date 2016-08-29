@@ -20,13 +20,12 @@ import org.hibernate.tool.schema.extract.spi.TableInformation;
 import org.hibernate.tool.schema.internal.exec.GenerationTarget;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 
-
 /**
- * @author Steve Ebersole
+ * @author Andrea Boriero
  */
-public class SchemaMigratorImpl extends AbstractSchemaMigrator {
+public class ImprovedSchemaMigratorImpl extends AbstractSchemaMigrator {
 
-	public SchemaMigratorImpl() {
+	public ImprovedSchemaMigratorImpl() {
 	}
 
 	@Override
@@ -40,11 +39,11 @@ public class SchemaMigratorImpl extends AbstractSchemaMigrator {
 			boolean tryToCreateCatalogs,
 			boolean tryToCreateSchemas,
 			Set<Identifier> exportedCatalogs,
-			Namespace namespace,
-			GenerationTarget[] targets) {
+			Namespace namespace, GenerationTarget[] targets) {
 		final NameSpaceTablesInformation tablesInformation = new NameSpaceTablesInformation( metadata.getDatabase()
 																									 .getJdbcEnvironment()
 																									 .getIdentifierHelper() );
+
 		if ( schemaFilter.includeNamespace( namespace ) ) {
 			createSchemaAndCatalog(
 					existingDatabase,
@@ -57,10 +56,11 @@ public class SchemaMigratorImpl extends AbstractSchemaMigrator {
 					namespace,
 					targets
 			);
+			final NameSpaceTablesInformation tables = existingDatabase.getTablesInformation( namespace );
 			for ( Table table : namespace.getTables() ) {
 				if ( schemaFilter.includeTable( table ) && table.isPhysicalTable() ) {
 					checkExportIdentifier( table, exportIdentifiers );
-					final TableInformation tableInformation = existingDatabase.getTableInformation( table.getQualifiedTableName() );
+					final TableInformation tableInformation = tables.getTableInformation( table );
 					if ( tableInformation == null ) {
 						createTable( table, dialect, metadata, formatter, options, targets );
 					}

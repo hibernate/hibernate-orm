@@ -73,12 +73,16 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 
 	@Override
 	public SchemaMigrator getSchemaMigrator(Map options) {
-		return new SchemaMigratorImpl( this, getSchemaFilterProvider( options ).getMigrateFilter() );
+		final SchemaMigrator schemaMigrator = getSchemaMigratorProvider( options );
+		schemaMigrator.configure( this, getSchemaFilterProvider( options ).getMigrateFilter() );
+		return schemaMigrator;
 	}
 
 	@Override
 	public SchemaValidator getSchemaValidator(Map options) {
-		return new SchemaValidatorImpl( this, getSchemaFilterProvider( options ).getValidateFilter() );
+		final SchemaValidator schemavalidator = getSchemaValidatorProvider( options );
+		schemavalidator.configure( this, getSchemaFilterProvider( options ).getValidateFilter() );
+		return schemavalidator;
 	}
 	
 	private SchemaFilterProvider getSchemaFilterProvider(Map options) {
@@ -89,6 +93,28 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 				SchemaFilterProvider.class,
 				configuredOption,
 				DefaultSchemaFilterProvider.INSTANCE
+		);
+	}
+
+	private SchemaMigrator getSchemaMigratorProvider(Map options){
+		final Object configuredOption = (options == null)
+				? null
+				: options.get( AvailableSettings.HBM2DDL_SCHEMA_MIGRATOR );
+		return serviceRegistry.getService( StrategySelector.class ).resolveDefaultableStrategy(
+				SchemaMigrator.class,
+				configuredOption,
+				new ImprovedSchemaMigratorImpl(  )
+		);
+	}
+
+	private SchemaValidator getSchemaValidatorProvider(Map options){
+		final Object configuredOption = (options == null)
+				? null
+				: options.get( AvailableSettings.HBM2DDL_SCHEMA_VALIDATOR );
+		return serviceRegistry.getService( StrategySelector.class ).resolveDefaultableStrategy(
+				SchemaValidator.class,
+				configuredOption,
+				new ImprovedSchemaValidatorImpl(  )
 		);
 	}
 

@@ -30,12 +30,13 @@ public class Index implements RelationalModel, Exportable, Serializable {
 	private java.util.List<Column> columns = new ArrayList<Column>();
 	private java.util.Map<Column, String> columnOrderMap = new HashMap<Column, String>(  );
 	private String name;
+	private boolean quoted;
 
 	public String sqlCreateString(Dialect dialect, Mapping mapping, String defaultCatalog, String defaultSchema)
 			throws HibernateException {
 		return buildSqlCreateIndexString(
 				dialect,
-				getName(),
+				getQuotedName( dialect ),
 				getTable(),
 				getColumnIterator(),
 				columnOrderMap,
@@ -171,7 +172,7 @@ public class Index implements RelationalModel, Exportable, Serializable {
 		return "drop index " +
 				StringHelper.qualify(
 						table.getQualifiedName( dialect, defaultCatalog, defaultSchema ),
-						name
+						getQuotedName( dialect )
 				);
 	}
 
@@ -223,7 +224,22 @@ public class Index implements RelationalModel, Exportable, Serializable {
 	}
 
 	public void setName(String name) {
-		this.name = name;
+		if (
+				StringHelper.isNotEmpty( name ) &&
+						Dialect.QUOTE.indexOf( name.charAt( 0 ) ) > -1 //TODO: deprecated, remove eventually
+				) {
+			quoted = true;
+			this.name = name.substring( 1, name.length() - 1 );
+		}
+		else {
+			this.name = name;
+		}
+	}
+
+	public String getQuotedName(Dialect d) {
+		return quoted ?
+				d.openQuote() + name + d.closeQuote() :
+				name;
 	}
 
 	@Override

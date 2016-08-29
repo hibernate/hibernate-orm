@@ -21,7 +21,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
-import org.hibernate.tool.schema.internal.exec.ImprovedDatabaseInformationImpl;
+import org.hibernate.tool.schema.extract.internal.DatabaseInformationImpl;
 import org.hibernate.tool.schema.internal.exec.ScriptSourceInputFromFile;
 import org.hibernate.tool.schema.internal.exec.ScriptSourceInputFromReader;
 import org.hibernate.tool.schema.internal.exec.ScriptSourceInputFromUrl;
@@ -129,7 +129,7 @@ public class Helper {
 			Namespace.Name defaultNamespace) {
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 		try {
-			return new ImprovedDatabaseInformationImpl(
+			return new DatabaseInformationImpl(
 					serviceRegistry,
 					jdbcEnvironment,
 					ddlTransactionIsolator,

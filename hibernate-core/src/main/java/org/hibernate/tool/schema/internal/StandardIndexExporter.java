@@ -41,7 +41,7 @@ public class StandardIndexExporter implements Exporter<Index> {
 					new QualifiedNameImpl(
 							index.getTable().getQualifiedTableName().getCatalogName(),
 							index.getTable().getQualifiedTableName().getSchemaName(),
-							jdbcEnvironment.getIdentifierHelper().toIdentifier( index.getName() )
+							jdbcEnvironment.getIdentifierHelper().toIdentifier( index.getQuotedName( dialect ) )
 					),
 					jdbcEnvironment.getDialect()
 			);

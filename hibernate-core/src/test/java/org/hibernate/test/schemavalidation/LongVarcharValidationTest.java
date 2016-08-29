@@ -6,6 +6,8 @@
  */
 package org.hibernate.test.schemavalidation;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Map;
 import javax.persistence.Entity;
@@ -16,7 +18,9 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
@@ -29,21 +33,35 @@ import org.hibernate.tool.schema.spi.SourceDescriptor;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /**
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-9693" )
-public class LongVarcharValidationTest extends BaseUnitTestCase implements ExecutionOptions {
+@TestForIssue(jiraKey = "HHH-9693")
+@RunWith(Parameterized.class)
+public class LongVarcharValidationTest implements ExecutionOptions {
+	@Parameterized.Parameters
+	public static Collection<String> parameters() {
+		return Arrays.asList(
+				new String[] {JdbcMetadaAccessStrategy.GROUPED.toString(), JdbcMetadaAccessStrategy.INDIVIDUALLY.toString()}
+		);
+	}
+
+	@Parameterized.Parameter
+	public String jdbcMetadataExtractorStrategy;
+
 	private StandardServiceRegistry ssr;
 
 	@Before
 	public void beforeTest() {
-		ssr = new StandardServiceRegistryBuilder().build();
+		ssr = new StandardServiceRegistryBuilder()
+				.applySetting( AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY, jdbcMetadataExtractorStrategy )
+				.build();
 	}
 
 	@After
@@ -137,13 +155,13 @@ public class LongVarcharValidationTest extends BaseUnitTestCase implements Execu
 		);
 	}
 
-	@Entity(name = "Translation")
-	public static class Translation {
-		@Id
-		public Integer id;
-		@Type( type = "text" )
-		String text;
-	}
+@Entity(name = "Translation")
+public static class Translation {
+	@Id
+	public Integer id;
+	@Type(type = "text")
+	String text;
+}
 
 	@Override
 	public Map getConfigurationValues() {

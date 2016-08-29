@@ -7,6 +7,7 @@
 package org.hibernate.cfg;
 
 import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 import org.hibernate.tool.schema.SourceType;
 
 /**
@@ -1080,6 +1081,15 @@ public interface AvailableSettings {
 	 * @since 5.1
 	 */
 	String HBM2DDL_FILTER_PROVIDER = "hibernate.hbm2ddl.schema_filter_provider";
+
+	/**
+	 * Setting to choose the strategy used to access the JDBC Metadata.
+	 *
+	 * Valid options are defined by the {@link JdbcMetadaAccessStrategy} enum.
+	 *
+	 * @see JdbcMetadaAccessStrategy
+	 */
+	String HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY = "hibernate.hbm2ddl.jdbc_metadata_extraction_strategy";
 
 	/**
 	 * Identifies the delimiter to use to separate schema management statements in script outputs

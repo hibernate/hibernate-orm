@@ -601,6 +601,14 @@ If this property is not supplied (or is explicitly `false`), the provider should
 Used to specify the `org.hibernate.tool.schema.spi.SchemaFilterProvider` to be used by `create`, `drop`, `migrate`, and `validate` operations on the database schema.
 `SchemaFilterProvider` provides filters that can be used to limit the scope of these operations to specific namespaces, tables and sequences. All objects are included by default.
 
+|`hibernate.hbm2ddl.jdbc_metadata_extraction_strategy` |`grouped` (default value) or `individually` a|
+
+Setting to choose the strategy used to access the JDBC Metadata.
+Valid options are defined by the `strategy` value of the `org.hibernate.tool.schema.JdbcMetadaAccessStrategy` enum:
+
+`grouped`:: `org.hibernate.tool.schema.spi.SchemaMigrator` and `org.hibernate.tool.schema.spi.SchemaValidator` execute a single `java.sql.DatabaseMetaData#getTables(String, String, String, String[])` call to retrieve all the database table in order to determine if all the `javax.persistence.Entity` have a corresponding mapped database tables.
+`individually`:: `org.hibernate.tool.schema.spi.SchemaMigrator` and `org.hibernate.tool.schema.spi.SchemaValidator` execute one `java.sql.DatabaseMetaData#getTables(String, String, String, String[])` call for each `javax.persistence.Entity` in order to determine if a corresponding database table exists.
+
 |`hibernate.hbm2ddl.delimiter` | `;` |Identifies the delimiter to use to separate schema management statements in script outputs.
 
 |`hibernate.schema_management_tool` |A schema name |Used to specify the `org.hibernate.tool.schema.spi.SchemaManagementTool` to use for performing schema management. The default is to use `org.hibernate.tool.schema.internal.HibernateSchemaManagementTool`

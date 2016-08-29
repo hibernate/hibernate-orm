@@ -14,6 +14,7 @@ import java.util.Iterator;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -29,13 +30,13 @@ public class Index implements RelationalModel, Exportable, Serializable {
 	private Table table;
 	private java.util.List<Column> columns = new ArrayList<Column>();
 	private java.util.Map<Column, String> columnOrderMap = new HashMap<Column, String>(  );
-	private String name;
+	private Identifier name;
 
 	public String sqlCreateString(Dialect dialect, Mapping mapping, String defaultCatalog, String defaultSchema)
 			throws HibernateException {
 		return buildSqlCreateIndexString(
 				dialect,
-				getName(),
+				getQuotedName( dialect ),
 				getTable(),
 				getColumnIterator(),
 				columnOrderMap,
@@ -171,7 +172,7 @@ public class Index implements RelationalModel, Exportable, Serializable {
 		return "drop index " +
 				StringHelper.qualify(
 						table.getQualifiedName( dialect, defaultCatalog, defaultSchema ),
-						name
+						getQuotedName( dialect )
 				);
 	}
 
@@ -219,11 +220,15 @@ public class Index implements RelationalModel, Exportable, Serializable {
 	}
 
 	public String getName() {
-		return name;
+		return name == null ? null : name.getText();
 	}
 
 	public void setName(String name) {
-		this.name = name;
+		this.name = Identifier.toIdentifier( name );
+	}
+
+	public String getQuotedName(Dialect dialect) {
+		return name == null ? null : name.render( dialect );
 	}
 
 	@Override

@@ -27,6 +27,7 @@ import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.exec.GenerationTarget;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
@@ -75,12 +76,22 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 
 	@Override
 	public SchemaMigrator getSchemaMigrator(Map options) {
-		return new SchemaMigratorImpl( this, getSchemaFilterProvider( options ).getMigrateFilter() );
+		if ( determineJdbcMetadaAccessStrategy( options ) == JdbcMetadaAccessStrategy.GROUPED ) {
+			return new GroupedSchemaMigratorImpl( this, getSchemaFilterProvider( options ).getMigrateFilter() );
+		}
+		else {
+			return new IndividuallySchemaMigratorImpl( this, getSchemaFilterProvider( options ).getMigrateFilter() );
+		}
 	}
 
 	@Override
 	public SchemaValidator getSchemaValidator(Map options) {
-		return new SchemaValidatorImpl( this, getSchemaFilterProvider( options ).getValidateFilter() );
+		if ( determineJdbcMetadaAccessStrategy( options ) == JdbcMetadaAccessStrategy.GROUPED ) {
+			return new GroupedSchemaValidatorImpl( this, getSchemaFilterProvider( options ).getValidateFilter() );
+		}
+		else {
+			return new IndividuallySchemaValidatorImpl( this, getSchemaFilterProvider( options ).getValidateFilter() );
+		}
 	}
 	
 	private SchemaFilterProvider getSchemaFilterProvider(Map options) {
@@ -92,6 +103,13 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 				configuredOption,
 				DefaultSchemaFilterProvider.INSTANCE
 		);
+	}
+
+	private JdbcMetadaAccessStrategy determineJdbcMetadaAccessStrategy(Map options) {
+		if ( options == null ) {
+			return JdbcMetadaAccessStrategy.interpretHbm2ddlSetting( null );
+		}
+		return JdbcMetadaAccessStrategy.interpretHbm2ddlSetting( options.get( AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY ) );
 	}
 
 	GenerationTarget[] buildGenerationTargets(

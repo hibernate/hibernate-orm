@@ -26,11 +26,12 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.tool.schema.internal.DefaultSchemaFilter;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
 import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
-import org.hibernate.tool.schema.internal.SchemaValidatorImpl;
+import org.hibernate.tool.schema.internal.IndividuallySchemaValidatorImpl;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
@@ -58,19 +59,19 @@ import static org.junit.Assert.assertEquals;
  */
 @TestForIssue(jiraKey = "HHH-10332")
 @RequiresDialect(H2Dialect.class)
-public class SchemaValidatorImplTest extends BaseUnitTestCase {
+public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, SchemaValidatorImplTest.class.getName() ) );
+			Logger.getMessageLogger( CoreMessageLogger.class, IndividuallySchemaValidatorImplTest.class.getName() ) );
 
 	private StandardServiceRegistry ssr;
 
-	private HibernateSchemaManagementTool tool;
+	protected HibernateSchemaManagementTool tool;
 
 	private Map configurationValues;
 
-	private ExecutionOptions executionOptions;
+	protected ExecutionOptions executionOptions;
 
 	@Before
 	public void setUp() throws IOException {
@@ -112,7 +113,7 @@ public class SchemaValidatorImplTest extends BaseUnitTestCase {
 		metadata.validate();
 
 		try {
-			new SchemaValidatorImpl( tool ).doValidation( metadata, executionOptions );
+			getSchemaValidator( metadata );
 			Assert.fail( "SchemaManagementException expected" );
 		}
 		catch (SchemaManagementException e) {
@@ -129,7 +130,7 @@ public class SchemaValidatorImplTest extends BaseUnitTestCase {
 		metadata.validate();
 
 		try {
-			new SchemaValidatorImpl( tool ).doValidation( metadata, executionOptions );
+			getSchemaValidator( metadata );
 			Assert.fail( "SchemaManagementException expected" );
 		}
 		catch (SchemaManagementException e) {
@@ -178,7 +179,7 @@ public class SchemaValidatorImplTest extends BaseUnitTestCase {
 			metadata.validate();
 
 			try {
-				new SchemaValidatorImpl( tool ).doValidation( metadata, executionOptions );
+				getSchemaValidator( metadata );
 				Assert.fail( "SchemaManagementException expected" );
 			}
 			catch (SchemaManagementException e) {
@@ -233,7 +234,7 @@ public class SchemaValidatorImplTest extends BaseUnitTestCase {
 			metadata.validate();
 
 			try {
-				new SchemaValidatorImpl( tool ).doValidation( metadata, executionOptions );
+				getSchemaValidator( metadata );
 				Assert.fail( "SchemaManagementException expected" );
 			}
 			catch (SchemaManagementException e) {
@@ -245,6 +246,11 @@ public class SchemaValidatorImplTest extends BaseUnitTestCase {
 			serviceRegistry.destroy();
 			connectionProvider.stop();
 		}
+	}
+
+	protected void getSchemaValidator(MetadataImplementor metadata) {
+		new IndividuallySchemaValidatorImpl( tool, DefaultSchemaFilter.INSTANCE )
+				.doValidation( metadata, executionOptions );
 	}
 
 	protected Properties properties() {

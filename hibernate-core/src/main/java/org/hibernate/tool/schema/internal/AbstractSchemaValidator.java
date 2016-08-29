@@ -34,19 +34,22 @@ import org.jboss.logging.Logger;
 /**
  * @author Steve Ebersole
  */
-public class SchemaValidatorImpl implements SchemaValidator {
-	private static final Logger log = Logger.getLogger( SchemaValidatorImpl.class );
+public abstract class AbstractSchemaValidator implements SchemaValidator {
+	private static final Logger log = Logger.getLogger( AbstractSchemaValidator.class );
 
-	private final HibernateSchemaManagementTool tool;
-	private final SchemaFilter schemaFilter;
+	protected HibernateSchemaManagementTool tool;
+	protected SchemaFilter schemaFilter;
 
-	public SchemaValidatorImpl(HibernateSchemaManagementTool tool) {
-		this( tool, DefaultSchemaFilter.INSTANCE );
-	}
-
-	public SchemaValidatorImpl(HibernateSchemaManagementTool tool, SchemaFilter schemaFilter) {
+	public AbstractSchemaValidator(
+			HibernateSchemaManagementTool tool,
+			SchemaFilter validateFilter) {
 		this.tool = tool;
-		this.schemaFilter = schemaFilter;
+		if ( validateFilter == null ) {
+			this.schemaFilter = DefaultSchemaFilter.INSTANCE;
+		}
+		else {
+			this.schemaFilter = validateFilter;
+		}
 	}
 
 	@Override
@@ -82,42 +85,30 @@ public class SchemaValidatorImpl implements SchemaValidator {
 			ExecutionOptions options,
 			Dialect dialect) {
 		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
-			if ( !schemaFilter.includeNamespace( namespace )) {
-				continue;
-			}
-			
-			for ( Table table : namespace.getTables() ) {
-				if ( !schemaFilter.includeTable( table )) {
-					continue;
-				}
-				if ( !table.isPhysicalTable() ) {
-					continue;
-				}
-
-				final TableInformation tableInformation = databaseInformation.getTableInformation(
-						table.getQualifiedTableName()
-				);
-				validateTable( table, tableInformation, metadata, options, dialect );
+			if ( schemaFilter.includeNamespace( namespace ) ) {
+				validateTables( metadata, databaseInformation, options, dialect, namespace );
 			}
 		}
 
 		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
-			if ( !schemaFilter.includeNamespace( namespace )) {
-				continue;
-			}
-			
-			for ( Sequence sequence : namespace.getSequences() ) {
-				if ( !schemaFilter.includeSequence( sequence )) {
-					continue;
+			if ( schemaFilter.includeNamespace( namespace ) ) {
+				for ( Sequence sequence : namespace.getSequences() ) {
+					if ( schemaFilter.includeSequence( sequence ) ) {
+						final SequenceInformation sequenceInformation = databaseInformation.getSequenceInformation(
+								sequence.getName()
+						);
+						validateSequence( sequence, sequenceInformation );
+					}
 				}
-				
-				final SequenceInformation sequenceInformation = databaseInformation.getSequenceInformation(
-						sequence.getName()
-				);
-				validateSequence( sequence, sequenceInformation );
 			}
 		}
 	}
+
+	protected abstract void validateTables(
+			Metadata metadata,
+			DatabaseInformation databaseInformation,
+			ExecutionOptions options,
+			Dialect dialect, Namespace namespace);
 
 	protected void validateTable(
 			Table table,
@@ -137,22 +128,20 @@ public class SchemaValidatorImpl implements SchemaValidator {
 		final Iterator selectableItr = table.getColumnIterator();
 		while ( selectableItr.hasNext() ) {
 			final Selectable selectable = (Selectable) selectableItr.next();
-			if ( !Column.class.isInstance( selectable ) ) {
-				continue;
+			if ( Column.class.isInstance( selectable ) ) {
+				final Column column = (Column) selectable;
+				final ColumnInformation existingColumn = tableInformation.getColumn( Identifier.toIdentifier( column.getQuotedName() ) );
+				if ( existingColumn == null ) {
+					throw new SchemaManagementException(
+							String.format(
+									"Schema-validation: missing column [%s] in table [%s]",
+									column.getName(),
+									table.getQualifiedTableName()
+							)
+					);
+				}
+				validateColumnType( table, column, existingColumn, metadata, options, dialect );
 			}
-
-			final Column column = (Column) selectable;
-			final ColumnInformation existingColumn = tableInformation.getColumn( Identifier.toIdentifier( column.getQuotedName() ) );
-			if ( existingColumn == null ) {
-				throw new SchemaManagementException(
-						String.format(
-								"Schema-validation: missing column [%s] in table [%s]",
-								column.getName(),
-								table.getQualifiedTableName()
-						)
-				);
-			}
-			validateColumnType( table, column, existingColumn, metadata, options, dialect );
 		}
 	}
 

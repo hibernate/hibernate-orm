@@ -182,10 +182,8 @@ public class MapBinder extends CollectionBinder {
 						throw new AnnotationException( "Unable to find class: " + mapKeyType, e );
 					}
 					classType = buildingContext.getMetadataCollector().getClassType( keyXClass );
-					//force in case of attribute override
-					boolean attributeOverride = property.isAnnotationPresent( AttributeOverride.class )
-							|| property.isAnnotationPresent( AttributeOverrides.class );
-					if ( isEmbedded || attributeOverride ) {
+					// force in case of attribute override naming the key
+					if ( isEmbedded || mappingDefinedAttributeOverrideOnMapKey( property ) ) {
 						classType = AnnotatedClassType.EMBEDDABLE;
 					}
 				}
@@ -306,6 +304,27 @@ public class MapBinder extends CollectionBinder {
 				);
 			}
 		}
+	}
+
+	private boolean mappingDefinedAttributeOverrideOnMapKey(XProperty property) {
+		if ( property.isAnnotationPresent( AttributeOverride.class ) ) {
+			return namedMapKey( property.getAnnotation( AttributeOverride.class ) );
+		}
+
+		if ( property.isAnnotationPresent( AttributeOverrides.class ) ) {
+			final AttributeOverrides annotations = property.getAnnotation( AttributeOverrides.class );
+			for ( AttributeOverride attributeOverride : annotations.value() ) {
+				if ( namedMapKey( attributeOverride ) ) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	private boolean namedMapKey(AttributeOverride annotation) {
+		return annotation.name().startsWith( "key." );
 	}
 
 	protected Value createFormulatedValue(

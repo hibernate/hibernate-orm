@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
+import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.MappedSuperclass;
 
@@ -118,6 +119,9 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		}
 		else if ( xClass.isAnnotationPresent( Entity.class )
 				|| xClass.isAnnotationPresent( MappedSuperclass.class ) ) {
+			xClasses.add( xClass );
+		}
+		else if ( xClass.isAnnotationPresent( Embeddable.class ) ) {
 			xClasses.add( xClass );
 		}
 		else {

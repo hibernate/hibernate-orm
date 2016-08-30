@@ -299,7 +299,7 @@ task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {
     backends "html5"
     separateOutputDirs false
     options logDocuments: true
-    attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true, stylesheet: "css/hibernate.css", majorMinorVersion: rootProject.hibernateMajorMinorVersion
+    attributes  icons: 'font', experimental: true, 'source-highlighter': 'prettify', linkcss: true, stylesheet: "css/hibernate.css", majorMinorVersion: rootProject.hibernateMajorMinorVersion, fullVersion: rootProject.hibernateFullVersion
     resources {
         from('src/main/asciidoc/userguide/') {
             include 'images/**'

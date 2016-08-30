@@ -59,6 +59,7 @@ import org.hibernate.type.TimeType;
 import org.hibernate.type.TimeZoneType;
 import org.hibernate.type.TimestampType;
 import org.hibernate.type.TrueFalseType;
+import org.hibernate.type.UtcTimestampType;
 import org.hibernate.type.YesNoType;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -322,6 +323,16 @@ public class TypeTest extends BaseUnitTestCase {
 		final Timestamp different = new Timestamp( now + 9999 );
 
 		runBasicTests( TimestampType.INSTANCE, original, copy, different );
+	}
+
+	@Test
+	public void testUtcTimestampType() {
+		final long now = System.currentTimeMillis();
+		final Timestamp original = new Timestamp( now );
+		final Timestamp copy = new Timestamp( now );
+		final Timestamp different = new Timestamp( now + 9999 );
+
+		runBasicTests( UtcTimestampType.INSTANCE, original, copy, different );
 	}
 
 	@Test

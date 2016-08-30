@@ -129,6 +129,9 @@ In some cases this automatic detection might not chose the default you expect or
 `date` property.  Hibernate cannot know if the property, which is of type `java.util.Date`, should map to a SQL
 _DATE_, _TIME_, or _TIMESTAMP_ datatype.  Full date and time information is preserved by mapping the property to
 the _timestamp_ converter, which identifies the converter class `org.hibernate.type.TimestampType`.
+If the `java.util.Date` field should be persisted in the database as UTC instead of local time, when the database
+does not persist time zone information, the converter must be manually overridden with an
+`@org.hibernate.annotations.Type( type = "org.hibernate.type.UtcTimestampType" )` annotation.
 
 TIP: Hibernate determines the mapping type using reflection when the mapping files are processed. This process adds
 overhead in terms of time and resources. If startup performance is important, consider explicitly defining the type

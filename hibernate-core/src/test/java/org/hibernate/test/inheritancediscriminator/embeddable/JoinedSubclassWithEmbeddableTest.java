@@ -73,7 +73,7 @@ public class JoinedSubclassWithEmbeddableTest extends BaseCoreFunctionalTestCase
 		session.close();
 	}
 
-	@Entity
+	@Entity(name = "Person")
 	@Inheritance(strategy = InheritanceType.JOINED)
 	public static abstract class Person implements Serializable {
 

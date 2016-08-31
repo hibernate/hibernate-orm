@@ -33,6 +33,7 @@ Internally Hibernate uses a registry of basic types when it needs to resolve a s
 |BigIntegerType |NUMERIC |java.math.BigInteger |big_integer, java.math.BigInteger
 |BigDecimalType |NUMERIC |java.math.BigDecimal |big_decimal, java.math.bigDecimal
 |TimestampType |TIMESTAMP |java.sql.Timestamp |timestamp, java.sql.Timestamp
+|UtcTimestampType |TIMESTAMP |java.sql.Timestamp |timestamp, java.sql.Timestamp
 |TimeType |TIME |java.sql.Time |time, java.sql.Time
 |DateType |DATE |java.sql.Date |date, java.sql.Date
 |CalendarType |TIMESTAMP |java.util.Calendar |calendar, java.util.Calendar
@@ -227,6 +228,10 @@ This tells Hibernate to store the Strings as nationalized data.
 This is just for illustration purposes; for better ways to indicate nationalized character data see <<basic-nationalized>> section.
 
 Additionally, the description is to be handled as a LOB. Again, for better ways to indicate LOBs see <<basic-lob>> section.
+
+Another use case for this is handling timestamps that are stored in the database without time zone as UTC instead of
+local time; this is most useful when mapping a `java.util.Date` field as milliseconds since the Unix epoch, UTC time.
+This can be achieved with an `@org.hibernate.annotations.Type( type = "org.hibernate.type.UtcTimestampType" )` annotation.
 
 The `org.hibernate.annotations.Type#type` attribute can name any of the following:
 

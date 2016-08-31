@@ -20,12 +20,17 @@ import javax.persistence.criteria.Root;
 import java.io.Serializable;
 import java.util.List;
 
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -198,6 +203,12 @@ public class CriteriaLiteralInSelectExpressionTest extends BaseEntityManagerFunc
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-9021")
+	@SkipForDialect( value= {
+			Oracle8iDialect.class,
+			DB2Dialect.class,
+			SQLServerDialect.class,
+			SybaseDialect.class
+	})
 	public void testStringLiteral2() {
 		final EntityManager entityManager = getOrCreateEntityManager();
 		try {

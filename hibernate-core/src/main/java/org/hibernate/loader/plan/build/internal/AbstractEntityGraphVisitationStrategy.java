@@ -29,6 +29,7 @@ import org.hibernate.loader.plan.spi.EntityReturn;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.loader.plan.spi.Return;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
+import org.hibernate.persister.walking.spi.AssociationAttributeDefinition.AssociationNature;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.CollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CollectionIndexDefinition;
@@ -65,7 +66,8 @@ public abstract class AbstractEntityGraphVisitationStrategy
 	 * NOTE: this may be changed in the near further, though ATM I have no idea how this will be changed to :)
 	 * -- stliu
 	 */
-	protected static final FetchStrategy DEFAULT_EAGER = new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.JOIN );
+	protected static final FetchStrategy DEFAULT_EAGER_JOIN = new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.JOIN );
+	protected static final FetchStrategy DEFAULT_EAGER_SELECT = new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.SELECT );
 	protected static final FetchStrategy DEFAULT_LAZY = new FetchStrategy( FetchTiming.DELAYED, FetchStyle.SELECT );
 	protected final LoadQueryInfluencers loadQueryInfluencers;
 	// Queue containing entity/sub graphs to be visited.
@@ -235,7 +237,9 @@ public abstract class AbstractEntityGraphVisitationStrategy
 	@Override
 	protected FetchStrategy determineFetchStrategy(
 			final AssociationAttributeDefinition attributeDefinition) {
-		return attributeStack.peekLast() != NON_EXIST_ATTRIBUTE_NODE ? DEFAULT_EAGER : resolveImplicitFetchStrategyFromEntityGraph(
+		FetchStrategy fetchStrategy = attributeDefinition.getAssociationNature().equals(AssociationNature.ENTITY) ?
+			DEFAULT_EAGER_JOIN : DEFAULT_EAGER_SELECT;
+		return attributeStack.peekLast() != NON_EXIST_ATTRIBUTE_NODE ? fetchStrategy : resolveImplicitFetchStrategyFromEntityGraph(
 				attributeDefinition
 		);
 	}
@@ -312,7 +316,7 @@ public abstract class AbstractEntityGraphVisitationStrategy
 		public List<AttributeNode<?>> attributeNodes() {
 			return Collections.emptyList();
 		}
-		
+
 		@Override
 		public boolean containsAttribute(String name) {
 			return false;
@@ -335,7 +339,7 @@ public abstract class AbstractEntityGraphVisitationStrategy
 				&& graphNode.containsAttribute( attributeDefinition.getName() )) {
 			currentSource().buildCollectionAttributeFetch( attributeDefinition, fetchStrategy );
 		}
-		
+
 		super.foundCircularAssociation( attributeDefinition );
 	}
 }

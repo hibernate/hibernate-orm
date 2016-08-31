@@ -73,7 +73,7 @@ public class TablePerClassWithEmbeddableTest extends BaseCoreFunctionalTestCase 
 		session.close();
 	}
 
-	@Entity
+	@Entity(name = "Person")
 	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 	public static abstract class Person implements Serializable {
 

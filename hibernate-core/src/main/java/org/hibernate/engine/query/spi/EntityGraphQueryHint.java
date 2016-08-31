@@ -139,7 +139,7 @@ public class EntityGraphQueryHint {
 						final QueryableCollection queryableCollection = walker.getSessionFactoryHelper()
 								.requireQueryableCollection( collectionType.getRole() );
 						fromElement = fromElementFactory.createCollection(
-								queryableCollection, collectionType.getRole(), JoinType.LEFT_OUTER_JOIN, true, false
+								queryableCollection, collectionType.getRole(), JoinType.LEFT_OUTER_JOIN, false, false
 						);
 					}
 				}

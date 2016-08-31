@@ -8,6 +8,16 @@ package org.hibernate.tuple;
 
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.MonthDay;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.Year;
+import java.time.YearMonth;
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -25,24 +35,7 @@ public class UpdateTimestampGeneration implements AnnotationValueGeneration<Upda
 
 	@Override
 	public void initialize(UpdateTimestamp annotation, Class<?> propertyType) {
-		if ( java.sql.Date.class.isAssignableFrom( propertyType ) ) {
-			generator = new TimestampGenerators.CurrentSqlDateGenerator();
-		}
-		else if ( Time.class.isAssignableFrom( propertyType ) ) {
-			generator = new TimestampGenerators.CurrentSqlTimeGenerator();
-		}
-		else if ( Timestamp.class.isAssignableFrom( propertyType ) ) {
-			generator = new TimestampGenerators.CurrentSqlTimestampGenerator();
-		}
-		else if ( Date.class.isAssignableFrom( propertyType ) ) {
-			generator = new TimestampGenerators.CurrentDateGenerator();
-		}
-		else if ( Calendar.class.isAssignableFrom( propertyType ) ) {
-			generator = new TimestampGenerators.CurrentCalendarGenerator();
-		}
-		else {
-			throw new HibernateException( "Unsupported property type for generator annotation @UpdateTimestamp" );
-		}
+		generator = TimestampGenerators.get(propertyType);
 	}
 
 	@Override

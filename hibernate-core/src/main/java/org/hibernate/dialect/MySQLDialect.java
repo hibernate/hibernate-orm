@@ -341,6 +341,8 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public String getCastTypeName(int code) {
 		switch ( code ) {
+			case Types.BOOLEAN:
+				return "char";
 			case Types.INTEGER:
 			case Types.BIGINT:
 			case Types.SMALLINT:

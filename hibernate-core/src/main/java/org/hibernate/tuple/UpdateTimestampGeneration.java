@@ -35,54 +35,7 @@ public class UpdateTimestampGeneration implements AnnotationValueGeneration<Upda
 
 	@Override
 	public void initialize(UpdateTimestamp annotation, Class<?> propertyType) {
-		if ( java.sql.Date.class.isAssignableFrom( propertyType ) ) {
-			generator = new TimestampGenerators.CurrentSqlDateGenerator();
-		}
-		else if ( Time.class.isAssignableFrom( propertyType ) ) {
-			generator = new TimestampGenerators.CurrentSqlTimeGenerator();
-		}
-		else if ( Timestamp.class.isAssignableFrom( propertyType ) ) {
-			generator = new TimestampGenerators.CurrentSqlTimestampGenerator();
-		}
-		else if ( Date.class.isAssignableFrom( propertyType ) ) {
-			generator = new TimestampGenerators.CurrentDateGenerator();
-		}
-		else if ( Calendar.class.isAssignableFrom( propertyType ) ) {
-			generator = new TimestampGenerators.CurrentCalendarGenerator();
-		}
-		else if ( Instant.class.isAssignableFrom( propertyType ) ) {
-			generator = new TimestampGenerators.CurrentInstantGenerator();
-		}
-		else if ( LocalDate.class.isAssignableFrom( propertyType ) ) {
-			generator = new TimestampGenerators.CurrentLocalDateGenerator();
-		}
-		else if ( LocalDateTime.class.isAssignableFrom( propertyType ) ) {
-			generator = new TimestampGenerators.CurrentLocalDateTimeGenerator();
-		}
-		else if ( LocalTime.class.isAssignableFrom( propertyType ) ) {
-			generator = new TimestampGenerators.CurrentLocalTimeGenerator();
-		}
-		else if ( MonthDay.class.isAssignableFrom( propertyType ) ) {
-			generator = new TimestampGenerators.CurrentMonthDayGenerator();
-		}
-		else if ( OffsetDateTime.class.isAssignableFrom( propertyType ) ) {
-			generator = new TimestampGenerators.CurrentOffsetDateTimeGenerator();
-		}
-		else if ( OffsetTime.class.isAssignableFrom( propertyType ) ) {
-			generator = new TimestampGenerators.CurrentOffsetTimeGenerator();
-		}
-		else if ( Year.class.isAssignableFrom( propertyType ) ) {
-			generator = new TimestampGenerators.CurrentYearGenerator();
-		}
-		else if ( YearMonth.class.isAssignableFrom( propertyType ) ) {
-			generator = new TimestampGenerators.CurrentYearMonthGenerator();
-		}
-		else if ( ZonedDateTime.class.isAssignableFrom( propertyType ) ) {
-			generator = new TimestampGenerators.CurrentZonedDateTimeGenerator();
-		}
-		else {
-			throw new HibernateException( "Unsupported property type for generator annotation @UpdateTimestamp" );
-		}
+		generator = TimestampGenerators.get(propertyType);
 	}
 
 	@Override

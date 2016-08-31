@@ -20,17 +20,47 @@ import java.time.YearMonth;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Supplier;
 
+import org.hibernate.HibernateException;
 import org.hibernate.Session;
+import org.hibernate.query.criteria.internal.expression.function.CurrentTimestampFunction;
 
 /**
  * Generators for obtaining the current VM timestamp in different representations.
  *
  * @author Gunnar Morling
  */
-/* package */ interface TimestampGenerators {
+/* package */ final class TimestampGenerators {
 
-	class CurrentDateGenerator implements ValueGenerator<Date> {
+	private static final Map<Class<?>, Supplier<ValueGenerator<?>>> generators;
+
+	private TimestampGenerators() {
+	}
+
+	static {
+		generators = new HashMap<>();
+		generators.put( Date.class, CurrentDateGenerator::new );
+        generators.put( Calendar.class, CurrentCalendarGenerator::new );
+        generators.put( java.sql.Date.class, CurrentSqlDateGenerator::new );
+        generators.put( Time.class, CurrentSqlTimeGenerator::new );
+		generators.put( Timestamp.class, CurrentSqlTimestampGenerator::new );
+		generators.put( Instant.class, CurrentInstantGenerator::new );
+		generators.put( LocalDate.class, CurrentLocalDateGenerator::new );
+		generators.put( LocalDateTime.class, CurrentLocalDateTimeGenerator::new );
+		generators.put( LocalTime.class, CurrentLocalTimeGenerator::new );
+		generators.put( MonthDay.class, CurrentMonthDayGenerator::new );
+		generators.put( OffsetDateTime.class, CurrentOffsetDateTimeGenerator::new );
+		generators.put( OffsetTime.class, CurrentOffsetTimeGenerator::new );
+		generators.put( Year.class, CurrentYearGenerator::new );
+		generators.put( YearMonth.class, CurrentYearMonthGenerator::new );
+		generators.put( ZonedDateTime.class, CurrentZonedDateTimeGenerator::new );
+	}
+
+	static class CurrentDateGenerator implements ValueGenerator<Date> {
 
 		@Override
 		public Date generateValue(Session session, Object owner) {
@@ -38,7 +68,7 @@ import org.hibernate.Session;
 		}
 	}
 
-	class CurrentCalendarGenerator implements ValueGenerator<Calendar> {
+	static class CurrentCalendarGenerator implements ValueGenerator<Calendar> {
 
 		@Override
 		public Calendar generateValue(Session session, Object owner) {
@@ -48,7 +78,7 @@ import org.hibernate.Session;
 		}
 	}
 
-	class CurrentSqlDateGenerator implements ValueGenerator<java.sql.Date> {
+	static class CurrentSqlDateGenerator implements ValueGenerator<java.sql.Date> {
 
 		@Override
 		public java.sql.Date generateValue(Session session, Object owner) {
@@ -56,7 +86,7 @@ import org.hibernate.Session;
 		}
 	}
 
-	class CurrentSqlTimeGenerator implements ValueGenerator<Time> {
+	static class CurrentSqlTimeGenerator implements ValueGenerator<Time> {
 
 		@Override
 		public Time generateValue(Session session, Object owner) {
@@ -64,7 +94,7 @@ import org.hibernate.Session;
 		}
 	}
 
-	class CurrentSqlTimestampGenerator implements ValueGenerator<Timestamp> {
+	static class CurrentSqlTimestampGenerator implements ValueGenerator<Timestamp> {
 
 		@Override
 		public Timestamp generateValue(Session session, Object owner) {
@@ -72,7 +102,7 @@ import org.hibernate.Session;
 		}
 	}
 
-	class CurrentInstantGenerator implements ValueGenerator<Instant> {
+	static class CurrentInstantGenerator implements ValueGenerator<Instant> {
 
 		@Override
 		public Instant generateValue(Session session, Object owner) {
@@ -80,7 +110,7 @@ import org.hibernate.Session;
 		}
 	}
 
-	class CurrentLocalDateGenerator implements ValueGenerator<LocalDate> {
+	static class CurrentLocalDateGenerator implements ValueGenerator<LocalDate> {
 
 		@Override
 		public LocalDate generateValue(Session session, Object owner) {
@@ -88,7 +118,7 @@ import org.hibernate.Session;
 		}
 	}
 
-	class CurrentLocalDateTimeGenerator implements ValueGenerator<LocalDateTime> {
+	static class CurrentLocalDateTimeGenerator implements ValueGenerator<LocalDateTime> {
 
 		@Override
 		public LocalDateTime generateValue(Session session, Object owner) {
@@ -96,7 +126,7 @@ import org.hibernate.Session;
 		}
 	}
 
-	class CurrentLocalTimeGenerator implements ValueGenerator<LocalTime> {
+	static class CurrentLocalTimeGenerator implements ValueGenerator<LocalTime> {
 
 		@Override
 		public LocalTime generateValue(Session session, Object owner) {
@@ -104,7 +134,7 @@ import org.hibernate.Session;
 		}
 	}
 
-	class CurrentMonthDayGenerator implements ValueGenerator<MonthDay> {
+	static class CurrentMonthDayGenerator implements ValueGenerator<MonthDay> {
 
 		@Override
 		public MonthDay generateValue(Session session, Object owner) {
@@ -112,7 +142,7 @@ import org.hibernate.Session;
 		}
 	}
 
-	class CurrentOffsetDateTimeGenerator implements ValueGenerator<OffsetDateTime> {
+	static class CurrentOffsetDateTimeGenerator implements ValueGenerator<OffsetDateTime> {
 
 		@Override
 		public OffsetDateTime generateValue(Session session, Object owner) {
@@ -120,7 +150,7 @@ import org.hibernate.Session;
 		}
 	}
 
-	class CurrentOffsetTimeGenerator implements ValueGenerator<OffsetTime> {
+	static class CurrentOffsetTimeGenerator implements ValueGenerator<OffsetTime> {
 
 		@Override
 		public OffsetTime generateValue(Session session, Object owner) {
@@ -128,7 +158,7 @@ import org.hibernate.Session;
 		}
 	}
 
-	class CurrentYearGenerator implements ValueGenerator<Year> {
+	static class CurrentYearGenerator implements ValueGenerator<Year> {
 
 		@Override
 		public Year generateValue(Session session, Object owner) {
@@ -136,7 +166,7 @@ import org.hibernate.Session;
 		}
 	}
 
-	class CurrentYearMonthGenerator implements ValueGenerator<YearMonth> {
+	static class CurrentYearMonthGenerator implements ValueGenerator<YearMonth> {
 
 		@Override
 		public YearMonth generateValue(Session session, Object owner) {
@@ -144,7 +174,7 @@ import org.hibernate.Session;
 		}
 	}
 
-	class CurrentZonedDateTimeGenerator implements ValueGenerator<ZonedDateTime> {
+	static class CurrentZonedDateTimeGenerator implements ValueGenerator<ZonedDateTime> {
 
 		@Override
 		public ZonedDateTime generateValue(Session session, Object owner) {
@@ -152,4 +182,13 @@ import org.hibernate.Session;
 		}
 	}
 
+	@SuppressWarnings("unchecked")
+	public static <T> ValueGenerator<T> get(final Class<T> type) {
+		final Supplier<ValueGenerator<?>> valueGeneratorSupplier = generators.get(type);
+		if (Objects.isNull(valueGeneratorSupplier)) {
+			throw new HibernateException("Unsupported property type for generator annotation @CreationTimestamp/@UpdateTimestamp");
+		}
+
+		return (ValueGenerator<T>) valueGeneratorSupplier.get();
+	}
 }

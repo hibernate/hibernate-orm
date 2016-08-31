@@ -6,6 +6,8 @@
  */
 package org.hibernate.test.criteria;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -23,6 +25,7 @@ import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.DetachedCriteria;
@@ -48,23 +51,31 @@ import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.hql.Animal;
 import org.hibernate.test.hql.Reptile;
+import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Test;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 /**
  * @author Gavin King
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @RequiresDialectFeature(DialectChecks.SupportsSequences.class)
-public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
+public class CriteriaQueryTest extends BaseNonConfigCoreFunctionalTestCase {
+
+	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
+
 	@Override
 	public String[] getMappings() {
 		return new String[] {
@@ -73,12 +84,24 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( Environment.USE_QUERY_CACHE, "true" );
-		cfg.setProperty( Environment.CACHE_REGION_PREFIX, "criteriaquerytest" );
-		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "true" );
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
+	protected void addSettings(Map settings) {
+		settings.put( AvailableSettings.USE_QUERY_CACHE, "true" );
+		settings.put(
+				AvailableSettings.CACHE_REGION_PREFIX,
+				"criteriaquerytest"
+		);
+		settings.put( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" );
+		settings.put( AvailableSettings.GENERATE_STATISTICS, "true" );
+		settings.put(
+				AvailableSettings.CONNECTION_PROVIDER,
+				connectionProvider
+		);
+	}
+
+	@Override
+	protected void releaseResources() {
+		super.releaseResources();
+		connectionProvider.stop();
 	}
 
 	@Test
@@ -430,6 +453,35 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		session.delete(bizarroGavin);
 		t.commit();
 		session.close();
+	}
+
+	@Test
+	public void testDetachedCriteriaTimeout() {
+		doInHibernate( this::sessionFactory, session -> {
+			DetachedCriteria dc = DetachedCriteria.forClass(Student.class)
+					.setTimeout( 100 );
+
+			Student gavin = new Student();
+			gavin.setName("Gavin King");
+			gavin.setStudentNumber(232);
+
+			session.persist(gavin);
+			session.flush();
+
+			connectionProvider.clear();
+			List result = dc.getExecutableCriteria(session).list();
+			PreparedStatement preparedStatement = connectionProvider.getPreparedStatements().get( 0 );
+			try {
+				verify(preparedStatement, times(1)).setQueryTimeout( 100 );
+			}
+			catch (SQLException e) {
+				fail(e.getMessage());
+			}
+
+			assertEquals( result.size(), 1 );
+
+			session.delete(gavin);
+		} );
 	}
 
 	@Test

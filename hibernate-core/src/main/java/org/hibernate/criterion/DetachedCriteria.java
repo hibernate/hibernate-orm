@@ -420,6 +420,19 @@ public class DetachedCriteria implements CriteriaSpecification, Serializable {
 		criteria.setLockMode( alias, lockMode );
 		return this;
 	}
+	
+	/**
+	 * Set a timeout for the underlying JDBC query.
+	 *
+	 * @param timeout The timeout value to apply.
+	 * @return this (for method chaining)
+	 *
+	 * @see java.sql.Statement#setQueryTimeout
+	 */
+	public DetachedCriteria setTimeout(int timeout) {
+		criteria.setTimeout( timeout );
+		return this;
+	}
 
 	@Override
 	public String toString() {

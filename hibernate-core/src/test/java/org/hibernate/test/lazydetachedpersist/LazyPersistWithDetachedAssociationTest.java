@@ -13,6 +13,8 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
+import org.hibernate.Hibernate;
+import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
@@ -21,7 +23,6 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertNotNull;
 
 public class LazyPersistWithDetachedAssociationTest
@@ -45,12 +46,14 @@ public class LazyPersistWithDetachedAssociationTest
 
 	@Before
 	public void setUpData() {
-		doInHibernate( this::sessionFactory, session -> {
-			Address address = new Address();
-			address.setId( 1L );
-			address.setContent( "21 Jump St" );
-			session.persist( address );
-		} );
+		Session session = openSession();
+		session.getTransaction().begin();
+		Address address = new Address();
+		address.setId( 1L );
+		address.setContent( "21 Jump St" );
+		session.persist( address );
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Override
@@ -63,29 +66,27 @@ public class LazyPersistWithDetachedAssociationTest
 	public void testDetachedAssociationOnPersisting() {
 		sessionFactory().getStatistics().clear();
 
-		Address loadedAddress = doInHibernate(
-				this::sessionFactory,
-				session -> {
-					// first load the address
-					Address _loadedAddress = session.load(
-							Address.class,
-							1L
-					);
-					assertNotNull( _loadedAddress );
-					return _loadedAddress;
-				}
+		Session session = openSession();
+		session.getTransaction().begin();
+
+		Address loadedAddress = session.load(
+				Address.class,
+				1L
 		);
+		assertNotNull( loadedAddress );
+		session.getTransaction().commit();
+		session.close();
 
-		doInHibernate( this::sessionFactory, session -> {
-			session.get( Address.class, 1L );
-
-			Person person = new Person();
-			person.setId( 1L );
-			person.setName( "Johnny Depp" );
-			person.setAddress( loadedAddress );
-
-			session.persist( person );
-		} );
+		session = openSession();
+		session.getTransaction().begin();
+		session.get( Address.class, 1L );
+		Person person = new Person();
+		person.setId( 1L );
+		person.setName( "Johnny Depp" );
+		person.setAddress( loadedAddress );
+		session.persist( person );
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Entity

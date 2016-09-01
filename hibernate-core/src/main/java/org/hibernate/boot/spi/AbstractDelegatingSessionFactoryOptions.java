@@ -7,6 +7,7 @@
 package org.hibernate.boot.spi;
 
 import java.util.Map;
+import java.util.TimeZone;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
@@ -347,5 +348,10 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public Class<? extends Interceptor> getStatelessInterceptorImplementor() {
 		return delegate.getStatelessInterceptorImplementor();
+	}
+
+	@Override
+	public TimeZone getJdbcTimeZone() {
+		return delegate.getJdbcTimeZone();
 	}
 }

@@ -7,6 +7,7 @@
 package org.hibernate.boot.internal;
 
 import java.util.Map;
+import java.util.TimeZone;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
@@ -165,4 +166,6 @@ public interface SessionFactoryOptionsState {
 	Map<String, SQLFunction> getCustomSqlFunctionMap();
 
 	boolean isPreferUserTransaction();
+
+	TimeZone getJdbcTimeZone();
 }

@@ -7,6 +7,7 @@
 package org.hibernate.internal;
 
 import java.sql.Connection;
+import java.util.TimeZone;
 
 import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
@@ -42,6 +43,7 @@ public interface SessionCreationOptions {
 
 	String getTenantIdentifier();
 
+	TimeZone getJdbcTimeZone();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// deprecations
@@ -62,5 +64,4 @@ public interface SessionCreationOptions {
 	AfterCompletionAction getAfterCompletionAction();
 
 	ManagedFlushChecker getManagedFlushChecker();
-
 }

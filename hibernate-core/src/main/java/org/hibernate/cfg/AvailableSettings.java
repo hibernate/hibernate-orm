@@ -711,6 +711,11 @@ public interface AvailableSettings {
 	String BATCH_VERSIONED_DATA = "hibernate.jdbc.batch_versioned_data";
 
 	/**
+	 * Default JDBC TimeZone.
+	 */
+	String JDBC_TIME_ZONE = "hibernate.jdbc.time_zone";
+
+	/**
 	 * Enable automatic session close at end of transaction
 	 */
 	String AUTO_CLOSE_SESSION = "hibernate.transaction.auto_close_session";

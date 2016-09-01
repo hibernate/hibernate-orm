@@ -14,6 +14,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 
 import org.hibernate.Session;
+import org.hibernate.SessionBuilder;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 
@@ -183,7 +184,7 @@ public class TransactionUtil {
 	/**
 	 * Execute function in a Hibernate transaction
 	 *
-	 * @param factorySupplier EntityManagerFactory supplier
+	 * @param factorySupplier SessionFactory supplier
 	 * @param function function
 	 * @param <T> result type
 	 *
@@ -219,9 +220,9 @@ public class TransactionUtil {
 	}
 
 	/**
-	 * Execute function in a JPA transaction without return value
+	 * Execute function in a Hibernate transaction without return value
 	 *
-	 * @param factorySupplier EntityManagerFactory supplier
+	 * @param factorySupplier SessionFactory supplier
 	 * @param function function
 	 */
 	public static void doInHibernate(
@@ -231,6 +232,77 @@ public class TransactionUtil {
 		Transaction txn = null;
 		try {
 			session = factorySupplier.get().openSession();
+			function.beforeTransactionCompletion();
+			txn = session.beginTransaction();
+
+			function.accept( session );
+			txn.commit();
+		}
+		catch ( Throwable e ) {
+			if ( txn != null ) {
+				txn.rollback();
+			}
+			throw e;
+		}
+		finally {
+			function.afterTransactionCompletion();
+			if ( session != null ) {
+				session.close();
+			}
+		}
+	}
+
+	/**
+	 * Execute function in a Hibernate transaction
+	 *
+	 * @param sessionBuilderSupplier SessionFactory supplier
+	 * @param function function
+	 * @param <T> result type
+	 *
+	 * @return result
+	 */
+	public static <T> T doInHibernateSessionBuilder(
+			Supplier<SessionBuilder> sessionBuilderSupplier,
+			HibernateTransactionFunction<T> function) {
+		T result = null;
+		Session session = null;
+		Transaction txn = null;
+		try {
+			session = sessionBuilderSupplier.get().openSession();
+			function.beforeTransactionCompletion();
+			txn = session.beginTransaction();
+
+			result = function.apply( session );
+			txn.commit();
+		}
+		catch ( Throwable e ) {
+			if ( txn != null ) {
+				txn.rollback();
+			}
+			throw e;
+		}
+		finally {
+			function.afterTransactionCompletion();
+			if ( session != null ) {
+				session.close();
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Execute function in a Hibernate transaction without return value
+	 *
+	 * @param sessionBuilderSupplier SessionFactory supplier
+	 * @param function function
+	 */
+	public static void doInHibernateSessionBuilder(
+			Supplier<SessionBuilder> sessionBuilderSupplier,
+			HibernateTransactionConsumer function) {
+		Session session = null;
+		Transaction txn = null;
+		try {
+			session = sessionBuilderSupplier.get().openSession();
 			function.beforeTransactionCompletion();
 			txn = session.beginTransaction();
 

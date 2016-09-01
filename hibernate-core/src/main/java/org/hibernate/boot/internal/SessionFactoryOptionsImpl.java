@@ -7,6 +7,7 @@
 package org.hibernate.boot.internal;
 
 import java.util.Map;
+import java.util.TimeZone;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
@@ -118,6 +119,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private final boolean commentsEnabled;
 	private final PhysicalConnectionHandlingMode physicalConnectionHandlingMode;
 	private final boolean wrapResultSetsEnabled;
+	private final TimeZone jdbcTimeZone;
 
 	private final Map<String, SQLFunction> sqlFunctions;
 
@@ -191,6 +193,8 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.commentsEnabled = state.isCommentsEnabled();
 
 		this.sqlFunctions = state.getCustomSqlFunctionMap();
+
+		this.jdbcTimeZone = state.getJdbcTimeZone();
 	}
 
 	@Override
@@ -495,5 +499,10 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public boolean isPreferUserTransaction() {
 		return preferUserTransaction;
+	}
+
+	@Override
+	public TimeZone getJdbcTimeZone() {
+		return jdbcTimeZone;
 	}
 }

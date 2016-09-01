@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 import javax.persistence.EntityGraph;
@@ -1073,6 +1074,8 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		private boolean autoClose;
 		private boolean autoClear;
 		private String tenantIdentifier;
+		private TimeZone jdbcTimeZone;
+
 		private List<SessionEventListener> listeners;
 
 		//todo : expose setting
@@ -1094,6 +1097,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			if ( sessionFactory.getCurrentTenantIdentifierResolver() != null ) {
 				tenantIdentifier = sessionFactory.getCurrentTenantIdentifierResolver().resolveCurrentTenantIdentifier();
 			}
+			this.jdbcTimeZone = sessionFactory.getSessionFactoryOptions().getJdbcTimeZone();
 
 			listeners = sessionFactory.getSessionFactoryOptions().getBaselineSessionEventsListenerBuilder().buildBaselineList();
 		}
@@ -1184,6 +1188,10 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			return tenantIdentifier;
 		}
 
+		@Override
+		public TimeZone getJdbcTimeZone() {
+			return jdbcTimeZone;
+		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// SessionBuilder
@@ -1304,6 +1312,12 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			listeners.clear();
 			return (T) this;
 		}
+
+		@Override
+		public T jdbcTimeZone(TimeZone timeZone) {
+			jdbcTimeZone = timeZone;
+			return (T) this;
+		}
 	}
 
 	public static class StatelessSessionBuilderImpl implements StatelessSessionBuilder, SessionCreationOptions {
@@ -1380,6 +1394,11 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		@Override
 		public String getTenantIdentifier() {
 			return tenantIdentifier;
+		}
+
+		@Override
+		public TimeZone getJdbcTimeZone() {
+			return sessionFactory.getSessionFactoryOptions().getJdbcTimeZone();
 		}
 
 		@Override

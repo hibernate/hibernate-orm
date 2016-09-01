@@ -6,12 +6,14 @@
  */
 package org.hibernate.boot.internal;
 
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
@@ -77,6 +79,7 @@ import static org.hibernate.cfg.AvailableSettings.FLUSH_BEFORE_COMPLETION;
 import static org.hibernate.cfg.AvailableSettings.GENERATE_STATISTICS;
 import static org.hibernate.cfg.AvailableSettings.HQL_BULK_ID_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.INTERCEPTOR;
+import static org.hibernate.cfg.AvailableSettings.JDBC_TIME_ZONE;
 import static org.hibernate.cfg.AvailableSettings.JPAQL_STRICT_COMPLIANCE;
 import static org.hibernate.cfg.AvailableSettings.JTA_TRACK_BY_THREAD;
 import static org.hibernate.cfg.AvailableSettings.LOG_SESSION_METRICS;
@@ -591,6 +594,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		private boolean commentsEnabled;
 		private PhysicalConnectionHandlingMode connectionHandlingMode;
 		private boolean wrapResultSetsEnabled;
+		private TimeZone jdbcTimeZone;
 
 		private Map<String, SQLFunction> sqlFunctions;
 
@@ -767,6 +771,22 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 					configurationSettings,
 					false
 			);
+			Object jdbcTimeZoneValue = configurationSettings.get(
+					JDBC_TIME_ZONE
+			);
+
+			if ( jdbcTimeZoneValue instanceof TimeZone ) {
+				this.jdbcTimeZone = (TimeZone) jdbcTimeZoneValue;
+			}
+			else if ( jdbcTimeZoneValue instanceof ZoneId ) {
+				this.jdbcTimeZone = TimeZone.getTimeZone( (ZoneId) jdbcTimeZoneValue );
+			}
+			else if ( jdbcTimeZoneValue instanceof String ) {
+				this.jdbcTimeZone = TimeZone.getTimeZone( ZoneId.of((String) jdbcTimeZoneValue) );
+			}
+			else if ( jdbcTimeZoneValue != null ) {
+				throw new IllegalArgumentException( "Configuration property " + JDBC_TIME_ZONE + " value [" + jdbcTimeZoneValue + "] is not supported!" );
+			}
 		}
 
 		private static Interceptor determineInterceptor(Map configurationSettings, StrategySelector strategySelector) {
@@ -1180,6 +1200,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		public boolean isPreferUserTransaction() {
 			return this.preferUserTransaction;
 		}
+
+		@Override
+		public TimeZone getJdbcTimeZone() {
+			return this.jdbcTimeZone;
+		}
 	}
 
 	@Override
@@ -1479,5 +1504,10 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public boolean isPreferUserTransaction() {
 		return options.isPreferUserTransaction();
+	}
+
+	@Override
+	public TimeZone getJdbcTimeZone() {
+		return options.getJdbcTimeZone();
 	}
 }

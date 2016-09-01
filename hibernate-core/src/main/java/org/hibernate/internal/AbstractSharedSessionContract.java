@@ -12,6 +12,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.UUID;
 import javax.persistence.FlushModeType;
 import javax.persistence.Tuple;
@@ -109,6 +110,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	private final boolean isTransactionCoordinatorShared;
 	private final Interceptor interceptor;
 
+	private final TimeZone jdbcTimeZone;
+
 	private FlushMode flushMode;
 	private boolean autoJoinTransactions;
 
@@ -152,6 +155,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 
 		this.interceptor = interpret( options.getInterceptor() );
+		this.jdbcTimeZone = options.getJdbcTimeZone();
 
 		final StatementInspector statementInspector = interpret( options.getStatementInspector() );
 		this.jdbcSessionContext = new JdbcSessionContextImpl( this, statementInspector );
@@ -485,6 +489,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		final Dialect dialect = getJdbcServices().getJdbcEnvironment().getDialect();
 		final SqlTypeDescriptor remapped = dialect.remapSqlTypeDescriptor( sqlTypeDescriptor );
 		return remapped == null ? sqlTypeDescriptor : remapped;
+	}
+
+	@Override
+	public TimeZone getJdbcTimeZone() {
+		return jdbcTimeZone;
 	}
 
 	@Override

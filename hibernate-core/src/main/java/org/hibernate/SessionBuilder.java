@@ -7,6 +7,7 @@
 package org.hibernate;
 
 import java.sql.Connection;
+import java.util.TimeZone;
 
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -174,4 +175,5 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 */
 	T clearEventListeners();
 
+	T jdbcTimeZone(TimeZone timeZone);
 }

@@ -6,15 +6,18 @@
  */
 package org.hibernate.jpa.test.metagen.mappedsuperclass.attribute;
 
-import static org.junit.Assert.assertNotNull;
-
 import java.util.Arrays;
 import javax.persistence.EntityManagerFactory;
+
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.test.TestingEntityManagerFactoryGenerator;
+
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
+
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Steve Ebersole
@@ -39,6 +42,8 @@ public class MappedSuperclassWithAttributesTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@FailureExpected(jiraKey = "HHH-11078")
+	@TestForIssue(jiraKey = "HHH-11078")
 	public void testStaticMetamodelOverridden() {
 		EntityManagerFactory emf = TestingEntityManagerFactoryGenerator.generateEntityManagerFactory(
 				AvailableSettings.LOADED_CLASSES,

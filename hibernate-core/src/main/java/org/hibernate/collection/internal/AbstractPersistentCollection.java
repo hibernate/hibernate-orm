@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -17,6 +18,7 @@ import java.util.ListIterator;
 import java.util.Map;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.Filter;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
@@ -73,6 +75,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 
 	private String sessionFactoryUuid;
 	private boolean allowLoadOutsideTransaction;
+	private Map<String, Filter> enabledFilters;
 
 	/**
 	 * Not called by Hibernate, but used by non-JDK serialization,
@@ -83,6 +86,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 
 	protected AbstractPersistentCollection(SharedSessionContractImplementor session) {
 		this.session = session;
+		enabledFilters = new HashMap<>( session.getLoadQueryInfluencers().getEnabledFilters() );
 	}
 
 	@Override
@@ -218,7 +222,6 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			}
 		}
 
-
 		SharedSessionContractImplementor originalSession = null;
 		boolean isJTA = false;
 
@@ -227,9 +230,8 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			originalSession = session;
 			session = tempSession;
 
-
 			isJTA = session.getTransactionCoordinator().getTransactionCoordinatorBuilder().isJta();
-			
+
 			if ( !isJTA ) {
 				// Explicitly handle the transactions only if we're not in
 				// a JTA environment.  A lazy loading temporary session can
@@ -277,6 +279,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		final SharedSessionContractImplementor session = (SharedSessionContractImplementor) sf.openSession();
 		session.getPersistenceContext().setDefaultReadOnly( true );
 		session.setFlushMode( FlushMode.MANUAL );
+		session.getLoadQueryInfluencers().getEnabledFilters().putAll( enabledFilters );
 		return session;
 	}
 

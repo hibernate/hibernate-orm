@@ -4,15 +4,15 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.event.internal.jpa;
+package org.hibernate.jpa.event.internal;
 
 import java.util.HashMap;
 import javax.persistence.PersistenceException;
 
-import org.hibernate.jpa.event.spi.jpa.Callback;
-import org.hibernate.jpa.event.spi.jpa.CallbackRegistry;
-import org.hibernate.jpa.event.spi.jpa.CallbackType;
-import org.hibernate.jpa.event.spi.jpa.CallbackBuilder;
+import org.hibernate.jpa.event.spi.Callback;
+import org.hibernate.jpa.event.spi.CallbackRegistry;
+import org.hibernate.jpa.event.spi.CallbackType;
+import org.hibernate.jpa.event.spi.CallbackBuilder;
 
 /**
  * Keep track of all lifecycle callbacks and listeners for a given persistence unit

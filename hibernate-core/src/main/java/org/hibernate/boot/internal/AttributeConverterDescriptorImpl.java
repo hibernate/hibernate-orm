@@ -112,8 +112,8 @@ public class AttributeConverterDescriptorImpl implements AttributeConverterDescr
 	}
 
 	private ResolvedMember resolveMember(XProperty xProperty, MetadataBuildingContext buildingContext) {
-		final ClassmateContext classmateContext = buildingContext.getMetadataCollector().getClassmateContext();
-		final ReflectionManager reflectionManager = buildingContext.getBuildingOptions().getReflectionManager();
+		final ClassmateContext classmateContext = buildingContext.getBootstrapContext().getClassmateContext();
+		final ReflectionManager reflectionManager = buildingContext.getBootstrapContext().getReflectionManager();
 
 		final ResolvedType declaringClassType = classmateContext.getTypeResolver().resolve(
 				reflectionManager.toClass( xProperty.getDeclaringClass() )

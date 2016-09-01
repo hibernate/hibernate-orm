@@ -52,6 +52,7 @@ import org.hibernate.TypeHelper;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cfg.AvailableSettings;
@@ -99,6 +100,7 @@ import org.hibernate.jpa.internal.AfterCompletionActionLegacyJpaImpl;
 import org.hibernate.jpa.internal.ExceptionMapperLegacyJpaImpl;
 import org.hibernate.jpa.internal.ManagedFlushCheckerLegacyJpaImpl;
 import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
@@ -119,6 +121,7 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.secure.spi.GrantedPermission;
 import org.hibernate.secure.spi.JaccPermissionDeclarations;
 import org.hibernate.secure.spi.JaccService;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
@@ -194,7 +197,10 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	private transient StatisticsImplementor statisticsImplementor;
 
-	public SessionFactoryImpl(final MetadataImplementor metadata, SessionFactoryOptions options) {
+	public SessionFactoryImpl(
+			final BootstrapContext bootstrapContext,
+			final MetadataImplementor metadata,
+			SessionFactoryOptions options) {
 		LOG.debug( "Building session factory" );
 
 		this.sessionFactoryOptions = options;
@@ -202,7 +208,9 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		this.serviceRegistry = options.getServiceRegistry()
 				.getService( SessionFactoryServiceRegistryFactory.class )
-				.buildServiceRegistry( this, options );
+				.buildServiceRegistry( this, bootstrapContext, options );
+
+		prepareEventListeners( metadata );
 
 		final CfgXmlAccessService cfgXmlAccessService = serviceRegistry.getService( CfgXmlAccessService.class );
 
@@ -382,6 +390,39 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 	}
 
+	private void prepareEventListeners(MetadataImplementor metadata) {
+		final EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
+		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
+		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+
+		eventListenerRegistry.prepare( metadata );
+
+		for ( Map.Entry entry : ( (Map<?, ?>) cfgService.getSettings() ).entrySet() ) {
+			if ( !String.class.isInstance( entry.getKey() ) ) {
+				continue;
+			}
+			final String propertyName = (String) entry.getKey();
+			if ( !propertyName.startsWith( org.hibernate.jpa.AvailableSettings.EVENT_LISTENER_PREFIX ) ) {
+				continue;
+			}
+			final String eventTypeName = propertyName.substring( org.hibernate.jpa.AvailableSettings.EVENT_LISTENER_PREFIX.length() + 1 );
+			final EventType eventType = EventType.resolveEventTypeByName( eventTypeName );
+			final EventListenerGroup eventListenerGroup = eventListenerRegistry.getEventListenerGroup( eventType );
+			for ( String listenerImpl : ( (String) entry.getValue() ).split( " ," ) ) {
+				eventListenerGroup.appendListener( instantiate( listenerImpl, classLoaderService ) );
+			}
+		}
+	}
+
+	private Object instantiate(String listenerImpl, ClassLoaderService classLoaderService) {
+		try {
+			return classLoaderService.classForName( listenerImpl ).newInstance();
+		}
+		catch (Exception e) {
+			throw new HibernateException( "Could not instantiate requested listener [" + listenerImpl + "]", e );
+		}
+	}
+
 	private void applyCfgXmlValues(LoadedConfig aggregatedConfig, SessionFactoryServiceRegistry serviceRegistry) {
 		final JaccService jaccService = serviceRegistry.getService( JaccService.class );
 		if ( jaccService.getContextId() != null ) {
@@ -510,10 +551,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
 		return null;
-	}
-
-	public TypeResolver getTypeResolver() {
-		return this.metamodel.getTypeResolver();
 	}
 
 	public QueryPlanCache getQueryPlanCache() {
@@ -993,10 +1030,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		return fetchProfiles.get( name );
 	}
 
-	public TypeHelper getTypeHelper() {
-		return typeHelper;
-	}
-
 	@Override
 	public Type resolveParameterBindType(Object bindValue) {
 		if ( bindValue == null ) {
@@ -1010,7 +1043,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public Type resolveParameterBindType(Class clazz){
 		String typename = clazz.getName();
-		Type type = getTypeResolver().heuristicType( typename );
+		Type type = getMetamodel().getTypeConfiguration().heuristicType( typename );
 		boolean serializable = type != null && type instanceof SerializableType;
 		if ( type == null || serializable ) {
 			try {
@@ -1024,7 +1057,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 					throw new HibernateException( "Could not determine a type for class: " + typename );
 				}
 			}
-			return getTypeHelper().entity( clazz );
+			return getMetamodel().getTypeConfiguration().manyToOne( clazz );
 		}
 		else {
 			return type;

@@ -104,8 +104,9 @@ class FromElementType {
 		boolean shallow = fromElement.getFromClause().getWalker().isShallowQuery();
 		return fromElement.getSessionFactoryHelper()
 				.getFactory()
-				.getTypeResolver()
-				.getTypeFactory().manyToOne( entityType.getAssociatedEntityName(), shallow );
+				.getMetamodel()
+				.getTypeConfiguration()
+				.manyToOne( entityType.getAssociatedEntityName(), shallow );
 	}
 
 	/**

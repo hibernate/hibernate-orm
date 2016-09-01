@@ -17,6 +17,7 @@ import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.DefaultRevisionEntity;
@@ -47,9 +48,10 @@ import org.hibernate.internal.util.xml.XMLHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.LongType;
 
+import org.jboss.logging.Logger;
+
 import org.dom4j.Document;
 import org.dom4j.Element;
-import org.jboss.logging.Logger;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -77,10 +79,10 @@ public class RevisionInfoConfigurationBuilder {
 	private String revisionPropSqlType;
 
 	public RevisionInfoConfigurationBuilder(
-			MetadataImplementor metadata,
+			InFlightMetadataCollector metadata,
 			AuditMetadataBuilderImplementor auditMetadataBuilder) {
 		this.metadata = metadata;
-		this.reflectionManager = metadata.getMetadataBuildingOptions().getReflectionManager();
+		this.reflectionManager = metadata.getBootstrapContext().getReflectionManager();
 		this.options = auditMetadataBuilder.getAuditMetadataBuildingOptions();
 		this.auditMetadataBuilder = auditMetadataBuilder;
 		this.xmlHelper = new XMLHelper( options.getServiceRegistry().getService( ClassLoaderService.class ) );

@@ -16,19 +16,24 @@ import java.util.Set;
 import org.hibernate.event.service.spi.DuplicationStrategy;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistrationException;
+import org.hibernate.event.service.spi.JpaBootstrapSensitive;
 import org.hibernate.event.spi.EventType;
+import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 
 /**
  * @author Steve Ebersole
  */
-public class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
+class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	private EventType<T> eventType;
+	private final EventListenerRegistryImpl listenerRegistry;
 
-	private final Set<DuplicationStrategy> duplicationStrategies = new LinkedHashSet<DuplicationStrategy>();
+	private final Set<DuplicationStrategy> duplicationStrategies = new LinkedHashSet<>();
 	private List<T> listeners;
 
-	public EventListenerGroupImpl(EventType<T> eventType) {
+	EventListenerGroupImpl(EventType<T> eventType, EventListenerRegistryImpl listenerRegistry) {
 		this.eventType = eventType;
+		this.listenerRegistry = listenerRegistry;
+
 		duplicationStrategies.add(
 				// At minimum make sure we do not register the same exact listener class multiple times.
 				new DuplicationStrategy() {
@@ -76,11 +81,12 @@ public class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	}
 
 	public Iterable<T> listeners() {
-		return listeners == null ? Collections.<T>emptyList() : listeners;
+		return listeners == null ? Collections.emptyList() : listeners;
 	}
 
 	@Override
-	public void appendListeners(T... listeners) {
+	@SafeVarargs
+	public final void appendListeners(T... listeners) {
 		for ( T listener : listeners ) {
 			appendListener( listener );
 		}
@@ -94,7 +100,8 @@ public class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	}
 
 	@Override
-	public void prependListeners(T... listeners) {
+	@SafeVarargs
+	public final void prependListeners(T... listeners) {
 		for ( T listener : listeners ) {
 			prependListener( listener );
 		}
@@ -109,7 +116,7 @@ public class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 
 	private boolean listenerShouldGetAdded(T listener) {
 		if ( listeners == null ) {
-			listeners = new ArrayList<T>();
+			listeners = new ArrayList<>();
 			return true;
 			// no need to do de-dup checks
 		}
@@ -143,7 +150,20 @@ public class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 
 	private void internalPrepend(T listener) {
 		checkAgainstBaseInterface( listener );
+		performInjections( listener );
 		listeners.add( 0, listener );
+	}
+
+	private void performInjections(T listener) {
+		if ( CallbackRegistryConsumer.class.isInstance( listener ) ) {
+			( (CallbackRegistryConsumer) listener ).injectCallbackRegistry( listenerRegistry.getCallbackRegistry() );
+		}
+
+		if ( JpaBootstrapSensitive.class.isInstance( listener ) ) {
+			( (JpaBootstrapSensitive) listener ).wasJpaBootstrap(
+					listenerRegistry.getSessionFactory().getSessionFactoryOptions().isJpaBootstrap()
+			);
+		}
 	}
 
 	private void checkAgainstBaseInterface(T listener) {
@@ -156,6 +176,7 @@ public class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 
 	private void internalAppend(T listener) {
 		checkAgainstBaseInterface( listener );
+		performInjections( listener );
 		listeners.add( listener );
 	}
 }

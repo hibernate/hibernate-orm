@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.event.internal.jpa;
+package org.hibernate.jpa.event.internal;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
@@ -24,9 +24,9 @@ import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XMethod;
-import org.hibernate.jpa.event.spi.jpa.Callback;
-import org.hibernate.jpa.event.spi.jpa.CallbackBuilder;
-import org.hibernate.jpa.event.spi.jpa.CallbackType;
+import org.hibernate.jpa.event.spi.Callback;
+import org.hibernate.jpa.event.spi.CallbackBuilder;
+import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.resource.cdi.spi.ManagedBeanRegistry;
 
 import org.jboss.logging.Logger;
@@ -77,12 +77,12 @@ public class CallbackBuilderLegacyImpl implements CallbackBuilder {
 
 	@Override
 	public void release() {
-		// nothign to do
+		// nothing to do
 	}
 
 	public Callback[] resolveCallbacks(XClass beanClass, CallbackType callbackType, ReflectionManager reflectionManager) {
 		List<Callback> callbacks = new ArrayList<>();
-		List<String> callbacksMethodNames = new ArrayList<>(); //used to track overridden methods
+		List<String> callbacksMethodNames = new ArrayList<>();
 		List<Class> orderedListeners = new ArrayList<>();
 		XClass currentClazz = beanClass;
 		boolean stopListeners = false;

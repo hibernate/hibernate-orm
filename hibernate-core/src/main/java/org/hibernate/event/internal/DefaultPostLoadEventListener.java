@@ -14,6 +14,8 @@ import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
+import org.hibernate.jpa.event.spi.CallbackRegistry;
+import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.persister.entity.spi.EntityPersister;
 
 /**
@@ -25,10 +27,20 @@ import org.hibernate.persister.entity.spi.EntityPersister;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class DefaultPostLoadEventListener implements PostLoadEventListener {
+public class DefaultPostLoadEventListener implements PostLoadEventListener, CallbackRegistryConsumer {
+	private CallbackRegistry callbackRegistry;
+
+	@Override
+	public void injectCallbackRegistry(CallbackRegistry callbackRegistry) {
+		this.callbackRegistry = callbackRegistry;
+	}
+
 	@Override
 	public void onPostLoad(PostLoadEvent event) {
 		final Object entity = event.getEntity();
+
+		callbackRegistry.postLoad( entity );
+
 		final EntityEntry entry = event.getSession().getPersistenceContext().getEntry( entity );
 		if ( entry == null ) {
 			throw new AssertionFailure( "possible non-threadsafe access to the session" );

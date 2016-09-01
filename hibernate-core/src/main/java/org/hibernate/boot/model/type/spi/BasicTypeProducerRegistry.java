@@ -38,13 +38,4 @@ public interface BasicTypeProducerRegistry {
 	BasicTypeProducer resolve(String name);
 
 	BasicTypeProducer makeUnregisteredProducer();
-
-	/**
-	 * Releases this BasicTypeProducerRegistry and its hold resources.
-	 * </p>
-	 * Applications should never call this.  Not overly happy about exposing this.  But
-	 * given the way TypeConfiguration and BasicTypeProducerRegistry get instantiated
-	 * currently I do not see an alternative.
-	 */
-	void release();
 }

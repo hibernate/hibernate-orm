@@ -131,7 +131,7 @@ public interface MetamodelImplementor extends Metamodel {
 
 	<T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass);
 
-	DomainMetamodel getSqmDomainMetamodel();
+	SqmDomainMetamodelImplementor getSqmDomainMetamodel();
 
 	void close();
 }

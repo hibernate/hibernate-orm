@@ -57,7 +57,10 @@ import org.hibernate.type.spi.Type;
  * @since 5.0
  */
 public interface InFlightMetadataCollector extends Mapping, MetadataImplementor {
-	BasicTypeProducerRegistry getBasicTypeProducerRegistry();
+	BootstrapContext getBootstrapContext();
+
+
+	Database getDatabase();
 
 	/**
 	 * Add the PersistentClass for an entity mapping.
@@ -206,8 +209,6 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 
 	void addFetchProfile(FetchProfile profile);
 
-	Database getDatabase();
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// make sure these are account for better in metamodel
 
@@ -279,8 +280,6 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 
 	NaturalIdUniqueKeyBinder locateNaturalIdUniqueKeyBinder(String entityName);
 	void registerNaturalIdUniqueKeyBinder(String entityName, NaturalIdUniqueKeyBinder ukBinder);
-
-	ClassmateContext getClassmateContext();
 
 	/**
 	 * Performs the same function as the legacy TypeResolver#basic, essentially performing

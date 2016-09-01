@@ -32,6 +32,7 @@ import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -124,11 +125,17 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	private static final Logger log = Logger.getLogger( SessionFactoryBuilderImpl.class );
 
 	private final MetadataImplementor metadata;
+	private final BootstrapContext bootstrapContext;
 	private final SessionFactoryOptionsStateStandardImpl options;
 
-	public SessionFactoryBuilderImpl(MetadataImplementor metadata) {
+	public SessionFactoryBuilderImpl(MetadataImplementor metadata, BootstrapContext bootstrapContext) {
 		this.metadata = metadata;
-		this.options = new SessionFactoryOptionsStateStandardImpl( metadata.getMetadataBuildingOptions().getServiceRegistry() );
+		this.bootstrapContext = bootstrapContext;
+
+		this.options = new SessionFactoryOptionsStateStandardImpl(
+				metadata.getMetadataBuildingOptions().getServiceRegistry(),
+				bootstrapContext.isJpaBootstrap()
+		);
 
 		if ( metadata.getSqlFunctionMap() != null ) {
 			for ( Map.Entry<String, SQLFunction> sqlFunctionEntry : metadata.getSqlFunctionMap().entrySet() ) {
@@ -499,12 +506,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SessionFactory build() {
 		metadata.validate();
-		return new SessionFactoryImpl( metadata, buildSessionFactoryOptions() );
-	}
-
-	@Override
-	public void markAsJpaBootstrap() {
-		this.options.jpaBootstrap = true;
+		return new SessionFactoryImpl( bootstrapContext, metadata, buildSessionFactoryOptions() );
 	}
 
 	@Override
@@ -528,13 +530,13 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 
 	public static class SessionFactoryOptionsStateStandardImpl implements SessionFactoryOptionsState {
 		private final StandardServiceRegistry serviceRegistry;
+		private final boolean jpaBootstrap;
 
 		// integration
 		private Object beanManagerReference;
 		private Object validatorFactoryReference;
 
 		// SessionFactory behavior
-		private boolean jpaBootstrap;
 		private String sessionFactoryName;
 		private boolean sessionFactoryNameAlsoJndiName;
 
@@ -616,8 +618,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 
 		private Map<String, SQLFunction> sqlFunctions;
 
-		public SessionFactoryOptionsStateStandardImpl(StandardServiceRegistry serviceRegistry) {
+		public SessionFactoryOptionsStateStandardImpl(
+				StandardServiceRegistry serviceRegistry,
+				boolean jpaBootstrap) {
 			this.serviceRegistry = serviceRegistry;
+			this.jpaBootstrap = jpaBootstrap;
 
 			final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
 			ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );

@@ -8,6 +8,7 @@ package org.hibernate.service.internal;
 
 import java.util.List;
 
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -17,16 +18,20 @@ import org.hibernate.service.spi.ServiceBinding;
 import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceInitiator;
+import org.hibernate.service.spi.SessionFactoryServiceInitiatorContext;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 /**
  * @author Steve Ebersole
  */
-public class SessionFactoryServiceRegistryImpl extends AbstractServiceRegistryImpl implements SessionFactoryServiceRegistry  {
-
-	private final SessionFactoryOptions sessionFactoryOptions;
+public class SessionFactoryServiceRegistryImpl
+		extends AbstractServiceRegistryImpl
+		implements SessionFactoryServiceRegistry, SessionFactoryServiceInitiatorContext {
 	private final SessionFactoryImplementor sessionFactory;
+	private final SessionFactoryOptions sessionFactoryOptions;
 	private EventListenerRegistry cachedEventListenerRegistry;
+
+	private BootstrapContext bootstrapContext;
 
 	@SuppressWarnings( {"unchecked"})
 	public SessionFactoryServiceRegistryImpl(
@@ -34,33 +39,56 @@ public class SessionFactoryServiceRegistryImpl extends AbstractServiceRegistryIm
 			List<SessionFactoryServiceInitiator> initiators,
 			List<ProvidedService> providedServices,
 			SessionFactoryImplementor sessionFactory,
+			BootstrapContext bootstrapContext,
 			SessionFactoryOptions sessionFactoryOptions) {
 		super( parent );
 
 		this.sessionFactory = sessionFactory;
 		this.sessionFactoryOptions = sessionFactoryOptions;
 
-		// for now, just use the standard initiator list
+		this.bootstrapContext = bootstrapContext;
+
 		for ( SessionFactoryServiceInitiator initiator : initiators ) {
-			// create the bindings up front to help identify to which registry services belong
 			createServiceBinding( initiator );
+			initiateService( initiator );
 		}
 
 		for ( ProvidedService providedService : providedServices ) {
 			createServiceBinding( providedService );
 		}
 
+		bootstrapContext = null;
 	}
 
 	@Override
 	public <R extends Service> R initiateService(ServiceInitiator<R> serviceInitiator) {
 		SessionFactoryServiceInitiator<R> sessionFactoryServiceInitiator = (SessionFactoryServiceInitiator<R>) serviceInitiator;
-		return sessionFactoryServiceInitiator.initiateService( sessionFactory, sessionFactoryOptions, this );
+		return sessionFactoryServiceInitiator.initiateService( this );
 	}
 
 	@Override
 	public <R extends Service> void configureService(ServiceBinding<R> serviceBinding) {
 		//TODO nothing to do here or should we inject SessionFactory properties?
+	}
+
+	@Override
+	public BootstrapContext getBootstrapContext() {
+		return bootstrapContext;
+	}
+
+	@Override
+	public SessionFactoryImplementor getSessionFactory() {
+		return sessionFactory;
+	}
+
+	@Override
+	public SessionFactoryOptions getSessionFactoryOptions() {
+		return sessionFactoryOptions;
+	}
+
+	@Override
+	public ServiceRegistryImplementor getServiceRegistry() {
+		return this;
 	}
 
 	@Override
@@ -76,5 +104,4 @@ public class SessionFactoryServiceRegistryImpl extends AbstractServiceRegistryIm
 
 		return super.getService( serviceRole );
 	}
-
 }

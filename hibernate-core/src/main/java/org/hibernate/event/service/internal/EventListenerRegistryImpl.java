@@ -11,6 +11,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.internal.DefaultAutoFlushEventListener;
 import org.hibernate.event.internal.DefaultDeleteEventListener;
 import org.hibernate.event.internal.DefaultDirtyCheckEventListener;
@@ -31,10 +34,19 @@ import org.hibernate.event.internal.DefaultResolveNaturalIdEventListener;
 import org.hibernate.event.internal.DefaultSaveEventListener;
 import org.hibernate.event.internal.DefaultSaveOrUpdateEventListener;
 import org.hibernate.event.internal.DefaultUpdateEventListener;
+import org.hibernate.event.internal.PostDeleteEventListenerStandardImpl;
+import org.hibernate.event.internal.PostInsertEventListenerStandardImpl;
+import org.hibernate.event.internal.PostUpdateEventListenerStandardImpl;
 import org.hibernate.event.service.spi.DuplicationStrategy;
 import org.hibernate.event.service.spi.EventListenerRegistrationException;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
+import org.hibernate.jpa.event.internal.CallbackBuilderLegacyImpl;
+import org.hibernate.jpa.event.internal.CallbackRegistryImpl;
+import org.hibernate.jpa.event.spi.CallbackBuilder;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.resource.cdi.spi.ManagedBeanRegistry;
+import org.hibernate.service.spi.Stoppable;
 
 import static org.hibernate.event.spi.EventType.AUTO_FLUSH;
 import static org.hibernate.event.spi.EventType.CLEAR;
@@ -76,10 +88,45 @@ import static org.hibernate.event.spi.EventType.UPDATE;
 /**
  * @author Steve Ebersole
  */
-public class EventListenerRegistryImpl implements EventListenerRegistry {
-	private Map<Class,Object> listenerClassToInstanceMap = new HashMap<Class, Object>();
+public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppable {
+	private Map<Class,Object> listenerClassToInstanceMap = new HashMap<>();
 
-	private EventListenerGroupImpl[] registeredEventListeners = prepareListenerAssociation();
+	private final SessionFactoryImplementor sessionFactory;
+
+	private CallbackBuilder callbackBuilder;
+	private CallbackRegistryImpl callbackRegistry;
+	private EventListenerGroupImpl[] registeredEventListeners;
+
+	EventListenerRegistryImpl(BootstrapContext bootstrapContext, SessionFactoryImplementor sessionFactory) {
+		this.sessionFactory = sessionFactory;
+
+		this.callbackRegistry = new CallbackRegistryImpl();
+		this.callbackBuilder = new CallbackBuilderLegacyImpl(
+				bootstrapContext.getServiceRegistry().getService( ManagedBeanRegistry.class ),
+				bootstrapContext.getReflectionManager()
+		);
+
+		this.registeredEventListeners = buildListenerGroups( bootstrapContext );
+	}
+
+	SessionFactoryImplementor getSessionFactory() {
+		return sessionFactory;
+	}
+
+	CallbackRegistryImpl getCallbackRegistry() {
+		return callbackRegistry;
+	}
+
+	@Override
+	public void prepare(MetadataImplementor metadata) {
+		for ( PersistentClass persistentClass : metadata.getEntityBindings() ) {
+			if ( persistentClass.getClassName() == null ) {
+				// we can have non java class persisted by hibernate
+				continue;
+			}
+			callbackBuilder.buildCallbacksForEntity( persistentClass.getClassName(), callbackRegistry );
+		}
+	}
 
 	@SuppressWarnings({ "unchecked" })
 	public <T> EventListenerGroupImpl<T> getEventListenerGroup(EventType<T> eventType) {
@@ -100,7 +147,8 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 	}
 
 	@Override
-	public <T> void setListeners(EventType<T> type, Class<? extends T>... listenerClasses) {
+	@SafeVarargs
+	public final <T> void setListeners(EventType<T> type, Class<? extends T>... listenerClasses) {
 		setListeners( type, resolveListenerInstances( type, listenerClasses ) );
 	}
 
@@ -136,37 +184,42 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 	}
 
 	@Override
-	public <T> void setListeners(EventType<T> type, T... listeners) {
+	@SafeVarargs
+	public final <T> void setListeners(EventType<T> type, T... listeners) {
 		EventListenerGroupImpl<T> registeredListeners = getEventListenerGroup( type );
 		registeredListeners.clear();
 		if ( listeners != null ) {
-			for ( int i = 0, max = listeners.length; i < max; i++ ) {
-				registeredListeners.appendListener( listeners[i] );
+			for ( T listener : listeners ) {
+				registeredListeners.appendListener( listener );
 			}
 		}
 	}
 
 	@Override
-	public <T> void appendListeners(EventType<T> type, Class<? extends T>... listenerClasses) {
+	@SafeVarargs
+	public final <T> void appendListeners(EventType<T> type, Class<? extends T>... listenerClasses) {
 		appendListeners( type, resolveListenerInstances( type, listenerClasses ) );
 	}
 
 	@Override
-	public <T> void appendListeners(EventType<T> type, T... listeners) {
+	@SafeVarargs
+	public final <T> void appendListeners(EventType<T> type, T... listeners) {
 		getEventListenerGroup( type ).appendListeners( listeners );
 	}
 
 	@Override
-	public <T> void prependListeners(EventType<T> type, Class<? extends T>... listenerClasses) {
+	@SafeVarargs
+	public final <T> void prependListeners(EventType<T> type, Class<? extends T>... listenerClasses) {
 		prependListeners( type, resolveListenerInstances( type, listenerClasses ) );
 	}
 
 	@Override
-	public <T> void prependListeners(EventType<T> type, T... listeners) {
+	@SafeVarargs
+	public final <T> void prependListeners(EventType<T> type, T... listeners) {
 		getEventListenerGroup( type ).prependListeners( listeners );
 	}
 
-	private static EventListenerGroupImpl[] prepareListenerAssociation() {
+	private EventListenerGroupImpl[] buildListenerGroups(BootstrapContext bootstrapContext) {
 		EventListenerGroupImpl[] listenerArray = new EventListenerGroupImpl[ EventType.values().size() ];
 
 		// auto-flush listeners
@@ -347,12 +400,14 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 		// post-delete listeners
 		prepareListeners(
 				POST_DELETE,
+				new PostDeleteEventListenerStandardImpl(),
 				listenerArray
 		);
 
 		// post-insert listeners
 		prepareListeners(
 				POST_INSERT,
+				new PostInsertEventListenerStandardImpl(),
 				listenerArray
 		);
 
@@ -366,6 +421,7 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 		// post-update listeners
 		prepareListeners(
 				POST_UPDATE,
+				new PostUpdateEventListenerStandardImpl(),
 				listenerArray
 		);
 
@@ -407,19 +463,19 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 		return listenerArray;
 	}
 
-	private static <T> void prepareListeners(EventType<T> type, EventListenerGroupImpl[] listenerArray) {
+	private <T> void prepareListeners(EventType<T> type, EventListenerGroupImpl[] listenerArray) {
 		prepareListeners( type, null, listenerArray );
 	}
 
-	private static <T> void prepareListeners(EventType<T> type, T defaultListener, EventListenerGroupImpl[] listenerArray) {
+	private <T> void prepareListeners(EventType<T> type, T defaultListener, EventListenerGroupImpl[] listenerArray) {
 		final EventListenerGroupImpl<T> listenerGroup;
 		if ( type == EventType.POST_COMMIT_DELETE
 				|| type == EventType.POST_COMMIT_INSERT
 				|| type == EventType.POST_COMMIT_UPDATE ) {
-			listenerGroup = new PostCommitEventListenerGroupImpl<T>( type );
+			listenerGroup = new PostCommitEventListenerGroupImpl<T>( type, this );
 		}
 		else {
-			listenerGroup = new EventListenerGroupImpl<T>( type );
+			listenerGroup = new EventListenerGroupImpl<T>( type, this );
 		}
 
 		if ( defaultListener != null ) {
@@ -428,4 +484,13 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 		listenerArray[ type.ordinal() ] = listenerGroup;
 	}
 
+	@Override
+	public void stop() {
+		if ( callbackRegistry != null ) {
+			callbackRegistry.release();
+		}
+		if ( callbackBuilder != null ) {
+			callbackBuilder.release();
+		}
+	}
 }

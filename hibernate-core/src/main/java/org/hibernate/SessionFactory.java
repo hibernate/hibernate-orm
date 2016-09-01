@@ -20,6 +20,7 @@ import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.stat.Statistics;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * The main contract here is the creation of {@link Session} instances.  Usually
@@ -164,13 +165,6 @@ public interface SessionFactory extends EntityManagerFactory, HibernateEntityMan
 	 * @return True if there is such a fetch profile; false otherwise.
 	 */
 	boolean containsFetchProfileDefinition(String name);
-
-	/**
-	 * Retrieve this factory's {@link TypeHelper}.
-	 *
-	 * @return The factory's {@link TypeHelper}
-	 */
-	TypeHelper getTypeHelper();
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -6,16 +6,16 @@
  */
 package org.hibernate.test.serialization;
 
-import org.junit.Test;
-
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.SerializationHelper;
+import org.hibernate.type.spi.TypeConfiguration;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.type.TypeFactory;
+import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -38,11 +38,11 @@ public class TypeFactorySerializationTest extends BaseUnitTestCase {
 		// Session factory is registered.
 		assertSame( factory, SessionFactoryRegistry.INSTANCE.getNamedSessionFactory( NAME ) );
 
-		TypeFactory typeFactory = factory.getTypeResolver().getTypeFactory();
-		byte[] typeFactoryBytes = SerializationHelper.serialize( typeFactory );
-		typeFactory = (TypeFactory) SerializationHelper.deserialize( typeFactoryBytes );
+		TypeConfiguration typeConfiguration = factory.getMetamodel().getTypeConfiguration();
+		byte[] bytes = SerializationHelper.serialize( typeConfiguration );
+		typeConfiguration = (TypeConfiguration) SerializationHelper.deserialize( bytes );
 
-		assertSame( factory, typeFactory.resolveSessionFactory() );
+		assertSame( factory, typeConfiguration.getSessionFactory() );
 		factory.close();
 	}
 
@@ -58,12 +58,12 @@ public class TypeFactorySerializationTest extends BaseUnitTestCase {
 		SessionFactoryRegistry.INSTANCE.removeSessionFactory( factory.getUuid(), NAME, false, null );
 		assertNull( SessionFactoryRegistry.INSTANCE.findSessionFactory( factory.getUuid(), NAME ) );
 
-		TypeFactory typeFactory = factory.getTypeResolver().getTypeFactory();
-		byte[] typeFactoryBytes = SerializationHelper.serialize( typeFactory );
-		typeFactory = (TypeFactory) SerializationHelper.deserialize( typeFactoryBytes );
+		TypeConfiguration typeConfiguration = factory.getMetamodel().getTypeConfiguration();
+		byte[] bytes = SerializationHelper.serialize( typeConfiguration );
+		typeConfiguration = (TypeConfiguration) SerializationHelper.deserialize( bytes );
 
 		try {
-			typeFactory.resolveSessionFactory();
+			typeConfiguration.getSessionFactory();
 			fail( "should have failed with HibernateException because session factory is not registered." );
 		}
 		catch ( HibernateException ex ) {
@@ -75,7 +75,7 @@ public class TypeFactorySerializationTest extends BaseUnitTestCase {
 
 		// Session factory resolved from typeFactory should be the new session factory
 		// (because it is resolved from SessionFactoryRegistry.INSTANCE)
-		assertSame( factory, typeFactory.resolveSessionFactory() );
+		assertSame( factory, typeConfiguration.getSessionFactory() );
 		factory.close();
 	}
 
@@ -89,12 +89,12 @@ public class TypeFactorySerializationTest extends BaseUnitTestCase {
 		SessionFactoryRegistry.INSTANCE.removeSessionFactory( factory.getUuid(), null, false, null );
 		assertNull( SessionFactoryRegistry.INSTANCE.findSessionFactory( factory.getUuid(), null ) );
 
-		TypeFactory typeFactory = factory.getTypeResolver().getTypeFactory();
-		byte[] typeFactoryBytes = SerializationHelper.serialize( typeFactory );
-		typeFactory = (TypeFactory) SerializationHelper.deserialize( typeFactoryBytes );
+		TypeConfiguration typeConfiguration = factory.getMetamodel().getTypeConfiguration();
+		byte[] bytes = SerializationHelper.serialize( typeConfiguration );
+		typeConfiguration = (TypeConfiguration) SerializationHelper.deserialize( bytes );
 
 		try {
-			typeFactory.resolveSessionFactory();
+			typeConfiguration.getSessionFactory();
 			fail( "should have failed with HibernateException because session factory is not registered." );
 		}
 		catch ( HibernateException ex ) {
@@ -106,7 +106,7 @@ public class TypeFactorySerializationTest extends BaseUnitTestCase {
 
 		// Session factory resolved from typeFactory should be the new session factory
 		// (because it is resolved from SessionFactoryRegistry.INSTANCE)
-		assertSame( factory, typeFactory.resolveSessionFactory() );
+		assertSame( factory, typeConfiguration.getSessionFactory() );
 		factory.close();
 	}
 
@@ -122,12 +122,12 @@ public class TypeFactorySerializationTest extends BaseUnitTestCase {
 		SessionFactoryRegistry.INSTANCE.removeSessionFactory( factory.getUuid(), NAME, false, null );
 		assertNull( SessionFactoryRegistry.INSTANCE.findSessionFactory( factory.getUuid(), NAME ) );
 
-		TypeFactory typeFactory = factory.getTypeResolver().getTypeFactory();
-		byte[] typeFactoryBytes = SerializationHelper.serialize( typeFactory );
-		typeFactory = (TypeFactory) SerializationHelper.deserialize( typeFactoryBytes );
+		TypeConfiguration typeConfiguration = factory.getMetamodel().getTypeConfiguration();
+		byte[] bytes = SerializationHelper.serialize( typeConfiguration );
+		typeConfiguration = (TypeConfiguration) SerializationHelper.deserialize( bytes );
 
 		try {
-			typeFactory.resolveSessionFactory();
+			typeConfiguration.getSessionFactory();
 			fail( "should have failed with HibernateException because session factory is not registered." );
 		}
 		catch ( HibernateException ex ) {
@@ -141,7 +141,7 @@ public class TypeFactorySerializationTest extends BaseUnitTestCase {
 
 		// Session factory resolved from typeFactory should be the new session factory
 		// (because it is resolved from SessionFactoryRegistry.INSTANCE)
-		assertSame( factoryWithSameName, typeFactory.resolveSessionFactory() );
+		assertSame( factoryWithSameName, typeConfiguration.getSessionFactory() );
 
 		factory.close();
 		factoryWithSameName.close();
@@ -157,12 +157,12 @@ public class TypeFactorySerializationTest extends BaseUnitTestCase {
 		SessionFactoryRegistry.INSTANCE.removeSessionFactory( factory.getUuid(), null, false, null );
 		assertNull( SessionFactoryRegistry.INSTANCE.getSessionFactory( factory.getUuid() ) );
 
-		TypeFactory typeFactory = factory.getTypeResolver().getTypeFactory();
-		byte[] typeFactoryBytes = SerializationHelper.serialize( typeFactory );
-		typeFactory = (TypeFactory) SerializationHelper.deserialize( typeFactoryBytes );
+		TypeConfiguration typeConfiguration = factory.getMetamodel().getTypeConfiguration();
+		byte[] bytes = SerializationHelper.serialize( typeConfiguration );
+		typeConfiguration = (TypeConfiguration) SerializationHelper.deserialize( bytes );
 
 		try {
-			typeFactory.resolveSessionFactory();
+			typeConfiguration.getSessionFactory();
 			fail( "should have failed with HibernateException because session factory is not registered." );
 		}
 		catch ( HibernateException ex ) {
@@ -176,7 +176,7 @@ public class TypeFactorySerializationTest extends BaseUnitTestCase {
 
 		// It should not be possible to resolve the session factory with no name configured.
 		try {
-			typeFactory.resolveSessionFactory();
+			typeConfiguration.getSessionFactory();
 			fail( "should have failed with HibernateException because session factories were not registered with the same non-null name." );
 		}
 		catch ( HibernateException ex ) {

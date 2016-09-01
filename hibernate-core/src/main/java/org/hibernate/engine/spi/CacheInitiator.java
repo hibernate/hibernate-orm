@@ -6,10 +6,9 @@
  */
 package org.hibernate.engine.spi;
 
-import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.internal.CacheImpl;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceInitiator;
+import org.hibernate.service.spi.SessionFactoryServiceInitiatorContext;
 
 /**
  * Initiator for second level cache support
@@ -21,15 +20,12 @@ public class CacheInitiator implements SessionFactoryServiceInitiator<CacheImple
 	public static final CacheInitiator INSTANCE = new CacheInitiator();
 
 	@Override
-	public CacheImplementor initiateService(
-			SessionFactoryImplementor sessionFactory,
-			SessionFactoryOptions sessionFactoryOptions,
-			ServiceRegistryImplementor registry) {
-		return new CacheImpl( sessionFactory );
+	public Class<CacheImplementor> getServiceInitiated() {
+		return CacheImplementor.class;
 	}
 
 	@Override
-	public Class<CacheImplementor> getServiceInitiated() {
-		return CacheImplementor.class;
+	public CacheImplementor initiateService(SessionFactoryServiceInitiatorContext context) {
+		return new CacheImpl( context.getSessionFactory() );
 	}
 }

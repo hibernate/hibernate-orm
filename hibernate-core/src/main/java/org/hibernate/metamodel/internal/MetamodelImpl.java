@@ -51,6 +51,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.metamodel.spi.SqmDomainMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.common.internal.DomainMetamodelImpl;
 import org.hibernate.persister.entity.spi.EntityPersister;
@@ -76,7 +77,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 	private final SessionFactoryImplementor sessionFactory;
 	private final TypeConfiguration typeConfiguration;
-	private final DomainMetamodel sqmDomainMetamodel;
+	private final DomainMetamodelImpl sqmDomainMetamodel;
 
 	private final Map<String,String> imports = new ConcurrentHashMap<>();
 	private final Map<String,EntityPersister> entityPersisterMap = new ConcurrentHashMap<>();
@@ -733,7 +734,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	}
 
 	@Override
-	public DomainMetamodel getSqmDomainMetamodel() {
+	public SqmDomainMetamodelImplementor getSqmDomainMetamodel() {
 		return sqmDomainMetamodel;
 	}
 

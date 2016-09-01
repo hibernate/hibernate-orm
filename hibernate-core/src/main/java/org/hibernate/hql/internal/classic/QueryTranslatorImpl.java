@@ -672,8 +672,8 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 			int j = 0;
 			for ( int i = 0; i < persisters.length; i++ ) {
 				if ( includeInSelect[i] ) {
-					actualReturnTypes[j++] = getFactory().getTypeResolver()
-							.getTypeFactory()
+					actualReturnTypes[j++] = getFactory().getMetamodel()
+							.getTypeConfiguration()
 							.manyToOne( persisters[i].getEntityName(), shallowQuery );
 				}
 			}
@@ -732,7 +732,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 			for ( int k = 0; k < size; k++ ) {
 
 				scalarTypes.add(
-						getFactory().getTypeResolver().getTypeFactory().manyToOne(
+						getFactory().getMetamodel().getTypeConfiguration().manyToOne(
 								persisters[k].getEntityName(),
 								shallowQuery
 						)

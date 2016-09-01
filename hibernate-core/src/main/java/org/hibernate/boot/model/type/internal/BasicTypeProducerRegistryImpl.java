@@ -156,7 +156,13 @@ public class BasicTypeProducerRegistryImpl implements BasicTypeProducerRegistry 
 		return this;
 	}
 
-	@Override
+	/**
+	 * Releases this BasicTypeProducerRegistry and its held resources.
+	 * </p>
+	 * Applications should never call this.  Not overly happy about exposing this.  But
+	 * given the way TypeConfiguration and BasicTypeProducerRegistry get instantiated
+	 * currently I do not see an alternative.
+	 */
 	public void release() {
 		// Handle any producers using @Release
 		for ( BasicTypeProducer basicTypeProducer : basicTypeProducerMap.values() ) {

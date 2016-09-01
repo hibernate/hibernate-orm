@@ -139,16 +139,6 @@ public interface SessionFactoryImplementor
 	FetchProfile getFetchProfile(String name);
 
 	/**
-	 * Retrieve the {@link Type} resolver associated with this factory.
-	 *
-	 * @return The type resolver
-	 *
-	 * @deprecated (since 6.0) Use Hibernate's {@link MetamodelImplementor} extension of the JPA
-	 * {@link javax.persistence.metamodel.Metamodel} contract instead, as accessed through {@link #getMetamodel()}
-	 */
-	TypeResolver getTypeResolver();
-
-	/**
 	 * Get the identifier generator for the hierarchy
 	 */
 	IdentifierGenerator getIdentifierGenerator(String rootEntityName);

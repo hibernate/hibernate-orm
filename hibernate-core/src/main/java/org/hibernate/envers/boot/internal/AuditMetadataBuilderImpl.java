@@ -12,7 +12,7 @@ import java.util.Map;
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -24,8 +24,8 @@ import org.hibernate.envers.boot.spi.AuditMetadataImplementor;
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.configuration.internal.EntitiesConfigurator;
 import org.hibernate.envers.configuration.internal.MappingCollector;
-import org.hibernate.envers.configuration.internal.RevisionInfoConfigurationBuilder;
 import org.hibernate.envers.configuration.internal.RevisionInfoConfiguration;
+import org.hibernate.envers.configuration.internal.RevisionInfoConfigurationBuilder;
 import org.hibernate.envers.internal.entities.EntitiesConfigurations;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.strategy.AuditStrategy;
@@ -41,12 +41,12 @@ import org.hibernate.service.ServiceRegistry;
  */
 public class AuditMetadataBuilderImpl implements AuditMetadataBuilderImplementor {
 
-	private final MetadataImplementor metadata;
+	private final InFlightMetadataCollector metadata;
 	private final AuditMetadataBuildingOptionsImpl options;
 	private RevisionInfoConfiguration revisionInfoConfiguration;
 	private EntitiesConfigurations entitiesConfigurations;
 
-	public AuditMetadataBuilderImpl(MetadataImplementor metadata) {
+	public AuditMetadataBuilderImpl(InFlightMetadataCollector metadata) {
 		this.metadata = metadata;
 		this.options = new AuditMetadataBuildingOptionsImpl( metadata.getMetadataBuildingOptions().getServiceRegistry() );
 	}

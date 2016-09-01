@@ -93,20 +93,6 @@ public interface MetadataBuilder {
 	MetadataBuilder applyPhysicalNamingStrategy(PhysicalNamingStrategy namingStrategy);
 
 	/**
-	 * Defines the Hibernate Commons Annotations ReflectionManager to use
-	 *
-	 * @param reflectionManager The ReflectionManager to use.
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated Deprecated (with no replacement) to indicate that this will go away as
-	 * we migrate away from Hibernate Commons Annotations to Jandex for annotation handling
-	 * and XMl->annotation merging.
-	 */
-	@Deprecated
-	MetadataBuilder applyReflectionManager(ReflectionManager reflectionManager);
-
-	/**
 	 * Specify the second-level cache mode to be used.  This is the cache mode in terms of whether or
 	 * not to cache.
 	 * <p/>

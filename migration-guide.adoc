@@ -16,6 +16,34 @@ earlier versions, see any other pertinent migration guides as well.
 Additionally, `hibernate-envers` has been made part of `hibernate-core` and better integrated
 from an API perspective.
 
+
+== Things that (might) make sense in a boot-only ServiceRegistry
+
+* ClassmateContext
+* Jandex/HCANN access
+* BasicTypeProducerRegistry
+
+At the moment this is being developed as `org.hibernate.boot.spi.BootstrapContext`.
+
+A general theme to remember is that there are certain things we need during the bootstrap process,
+but that we should unequivocally not hold reference to after:
+
+* ClassmateContext
+* BasicTypeProducerRegistry
+* Jandex IndexView
+* HCANN ReflectionManager, ClassLoaderDelegate, etc
+* JPA "temp ClassLoader" (and ClassLoaderAccess?)
+* Scanning / ArchiveDescriptor delegates
+* List<CacheRegionDefinition> (this is an exposed collector)
+* List<AttributeConverterDefinition>
+* List<AuxiliaryDatabaseObject>
+
+Some of these need to be exposed on the "BootstrapContext", some exposed on the
+MetadataBuilder/MetadataBuildingOptions.  Remember though that MetadataBuildingOptions portion
+of the MetadataBuilder/MetadataBuildingOptions combo is passed and held on the SessionFactory; so
+anything that we should not hold reference to after bootstrap should not be defined on this contract.
+
+
 == Misc
 
 * removed `org.hibernate.type.TypeHelper` and `org.hibernate.type.TypeResolver`, as well as methods exposing

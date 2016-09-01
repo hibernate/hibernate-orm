@@ -9,7 +9,6 @@ package org.hibernate.boot.spi;
 import javax.persistence.AttributeConverter;
 import javax.persistence.SharedCacheMode;
 
-import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
@@ -79,12 +78,6 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Abs
 	@Override
 	public MetadataBuilder applyPhysicalNamingStrategy(PhysicalNamingStrategy namingStrategy) {
 		delegate.applyPhysicalNamingStrategy( namingStrategy );
-		return getThis();
-	}
-
-	@Override
-	public MetadataBuilder applyReflectionManager(ReflectionManager reflectionManager) {
-		delegate.applyReflectionManager( reflectionManager );
 		return getThis();
 	}
 
@@ -215,13 +208,14 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Abs
 	}
 
 	@Override
-	public MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass) {
+	public MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter<?, ?>> attributeConverterClass) {
 		delegate.applyAttributeConverter( attributeConverterClass );
 		return getThis();
 	}
 
 	@Override
-	public MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass, boolean autoApply) {
+	public MetadataBuilder applyAttributeConverter(
+			Class<? extends AttributeConverter<?, ?>> attributeConverterClass, boolean autoApply) {
 		delegate.applyAttributeConverter( attributeConverterClass, autoApply );
 		return getThis();
 	}

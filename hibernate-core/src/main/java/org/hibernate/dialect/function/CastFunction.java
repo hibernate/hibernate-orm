@@ -46,11 +46,8 @@ public class CastFunction implements SQLFunction {
 			throw new QueryException( "cast() requires two arguments; found : " + args.size() );
 		}
 		final String type = (String) args.get( 1 );
-		final int[] sqlTypeCodes = factory.getTypeResolver().heuristicType( type ).sqlTypes( factory );
-		if ( sqlTypeCodes.length!=1 ) {
-			throw new QueryException("invalid Hibernate type for cast()");
-		}
-		String sqlType = factory.getDialect().getCastTypeName( sqlTypeCodes[0] );
+		final int jdbcTypeCode = factory.getMetamodel().getTypeConfiguration().resolveCastTargetType( type ).getColumnMapping().getSqlTypeDescriptor().getSqlType();
+		String sqlType = factory.getDialect().getCastTypeName( jdbcTypeCode );
 		if ( sqlType == null ) {
 			//TODO: never reached, since getExplicitHibernateTypeName() actually throws an exception!
 			sqlType = type;

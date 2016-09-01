@@ -375,7 +375,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 
 	/* package-protected */
 	Type getResultType(Criteria criteria) {
-		return getFactory().getTypeResolver().getTypeFactory().manyToOne( getEntityName( criteria ) );
+		return getFactory().getMetamodel().getTypeConfiguration().manyToOne( getEntityName( criteria ) );
 	}
 
 	public Type[] getProjectedTypes() {

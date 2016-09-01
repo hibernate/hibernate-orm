@@ -890,7 +890,7 @@ public class EntityMetamodel implements Serializable {
 
 	public EntityType getEntityType() {
 		if ( entityType == null ) {
-			entityType = sessionFactory.getTypeResolver().getTypeFactory().manyToOne( name );
+			entityType = sessionFactory.getMetamodel().getTypeConfiguration().manyToOne( name );
 		}
 		return entityType;
 	}

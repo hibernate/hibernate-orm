@@ -11,10 +11,10 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.spi.SqmDomainMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.internal.ImprovedCollectionPersisterImpl;
 import org.hibernate.persister.collection.spi.ImprovedCollectionPersister;
@@ -31,7 +31,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
 /**
  * @author Steve Ebersole
  */
-public class DomainMetamodelImpl implements DomainMetamodel {
+public class DomainMetamodelImpl implements SqmDomainMetamodelImplementor {
 	private final DatabaseModel databaseModel  = new DatabaseModel();
 	private final SessionFactoryImplementor sessionFactory;
 
@@ -118,7 +118,7 @@ public class DomainMetamodelImpl implements DomainMetamodel {
 					}
 
 					@Override
-					public TemporalType getTemporalPrecision() {
+					public javax.persistence.TemporalType getTemporalPrecision() {
 						return temporalType;
 					}
 				},

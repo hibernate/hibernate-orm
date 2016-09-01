@@ -14,6 +14,7 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.envers.boot.spi.AuditMetadataBuilderImplementor;
 import org.hibernate.envers.configuration.internal.metadata.AuditEntityNameRegister;
@@ -51,7 +52,7 @@ public class EntitiesConfigurator {
 	}
 
 	public EntitiesConfigurations build(
-			MetadataImplementor metadata,
+			InFlightMetadataCollector metadata,
 			MappingCollector mappingCollector,
 			Document revisionInfoXmlMapping,
 			Element revisionInfoRelationMapping) {
@@ -64,8 +65,8 @@ public class EntitiesConfigurator {
 		);
 	}
 
-	private ClassesAuditingData prepare(MetadataImplementor metadata) {
-		final ReflectionManager reflectionManager = metadata.getMetadataBuildingOptions().getReflectionManager();
+	private ClassesAuditingData prepare(InFlightMetadataCollector metadata) {
+		final ReflectionManager reflectionManager = metadata.getBootstrapContext().getReflectionManager();
 		final ClassesAuditingData classesAuditingData = new ClassesAuditingData();
 		final Iterator<PersistentClass> classes = sort( new PersistentClassGraphDefiner( metadata ) ).iterator();
 		while ( classes.hasNext() ) {

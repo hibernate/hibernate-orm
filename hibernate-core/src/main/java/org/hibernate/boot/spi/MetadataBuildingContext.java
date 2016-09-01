@@ -19,38 +19,33 @@ import org.hibernate.boot.model.naming.ObjectNameNormalizer;
  * @since 5.0
  */
 public interface MetadataBuildingContext {
+	BootstrapContext getBootstrapContext();
+
 	/**
 	 * Access to the options specified by the {@link org.hibernate.boot.MetadataBuilder}
 	 *
 	 * @return The options
 	 */
-	public MetadataBuildingOptions getBuildingOptions();
+	MetadataBuildingOptions getBuildingOptions();
 
 	/**
 	 * Access to mapping defaults in effect for this context
 	 *
 	 * @return The mapping defaults.
 	 */
-	public MappingDefaults getMappingDefaults();
+	MappingDefaults getMappingDefaults();
 
 	/**
 	 * Access to the collector of metadata as we build it.
 	 *
 	 * @return The metadata collector.
 	 */
-	public InFlightMetadataCollector getMetadataCollector();
-
-	/**
-	 * Provides access to ClassLoader services when needed during binding
-	 *
-	 * @return The ClassLoaderAccess
-	 */
-	public ClassLoaderAccess getClassLoaderAccess();
+	InFlightMetadataCollector getMetadataCollector();
 
 	/**
 	 * Not sure how I feel about this exposed here
 	 *
 	 * @return
 	 */
-	public ObjectNameNormalizer getObjectNameNormalizer();
+	ObjectNameNormalizer getObjectNameNormalizer();
 }

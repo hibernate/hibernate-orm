@@ -6,6 +6,7 @@
  */
 package org.hibernate.event.internal;
 
+import java.io.Serializable;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
@@ -23,6 +24,8 @@ import org.hibernate.event.spi.PersistEventListener;
 import org.hibernate.id.ForeignGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.jpa.event.spi.CallbackRegistry;
+import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
@@ -33,9 +36,42 @@ import org.hibernate.proxy.LazyInitializer;
  * transient entities in response to generated create events.
  *
  * @author Gavin King
+ * @author Steve Ebersole
  */
-public class DefaultPersistEventListener extends AbstractSaveEventListener implements PersistEventListener {
+public class DefaultPersistEventListener
+		extends AbstractSaveEventListener
+		implements PersistEventListener, CallbackRegistryConsumer {
+
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultPersistEventListener.class );
+
+	private CallbackRegistry callbackRegistry;
+
+	@Override
+	public void injectCallbackRegistry(CallbackRegistry callbackRegistry) {
+		this.callbackRegistry = callbackRegistry;
+	}
+
+	@Override
+	protected Serializable saveWithRequestedId(
+			Object entity,
+			Serializable requestedId,
+			String entityName,
+			Object anything,
+			EventSource source) {
+		callbackRegistry.preCreate( entity );
+		return super.saveWithRequestedId( entity, requestedId, entityName, anything, source );
+	}
+
+	@Override
+	protected Serializable saveWithGeneratedId(
+			Object entity,
+			String entityName,
+			Object anything,
+			EventSource source,
+			boolean requiresImmediateIdAccess) {
+		callbackRegistry.preCreate( entity );
+		return super.saveWithGeneratedId( entity, entityName, anything, source, requiresImmediateIdAccess );
+	}
 
 	@Override
 	protected CascadingAction getCascadeAction() {

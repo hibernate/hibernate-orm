@@ -11,7 +11,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
@@ -28,7 +27,7 @@ import org.hibernate.boot.model.source.internal.hbm.ModelBinder;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.AdditionalJaxbMappingProducer;
-import org.hibernate.boot.spi.ClassLoaderAccess;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataContributor;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -76,8 +75,9 @@ public class MetadataBuildingProcess {
 	 */
 	public static MetadataImplementor build(
 			final MetadataSources sources,
+			final BootstrapContext bootstrapContext,
 			final MetadataBuildingOptions options) {
-		return complete( prepare( sources, options ), options );
+		return complete( prepare( sources, bootstrapContext, options ), bootstrapContext, options );
 	}
 
 	/**
@@ -90,8 +90,9 @@ public class MetadataBuildingProcess {
 	 */
 	public static ManagedResources prepare(
 			final MetadataSources sources,
+			final BootstrapContext bootstrapContext,
 			final MetadataBuildingOptions options) {
-		final ManagedResourcesImpl managedResources = ManagedResourcesImpl.baseline( sources, options );
+		final ManagedResourcesImpl managedResources = ManagedResourcesImpl.baseline( sources, bootstrapContext );
 		ScanningCoordinator.INSTANCE.coordinateScan( managedResources, options, sources.getXmlMappingBinderAccess() );
 		return managedResources;
 	}
@@ -104,9 +105,12 @@ public class MetadataBuildingProcess {
 	 *
 	 * @return Token/memento representing all known users resources (classes, packages, mapping files, etc).
 	 */
-	public static MetadataImplementor complete(final ManagedResources managedResources, final MetadataBuildingOptions options) {
+	public static MetadataImplementor complete(
+			final ManagedResources managedResources,
+			final BootstrapContext bootstrapContext,
+			final MetadataBuildingOptions options) {
 		final InFlightMetadataCollectorImpl metadataCollector = new InFlightMetadataCollectorImpl( options );
-		handleTypes( options, metadataCollector.getTypeConfiguration() );
+		handleTypes( bootstrapContext, options );
 
 		for ( AttributeConverterDefinition attributeConverterDefinition : managedResources.getAttributeConverterDefinitions() ) {
 			metadataCollector.addAttributeConverter( attributeConverterDefinition );
@@ -114,18 +118,16 @@ public class MetadataBuildingProcess {
 
 		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService( ClassLoaderService.class );
 
-		final ClassLoaderAccess classLoaderAccess = new ClassLoaderAccessImpl(
-				options.getTempClassLoader(),
-				classLoaderService
-		);
-
 		final MetadataBuildingContextRootImpl rootMetadataBuildingContext = new MetadataBuildingContextRootImpl(
+				bootstrapContext,
 				options,
-				classLoaderAccess,
 				metadataCollector
 		);
 
-		final IndexView jandexView = options.getJandexView();
+		// scope the TyepConfiguration to the second (metamodel building) phase...
+		bootstrapContext.getTypeConfiguration().scope( rootMetadataBuildingContext );
+
+		final IndexView jandexView = bootstrapContext.getJandexView();
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Set up the processors and start binding
@@ -314,29 +316,42 @@ public class MetadataBuildingProcess {
 
 
 
-	private static void handleTypes(MetadataBuildingOptions options, TypeConfiguration typeConfiguration) {
+	private static void handleTypes(
+			BootstrapContext bootstrapContext,
+			MetadataBuildingOptions options) {
 		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService( ClassLoaderService.class );
 
 		final TypeContributions typeContributions = new TypeContributions() {
 			@Override
 			public void contributeJavaTypeDescriptor(JavaTypeDescriptor descriptor) {
-				typeConfiguration.getJavaTypeDescriptorRegistry().addDescriptor( descriptor );
+				bootstrapContext.getTypeConfiguration().getJavaTypeDescriptorRegistry().addDescriptor( descriptor );
 			}
 
 			@Override
 			public void contributeSqlTypeDescriptor(SqlTypeDescriptor descriptor) {
-				typeConfiguration.getSqlTypeDescriptorRegistry().addDescriptor( descriptor );
+				bootstrapContext.getTypeConfiguration().getSqlTypeDescriptorRegistry().addDescriptor( descriptor );
 			}
 
 			@Override
-			public void contributeType(org.hibernate.type.spi.BasicType type, RegistryKey registryKey) {
-				// todo : hook this in with BasicTypeProducerRegistry for "registration keys" handling
-				typeConfiguration.getBasicTypeRegistry().register( type, registryKey );
+			public void contributeType(org.hibernate.type.spi.BasicType type, String... registrationKeys) {
+				// register the BasicType with the BasicTypeRegistry
+				bootstrapContext.getTypeConfiguration().getBasicTypeRegistry().register( type, RegistryKey.from( type ) );
+
+				// then, register the BasicType with the BasicTypeProducerRegistry using the
+				// "registration keys"
+
+				// first the BasicType class name
+				bootstrapContext.getBasicTypeProducerRegistry().register( type, type.getClass().getName() );
+
+				// and then the passed keys, if any
+				if ( registrationKeys != null ) {
+					bootstrapContext.getBasicTypeProducerRegistry().register( type, registrationKeys );
+				}
 			}
 
 			@Override
 			public TypeConfiguration getTypeConfiguration() {
-				return options.getTypeConfiguration();
+				return bootstrapContext.getTypeConfiguration();
 			}
 		};
 

@@ -4,8 +4,9 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.event.spi.jpa;
 
 /**
- * SPI classes for integrating with JPA event callbacks
+ * The SPI contracts for supporting JPA lifecycle callbacks.
  */
+package org.hibernate.jpa.event.spi;
+

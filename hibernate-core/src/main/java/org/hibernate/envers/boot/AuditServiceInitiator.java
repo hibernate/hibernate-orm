@@ -6,11 +6,9 @@
  */
 package org.hibernate.envers.boot;
 
-import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.envers.boot.internal.AuditServiceImpl;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceInitiator;
+import org.hibernate.service.spi.SessionFactoryServiceInitiatorContext;
 
 /**
  * Initiator for the {@link AuditService}.
@@ -27,9 +25,7 @@ public class AuditServiceInitiator implements SessionFactoryServiceInitiator<Aud
 	}
 
 	@Override
-	public AuditService initiateService(SessionFactoryImplementor sessionFactory,
-			SessionFactoryOptions sessionFactoryOptions,
-			ServiceRegistryImplementor registry) {
-		return new AuditServiceImpl( registry );
+	public AuditService initiateService(SessionFactoryServiceInitiatorContext context) {
+		return new AuditServiceImpl( context.getServiceRegistry() );
 	}
 }

@@ -117,6 +117,28 @@ public class TypeConfiguration implements SessionFactoryObserver, TypeDescriptor
 		throw new NotYetImplementedException(  );
 	}
 
+	public Type manyToOne(Class clazz) {
+		assert clazz != null;
+		return manyToOne( clazz.getName() );
+	}
+
+	public Type manyToOne(String entityName) {
+		throw new NotYetImplementedException(  );
+	}
+
+	public Type manyToOne(Class clazz, boolean lazy) {
+		assert clazz != null;
+		return manyToOne( clazz.getName(), lazy );
+	}
+
+	public Type manyToOne(String entityName, boolean lazy) {
+		throw new NotYetImplementedException(  );
+	}
+
+	public Type heuristicType(String typename) {
+		throw new NotYetImplementedException(  );
+	}
+
 
 	/**
 	 * Encapsulation of lifecycle concerns for a TypeConfiguration, mainly in regards to

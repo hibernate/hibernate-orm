@@ -27,6 +27,9 @@ import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.engine.spi.CascadingActions.getAllElementsIterator;
+import static org.hibernate.engine.spi.CascadingActions.getLoadedElementsIterator;
+
 /**
  * @author Steve Ebersole
  */
@@ -303,8 +306,14 @@ public class CascadingActions {
 				EventSource session,
 				CollectionType collectionType,
 				Object collection) {
-			// persists don't cascade to uninitialized collections
-			return getAllElementsIterator( session, collectionType, collection );
+			// in merging with DefaultPersistEventListener...
+			if ( session.getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
+				// persists don't cascade to uninitialized collections
+				return getLoadedElementsIterator( session, collectionType, collection );
+			}
+			else {
+				return getAllElementsIterator( session, collectionType, collection );
+			}
 		}
 
 		@Override
@@ -342,12 +351,15 @@ public class CascadingActions {
 		}
 
 		@Override
-		public Iterator getCascadableChildrenIterator(
-				EventSource session,
-				CollectionType collectionType,
-				Object collection) {
-			// persists don't cascade to uninitialized collections
-			return getLoadedElementsIterator( session, collectionType, collection );
+		public Iterator getCascadableChildrenIterator(EventSource session, CollectionType collectionType, Object collection) {
+			// in merging with DefaultPersistEventListener...
+			if ( session.getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
+				// persists don't cascade to uninitialized collections
+				return getLoadedElementsIterator( session, collectionType, collection );
+			}
+			else {
+				return getAllElementsIterator( session, collectionType, collection );
+			}
 		}
 
 		@Override
@@ -471,7 +483,7 @@ public class CascadingActions {
 	 *
 	 * @return The children iterator.
 	 */
-	private static Iterator getAllElementsIterator(
+	public static Iterator getAllElementsIterator(
 			EventSource session,
 			CollectionType collectionType,
 			Object collection) {

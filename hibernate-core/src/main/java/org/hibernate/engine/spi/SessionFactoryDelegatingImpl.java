@@ -190,16 +190,6 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public TypeHelper getTypeHelper() {
-		return delegate.getTypeHelper();
-	}
-
-	@Override
-	public TypeResolver getTypeResolver() {
-		return delegate.getTypeResolver();
-	}
-
-	@Override
 	public Map<String, Object> getProperties() {
 		return delegate.getProperties();
 	}

@@ -17,6 +17,8 @@ import org.hibernate.type.converter.spi.AttributeConverterDefinition;
  * @author Steve Ebersole
  */
 public interface AttributeConverterDescriptor extends AttributeConverterDefinition {
+	String EXPLICIT_TYPE_NAME_PREFIX = "converted::";
+
 	@Override
 	AttributeConverter getAttributeConverter();
 

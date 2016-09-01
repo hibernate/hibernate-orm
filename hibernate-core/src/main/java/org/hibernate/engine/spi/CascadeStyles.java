@@ -155,16 +155,27 @@ public class CascadeStyles {
 	 * create
 	 */
 	public static final CascadeStyle PERSIST = new BaseCascadeStyle() {
+//		@Override
+//		public boolean doCascade(CascadingAction action) {
+//			return action == CascadingActions.PERSIST
+//					|| action == CascadingActions.PERSIST_ON_FLUSH;
+//		}
+//
+		@Override
+		public String toString() {
+			return "STYLE_PERSIST";
+		}
+
 		@Override
 		public boolean doCascade(CascadingAction action) {
 			return action == CascadingActions.PERSIST
 					|| action == CascadingActions.PERSIST_ON_FLUSH;
 		}
-
-		@Override
-		public String toString() {
-			return "STYLE_PERSIST";
-		}
+//
+//		@Override
+//		public String toString() {
+//			return "STYLE_PERSIST_SKIPLAZY";
+//		}
 	};
 
 	/**

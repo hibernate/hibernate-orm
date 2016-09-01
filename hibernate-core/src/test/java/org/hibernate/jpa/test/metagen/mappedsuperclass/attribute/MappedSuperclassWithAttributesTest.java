@@ -6,20 +6,15 @@
  */
 package org.hibernate.jpa.test.metagen.mappedsuperclass.attribute;
 
-import javax.persistence.EntityManagerFactory;
+import static org.junit.Assert.assertNotNull;
+
 import java.util.Arrays;
-
-import org.hibernate.jpa.test.TestingEntityManagerFactoryGenerator;
-import org.hibernate.jpa.test.metagen.mappedsuperclass.attribute.AbstractNameable_;
-import org.hibernate.jpa.test.metagen.mappedsuperclass.attribute.Product_;
+import javax.persistence.EntityManagerFactory;
 import org.hibernate.jpa.AvailableSettings;
-
-import org.junit.Test;
-
+import org.hibernate.jpa.test.TestingEntityManagerFactoryGenerator;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import static org.junit.Assert.assertNotNull;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
@@ -37,6 +32,22 @@ public class MappedSuperclassWithAttributesTest extends BaseUnitTestCase {
 			assertNotNull( "'Product_.name' should not be null)", Product_.name );
 
 			assertNotNull( "'AbstractNameable_.name' should not be null)", AbstractNameable_.name );
+		}
+		finally {
+			emf.close();
+		}
+	}
+
+	@Test
+	public void testStaticMetamodelOverridden() {
+		EntityManagerFactory emf = TestingEntityManagerFactoryGenerator.generateEntityManagerFactory(
+				AvailableSettings.LOADED_CLASSES,
+				Arrays.asList( Product.class )
+		);
+		try {
+			assertNotNull( "'AbstractNameable_.overridenName' should not be null)", AbstractNameable_.overridenName );
+
+			assertNotNull( "'Product_.overridenName' should not be null)", Product_.overridenName ); // is null
 		}
 		finally {
 			emf.close();

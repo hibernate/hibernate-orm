@@ -15,6 +15,7 @@ import javax.persistence.MappedSuperclass;
 @MappedSuperclass
 public abstract class AbstractNameable {
 	private String name;
+	private String overridenName;
 
 	protected AbstractNameable() {
 	}
@@ -30,5 +31,14 @@ public abstract class AbstractNameable {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	@Column(name = "overridenName")
+	public String getOverridenName() {
+		return overridenName;
+	}
+
+	public void setOverridenName(String overridenName) {
+		this.overridenName = overridenName;
 	}
 }

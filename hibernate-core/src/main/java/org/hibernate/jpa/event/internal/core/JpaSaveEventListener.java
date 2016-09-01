@@ -17,7 +17,10 @@ import org.hibernate.jpa.event.spi.jpa.CallbackRegistry;
  * Overrides the LifeCycle OnSave call to call the PrePersist operation
  *
  * @author Emmanuel Bernard
+ *
+ * @deprecated No longer used.  Handling variance has been incorporated directly into DefaultSaveEventListener
  */
+@Deprecated
 public class JpaSaveEventListener extends DefaultSaveEventListener implements CallbackRegistryConsumer {
 	private CallbackRegistry callbackRegistry;
 

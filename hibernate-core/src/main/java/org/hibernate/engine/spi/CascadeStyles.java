@@ -11,6 +11,7 @@ import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.jpa.event.internal.core.JpaPersistEventListener;
 
 import org.jboss.logging.Logger;
 
@@ -155,16 +156,28 @@ public class CascadeStyles {
 	 * create
 	 */
 	public static final CascadeStyle PERSIST = new BaseCascadeStyle() {
-		@Override
-		public boolean doCascade(CascadingAction action) {
-			return action == CascadingActions.PERSIST
-					|| action == CascadingActions.PERSIST_ON_FLUSH;
-		}
-
+//		@Override
+//		public boolean doCascade(CascadingAction action) {
+//			return action == CascadingActions.PERSIST
+//					|| action == CascadingActions.PERSIST_ON_FLUSH;
+//		}
+//
 		@Override
 		public String toString() {
 			return "STYLE_PERSIST";
 		}
+
+		@Override
+		public boolean doCascade(CascadingAction action) {
+			return action == CascadingActions.PERSIST
+					|| action == JpaPersistEventListener.PERSIST_SKIPLAZY
+					|| action == CascadingActions.PERSIST_ON_FLUSH;
+		}
+//
+//		@Override
+//		public String toString() {
+//			return "STYLE_PERSIST_SKIPLAZY";
+//		}
 	};
 
 	/**

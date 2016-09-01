@@ -30,6 +30,6 @@ public class EventListenerServiceInitiator implements SessionFactoryServiceIniti
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryOptions sessionFactoryOptions,
 			ServiceRegistryImplementor registry) {
-		return new EventListenerRegistryImpl();
+		return new EventListenerRegistryImpl( sessionFactoryOptions );
 	}
 }

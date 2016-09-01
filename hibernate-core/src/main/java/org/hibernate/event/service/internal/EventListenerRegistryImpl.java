@@ -11,6 +11,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
+import org.hibernate.annotations.common.reflection.ReflectionManager;
+import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.event.internal.DefaultAutoFlushEventListener;
 import org.hibernate.event.internal.DefaultDeleteEventListener;
 import org.hibernate.event.internal.DefaultDirtyCheckEventListener;
@@ -31,10 +34,21 @@ import org.hibernate.event.internal.DefaultResolveNaturalIdEventListener;
 import org.hibernate.event.internal.DefaultSaveEventListener;
 import org.hibernate.event.internal.DefaultSaveOrUpdateEventListener;
 import org.hibernate.event.internal.DefaultUpdateEventListener;
+import org.hibernate.event.internal.PostDeleteEventListenerStandardImpl;
+import org.hibernate.event.internal.PostInsertEventListenerStandardImpl;
+import org.hibernate.event.internal.PostUpdateEventListenerStandardImpl;
 import org.hibernate.event.service.spi.DuplicationStrategy;
 import org.hibernate.event.service.spi.EventListenerRegistrationException;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
+import org.hibernate.jpa.event.internal.jpa.CallbackBuilderLegacyImpl;
+import org.hibernate.jpa.event.internal.jpa.CallbackRegistryImpl;
+import org.hibernate.jpa.event.spi.jpa.CallbackBuilder;
+import org.hibernate.jpa.event.spi.jpa.CallbackRegistry;
+import org.hibernate.jpa.event.spi.jpa.ListenerFactory;
+import org.hibernate.jpa.event.spi.jpa.ListenerFactoryBuilder;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.service.spi.Stoppable;
 
 import static org.hibernate.event.spi.EventType.AUTO_FLUSH;
 import static org.hibernate.event.spi.EventType.CLEAR;
@@ -76,10 +90,51 @@ import static org.hibernate.event.spi.EventType.UPDATE;
 /**
  * @author Steve Ebersole
  */
-public class EventListenerRegistryImpl implements EventListenerRegistry {
-	private Map<Class,Object> listenerClassToInstanceMap = new HashMap<Class, Object>();
+public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppable {
+	private Map<Class,Object> listenerClassToInstanceMap = new HashMap<>();
 
-	private EventListenerGroupImpl[] registeredEventListeners = prepareListenerAssociation();
+	private final SessionFactoryOptions options;
+
+	private final ListenerFactory jpaListenerFactory;
+	private final CallbackRegistryImpl callbackRegistry;
+
+	private final EventListenerGroupImpl[] registeredEventListeners;
+
+	EventListenerRegistryImpl(SessionFactoryOptions options) {
+		this.options = options;
+
+		this.callbackRegistry = new CallbackRegistryImpl();
+		this.jpaListenerFactory = ListenerFactoryBuilder.buildListenerFactory( options );
+
+		this.registeredEventListeners = buildListenerGroups();
+	}
+
+	public SessionFactoryOptions getOptions() {
+		return options;
+	}
+
+	public CallbackRegistry getCallbackRegistry() {
+		return callbackRegistry;
+	}
+
+	@Override
+	public void prepare(MetadataImplementor metadata) {
+		final ReflectionManager reflectionManager = metadata.getMetadataBuildingOptions().getReflectionManager();
+		final CallbackBuilder callbackBuilder = new CallbackBuilderLegacyImpl( jpaListenerFactory, reflectionManager );
+
+		try {
+			for ( PersistentClass persistentClass : metadata.getEntityBindings() ) {
+				if ( persistentClass.getClassName() == null ) {
+					// we can have non java class persisted by hibernate
+					continue;
+				}
+				callbackBuilder.buildCallbacksForEntity( persistentClass.getClassName(), callbackRegistry );
+			}
+		}
+		finally {
+			callbackBuilder.release();
+		}
+	}
 
 	@SuppressWarnings({ "unchecked" })
 	public <T> EventListenerGroupImpl<T> getEventListenerGroup(EventType<T> eventType) {
@@ -166,239 +221,242 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 		getEventListenerGroup( type ).prependListeners( listeners );
 	}
 
-	private static EventListenerGroupImpl[] prepareListenerAssociation() {
+	private EventListenerGroupImpl[] buildListenerGroups() {
 		EventListenerGroupImpl[] listenerArray = new EventListenerGroupImpl[ EventType.values().size() ];
 
 		// auto-flush listeners
-		prepareListeners(
+		prepareListenerGroup(
 				AUTO_FLUSH,
 				new DefaultAutoFlushEventListener(),
 				listenerArray
 		);
 
 		// create listeners
-		prepareListeners(
+		prepareListenerGroup(
 				PERSIST,
 				new DefaultPersistEventListener(),
 				listenerArray
 		);
 
 		// create-onflush listeners
-		prepareListeners(
+		prepareListenerGroup(
 				PERSIST_ONFLUSH,
 				new DefaultPersistOnFlushEventListener(),
 				listenerArray
 		);
 
 		// delete listeners
-		prepareListeners(
+		prepareListenerGroup(
 				DELETE,
 				new DefaultDeleteEventListener(),
 				listenerArray
 		);
 
 		// dirty-check listeners
-		prepareListeners(
+		prepareListenerGroup(
 				DIRTY_CHECK,
 				new DefaultDirtyCheckEventListener(),
 				listenerArray
 		);
 
 		// evict listeners
-		prepareListeners(
+		prepareListenerGroup(
 				EVICT,
 				new DefaultEvictEventListener(),
 				listenerArray
 		);
 
-		prepareListeners(
+		prepareListenerGroup(
 				CLEAR,
 				listenerArray
 		);
 
 		// flush listeners
-		prepareListeners(
+		prepareListenerGroup(
 				FLUSH,
 				new DefaultFlushEventListener(),
 				listenerArray
 		);
 
 		// flush-entity listeners
-		prepareListeners(
+		prepareListenerGroup(
 				FLUSH_ENTITY,
 				new DefaultFlushEntityEventListener(),
 				listenerArray
 		);
 
 		// load listeners
-		prepareListeners(
+		prepareListenerGroup(
 				LOAD,
 				new DefaultLoadEventListener(),
 				listenerArray
 		);
 
 		// resolve natural-id listeners
-		prepareListeners( 
+		prepareListenerGroup(
 				RESOLVE_NATURAL_ID, 
 				new DefaultResolveNaturalIdEventListener(), 
 				listenerArray
 		);
 
 		// load-collection listeners
-		prepareListeners(
+		prepareListenerGroup(
 				INIT_COLLECTION,
 				new DefaultInitializeCollectionEventListener(),
 				listenerArray
 		);
 
 		// lock listeners
-		prepareListeners(
+		prepareListenerGroup(
 				LOCK,
 				new DefaultLockEventListener(),
 				listenerArray
 		);
 
 		// merge listeners
-		prepareListeners(
+		prepareListenerGroup(
 				MERGE,
 				new DefaultMergeEventListener(),
 				listenerArray
 		);
 
 		// pre-collection-recreate listeners
-		prepareListeners(
+		prepareListenerGroup(
 				PRE_COLLECTION_RECREATE,
 				listenerArray
 		);
 
 		// pre-collection-remove listeners
-		prepareListeners(
+		prepareListenerGroup(
 				PRE_COLLECTION_REMOVE,
 				listenerArray
 		);
 
 		// pre-collection-update listeners
-		prepareListeners(
+		prepareListenerGroup(
 				PRE_COLLECTION_UPDATE,
 				listenerArray
 		);
 
 		// pre-delete listeners
-		prepareListeners(
+		prepareListenerGroup(
 				PRE_DELETE,
 				listenerArray
 		);
 
 		// pre-insert listeners
-		prepareListeners(
+		prepareListenerGroup(
 				PRE_INSERT,
 				listenerArray
 		);
 
 		// pre-load listeners
-		prepareListeners(
+		prepareListenerGroup(
 				PRE_LOAD,
 				new DefaultPreLoadEventListener(),
 				listenerArray
 		);
 
 		// pre-update listeners
-		prepareListeners(
+		prepareListenerGroup(
 				PRE_UPDATE,
 				listenerArray
 		);
 
 		// post-collection-recreate listeners
-		prepareListeners(
+		prepareListenerGroup(
 				POST_COLLECTION_RECREATE,
 				listenerArray
 		);
 
 		// post-collection-remove listeners
-		prepareListeners(
+		prepareListenerGroup(
 				POST_COLLECTION_REMOVE,
 				listenerArray
 		);
 
 		// post-collection-update listeners
-		prepareListeners(
+		prepareListenerGroup(
 				POST_COLLECTION_UPDATE,
 				listenerArray
 		);
 
 		// post-commit-delete listeners
-		prepareListeners(
+		prepareListenerGroup(
 				POST_COMMIT_DELETE,
 				listenerArray
 		);
 
 		// post-commit-insert listeners
-		prepareListeners(
+		prepareListenerGroup(
 				POST_COMMIT_INSERT,
 				listenerArray
 		);
 
 		// post-commit-update listeners
-		prepareListeners(
+		prepareListenerGroup(
 				POST_COMMIT_UPDATE,
 				listenerArray
 		);
 
 		// post-delete listeners
-		prepareListeners(
+		prepareListenerGroup(
 				POST_DELETE,
+				new PostDeleteEventListenerStandardImpl(),
 				listenerArray
 		);
 
 		// post-insert listeners
-		prepareListeners(
+		prepareListenerGroup(
 				POST_INSERT,
+				new PostInsertEventListenerStandardImpl(),
 				listenerArray
 		);
 
 		// post-load listeners
-		prepareListeners(
+		prepareListenerGroup(
 				POST_LOAD,
 				new DefaultPostLoadEventListener(),
 				listenerArray
 		);
 
 		// post-update listeners
-		prepareListeners(
+		prepareListenerGroup(
 				POST_UPDATE,
+				new PostUpdateEventListenerStandardImpl(),
 				listenerArray
 		);
 
 		// update listeners
-		prepareListeners(
+		prepareListenerGroup(
 				UPDATE,
 				new DefaultUpdateEventListener(),
 				listenerArray
 		);
 
 		// refresh listeners
-		prepareListeners(
+		prepareListenerGroup(
 				REFRESH,
 				new DefaultRefreshEventListener(),
 				listenerArray
 		);
 
 		// replicate listeners
-		prepareListeners(
+		prepareListenerGroup(
 				REPLICATE,
 				new DefaultReplicateEventListener(),
 				listenerArray
 		);
 
 		// save listeners
-		prepareListeners(
+		prepareListenerGroup(
 				SAVE,
 				new DefaultSaveEventListener(),
 				listenerArray
 		);
 
 		// save-update listeners
-		prepareListeners(
+		prepareListenerGroup(
 				SAVE_UPDATE,
 				new DefaultSaveOrUpdateEventListener(),
 				listenerArray
@@ -407,19 +465,19 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 		return listenerArray;
 	}
 
-	private static <T> void prepareListeners(EventType<T> type, EventListenerGroupImpl[] listenerArray) {
-		prepareListeners( type, null, listenerArray );
+	private <T> void prepareListenerGroup(EventType<T> type, EventListenerGroupImpl[] listenerArray) {
+		prepareListenerGroup( type, null, listenerArray );
 	}
 
-	private static <T> void prepareListeners(EventType<T> type, T defaultListener, EventListenerGroupImpl[] listenerArray) {
+	private <T> void prepareListenerGroup(EventType<T> type, T defaultListener, EventListenerGroupImpl[] listenerArray) {
 		final EventListenerGroupImpl<T> listenerGroup;
 		if ( type == EventType.POST_COMMIT_DELETE
 				|| type == EventType.POST_COMMIT_INSERT
 				|| type == EventType.POST_COMMIT_UPDATE ) {
-			listenerGroup = new PostCommitEventListenerGroupImpl<T>( type );
+			listenerGroup = new PostCommitEventListenerGroupImpl<>( type, this );
 		}
 		else {
-			listenerGroup = new EventListenerGroupImpl<T>( type );
+			listenerGroup = new EventListenerGroupImpl<>( type, this );
 		}
 
 		if ( defaultListener != null ) {
@@ -428,4 +486,13 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 		listenerArray[ type.ordinal() ] = listenerGroup;
 	}
 
+	@Override
+	public void stop() {
+		if ( callbackRegistry != null ) {
+			callbackRegistry.release();
+		}
+		if ( jpaListenerFactory != null ) {
+			jpaListenerFactory.release();
+		}
+	}
 }

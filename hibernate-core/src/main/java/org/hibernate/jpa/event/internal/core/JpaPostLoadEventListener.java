@@ -13,7 +13,10 @@ import org.hibernate.jpa.event.spi.jpa.CallbackRegistry;
 
 /**
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
+ *
+ * @deprecated No longer used.  Handling variance has been incorporated directly into DefaultPostLoadEventListener
  */
+@Deprecated
 public class JpaPostLoadEventListener implements PostLoadEventListener, CallbackRegistryConsumer {
 	CallbackRegistry callbackRegistry;
 

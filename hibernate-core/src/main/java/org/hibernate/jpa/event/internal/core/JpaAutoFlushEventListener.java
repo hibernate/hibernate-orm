@@ -18,7 +18,10 @@ import org.hibernate.event.spi.AutoFlushEventListener;
  * operation in Hibernate).
  *
  * @author Gavin King
+ *
+ * @deprecated No longer used.  Handling variance has been incorporated directly into DefaultAutoFlushEventListener
  */
+@Deprecated
 public class JpaAutoFlushEventListener
 		extends DefaultAutoFlushEventListener
 		implements HibernateEntityManagerEventListener {

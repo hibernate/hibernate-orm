@@ -11,7 +11,10 @@ import org.hibernate.engine.spi.CascadingActions;
 
 /**
  * @author Emmanuel Bernard
+ *
+ * @deprecated No longer used.  Handling variance has been incorporated directly into DefaultPersistOnFlushEventListener
  */
+@Deprecated
 public class JpaPersistOnFlushEventListener extends JpaPersistEventListener {
 	@Override
 	protected CascadingAction getCascadeAction() {

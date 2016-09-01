@@ -18,7 +18,10 @@ import org.hibernate.event.spi.FlushEventListener;
  * save-update operation in Hibernate).
  *
  * @author Gavin King
+ *
+ * @deprecated No longer used.  Handling variance has been incorporated directly into DefaultFlushEventListener
  */
+@Deprecated
 public class JpaFlushEventListener extends DefaultFlushEventListener implements HibernateEntityManagerEventListener {
 	public static final FlushEventListener INSTANCE = new JpaFlushEventListener();
 

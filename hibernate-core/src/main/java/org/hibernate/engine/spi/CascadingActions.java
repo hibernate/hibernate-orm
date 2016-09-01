@@ -303,8 +303,12 @@ public class CascadingActions {
 				EventSource session,
 				CollectionType collectionType,
 				Object collection) {
-			// persists don't cascade to uninitialized collections
-			return getAllElementsIterator( session, collectionType, collection );
+			if ( session.getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
+				return getLoadedElementsIterator( session, collectionType, collection );
+			}
+			else {
+				return getAllElementsIterator( session, collectionType, collection );
+			}
 		}
 
 		@Override
@@ -346,8 +350,12 @@ public class CascadingActions {
 				EventSource session,
 				CollectionType collectionType,
 				Object collection) {
-			// persists don't cascade to uninitialized collections
-			return getLoadedElementsIterator( session, collectionType, collection );
+			if ( session.getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
+				return getLoadedElementsIterator( session, collectionType, collection );
+			}
+			else {
+				return getAllElementsIterator( session, collectionType, collection );
+			}
 		}
 
 		@Override

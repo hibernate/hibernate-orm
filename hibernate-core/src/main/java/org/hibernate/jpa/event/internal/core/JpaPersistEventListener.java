@@ -25,7 +25,10 @@ import org.jboss.logging.Logger;
  * Overrides the LifeCycle OnSave call to call the PrePersist operation
  *
  * @author Emmanuel Bernard
+ *
+ * @deprecated No longer used.  Handling variance has been incorporated directly into DefaultPersistEventListener
  */
+@Deprecated
 public class JpaPersistEventListener extends DefaultPersistEventListener implements CallbackRegistryConsumer {
 	private static final Logger log = Logger.getLogger( JpaPersistEventListener.class );
 

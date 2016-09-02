@@ -1066,8 +1066,8 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToDropTemporaryIdTable(String message);
 
 	@LogMessage(level = ERROR)
-	@Message(value = "Exception executing batch [%s]", id = 315)
-	void unableToExecuteBatch(String message);
+	@Message(value = "Exception executing batch [%s], SQL: %s", id = 315)
+	void unableToExecuteBatch(Exception e, String sql );
 
 	@LogMessage(level = WARN)
 	@Message(value = "Error executing resolver [%s] : %s", id = 316)

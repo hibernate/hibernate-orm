@@ -6,7 +6,6 @@
  */
 package org.hibernate.jpa.test.metagen.mappedsuperclass.attribute;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -31,14 +30,5 @@ public class Product extends AbstractNameable {
 
 	private void setId(Long id) {
 		this.id = id;
-	}
-
-	@Column(name = "overridenName")
-	public String getOverridenName() {
-		return super.getOverridenName();
-	}
-
-	public void setOverridenName(String overridenName) {
-		super.setOverridenName(overridenName);
 	}
 }

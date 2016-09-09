@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.inheritancediscriminator;
+package org.hibernate.test.inheritance.discriminator;
 
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.Entity;

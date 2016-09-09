@@ -21,46 +21,56 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.inheritancediscriminator;
+package org.hibernate.test.inheritance.discriminator;
 
-import org.hibernate.Session;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
 
 /**
- * Test cases for joined inheritance with a discriminator column.
+ * Sub class for testing joined inheritance with a discriminator column.
  *
  * @author Etienne Miret
  */
-public class JoinedInheritanceTest extends BaseCoreFunctionalTestCase {
+@Entity
+@DiscriminatorValue( "quadrilateral" )
+public class Quadrilateral extends Polygon {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Polygon.class, Quadrilateral.class };
+	private Double angleA;
+	private Double angleB;
+	private Double angleC;
+
+	public Double getAngleA() {
+		return angleA;
 	}
 
-	@Test
-	public void simpleSelectTest() {
-		final Session s = openSession();
-		s.getTransaction().begin();
-
-		s.createQuery( "from Polygon" ).list();
-
-		s.getTransaction().commit();
-		s.close();
+	public void setAngleA(final Double angleA) {
+		this.angleA = angleA;
 	}
 
-	@Test
-	@TestForIssue( jiraKey = "HHH-9357" )
-	public void selectWhereTypeEqual() {
-		final Session s = openSession();
-		s.getTransaction().begin();
+	public Double getAngleB() {
+		return angleB;
+	}
 
-		s.createQuery( "from Polygon p where type(p) = Quadrilateral" ).list();
+	public void setAngleB(final Double angleB) {
+		this.angleB = angleB;
+	}
 
-		s.getTransaction().commit();
-		s.close();
+	public Double getAngleC() {
+		return angleC;
+	}
+
+	public void setAngleC(final Double angleC) {
+		this.angleC = angleC;
+	}
+
+	/**
+	 * Compute angle D.
+	 *
+	 * @return angle D.
+	 * @throws NullPointerException if one of the other angles is not set.
+	 */
+	public Double getAngleD() {
+		return new Double( Math.PI * 2 - angleA.doubleValue() - angleB.doubleValue() - angleC.doubleValue() );
 	}
 
 }

@@ -22,8 +22,4 @@ public interface FromImplementor<Z,X> extends PathImplementor<X>, From<Z,X> {
 	FromImplementor<Z,X> correlateTo(CriteriaSubqueryImpl subquery);
 	void prepareCorrelationDelegate(FromImplementor<Z,X> parent);
 	FromImplementor<Z, X> getCorrelationParent();
-
-	default boolean shouldBeRendered(){
-		return true;
-	}
 }

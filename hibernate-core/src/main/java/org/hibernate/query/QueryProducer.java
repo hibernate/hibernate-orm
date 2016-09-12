@@ -86,22 +86,6 @@ public interface QueryProducer {
 	<R> Query<R> createNamedQuery(String name, Class<R> resultClass);
 
 	/**
-	 * Create a {@link NativeQuery} instance for the given SQL query string.
-	 *
-	 * @param queryString The SQL query
-	 *
-	 * @return The query instance for manipulation and execution
-	 *
-	 * @deprecated (since 5.2) use {@link #createNativeQuery(String)} instead
-	 */
-	@Deprecated
-	default NativeQuery createSQLQuery(String queryString) {
-		NativeQuery query = createNativeQuery( queryString );
-		query.setComment( "dynamic native SQL query" );
-		return query;
-	}
-
-	/**
 	 * Create a NativeQuery instance for the given native (SQL) query
 	 *
 	 * @param sqlString a native SQL query string
@@ -123,7 +107,7 @@ public interface QueryProducer {
 	 *
 	 * @see javax.persistence.EntityManager#createNativeQuery(String,Class)
 	 */
-	<R> NativeQuery<R> createNativeQuery(String sqlString, Class<R> resultClass);
+	NativeQuery createNativeQuery(String sqlString, Class resultClass);
 
 	/**
 	 * Create a NativeQuery instance for the given native (SQL) query using
@@ -138,20 +122,6 @@ public interface QueryProducer {
 	 * @see javax.persistence.SqlResultSetMapping
 	 */
 	NativeQuery createNativeQuery(String sqlString, String resultSetMapping);
-
-	/**
-	 * Get a NativeQuery instance for a named native SQL query
-	 *
-	 * @param name The name of the pre-defined query
-	 *
-	 * @return The NativeQuery instance for manipulation and execution
-	 *
-	 * @deprecated (since 5.2) use {@link #getNamedNativeQuery(String)} instead
-	 */
-	@Deprecated
-	default NativeQuery getNamedSQLQuery(String name) {
-		return getNamedNativeQuery( name );
-	}
 
 	/**
 	 * Get a NativeQuery instance for a named native SQL query

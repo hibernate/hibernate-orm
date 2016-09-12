@@ -463,27 +463,7 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public String getQueryString() {
-		return null;
-	}
-
-	@Override
-	public String[] getReturnAliases() {
-		throw new UnsupportedOperationException( "Procedure/function calls do not support returning aliases" );
-	}
-
-	@Override
-	public Type[] getReturnTypes() {
-		throw new UnsupportedOperationException( "Procedure/function calls do not support returning 'return types'" );
-	}
-
-	@Override
-	public ProcedureCallImplementor<R> setEntity(int position, Object val) {
-		return null;
-	}
-
-	@Override
-	public ProcedureCallImplementor<R> setEntity(String name, Object val) {
-		return null;
+		return getProcedureName() + "(...)";
 	}
 
 	/**

@@ -40,7 +40,6 @@ import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
-import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.spi.Type;
 
 import static org.hibernate.jpa.QueryHints.HINT_NATIVE_LOCKMODE;
@@ -378,28 +377,6 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 	}
 
 	@Override
-	public String[] getReturnAliases() {
-		throw new UnsupportedOperationException( "Native (SQL) queries do not support returning aliases" );
-	}
-
-	@Override
-	public Type[] getReturnTypes() {
-		throw new UnsupportedOperationException( "Native (SQL) queries do not support returning 'return types'" );
-	}
-
-	@Override
-	public NativeQueryImplementor<T> setEntity(int position, Object val) {
-		setParameter( position, val, getProducer().getFactory().getTypeHelper().entity( resolveEntityName( val ) ) );
-		return this;
-	}
-
-	@Override
-	public NativeQueryImplementor<T> setEntity(String name, Object val) {
-		setParameter( name, val, getProducer().getFactory().getTypeHelper().entity( resolveEntityName( val ) ) );
-		return this;
-	}
-
-	@Override
 	public Collection<String> getSynchronizedQuerySpaces() {
 		return querySpaces;
 	}
@@ -448,12 +425,6 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 	@Override
 	public NativeQueryImplementor<T> setHibernateFlushMode(FlushMode flushMode) {
 		super.setHibernateFlushMode( flushMode );
-		return this;
-	}
-
-	@Override
-	public NativeQueryImplementor<T> setFlushMode(FlushMode flushMode) {
-		super.setFlushMode( flushMode );
 		return this;
 	}
 
@@ -685,12 +656,6 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 	@Override
 	public NativeQueryImplementor<T> setParameter(int position, Date value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
-		return this;
-	}
-
-	@Override
-	public NativeQueryImplementor<T> setResultTransformer(ResultTransformer transformer) {
-		super.setResultTransformer( transformer );
 		return this;
 	}
 

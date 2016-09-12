@@ -9,14 +9,15 @@ package org.hibernate.engine.spi;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
+import javax.persistence.LockModeType;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
-import javax.persistence.criteria.Selection;
 
 import org.hibernate.HibernateException;
+import org.hibernate.LockOptions;
 import org.hibernate.Session;
-import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
+import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.query.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
@@ -54,23 +55,41 @@ import org.hibernate.type.spi.descriptor.WrapperOptions;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface SessionImplementor
-		extends Session, SharedSessionContractImplementor, HibernateEntityManagerImplementor {
+public interface SessionImplementor extends Session, SharedSessionContractImplementor {
 
 	@Override
 	SessionFactoryImplementor getSessionFactory();
-
-	/**
-	 * @deprecated (since 5.2) use {@link #getHibernateFlushMode()} instead.
-	 */
-	@Deprecated
-	boolean isFlushBeforeCompletionEnabled();
 
 	ActionQueue getActionQueue();
 
 	Object instantiate(EntityPersister persister, Serializable id) throws HibernateException;
 
 	void forceFlush(EntityEntry e) throws HibernateException;
+
+	/**
+	 * Used to ensure the EntityManager is open, throwing IllegalStateException if it is closed.
+	 *
+	 * Depending on the value of {@code markForRollbackIfClosed}, may also rollback any enlisted-in transaction.  This
+	 * distinction is made across various sections of the spec.  Most failed checks should rollback.  Section
+	 * 3.10.7 (per 2.1 spec) lists cases related to calls on related query objects that should not rollback.
+	 *
+	 * @param markForRollbackIfClosed If the EM is closed, should the transaction (if one) be marked for rollback?
+	 *
+	 * @throws IllegalStateException Thrown if the EM is closed
+	 */
+	void checkOpen(boolean markForRollbackIfClosed) throws IllegalStateException;
+
+	/**
+	 * Provides access to whether a transaction is currently in progress.
+	 *
+	 * @return True if a transaction is considered currently in progress; false otherwise.
+	 */
+	boolean isTransactionInProgress();
+
+	/**
+	 * Used to mark a transaction for rollback only (when that is the JPA spec defined behavior).
+	 */
+	void markForRollbackOnly();
 
 	@Override
 	QueryImplementor createQuery(String queryString);
@@ -100,9 +119,6 @@ public interface SessionImplementor
 	QueryImplementor getNamedQuery(String queryName);
 
 	@Override
-	NativeQueryImplementor getNamedSQLQuery(String name);
-
-	@Override
 	<T> QueryImplementor<T> createQuery(CriteriaQuery<T> criteriaQuery);
 
 	@Override
@@ -111,20 +127,8 @@ public interface SessionImplementor
 	@Override
 	QueryImplementor createQuery(CriteriaDelete deleteQuery);
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @deprecated (since 5.2) - see deprecation note on super
-	 *
-	 * @return The typed query
-	 */
-	@Deprecated
-	@Override
-	<T> QueryImplementor<T> createQuery(
-			String jpaqlString,
-			Class<T> resultClass,
-			Selection selection,
-			QueryOptions queryOptions);
+
+
 
 	/**
 	 * @deprecated  OperationalContext should cover this overload I believe; Gail?

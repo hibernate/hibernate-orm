@@ -29,6 +29,7 @@ import org.hibernate.sqm.query.DeleteStatement;
 import org.hibernate.sqm.query.InsertSelectStatement;
 import org.hibernate.sqm.query.QuerySpec;
 import org.hibernate.sqm.query.SelectStatement;
+import org.hibernate.sqm.query.SqmStatementSelect;
 import org.hibernate.sqm.query.UpdateStatement;
 import org.hibernate.sqm.query.expression.AttributeReferenceSqmExpression;
 import org.hibernate.sqm.query.expression.BinaryArithmeticSqmExpression;
@@ -103,7 +104,7 @@ public class SelectStatementInterpreter extends BaseSemanticQueryWalker {
 	 *
 	 * @return The SQL AST
 	 */
-	public static SelectQuery interpret(SelectStatement statement, QueryOptions queryOptions, Callback callback) {
+	public static SelectQuery interpret(SqmStatementSelect statement, QueryOptions queryOptions, Callback callback) {
 		final SelectStatementInterpreter walker = new SelectStatementInterpreter( queryOptions, callback );
 		return walker.interpret( statement );
 	}

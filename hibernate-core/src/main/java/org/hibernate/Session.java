@@ -16,7 +16,7 @@ import javax.persistence.criteria.CriteriaUpdate;
 
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
-import org.hibernate.jpa.HibernateEntityManager;
+import org.hibernate.query.Query;
 import org.hibernate.stat.SessionStatistics;
 
 /**
@@ -80,7 +80,7 @@ import org.hibernate.stat.SessionStatistics;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface Session extends SharedSessionContract, EntityManager, HibernateEntityManager, AutoCloseable {
+public interface Session extends SharedSessionContract, EntityManager, AutoCloseable {
 	/**
 	 * Obtain a {@link Session} builder with the ability to grab certain information from this session.
 	 *
@@ -231,6 +231,7 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 *
 	 * To override this session's read-only/modifiable setting for entities
 	 * and proxies loaded by a Query:
+	 *
 	 * @see Query#setReadOnly(boolean)
 	 *
 	 * @param readOnly true, the default for loaded entities/proxies is read-only;

@@ -18,12 +18,11 @@ import javax.persistence.metamodel.PluralAttribute;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.jpa.spi.HibernateEntityManagerFactoryAware;
 import org.hibernate.metamodel.internal.Helper;
 import org.hibernate.metamodel.internal.PluralAttributeImpl;
 import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.spi.Type;
 
@@ -32,7 +31,7 @@ import org.hibernate.type.spi.Type;
  *
  * @author Steve Ebersole
  */
-public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImplementor<T>, HibernateEntityManagerFactoryAware {
+public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImplementor<T> {
 	private final SessionFactoryImplementor sessionFactory;
 	private final Attribute<?,T> attribute;
 	private final ManagedType managedType;
@@ -66,7 +65,6 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 		this.keySubgraphMap = keySubgraphMap;
 	}
 
-	@Override
 	public SessionFactoryImplementor getFactory() {
 		return sessionFactory;
 	}

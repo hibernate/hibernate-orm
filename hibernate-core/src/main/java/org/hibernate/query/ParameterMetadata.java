@@ -9,11 +9,14 @@ package org.hibernate.query;
 import java.util.Set;
 import javax.persistence.Parameter;
 
+import org.hibernate.Incubating;
+
 /**
  * Access to known information about the parameters for a query.
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface ParameterMetadata {
 
 	/**
@@ -30,27 +33,36 @@ public interface ParameterMetadata {
 	 */
 	boolean hasPositionalParameters();
 
-	Set<QueryParameter<?>> collectAllParameters();
-
-	Set<Parameter<?>> collectAllParametersJpa();
-
 	/**
-	 * Return the names of all named parameters of the query.
+	 * Returns the number of named parameters.
 	 *
-	 * @return the parameter names, in no particular order
+	 * @return The number of named parameters.  Will return zero if
+	 * {@link #hasNamedParameters()} ()} is {@code false}
 	 */
-	Set<String> getNamedParameterNames();
+	int getNamedParameterCount();
 
 	/**
 	 * Returns the number of positional parameters.
 	 *
-	 * @return The number of positional parameters.
+	 * @return The number of positional parameters.  Will return zero if
+	 * {@link #hasPositionalParameters()} is {@code false}
 	 */
 	int getPositionalParameterCount();
 
+	/**
+	 * Return the names of all named parameters of the query.
+	 *
+	 * @return the parameter names
+	 */
+	Set<String> getNamedParameterNames();
+
+	Set<QueryParameter<?>> collectAllParameters();
+
+	Set<Parameter<?>> collectAllParametersJpa();
+
 	<T> QueryParameter<T> getQueryParameter(String name);
 
-	<T> QueryParameter<T> getQueryParameter(Integer position);
+	<T> QueryParameter<T> getQueryParameter(int position);
 
 	<T> QueryParameter<T> resolve(Parameter<T> param);
 

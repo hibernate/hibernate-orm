@@ -9,7 +9,9 @@ package org.hibernate.jpa;
 /**
  * Defines the available HEM settings, both JPA-defined as well as Hibernate-specific
  * <p/>
- * NOTE : Does *not* include {@link org.hibernate.cfg.Environment} values.
+ * NOTE : Does *not* include {@link org.hibernate.cfg.AvailableSettings} values.
+ *
+ * @todo merge org.hibernate.jpa.AvailableSettings into org.hibernate.cfg.AvailableSettings
  *
  * @author Steve Ebersole
  */

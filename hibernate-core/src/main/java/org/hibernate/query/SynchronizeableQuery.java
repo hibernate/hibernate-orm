@@ -4,9 +4,11 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate;
+package org.hibernate.query;
 
 import java.util.Collection;
+
+import org.hibernate.MappingException;
 
 /**
  * A unifying interface for queries which can define tables (query spaces) to synchronize on.
@@ -19,7 +21,7 @@ import java.util.Collection;
  *
  * @author Steve Ebersole
  */
-public interface SynchronizeableQuery<T> {
+public interface SynchronizeableQuery {
 	/**
 	 * Obtain the list of query spaces the query is synchronized on.
 	 *
@@ -34,7 +36,7 @@ public interface SynchronizeableQuery<T> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	SynchronizeableQuery<T> addSynchronizedQuerySpace(String querySpace);
+	SynchronizeableQuery addSynchronizedQuerySpace(String querySpace);
 
 	/**
 	 * Adds an entity name for (a) auto-flush checking and (b) query result cache invalidation checking.  Same as
@@ -46,7 +48,7 @@ public interface SynchronizeableQuery<T> {
 	 *
 	 * @throws MappingException Indicates the given name could not be resolved as an entity
 	 */
-	SynchronizeableQuery<T> addSynchronizedEntityName(String entityName) throws MappingException;
+	SynchronizeableQuery addSynchronizedEntityName(String entityName) throws MappingException;
 
 	/**
 	 * Adds an entity for (a) auto-flush checking and (b) query result cache invalidation checking.  Same as
@@ -58,5 +60,5 @@ public interface SynchronizeableQuery<T> {
 	 *
 	 * @throws MappingException Indicates the given class could not be resolved as an entity
 	 */
-	SynchronizeableQuery<T> addSynchronizedEntityClass(Class entityClass) throws MappingException;
+	SynchronizeableQuery addSynchronizedEntityClass(Class entityClass) throws MappingException;
 }

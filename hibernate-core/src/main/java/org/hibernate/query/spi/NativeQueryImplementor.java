@@ -11,6 +11,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
+import javax.persistence.FlushModeType;
 import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
 
@@ -32,7 +33,7 @@ public interface NativeQueryImplementor<T> extends QueryImplementor<T>, NativeQu
 	NativeQueryImplementor setCollectionKey(Serializable key);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// overrides
+	// covariant overrides - NativeQuery
 
 	@Override
 	NativeQueryImplementor<T> addScalar(String columnAlias);
@@ -71,7 +72,23 @@ public interface NativeQueryImplementor<T> extends QueryImplementor<T>, NativeQu
 	NativeQueryImplementor<T> addJoin(String tableAlias, String path, LockMode lockMode);
 
 	@Override
+	NativeQueryImplementor<T> addSynchronizedQuerySpace(String querySpace);
+
+	@Override
+	NativeQueryImplementor<T> addSynchronizedEntityName(String entityName) throws MappingException;
+
+	@Override
+	NativeQueryImplementor<T> addSynchronizedEntityClass(Class entityClass) throws MappingException;
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// covariant overrides - Query / QueryImplementor
+
+	@Override
 	NativeQueryImplementor<T> setHibernateFlushMode(FlushMode flushMode);
+
+	@Override
+	NativeQueryImplementor<T> setFlushMode(FlushModeType flushMode);
 
 	@Override
 	NativeQueryImplementor<T> setCacheMode(CacheMode cacheMode);
@@ -172,15 +189,4 @@ public interface NativeQueryImplementor<T> extends QueryImplementor<T>, NativeQu
 	@Override
 	NativeQueryImplementor<T> setParameter(int position, Date value, TemporalType temporalType);
 
-	@Override
-	NativeQueryImplementor<T> addSynchronizedQuerySpace(String querySpace);
-
-	@Override
-	NativeQueryImplementor<T> addSynchronizedEntityName(String entityName) throws MappingException;
-
-	@Override
-	NativeQueryImplementor<T> setFlushMode(FlushMode flushMode);
-
-	@Override
-	NativeQueryImplementor<T> addSynchronizedEntityClass(Class entityClass) throws MappingException;
 }

@@ -19,7 +19,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphNodeImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.jpa.spi.HibernateEntityManagerFactoryAware;
 
 import org.jboss.logging.Logger;
 
@@ -28,7 +27,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractGraphNode<T> implements GraphNodeImplementor, HibernateEntityManagerFactoryAware {
+public abstract class AbstractGraphNode<T> implements GraphNodeImplementor {
 	private static final Logger log = Logger.getLogger( AbstractGraphNode.class );
 
 	private final SessionFactoryImplementor sessionFactory;
@@ -65,8 +64,6 @@ public abstract class AbstractGraphNode<T> implements GraphNodeImplementor, Hibe
 		return copy;
 	}
 
-
-	@Override
 	public SessionFactoryImplementor getFactory() {
 		return sessionFactory;
 	}

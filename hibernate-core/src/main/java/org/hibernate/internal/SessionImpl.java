@@ -39,12 +39,10 @@ import javax.persistence.PersistenceException;
 import javax.persistence.PessimisticLockScope;
 import javax.persistence.StoredProcedureQuery;
 import javax.persistence.TransactionRequiredException;
-import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
-import javax.persistence.criteria.Selection;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
@@ -147,16 +145,14 @@ import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
-import org.hibernate.jpa.spi.CriteriaQueryTupleTransformer;
-import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 import org.hibernate.loader.criteria.CriteriaLoader;
 import org.hibernate.loader.custom.CustomLoader;
 import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.MultiLoadOptions;
 import org.hibernate.persister.entity.OuterJoinLoadable;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureCallMemento;
@@ -166,7 +162,6 @@ import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.Query;
 import org.hibernate.query.criteria.internal.compile.CompilableCriteria;
 import org.hibernate.query.criteria.internal.compile.CriteriaCompiler;
-import org.hibernate.query.criteria.internal.expression.CompoundSelectionImpl;
 import org.hibernate.query.internal.CollectionFilterImpl;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
@@ -202,7 +197,7 @@ import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
  */
 public final class SessionImpl
 		extends AbstractSessionImpl
-		implements EventSource, SessionImplementor, HibernateEntityManagerImplementor {
+		implements EventSource, SessionImplementor {
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( SessionImpl.class );
 	private static final boolean TRACE_ENABLED = log.isTraceEnabled();
 
@@ -295,7 +290,7 @@ public final class SessionImpl
 		applyEntityManagerSpecificProperties();
 		setHibernateFlushMode( ConfigurationHelper.getFlushMode( properties.get( AvailableSettings.FLUSH_MODE ), FlushMode.AUTO ) );
 		setLockOptions( this.properties, this.lockOptions );
-		getSession().setCacheMode(
+		setCacheMode(
 				CacheModeHelper.interpretCacheMode(
 						currentCacheStoreMode(),
 						currentCacheRetrieveMode()
@@ -3173,11 +3168,6 @@ public final class SessionImpl
 		return status == TransactionStatus.ACTIVE || status == TransactionStatus.COMMITTING;
 	}
 
-	@Override
-	public boolean isFlushBeforeCompletionEnabled() {
-		return getHibernateFlushMode() != FlushMode.MANUAL;
-	}
-
 	private static final AfterCompletionAction STANDARD_AFTER_COMPLETION_ACTION = (AfterCompletionAction) (successful, session) -> {
 		// nothing to do by default.
 	};
@@ -3197,20 +3187,6 @@ public final class SessionImpl
 	};
 
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// HibernateEntityManager impl
-
-	@Override
-	public SessionImplementor getSession() {
-		return this;
-	}
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// HibernateEntityManagerImplementor impl
-
-
-	@Override
 	public LockOptions getLockRequest(LockModeType lockModeType, Map<String, Object> properties) {
 		LockOptions lockOptions = new LockOptions();
 		LockOptions.copy( this.lockOptions, lockOptions );
@@ -3262,39 +3238,6 @@ public final class SessionImpl
 			else {
 				options.setTimeOut( timeout );
 			}
-		}
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public <T> QueryImplementor<T> createQuery(
-			String jpaqlString,
-			Class<T> resultClass,
-			Selection selection,
-			QueryOptions queryOptions) {
-		try {
-			final QueryImplementor query = createQuery( jpaqlString );
-
-			if ( queryOptions.getValueHandlers() == null ) {
-				if ( queryOptions.getResultMetadataValidator() != null ) {
-					queryOptions.getResultMetadataValidator().validate( query.getReturnTypes() );
-				}
-			}
-
-			// determine if we need a result transformer
-			List tupleElements = Tuple.class.equals( resultClass )
-					? ( (CompoundSelectionImpl<Tuple>) selection ).getCompoundSelectionItems()
-					: null;
-			if ( queryOptions.getValueHandlers() != null || tupleElements != null ) {
-				query.setResultTransformer(
-						new CriteriaQueryTupleTransformer( queryOptions.getValueHandlers(), tupleElements )
-				);
-			}
-
-			return query;
-		}
-		catch ( RuntimeException e ) {
-			throw exceptionConverter.convert( e );
 		}
 	}
 
@@ -3456,6 +3399,16 @@ public final class SessionImpl
 		catch (RuntimeException e) {
 			throw exceptionConverter.convert( e, lockOptions );
 		}
+	}
+
+	private LockOptions buildLockOptions(LockModeType lockModeType, Map<String, Object> properties) {
+		LockOptions lockOptions = new LockOptions();
+		LockOptions.copy( this.lockOptions, lockOptions );
+		lockOptions.setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
+		if ( properties != null ) {
+			setLockOptions( properties, lockOptions );
+		}
+		return lockOptions;
 	}
 
 	@Override

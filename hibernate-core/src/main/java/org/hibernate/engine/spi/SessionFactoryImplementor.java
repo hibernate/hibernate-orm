@@ -7,6 +7,7 @@
 package org.hibernate.engine.spi;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.persistence.EntityGraph;
@@ -43,9 +44,12 @@ import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.Query;
 import org.hibernate.query.spi.NamedQueryRepository;
+import org.hibernate.query.spi.QueryInterpretations;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.sqm.ConsumerContext;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.TypeResolver;
@@ -60,7 +64,8 @@ import org.hibernate.type.TypeResolver;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface SessionFactoryImplementor extends Mapping, SessionFactory, QueryParameterBindingTypeResolver {
+public interface SessionFactoryImplementor
+		extends Mapping, SessionFactory, QueryParameterBindingTypeResolver, ConsumerContext {
 	/**
 	 * Get the UUID for this SessionFactory.  The value is generated as a {@link java.util.UUID}, but kept
 	 * as a String.
@@ -174,6 +179,8 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, Quer
 		return getMetamodel().getEntityNameResolvers();
 	}
 
+	QueryInterpretations getQueryInterpretations();
+
 	/**
 	 * Contract for resolving this SessionFactory on deserialization
 	 */
@@ -182,6 +189,16 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, Quer
 	}
 
 	DeserializationResolver getDeserializationResolver();
+
+	/**
+	 * Find all  {@code EntityGraph}s associated with a given entity type.
+	 *
+	 * @param entityClass the entity type for which to find all {@code EntityGraph}s.
+	 *
+	 * @return A list of {@code EntityGraph} instances associated with the given entity type. The empty list is
+	 * returned in case there are not entity graphs.
+	 */
+	<T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass);
 
 
 

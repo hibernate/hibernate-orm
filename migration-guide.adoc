@@ -19,6 +19,24 @@ from an API perspective.
 == Misc
 
 * removed `org.hibernate.type.TypeHelper` and `org.hibernate.type.TypeResolver`, as well as methods exposing
-access to them.  For the most part, replace with calls to `org.hibernate.Metamodel`
-and/or `org.hibernate.type.spi.TypeConfiguration`.
+	access to them.  For the most part, replace with calls to `org.hibernate.Metamodel`
+	and/or `org.hibernate.type.spi.TypeConfiguration`.
 * removed `org.hibernate.type.TypeFactory` in favor of `TypeConfiguration`
+*  I think SqlTypeDescriptor should have some say in determining the JdbcLiteralFormatter to use.  Currently this is
+	defined on the mapper Type and the JavaTypeDescriptor.  But really its the fact that its a VARCHAR that dictates
+	that a literal should be quoted, e.g.
+* Moved `org.hibernate.jpa.event.spi.jpa.ExtendedBeanManager` to `org.hibernate.resource.cdi.spi.ExtendedBeanManager`
+
+
+== todo
+
+* need to split AttributeConverterDescriptor from AttributeConverterDefinition.  The former is the "bootstrap view" of
+	an AttributeConverter, whereas the latter is the runtime view of it.  In the bootstrap view we want to minimize
+	access to the AttributeConverter instance (unless we were handed an instance).  Also AttributeConverterDescriptor
+	needs to define the shouldAutoApplyToXYZ methods whereas that would not be appropriate for the runtime view.
+* merge `org.hibernate.jpa.AvailableSettings` into `org.hibernate.cfg.AvailableSettings`
+* design appropriate "keys" into the various "query interpretation" caches based on SQM.
+* ideally (perf wise) we'd "build and collect" ParameterMetadata as we build the SQM.  The alternative is to
+ 	build the SQM and then walk it to "build and collect" ParameterMetadata (extra walk).  This would mean either:
+ 	** collecting/storing and exposing the parameters on the SqmStatement itself
+ 	** passing an "ExpressionVisitor" into the SQM interpreter.

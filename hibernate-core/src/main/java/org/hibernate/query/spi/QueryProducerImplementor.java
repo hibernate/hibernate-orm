@@ -24,25 +24,17 @@ public interface QueryProducerImplementor extends QueryProducer {
 	FlushMode getHibernateFlushMode();
 	CacheMode getCacheMode();
 
-	// todo : define list/scroll/iterate methods here...
+	// todo : define the "execution methods" (list, scroll, iterate, etc) here...
 
 
-	// overrides...
-
-	@Override
-	QueryImplementor getNamedQuery(String queryName);
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// covariant overrides
 
 	@Override
 	QueryImplementor createQuery(String queryString);
 
 	@Override
 	<R> QueryImplementor<R> createQuery(String queryString, Class<R> resultClass);
-
-	@Override
-	Query createNamedQuery(String name);
-
-	@Override
-	<R> QueryImplementor<R> createNamedQuery(String name, Class<R> resultClass);
 
 	@Override
 	NativeQueryImplementor createNativeQuery(String sqlString);
@@ -54,15 +46,14 @@ public interface QueryProducerImplementor extends QueryProducer {
 	NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMapping);
 
 	@Override
+	QueryImplementor getNamedQuery(String queryName);
+
+	@Override
+	QueryImplementor createNamedQuery(String name);
+
+	@Override
+	<R> QueryImplementor<R> createNamedQuery(String name, Class<R> resultClass);
+
+	@Override
 	NativeQueryImplementor getNamedNativeQuery(String name);
-
-	@Override
-	default NativeQueryImplementor getNamedSQLQuery(String name) {
-		return (NativeQueryImplementor) QueryProducer.super.getNamedSQLQuery( name );
-	}
-
-	@Override
-	default NativeQueryImplementor createSQLQuery(String queryString) {
-		return (NativeQueryImplementor) QueryProducer.super.createSQLQuery( queryString );
-	}
 }

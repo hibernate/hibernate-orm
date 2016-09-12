@@ -11,16 +11,16 @@ import java.util.Map;
 import javax.persistence.ParameterMode;
 import javax.persistence.StoredProcedureQuery;
 
-import org.hibernate.BasicQueryContract;
 import org.hibernate.MappingException;
-import org.hibernate.SynchronizeableQuery;
+import org.hibernate.query.CommonQueryContract;
+import org.hibernate.query.SynchronizeableQuery;
 
 /**
  * Defines support for executing database stored procedures and functions
  *
  * @author Steve Ebersole
  */
-public interface ProcedureCall extends BasicQueryContract, SynchronizeableQuery, StoredProcedureQuery {
+public interface ProcedureCall extends CommonQueryContract, SynchronizeableQuery, StoredProcedureQuery {
 	@Override
 	ProcedureCall addSynchronizedQuerySpace(String querySpace);
 

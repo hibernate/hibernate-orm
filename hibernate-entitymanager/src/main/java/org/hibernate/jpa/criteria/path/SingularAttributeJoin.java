@@ -160,16 +160,6 @@ public class SingularAttributeJoin<O,X> extends AbstractJoinImpl<O,X> {
 		}
 
 		@Override
-		public boolean shouldBeRendered() {
-			if ( getJoins().size() > 0 ) {
-				return true;
-			}
-			else {
-				return false;
-			}
-		}
-
-		@Override
 		public String render(RenderingContext renderingContext) {
 			return "treat(" + original.render( renderingContext ) + " as " + treatAsType.getName() + ")";
 		}

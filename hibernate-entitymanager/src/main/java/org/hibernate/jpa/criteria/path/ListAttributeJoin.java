@@ -128,16 +128,6 @@ public class ListAttributeJoin<O,E>
 		}
 
 		@Override
-		public boolean shouldBeRendered() {
-			if ( getJoins().size() > 0 ) {
-				return true;
-			}
-			else {
-				return false;
-			}
-		}
-
-		@Override
 		public String render(RenderingContext renderingContext) {
 			return "treat(" + original.render( renderingContext ) + " as " + treatAsType.getName() + ")";
 		}

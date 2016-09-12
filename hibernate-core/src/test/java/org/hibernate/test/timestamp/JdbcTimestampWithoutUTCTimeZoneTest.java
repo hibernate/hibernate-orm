@@ -9,6 +9,8 @@ package org.hibernate.test.timestamp;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Map;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -56,29 +58,37 @@ public class JdbcTimestampWithoutUTCTimeZoneTest
 
 	@Test
 	public void testTimeZone() {
-		doInHibernate( this::sessionFactory, s -> {
+		doInHibernate( this::sessionFactory, session -> {
 			Person person = new Person();
 			person.id = 1L;
-			//Y2K
-			person.createdOn = new Timestamp(946684800000L);
-			s.persist( person );
+			long y2kMillis = LocalDateTime.of( 2000, 1, 1, 0, 0, 0 )
+					.atZone( ZoneId.of( "UTC" ) )
+					.toInstant()
+					.toEpochMilli();
+			assertEquals(946684800000L, y2kMillis);
+
+			person.createdOn = new Timestamp(y2kMillis);
+			session.persist( person );
 
 		} );
 		doInHibernate( this::sessionFactory, s -> {
 			s.doWork( connection -> {
 				try (Statement st = connection.createStatement()) {
 					try (ResultSet rs = st.executeQuery(
-							"SELECT " +
-							"	to_char(createdon, 'YYYY-MM-DD HH24:MI:SS.US') " +
+							"SELECT to_char(createdon, 'YYYY-MM-DD HH24:MI:SS.US') " +
 							"FROM person" )) {
 						while ( rs.next() ) {
 							String timestamp = rs.getString( 1 );
-							assertEquals("1999-12-31 16:00:00.000000", timestamp);
+							assertEquals(expectedTimestampValue(), timestamp);
 						}
 					}
 				}
 			} );
 		} );
+	}
+
+	protected String expectedTimestampValue() {
+		return "1999-12-31 16:00:00.000000";
 	}
 
 	@Entity(name = "Person")

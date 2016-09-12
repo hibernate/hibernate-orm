@@ -228,6 +228,7 @@ Default is `hbm,class"` which indicates to process `hbm.xml` files followed by a
 3+|JDBC-related options
 |`hibernate.use_nationalized_character_data` |`true` or `false` (default value) |Enable nationalized character support on all string / clob based attribute ( string, char, clob, text etc ).
 |`hibernate.jdbc.lob.non_contextual_creation` |`true` or `false` (default value) |Should we not use contextual LOB creation (aka based on `java.sql.Connection#createBlob()` et al)? The default value for HANA, H2, and PostgreSQL is `true`.
+|`hibernate.jdbc.time_zone` | A `java.util.TimeZone`, a `java.time.ZoneId` or a `String` representation of a `ZoneId` |Unless specified, the JDBC Driver uses the default JVM time zone. If a different time zone is configured via this setting, the JDBC https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTimestamp-int-java.sql.Timestamp-java.util.Calendar-[PreparedStatement#setTimestamp] is going to use a `Calendar` instance according to the specified time zone.
 
 3+|Bean Validation options
 |`javax.persistence.validation.factory` |`javax.validation.ValidationFactory` implementation | Specify the  `javax.validation.ValidationFactory` implementation to use for Bean Validation.

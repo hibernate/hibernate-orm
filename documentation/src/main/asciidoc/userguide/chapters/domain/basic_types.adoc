@@ -962,6 +962,57 @@ org.hibernate.AnnotationException: @Temporal should only be set on a java.util.D
 ----
 ====
 
+[[basic-datetime-time-zone]]
+===== Using a specific time zone
+
+By default, Hibernate is going to use the https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTimestamp-int-java.sql.Timestamp-[`PreparedStatement.setTimestamp(int parameterIndex, java.sql.Timestamp)`] or
+https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTime-int-java.sql.Time-[`PreparedStatement.setTime(int parameterIndex, java.sql.Time x)`] when saving a `java.sql.Timestamp` or a `java.sql.Time` property.
+
+When the time zone is not specified, the JDBC driver is going to use the underlying JVM default time zone, which might not be suitable if the application is used from all across the globe.
+For this reason, it is very common to use a single reference time zone (e.g. UTC) whenever saving/loading data from the database.
+
+One alternative would be to configure all JVMs to use the reference time zone:
+
+Declaratively::
++
+[source,java]
+----
+java -Duser.timezone=UTC ...
+----
+
+Programmatically::
++
+[source,java]
+----
+TimeZone.setDefault( TimeZone.getTimeZone( "UTC" ) );
+----
+
+However, as explained in http://in.relation.to/2016/09/12/jdbc-time-zone-configuration-property/[this article], this is not always practical especially for front-end nodes.
+For this reason, Hibernate offers the `hibernate.jdbc.time_zone` configuration property which can be configured:
+
+Declaratively, at the `SessionFactory` level::
++
+[source,java]
+----
+settings.put(
+    AvailableSettings.JDBC_TIME_ZONE,
+    TimeZone.getTimeZone( "UTC" )
+);
+----
+
+Programmatically, on a per `Session` basis::
++
+[source,java]
+----
+Session session = sessionFactory()
+    .withOptions()
+    .jdbcTimeZone( TimeZone.getTimeZone( "UTC" ) )
+    .openSession();
+----
+
+With this configuration property in place, Hibernate is going to call the https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTimestamp-int-java.sql.Timestamp-java.util.Calendar-[`PreparedStatement.setTimestamp(int parameterIndex, java.sql.Timestamp, Calendar cal)`] or
+https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTime-int-java.sql.Time-java.util.Calendar-[`PreparedStatement.setTime(int parameterIndex, java.sql.Time x, Calendar cal)`], where the `java.util.Calendar` references the time zone provided via the `hibernate.jdbc.time_zone` property.
+
 [[basic-jpa-convert]]
 ==== JPA 2.1 AttributeConverters
 

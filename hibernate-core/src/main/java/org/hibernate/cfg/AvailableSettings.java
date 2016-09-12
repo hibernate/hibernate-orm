@@ -711,7 +711,7 @@ public interface AvailableSettings {
 	String BATCH_VERSIONED_DATA = "hibernate.jdbc.batch_versioned_data";
 
 	/**
-	 * Default JDBC TimeZone.
+	 * Default JDBC TimeZone. Unless specified, the JVM default TimeZone is going to be used by the underlying JDBC Driver.
 	 */
 	String JDBC_TIME_ZONE = "hibernate.jdbc.time_zone";
 

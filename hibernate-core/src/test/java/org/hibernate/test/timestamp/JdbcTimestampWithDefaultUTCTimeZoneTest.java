@@ -7,7 +7,6 @@
 package org.hibernate.test.timestamp;
 
 import java.util.Map;
-import java.util.TimeZone;
 
 import org.hibernate.cfg.AvailableSettings;
 
@@ -16,22 +15,16 @@ import org.hibernate.test.util.jdbc.TimeZoneConnectionProvider;
 /**
  * @author Vlad Mihalcea
  */
-public class JdbcTimestampUTCTimeZoneTest
+public class JdbcTimestampWithDefaultUTCTimeZoneTest
 		extends JdbcTimestampWithoutUTCTimeZoneTest {
 
-	private TimeZoneConnectionProvider connectionProvider = new TimeZoneConnectionProvider( "America/Los_Angeles" );
-
-	private static final TimeZone TIME_ZONE = TimeZone.getTimeZone( "UTC" );
+	private TimeZoneConnectionProvider connectionProvider = new TimeZoneConnectionProvider( "UTC" );
 
 	@Override
 	protected void addSettings(Map settings) {
 		settings.put(
 				AvailableSettings.CONNECTION_PROVIDER,
 				connectionProvider
-		);
-		settings.put(
-				AvailableSettings.JDBC_TIME_ZONE,
-				TIME_ZONE
 		);
 	}
 

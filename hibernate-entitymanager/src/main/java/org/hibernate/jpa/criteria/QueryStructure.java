@@ -336,13 +336,11 @@ public class QueryStructure<T> implements Serializable {
 		}
 
 		for ( Join join : joins ) {
-			if ( ((FromImplementor) join).shouldBeRendered() ) {
-				((FromImplementor) join).prepareAlias( renderingContext );
-				jpaqlQuery.append( renderJoinType( join.getJoinType() ) )
-						.append( ((FromImplementor) join).renderTableExpression( renderingContext ) );
-				renderJoins( jpaqlQuery, renderingContext, join.getJoins() );
-				renderFetches( jpaqlQuery, renderingContext, join.getFetches() );
-			}
+			( (FromImplementor) join ).prepareAlias( renderingContext );
+			jpaqlQuery.append( renderJoinType( join.getJoinType() ) )
+					.append( ( (FromImplementor) join ).renderTableExpression( renderingContext ) );
+			renderJoins( jpaqlQuery, renderingContext, join.getJoins() );
+			renderFetches( jpaqlQuery, renderingContext, join.getFetches() );
 		}
 	}
 

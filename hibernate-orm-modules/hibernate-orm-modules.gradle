@@ -62,6 +62,7 @@ dependencies {
     javassist libraries.javassist
 
     testCompile project( ":hibernate-core" )
+    testCompile project( ":hibernate-envers" )
     testCompile libraries.junit
     testCompile libraries.arquillian_junit_container
     testCompile libraries.arquillian_protocol_servlet

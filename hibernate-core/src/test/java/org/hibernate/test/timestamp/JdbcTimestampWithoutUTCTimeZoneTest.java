@@ -29,11 +29,12 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect( value = PostgreSQL82Dialect.class)
+@RequiresDialect(value = PostgreSQL82Dialect.class)
 public class JdbcTimestampWithoutUTCTimeZoneTest
 		extends BaseNonConfigCoreFunctionalTestCase {
 
-	private TimeZoneConnectionProvider connectionProvider = new TimeZoneConnectionProvider( "America/Los_Angeles" );
+	private TimeZoneConnectionProvider connectionProvider = new TimeZoneConnectionProvider(
+			"America/Los_Angeles" );
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -65,21 +66,21 @@ public class JdbcTimestampWithoutUTCTimeZoneTest
 					.atZone( ZoneId.of( "UTC" ) )
 					.toInstant()
 					.toEpochMilli();
-			assertEquals(946684800000L, y2kMillis);
+			assertEquals( 946684800000L, y2kMillis );
 
-			person.createdOn = new Timestamp(y2kMillis);
+			person.createdOn = new Timestamp( y2kMillis );
 			session.persist( person );
 
 		} );
 		doInHibernate( this::sessionFactory, s -> {
 			s.doWork( connection -> {
-				try (Statement st = connection.createStatement()) {
-					try (ResultSet rs = st.executeQuery(
+				try ( Statement st = connection.createStatement() ) {
+					try ( ResultSet rs = st.executeQuery(
 							"SELECT to_char(createdon, 'YYYY-MM-DD HH24:MI:SS.US') " +
-							"FROM person" )) {
+									"FROM person" ) ) {
 						while ( rs.next() ) {
 							String timestamp = rs.getString( 1 );
-							assertEquals(expectedTimestampValue(), timestamp);
+							assertEquals( expectedTimestampValue(), timestamp );
 						}
 					}
 				}

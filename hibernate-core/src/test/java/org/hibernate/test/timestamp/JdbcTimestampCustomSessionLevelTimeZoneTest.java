@@ -69,7 +69,9 @@ public class JdbcTimestampCustomSessionLevelTimeZoneTest
 	public void testTimeZone() {
 
 		connectionProvider.clear();
-		doInHibernateSessionBuilder( () -> {return sessionFactory().withOptions().jdbcTimeZone( TIME_ZONE);}, s -> {
+		doInHibernateSessionBuilder( () -> {
+			return sessionFactory().withOptions().jdbcTimeZone( TIME_ZONE );
+		}, s -> {
 			Person person = new Person();
 			person.id = 1L;
 			s.persist( person );
@@ -92,16 +94,18 @@ public class JdbcTimestampCustomSessionLevelTimeZoneTest
 					calendarArgumentCaptor.getValue().getTimeZone()
 			);
 		}
-		catch (SQLException e) {
+		catch ( SQLException e ) {
 			fail( e.getMessage() );
 		}
 
 		connectionProvider.clear();
-		doInHibernateSessionBuilder( () -> {return sessionFactory().withOptions().jdbcTimeZone( TIME_ZONE);}, s -> {
+		doInHibernateSessionBuilder( () -> {
+			return sessionFactory().withOptions().jdbcTimeZone( TIME_ZONE );
+		}, s -> {
 			s.doWork( connection -> {
-				try (Statement st = connection.createStatement()) {
-					try (ResultSet rs = st.executeQuery(
-							"select createdOn from Person" )) {
+				try ( Statement st = connection.createStatement() ) {
+					try ( ResultSet rs = st.executeQuery(
+							"select createdOn from Person" ) ) {
 						while ( rs.next() ) {
 							Timestamp timestamp = rs.getTimestamp( 1 );
 							int offsetDiff = TimeZone.getDefault()

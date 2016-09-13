@@ -96,16 +96,16 @@ public class JdbcTimestampCustomTimeZoneTest
 					calendarArgumentCaptor.getValue().getTimeZone()
 			);
 		}
-		catch (SQLException e) {
+		catch ( SQLException e ) {
 			fail( e.getMessage() );
 		}
 
 		connectionProvider.clear();
 		doInHibernate( this::sessionFactory, s -> {
 			s.doWork( connection -> {
-				try (Statement st = connection.createStatement()) {
-					try (ResultSet rs = st.executeQuery(
-							"select createdOn from Person" )) {
+				try ( Statement st = connection.createStatement() ) {
+					try ( ResultSet rs = st.executeQuery(
+							"select createdOn from Person" ) ) {
 						while ( rs.next() ) {
 							Timestamp timestamp = rs.getTimestamp( 1 );
 							int offsetDiff = TimeZone.getDefault()

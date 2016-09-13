@@ -76,7 +76,7 @@ public class JdbcTimestampDefaultTimeZoneTest
 					any( Timestamp.class )
 			);
 		}
-		catch (SQLException e) {
+		catch ( SQLException e ) {
 			fail( e.getMessage() );
 		}
 

@@ -9,16 +9,20 @@ package org.hibernate.test.timestamp;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.PostgreSQL82Dialect;
 
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.test.util.jdbc.TimeZoneConnectionProvider;
 
 /**
  * @author Vlad Mihalcea
  */
+@RequiresDialect(value = PostgreSQL82Dialect.class)
 public class JdbcTimestampWithDefaultUTCTimeZoneTest
 		extends JdbcTimestampWithoutUTCTimeZoneTest {
 
-	private TimeZoneConnectionProvider connectionProvider = new TimeZoneConnectionProvider( "UTC" );
+	private TimeZoneConnectionProvider connectionProvider = new TimeZoneConnectionProvider(
+			"UTC" );
 
 	@Override
 	protected void addSettings(Map settings) {

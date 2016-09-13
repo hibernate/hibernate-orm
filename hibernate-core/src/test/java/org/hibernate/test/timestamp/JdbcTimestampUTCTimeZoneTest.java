@@ -10,16 +10,20 @@ import java.util.Map;
 import java.util.TimeZone;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.PostgreSQL82Dialect;
 
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.test.util.jdbc.TimeZoneConnectionProvider;
 
 /**
  * @author Vlad Mihalcea
  */
+@RequiresDialect(value = PostgreSQL82Dialect.class)
 public class JdbcTimestampUTCTimeZoneTest
 		extends JdbcTimestampWithoutUTCTimeZoneTest {
 
-	private TimeZoneConnectionProvider connectionProvider = new TimeZoneConnectionProvider( "America/Los_Angeles" );
+	private TimeZoneConnectionProvider connectionProvider = new TimeZoneConnectionProvider(
+			"America/Los_Angeles" );
 
 	private static final TimeZone TIME_ZONE = TimeZone.getTimeZone( "UTC" );
 

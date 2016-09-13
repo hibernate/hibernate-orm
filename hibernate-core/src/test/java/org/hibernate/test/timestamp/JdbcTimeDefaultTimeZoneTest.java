@@ -73,7 +73,7 @@ public class JdbcTimeDefaultTimeZoneTest
 		try {
 			verify( ps, times( 1 ) ).setTime( anyInt(), any( Time.class ) );
 		}
-		catch (SQLException e) {
+		catch ( SQLException e ) {
 			fail( e.getMessage() );
 		}
 

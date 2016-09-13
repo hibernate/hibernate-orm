@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.Map;
 
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.tuple.NonIdentifierAttribute;
@@ -359,5 +360,19 @@ public class TypeHelper {
 			System.arraycopy( results, 0, trimmed, 0, count );
 			return trimmed;
 		}
+	}
+
+	public static String toLoggableString(
+			Object[] state,
+			Type[] types,
+			SessionFactoryImplementor factory) {
+		final StringBuilder buff = new StringBuilder();
+		for ( int i = 0; i < state.length; i++ ) {
+			if ( i > 0 ) {
+				buff.append( ", " );
+			}
+			buff.append( types[i].toLoggableString( state[i], factory ) );
+		}
+		return buff.toString();
 	}
 }

@@ -18,7 +18,6 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.TypeHelper;
 
@@ -29,8 +28,9 @@ import org.hibernate.type.TypeHelper;
  */
 public class StandardCacheEntryImpl implements CacheEntry {
 	private final Serializable[] disassembledState;
-	private final String subclass;
+	private final String disassembledStateText;
 	private final Object version;
+	private final String subclass;
 
 	/**
 	 * Constructs a StandardCacheEntryImpl
@@ -57,12 +57,18 @@ public class StandardCacheEntryImpl implements CacheEntry {
 				session,
 				owner
 		);
-		subclass = persister.getEntityName();
+		this.disassembledStateText = TypeHelper.toLoggableString(
+				state,
+				persister.getPropertyTypes(),
+				session.getFactory()
+		);
+		this.subclass = persister.getEntityName();
 		this.version = version;
 	}
 
-	StandardCacheEntryImpl(Serializable[] state, String subclass, Object version) {
+	StandardCacheEntryImpl(Serializable[] state, String disassembledStateText, String subclass, Object version) {
 		this.disassembledState = state;
+		this.disassembledStateText = disassembledStateText;
 		this.subclass = subclass;
 		this.version = version;
 	}
@@ -163,6 +169,6 @@ public class StandardCacheEntryImpl implements CacheEntry {
 
 	@Override
 	public String toString() {
-		return "CacheEntry(" + subclass + ')' + ArrayHelper.toString( disassembledState );
+		return "CacheEntry(" + subclass + " {" + disassembledStateText + "})";
 	}
 }

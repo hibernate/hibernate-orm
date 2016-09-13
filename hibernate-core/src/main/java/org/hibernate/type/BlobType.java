@@ -38,4 +38,5 @@ public class BlobType extends AbstractSingleColumnStandardBasicType<Blob> {
 	protected Blob getReplacement(Blob original, Blob target, SharedSessionContractImplementor session) {
 		return session.getJdbcServices().getJdbcEnvironment().getDialect().getLobMergeStrategy().mergeBlob( original, target, session );
 	}
+
 }

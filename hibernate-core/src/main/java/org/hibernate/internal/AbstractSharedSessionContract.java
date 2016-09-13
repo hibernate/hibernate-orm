@@ -287,7 +287,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public void close() {
-		if ( closed ) {
+		if ( closed && !waitingForAutoClose ) {
 			return;
 		}
 

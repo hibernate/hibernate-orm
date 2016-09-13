@@ -404,7 +404,9 @@ public final class SessionImpl
 		if ( getSessionFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
 			// Original hibernate-entitymanager EM#close behavior
 			checkSessionFactoryOpen();
-			checkOpen();
+			if ( !waitingForAutoClose ) {
+				checkOpen();
+			}
 			if ( discardOnClose || !isTransactionInProgress() ) {
 				super.close();
 			}
@@ -2393,7 +2395,7 @@ public final class SessionImpl
 	public void afterTransactionCompletion(boolean successful, boolean delayed) {
 		log.tracef( "SessionImpl#afterTransactionCompletion(successful=%s, delayed=%s)", successful, delayed );
 
-		if ( !isClosed() ) {
+		if ( !isClosed() || waitingForAutoClose ) {
 			if ( autoClear ||!successful ) {
 				internalClear();
 			}
@@ -2416,7 +2418,7 @@ public final class SessionImpl
 		}
 
 		if ( !delayed ) {
-			if ( shouldAutoClose() && !isClosed() ) {
+			if ( shouldAutoClose() && (!isClosed() || waitingForAutoClose) ) {
 				managedClose();
 			}
 		}

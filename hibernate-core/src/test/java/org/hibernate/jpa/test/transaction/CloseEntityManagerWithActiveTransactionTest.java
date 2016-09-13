@@ -6,20 +6,22 @@
  */
 package org.hibernate.jpa.test.transaction;
 
+import java.util.List;
+import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.transaction.Status;
 import javax.transaction.TransactionManager;
-import java.util.List;
-import java.util.Map;
 
+import org.hibernate.Session;
+import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
+import org.hibernate.internal.SessionImpl;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
+import org.junit.Test;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -72,6 +74,34 @@ public class CloseEntityManagerWithActiveTransactionTest extends BaseEntityManag
 		}
 		finally {
 			em.close();
+		}
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-11099")
+	public void testCommitReleasesLogicalConnection() throws Exception {
+		Book book = new Book();
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
+		EntityManager em = getOrCreateEntityManager();
+		try {
+			em.persist( book );
+			final SessionImpl session =(SessionImpl) em.unwrap( Session.class );
+			final JdbcCoordinatorImpl jdbcCoordinator = (JdbcCoordinatorImpl)session.getJdbcCoordinator();
+			em.close();
+			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+			assertThat( "The logical connection is still open after commit",jdbcCoordinator.getLogicalConnection().isOpen(),is(false));
+		}
+		catch (Exception e) {
+			final TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
+			if(transactionManager.getTransaction().getStatus() == Status.STATUS_ACTIVE ) {
+				TestingJtaPlatformImpl.INSTANCE.getTransactionManager().rollback();
+			}
+			throw e;
+		}
+		finally {
+			if ( em.isOpen() ) {
+				em.close();
+			}
 		}
 	}
 }

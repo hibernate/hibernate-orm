@@ -6,19 +6,15 @@
  */
 package org.hibernate.action.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.LockMode;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
 import org.hibernate.engine.internal.Nullability;
 import org.hibernate.engine.internal.Versioning;
-import org.hibernate.engine.spi.CachedNaturalIdValueSource;
-import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.spi.Status;
+import org.hibernate.engine.spi.*;
 import org.hibernate.persister.entity.EntityPersister;
+
+import java.io.Serializable;
 
 /**
  * A base class for entity insert actions.
@@ -194,7 +190,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 		// after save, we need to manage the shared cache entries
 		getSession().getPersistenceContext().getNaturalIdHelper().manageSharedNaturalIdCrossReference(
 				getPersister(),
-				getId(),
+				generatedId,
 				state,
 				null,
 				CachedNaturalIdValueSource.INSERT

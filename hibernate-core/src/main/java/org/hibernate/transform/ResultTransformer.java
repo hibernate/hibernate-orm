@@ -21,7 +21,7 @@ import org.hibernate.query.TupleTransformer;
  * @author Gavin King
  *
  * @deprecated ResultTransformer is no longer supported.  It has been split
- * into {@}
+ * into {@link TupleTransformer} and {@link ResultListTransformer}
  */
 @Deprecated
 public interface ResultTransformer extends TupleTransformer, ResultListTransformer, Serializable {

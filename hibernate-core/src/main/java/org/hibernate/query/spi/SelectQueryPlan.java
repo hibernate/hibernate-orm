@@ -10,7 +10,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.ScrollMode;
-import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.sqm.exec.spi.QueryOptions;
 

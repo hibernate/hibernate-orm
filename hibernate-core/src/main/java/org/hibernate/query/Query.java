@@ -231,7 +231,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 */
 	Query<R> setLockMode(String alias, LockMode lockMode);
 
-	Query<R> setTupleTransformer(TupleTransformer transformer);
+	Query<R> setTupleTransformer(TupleTransformer<R> transformer);
 
 	Query<R> setResultListTransformer(ResultListTransformer transformer);
 
@@ -578,6 +578,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @deprecated (since 5.2) Use
 	 */
 	@Deprecated
+	@SuppressWarnings("unchecked")
 	default Query<R> setResultTransformer(ResultTransformer transformer) {
 		setTupleTransformer( transformer );
 		setResultListTransformer( transformer );

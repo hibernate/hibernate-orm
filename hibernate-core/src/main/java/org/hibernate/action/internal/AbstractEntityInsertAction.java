@@ -193,7 +193,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 		// afterQuery save, we need to manage the shared cache entries
 		getSession().getPersistenceContext().getNaturalIdHelper().manageSharedNaturalIdCrossReference(
 				getPersister(),
-				getId(),
+				generatedId,
 				state,
 				null,
 				CachedNaturalIdValueSource.INSERT

@@ -9,7 +9,7 @@ package org.hibernate.sql.sqm.convert.spi;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
 
 /**
@@ -23,5 +23,5 @@ public interface ParameterBinder {
 			PreparedStatement statement,
 			int startPosition,
 			QueryParameterBindings queryParameterBindings,
-			SessionImplementor session) throws SQLException;
+			SharedSessionContractImplementor session) throws SQLException;
 }

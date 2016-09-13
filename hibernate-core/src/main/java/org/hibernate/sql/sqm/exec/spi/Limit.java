@@ -17,6 +17,12 @@ public class Limit {
 		return firstRow;
 	}
 
+	public int getFirstRowJpa() {
+		// JPA defines this return as a primitive with magic values...
+		//  	- specifically the "magic number" 0 (ZERO) as defined by the spec.
+		return firstRow == null ? 0 : firstRow;
+	}
+
 	public void setFirstRow(Integer firstRow) {
 		this.firstRow = firstRow;
 	}
@@ -25,7 +31,19 @@ public class Limit {
 		return maxRows;
 	}
 
+	public int getMaxRowsJpa() {
+		// JPA defines this return as a primitive with magic values...
+		//  	- specifically the "magic number" Integer.MAX_VALUE as defined by the spec.
+		return maxRows == null ? Integer.MAX_VALUE : maxRows;
+	}
+
 	public void setMaxRows(Integer maxRows) {
-		this.maxRows = maxRows;
+		if ( maxRows <= 0 ) {
+			// treat zero and negatives specially as meaning no limit...
+			this.maxRows = null;
+		}
+		else {
+			this.maxRows = maxRows;
+		}
 	}
 }

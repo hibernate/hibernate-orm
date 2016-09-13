@@ -4,14 +4,16 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.sql.sqm.exec.spi;
-
-import org.hibernate.Incubating;
+package org.hibernate.internal.util;
 
 /**
  * @author Steve Ebersole
  */
-@Incubating
-public interface RowTransformer<T> {
-	T transformRow(Object[] row);
+public class NullnessHelper {
+	private NullnessHelper() {
+	}
+
+	public static <T> T nullif(T test, T fallback) {
+		return test == null ? fallback : test;
+	}
 }

@@ -6,21 +6,19 @@
  */
 package org.hibernate.query.spi;
 
-import org.hibernate.internal.AbstractSharedSessionContract;
-import org.hibernate.query.ParameterMetadata;
-
 /**
- * Acts as a cache for various things used by (and produced by) the translation
- * of a query.
+ * Acts as a cache for QueryPlans used (and produced) by the translation
+ * and execution of a query.
  *
  * @author Steve Ebersole
  */
 public interface QueryInterpretations {
-	interface ParameterMetadataKey {
+	interface Key {
 	}
 
-	ParameterMetadata getParameterMetadata(ParameterMetadataKey key);
+	SelectQueryPlan getSelectQueryPlan(Key key);
+	void cacheSelectQueryPlan(Key key, SelectQueryPlan plan);
 
-	void cacheParameterMetadata(ParameterMetadataKey key, ParameterMetadata parameterMetadata);
-
+	NonSelectQueryPlan getNonSelectQueryPlan(Key key);
+	void cacheNonSelectQueryPlan(Key key, NonSelectQueryPlan plan);
 }

@@ -8,6 +8,7 @@ package org.hibernate.sql.sqm.exec.spi;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.result.Outputs;
 import org.hibernate.sql.sqm.ast.SelectQuery;
@@ -57,28 +58,28 @@ public interface SqlTreeExecutor {
 			QueryParameterBindings queryParameterBindings,
 			RowTransformer<T> rowTransformer,
 			Callback callback,
-			SessionImplementor session);
+			SharedSessionContractImplementor session);
 
 	Object[] executeInsert(
 			Object sqlTree,
 			PreparedStatementCreator statementCreator,
 			QueryOptions queryOptions,
 			QueryParameterBindings queryParameterBindings,
-			SessionImplementor session);
+			SharedSessionContractImplementor session);
 
 	int executeUpdate(
 			Object sqlTree,
 			PreparedStatementCreator statementCreator,
 			QueryOptions queryOptions,
 			QueryParameterBindings queryParameterBindings,
-			SessionImplementor session);
+			SharedSessionContractImplementor session);
 
 	int executeDelete(
 			Object sqlTree,
 			PreparedStatementCreator statementCreator,
 			QueryOptions queryOptions,
 			QueryParameterBindings queryParameterBindings,
-			SessionImplementor session);
+			SharedSessionContractImplementor session);
 
 	<T> Outputs executeCall(
 			String callableName,
@@ -86,5 +87,5 @@ public interface SqlTreeExecutor {
 			QueryParameterBindings queryParameterBindings,
 			RowTransformer<T> rowTransformer,
 			Callback callback,
-			SessionImplementor session);
+			SharedSessionContractImplementor session);
 }

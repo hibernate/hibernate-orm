@@ -37,6 +37,8 @@ import org.hibernate.NonUniqueResultException;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.RowSelection;
+import org.hibernate.sql.sqm.exec.spi.QueryOptions;
+import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.mapper.spi.Type;
 
 /**
@@ -229,17 +231,22 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 */
 	Query<R> setLockMode(String alias, LockMode lockMode);
 
+	Query<R> setTupleTransformer(TupleTransformer transformer);
+
+	Query<R> setResultListTransformer(ResultListTransformer transformer);
 
 	/**
-	 * "QueryOptions" is a better name, I think, than "RowSelection" -> 6.0
+	 * Get the execution options for this Query.  Many of the setter on the Query
+	 * contract update the state of the returned {@link QueryOptions}.  This is
+	 * important because it gives access to any primitive data in their wrapper
+	 * forms rather than the primitive forms as required by JPA.  For example, that
+	 * allows use to know whether a specific value has been set at all by the Query
+	 * consumer.
 	 *
 	 * @return Return the encapsulation of this query's options, which includes access to
-	 * firstRow, maxRows, timeout and fetchSize.   Important because this gives access to
-	 * those values in their Integer form rather than the primitive form (int) required by JPA.
-	 *
-	 * @todo 6.0 rename RowSelection to QueryOptions
+	 * firstRow, maxRows, timeout and fetchSize, etc.
 	 */
-	RowSelection getQueryOptions();
+	QueryOptions getQueryOptions();
 
 	/**
 	 * Access to information about query parameters.
@@ -562,4 +569,18 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @return {@code this}, for method chaining
 	 */
 	Query<R> setProperties(Map bean);
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// deprecations
+
+	/**
+	 * @deprecated (since 5.2) Use
+	 */
+	@Deprecated
+	default Query<R> setResultTransformer(ResultTransformer transformer) {
+		setTupleTransformer( transformer );
+		setResultListTransformer( transformer );
+		return this;
+	}
 }

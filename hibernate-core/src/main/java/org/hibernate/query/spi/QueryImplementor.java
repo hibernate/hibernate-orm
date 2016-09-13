@@ -23,6 +23,9 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.query.ResultListTransformer;
+import org.hibernate.query.TupleTransformer;
+import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.mapper.spi.Type;
 
 /**
@@ -90,6 +93,12 @@ public interface QueryImplementor<R> extends Query<R> {
 
 	@Override
 	QueryImplementor<R> setLockMode(LockModeType lockMode);
+
+	@Override
+	QueryImplementor<R> setTupleTransformer(TupleTransformer transformer);
+
+	@Override
+	QueryImplementor<R> setResultListTransformer(ResultListTransformer transformer);
 
 	@Override
 	QueryImplementor<R> setParameter(String name, Object value);

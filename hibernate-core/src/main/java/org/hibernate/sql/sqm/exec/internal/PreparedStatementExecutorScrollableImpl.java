@@ -13,6 +13,7 @@ import java.util.List;
 
 import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.sql.sqm.exec.spi.PreparedStatementExecutor;
 import org.hibernate.sql.sqm.exec.spi.QueryOptions;
@@ -40,7 +41,7 @@ public class PreparedStatementExecutorScrollableImpl<T> implements PreparedState
 			QueryOptions queryOptions,
 			List<Return> returns,
 			RowTransformer<T> rowTransformer,
-			SessionImplementor session) throws SQLException {
+			SharedSessionContractImplementor session) throws SQLException {
 		final LogicalConnectionImplementor logicalConnection = session.getJdbcCoordinator().getLogicalConnection();
 
 		// Execute the query

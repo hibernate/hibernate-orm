@@ -11,7 +11,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
@@ -51,7 +50,6 @@ import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.spi.ExceptionConverter;
 import org.hibernate.engine.spi.QueryParameters;
-import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.hql.internal.QueryExecutionRequestException;
@@ -69,6 +67,9 @@ import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.query.ResultListTransformer;
+import org.hibernate.query.TupleTransformer;
+import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterListBinding;
@@ -80,6 +81,7 @@ import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
+import static org.hibernate.internal.util.NullnessHelper.nullif;
 import static org.hibernate.jpa.AvailableSettings.ALIAS_SPECIFIC_LOCK_MODE;
 import static org.hibernate.jpa.QueryHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.QueryHints.HINT_CACHE_MODE;
@@ -104,33 +106,13 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	private final ParameterMetadata parameterMetadata;
 	private final QueryParameterBindingsImpl queryParameterBindings;
 
-	private FlushMode flushMode;
-	private CacheStoreMode cacheStoreMode;
-	private CacheRetrieveMode cacheRetrieveMode;
-	private boolean cacheable;
-	private String cacheRegion;
-	private Boolean readOnly;
-
-	private LockOptions lockOptions = new LockOptions();
-
-	private String comment;
-	private final List<String> dbHints = new ArrayList<>();
-
-	private RowSelection queryOptions = new RowSelection();
-
-	private EntityGraphQueryHint entityGraphQueryHint;
-
-	private Object optionalObject;
-	private Serializable optionalId;
-	private String optionalEntityName;
-
-	private Boolean passDistinctThrough;
 
 	public AbstractProducedQuery(
 			SharedSessionContractImplementor producer,
 			ParameterMetadata parameterMetadata) {
 		this.producer = producer;
 		this.parameterMetadata = parameterMetadata;
+
 		this.queryParameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, producer.getFactory() );
 	}
 
@@ -140,23 +122,25 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
+	public abstract MutableQueryOptions getQueryOptions();
+
+	@Override
 	public FlushMode getHibernateFlushMode() {
-		return flushMode;
+		return getQueryOptions().getFlushMode();
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setHibernateFlushMode(FlushMode flushMode) {
-		this.flushMode = flushMode;
+		getQueryOptions().setFlushMode( flushMode );
 		return this;
 	}
 
 	@Override
 	public FlushModeType getFlushMode() {
-		return ( flushMode == null ?
-				getProducer().getFlushMode() :
-				FlushModeTypeHelper.getFlushModeType( flushMode )
-		);
+		return getQueryOptions().getFlushMode() == null
+				? getProducer().getFlushMode()
+				: FlushModeTypeHelper.getFlushModeType( getQueryOptions().getFlushMode() );
 	}
 
 	@Override
@@ -168,99 +152,97 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public CacheMode getCacheMode() {
-		return CacheModeHelper.interpretCacheMode( cacheStoreMode, cacheRetrieveMode );
+		return getQueryOptions().getCacheMode();
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setCacheMode(CacheMode cacheMode) {
-		this.cacheStoreMode = CacheModeHelper.interpretCacheStoreMode( cacheMode );
-		this.cacheRetrieveMode = CacheModeHelper.interpretCacheRetrieveMode( cacheMode );
+		getQueryOptions().setCacheMode( cacheMode );
 		return this;
 	}
 
 	@Override
 	public boolean isCacheable() {
-		return cacheable;
+		return getQueryOptions().isResultCachingEnabled() == Boolean.TRUE;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setCacheable(boolean cacheable) {
-		this.cacheable = cacheable;
+		getQueryOptions().setResultCachingEnabled( cacheable );
 		return this;
 	}
 
 	@Override
 	public String getCacheRegion() {
-		return cacheRegion;
+		return getQueryOptions().getResultCacheRegionName();
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setCacheRegion(String cacheRegion) {
-		this.cacheRegion = cacheRegion;
+		getQueryOptions().setResultCacheRegionName( cacheRegion );
 		return this;
 	}
 
 	@Override
 	public Integer getTimeout() {
-		return queryOptions.getTimeout();
+		return getQueryOptions().getTimeout();
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setTimeout(int timeout) {
-		queryOptions.setTimeout( timeout );
+		getQueryOptions().setTimeout( timeout );
 		return this;
 	}
 
 	@Override
 	public Integer getFetchSize() {
-		return queryOptions.getFetchSize();
+		return getQueryOptions().getFetchSize();
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setFetchSize(int fetchSize) {
-		queryOptions.setFetchSize( fetchSize );
+		getQueryOptions().setFetchSize( fetchSize );
 		return this;
 	}
 
 	@Override
 	public boolean isReadOnly() {
-		return ( readOnly == null ?
-				producer.getPersistenceContext().isDefaultReadOnly() :
-				readOnly
-		);
+		return getQueryOptions().isReadOnly() == null
+				? producer.getPersistenceContext().isDefaultReadOnly()
+				: getQueryOptions().isReadOnly();
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setReadOnly(boolean readOnly) {
-		this.readOnly = readOnly;
+		getQueryOptions().setReadOnly( readOnly );
 		return this;
 	}
 
 	@Override
 	public LockOptions getLockOptions() {
-		return lockOptions;
+		return getQueryOptions().getLockOptions();
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setLockOptions(LockOptions lockOptions) {
-		this.lockOptions.setLockMode( lockOptions.getLockMode() );
-		this.lockOptions.setScope( lockOptions.getScope() );
-		this.lockOptions.setTimeOut( lockOptions.getTimeOut() );
-		this.lockOptions.setFollowOnLocking( lockOptions.getFollowOnLocking() );
+		getQueryOptions().getLockOptions().setLockMode( lockOptions.getLockMode() );
+		getQueryOptions().getLockOptions().setScope( lockOptions.getScope() );
+		getQueryOptions().getLockOptions().setTimeOut( lockOptions.getTimeOut() );
+		getQueryOptions().getLockOptions().setFollowOnLocking( lockOptions.getFollowOnLocking() );
 		return this;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setLockMode(String alias, LockMode lockMode) {
-		lockOptions.setAliasSpecificLockMode( alias, lockMode );
+		getQueryOptions().getLockOptions().setAliasSpecificLockMode( alias, lockMode );
 		return this;
 	}
 
@@ -272,26 +254,26 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 				throw new IllegalStateException( "Illegal attempt to set lock mode on a non-SELECT query" );
 			}
 		}
-		lockOptions.setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
+		getQueryOptions().getLockOptions().setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
 		return this;
 	}
 
 	@Override
 	public String getComment() {
-		return comment;
+		return getQueryOptions().getComment();
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setComment(String comment) {
-		this.comment = comment;
+		getQueryOptions().setComment( comment );
 		return this;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor addQueryHint(String hint) {
-		this.dbHints.add( hint );
+		getQueryOptions().addDatabaseHint( hint );
 		return this;
 	}
 
@@ -781,41 +763,38 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public RowSelection getQueryOptions() {
-		return queryOptions;
-	}
-
-	@Override
 	public int getMaxResults() {
-		// to be JPA compliant this method returns an int - specifically the "magic number" Integer.MAX_VALUE defined by the spec.
-		// For access to the Integer (for checking), use #getQueryOptions#getMaxRows instead
-		return queryOptions.getMaxRows() == null ? Integer.MAX_VALUE : queryOptions.getMaxRows();
+		return getQueryOptions().getLimit().getMaxRowsJpa();
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setMaxResults(int maxResult) {
-		if ( maxResult <= 0 ) {
-			// treat zero and negatives specially as meaning no limit...
-			queryOptions.setMaxRows( null );
-		}
-		else {
-			queryOptions.setMaxRows( maxResult );
-		}
+		getQueryOptions().getLimit().setMaxRows( maxResult );
 		return this;
 	}
 
 	@Override
 	public int getFirstResult() {
-		// to be JPA compliant this method returns an int - specifically the "magic number" 0 (ZERO) defined by the spec.
-		// For access to the Integer (for checking), use #getQueryOptions#getFirstRow instead
-		return queryOptions.getFirstRow() == null ? 0 : queryOptions.getFirstRow();
+		return getQueryOptions().getLimit().getFirstRowJpa();
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setFirstResult(int startPosition) {
-		queryOptions.setFirstRow( startPosition );
+		getQueryOptions().getLimit().setFirstRow( startPosition );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setTupleTransformer(TupleTransformer transformer) {
+		getQueryOptions().setTupleTransformer( transformer );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setResultListTransformer(ResultListTransformer transformer) {
+		getQueryOptions().setResultListTransformer( transformer );
 		return this;
 	}
 
@@ -867,10 +846,10 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		putIfNotNull( hints, HINT_FETCH_SIZE, getQueryOptions().getFetchSize() );
 		putIfNotNull( hints, HINT_FLUSH_MODE, getHibernateFlushMode() );
 
-		if ( cacheStoreMode != null || cacheRetrieveMode != null ) {
-			putIfNotNull( hints, HINT_CACHE_MODE, CacheModeHelper.interpretCacheMode( cacheStoreMode, cacheRetrieveMode ) );
-			putIfNotNull( hints, JPA_SHARED_CACHE_RETRIEVE_MODE, cacheRetrieveMode );
-			putIfNotNull( hints, JPA_SHARED_CACHE_STORE_MODE, cacheStoreMode );
+		if ( getCacheMode() != null ) {
+			putIfNotNull( hints, HINT_CACHE_MODE, getCacheMode() );
+			putIfNotNull( hints, JPA_SHARED_CACHE_RETRIEVE_MODE, CacheModeHelper.interpretCacheRetrieveMode( getCacheMode() ) );
+			putIfNotNull( hints, JPA_SHARED_CACHE_STORE_MODE, CacheModeHelper.interpretCacheStoreMode( getCacheMode() ) );
 		}
 
 		if ( isCacheable() ) {
@@ -880,10 +859,6 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 		if ( isReadOnly() ) {
 			hints.put( HINT_READONLY, true );
-		}
-
-		if ( entityGraphQueryHint != null ) {
-			hints.put( entityGraphQueryHint.getHintName(), entityGraphQueryHint.getOriginEntityGraph() );
 		}
 	}
 
@@ -971,7 +946,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			}
 			else if ( HINT_FETCHGRAPH.equals( hintName ) || HINT_LOADGRAPH.equals( hintName ) ) {
 				if (value instanceof EntityGraphImpl ) {
-					applyEntityGraphQueryHint( new EntityGraphQueryHint( hintName, (EntityGraphImpl) value ) );
+					applyEntityGraphQueryHint( hintName, (EntityGraphImpl) value );
 				}
 				else {
 					log.warnf( "The %s hint was set, but the value was not an EntityGraph!", hintName );
@@ -999,13 +974,25 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		return this;
 	}
 
-	protected boolean applyJpaCacheRetrieveMode(CacheRetrieveMode mode) {
-		this.cacheRetrieveMode = mode;
+	protected boolean applyJpaCacheRetrieveMode(CacheRetrieveMode retrieveMode) {
+		final CacheMode currentCacheMode = nullif( getCacheMode(), getProducer().getCacheMode() );
+		setCacheMode(
+				CacheModeHelper.interpretCacheMode(
+						CacheModeHelper.interpretCacheStoreMode( currentCacheMode ),
+						retrieveMode
+				)
+		);
 		return true;
 	}
 
 	protected boolean applyJpaCacheStoreMode(CacheStoreMode storeMode) {
-		this.cacheStoreMode = storeMode;
+		final CacheMode currentCacheMode = nullif( getCacheMode(), getProducer().getCacheMode() );
+		setCacheMode(
+				CacheModeHelper.interpretCacheMode(
+						storeMode,
+						CacheModeHelper.interpretCacheRetrieveMode( currentCacheMode )
+				)
+		);
 		return true;
 	}
 
@@ -1158,15 +1145,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		getLockOptions().setAliasSpecificLockMode( alias, lockMode );
 	}
 
-	/**
-	 * Used from HEM code as a (hopefully temporary) means to apply a custom query plan
-	 * in regards to a JPA entity graph.
-	 *
-	 * @param hint The entity graph hint object
-	 */
-	protected void applyEntityGraphQueryHint(EntityGraphQueryHint hint) {
-		this.entityGraphQueryHint = hint;
-	}
+	protected abstract void applyEntityGraphQueryHint(String hintName, EntityGraphImpl entityGraph);
 
 	/**
 	 * Apply the follow-on-locking hint.
@@ -1197,7 +1176,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public LockModeType getLockMode() {
-		return LockModeTypeHelper.getLockModeType( lockOptions.getLockMode() );
+		return LockModeTypeHelper.getLockModeType( getQueryOptions().getLockOptions().getLockMode() );
 	}
 
 	@Override
@@ -1218,51 +1197,6 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 		throw new HibernateException( "Could not unwrap this [" + toString() + "] as requested Java type [" + cls.getName() + "]" );
 //		throw new IllegalArgumentException( "Could not unwrap this [" + toString() + "] as requested Java type [" + cls.getName() + "]" );
-	}
-
-	public QueryParameters getQueryParameters() {
-		final HQLQueryPlan entityGraphHintedQueryPlan;
-		if ( entityGraphQueryHint == null) {
-			entityGraphHintedQueryPlan = null;
-		}
-		else {
-			queryParameterBindings.verifyParametersBound( false );
-
-			// todo : ideally we'd update the instance state related to queryString but that is final atm
-
-			final String expandedQuery = queryParameterBindings.expandListValuedParameters( getQueryString(), getProducer() );
-			entityGraphHintedQueryPlan = new HQLQueryPlan(
-					expandedQuery,
-					false,
-					getProducer().getLoadQueryInfluencers().getEnabledFilters(),
-					getProducer().getFactory(),
-					entityGraphQueryHint
-			);
-		}
-
-		QueryParameters queryParameters = new QueryParameters(
-				getPositionalParameterTypes(),
-				getPositionalParameterValues(),
-				getNamedParameterMap(),
-				getLockOptions(),
-				queryOptions,
-				true,
-				isReadOnly(),
-				cacheable,
-				cacheRegion,
-				comment,
-				dbHints,
-				null,
-				optionalObject,
-				optionalEntityName,
-				optionalId,
-				null 	// resultTransformer
-		);
-		queryParameters.setQueryPlan( entityGraphHintedQueryPlan );
-		if ( passDistinctThrough != null ) {
-			queryParameters.setPassDistinctThrough( passDistinctThrough );
-		}
-		return queryParameters;
 	}
 
 	@SuppressWarnings("deprecation")
@@ -1289,11 +1223,13 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		assert sessionFlushMode == null;
 		assert sessionCacheMode == null;
 
-		if ( flushMode != null ) {
+		final FlushMode effectiveFlushMode = getHibernateFlushMode();
+		if ( effectiveFlushMode != null ) {
 			sessionFlushMode = getProducer().getHibernateFlushMode();
-			getProducer().setHibernateFlushMode( flushMode );
+			getProducer().setHibernateFlushMode( effectiveFlushMode );
 		}
-		final CacheMode effectiveCacheMode = CacheModeHelper.effectiveCacheMode( cacheStoreMode, cacheRetrieveMode );
+
+		final CacheMode effectiveCacheMode = getCacheMode();
 		if ( effectiveCacheMode != null ) {
 			sessionCacheMode = getProducer().getCacheMode();
 			getProducer().setCacheMode( effectiveCacheMode );
@@ -1322,6 +1258,9 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		}
 	}
 
+	/**
+	 * todo make this abstract
+	 */
 	@SuppressWarnings("unchecked")
 	protected Iterator<R> doIterate() {
 		return getProducer().iterate(
@@ -1346,6 +1285,9 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		}
 	}
 
+	/**
+	 * todo make this abstract
+	 */
 	protected ScrollableResultsImplementor doScroll(ScrollMode scrollMode) {
 		final String query = queryParameterBindings.expandListValuedParameters( getQueryString(), getProducer() );
 		QueryParameters queryParameters = getQueryParameters();
@@ -1391,23 +1333,13 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		}
 	}
 
+	// todo : make doList() abstract
+
 	protected boolean isCallable() {
 		return false;
 	}
 
-	@SuppressWarnings("unchecked")
-	protected List<R> doList() {
-		if ( lockOptions.getLockMode() != null && lockOptions.getLockMode() != LockMode.NONE ) {
-			if ( !getProducer().isTransactionInProgress() ) {
-				throw new TransactionRequiredException( "no transaction is in progress" );
-			}
-		}
-
-		return getProducer().list(
-				queryParameterBindings.expandListValuedParameters( getQueryString(), getProducer() ),
-				getQueryParameters()
-		);
-	}
+	protected abstract List<R> doList();
 
 	public QueryParameterBindingsImpl getQueryParameterBindings() {
 		return queryParameterBindings;
@@ -1483,6 +1415,9 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		}
 	}
 
+	/**
+	 * todo make this abstract
+	 */
 	protected int doExecuteUpdate() {
 		return getProducer().executeUpdate(
 				queryParameterBindings.expandListValuedParameters( getQueryString(), getProducer() ),
@@ -1495,6 +1430,18 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			throw new IllegalArgumentException( "entity for parameter binding cannot be null" );
 		}
 		return getProducer().bestGuessEntityName( val );
+	}
+
+
+
+	private boolean isSelect() {
+		return getProducer().getFactory().getQueryPlanCache()
+				.getHQLQueryPlan( getQueryString(), false, Collections.<String, Filter>emptyMap() )
+				.isSelect();
+	}
+
+	protected ExceptionConverter getExceptionConverter(){
+		return producer.getExceptionConverter();
 	}
 
 	@Override
@@ -1512,13 +1459,46 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		this.optionalObject = optionalObject;
 	}
 
-	private boolean isSelect() {
-		return getProducer().getFactory().getQueryPlanCache()
-				.getHQLQueryPlan( getQueryString(), false, Collections.<String, Filter>emptyMap() )
-				.isSelect();
+	public QueryParameters getQueryParameters() {
+		final HQLQueryPlan entityGraphHintedQueryPlan;
+		if ( entityGraphQueryHint == null) {
+			entityGraphHintedQueryPlan = null;
+		}
+		else {
+			queryParameterBindings.verifyParametersBound( false );
+
+			// todo : ideally we'd update the instance state related to queryString but that is final atm
+
+			final String expandedQuery = queryParameterBindings.expandListValuedParameters( getQueryString(), getProducer() );
+			entityGraphHintedQueryPlan = new HQLQueryPlan(
+					expandedQuery,
+					false,
+					getProducer().getLoadQueryInfluencers().getEnabledFilters(),
+					getProducer().getFactory(),
+					entityGraphQueryHint
+			);
+		}
+
+		QueryParameters queryParameters = new QueryParameters(
+				getPositionalParameterTypes(),
+				getPositionalParameterValues(),
+				getNamedParameterMap(),
+				getLockOptions(),
+				queryOptions,
+				true,
+				isReadOnly(),
+				cacheable,
+				cacheRegion,
+				comment,
+				dbHints,
+				null,
+				optionalObject,
+				optionalEntityName,
+				optionalId,
+				null 	// resultTransformer
+		);
+		queryParameters.setQueryPlan( entityGraphHintedQueryPlan );
+		return queryParameters;
 	}
 
-	protected ExceptionConverter getExceptionConverter(){
-		return producer.getExceptionConverter();
-	}
 }

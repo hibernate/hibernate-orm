@@ -11,20 +11,20 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.result.Outputs;
 import org.hibernate.sql.sqm.ast.SelectQuery;
+import org.hibernate.sql.sqm.convert.spi.Callback;
+import org.hibernate.sql.sqm.convert.spi.NotYetImplementedException;
+import org.hibernate.sql.sqm.convert.spi.ParameterBinder;
+import org.hibernate.sql.sqm.convert.spi.SqlTreeWalker;
 import org.hibernate.sql.sqm.exec.spi.PreparedStatementCreator;
 import org.hibernate.sql.sqm.exec.spi.PreparedStatementExecutor;
 import org.hibernate.sql.sqm.exec.spi.QueryOptions;
 import org.hibernate.sql.sqm.exec.spi.RowTransformer;
 import org.hibernate.sql.sqm.exec.spi.SqlTreeExecutor;
-import org.hibernate.sql.sqm.convert.spi.Callback;
-import org.hibernate.sql.sqm.convert.spi.NotYetImplementedException;
-import org.hibernate.sql.sqm.convert.spi.ParameterBinder;
-import org.hibernate.sql.sqm.convert.spi.SqlTreeWalker;
 
 /**
  * Standard SqlTreeExecutor implementation
@@ -41,7 +41,7 @@ public class SqlTreeExecutorImpl implements SqlTreeExecutor {
 			QueryParameterBindings queryParameterBindings,
 			RowTransformer<T> rowTransformer,
 			Callback callback,
-			SessionImplementor session) {
+			SharedSessionContractImplementor session) {
 		// Walk the SQL AST.  This produces:
 		//		* SQL string
 		//		* ParameterBinders
@@ -108,7 +108,7 @@ public class SqlTreeExecutorImpl implements SqlTreeExecutor {
 			PreparedStatementCreator statementCreator,
 			QueryOptions queryOptions,
 			QueryParameterBindings queryParameterBindings,
-			SessionImplementor session) {
+			SharedSessionContractImplementor session) {
 		throw new NotYetImplementedException( "DML execution is not yet implemented" );
 	}
 
@@ -118,7 +118,7 @@ public class SqlTreeExecutorImpl implements SqlTreeExecutor {
 			PreparedStatementCreator statementCreator,
 			QueryOptions queryOptions,
 			QueryParameterBindings queryParameterBindings,
-			SessionImplementor session) {
+			SharedSessionContractImplementor session) {
 		throw new NotYetImplementedException( "DML execution is not yet implemented" );
 	}
 
@@ -128,7 +128,7 @@ public class SqlTreeExecutorImpl implements SqlTreeExecutor {
 			PreparedStatementCreator statementCreator,
 			QueryOptions queryOptions,
 			QueryParameterBindings queryParameterBindings,
-			SessionImplementor session) {
+			SharedSessionContractImplementor session) {
 		throw new NotYetImplementedException( "DML execution is not yet implemented" );
 	}
 
@@ -139,7 +139,7 @@ public class SqlTreeExecutorImpl implements SqlTreeExecutor {
 			QueryParameterBindings queryParameterBindings,
 			RowTransformer<T> rowTransformer,
 			Callback callback,
-			SessionImplementor session) {
+			SharedSessionContractImplementor session) {
 		throw new NotYetImplementedException( "Procedure/function call execution is not yet implemented" );
 	}
 }

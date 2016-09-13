@@ -42,9 +42,12 @@ public final class QueryParameters {
 	 */
 	private static final String SYMBOLS = ParserHelper.HQL_SEPARATORS.replace( "'", "" );
 
+	// move to "bindings"
 	private Type[] positionalParameterTypes;
 	private Object[] positionalParameterValues;
 	private Map<String,TypedValue> namedParameters;
+
+	// move to "options"
 	private LockOptions lockOptions;
 	private RowSelection rowSelection;
 	private boolean cacheable;
@@ -52,19 +55,27 @@ public final class QueryParameters {
 	private String comment;
 	private List<String> queryHints;
 	private ScrollMode scrollMode;
-	private Serializable[] collectionKeys;
-	private Object optionalObject;
-	private String optionalEntityName;
-	private Serializable optionalId;
 	private boolean isReadOnlyInitialized;
 	private boolean readOnly;
+
+	// specific to native queries, "native-query-options"?
 	private boolean callable;
 	private boolean autodiscovertypes;
 	private boolean isNaturalKeyLookup;
 	private boolean passDistinctThrough = true;
 
+	// used only for certain things
+	private Serializable[] collectionKeys;
+	private Object optionalObject;
+	private String optionalEntityName;
+	private Serializable optionalId;
+
+
+	// "options"?
 	private final ResultTransformer resultTransformer; // why is all others non final ?
 
+
+	// these just go away I think
 	private String processedSQL;
 	private Type[] processedPositionalParameterTypes;
 	private Object[] processedPositionalParameterValues;

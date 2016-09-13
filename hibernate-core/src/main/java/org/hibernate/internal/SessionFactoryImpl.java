@@ -852,12 +852,12 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 				.setReadOnly( query.isReadOnly() )
 				.setFlushMode( query.getHibernateFlushMode() );
 
-		if ( query.getQueryOptions().getFirstRow() != null ) {
-			builder.setFirstResult( query.getQueryOptions().getFirstRow() );
+		if ( query.getQueryOptions().getLimit().getFirstRow() != null ) {
+			builder.setFirstResult( query.getQueryOptions().getLimit().getFirstRow() );
 		}
 
-		if ( query.getQueryOptions().getMaxRows() != null ) {
-			builder.setMaxResults( query.getQueryOptions().getMaxRows() );
+		if ( query.getQueryOptions().getLimit().getMaxRows() != null ) {
+			builder.setMaxResults( query.getQueryOptions().getLimit().getMaxRows() );
 		}
 
 		if ( query.getQueryOptions().getTimeout() != null ) {

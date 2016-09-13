@@ -16,6 +16,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import org.hibernate.type.spi.Type;
+import org.hibernate.query.Query;
 
 /**
  * A result iterator that allows moving around within the results

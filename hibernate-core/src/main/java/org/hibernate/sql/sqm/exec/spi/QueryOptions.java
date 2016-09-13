@@ -11,21 +11,26 @@ import java.util.List;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
+import org.hibernate.query.ResultListTransformer;
+import org.hibernate.query.TupleTransformer;
 
 /**
  * @author Steve Ebersole
  */
 public interface QueryOptions {
+	Limit getLimit();
+	Integer getFetchSize();
+	String getComment();
+	LockOptions getLockOptions();
+	List<String> getDatabaseHints();
+
 	Integer getTimeout();
 	FlushMode getFlushMode();
-	String getComment();
-	List<String> getSqlHints();
-
-	Limit getLimit();
-	LockOptions getLockOptions();
-	Integer getFetchSize();
 	Boolean isReadOnly();
 	CacheMode getCacheMode();
 	Boolean isResultCachingEnabled();
 	String getResultCacheRegionName();
+
+	TupleTransformer getTupleTransformer();
+	ResultListTransformer getResultListTransformer();
 }

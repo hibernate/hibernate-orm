@@ -46,7 +46,6 @@ import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.jdbc.spi.ResultSetReturn;
 import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.NativeSQLQueryPlan;
@@ -85,7 +84,6 @@ import org.hibernate.query.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryInterpretations;
-import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.spi.SqmBackedQuery;
@@ -978,8 +976,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 					concreteSqmStatements[0],
 					query.getResultType(),
 					query.getEntityGraphHint(),
-					query.getQueryOptions(),
-					query.getQueryParameterBindings()
+					query.getQueryOptions()
 			);
 		}
 	}
@@ -997,8 +994,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 					concreteSqmStatements[i],
 					query.getResultType(),
 					query.getEntityGraphHint(),
-					query.getQueryOptions(),
-					query.getQueryParameterBindings()
+					query.getQueryOptions()
 			);
 		}
 
@@ -1009,12 +1005,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			SqmSelectStatement concreteSqmStatement,
 			Class<R> resultType,
 			EntityGraphQueryHint entityGraphHint,
-			QueryOptions queryOptions,
-			QueryParameterBindings queryParameterBindings) {
-		return new ConcreteSqmSelectQueryPlan<R>(
+			QueryOptions queryOptions) {
+		return new ConcreteSqmSelectQueryPlan<>(
 				concreteSqmStatement,
-				resultType,
 				entityGraphHint,
+				resultType,
 				queryOptions
 		);
 	}

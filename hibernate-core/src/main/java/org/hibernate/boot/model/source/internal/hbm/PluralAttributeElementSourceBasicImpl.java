@@ -72,6 +72,11 @@ public class PluralAttributeElementSourceBasicImpl
 					}
 
 					@Override
+					public boolean isUnique() {
+						return jaxbElement.isUnique();
+					}
+
+					@Override
 					public SizeSource getSizeSource() {
 						return Helper.interpretSizeSource(
 								jaxbElement.getLength(),

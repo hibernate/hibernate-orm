@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd" >
+<hibernate-mapping package="org.hibernate.test.schemaupdate.manytomany" default-access="field">
+    <class entity-name="TestEntity" >
+        <id name="id" type="long">
+            <generator class="native"/>
+        </id>
+
+        <list name="children" table="test_entity_children" >
+            <key column="entity_id" foreign-key="fk_entity"/>
+            <index column="order"/>
+            <many-to-many column="child" entity-name="TestEntity" unique="true" foreign-key="fk_entity_children"/>
+        </list>
+
+        <set name="items" table="test_entity_item">
+            <key column="entity_id"/>
+            <element type="string" column="item" unique="true"/>
+        </set>
+    </class>
+</hibernate-mapping>

@@ -6,18 +6,19 @@
  */
 package org.hibernate.query.internal;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.persistence.Tuple;
-import javax.persistence.TupleElement;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.StingArrayCollector;
 import org.hibernate.persister.common.spi.SqmTypeImplementor;
 import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.TupleBuilder;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
@@ -33,6 +34,7 @@ import org.hibernate.sql.sqm.exec.internal.PreparedStatementExecutorScrollableIm
 import org.hibernate.sql.sqm.exec.internal.RowTransformerPassThruImpl;
 import org.hibernate.sql.sqm.exec.internal.RowTransformerSingularReturnImpl;
 import org.hibernate.sql.sqm.exec.internal.RowTransformerTupleImpl;
+import org.hibernate.sql.sqm.exec.internal.RowTransformerTupleTransformerAdapter;
 import org.hibernate.sql.sqm.exec.internal.SqlTreeExecutorImpl;
 import org.hibernate.sql.sqm.exec.spi.PreparedStatementCreator;
 import org.hibernate.sql.sqm.exec.spi.QueryOptions;
@@ -64,37 +66,70 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			SqmSelectStatement sqm,
 			Class<R> resultType,
 			QueryOptions queryOptions) {
-		if ( resultType != null ) {
-			// an explicit return Type was requested
-			if ( resultType.isArray() ) {
-				return (RowTransformer<R>) RowTransformerPassThruImpl.INSTANCE;
-			}
-
-			if ( Tuple.class.isAssignableFrom( resultType ) ) {
-				List<TupleElement<?>> tupleElements = new ArrayList<>();
-				int i = 0;
-				for ( SqmSelection selection : sqm.getQuerySpec().getSelectClause().getSelections() ) {
-					tupleElements.add(
-							new RowTransformerTupleImpl.HqlTupleElementImpl(
-									( (SqmTypeImplementor) selection.getExpression().getExpressionType() ).getOrmType().getReturnedClass(),
-									selection.getAlias()
-							)
-					);
-				}
-
-				return (RowTransformer<R>) new RowTransformerTupleImpl( tupleElements );
-			}
-
-			if ( sqm.getQuerySpec().getSelectClause().getSelections().size() > 1 ) {
-				throw new IllegalQueryOperationException( "Query defined multiple selections, return cannot be typed (other that Object[] or Tuple)" );
+		if ( resultType == null || resultType.isArray() ) {
+			if ( queryOptions.getTupleTransformer() != null ) {
+				return makeRowTransformerTupleTransformerAdapter( sqm, queryOptions );
 			}
 			else {
-				return (RowTransformer<R>) RowTransformerSingularReturnImpl.INSTANCE;
+				return (RowTransformer<R>) RowTransformerPassThruImpl.INSTANCE;
 			}
 		}
 
-		// otherwise just pass through the result row (as if Object[] were specified as return type)
-		return (RowTransformer<R>) RowTransformerPassThruImpl.INSTANCE;
+		// NOTE : if we get here, a result-type of some kind (other than Object[].class) was specified
+
+		if ( Tuple.class.isAssignableFrom( resultType ) ) {
+			// resultType is Tuple..
+			if ( queryOptions.getTupleTransformer() == null ) {
+				return (RowTransformer<R>) new RowTransformerTupleImpl(
+						sqm.getQuerySpec().getSelectClause().getSelections()
+								.stream()
+								.map( selection -> new RowTransformerTupleImpl.HqlTupleElementImpl(
+										( (SqmTypeImplementor) selection.getExpression().getExpressionType() ).getOrmType().getReturnedClass(),
+										selection.getAlias()
+								) )
+								.collect( Collectors.toList() )
+				);
+			}
+
+			// there can be a TupleTransformer IF it is a TupleBuilder,
+			// otherwise this is considered an error
+			if ( queryOptions.getTupleTransformer() instanceof TupleBuilder ) {
+				return makeRowTransformerTupleTransformerAdapter( sqm, queryOptions );
+			}
+
+			throw new IllegalArgumentException(
+					"Illegal combination of Tuple resultType and (non-TupleBuilder) TupleTransformer : " +
+							queryOptions.getTupleTransformer()
+			);
+		}
+
+		// NOTE : if we get here we have a resultType of some kind
+
+		if ( queryOptions.getTupleTransformer() != null ) {
+			// aside from checking the type parameters for the given TupleTransformer
+			// there is not a decent way to verify that the TupleTransformer returns
+			// the same type.  We rely on the API here and assume the best
+			return makeRowTransformerTupleTransformerAdapter( sqm, queryOptions );
+		}
+		else if ( sqm.getQuerySpec().getSelectClause().getSelections().size() > 1 ) {
+			throw new IllegalQueryOperationException( "Query defined multiple selections, return cannot be typed (other that Object[] or Tuple)" );
+		}
+		else {
+			return (RowTransformer<R>) RowTransformerSingularReturnImpl.INSTANCE;
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private RowTransformer makeRowTransformerTupleTransformerAdapter(
+			SqmSelectStatement sqm,
+			QueryOptions queryOptions) {
+		return new RowTransformerTupleTransformerAdapter<>(
+				sqm.getQuerySpec().getSelectClause().getSelections()
+						.stream()
+						.map( SqmSelection::getAlias )
+						.collect( StingArrayCollector.INSTANCE ),
+				queryOptions.getTupleTransformer()
+		);
 	}
 
 	@Override
@@ -106,6 +141,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		verifyQueryIsSelect();
 
 		final Callback callback = new Callback() {};
+		// todo : SelectStatementInterpreter needs to account for the EntityGraph hint
 		final SelectQuery sqlTree = SelectStatementInterpreter.interpret( sqm, queryOptions, callback );
 		return (List<R>) new SqlTreeExecutorImpl().executeSelect(
 				sqlTree,
@@ -148,6 +184,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		verifyQueryIsSelect();
 
 		final Callback callback = new Callback() {};
+		// todo : SelectStatementInterpreter needs to account for the EntityGraph hint
 		final SelectQuery sqlTree = SelectStatementInterpreter.interpret( sqm, queryOptions, callback );
 
 		final PreparedStatementCreator creator;

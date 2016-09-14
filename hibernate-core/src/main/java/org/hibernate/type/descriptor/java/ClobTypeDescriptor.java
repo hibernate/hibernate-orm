@@ -57,7 +57,7 @@ public class ClobTypeDescriptor extends AbstractTypeDescriptor<Clob> {
 
 	@Override
 	public String extractLoggableRepresentation(Clob value) {
-		return value == null ? "null" : "CLOB{...}";
+		return value == null ? "null" : "{clob}";
 	}
 
 	public String toString(Clob value) {

@@ -179,7 +179,23 @@ public abstract class CollectionType extends AbstractType implements Association
 		if ( value == null ) {
 			return "null";
 		}
-		else if ( !Hibernate.isInitialized( value ) ) {
+
+		if ( !getReturnedClass().isInstance( value ) && !PersistentCollection.class.isInstance( value ) ) {
+			// its most likely the collection-key
+			final CollectionPersister persister = getPersister( factory );
+			if ( persister.getKeyType().getReturnedClass().isInstance( value ) ) {
+				return getRole() + "#" + getPersister( factory ).getKeyType().toLoggableString( value, factory );
+			}
+			else {
+				// although it could also be the collection-id
+				if ( persister.getIdentifierType() != null
+						&& persister.getIdentifierType().getReturnedClass().isInstance( value ) ) {
+					return getRole() + "#" + getPersister( factory ).getIdentifierType().toLoggableString( value, factory );
+				}
+			}
+		}
+
+		if ( !Hibernate.isInitialized( value ) ) {
 			return "<uninitialized>";
 		}
 		else {
@@ -289,7 +305,11 @@ public abstract class CollectionType extends AbstractType implements Association
 	 * @return The underlying collection persister
 	 */
 	private CollectionPersister getPersister(SharedSessionContractImplementor session) {
-		return session.getFactory().getMetamodel().collectionPersister( role );
+		return getPersister( session.getFactory() );
+	}
+
+	private CollectionPersister getPersister(SessionFactoryImplementor factory) {
+		return factory.getMetamodel().collectionPersister( role );
 	}
 
 	@Override

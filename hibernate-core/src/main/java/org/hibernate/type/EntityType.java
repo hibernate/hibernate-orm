@@ -499,8 +499,15 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			return "null";
 		}
 
-		EntityPersister persister = getAssociatedEntityPersister( factory );
-		StringBuilder result = new StringBuilder().append( associatedEntityName );
+		final EntityPersister persister = getAssociatedEntityPersister( factory );
+		if ( !persister.getEntityTuplizer().isInstance( value ) ) {
+			// it should be the id type...
+			if ( persister.getIdentifierType().getReturnedClass().isInstance( value ) ) {
+				return associatedEntityName + "#" + value;
+			}
+		}
+
+		final StringBuilder result = new StringBuilder().append( associatedEntityName );
 
 		if ( persister.hasIdentifierProperty() ) {
 			final Serializable id;

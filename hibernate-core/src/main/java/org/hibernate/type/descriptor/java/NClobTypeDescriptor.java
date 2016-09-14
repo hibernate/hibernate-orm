@@ -57,7 +57,7 @@ public class NClobTypeDescriptor extends AbstractTypeDescriptor<NClob> {
 
 	@Override
 	public String extractLoggableRepresentation(NClob value) {
-		return value == null ? "null" : "NCLOB{...}";
+		return value == null ? "null" : "{nclob}";
 	}
 
 	public String toString(NClob value) {

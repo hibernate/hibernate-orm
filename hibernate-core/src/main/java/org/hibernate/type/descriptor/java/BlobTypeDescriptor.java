@@ -63,7 +63,7 @@ public class BlobTypeDescriptor extends AbstractTypeDescriptor<Blob> {
 
 	@Override
 	public String extractLoggableRepresentation(Blob value) {
-		return value == null ? "null" : "BLOB{...}";
+		return value == null ? "null" : "{blob}";
 	}
 
 	@Override

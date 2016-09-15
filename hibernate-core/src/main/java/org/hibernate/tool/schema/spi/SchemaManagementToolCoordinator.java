@@ -208,12 +208,12 @@ public class SchemaManagementToolCoordinator {
 			);
 		}
 
-		final ScriptSourceInput scriptSourceInput = includesScripts
-				? Helper.interpretScriptSourceSetting( scriptSourceSetting,
-													   serviceRegistry.getService(
-															   ClassLoaderService.class ),
-													   (String) configurationValues
-															   .get( AvailableSettings.HBM2DDL_CHARSET_NAME ) )
+		final ScriptSourceInput scriptSourceInput = includesScripts ?
+				Helper.interpretScriptSourceSetting(
+						scriptSourceSetting,
+						serviceRegistry.getService( ClassLoaderService.class ),
+						(String) configurationValues.get( AvailableSettings.HBM2DDL_CHARSET_NAME )
+				)
 				: null;
 
 		return new JpaTargetAndSourceDescriptor() {

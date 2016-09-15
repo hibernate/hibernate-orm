@@ -297,17 +297,18 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 			final String methodName = method.getName();
 
 			// first check methods calls that we handle completely locally:
-			if ( "equals".equals( methodName ) && method.getParameterCount() == 1 ) {
+			final int parameterCount = method.getParameterTypes().length;
+			if ( "equals".equals( methodName ) && parameterCount == 1 ) {
 				if ( args[0] == null
 						|| !Proxy.isProxyClass( args[0].getClass() ) ) {
 					return false;
 				}
 				return this.equals( Proxy.getInvocationHandler( args[0] ) );
 			}
-			else if ( "hashCode".equals( methodName ) && method.getParameterCount() == 0 ) {
+			else if ( "hashCode".equals( methodName ) && parameterCount == 0 ) {
 				return this.hashCode();
 			}
-			else if ( "toString".equals( methodName ) && method.getParameterCount() == 0 ) {
+			else if ( "toString".equals( methodName ) && parameterCount == 0 ) {
 				return String.format( Locale.ROOT, "ThreadLocalSessionContext.TransactionProtectionWrapper[%s]", realSession );
 			}
 

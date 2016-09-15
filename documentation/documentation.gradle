@@ -19,6 +19,7 @@ buildscript {
     }
     dependencies {
         classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.2'
+		classpath "org.hibernate:hibernate-gradle-plugin:$hibernateTargetVersion"
     }
 }
 
@@ -28,6 +29,15 @@ apply plugin: 'org.asciidoctor.convert'
 apply plugin: 'hibernate-matrix-testing'
 
 apply from: "${rootProject.projectDir}/utilities.gradle"
+
+apply plugin: 'org.hibernate.orm'
+
+hibernate {
+	enhance {
+		enableLazyInitialization = true
+	}
+}
+
 
 defaultTasks 'buildDocs'
 
@@ -62,6 +72,7 @@ dependencies {
 
 	testCompile( project(':hibernate-testing') )
 
+	testCompile( libraries.mockito )
 	testRuntime( libraries.h2 )
 	testRuntime( libraries.hsqldb )
 	testRuntime( libraries.postgresql )

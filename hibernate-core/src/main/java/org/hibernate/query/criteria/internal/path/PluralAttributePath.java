@@ -9,12 +9,17 @@ package org.hibernate.query.criteria.internal.path;
 import java.io.Serializable;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Bindable;
+import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
+import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.Type;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.internal.AbstractManagedType;
+import org.hibernate.metamodel.internal.AttributeImplementor;
+import org.hibernate.metamodel.internal.EmbeddableTypeImpl;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.PathSource;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -73,6 +78,13 @@ public class PluralAttributePath<X> extends AbstractPathImpl<X> implements Seria
 				roleOwnerType = entityTypeNearestDeclaringType.getJavaType();
 			}
 			// else throw an exception?
+		}
+		else if ( attribute.getDeclaringType().getPersistenceType() == Type.PersistenceType.EMBEDDABLE ) {
+			final EmbeddableTypeImpl declaringType = (EmbeddableTypeImpl) attribute.getDeclaringType();
+			final AttributeImplementor parentAttribute = declaringType.getParentAttribute();
+			return parentAttribute.getDeclaringType()
+					.getJavaType()
+					.getName() + '.' + parentAttribute.getName() + '.' + attribute.getName();
 		}
 		// TODO: still need to deal with a plural attribute declared in an embeddable (HHH-6562)
 		return roleOwnerType.getName() +

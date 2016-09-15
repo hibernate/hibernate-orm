@@ -21,6 +21,12 @@ public class EmbeddableTypeImpl<X>
 	private final AbstractManagedType parent;
 	private final ComponentType hibernateType;
 
+	public AttributeImplementor<X,Object> getParentAttribute() {
+		return parentAttribute;
+	}
+
+	private AttributeImplementor<X,Object>  parentAttribute;
+
 	public EmbeddableTypeImpl(Class<X> javaType, AbstractManagedType parent, ComponentType hibernateType) {
 		super( javaType, null, null );
 		this.parent = parent;
@@ -37,5 +43,9 @@ public class EmbeddableTypeImpl<X>
 
 	public ComponentType getHibernateType() {
 		return hibernateType;
+	}
+
+	public void setParentAttribute(AttributeImplementor<X,Object> parentAttribute) {
+		this.parentAttribute = parentAttribute;
 	}
 }

@@ -97,11 +97,6 @@ public abstract class AbstractFromImpl<Z, X>
 	}
 
 	@Override
-	public boolean shouldBeRendered() {
-		return true;
-	}
-
-	@Override
 	public String render(RenderingContext renderingContext) {
 		return renderProjection( renderingContext );
 	}

@@ -10,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -79,7 +80,10 @@ public class JdbcTimeDefaultTimeZoneTest
 
 		doInHibernate( this::sessionFactory, s -> {
 			Person person = s.find( Person.class, 1L );
-			assertEquals( 0, person.createdOn.getTime() );
+			assertEquals(
+					0,
+					person.createdOn.getTime() % TimeUnit.DAYS.toSeconds( 1 )
+			);
 		} );
 	}
 

@@ -7,8 +7,10 @@
 package org.hibernate.tool.schema.internal.exec;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.Reader;
 
 import org.hibernate.tool.schema.spi.SchemaManagementException;
@@ -48,11 +50,11 @@ public class ScriptSourceInputFromFile extends AbstractScriptSourceInput impleme
 	@Override
 	public void prepare() {
 		super.prepare();
-		this.reader = toFileReader( file );
+		this.reader = toReader( file );
 	}
 
 	@SuppressWarnings("ResultOfMethodCallIgnored")
-	private static Reader toFileReader(File file) {
+	private static Reader toReader(File file) {
 		if ( ! file.exists() ) {
 			log.warnf( "Specified schema generation script file [%s] did not exist for reading", file );
 			return new Reader() {
@@ -68,7 +70,7 @@ public class ScriptSourceInputFromFile extends AbstractScriptSourceInput impleme
 		}
 
 		try {
-			return new FileReader( file );
+			return new InputStreamReader( new FileInputStream(file), "UTF-8" );
 		}
 		catch (IOException e) {
 			throw new SchemaManagementException(

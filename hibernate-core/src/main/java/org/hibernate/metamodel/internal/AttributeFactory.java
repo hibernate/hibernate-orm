@@ -83,7 +83,7 @@ public class AttributeFactory {
 		}
 		final SingularAttributeMetadata<X, Y> singularAttributeMetadata = (SingularAttributeMetadata<X, Y>) attributeMetadata;
 		final Type<Y> metaModelType = getMetaModelType( singularAttributeMetadata.getValueContext() );
-		return new SingularAttributeImpl<X, Y>(
+		final SingularAttributeImpl<X, Y> singularAttribute = new SingularAttributeImpl<>(
 				attributeMetadata.getName(),
 				attributeMetadata.getJavaType(),
 				ownerType,
@@ -94,6 +94,10 @@ public class AttributeFactory {
 				metaModelType,
 				attributeMetadata.getPersistentAttributeType()
 		);
+		if ( metaModelType.getPersistenceType() == Type.PersistenceType.EMBEDDABLE ) {
+			((EmbeddableTypeImpl) metaModelType).setParentAttribute( singularAttribute );
+		}
+		return singularAttribute;
 	}
 
 	private <X> AttributeContext<X> wrap(final AbstractManagedType<X> ownerType, final Property property) {

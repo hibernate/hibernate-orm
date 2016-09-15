@@ -46,7 +46,7 @@ public class ComponentInWhereClauseTest extends BaseEntityManagerFunctionalTestC
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {Employee.class, Project.class};
+		return new Class[] {Employee.class, Project.class, Person.class};
 	}
 
 	@Before
@@ -65,6 +65,14 @@ public class ComponentInWhereClauseTest extends BaseEntityManagerFunctionalTestC
 									 employee.setProjects( projects );
 									 employee.setContactDetail( contactDetail );
 									 entityManager.persist( employee );
+
+									 final Person person = new Person();
+									 person.setInformation( new Information() );
+									 ContactDetail infoContactDetail = new ContactDetail();
+									 infoContactDetail.setEmail( "xyz@mail.org" );
+									 infoContactDetail.addPhone( new Phone( "999-999-9999" ) );
+									 person.getInformation().setContactDetail( infoContactDetail );
+									 entityManager.persist( person );
 								 }
 		);
 	}
@@ -107,6 +115,25 @@ public class ComponentInWhereClauseTest extends BaseEntityManagerFunctionalTestC
 	}
 
 	@Test
+	public void testSizeExpressionForTheElementCollectionPropertyOfASubComponent() {
+		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+					CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+					CriteriaQuery<Person> query = builder.createQuery( Person.class );
+					Root<Person> root = query.from( Person.class );
+
+					query.where(
+							builder.equal(
+									builder.size( root.get( "information" ).get( "contactDetail" ).get( "phones" ) )
+									, 1 )
+					);
+
+					final List<Person> results = entityManager.createQuery( query ).getResultList();
+					assertThat( results.size(), is( 1 ) );
+				}
+		);
+	}
+
+	@Test
 	public void testEqualExpressionForThePropertyOfTheElementCollectionPropertyOfAComponent() {
 		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
 									 CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -135,7 +162,8 @@ public class ComponentInWhereClauseTest extends BaseEntityManagerFunctionalTestC
 									 query.where(
 											 builder.equal(
 													 root.join( "contactDetail" ).get( "email" )
-													 , "abc@mail.org" )
+													 , "abc@mail.org"
+											 )
 									 );
 
 									 final List<Employee> results = entityManager.createQuery( query ).getResultList();
@@ -289,5 +317,35 @@ public class ComponentInWhereClauseTest extends BaseEntityManagerFunctionalTestC
 			return this.number;
 		}
 	}
+
+	@Entity(name = "Person")
+	@Table(name="PERSON")
+	public static class Person extends AbstractEntity {
+		@Embedded
+		private Information information;
+
+		public Information getInformation() {
+			return information;
+		}
+
+		public void setInformation(Information information) {
+			this.information = information;
+		}
+	}
+
+	@Embeddable
+	public static class Information {
+		@Embedded
+		private ContactDetail contactDetail;
+
+		public ContactDetail getContactDetail() {
+			return contactDetail;
+		}
+
+		public void setContactDetail(ContactDetail contactDetail) {
+			this.contactDetail = contactDetail;
+		}
+	}
+
 
 }

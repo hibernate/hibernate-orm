@@ -15,6 +15,7 @@ import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.Type;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.internal.EmbeddableTypeImpl;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.PathSource;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -74,7 +75,9 @@ public class PluralAttributePath<X> extends AbstractPathImpl<X> implements Seria
 			}
 			// else throw an exception?
 		}
-		// TODO: still need to deal with a plural attribute declared in an embeddable (HHH-6562)
+		else if ( attribute.getDeclaringType().getPersistenceType() == Type.PersistenceType.EMBEDDABLE ) {
+			return ( (EmbeddableTypeImpl) attribute.getDeclaringType() ).resolveRole() + '.' + attribute.getName();
+		}
 		return roleOwnerType.getName() +
 				'.' + attribute.getName();
 	}

@@ -9,7 +9,6 @@ package org.hibernate.test.schemaupdate.uniqueconstraint;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.EnumSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,9 +18,10 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.tool.hbm2ddl.Target;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,6 +43,7 @@ public class UniqueConstraintGenerationTest {
 		output.deleteOnExit();
 		ssr = new StandardServiceRegistryBuilder()
 				.applySetting( Environment.HBM2DDL_AUTO, "none" )
+				.applySetting( Environment.FORMAT_SQL, "false" )
 				.build();
 		metadata = (MetadataImplementor) new MetadataSources( ssr )
 				.addResource( "org/hibernate/test/schemaupdate/uniqueconstraint/TestEntity.hbm.xml" )
@@ -58,9 +59,9 @@ public class UniqueConstraintGenerationTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-11101")
 	public void testUniqueConstraintIsGenerated() throws Exception {
-		new SchemaExport()
+		new SchemaExport( metadata )
 				.setOutputFile( output.getAbsolutePath() )
-				.create( EnumSet.of( TargetType.SCRIPT ), metadata );
+				.create( Target.SCRIPT );
 
 		assertThat(
 				"The test_entity_item table unique constraint has not been generated",

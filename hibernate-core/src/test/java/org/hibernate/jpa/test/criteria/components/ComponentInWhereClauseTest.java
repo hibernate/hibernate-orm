@@ -71,7 +71,7 @@ public class ComponentInWhereClauseTest extends BaseEntityManagerFunctionalTestC
 									 ContactDetail infoContactDetail = new ContactDetail();
 									 infoContactDetail.setEmail( "xyz@mail.org" );
 									 infoContactDetail.addPhone( new Phone( "999-999-9999" ) );
-									 person.getInformation().setContactDetail( infoContactDetail );
+									 person.getInformation().setInfoContactDetail( infoContactDetail );
 									 entityManager.persist( person );
 								 }
 		);
@@ -123,7 +123,7 @@ public class ComponentInWhereClauseTest extends BaseEntityManagerFunctionalTestC
 
 					query.where(
 							builder.equal(
-									builder.size( root.get( "information" ).get( "contactDetail" ).get( "phones" ) )
+									builder.size( root.get( "information" ).get( "infoContactDetail" ).get( "phones" ) )
 									, 1 )
 					);
 
@@ -336,14 +336,14 @@ public class ComponentInWhereClauseTest extends BaseEntityManagerFunctionalTestC
 	@Embeddable
 	public static class Information {
 		@Embedded
-		private ContactDetail contactDetail;
+		private ContactDetail infoContactDetail;
 
-		public ContactDetail getContactDetail() {
-			return contactDetail;
+		public ContactDetail getInfoContactDetail() {
+			return infoContactDetail;
 		}
 
-		public void setContactDetail(ContactDetail contactDetail) {
-			this.contactDetail = contactDetail;
+		public void setInfoContactDetail(ContactDetail infoContactDetail) {
+			this.infoContactDetail = infoContactDetail;
 		}
 	}
 

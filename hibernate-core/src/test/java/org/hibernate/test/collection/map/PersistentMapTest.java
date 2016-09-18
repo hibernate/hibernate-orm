@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -51,7 +52,9 @@ public class PersistentMapTest extends BaseCoreFunctionalTestCase {
 		return new Class<?>[] {
 				User.class,
 				UserData.class,
-				MultilingualString.class
+				MultilingualString.class,
+				Address.class,
+				Detail.class
 		};
 	}
 
@@ -165,7 +168,7 @@ public class PersistentMapTest extends BaseCoreFunctionalTestCase {
         session.getTransaction().commit();
         session.close();
     }
-	
+
 	@Test
 	@TestForIssue(jiraKey = "HHH-5732")
 	public void testClearMap() {
@@ -234,7 +237,68 @@ public class PersistentMapTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 	}
-	
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-11038" )
+	public void testMapKeyColumnNonInsertableNonUpdatableBidirOneToMany() {
+		Session s = openSession();
+		s.getTransaction().begin();
+		User user = new User();
+		Address address = new Address();
+		address.addressType = "email";
+		address.addressText = "jane@doe.com";
+		user.addresses.put( address.addressType, address );
+		address.user = user;
+		s.persist( user );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.getTransaction().begin();
+		user = s.get( User.class, user.id );
+		user.addresses.clear();
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.getTransaction().begin();
+		user = s.get( User.class, user.id );
+		s.delete( user );
+		s.createQuery( "delete from " + User.class.getName() ).executeUpdate();
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-11038" )
+	public void testMapKeyColumnNonInsertableNonUpdatableUnidirOneToMany() {
+		Session s = openSession();
+		s.getTransaction().begin();
+		User user = new User();
+		Detail detail = new Detail();
+		detail.description = "desc";
+		detail.detailType = "trivial";
+		user.details.put( detail.detailType, detail );
+		s.persist( user );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.getTransaction().begin();
+		user = s.get( User.class, user.id );
+		user.details.clear();
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.getTransaction().begin();
+		user = s.get( User.class, user.id );
+		s.delete( user );
+		s.createQuery( "delete from " + User.class.getName() ).executeUpdate();
+		s.getTransaction().commit();
+		s.close();
+	}
+
 	@Entity
 	@Table(name = "MyUser")
 	private static class User implements Serializable {
@@ -244,6 +308,15 @@ public class PersistentMapTest extends BaseCoreFunctionalTestCase {
 		@OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.ALL)
 		@MapKeyColumn(name = "name", nullable = true)
 		private Map<String, UserData> userDatas = new HashMap<String, UserData>();
+
+		@OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.ALL)
+		@MapKeyColumn(name = "addressType", insertable = false, updatable = false)
+		private Map<String, Address> addresses = new HashMap<String, Address>();
+
+		@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+		@MapKeyColumn(name = "detailType", insertable = false, updatable = false)
+		@JoinColumn
+		private Map<String, Detail> details = new HashMap<String, Detail>();
 	}
 	
 	@Entity
@@ -257,4 +330,32 @@ public class PersistentMapTest extends BaseCoreFunctionalTestCase {
 		private User user;
 	}
 
+	@Entity
+	@Table(name = "Address")
+	private static class Address {
+		@Id @GeneratedValue
+		private Integer id;
+
+		@ManyToOne
+		@JoinColumn(name = "userId")
+		private User user;
+
+		@Column(nullable = false)
+		private String addressType;
+
+		@Column(nullable = false)
+		private String addressText;
+	}
+
+	@Entity
+	@Table(name="Detail")
+	private static class Detail {
+		@Id @GeneratedValue
+		private Integer id;
+
+		@Column(nullable = false)
+		private String detailType;
+
+		private String description;
+	}
 }

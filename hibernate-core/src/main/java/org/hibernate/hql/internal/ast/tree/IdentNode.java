@@ -39,6 +39,11 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 	}
 
 	private boolean nakedPropertyRef;
+	private String[] columns;
+	
+	public String[] getColumns() {
+		return columns;
+	}
 
 	public void resolveIndex(AST parent) throws SemanticException {
 		// An ident node can represent an index expression if the ident
@@ -80,12 +85,56 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 		getWalker().addQuerySpaces(queryableCollection.getCollectionSpaces());	// Always add the collection's query spaces.
 	}
 
+	protected String[] resolveColumns(QueryableCollection collectionPersister) {
+		final FromElement fromElement = getFromElement();
+		return fromElement.toColumns(
+				fromElement.getCollectionTableAlias(),
+				"elements", // the JPA VALUE "qualifier" is the same concept as the HQL ELEMENTS function/property
+				getWalker().isInSelect()
+		);
+	}
+	
+	private void initText(String[] columns) {
+		String text = StringHelper.join( ", ", columns );
+		if ( columns.length > 1 && getWalker().isComparativeExpressionClause() ) {
+			text = "(" + text + ")";
+		}
+		setText( text );
+	}
+	
 	public void resolve(boolean generateJoin, boolean implicitJoin, String classAlias, AST parent) {
 		if (!isResolved()) {
-			if (getWalker().getCurrentFromClause().isFromElementAlias(getText())) {
-				if (resolveAsAlias()) {
+			if ( getWalker().getCurrentFromClause().isFromElementAlias( getText() ) ) {
+				FromElement fromElement = getWalker().getCurrentFromClause().getFromElement( getText() );
+				if ( fromElement.getQueryableCollection() != null && fromElement.getQueryableCollection().getElementType().isComponentType() ) {
+					if ( getWalker().isInSelect() ) {
+						// This is a reference to an element collection
+						setFromElement( fromElement );
+						super.setDataType( fromElement.getQueryableCollection().getElementType() );
+						this.columns = resolveColumns( fromElement.getQueryableCollection() );
+						initText( getColumns() );
+						setFirstChild( null );
+						// Don't resolve it
+					}
+					else {
+						resolveAsAlias();
+						// Don't resolve it
+					}
+				}
+				else if ( resolveAsAlias() ) {
 					setResolved();
 					// We represent a from-clause alias
+				}
+			}
+			else if (
+					getColumns() != null
+					&& ( getWalker().getAST() instanceof AbstractMapComponentNode || getWalker().getAST() instanceof IndexNode )
+					&& getWalker().getCurrentFromClause().isFromElementAlias( getOriginalText() )
+					) {
+				// We might have to revert our decision that this is naked element collection reference when we encounter it is embedded in a map function
+				setText( getOriginalText() );
+				if ( resolveAsAlias() ) {
+					setResolved();
 				}
 			}
 			else if (parent != null && parent.getType() == SqlTokenTypes.DOT) {
@@ -338,7 +387,12 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 		else {
 			FromElement fe = getFromElement();
 			if (fe != null) {
-				setText(fe.renderScalarIdentifierSelect(i));
+				if ( fe.getQueryableCollection() != null && fe.getQueryableCollection().getElementType().isComponentType() ) {
+					ColumnHelper.generateScalarColumns( this, getColumns(), i );
+				}
+				else {
+					setText(fe.renderScalarIdentifierSelect(i));
+				}
 			}
 			else {
 				ColumnHelper.generateSingleScalarColumn(this, i);

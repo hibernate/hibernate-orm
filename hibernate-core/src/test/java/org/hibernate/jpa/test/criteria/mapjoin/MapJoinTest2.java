@@ -61,6 +61,25 @@ public class MapJoinTest2 extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-10229" )
+	public void testSelectingValueOfMapJoin() {
+		EntityManager em = getOrCreateEntityManager();
+
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<Node> query = cb.createQuery( Node.class );
+		Root<Batch> root = query.from( Batch.class );
+
+		MapJoin nodes = (MapJoin) root.join( "batchNodeMetadata" );
+
+		query.select( nodes );
+		query.where( cb.equal( root.get( "id" ), 1 ) );
+
+		em.createQuery( query ).getResultList();
+
+		em.close();
+	}
+
 	@Entity
 	@Table(name = "batch")
 	public static class Batch implements Serializable {

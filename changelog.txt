@@ -3,6 +3,31 @@ Hibernate 5.1 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.1.2.Final (September 19, 2016)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/24051
+https://hibernate.atlassian.net/issues/?jql=project%20%3D%2010031%20AND%20fixVersion%20%3D%2024051%20ORDER%20BY%20priority%20DESC%2C%20key%20ASC
+
+** Bug
+    * [HHH-3846] - LazyInit error on persting with detached association
+    * [HHH-9199] - ValidityAuditStrategy: Collection of embeddables is not audited correctly
+    * [HHH-9512] - Invalid entity being created when merging with recursive cascading
+    * [HHH-9739] - Updated object is written to second level cache with CacheMode.IGNORE
+    * [HHH-11037] - Subclass embeddable sub-properties ignored if superclass has property with same name
+    * [HHH-11038] - Invalid statement generated for @MapKeyColumn(updatable=false) for @OneToMany
+    * [HHH-11051] - Cache EventListenerRegistry and StatisticsImplementor
+    * [HHH-11058] - NPE in SchemaValidator with DdlTransactionIsolatorJtaImpl
+    * [HHH-11067] - Proxy-wrapped Sessions (ThreadLocalSessionContext.TransactionProtectionWrapper) handle equals incorrectly
+    * [HHH-11072] - Skip CriteriaLiteralInSelectExpressionTest#testStringLiteral2 for Oracle, DB2, SQL Server, and Sybase dialects
+    * [HHH-11073] - Casting to boolean in query fails on MySQL
+    * [HHH-11081] - JPA join with treat causes QuerySyntaxException: Invalid path
+    * [HHH-11101] - Missing unique constraint for many-to-many with unique=true in list mapping
+
+** Improvement
+    * [HHH-10106] - Include source entity name and table name (attribute name too ideally) for associations referencing unmapped classes
+    * [HHH-11059] - Improve documentation for JTA configuration in user guide and 5.0 migration guide
+    * [HHH-11069] - Improve documentation regarding GenerationType.AUTO
+
 Changes in 5.1.1.Final (August 12, 2016)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/22550

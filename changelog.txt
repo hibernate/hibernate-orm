@@ -3,6 +3,36 @@ Hibernate 5.0 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.0.11.Final (September 19, 2016)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/24050
+
+** Bug
+     * [HHH-8488] - JPA joinList and treat behaviour
+     * [HHH-9512] - Invalid entity being created when merging with recursive cascading
+     * [HHH-10027] - Dynamic filter parameter can be bound in wrong order when applied to OneToMany collections
+     * [HHH-10876] - DefaultIdentifierGeneratorFactory does not consider the hibernate.id.new_generator_mappings setting
+     * [HHH-10953] - HQL update statement fails if entity is inside a package of format in.mycomany.domain.Entity
+     * [HHH-10964] - Fix missing currentTenantIdentifierResolver
+     * [HHH-10978] - Hibernate throws SQLGrammarException: Error accessing table metadata when @Table is used with schema value and no catalog
+     * [HHH-11013] - The release task creates two documentation folders for UserGuide
+     * [HHH-11037] - Subclass embeddable sub-properties ignored if superclass has property with same name
+     * [HHH-11038] - Invalid statement generated for @MapKeyColumn(updatable=false) for @OneToMany
+     * [HHH-11051] - Cache EventListenerRegistry and StatisticsImplementor
+     * [HHH-11067] - Proxy-wrapped Sessions (ThreadLocalSessionContext.TransactionProtectionWrapper) handle equals incorrectly
+     * [HHH-11072] - Skip CriteriaLiteralInSelectExpressionTest#testStringLiteral2 for Oracle, DB2, SQL Server, and Sybase dialects
+     * [HHH-11073] - Casting to boolean in query fails on MySQL
+     * [HHH-11081] - JPA join with treat causes QuerySyntaxException: Invalid path
+     * [HHH-11101] - Missing unique constraint for many-to-many with unique=true in list mapping
+
+** Task
+     * [HHH-11041] - Correct references to Hibernate version in javadoc annotations in backported code
+
+** Improvement
+     * [HHH-10523] - 2.3.20. SQL quoted identifiers in User Guide should discuss explicit enclosure in double-quotes (JPA)
+     * [HHH-11059] - Improve documentation for JTA configuration in user guide and 5.0 migration guide
+     * [HHH-11069] - Improve documentation regarding GenerationType.AUTO
+
 Changes in 5.0.10.Final (July 31, 2016)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/22752

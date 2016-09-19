@@ -14,7 +14,6 @@ import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
-import javax.persistence.EntityManager;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
@@ -33,10 +32,12 @@ import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+
 /**
- * @author Steve Ebersole
+ * @author Christian Beikov
  */
-public class MapJoinTest2 extends BaseEntityManagerFunctionalTestCase {
+public class MapJoinTestWithEmbeddable extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {Batch.class, Node.class, BatchNodeMetadata.class};
@@ -45,20 +46,35 @@ public class MapJoinTest2 extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-10455" )
 	public void testSelectingKeyOfMapJoin() {
-		EntityManager em = getOrCreateEntityManager();
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+			CriteriaQuery<Node> query = cb.createQuery( Node.class );
+			Root<Batch> root = query.from( Batch.class );
 
-		CriteriaBuilder cb = em.getCriteriaBuilder();
-		CriteriaQuery<Node> query = cb.createQuery( Node.class );
-		Root<Batch> root = query.from( Batch.class );
+			MapJoin nodes = (MapJoin) root.join( "batchNodeMetadata" );
 
-		MapJoin nodes = (MapJoin) root.join( "batchNodeMetadata" );
+			query.select( nodes.key() );
+			query.where( cb.equal( root.get( "id" ), 1 ) );
 
-		query.select( nodes.key() );
-		query.where( cb.equal( root.get( "id" ), 1 ) );
+			entityManager.createQuery( query ).getResultList();
+		} );
+	}
 
-		em.createQuery( query ).getResultList();
+	@Test
+	@TestForIssue( jiraKey = "HHH-10229" )
+	public void testSelectingValueOfMapJoin() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+			CriteriaQuery<Node> query = cb.createQuery( Node.class );
+			Root<Batch> root = query.from( Batch.class );
 
-		em.close();
+			MapJoin nodes = (MapJoin) root.join( "batchNodeMetadata" );
+
+			query.select( nodes );
+			query.where( cb.equal( root.get( "id" ), 1 ) );
+
+			entityManager.createQuery( query ).getResultList();
+		} );
 	}
 
 	@Entity

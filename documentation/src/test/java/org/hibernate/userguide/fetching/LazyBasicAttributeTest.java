@@ -16,7 +16,6 @@ import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.userguide.model.Image;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.Skip;
 import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Test;
 
@@ -61,7 +60,6 @@ public class LazyBasicAttributeTest extends BaseEntityManagerFunctionalTestCase 
 	}
 
 	@Test
-	@Skip(condition = Skip.JdkVersion._1_9.class, message = "On Java 1.9, bytecode enhancement does not work on pre-release!")
 	public void test() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Image image = new Image();

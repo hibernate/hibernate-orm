@@ -120,6 +120,17 @@ dependencies {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
+if ( JavaVersion.current().isJava9Compatible() ) {
+	logger.warn( '[WARN] Skipping Javassist-related tests for hibernate-core due to Javassist JDK 9 incompatibility' )
+
+	// we need to exclude tests using Javassist enhancement, which does not properly support
+	// Java 9 yet - https://issues.jboss.org/browse/JASSIST-261
+	test {
+		// rather than wild-cards, keep an explicit list
+		exclude 'org/hibernate/userguide/fetching/LazyBasicAttributeTest.class'
+	}
+}
+
 processTestResources.doLast( {
 	copy {
 		from( sourceSets.test.java.srcDirs ) {

@@ -60,12 +60,4 @@ public @interface Skip {
 			}
 		}
 	}
-	interface JdkVersion {
-		class _1_9 implements Matcher {
-			@Override
-			public boolean isMatch() {
-				return System.getProperty("java.version").toLowerCase().startsWith( "1.9" );
-			}
-		}
-	}
 }

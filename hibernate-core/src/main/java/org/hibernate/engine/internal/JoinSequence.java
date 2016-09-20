@@ -6,12 +6,10 @@
  */
 package org.hibernate.engine.internal;
 
-import java.util.ArrayList;
+import java.util.*;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -173,7 +171,19 @@ public class JoinSequence {
 			boolean includeAllSubclassJoins,
 			String withClauseFragment,
 			String withClauseJoinAlias) throws MappingException {
+		return toJoinFragment( enabledFilters, includeAllSubclassJoins, true, withClauseFragment, withClauseJoinAlias );
+	}
+
+	public JoinFragment toJoinFragment(
+			Map enabledFilters,
+			boolean includeAllSubclassJoins,
+			boolean renderSubclassJoins,
+			String withClauseFragment,
+			String withClauseJoinAlias) throws MappingException {
 		final QueryJoinFragment joinFragment = new QueryJoinFragment( factory.getDialect(), useThetaStyle );
+		Iterator<Join> iter;
+		Join first;
+		Joinable last;
 		if ( rootJoinable != null ) {
 			joinFragment.addCrossJoin( rootJoinable.getTableName(), rootAlias );
 			final String filterCondition = rootJoinable.filterFragment( rootAlias, enabledFilters, treatAsDeclarations );
@@ -182,10 +192,111 @@ public class JoinSequence {
 			// of that fact.
 			joinFragment.setHasFilterCondition( joinFragment.addCondition( filterCondition ) );
 			addSubclassJoins( joinFragment, rootAlias, rootJoinable, true, includeAllSubclassJoins, treatAsDeclarations );
+
+			last = rootJoinable;
 		}
+		else if (
+				withClauseFragment != null
+				&& joins.size() > 1
+				&& withClauseFragment.contains( withClauseJoinAlias )
+				&& ( first = ( iter = joins.iterator() ).next() ).joinType == JoinType.LEFT_OUTER_JOIN
+				) {
+			final QueryJoinFragment subqueryJoinFragment = new QueryJoinFragment( factory.getDialect(), useThetaStyle );
+			subqueryJoinFragment.addFromFragmentString( "(select " );
 
-		Joinable last = rootJoinable;
+			subqueryJoinFragment.addFromFragmentString( first.getAlias() );
+			subqueryJoinFragment.addFromFragmentString( ".*" );
 
+			// Re-alias columns of withClauseJoinAlias and rewrite withClauseFragment
+			Pattern p = Pattern.compile( Pattern.quote( withClauseJoinAlias + "." ) + "([a-zA-Z0-9_]+)");
+			Matcher matcher = p.matcher( withClauseFragment );
+			StringBuilder withClauseSb = new StringBuilder( withClauseFragment.length() );
+			withClauseSb.append( " and " );
+
+			int start = 0;
+			int aliasNumber = 0;
+			while ( matcher.find() ) {
+				final String column = matcher.group( 1 );
+				final String alias = "_" + aliasNumber + "_" + column;
+				withClauseSb.append( withClauseFragment, start, matcher.start() );
+				withClauseSb.append( first.getAlias() );
+				withClauseSb.append( '.' );
+				withClauseSb.append( alias );
+
+				subqueryJoinFragment.addFromFragmentString( ", " );
+				subqueryJoinFragment.addFromFragmentString( withClauseJoinAlias );
+				subqueryJoinFragment.addFromFragmentString( "." );
+				subqueryJoinFragment.addFromFragmentString( column );
+				subqueryJoinFragment.addFromFragmentString( " as " );
+				subqueryJoinFragment.addFromFragmentString( alias );
+
+				start = matcher.end();
+				aliasNumber++;
+			}
+
+			withClauseSb.append( withClauseFragment, start, withClauseFragment.length() );
+
+			subqueryJoinFragment.addFromFragmentString( " from " );
+			subqueryJoinFragment.addFromFragmentString( first.joinable.getTableName() );
+			subqueryJoinFragment.addFromFragmentString( " " );
+			subqueryJoinFragment.addFromFragmentString( first.getAlias() );
+
+			// Render following join sequences in a sub-sequence
+			JoinSequence subSequence = new JoinSequence( factory );
+
+			while ( iter.hasNext() ) {
+				Join join = iter.next();
+				subSequence.joins.add( join );
+			}
+
+			JoinFragment subFragment = subSequence.toJoinFragment(
+					enabledFilters,
+					false,
+					true, // TODO: only join subclasses that are needed for ON clause
+					null,
+					null
+			);
+			subqueryJoinFragment.addFragment( subFragment );
+			subqueryJoinFragment.addFromFragmentString( ")" );
+
+			joinFragment.addJoin(
+					subqueryJoinFragment.toFromFragmentString(),
+					first.getAlias(),
+					first.getLHSColumns(),
+					JoinHelper.getRHSColumnNames( first.getAssociationType(), factory ),
+					first.joinType,
+					withClauseSb.toString()
+			);
+
+			for ( Join join : joins ) {
+				// Skip joining the first join node as it is contained in the subquery
+				if ( join != first ) {
+					joinFragment.addJoin(
+							join.getJoinable().getTableName(),
+							join.getAlias(),
+							join.getLHSColumns(),
+							JoinHelper.getRHSColumnNames( join.getAssociationType(), factory ),
+							join.joinType,
+							""
+					);
+				}
+				addSubclassJoins(
+						joinFragment,
+						join.getAlias(),
+						join.getJoinable(),
+						join.joinType == JoinType.INNER_JOIN,
+						includeAllSubclassJoins,
+						// ugh.. this is needed because of how HQL parser (FromElementFactory/SessionFactoryHelper)
+						// builds the JoinSequence for HQL joins
+						treatAsDeclarations
+				);
+			}
+
+			return joinFragment;
+		}
+		else {
+			last = null;
+		}
 		for ( Join join : joins ) {
 			// technically the treatAsDeclarations should only apply to rootJoinable or to a single Join,
 			// but that is not possible atm given how these JoinSequence and Join objects are built.
@@ -225,16 +336,19 @@ public class JoinSequence {
 					condition
 			);
 
-			addSubclassJoins(
-					joinFragment,
-					join.getAlias(),
-					join.getJoinable(),
-					join.joinType == JoinType.INNER_JOIN,
-					includeAllSubclassJoins,
-					// ugh.. this is needed because of how HQL parser (FromElementFactory/SessionFactoryHelper)
-					// builds the JoinSequence for HQL joins
-					treatAsDeclarations
-			);
+			if (renderSubclassJoins) {
+				addSubclassJoins(
+						joinFragment,
+						join.getAlias(),
+						join.getJoinable(),
+						join.joinType == JoinType.INNER_JOIN,
+						includeAllSubclassJoins,
+						// ugh.. this is needed because of how HQL parser (FromElementFactory/SessionFactoryHelper)
+						// builds the JoinSequence for HQL joins
+						treatAsDeclarations
+				);
+			}
+
 			last = join.getJoinable();
 		}
 

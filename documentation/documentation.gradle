@@ -32,9 +32,12 @@ apply from: "${rootProject.projectDir}/utilities.gradle"
 
 apply plugin: 'org.hibernate.orm'
 
-hibernate {
-	enhance {
-		enableLazyInitialization = true
+// Java 9 ftw!
+if ( !JavaVersion.current().isJava9Compatible() ) {
+	hibernate {
+		enhance {
+			enableLazyInitialization = true
+		}
 	}
 }
 

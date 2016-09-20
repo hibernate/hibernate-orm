@@ -177,6 +177,27 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-9329")
+	public void testWithClauseAsSubquery() {
+		TestData data = new TestData();
+		data.prepare();
+
+		Session s = openSession();
+		Transaction txn = s.beginTransaction();
+
+		// Since friends has a join table, we will first left join all friends and then do the WITH clause on the target entity table join
+		// Normally this produces 2 results which is wrong and can only be circumvented by converting the join table and target entity table join to a subquery
+		List list = s.createQuery( "from Human h left join h.friends as f with f.nickName like 'bubba' where h.description = 'father'" )
+				.list();
+		assertEquals( "subquery rewriting of join table did not take effect", 1, list.size() );
+
+		txn.commit();
+		s.close();
+
+		data.cleanup();
+	}
+
 	private class TestData {
 		public void prepare() {
 			Session session = openSession();
@@ -202,6 +223,10 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 			friend.setBodyWeight( 20 );
 			friend.setDescription( "friend" );
 
+			Human friend2 = new Human();
+			friend2.setBodyWeight( 20 );
+			friend2.setDescription( "friend2" );
+
 			child1.setMother( mother );
 			child1.setFather( father );
 			mother.addOffspring( child1 );
@@ -214,12 +239,14 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 
 			father.setFriends( new ArrayList() );
 			father.getFriends().add( friend );
+			father.getFriends().add( friend2 );
 
 			session.save( mother );
 			session.save( father );
 			session.save( child1 );
 			session.save( child2 );
 			session.save( friend );
+			session.save( friend2 );
 
 			txn.commit();
 			session.close();

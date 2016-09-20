@@ -275,12 +275,12 @@ public final class StringHelper {
 	}
 
 	public static String unqualify(String qualifiedName) {
-		int loc = qualifiedName.lastIndexOf( "." );
+		int loc = qualifiedName.lastIndexOf( '.' );
 		return ( loc < 0 ) ? qualifiedName : qualifiedName.substring( loc + 1 );
 	}
 
 	public static String qualifier(String qualifiedName) {
-		int loc = qualifiedName.lastIndexOf( "." );
+		int loc = qualifiedName.lastIndexOf( '.' );
 		return ( loc < 0 ) ? "" : qualifiedName.substring( 0, loc );
 	}
 

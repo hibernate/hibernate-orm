@@ -1811,9 +1811,10 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 				fk.setReferencedTable( referencedClass.getTable() );
 
-				// todo : should we apply a physical naming too?
+				Identifier nameIdentifier;
+
 				if ( fk.getName() == null ) {
-					final Identifier nameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy().determineForeignKeyName(
+					nameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy().determineForeignKeyName(
 							new ImplicitForeignKeyNameSource() {
 								final List<Identifier> columnNames = extractColumnNames( fk.getColumns() );
 								List<Identifier> referencedColumnNames = null;
@@ -1847,9 +1848,11 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 								}
 							}
 					);
-
-					fk.setName( nameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() ) );
+				} else {
+					nameIdentifier = Identifier.toIdentifier( fk.getName(), true );
 				}
+
+				fk.setName( getMetadataBuildingOptions().getPhysicalNamingStrategy().toPhysicalSequenceName(nameIdentifier, getDatabase().getJdbcEnvironment()).render( getDatabase().getJdbcEnvironment().getDialect() ) );
 
 				fk.alignColumns();
 			}
@@ -1960,8 +1963,10 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 
 		if ( unique ) {
+			Identifier keyNameIdentifier;
+
 			if ( StringHelper.isEmpty( keyName ) ) {
-				final Identifier keyNameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy().determineUniqueKeyName(
+				keyNameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy().determineUniqueKeyName(
 						new ImplicitUniqueKeyNameSource() {
 							@Override
 							public MetadataBuildingContext getBuildingContext() {
@@ -1985,8 +1990,11 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 							}
 						}
 				);
-				keyName = keyNameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() );
+			} else {
+				keyNameIdentifier = Identifier.toIdentifier( keyName, true );
 			}
+
+			keyName = getMetadataBuildingOptions().getPhysicalNamingStrategy().toPhysicalSequenceName( keyNameIdentifier, getDatabase().getJdbcEnvironment() ).render( getDatabase().getJdbcEnvironment().getDialect() );
 
 			UniqueKey uk = table.getOrCreateUniqueKey( keyName );
 			for ( int i = 0; i < columns.length; i++ ) {

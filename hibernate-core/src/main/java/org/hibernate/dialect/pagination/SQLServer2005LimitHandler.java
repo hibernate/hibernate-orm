@@ -27,10 +27,12 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	private static final String FROM = "from";
 	private static final String DISTINCT = "distinct";
 	private static final String ORDER_BY = "order by";
+	private static final String SELECT_DISTINCT = SELECT + " " + DISTINCT;
+	private static final String SELECT_DISTINCT_SPACE = SELECT_DISTINCT + " ";
 
-	final String SELECT_DISTINCT_SPACE = "select distinct ";
 	final String SELECT_SPACE = "select ";
 
+	private static final Pattern SELECT_DISTINCT_PATTERN = buildShallowIndexPattern( SELECT_DISTINCT_SPACE, true );
 	private static final Pattern SELECT_PATTERN = buildShallowIndexPattern( SELECT + "(.*)", true );
 	private static final Pattern FROM_PATTERN = buildShallowIndexPattern( FROM, true );
 	private static final Pattern DISTINCT_PATTERN = buildShallowIndexPattern( DISTINCT, true );
@@ -286,15 +288,16 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 * @param sql SQL query.
 	 */
 	protected void addTopExpression(StringBuilder sql) {
-		final int distinctStartPos = shallowIndexOfPattern( sql, DISTINCT_PATTERN, 0 );
-		if ( distinctStartPos > 0 ) {
-			// Place TOP after DISTINCT.
-			sql.insert( distinctStartPos + DISTINCT.length(), " TOP(?)" );
+		// We should use either of these which come first (SELECT or SELECT DISTINCT).
+		final int selectPos = shallowIndexOfPattern( sql, SELECT_PATTERN, 0 );
+		final int selectDistinctPos = shallowIndexOfPattern( sql, SELECT_DISTINCT_PATTERN, 0 );
+		if ( selectPos == selectDistinctPos ) {
+			// Place TOP after SELECT DISTINCT
+			sql.insert( selectDistinctPos + SELECT_DISTINCT.length(), " TOP(?)" );
 		}
 		else {
-			final int selectStartPos = shallowIndexOfPattern( sql, SELECT_PATTERN, 0 );
-			// Place TOP after SELECT.
-			sql.insert( selectStartPos + SELECT.length(), " TOP(?)" );
+			// Place TOP after SELECT
+			sql.insert( selectPos + SELECT.length(), " TOP(?)" );
 		}
 		topAdded = true;
 	}

@@ -1849,7 +1849,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 							}
 					);
 				} else {
-					nameIdentifier = Identifier.toIdentifier( fk.getName(), true );
+					nameIdentifier = Identifier.toIdentifier( fk.getName() );
 				}
 
 				fk.setName( getMetadataBuildingOptions().getPhysicalNamingStrategy().toPhysicalSequenceName(nameIdentifier, getDatabase().getJdbcEnvironment()).render( getDatabase().getJdbcEnvironment().getDialect() ) );
@@ -1991,7 +1991,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 						}
 				);
 			} else {
-				keyNameIdentifier = Identifier.toIdentifier( keyName, true );
+				keyNameIdentifier = Identifier.toIdentifier( keyName );
 			}
 
 			keyName = getMetadataBuildingOptions().getPhysicalNamingStrategy().toPhysicalSequenceName( keyNameIdentifier, getDatabase().getJdbcEnvironment() ).render( getDatabase().getJdbcEnvironment().getDialect() );

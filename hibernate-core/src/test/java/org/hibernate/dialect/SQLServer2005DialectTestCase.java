@@ -147,6 +147,36 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-11084")
+	public void testGetLimitStringWithSelectDistinctSubselect() {
+		final String selectDistinctSubselectSQL = "select page0_.CONTENTID as CONTENT1_12_ " +
+				"where page0_.CONTENTTYPE='PAGE' and (page0_.CONTENTID in " +
+				"(select distinct page2_.PREVVER from CONTENT page2_ where (page2_.PREVVER is not null))";
+
+		assertEquals(
+				"select TOP(?) page0_.CONTENTID as CONTENT1_12_ " +
+						"where page0_.CONTENTTYPE='PAGE' and (page0_.CONTENTID in " +
+						"(select distinct page2_.PREVVER from CONTENT page2_ where (page2_.PREVVER is not null))",
+				dialect.getLimitHandler().processSql( selectDistinctSubselectSQL, toRowSelection( 0, 5 ) )
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11084")
+	public void testGetLimitStringWithSelectDistinctSubselectNotFirst() {
+		final String selectDistinctSubselectSQL = "select page0_.CONTENTID as CONTENT1_12_ " +
+				"where page0_.CONTENTTYPE='PAGE' and (page0_.CONTENTID in " +
+				"(select distinct page2_.PREVVER from CONTENT page2_ where (page2_.PREVVER is not null))";
+
+		assertEquals(
+				"WITH query AS (SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ " +
+				"FROM ( " + selectDistinctSubselectSQL + " ) inner_query ) " +
+				"SELECT page2_.PREVVER FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
+				dialect.getLimitHandler().processSql( selectDistinctSubselectSQL, toRowSelection( 1, 5 ) )
+		);
+	}
+
+	@Test
 	@TestForIssue(jiraKey = "HHH-6728")
 	public void testGetLimitStringCaseSensitive() {
 		final String caseSensitiveSQL = "select persistent0_.id, persistent0_.uid AS tmp1, " +

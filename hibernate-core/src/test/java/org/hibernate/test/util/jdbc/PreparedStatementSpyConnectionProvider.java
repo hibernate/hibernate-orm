@@ -34,10 +34,19 @@ public class PreparedStatementSpyConnectionProvider
 
 	private final Map<PreparedStatement, String> preparedStatementMap = new LinkedHashMap<>();
 
+	private final List<Connection> acquiredConnections = new ArrayList<>( );
+
 	@Override
 	public Connection getConnection() throws SQLException {
-		Connection connection = super.getConnection();
-		return spy( connection );
+		Connection connection = spy( super.getConnection() );
+		acquiredConnections.add( connection );
+		return connection;
+	}
+
+	@Override
+	public void closeConnection(Connection conn) throws SQLException {
+		acquiredConnections.remove( conn );
+		super.closeConnection( conn );
 	}
 
 	private Connection spy(Connection connection) {
@@ -64,6 +73,7 @@ public class PreparedStatementSpyConnectionProvider
 	 * Clears the recorded PreparedStatements and reset the associated Mocks.
 	 */
 	public void clear() {
+		acquiredConnections.clear();
 		preparedStatementMap.keySet().forEach( Mockito::reset );
 		preparedStatementMap.clear();
 	}
@@ -112,5 +122,13 @@ public class PreparedStatementSpyConnectionProvider
 	 */
 	public List<PreparedStatement> getPreparedStatements() {
 		return new ArrayList<>( preparedStatementMap.keySet() );
+	}
+
+	/**
+	 * Get a list of current acquired Connections.
+	 * @return list of current acquired Connections
+	 */
+	public List<Connection> getAcquiredConnections() {
+		return acquiredConnections;
 	}
 }

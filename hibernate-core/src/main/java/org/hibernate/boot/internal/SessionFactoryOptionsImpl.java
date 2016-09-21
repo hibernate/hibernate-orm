@@ -137,6 +137,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 
 		this.flushBeforeCompletionEnabled = state.isFlushBeforeCompletionEnabled();
 		this.autoCloseSessionEnabled = state.isAutoCloseSessionEnabled();
+		this.releaseResourcesOnCloseEnabled = state.isReleaseResourcesOnCloseEnabled();
 
 		this.jtaTrackByThread = state.isJtaTrackByThread();
 		this.preferUserTransaction = state.isPreferUserTransaction();

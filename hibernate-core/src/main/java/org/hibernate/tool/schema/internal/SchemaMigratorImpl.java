@@ -6,8 +6,10 @@
  */
 package org.hibernate.tool.schema.internal;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.boot.Metadata;
@@ -16,6 +18,7 @@ import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
@@ -199,7 +202,7 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 				tryToCreateCatalogs = true;
 			}
 		}
-
+		final Map<QualifiedTableName, TableInformation> tablesInformation = new HashMap<>();
 		Set<Identifier> exportedCatalogs = new HashSet<Identifier>();
 		for ( Namespace namespace : database.getNamespaces() ) {
 			if ( !schemaFilter.includeNamespace( namespace ) ) {
@@ -245,6 +248,7 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 				}
 				checkExportIdentifier( table, exportIdentifiers );
 				final TableInformation tableInformation = existingDatabase.getTableInformation( table.getQualifiedTableName() );
+				tablesInformation.put( table.getQualifiedTableName(), tableInformation );
 				if ( tableInformation != null && !tableInformation.isPhysicalTable() ) {
 					continue;
 				}
@@ -264,7 +268,7 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 					continue;
 				}
 
-				final TableInformation tableInformation = existingDatabase.getTableInformation( table.getQualifiedTableName() );
+				final TableInformation tableInformation = tablesInformation.get( table.getQualifiedTableName() );
 				if ( tableInformation != null && !tableInformation.isPhysicalTable() ) {
 					continue;
 				}
@@ -303,7 +307,7 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 				if ( !schemaFilter.includeTable( table ) ) {
 					continue;
 				}
-				final TableInformation tableInformation = existingDatabase.getTableInformation( table.getQualifiedTableName() );
+				final TableInformation tableInformation = tablesInformation.get( table.getQualifiedTableName() );
 				if ( tableInformation != null && !tableInformation.isPhysicalTable() ) {
 					continue;
 				}

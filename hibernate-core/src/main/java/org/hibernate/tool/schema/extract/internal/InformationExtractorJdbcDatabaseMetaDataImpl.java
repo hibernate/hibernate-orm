@@ -26,6 +26,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
+import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -421,14 +422,17 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 	}
 
 	@Override
-	public ColumnInformation getColumn(TableInformation tableInformation, Identifier columnIdentifier) {
-		final Identifier catalog = tableInformation.getName().getCatalogName();
-		final Identifier schema = tableInformation.getName().getSchemaName();
+	public Map<Identifier, ColumnInformation> getColumns(TableInformation tableInformation) {
+		final QualifiedTableName tableName = tableInformation.getName();
+		final Identifier catalog = tableName.getCatalogName();
+		final Identifier schema = tableName.getSchemaName();
 
 		final String catalogFilter;
 		final String schemaFilter;
 
-		if ( extractionContext.getJdbcEnvironment().getNameQualifierSupport().supportsCatalogs() ) {
+		final NameQualifierSupport nameQualifierSupport = extractionContext.getJdbcEnvironment()
+				.getNameQualifierSupport();
+		if ( nameQualifierSupport.supportsCatalogs() ) {
 			if ( catalog == null ) {
 				catalogFilter = "";
 			}
@@ -440,7 +444,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 			catalogFilter = null;
 		}
 
-		if ( extractionContext.getJdbcEnvironment().getNameQualifierSupport().supportsSchemas() ) {
+		if ( nameQualifierSupport.supportsSchemas() ) {
 			if ( schema == null ) {
 				schemaFilter = "";
 			}
@@ -452,37 +456,41 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 			schemaFilter = null;
 		}
 
-		final String tableFilter = toMetaDataObjectName( tableInformation.getName().getTableName() );
-		final String columnFilter = toMetaDataObjectName( columnIdentifier );
+		final String tableFilter = toMetaDataObjectName( tableName.getTableName() );
 		try {
 			ResultSet resultSet = extractionContext.getJdbcDatabaseMetaData().getColumns(
 					catalogFilter,
 					schemaFilter,
 					tableFilter,
-					columnFilter
+					"%"
 			);
 
 			try {
-				if ( !resultSet.next() ) {
-					return null;
+				final Map<Identifier, ColumnInformation> columns = new HashMap<>();
+				while ( resultSet.next() ) {
+					final String columnName = resultSet.getString( "COLUMN_NAME" );
+					final ColumnInformationImpl columnInformation = new ColumnInformationImpl(
+							tableInformation,
+							identifierHelper().toIdentifier( columnName ),
+							resultSet.getInt( "DATA_TYPE" ),
+							new StringTokenizer( resultSet.getString( "TYPE_NAME" ), "() " ).nextToken(),
+							resultSet.getInt( "COLUMN_SIZE" ),
+							resultSet.getInt( "DECIMAL_DIGITS" ),
+							interpretTruthValue( resultSet.getString( "IS_NULLABLE" ) )
+					);
+					columns.put( identifierHelper().toIdentifier( columnName ), columnInformation );
 				}
-				return new ColumnInformationImpl(
-						tableInformation,
-						identifierHelper().toIdentifier( resultSet.getString( "COLUMN_NAME" ) ),
-						resultSet.getInt( "DATA_TYPE" ),
-						new StringTokenizer( resultSet.getString( "TYPE_NAME" ), "() " ).nextToken(),
-						resultSet.getInt( "COLUMN_SIZE" ),
-						resultSet.getInt( "DECIMAL_DIGITS" ),
-						interpretTruthValue( resultSet.getString( "IS_NULLABLE" ) )
-				);
-
+				return columns;
 			}
 			finally {
 				resultSet.close();
 			}
 		}
 		catch (SQLException e) {
-			throw convertSQLException( e, "Error accessing column metadata: " + tableInformation.getName().toString() );
+			throw convertSQLException(
+					e,
+					"Error accessing column metadata: " + tableName.toString()
+			);
 		}
 	}
 

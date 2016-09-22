@@ -64,7 +64,7 @@ public class QueryPlanCache implements Serializable {
 	 * Used solely for caching param metadata for native-sql queries, see {@link #getSQLParameterMetadata} for a
 	 * discussion as to why...
 	 */
-	private final BoundedConcurrentHashMap<String,ParameterMetadataImpl> parameterMetadataCache;
+	private final BoundedConcurrentHashMap<ParameterMetadataKey,ParameterMetadataImpl> parameterMetadataCache;
 
 
 	private NativeQueryInterpreter nativeQueryInterpreterService;
@@ -102,7 +102,7 @@ public class QueryPlanCache implements Serializable {
 		}
 
 		queryPlanCache = new BoundedConcurrentHashMap( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
-		parameterMetadataCache = new BoundedConcurrentHashMap<String, ParameterMetadataImpl>(
+		parameterMetadataCache = new BoundedConcurrentHashMap<>(
 				maxParameterMetadataCount,
 				20,
 				BoundedConcurrentHashMap.Eviction.LIRS
@@ -121,11 +121,12 @@ public class QueryPlanCache implements Serializable {
 	 * @param query The query
 	 * @return The parameter metadata
 	 */
-	public ParameterMetadata getSQLParameterMetadata(final String query)  {
-		ParameterMetadataImpl value = parameterMetadataCache.get( query );
+	public ParameterMetadata getSQLParameterMetadata(final String query, boolean isOrdinalParameterZeroBased)  {
+		final ParameterMetadataKey key = new ParameterMetadataKey( query, isOrdinalParameterZeroBased );
+		ParameterMetadataImpl value = parameterMetadataCache.get( key );
 		if ( value == null ) {
 			value = nativeQueryInterpreterService.getParameterMetadata( query );
-			parameterMetadataCache.putIfAbsent( query, value );
+			parameterMetadataCache.putIfAbsent( key, value );
 		}
 		return value;
 	}
@@ -225,6 +226,41 @@ public class QueryPlanCache implements Serializable {
 		LOG.trace( "Cleaning QueryPlan Cache" );
 		queryPlanCache.clear();
 		parameterMetadataCache.clear();
+	}
+
+	private static class ParameterMetadataKey implements Serializable {
+		private final String query;
+		private final boolean isOrdinalParameterZeroBased;
+		private final int hashCode;
+
+		public ParameterMetadataKey(String query, boolean isOrdinalParameterZeroBased) {
+			this.query = query;
+			this.isOrdinalParameterZeroBased = isOrdinalParameterZeroBased;
+			int hash = query.hashCode();
+			hash = 29 * hash + ( isOrdinalParameterZeroBased ? 1 : 0 );
+			this.hashCode = hash;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if ( this == o ) {
+				return true;
+			}
+			if ( o == null || getClass() != o.getClass() ) {
+				return false;
+			}
+
+			final ParameterMetadataKey that = (ParameterMetadataKey) o;
+
+			return isOrdinalParameterZeroBased == that.isOrdinalParameterZeroBased
+					&& query.equals( that.query );
+
+		}
+
+		@Override
+		public int hashCode() {
+			return hashCode;
+		}
 	}
 
 	private static class HQLQueryPlanKey implements Serializable {

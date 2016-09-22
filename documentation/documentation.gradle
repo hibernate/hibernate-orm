@@ -30,18 +30,6 @@ apply plugin: 'hibernate-matrix-testing'
 
 apply from: "${rootProject.projectDir}/utilities.gradle"
 
-apply plugin: 'org.hibernate.orm'
-
-// Java 9 ftw!
-if ( !JavaVersion.current().isJava9Compatible() ) {
-	hibernate {
-		enhance {
-			enableLazyInitialization = true
-		}
-	}
-}
-
-
 defaultTasks 'buildDocs'
 
 configurations {
@@ -118,17 +106,6 @@ dependencies {
 		testRuntime( 'javax:javaee-api:7.0' )
 	}
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-}
-
-if ( JavaVersion.current().isJava9Compatible() ) {
-	logger.warn( '[WARN] Skipping Javassist-related tests for hibernate-core due to Javassist JDK 9 incompatibility' )
-
-	// we need to exclude tests using Javassist enhancement, which does not properly support
-	// Java 9 yet - https://issues.jboss.org/browse/JASSIST-261
-	test {
-		// rather than wild-cards, keep an explicit list
-		exclude 'org/hibernate/userguide/fetching/LazyBasicAttributeTest.class'
-	}
 }
 
 processTestResources.doLast( {

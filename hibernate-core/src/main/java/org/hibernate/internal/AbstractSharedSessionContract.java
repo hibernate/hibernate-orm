@@ -727,7 +727,9 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public QueryImplementor createNamedQuery(String name) {
-		return buildQueryFromName( name, null );
+		final QueryImplementor<Object> query = buildQueryFromName( name, null );
+		query.getParameterMetadata().setOrdinalParametersZeroBased( false );
+		return query;
 	}
 
 	protected  <T> QueryImplementor<T> buildQueryFromName(String name, Class<T> resultType) {

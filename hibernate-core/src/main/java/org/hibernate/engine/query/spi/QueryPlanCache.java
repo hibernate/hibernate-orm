@@ -127,7 +127,7 @@ public class QueryPlanCache implements Serializable {
 			value = nativeQueryInterpreterService.getParameterMetadata( query );
 			parameterMetadataCache.putIfAbsent( query, value );
 		}
-		return value;
+		return value.clone();
 	}
 
 	/**

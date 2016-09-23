@@ -16,7 +16,10 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.List;
 
+import org.hibernate.Session;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.query.NativeQuery;
+import org.hibernate.query.spi.NativeQueryImplementor;
 
 import org.junit.After;
 import org.junit.Before;
@@ -29,7 +32,6 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-10885")
 public class NativeQueryOrdinalParametersTest extends BaseEntityManagerFunctionalTestCase {
 
 	private static final String[] GAME_TITLES = { "Super Mario Brothers", "Mario Kart", "F-Zero" };
@@ -77,6 +79,7 @@ public class NativeQueryOrdinalParametersTest extends BaseEntityManagerFunctiona
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-10885")
 	public void testNativeQueryIndexedOrdinalParameter() {
 		EntityManager em = getOrCreateEntityManager();
 		try {
@@ -91,6 +94,7 @@ public class NativeQueryOrdinalParametersTest extends BaseEntityManagerFunctiona
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-10885")
 	public void testNativeQueryOrdinalParameter() {
 		EntityManager em = getOrCreateEntityManager();
 		try {
@@ -98,6 +102,36 @@ public class NativeQueryOrdinalParametersTest extends BaseEntityManagerFunctiona
 			query.setParameter( 1, "Super Mario Brothers" );
 			List list = query.getResultList();
 			assertEquals( 1, list.size() );
+		}
+		finally {
+			em.close();
+		}
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-11121")
+	public void testConflictWithSessionNativeQuery(){
+		EntityManager em = getOrCreateEntityManager();
+		final String sqlString = "SELECT * FROM Game g WHERE title = ?";
+		try {
+			NativeQuery sqlQuery = em.unwrap( Session.class ).createSQLQuery( sqlString );
+			sqlQuery.setString( 0, "Super Mario Brothers").setCacheable( true );
+
+			List results = sqlQuery.list();
+			assertEquals( 1, results.size() );
+
+			NativeQueryImplementor query = (NativeQueryImplementor) em.createNativeQuery( sqlString );
+			query.setString( 1, "Super Mario Brothers" );
+			List list = query.list();
+			assertEquals( 1, list.size() );
+
+			sqlQuery = em.unwrap( Session.class ).createSQLQuery( sqlString );
+			sqlQuery.setString( 0, "Super Mario Brothers").setCacheable( true );
+
+			results = sqlQuery.list();
+			assertEquals( 1, results.size() );
+
+			query.setString( 1, "Super Mario Brothers" );
 		}
 		finally {
 			em.close();

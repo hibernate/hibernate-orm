@@ -8,6 +8,7 @@ package org.hibernate.jpa.test.hibernateFilters;
 
 import java.util.Map;
 
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
@@ -71,4 +72,179 @@ public class ProxyPreservingFiltersOutsideInitialSessionTest
 
 		assertEquals(1, group.getAccounts().size());
 	}
+
+	@Test
+	public void testChangeFilterBeforeInitializeInSameSession() {
+
+		doInJPA(
+				this::entityManagerFactory, entityManager -> {
+					AccountGroup accountGroup = new AccountGroup();
+					accountGroup.setId( 1L );
+					entityManager.persist( accountGroup );
+
+					Account account = new Account();
+					account.setName( "A1" );
+					account.setRegionCode( "Europe" );
+					entityManager.persist( account );
+					accountGroup.getAccounts().add( account );
+
+					account = new Account();
+					account.setName( "A2" );
+					account.setRegionCode( "Europe" );
+					entityManager.persist( account );
+					accountGroup.getAccounts().add( account );
+
+					account = new Account();
+					account.setName( "A3" );
+					account.setRegionCode( "US" );
+					entityManager.persist( account );
+					accountGroup.getAccounts().add( account );
+				}
+		);
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+					entityManager.unwrap( Session.class ).enableFilter( "byRegion" ).setParameter( "region", "US" );
+					AccountGroup accountGroup = entityManager.find( AccountGroup.class, 1L );
+					// Change the filter
+					entityManager.unwrap( Session.class ).enableFilter( "byRegion" ).setParameter( "region", "Europe" );
+					Hibernate.initialize( accountGroup.getAccounts() );
+					// will contain accounts with regionCode "Europe"
+					assertEquals( 2, accountGroup.getAccounts().size() );
+					return accountGroup;
+				} );
+	}
+
+	@Test
+	public void testChangeFilterBeforeInitializeInTempSession() {
+
+		doInJPA(
+				this::entityManagerFactory, entityManager -> {
+					AccountGroup accountGroup = new AccountGroup();
+					accountGroup.setId( 1L );
+					entityManager.persist( accountGroup );
+
+					Account account = new Account();
+					account.setName( "A1" );
+					account.setRegionCode( "Europe" );
+					entityManager.persist( account );
+					accountGroup.getAccounts().add( account );
+
+					account = new Account();
+					account.setName( "A2" );
+					account.setRegionCode( "Europe" );
+					entityManager.persist( account );
+					accountGroup.getAccounts().add( account );
+
+					account = new Account();
+					account.setName( "A3" );
+					account.setRegionCode( "US" );
+					entityManager.persist( account );
+					accountGroup.getAccounts().add( account );
+				}
+		);
+
+		AccountGroup group = doInJPA( this::entityManagerFactory, entityManager -> {
+					entityManager.unwrap( Session.class ).enableFilter( "byRegion" ).setParameter( "region", "US" );
+					AccountGroup accountGroup = entityManager.find( AccountGroup.class, 1L );
+					// Change the filter.
+					entityManager.unwrap( Session.class ).enableFilter( "byRegion" ).setParameter( "region", "Europe" );
+					return accountGroup;
+				} );
+
+		// What should group.getAccounts() contain? Should it be accounts with regionCode "Europe"
+		// because that was the most recent filter used in the session?
+		Hibernate.initialize( group.getAccounts() );
+		// The following will fail because the collection will only contain accounts with regionCode "US"
+		assertEquals(2, group.getAccounts().size());
+	}
+
+	@Test
+	public void testMergeNoFilterThenInitializeTempSession() {
+
+		doInJPA(
+				this::entityManagerFactory, entityManager -> {
+					AccountGroup accountGroup = new AccountGroup();
+					accountGroup.setId( 1L );
+					entityManager.persist( accountGroup );
+
+					Account account = new Account();
+					account.setName( "A1" );
+					account.setRegionCode( "Europe" );
+					entityManager.persist( account );
+					accountGroup.getAccounts().add( account );
+
+					account = new Account();
+					account.setName( "A2" );
+					account.setRegionCode( "Europe" );
+					entityManager.persist( account );
+					accountGroup.getAccounts().add( account );
+
+					account = new Account();
+					account.setName( "A3" );
+					account.setRegionCode( "US" );
+					entityManager.persist( account );
+					accountGroup.getAccounts().add( account );
+				}
+		);
+
+		final AccountGroup group = doInJPA( this::entityManagerFactory, entityManager -> {
+					entityManager.unwrap( Session.class ).enableFilter( "byRegion" ).setParameter( "region", "US" );
+					return entityManager.find( AccountGroup.class, 1L );
+				} );
+
+		final AccountGroup mergedGroup = doInJPA( this::entityManagerFactory, entityManager -> {
+					return entityManager.merge( group );
+				} );
+
+		// group.getAccounts() will be unfiltered because merge cleared AbstractCollectionPersister#enabledFilters
+		Hibernate.initialize( mergedGroup.getAccounts() );
+		assertEquals(3, mergedGroup.getAccounts().size());
+	}
+
+	@Test
+	public void testSaveOrUpdateNoFilterThenInitializeTempSession() {
+
+		doInJPA(
+				this::entityManagerFactory, entityManager -> {
+					AccountGroup accountGroup = new AccountGroup();
+					accountGroup.setId( 1L );
+					entityManager.persist( accountGroup );
+
+					Account account = new Account();
+					account.setName( "A1" );
+					account.setRegionCode( "Europe" );
+					entityManager.persist( account );
+					accountGroup.getAccounts().add( account );
+
+					account = new Account();
+					account.setName( "A2" );
+					account.setRegionCode( "Europe" );
+					entityManager.persist( account );
+					accountGroup.getAccounts().add( account );
+
+					account = new Account();
+					account.setName( "A3" );
+					account.setRegionCode( "US" );
+					entityManager.persist( account );
+					accountGroup.getAccounts().add( account );
+				}
+		);
+
+		final AccountGroup group = doInJPA( this::entityManagerFactory, entityManager -> {
+					entityManager.unwrap( Session.class ).enableFilter( "byRegion" ).setParameter( "region", "US" );
+					return entityManager.find( AccountGroup.class, 1L );
+				} );
+
+		final AccountGroup savedGroup = doInJPA( this::entityManagerFactory, entityManager -> {
+					// saveOrUpdate adds the PersistenceCollection to the session "as is"
+					entityManager.unwrap( Session.class ).saveOrUpdate( group );
+					return group;
+				} );
+
+		Hibernate.initialize( savedGroup.getAccounts() );
+		// group.getAccounts() should not be filtered.
+		// the following fails because AbstractCollectionPersister#enabledFilters is still intact.
+		assertEquals(3, group.getAccounts().size());
+	}
+
 }

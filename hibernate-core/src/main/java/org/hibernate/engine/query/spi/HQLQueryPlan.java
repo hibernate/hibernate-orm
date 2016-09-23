@@ -151,7 +151,7 @@ public class HQLQueryPlan implements Serializable {
 	}
 
 	public ParameterMetadataImpl getParameterMetadata() {
-		return parameterMetadata;
+		return parameterMetadata.getOrdinalParametersZeroBasedCopy();
 	}
 
 	public ReturnMetadata getReturnMetadata() {

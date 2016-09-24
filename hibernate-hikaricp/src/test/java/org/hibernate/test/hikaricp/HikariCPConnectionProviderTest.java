@@ -56,7 +56,7 @@ public class HikariCPConnectionProviderTest extends BaseCoreFunctionalTestCase {
 		}
 		catch (SQLException e) {
 			// expected
-			assertTrue( e.getMessage().contains( "Timeout" ) );
+			assertTrue( e.getMessage().contains( "Connection is not available, request timed out after" ) );
 		}
 
 		for ( Connection conn : conns ) {
@@ -72,7 +72,7 @@ public class HikariCPConnectionProviderTest extends BaseCoreFunctionalTestCase {
 		}
 		catch (Exception e) {
 			// expected
-			assertTrue( e.getMessage().contains( "shutdown" ) );
+			assertTrue( e.getMessage().contains( "has been closed" ) );
 		}
 	}
 }

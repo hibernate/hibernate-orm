@@ -122,7 +122,7 @@ ext {
             ehcache3:        "org.ehcache:ehcache:3.0.0",
             jcache:          "javax.cache:cache-api:1.0.0",
             proxool:         "proxool:proxool:0.8.3",
-            hikaricp:        "com.zaxxer:HikariCP-java6:2.3.9",
+            hikaricp:        "com.zaxxer:HikariCP:2.5.1",
 
             // Arquillian/Shrinkwrap
             arquillian_junit_container: "org.jboss.arquillian.junit:arquillian-junit-container:${arquillianVersion}",

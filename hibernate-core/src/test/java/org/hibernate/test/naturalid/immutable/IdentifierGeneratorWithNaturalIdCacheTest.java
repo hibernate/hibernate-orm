@@ -11,6 +11,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
+import org.hibernate.Session;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.NaturalId;
@@ -24,7 +25,6 @@ import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -51,25 +51,33 @@ public class IdentifierGeneratorWithNaturalIdCacheTest
 	@Test
 	@TestForIssue(jiraKey = "HHH-10659")
 	public void testNaturalIdCacheEntry() {
-		doInHibernate( this::sessionFactory, session -> {
-			Person person = new Person();
-			person.setName( "John Doe" );
-			session.persist( person );
-		} );
-		doInHibernate( this::sessionFactory, session -> {
-			assertEquals(0, sessionFactory().getStatistics().getSecondLevelCacheHitCount());
-			assertEquals(0, sessionFactory().getStatistics().getNaturalIdCacheHitCount());
-			Person person = session.bySimpleNaturalId( Person.class )
-					.load( "John Doe" );
-			assertEquals(0, sessionFactory().getStatistics().getSecondLevelCacheHitCount());
-			assertEquals(1, sessionFactory().getStatistics().getNaturalIdCacheHitCount());
-		} );
-		doInHibernate( this::sessionFactory, session -> {
-			Person person = session.bySimpleNaturalId( Person.class )
-					.load( "John Doe" );
-			assertEquals(1, sessionFactory().getStatistics().getSecondLevelCacheHitCount());
-			assertEquals(2, sessionFactory().getStatistics().getNaturalIdCacheHitCount());
-		} );
+		Session session = openSession();
+		session.getTransaction().begin();
+		Person person = new Person();
+		person.setName( "John Doe" );
+		session.persist( person );
+		session.getTransaction().commit();
+		session.close();
+
+		session = openSession();
+		session.getTransaction().begin();
+		assertEquals(0, sessionFactory().getStatistics().getSecondLevelCacheHitCount());
+		assertEquals( 0, sessionFactory().getStatistics().getNaturalIdCacheHitCount() );
+		person = session.bySimpleNaturalId( Person.class )
+				.load( "John Doe" );
+		assertEquals(0, sessionFactory().getStatistics().getSecondLevelCacheHitCount());
+		assertEquals( 1, sessionFactory().getStatistics().getNaturalIdCacheHitCount() );
+		session.getTransaction().commit();
+		session.close();
+
+		session = openSession();
+		session.getTransaction().begin();
+		person = session.bySimpleNaturalId( Person.class )
+				.load( "John Doe" );
+		assertEquals(1, sessionFactory().getStatistics().getSecondLevelCacheHitCount());
+		assertEquals(2, sessionFactory().getStatistics().getNaturalIdCacheHitCount());
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Entity(name = "Person")

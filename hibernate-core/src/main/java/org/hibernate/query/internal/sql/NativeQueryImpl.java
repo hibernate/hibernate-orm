@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.query.internal;
+package org.hibernate.query.internal.sql;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -38,20 +38,33 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.query.internal.AbstractQuery;
+import org.hibernate.query.internal.ParameterMetadataImpl;
+import org.hibernate.query.internal.QueryParameterBindingsImpl;
 import org.hibernate.query.spi.NativeQueryImplementor;
+import org.hibernate.query.spi.NativeQueryInterpreter;
+import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.type.spi.Type;
+import org.hibernate.sql.spi.ParameterBinder;
 
 import static org.hibernate.jpa.QueryHints.HINT_NATIVE_LOCKMODE;
 
 /**
  * @author Steve Ebersole
  */
-public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements NativeQueryImplementor<T> {
+public class NativeQueryImpl<T> extends AbstractQuery<T> implements NativeQueryImplementor<T> {
 	private final String sqlString;
+
 	private List<NativeSQLQueryReturn> queryReturns;
 	private List<NativeQueryReturnBuilder> queryReturnBuilders;
 	private boolean autoDiscoverTypes;
+
+	private final boolean hasMainOutputParameter;
+	private final ParameterMetadataImpl parameterMetadata;
+	private final QueryParameterBindings parameterBindings;
+
+	private final List<ParameterBinder> parameterBinders;
 
 	private Collection<String> querySpaces;
 
@@ -64,18 +77,52 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 	 *
 	 * @param queryDef The representation of the defined <sql-query/>.
 	 * @param session The session to which this NativeQuery belongs.
-	 * @param parameterMetadata Metadata about parameters found in the query.
 	 */
 	public NativeQueryImpl(
 			NamedSQLQueryDefinition queryDef,
+			SharedSessionContractImplementor session) {
+		this(
+				session,
+				queryDef.getQueryString(),
+				queryDef.isCallable(),
+				queryDef.getQuerySpaces(),
+				collectQueryReturns( queryDef, session )
+		);
+	}
+
+	private NativeQueryImpl(
 			SharedSessionContractImplementor session,
-			ParameterMetadata parameterMetadata) {
-		super( session, parameterMetadata );
+			String queryString,
+			boolean callable,
+			List<String> querySpaces,
+			List<NativeSQLQueryReturn> queryReturns) {
+		super( session );
 
-		this.sqlString = queryDef.getQueryString();
-		this.callable = queryDef.isCallable();
-		this.querySpaces = queryDef.getQuerySpaces();
+		this.sqlString = queryString;
+		this.callable = callable;
+		this.querySpaces = querySpaces;
 
+		this.queryReturns = queryReturns;
+
+		final ParameterRecognizerImpl parameterRecognizer = new ParameterRecognizerImpl( session.getFactory() );
+		session.getFactory().getServiceRegistry()
+				.getService( NativeQueryInterpreter.class )
+				.recognizeParameters( sqlString, parameterRecognizer );
+		parameterRecognizer.validate();
+		// todo : validate hasMainOutputParameter against callable?
+		this.hasMainOutputParameter = parameterRecognizer.hadMainOutputParameter();
+		this.parameterMetadata = new ParameterMetadataImpl(
+				parameterRecognizer.getNamedQueryParameters(),
+				parameterRecognizer.getPositionalQueryParameters()
+		);
+		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
+
+		this.parameterBinders = parameterRecognizer.getParameterBinders();
+	}
+
+	private static List<NativeSQLQueryReturn> collectQueryReturns(
+			NamedSQLQueryDefinition queryDef,
+			SharedSessionContractImplementor session) {
 		if ( queryDef.getResultSetRef() != null ) {
 			ResultSetMappingDefinition definition = session.getFactory()
 					.getNamedQueryRepository()
@@ -86,31 +133,36 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 								queryDef.getResultSetRef()
 				);
 			}
-			this.queryReturns = new ArrayList<>( Arrays.asList( definition.getQueryReturns() ) );
+			return new ArrayList<>( Arrays.asList( definition.getQueryReturns() ) );
 		}
 		else if ( queryDef.getQueryReturns() != null && queryDef.getQueryReturns().length > 0 ) {
-			this.queryReturns = new ArrayList<>( Arrays.asList( queryDef.getQueryReturns() ) );
+			return new ArrayList<>( Arrays.asList( queryDef.getQueryReturns() ) );
 		}
 		else {
-			this.queryReturns = new ArrayList<>();
+			return new ArrayList<>();
 		}
 	}
 
 	public NativeQueryImpl(
 			String sqlString,
 			boolean callable,
-			SharedSessionContractImplementor session,
-			ParameterMetadata sqlParameterMetadata) {
-		super( session, sqlParameterMetadata );
-
-		this.queryReturns = new ArrayList<>();
-		this.sqlString = sqlString;
-		this.callable = callable;
-		this.querySpaces = new ArrayList<>();
+			SharedSessionContractImplementor session) {
+		this(
+				session,
+				sqlString,
+				callable,
+				new ArrayList<>(),
+				new ArrayList<>()
+		);
 	}
 
 	@Override
-	public NativeQuery setResultSetMapping(String name) {
+	public ParameterMetadata getParameterMetadata() {
+		return parameterMetadata;
+	}
+
+	@Override
+	public NativeQuery<T> setResultSetMapping(String name) {
 		ResultSetMappingDefinition mapping = getProducer().getFactory().getNamedQueryRepository().getResultSetMappingDefinition( name );
 		if ( mapping == null ) {
 			throw new MappingException( "Unknown SqlResultSetMapping [" + name + "]" );
@@ -141,8 +193,17 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 	}
 
 	@Override
+	public boolean isBound(Parameter<?> param) {
+		final QueryParameter qp = parameterMetadata.resolve( param );
+		return qp != null && parameterBindings.isBound( qp );
+	}
+
+	@Override
 	@SuppressWarnings("unchecked")
 	protected List<T> doList() {
+		getProducer().performList(
+				generate
+		)
 		return getProducer().list(
 				generateQuerySpecification(),
 				getQueryParameters()
@@ -160,6 +221,9 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 	@Override
 	public QueryParameters getQueryParameters() {
 		final QueryParameters queryParameters = super.getQueryParameters();
+
+		// 6.0 -> how to account for these settings?
+
 		queryParameters.setCallable( callable );
 		queryParameters.setAutoDiscoverScalarTypes( autoDiscoverTypes );
 		if ( collectionKey != null ) {
@@ -418,11 +482,6 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 	}
 
 	@Override
-	protected boolean isNativeQuery() {
-		return true;
-	}
-
-	@Override
 	public NativeQueryImplementor<T> setHibernateFlushMode(FlushMode flushMode) {
 		super.setHibernateFlushMode( flushMode );
 		return this;
@@ -669,6 +728,21 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 	public NativeQueryImplementor<T> setProperties(Object bean) {
 		super.setProperties( bean );
 		return this;
+	}
+
+	@Override
+	protected boolean canApplyAliasSpecificLockModes() {
+		return false;
+	}
+
+	@Override
+	protected void verifySettingLockMode() {
+		throw new IllegalStateException( "Illegal attempt to set lock mode on a native query" );
+	}
+
+	@Override
+	protected void verifySettingAliasSpecificLockModes() {
+		throw new IllegalStateException( "Illegal attempt to set lock mode on a native query" );
 	}
 
 	@Override

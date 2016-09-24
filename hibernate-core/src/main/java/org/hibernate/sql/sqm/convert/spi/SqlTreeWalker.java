@@ -59,6 +59,7 @@ import org.hibernate.sql.sqm.ast.predicate.RelationalPredicate;
 import org.hibernate.sql.sqm.ast.select.SelectClause;
 import org.hibernate.sql.sqm.ast.select.Selection;
 import org.hibernate.sql.sqm.exec.results.spi.ReturnReader;
+import org.hibernate.sql.spi.ParameterBinder;
 import org.hibernate.type.LiteralType;
 import org.hibernate.type.spi.Type;
 

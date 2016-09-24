@@ -15,7 +15,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.entity.UniqueEntityLoader;
 import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.query.internal.AbstractProducedQuery;
+import org.hibernate.query.internal.old.AbstractProducedQuery;
 
 /**
  * Not really a Loader, just a wrapper around a named query.  Used when the metadata has named a query to use for

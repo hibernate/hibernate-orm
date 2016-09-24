@@ -9,9 +9,9 @@ package org.hibernate.sql.sqm.convert.internal;
 import java.util.List;
 
 import org.hibernate.loader.plan.spi.Return;
-import org.hibernate.sql.gen.JdbcSelectPlan;
-import org.hibernate.sql.gen.ParameterBinder;
-import org.hibernate.sql.gen.QueryOptionBinder;
+import org.hibernate.sql.sqm.convert.spi.JdbcSelectPlan;
+import org.hibernate.sql.spi.ParameterBinder;
+import org.hibernate.sql.sqm.convert.spi.QueryOptionBinder;
 
 /**
  * @author Steve Ebersole

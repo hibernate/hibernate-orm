@@ -24,7 +24,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.FilterImpl;
 import org.hibernate.internal.util.EntityPrinter;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.query.internal.QueryParameterBindingsImpl;
+import org.hibernate.query.internal.old.QueryParameterBindingsImpl;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.spi.Type;

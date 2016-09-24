@@ -98,6 +98,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private final boolean namedQueryStartupCheckingEnabled;
 	private final boolean procedureParameterNullPassingEnabled;
 	private final boolean collectionJoinSubqueryRewriteEnabled;
+	private final Integer nonJpaNativeQueryOrdinalParameterBase;
 
 	// Caching
 	private final boolean secondLevelCacheEnabled;
@@ -177,6 +178,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.namedQueryStartupCheckingEnabled = state.isNamedQueryStartupCheckingEnabled();
 		this.procedureParameterNullPassingEnabled = state.isProcedureParameterNullPassingEnabled();
 		this.collectionJoinSubqueryRewriteEnabled = state.isCollectionJoinSubqueryRewriteEnabled();
+		this.nonJpaNativeQueryOrdinalParameterBase = state.getNonJpaNativeQueryOrdinalParameterBase();
 
 		this.secondLevelCacheEnabled = state.isSecondLevelCacheEnabled();
 		this.queryCacheEnabled = state.isQueryCacheEnabled();
@@ -519,5 +521,10 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public TimeZone getJdbcTimeZone() {
 		return jdbcTimeZone;
+	}
+
+	@Override
+	public Integer getNonJpaNativeQueryOrdinalParameterBase() {
+		return nonJpaNativeQueryOrdinalParameterBase;
 	}
 }

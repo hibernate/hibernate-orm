@@ -15,6 +15,7 @@ import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.NullPrecedence;
+import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
@@ -24,6 +25,7 @@ import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
@@ -368,9 +370,25 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends Abstract
 		return getThis();
 	}
 
+	public SessionFactoryBuilder applyStatelessInterceptor(Class<? extends Interceptor> statelessInterceptorClass) {
+		delegate.applyStatelessInterceptor( statelessInterceptorClass );
+		return getThis();
+	}
+
 	@Override
 	public SessionFactoryBuilder enableReleaseResourcesOnCloseEnabled(boolean enable) {
 		delegate.enableReleaseResourcesOnCloseEnabled( enable );
+		return getThis();
+	}
+
+	public SessionFactoryBuilder applyConnectionHandlingMode(PhysicalConnectionHandlingMode connectionHandlingMode) {
+		delegate.applyConnectionHandlingMode( connectionHandlingMode );
+		return getThis();
+	}
+
+	@Override
+	public SessionFactoryBuilder applyNonJpaNativeQueryOrdinalParameterBase(Integer base) {
+		delegate.applyNonJpaNativeQueryOrdinalParameterBase( base );
 		return getThis();
 	}
 

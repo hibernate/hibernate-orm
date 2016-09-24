@@ -4,13 +4,13 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.query.internal;
+package org.hibernate.query.internal.old;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
 import javax.persistence.Parameter;
 
 import org.hibernate.QueryParameterException;
@@ -18,25 +18,48 @@ import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
 
 /**
+ * Encapsulates metadata about parameters encountered within a query.
+ *
  * @author Steve Ebersole
  */
-public class ParameterMetadataImpl implements ParameterMetadata {
+public class OldParameterMetadataImpl implements ParameterMetadata {
 	private final Map<String,QueryParameter> namedQueryParameters;
 	private final Map<Integer,QueryParameter> positionalQueryParameters;
 
-	public ParameterMetadataImpl(
+	/**
+	 * Instantiates a ParameterMetadata container.
+	 */
+	public OldParameterMetadataImpl(
 			Map<String, QueryParameter> namedQueryParameters,
 			Map<Integer, QueryParameter> positionalQueryParameters) {
+		validatePositionalParameters( positionalQueryParameters );
+
 		this.namedQueryParameters = namedQueryParameters != null ? namedQueryParameters : Collections.emptyMap();
 		this.positionalQueryParameters = positionalQueryParameters != null ? positionalQueryParameters : Collections.emptyMap();
 	}
 
-	public Map<String, QueryParameter> namedQueryParameters() {
-		return namedQueryParameters;
-	}
+	private static void validatePositionalParameters(Map<Integer, QueryParameter> positionalQueryParameters) {
+		if ( positionalQueryParameters == null ) {
+			return;
+		}
 
-	public Map<Integer, QueryParameter> positionalQueryParameters() {
-		return positionalQueryParameters;
+		// validate the positions.  JPA says that these should start with 1 and
+		// increment contiguously (no gaps)
+		int[] positionsArray = positionalQueryParameters.keySet().stream().mapToInt( Integer::intValue ).toArray();
+		Arrays.sort( positionsArray );
+
+		int previous = 0;
+		for ( Integer position : positionsArray ) {
+			if ( position != previous + 1 ) {
+				if ( previous == 0 ) {
+					throw new QueryParameterException( "Positional parameters did not start with 1 : " + position );
+				}
+				else {
+					throw new QueryParameterException( "Gap in positional parameter positions; skipped " + (previous+1) );
+				}
+			}
+			previous = position;
+		}
 	}
 
 	@Override

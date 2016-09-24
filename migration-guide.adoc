@@ -40,3 +40,6 @@ from an API perspective.
  	build the SQM and then walk it to "build and collect" ParameterMetadata (extra walk).  This would mean either:
  	** collecting/storing and exposing the parameters on the SqmStatement itself
  	** passing an "ExpressionVisitor" into the SQM interpreter.
+* there is really nothing SQM-specific in most of the `org.hibernate.sql.sqm.exec.spi` contracts.  Let's get
+	them finished up, clean them up and consider moving to a new `org.hibernate.sql.exec.spi` package.  Much of
+	this is usable from NativeQuery as well...

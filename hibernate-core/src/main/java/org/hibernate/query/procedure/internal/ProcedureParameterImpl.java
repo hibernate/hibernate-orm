@@ -9,7 +9,7 @@ package org.hibernate.query.procedure.internal;
 import javax.persistence.ParameterMode;
 
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
-import org.hibernate.query.internal.QueryParameterImpl;
+import org.hibernate.query.internal.old.QueryParameterImpl;
 import org.hibernate.query.procedure.spi.ProcedureParameterImplementor;
 
 /**

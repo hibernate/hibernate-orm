@@ -18,7 +18,7 @@ import org.hibernate.result.Outputs;
 import org.hibernate.sql.sqm.ast.SelectQuery;
 import org.hibernate.sql.sqm.convert.spi.Callback;
 import org.hibernate.sql.sqm.convert.spi.NotYetImplementedException;
-import org.hibernate.sql.sqm.convert.spi.ParameterBinder;
+import org.hibernate.sql.spi.ParameterBinder;
 import org.hibernate.sql.sqm.convert.spi.SqlTreeWalker;
 import org.hibernate.sql.sqm.exec.spi.PreparedStatementCreator;
 import org.hibernate.sql.sqm.exec.spi.PreparedStatementExecutor;
@@ -46,6 +46,9 @@ public class SqlTreeExecutorImpl implements SqlTreeExecutor {
 		//		* SQL string
 		//		* ParameterBinders
 		//		* Returns
+		// todo : should also pass in QueryOptions
+		// 		as the rendered SQL would depend on first/max results, comment, db-hints, lock-options
+
 		final SqlTreeWalker sqlTreeWalker = new SqlTreeWalker( session.getFactory(), queryParameterBindings );
 		sqlTreeWalker.visitSelectQuery( sqlTree );
 

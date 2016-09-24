@@ -16,7 +16,7 @@ import org.hibernate.query.spi.ScrollableResultsImplementor;
  * @since 5.2
  */
 @Incubating
-class ScrollableResultsIterator<T> implements CloseableIterator {
+public class ScrollableResultsIterator<T> implements CloseableIterator {
 	private final ScrollableResultsImplementor scrollableResults;
 
 	ScrollableResultsIterator(ScrollableResultsImplementor scrollableResults) {

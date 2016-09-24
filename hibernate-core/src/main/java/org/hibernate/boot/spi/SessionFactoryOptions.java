@@ -213,4 +213,14 @@ public interface SessionFactoryOptions {
 	boolean isReleaseResourcesOnCloseEnabled();
 
 	TimeZone getJdbcTimeZone();
+
+	/**
+	 * See {@link org.hibernate.cfg.AvailableSettings#NATIVE_QUERY_ORDINAL_PARAMETER_BASE} and
+	 * {@link org.hibernate.boot.SessionFactoryBuilder#applyNonJpaNativeQueryOrdinalParameterBase(Integer)} for details.
+	 *
+	 * @return The base integer for ordinal parameters
+	 *
+	 * @since 6.0
+	 */
+	Integer getNonJpaNativeQueryOrdinalParameterBase();
 }

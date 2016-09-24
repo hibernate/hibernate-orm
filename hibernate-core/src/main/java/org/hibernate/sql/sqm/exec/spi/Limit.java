@@ -37,8 +37,18 @@ public class Limit {
 		return maxRows == null ? Integer.MAX_VALUE : maxRows;
 	}
 
-	public void setMaxRows(Integer maxRows) {
+	public void setMaxRows(int maxRows) {
 		if ( maxRows <= 0 ) {
+			// treat zero and negatives specially as meaning no limit...
+			this.maxRows = null;
+		}
+		else {
+			this.maxRows = maxRows;
+		}
+	}
+
+	public void setMaxRows(Integer maxRows) {
+		if ( maxRows != null && maxRows <= 0 ) {
 			// treat zero and negatives specially as meaning no limit...
 			this.maxRows = null;
 		}

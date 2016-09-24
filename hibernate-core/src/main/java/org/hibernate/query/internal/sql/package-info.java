@@ -4,13 +4,10 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.query.internal;
-
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 
 /**
- * @author Steve Ebersole
+ * Package for the NativeQuery implementation details.  Not in a package named
+ * {@code native} because Java does not like that, {@code native} being a Java
+ * reserved word and all.
  */
-public interface NativeQueryReturnBuilder {
-	NativeSQLQueryReturn buildReturn();
-}
+package org.hibernate.query.internal.sql;

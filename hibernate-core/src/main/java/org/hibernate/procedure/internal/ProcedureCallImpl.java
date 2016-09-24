@@ -50,7 +50,7 @@ import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.query.internal.AbstractProducedQuery;
+import org.hibernate.query.internal.old.AbstractProducedQuery;
 import org.hibernate.query.procedure.internal.ProcedureParameterImpl;
 import org.hibernate.query.procedure.internal.ProcedureParameterMetadata;
 import org.hibernate.result.NoMoreReturnsException;

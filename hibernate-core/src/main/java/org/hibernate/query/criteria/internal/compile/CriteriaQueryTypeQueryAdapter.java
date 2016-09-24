@@ -36,7 +36,6 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.query.ParameterMetadata;
-import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryProducerImplementor;
 import org.hibernate.transform.ResultTransformer;

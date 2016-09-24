@@ -34,7 +34,8 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.EmptyIterator;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.internal.util.collections.JoinedIterator;
-import org.hibernate.query.internal.ParameterMetadataImpl;
+import org.hibernate.query.internal.old.OldParameterMetadataImpl;
+import org.hibernate.query.internal.sql.NativeQueryParameterMetadataBuilder;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.type.spi.Type;
 
@@ -52,7 +53,7 @@ public class HQLQueryPlan implements Serializable {
 	private final QueryTranslator[] translators;
 	private final String[] sqlStrings;
 
-	private final ParameterMetadataImpl parameterMetadata;
+	private final OldParameterMetadataImpl parameterMetadata;
 	private final ReturnMetadata returnMetadata;
 	private final Set querySpaces;
 
@@ -127,7 +128,7 @@ public class HQLQueryPlan implements Serializable {
 		this.querySpaces = combinedQuerySpaces;
 
 		if ( length == 0 ) {
-			parameterMetadata = new ParameterMetadataImpl( null, null );
+			parameterMetadata = new OldParameterMetadataImpl( null, null );
 			returnMetadata = null;
 		}
 		else {
@@ -150,8 +151,8 @@ public class HQLQueryPlan implements Serializable {
 		return querySpaces;
 	}
 
-	public ParameterMetadataImpl getParameterMetadata() {
-		return parameterMetadata.getOrdinalParametersZeroBasedCopy();
+	public OldParameterMetadataImpl getParameterMetadata() {
+		return parameterMetadata;
 	}
 
 	public ReturnMetadata getReturnMetadata() {
@@ -376,9 +377,9 @@ public class HQLQueryPlan implements Serializable {
 		return result;
 	}
 
-	private ParameterMetadataImpl buildParameterMetadata(ParameterTranslations parameterTranslations, String hql) {
+	private OldParameterMetadataImpl buildParameterMetadata(ParameterTranslations parameterTranslations, String hql) {
 		final long start = traceEnabled ? System.nanoTime() : 0;
-		final ParamLocationRecognizer recognizer = ParamLocationRecognizer.parseLocations( hql );
+		final NativeQueryParameterMetadataBuilder recognizer = NativeQueryParameterMetadataBuilder.parseLocations( hql );
 
 		if ( traceEnabled ) {
 			final long end = System.nanoTime();
@@ -404,9 +405,9 @@ public class HQLQueryPlan implements Serializable {
 		}
 
 		final Map<String, NamedParameterDescriptor> namedParamDescriptorMap = new HashMap<String, NamedParameterDescriptor>();
-		final Map<String, ParamLocationRecognizer.NamedParameterDescription> map = recognizer.getNamedParameterDescriptionMap();
+		final Map<String, NativeQueryParameterMetadataBuilder.NamedParameterDescription> map = recognizer.getNamedParameterDescriptionMap();
 		for ( final String name : map.keySet() ) {
-			final ParamLocationRecognizer.NamedParameterDescription description = map.get( name );
+			final NativeQueryParameterMetadataBuilder.NamedParameterDescription description = map.get( name );
 			namedParamDescriptorMap.put(
 					name,
 					new NamedParameterDescriptor(
@@ -417,7 +418,7 @@ public class HQLQueryPlan implements Serializable {
 					)
 			);
 		}
-		return new ParameterMetadataImpl( ordinalParamDescriptors, namedParamDescriptorMap );
+		return new OldParameterMetadataImpl( ordinalParamDescriptors, namedParamDescriptorMap );
 	}
 
 	/**

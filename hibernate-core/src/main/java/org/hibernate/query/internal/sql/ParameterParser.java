@@ -4,13 +4,19 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.engine.query.spi;
+package org.hibernate.query.internal.sql;
 
 import org.hibernate.QueryException;
 import org.hibernate.hql.internal.classic.ParserHelper;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.query.spi.ParameterRecognizer;
+
+import org.jboss.logging.Logger;
 
 /**
+ * Coordinates "parsing" a native query's SQL string looking for parameter markers
+ * and calling out to the given Recognizer.
+ *
  * The single available method {@link #parse} is responsible for parsing a
  * query string and recognizing tokens in relation to parameters (either
  * named, JPA-style, or ordinal) and providing callbacks about such
@@ -19,53 +25,7 @@ import org.hibernate.internal.util.StringHelper;
  * @author Steve Ebersole
  */
 public class ParameterParser {
-	/**
-	 * Maybe better named a Journaler.  Essentially provides a callback contract for things that recognize parameters
-	 */
-	public static interface Recognizer {
-		/**
-		 * Called when an output parameter is recognized
-		 *
-		 * @param position The position within the query
-		 */
-		public void outParameter(int position);
-
-		/**
-		 * Called when an ordinal parameter is recognized
-		 *
-		 * @param position The position within the query
-		 */
-		public void ordinalParameter(int position);
-
-		/**
-		 * Called when a named parameter is recognized
-		 *
-		 * @param name The recognized parameter name
-		 * @param position The position within the query
-		 */
-		public void namedParameter(String name, int position);
-
-		/**
-		 * Called when a JPA-style named parameter is recognized
-		 *
-		 * @param name The name of the JPA-style parameter
-		 * @param position The position within the query
-		 */
-		public void jpaPositionalParameter(String name, int position);
-
-		/**
-		 * Called when a character that is not a parameter (or part of a parameter dfinition) is recognized.
-		 *
-		 * @param character The recognized character
-		 */
-		public void other(char character);
-	}
-
-	/**
-	 * Direct instantiation of ParameterParser disallowed.
-	 */
-	private ParameterParser() {
-	}
+	private static final Logger log = Logger.getLogger( ParameterParser.class );
 
 	/**
 	 * Performs the actual parsing and tokenizing of the query string making appropriate
@@ -79,8 +39,8 @@ public class ParameterParser {
 	 * @param recognizer The thing which handles recognition events.
 	 * @throws QueryException Indicates unexpected parameter conditions.
 	 */
-	public static void parse(String sqlString, Recognizer recognizer) throws QueryException {
-		final boolean hasMainOutputParameter = startsWithEscapeCallTemplate( sqlString );
+	public static void parse(String sqlString, ParameterRecognizer recognizer) throws QueryException {
+		final boolean hasMainOutputParameter = determineQueryType( sqlString ) == Type.CALL_FUNCTION;
 		boolean foundMainOutputParam = false;
 
 		final int stringLength = sqlString.length();
@@ -171,28 +131,27 @@ public class ParameterParser {
 					final String param = sqlString.substring( indx + 1, chopLocation );
 					if ( StringHelper.isEmpty( param ) ) {
 						throw new QueryException(
-								"Space is not allowed afterQuery parameter prefix ':' [" + sqlString + "]"
+								"Space is not allowed after parameter prefix ':' [" + sqlString + "]"
 						);
 					}
 					recognizer.namedParameter( param, indx );
 					indx = chopLocation - 1;
 				}
 				else if ( c == '?' ) {
-					// could be either an ordinal or JPA-positional parameter
+					// could be either a positional of a JDBC-style ordinal parameter
 					if ( indx < stringLength - 1 && Character.isDigit( sqlString.charAt( indx + 1 ) ) ) {
 						// a peek ahead showed this as an JPA-positional parameter
 						final int right = StringHelper.firstIndexOfChar( sqlString, ParserHelper.HQL_SEPARATORS, indx + 1 );
 						final int chopLocation = right < 0 ? sqlString.length() : right;
 						final String param = sqlString.substring( indx + 1, chopLocation );
-						// make sure this "name" is an integral
+						// make sure this "name" is an integer value
 						try {
-							Integer.valueOf( param );
+							recognizer.jpaPositionalParameter( Integer.valueOf( param ), indx );
+							indx = chopLocation - 1;
 						}
 						catch( NumberFormatException e ) {
-							throw new QueryException( "JPA-style positional param was not an integral ordinal" );
+							throw new QueryException( "JPA-style positional param was not an integer value : " + param );
 						}
-						recognizer.jpaPositionalParameter( param, indx );
-						indx = chopLocation - 1;
 					}
 					else {
 						if ( hasMainOutputParameter && !foundMainOutputParam ) {
@@ -211,42 +170,80 @@ public class ParameterParser {
 		}
 	}
 
+	enum Type {
+		/**
+		 * Indicates a query string not using JDBC's "call escape" syntax.  This
+		 * could be a SELECT, DELETE, etc query.
+		 */
+		NORMAL,
+		/**
+		 * Indicates a query string not using JDBC's procedure "call escape" syntax, i.e.:
+		 * {@code "{call...}"}.
+		 */
+		CALL_PROCEDURE,
+		/**
+		 * Indicates a query string not using JDBC's function "call escape" syntax, i.e.:
+		 * {@code "{?=call...}"}.
+		 */
+		CALL_FUNCTION
+	}
+
+	/**
+	 * Exposed as public solely for use from tests
+	 *
+	 * @param sql The SQL string to check
+	 *
+	 * @return true/false
+	 */
+	public static Type determineQueryType(String sql) {
+		sql = sql.trim();
+
+		if ( ! ( sql.startsWith( "{" ) && sql.endsWith( "}" ) ) ) {
+			return Type.NORMAL;
+		}
+
+		final String trimmed = StringHelper.stripBookends( sql, 1 ).trim();
+		final int callStartPosition = trimmed.indexOf( "call" );
+		if ( callStartPosition <= 0 ) {
+			log.debugf( "SQL query is wrapped in braces, but contained no `call` keyword; returning Type.NORMAL but that seems unintended : %s", sql );
+			return Type.NORMAL;
+		}
+
+		// so we know we have a JDBC call escape syntax, need to find out if it
+		// is the procedure or function variant...
+		if ( callStartPosition == 1 ) {
+			// `call` is the first piece inside the escape syntax, cannot be a function call variant
+			return Type.CALL_PROCEDURE;
+		}
+
+		final int firstParamPosition = trimmed.indexOf( "?" );
+		if ( firstParamPosition < callStartPosition ) {
+			return Type.CALL_FUNCTION;
+		}
+		else {
+			return Type.CALL_PROCEDURE;
+		}
+	}
+
 	/**
 	 * Exposed as public solely for use from tests
 	 *
 	 * @param sqlString The SQL string to check
 	 *
 	 * @return true/false
+	 *
+	 * @deprecated (since 6.0) use {@link #determineQueryType(String)} instead
 	 */
+	@Deprecated
 	public static boolean startsWithEscapeCallTemplate(String sqlString) {
-		if ( ! ( sqlString.startsWith( "{" ) && sqlString.endsWith( "}" ) ) ) {
-			return false;
-		}
-
-		final int chopLocation = sqlString.indexOf( "call" );
-		if ( chopLocation <= 0 ) {
-			return false;
-		}
-
-		final String checkString = sqlString.substring( 1, chopLocation + 4 );
-		final String fixture = "?=call";
-		int fixturePosition = 0;
-		boolean matches = true;
-		final int max = checkString.length();
-		for ( int i = 0; i < max; i++ ) {
-			final char c = Character.toLowerCase( checkString.charAt( i ) );
-			if ( Character.isWhitespace( c ) ) {
-				continue;
-			}
-			if ( c == fixture.charAt( fixturePosition ) ) {
-				fixturePosition++;
-				continue;
-			}
-			matches = false;
-			break;
-		}
-
-		return matches;
+		// the result of this historically was true only if the sqlString was using
+		// function call syntax specifically
+		return determineQueryType( sqlString ) == Type.CALL_FUNCTION;
 	}
 
+	/**
+	 * Direct instantiation of ParameterParser disallowed.
+	 */
+	private ParameterParser() {
+	}
 }

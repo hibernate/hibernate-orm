@@ -27,7 +27,7 @@ import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.query.ParameterMetadata;
-import org.hibernate.query.internal.ParameterMetadataImpl;
+import org.hibernate.query.internal.old.OldParameterMetadataImpl;
 
 /**
  * Acts as a cache for compiled query plans, as well as query-parameter metadata.
@@ -64,7 +64,7 @@ public class QueryPlanCache implements Serializable {
 	 * Used solely for caching param metadata for native-sql queries, see {@link #getSQLParameterMetadata} for a
 	 * discussion as to why...
 	 */
-	private final BoundedConcurrentHashMap<ParameterMetadataKey,ParameterMetadataImpl> parameterMetadataCache;
+	private final BoundedConcurrentHashMap<String,OldParameterMetadataImpl> parameterMetadataCache;
 
 
 	private NativeQueryInterpreter nativeQueryInterpreterService;
@@ -102,7 +102,7 @@ public class QueryPlanCache implements Serializable {
 		}
 
 		queryPlanCache = new BoundedConcurrentHashMap( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
-		parameterMetadataCache = new BoundedConcurrentHashMap<>(
+		parameterMetadataCache = new BoundedConcurrentHashMap<String, OldParameterMetadataImpl>(
 				maxParameterMetadataCount,
 				20,
 				BoundedConcurrentHashMap.Eviction.LIRS
@@ -121,12 +121,11 @@ public class QueryPlanCache implements Serializable {
 	 * @param query The query
 	 * @return The parameter metadata
 	 */
-	public ParameterMetadata getSQLParameterMetadata(final String query, boolean isOrdinalParameterZeroBased)  {
-		final ParameterMetadataKey key = new ParameterMetadataKey( query, isOrdinalParameterZeroBased );
-		ParameterMetadataImpl value = parameterMetadataCache.get( key );
+	public ParameterMetadata getSQLParameterMetadata(final String query)  {
+		OldParameterMetadataImpl value = parameterMetadataCache.get( query );
 		if ( value == null ) {
 			value = nativeQueryInterpreterService.getParameterMetadata( query );
-			parameterMetadataCache.putIfAbsent( key, value );
+			parameterMetadataCache.putIfAbsent( query, value );
 		}
 		return value;
 	}

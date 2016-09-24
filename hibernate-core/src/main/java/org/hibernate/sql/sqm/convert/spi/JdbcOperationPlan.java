@@ -8,6 +8,8 @@ package org.hibernate.sql.sqm.convert.spi;
 
 import java.util.List;
 
+import org.hibernate.sql.spi.ParameterBinder;
+
 /**
  * Represents the information needed to perform a JDBC operation.
  *

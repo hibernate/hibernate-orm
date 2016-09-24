@@ -61,7 +61,58 @@ import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.cfg.AvailableSettings.*;
+import static org.hibernate.cfg.AvailableSettings.ACQUIRE_CONNECTIONS;
+import static org.hibernate.cfg.AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS;
+import static org.hibernate.cfg.AvailableSettings.ALLOW_UPDATE_OUTSIDE_TRANSACTION;
+import static org.hibernate.cfg.AvailableSettings.AUTO_CLOSE_SESSION;
+import static org.hibernate.cfg.AvailableSettings.AUTO_EVICT_COLLECTION_CACHE;
+import static org.hibernate.cfg.AvailableSettings.AUTO_SESSION_EVENTS_LISTENER;
+import static org.hibernate.cfg.AvailableSettings.BATCH_FETCH_STYLE;
+import static org.hibernate.cfg.AvailableSettings.BATCH_VERSIONED_DATA;
+import static org.hibernate.cfg.AvailableSettings.CACHE_REGION_PREFIX;
+import static org.hibernate.cfg.AvailableSettings.CHECK_NULLABILITY;
+import static org.hibernate.cfg.AvailableSettings.COLLECTION_JOIN_SUBQUERY;
+import static org.hibernate.cfg.AvailableSettings.CONNECTION_HANDLING;
+import static org.hibernate.cfg.AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATEGY;
+import static org.hibernate.cfg.AvailableSettings.DEFAULT_BATCH_FETCH_SIZE;
+import static org.hibernate.cfg.AvailableSettings.DEFAULT_ENTITY_MODE;
+import static org.hibernate.cfg.AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS;
+import static org.hibernate.cfg.AvailableSettings.FLUSH_BEFORE_COMPLETION;
+import static org.hibernate.cfg.AvailableSettings.GENERATE_STATISTICS;
+import static org.hibernate.cfg.AvailableSettings.HQL_BULK_ID_STRATEGY;
+import static org.hibernate.cfg.AvailableSettings.INTERCEPTOR;
+import static org.hibernate.cfg.AvailableSettings.JPAQL_STRICT_COMPLIANCE;
+import static org.hibernate.cfg.AvailableSettings.JTA_TRACK_BY_THREAD;
+import static org.hibernate.cfg.AvailableSettings.LOG_SESSION_METRICS;
+import static org.hibernate.cfg.AvailableSettings.MAX_FETCH_DEPTH;
+import static org.hibernate.cfg.AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER;
+import static org.hibernate.cfg.AvailableSettings.NATIVE_QUERY_ORDINAL_PARAMETER_BASE;
+import static org.hibernate.cfg.AvailableSettings.ORDER_INSERTS;
+import static org.hibernate.cfg.AvailableSettings.ORDER_UPDATES;
+import static org.hibernate.cfg.AvailableSettings.PREFER_USER_TRANSACTION;
+import static org.hibernate.cfg.AvailableSettings.PROCEDURE_NULL_PARAM_PASSING;
+import static org.hibernate.cfg.AvailableSettings.QUERY_CACHE_FACTORY;
+import static org.hibernate.cfg.AvailableSettings.QUERY_STARTUP_CHECKING;
+import static org.hibernate.cfg.AvailableSettings.QUERY_SUBSTITUTIONS;
+import static org.hibernate.cfg.AvailableSettings.RELEASE_CONNECTIONS;
+import static org.hibernate.cfg.AvailableSettings.SESSION_FACTORY_NAME;
+import static org.hibernate.cfg.AvailableSettings.SESSION_FACTORY_NAME_IS_JNDI;
+import static org.hibernate.cfg.AvailableSettings.SESSION_SCOPED_INTERCEPTOR;
+import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
+import static org.hibernate.cfg.AvailableSettings.STATEMENT_FETCH_SIZE;
+import static org.hibernate.cfg.AvailableSettings.STATEMENT_INSPECTOR;
+import static org.hibernate.cfg.AvailableSettings.USE_DIRECT_REFERENCE_CACHE_ENTRIES;
+import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
+import static org.hibernate.cfg.AvailableSettings.USE_IDENTIFIER_ROLLBACK;
+import static org.hibernate.cfg.AvailableSettings.USE_MINIMAL_PUTS;
+import static org.hibernate.cfg.AvailableSettings.USE_QUERY_CACHE;
+import static org.hibernate.cfg.AvailableSettings.USE_SCROLLABLE_RESULTSET;
+import static org.hibernate.cfg.AvailableSettings.USE_SECOND_LEVEL_CACHE;
+import static org.hibernate.cfg.AvailableSettings.USE_SQL_COMMENTS;
+import static org.hibernate.cfg.AvailableSettings.USE_STRUCTURED_CACHE;
+import static org.hibernate.cfg.AvailableSettings.WRAP_RESULT_SETS;
+import static org.hibernate.cfg.AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY;
+import static org.hibernate.cfg.AvailableSettings.JDBC_TIME_ZONE;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.jpa.AvailableSettings.DISCARD_PC_ON_CLOSE;
 
@@ -300,6 +351,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
+	public SessionFactoryBuilder applyNonJpaNativeQueryOrdinalParameterBase(Integer base) {
+		this.options.applyNonJpaNativeQueryOrdinalParameterBase( base );
+		return this;
+	}
+
+	@Override
 	public SessionFactoryBuilder applySecondLevelCacheSupport(boolean enabled) {
 		this.options.secondLevelCacheEnabled = enabled;
 		return this;
@@ -528,6 +585,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		private Map querySubstitutions;
 		private boolean strictJpaQueryLanguageCompliance;
 		private boolean namedQueryStartupCheckingEnabled;
+		private Integer nonJpaNativeQueryOrdinalParameterBase;
 		private final boolean procedureParameterNullPassingEnabled;
 		private final boolean collectionJoinSubqueryRewriteEnabled;
 
@@ -656,6 +714,9 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 			this.namedQueryStartupCheckingEnabled = cfgService.getSetting( QUERY_STARTUP_CHECKING, BOOLEAN, true );
 			this.procedureParameterNullPassingEnabled = cfgService.getSetting( PROCEDURE_NULL_PARAM_PASSING, BOOLEAN, false );
 			this.collectionJoinSubqueryRewriteEnabled = cfgService.getSetting( COLLECTION_JOIN_SUBQUERY, BOOLEAN, true );
+			applyNonJpaNativeQueryOrdinalParameterBase(
+					ConfigurationHelper.getInteger( NATIVE_QUERY_ORDINAL_PARAMETER_BASE, cfgService.getSettings() )
+			);
 
 			this.secondLevelCacheEnabled = cfgService.getSetting( USE_SECOND_LEVEL_CACHE, BOOLEAN, true );
 			this.queryCacheEnabled = cfgService.getSetting( USE_QUERY_CACHE, BOOLEAN, false );
@@ -868,6 +929,13 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 			return PhysicalConnectionHandlingMode.interpret( effectiveAcquisitionMode, effectiveReleaseMode );
 		}
 
+		private void applyNonJpaNativeQueryOrdinalParameterBase(Integer base) {
+			if ( base != null && base != 0 && base != 1 ) {
+				throw new IllegalArgumentException( "Illegal value for ordinal parameter base [" + base + "]; should be null, 0 or 1" );
+			}
+			this.nonJpaNativeQueryOrdinalParameterBase = base;
+		}
+
 		@Override
 		public StandardServiceRegistry getServiceRegistry() {
 			return serviceRegistry;
@@ -1059,6 +1127,10 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		@Override
 		public boolean isCollectionJoinSubqueryRewriteEnabled() {
 			return collectionJoinSubqueryRewriteEnabled;
+		}
+
+		public Integer getNonJpaNativeQueryOrdinalParameterBase() {
+			return nonJpaNativeQueryOrdinalParameterBase;
 		}
 
 		@Override
@@ -1373,6 +1445,10 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public boolean isCollectionJoinSubqueryRewriteEnabled() {
 		return options.isCollectionJoinSubqueryRewriteEnabled();
+	}
+
+	public Integer getNonJpaNativeQueryOrdinalParameterBase() {
+		return options.getNonJpaNativeQueryOrdinalParameterBase();
 	}
 
 	@Override

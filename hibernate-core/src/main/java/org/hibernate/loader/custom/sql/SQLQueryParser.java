@@ -12,10 +12,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.QueryException;
-import org.hibernate.engine.query.spi.ParameterParser;
+import org.hibernate.query.internal.sql.ParameterParser;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.collection.SQLLoadableCollection;
 import org.hibernate.persister.entity.SQLLoadable;
+import org.hibernate.query.spi.ParameterRecognizer;
 
 /**
  * @author Gavin King
@@ -275,7 +276,7 @@ public class SQLQueryParser {
 		return recognizer.result.toString();
 	}
 
-	public static class ParameterSubstitutionRecognizer implements ParameterParser.Recognizer {
+	public static class ParameterSubstitutionRecognizer implements ParameterRecognizer {
 		StringBuilder result = new StringBuilder();
 		Map namedParameterBindPoints = new HashMap();
 		int parameterCount;
@@ -291,7 +292,7 @@ public class SQLQueryParser {
 		}
 
 		@Override
-		public void namedParameter(String name, int position) {
+		public void namedParameter(String name, int sourcePosition) {
 			addNamedParameter( name );
 			result.append( '?' );
 		}

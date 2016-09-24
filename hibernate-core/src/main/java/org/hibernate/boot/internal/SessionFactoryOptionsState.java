@@ -121,6 +121,8 @@ public interface SessionFactoryOptionsState {
 
 	boolean isCollectionJoinSubqueryRewriteEnabled();
 
+	Integer getNonJpaNativeQueryOrdinalParameterBase();
+
 	boolean isSecondLevelCacheEnabled();
 
 	boolean isQueryCacheEnabled();

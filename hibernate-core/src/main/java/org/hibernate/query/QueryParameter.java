@@ -6,6 +6,8 @@
  */
 package org.hibernate.query;
 
+import javax.persistence.ParameterMode;
+
 import org.hibernate.Incubating;
 import org.hibernate.type.spi.Type;
 
@@ -18,9 +20,16 @@ import org.hibernate.type.spi.Type;
  */
 @Incubating
 public interface QueryParameter<T> extends javax.persistence.Parameter<T> {
-	boolean allowsMultiValuedBinding();
+	/**
+	 * Is this a {@code IN}, {@code OUT} or {@code INOUT} parameter.
+	 *
+	 * @return The mode.
+	 */
+	default ParameterMode getMode() {
+		return ParameterMode.IN;
+	}
 
-	void allowMultiValuedBinding(boolean allow);
+	boolean allowsMultiValuedBinding();
 
 	/**
 	 * Get the Hibernate Type associated with this parameter.
@@ -42,6 +51,9 @@ public interface QueryParameter<T> extends javax.persistence.Parameter<T> {
 	 * by design any positional parameter is now a "jpa positional parameter".
 	 */
 	@Deprecated
-	boolean isJpaPositionalParameter();
+	default boolean isJpaPositionalParameter() {
+		// per discussion above, any positional parameter is a "jpa positional parameter"
+		return getPosition() != null;
+	}
 
 }

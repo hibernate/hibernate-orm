@@ -11,6 +11,7 @@ import java.sql.SQLException;
 
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.sqm.convert.spi.SqlTreeWalker;
@@ -42,7 +43,7 @@ public class NamedParameter extends AbstractParameter {
 			PreparedStatement statement,
 			int startPosition,
 			QueryParameterBindings queryParameterBindings,
-			SessionImplementor session) throws SQLException {
+			SharedSessionContractImplementor session) throws SQLException {
 		final QueryParameterBinding binding = queryParameterBindings.getBinding( name );
 		return bindParameterValue( statement, startPosition, binding, session );
 	}

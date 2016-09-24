@@ -12,6 +12,7 @@ import java.util.List;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.ScrollMode;
+import org.hibernate.engine.spi.ExceptionConverter;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.QueryProducer;
 
@@ -25,9 +26,18 @@ public interface QueryProducerImplementor extends QueryProducer {
 	SessionFactoryImplementor getFactory();
 
 	FlushMode getHibernateFlushMode();
-	CacheMode getCacheMode();
+	void setHibernateFlushMode(FlushMode effectiveFlushMode);
 
-	// todo : define the "execution methods" (list, scroll, iterate, etc) here...
+	CacheMode getCacheMode();
+	void setCacheMode(CacheMode effectiveCacheMode);
+
+	boolean isDefaultReadOnly();
+
+	ExceptionConverter getExceptionConverter();
+
+	boolean isTransactionInProgress();
+
+	void checkOpen(boolean rollbackIfNot);
 
 	/**
 	 * This is the list function for a SQM-backed query (HQL, JPQL, Criteria)
@@ -99,4 +109,5 @@ public interface QueryProducerImplementor extends QueryProducer {
 
 	@Override
 	NativeQueryImplementor getNamedNativeQuery(String name);
+
 }

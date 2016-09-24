@@ -6,9 +6,9 @@
  */
 package org.hibernate.engine.query;
 
-import org.hibernate.engine.query.spi.ParamLocationRecognizer;
-import org.hibernate.engine.query.spi.ParameterParser;
-import org.hibernate.engine.query.spi.ParameterParser.Recognizer;
+import org.hibernate.query.internal.sql.NativeQueryParameterMetadataBuilder;
+import org.hibernate.query.internal.sql.ParameterParser;
+import org.hibernate.query.spi.ParameterRecognizer;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
@@ -33,7 +33,7 @@ public class ParameterParserTest {
 	}
 	@Test
 	public void testQuotedTextInComment() {
-		ParamLocationRecognizer recognizer = new ParamLocationRecognizer();
+		NativeQueryParameterMetadataBuilder recognizer = new NativeQueryParameterMetadataBuilder();
 
 		ParameterParser.parse("-- 'This' should not fail the test.\n"
 									  + "SELECT column FROM Table WHERE column <> :param", recognizer);
@@ -43,7 +43,7 @@ public class ParameterParserTest {
 
 	@Test
 	public void testContractionInComment() {
-		ParamLocationRecognizer recognizer = new ParamLocationRecognizer();
+		NativeQueryParameterMetadataBuilder recognizer = new NativeQueryParameterMetadataBuilder();
 
 		ParameterParser.parse("-- This shouldn't fail the test.\n" + "SELECT column FROM Table WHERE column <> :param",
 							  recognizer);
@@ -53,7 +53,7 @@ public class ParameterParserTest {
 
 	@Test
 	public void testDoubleDashInCharLiteral() {
-		ParamLocationRecognizer recognizer = new ParamLocationRecognizer();
+		NativeQueryParameterMetadataBuilder recognizer = new NativeQueryParameterMetadataBuilder();
 
 		ParameterParser.parse("select coalesce(i.name, '--NONE--') as itname  from Item i where i.intVal=? ",recognizer);
 
@@ -62,7 +62,7 @@ public class ParameterParserTest {
 
 	@Test
 	public void testSlashStarInCharLiteral() {
-		ParamLocationRecognizer recognizer = new ParamLocationRecognizer();
+		NativeQueryParameterMetadataBuilder recognizer = new NativeQueryParameterMetadataBuilder();
 
 		ParameterParser.parse("select coalesce(i.name, '/*NONE') as itname  from Item i where i.intVal=? ",recognizer);
 
@@ -71,7 +71,7 @@ public class ParameterParserTest {
 
 	@Test
 	public void testApostropheInOracleAlias() {
-		ParamLocationRecognizer recognizer = new ParamLocationRecognizer();
+		NativeQueryParameterMetadataBuilder recognizer = new NativeQueryParameterMetadataBuilder();
 
 		ParameterParser.parse("SELECT column as \"Table's column\" FROM Table WHERE column <> :param", recognizer);
 
@@ -82,21 +82,21 @@ public class ParameterParserTest {
 	@TestForIssue( jiraKey = "HHH-1237")
     public void testParseColonCharacterEscaped() {
         final StringBuilder captured = new StringBuilder();
-        Recognizer recognizer = new Recognizer() {
+        ParameterRecognizer recognizer = new ParameterRecognizer() {
             @Override
-            public void outParameter(int position) {
+            public void outParameter(int sourcePosition) {
                 fail();
             }
             @Override
-            public void ordinalParameter(int position) {
+            public void ordinalParameter(int sourcePosition) {
                 fail();
             }
             @Override
-            public void namedParameter(String name, int position) {
+            public void namedParameter(String name, int sourcePosition) {
                 fail();
             }
             @Override
-            public void jpaPositionalParameter(String name, int position) {
+            public void jpaPositionalParameter(int position, int sourcePosition) {
                 fail();
             }
             @Override
@@ -110,7 +110,7 @@ public class ParameterParserTest {
     
     @Test
     public void testParseNamedParameter() {
-        ParamLocationRecognizer recognizer = new ParamLocationRecognizer();
+        NativeQueryParameterMetadataBuilder recognizer = new NativeQueryParameterMetadataBuilder();
         ParameterParser.parse("from Stock s where s.stockCode = :stockCode and s.xyz = :pxyz", recognizer);
         assertTrue(recognizer.getNamedParameterDescriptionMap().containsKey("stockCode"));
         assertTrue(recognizer.getNamedParameterDescriptionMap().containsKey("pxyz"));

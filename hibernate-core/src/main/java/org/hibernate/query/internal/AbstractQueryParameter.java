@@ -7,6 +7,7 @@
 package org.hibernate.query.internal;
 
 import org.hibernate.query.QueryParameter;
+import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.type.mapper.spi.Type;
 
 import org.jboss.logging.Logger;
@@ -14,7 +15,7 @@ import org.jboss.logging.Logger;
 /**
  * @author Steve Ebersole
  */
-public class AbstractQueryParameter<T> implements QueryParameter<T> {
+public class AbstractQueryParameter<T> implements QueryParameterImplementor<T> {
 	private static final Logger log = Logger.getLogger( AbstractQueryParameter.class );
 
 	private boolean allowMultiValuedBinding;
@@ -31,19 +32,14 @@ public class AbstractQueryParameter<T> implements QueryParameter<T> {
 	}
 
 	@Override
-	public void allowMultiValuedBinding(boolean allow) {
-		log.debugf( "QueryParameter#allowMultiValuedBinding(%s) called", allow );
-		this.allowMultiValuedBinding = allow;
+	public void allowMultiValuedBinding() {
+		log.debugf( "QueryParameter#allowMultiValuedBinding() called" );
+		this.allowMultiValuedBinding = true;
 	}
 
 	@Override
 	public Type getType() {
 		return null;
-	}
-
-	@Override
-	public boolean isJpaPositionalParameter() {
-		return false;
 	}
 
 	@Override

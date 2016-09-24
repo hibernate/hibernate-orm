@@ -27,7 +27,7 @@ import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.query.internal.AbstractProducedQuery;
+import org.hibernate.query.internal.old.AbstractProducedQuery;
 import org.hibernate.sql.JoinType;
 import org.hibernate.transform.ResultTransformer;
 

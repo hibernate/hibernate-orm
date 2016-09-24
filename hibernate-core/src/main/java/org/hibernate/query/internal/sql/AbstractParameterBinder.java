@@ -4,44 +4,34 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.sql.sqm.ast.expression;
+package org.hibernate.query.internal.sql;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
+import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.spi.ParameterBinder;
-import org.hibernate.sql.sqm.convert.spi.ParameterSpec;
-import org.hibernate.type.spi.Type;
-
-import org.jboss.logging.Logger;
+import org.hibernate.type.mapper.spi.Type;
 
 /**
+ * Abstract ParameterBinder implementation for QueryParameter binding.
+ *
  * @author Steve Ebersole
  */
-public abstract class AbstractParameter extends SelfReadingExpressionSupport implements ParameterSpec, ParameterBinder {
-	private static final Logger log = Logger.getLogger( AbstractParameter.class );
-
-	private final Type inferredType;
-
-	public AbstractParameter(Type inferredType) {
-		this.inferredType = inferredType;
-	}
-
-	public Type getInferredType() {
-		return inferredType;
-	}
-
+public abstract class AbstractParameterBinder implements ParameterBinder {
 	@Override
-	public Type getType() {
-		return getInferredType();
+	public int bindParameterValue(
+			PreparedStatement statement,
+			int startPosition,
+			QueryParameterBindings queryParameterBindings,
+			SharedSessionContractImplementor session) throws SQLException {
+		final QueryParameterBinding binding = getBinding( queryParameterBindings );
+		return bindParameterValue(  statement, startPosition, binding, session );
 	}
 
-	@Override
-	public ParameterBinder getParameterBinder() {
-		return this;
-	}
+	protected abstract QueryParameterBinding getBinding(QueryParameterBindings queryParameterBindings);
 
 	protected int bindParameterValue(
 			PreparedStatement statement,
@@ -53,12 +43,13 @@ public abstract class AbstractParameter extends SelfReadingExpressionSupport imp
 
 		if ( valueBinding == null ) {
 			warnNoBinding();
-			bindType = valueBinding.getBindType();
+			bindType = null;
 			bindValue = null;
+			return 1;
 		}
 		else {
 			if ( valueBinding.getBindType() == null ) {
-				bindType = inferredType;
+				bindType = null;
 			}
 			else {
 				bindType = valueBinding.getBindType();

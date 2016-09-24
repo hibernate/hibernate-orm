@@ -6,48 +6,51 @@
  */
 package org.hibernate.query.internal;
 
-import org.hibernate.query.QueryParameter;
 import org.hibernate.type.spi.Type;
+import org.hibernate.sqm.query.Parameter;
 
 /**
- * Models a named query parameter
- *
- * NOTE: Unfortunately we need to model named and positional parameters separately still until 6.0
- *
- * NOTE : Also, notice that this still treats JPA "positional" parameters as named.  This will change in
- * 6.0 as well after we remove support for legacy positional parameters (the JPA model is better there).
+ * QueryParameter impl for named-parameters in HQL, JPQL or Criteria queries.
  *
  * @author Steve Ebersole
  */
-public class QueryParameterNamedImpl<T> extends QueryParameterImpl<T> implements QueryParameter<T> {
-	private final String name;
-	private final int[] sourceLocations;
-	private final boolean jpaStyle;
+public class QueryParameterNamedImpl<T> extends AbstractQueryParameter<T> {
+	/**
+	 * Create a named parameter descriptor from the SQM parameter
+	 *
+	 * @param parameter The source parameter info
+	 *
+	 * @return The parameter descriptor
+	 */
+	public static <T> QueryParameterNamedImpl<T> fromSqm(Parameter parameter) {
+		assert parameter.getName() != null;
+		assert parameter.getPosition() == null;
 
-	public QueryParameterNamedImpl(String name, int[] sourceLocations, boolean jpaStyle, Type expectedType) {
-		super( expectedType );
+		return new QueryParameterNamedImpl<>(
+				parameter.getName(),
+				parameter.allowMultiValuedBinding(),
+				parameter.getAnticipatedType()
+		);
+	}
+
+	public static <T> QueryParameterNamedImpl<T> fromNativeQuery(String name) {
+		return new QueryParameterNamedImpl<>(
+				name,
+				false,
+				null
+		);
+	}
+
+	private final String name;
+
+	private QueryParameterNamedImpl(String name, boolean allowMultiValuedBinding, Type anticipatedType) {
+		super( allowMultiValuedBinding, anticipatedType );
 		this.name = name;
-		this.sourceLocations = sourceLocations;
-		this.jpaStyle = jpaStyle;
 	}
 
 	@Override
 	public String getName() {
 		return name;
-	}
-
-	@Override
-	public Integer getPosition() {
-		return null;
-	}
-
-	public int[] getSourceLocations() {
-		return sourceLocations;
-	}
-
-	@Override
-	public boolean isJpaPositionalParameter() {
-		return jpaStyle;
 	}
 
 	@Override

@@ -11,8 +11,8 @@ import java.sql.SQLException;
 
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.sql.sqm.convert.spi.ParameterBinder;
 import org.hibernate.type.spi.Type;
+import org.hibernate.sql.spi.ParameterBinder;
 
 /*
  * We classify literals different based on their source so that we can handle then differently

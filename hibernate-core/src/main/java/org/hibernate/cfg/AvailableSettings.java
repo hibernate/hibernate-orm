@@ -7,7 +7,8 @@
 package org.hibernate.cfg;
 
 import org.hibernate.boot.MetadataBuilder;
-import org.hibernate.query.internal.ParameterMetadataImpl;
+import org.hibernate.query.ParameterMetadata;
+import org.hibernate.resource.cdi.spi.ManagedBeanRegistry;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
@@ -775,17 +776,6 @@ public interface AvailableSettings {
 	String USE_REFLECTION_OPTIMIZER = "hibernate.bytecode.use_reflection_optimizer";
 
 	/**
-	 * The classname of the HQL query parser factory
-	 */
-	String QUERY_TRANSLATOR = "hibernate.query.factory_class";
-
-	/**
-	 * A comma-separated list of token substitutions to use when translating a Hibernate
-	 * query to SQL
-	 */
-	String QUERY_SUBSTITUTIONS = "hibernate.query.substitutions";
-
-	/**
 	 * Should named queries be checked during startup (the default is enabled).
 	 * <p/>
 	 * Mainly intended for test environments.
@@ -1025,8 +1015,6 @@ public interface AvailableSettings {
 
 	String BYTECODE_PROVIDER = "hibernate.bytecode.provider";
 
-	String JPAQL_STRICT_COMPLIANCE= "hibernate.query.jpaql_strict_compliance";
-
 	/**
 	 * When using pooled {@link org.hibernate.id.enhanced.Optimizer optimizers}, prefer interpreting the
 	 * database value as the lower (lo) boundary.  The default is to interpret it as the high boundary.
@@ -1042,38 +1030,6 @@ public interface AvailableSettings {
 	 * impl FQN.
 	 */
 	String PREFERRED_POOLED_OPTIMIZER = "hibernate.id.optimizer.pooled.preferred";
-
-	/**
-	 * The maximum number of strong references maintained by {@link org.hibernate.engine.query.spi.QueryPlanCache}. Default is 128.
-	 * @deprecated in favor of {@link #QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE}
-	 */
-	@Deprecated
-	String QUERY_PLAN_CACHE_MAX_STRONG_REFERENCES = "hibernate.query.plan_cache_max_strong_references";
-
-	/**
-	 * The maximum number of soft references maintained by {@link org.hibernate.engine.query.spi.QueryPlanCache}. Default is 2048.
-	 * @deprecated in favor of {@link #QUERY_PLAN_CACHE_MAX_SIZE}
-	 */
-	@Deprecated
-	String QUERY_PLAN_CACHE_MAX_SOFT_REFERENCES = "hibernate.query.plan_cache_max_soft_references";
-
-	/**
-	 * The maximum number of entries including:
-	 * <ul>
-	 *     <li>{@link org.hibernate.engine.query.spi.HQLQueryPlan}</li>
-	 *     <li>{@link org.hibernate.engine.query.spi.FilterQueryPlan}</li>
-	 *     <li>{@link org.hibernate.engine.query.spi.NativeSQLQueryPlan}</li>
-	 * </ul>
-	 * 
-	 * maintained by {@link org.hibernate.engine.query.spi.QueryPlanCache}. Default is 2048.
-	 */
-	String QUERY_PLAN_CACHE_MAX_SIZE = "hibernate.query.plan_cache_max_size";
-
-	/**
-	 * The maximum number of {@link ParameterMetadataImpl} maintained
-	 * by {@link org.hibernate.engine.query.spi.QueryPlanCache}. Default is 128.
-	 */
-	String QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE = "hibernate.query.plan_parameter_metadata_max_size";
 
 	/**
 	 * Should we not use contextual LOB creation (aka based on {@link java.sql.Connection#createBlob()} et al).
@@ -1510,19 +1466,6 @@ public interface AvailableSettings {
 	String AUTO_SESSION_EVENTS_LISTENER = "hibernate.session.events.auto";
 
 	/**
-	 * Global setting for whether NULL parameter bindings should be passed to database
-	 * procedure/function calls as part of {@link org.hibernate.procedure.ProcedureCall}
-	 * handling.  Implicitly Hibernate will not pass the NULL, the intention being to allow
-	 * any default argumnet values to be applied.
-	 * <p/>
-	 * This defines a global setting, which can them be controlled per parameter via
-	 * {@link org.hibernate.procedure.ParameterRegistration#enablePassingNulls(boolean)}
-	 * <p/>
-	 * Values are {@code true} (pass the NULLs) or {@code false} (do not pass the NULLs).
-	 */
-	String PROCEDURE_NULL_PARAM_PASSING = "hibernate.proc.param_null_passing";
-
-	/**
 	 * Enable instantiation of composite/embedded objects when all of its attribute values are {@code null}.
 	 * The default (and historical) behavior is that a {@code null} reference will be used to represent the
 	 * composite when all of its attributes are {@code null}
@@ -1603,7 +1546,93 @@ public interface AvailableSettings {
 	String MERGE_ENTITY_COPY_OBSERVER = "hibernate.event.merge.entity_copy_observer";
 
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Query settings
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	/**
+	 * Global setting for whether NULL parameter bindings should be passed to database
+	 * procedure/function calls as part of {@link org.hibernate.procedure.ProcedureCall}
+	 * handling.  Implicitly Hibernate will not pass the NULL, the intention being to allow
+	 * any default argument values to be applied.
+	 * <p/>
+	 * This defines a global setting, which can them be controlled per parameter via
+	 * {@link org.hibernate.procedure.ParameterRegistration#enablePassingNulls(boolean)}
+	 * <p/>
+	 * Values are {@code true} (pass the NULLs) or {@code false} (do not pass the NULLs).
+	 */
+	String PROCEDURE_NULL_PARAM_PASSING = "hibernate.proc.param_null_passing";
 
+	/**
+	 * Controls the base integer for binding JDBC-style ({@code ?}) ordinal
+	 * parameters when the Hibernate SessionFactory is bootstrapped via the native
+	 * bootstrapping API.  JPA says that all non-named parameter binding is explicitly
+	 * 1-based; so when bootstrapped via JPA, Hibernate always treats these as 1-based.
+	 * <p/>
+	 * Note that this affects only ordinal parameters.  Positional
+	 * parameters (e.g. {@code ?1}) explicitly define the binding position (1) in
+	 * their declaration, whereas the binding position is implicit with ordinal
+	 * parameters based on its ordinal position in the query.  As of 6.0, support
+	 * for this ordinal parameter declaration form has been removed from HQL and
+	 * is now only valid for {@link org.hibernate.query.NativeQuery}s.
+	 * <p/>
+	 * Historically Hibernate followed JDBC conventions for ordinal parameter binding
+	 * such that the implied positions were 0-based.  This presents a mismatch between
+	 * how to bind ordinal parameters based on how the SessionFactory was bootstrapped,
+	 * which is not ideal.  This setting then seeks to allow unifying how these are
+	 * handled regardless of the bootstrap method.  The expected value of this setting
+	 * is an integer value of either 0 (the default) or 1.  The default follows the legacy
+	 * expectations and allows legacy Hibernate apps to continue to work.  Setting this
+	 * to 1 (one) allows all non-named parameter binding to be unified as 1-based.
+	 *
+	 * @since 6.0
+	 */
+	String NATIVE_QUERY_ORDINAL_PARAMETER_BASE = "hibernate.query.native.ordinal_parameter_base";
 
+	/**
+	 * The classname of the HQL query parser factory
+	 */
+	String QUERY_TRANSLATOR = "hibernate.query.factory_class";
+
+	/**
+	 * A comma-separated list of token substitutions to use when translating a Hibernate
+	 * query to SQL
+	 */
+	String QUERY_SUBSTITUTIONS = "hibernate.query.substitutions";
+
+	String JPAQL_STRICT_COMPLIANCE = "hibernate.query.jpaql_strict_compliance";
+
+	/**
+	 * The maximum number of strong references maintained by {@link org.hibernate.engine.query.spi.QueryPlanCache}. Default is 128.
+	 *
+	 * @deprecated in favor of {@link #QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE}
+	 */
+	@Deprecated
+	String QUERY_PLAN_CACHE_MAX_STRONG_REFERENCES = "hibernate.query.plan_cache_max_strong_references";
+
+	/**
+	 * The maximum number of soft references maintained by {@link org.hibernate.engine.query.spi.QueryPlanCache}. Default is 2048.
+	 *
+	 * @deprecated in favor of {@link #QUERY_PLAN_CACHE_MAX_SIZE}
+	 */
+	@Deprecated
+	String QUERY_PLAN_CACHE_MAX_SOFT_REFERENCES = "hibernate.query.plan_cache_max_soft_references";
+
+	/**
+	 * The maximum number of entries including:
+	 * <ul>
+	 * <li>{@link org.hibernate.engine.query.spi.HQLQueryPlan}</li>
+	 * <li>{@link org.hibernate.engine.query.spi.FilterQueryPlan}</li>
+	 * <li>{@link org.hibernate.engine.query.spi.NativeSQLQueryPlan}</li>
+	 * </ul>
+	 * <p>
+	 * maintained by {@link org.hibernate.engine.query.spi.QueryPlanCache}. Default is 2048.
+	 */
+	String QUERY_PLAN_CACHE_MAX_SIZE = "hibernate.query.plan_cache_max_size";
+
+	/**
+	 * The maximum number of {@link ParameterMetadata} maintained
+	 * by {@link org.hibernate.engine.query.spi.QueryPlanCache}. Default is 128.
+	 */
+	String QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE = "hibernate.query.plan_parameter_metadata_max_size";
 }

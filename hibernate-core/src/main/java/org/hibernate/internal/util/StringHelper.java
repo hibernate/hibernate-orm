@@ -857,6 +857,14 @@ public final class StringHelper {
 		return join( Arrays.asList( values ), renderer );
 	}
 
+	public static String stripBookends(String string, int characterCount) {
+		if ( string == null ) {
+			throw new IllegalArgumentException( "String cannot be null" );
+		}
+
+		return string.substring( characterCount, string.length() - characterCount );
+	}
+
 	public interface Renderer<T> {
 		String render(T value);
 	}

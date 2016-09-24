@@ -11,10 +11,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.TimeZone;
 import java.util.UUID;
 import javax.persistence.FlushModeType;
@@ -69,17 +67,12 @@ import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.procedure.internal.ProcedureCallImpl;
-import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.Query;
-import org.hibernate.query.QueryParameter;
-import org.hibernate.query.internal.AggregatedSelectQueryPlanImpl;
-import org.hibernate.query.internal.ConcreteSqmSelectQueryPlan;
-import org.hibernate.query.internal.NamedQueryParameterStandardImpl;
-import org.hibernate.query.internal.NativeQueryImpl;
-import org.hibernate.query.internal.ParameterMetadataImpl;
-import org.hibernate.query.internal.PositionalQueryParameterStandardImpl;
-import org.hibernate.query.internal.QuerySqmImpl;
-import org.hibernate.query.internal.SqmInterpretationsKey;
+import org.hibernate.query.internal.sqm.AggregatedSelectQueryPlanImpl;
+import org.hibernate.query.internal.sql.NativeQueryImpl;
+import org.hibernate.query.internal.sqm.ConcreteSqmSelectQueryPlan;
+import org.hibernate.query.internal.sqm.QuerySqmImpl;
+import org.hibernate.query.internal.sqm.SqmInterpretationsKey;
 import org.hibernate.query.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.QueryImplementor;
@@ -97,7 +90,6 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.sql.sqm.exec.spi.QueryOptions;
 import org.hibernate.sqm.QuerySplitter;
 import org.hibernate.sqm.SemanticQueryInterpreter;
-import org.hibernate.sqm.query.Parameter;
 import org.hibernate.sqm.query.SqmSelectStatement;
 import org.hibernate.sqm.query.SqmStatement;
 
@@ -560,6 +552,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		this.cacheMode = cacheMode;
 	}
 
+	@Override
+	public boolean isDefaultReadOnly() {
+		return getPersistenceContext().isDefaultReadOnly();
+	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -568,42 +564,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public QueryImplementor createQuery(String queryString) {
 		return createQuery( queryString, null );
-	}
-
-	protected ParameterMetadata extractParameterMetadata(SqmStatement sqm) {
-		Map<String,QueryParameter> namedQueryParameters = null;
-		Map<Integer,QueryParameter> positionalQueryParameters = null;
-
-		for ( Parameter parameter : sqm.getQueryParameters() ) {
-			if ( parameter.getName() != null ) {
-				if ( namedQueryParameters == null ) {
-					namedQueryParameters = new HashMap<>();
-				}
-				namedQueryParameters.put(
-						parameter.getName(),
-						new NamedQueryParameterStandardImpl(
-								parameter.getName(),
-								parameter.allowMultiValuedBinding(),
-								parameter.getAnticipatedType()
-						)
-				);
-			}
-			else if ( parameter.getPosition() != null ) {
-				if ( positionalQueryParameters == null ) {
-					positionalQueryParameters = new HashMap<>();
-				}
-				positionalQueryParameters.put(
-						parameter.getPosition(),
-						new PositionalQueryParameterStandardImpl(
-								parameter.getPosition(),
-								parameter.allowMultiValuedBinding(),
-								parameter.getAnticipatedType()
-						)
-				);
-			}
-		}
-
-		return new ParameterMetadataImpl( namedQueryParameters, positionalQueryParameters );
 	}
 
 	protected void applyQuerySettingsAndHints(Query query) {
@@ -742,13 +702,9 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	protected NativeQueryImplementor buildNamedNativeQuery(NamedSQLQueryDefinition queryDefinition) {
-		final ParameterMetadata parameterMetadata = factory.getQueryPlanCache().getSQLParameterMetadata(
-				queryDefinition.getQueryString()
-		);
 		final NativeQueryImpl query = new NativeQueryImpl(
 				queryDefinition,
-				this,
-				parameterMetadata
+				this
 		);
 		query.setComment( queryDefinition.getComment() != null ? queryDefinition.getComment() : queryDefinition.getName() );
 
@@ -774,8 +730,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 		final NativeQueryImpl query = new NativeQueryImpl(
 				queryDefinition,
-				this,
-				factory.getQueryPlanCache().getSQLParameterMetadata( queryDefinition.getQueryString(), false )
+				this
 		);
 		query.setHibernateFlushMode( queryDefinition.getFlushMode() );
 		query.setComment( queryDefinition.getComment() != null ? queryDefinition.getComment() : queryDefinition.getName() );
@@ -845,9 +800,22 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public NativeQueryImplementor createNativeQuery(String sqlString) {
-		final NativeQueryImpl query = (NativeQueryImpl) getNativeQueryImplementor( sqlString, false );
-		query.setZeroBasedParametersIndex( false );
-		return query;
+		checkOpen();
+		checkTransactionSynchStatus();
+		delayedAfterCompletion();
+
+		try {
+			NativeQueryImpl query = new NativeQueryImpl(
+					sqlString,
+					false,
+					this
+			);
+			query.setComment( "dynamic native SQL query" );
+			return query;
+		}
+		catch ( RuntimeException he ) {
+			throw exceptionConverter.convert( he );
+		}
 	}
 
 	@Override
@@ -943,22 +911,21 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@SuppressWarnings("unchecked")
 	private <R> SelectQueryPlan<R> resolveSelectQueryPlan(SqmBackedQuery<R> query) {
 		// resolve (or make) the QueryPlan.  This QueryPlan might be an
-		// aggregation of multiple plans.  QueryPlans can be cached, unless either:
-		//		1) the query declared multi-valued parameter(s)
-		//		2) an EntityGraph hint is attached.
+		// aggregation of multiple plans.  QueryPlans can be cached, except
+		// for in certain circumstances, the determination of which occurs in
+		// SqmInterpretationsKey#generateFrom - if SqmInterpretationsKey#generateFrom
+		// returns null the query is not cacheable
 
-		final boolean isPlanCacheable = determineIfQueryPlanIsCacheable( query );
-		QueryInterpretations.Key cacheKey = null;
 		SelectQueryPlan<R> queryPlan = null;
 
-		if ( isPlanCacheable ) {
-			cacheKey = buildSqmCacheKey( query );
+		final QueryInterpretations.Key cacheKey = SqmInterpretationsKey.generateFrom( query );
+		if ( cacheKey != null ) {
 			queryPlan = getFactory().getQueryInterpretations().getSelectQueryPlan( cacheKey );
 		}
 
 		if ( queryPlan == null ) {
 			queryPlan = buildSelectQueryPlan( query );
-			if ( isPlanCacheable ) {
+			if ( cacheKey != null ) {
 				getFactory().getQueryInterpretations().cacheSelectQueryPlan( cacheKey, queryPlan );
 			}
 		}
@@ -1014,32 +981,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		);
 	}
 
-	@SuppressWarnings("RedundantIfStatement")
-	private <R> boolean determineIfQueryPlanIsCacheable(SqmBackedQuery<R> query) {
-		if ( query.getEntityGraphHint() != null ) {
-			return false;
-		}
-
-		if ( hasMultiValuedParameters( query.getParameterMetadata() ) ) {
-			return false;
-		}
-
-		return true;
-	}
-
-	private boolean hasMultiValuedParameters(ParameterMetadata parameterMetadata) {
-		for ( QueryParameter<?> queryParameter : parameterMetadata.collectAllParameters() ) {
-			if ( queryParameter.allowsMultiValuedBinding() ) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private <R> QueryInterpretations.Key buildSqmCacheKey(SqmBackedQuery<R> query) {
-		return new SqmInterpretationsKey( query.getSqmStatement(), query.getResultType() );
-	}
-
 	@Override
 	public <R> Iterator<R> performIterate(SqmBackedQuery<R> query) {
 		checkOpen();
@@ -1083,18 +1024,16 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		//		1) the query declared multi-valued parameter(s)
 		//		2) an EntityGraph hint is attached.
 
-		final boolean isPlanCacheable = determineIfQueryPlanIsCacheable( query );
-		QueryInterpretations.Key cacheKey = null;
 		NonSelectQueryPlan queryPlan = null;
 
-		if ( isPlanCacheable ) {
-			cacheKey = buildSqmCacheKey( query );
+		final QueryInterpretations.Key cacheKey = SqmInterpretationsKey.generateFrom( query );
+		if ( cacheKey != null ) {
 			queryPlan = getFactory().getQueryInterpretations().getNonSelectQueryPlan( cacheKey );
 		}
 
 		if ( queryPlan == null ) {
 			queryPlan = buildNonSelectQueryPlan( query );
-			if ( isPlanCacheable ) {
+			if ( cacheKey != null ) {
 				getFactory().getQueryInterpretations().cacheNonSelectQueryPlan( cacheKey, queryPlan );
 			}
 		}

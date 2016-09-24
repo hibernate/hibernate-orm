@@ -544,7 +544,7 @@ public class OptimizerFactory {
 			}
 		}
 
-		public Serializable generate(AccessCallback callback) {
+		public synchronized Serializable generate(AccessCallback callback) {
 			if ( lastSourceValue == null || ! value.lt( lastSourceValue.copy().add( incrementSize ) ) ) {
 				lastSourceValue = callback.getNextValue();
 				value = lastSourceValue.copy();

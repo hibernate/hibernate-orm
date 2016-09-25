@@ -29,164 +29,164 @@ import org.hibernate.type.spi.Type;
  * @author Steve Ebersole
  */
 @Incubating
-public interface NativeQueryImplementor<T> extends QueryImplementor<T>, NativeQuery<T> {
+public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQuery<R> {
 	NativeQueryImplementor setCollectionKey(Serializable key);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// covariant overrides - NativeQuery
 
 	@Override
-	NativeQueryImplementor<T> addScalar(String columnAlias);
+	NativeQueryImplementor<R> addScalar(String columnAlias);
 
 	@Override
-	NativeQueryImplementor<T> addScalar(String columnAlias, Type type);
+	NativeQueryImplementor<R> addScalar(String columnAlias, Type type);
 
 	@Override
 	RootReturn addRoot(String tableAlias, String entityName);
 
 	@Override
-	NativeQueryImplementor<T> addEntity(String entityName);
+	NativeQueryImplementor<R> addEntity(String entityName);
 
 	@Override
-	NativeQueryImplementor<T> addEntity(String tableAlias, String entityName);
+	NativeQueryImplementor<R> addEntity(String tableAlias, String entityName);
 
 	@Override
-	NativeQueryImplementor<T> addEntity(String tableAlias, String entityName, LockMode lockMode);
+	NativeQueryImplementor<R> addEntity(String tableAlias, String entityName, LockMode lockMode);
 
 	@Override
-	NativeQueryImplementor<T> addEntity(Class entityType);
+	NativeQueryImplementor<R> addEntity(Class entityType);
 
 	@Override
-	NativeQueryImplementor<T> addEntity(String tableAlias, Class entityType);
+	NativeQueryImplementor<R> addEntity(String tableAlias, Class entityType);
 
 	@Override
-	NativeQueryImplementor<T> addEntity(String tableAlias, Class entityClass, LockMode lockMode);
+	NativeQueryImplementor<R> addEntity(String tableAlias, Class entityClass, LockMode lockMode);
 
 	@Override
-	NativeQueryImplementor<T> addJoin(String tableAlias, String path);
+	NativeQueryImplementor<R> addJoin(String tableAlias, String path);
 
 	@Override
-	NativeQueryImplementor<T> addJoin(String tableAlias, String ownerTableAlias, String joinPropertyName);
+	NativeQueryImplementor<R> addJoin(String tableAlias, String ownerTableAlias, String joinPropertyName);
 
 	@Override
-	NativeQueryImplementor<T> addJoin(String tableAlias, String path, LockMode lockMode);
+	NativeQueryImplementor<R> addJoin(String tableAlias, String path, LockMode lockMode);
 
 	@Override
-	NativeQueryImplementor<T> addSynchronizedQuerySpace(String querySpace);
+	NativeQueryImplementor<R> addSynchronizedQuerySpace(String querySpace);
 
 	@Override
-	NativeQueryImplementor<T> addSynchronizedEntityName(String entityName) throws MappingException;
+	NativeQueryImplementor<R> addSynchronizedEntityName(String entityName) throws MappingException;
 
 	@Override
-	NativeQueryImplementor<T> addSynchronizedEntityClass(Class entityClass) throws MappingException;
+	NativeQueryImplementor<R> addSynchronizedEntityClass(Class entityClass) throws MappingException;
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// covariant overrides - Query / QueryImplementor
 
 	@Override
-	NativeQueryImplementor<T> setHibernateFlushMode(FlushMode flushMode);
+	NativeQueryImplementor<R> setHibernateFlushMode(FlushMode flushMode);
 
 	@Override
-	NativeQueryImplementor<T> setFlushMode(FlushModeType flushMode);
+	NativeQueryImplementor<R> setFlushMode(FlushModeType flushMode);
 
 	@Override
-	NativeQueryImplementor<T> setCacheMode(CacheMode cacheMode);
+	NativeQueryImplementor<R> setCacheMode(CacheMode cacheMode);
 
 	@Override
-	NativeQueryImplementor<T> setCacheable(boolean cacheable);
+	NativeQueryImplementor<R> setCacheable(boolean cacheable);
 
 	@Override
-	NativeQueryImplementor<T> setCacheRegion(String cacheRegion);
+	NativeQueryImplementor<R> setCacheRegion(String cacheRegion);
 
 	@Override
-	NativeQueryImplementor<T> setTimeout(int timeout);
+	NativeQueryImplementor<R> setTimeout(int timeout);
 
 	@Override
-	NativeQueryImplementor<T> setFetchSize(int fetchSize);
+	NativeQueryImplementor<R> setFetchSize(int fetchSize);
 
 	@Override
-	NativeQueryImplementor<T> setReadOnly(boolean readOnly);
+	NativeQueryImplementor<R> setReadOnly(boolean readOnly);
 
 	@Override
-	NativeQueryImplementor<T> setLockOptions(LockOptions lockOptions);
+	NativeQueryImplementor<R> setLockOptions(LockOptions lockOptions);
 
 	@Override
-	NativeQueryImplementor<T> setLockMode(String alias, LockMode lockMode);
+	NativeQueryImplementor<R> setLockMode(String alias, LockMode lockMode);
 
 	@Override
-	NativeQueryImplementor<T> setComment(String comment);
+	NativeQueryImplementor<R> setComment(String comment);
 
 	@Override
-	NativeQueryImplementor<T> addQueryHint(String hint);
+	NativeQueryImplementor<R> addQueryHint(String hint);
 
 	@Override
-	<P> NativeQueryImplementor<T> setParameter(QueryParameter<P> parameter, P val);
+	<P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P val);
 
 	@Override
-	<P> NativeQueryImplementor<T> setParameter(Parameter<P> param, P value);
+	<P> NativeQueryImplementor<R> setParameter(Parameter<P> param, P value);
 
 	@Override
-	NativeQueryImplementor<T> setParameter(String name, Object val);
+	NativeQueryImplementor<R> setParameter(String name, Object val);
 
 	@Override
-	<P> NativeQueryImplementor<T> setParameter(QueryParameter<P> parameter, P val, Type type);
+	<P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P val, Type type);
 
 	@Override
-	NativeQueryImplementor<T> setParameter(int position, Object val);
+	NativeQueryImplementor<R> setParameter(int position, Object val);
 
 	@Override
-	NativeQueryImplementor<T> setParameter(String name, Object val, Type type);
+	NativeQueryImplementor<R> setParameter(String name, Object val, Type type);
 
 	@Override
-	NativeQueryImplementor<T> setParameter(int position, Object val, Type type);
+	NativeQueryImplementor<R> setParameter(int position, Object val, Type type);
 
 	@Override
-	<P> NativeQueryImplementor<T> setParameter(QueryParameter<P> parameter, P val, TemporalType temporalType);
+	<P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P val, TemporalType temporalType);
 
 	@Override
-	NativeQueryImplementor<T> setParameter(String name, Object val, TemporalType temporalType);
+	NativeQueryImplementor<R> setParameter(String name, Object val, TemporalType temporalType);
 
 	@Override
-	NativeQueryImplementor<T> setParameter(int position, Object val, TemporalType temporalType);
+	NativeQueryImplementor<R> setParameter(int position, Object val, TemporalType temporalType);
 
 	@Override
-	<P> NativeQueryImplementor<T> setParameterList(QueryParameter<P> parameter, Collection<P> values);
+	<P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<P> values);
 
 	@Override
-	NativeQueryImplementor<T> setParameterList(String name, Collection values);
+	NativeQueryImplementor<R> setParameterList(String name, Collection values);
 
 	@Override
-	NativeQueryImplementor<T> setParameterList(String name, Collection values, Type type);
+	NativeQueryImplementor<R> setParameterList(String name, Collection values, Type type);
 
 	@Override
-	NativeQueryImplementor<T> setParameterList(String name, Object[] values, Type type);
+	NativeQueryImplementor<R> setParameterList(String name, Object[] values, Type type);
 
 	@Override
-	NativeQueryImplementor<T> setParameterList(String name, Object[] values);
+	NativeQueryImplementor<R> setParameterList(String name, Object[] values);
 
 	@Override
-	NativeQueryImplementor<T> setProperties(Object bean);
+	NativeQueryImplementor<R> setProperties(Object bean);
 
 	@Override
-	NativeQueryImplementor<T> setProperties(Map bean);
+	NativeQueryImplementor<R> setProperties(Map bean);
 
 	@Override
-	NativeQueryImplementor<T> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
+	NativeQueryImplementor<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
 	@Override
-	NativeQueryImplementor<T> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
+	NativeQueryImplementor<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
 
 	@Override
-	NativeQueryImplementor<T> setParameter(String name, Date value, TemporalType temporalType);
+	NativeQueryImplementor<R> setParameter(String name, Date value, TemporalType temporalType);
 
 	@Override
-	NativeQueryImplementor<T> setParameter(String name, Calendar value, TemporalType temporalType);
+	NativeQueryImplementor<R> setParameter(String name, Calendar value, TemporalType temporalType);
 
 	@Override
-	NativeQueryImplementor<T> setParameter(int position, Calendar value, TemporalType temporalType);
+	NativeQueryImplementor<R> setParameter(int position, Calendar value, TemporalType temporalType);
 
 	@Override
-	NativeQueryImplementor<T> setParameter(int position, Date value, TemporalType temporalType);
+	NativeQueryImplementor<R> setParameter(int position, Date value, TemporalType temporalType);
 
 }

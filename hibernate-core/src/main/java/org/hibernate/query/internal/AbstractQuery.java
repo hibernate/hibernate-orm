@@ -64,6 +64,7 @@ import org.hibernate.query.internal.old.AbstractProducedQuery;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
+import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.type.mapper.spi.Type;
 
@@ -109,6 +110,8 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	protected abstract void verifySettingLockMode();
 
 	protected abstract void verifySettingAliasSpecificLockModes();
+
+	protected abstract QueryParameterBindings queryParameterBindings();
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -663,6 +666,70 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// QueryParameter handling
 
+	@Override
+	public Parameter<?> getParameter(String name) {
+		try {
+			return getParameterMetadata().getQueryParameter( name );
+		}
+		catch ( HibernateException e ) {
+			throw getProducer().getExceptionConverter().convert( e );
+		}
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> Parameter<T> getParameter(String name, Class<T> type) {
+		try {
+			final QueryParameter parameter = getParameterMetadata().getQueryParameter( name );
+			if ( !parameter.getParameterType().isAssignableFrom( type ) ) {
+				throw new IllegalArgumentException(
+						"The type [" + parameter.getParameterType().getName() +
+								"] associated with the parameter corresponding to name [" + name +
+								"] is not assignable to requested Java type [" + type.getName() + "]"
+				);
+			}
+			return parameter;
+		}
+		catch ( HibernateException e ) {
+			throw getProducer().getExceptionConverter().convert( e );
+		}
+	}
+
+	@Override
+	public Parameter<?> getParameter(int position) {
+		try {
+			return getParameterMetadata().getQueryParameter( position );
+		}
+		catch ( HibernateException e ) {
+			throw getProducer().getExceptionConverter().convert( e );
+		}
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> Parameter<T> getParameter(int position, Class<T> type) {
+		try {
+			final QueryParameter parameter = getParameterMetadata().getQueryParameter( position );
+			if ( !parameter.getParameterType().isAssignableFrom( type ) ) {
+				throw new IllegalArgumentException(
+						"The type [" + parameter.getParameterType().getName() +
+								"] associated with the parameter corresponding to position [" + position +
+								"] is not assignable to requested Java type [" + type.getName() + "]"
+				);
+			}
+			return parameter;
+		}
+		catch ( HibernateException e ) {
+			throw getProducer().getExceptionConverter().convert( e );
+		}
+	}
+
+	@Override
+	public boolean isBound(Parameter<?> param) {
+		final QueryParameter qp = getParameterMetadata().resolve( param );
+		return qp != null && queryParameterBindings().isBound( qp );
+	}
+
 	// todo : rename these #locateParameterBinding
 
 	@SuppressWarnings("unchecked")
@@ -682,11 +749,17 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		);
 	}
 
-	protected abstract <P> QueryParameterBinding<P> locateBinding(QueryParameter<P> parameter);
+	protected <P> QueryParameterBinding<P> locateBinding(QueryParameter<P> parameter) {
+		return queryParameterBindings().getBinding( parameter );
+	}
 
-	protected abstract <P> QueryParameterBinding<P> locateBinding(String name);
+	protected <P> QueryParameterBinding<P> locateBinding(String name) {
+		return queryParameterBindings().getBinding( name );
+	}
 
-	protected abstract <P> QueryParameterBinding<P> locateBinding(int position);
+	protected <P> QueryParameterBinding<P> locateBinding(int position) {
+		return queryParameterBindings().getBinding( position );
+	}
 
 	@Override
 	public QueryImplementor<R> setParameter(Parameter<Instant> param, Instant value, TemporalType temporalType) {
@@ -948,6 +1021,66 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		return this;
 	}
 
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> T getParameterValue(Parameter<T> param) {
+		final QueryParameter qp = getParameterMetadata().resolve( param );
+		if ( qp == null ) {
+			throw new IllegalArgumentException( "The parameter [" + param + "] is not part of this Query" );
+		}
+
+		final QueryParameterBinding binding = queryParameterBindings().getBinding( qp );
+		if ( binding == null || !binding.isBound() ) {
+			throw new IllegalStateException( "The parameter [" + param + "] has not yet been bound" );
+		}
+
+		if ( binding.isMultiValued() ) {
+			return (T) binding.getBindValues();
+		}
+		else {
+			return (T) binding.getBindValue();
+		}
+	}
+
+	@Override
+	public Object getParameterValue(String name) {
+		final QueryParameter qp = getParameterMetadata().getQueryParameter( name );
+		if ( qp == null ) {
+			throw new IllegalArgumentException( "The parameter [" + name + "] is not part of this Query" );
+		}
+
+		final QueryParameterBinding binding = queryParameterBindings().getBinding( qp );
+		if ( binding == null || !binding.isBound() ) {
+			throw new IllegalStateException( "The parameter [" + name + "] has not yet been bound" );
+		}
+
+		if ( binding.isMultiValued() ) {
+			return binding.getBindValues();
+		}
+		else {
+			return binding.getBindValue();
+		}
+	}
+
+	@Override
+	public Object getParameterValue(int position) {
+		final QueryParameter qp = getParameterMetadata().getQueryParameter( position );
+		if ( qp == null ) {
+			throw new IllegalArgumentException( "The parameter [" + position + "] is not part of this Query" );
+		}
+
+		final QueryParameterBinding binding = queryParameterBindings().getBinding( qp );
+		if ( binding == null || !binding.isBound() ) {
+			throw new IllegalStateException( "The parameter [" + position + "] has not yet been bound" );
+		}
+
+		if ( binding.isMultiValued() ) {
+			return binding.getBindValues();
+		}
+		else {
+			return binding.getBindValue();
+		}
+	}
 
 
 
@@ -958,7 +1091,9 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	private CacheMode sessionCacheMode;
 
 	protected void beforeQuery() {
-		verifyParameterBindings();
+		queryParameterBindings().validate();
+
+		prepareForExecution();
 
 		assert sessionFlushMode == null;
 		assert sessionCacheMode == null;
@@ -974,6 +1109,9 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			sessionCacheMode = getProducer().getCacheMode();
 			getProducer().setCacheMode( effectiveCacheMode );
 		}
+	}
+
+	protected void prepareForExecution() {
 	}
 
 	@Override
@@ -1043,8 +1181,6 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		}
 		return this;
 	}
-
-	protected abstract void verifyParameterBindings();
 
 	protected void afterQuery() {
 		if ( sessionFlushMode != null ) {

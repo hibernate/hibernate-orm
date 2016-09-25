@@ -141,6 +141,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		verifyQueryIsSelect();
 
 		final Callback callback = new Callback() {};
+
 		// todo : SelectStatementInterpreter needs to account for the EntityGraph hint
 		final SelectQuery sqlTree = SelectStatementInterpreter.interpret( sqm, queryOptions, callback );
 		return (List<R>) new SqlTreeExecutorImpl().executeSelect(
@@ -184,6 +185,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		verifyQueryIsSelect();
 
 		final Callback callback = new Callback() {};
+
 		// todo : SelectStatementInterpreter needs to account for the EntityGraph hint
 		final SelectQuery sqlTree = SelectStatementInterpreter.interpret( sqm, queryOptions, callback );
 

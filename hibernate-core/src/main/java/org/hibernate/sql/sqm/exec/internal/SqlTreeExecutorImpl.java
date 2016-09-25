@@ -46,8 +46,11 @@ public class SqlTreeExecutorImpl implements SqlTreeExecutor {
 		//		* SQL string
 		//		* ParameterBinders
 		//		* Returns
+
 		// todo : should also pass in QueryOptions
-		// 		as the rendered SQL would depend on first/max results, comment, db-hints, lock-options
+		// 		as the rendered SQL would depend on first/max results, comment, db-hints, lock-options, entity-graph
+
+		// todo : also need to account for multi-valued param bindings in terms of the generated SQL...
 
 		final SqlTreeWalker sqlTreeWalker = new SqlTreeWalker( session.getFactory(), queryParameterBindings );
 		sqlTreeWalker.visitSelectQuery( sqlTree );

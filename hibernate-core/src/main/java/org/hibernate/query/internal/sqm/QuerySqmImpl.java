@@ -13,11 +13,11 @@ import java.util.Map;
 import java.util.Set;
 import javax.persistence.Parameter;
 import javax.persistence.PersistenceException;
-import javax.persistence.TransactionRequiredException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.ScrollMode;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jpa.graph.internal.EntityGraphImpl;
@@ -25,16 +25,17 @@ import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.AbstractQuery;
+import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
 import org.hibernate.query.internal.QueryParameterNamedImpl;
 import org.hibernate.query.internal.QueryParameterPositionalImpl;
 import org.hibernate.query.spi.MutableQueryOptions;
+import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.QueryInterpretations;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
-import org.hibernate.query.spi.SqmBackedQuery;
 import org.hibernate.sql.sqm.exec.internal.QueryOptionsImpl;
 import org.hibernate.sql.sqm.exec.spi.QueryOptions;
 import org.hibernate.sqm.QuerySplitter;
@@ -42,14 +43,12 @@ import org.hibernate.sqm.query.SqmSelectStatement;
 import org.hibernate.sqm.query.SqmStatement;
 import org.hibernate.sqm.query.SqmStatementNonSelect;
 
-import org.hibernate.query.internal.ParameterMetadataImpl;
-
 /**
  * {@link Query} implementation based on an SQM
  *
  * @author Steve Ebersole
  */
-public class QuerySqmImpl<R> extends AbstractQuery<R> implements SqmBackedQuery<R> {
+public class QuerySqmImpl<R> extends AbstractQuery<R> {
 	private final String sourceQueryString;
 	private final SqmStatement sqmStatement;
 	private final Class resultType;
@@ -110,6 +109,52 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> implements SqmBackedQuery<
 		return new ParameterMetadataImpl( namedQueryParameters, positionalQueryParameters );
 	}
 
+	private boolean isSelect() {
+		return sqmStatement instanceof SqmSelectStatement;
+	}
+
+	@Override
+	public String getQueryString() {
+		return sourceQueryString;
+	}
+
+	public SqmStatement getSqmStatement() {
+		return sqmStatement;
+	}
+
+	@SuppressWarnings("unchecked")
+	public Class<R> getResultType() {
+		return resultType;
+	}
+
+	@Override
+	public MutableQueryOptions getQueryOptions() {
+		return queryOptions;
+	}
+
+	public EntityGraphQueryHint getEntityGraphHint() {
+		return entityGraphQueryHint;
+	}
+
+	@Override
+	public ParameterMetadata getParameterMetadata() {
+		return parameterMetadata;
+	}
+
+	public QueryParameterBindings getQueryParameterBindings() {
+		return parameterBindings;
+	}
+
+	@Override
+	public Set<Parameter<?>> getParameters() {
+		return parameterMetadata.collectAllParametersJpa();
+	}
+
+	@Override
+	protected QueryParameterBindings queryParameterBindings() {
+		return parameterBindings;
+	}
+
 	@Override
 	protected boolean canApplyAliasSpecificLockModes() {
 		return isSelect();
@@ -122,203 +167,10 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> implements SqmBackedQuery<
 		}
 	}
 
-	private boolean isSelect() {
-		return sqmStatement instanceof SqmSelectStatement;
-	}
-
 	@Override
 	protected void verifySettingAliasSpecificLockModes() {
 		// todo : add a specific Dialect check as well? - if not supported, maybe that can trigger follow-on locks?
 		verifySettingLockMode();
-	}
-
-	@Override
-	public String getQueryString() {
-		return sourceQueryString;
-	}
-
-	@Override
-	public SqmStatement getSqmStatement() {
-		return sqmStatement;
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public Class<R> getResultType() {
-		return resultType;
-	}
-
-	@Override
-	public ParameterMetadata getParameterMetadata() {
-		return parameterMetadata;
-	}
-
-	@Override
-	public QueryParameterBindings getQueryParameterBindings() {
-		return parameterBindings;
-	}
-
-	@Override
-	public Set<Parameter<?>> getParameters() {
-		return parameterMetadata.collectAllParametersJpa();
-	}
-
-	@Override
-	public Parameter<?> getParameter(String name) {
-		try {
-			return parameterMetadata.getQueryParameter( name );
-		}
-		catch ( HibernateException e ) {
-			throw getProducer().getExceptionConverter().convert( e );
-		}
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public <T> Parameter<T> getParameter(String name, Class<T> type) {
-		try {
-			final QueryParameter parameter = parameterMetadata.getQueryParameter( name );
-			if ( !parameter.getParameterType().isAssignableFrom( type ) ) {
-				throw new IllegalArgumentException(
-						"The type [" + parameter.getParameterType().getName() +
-								"] associated with the parameter corresponding to name [" + name +
-								"] is not assignable to requested Java type [" + type.getName() + "]"
-				);
-			}
-			return parameter;
-		}
-		catch ( HibernateException e ) {
-			throw getProducer().getExceptionConverter().convert( e );
-		}
-	}
-
-	@Override
-	public Parameter<?> getParameter(int position) {
-		try {
-			return parameterMetadata.getQueryParameter( position );
-		}
-		catch ( HibernateException e ) {
-			throw getProducer().getExceptionConverter().convert( e );
-		}
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public <T> Parameter<T> getParameter(int position, Class<T> type) {
-		try {
-			final QueryParameter parameter = parameterMetadata.getQueryParameter( position );
-			if ( !parameter.getParameterType().isAssignableFrom( type ) ) {
-				throw new IllegalArgumentException(
-						"The type [" + parameter.getParameterType().getName() +
-								"] associated with the parameter corresponding to position [" + position +
-								"] is not assignable to requested Java type [" + type.getName() + "]"
-				);
-			}
-			return parameter;
-		}
-		catch ( HibernateException e ) {
-			throw getProducer().getExceptionConverter().convert( e );
-		}
-	}
-
-	@Override
-	public boolean isBound(Parameter<?> param) {
-		final QueryParameter qp = parameterMetadata.resolve( param );
-		return qp != null && parameterBindings.isBound( qp );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public <T> T getParameterValue(Parameter<T> param) {
-		final QueryParameter qp = parameterMetadata.resolve( param );
-		if ( qp == null ) {
-			throw new IllegalArgumentException( "The parameter [" + param + "] is not part of this Query" );
-		}
-
-		final QueryParameterBinding binding = parameterBindings.getBinding( qp );
-		if ( binding == null || !binding.isBound() ) {
-			throw new IllegalStateException( "The parameter [" + param + "] has not yet been bound" );
-		}
-
-		if ( binding.isMultiValued() ) {
-			return (T) binding.getBindValues();
-		}
-		else {
-			return (T) binding.getBindValue();
-		}
-	}
-
-	@Override
-	public Object getParameterValue(String name) {
-		final QueryParameter qp = parameterMetadata.getQueryParameter( name );
-		if ( qp == null ) {
-			throw new IllegalArgumentException( "The parameter [" + name + "] is not part of this Query" );
-		}
-
-		final QueryParameterBinding binding = parameterBindings.getBinding( qp );
-		if ( binding == null || !binding.isBound() ) {
-			throw new IllegalStateException( "The parameter [" + name + "] has not yet been bound" );
-		}
-
-		if ( binding.isMultiValued() ) {
-			return binding.getBindValues();
-		}
-		else {
-			return binding.getBindValue();
-		}
-	}
-
-	@Override
-	public Object getParameterValue(int position) {
-		final QueryParameter qp = parameterMetadata.getQueryParameter( position );
-		if ( qp == null ) {
-			throw new IllegalArgumentException( "The parameter [" + position + "] is not part of this Query" );
-		}
-
-		final QueryParameterBinding binding = parameterBindings.getBinding( qp );
-		if ( binding == null || !binding.isBound() ) {
-			throw new IllegalStateException( "The parameter [" + position + "] has not yet been bound" );
-		}
-
-		if ( binding.isMultiValued() ) {
-			return binding.getBindValues();
-		}
-		else {
-			return binding.getBindValue();
-		}
-	}
-
-	@Override
-	public MutableQueryOptions getQueryOptions() {
-		return queryOptions;
-	}
-
-	@Override
-	public EntityGraphQueryHint getEntityGraphHint() {
-		return entityGraphQueryHint;
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	protected QueryParameterBinding locateBinding(QueryParameter parameter) {
-		return parameterBindings.getBinding( parameter );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	protected QueryParameterBinding locateBinding(String name) {
-		return parameterBindings.getBinding( name );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	protected QueryParameterBinding locateBinding(int position) {
-		return parameterBindings.getBinding( position );
-	}
-
-	@Override
-	protected void verifyParameterBindings() {
-		parameterBindings.validate();
 	}
 
 	@Override
@@ -375,56 +227,21 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> implements SqmBackedQuery<
 	@Override
 	@SuppressWarnings("unchecked")
 	protected List<R> doList() {
-		verifyTransactionInProgressIfRequired();
+		getProducer().prepareForQueryExecution( requiresTxn( getLockOptions().findGreatestLockMode() ) );
 
-		// todo:
-		//		1) build SelectQueryPlan
-		//		2) getProducer().performList( builtSelectQueryPlan )
-		//
-		// this (^^) approach can be reused across SQM and native
-		//
-		// Producer#performList ->
-		//		1) checkOpen();
-		//		2) checkTransactionSynchStatus();
-		//		3) SelectQueryPlan#performList
-
-		// ofc, as an alt we could just do away with the callout to
-		// getProducer().performList( builtSelectQueryPlan ) and instead do:
-		//		1) build SelectQueryPlan
-		//		2) getProducer().checkOpen();
-		//		3) getProducer().checkTransactionSynchStatus();
-		//		4) builtSelectQueryPlan#performList
-
-		getProducer().checkOpen();
-		getProducer().checkTransactionSynchStatus();
-
-		return getProducer().performList( this );
-
-//		return getProducer().list(
-//				sqmStatement,
-//				resultType,
-//				entityGraphQueryHint,
-//				getQueryOptions(),
-//				getQueryParameterBindings()
-//		);
-	}
-
-
-	@SuppressWarnings("unchecked")
-	protected List<R> doList2() {
-		// should coordinate #checkOpen and #checkTransactionSynchStatus
-		getProducer().prepareForQueryExecution();
-		verifyTransactionInProgressIfRequired();
-
-		return resolveSelectQueryPlan( this ).performList(
+		return resolveSelectQueryPlan().performList(
 				getProducer(),
 				getQueryOptions(),
 				getQueryParameterBindings()
 		);
 	}
 
+	private boolean requiresTxn(LockMode lockMode) {
+		return lockMode != null && lockMode.greaterThan( LockMode.READ );
+	}
+
 	@SuppressWarnings("unchecked")
-	private <R> SelectQueryPlan<R> resolveSelectQueryPlan(SqmBackedQuery<R> query) {
+	private SelectQueryPlan<R> resolveSelectQueryPlan() {
 		// resolve (or make) the QueryPlan.  This QueryPlan might be an
 		// aggregation of multiple plans.  QueryPlans can be cached, except
 		// for in certain circumstances, the determination of which occurs in
@@ -433,13 +250,13 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> implements SqmBackedQuery<
 
 		SelectQueryPlan<R> queryPlan = null;
 
-		final QueryInterpretations.Key cacheKey = SqmInterpretationsKey.generateFrom( query );
+		final QueryInterpretations.Key cacheKey = SqmInterpretationsKey.generateFrom( this );
 		if ( cacheKey != null ) {
 			queryPlan = getProducer().getFactory().getQueryInterpretations().getSelectQueryPlan( cacheKey );
 		}
 
 		if ( queryPlan == null ) {
-			queryPlan = buildSelectQueryPlan( query );
+			queryPlan = buildSelectQueryPlan();
 			if ( cacheKey != null ) {
 				getProducer().getFactory().getQueryInterpretations().cacheSelectQueryPlan( cacheKey, queryPlan );
 			}
@@ -448,42 +265,40 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> implements SqmBackedQuery<
 		return queryPlan;
 	}
 
-	private <R> SelectQueryPlan<R> buildSelectQueryPlan(SqmBackedQuery<R> query) {
-		final SqmSelectStatement[] concreteSqmStatements = QuerySplitter.split( (SqmSelectStatement) query.getSqmStatement() );
+	private SelectQueryPlan<R> buildSelectQueryPlan() {
+		final SqmSelectStatement[] concreteSqmStatements = QuerySplitter.split( (SqmSelectStatement) getSqmStatement() );
 		if ( concreteSqmStatements.length > 1 ) {
-			return buildAggregatedSelectQueryPlan( query, concreteSqmStatements );
+			return buildAggregatedSelectQueryPlan( concreteSqmStatements );
 		}
 		else {
-			return buildSimpleSelectQueryPlan(
+			return buildConcreteSelectQueryPlan(
 					concreteSqmStatements[0],
-					query.getResultType(),
-					query.getEntityGraphHint(),
-					query.getQueryOptions()
+					getResultType(),
+					getEntityGraphHint(),
+					getQueryOptions()
 			);
 		}
 	}
 
 	@SuppressWarnings("unchecked")
-	private <R> SelectQueryPlan<R> buildAggregatedSelectQueryPlan(
-			SqmBackedQuery<R> query,
-			SqmSelectStatement[] concreteSqmStatements) {
+	private SelectQueryPlan<R> buildAggregatedSelectQueryPlan(SqmSelectStatement[] concreteSqmStatements) {
 		final SelectQueryPlan[] aggregatedQueryPlans = new SelectQueryPlan[ concreteSqmStatements.length ];
 
 		// todo : we want to make sure that certain thing (ResultListTransformer, etc) only get applied at the aggregator-level
 
 		for ( int i = 0, x = concreteSqmStatements.length; i < x; i++ ) {
-			aggregatedQueryPlans[i] = buildSimpleSelectQueryPlan(
+			aggregatedQueryPlans[i] = buildConcreteSelectQueryPlan(
 					concreteSqmStatements[i],
-					query.getResultType(),
-					query.getEntityGraphHint(),
-					query.getQueryOptions()
+					getResultType(),
+					getEntityGraphHint(),
+					getQueryOptions()
 			);
 		}
 
 		return new AggregatedSelectQueryPlanImpl( aggregatedQueryPlans );
 	}
 
-	private <R> SelectQueryPlan<R> buildSimpleSelectQueryPlan(
+	private SelectQueryPlan<R> buildConcreteSelectQueryPlan(
 			SqmSelectStatement concreteSqmStatement,
 			Class<R> resultType,
 			EntityGraphQueryHint entityGraphHint,
@@ -496,55 +311,65 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> implements SqmBackedQuery<
 		);
 	}
 
-	private void verifyTransactionInProgressIfRequired() {
-		final LockMode lockMode = getLockOptions().findGreatestLockMode();
-		if ( lockMode != null && lockMode.greaterThan( LockMode.NONE ) ) {
-			if ( !getProducer().isTransactionInProgress() ) {
-				throw new TransactionRequiredException(
-						"Locking [" + lockMode.name() + "] was requested on Query, but no transaction is in progress"
-				);
-			}
-		}
-	}
-
 	@Override
 	@SuppressWarnings("unchecked")
 	protected Iterator<R> doIterate() {
-		verifyTransactionInProgressIfRequired();
+		getProducer().prepareForQueryExecution( requiresTxn( getLockOptions().findGreatestLockMode() ) );
 
-		return getProducer().performIterate( this );
-//		return getProducer().iterate(
-//				sqmStatement,
-//				resultType,
-//				entityGraphQueryHint,
-//				getQueryOptions(),
-//				getQueryParameterBindings()
-//		);
+		return resolveSelectQueryPlan().performIterate(
+				getProducer(),
+				getQueryOptions(),
+				getQueryParameterBindings()
+		);
 	}
 
 	@Override
 	protected ScrollableResultsImplementor doScroll(ScrollMode scrollMode) {
-		verifyTransactionInProgressIfRequired();
+		getProducer().prepareForQueryExecution( requiresTxn( getLockOptions().findGreatestLockMode() ) );
 
-		return getProducer().performScroll( this, scrollMode );
-//		return getProducer().scroll(
-//				sqmStatement,
-//				resultType,
-//				entityGraphQueryHint,
-//				getQueryOptions(),
-//				getQueryParameterBindings()
-//		);
+		return resolveSelectQueryPlan().performScroll(
+				getProducer(),
+				getQueryOptions(),
+				getQueryParameterBindings(),
+				scrollMode
+		);
 	}
 
 	@Override
 	protected int doExecuteUpdate() {
-		return getProducer().executeUpdate( this );
-//		return getProducer().executeUpdate(
-//				sqmStatement,
-//				resultType,
-//				entityGraphQueryHint,
-//				getQueryOptions(),
-//				getQueryParameterBindings()
-//		);
+		getProducer().prepareForQueryExecution( true );
+
+		return resolveNonSelectQueryPlan().executeUpdate(
+				getProducer(),
+				getQueryOptions(),
+				getQueryParameterBindings()
+		);
+	}
+
+	private NonSelectQueryPlan resolveNonSelectQueryPlan() {
+		// resolve (or make) the QueryPlan.  This QueryPlan might be an
+		// aggregation of multiple plans.  QueryPlans can be cached, unless either:
+		//		1) the query declared multi-valued parameter(s)
+		//		2) an EntityGraph hint is attached.
+
+		NonSelectQueryPlan queryPlan = null;
+
+		final QueryInterpretations.Key cacheKey = SqmInterpretationsKey.generateFrom( this );
+		if ( cacheKey != null ) {
+			queryPlan = getProducer().getFactory().getQueryInterpretations().getNonSelectQueryPlan( cacheKey );
+		}
+
+		if ( queryPlan == null ) {
+			queryPlan = buildNonSelectQueryPlan();
+			if ( cacheKey != null ) {
+				getProducer().getFactory().getQueryInterpretations().cacheNonSelectQueryPlan( cacheKey, queryPlan );
+			}
+		}
+
+		return queryPlan;
+	}
+
+	private NonSelectQueryPlan buildNonSelectQueryPlan() {
+		throw new NotYetImplementedException( "Query#executeUpdate not yet implemented" );
 	}
 }

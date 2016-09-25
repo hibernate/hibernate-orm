@@ -13,7 +13,6 @@ import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.QueryInterpretations;
-import org.hibernate.query.spi.SqmBackedQuery;
 import org.hibernate.sql.sqm.exec.spi.Limit;
 import org.hibernate.sql.sqm.exec.spi.QueryOptions;
 import org.hibernate.sqm.query.SqmStatement;
@@ -21,8 +20,8 @@ import org.hibernate.sqm.query.SqmStatement;
 /**
  * @author Steve Ebersole
  */
-public class SqmInterpretationsKey implements QueryInterpretations.Key {
-	public static SqmInterpretationsKey generateFrom(SqmBackedQuery query) {
+class SqmInterpretationsKey implements QueryInterpretations.Key {
+	static SqmInterpretationsKey generateFrom(QuerySqmImpl query) {
 		if ( !isCacheable( query ) ) {
 			return null;
 		}
@@ -35,7 +34,7 @@ public class SqmInterpretationsKey implements QueryInterpretations.Key {
 	}
 
 	@SuppressWarnings("RedundantIfStatement")
-	private static boolean isCacheable(SqmBackedQuery query) {
+	private static boolean isCacheable(QuerySqmImpl query) {
 		if ( query.getEntityGraphHint() != null ) {
 			return false;
 		}

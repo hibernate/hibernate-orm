@@ -11,11 +11,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.sql.SQLException;
-import java.util.Iterator;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.UUID;
 import javax.persistence.FlushModeType;
+import javax.persistence.TransactionRequiredException;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
@@ -27,7 +27,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.LockMode;
 import org.hibernate.MultiTenancyStrategy;
-import org.hibernate.ScrollMode;
 import org.hibernate.SessionException;
 import org.hibernate.Transaction;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -44,7 +43,6 @@ import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.NativeSQLQueryPlan;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryConstructorReturn;
@@ -68,18 +66,11 @@ import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.procedure.internal.ProcedureCallImpl;
 import org.hibernate.query.Query;
-import org.hibernate.query.internal.sqm.AggregatedSelectQueryPlanImpl;
 import org.hibernate.query.internal.sql.NativeQueryImpl;
-import org.hibernate.query.internal.sqm.ConcreteSqmSelectQueryPlan;
 import org.hibernate.query.internal.sqm.QuerySqmImpl;
-import org.hibernate.query.internal.sqm.SqmInterpretationsKey;
 import org.hibernate.query.spi.NativeQueryImplementor;
-import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.query.spi.QueryInterpretations;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
-import org.hibernate.query.spi.SelectQueryPlan;
-import org.hibernate.query.spi.SqmBackedQuery;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
@@ -87,10 +78,7 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.sql.sqm.exec.spi.QueryOptions;
-import org.hibernate.sqm.QuerySplitter;
 import org.hibernate.sqm.SemanticQueryInterpreter;
-import org.hibernate.sqm.query.SqmSelectStatement;
 import org.hibernate.sqm.query.SqmStatement;
 
 /**
@@ -360,6 +348,18 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Deprecated
 	protected void errorIfClosed() {
 		checkOpen();
+	}
+
+	@Override
+	public void prepareForQueryExecution(boolean requiresTxn) {
+		checkOpen();
+		checkTransactionSynchStatus();
+
+		if ( requiresTxn && !isTransactionInProgress() ) {
+			throw new TransactionRequiredException(
+					"Query requires transaction be in progress, but no transaction is known to be in progress"
+			);
+		}
 	}
 
 	@Override
@@ -895,155 +895,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	protected abstract Object load(String entityName, Serializable identifier);
-
-	@Override
-	public <R> List<R> performList(SqmBackedQuery<R> query) {
-		checkOpen();
-		checkTransactionSynchStatus();
-
-		return resolveSelectQueryPlan( query ).performList(
-				this,
-				query.getQueryOptions(),
-				query.getQueryParameterBindings()
-		);
-	}
-
-	@SuppressWarnings("unchecked")
-	private <R> SelectQueryPlan<R> resolveSelectQueryPlan(SqmBackedQuery<R> query) {
-		// resolve (or make) the QueryPlan.  This QueryPlan might be an
-		// aggregation of multiple plans.  QueryPlans can be cached, except
-		// for in certain circumstances, the determination of which occurs in
-		// SqmInterpretationsKey#generateFrom - if SqmInterpretationsKey#generateFrom
-		// returns null the query is not cacheable
-
-		SelectQueryPlan<R> queryPlan = null;
-
-		final QueryInterpretations.Key cacheKey = SqmInterpretationsKey.generateFrom( query );
-		if ( cacheKey != null ) {
-			queryPlan = getFactory().getQueryInterpretations().getSelectQueryPlan( cacheKey );
-		}
-
-		if ( queryPlan == null ) {
-			queryPlan = buildSelectQueryPlan( query );
-			if ( cacheKey != null ) {
-				getFactory().getQueryInterpretations().cacheSelectQueryPlan( cacheKey, queryPlan );
-			}
-		}
-
-		return queryPlan;
-	}
-
-	private <R> SelectQueryPlan<R> buildSelectQueryPlan(SqmBackedQuery<R> query) {
-		final SqmSelectStatement[] concreteSqmStatements = QuerySplitter.split( (SqmSelectStatement) query.getSqmStatement() );
-		if ( concreteSqmStatements.length > 1 ) {
-			return buildAggregatedSelectQueryPlan( query, concreteSqmStatements );
-		}
-		else {
-			return buildSimpleSelectQueryPlan(
-					concreteSqmStatements[0],
-					query.getResultType(),
-					query.getEntityGraphHint(),
-					query.getQueryOptions()
-			);
-		}
-	}
-
-	@SuppressWarnings("unchecked")
-	private <R> SelectQueryPlan<R> buildAggregatedSelectQueryPlan(
-			SqmBackedQuery<R> query,
-			SqmSelectStatement[] concreteSqmStatements) {
-		final SelectQueryPlan[] aggregatedQueryPlans = new SelectQueryPlan[ concreteSqmStatements.length ];
-
-		// todo : we want to make sure that certain thing (ResultListTransformer, etc) only get applied at the aggregator-level
-
-		for ( int i = 0, x = concreteSqmStatements.length; i < x; i++ ) {
-			aggregatedQueryPlans[i] = buildSimpleSelectQueryPlan(
-					concreteSqmStatements[i],
-					query.getResultType(),
-					query.getEntityGraphHint(),
-					query.getQueryOptions()
-			);
-		}
-
-		return new AggregatedSelectQueryPlanImpl( aggregatedQueryPlans );
-	}
-
-	private <R> SelectQueryPlan<R> buildSimpleSelectQueryPlan(
-			SqmSelectStatement concreteSqmStatement,
-			Class<R> resultType,
-			EntityGraphQueryHint entityGraphHint,
-			QueryOptions queryOptions) {
-		return new ConcreteSqmSelectQueryPlan<>(
-				concreteSqmStatement,
-				entityGraphHint,
-				resultType,
-				queryOptions
-		);
-	}
-
-	@Override
-	public <R> Iterator<R> performIterate(SqmBackedQuery<R> query) {
-		checkOpen();
-		checkTransactionSynchStatus();
-
-		return resolveSelectQueryPlan( query ).performIterate(
-				this,
-				query.getQueryOptions(),
-				query.getQueryParameterBindings()
-		);
-	}
-
-	@Override
-	public ScrollableResultsImplementor performScroll(SqmBackedQuery query, ScrollMode scrollMode) {
-		checkOpen();
-		checkTransactionSynchStatus();
-
-		return resolveSelectQueryPlan( query ).performScroll(
-				this,
-				query.getQueryOptions(),
-				query.getQueryParameterBindings(),
-				scrollMode
-		);
-	}
-
-	@Override
-	public int executeUpdate(SqmBackedQuery query) {
-		checkOpen();
-		checkTransactionSynchStatus();
-
-		return resolveNonSelectQueryPlan( query ).executeUpdate(
-				this,
-				query.getQueryOptions(),
-				query.getQueryParameterBindings()
-		);
-	}
-
-	private NonSelectQueryPlan resolveNonSelectQueryPlan(SqmBackedQuery query) {
-		// resolve (or make) the QueryPlan.  This QueryPlan might be an
-		// aggregation of multiple plans.  QueryPlans can be cached, unless either:
-		//		1) the query declared multi-valued parameter(s)
-		//		2) an EntityGraph hint is attached.
-
-		NonSelectQueryPlan queryPlan = null;
-
-		final QueryInterpretations.Key cacheKey = SqmInterpretationsKey.generateFrom( query );
-		if ( cacheKey != null ) {
-			queryPlan = getFactory().getQueryInterpretations().getNonSelectQueryPlan( cacheKey );
-		}
-
-		if ( queryPlan == null ) {
-			queryPlan = buildNonSelectQueryPlan( query );
-			if ( cacheKey != null ) {
-				getFactory().getQueryInterpretations().cacheNonSelectQueryPlan( cacheKey, queryPlan );
-			}
-		}
-
-		return queryPlan;
-	}
-
-	private NonSelectQueryPlan buildNonSelectQueryPlan(SqmBackedQuery query) {
-		return null;
-	}
 
 	@Override
 	public List list(NativeSQLQuerySpecification spec, QueryParameters queryParameters) {

@@ -6,19 +6,16 @@
  */
 package org.hibernate.query.spi;
 
-import java.util.Iterator;
-import java.util.List;
-
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
-import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.ExceptionConverter;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.QueryProducer;
 
 /**
  * The internal contract for QueryProducer implementations.  Acts as the value passed to
- * produced queries and provides them with access to needed functionality.
+ * produced queries and provides them with access to functionality needed for performing
+ * the query.
  *
  * @author Steve Ebersole
  */
@@ -39,45 +36,7 @@ public interface QueryProducerImplementor extends QueryProducer {
 
 	void checkOpen(boolean rollbackIfNot);
 
-	/**
-	 * This is the list function for a SQM-backed query (HQL, JPQL, Criteria)
-	 *
-	 * @param query The SqmBackedQuery giving access to needed execution information
-	 *
-	 * @param <R> The query result type
-	 *
-	 * @return The query result list
-	 */
-	<R> List<R> performList(SqmBackedQuery<R> query);
-
-	/**
-	 * This is the iterate function for a SQM-backed query (HQL, JPQL, Criteria)
-	 *
-	 * @param query The SqmBackedQuery giving access to needed execution information
-	 *
-	 * @param <R> The type of the individual query results
-	 *
-	 * @return The query result Iterator
-	 */
-	<R> Iterator<R> performIterate(SqmBackedQuery<R> query);
-
-	/**
-	 * This is the scroll function for a SQM-backed query (HQL, JPQL, Criteria)
-	 *
-	 * @param query The SqmBackedQuery giving access to needed execution information
-	 *
-	 * @return The ScrollableResults over the query results
-	 */
-	ScrollableResultsImplementor performScroll(SqmBackedQuery query, ScrollMode scrollMode);
-
-	/**
-	 * This is the DML execution function for a SQM-backed query (HQL, JPQL, Criteria)
-	 *
-	 * @param query The SqmBackedQuery giving access to needed execution information
-	 *
-	 * @return The ScrollableResults over the query results
-	 */
-	int executeUpdate(SqmBackedQuery query);
+	void prepareForQueryExecution(boolean requiresTxn);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -109,5 +68,4 @@ public interface QueryProducerImplementor extends QueryProducer {
 
 	@Override
 	NativeQueryImplementor getNamedNativeQuery(String name);
-
 }

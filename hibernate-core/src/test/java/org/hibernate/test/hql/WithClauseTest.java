@@ -7,6 +7,7 @@
 package org.hibernate.test.hql;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.hibernate.HibernateException;
@@ -198,6 +199,27 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 		data.cleanup();
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-9329")
+	public void testWithClauseAsSubqueryWithKey() {
+		TestData data = new TestData();
+		data.prepare();
+
+		Session s = openSession();
+		Transaction txn = s.beginTransaction();
+
+		// Since family has a join table, we will first left join all family members and then do the WITH clause on the target entity table join
+		// Normally this produces 2 results which is wrong and can only be circumvented by converting the join table and target entity table join to a subquery
+		List list = s.createQuery( "from Human h left join h.family as f with key(f) like 'son1' where h.description = 'father'" )
+				.list();
+		assertEquals( "subquery rewriting of join table did not take effect", 1, list.size() );
+
+		txn.commit();
+		s.close();
+
+		data.cleanup();
+	}
+
 	private class TestData {
 		public void prepare() {
 			Session session = openSession();
@@ -248,6 +270,10 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 			session.save( friend );
 			session.save( friend2 );
 
+			father.setFamily( new HashMap() );
+			father.getFamily().put( "son1", child1 );
+			father.getFamily().put( "son2", child2 );
+
 			txn.commit();
 			session.close();
 		}
@@ -257,7 +283,9 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 			Transaction txn = session.beginTransaction();
 			Human father = (Human) session.createQuery( "from Human where description = 'father'" ).uniqueResult();
 			father.getFriends().clear();
+			father.getFamily().clear();
 			session.flush();
+			session.delete( session.createQuery( "from Human where description = 'friend2'" ).uniqueResult() );
 			session.delete( session.createQuery( "from Human where description = 'friend'" ).uniqueResult() );
 			session.delete( session.createQuery( "from Human where description = 'child1'" ).uniqueResult() );
 			session.delete( session.createQuery( "from Human where description = 'child2'" ).uniqueResult() );

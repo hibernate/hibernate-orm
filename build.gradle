@@ -7,12 +7,6 @@ import org.apache.tools.ant.filters.ReplaceTokens
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-apply plugin: 'eclipse'
-apply plugin: 'idea'
-apply from: "./libraries.gradle"
-apply from: "./databases.gradle"
-
-
 buildscript {
 	repositories {
 		mavenCentral()
@@ -36,6 +30,15 @@ buildscript {
 		classpath 'com.github.lburgazzoli:lb-karaf-features-gen:1.0.0-SNAPSHOT'
 	}
 }
+
+plugins {
+	id 'com.gradle.build-scan' version '1.1.1'
+}
+
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply from: "./libraries.gradle"
+apply from: "./databases.gradle"
 
 allprojects {
     repositories {
@@ -422,6 +425,13 @@ task release(type: Task, dependsOn: 'release:release')
 task wrapper(type: Wrapper) {
     gradleVersion = expectedGradleVersion
 }
+
+buildScan {
+	licenseAgreementUrl = 'https://gradle.com/terms-of-service'
+	licenseAgree = 'yes'
+}
+
+
 
 def excludeAllLowLevelBugsExcept(String[] bugTypes){
 	def writer = new StringWriter()

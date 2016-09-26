@@ -19,7 +19,6 @@ buildscript {
     }
     dependencies {
         classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.2'
-		classpath "org.hibernate:hibernate-gradle-plugin:$hibernateTargetVersion"
     }
 }
 

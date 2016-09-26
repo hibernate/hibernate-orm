@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping SYSTEM "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+
+    <class name="org.hibernate.test.join.Order" table="`ORDER`" lazy="false">
+        <id name="orderId" column="LID" type="java.lang.Long"/>
+        <join table="ORDER_ENTRY" optional="true" inverse="true">
+            <subselect>select ID as entryId, ID as lorderid from ORDER_ENTRY where TYPE = 0</subselect>
+            <key column="lorderid"/>
+            <many-to-one name="firstOrder" class="org.hibernate.test.join.OrderEntry" column="entryId"
+                         update="false" insert="false"/>
+        </join>
+
+    </class>
+
+    <class name="org.hibernate.test.join.OrderEntry" table="ORDER_ENTRY" lazy="false">
+        <id name="entryId" column="ID" type="java.lang.Long">
+            <generator class="native"/>
+        </id>
+        <property name="type" column="TYPE" type="java.lang.Integer"/>
+    </class>
+
+</hibernate-mapping>

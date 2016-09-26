@@ -497,6 +497,7 @@
                 </xs:sequence>
                 <xs:attributeGroup ref="table-information-group"/>
                 <xs:attribute name="check" type="xs:string"/>
+                <xs:attribute name="discriminator-value" type="xs:string" />
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>

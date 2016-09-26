@@ -88,4 +88,11 @@ public class JoinedSubclassEntitySourceImpl extends SubclassEntitySourceImpl imp
 	public List<ColumnSource> getPrimaryKeyColumnSources() {
 		return primaryKeyJoinColumnSources;
 	}
+
+	@Override
+	public String getDiscriminatorMatchValue() {
+		return JaxbHbmJoinedSubclassEntityType.class.isInstance( jaxbEntityMapping() )
+				? ( (JaxbHbmJoinedSubclassEntityType) jaxbEntityMapping() ).getDiscriminatorValue()
+				: null;
+	}
 }

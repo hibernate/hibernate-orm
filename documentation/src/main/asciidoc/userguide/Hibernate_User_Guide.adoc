@@ -31,6 +31,7 @@ include::chapters/envers/Envers.adoc[]
 include::chapters/portability/Portability.adoc[]
 
 include::appendices/Configurations.adoc[]
+include::appendices/BestPractices.adoc[]
 include::appendices/Legacy_Bootstrap.adoc[]
 include::appendices/Legacy_DomainModel.adoc[]
 include::appendices/Legacy_Criteria.adoc[]

@@ -94,7 +94,7 @@ public class SQLExceptionConverterFactory {
 			// First, try to find a matching constructor accepting a ViolatedConstraintNameExtracter param...
 			final Constructor[] ctors = converterClass.getDeclaredConstructors();
 			for ( Constructor ctor : ctors ) {
-				if ( ctor.getParameterTypes() != null && ctor.getParameterTypes().length == 1 ) {
+				if ( ctor.getParameterTypes() != null && ctor.getParameterCount() == 1 ) {
 					if ( ViolatedConstraintNameExtracter.class.isAssignableFrom( ctor.getParameterTypes()[0] ) ) {
 						try {
 							return (SQLExceptionConverter) ctor.newInstance( violatedConstraintNameExtracter );

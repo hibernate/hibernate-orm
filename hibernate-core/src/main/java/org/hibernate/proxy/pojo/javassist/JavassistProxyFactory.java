@@ -36,7 +36,7 @@ public class JavassistProxyFactory implements ProxyFactory, Serializable {
 	private static final MethodFilter FINALIZE_FILTER = new MethodFilter() {
 		public boolean isHandled(Method m) {
 			// skip finalize methods
-			return !( m.getParameterTypes().length == 0 && m.getName().equals( "finalize" ) );
+			return !( m.getParameterCount() == 0 && m.getName().equals( "finalize" ) );
 		}
 	};
 

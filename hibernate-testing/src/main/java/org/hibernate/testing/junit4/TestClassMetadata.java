@@ -123,7 +123,7 @@ public class TestClassMetadata {
 	}
 
 	private void validateCallbackMethod(Method method, CallbackType type, List<Throwable> errors) {
-		if ( method.getParameterTypes().length > 0 ) {
+		if ( method.getParameterCount() > 0 ) {
 			errors.add(
 					new InvalidMethodForAnnotationException(
 							type.buildTypeMarker() + " callback only valid on no-arg methods : "

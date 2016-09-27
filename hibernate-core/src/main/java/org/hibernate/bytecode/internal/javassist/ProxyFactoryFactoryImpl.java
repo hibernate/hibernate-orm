@@ -89,7 +89,7 @@ public class ProxyFactoryFactoryImpl implements ProxyFactoryFactory {
 	private static final MethodFilter FINALIZE_FILTER = new MethodFilter() {
 		public boolean isHandled(Method m) {
 			// skip finalize methods
-			return !( m.getParameterTypes().length == 0 && m.getName().equals( "finalize" ) );
+			return !( m.getParameterCount() == 0 && m.getName().equals( "finalize" ) );
 		}
 	};
 
@@ -120,9 +120,9 @@ public class ProxyFactoryFactoryImpl implements ProxyFactoryFactory {
 				return System.identityHashCode( object );
 			}
 
-			final boolean hasGetterSignature = method.getParameterTypes().length == 0
+			final boolean hasGetterSignature = method.getParameterCount() == 0
 					&& method.getReturnType() != null;
-			final boolean hasSetterSignature = method.getParameterTypes().length == 1
+			final boolean hasSetterSignature = method.getParameterCount() == 1
 					&& ( method.getReturnType() == null || method.getReturnType() == void.class );
 
 			if ( name.startsWith( "get" ) && hasGetterSignature ) {

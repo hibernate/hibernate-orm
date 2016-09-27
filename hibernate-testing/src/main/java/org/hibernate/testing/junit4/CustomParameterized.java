@@ -136,7 +136,7 @@ public class CustomParameterized extends Suite {
 		for (FrameworkMethod each : methods) {
 			if (each.isPublic()) {
 				if (!each.isStatic()) {
-					if (getTestClass().getOnlyConstructor().getParameterTypes().length != 0) {
+					if (getTestClass().getOnlyConstructor().getParameterCount() != 0) {
 						throw new Exception("Method " + each.getMethod() + " is annotated with @Parameters, it is not static and there is no parameter-less constructor!");
 					}
 				}

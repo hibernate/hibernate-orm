@@ -421,7 +421,7 @@ public final class ReflectHelper {
 	private static Method getGetterOrNull(Class containerClass, String propertyName) {
 		for ( Method method : containerClass.getDeclaredMethods() ) {
 			// if the method has parameters, skip it
-			if ( method.getParameterTypes().length != 0 ) {
+			if ( method.getParameterCount() != 0 ) {
 				continue;
 			}
 
@@ -555,7 +555,7 @@ public final class ReflectHelper {
 
 		for ( Method method : theClass.getDeclaredMethods() ) {
 			final String methodName = method.getName();
-			if ( method.getParameterTypes().length == 1 && methodName.startsWith( "set" ) ) {
+			if ( method.getParameterCount() == 1 && methodName.startsWith( "set" ) ) {
 				final String testOldMethod = methodName.substring( 3 );
 				final String testStdMethod = Introspector.decapitalize( testOldMethod );
 				if ( testStdMethod.equals( propertyName ) || testOldMethod.equals( propertyName ) ) {

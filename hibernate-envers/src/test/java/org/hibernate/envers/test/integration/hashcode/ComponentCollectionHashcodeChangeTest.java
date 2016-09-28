@@ -123,7 +123,7 @@ public class ComponentCollectionHashcodeChangeTest extends BaseEnversJPAFunction
 		);
 	}
 
-	@Entity
+	@Entity(name = "ComponentEntity")
 	@Audited
 	public static class ComponentEntity {
 		@Id

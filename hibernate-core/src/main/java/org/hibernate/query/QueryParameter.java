@@ -10,6 +10,7 @@ import javax.persistence.ParameterMode;
 
 import org.hibernate.Incubating;
 import org.hibernate.type.spi.Type;
+import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 
 /**
  * Represents a parameter defined in the source (HQL/JPQL or criteria) query.
@@ -22,21 +23,44 @@ import org.hibernate.type.spi.Type;
 public interface QueryParameter<T> extends javax.persistence.Parameter<T> {
 	/**
 	 * Is this a {@code IN}, {@code OUT} or {@code INOUT} parameter.
+	 * <p/>
+	 * Only really pertinent in regards to procedure/function calls.  In all
+	 * other cases the mode would be {@link ParameterMode#IN}
 	 *
-	 * @return The mode.
+	 * @return The parameter mode.
 	 */
 	default ParameterMode getMode() {
 		return ParameterMode.IN;
 	}
 
+	/**
+	 * Does this parameter allow multi-valued (collection, array, etc) binding?
+	 * <p/>
+	 * This is only valid for HQL/JPQL and (I think) Criteria queries, and is
+	 * determined based on the context of the parameters declaration.
+	 *
+	 * @return {@code true} indicates that multi-valued binding is allowed for this
+	 * parameter
+	 */
 	boolean allowsMultiValuedBinding();
 
 	/**
-	 * Get the Hibernate Type associated with this parameter.
+	 * How will an unbound value be handled in terms of the JDBC parameter?
 	 *
-	 * @return The Hibernate Type.
+	 * @return {@code true} here indicates that NULL should be passed; {@code false} indicates
+	 * that it is ignored.
+	 *
+	 * @see ParameterRegistrationImplementor#isPassNullsEnabled()
 	 */
-	Type getType();
+	boolean isPassNullsEnabled();
+
+	/**
+	 * Get the Hibernate Type associated with this parameter, if one.  May
+	 * return {@code null}.
+	 *
+	 * @return The associated Hibernate Type, may be {@code null}.
+	 */
+	Type getHibernateType();
 
 	/**
 	 * JPA has a different definition of positional parameters than what legacy Hibernate HQL had.  In JPA,

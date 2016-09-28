@@ -588,6 +588,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		private Integer nonJpaNativeQueryOrdinalParameterBase;
 		private final boolean procedureParameterNullPassingEnabled;
 		private final boolean collectionJoinSubqueryRewriteEnabled;
+		private boolean useOfJdbcNamedParametersEnabled;
 
 		// Caching
 		private boolean secondLevelCacheEnabled;
@@ -717,6 +718,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 			applyNonJpaNativeQueryOrdinalParameterBase(
 					ConfigurationHelper.getInteger( NATIVE_QUERY_ORDINAL_PARAMETER_BASE, cfgService.getSettings() )
 			);
+			this.useOfJdbcNamedParametersEnabled = cfgService.getSetting( AvailableSettings.CALLABLE_NAMED_PARAMS_ENABLED, BOOLEAN, true );
 
 			this.secondLevelCacheEnabled = cfgService.getSetting( USE_SECOND_LEVEL_CACHE, BOOLEAN, true );
 			this.queryCacheEnabled = cfgService.getSetting( USE_QUERY_CACHE, BOOLEAN, false );
@@ -1134,6 +1136,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		}
 
 		@Override
+		public boolean isUseOfJdbcNamedParametersEnabled() {
+			return useOfJdbcNamedParametersEnabled;
+		}
+
+		@Override
 		public boolean isSecondLevelCacheEnabled() {
 			return secondLevelCacheEnabled;
 		}
@@ -1449,6 +1456,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 
 	public Integer getNonJpaNativeQueryOrdinalParameterBase() {
 		return options.getNonJpaNativeQueryOrdinalParameterBase();
+	}
+
+	@Override
+	public boolean isUseOfJdbcNamedParametersEnabled() {
+		return options.isUseOfJdbcNamedParametersEnabled();
 	}
 
 	@Override

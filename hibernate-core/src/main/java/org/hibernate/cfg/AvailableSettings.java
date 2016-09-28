@@ -7,6 +7,7 @@
 package org.hibernate.cfg;
 
 import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.resource.cdi.spi.ManagedBeanRegistry;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
@@ -1588,6 +1589,19 @@ public interface AvailableSettings {
 	 * @since 6.0
 	 */
 	String NATIVE_QUERY_ORDINAL_PARAMETER_BASE = "hibernate.query.native.ordinal_parameter_base";
+
+	/**
+	 * Global setting name for controlling whether Hibernate should try to map
+	 * named parameter names specified in a
+	 * {@link org.hibernate.procedure.ProcedureCall} or
+	 * {@link javax.persistence.StoredProcedureQuery} to named parameters in
+	 * the JDBC {@link java.sql.CallableStatement}.
+	 *
+	 * @see SessionFactoryOptions#isUseOfJdbcNamedParametersEnabled()
+	 *
+	 * @since 6.0
+	 */
+	String CALLABLE_NAMED_PARAMS_ENABLED = "hibernate.query.proc.callable_named_params_enabled";
 
 	/**
 	 * The classname of the HQL query parser factory

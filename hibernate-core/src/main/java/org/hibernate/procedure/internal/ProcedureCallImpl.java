@@ -18,29 +18,29 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.Parameter;
 import javax.persistence.ParameterMode;
+import javax.persistence.PersistenceException;
 import javax.persistence.TemporalType;
 import javax.persistence.TransactionRequiredException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.QueryException;
 import org.hibernate.engine.ResultSetMappingDefinition;
-import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.procedure.NoSuchParameterException;
+import org.hibernate.procedure.ParameterMisuseException;
 import org.hibernate.procedure.ParameterRegistration;
 import org.hibernate.procedure.ParameterStrategyException;
 import org.hibernate.procedure.ProcedureCall;
@@ -49,16 +49,23 @@ import org.hibernate.procedure.ProcedureOutputs;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
+import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.old.AbstractProducedQuery;
 import org.hibernate.query.procedure.internal.ProcedureParameterImpl;
 import org.hibernate.query.procedure.internal.ProcedureParameterMetadata;
+import org.hibernate.query.internal.AbstractQuery;
+import org.hibernate.query.spi.MutableQueryOptions;
+import org.hibernate.query.spi.QueryParameterBinding;
+import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.result.NoMoreReturnsException;
 import org.hibernate.result.Output;
+import org.hibernate.result.Outputs;
 import org.hibernate.result.ResultSetOutput;
 import org.hibernate.result.UpdateCountOutput;
 import org.hibernate.result.spi.ResultContext;
 import org.hibernate.type.spi.Type;
+import org.hibernate.sql.sqm.exec.internal.QueryOptionsImpl;
 
 import org.jboss.logging.Logger;
 
@@ -68,7 +75,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class ProcedureCallImpl<R>
-		extends AbstractProducedQuery<R>
+		extends AbstractQuery<R>
 		implements ProcedureCallImplementor<R>, ResultContext {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
@@ -78,16 +85,16 @@ public class ProcedureCallImpl<R>
 	private static final NativeSQLQueryReturn[] NO_RETURNS = new NativeSQLQueryReturn[0];
 
 	private final String procedureName;
-	private final NativeSQLQueryReturn[] queryReturns;
+	private boolean functionCall;
 
-	private final boolean globalParameterPassNullsSetting;
-
-	private ParameterStrategy parameterStrategy = ParameterStrategy.UNKNOWN;
-	private List<ParameterRegistrationImplementor<?>> registeredParameters = new ArrayList<>();
-
+	private final ParameterManager parameterManager;
 	private Set<String> synchronizedQuerySpaces;
 
 	private ProcedureOutputsImpl outputs;
+	private final NativeSQLQueryReturn[] queryReturns;
+
+	private final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
+
 
 	/**
 	 * The no-returns form.
@@ -96,9 +103,10 @@ public class ProcedureCallImpl<R>
 	 * @param procedureName The name of the procedure to call
 	 */
 	public ProcedureCallImpl(SharedSessionContractImplementor session, String procedureName) {
-		super( session, new ProcedureParameterMetadata() );
+		super( session );
 		this.procedureName = procedureName;
-		this.globalParameterPassNullsSetting = session.getFactory().getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();
+
+		this.parameterManager = new ParameterManager( this );
 
 		this.queryReturns = NO_RETURNS;
 	}
@@ -111,9 +119,10 @@ public class ProcedureCallImpl<R>
 	 * @param resultClasses The classes making up the result
 	 */
 	public ProcedureCallImpl(final SharedSessionContractImplementor session, String procedureName, Class... resultClasses) {
-		super( session, new ProcedureParameterMetadata() );
+		super( session );
 		this.procedureName = procedureName;
-		this.globalParameterPassNullsSetting = session.getFactory().getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();
+
+		this.parameterManager = new ParameterManager( this );
 
 		final List<NativeSQLQueryReturn> collectedQueryReturns = new ArrayList<>();
 		final Set<String> collectedQuerySpaces = new HashSet<>();
@@ -150,9 +159,10 @@ public class ProcedureCallImpl<R>
 	 * @param resultSetMappings The names of the result set mappings making up the result
 	 */
 	public ProcedureCallImpl(final SharedSessionContractImplementor session, String procedureName, String... resultSetMappings) {
-		super( session, new ProcedureParameterMetadata() );
+		super( session );
 		this.procedureName = procedureName;
-		this.globalParameterPassNullsSetting = session.getFactory().getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();
+
+		this.parameterManager = new ParameterManager( this );
 
 		final List<NativeSQLQueryReturn> collectedQueryReturns = new ArrayList<>();
 		final Set<String> collectedQuerySpaces = new HashSet<>();
@@ -194,68 +204,14 @@ public class ProcedureCallImpl<R>
 	 */
 	@SuppressWarnings("unchecked")
 	ProcedureCallImpl(SharedSessionContractImplementor session, ProcedureCallMementoImpl memento) {
-		super( session, new ProcedureParameterMetadata() );
+		super( session );
 		this.procedureName = memento.getProcedureName();
-		this.globalParameterPassNullsSetting = session.getFactory().getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();
+
+		this.parameterManager = new ParameterManager( this );
+		parameterManager.registerParameters( memento );
 
 		this.queryReturns = memento.getQueryReturns();
 		this.synchronizedQuerySpaces = Util.copy( memento.getSynchronizedQuerySpaces() );
-		this.parameterStrategy = memento.getParameterStrategy();
-		if ( parameterStrategy == ParameterStrategy.UNKNOWN ) {
-			// nothing else to do in this case
-			return;
-		}
-
-		final List<ProcedureCallMementoImpl.ParameterMemento> storedRegistrations = memento.getParameterDeclarations();
-		if ( storedRegistrations == null ) {
-			// most likely a problem if ParameterStrategy is not UNKNOWN...
-			LOG.debugf(
-					"ParameterStrategy was [%s] on named copy [%s], but no parameters stored",
-					parameterStrategy,
-					procedureName
-			);
-			return;
-		}
-
-		final List<ParameterRegistrationImplementor<?>> parameterRegistrations =
-				CollectionHelper.arrayList( storedRegistrations.size() );
-
-		for ( ProcedureCallMementoImpl.ParameterMemento storedRegistration : storedRegistrations ) {
-			final ParameterRegistrationImplementor<?> registration;
-			if ( StringHelper.isNotEmpty( storedRegistration.getName() ) ) {
-				if ( parameterStrategy != ParameterStrategy.NAMED ) {
-					throw new IllegalStateException(
-							"Found named stored procedure parameter associated with positional parameters"
-					);
-				}
-				registration = new NamedParameterRegistration(
-						this,
-						storedRegistration.getName(),
-						storedRegistration.getMode(),
-						storedRegistration.getType(),
-						storedRegistration.getHibernateType(),
-						storedRegistration.isPassNullsEnabled()
-				);
-			}
-			else {
-				if ( parameterStrategy != ParameterStrategy.POSITIONAL ) {
-					throw new IllegalStateException(
-							"Found named stored procedure parameter associated with positional parameters"
-					);
-				}
-				registration = new PositionalParameterRegistration(
-						this,
-						storedRegistration.getPosition(),
-						storedRegistration.getMode(),
-						storedRegistration.getType(),
-						storedRegistration.getHibernateType(),
-						storedRegistration.isPassNullsEnabled()
-				);
-			}
-			getParameterMetadata().registerParameter( new ProcedureParameterImpl( registration ) );
-			parameterRegistrations.add( registration );
-		}
-		this.registeredParameters = parameterRegistrations;
 
 		for ( Map.Entry<String, Object> entry : memento.getHintsMap().entrySet() ) {
 			setHint( entry.getKey(), entry.getValue() );
@@ -272,13 +228,35 @@ public class ProcedureCallImpl<R>
 		return getProducer();
 	}
 
-	public ParameterStrategy getParameterStrategy() {
-		return parameterStrategy;
-	}
-
 	@Override
 	public String getProcedureName() {
 		return procedureName;
+	}
+
+	@Override
+	public MutableQueryOptions getQueryOptions() {
+		return queryOptions;
+	}
+
+	@Override
+	public ParameterManager getParameterMetadata() {
+		return parameterManager;
+	}
+
+	@Override
+	protected ParameterManager queryParameterBindings() {
+		return parameterManager;
+	}
+
+	@Override
+	public boolean isFunctionCall() {
+		return functionCall;
+	}
+
+	@Override
+	public ProcedureCall markAsFunctionCall() {
+		functionCall = true;
+		return this;
 	}
 
 	@Override
@@ -294,108 +272,45 @@ public class ProcedureCallImpl<R>
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> ParameterRegistration<T> registerParameter(int position, Class<T> type, ParameterMode mode) {
-
-		final PositionalParameterRegistration parameterRegistration =
-				new PositionalParameterRegistration( this, position, mode, type, globalParameterPassNullsSetting );
-		registerParameter( parameterRegistration );
-		return parameterRegistration;
+		return parameterManager.registerParameter( position, mode, type );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public ProcedureCall registerParameter0(int position, Class type, ParameterMode mode) {
-		registerParameter( position, type, mode );
+		parameterManager.registerParameter( position, mode, type );
 		return this;
 	}
 
-	private void registerParameter(ParameterRegistrationImplementor parameter) {
-		if ( StringHelper.isNotEmpty( parameter.getName() ) ) {
-			prepareForNamedParameters();
-		}
-		else if ( parameter.getPosition() != null ) {
-			prepareForPositionalParameters();
-		}
-		else {
-			throw new IllegalArgumentException( "Given parameter did not define name or position [" + parameter + "]" );
-		}
-		((ProcedureParameterMetadata)getParameterMetadata()).registerParameter( new ProcedureParameterImpl( parameter ) );
-
-		registeredParameters.add( parameter );
-	}
-
-	private void prepareForPositionalParameters() {
-		if ( parameterStrategy == ParameterStrategy.NAMED ) {
-			throw new QueryException( "Cannot mix named and positional parameters" );
-		}
-		parameterStrategy = ParameterStrategy.POSITIONAL;
-	}
-
-	private void prepareForNamedParameters() {
-		if ( parameterStrategy == ParameterStrategy.POSITIONAL ) {
-			throw new QueryException( "Cannot mix named and positional parameters" );
-		}
-		if ( parameterStrategy == ParameterStrategy.UNKNOWN ) {
-			// protect to only do this check once
-			final ExtractedDatabaseMetaData databaseMetaData = getSession()
-					.getJdbcCoordinator()
-					.getJdbcSessionOwner()
-					.getJdbcSessionContext()
-					.getServiceRegistry().getService( JdbcEnvironment.class )
-					.getExtractedDatabaseMetaData();
-			if ( ! databaseMetaData.supportsNamedParameters() ) {
-				LOG.unsupportedNamedParameters();
-			}
-			parameterStrategy = ParameterStrategy.NAMED;
-		}
-	}
-
 	@Override
+	@SuppressWarnings("unchecked")
 	public ParameterRegistrationImplementor getParameterRegistration(int position) {
-		if ( parameterStrategy != ParameterStrategy.POSITIONAL ) {
-			throw new ParameterStrategyException(
-					"Attempt to access positional parameter [" + position + "] but ProcedureCall using named parameters"
-			);
-		}
-		for ( ParameterRegistrationImplementor parameter : registeredParameters ) {
-			if ( position == parameter.getPosition() ) {
-				return parameter;
-			}
-		}
-		throw new NoSuchParameterException( "Could not locate parameter registered using that position [" + position + "]" );
+		return parameterManager.getQueryParameter( position );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> ParameterRegistration<T> registerParameter(String name, Class<T> type, ParameterMode mode) {
-		final NamedParameterRegistration parameterRegistration = new NamedParameterRegistration( this, name, mode, type, globalParameterPassNullsSetting );
-		registerParameter( parameterRegistration );
-		return parameterRegistration;
+		return parameterManager.registerParameter( name, mode, type );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public ProcedureCall registerParameter0(String name, Class type, ParameterMode mode) {
-		registerParameter( name, type, mode );
+		parameterManager.registerParameter( name, mode, type );
 		return this;
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public ParameterRegistrationImplementor getParameterRegistration(String name) {
-		if ( parameterStrategy != ParameterStrategy.NAMED ) {
-			throw new ParameterStrategyException( "Names were not used to register parameters with this stored procedure call" );
-		}
-		for ( ParameterRegistrationImplementor parameter : registeredParameters ) {
-			if ( name.equals( parameter.getName() ) ) {
-				return parameter;
-			}
-		}
-		throw new NoSuchParameterException( "Could not locate parameter registered under that name [" + name + "]" );
+		return parameterManager.getQueryParameter( name );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public List<ParameterRegistration> getRegisteredParameters() {
-		return new ArrayList<>( registeredParameters );
+		return parameterManager.collectParameterRegistrations();
 	}
 
 	@Override
@@ -513,12 +428,9 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	protected boolean isNativeQuery() {
-		return false;
-	}
-
-	@Override
 	public QueryParameters getQueryParameters() {
+		// todo : verify that we actually need this...
+
 		final QueryParameters qp = super.getQueryParameters();
 		// both of these are for documentation purposes, they are actually handled directly...
 		qp.setAutoDiscoverScalarTypes( true );
@@ -526,28 +438,13 @@ public class ProcedureCallImpl<R>
 		return qp;
 	}
 
-	/**
-	 * Collects any parameter registrations which indicate a REF_CURSOR parameter type/mode.
-	 *
-	 * @return The collected REF_CURSOR type parameters.
-	 */
-	public ParameterRegistrationImplementor[] collectRefCursorParameters() {
-		final List<ParameterRegistrationImplementor> refCursorParams = new ArrayList<>();
-		for ( ParameterRegistrationImplementor param : registeredParameters ) {
-			if ( param.getMode() == ParameterMode.REF_CURSOR ) {
-				refCursorParams.add( param );
-			}
-		}
-		return refCursorParams.toArray( new ParameterRegistrationImplementor[refCursorParams.size()] );
-	}
-
 	@Override
 	public ProcedureCallMemento extractMemento(Map<String, Object> hints) {
 		return new ProcedureCallMementoImpl(
 				procedureName,
 				Util.copy( queryReturns ),
-				parameterStrategy,
-				toParameterMementos( registeredParameters ),
+				parameterManager.getParameterStrategy(),
+				parameterManager.toParameterMementos(),
 				Util.copy( synchronizedQuerySpaces ),
 				Util.copy( hints )
 		);
@@ -558,23 +455,11 @@ public class ProcedureCallImpl<R>
 		return new ProcedureCallMementoImpl(
 				procedureName,
 				Util.copy( queryReturns ),
-				parameterStrategy,
-				toParameterMementos( registeredParameters ),
+				parameterManager.getParameterStrategy(),
+				parameterManager.toParameterMementos(),
 				Util.copy( synchronizedQuerySpaces ),
 				Util.copy( getHints() )
 		);
-	}
-
-	private static List<ProcedureCallMementoImpl.ParameterMemento> toParameterMementos(List<ParameterRegistrationImplementor<?>> registeredParameters) {
-		if ( registeredParameters == null ) {
-			return null;
-		}
-
-		final List<ProcedureCallMementoImpl.ParameterMemento> copy = CollectionHelper.arrayList( registeredParameters.size() );
-		for ( ParameterRegistrationImplementor registration : registeredParameters ) {
-			copy.add( ProcedureCallMementoImpl.ParameterMemento.fromRegistration( registration ) );
-		}
-		return copy;
 	}
 
 
@@ -591,7 +476,7 @@ public class ProcedureCallImpl<R>
 			registerParameter( position, type, mode );
 		}
 		catch (HibernateException he) {
-			throw getExceptionConverter().convert( he );
+			throw getProducer().getExceptionConverter().convert( he );
 		}
 		catch (RuntimeException e) {
 			getProducer().markForRollbackOnly();
@@ -608,7 +493,7 @@ public class ProcedureCallImpl<R>
 			registerParameter( parameterName, type, mode );
 		}
 		catch (HibernateException he) {
-			throw getExceptionConverter().convert( he );
+			throw getProducer().getExceptionConverter().convert( he );
 		}
 		catch (RuntimeException e) {
 			getProducer().markForRollbackOnly();
@@ -630,7 +515,7 @@ public class ProcedureCallImpl<R>
 			return false;
 		}
 		catch (HibernateException he) {
-			throw getExceptionConverter().convert( he );
+			throw getProducer().getExceptionConverter().convert( he );
 		}
 		catch (RuntimeException e) {
 			getProducer().markForRollbackOnly();
@@ -712,7 +597,7 @@ public class ProcedureCallImpl<R>
 			return -1;
 		}
 		catch (HibernateException he) {
-			throw getExceptionConverter().convert( he );
+			throw getProducer().getExceptionConverter().convert( he );
 		}
 		catch (RuntimeException e) {
 			getProducer().markForRollbackOnly();
@@ -739,7 +624,7 @@ public class ProcedureCallImpl<R>
 			return null;
 		}
 		catch (HibernateException he) {
-			throw getExceptionConverter().convert( he );
+			throw getProducer().getExceptionConverter().convert( he );
 		}
 		catch (RuntimeException e) {
 			getProducer().markForRollbackOnly();
@@ -776,11 +661,58 @@ public class ProcedureCallImpl<R>
 		if ( cls.isInstance( this ) ) {
 			return (T) this;
 		}
-		else if ( cls.isInstance( outputs ) ) {
-			return (T) outputs();
+
+		if ( cls.isInstance( parameterManager ) ) {
+			return (T) parameterManager;
 		}
 
-		return super.unwrap( cls );
+		if ( cls.isInstance( queryOptions ) ) {
+			return (T) queryOptions;
+		}
+
+		if ( cls.isInstance( queryReturns ) ) {
+			return (T) queryReturns;
+		}
+
+		if ( cls.isInstance( getProducer() ) ) {
+			return (T) getProducer();
+		}
+
+		if ( Outputs.class.isAssignableFrom( cls ) ) {
+			return (T) getOutputs();
+		}
+
+		throw new PersistenceException( "Unrecognized unwrap type : " + cls.getName() );
+	}
+
+	@Override
+	public ProcedureCallImplementor<R> setHint(String hintName, Object value) {
+		if ( IS_FUNCTION_HINT.equals( hintName ) ) {
+			// functionCall is a 1-way toggle
+			if ( !functionCall && ConfigurationHelper.getBoolean( value ) ) {
+				this.functionCall = true;
+			}
+		}
+		else {
+			super.setHint( hintName, value );
+		}
+
+		return this;
+	}
+
+	@Override
+	protected boolean canApplyAliasSpecificLockModes() {
+		return false;
+	}
+
+	@Override
+	protected void verifySettingLockMode() {
+		throw new IllegalStateException( "Illegal attempt to set lock mode on a ProcedureCall / StoredProcedureQuery" );
+	}
+
+	@Override
+	protected void verifySettingAliasSpecificLockModes() {
+		throw new IllegalStateException( "Illegal attempt to set lock mode on a ProcedureCall / StoredProcedureQuery" );
 	}
 
 	@Override
@@ -790,13 +722,7 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public LockModeType getLockMode() {
-		throw new IllegalStateException( "javax.persistence.Query.getHibernateFlushMode not valid on javax.persistence.StoredProcedureQuery" );
-	}
-
-	@Override
-	public ProcedureCallImplementor<R> setHint(String hintName, Object value) {
-		super.setHint( hintName, value );
-		return this;
+		throw new IllegalStateException( "javax.persistence.Query.getLockMode not valid on javax.persistence.StoredProcedureQuery" );
 	}
 
 	@Override
@@ -807,94 +733,49 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public <P> ProcedureCallImplementor<R> setParameter(QueryParameter<P> parameter, P value) {
-		locateParameterRegistration( parameter ).bindValue( value );
+		parameterManager.resolve( parameter ).bindValue( value );
 		return this;
-	}
-
-	@SuppressWarnings("unchecked")
-	private  <P> ParameterRegistrationImplementor<P> locateParameterRegistration(Parameter<P> parameter) {
-		if ( parameter.getName() != null ) {
-			return locateParameterRegistration( parameter.getName() );
-		}
-
-		if ( parameter.getPosition() != null ) {
-			return locateParameterRegistration( parameter.getPosition() );
-		}
-
-		throw getExceptionConverter().convert(
-				new IllegalArgumentException( "Could not resolve registration for given parameter reference [" + parameter + "]" )
-		);
-	}
-
-	@SuppressWarnings("unchecked")
-	private <P> ParameterRegistrationImplementor<P> locateParameterRegistration(String name) {
-		assert name != null;
-
-		if ( parameterStrategy == ParameterStrategy.POSITIONAL ) {
-			throw new IllegalArgumentException( "Expecting positional parameter" );
-		}
-
-		for ( ParameterRegistrationImplementor<?> registeredParameter : registeredParameters ) {
-			if ( name.equals( registeredParameter.getName() ) ) {
-				return (ParameterRegistrationImplementor<P>) registeredParameter;
-			}
-		}
-
-		throw new IllegalArgumentException( "Unknown parameter registration name [" + name + "]" );
-	}
-
-	@SuppressWarnings("unchecked")
-	private <P> ParameterRegistrationImplementor<P> locateParameterRegistration(int position) {
-		if ( parameterStrategy == ParameterStrategy.NAMED ) {
-			throw new IllegalArgumentException( "Expecting named parameter" );
-		}
-
-		for ( ParameterRegistrationImplementor<?> registeredParameter : registeredParameters ) {
-			if ( registeredParameter.getPosition() != null && registeredParameter.getPosition() == position ) {
-				return (ParameterRegistrationImplementor<P>) registeredParameter;
-			}
-		}
-
-		throw new IllegalArgumentException( "Unknown parameter registration position [" + position + "]" );
 	}
 
 	@Override
 	public <P> ProcedureCallImplementor<R> setParameter(Parameter<P> parameter, P value) {
-		locateParameterRegistration( parameter ).bindValue( value );
+		parameterManager.resolve( parameter ).bindValue( value );
 		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(String name, Object value) {
-		locateParameterRegistration( name ).bindValue( value );
+		parameterManager.getQueryParameter( name ).bindValue( value );
 		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(int position, Object value) {
-		locateParameterRegistration( position ).bindValue( value );
+		parameterManager.getQueryParameter( position ).bindValue( value );
 		return this;
 	}
 
 	@Override
 	public <P> ProcedureCallImplementor<R> setParameter(QueryParameter<P> parameter, P value, Type type) {
-		final ParameterRegistrationImplementor<P> reg = locateParameterRegistration( parameter );
+		final ParameterRegistrationImplementor<P> reg = parameterManager.resolve( parameter );
 		reg.bindValue( value );
 		reg.setHibernateType( type );
 		return this;
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public ProcedureCallImplementor<R> setParameter(String name, Object value, Type type) {
-		final ParameterRegistrationImplementor reg = locateParameterRegistration( name );
+		final ParameterRegistrationImplementor reg = parameterManager.getQueryParameter( name );
 		reg.bindValue( value );
 		reg.setHibernateType( type );
 		return this;
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public ProcedureCallImplementor<R> setParameter(int position, Object value, Type type) {
-		final ParameterRegistrationImplementor reg = locateParameterRegistration( position );
+		final ParameterRegistrationImplementor reg = parameterManager.getQueryParameter( position );
 		reg.bindValue( value );
 		reg.setHibernateType( type );
 		return this;
@@ -902,85 +783,87 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public <P> ProcedureCallImplementor<R> setParameter(QueryParameter<P> parameter, P value, TemporalType temporalType) {
-		locateParameterRegistration( parameter ).bindValue( value, temporalType );
+		parameterManager.resolve( parameter ).bindValue( value, temporalType );
 		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(String name, Object value, TemporalType temporalType) {
-		locateParameterRegistration( name ).bindValue( value, temporalType );
+		parameterManager.getQueryParameter( name ).bindValue( value, temporalType );
 		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(int position, Object value, TemporalType temporalType) {
-		locateParameterRegistration( position ).bindValue( value, temporalType );
+		parameterManager.getQueryParameter( position ).bindValue( value, temporalType );
 		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameterList(QueryParameter parameter, Collection values) {
-		super.setParameterList( parameter, values );
-		return this;
+		throw new ParameterMisuseException( "ProcedureCall/StoredProcedureQuery parameters cannot be multi-valued" );
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameterList(String name, Collection values) {
-		super.setParameterList( name, values );
-		return this;
+		throw new ParameterMisuseException( "ProcedureCall/StoredProcedureQuery parameters cannot be multi-valued" );
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameterList(String name, Collection values, Type type) {
-		super.setParameterList( name, values, type );
-		return this;
+		throw new ParameterMisuseException( "ProcedureCall/StoredProcedureQuery parameters cannot be multi-valued" );
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameterList(String name, Object[] values, Type type) {
-		super.setParameterList( name, values, type );
-		return this;
+		throw new ParameterMisuseException( "ProcedureCall/StoredProcedureQuery parameters cannot be multi-valued" );
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameterList(String name, Object[] values) {
-		super.setParameterList( name, values );
-		return this;
+		throw new ParameterMisuseException( "ProcedureCall/StoredProcedureQuery parameters cannot be multi-valued" );
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public ProcedureCallImplementor<R> setParameter(Parameter parameter, Calendar value, TemporalType temporalType) {
-		locateParameterRegistration( parameter ).bindValue( value, temporalType );
+		parameterManager.resolve( parameter ).bindValue( value, temporalType );
 		return this;
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public ProcedureCallImplementor<R> setParameter(Parameter parameter, Date value, TemporalType temporalType) {
-		locateParameterRegistration( parameter ).bindValue( value, temporalType );
+		parameterManager.resolve( parameter ).bindValue( value, temporalType );
 		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(String name, Calendar value, TemporalType temporalType) {
-		locateParameterRegistration( name ).bindValue( value, temporalType );
+		parameterManager.getQueryParameter( name ).bindValue( value, temporalType );
 		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(String name, Date value, TemporalType temporalType) {
-		locateParameterRegistration( name ).bindValue( value, temporalType );
+		parameterManager.getQueryParameter( name ).bindValue( value, temporalType );
 		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(int position, Calendar value, TemporalType temporalType) {
-		locateParameterRegistration( position ).bindValue( value, temporalType );
+		parameterManager.getQueryParameter( position ).bindValue( value, temporalType );
 		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(int position, Date value, TemporalType temporalType) {
-		locateParameterRegistration( position ).bindValue( value, temporalType );
+		parameterManager.getQueryParameter( position ).bindValue( value, temporalType );
 		return this;
+	}
+
+	@Override
+	public Set<Parameter<?>> getParameters() {
+		return parameterManager.collectAllParametersJpa();
 	}
 }

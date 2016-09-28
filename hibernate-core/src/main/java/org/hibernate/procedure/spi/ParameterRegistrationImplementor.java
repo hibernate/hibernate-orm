@@ -10,7 +10,6 @@ import java.sql.CallableStatement;
 import java.sql.SQLException;
 
 import org.hibernate.procedure.ParameterRegistration;
-import org.hibernate.type.spi.Type;
 
 /**
  * Additional internal contract for ParameterRegistration
@@ -18,6 +17,8 @@ import org.hibernate.type.spi.Type;
  * @author Steve Ebersole
  */
 public interface ParameterRegistrationImplementor<T> extends ParameterRegistration<T> {
+	ProcedureCallImplementor getProcedureCall();
+
 	/**
 	 * Prepare for execution.
 	 *
@@ -27,25 +28,6 @@ public interface ParameterRegistrationImplementor<T> extends ParameterRegistrati
 	 * @throws SQLException Indicates a problem accessing the statement object
 	 */
 	void prepare(CallableStatement statement, int i) throws SQLException;
-
-	/**
-	 * Access to the Hibernate type for this parameter registration
-	 *
-	 * @return The Hibernate Type
-	 */
-	Type getHibernateType();
-
-	/**
-	 * If no value is bound for this parameter registration, is the passing of NULL
-	 * to the JDBC CallableStatement for that parameter enabled?  This effectively controls
-	 * whether default values for the argument as defined in the database are applied or not.
-	 *
-	 * @return {@code true} indicates that NULL will be passed to the JDBC driver, effectively disabling
-	 * the application of the default argument value defined in the database; {@code false} indicates
-	 * that the parameter will simply be ignored, with the assumption that the corresponding argument
-	 * defined a default value.
-	 */
-	boolean isPassNullsEnabled();
 
 	/**
 	 * Access to the SQL type(s) for this parameter

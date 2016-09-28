@@ -33,7 +33,7 @@ public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutput
 		this.procedureCall = procedureCall;
 		this.callableStatement = callableStatement;
 
-		this.refCursorParameters = procedureCall.collectRefCursorParameters();
+		this.refCursorParameters = procedureCall.getParameterMetadata().collectRefCursorParameters();
 	}
 
 	@Override

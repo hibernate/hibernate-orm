@@ -15,7 +15,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.StingArrayCollector;
+import org.hibernate.internal.util.collections.streams.StingArrayCollector;
 import org.hibernate.persister.common.spi.SqmTypeImplementor;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.TupleBuilder;

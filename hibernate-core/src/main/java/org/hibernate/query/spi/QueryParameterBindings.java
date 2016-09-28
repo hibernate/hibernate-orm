@@ -53,7 +53,7 @@ public interface QueryParameterBindings {
 	 *
 	 * @return The binding, or {@code null} if not yet bound
 	 */
-	<T> QueryParameterBinding<T> getBinding(int position);
+	<T> QueryParameterBinding getBinding(int position);
 
 	/**
 	 * Validate the bindings.  Called just before execution

@@ -123,6 +123,8 @@ public interface SessionFactoryOptionsState {
 
 	Integer getNonJpaNativeQueryOrdinalParameterBase();
 
+	boolean isUseOfJdbcNamedParametersEnabled();
+
 	boolean isSecondLevelCacheEnabled();
 
 	boolean isQueryCacheEnabled();

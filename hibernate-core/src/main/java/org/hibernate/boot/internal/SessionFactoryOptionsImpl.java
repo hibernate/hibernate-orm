@@ -99,6 +99,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private final boolean procedureParameterNullPassingEnabled;
 	private final boolean collectionJoinSubqueryRewriteEnabled;
 	private final Integer nonJpaNativeQueryOrdinalParameterBase;
+	private final boolean useOfJdbcNamedParametersEnabled;
 
 	// Caching
 	private final boolean secondLevelCacheEnabled;
@@ -179,6 +180,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.procedureParameterNullPassingEnabled = state.isProcedureParameterNullPassingEnabled();
 		this.collectionJoinSubqueryRewriteEnabled = state.isCollectionJoinSubqueryRewriteEnabled();
 		this.nonJpaNativeQueryOrdinalParameterBase = state.getNonJpaNativeQueryOrdinalParameterBase();
+		this.useOfJdbcNamedParametersEnabled = state.isUseOfJdbcNamedParametersEnabled();
 
 		this.secondLevelCacheEnabled = state.isSecondLevelCacheEnabled();
 		this.queryCacheEnabled = state.isQueryCacheEnabled();
@@ -526,5 +528,10 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public Integer getNonJpaNativeQueryOrdinalParameterBase() {
 		return nonJpaNativeQueryOrdinalParameterBase;
+	}
+
+	@Override
+	public boolean isUseOfJdbcNamedParametersEnabled() {
+		return useOfJdbcNamedParametersEnabled;
 	}
 }

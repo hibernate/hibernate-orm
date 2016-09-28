@@ -6,35 +6,34 @@
  */
 package org.hibernate.procedure.internal;
 
-import javax.persistence.TemporalType;
-
 import org.hibernate.procedure.ParameterBind;
+import org.hibernate.procedure.spi.ParameterBindImplementor;
+import org.hibernate.query.QueryParameter;
+import org.hibernate.query.internal.QueryParameterBindingImpl;
+import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
+import org.hibernate.type.mapper.spi.Type;
 
 /**
  * Implementation of the {@link ParameterBind} contract.
  *
  * @author Steve Ebersole
  */
-public class ParameterBindImpl<T> implements ParameterBind<T> {
-	private final T value;
-	private final TemporalType explicitTemporalType;
-
-	ParameterBindImpl(T value) {
-		this( value, null );
+public class ParameterBindImpl<T> extends QueryParameterBindingImpl<T> implements ParameterBindImplementor<T> {
+	public ParameterBindImpl(
+			QueryParameter<T> queryParameter,
+			QueryParameterBindingTypeResolver typeResolver) {
+		super( queryParameter, typeResolver );
 	}
 
-	ParameterBindImpl(T value, TemporalType explicitTemporalType) {
-		this.value = value;
-		this.explicitTemporalType = explicitTemporalType;
+	public ParameterBindImpl(
+			Type bindType,
+			QueryParameter<T> queryParameter,
+			QueryParameterBindingTypeResolver typeResolver) {
+		super( bindType, queryParameter, typeResolver );
 	}
 
 	@Override
 	public T getValue() {
-		return value;
-	}
-
-	@Override
-	public TemporalType getExplicitTemporalType() {
-		return explicitTemporalType;
+		return super.getBindValue();
 	}
 }

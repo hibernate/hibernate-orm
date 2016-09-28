@@ -9,46 +9,20 @@ package org.hibernate.procedure;
 import javax.persistence.ParameterMode;
 import javax.persistence.TemporalType;
 
-import org.hibernate.type.spi.Type;
+import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.query.QueryParameter;
 
 /**
  * Describes a registered procedure/function parameter.
+ * <p/>
+ * Conceptually this contract groups together the notion of a
+ * {@link QueryParameter} and, depending on that parameter's mode
+ * ({@link QueryParameter#getMode()}), the related binding (for IN/INOUT
+ * parameters).
  *
  * @author Steve Ebersole
  */
-public interface ParameterRegistration<T> {
-	/**
-	 * The name under which this parameter was registered.  Can be {@code null} which should indicate that
-	 * positional registration was used (and therefore {@link #getPosition()} should return non-null.
-	 *
-	 * @return The name;
-	 */
-	String getName();
-
-	/**
-	 * The position at which this parameter was registered.  Can be {@code null} which should indicate that
-	 * named registration was used (and therefore {@link #getName()} should return non-null.
-	 *
-	 * @return The name;
-	 */
-	Integer getPosition();
-
-	/**
-	 * Obtain the Java type of parameter.  This is used to guess the Hibernate type (unless {@link #setHibernateType}
-	 * is called explicitly).
-	 *
-	 * @return The parameter Java type.
-	 */
-	Class<T> getType();
-
-	/**
-	 * Retrieves the parameter "mode" which describes how the parameter is defined in the actual database procedure
-	 * definition (is it an INPUT parameter?  An OUTPUT parameter? etc).
-	 *
-	 * @return The parameter mode.
-	 */
-	ParameterMode getMode();
-
+public interface ParameterRegistration<T> extends QueryParameter<T> {
 	/**
 	 * Controls how unbound values for this IN/INOUT parameter registration will be handled prior to
 	 * execution.  There are 2 possible options to handle it:<ul>
@@ -61,16 +35,17 @@ public interface ParameterRegistration<T> {
 	 * argument, its default value will not be used.  So effectively this setting controls
 	 * whether the NULL should be interpreted as "pass the NULL" or as "apply the argument default".
 	 * <p/>
-	 * The (global) default this setting is defined by {@link org.hibernate.cfg.AvailableSettings#PROCEDURE_NULL_PARAM_PASSING}
+	 * The (global) default this setting is defined by {@link SessionFactoryOptions#isProcedureParameterNullPassingEnabled()}
 	 *
 	 * @param enabled {@code true} indicates that the NULL should be passed; {@code false} indicates it should not.
 	 */
 	void enablePassingNulls(boolean enabled);
 
 	/**
-	 * Set the Hibernate mapping type for this parameter.
+	 * Set the Hibernate Type associated with this parameter.  Affects
+	 * the return from {@link #getHibernateType()}.
 	 *
-	 * @param type The Hibernate mapping type.
+	 * @param type The Hibernate Type.
 	 */
 	void setHibernateType(Type type);
 
@@ -100,4 +75,18 @@ public interface ParameterRegistration<T> {
 	 * @param explicitTemporalType An explicitly supplied TemporalType.
 	 */
 	void bindValue(T value, TemporalType explicitTemporalType);
+
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Deprecations
+
+	/**
+	 * @deprecated (since 6.0) Use {@link #getParameterType()} instead as
+	 * ParameterRegistration now extends {@link QueryParameter}.
+	 */
+	@Deprecated
+	default Class<T> getType() {
+		return getParameterType();
+	}
 }

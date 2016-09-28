@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.internal;
 
-import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.type.mapper.spi.Type;
 
@@ -15,7 +14,7 @@ import org.jboss.logging.Logger;
 /**
  * @author Steve Ebersole
  */
-public class AbstractQueryParameter<T> implements QueryParameterImplementor<T> {
+public abstract class AbstractQueryParameter<T> implements QueryParameterImplementor<T> {
 	private static final Logger log = Logger.getLogger( AbstractQueryParameter.class );
 
 	private boolean allowMultiValuedBinding;
@@ -38,7 +37,7 @@ public class AbstractQueryParameter<T> implements QueryParameterImplementor<T> {
 	}
 
 	@Override
-	public Type getType() {
+	public Type getHibernateType() {
 		return null;
 	}
 

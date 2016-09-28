@@ -24,6 +24,11 @@ public interface ParameterBind<T> {
 	 * the DATE/TIME value to be bound.  This value represents the particular part the user requested to be bound.
 	 *
 	 * @return The explicitly supplied TemporalType.
+	 *
+	 * @deprecated (since 6.0) No longer supported
 	 */
-	TemporalType getExplicitTemporalType();
+	@Deprecated
+	default TemporalType getExplicitTemporalType() {
+		return null;
+	}
 }

@@ -15,9 +15,22 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.CLASS;
 
 /**
+ * Annotation used to identify a package, class, interface or method
+ * as "incubating", meaning it is more subject to change then normally
+ * allowed based on its API/SPI distinction.
+ * <p/>
+ * Generally this is a new feature that has not yet been fully vetted
+ * in multiple contexts (typically 3 at a minimum).
+ *
  * @author Steve Ebersole
  */
 @Target({PACKAGE, TYPE, METHOD})
 @Retention(CLASS)
 public @interface Incubating {
+	/**
+	 * Define the release (release family ideally) since the annotated
+	 * thing has been incubating.
+	 */
+	String since() default "";
 }
+

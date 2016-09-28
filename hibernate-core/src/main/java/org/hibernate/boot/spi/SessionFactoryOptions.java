@@ -49,14 +49,12 @@ public interface SessionFactoryOptions {
 	Object getValidatorFactoryReference();
 
 	/**
-	 * @deprecated (since 5.2) In fact added in 5.2 as part of consolidating JPA support
-	 * directly into Hibernate contracts (SessionFactory, Session); intended to provide
-	 * transition help in cases where we need to know the difference in JPA/native use for
-	 * various reasons.
+	 * Was building of the SessionFactory initiated through JPA bootstrapping, or
+	 * through Hibernate's native bootstrapping?
 	 *
-	 * @see SessionFactoryBuilderImplementor#markAsJpaBootstrap
+	 * @return {@code true} indicates the SessionFactory was built through JPA
+	 * bootstrapping; {@code false} indicates it was built through native bootstrapping.
 	 */
-	@Deprecated
 	boolean isJpaBootstrap();
 
 	boolean isJtaTransactionAccessEnabled();
@@ -202,8 +200,26 @@ public interface SessionFactoryOptions {
 
 	void setCheckNullability(boolean enabled);
 
+	/**
+	 * For transaction management in JTA, should we prefer to use
+	 * {@link javax.transaction.UserTransaction} as opposed to
+	 * {@link javax.transaction.Transaction}?
+	 *
+	 * @return {@code true} indicates we should prefer to use
+	 * {@link javax.transaction.UserTransaction}; {@code false} indicates we
+	 * should prefer {@link javax.transaction.Transaction}.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#PREFER_USER_TRANSACTION
+	 */
 	boolean isPreferUserTransaction();
 
+	/**
+	 * For parameters defined as part of {@link org.hibernate.procedure.ProcedureCall}
+	 * or {@link javax.persistence.StoredProcedureQuery} how should we treat {@code null}
+	 * bindings?
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#PROCEDURE_NULL_PARAM_PASSING
+	 */
 	boolean isProcedureParameterNullPassingEnabled();
 
 	boolean isCollectionJoinSubqueryRewriteEnabled();
@@ -223,4 +239,30 @@ public interface SessionFactoryOptions {
 	 * @since 6.0
 	 */
 	Integer getNonJpaNativeQueryOrdinalParameterBase();
+
+	/**
+	 * Controls whether Hibernate should try to map named parameter names
+	 * specified in a {@link org.hibernate.procedure.ProcedureCall} or
+	 * {@link javax.persistence.StoredProcedureQuery} to named parameters in
+	 * the JDBC {@link java.sql.CallableStatement}.
+	 * <p/>
+	 * As JPA is defined, the use of named parameters is essentially of dubious
+	 * value since by spec the parameters have to be defined in the order they are
+	 * defined in the procedure/function declaration - we can always bind them
+	 * positionally.  The whole idea of named parameters for CallableStatement
+	 * is the ability to bind these in any order, but since we unequivocally
+	 * know the order anyway binding them via name really gains nothing.
+	 * <p/>
+	 * If this is {@code true}, we still need to make sure the Dialect supports
+	 * named binding.  Setting this to {@code false} simply circumvents that
+	 * check and always performs positional binding.
+	 *
+	 * @return {@code true} indicates we should try to use {@link java.sql.CallableStatement}
+	 * named parameters, if the Dialect says it is supported; {@code false}
+	 * indicates that we should never try to use {@link java.sql.CallableStatement}
+	 * named parameters, regardless of what the Dialect says.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#CALLABLE_NAMED_PARAMS_ENABLED
+	 */
+	boolean isUseOfJdbcNamedParametersEnabled();
 }

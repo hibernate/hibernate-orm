@@ -14,7 +14,6 @@ import javax.persistence.EntityManager;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.testing.TestForIssue;
@@ -25,7 +24,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Test verifies that the sequence is created properly both for database operations and
+ * Test verifies that the sequence is created properly both for database operations and export
+ * scripts and that a basic entity using said sequence can be persisted and fetched via the
+ * audit reader.
+ *
  * @author Chris Cranford
  */
 @TestForIssue(jiraKey = "HHH-11131")

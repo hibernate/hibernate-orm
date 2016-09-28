@@ -25,18 +25,13 @@ import org.hibernate.type.Type;
  */
 public class OrderedSequenceGenerator extends SequenceStyleGenerator {
 	@Override
-	protected DatabaseStructure buildDatabaseStructure(
+	protected DatabaseStructure buildSequenceStructure(
 			Type type,
 			Properties params,
 			JdbcEnvironment jdbcEnvironment,
-			boolean forceTableUse,
 			QualifiedName sequenceName,
 			int initialValue,
 			int incrementSize) {
-		final boolean useSequence = jdbcEnvironment.getDialect().supportsSequences() && !forceTableUse;
-		if ( useSequence ) {
-			return new OrderedSequenceStructure( jdbcEnvironment, sequenceName, initialValue, incrementSize, type.getReturnedClass() );
-		}
-		return super.buildDatabaseStructure( type, params, jdbcEnvironment, forceTableUse, sequenceName, initialValue, incrementSize );
+		return new OrderedSequenceStructure( jdbcEnvironment, sequenceName, initialValue, incrementSize, type.getReturnedClass() );
 	}
 }

@@ -396,12 +396,32 @@ public class SequenceStyleGenerator
 			int incrementSize) {
 		final boolean useSequence = jdbcEnvironment.getDialect().supportsSequences() && !forceTableUse;
 		if ( useSequence ) {
-			return new SequenceStructure( jdbcEnvironment, sequenceName, initialValue, incrementSize, type.getReturnedClass() );
+			return buildSequenceStructure( type, params, jdbcEnvironment, sequenceName, initialValue, incrementSize );
 		}
 		else {
-			final Identifier valueColumnName = determineValueColumnName( params, jdbcEnvironment );
-			return new TableStructure( jdbcEnvironment, sequenceName, valueColumnName, initialValue, incrementSize, type.getReturnedClass() );
+			return buildTableStructure( type, params, jdbcEnvironment, sequenceName, initialValue, incrementSize );
 		}
+	}
+
+	protected DatabaseStructure buildSequenceStructure(
+			Type type,
+			Properties params,
+			JdbcEnvironment jdbcEnvironment,
+			QualifiedName sequenceName,
+			int initialValue,
+			int incrementSize) {
+		return new SequenceStructure( jdbcEnvironment, sequenceName, initialValue, incrementSize, type.getReturnedClass() );
+	}
+
+	protected DatabaseStructure buildTableStructure(
+			Type type,
+			Properties params,
+			JdbcEnvironment jdbcEnvironment,
+			QualifiedName sequenceName,
+			int initialValue,
+			int incrementSize) {
+		final Identifier valueColumnName = determineValueColumnName( params, jdbcEnvironment );
+		return new TableStructure( jdbcEnvironment, sequenceName, valueColumnName, initialValue, incrementSize, type.getReturnedClass() );
 	}
 
 

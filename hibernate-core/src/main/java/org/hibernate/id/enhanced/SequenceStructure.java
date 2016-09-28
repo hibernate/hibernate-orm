@@ -41,11 +41,10 @@ public class SequenceStructure implements DatabaseStructure {
 	private final int incrementSize;
 	private final Class numberType;
 
-
-	private String sequenceName;
 	private String sql;
 	private boolean applyIncrementSizeToSourceValues;
 	private int accessCounter;
+	protected String sequenceName;
 
 	public SequenceStructure(
 			JdbcEnvironment jdbcEnvironment,
@@ -141,8 +140,35 @@ public class SequenceStructure implements DatabaseStructure {
 
 	@Override
 	public void registerExportables(Database database) {
-		final int sourceIncrementSize = applyIncrementSizeToSourceValues ? incrementSize : 1;
+		buildSequence( database );
+		this.sql = database.getJdbcEnvironment().getDialect().getSequenceNextValString( sequenceName );
+	}
 
+	@Override
+	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
+		return dialect.getCreateSequenceStrings( sequenceName, initialValue, getSourceIncrementSize() );
+	}
+
+	@Override
+	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
+		return dialect.getDropSequenceStrings( sequenceName );
+	}
+
+	@Override
+	public boolean isPhysicalSequence() {
+		return true;
+	}
+
+	protected final int getSourceIncrementSize() {
+		return applyIncrementSizeToSourceValues ? incrementSize : 1;
+	}
+
+	protected QualifiedName getQualifiedName() {
+		return logicalQualifiedSequenceName;
+	}
+
+	protected void buildSequence(Database database) {
+		final int sourceIncrementSize = getSourceIncrementSize();
 
 		final Namespace namespace = database.locateNamespace(
 				logicalQualifiedSequenceName.getCatalogName(),
@@ -156,29 +182,9 @@ public class SequenceStructure implements DatabaseStructure {
 			sequence = namespace.createSequence( logicalQualifiedSequenceName.getObjectName(), initialValue, sourceIncrementSize );
 		}
 
-		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
-		final Dialect dialect = jdbcEnvironment.getDialect();
-
-		this.sequenceName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+		this.sequenceName = database.getJdbcEnvironment().getQualifiedObjectNameFormatter().format(
 				sequence.getName(),
-				dialect
+				database.getJdbcEnvironment().getDialect()
 		);
-		this.sql = jdbcEnvironment.getDialect().getSequenceNextValString( sequenceName );
-	}
-
-	@Override
-	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
-		final int sourceIncrementSize = applyIncrementSizeToSourceValues ? incrementSize : 1;
-		return dialect.getCreateSequenceStrings( sequenceName, initialValue, sourceIncrementSize );
-	}
-
-	@Override
-	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
-		return dialect.getDropSequenceStrings( sequenceName );
-	}
-
-	@Override
-	public boolean isPhysicalSequence() {
-		return true;
 	}
 }

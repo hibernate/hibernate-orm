@@ -373,6 +373,10 @@ public class ParameterManager implements ParameterMetadata, QueryParameterBindin
 		return parameterRegistrations.stream().collect( Collectors.toList() );
 	}
 
+	public List<ParameterRegistrationImplementor<?>> collectParameterRegistrationImplementors() {
+		return parameterRegistrations.stream().collect( Collectors.toList() );
+	}
+
 	public List<ProcedureCallMementoImpl.ParameterMemento> toParameterMementos() {
 		if ( parameterRegistrations == null || parameterRegistrations.isEmpty() ) {
 			return null;

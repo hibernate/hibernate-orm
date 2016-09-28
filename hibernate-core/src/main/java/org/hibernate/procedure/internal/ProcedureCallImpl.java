@@ -15,14 +15,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
 import javax.persistence.Parameter;
 import javax.persistence.ParameterMode;
 import javax.persistence.PersistenceException;
@@ -30,13 +28,14 @@ import javax.persistence.TemporalType;
 import javax.persistence.TransactionRequiredException;
 
 import org.hibernate.HibernateException;
+import org.hibernate.ScrollMode;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.jpa.graph.internal.EntityGraphImpl;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.procedure.NoSuchParameterException;
@@ -47,17 +46,14 @@ import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.procedure.ProcedureOutputs;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
-import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
-import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.old.AbstractProducedQuery;
 import org.hibernate.query.procedure.internal.ProcedureParameterImpl;
 import org.hibernate.query.procedure.internal.ProcedureParameterMetadata;
 import org.hibernate.query.internal.AbstractQuery;
 import org.hibernate.query.spi.MutableQueryOptions;
-import org.hibernate.query.spi.QueryParameterBinding;
-import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.result.NoMoreReturnsException;
 import org.hibernate.result.Output;
 import org.hibernate.result.Outputs;
@@ -339,8 +335,8 @@ public class ProcedureCallImpl<R>
 
 		final String call = getProducer().getJdbcServices().getJdbcEnvironment().getDialect().getCallableStatementSupport().renderCallableStatement(
 				procedureName,
-				parameterStrategy,
-				registeredParameters,
+				parameterManager.getParameterStrategy(),
+				parameterManager.collectParameterRegistrationImplementors(),
 				getProducer()
 		);
 
@@ -355,7 +351,7 @@ public class ProcedureCallImpl<R>
 			// prepare parameters
 			int i = 1;
 
-			for ( ParameterRegistrationImplementor parameter : registeredParameters ) {
+			for ( ParameterRegistrationImplementor parameter : parameterManager.collectParameterRegistrationImplementors() ) {
 				parameter.prepare( statement, i );
 				if ( parameter.getMode() == ParameterMode.REF_CURSOR ) {
 					i++;
@@ -429,7 +425,8 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public QueryParameters getQueryParameters() {
-		// todo : verify that we actually need this...
+		// todo : remove this
+		//		- kept here for now as reminder to make sure I integrate auto-discover and callable
 
 		final QueryParameters qp = super.getQueryParameters();
 		// both of these are for documentation purposes, they are actually handled directly...
@@ -503,6 +500,7 @@ public class ProcedureCallImpl<R>
 		return this;
 	}
 
+
 	// outputs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
@@ -531,7 +529,7 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public int executeUpdate() {
+	protected int doExecuteUpdate() {
 		if ( ! getProducer().isTransactionInProgress() ) {
 			throw new TransactionRequiredException( "javax.persistence.Query.executeUpdate requires active transaction" );
 		}
@@ -605,10 +603,9 @@ public class ProcedureCallImpl<R>
 		}
 	}
 
-
 	@Override
 	@SuppressWarnings("unchecked")
-	public List<R> getResultList() {
+	protected List<R> doList() {
 		try {
 			final Output rtn = outputs().getCurrent();
 			if ( ! ResultSetOutput.class.isInstance( rtn ) ) {
@@ -633,26 +630,13 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public R getSingleResult() {
-		final List<R> resultList = getResultList();
-		if ( resultList == null || resultList.isEmpty() ) {
-			throw new NoResultException(
-					String.format(
-							"Call to stored procedure [%s] returned no results",
-							getProcedureName()
-					)
-			);
-		}
-		else if ( resultList.size() > 1 ) {
-			throw new NonUniqueResultException(
-					String.format(
-							"Call to stored procedure [%s] returned multiple results",
-							getProcedureName()
-					)
-			);
-		}
+	protected Iterator<R> doIterate() {
+		throw new UnsupportedOperationException( "Query#iterate is not valid for ProcedureCall/StoredProcedureQuery" );
+	}
 
-		return resultList.get( 0 );
+	@Override
+	protected ScrollableResultsImplementor doScroll(ScrollMode scrollMode) {
+		throw new UnsupportedOperationException( "Query#scroll is not valid for ProcedureCall/StoredProcedureQuery" );
 	}
 
 	@Override
@@ -698,6 +682,11 @@ public class ProcedureCallImpl<R>
 		}
 
 		return this;
+	}
+
+	@Override
+	protected void applyEntityGraphQueryHint(String hintName, EntityGraphImpl entityGraph) {
+		throw new IllegalStateException( "EntityGraph hints are not supported for ProcedureCall/StoredProcedureQuery" );
 	}
 
 	@Override

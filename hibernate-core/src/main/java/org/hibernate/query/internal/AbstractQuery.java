@@ -1148,7 +1148,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	protected Type determineType(String namedParam, Class retType) {
 		Type type = locateBinding( namedParam ).getBindType();
 		if ( type == null ) {
-			type = getParameterMetadata().getQueryParameter( namedParam ).getType();
+			type = getParameterMetadata().getQueryParameter( namedParam ).getHibernateType();
 		}
 		if ( type == null ) {
 			type = getProducer().getFactory().resolveParameterBindType( retType );

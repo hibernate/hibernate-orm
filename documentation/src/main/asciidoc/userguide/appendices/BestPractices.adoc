@@ -126,6 +126,12 @@ On the other hand, the more exotic the association mapping, the better the chanc
 
 Therefore, the `@ManyToOne` and the `@OneToOne` child-side association are best to represent a `FOREIGN KEY` relationship.
 
+The parent-side `@OneToOne` association requires https://vladmihalcea.com/2016/02/11/how-to-enable-bytecode-enhancement-dirty-checking-in-hibernate/[bytecode enhancement]
+so that the association can be loaded lazily. Otherwise, the parent-side is always fetched even if the association is marked with `FetchType.LAZY`.
+
+For this reason, https://vladmihalcea.com/2016/07/26/the-best-way-to-map-a-onetoone-relationship-with-jpa-and-hibernate/[it's best to map `@OneToOne` association using `@MapsId`] so that the `PRIMARY KEY` is shared between the child and the parent entities.
+When using `@MapsId`, the parent-side becomes redundant since the child-entity can be easily fetched using the parent entity identifier.
+
 For collections, the association can be either:
 
 - unidirectional
@@ -134,12 +140,14 @@ For collections, the association can be either:
 For unidirectional collections, `Sets` are the best choice because they generate the most efficient SQL statements.
 https://vladmihalcea.com/2015/05/04/how-to-optimize-unidirectional-collections-with-jpa-and-hibernate/[Unidirectional `Lists`] are less efficient than a `@ManyToOne` association.
 
-Bidirectional associations are usually a better choice because the `@ManyToOne` controls the association.
+Bidirectional associations are usually a better choice because the `@ManyToOne` side controls the association.
+
+Embeddable collections (``@ElementCollection`) are unidirectional associations, hence `Sets` are the most efficient, followed by ordered `Lists`, whereas bags (unordered `Lists`) are the least efficient.
 
 The `@ManyToMany` annotation is rarely a good choice because it treats both sides as unidirectional associations.
 
 For this reason, it's much better to map the link table as depicted in the <<chapters/domain/associations.adoc#associations-many-to-many-bidirectional-with-link-entity-lifecycle-example,Bidirectional many-to-many with link entity lifecycle>> section.
-Each `FOREIGN KEY column will be mapped as a `@ManyToOne` association.
+Each `FOREIGN KEY` column will be mapped as a `@ManyToOne` association.
 On each parent-side, a bidirectional `@OneToMany` association is going to map to the aforementioned `@ManyToOne` relationship in the link entity.
 
 [TIP]
@@ -171,7 +179,7 @@ Fetching too much data is the number one performance issue for the vast majority
 Hibernate supports both entity queries (JPQL/HQL and Criteria API) and native SQL statements.
 Entity queries are useful only if you need to modify the fetched entities, therefore benefiting from the https://vladmihalcea.com/2014/08/21/the-anatomy-of-hibernate-dirty-checking/[automatic dirty checking mechanism].
 
-For read-only transactions, you should fetch DTO projections because they allow you to fetch just as many columns as you need to fulfill a certain business use case.
+For read-only transactions, you should fetch DTO projections because they allow you to select just as many columns as you need to fulfill a certain business use case.
 This has many benefits like reducing the load on the currently running Persistence Context because DTO projections don't need to be managed.
 
 [[best-practices-fetching-associations]]
@@ -210,7 +218,7 @@ Hibernate has two caching layers:
 - the first-level cache (Persistence Context) which is a https://vladmihalcea.com/2015/04/20/a-beginners-guide-to-cache-synchronization-strategies/[transactional write-behind cache] providing https://vladmihalcea.com/2014/10/23/hibernate-application-level-repeatable-reads/[application-level repeatable reads].
 - the second-level cache which, unlike application-level caches, https://vladmihalcea.com/2015/04/09/how-does-hibernate-store-second-level-cache-entries/[it doesn't store entity aggregates but normalized dehydrated entity entries].
 
-The first-level cache is not a caching solution "per se", being more useful for ensuring https://vladmihalcea.com/2014/01/05/a-beginners-guide-to-acid-and-database-transactions/[REPEATABLE READS] even when using the https://vladmihalcea.com/2014/12/23/a-beginners-guide-to-transaction-isolation-levels-in-enterprise-java/[READ_COMMITTED isolation level].
+The first-level cache is not a caching solution "per se", being more useful for ensuring https://vladmihalcea.com/2014/01/05/a-beginners-guide-to-acid-and-database-transactions/[`REPEATABLE READ(s)`] even when using the https://vladmihalcea.com/2014/12/23/a-beginners-guide-to-transaction-isolation-levels-in-enterprise-java/[`READ COMMITTED` isolation level].
 
 While the first-level cache is short lived, being cleared when the underlying `EntityManager` is closed, the second-level cache is tied to an `EntityManagerFactory`.
 Some second-level caching providers offer support for clusters. Therefore, a node needs only to store a subset of the whole cached data.

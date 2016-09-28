@@ -85,4 +85,6 @@ public interface TableInformation {
 	 * @return The matching index information.  May return {@code null}
 	 */
 	public IndexInformation getIndex(Identifier indexName);
+
+	public void addColumn(ColumnInformation columnIdentifier);
 }

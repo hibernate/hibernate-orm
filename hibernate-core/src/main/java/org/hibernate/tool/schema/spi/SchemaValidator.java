@@ -8,6 +8,7 @@ package org.hibernate.tool.schema.spi;
 
 import org.hibernate.Incubating;
 import org.hibernate.boot.Metadata;
+import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
 
 /**
  * Service delegate for handling schema validations
@@ -16,6 +17,8 @@ import org.hibernate.boot.Metadata;
  */
 @Incubating
 public interface SchemaValidator {
+	SchemaValidator configure(HibernateSchemaManagementTool hibernateSchemaManagementTool, SchemaFilter validateFilter);
+
 	/**
 	 * Perform the validation of the schema described by Metadata
 	 *

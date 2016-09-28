@@ -61,6 +61,15 @@ public interface DatabaseInformation {
 	TableInformation getTableInformation(QualifiedTableName tableName);
 
 	/**
+	 * Obtain reference to all the {@link TableInformation) for a given {@link Namespace}
+	 *
+	 * @param namespace The {@link Namespace} which contains the {@link TableInformation)
+	 *
+	 * @return a {@link NameSpaceTablesInformation}
+	 */
+	NameSpaceTablesInformation getTablesInformation(Namespace namespace);
+
+	/**
 	 * Obtain reference to the named SequenceInformation
 	 *
 	 * @param catalogName The name of the catalog which contains the schema which the sequence belongs to

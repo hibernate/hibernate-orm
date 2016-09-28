@@ -8,6 +8,7 @@ package org.hibernate.tool.schema.spi;
 
 import org.hibernate.Incubating;
 import org.hibernate.boot.Metadata;
+import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
 
 /**
  * Service delegate for handling schema migration.
@@ -16,6 +17,8 @@ import org.hibernate.boot.Metadata;
  */
 @Incubating
 public interface SchemaMigrator {
+
+	SchemaMigrator configure(HibernateSchemaManagementTool tool, SchemaFilter schemaFilter);
 	/**
 	 * Perform a schema migration (alteration) from the indicated source(s) to the indicated target(s).
 	 *

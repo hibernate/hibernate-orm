@@ -56,15 +56,16 @@ public interface InformationExtractor {
 	TableInformation getTable(Identifier catalog, Identifier schema, Identifier tableName);
 
 	/**
-	 * Return information about column for the given table.  Typically called from the TableInformation itself
-	 * as part of on-demand initialization of its state.
+	 * Extract all the tables information.
 	 *
-	 * @param tableInformation table info for the matching table
-	 * @param columnIdentifier The column identifier for which to locate column
+	 * @param catalog Can be {@code null}, indicating that any catalog may be considered a match.  A
+	 * non-{@code null} value indicates that search should be limited to the passed catalog.
+	 * @param schema Can  be {@code null}, indicating that any schema may be considered a match.  A
+	 * non-{@code null} value indicates that search should be limited to the passed schema .
 	 *
-	 * @return The extracted column information
+	 * @return a {@link NameSpaceTablesInformation}
 	 */
-	ColumnInformation getColumn(TableInformation tableInformation, Identifier columnIdentifier);
+	NameSpaceTablesInformation getTables(Identifier catalog, Identifier schema);
 
 	/**
 	 * Extract information about the given table's primary key.

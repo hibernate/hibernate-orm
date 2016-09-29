@@ -207,7 +207,9 @@ public class SelectClause extends SelectExpressionList {
 					else {
 						origin = fromElement.getRealOrigin();
 					}
-					if ( !fromElementsForLoad.contains( origin ) ) {
+					if ( !fromElementsForLoad.contains( origin )
+							// work around that fetch joins of element collections where their parent instead of the root is selected
+							&& ( !fromElement.isCollectionJoin() || !fromElementsForLoad.contains( fromElement.getFetchOrigin() ) ) ) {
 						throw new QueryException(
 								"query specified join fetching, but the owner " +
 										"of the fetched association was not present in the select list " +

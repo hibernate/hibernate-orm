@@ -1810,8 +1810,11 @@ public class ModelBinder {
 
 		keyBinding.setForeignKeyName( secondaryTableSource.getExplicitForeignKeyName() );
 
-		secondaryTableJoin.createPrimaryKey();
-		secondaryTableJoin.createForeignKey();
+		// skip creating primary and foreign keys for a subselect.
+		if ( secondaryTable.getSubselect() == null ) {
+			secondaryTableJoin.createPrimaryKey();
+			secondaryTableJoin.createForeignKey();
+		}
 	}
 
 	private Property createEmbeddedAttribute(

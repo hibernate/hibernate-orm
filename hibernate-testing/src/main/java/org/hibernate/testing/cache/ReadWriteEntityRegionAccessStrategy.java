@@ -20,7 +20,7 @@ import org.hibernate.persister.entity.EntityPersister;
 /**
  * @author Strong Liu
  */
-class ReadWriteEntityRegionAccessStrategy extends AbstractReadWriteAccessStrategy
+public class ReadWriteEntityRegionAccessStrategy extends AbstractReadWriteAccessStrategy
 		implements EntityRegionAccessStrategy {
 	private final EntityRegionImpl region;
 

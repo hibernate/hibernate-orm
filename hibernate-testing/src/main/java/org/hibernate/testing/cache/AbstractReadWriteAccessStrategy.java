@@ -21,7 +21,7 @@ import org.jboss.logging.Logger;
 /**
  * @author Strong Liu
  */
-abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessStrategy {
+public abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessStrategy {
 	private static final Logger LOG = Logger.getLogger( AbstractReadWriteAccessStrategy.class.getName() );
 
 	private final UUID uuid = UUID.randomUUID();
@@ -181,7 +181,7 @@ abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessStrategy 
 	/**
 	 * Interface type implemented by all wrapper objects in the cache.
 	 */
-	protected interface Lockable {
+	public interface Lockable {
 
 		/**
 		 * Returns <code>true</code> if the enclosed value can be read by a transaction started at the given time.
@@ -214,7 +214,7 @@ abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessStrategy 
 	/**
 	 * Wrapper type representing unlocked items.
 	 */
-	protected final static class Item implements Serializable, Lockable {
+	public final static class Item implements Serializable, Lockable {
 
 		private static final long serialVersionUID = 1L;
 		private final Object value;
@@ -259,7 +259,7 @@ abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessStrategy 
 	/**
 	 * Wrapper type representing locked items.
 	 */
-	protected final static class Lock implements Serializable, Lockable, SoftLock {
+	public final static class Lock implements Serializable, Lockable, SoftLock {
 
 		private static final long serialVersionUID = 2L;
 

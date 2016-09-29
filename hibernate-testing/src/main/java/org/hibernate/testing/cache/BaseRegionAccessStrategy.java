@@ -16,7 +16,7 @@ import org.jboss.logging.Logger;
 /**
  * @author Strong Liu
  */
-abstract class BaseRegionAccessStrategy implements RegionAccessStrategy {
+public abstract class BaseRegionAccessStrategy implements RegionAccessStrategy {
 
 	private static final Logger LOG = Logger.getLogger( BaseRegionAccessStrategy.class );
 

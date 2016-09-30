@@ -216,7 +216,7 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 						: componentDescriptor.unwrap(value[i], componentClass, options);
 			}
 			try {
-				conn = sess.getJdbcConnectionAccess().obtainConnection();
+				conn = sess.connection();
 				String typeName = sqlDialect.getTypeName( sqlType );
 				int cutIndex = typeName.indexOf( '(' );
 				if ( cutIndex > 0 ) {

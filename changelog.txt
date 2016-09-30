@@ -3,6 +3,80 @@ Hibernate 5.0 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.2.3.Final (September 30, 2016)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/24650
+
+** Bug
+    * [HHH-3846] - LazyInit error on persting with detached association
+    * [HHH-5908] - unnecessary updates when using select-before-update dirty check with entity that has immutable many-to-one properties.
+    * [HHH-6562] - Unknown collection role when accessing ElementCollection in Embeddable via Criteria API
+    * [HHH-7681] - Collection changes result in null audit values when collection entity participates in a fake bidirectional relationship.
+    * [HHH-8630] - random map key column generated when using @AttributeOverrides and @ElementCollection
+    * [HHH-9329] - Join With SQL generation regression
+    * [HHH-9739] - Updated object is written to second level cache with CacheMode.IGNORE
+    * [HHH-10229] - Select value from element collection results in wrong SQL being produced
+    * [HHH-10502] - ORDER BY FIELD(..) throws java.sql.SQLException: Operand should contain 1 column(s)
+    * [HHH-10629] - Spatial not bundled in release bundles
+    * [HHH-10659] - Natural Id 2nd level Cache not working when Identity is database generated
+    * [HHH-10693] - PostgreSQL should not use nvarchar when using Nationalization
+    * [HHH-10695] - MySQL fails using the NCLOB type
+    * [HHH-10818] - Allow AttributeConverter on attributes marked as Lob (REALLY this time)
+    * [HHH-10978] - Hibernate throws SQLGrammarException: Error accessing table metadata when @Table is used with schema value and no catalog
+    * [HHH-10981] - Support private persistent attributes in @MappedSuperclas
+    * [HHH-10998] - NullPointerException when using join with subselect in hbm mapping
+    * [HHH-11004] - Array types as @ElementCollection values not handled
+    * [HHH-11005] - OneToMany generated incorrect SQL where MapKey is on superclass and using InheritanceType.JOINED
+    * [HHH-11023] - Startup performance regression : schema update/validate
+    * [HHH-11030] - InformationExtractorJdbcDatabaseMetaDataImpl getTable method wrong default namespace lookup
+    * [HHH-11033] - NativeQueryImpl::doScroll seems to be broken when used with setParameterList (affects scroll and stream)
+    * [HHH-11036] - The drop schema filtering of sequence generation with schemaFilter is wrong
+    * [HHH-11037] - Subclass embeddable sub-properties ignored if superclass has property with same name
+    * [HHH-11038] - Invalid statement generated for @MapKeyColumn(updatable=false) for @OneToMany
+    * [HHH-11051] - Cache EventListenerRegistry and StatisticsImplementor
+    * [HHH-11056] - Envers audits unchanged objects for a certain use case
+    * [HHH-11058] - NPE in SchemaValidator with DdlTransactionIsolatorJtaImpl
+    * [HHH-11061] - Attempt to resolve foreign key metadata from JDBC metadata failed to find column mappings for foreign when keywords auto quoting is enabled
+    * [HHH-11063] - Auditing tables are not filled correctly when using a custom hashCode method that does not use the entity id.
+    * [HHH-11067] - Proxy-wrapped Sessions (ThreadLocalSessionContext.TransactionProtectionWrapper) handle equals incorrectly
+    * [HHH-11072] - Skip CriteriaLiteralInSelectExpressionTest#testStringLiteral2 for Oracle, DB2, SQL Server, and Sybase dialects
+    * [HHH-11073] - Casting to boolean in query fails on MySQL
+    * [HHH-11081] - JPA join with treat causes QuerySyntaxException: Invalid path
+    * [HHH-11084] - SQLServer2005LimitHandler applies TOP(?) to subselect
+    * [HHH-11092] - NamedNativeQueries ordinal parameters are zero based
+    * [HHH-11097] - Performance problem if cached entity has attribute state with an expensive toString() method (LOB, etc)
+    * [HHH-11099] - Closing EntityManager with an active transaction causes JTA connection leak
+    * [HHH-11101] - Missing unique constraint for many-to-many with unique=true in list mapping
+    * [HHH-11120] - SessionFactoryOptionsImpl#releaseResourcesOnCloseEnabled never initialized
+    * [HHH-11121] - Wrong NativeQueryImpl.setZeroBasedParametersIndex when Session#createSQLQuery is executed after EM#createNativeQuery
+    * [HHH-11131] - OrderedSequenceGenerator no longer serves any purpose
+    * [HHH-11133] - Audit tables storing incorrect discriminator value when using JOINED entity inheritance.
+    * [HHH-11140] - "query specified join fetching, but the owner of the fetched association was not present in the select list" with @ElementCollection
+
+
+** New Feature
+    * [HHH-10399] - Add support for specifying TimeZone for ZonedDateTime type
+
+
+** Improvement
+    * [HHH-10106] - Include source entity name and table name (attribute name too ideally) for associations referencing unmapped classes
+    * [HHH-10406] - Provide @CreationTimestamp and @UpdateTimestamp for Instant and LocalDateTime
+    * [HHH-10523] - 2.3.20. SQL quoted identifiers in User Guide should discuss explicit enclosure in double-quotes (JPA)
+    * [HHH-10972] - Use UTF-8 charset for reading files for initializing the database (javax.persistence.sql-load-script-source scripts)
+    * [HHH-11007] - The distributed modules for WildFly are missing Hibernate Envers test case support.
+    * [HHH-11027] - Document the PASS_DISTINCT_THROUGH Query Hint
+    * [HHH-11059] - Improve documentation for JTA configuration in user guide and 5.0 migration guide
+    * [HHH-11069] - Improve documentation regarding GenerationType.AUTO
+    * [HHH-11070] - Add the full Hibernate ORM version to the User Guide title
+    * [HHH-11074] - Add method setTimeout for DetachedCriteria
+    * [HHH-11082] - Log the failing SQL when the batched execution throws a RuntimeException (e.g. StaleStateException)
+    * [HHH-11108] - Add test to prove that @Basic( fetch = FetchType.LAZY ) really works as expected
+    * [HHH-11116] - Improve the JPA bootstrapping section in the User Guide
+    * [HHH-11119] - Improve performance of StringHelper.qualify() and StringHelper.unqualify()
+    * [HHH-11136] - Reduce memory consumption caused by Method.getParameterTypes()
+
+
+
 Changes in 5.2.2.Final (August 04, 2016)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/24150

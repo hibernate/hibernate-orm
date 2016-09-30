@@ -13,12 +13,10 @@ import java.sql.SQLException;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.SessionImpl;
-import org.hibernate.type.LiteralType;
 import org.hibernate.type.AbstractStandardBasicType;
 import org.hibernate.type.descriptor.WrapperOptions;
 
-public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]>
-	implements LiteralType<T[]> {
+public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 
 	private final JavaTypeDescriptor<T> componentDescriptor;
 	private final Class<T> componentClass;
@@ -81,47 +79,12 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]>
 	}
 
 	@Override
-	public String objectToSQLString(T[] value, Dialect dialect) throws Exception {
-		if ( value == null ) {
-			return "null";
-		}
-		StringBuilder sb = new StringBuilder( "ARRAY[" );
-		String glue = "";
-		for ( T v : value ) {
-			sb.append( glue );
-			if ( v == null ) {
-				sb.append( "null" );
-				glue = ",";
-				continue;
-			}
-			sb.append( '"' );
-			String carr = v.toString();
-			int codepoint = 0; //set to 0 to allocate stack before the loop
-			int characlen = 0;
-			char[] tchars = new char[2];
-			for ( int i = 0; i < carr.length(); i = characlen ) {
-				codepoint = carr.codePointAt( i );
-				characlen = Character.toChars( codepoint, tchars, 0 );
-				if ( codepoint == '\'' ) {
-					// Escape as per SQL 9075-2:2003 section 5.3
-					// Sorry, to non-compliant SQL servers.
-					sb.append( '\'' );
-				}
-				sb.append( tchars, 0, characlen );
-			}
-			sb.append( '"' );
-			glue = ",";
-		}
-		sb.append( ']' );
-		return sb.toString();
-	}
-
-	@Override
 	public String toString(T[] value) {
 		if ( value == null ) {
 			return "null";
 		}
-		StringBuilder sb = new StringBuilder( "[" );
+		StringBuilder sb = new StringBuilder();
+		sb.append( '{' );
 		String glue = "";
 		for ( T v : value ) {
 			sb.append( glue );
@@ -130,24 +93,12 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]>
 				glue = ",";
 				continue;
 			}
-			sb.append( '"' );
-			String carr = componentDescriptor.toString( v );
-			int codepoint = 0; //set to 0 to allocate stack before the loop
-			int characlen = 0;
-			char[] tchars = new char[2];
-			for ( int i = 0; i < carr.length(); i = characlen ) {
-				codepoint = carr.codePointAt( i );
-				characlen = Character.toChars( codepoint, tchars, 0 );
-				if ( codepoint == '\'' ) {
-					// This escape is not meant for SQL
-					sb.append( '\\' );
-				}
-				sb.append( tchars, 0, characlen );
-			}
-			sb.append( '"' );
+			sb.append( '\'' );
+			sb.append( v.toString().replace( "\\", "\\\\" ).replace( "'", "\\'" ) );
+			sb.append( '\'' );
 			glue = ",";
 		}
-		sb.append( ']' );
+		sb.append( '}' );
 		return sb.toString();
 	}
 

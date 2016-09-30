@@ -10,12 +10,14 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -44,6 +46,8 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.type.CollectionType;
+import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
 /**
@@ -1008,12 +1012,56 @@ public class ActionQueue {
 		 */
 		public static final InsertActionSorter INSTANCE = new InsertActionSorter();
 
+		private static class BatchIdentifier {
+
+			private final String entityName;
+
+			private Set<String> parentEntityNames = new HashSet<>( );
+
+			private Set<String> childEntityNames = new HashSet<>( );
+
+			public BatchIdentifier(
+					String entityName) {
+				this.entityName = entityName;
+			}
+
+			@Override
+			public boolean equals(Object o) {
+				if ( this == o ) {
+					return true;
+				}
+				if ( !( o instanceof BatchIdentifier ) ) {
+					return false;
+				}
+				BatchIdentifier that = (BatchIdentifier) o;
+				return Objects.equals( entityName, that.entityName );
+			}
+
+			@Override
+			public int hashCode() {
+				return Objects.hash( entityName );
+			}
+
+			public String getEntityName() {
+				return entityName;
+			}
+
+			public Set<String> getParentEntityNames() {
+				return parentEntityNames;
+			}
+
+			public Set<String> getChildEntityNames() {
+				return childEntityNames;
+			}
+		}
+
 		// the mapping of entity names to their latest batch numbers.
-		private Map<String, Integer> latestBatches;
-		private Map<Object, Integer> entityBatchNumber;
+		private List<BatchIdentifier> latestBatches;
+
+		private Map<Object, BatchIdentifier> entityBatchIdentifier;
 
 		// the map of batch numbers to EntityInsertAction lists
-		private Map<Integer, List<AbstractEntityInsertAction>> actionBatches;
+		private Map<BatchIdentifier, List<AbstractEntityInsertAction>> actionBatches;
 
 		public InsertActionSorter() {
 		}
@@ -1023,64 +1071,68 @@ public class ActionQueue {
 		 */
 		public void sort(List<AbstractEntityInsertAction> insertions) {
 			// optimize the hash size to eliminate a rehash.
-			this.latestBatches = new HashMap<String, Integer>();
-			this.entityBatchNumber = new HashMap<Object, Integer>( insertions.size() + 1, 1.0f );
-			this.actionBatches = new HashMap<Integer, List<AbstractEntityInsertAction>>();
+			this.latestBatches = new ArrayList<>( );
+			this.entityBatchIdentifier = new HashMap<>( insertions.size() + 1, 1.0f );
+			this.actionBatches = new HashMap<>();
 
-			// the list of entity names that indicate the batch number
 			for ( AbstractEntityInsertAction action : insertions ) {
-				// remove the current element from insertions. It will be added back later.
-				String entityName = action.getEntityName();
+				BatchIdentifier batchIdentifier = new BatchIdentifier( action.getEntityName() );
 
 				// the entity associated with the current action.
 				Object currentEntity = action.getInstance();
+				int index = latestBatches.indexOf( batchIdentifier );
 
-				Integer batchNumber;
-				if ( latestBatches.containsKey( entityName ) ) {
-					// There is already an existing batch for this type of entity.
-					// Check to see if the latest batch is acceptable.
-					batchNumber = findBatchNumber( action, entityName );
+				if ( index != -1 )  {
+					batchIdentifier = latestBatches.get( index );
 				}
 				else {
-					// add an entry for this type of entity.
-					// we can be assured that all referenced entities have already
-					// been processed,
-					// so specify that this entity is with the latest batch.
-					// doing the batch number before adding the name to the list is
-					// a faster way to get an accurate number.
-
-					batchNumber = actionBatches.size();
-					latestBatches.put( entityName, batchNumber );
+					latestBatches.add( batchIdentifier );
 				}
-				entityBatchNumber.put( currentEntity, batchNumber );
-				addToBatch( batchNumber, action );
+				addParentChildEntityNames( action, batchIdentifier );
+				entityBatchIdentifier.put( currentEntity, batchIdentifier );
+				addToBatch(batchIdentifier, action);
 			}
 			insertions.clear();
 
+			for ( int i = 0; i < latestBatches.size(); i++ ) {
+				BatchIdentifier batchIdentifier = latestBatches.get( i );
+				String entityName = batchIdentifier.getEntityName();
+
+				//Make sure that child entries are not before parents
+				for ( int j = i - 1; j >= 0; j-- ) {
+					BatchIdentifier prevBatchIdentifier = latestBatches.get( j );
+					if(prevBatchIdentifier.getParentEntityNames().contains( entityName )) {
+						latestBatches.remove( i );
+						latestBatches.add( j, batchIdentifier );
+					}
+				}
+
+				//Make sure that parent entries are not after children
+				for ( int j = i + 1; j < latestBatches.size(); j++ ) {
+					BatchIdentifier nextBatchIdentifier = latestBatches.get( j );
+					//Take care of unidirectional @OneToOne associations but exclude bidirectional @ManyToMany
+					if(nextBatchIdentifier.getChildEntityNames().contains( entityName ) &&
+						!batchIdentifier.getChildEntityNames().contains( nextBatchIdentifier.getEntityName() )) {
+						latestBatches.remove( i );
+						latestBatches.add( j, batchIdentifier );
+					}
+				}
+			}
+
 			// now rebuild the insertions list. There is a batch for each entry in the name list.
-			for ( int i = 0; i < actionBatches.size(); i++ ) {
-				List<AbstractEntityInsertAction> batch = actionBatches.get( i );
+			for ( BatchIdentifier rootIdentifier : latestBatches ) {
+				List<AbstractEntityInsertAction> batch = actionBatches.get( rootIdentifier );
 				insertions.addAll( batch );
 			}
 		}
 
 		/**
-		 * Finds an acceptable batch for this entity to be a member as part of the {@link InsertActionSorter}
+		 * Add parent and child entity names so that we know how to rearrange dependencies
 		 * 
 		 * @param action The action being sorted
-		 * @param entityName The name of the entity affected by the action
-		 * @return An appropriate batch number; todo document this process better
+		 * @param batchIdentifier The batch identifier of the entity affected by the action
 		 */
-		private Integer findBatchNumber(AbstractEntityInsertAction action, String entityName) {
-			// loop through all the associated entities and make sure they have been
-			// processed before the latest
-			// batch associated with this entity type.
-
-			// the current batch number is the latest batch for this entity type.
-			Integer latestBatchNumberForType = latestBatches.get( entityName );
-
-			// loop through all the associations of the current entity and make sure that they are processed
-			// before the current batch number
+		private void addParentChildEntityNames(AbstractEntityInsertAction action, BatchIdentifier batchIdentifier) {
 			Object[] propertyValues = action.getState();
 			Type[] propertyTypes = action.getPersister().getClassMetadata().getPropertyTypes();
 
@@ -1088,34 +1140,29 @@ public class ActionQueue {
 				Object value = propertyValues[i];
 				Type type = propertyTypes[i];
 				if ( type.isEntityType() && value != null ) {
-					// find the batch number associated with the current association, if any.
-					Integer associationBatchNumber = entityBatchNumber.get( value );
-					if ( associationBatchNumber != null && associationBatchNumber.compareTo( latestBatchNumberForType ) > 0 ) {
-						// create a new batch for this type. The batch number is the number of current batches.
-						latestBatchNumberForType = actionBatches.size();
-						latestBatches.put( entityName, latestBatchNumberForType );
-						// since this entity will now be processed in the latest possible batch,
-						// we can be assured that it will come after all other associations,
-						// there's not need to continue checking.
-						break;
-					}
+					EntityType entityType = (EntityType) type;
+					String entityName = entityType.getName();
+					batchIdentifier.getParentEntityNames().add( entityName );
+				}
+				else if ( type.isCollectionType() && value != null ) {
+					CollectionType collectionType = (CollectionType) type;
+					String entityName = collectionType.getAssociatedEntityName( ( action.getSession().getFactory() ) );
+					batchIdentifier.getChildEntityNames().add( entityName );
 				}
 			}
-			return latestBatchNumberForType;
 		}
 
-		private void addToBatch(Integer batchNumber, AbstractEntityInsertAction action) {
-			List<AbstractEntityInsertAction> actions = actionBatches.get( batchNumber );
+		private void addToBatch(BatchIdentifier batchIdentifier, AbstractEntityInsertAction action) {
+			List<AbstractEntityInsertAction> actions = actionBatches.get( batchIdentifier );
 
 			if ( actions == null ) {
-				actions = new LinkedList<AbstractEntityInsertAction>();
-				actionBatches.put( batchNumber, actions );
+				actions = new LinkedList<>();
+				actionBatches.put( batchIdentifier, actions );
 			}
 			actions.add( action );
 		}
 
 	}
-
 
 	private static abstract class ListProvider<T extends Executable & Comparable & Serializable> {
 		abstract ExecutableList<T> get(ActionQueue instance);

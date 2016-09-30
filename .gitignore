@@ -36,6 +36,7 @@ bin
 *.log
 .clover
 .DS_Store
+gradle-app.setting
 
 # JBoss Transactions
 ObjectStore

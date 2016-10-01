@@ -7,6 +7,7 @@
 
 package org.hibernate.spatial.testing;
 
+import javax.sql.DataSource;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -22,7 +23,6 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import javax.sql.DataSource;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.geolatte.geom.Geometry;
@@ -74,7 +74,12 @@ public class DataSourceUtils {
 	 * @param jdbcPass
 	 * @param sqlExpressionTemplate SQLExpressionTemplate object that generates SQL statements for this database
 	 */
-	public DataSourceUtils(String jdbcDriver, String jdbcUrl, String jdbcUser, String jdbcPass, SQLExpressionTemplate sqlExpressionTemplate) {
+	public DataSourceUtils(
+			String jdbcDriver,
+			String jdbcUrl,
+			String jdbcUser,
+			String jdbcPass,
+			SQLExpressionTemplate sqlExpressionTemplate) {
 		this.jdbcDriver = jdbcDriver;
 		this.jdbcUrl = jdbcUrl;
 		this.jdbcUser = jdbcUser;
@@ -110,15 +115,15 @@ public class DataSourceUtils {
 			properties.load( is );
 			return properties;
 		}
-		catch ( IOException e ) {
-			throw ( new RuntimeException( e ) );
+		catch (IOException e) {
+			throw (new RuntimeException( e ));
 		}
 		finally {
 			if ( is != null ) {
 				try {
 					is.close();
 				}
-				catch ( IOException e ) {
+				catch (IOException e) {
 					//nothing to do
 				}
 			}
@@ -141,7 +146,7 @@ public class DataSourceUtils {
 	 * @throws SQLException
 	 */
 	public void close() throws SQLException {
-		( (BasicDataSource) dataSource ).close();
+		((BasicDataSource) dataSource).close();
 	}
 
 	/**
@@ -190,7 +195,7 @@ public class DataSourceUtils {
 					cn.close();
 				}
 			}
-			catch ( SQLException e ) {
+			catch (SQLException e) {
 				// nothing to do
 			}
 		}
@@ -212,14 +217,18 @@ public class DataSourceUtils {
 			stmt.close();
 			LOG.info( "Loaded " + sum( insCounts ) + " rows." );
 		}
+		catch (SQLException e) {
+			e.printStackTrace();
+			throw e;
+		}
 		finally {
 			try {
 				if ( cn != null ) {
 					cn.close();
 				}
 			}
-			catch ( SQLException e ) {
-				// nothing to do
+			catch (SQLException e) {
+				e.printStackTrace();
 			}
 		}
 	}
@@ -255,7 +264,9 @@ public class DataSourceUtils {
 			return sw.toString();
 		}
 		finally {
-			if (reader != null) reader.close();
+			if ( reader != null ) {
+				reader.close();
+			}
 			is.close();
 		}
 	}
@@ -287,7 +298,7 @@ public class DataSourceUtils {
 					cn.close();
 				}
 			}
-			catch ( SQLException e ) {
+			catch (SQLException e) {
 			} //do nothing.
 		}
 	}
@@ -323,7 +334,7 @@ public class DataSourceUtils {
 			}
 
 		}
-		catch ( SQLException e ) {
+		catch (SQLException e) {
 			e.printStackTrace();
 		}
 		finally {
@@ -331,14 +342,16 @@ public class DataSourceUtils {
 				if ( results != null ) {
 					results.close();
 				}
-			} catch (SQLException e){
+			}
+			catch (SQLException e) {
 				//nothing to do
 			}
 			try {
 				if ( pstmt != null ) {
 					pstmt.close();
 				}
-			} catch (SQLException e){
+			}
+			catch (SQLException e) {
 				//nothing to do
 			}
 			try {
@@ -346,7 +359,7 @@ public class DataSourceUtils {
 					cn.close();
 				}
 			}
-			catch ( SQLException e ) {
+			catch (SQLException e) {
 				// nothing we can do.
 			}
 		}
@@ -371,7 +384,7 @@ public class DataSourceUtils {
 				try {
 					result.put( testDataElement.id, decoder.decode( testDataElement.wkt ) );
 				}
-				catch ( WktDecodeException e ) {
+				catch (WktDecodeException e) {
 					System.out
 							.println(
 									String.format(

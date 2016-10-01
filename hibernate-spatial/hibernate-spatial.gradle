@@ -21,9 +21,8 @@ mavenPom {
 
 dependencies {
     compile(project(':hibernate-core'))
-
     compile([group: 'postgresql', name: 'postgresql', version: '8.4-701.jdbc4'])
-    compile([group: 'org.geolatte', name: 'geolatte-geom', version: '1.0.4'])
+    compile([group: 'org.geolatte', name: 'geolatte-geom', version: '1.0.6'])
 
     compile(libraries.dom4j) {
         transitive = false
@@ -34,11 +33,6 @@ dependencies {
     testCompile(libraries.junit)
     testCompile(project(':hibernate-testing'))
     testCompile([group: 'commons-dbcp', name: 'commons-dbcp', version: '1.4'])
-//    testCompile([group: 'com.oracle.jdbc', name: 'ojdbc6', version: '11.1.0.7.0'])
-//    testRuntime([group: 'com.microsoft', name: 'sqljdbc', version: '2.0'])
-//    testRuntime("org.opengeo:geodb:0.7")
-//    testRuntime("mysql:mysql-connector-java:5.1.15")
-//    testRuntime("postgresql:postgresql:8.4-701.jdbc4")
     testCompile(libraries.validation)
     testCompile(libraries.jandex)
     testCompile(libraries.classmate)

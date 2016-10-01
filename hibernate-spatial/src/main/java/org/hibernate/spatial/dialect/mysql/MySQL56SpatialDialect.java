@@ -8,14 +8,16 @@ package org.hibernate.spatial.dialect.mysql;
 
 /**
  * @author Karel Maesen, Geovise BVBA
- *         creation-date: 10/9/13
+ * creation-date: 10/9/13
  */
 
 import java.util.Map;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.SpatialRelation;
@@ -71,6 +73,19 @@ public class MySQL56SpatialDialect extends MySQL5Dialect implements SpatialDiale
 	@Override
 	public String getTypeName(int code, long length, int precision, int scale) throws HibernateException {
 		return dialectDelegate.getTypeName( code, length, precision, scale );
+	}
+
+	/**
+	 * Allows the Dialect to contribute additional types
+	 *
+	 * @param typeContributions Callback to contribute the types
+	 * @param serviceRegistry The service registry
+	 */
+	@Override
+	public void contributeTypes(
+			TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes( typeContributions, serviceRegistry );
+		dialectDelegate.contributeTypes( typeContributions, serviceRegistry );
 	}
 
 	@Override

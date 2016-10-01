@@ -64,7 +64,7 @@ public class TestSupportFactories {
 				"org.hibernate.spatial.dialect.mysql.MySQL5InnoDBSpatialDialect".equals( canonicalName ) ) {
 			return MySQLTestSupport.class;
 		}
-		if ( "org.hibernate.spatial.dialect.mysql.MySQLSpatial56Dialect".equals( canonicalName ) ||
+		if ( "org.hibernate.spatial.dialect.mysql.MySQL56SpatialDialect".equals( canonicalName ) ||
 				"org.hibernate.spatial.dialect.mysql.MySQL56InnoDBSpatialDialect".equals( canonicalName ) ) {
 			return MySQL56TestSupport.class;
 		}

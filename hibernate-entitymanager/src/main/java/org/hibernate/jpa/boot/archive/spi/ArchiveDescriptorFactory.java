@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2015, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -37,6 +37,7 @@ public interface ArchiveDescriptorFactory {
 	 * @param url The url to the archive
 	 *
 	 * @return The descriptor
+     * @throws ArchiveException if building the archive descriptor fails
 	 */
 	public ArchiveDescriptor buildArchiveDescriptor(URL url);
 
@@ -47,6 +48,7 @@ public interface ArchiveDescriptorFactory {
 	 * @param path The path within the given url that refers to the archive
 	 *
 	 * @return The descriptor
+     * @throws ArchiveException if building the archive descriptor fails
 	 */
 	public ArchiveDescriptor buildArchiveDescriptor(URL url, String path);
 

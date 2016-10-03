@@ -38,7 +38,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	private static final Pattern ORDER_BY_PATTERN = buildShallowIndexPattern( ORDER_BY, true );
 	private static final Pattern COMMA_PATTERN = buildShallowIndexPattern( ",", false );
 	private static final Pattern ALIAS_PATTERN =
-			Pattern.compile( "\\S+\\s*(\\s(?i)as\\s)\\s*(\\S+)*\\s*$|\\s+(\\S+)$" );
+			Pattern.compile( "(?![^\\[]*(\\]))\\S+\\s*(\\s(?i)as\\s)\\s*(\\S+)*\\s*$|(?![^\\[]*(\\]))\\s+(\\S+)$" );
 
 	// Flag indicating whether TOP(?) expression has been added to the original query.
 	private boolean topAdded;
@@ -262,10 +262,18 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 		// This will match any text provided with:
 		// 		columnName [[as] alias]
 		final Matcher matcher = ALIAS_PATTERN.matcher( expression );
+
+		String alias = null;
 		if ( matcher.find() && matcher.groupCount() > 1 ) {
-			return matcher.group( 1 ) != null ? matcher.group( 2 ) : matcher.group( 3 );
+			// default to the alias after 'as' if detected
+			alias = matcher.group( 3 );
+			if ( alias == null ) {
+				// use the clause which has on proceeding 'as' fragment.
+				alias = matcher.group( 0 );
+			}
 		}
-		return null;
+
+		return ( alias != null ? alias.trim() : null );
 	}
 
 	/**
@@ -356,7 +364,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 				"(" +
 				( wordBoundardy ? "\\b" : "" ) +
 				pattern +
-				")(?![^\\(]*\\))",
+				")(?![^\\(|\\[]*(\\)|\\]))",
 				Pattern.CASE_INSENSITIVE
 		);
 	}

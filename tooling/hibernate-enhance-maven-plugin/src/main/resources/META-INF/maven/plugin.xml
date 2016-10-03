@@ -69,7 +69,7 @@
           <description>Enable enhancement for management of bi-direction associations</description>
         </parameter>
         <parameter>
-          <name>enableFieldAccessEnhancement</name>
+          <name>enableExtendedEnhancement</name>
           <type>java.lang.Boolean</type>
           <required>false</required>
           <editable>true</editable>

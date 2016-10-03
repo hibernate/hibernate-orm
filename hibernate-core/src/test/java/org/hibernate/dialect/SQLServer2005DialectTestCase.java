@@ -297,6 +297,41 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-11145")
+	public void testGetLimitStringWithFromInColumnName() {
+		final String query = "select [Created From Nonstock Item], field2 from table1";
+
+		assertEquals( "WITH query AS (SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( " +
+						"select [Created From Nonstock Item] as page0_, field2 as page1_ from table1 ) inner_query ) " +
+						"SELECT page0_, page1_ FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
+				dialect.getLimitHandler().processSql( query, toRowSelection( 1, 5 ) )
+		);
+	}
+
+	@TestForIssue(jiraKey = "HHH-11145")
+	public void testGetLimitStringWithQuotedColumnNamesAndAlias() {
+		final String query = "select [Created From Item] c1, field2 from table1";
+
+		assertEquals( "WITH query AS (SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( " +
+						"select [Created From Item] c1, field2 as page0_ from table1 ) inner_query ) " +
+						"SELECT c1, page0_ FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
+				dialect.getLimitHandler().processSql( query, toRowSelection( 1, 5 ) )
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11145")
+	public void testGetLimitStringWithQuotedColumnNamesAndAliasWithAs() {
+		final String query = "select [Created From Item] as c1, field2 from table1";
+
+		assertEquals( "WITH query AS (SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( " +
+						"select [Created From Item] as c1, field2 as page0_ from table1 ) inner_query ) " +
+						"SELECT c1, page0_ FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
+				dialect.getLimitHandler().processSql( query, toRowSelection( 1, 5 ) )
+		);
+	}
+
+	@Test
 	@TestForIssue(jiraKey = "HHH-11324")
 	public void testGetLimitStringWithSelectClauseNestedQueryUsingParenthesis() {
 		final String query = "select t1.c1 as col_0_0, (select case when count(t2.c1)>0 then 'ADDED' else 'UNMODIFIED' end from table2 t2 WHERE (t2.c1 in (?))) as col_1_0 from table1 t1 WHERE 1=1 ORDER BY t1.c1 ASC";

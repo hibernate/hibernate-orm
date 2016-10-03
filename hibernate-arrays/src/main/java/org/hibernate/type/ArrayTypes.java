@@ -13,8 +13,7 @@ import org.hibernate.type.descriptor.java.GenericArrayTypeDescriptor;
 import org.hibernate.type.descriptor.sql.ArrayTypeDescriptor;
 
 public class ArrayTypes<T>
-		extends AbstractSingleColumnStandardBasicType<T[]>
-		implements LiteralType<T[]> {
+		extends AbstractSingleColumnStandardBasicType<T[]> {
 
 	// Taken directly from org.hibernate.type.StandardBasicTypes
 	public static final ArrayTypes BOOLEAN = new ArrayTypes<>( BooleanType.INSTANCE );
@@ -112,23 +111,6 @@ public class ArrayTypes<T>
 	@Override
 	protected boolean registerUnderJavaType() {
 		return true;
-	}
-
-	@Override
-	public String objectToSQLString(T[] value, Dialect dialect) throws Exception {
-		StringBuilder sb = new StringBuilder( "{" );
-		for ( T i : value ) {
-			if ( i == null ) {
-				sb.append( "null" );
-			}
-			else {
-				sb.append( dialect.quote( i.toString() ) );
-			}
-			sb.append( ',' );
-		}
-		sb.deleteCharAt( sb.length() - 1 );
-		sb.append( '}' );
-		return sb.toString();
 	}
 
 }

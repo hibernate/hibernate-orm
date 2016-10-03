@@ -71,7 +71,7 @@ public class ArrayTypeDescriptor implements SqlTypeDescriptor {
 					throw new HibernateException( "JDBC driver does not support named parameters for setArray. Use positional." );
 				}
 				// Not that it's supposed to, by standard. There are numerous missing methods that only
-				// have versions for named positional parameter, but not named ones.
+				// have versions for positional parameter, but not named ones.
 
 				final java.sql.Array arr = javaTypeDescriptor.unwrap( value, java.sql.Array.class, options );
 				try {

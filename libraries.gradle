@@ -19,6 +19,7 @@ ext {
     cdiVersion = '1.1'
 
     javassistVersion = '3.20.0-GA'
+    byteBuddyVersion = '1.5.4'
 
     // Wildfly version targeted by module ZIP; Arquillian/Shrinkwrap versions used for CDI testing and testing the module ZIP
     wildflyVersion = '10.0.0.Final'
@@ -47,6 +48,9 @@ ext {
 
             // Javassist
             javassist:      "org.javassist:javassist:${javassistVersion}",
+
+            // Byte Buddy
+            byteBuddy:      "net.bytebuddy:byte-buddy:${byteBuddyVersion}",
 
             // javax
             jpa:            'org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0.Final',

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.bytecode.enhance.internal;
+package org.hibernate.bytecode.enhance.internal.javassist;
 
 import java.beans.Introspector;
 import java.lang.annotation.Annotation;
@@ -207,7 +207,7 @@ public class PersistentAttributesHelper {
 				PersistentAttributesHelper.hasAnnotation( persistentField, ManyToMany.class );
 	}
 
-	public static String getMappedBy(CtField persistentField, CtClass targetEntity, EnhancementContext context) throws NotFoundException {
+	public static String getMappedBy(CtField persistentField, CtClass targetEntity, JavassistEnhancementContext context) throws NotFoundException {
 		final String local = getMappedByFromAnnotation( persistentField );
 		return local.isEmpty() ? getMappedByFromTargetEntity( persistentField, targetEntity, context ) : local;
 	}
@@ -233,7 +233,7 @@ public class PersistentAttributesHelper {
 	private static String getMappedByFromTargetEntity(
 			CtField persistentField,
 			CtClass targetEntity,
-			EnhancementContext context) throws NotFoundException {
+			JavassistEnhancementContext context) throws NotFoundException {
 		// get mappedBy value by searching in the fields of the target entity class
 		for ( CtField f : targetEntity.getDeclaredFields() ) {
 			if ( context.isPersistentField( f )

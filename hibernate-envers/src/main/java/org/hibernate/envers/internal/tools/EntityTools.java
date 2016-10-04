@@ -6,7 +6,6 @@
  */
 package org.hibernate.envers.internal.tools;
 
-import javassist.util.proxy.ProxyFactory;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -76,7 +75,7 @@ public abstract class EntityTools {
 		if ( clazz == null ) {
 			return null;
 		}
-		else if ( ProxyFactory.isProxyClass( clazz ) ) {
+		else if ( HibernateProxy.class.isAssignableFrom( clazz ) ) {
 			// Get the source class of Javassist proxy instance.
 			return (Class<T>) clazz.getSuperclass();
 		}

@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.bytecode.enhancement;
 
-import javassist.CtClass;
+import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 
 import org.hibernate.test.bytecode.enhancement.association.InheritedAttributeAssociationTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.group.LazyGroupUpdateTestTask;
@@ -50,6 +50,7 @@ import org.hibernate.test.bytecode.enhancement.merge.CompositeMergeTestTask;
 import org.hibernate.test.bytecode.enhancement.ondemandload.LazyCollectionWithClearedSessionTestTask;
 import org.hibernate.test.bytecode.enhancement.ondemandload.LazyCollectionWithClosedSessionTestTask;
 import org.hibernate.test.bytecode.enhancement.ondemandload.LazyEntityLoadingWithClosedSessionTestTask;
+import org.hibernate.test.bytecode.enhancement.otherentityentrycontext.OtherEntityEntryContextTestTask;
 import org.hibernate.test.bytecode.enhancement.pk.EmbeddedPKTestTask;
 import org.junit.Test;
 
@@ -112,7 +113,7 @@ public class EnhancerTest extends BaseUnitTestCase {
 	public void testLazyProxyOnEnhancedEntity() {
 		EnhancerTestUtils.runEnhancerTestTask( LazyProxyOnEnhancedEntityTestTask.class, new EnhancerTestContext() {
 			@Override
-			public boolean hasLazyLoadableAttributes(CtClass classDescriptor) {
+			public boolean hasLazyLoadableAttributes(UnloadedClass classDescriptor) {
 				return false;
 			}
 		} );
@@ -176,7 +177,7 @@ public class EnhancerTest extends BaseUnitTestCase {
 		EnhancerTestUtils.runEnhancerTestTask( MappedSuperclassTestTask.class );
 		EnhancerTestUtils.runEnhancerTestTask( MappedSuperclassTestTask.class, new EnhancerTestContext() {
 			@Override
-			public boolean hasLazyLoadableAttributes(CtClass classDescriptor) {
+			public boolean hasLazyLoadableAttributes(UnloadedClass classDescriptor) {
 				// HHH-10981 - Without lazy loading, the generation of getters and setters has a different code path
 				return false;
 			}

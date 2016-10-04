@@ -51,6 +51,8 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
 import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.bytecode.enhance.spi.UnloadedClass;
+import org.hibernate.bytecode.enhance.spi.UnloadedField;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.beanvalidation.BeanValidationIntegrator;
@@ -276,39 +278,39 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		return new DefaultEnhancementContext() {
 
 			@Override
-			public boolean isEntityClass(CtClass classDescriptor) {
+			public boolean isEntityClass(UnloadedClass classDescriptor) {
 				return managedResources.getAnnotatedClassNames().contains( classDescriptor.getName() )
 						&& super.isEntityClass( classDescriptor );
 			}
 
 			@Override
-			public boolean isCompositeClass(CtClass classDescriptor) {
+			public boolean isCompositeClass(UnloadedClass classDescriptor) {
 				return managedResources.getAnnotatedClassNames().contains( classDescriptor.getName() )
 						&& super.isCompositeClass( classDescriptor );
 			}
 
 			@Override
-			public boolean doBiDirectionalAssociationManagement(CtField field) {
+			public boolean doBiDirectionalAssociationManagement(UnloadedField field) {
 				return associationManagementEnabled;
 			}
 
 			@Override
-			public boolean doDirtyCheckingInline(CtClass classDescriptor) {
+			public boolean doDirtyCheckingInline(UnloadedClass classDescriptor) {
 				return dirtyTrackingEnabled;
 			}
 
 			@Override
-			public boolean hasLazyLoadableAttributes(CtClass classDescriptor) {
+			public boolean hasLazyLoadableAttributes(UnloadedClass classDescriptor) {
 				return lazyInitializationEnabled;
 			}
 
 			@Override
-			public boolean isLazyLoadable(CtField field) {
+			public boolean isLazyLoadable(UnloadedField field) {
 				return lazyInitializationEnabled;
 			}
 
 			@Override
-			public boolean doExtendedEnhancement(CtClass classDescriptor) {
+			public boolean doExtendedEnhancement(UnloadedClass classDescriptor) {
 				// doesn't make any sense to have extended enhancement enabled at runtime. we only enhance entities anyway.
 				return false;
 			}

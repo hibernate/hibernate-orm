@@ -16,6 +16,7 @@ dependencies {
     testCompile( project( ':hibernate-testing' ) )
     testCompile( project( path: ':hibernate-core', configuration: 'tests' ) )
     testRuntime( libraries.javassist )
+    testRuntime( libraries.byteBuddy )
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Java 9 ftw!

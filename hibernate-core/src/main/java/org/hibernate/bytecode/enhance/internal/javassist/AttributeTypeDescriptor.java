@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.bytecode.enhance.internal;
+package org.hibernate.bytecode.enhance.internal.javassist;
 
 import java.util.Collection;
 import java.util.Locale;
@@ -37,7 +37,7 @@ public abstract class AttributeTypeDescriptor {
 
 	public abstract String buildWriteInterceptionBodyFragment(String fieldName);
 
-	public String buildInLineDirtyCheckingBodyFragment(EnhancementContext context, CtField currentValue) {
+	public String buildInLineDirtyCheckingBodyFragment(JavassistEnhancementContext context, CtField currentValue) {
 		StringBuilder builder = new StringBuilder();
 		try {
 			// should ignore primary keys

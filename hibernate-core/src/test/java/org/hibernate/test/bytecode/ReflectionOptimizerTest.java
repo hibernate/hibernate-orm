@@ -4,15 +4,15 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.bytecode.javassist;
+package org.hibernate.test.bytecode;
 
 import org.junit.Test;
 
 import org.hibernate.bytecode.internal.javassist.BulkAccessor;
-import org.hibernate.bytecode.internal.javassist.BytecodeProviderImpl;
+import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
-import org.hibernate.test.bytecode.Bean;
-import org.hibernate.test.bytecode.BeanReflectionHelper;
+import org.hibernate.cfg.Environment;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -34,7 +34,7 @@ public class ReflectionOptimizerTest extends BaseUnitTestCase {
 
 	@Test
 	public void testReflectionOptimization() {
-		BytecodeProviderImpl provider = new BytecodeProviderImpl();
+		BytecodeProvider provider = Environment.getBytecodeProvider();
 		ReflectionOptimizer optimizer = provider.getReflectionOptimizer(
 				Bean.class,
 		        BeanReflectionHelper.getGetterNames(),

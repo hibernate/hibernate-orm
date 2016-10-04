@@ -4,11 +4,12 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.bytecode.enhance.internal;
+package org.hibernate.bytecode.enhance.internal.javassist;
 
 import javassist.CtClass;
 import javassist.CtField;
 import javassist.CtMethod;
+
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.engine.spi.ManagedMappedSuperclass;
@@ -20,7 +21,7 @@ import org.hibernate.engine.spi.ManagedMappedSuperclass;
  */
 public class MappedSuperclassEnhancer extends PersistentAttributesEnhancer {
 
-	public MappedSuperclassEnhancer(EnhancementContext context) {
+	public MappedSuperclassEnhancer(JavassistEnhancementContext context) {
 		super( context );
 	}
 

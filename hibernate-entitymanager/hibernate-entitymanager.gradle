@@ -5,6 +5,7 @@ dependencies {
 	compile( libraries.commons_annotations )
 	compile( libraries.jpa )
 	compile( libraries.javassist )
+	compile( libraries.byteBuddy )
 	compile( libraries.jta )
 }
 

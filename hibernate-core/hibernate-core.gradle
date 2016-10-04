@@ -23,6 +23,7 @@ configurations {
 dependencies {
     compile( libraries.jpa )
     compile( libraries.javassist )
+    compile( libraries.byteBuddy )
     compile( libraries.antlr )
     compile( libraries.jta )
     compile( libraries.jandex )
@@ -95,6 +96,7 @@ dependencies {
     testRuntime( libraries.expression_language_impl )
     testRuntime( 'jaxen:jaxen:1.1' )
     testRuntime( libraries.javassist )
+    testRuntime( libraries.byteBuddy )
 
     testCompile( project( ':hibernate-jpamodelgen' ) )
 

@@ -314,17 +314,20 @@ public final class Environment implements AvailableSettings {
 	}
 
 	public static BytecodeProvider buildBytecodeProvider(Properties properties) {
-		String provider = ConfigurationHelper.getString( BYTECODE_PROVIDER, properties, "javassist" );
+		String provider = ConfigurationHelper.getString( BYTECODE_PROVIDER, properties, "bytebuddy" );
 		LOG.bytecodeProvider( provider );
 		return buildBytecodeProvider( provider );
 	}
 
 	private static BytecodeProvider buildBytecodeProvider(String providerName) {
+		if ( "bytebuddy".equals( providerName ) ) {
+			return new org.hibernate.bytecode.internal.bytebuddy.BytecodeProviderImpl();
+		}
 		if ( "javassist".equals( providerName ) ) {
 			return new org.hibernate.bytecode.internal.javassist.BytecodeProviderImpl();
 		}
 
 		LOG.unknownBytecodeProvider( providerName );
-		return new org.hibernate.bytecode.internal.javassist.BytecodeProviderImpl();
+		return new org.hibernate.bytecode.internal.bytebuddy.BytecodeProviderImpl();
 	}
 }

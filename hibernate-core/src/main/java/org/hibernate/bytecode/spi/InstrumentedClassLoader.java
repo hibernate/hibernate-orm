@@ -48,7 +48,7 @@ public class InstrumentedClassLoader extends ClassLoader {
 		try {
 			final byte[] originalBytecode = ByteCodeHelper.readByteCode( is );
 			final byte[] transformedBytecode = classTransformer.transform( getParent(), name, null, null, originalBytecode );
-			if ( originalBytecode == transformedBytecode ) {
+			if ( transformedBytecode == null ) {
 				// no transformations took place, so handle it as we would a
 				// non-instrumented class
 				return getParent().loadClass( name );
@@ -57,7 +57,7 @@ public class InstrumentedClassLoader extends ClassLoader {
 				return defineClass( name, transformedBytecode, 0, transformedBytecode.length );
 			}
 		}
-		catch( Throwable t ) {
+		catch ( Throwable t ) {
 			throw new ClassNotFoundException( name + " not found", t );
 		}
 	}

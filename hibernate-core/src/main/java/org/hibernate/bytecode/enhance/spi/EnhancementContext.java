@@ -6,9 +6,6 @@
  */
 package org.hibernate.bytecode.enhance.spi;
 
-import javassist.CtClass;
-import javassist.CtField;
-
 /**
  * The context for performing an enhancement.  Enhancement can happen in any number of ways:<ul>
  * <li>Build time, via Ant</li>
@@ -22,7 +19,6 @@ import javassist.CtField;
  * the enhancement is being performed.
  *
  * @author Steve Ebersole
- * @todo Not sure its a great idea to expose Javassist classes this way.  maybe wrap them in our own contracts?
  */
 public interface EnhancementContext {
 	/**
@@ -41,7 +37,7 @@ public interface EnhancementContext {
 	 *
 	 * @return {@code true} if the class is an entity; {@code false} otherwise.
 	 */
-	public boolean isEntityClass(CtClass classDescriptor);
+	public boolean isEntityClass(UnloadedClass classDescriptor);
 
 	/**
 	 * Does the given class name represent an embeddable/component class?
@@ -50,7 +46,7 @@ public interface EnhancementContext {
 	 *
 	 * @return {@code true} if the class is an embeddable/component; {@code false} otherwise.
 	 */
-	public boolean isCompositeClass(CtClass classDescriptor);
+	public boolean isCompositeClass(UnloadedClass classDescriptor);
 
 	/**
 	 * Does the given class name represent an MappedSuperclass class?
@@ -59,7 +55,7 @@ public interface EnhancementContext {
 	 *
 	 * @return {@code true} if the class is an mapped super class; {@code false} otherwise.
 	 */
-	public boolean isMappedSuperclassClass(CtClass classDescriptor);
+	public boolean isMappedSuperclassClass(UnloadedClass classDescriptor);
 
 	/**
 	 * Should we manage association of bi-directional persistent attributes for this field?
@@ -70,7 +66,7 @@ public interface EnhancementContext {
 	 * 			the association is managed, i.e. the associations are automatically set; {@code false} indicates that
 	 * 			the management is handled by the user.
 	 */
-	public boolean doBiDirectionalAssociationManagement(CtField field);
+	public boolean doBiDirectionalAssociationManagement(UnloadedField field);
 
 	/**
 	 * Should we in-line dirty checking for persistent attributes for this class?
@@ -80,7 +76,7 @@ public interface EnhancementContext {
 	 * @return {@code true} indicates that dirty checking should be in-lined within the entity; {@code false}
 	 *         indicates it should not.  In-lined is more easily serializable and probably more performant.
 	 */
-	public boolean doDirtyCheckingInline(CtClass classDescriptor);
+	public boolean doDirtyCheckingInline(UnloadedClass classDescriptor);
 
 	/**
 	 * Should we enhance field access to entities from this class?
@@ -90,7 +86,7 @@ public interface EnhancementContext {
 	 * @return {@code true} indicates that any direct access to fields of entities should be routed to the enhanced
 	 *         getter / setter  method.
 	 */
-	public boolean doExtendedEnhancement(CtClass classDescriptor);
+	public boolean doExtendedEnhancement(UnloadedClass classDescriptor);
 
 	/**
 	 * Does the given class define any lazy loadable attributes?
@@ -99,7 +95,7 @@ public interface EnhancementContext {
 	 *
 	 * @return true/false
 	 */
-	public boolean hasLazyLoadableAttributes(CtClass classDescriptor);
+	public boolean hasLazyLoadableAttributes(UnloadedClass classDescriptor);
 
 	// todo : may be better to invert these 2 such that the context is asked for an ordered list of persistent fields for an entity/composite
 
@@ -113,7 +109,7 @@ public interface EnhancementContext {
 	 *
 	 * @return {@code true} if the field is ; {@code false} otherwise.
 	 */
-	public boolean isPersistentField(CtField ctField);
+	public boolean isPersistentField(UnloadedField ctField);
 
 	/**
 	 * For fields which are persistent (according to {@link #isPersistentField}), determine the corresponding ordering
@@ -123,7 +119,7 @@ public interface EnhancementContext {
 	 *
 	 * @return The ordered references.
 	 */
-	public CtField[] order(CtField[] persistentFields);
+	public UnloadedField[] order(UnloadedField[] persistentFields);
 
 	/**
 	 * Determine if a field is lazy loadable.
@@ -132,12 +128,12 @@ public interface EnhancementContext {
 	 *
 	 * @return {@code true} if the field is lazy loadable; {@code false} otherwise.
 	 */
-	public boolean isLazyLoadable(CtField field);
+	public boolean isLazyLoadable(UnloadedField field);
 
 	/**
 	 * @param field the field to check
 	 *
 	 * @return {@code true} if the field is mapped
 	 */
-	public boolean isMappedCollection(CtField field);
+	public boolean isMappedCollection(UnloadedField field);
 }

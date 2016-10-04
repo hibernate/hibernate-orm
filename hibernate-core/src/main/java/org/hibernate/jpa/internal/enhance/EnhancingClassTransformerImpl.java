@@ -9,12 +9,11 @@ package org.hibernate.jpa.internal.enhance;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 
-import javassist.CtClass;
-import javassist.CtField;
-
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.bytecode.enhance.spi.EnhancementContextWrapper;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.spi.ClassTransformer;
+import org.hibernate.cfg.Environment;
 
 /**
  * @author Steve Ebersole
@@ -41,7 +40,7 @@ public class EnhancingClassTransformerImpl implements ClassTransformer {
 		// It also assumed that all calls come from the same class loader, which is fair, but this makes it more robust.
 
 		try {
-			Enhancer enhancer = new Enhancer( new EnhancementContextWrapper( enhancementContext, loader ) );
+			Enhancer enhancer = Environment.getBytecodeProvider().getEnhancer( new EnhancementContextWrapper( enhancementContext, loader ) );
 			return enhancer.enhance( className, classfileBuffer );
 		}
 		catch (final Exception e) {
@@ -51,78 +50,6 @@ public class EnhancingClassTransformerImpl implements ClassTransformer {
 					return e;
 				}
 			};
-		}
-	}
-
-	// Wrapper for a EnhancementContext that allows to set the right classloader.
-	private class EnhancementContextWrapper implements EnhancementContext {
-
-		private final ClassLoader loadingClassloader;
-		private final EnhancementContext wrappedContext;
-
-		private EnhancementContextWrapper(EnhancementContext wrappedContext, ClassLoader loadingClassloader) {
-			this.wrappedContext = wrappedContext;
-			this.loadingClassloader = loadingClassloader;
-		}
-
-		@Override
-		public ClassLoader getLoadingClassLoader() {
-			return loadingClassloader;
-		}
-
-		@Override
-		public boolean isEntityClass(CtClass classDescriptor) {
-			return wrappedContext.isEntityClass( classDescriptor );
-		}
-
-		@Override
-		public boolean isCompositeClass(CtClass classDescriptor) {
-			return wrappedContext.isCompositeClass( classDescriptor );
-		}
-
-		@Override
-		public boolean isMappedSuperclassClass(CtClass classDescriptor) {
-			return wrappedContext.isMappedSuperclassClass( classDescriptor );
-		}
-
-		@Override
-		public boolean doBiDirectionalAssociationManagement(CtField field) {
-			return wrappedContext.doBiDirectionalAssociationManagement( field );
-		}
-
-		@Override
-		public boolean doDirtyCheckingInline(CtClass classDescriptor) {
-			return wrappedContext.doDirtyCheckingInline( classDescriptor );
-		}
-
-		@Override
-		public boolean doExtendedEnhancement(CtClass classDescriptor) {
-			return wrappedContext.doExtendedEnhancement( classDescriptor );
-		}
-
-		@Override
-		public boolean hasLazyLoadableAttributes(CtClass classDescriptor) {
-			return wrappedContext.hasLazyLoadableAttributes( classDescriptor );
-		}
-
-		@Override
-		public boolean isPersistentField(CtField ctField) {
-			return wrappedContext.isPersistentField( ctField );
-		}
-
-		@Override
-		public CtField[] order(CtField[] persistentFields) {
-			return wrappedContext.order( persistentFields );
-		}
-
-		@Override
-		public boolean isLazyLoadable(CtField field) {
-			return wrappedContext.isLazyLoadable( field );
-		}
-
-		@Override
-		public boolean isMappedCollection(CtField field) {
-			return wrappedContext.isMappedCollection( field );
 		}
 	}
 

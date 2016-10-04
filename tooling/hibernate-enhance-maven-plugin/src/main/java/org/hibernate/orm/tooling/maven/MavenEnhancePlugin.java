@@ -8,11 +8,9 @@ package org.hibernate.orm.tooling.maven;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -20,10 +18,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.CtField;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
@@ -39,6 +33,9 @@ import org.apache.maven.project.MavenProject;
 import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
+import org.hibernate.bytecode.enhance.spi.UnloadedClass;
+import org.hibernate.bytecode.enhance.spi.UnloadedField;
+import org.hibernate.cfg.Environment;
 
 /**
  * This plugin will enhance Entity objects.
@@ -105,27 +102,27 @@ public class MavenEnhancePlugin extends AbstractMojo {
 			}
 
 			@Override
-			public boolean doBiDirectionalAssociationManagement(CtField field) {
+			public boolean doBiDirectionalAssociationManagement(UnloadedField field) {
 				return enableAssociationManagement;
 			}
 
 			@Override
-			public boolean doDirtyCheckingInline(CtClass classDescriptor) {
+			public boolean doDirtyCheckingInline(UnloadedClass classDescriptor) {
 				return enableDirtyTracking;
 			}
 
 			@Override
-			public boolean hasLazyLoadableAttributes(CtClass classDescriptor) {
+			public boolean hasLazyLoadableAttributes(UnloadedClass classDescriptor) {
 				return enableLazyInitialization;
 			}
 
 			@Override
-			public boolean isLazyLoadable(CtField field) {
+			public boolean isLazyLoadable(UnloadedField field) {
 				return enableLazyInitialization;
 			}
 
 			@Override
-			public boolean doExtendedEnhancement(CtClass classDescriptor) {
+			public boolean doExtendedEnhancement(UnloadedClass classDescriptor) {
 				return enableExtendedEnhancement;
 			}
 		};
@@ -134,28 +131,19 @@ public class MavenEnhancePlugin extends AbstractMojo {
 			getLog().warn( "Extended enhancement is enabled. Classes other than entities may be modified. You should consider access the entities using getter/setter methods and disable this property. Use at your own risk." );
 		}
 
-		final Enhancer enhancer = new Enhancer( enhancementContext );
-		final ClassPool classPool = new ClassPool( false );
+		final Enhancer enhancer = Environment.getBytecodeProvider().getEnhancer( enhancementContext );
 
 		for ( File file : sourceSet ) {
-			final CtClass ctClass = toCtClass( file, classPool );
-			if ( ctClass == null ) {
+
+			final byte[] enhancedBytecode = doEnhancement( file, enhancer );
+
+			if ( enhancedBytecode == null ) {
 				continue;
 			}
 
-			if ( !enableLazyInitialization ) {
-				if ( !enhancementContext.isEntityClass( ctClass )
-						&& !enhancementContext.isCompositeClass( ctClass )
-						&& !enhancementContext.isMappedSuperclassClass( ctClass ) ) {
-					getLog().info( "Skipping class file [" + file.getAbsolutePath() + "], not an entity nor embeddable" );
-					continue;
-				}
-			}
+			writeOutEnhancedClass( enhancedBytecode, file );
 
-			final byte[] enhancedBytecode = doEnhancement( ctClass, enhancer );
-			writeOutEnhancedClass( enhancedBytecode, ctClass, file );
-
-			getLog().info( "Successfully enhanced class [" + ctClass.getName() + "]" );
+			getLog().info( "Successfully enhanced class [" + file + "]" );
 		}
 	}
 
@@ -204,47 +192,12 @@ public class MavenEnhancePlugin extends AbstractMojo {
 		return new URLClassLoader( urls.toArray( new URL[urls.size()] ), Enhancer.class.getClassLoader() );
 	}
 
-	private CtClass toCtClass(File file, ClassPool classPool) throws MojoExecutionException {
+	private byte[] doEnhancement(File javaClassFile, Enhancer enhancer) throws MojoExecutionException {
 		try {
-			final InputStream is = new FileInputStream( file.getAbsolutePath() );
-
-			try {
-				return classPool.makeClass( is );
-			}
-			catch (IOException e) {
-				String msg = "Javassist unable to load class in preparation for enhancing: " + file.getAbsolutePath();
-				if ( failOnError ) {
-					throw new MojoExecutionException( msg, e );
-				}
-				getLog().warn( msg );
-				return null;
-			}
-			finally {
-				try {
-					is.close();
-				}
-				catch (IOException e) {
-					getLog().info( "Was unable to close InputStream : " + file.getAbsolutePath(), e );
-				}
-			}
-		}
-		catch (FileNotFoundException e) {
-			// should never happen, but...
-			String msg = "Unable to locate class file for InputStream: " + file.getAbsolutePath();
-			if ( failOnError ) {
-				throw new MojoExecutionException( msg, e );
-			}
-			getLog().warn( msg );
-			return null;
-		}
-	}
-
-	private byte[] doEnhancement(CtClass ctClass, Enhancer enhancer) throws MojoExecutionException {
-		try {
-			return enhancer.enhance( ctClass.getName(), ctClass.toBytecode() );
+			return enhancer.enhance(javaClassFile);
 		}
 		catch (Exception e) {
-			String msg = "Unable to enhance class: " + ctClass.getName();
+			String msg = "Unable to enhance class: " + javaClassFile.getName();
 			if ( failOnError ) {
 				throw new MojoExecutionException( msg, e );
 			}
@@ -283,22 +236,19 @@ public class MavenEnhancePlugin extends AbstractMojo {
 		Collections.addAll( this.sourceSet, files );
 	}
 
-	private void writeOutEnhancedClass(byte[] enhancedBytecode, CtClass ctClass, File file) throws MojoExecutionException{
-		if ( enhancedBytecode == null ) {
-			return;
-		}
+	private void writeOutEnhancedClass(byte[] enhancedBytecode, File file) throws MojoExecutionException {
 		try {
 			if ( file.delete() ) {
 				if ( !file.createNewFile() ) {
-					getLog().error( "Unable to recreate class file [" + ctClass.getName() + "]" );
+					getLog().error( "Unable to recreate class file [" + file.getName() + "]" );
 				}
 			}
 			else {
-				getLog().error( "Unable to delete class file [" + ctClass.getName() + "]" );
+				getLog().error( "Unable to delete class file [" + file.getName() + "]" );
 			}
 		}
 		catch (IOException e) {
-			getLog().warn( "Problem preparing class file for writing out enhancements [" + ctClass.getName() + "]" );
+			getLog().warn( "Problem preparing class file for writing out enhancements [" + file.getName() + "]" );
 		}
 
 		try {
@@ -308,7 +258,7 @@ public class MavenEnhancePlugin extends AbstractMojo {
 				outputStream.flush();
 			}
 			catch (IOException e) {
-				String msg = String.format( "Error writing to enhanced class [%s] to file [%s]", ctClass.getName(), file.getAbsolutePath() );
+				String msg = String.format( "Error writing to enhanced class [%s] to file [%s]", file.getName(), file.getAbsolutePath() );
 				if ( failOnError ) {
 					throw new MojoExecutionException( msg, e );
 				}
@@ -317,7 +267,6 @@ public class MavenEnhancePlugin extends AbstractMojo {
 			finally {
 				try {
 					outputStream.close();
-					ctClass.detach();
 				}
 				catch (IOException ignore) {
 				}

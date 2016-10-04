@@ -14,11 +14,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javassist.ClassPool;
-import javassist.CtClass;
-
 import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
+import org.hibernate.cfg.Environment;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
@@ -39,9 +37,7 @@ import org.apache.tools.ant.types.FileSet;
 public class EnhancementTask extends Task {
 	private List<FileSet> filesets = new ArrayList<FileSet>();
 
-	// Enhancer also builds CtClass instances.  Might make sense to share these (ClassPool).
-	private final ClassPool classPool = new ClassPool( false );
-	private final Enhancer enhancer = new Enhancer( new DefaultEnhancementContext() );
+	private final Enhancer enhancer = Environment.getBytecodeProvider().getEnhancer( new DefaultEnhancementContext() );
 
 	public void addFileset(FileSet set) {
 		this.filesets.add( set );
@@ -72,8 +68,7 @@ public class EnhancementTask extends Task {
 
 	private void processClassFile(File javaClassFile) {
 		try {
-			final CtClass ctClass = classPool.makeClass( new FileInputStream( javaClassFile ) );
-			byte[] result = enhancer.enhance( ctClass.getName(), ctClass.toBytecode() );
+			byte[] result = enhancer.enhance( javaClassFile );
 			if ( result != null ) {
 				writeEnhancedClass( javaClassFile, result );
 			}

@@ -6,6 +6,9 @@
  */
 package org.hibernate.bytecode.spi;
 
+import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.bytecode.enhance.spi.Enhancer;
+
 /**
  * Contract for providers of bytecode services to Hibernate.
  * <p/>
@@ -36,4 +39,13 @@ public interface BytecodeProvider {
 	 * @return The reflection optimization delegate.
 	 */
 	ReflectionOptimizer getReflectionOptimizer(Class clazz, String[] getterNames, String[] setterNames, Class[] types);
+
+	/**
+	 * Returns a byte code enhancer that implements the enhancements described in the supplied enhancement context.
+	 *
+	 * @param enhancementContext The enhancement context that describes the enhancements to apply.
+	 *
+	 * @return An enhancer to perform byte code manipulations.
+	 */
+	Enhancer getEnhancer(EnhancementContext enhancementContext);
 }

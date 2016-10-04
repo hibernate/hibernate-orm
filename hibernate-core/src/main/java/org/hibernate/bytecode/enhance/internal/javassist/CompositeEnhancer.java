@@ -4,10 +4,11 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.bytecode.enhance.internal;
+package org.hibernate.bytecode.enhance.internal.javassist;
 
 import javassist.CannotCompileException;
 import javassist.CtClass;
+
 import org.hibernate.bytecode.enhance.internal.tracker.CompositeOwnerTracker;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
@@ -22,7 +23,7 @@ import org.hibernate.engine.spi.ManagedComposite;
  */
 public class CompositeEnhancer extends PersistentAttributesEnhancer {
 
-	public CompositeEnhancer(EnhancementContext context) {
+	public CompositeEnhancer(JavassistEnhancementContext context) {
 		super( context );
 	}
 
@@ -57,10 +58,10 @@ public class CompositeEnhancer extends PersistentAttributesEnhancer {
 							"  if (%2$s == null) { %2$s = new %4$s(); }%n" +
 							"  %2$s.add(name, tracker);%n" +
 							"}",
-					EnhancerConstants.TRACKER_COMPOSITE_SET_OWNER,
-					EnhancerConstants.TRACKER_COMPOSITE_FIELD_NAME,
-					CompositeOwner.class.getName(),
-					CompositeOwnerTracker.class.getName() );
+								EnhancerConstants.TRACKER_COMPOSITE_SET_OWNER,
+								EnhancerConstants.TRACKER_COMPOSITE_FIELD_NAME,
+								CompositeOwner.class.getName(),
+								CompositeOwnerTracker.class.getName() );
 
 			MethodWriter.write( managedCtClass, "" +
 							"public void %1$s(String name) {%n" +

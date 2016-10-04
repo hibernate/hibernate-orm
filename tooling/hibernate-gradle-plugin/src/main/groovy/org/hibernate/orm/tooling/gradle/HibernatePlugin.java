@@ -7,20 +7,14 @@
 package org.hibernate.orm.tooling.gradle;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
-
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.CtField;
 
 import org.gradle.api.Action;
 import org.gradle.api.GradleException;
@@ -36,6 +30,9 @@ import org.gradle.api.tasks.SourceSet;
 import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
+import org.hibernate.bytecode.enhance.spi.UnloadedClass;
+import org.hibernate.bytecode.enhance.spi.UnloadedField;
+import org.hibernate.cfg.Environment;
 
 /**
  * The Hibernate Gradle plugin.  Adds Hibernate build-time capabilities into your Gradle-based build.
@@ -92,37 +89,36 @@ public class HibernatePlugin implements Plugin<Project> {
 								}
 
 								@Override
-								public boolean doBiDirectionalAssociationManagement(CtField field) {
+								public boolean doBiDirectionalAssociationManagement(UnloadedField field) {
 									return hibernateExtension.enhance.getEnableAssociationManagement();
 								}
 
 								@Override
-								public boolean doDirtyCheckingInline(CtClass classDescriptor) {
+								public boolean doDirtyCheckingInline(UnloadedClass classDescriptor) {
 									return hibernateExtension.enhance.getEnableDirtyTracking();
 								}
 
 								@Override
-								public boolean hasLazyLoadableAttributes(CtClass classDescriptor) {
+								public boolean hasLazyLoadableAttributes(UnloadedClass classDescriptor) {
 									return hibernateExtension.enhance.getEnableLazyInitialization();
 								}
 
 								@Override
-								public boolean isLazyLoadable(CtField field) {
+								public boolean isLazyLoadable(UnloadedField field) {
 									return hibernateExtension.enhance.getEnableLazyInitialization();
 								}
 
 								@Override
-								public boolean doExtendedEnhancement(CtClass classDescriptor) {
+								public boolean doExtendedEnhancement(UnloadedClass classDescriptor) {
 									return hibernateExtension.enhance.getEnableExtendedEnhancement();
 								}
 							};
 
 							if ( hibernateExtension.enhance.getEnableExtendedEnhancement() ) {
-								logger.warn( "Extended enhancement is enabled. Classes other than entities may be modified. You should consider access the entities using getter/setter methods and disable this property. Use at your own risk." );
+								logger.warn("Extended enhancement is enabled. Classes other than entities may be modified. You should consider access the entities using getter/setter methods and disable this property. Use at your own risk." );
 							}
 
-							final Enhancer enhancer = new Enhancer( enhancementContext );
-							final ClassPool classPool = new ClassPool( false );
+							final Enhancer enhancer = Environment.getBytecodeProvider().getEnhancer( enhancementContext );
 
 							final FileTree fileTree = project.fileTree( sourceSet.getOutput().getClassesDir() );
 							for ( File file : fileTree ) {
@@ -130,19 +126,14 @@ public class HibernatePlugin implements Plugin<Project> {
 									continue;
 								}
 
-								final CtClass ctClass = toCtClass( file, classPool );
-
-								if ( !enhancementContext.isEntityClass( ctClass )
-										&& !enhancementContext.isCompositeClass( ctClass )
-										&& !enhancementContext.isMappedSuperclassClass( ctClass ) ) {
-									logger.info( "Skipping class [" + file.getAbsolutePath() + "], not an entity nor embeddable" );
-									continue;
+								final byte[] enhancedBytecode = doEnhancement( file, enhancer );
+								if ( enhancedBytecode != null ) {
+									writeOutEnhancedClass( enhancedBytecode, file );
+									logger.info( "Successfully enhanced class [" + file + "]" );
 								}
-
-								final byte[] enhancedBytecode = doEnhancement( ctClass, enhancer );
-								writeOutEnhancedClass( enhancedBytecode, ctClass, file );
-
-								logger.info( "Successfully enhanced class [" + ctClass.getName() + "]" );
+								else {
+									logger.info( "Skipping class [" + file.getAbsolutePath() + "], not an entity nor embeddable" );
+								}
 							}
 						}
 					}
@@ -164,53 +155,28 @@ public class HibernatePlugin implements Plugin<Project> {
 		return new URLClassLoader( urls.toArray( new URL[urls.size()] ), Enhancer.class.getClassLoader() );
 	}
 
-	private CtClass toCtClass(File file, ClassPool classPool) {
+	private byte[] doEnhancement(File javaClassFile, Enhancer enhancer) {
 		try {
-			final InputStream is = new FileInputStream( file.getAbsolutePath() );
-
-			try {
-				return classPool.makeClass( is );
-			}
-			catch (IOException e) {
-				throw new GradleException( "Javassist unable to load class in preparation for enhancing : " + file.getAbsolutePath(), e );
-			}
-			finally {
-				try {
-					is.close();
-				}
-				catch (IOException e) {
-					logger.info( "Was unable to close InputStream : " + file.getAbsolutePath(), e );
-				}
-			}
-		}
-		catch (FileNotFoundException e) {
-			// should never happen, but...
-			throw new GradleException( "Unable to locate class file for InputStream: " + file.getAbsolutePath(), e );
-		}
-	}
-
-	private byte[] doEnhancement(CtClass ctClass, Enhancer enhancer) {
-		try {
-			return enhancer.enhance( ctClass.getName(), ctClass.toBytecode() );
+			return enhancer.enhance( javaClassFile );
 		}
 		catch (Exception e) {
-			throw new GradleException( "Unable to enhance class : " + ctClass.getName(), e );
+			throw new GradleException( "Unable to enhance class : " + javaClassFile, e );
 		}
 	}
 
-	private void writeOutEnhancedClass(byte[] enhancedBytecode, CtClass ctClass, File file) {
+	private void writeOutEnhancedClass(byte[] enhancedBytecode, File file) {
 		try {
 			if ( file.delete() ) {
 				if ( !file.createNewFile() ) {
-					logger.error( "Unable to recreate class file [" + ctClass.getName() + "]" );
+					logger.error( "Unable to recreate class file [" + file.getName() + "]" );
 				}
 			}
 			else {
-				logger.error( "Unable to delete class file [" + ctClass.getName() + "]" );
+				logger.error( "Unable to delete class file [" + file.getName() + "]" );
 			}
 		}
 		catch (IOException e) {
-			logger.warn( "Problem preparing class file for writing out enhancements [" + ctClass.getName() + "]" );
+			logger.warn( "Problem preparing class file for writing out enhancements [" + file.getName() + "]" );
 		}
 
 		try {
@@ -220,12 +186,11 @@ public class HibernatePlugin implements Plugin<Project> {
 				outputStream.flush();
 			}
 			catch (IOException e) {
-				throw new GradleException( "Error writing to enhanced class [" + ctClass.getName() + "] to file [" + file.getAbsolutePath() + "]", e );
+				throw new GradleException( "Error writing to enhanced class [" + file.getName() + "] to file [" + file.getAbsolutePath() + "]", e );
 			}
 			finally {
 				try {
 					outputStream.close();
-					ctClass.detach();
 				}
 				catch (IOException ignore) {
 				}

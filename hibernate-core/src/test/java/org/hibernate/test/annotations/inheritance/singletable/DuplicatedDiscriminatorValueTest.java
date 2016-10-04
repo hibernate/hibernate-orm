@@ -75,18 +75,18 @@ public class DuplicatedDiscriminatorValueTest extends BaseUnitTestCase {
 
 	@Entity
 	@DiscriminatorValue(DISCRIMINATOR_VALUE) // Duplicated discriminator value in single hierarchy.
-	private static class Building1 extends Building {
+	public static class Building1 extends Building {
 	}
 
 	@Entity
 	@DiscriminatorValue(DISCRIMINATOR_VALUE) // Duplicated discriminator value in single hierarchy.
-	private static class Building2 extends Building {
+	public static class Building2 extends Building {
 	}
 
 	@Entity
 	@DiscriminatorColumn(name = "entity_type")
 	@DiscriminatorValue("F")
-	private static class Furniture {
+	public static class Furniture {
 		@Id
 		@GeneratedValue
 		private Integer id;
@@ -94,6 +94,6 @@ public class DuplicatedDiscriminatorValueTest extends BaseUnitTestCase {
 
 	@Entity
 	@DiscriminatorValue(DISCRIMINATOR_VALUE) // Duplicated discriminator value in different hierarchy.
-	private static class Chair extends Furniture {
+	public static class Chair extends Furniture {
 	}
 }

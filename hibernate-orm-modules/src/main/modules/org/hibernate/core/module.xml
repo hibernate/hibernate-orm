@@ -10,6 +10,7 @@
         <resource-root path="hibernate-core-${version}.jar"/>
         <resource-root path="hibernate-envers-${version}.jar"/>
         <resource-root path="javassist-${javassistVersion}.jar"/>
+        <resource-root path="byte-buddy-${byteBuddyVersion}.jar"/>
     </resources>
 
     <dependencies>

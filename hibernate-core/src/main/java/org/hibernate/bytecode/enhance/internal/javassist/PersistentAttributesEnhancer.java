@@ -4,14 +4,13 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.bytecode.enhance.internal;
+package org.hibernate.bytecode.enhance.internal.javassist;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.IdentityHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.Embedded;
@@ -36,9 +35,7 @@ import javassist.bytecode.Opcode;
 import javassist.bytecode.stackmap.MapMaker;
 
 import org.hibernate.Hibernate;
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
-import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.engine.spi.CompositeOwner;
 import org.hibernate.engine.spi.CompositeTracker;
@@ -50,11 +47,11 @@ import org.hibernate.internal.CoreMessageLogger;
  *
  * @author <a href="mailto:lbarreiro@redhat.com">Luis Barreiro</a>
  */
-public class PersistentAttributesEnhancer extends Enhancer {
+public class PersistentAttributesEnhancer extends EnhancerImpl {
 
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( PersistentAttributesEnhancer.class );
 
-	public PersistentAttributesEnhancer(EnhancementContext context) {
+	public PersistentAttributesEnhancer(JavassistEnhancementContext context) {
 		super( context );
 	}
 
@@ -97,7 +94,7 @@ public class PersistentAttributesEnhancer extends Enhancer {
 		}
 
 		CtField[] orderedFields = enhancementContext.order( persistentFieldList.toArray( new CtField[0] ) );
-		log.debugf( "Persistent fields for entity %s: %s", managedCtClass.getName(), Arrays.toString( orderedFields ));
+		log.debugf( "Persistent fields for entity %s: %s", managedCtClass.getName(), Arrays.toString( orderedFields ) );
 		return orderedFields;
 	}
 
@@ -131,7 +128,7 @@ public class PersistentAttributesEnhancer extends Enhancer {
 		}
 	}
 
-	private PersistentAttributeAccessMethods enhancePersistentAttribute( CtClass managedCtClass, CtField persistentField) {
+	private PersistentAttributeAccessMethods enhancePersistentAttribute(CtClass managedCtClass, CtField persistentField) {
 		try {
 			AttributeTypeDescriptor typeDescriptor = AttributeTypeDescriptor.resolve( managedCtClass, persistentField );
 			return new PersistentAttributeAccessMethods(
@@ -165,13 +162,13 @@ public class PersistentAttributesEnhancer extends Enhancer {
 			String declaredReadFragment = "this." + fieldName + "";
 			String superReadFragment = "super." + readerName + "()";
 
-			if (!declared) {
+			if ( !declared ) {
 				// create a temporary getter on the supper entity to be able to compile our code
 				try {
 					persistentField.getDeclaringClass().getDeclaredMethod( readerName );
 					persistentField.getDeclaringClass().getDeclaredMethod( writerName );
 				}
-				catch (NotFoundException nfe){
+				catch ( NotFoundException nfe ) {
 					tmpSuperReader = MethodWriter.addGetter( persistentField.getDeclaringClass(), persistentField.getName(), readerName );
 					tmpSuperWriter = MethodWriter.addSetter( persistentField.getDeclaringClass(), persistentField.getName(), writerName );
 				}
@@ -179,8 +176,7 @@ public class PersistentAttributesEnhancer extends Enhancer {
 
 			// read attempts only have to deal lazy-loading support, not dirty checking;
 			// so if the field is not enabled as lazy-loadable return a plain simple getter as the reader
-			if ( !enhancementContext.hasLazyLoadableAttributes( managedCtClass )
-					|| !enhancementContext.isLazyLoadable( persistentField ) ) {
+			if ( !enhancementContext.hasLazyLoadableAttributes( managedCtClass ) || !enhancementContext.isLazyLoadable( persistentField ) ) {
 				reader = MethodWriter.write(
 						managedCtClass, "public %s %s() {  return %s;%n}",
 						persistentField.getType().getName(),
@@ -237,15 +233,15 @@ public class PersistentAttributesEnhancer extends Enhancer {
 		try {
 			boolean declared = persistentField.getDeclaringClass().equals( managedCtClass );
 			String declaredWriteFragment = "this." + fieldName + "=" + fieldName + ";";
-			String superWriteFragment =	"super." + writerName + "(" + fieldName + ");";
+			String superWriteFragment = "super." + writerName + "(" + fieldName + ");";
 
-			if (!declared) {
+			if ( !declared ) {
 				// create a temporary setter on the supper entity to be able to compile our code
 				try {
 					persistentField.getDeclaringClass().getDeclaredMethod( readerName );
 					persistentField.getDeclaringClass().getDeclaredMethod( writerName );
 				}
-				catch (NotFoundException nfe){
+				catch ( NotFoundException nfe ) {
 					tmpSuperReader = MethodWriter.addGetter( persistentField.getDeclaringClass(), persistentField.getName(), readerName );
 					tmpSuperWriter = MethodWriter.addSetter( persistentField.getDeclaringClass(), persistentField.getName(), writerName );
 				}
@@ -352,7 +348,7 @@ public class PersistentAttributesEnhancer extends Enhancer {
 			getter = targetEntity.getDeclaredMethod( mappedByGetterName );
 			setter = targetEntity.getDeclaredMethod( mappedByGetterName );
 		}
-		catch (NotFoundException nfe){
+		catch ( NotFoundException nfe ) {
 			getter = MethodWriter.addGetter( targetEntity, mappedBy, mappedByGetterName );
 			setter = MethodWriter.addSetter( targetEntity, mappedBy, mappedBySetterName );
 			tmpTargetMethods = true;
@@ -397,19 +393,19 @@ public class PersistentAttributesEnhancer extends Enhancer {
 		}
 		if ( PersistentAttributesHelper.hasAnnotation( persistentField, OneToMany.class ) ) {
 			boolean isMap = PersistentAttributesHelper.isAssignable( persistentField.getType(), Map.class.getName() );
-			String toArrayMethod = isMap ? "values().toArray()" : "toArray()" ;
+			String toArrayMethod = isMap ? "values().toArray()" : "toArray()";
 
 			// only remove elements not in the new collection or else we would loose those elements
 			// don't use iterator to avoid ConcurrentModException
 			fieldWriter.insertBefore(
 					String.format(
 							"  if (this.%3$s != null && %1$s) {%n" +
-							"    Object[] array = this.%3$s.%2$s;%n" +
-							"    for (int i = 0; i < array.length; i++) {%n" +
-							"      %4$s target = (%4$s) array[i];%n" +
-							"      if ($1 == null || !$1.contains(target)) { target.%5$s(null); }%n" +
-							"    }%n" +
-							"  }%n",
+									"    Object[] array = this.%3$s.%2$s;%n" +
+									"    for (int i = 0; i < array.length; i++) {%n" +
+									"      %4$s target = (%4$s) array[i];%n" +
+									"      if ($1 == null || !$1.contains(target)) { target.%5$s(null); }%n" +
+									"    }%n" +
+									"  }%n",
 							currentAssociationLoaded,
 							toArrayMethod,
 							persistentField.getName(),
@@ -420,12 +416,12 @@ public class PersistentAttributesEnhancer extends Enhancer {
 			fieldWriter.insertAfter(
 					String.format(
 							"  if ($1 != null && %1$s) {%n" +
-							"    Object[] array = $1.%2$s;%n" +
-							"    for (int i = 0; i < array.length; i++) {%n" +
-							"      %4$s target = (%4$s) array[i];%n" +
-							"      if (%3$s && target.%5$s() != this) { target.%6$s(this); }%n" +
-							"    }%n" +
-							"  }%n",
+									"    Object[] array = $1.%2$s;%n" +
+									"    for (int i = 0; i < array.length; i++) {%n" +
+									"      %4$s target = (%4$s) array[i];%n" +
+									"      if (%3$s && target.%5$s() != this) { target.%6$s(this); }%n" +
+									"    }%n" +
+									"  }%n",
 							newAssociationLoaded,
 							toArrayMethod,
 							targetElementLoaded,
@@ -448,9 +444,9 @@ public class PersistentAttributesEnhancer extends Enhancer {
 			fieldWriter.insertAfter(
 					String.format(
 							"  if ($1 != null && %s) {%n" +
-							"    java.util.Collection c = $1.%s();%n" +
-							"    if (c != null && !c.contains(this)) { c.add(this); }%n" +
-							"  }%n",
+									"    java.util.Collection c = $1.%s();%n" +
+									"    if (c != null && !c.contains(this)) { c.add(this); }%n" +
+									"  }%n",
 							newAssociationLoaded,
 							mappedByGetterName
 					)
@@ -458,7 +454,7 @@ public class PersistentAttributesEnhancer extends Enhancer {
 		}
 		if ( PersistentAttributesHelper.hasAnnotation( persistentField, ManyToMany.class ) ) {
 			if ( PersistentAttributesHelper.isAssignable( persistentField.getType(), Map.class.getName() ) ||
-					PersistentAttributesHelper.isAssignable( targetEntity.getField( mappedBy ).getType() , Map.class.getName() ) ) {
+					PersistentAttributesHelper.isAssignable( targetEntity.getField( mappedBy ).getType(), Map.class.getName() ) ) {
 				log.infof(
 						"Bi-directional association for field [%s#%s] not managed: @ManyToMany in java.util.Map attribute not supported ",
 						managedCtClass.getName(),
@@ -469,12 +465,12 @@ public class PersistentAttributesEnhancer extends Enhancer {
 			fieldWriter.insertBefore(
 					String.format(
 							"  if (this.%2$s != null && %1$s) {%n" +
-							"    Object[] array = this.%2$s.toArray();%n" +
-							"    for (int i = 0; i < array.length; i++) {%n" +
-							"      %3$s target = (%3$s) array[i];%n" +
-							"      if ($1 == null || !$1.contains(target)) { target.%4$s().remove(this); }%n" +
-							"    }%n" +
-							"  }%n",
+									"    Object[] array = this.%2$s.toArray();%n" +
+									"    for (int i = 0; i < array.length; i++) {%n" +
+									"      %3$s target = (%3$s) array[i];%n" +
+									"      if ($1 == null || !$1.contains(target)) { target.%4$s().remove(this); }%n" +
+									"    }%n" +
+									"  }%n",
 							currentAssociationLoaded,
 							persistentField.getName(),
 							targetEntity.getName(),
@@ -484,15 +480,15 @@ public class PersistentAttributesEnhancer extends Enhancer {
 			fieldWriter.insertAfter(
 					String.format(
 							"  if ($1 != null && %s) {%n" +
-							"    Object[] array = $1.toArray();%n" +
-							"    for (int i = 0; i < array.length; i++) {%n" +
-							"      %s target = (%s) array[i];%n" +
-							"	   if (%s) {%n" +
-							"        java.util.Collection c = target.%s();%n" +
-							"        if (c != this && c != null) { c.add(this); }%n" +
-							"      }%n" +
-							"    }%n" +
-							"  }%n",
+									"    Object[] array = $1.toArray();%n" +
+									"    for (int i = 0; i < array.length; i++) {%n" +
+									"      %s target = (%s) array[i];%n" +
+									"	   if (%s) {%n" +
+									"        java.util.Collection c = target.%s();%n" +
+									"        if (c != this && c != null) { c.add(this); }%n" +
+									"      }%n" +
+									"    }%n" +
+									"  }%n",
 							newAssociationLoaded,
 							targetEntity.getName(),
 							targetEntity.getName(),
@@ -523,7 +519,7 @@ public class PersistentAttributesEnhancer extends Enhancer {
 		// cleanup previous owner
 		fieldWriter.insertBefore(
 				String.format(
-								"if (%1$s != null) { ((%2$s) %1$s).%3$s(\"%1$s\"); }%n",
+						"if (%1$s != null) { ((%2$s) %1$s).%3$s(\"%1$s\"); }%n",
 						persistentField.getName(),
 						CompositeTracker.class.getName(),
 						EnhancerConstants.TRACKER_COMPOSITE_CLEAR_OWNER
@@ -533,7 +529,7 @@ public class PersistentAttributesEnhancer extends Enhancer {
 		// trigger track changes
 		fieldWriter.insertAfter(
 				String.format(
-								"if (%1$s != null) { ((%2$s) %1$s).%4$s(\"%1$s\", (%3$s) this); }%n" +
+						"if (%1$s != null) { ((%2$s) %1$s).%4$s(\"%1$s\", (%3$s) this); }%n" +
 								"%5$s(\"%1$s\");",
 						persistentField.getName(),
 						CompositeTracker.class.getName(),
@@ -691,11 +687,13 @@ public class PersistentAttributesEnhancer extends Enhancer {
 						continue;
 					}
 
-					log.debugf( "Extended enhancement: Transforming access to field [%s.%s] from method [%s#%s]",
-								fieldClassName,
-								fieldName,
-								aCtClass.getName(),
-								methodName );
+					log.debugf(
+							"Extended enhancement: Transforming access to field [%s.%s] from method [%s#%s]",
+							fieldClassName,
+							fieldName,
+							aCtClass.getName(),
+							methodName
+					);
 
 					if ( op == Opcode.GETFIELD ) {
 						int fieldReaderMethodIndex = constPool.addMethodrefInfo(

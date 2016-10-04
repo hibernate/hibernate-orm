@@ -23,6 +23,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
+import org.hibernate.cfg.Environment;
 import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
@@ -57,8 +58,8 @@ public abstract class EnhancerTestUtils extends BaseUnitTestCase {
 		CtClass entityCtClass = generateCtClassForAnEntity( classToEnhance );
 
 		byte[] original = entityCtClass.toBytecode();
-		byte[] enhanced = new Enhancer( new EnhancerTestContext() ).enhance( entityCtClass.getName(), original );
-		assertFalse( "entity was not enhanced", Arrays.equals( original, enhanced ) );
+		byte[] enhanced = Environment.getBytecodeProvider().getEnhancer( new EnhancerTestContext() ).enhance( entityCtClass.getName(), original );
+		assertFalse( "entity was not enhanced", enhanced == null );
 		log.infof( "enhanced entity [%s]", entityCtClass.getName() );
 
 		ClassPool cp = new ClassPool( false );
@@ -127,7 +128,7 @@ public abstract class EnhancerTestUtils extends BaseUnitTestCase {
 	private static ClassLoader getEnhancerClassLoader(EnhancementContext context, String packageName) {
 		return new ClassLoader() {
 
-			private Enhancer enhancer = new Enhancer( context );
+			private Enhancer enhancer = Environment.getBytecodeProvider().getEnhancer( context );
 
 			@SuppressWarnings("ResultOfMethodCallIgnored")
 			@Override
@@ -151,12 +152,17 @@ public abstract class EnhancerTestUtils extends BaseUnitTestCase {
 
 					byte[] enhanced = enhancer.enhance( name, original );
 
-					File f = new File( workingDir + File.separator + name.replace( ".", File.separator ) + ".class" );
-					f.getParentFile().mkdirs();
-					f.createNewFile();
-					FileOutputStream out = new FileOutputStream( f );
-					out.write( enhanced );
-					out.close();
+					if ( enhanced != null ) {
+						File f = new File( workingDir + File.separator + name.replace( ".", File.separator ) + ".class" );
+						f.getParentFile().mkdirs();
+						f.createNewFile();
+						FileOutputStream out = new FileOutputStream( f );
+						out.write( enhanced );
+						out.close();
+					}
+					else {
+						enhanced = original;
+					}
 
 					return defineClass( name, enhanced, 0, enhanced.length );
 				}

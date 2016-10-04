@@ -14,9 +14,6 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToMany;
 import javax.persistence.Transient;
 
-import javassist.CtClass;
-import javassist.CtField;
-
 /**
  * default implementation of EnhancementContext. May be sub-classed as needed.
  *
@@ -27,6 +24,7 @@ public class DefaultEnhancementContext implements EnhancementContext {
 	/**
 	 * @return the classloader for this class
 	 */
+	@Override
 	public ClassLoader getLoadingClassLoader() {
 		return getClass().getClassLoader();
 	}
@@ -34,77 +32,88 @@ public class DefaultEnhancementContext implements EnhancementContext {
 	/**
 	 * look for @Entity annotation
 	 */
-	public boolean isEntityClass(CtClass classDescriptor) {
+	@Override
+	public boolean isEntityClass(UnloadedClass classDescriptor) {
 		return classDescriptor.hasAnnotation( Entity.class );
 	}
 
 	/**
 	 * look for @Embeddable annotation
 	 */
-	public boolean isCompositeClass(CtClass classDescriptor) {
+	@Override
+	public boolean isCompositeClass(UnloadedClass classDescriptor) {
 		return classDescriptor.hasAnnotation( Embeddable.class );
 	}
 
 	/**
 	 * look for @MappedSuperclass annotation
 	 */
-	public boolean isMappedSuperclassClass(CtClass classDescriptor) {
+	@Override
+	public boolean isMappedSuperclassClass(UnloadedClass classDescriptor) {
 		return classDescriptor.hasAnnotation( MappedSuperclass.class );
 	}
 
 	/**
 	 * @return true
 	 */
-	public boolean doBiDirectionalAssociationManagement(CtField field) {
+	@Override
+	public boolean doBiDirectionalAssociationManagement(UnloadedField field) {
 		return true;
 	}
 
 	/**
 	 * @return true
 	 */
-	public boolean doDirtyCheckingInline(CtClass classDescriptor) {
+	@Override
+	public boolean doDirtyCheckingInline(UnloadedClass classDescriptor) {
 		return true;
 	}
 
 	/**
 	 * @return false
 	 */
-	public boolean doExtendedEnhancement(CtClass classDescriptor) {
+	@Override
+	public boolean doExtendedEnhancement(UnloadedClass classDescriptor) {
 		return false;
 	}
 
 	/**
 	 * @return true
 	 */
-	public boolean hasLazyLoadableAttributes(CtClass classDescriptor) {
+	@Override
+	public boolean hasLazyLoadableAttributes(UnloadedClass classDescriptor) {
 		return true;
 	}
 
 	/**
 	 * @return true
 	 */
-	public boolean isLazyLoadable(CtField field) {
+	@Override
+	public boolean isLazyLoadable(UnloadedField field) {
 		return true;
 	}
 
 	/**
 	 * look for @Transient annotation
 	 */
-	public boolean isPersistentField(CtField ctField) {
+	@Override
+	public boolean isPersistentField(UnloadedField ctField) {
 		return ! ctField.hasAnnotation( Transient.class );
 	}
 
 	/**
 	 * look for @OneToMany, @ManyToMany and @ElementCollection annotations
 	 */
-	public boolean isMappedCollection(CtField field) {
+	@Override
+	public boolean isMappedCollection(UnloadedField field) {
 		return field.hasAnnotation( OneToMany.class ) || field.hasAnnotation( ManyToMany.class )  || field.hasAnnotation( ElementCollection.class );
 	}
 
 	/**
 	 * keep the same order.
 	 */
-	public CtField[] order(CtField[] persistentFields) {
+	@Override
+	public UnloadedField[] order(UnloadedField[] persistentFields) {
 		return persistentFields;
 	}
 }

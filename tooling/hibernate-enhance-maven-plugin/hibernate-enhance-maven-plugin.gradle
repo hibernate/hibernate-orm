@@ -29,6 +29,7 @@ dependencies {
     compile( project(':hibernate-core') ) { transitive = false }
     compile( libraries.jpa ) { transitive = false }
     compile( libraries.javassist ) { transitive = false }
+    compile( libraries.byteBuddy ) { transitive = false }
     compile 'org.codehaus.plexus:plexus-utils:3.0.1'
     runtime( libraries.maven_core )
     runtime( libraries.maven_artifact )
@@ -37,6 +38,7 @@ dependencies {
     runtime( project(':hibernate-core') )
     runtime( libraries.jpa )
     runtime( libraries.javassist )
+    runtime( libraries.byteBuddy )
     runtime 'org.codehaus.plexus:plexus-utils:3.0.1'
 }
 
@@ -56,6 +58,7 @@ task processPluginXml(type: Copy) {
             + generateMavenDependency(libraries.jta)\
             + generateMavenDependency(libraries.commons_annotations)\
             + generateMavenDependency(libraries.javassist)\
+            + generateMavenDependency(libraries.byteBuddy)\
             + generateMavenDependency(libraries.logging)\
             + generateMavenDependency("org.hibernate:hibernate-core:" + project.version)])
 }

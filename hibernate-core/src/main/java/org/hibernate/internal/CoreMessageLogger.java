@@ -467,8 +467,8 @@ public interface CoreMessageLogger extends BasicLogger {
 			String old,
 			String name);
 
-	@Message(value = "Javassist Enhancement failed: %s", id = 142)
-	String javassistEnhancementFailed(String entityName);
+	@Message(value = "Bytecode enhancement failed: %s", id = 142)
+	String bytecodeEnhancementFailed(String entityName);
 
 	@LogMessage(level = WARN)
 	@Message(value = "%s = false breaks the EJB3 specification", id = 144)
@@ -1327,7 +1327,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unexpectedRowCounts();
 
 	@LogMessage(level = WARN)
-	@Message(value = "unrecognized bytecode provider [%s], using javassist by default", id = 382)
+	@Message(value = "unrecognized bytecode provider [%s], using 'bytebuddy' by default", id = 382)
 	void unknownBytecodeProvider(String providerName);
 
 	@LogMessage(level = WARN)

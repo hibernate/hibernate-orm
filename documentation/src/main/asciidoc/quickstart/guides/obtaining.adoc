@@ -6,8 +6,6 @@
 Hibernate's functionality is split into a number of modules/artifacts meant to isolate dependencies (modularity).
 
 hibernate-core:: The main (core) Hibernate module.  Defines its ORM features and APIs as well as the various integration SPIs.
-hibernate-entitymanager:: Defines Hibernate's support for link:$$http://jcp.org/en/jsr/detail?id=317$$[JPA]
-hibernate-java8:: Support for using Java8 specific data-types such as any of the JSR 310 Date/Time types in domain model.
 hibernate-envers:: Hibernate's historical entity versioning feature
 hibernate-spatial:: Hibernate's Spatial/GIS data-type support
 hibernate-osgi:: Hibernate support for running in OSGi containers.
@@ -30,16 +28,13 @@ https://sourceforge.net/projects/hibernate/files/hibernate-orm/.  The release bu
 
 * The `lib/required/` directory contains the `hibernate-core` jar and all of its dependencies.  All of these jars are
 required to be available on your classpath no matter which features of Hibernate are being used.
-* The `/lib/jpa/` directory contains the `hibernate-entitymanager` jar as well as all of its dependencies (beyond
-those in `lib/required/`)
-* The `lib/java8/` directory contains the `hibernate-java8` jar and all of its dependencies (beyond those in `lib/required/`)
 * The `lib/envers` directory contains the `hibernate-envers` jar and all of its dependencies (beyond those in
 `lib/required/` and `lib/jpa/`).
 * The `lib/spatial/` directory contains the `hibernate-spatial` jar and all of its dependencies (beyond those in `lib/required/`)
 * The `lib/osgi/` directory contains the `hibernate-osgi` jar and all of its dependencies (beyond those in `lib/required/` and `lib/jpa/`)
+* The `lib/jpa-metamodel-generator/` directory contains the jar needed for generating the Criteria API type-safe Metamodel.
 * The `lib/optional/` directory contains the jars needed for the various connection pooling and second-level cache integrations
 provided by Hibernate, along with their dependencies.
-
 
 === Maven Repository Artifacts
 

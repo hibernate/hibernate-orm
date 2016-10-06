@@ -31,6 +31,8 @@ import java.util.Map;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.cfg.Environment;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.tuple.PropertyFactory;
@@ -56,6 +58,7 @@ public class ComponentMetamodel implements Serializable {
 	// cached for efficiency...
 	private final int propertySpan;
 	private final Map propertyIndexes = new HashMap();
+	private final boolean createEmptyCompositesEnabled;
 
 //	public ComponentMetamodel(Component component, SessionFactoryImplementor sessionFactory) {
 	public ComponentMetamodel(Component component) {
@@ -82,6 +85,12 @@ public class ComponentMetamodel implements Serializable {
 				entityMode,
 				component
 		) : componentTuplizerFactory.constructTuplizer( tuplizerClassName, component );
+
+		this.createEmptyCompositesEnabled = ConfigurationHelper.getBoolean(
+				Environment.CREATE_EMPTY_COMPOSITES_ENABLED,
+				component.getMappings().getConfigurationProperties(),
+				false
+		);
 	}
 
 	public boolean isKey() {
@@ -121,6 +130,10 @@ public class ComponentMetamodel implements Serializable {
 
 	public ComponentTuplizer getComponentTuplizer() {
 		return componentTuplizer;
+	}
+
+	public boolean isCreateEmptyCompositesEnabled() {
+		return createEmptyCompositesEnabled;
 	}
 
 }

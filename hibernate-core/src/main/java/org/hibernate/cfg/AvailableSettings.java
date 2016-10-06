@@ -711,4 +711,11 @@ public interface AvailableSettings {
 
 	String AUTO_SESSION_EVENTS_LISTENER = "hibernate.session.events.auto";
 
+	/**
+	 * Enable instantiation of composite/embedded objects when all of its attribute values are {@code null}.
+	 * The default (and historical) behavior is that a {@code null} reference will be used to represent the
+	 * composite when all of its attributes are {@code null}.
+	 */
+	String CREATE_EMPTY_COMPOSITES_ENABLED = "hibernate.create_empty_composites.enabled";
+
 }

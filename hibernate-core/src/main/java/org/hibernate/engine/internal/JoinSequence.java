@@ -208,7 +208,13 @@ public class JoinSequence {
 			subqueryJoinFragment.addFromFragmentString( ".*" );
 
 			// Re-alias columns of withClauseJoinAlias and rewrite withClauseFragment
-			Pattern p = Pattern.compile( Pattern.quote( withClauseJoinAlias + "." ) + "([a-zA-Z0-9_]+)");
+			Pattern p = Pattern.compile( Pattern.quote( withClauseJoinAlias + "." ) + "(" +
+					"([a-zA-Z0-9_]+) | " + // Normal identifiers
+					"('[a-zA-Z0-9_]+' ((''[a-zA-Z0-9_]+)+')?) | " + // Single quoted identifiers
+					"(\"[a-zA-Z0-9_]+\" ((\"\"[a-zA-Z0-9_]+)+\")?) | " + // Double quoted identifiers
+					"(\\[[a-zA-Z0-9_\\s]+\\])" + // MSSQL quoted identifiers
+				")"
+			);
 			Matcher matcher = p.matcher( withClauseFragment );
 			StringBuilder withClauseSb = new StringBuilder( withClauseFragment.length() );
 			withClauseSb.append( " and " );
@@ -217,11 +223,13 @@ public class JoinSequence {
 			int aliasNumber = 0;
 			while ( matcher.find() ) {
 				final String column = matcher.group( 1 );
-				final String alias = "_" + aliasNumber + "_" + column;
+				// Replace non-valid simple identifier characters from the column name
+				final String alias = "c_" + aliasNumber + "_" + column.replaceAll( "[\\[\\]\\s\"']+", "" );
 				withClauseSb.append( withClauseFragment, start, matcher.start() );
 				withClauseSb.append( first.getAlias() );
 				withClauseSb.append( '.' );
 				withClauseSb.append( alias );
+				withClauseSb.append( ' ' );
 
 				subqueryJoinFragment.addFromFragmentString( ", " );
 				subqueryJoinFragment.addFromFragmentString( withClauseJoinAlias );

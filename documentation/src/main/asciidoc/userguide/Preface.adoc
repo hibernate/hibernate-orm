@@ -22,6 +22,17 @@ However, Hibernate can certainly help you to remove or encapsulate vendor-specif
 * Help improve or translate this documentation. Contact us on the developer mailing list if you have interest.
 * Spread the word. Let the rest of your organization know about the benefits of Hibernate.
 
+== System Requirements
+
+Hibernate 5.2 and later versions require at least Java 1.8 and JDBC 4.2.
+
+Hibernate 5.1 and older versions require at least Java 1.6 and JDBC 4.0.
+
+[TIP]
+====
+When building Hibernate 5.1 or older from sources, you need Java 1.7 due to a bug in the JDK 1.6 compiler.
+====
+
 === Getting Started Guide
 
 New users may want to first look through the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/quickstart/html_single/[Hibernate Getting Started Guide] for basic information as well as tutorials.

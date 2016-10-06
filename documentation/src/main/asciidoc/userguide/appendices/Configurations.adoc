@@ -209,7 +209,7 @@ Accepts either:
 
 See information on `org.hibernate.boot.archive.scan.spi.Scanner` about expected constructor forms.
 
-|`hibernate.archive.autodetection` | `true` or `false` (default value)  a|
+|`hibernate.archive.autodetection` | `hbm,class` (default value) a|
 
 Identifies a comma-separate list of values indicating the mapping types we should auto-detect during scanning.
 
@@ -218,12 +218,18 @@ Allowable values include:
 `class`:: scan classes (e.g. `.class`) to extract entity mapping metadata
 `hbm`:: scan `hbm` mapping files (e.g. `hbm.xml`) to extract entity mapping metadata
 
-|`hibernate.mapping.precedence` | `true` or `false` (default value)  |
+Bu default both HBM, annotations, and JPA XML mappings are scanned.
+
+When using JPA, to disable the automatic scanning of all entity classes, the `exclude-unlisted-classes` `persistence.xml` element must be set to false.
+
+|`hibernate.mapping.precedence` | `hbm,class` (default value)  |
 
 Used to specify the order in which metadata sources should be processed.
 Value is a delimited-list whose elements are defined by `org.hibernate.cfg.MetadataSourceType`.
 
-Default is `hbm,class"` which indicates to process `hbm.xml` files followed by annotations (combined with `orm.xml` mappings).
+Default is `hbm,class"`, therefore `hbm.xml` files are processed first, followed by annotations (combined with `orm.xml` mappings).
+
+When using JPA, the XML mapping overrides a conflicting annotation mapping that targets the same entity attribute.
 
 3+|JDBC-related options
 |`hibernate.use_nationalized_character_data` |`true` or `false` (default value) |Enable nationalized character support on all string / clob based attribute ( string, char, clob, text etc ).

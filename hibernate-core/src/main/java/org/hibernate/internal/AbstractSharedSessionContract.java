@@ -333,6 +333,16 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
+	protected void checkOpenOrWaitingForAutoClose() {
+		if ( !waitingForAutoClose ) {
+			checkOpen();
+		}
+		else if ( factory.isClosed() ) {
+			markForRollbackOnly();
+			throw new IllegalStateException( "SessionFactory is closed" );
+		}
+	}
+
 	/**
 	 * @deprecated (since 5.2) use {@link #checkOpen()} instead
 	 */
@@ -349,7 +359,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public boolean isTransactionInProgress() {
 		if ( waitingForAutoClose ) {
-			return transactionCoordinator.isTransactionActive();
+			return factory.isOpen() && transactionCoordinator.isTransactionActive();
 		}
 		return !isClosed() && transactionCoordinator.isTransactionActive();
 	}
@@ -377,7 +387,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			);
 
 		}
-		if ( !isClosed() ) {
+		if ( !isClosed() || (waitingForAutoClose && factory.isOpen()) ) {
 			getTransactionCoordinator().pulse();
 		}
 		return this.currentHibernateTransaction;

@@ -33,14 +33,20 @@ import org.hibernate.type.Type;
  * Allows multiple entity classes / collection roles to be stored in the same cache region. Also allows for composite
  * keys which do not properly implement equals()/hashCode().
  *
+ * Note on performance: this class is allocated very heavily!
+ * Make sure the allocation cost stays as low as possible:
+ * if you need to add fields for not-so-common use cases,
+ * it's probably better to create an ad-hoc implementation
+ * extending this one.
+ *
  * @author Gavin King
  * @author Steve Ebersole
+ * @author Sanne Grinovero
  */
 public class CacheKey implements Serializable {
+
 	private final Serializable key;
 	private final Type type;
-	private final String entityOrRoleName;
-	private final String tenantId;
 	private final int hashCode;
 
 	/**
@@ -58,16 +64,25 @@ public class CacheKey implements Serializable {
 			final Serializable id,
 			final Type type,
 			final String entityOrRoleName,
-			final String tenantId,
 			final SessionFactoryImplementor factory) {
-		this.key = id;
-		this.type = type;
-		this.entityOrRoleName = entityOrRoleName;
-		this.tenantId = tenantId;
-		this.hashCode = calculateHashCode( type, factory );
+		this( id, type, entityOrRoleName, factory, null );
 	}
 
-	private int calculateHashCode(Type type, SessionFactoryImplementor factory) {
+	/**
+	 * Used by subclasses: need to specify a tenantId
+	 */
+	protected CacheKey(
+			final Serializable id,
+			final Type type,
+			final String entityOrRoleName,
+			final SessionFactoryImplementor factory,
+			final String tenantId) {
+		this.key = id;
+		this.type = type;
+		this.hashCode = calculateHashCode( type, factory, tenantId );
+	}
+
+	private int calculateHashCode(Type type, SessionFactoryImplementor factory, String tenantId) {
 		int result = type.getHashCode( key, factory );
 		result = 31 * result + (tenantId != null ? tenantId.hashCode() : 0);
 		return result;
@@ -77,12 +92,8 @@ public class CacheKey implements Serializable {
 		return key;
 	}
 
-	public String getEntityOrRoleName() {
-		return entityOrRoleName;
-	}
-
 	public String getTenantId() {
-		return tenantId;
+		return null;
 	}
 
 	@Override
@@ -97,10 +108,10 @@ public class CacheKey implements Serializable {
 			//hashCode is part of this check since it is pre-calculated and hash must match for equals to be true
 			return false;
 		}
+		//Warning: this equals implementation needs to work correctly also for the subclass
 		final CacheKey that = (CacheKey) other;
-		return EqualsHelper.equals( entityOrRoleName, that.entityOrRoleName )
-				&& type.isEqual( key, that.key )
-				&& EqualsHelper.equals( tenantId, that.tenantId );
+		return EqualsHelper.equals( getTenantId(), that.getTenantId() )
+				&& type.isEqual( key, that.key );
 	}
 
 	@Override
@@ -108,9 +119,4 @@ public class CacheKey implements Serializable {
 		return hashCode;
 	}
 
-	@Override
-	public String toString() {
-		// Used to be required for OSCache
-		return entityOrRoleName + '#' + key.toString();
-	}
 }

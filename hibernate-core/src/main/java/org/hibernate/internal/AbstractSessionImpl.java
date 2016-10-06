@@ -38,6 +38,7 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionContract;
+import org.hibernate.cache.internal.TenantAwareCacheKey;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -329,7 +330,13 @@ public abstract class AbstractSessionImpl
 
 	@Override
 	public CacheKey generateCacheKey(Serializable id, Type type, String entityOrRoleName) {
-		return new CacheKey( id, type, entityOrRoleName, getTenantIdentifier(), getFactory() );
+		final String tenantIdentifier = getTenantIdentifier();
+		if ( tenantIdentifier == null ) {
+			return new CacheKey( id, type, entityOrRoleName, getFactory() );
+		}
+		else {
+			return new TenantAwareCacheKey( id, type, entityOrRoleName, getFactory(), tenantIdentifier );
+		}
 	}
 
 	private transient JdbcConnectionAccess jdbcConnectionAccess;

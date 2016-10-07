@@ -28,10 +28,10 @@ public class NullLiteralExpression<T> extends ExpressionImpl<T> implements Seria
 	}
 
 	public String render(RenderingContext renderingContext) {
-		return CastFunction.CAST_NAME + "( 	null  as " + renderingContext.getCastType( getJavaType() ) + ')';
+		return "null";
 	}
 
 	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
+		return CastFunction.CAST_NAME + "( 	null  as " + renderingContext.getCastType( getJavaType() ) + ')';
 	}
 }

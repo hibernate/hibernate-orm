@@ -58,14 +58,14 @@ public class ArrayTypes<T>
 	public static final ArrayTypes SERIALIZABLE = new ArrayTypes<>( SerializableType.INSTANCE );
 
 	// Java 8 time classes
-	public static final ArrayTypes INSTANT = new ArrayTypes<>( InstantType.INSTANCE );
-	public static final ArrayTypes DURATION = new ArrayTypes<>( DurationType.INSTANCE );
-	public static final ArrayTypes LOCAL_DATE_TIME = new ArrayTypes<>( LocalDateTimeType.INSTANCE );
-	public static final ArrayTypes LOCAL_DATE = new ArrayTypes<>( LocalDateType.INSTANCE );
-	public static final ArrayTypes LOCAL_TIME = new ArrayTypes<>( LocalTimeType.INSTANCE );
-	public static final ArrayTypes ZONED_DATE_TIME = new ArrayTypes<>( ZonedDateTimeType.INSTANCE );
-	public static final ArrayTypes OFFSET_DATE_TIME = new ArrayTypes<>( OffsetDateTimeType.INSTANCE );
-	public static final ArrayTypes OFFSET_TIME = new ArrayTypes<>( OffsetTimeType.INSTANCE );
+	public static final ArrayTypes INSTANT = new ArrayTypes<>( InstantType.INSTANCE, java.sql.Timestamp.class );
+	public static final ArrayTypes DURATION = new ArrayTypes<>( DurationType.INSTANCE, String.class );
+	public static final ArrayTypes LOCAL_DATE_TIME = new ArrayTypes<>( LocalDateTimeType.INSTANCE, java.sql.Timestamp.class );
+	public static final ArrayTypes LOCAL_DATE = new ArrayTypes<>( LocalDateType.INSTANCE, java.sql.Date.class );
+	public static final ArrayTypes LOCAL_TIME = new ArrayTypes<>( LocalTimeType.INSTANCE, java.sql.Time.class );
+	public static final ArrayTypes ZONED_DATE_TIME = new ArrayTypes<>( ZonedDateTimeType.INSTANCE, java.sql.Timestamp.class );
+	public static final ArrayTypes OFFSET_DATE_TIME = new ArrayTypes<>( OffsetDateTimeType.INSTANCE, java.sql.Timestamp.class );
+	public static final ArrayTypes OFFSET_TIME = new ArrayTypes<>( OffsetTimeType.INSTANCE, java.sql.Time.class );
 
 	// Shouldn't this type be deprecated in SQL already?
 	public static final ArrayTypes STRING_N_VARCHAR = new ArrayTypes<>( StringNVarcharType.INSTANCE );
@@ -75,7 +75,11 @@ public class ArrayTypes<T>
 	private final String[] regKeys;
 
 	public ArrayTypes(AbstractStandardBasicType<T> baseDescriptor) {
-		super( ArrayTypeDescriptor.INSTANCE, new GenericArrayTypeDescriptor<>( baseDescriptor ) );
+		this(baseDescriptor, null);
+	}
+
+	public ArrayTypes(AbstractStandardBasicType<T> baseDescriptor, Class unwrap) {
+		super( ArrayTypeDescriptor.INSTANCE, new GenericArrayTypeDescriptor<>( baseDescriptor, unwrap ) );
 		this.baseDescriptor = baseDescriptor;
 		this.name = baseDescriptor.getName() + "[]";
 		String[] baseKeys = baseDescriptor.getRegistrationKeys();

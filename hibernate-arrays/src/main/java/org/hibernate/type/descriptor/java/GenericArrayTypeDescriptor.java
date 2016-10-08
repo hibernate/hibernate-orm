@@ -22,8 +22,13 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 	private final Class<T> componentClass;
 	private final MutabilityPlan<T[]> mutaplan;
 	private final int sqlType;
+	private final Class unrapTo;
 
 	public GenericArrayTypeDescriptor(AbstractStandardBasicType<T> baseDescriptor) {
+		this(baseDescriptor, null);
+	}
+
+	public GenericArrayTypeDescriptor(AbstractStandardBasicType<T> baseDescriptor, Class unwrapTo) {
 		super( (Class<T[]>) Array.newInstance( baseDescriptor.getJavaTypeDescriptor().getJavaTypeClass(), 0 ).getClass() );
 		this.componentDescriptor = baseDescriptor.getJavaTypeDescriptor();
 		this.componentClass = baseDescriptor.getJavaTypeDescriptor().getJavaTypeClass();
@@ -34,6 +39,7 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 			this.mutaplan = ArrayMutabilityPlan.INSTANCE;
 		}
 		this.sqlType = baseDescriptor.getSqlTypeDescriptor().getSqlType();
+		this.unrapTo = unwrapTo == null ? componentClass : unwrapTo;
 	}
 
 	private class LocalArrayMutabilityPlan implements MutabilityPlan<T[]> {
@@ -211,9 +217,9 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 			Object[] unwrapped = new Object[value.length];
 			Class cls = value.getClass().getComponentType();
 			for (int i = 0; i < value.length; i++) {
-				unwrapped[i] = componentClass.isAssignableFrom(cls)
+				unwrapped[i] = unrapTo.isAssignableFrom(cls)
 						? value[i]
-						: componentDescriptor.unwrap(value[i], componentClass, options);
+						: componentDescriptor.unwrap(value[i], unrapTo, options);
 			}
 			try {
 				conn = sess.connection();

@@ -16,6 +16,9 @@ import org.hibernate.internal.SessionImpl;
 import org.hibernate.type.AbstractStandardBasicType;
 import org.hibernate.type.descriptor.WrapperOptions;
 
+/**
+ * @author Jordan Gigov
+ */
 public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 
 	private final JavaTypeDescriptor<T> componentDescriptor;

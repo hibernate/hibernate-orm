@@ -29,6 +29,7 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -52,6 +53,7 @@ import org.hibernate.util.ReflectHelper;
  * <tt>DBCPConnectionProvider</tt>.
  *
  * @author Gavin King
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  * @see ConnectionProvider
  */
 
@@ -170,8 +172,13 @@ public final class ConnectionProviderFactory {
 	private static ConnectionProvider initializeConnectionProviderFromConfig(String providerClass) {
 		ConnectionProvider connections;
 		try {
-			log.info( "Initializing connection provider: " + providerClass );
-			connections = (ConnectionProvider) ReflectHelper.classForName( providerClass ).newInstance();
+			if ( USER_SUPPLIED_CONNECTION_PROVIDERS.containsKey( providerClass ) ) {
+				log.info( "Utilizing user supplied connection provider: " + providerClass );
+				connections = USER_SUPPLIED_CONNECTION_PROVIDERS.get( providerClass );
+			} else {
+				log.info( "Initializing connection provider: " + providerClass );
+				connections = (ConnectionProvider) ReflectHelper.classForName( providerClass ).newInstance();
+			}
 		}
 		catch ( Exception e ) {
 			log.error( "Could not instantiate connection provider", e );
@@ -212,9 +219,26 @@ public final class ConnectionProviderFactory {
 		return result;
 	}
 
+	/**
+	 * Allows user to supply his own connection provider instances. {@link Environment#CONNECTION_PROVIDER}
+	 * configuration parameter should point to the fully qualified class name of the chosen instance.
+	 * @param connectionProvider Connection provider instance.
+	 * @throws IllegalArgumentException If the specified connection provider instance is {@code null}.
+	 */
+	public static void registerConnectionProviderInstance(ConnectionProvider connectionProvider) {
+		if ( connectionProvider == null ) {
+			throw new IllegalArgumentException( "Connection provider instance cannot be null." );
+		}
+		USER_SUPPLIED_CONNECTION_PROVIDERS.put( connectionProvider.getClass().getName(), connectionProvider );
+	}
+
 	private static final Set SPECIAL_PROPERTIES;
 
+	// Mapping from class name to already constructed connection provider instance (provided by user).
+	private static final Map<String, ConnectionProvider> USER_SUPPLIED_CONNECTION_PROVIDERS;
+
 	static {
+		USER_SUPPLIED_CONNECTION_PROVIDERS = new HashMap<String, ConnectionProvider>( 0 );
 		SPECIAL_PROPERTIES = new HashSet();
 		SPECIAL_PROPERTIES.add( Environment.DATASOURCE );
 		SPECIAL_PROPERTIES.add( Environment.URL );

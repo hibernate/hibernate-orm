@@ -404,9 +404,7 @@ public final class SessionImpl
 		if ( getSessionFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
 			// Original hibernate-entitymanager EM#close behavior
 			checkSessionFactoryOpen();
-			if ( !waitingForAutoClose ) {
-				checkOpen();
-			}
+			checkOpenOrWaitingForAutoClose();
 			if ( discardOnClose || !isTransactionInProgress() ) {
 				super.close();
 			}
@@ -450,7 +448,7 @@ public final class SessionImpl
 		checkSessionFactoryOpen();
 		checkTransactionSynchStatus();
 		try {
-			return !isClosed() && !waitingForAutoClose ;
+			return !isClosed();
 		}
 		catch (HibernateException he) {
 			throw exceptionConverter.convert( he );
@@ -587,7 +585,7 @@ public final class SessionImpl
 
 	@Override
 	public Object getEntityUsingInterceptor(EntityKey key) throws HibernateException {
-		checkOpen();
+		checkOpenOrWaitingForAutoClose();
 		// todo : should this get moved to PersistentContext?
 		// logically, is PersistentContext the "thing" to which an interceptor gets attached?
 		final Object result = persistenceContext.getEntity( key );
@@ -819,7 +817,7 @@ public final class SessionImpl
 	}
 
 	private void firePersistOnFlush(Map copiedAlready, PersistEvent event) {
-		checkOpen();
+		checkOpenOrWaitingForAutoClose();
 		checkTransactionSynchStatus();
 		for ( PersistEventListener listener : listeners( EventType.PERSIST_ONFLUSH ) ) {
 			listener.onPersist( event, copiedAlready );
@@ -1435,8 +1433,8 @@ public final class SessionImpl
 					entityEntry.getPersister().getEntityName()
 			);
 		}
-
-		flush();
+		checkOpenOrWaitingForAutoClose();
+		doFlush();
 	}
 
 	@Override
@@ -1585,7 +1583,7 @@ public final class SessionImpl
 	 */
 	@Override
 	public Object instantiate(EntityPersister persister, Serializable id) throws HibernateException {
-		checkOpen();
+		checkOpenOrWaitingForAutoClose();
 		checkTransactionSynchStatus();
 		Object result = getInterceptor().instantiate(
 				persister.getEntityName(),
@@ -1601,7 +1599,7 @@ public final class SessionImpl
 
 	@Override
 	public EntityPersister getEntityPersister(final String entityName, final Object object) {
-		checkOpen();
+		checkOpenOrWaitingForAutoClose();
 		if ( entityName == null ) {
 			return getFactory().getMetamodel().entityPersister( guessEntityName( object ) );
 		}
@@ -1652,7 +1650,7 @@ public final class SessionImpl
 	 */
 	@Override
 	public Serializable getContextEntityIdentifier(Object object) {
-		checkOpen();
+		checkOpenOrWaitingForAutoClose();
 		if ( object instanceof HibernateProxy ) {
 			return getProxyIdentifier( object );
 		}
@@ -2145,7 +2143,7 @@ public final class SessionImpl
 
 	@Override
 	public void initializeCollection(PersistentCollection collection, boolean writing) {
-		checkOpen();
+		checkOpenOrWaitingForAutoClose();
 		checkTransactionSynchStatus();
 		InitializeCollectionEvent event = new InitializeCollectionEvent( collection, this );
 		for ( InitializeCollectionEventListener listener : listeners( EventType.INIT_COLLECTION ) ) {
@@ -2234,18 +2232,14 @@ public final class SessionImpl
 
 	@Override
 	public ActionQueue getActionQueue() {
-		if ( !waitingForAutoClose ) {
-			checkOpen();
-		}
+		checkOpenOrWaitingForAutoClose();
 //		checkTransactionSynchStatus();
 		return actionQueue;
 	}
 
 	@Override
 	public PersistenceContext getPersistenceContext() {
-		if ( !waitingForAutoClose ) {
-			checkOpen();
-		}
+		checkOpenOrWaitingForAutoClose();
 //		checkTransactionSynchStatus();
 		return persistenceContext;
 	}
@@ -3156,7 +3150,7 @@ public final class SessionImpl
 
 	@Override
 	public void afterTransactionBegin() {
-		checkOpen();
+		checkOpenOrWaitingForAutoClose();
 		getInterceptor().afterTransactionBegin( getCurrentTransaction() );
 	}
 

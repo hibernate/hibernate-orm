@@ -83,6 +83,32 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 	}
 
 	@Override
+	public boolean areEqual(T[] one, T[] another) {
+		if (one == null && another == null) {
+			return true;
+		}
+		if (one == null || another == null) {
+			return false;
+		}
+		if (one.length != another.length) {
+			return false;
+		}
+		int l = one.length;
+		for (int i = 0; i < l; i++) {
+			
+			if ( ! componentDescriptor.areEqual( one[i], another[i] )) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	@Override
+	public int extractHashCode(T[] value) {
+		return java.util.Arrays.hashCode( value );
+	}
+
+	@Override
 	public MutabilityPlan<T[]> getMutabilityPlan() {
 		return super.getMutabilityPlan();
 	}
@@ -90,11 +116,12 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 	@Override
 	public String toString(T[] value) {
 		if ( value == null ) {
-			return "null";
+			return null;
 		}
 		StringBuilder sb = new StringBuilder();
 		sb.append( '{' );
 		String glue = "";
+		char[] buf = new char[2];
 		for ( T v : value ) {
 			sb.append( glue );
 			if ( v == null ) {
@@ -102,13 +129,25 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 				glue = ",";
 				continue;
 			}
-			sb.append( '\'' );
-			sb.append( v.toString().replace( "\\", "\\\\" ).replace( "'", "\\'" ) );
-			sb.append( '\'' );
+			sb.append( '"' );
+			String valstr = this.componentDescriptor.toString( v );
+			// using replaceAll is a shorter, but much slower way to do this
+			for (int i = 0, len = valstr.length(), charsn = 0, cp = 0; i < len;) {
+				cp = valstr.codePointAt( i );
+				// Surrogate pairs. This is how they're done.
+				charsn = Character.toChars( cp, buf, 0 );
+				if (cp == '\\' || cp == '"') {
+					sb.append('\\');
+				}
+				sb.append( buf, 0, charsn );
+				i += charsn;
+			}
+			sb.append( '"' );
 			glue = ",";
 		}
 		sb.append( '}' );
-		return sb.toString();
+		String result = sb.toString();
+		return result;
 	}
 
 	@Override
@@ -120,83 +159,70 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 		string = string.trim();
 		StringBuilder sb = null;
 		char lastchar = string.charAt( string.length() - 1 );
-		char opener;
-		switch ( lastchar ) {
-			case ']':
-				opener = '[';
-				break;
-			case '}':
-				opener = '{';
-				break;
-			case ')':
-				opener = '(';
-				break;
-			default:
-				throw new IllegalArgumentException( "Cannot parse given string into array of strings" );
+		char firstchar = string.charAt( 0 );
+		if ( firstchar != '{' || lastchar != '}' ) {
+			throw new IllegalArgumentException( "Cannot parse given string into array of strings. First and last character must be { and }" );
 		}
 		int len = string.length();
 		char[] duo = new char[ 2 ];
 		int applen;
-		for ( int i = string.indexOf( opener ) + 1; i < len; i ++ ) {
+		boolean inquote = false;
+		for ( int i = 1, charsn = 0; i < len; i ++ ) {
 			int cp = string.codePointAt( i );
 			char quote;
-			if ( cp == '\'' || cp == '\"' || cp == '`' ) {
-				quote = (char) cp;
-			}
-			else if ( cp == lastchar ) {
-				// treat no-value between commas to mean null
-				if ( sb == null ) {
-					lst.add( null );
-				}
-				break;
-			}
-			else if ( Character.isWhitespace( cp ) ) {
-				continue;
-			}
-			else if ( cp == ',' ) {
-				// treat no-value between commas to mean null
-				if ( sb == null ) {
-					lst.add( null );
+			if ( cp == '"' ) {
+				if (inquote) {
+					lst.add( sb.toString() );
 				}
 				else {
-					sb = null;
+					sb = new StringBuilder();
 				}
+				inquote = !inquote;
 				continue;
 			}
-			else if ( "null".equalsIgnoreCase( string.substring( i, i + 4 ) ) ) {
-				// skip some possible whitespace
-				int j = 5;
-				do {
-					cp = string.codePointAt( i + j );
-					j ++;
-				}
-				while ( Character.isWhitespace( cp ) );
-				// check if this was the last entry
-				if ( cp == lastchar || cp == ',' ) {
-					lst.add( null );
+			else if ( !inquote ) {
+				if ( Character.isWhitespace( cp ) ) {
 					continue;
 				}
-				throw new IllegalArgumentException( "Cannot parse given string into array of strings" );
-			}
-			else {
-				throw new IllegalArgumentException( "Cannot parse given string into array of strings" );
-			}
-			sb = new StringBuilder();
-			while (  ++ i < len && ( cp = string.codePointAt( i ) ) != quote ) {
-				if ( cp == '\\' && ( i + 1 ) < len ) {
-					sb.appendCodePoint( quote );
+				else if ( cp == ',' ) {
+					// treat no-value between commas to mean null
+					if ( sb == null ) {
+						lst.add( null );
+					}
+					else {
+						sb = null;
+					}
 					continue;
 				}
-				sb.appendCodePoint( cp );
-				if (  ! Character.isBmpCodePoint( cp ) ) {
-					i ++;
+				else {
+					// i + 4, because there has to be a comma or closing brace after null
+					if ( i + 4 < len
+							&& string.charAt( i ) == 'n'
+							&& string.charAt( i + 1 ) == 'u'
+							&& string.charAt( i + 2 ) == 'l'
+							&& string.charAt( i + 3 ) == 'l') {
+						lst.add( null );
+						continue;
+					}
+					if (i + 1 == len) {
+						break;
+					}
+					throw new IllegalArgumentException( "Cannot parse given string into array of strings."
+							+ " Outside of quote, but neither whitespace, comma, array end, nor null found." );
 				}
 			}
-			lst.add( sb.toString() );
+			else if ( cp == '\\' && i + 2 < len && (string.charAt( i + 1 ) == '\\' || string.charAt( i + 1 ) == '"')) {
+				// no need to use codePointAt here, we already know it's not a surrogate pair
+				cp = string.charAt( ++i );
+			}
+			// If there is ever a null-pointer here, the if-else logic before is incomplete
+			charsn = Character.toChars( cp, duo, 0 );
+			sb.append( duo, 0, charsn );
 		}
+		String[] objects = lst.toArray( new String[lst.size()] );
 		T[] result = (T[]) Array.newInstance( componentClass, lst.size() );
 		for ( int i = 0; i < result.length; i ++ ) {
-			result[ i ] = componentDescriptor.fromString( lst.get( i ) );
+			result[ i ] = componentDescriptor.fromString( objects[ i ] );
 		}
 		return result;
 	}

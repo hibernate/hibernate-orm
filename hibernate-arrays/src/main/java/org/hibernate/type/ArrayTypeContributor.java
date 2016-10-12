@@ -26,7 +26,7 @@ public class ArrayTypeContributor implements TypeContributor {
 		JavaTypeDescriptorRegistry.INSTANCE.addDescriptor( ArrayTypes.NUMERIC_BOOLEAN.getJavaTypeDescriptor() );
 		JavaTypeDescriptorRegistry.INSTANCE.addDescriptor( ArrayTypes.TRUE_FALSE.getJavaTypeDescriptor() );
 		JavaTypeDescriptorRegistry.INSTANCE.addDescriptor( ArrayTypes.YES_NO.getJavaTypeDescriptor() );
-		JavaTypeDescriptorRegistry.INSTANCE.addDescriptor( ArrayTypes.BYTE.getJavaTypeDescriptor() );
+//		JavaTypeDescriptorRegistry.INSTANCE.addDescriptor( ArrayTypes.BYTE.getJavaTypeDescriptor() );
 		JavaTypeDescriptorRegistry.INSTANCE.addDescriptor( ArrayTypes.SHORT.getJavaTypeDescriptor() );
 		JavaTypeDescriptorRegistry.INSTANCE.addDescriptor( ArrayTypes.INTEGER.getJavaTypeDescriptor() );
 		JavaTypeDescriptorRegistry.INSTANCE.addDescriptor( ArrayTypes.LONG.getJavaTypeDescriptor() );
@@ -34,7 +34,7 @@ public class ArrayTypeContributor implements TypeContributor {
 		JavaTypeDescriptorRegistry.INSTANCE.addDescriptor( ArrayTypes.DOUBLE.getJavaTypeDescriptor() );
 		JavaTypeDescriptorRegistry.INSTANCE.addDescriptor( ArrayTypes.BIG_INTEGER.getJavaTypeDescriptor() );
 		JavaTypeDescriptorRegistry.INSTANCE.addDescriptor( ArrayTypes.BIG_DECIMAL.getJavaTypeDescriptor() );
-		JavaTypeDescriptorRegistry.INSTANCE.addDescriptor( ArrayTypes.CHARACTER.getJavaTypeDescriptor() );
+//		JavaTypeDescriptorRegistry.INSTANCE.addDescriptor( ArrayTypes.CHARACTER.getJavaTypeDescriptor() );
 		JavaTypeDescriptorRegistry.INSTANCE.addDescriptor( ArrayTypes.STRING.getJavaTypeDescriptor() );
 		JavaTypeDescriptorRegistry.INSTANCE.addDescriptor( ArrayTypes.URL.getJavaTypeDescriptor() );
 		JavaTypeDescriptorRegistry.INSTANCE.addDescriptor( ArrayTypes.TIME.getJavaTypeDescriptor() );
@@ -75,7 +75,7 @@ public class ArrayTypeContributor implements TypeContributor {
 		typeContributions.contributeType( ArrayTypes.NUMERIC_BOOLEAN );
 		typeContributions.contributeType( ArrayTypes.TRUE_FALSE );
 		typeContributions.contributeType( ArrayTypes.YES_NO );
-		typeContributions.contributeType( ArrayTypes.BYTE );
+//		typeContributions.contributeType( ArrayTypes.BYTE );
 		typeContributions.contributeType( ArrayTypes.SHORT );
 		typeContributions.contributeType( ArrayTypes.INTEGER );
 		typeContributions.contributeType( ArrayTypes.LONG );
@@ -83,7 +83,7 @@ public class ArrayTypeContributor implements TypeContributor {
 		typeContributions.contributeType( ArrayTypes.DOUBLE );
 		typeContributions.contributeType( ArrayTypes.BIG_INTEGER );
 		typeContributions.contributeType( ArrayTypes.BIG_DECIMAL );
-		typeContributions.contributeType( ArrayTypes.CHARACTER );
+//		typeContributions.contributeType( ArrayTypes.CHARACTER );
 		typeContributions.contributeType( ArrayTypes.STRING );
 		typeContributions.contributeType( ArrayTypes.URL );
 		typeContributions.contributeType( ArrayTypes.TIME );

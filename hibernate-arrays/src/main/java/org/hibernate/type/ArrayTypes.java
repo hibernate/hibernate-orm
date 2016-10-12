@@ -8,7 +8,6 @@ package org.hibernate.type;
 
 import java.util.ArrayList;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.GenericArrayTypeDescriptor;
 import org.hibernate.type.descriptor.sql.ArrayTypeDescriptor;
 
@@ -75,31 +74,93 @@ public class ArrayTypes<T>
 	private final String[] regKeys;
 
 	public ArrayTypes(AbstractStandardBasicType<T> baseDescriptor) {
-		this(baseDescriptor, null);
+		this( baseDescriptor, null );
 	}
 
 	public ArrayTypes(AbstractStandardBasicType<T> baseDescriptor, Class unwrap) {
 		super( ArrayTypeDescriptor.INSTANCE, new GenericArrayTypeDescriptor<>( baseDescriptor, unwrap ) );
 		this.baseDescriptor = baseDescriptor;
 		this.name = baseDescriptor.getName() + "[]";
-		String[] baseKeys = baseDescriptor.getRegistrationKeys();
-		ArrayList<String> keys = new ArrayList<>( baseKeys.length );
+		this.regKeys = buildTypeRegistrations( baseDescriptor.getRegistrationKeys(), ArrayTypes.class.isInstance( baseDescriptor ) );
+	}
+
+	/**
+	 * Builds the array registration keys, based on the original type's keys.
+	 *
+	 * @param baseKeys Array of keys used by the base type.
+	 * @return
+	 */
+	private String[] buildTypeRegistrations(String[] baseKeys, boolean noSQLrecurse) {
+		ArrayList<String> keys = new ArrayList<>( baseKeys.length << 1 );
 		for ( String bk : baseKeys ) {
+			boolean addSQL = true;
 			try {
-				Class c = Class.forName( bk );
-				bk = c.getName();
+				Class c;
+				switch ( bk ) {
+					case "boolean":
+						c = boolean.class;
+						bk = "Z";
+						break;
+
+					case "byte":
+						c = byte.class;
+						bk = "B";
+						break;
+
+					case "char":
+						c = char.class;
+						bk = "C";
+						break;
+
+					case "double":
+						c = double.class;
+						bk = "D";
+						break;
+
+					case "float":
+						c = float.class;
+						bk = "F";
+						break;
+
+					case "int":
+						c = int.class;
+						bk = "I";
+						break;
+
+					case "long":
+						c = long.class;
+						bk = "J";
+						break;
+
+					case "short":
+						c = short.class;
+						bk = "S";
+						break;
+
+					default:
+						c = Class.forName( bk ); // load to make sure it exists
+						bk = c.getName();
+						addSQL = false;
+				}
 				if ( c.isPrimitive() || c.isArray() ) {
 					keys.add( "[" + bk );
-				}
-				else {
+				} else {
 					keys.add( "[L" + bk + ";" );
 				}
+			} catch ( ClassNotFoundException ex ) {
 			}
-			catch ( ClassNotFoundException ex ) {
-				// Ignore. Not real class.
+			if ( addSQL ) {
+				// Not all type names given are Java classes, so assume the others are Database types
+				if ( noSQLrecurse ) {
+					keys.add( bk ); // type is just "basetype ARRAY", never "basetype ARRAY ARRAY ARRAY"
+				} else {
+					keys.add( bk + "[]" ); // PostgreSQL type names
+					keys.add( bk + " ARRAY" ); // standard SQL
+					keys.add( bk + " array" ); // also possible
+				}
 			}
 		}
-		this.regKeys = keys.toArray( new String[ keys.size() ] );
+		return keys.toArray( new String[keys.size()] );
 	}
 
 	@Override
@@ -109,7 +170,7 @@ public class ArrayTypes<T>
 
 	@Override
 	public String[] getRegistrationKeys() {
-		return (String[]) regKeys.clone();
+		return ( String[] ) regKeys.clone();
 	}
 
 	@Override

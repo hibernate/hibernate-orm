@@ -1779,3 +1779,38 @@ Null values can be placed in front or at the end of the sorted set using `NULLS 
 include::{sourcedir}/HQLTest.java[tags=hql-order-by-example]
 ----
 ====
+
+[[hql-read-only-entities]]
+=== Read-only entities
+
+As explained in <<chapters/domain/immutability.adoc#entity-immutability,entity immutability>> section, fetching entities in read-only mode is much more efficient than fetching read-write entities.
+Even if the entities are mutable, you can still fetch them in read-only mode, and benefit from reducing the memory footprint and sepeding up the flushing process.
+
+Read-only entities are skipped by the dirty checking mechanism as illustrated by the following example:
+
+[[hql-read-only-entities-example]]
+.Read-only entities query example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-read-only-entities-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/hql-read-only-entities-example.sql[]
+----
+====
+
+As you can see, there is no SQL `UPDATE` being executed.
+
+The Hibernate native API offers a `Query#setReadOnly` method, as an alternative to using a JPA query hint:
+
+[[hql-read-only-entities-native-example]]
+.Read-only entities native query example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-read-only-entities-native-example]
+----
+====

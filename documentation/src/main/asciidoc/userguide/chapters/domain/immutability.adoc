@@ -1,0 +1,111 @@
+[[entity-immutability]]
+=== Immutability
+:sourcedir: ../../../../../test/java/org/hibernate/userguide/immutability
+:extrasdir: extras/immutability
+
+Immutability can be specified for both entities and collections.
+
+==== Entity immutability
+
+If a specific entity is immutable, it is good practice to mark it with the `@Immutable` annotation.
+
+.Immutable entity
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/EntityImmutabilityTest.java[tags=entity-immutability-example]
+----
+====
+
+Internally, Hibernate is going to perform several optimizations, such as:
+
+- reducing memory footprint since there is no need to retain the dehydrated state for the dirty checking mechanism
+- speeding-up the Persistence Context flushing phase since immutable entities can skip the dirty checking process
+
+Considering the following entity is persisted in the database:
+
+.Persisting an immutable entity
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/EntityImmutabilityTest.java[tags=entity-immutability-persist-example]
+----
+====
+
+When loading the entity and trying to change its state,
+Hibernate will skip any modification, therefore no SQL `UPDATE` statement is executed.
+
+.The immutable entity ignores any update
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/EntityImmutabilityTest.java[tags=entity-immutability-update-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/entity-immutability-update-example.sql[]
+----
+====
+
+==== Collection immutability
+
+Just like entities, collections can also be marked with the `@Immutable` annotation.
+
+Considering the following entity mappings:
+
+.Immutable collection
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CollectionImmutabilityTest.java[tags=collection-immutability-example]
+----
+====
+
+This time, not only the `Event` entity is immutable, but the `Event` collection stored by the `Batch` parent entity.
+Once the immutable collection is created, it can never be modified.
+
+.Persisting an immutable collection
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CollectionImmutabilityTest.java[tags=collection-immutability-persist-example]
+----
+====
+
+The `Batch` entity is mutable. Only the `events` collection is immutable.
+
+For instance, we can still modify the entity name:
+
+.Changing the mutable entity
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CollectionImmutabilityTest.java[tags=collection-entity-update-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/collection-entity-update-example.sql[]
+----
+====
+
+However, when trying to modify the `events` collection:
+
+.Immutable collections cannot be modified
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CollectionImmutabilityTest.java[tags=collection-immutability-update-example]
+----
+
+[source, bash, indent=0]
+----
+include::{extrasdir}/collection-immutability-update-example.log[]
+----
+====
+
+[TIP]
+====
+While immutable entity changes are simply discarded, modifying an immutable collection end up in a `HibernateException` being thrown.
+====

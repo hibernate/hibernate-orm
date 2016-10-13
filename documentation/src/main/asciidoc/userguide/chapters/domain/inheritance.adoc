@@ -264,7 +264,7 @@ include::{extrasdir}/entity-inheritance-joined-table-query-example.sql[]
 
 [IMPORTANT]
 ====
-Polymorphic queries can create Cartesian Products, so caution is advised.
+The joined table inheritance polymorphic queries can use several JOINS which might affect performance when fetching a large number of entities.
 ====
 
 [[entity-inheritance-table-per-class]]

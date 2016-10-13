@@ -1383,6 +1383,17 @@ include::{extrasdir}/basic/mapping-filter-collection-query-example.sql[]
 The main advantage of `@Filter` over teh `@Where` clause is that the filtering criteria can be customized at runtime.
 ====
 
+[WARNING]
+====
+It's not possible to combine the `@Filter` and `@Cache` collection annotations.
+This limitation is due to ensuring consistency and because the filtering information is not stored in the second-level cache.
+
+If caching was allowed for a currently filtered collection, then the second-level cache would store only a subset of the whole collection.
+Afterward, every other Session will get the filtered collection from the cache, even if the Session-level filters have not been explicitly activated.
+
+For this reason, the second-level collection cache is limited to storing whole collections, and not subsets.
+====
+
 [[mapping-column-any]]
 ==== @Any mapping
 

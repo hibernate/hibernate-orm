@@ -53,10 +53,10 @@ public class TimeArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 		EntityTransaction et = em.getTransaction();
 		et.begin();
 		try {
-			time1 = LocalTime.of(0, 0, 0);
-			time2 = LocalTime.of(6, 15, 0);
-			time3 = LocalTime.of(12, 30, 0);
-			time4 = LocalTime.of(23, 59, 59);
+			time1 = LocalTime.of( 0, 0, 0 );
+			time2 = LocalTime.of( 6, 15, 0 );
+			time3 = LocalTime.of( 12, 30, 0 );
+			time4 = LocalTime.of( 23, 59, 59 );
 			em.persist( new TableWithTimeArrays( 1L, new LocalTime[]{} ) );
 			em.persist( new TableWithTimeArrays( 2L, new LocalTime[]{ time1, time2, time3 } ) );
 			em.persist( new TableWithTimeArrays( 3L, null ) );
@@ -90,36 +90,36 @@ public class TimeArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 		final EntityManager em = openSession();
 		try {
 			TableWithTimeArrays tableRecord;
-			tableRecord = em.find(TableWithTimeArrays.class, 1L );
+			tableRecord = em.find( TableWithTimeArrays.class, 1L );
 			assertThat( tableRecord.getTheArray(), is( new LocalTime[]{} ) );
 
-			tableRecord = em.find(TableWithTimeArrays.class, 2L );
+			tableRecord = em.find( TableWithTimeArrays.class, 2L );
 			assertThat( tableRecord.getTheArray(), is( new LocalTime[]{ time1, time2, time3 } ) );
 
-			tableRecord = em.find(TableWithTimeArrays.class, 3L );
+			tableRecord = em.find( TableWithTimeArrays.class, 3L );
 			assertThat( tableRecord.getTheArray(), is( (Object) null ) );
 
-			tableRecord = em.find(TableWithTimeArrays.class, 4L );
+			tableRecord = em.find( TableWithTimeArrays.class, 4L );
 			assertThat( tableRecord.getTheArray(), is( new LocalTime[]{ null, time4, time2 } ) );
 
 			TypedQuery<TableWithTimeArrays> tq;
 
-			tq = em.createNamedQuery("TableWithTimeArrays.JPQL.getById", TableWithTimeArrays.class );
+			tq = em.createNamedQuery( "TableWithTimeArrays.JPQL.getById", TableWithTimeArrays.class );
 			tq.setParameter( "id", 2L );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getTheArray(), is( new LocalTime[]{ time1, time2, time3 } ) );
 
-			tq = em.createNamedQuery("TableWithTimeArrays.JPQL.getByData", TableWithTimeArrays.class );
+			tq = em.createNamedQuery( "TableWithTimeArrays.JPQL.getByData", TableWithTimeArrays.class );
 			tq.setParameter( "data", new String[]{} );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getId(), is( 1L ) );
 
-			tq = em.createNamedQuery("TableWithTimeArrays.Native.getById", TableWithTimeArrays.class );
+			tq = em.createNamedQuery( "TableWithTimeArrays.Native.getById", TableWithTimeArrays.class );
 			tq.setParameter( "id", 2L );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getTheArray(), is( new LocalTime[]{ time1, time2, time3 } ) );
 
-			tq = em.createNamedQuery("TableWithTimeArrays.Native.getByData", TableWithTimeArrays.class );
+			tq = em.createNamedQuery( "TableWithTimeArrays.Native.getByData", TableWithTimeArrays.class );
 			tq.setParameter( "data", new LocalTime[]{ time1, time2, time3 } );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getId(), is( 2L ) );

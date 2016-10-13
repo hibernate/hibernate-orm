@@ -46,9 +46,9 @@ public class StringArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 		EntityTransaction et = em.getTransaction();
 		et.begin();
 		try {
-			em.persist(new TableWithStringArrays( 1L, new String[]{} ) );
-			em.persist(new TableWithStringArrays( 2L, new String[]{ "", "test", null, "text" } ) );
-			em.persist(new TableWithStringArrays( 3L, null ) );
+			em.persist( new TableWithStringArrays( 1L, new String[]{} ) );
+			em.persist( new TableWithStringArrays( 2L, new String[]{ "", "test", null, "text" } ) );
+			em.persist( new TableWithStringArrays( 3L, null ) );
 
 			Query q;
 			q = em.createNamedQuery( "TableWithStringArrays.Native.insert" );
@@ -79,23 +79,23 @@ public class StringArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 		final EntityManager em = openSession();
 		try {
 			TableWithStringArrays tableRecord;
-			tableRecord = em.find(TableWithStringArrays.class, 1L );
+			tableRecord = em.find( TableWithStringArrays.class, 1L );
 			assertThat( tableRecord.getTheArray(), is( new String[]{} ) );
 
-			tableRecord = em.find(TableWithStringArrays.class, 2L );
+			tableRecord = em.find( TableWithStringArrays.class, 2L );
 			assertThat( tableRecord.getTheArray(), is( new String[]{ "", "test", null, "text" } ) );
 
-			tableRecord = em.find(TableWithStringArrays.class, 3L );
+			tableRecord = em.find( TableWithStringArrays.class, 3L );
 			assertThat( tableRecord.getTheArray(), is( (Object) null ) );
 
 			TypedQuery<TableWithStringArrays> tq;
 
-			tq = em.createNamedQuery("TableWithStringArrays.JPQL.getById", TableWithStringArrays.class );
+			tq = em.createNamedQuery( "TableWithStringArrays.JPQL.getById", TableWithStringArrays.class );
 			tq.setParameter( "id", 2L );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getTheArray(), is( new String[]{ "", "test", null, "text" } ) );
 
-			tq = em.createNamedQuery("TableWithStringArrays.Native.getById", TableWithStringArrays.class );
+			tq = em.createNamedQuery( "TableWithStringArrays.Native.getById", TableWithStringArrays.class );
 			tq.setParameter( "id", 2L );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getTheArray(), is( new String[]{ "", "test", null, "text" } ) );

@@ -12,12 +12,12 @@ import org.hibernate.type.ArrayTypes;
  * @author Jordan Gigov
  */
 public class LongArrayDescriptorTest extends AbstractDescriptorTest<Long[]> {
-	final Long[] original = new Long[]{ 13l, -2l, 666l };
-	final Long[] copy = new Long[]{ 13l, -2l, 666l };
-	final Long[] different = new Long[]{ -2l, 666l, 13l };
+	final Long[] original = new Long[]{ 13L, -2L, 666L };
+	final Long[] copy = new Long[]{ 13L, -2L, 666L };
+	final Long[] different = new Long[]{ -2L, 666L, 13L };
 
 	public LongArrayDescriptorTest() {
-		super(ArrayTypes.LONG.getJavaTypeDescriptor());
+		super( ArrayTypes.LONG.getJavaTypeDescriptor() );
 	}
 
 	@Override

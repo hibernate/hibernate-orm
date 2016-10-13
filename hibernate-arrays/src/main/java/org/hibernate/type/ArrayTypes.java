@@ -93,70 +93,79 @@ public class ArrayTypes<T>
 	private String[] buildTypeRegistrations(String[] baseKeys, boolean noSQLrecurse) {
 		ArrayList<String> keys = new ArrayList<>( baseKeys.length << 1 );
 		for ( String bk : baseKeys ) {
+			String className;
 			boolean addSQL = true;
 			try {
 				Class c;
 				switch ( bk ) {
 					case "boolean":
 						c = boolean.class;
-						bk = "Z";
+						className = "Z";
 						break;
 
 					case "byte":
 						c = byte.class;
-						bk = "B";
+						className = "B";
 						break;
 
 					case "char":
 						c = char.class;
-						bk = "C";
+						className = "C";
 						break;
 
 					case "double":
 						c = double.class;
-						bk = "D";
+						className = "D";
 						break;
 
 					case "float":
 						c = float.class;
-						bk = "F";
+						className = "F";
 						break;
 
 					case "int":
 						c = int.class;
-						bk = "I";
+						className = "I";
 						break;
 
 					case "long":
 						c = long.class;
-						bk = "J";
+						className = "J";
 						break;
 
 					case "short":
 						c = short.class;
-						bk = "S";
+						className = "S";
 						break;
 
 					default:
-						c = Class.forName( bk ); // load to make sure it exists
-						bk = c.getName();
+						// load to make sure it exists
+						c = Class.forName( bk );
+						className = c.getName();
 						addSQL = false;
 				}
 				if ( c.isPrimitive() || c.isArray() ) {
-					keys.add( "[" + bk );
-				} else {
-					keys.add( "[L" + bk + ";" );
+					keys.add( "[" + className );
 				}
-			} catch ( ClassNotFoundException ex ) {
+				else {
+					keys.add( "[L" + className + ";" );
+				}
+			}
+			catch ( ClassNotFoundException ex ) {
 			}
 			if ( addSQL ) {
 				// Not all type names given are Java classes, so assume the others are Database types
 				if ( noSQLrecurse ) {
-					keys.add( bk ); // type is just "basetype ARRAY", never "basetype ARRAY ARRAY ARRAY"
-				} else {
-					keys.add( bk + "[]" ); // PostgreSQL type names
-					keys.add( bk + " ARRAY" ); // standard SQL
-					keys.add( bk + " array" ); // also possible
+					// type is just "basetype ARRAY", never "basetype ARRAY ARRAY ARRAY"
+					keys.add( bk );
+				}
+				else {
+					// PostgreSQL type names
+					keys.add( bk + "[]" );
+					// standard SQL
+					keys.add( bk + " ARRAY" );
+					// also possible
+					keys.add( bk + " array" );
 				}
 			}
 		}
@@ -170,7 +179,7 @@ public class ArrayTypes<T>
 
 	@Override
 	public String[] getRegistrationKeys() {
-		return ( String[] ) regKeys.clone();
+		return (String[]) regKeys.clone();
 	}
 
 	@Override

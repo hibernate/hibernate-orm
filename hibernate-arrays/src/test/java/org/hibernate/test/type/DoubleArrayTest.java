@@ -79,33 +79,33 @@ public class DoubleArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 		final EntityManager em = openSession();
 		try {
 			TableWithDoubleArrays tableRecord;
-			tableRecord = em.find(TableWithDoubleArrays.class, 1L );
+			tableRecord = em.find( TableWithDoubleArrays.class, 1L );
 			assertThat( tableRecord.getTheArray(), is( new Double[]{} ) );
 
-			tableRecord = em.find(TableWithDoubleArrays.class, 2L );
+			tableRecord = em.find( TableWithDoubleArrays.class, 2L );
 			assertThat( tableRecord.getTheArray(), is( new Double[]{ 512.5, 112.0, null, -0.5 } ) );
 
-			tableRecord = em.find(TableWithDoubleArrays.class, 3L );
+			tableRecord = em.find( TableWithDoubleArrays.class, 3L );
 			assertThat( tableRecord.getTheArray(), is( (Object) null ) );
 
 			TypedQuery<TableWithDoubleArrays> tq;
 
-			tq = em.createNamedQuery("TableWithDoubleArrays.JPQL.getById", TableWithDoubleArrays.class );
+			tq = em.createNamedQuery( "TableWithDoubleArrays.JPQL.getById", TableWithDoubleArrays.class );
 			tq.setParameter( "id", 2L );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getTheArray(), is( new Double[]{ 512.5, 112.0, null, -0.5 } ) );
 
-			tq = em.createNamedQuery("TableWithDoubleArrays.JPQL.getByData", TableWithDoubleArrays.class );
+			tq = em.createNamedQuery( "TableWithDoubleArrays.JPQL.getByData", TableWithDoubleArrays.class );
 			tq.setParameter( "data", new Double[]{} );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getId(), is( 1L ) );
 
-			tq = em.createNamedQuery("TableWithDoubleArrays.Native.getById", TableWithDoubleArrays.class );
+			tq = em.createNamedQuery( "TableWithDoubleArrays.Native.getById", TableWithDoubleArrays.class );
 			tq.setParameter( "id", 2L );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getTheArray(), is( new Double[]{ 512.5, 112.0, null, -0.5 } ) );
 
-			tq = em.createNamedQuery("TableWithDoubleArrays.Native.getByData", TableWithDoubleArrays.class );
+			tq = em.createNamedQuery( "TableWithDoubleArrays.Native.getByData", TableWithDoubleArrays.class );
 			tq.setParameter( "data", new Double[]{ 512.5, 112.0, null, -0.5 } );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getId(), is( 2L ) );

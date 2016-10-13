@@ -46,9 +46,9 @@ public class IntegerArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 		EntityTransaction et = em.getTransaction();
 		et.begin();
 		try {
-			em.persist(new TableWithIntegerArrays( 1L, new Integer[]{} ) );
-			em.persist(new TableWithIntegerArrays( 2L, new Integer[]{ 512, 112, null, 0 } ) );
-			em.persist(new TableWithIntegerArrays( 3L, null ) );
+			em.persist( new TableWithIntegerArrays( 1L, new Integer[]{} ) );
+			em.persist( new TableWithIntegerArrays( 2L, new Integer[]{ 512, 112, null, 0 } ) );
+			em.persist( new TableWithIntegerArrays( 3L, null ) );
 
 			Query q;
 			q = em.createNamedQuery( "TableWithIntegerArrays.Native.insert" );
@@ -79,33 +79,33 @@ public class IntegerArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 		final EntityManager em = openSession();
 		try {
 			TableWithIntegerArrays tableRecord;
-			tableRecord = em.find(TableWithIntegerArrays.class, 1L );
+			tableRecord = em.find( TableWithIntegerArrays.class, 1L );
 			assertThat( tableRecord.getTheArray(), is( new Integer[]{} ) );
 
-			tableRecord = em.find(TableWithIntegerArrays.class, 2L );
+			tableRecord = em.find( TableWithIntegerArrays.class, 2L );
 			assertThat( tableRecord.getTheArray(), is( new Integer[]{ 512, 112, null, 0 } ) );
 
-			tableRecord = em.find(TableWithIntegerArrays.class, 3L );
+			tableRecord = em.find( TableWithIntegerArrays.class, 3L );
 			assertThat( tableRecord.getTheArray(), is( (Object) null ) );
 
 			TypedQuery<TableWithIntegerArrays> tq;
 
-			tq = em.createNamedQuery("TableWithIntegerArrays.JPQL.getById", TableWithIntegerArrays.class );
+			tq = em.createNamedQuery( "TableWithIntegerArrays.JPQL.getById", TableWithIntegerArrays.class );
 			tq.setParameter( "id", 2L );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getTheArray(), is( new Integer[]{ 512, 112, null, 0 } ) );
 
-			tq = em.createNamedQuery("TableWithIntegerArrays.JPQL.getByData", TableWithIntegerArrays.class );
+			tq = em.createNamedQuery( "TableWithIntegerArrays.JPQL.getByData", TableWithIntegerArrays.class );
 			tq.setParameter( "data", new Integer[]{} );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getId(), is( 1L ) );
 
-			tq = em.createNamedQuery("TableWithIntegerArrays.Native.getById", TableWithIntegerArrays.class );
+			tq = em.createNamedQuery( "TableWithIntegerArrays.Native.getById", TableWithIntegerArrays.class );
 			tq.setParameter( "id", 2L );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getTheArray(), is( new Integer[]{ 512, 112, null, 0 } ) );
 
-			tq = em.createNamedQuery("TableWithIntegerArrays.Native.getByData", TableWithIntegerArrays.class );
+			tq = em.createNamedQuery( "TableWithIntegerArrays.Native.getByData", TableWithIntegerArrays.class );
 			tq.setParameter( "data", new Integer[]{ 512, 112, null, 0 } );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getId(), is( 2L ) );

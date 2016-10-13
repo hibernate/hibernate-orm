@@ -46,9 +46,9 @@ public class ShortArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 		EntityTransaction et = em.getTransaction();
 		et.begin();
 		try {
-			em.persist(new TableWithShortArrays( 1L, new Short[]{} ) );
-			em.persist(new TableWithShortArrays( 2L, new Short[]{ 512, 112, null, 0 } ) );
-			em.persist(new TableWithShortArrays( 3L, null ) );
+			em.persist( new TableWithShortArrays( 1L, new Short[]{} ) );
+			em.persist( new TableWithShortArrays( 2L, new Short[]{ 512, 112, null, 0 } ) );
+			em.persist( new TableWithShortArrays( 3L, null ) );
 
 			Query q;
 			q = em.createNamedQuery( "TableWithShortArrays.Native.insert" );
@@ -79,33 +79,33 @@ public class ShortArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 		final EntityManager em = openSession();
 		try {
 			TableWithShortArrays tableRecord;
-			tableRecord = em.find(TableWithShortArrays.class, 1L );
+			tableRecord = em.find( TableWithShortArrays.class, 1L );
 			assertThat( tableRecord.getTheArray(), is( new Short[]{} ) );
 
-			tableRecord = em.find(TableWithShortArrays.class, 2L );
+			tableRecord = em.find( TableWithShortArrays.class, 2L );
 			assertThat( tableRecord.getTheArray(), is( new Short[]{ 512, 112, null, 0 } ) );
 
-			tableRecord = em.find(TableWithShortArrays.class, 3L );
+			tableRecord = em.find( TableWithShortArrays.class, 3L );
 			assertThat( tableRecord.getTheArray(), is( (Object) null ) );
 
 			TypedQuery<TableWithShortArrays> tq;
 
-			tq = em.createNamedQuery("TableWithShortArrays.JPQL.getById", TableWithShortArrays.class );
+			tq = em.createNamedQuery( "TableWithShortArrays.JPQL.getById", TableWithShortArrays.class );
 			tq.setParameter( "id", 2L );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getTheArray(), is( new Short[]{ 512, 112, null, 0 } ) );
 
-			tq = em.createNamedQuery("TableWithShortArrays.JPQL.getByData", TableWithShortArrays.class );
+			tq = em.createNamedQuery( "TableWithShortArrays.JPQL.getByData", TableWithShortArrays.class );
 			tq.setParameter( "data", new Short[]{} );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getId(), is( 1L ) );
 
-			tq = em.createNamedQuery("TableWithShortArrays.Native.getById", TableWithShortArrays.class );
+			tq = em.createNamedQuery( "TableWithShortArrays.Native.getById", TableWithShortArrays.class );
 			tq.setParameter( "id", 2L );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getTheArray(), is( new Short[]{ 512, 112, null, 0 } ) );
 
-			tq = em.createNamedQuery("TableWithShortArrays.Native.getByData", TableWithShortArrays.class );
+			tq = em.createNamedQuery( "TableWithShortArrays.Native.getByData", TableWithShortArrays.class );
 			tq.setParameter( "data", new Short[]{ 512, 112, null, 0 } );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getId(), is( 2L ) );

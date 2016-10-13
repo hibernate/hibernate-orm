@@ -28,7 +28,7 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 	private final Class unrapTo;
 
 	public GenericArrayTypeDescriptor(AbstractStandardBasicType<T> baseDescriptor) {
-		this(baseDescriptor, null);
+		this( baseDescriptor, null );
 	}
 
 	public GenericArrayTypeDescriptor(AbstractStandardBasicType<T> baseDescriptor, Class unwrapTo) {
@@ -137,7 +137,7 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 				// Surrogate pairs. This is how they're done.
 				charsn = Character.toChars( cp, buf, 0 );
 				if (cp == '\\' || cp == '"') {
-					sb.append('\\');
+					sb.append( '\\' );
 				}
 				sb.append( buf, 0, charsn );
 				i += charsn;
@@ -246,9 +246,9 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 			Object[] unwrapped = new Object[value.length];
 			Class cls = value.getClass().getComponentType();
 			for (int i = 0; i < value.length; i++) {
-				unwrapped[i] = unrapTo.isAssignableFrom(cls)
+				unwrapped[i] = unrapTo.isAssignableFrom( cls )
 						? value[i]
-						: componentDescriptor.unwrap(value[i], unrapTo, options);
+						: componentDescriptor.unwrap( value[i], unrapTo, options );
 			}
 			try {
 				conn = sess.connection();
@@ -281,18 +281,18 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 		Class cls = value.getClass();
 
 		if ( cls.isArray() ) {
-			if ( componentClass.isAssignableFrom(cls.getComponentType()) ) {
+			if ( componentClass.isAssignableFrom( cls.getComponentType() ) ) {
 				Object[] raw = (Object[]) value;
-				T[] wrapped = (T[]) java.lang.reflect.Array.newInstance(componentClass, raw.length);
+				T[] wrapped = (T[]) java.lang.reflect.Array.newInstance( componentClass, raw.length );
 				for (int i = 0; i < raw.length; i++) {
 					wrapped[i] = (T) raw[i];
 				}
 				return wrapped;
 			}
 			Object[] raw = (Object[]) value;
-			T[] wrapped = (T[]) java.lang.reflect.Array.newInstance(componentClass, raw.length);
+			T[] wrapped = (T[]) java.lang.reflect.Array.newInstance( componentClass, raw.length );
 			for (int i = 0; i < raw.length; i++) {
-				wrapped[i] = componentDescriptor.wrap(raw[i], options);
+				wrapped[i] = componentDescriptor.wrap( raw[i], options );
 			}
 			return wrapped;
 		}
@@ -307,9 +307,9 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 			if (raw == null) {
 				return null;
 			}
-			T[] wrapped = (T[]) java.lang.reflect.Array.newInstance(componentClass, raw.length);
+			T[] wrapped = (T[]) java.lang.reflect.Array.newInstance( componentClass, raw.length );
 			for (int i = 0; i < raw.length; i++) {
-				wrapped[i] = componentDescriptor.wrap(raw[i], options);
+				wrapped[i] = componentDescriptor.wrap( raw[i], options );
 			}
 			return (T[]) wrapped;
 		}

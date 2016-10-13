@@ -55,9 +55,9 @@ public class DateArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 		try {
 			// I can't believe anyone ever thought this Date API is a good idea
 			date1 = LocalDate.now();
-			date2 = date1.plusDays(5);
-			date3 = date1.plusMonths(4);
-			date4 = date1.plusYears(3);
+			date2 = date1.plusDays( 5 );
+			date3 = date1.plusMonths( 4 );
+			date4 = date1.plusYears( 3 );
 			em.persist( new TableWithDateArrays( 1L, new LocalDate[]{} ) );
 			em.persist( new TableWithDateArrays( 2L, new LocalDate[]{ date1, date2, date3 } ) );
 			em.persist( new TableWithDateArrays( 3L, null ) );
@@ -91,36 +91,36 @@ public class DateArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 		final EntityManager em = openSession();
 		try {
 			TableWithDateArrays tableRecord;
-			tableRecord = em.find(TableWithDateArrays.class, 1L );
+			tableRecord = em.find( TableWithDateArrays.class, 1L );
 			assertThat( tableRecord.getTheArray(), is( new LocalDate[]{} ) );
 
-			tableRecord = em.find(TableWithDateArrays.class, 2L );
+			tableRecord = em.find( TableWithDateArrays.class, 2L );
 			assertThat( tableRecord.getTheArray(), is( new LocalDate[]{ date1, date2, date3 } ) );
 
-			tableRecord = em.find(TableWithDateArrays.class, 3L );
+			tableRecord = em.find( TableWithDateArrays.class, 3L );
 			assertThat( tableRecord.getTheArray(), is( (Object) null ) );
 
-			tableRecord = em.find(TableWithDateArrays.class, 4L );
+			tableRecord = em.find( TableWithDateArrays.class, 4L );
 			assertThat( tableRecord.getTheArray(), is( new LocalDate[]{ null, date4, date2 } ) );
 
 			TypedQuery<TableWithDateArrays> tq;
 
-			tq = em.createNamedQuery("TableWithDateArrays.JPQL.getById", TableWithDateArrays.class );
+			tq = em.createNamedQuery( "TableWithDateArrays.JPQL.getById", TableWithDateArrays.class );
 			tq.setParameter( "id", 2L );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getTheArray(), is( new LocalDate[]{ date1, date2, date3 } ) );
 
-			tq = em.createNamedQuery("TableWithDateArrays.JPQL.getByData", TableWithDateArrays.class );
+			tq = em.createNamedQuery( "TableWithDateArrays.JPQL.getByData", TableWithDateArrays.class );
 			tq.setParameter( "data", new Boolean[]{} );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getId(), is( 1L ) );
 
-			tq = em.createNamedQuery("TableWithDateArrays.Native.getById", TableWithDateArrays.class );
+			tq = em.createNamedQuery( "TableWithDateArrays.Native.getById", TableWithDateArrays.class );
 			tq.setParameter( "id", 2L );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getTheArray(), is( new LocalDate[]{ date1, date2, date3 } ) );
 
-			tq = em.createNamedQuery("TableWithDateArrays.Native.getByData", TableWithDateArrays.class );
+			tq = em.createNamedQuery( "TableWithDateArrays.Native.getByData", TableWithDateArrays.class );
 			tq.setParameter( "data", new LocalDate[]{ date1, date2, date3 } );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getId(), is( 2L ) );

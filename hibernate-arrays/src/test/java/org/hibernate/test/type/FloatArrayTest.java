@@ -79,33 +79,33 @@ public class FloatArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 		final EntityManager em = openSession();
 		try {
 			TableWithFloatArrays tableRecord;
-			tableRecord = em.find(TableWithFloatArrays.class, 1L );
+			tableRecord = em.find( TableWithFloatArrays.class, 1L );
 			assertThat( tableRecord.getTheArray(), is( new Float[]{} ) );
 
-			tableRecord = em.find(TableWithFloatArrays.class, 2L );
+			tableRecord = em.find( TableWithFloatArrays.class, 2L );
 			assertThat( tableRecord.getTheArray(), is( new Float[]{ 512.5f, 112.0f, null, -0.5f } ) );
 
-			tableRecord = em.find(TableWithFloatArrays.class, 3L );
+			tableRecord = em.find( TableWithFloatArrays.class, 3L );
 			assertThat( tableRecord.getTheArray(), is( (Object) null ) );
 
 			TypedQuery<TableWithFloatArrays> tq;
 
-			tq = em.createNamedQuery("TableWithFloatArrays.JPQL.getById", TableWithFloatArrays.class );
+			tq = em.createNamedQuery( "TableWithFloatArrays.JPQL.getById", TableWithFloatArrays.class );
 			tq.setParameter( "id", 2L );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getTheArray(), is( new Float[]{ 512.5f, 112.0f, null, -0.5f } ) );
 
-			tq = em.createNamedQuery("TableWithFloatArrays.JPQL.getByData", TableWithFloatArrays.class );
+			tq = em.createNamedQuery( "TableWithFloatArrays.JPQL.getByData", TableWithFloatArrays.class );
 			tq.setParameter( "data", new Float[]{} );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getId(), is( 1L ) );
 
-			tq = em.createNamedQuery("TableWithFloatArrays.Native.getById", TableWithFloatArrays.class );
+			tq = em.createNamedQuery( "TableWithFloatArrays.Native.getById", TableWithFloatArrays.class );
 			tq.setParameter( "id", 2L );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getTheArray(), is( new Float[]{ 512.5f, 112.0f, null, -0.5f } ) );
 
-			tq = em.createNamedQuery("TableWithFloatArrays.Native.getByData", TableWithFloatArrays.class );
+			tq = em.createNamedQuery( "TableWithFloatArrays.Native.getByData", TableWithFloatArrays.class );
 			tq.setParameter( "data", new Float[]{ 512.5f, 112.0f, null, -0.5f } );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getId(), is( 2L ) );

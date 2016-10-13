@@ -20,7 +20,7 @@ public class LocalDateArrayDescriptorTest extends AbstractDescriptorTest<LocalDa
 	final LocalDate[] different;
 
 	public LocalDateArrayDescriptorTest() {
-		super(ArrayTypes.LOCAL_DATE.getJavaTypeDescriptor());
+		super( ArrayTypes.LOCAL_DATE.getJavaTypeDescriptor() );
 		JavaTypeDescriptor<LocalDate> jt = LocalDateType.INSTANCE.getJavaTypeDescriptor();
 		original = new LocalDate[] {
 			LocalDate.of( 2016, 10, 8 ),

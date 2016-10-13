@@ -54,13 +54,17 @@ public class TimestampArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 		EntityTransaction et = em.getTransaction();
 		et.begin();
 		try {
-			time1 = LocalDateTime.of(1970, Month.JANUARY, 1, 0, 0, 0, 0); // Unix epoch start if you're in the UK
-			time2 = LocalDateTime.of(1999, Month.DECEMBER, 31, 23, 59, 59, 0); // pre-Y2K
-			time3 = LocalDateTime.of(2000, Month.JANUARY, 1, 0, 0, 0, 0); // We survived! Why was anyone worried?
-			time4 = LocalDateTime.of(2010, Month.JUNE, 26, 20, 4, 0, 0); // Silence will fall!
-			em.persist(new TableWithTimestampArrays( 1L, new LocalDateTime[]{} ) );
-			em.persist(new TableWithTimestampArrays( 2L, new LocalDateTime[]{ time1, time2, time3 } ) );
-			em.persist(new TableWithTimestampArrays( 3L, null ) );
+			// Unix epoch start if you're in the UK
+			time1 = LocalDateTime.of( 1970, Month.JANUARY, 1, 0, 0, 0, 0 );
+			// pre-Y2K
+			time2 = LocalDateTime.of( 1999, Month.DECEMBER, 31, 23, 59, 59, 0 );
+			// We survived! Why was anyone worried?
+			time3 = LocalDateTime.of( 2000, Month.JANUARY, 1, 0, 0, 0, 0 );
+			// Silence will fall!
+			time4 = LocalDateTime.of( 2010, Month.JUNE, 26, 20, 4, 0, 0 );
+			em.persist( new TableWithTimestampArrays( 1L, new LocalDateTime[]{} ) );
+			em.persist( new TableWithTimestampArrays( 2L, new LocalDateTime[]{ time1, time2, time3 } ) );
+			em.persist( new TableWithTimestampArrays( 3L, null ) );
 
 			Query q;
 			q = em.createNamedQuery( "TableWithTimestampArrays.Native.insert" );
@@ -91,36 +95,36 @@ public class TimestampArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 		final EntityManager em = openSession();
 		try {
 			TableWithTimestampArrays tableRecord;
-			tableRecord = em.find(TableWithTimestampArrays.class, 1L );
+			tableRecord = em.find( TableWithTimestampArrays.class, 1L );
 			assertThat( tableRecord.getTheArray(), is( new LocalDateTime[]{} ) );
 
-			tableRecord = em.find(TableWithTimestampArrays.class, 2L );
+			tableRecord = em.find( TableWithTimestampArrays.class, 2L );
 			assertThat( tableRecord.getTheArray(), is( new LocalDateTime[]{ time1, time2, time3 } ) );
 
-			tableRecord = em.find(TableWithTimestampArrays.class, 3L );
+			tableRecord = em.find( TableWithTimestampArrays.class, 3L );
 			assertThat( tableRecord.getTheArray(), is( (Object) null ) );
 
-			tableRecord = em.find(TableWithTimestampArrays.class, 4L );
+			tableRecord = em.find( TableWithTimestampArrays.class, 4L );
 			assertThat( tableRecord.getTheArray(), is( new LocalDateTime[]{ null, time4, time2 } ) );
 
 			TypedQuery<TableWithTimestampArrays> tq;
 
-			tq = em.createNamedQuery("TableWithTimestampArrays.JPQL.getById", TableWithTimestampArrays.class );
+			tq = em.createNamedQuery( "TableWithTimestampArrays.JPQL.getById", TableWithTimestampArrays.class );
 			tq.setParameter( "id", 2L );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getTheArray(), is( new LocalDateTime[]{ time1, time2, time3 } ) );
 
-			tq = em.createNamedQuery("TableWithTimestampArrays.JPQL.getByData", TableWithTimestampArrays.class );
+			tq = em.createNamedQuery( "TableWithTimestampArrays.JPQL.getByData", TableWithTimestampArrays.class );
 			tq.setParameter( "data", new String[]{} );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getId(), is( 1L ) );
 
-			tq = em.createNamedQuery("TableWithTimestampArrays.Native.getById", TableWithTimestampArrays.class );
+			tq = em.createNamedQuery( "TableWithTimestampArrays.Native.getById", TableWithTimestampArrays.class );
 			tq.setParameter( "id", 2L );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getTheArray(), is( new LocalDateTime[]{ time1, time2, time3 } ) );
 
-			tq = em.createNamedQuery("TableWithTimestampArrays.Native.getByData", TableWithTimestampArrays.class );
+			tq = em.createNamedQuery( "TableWithTimestampArrays.Native.getByData", TableWithTimestampArrays.class );
 			tq.setParameter( "data", new LocalDateTime[]{ time1, time2, time3 } );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getId(), is( 2L ) );

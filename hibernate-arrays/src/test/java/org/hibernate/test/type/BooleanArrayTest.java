@@ -79,33 +79,33 @@ public class BooleanArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 		final EntityManager em = openSession();
 		try {
 			TableWithBooleanArrays tableRecord;
-			tableRecord = em.find(TableWithBooleanArrays.class, 1L );
+			tableRecord = em.find( TableWithBooleanArrays.class, 1L );
 			assertThat( tableRecord.getTheArray(), is( new Boolean[]{} ) );
 
-			tableRecord = em.find(TableWithBooleanArrays.class, 2L );
+			tableRecord = em.find( TableWithBooleanArrays.class, 2L );
 			assertThat( tableRecord.getTheArray(), is( new Boolean[]{ Boolean.FALSE, Boolean.FALSE, null, Boolean.TRUE } ) );
 
-			tableRecord = em.find(TableWithBooleanArrays.class, 3L );
+			tableRecord = em.find( TableWithBooleanArrays.class, 3L );
 			assertThat( tableRecord.getTheArray(), is( (Object) null ) );
 
 			TypedQuery<TableWithBooleanArrays> tq;
 
-			tq = em.createNamedQuery("TableWithBooleanArrays.JPQL.getById", TableWithBooleanArrays.class );
+			tq = em.createNamedQuery( "TableWithBooleanArrays.JPQL.getById", TableWithBooleanArrays.class );
 			tq.setParameter( "id", 2L );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getTheArray(), is( new Boolean[]{ Boolean.FALSE, Boolean.FALSE, null, Boolean.TRUE } ) );
 
-			tq = em.createNamedQuery("TableWithBooleanArrays.JPQL.getByData", TableWithBooleanArrays.class );
+			tq = em.createNamedQuery( "TableWithBooleanArrays.JPQL.getByData", TableWithBooleanArrays.class );
 			tq.setParameter( "data", new Boolean[]{} );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getId(), is( 1L ) );
 
-			tq = em.createNamedQuery("TableWithBooleanArrays.Native.getById", TableWithBooleanArrays.class );
+			tq = em.createNamedQuery( "TableWithBooleanArrays.Native.getById", TableWithBooleanArrays.class );
 			tq.setParameter( "id", 2L );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getTheArray(), is( new Boolean[]{ Boolean.FALSE, Boolean.FALSE, null, Boolean.TRUE } ) );
 
-			tq = em.createNamedQuery("TableWithBooleanArrays.Native.getByData", TableWithBooleanArrays.class );
+			tq = em.createNamedQuery( "TableWithBooleanArrays.Native.getByData", TableWithBooleanArrays.class );
 			tq.setParameter( "data", new Boolean[]{ Boolean.FALSE, Boolean.FALSE, null, Boolean.TRUE } );
 			tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getId(), is( 2L ) );

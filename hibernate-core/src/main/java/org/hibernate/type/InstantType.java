@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.Comparator;
 import java.util.Locale;
 
@@ -32,7 +33,7 @@ public class InstantType
 	 */
 	public static final InstantType INSTANCE = new InstantType();
 
-	public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss.S 'Z'", Locale.ENGLISH );
+	public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss.n ZZZZ", Locale.ENGLISH );
 
 	public InstantType() {
 		super( TimestampTypeDescriptor.INSTANCE, InstantJavaDescriptor.INSTANCE );
@@ -40,7 +41,8 @@ public class InstantType
 
 	@Override
 	public String objectToSQLString(Instant value, Dialect dialect) throws Exception {
-		return "{ts '" + FORMATTER.format( ZonedDateTime.ofInstant( value, ZoneId.of( "UTC" ) ) ) + "'}";
+		// SQL 9075-2:2003 5.3 <timestamp literal>
+		return "TIMESTAMP '" + FORMATTER.format( ZonedDateTime.ofInstant( value, ZoneId.of( "UTC" ) ) ) + "'";
 	}
 
 	@Override

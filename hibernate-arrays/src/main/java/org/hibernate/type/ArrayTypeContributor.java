@@ -14,7 +14,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptorRegistry;
 /**
  * TypeContributor for adding single-dimensional arrays
  *
- * @author Steve Ebersole
+ * @author Jordan Gigov
  */
 public class ArrayTypeContributor implements TypeContributor {
 

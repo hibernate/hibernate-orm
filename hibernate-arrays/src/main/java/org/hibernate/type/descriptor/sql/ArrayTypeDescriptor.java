@@ -20,8 +20,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
- *
- * @author jordan
+ * @author Jordan Gigov
  */
 public class ArrayTypeDescriptor implements SqlTypeDescriptor {
 

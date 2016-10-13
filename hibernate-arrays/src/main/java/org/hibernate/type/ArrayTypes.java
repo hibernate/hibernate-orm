@@ -11,6 +11,9 @@ import java.util.ArrayList;
 import org.hibernate.type.descriptor.java.GenericArrayTypeDescriptor;
 import org.hibernate.type.descriptor.sql.ArrayTypeDescriptor;
 
+/**
+ * @author Jordan Gigov
+ */
 public class ArrayTypes<T>
 		extends AbstractSingleColumnStandardBasicType<T[]> {
 

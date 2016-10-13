@@ -44,7 +44,7 @@ public class LocalTimeJavaDescriptor extends AbstractTypeDescriptor<LocalTime> {
 
 	@Override
 	public LocalTime fromString(String string) {
-		return (LocalTime) LocalTimeType.FORMATTER.parse( string );
+		return LocalTime.from( LocalTimeType.FORMATTER.parse( string ) );
 	}
 
 	@Override

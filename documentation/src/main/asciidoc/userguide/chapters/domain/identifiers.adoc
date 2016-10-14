@@ -43,6 +43,9 @@ According to JPA only the following types should be used as identifier attribute
 
 Any types used for identifier attributes beyond this list will not be portable.
 
+[[identifiers-simple-assigned]]
+===== Assigned identifiers
+
 Values for simple identifiers can be assigned, as we have seen in the examples above.
 The expectation for assigned identifier values is that the application assigns (sets them on the entity attribute) prior to calling save/persist.
 
@@ -53,6 +56,9 @@ The expectation for assigned identifier values is that the application assigns (
 include::{sourcedir}/id/SimpleAssigned.java[]
 ----
 ====
+
+[[identifiers-simple-generated]]
+===== Generated identifiers
 
 Values for simple identifiers can be generated. To denote that an identifier attribute is generated, it is annotated with `javax.persistence.GeneratedValue`
 
@@ -93,7 +99,7 @@ The attributes making up the composition can be either basic, composite, ManyToO
 Note especially that collections and one-to-ones are never appropriate.
 
 [[identifiers-composite-aggregated]]
-==== Composite identifiers - aggregated (EmbeddedId)
+==== Composite identifiers with `@EmbeddedId`
 
 Modeling a composite identifier using an EmbeddedId simply means defining an embeddable to be a composition for the one or more attributes making up the identifier,
 and then exposing an attribute of that embeddable type on the entity.
@@ -124,7 +130,7 @@ In JPA terms one would use "derived identifiers"; for details, see <<identifiers
 ====
 
 [[identifiers-composite-nonaggregated]]
-==== Composite identifiers - non-aggregated (IdClass)
+==== Composite identifiers with `@IdClass`
 
 Modeling a composite identifier using an IdClass differs from using an EmbeddedId in that the entity defines each individual attribute making up the composition.
 The IdClass simply acts as a "shadow".
@@ -165,7 +171,7 @@ Use of this feature may or may not be portable from a JPA perspective.
 ====
 
 [[identifiers-composite-associations]]
-==== Composite identifiers - associations
+==== Composite identifiers with associations
 
 Hibernate allows defining a composite identifier out of entity associations.
 In the following example, the `PersonAddress` entity identifier is formed of two `@ManyToOne` associations.
@@ -401,6 +407,7 @@ Applications can also implement and use their own optimizer strategies, as defin
 
 JPA 2.0 added support for derived identifiers which allow an entity to borrow the identifier from a many-to-one or one-to-one association.
 
+[[identifiers-derived-mapsid]]
 .Derived identifier with `@MapsId`
 ====
 [source,java]
@@ -415,6 +422,7 @@ The `@MapsId` annotation can also reference columns from an `@EmbeddedId` identi
 
 The previous example can also be mapped using `@PrimaryKeyJoinColumn`.
 
+[[identifiers-derived-primarykeyjoincolumn]]
 .Derived identifier `@PrimaryKeyJoinColumn`
 ====
 [source,java]

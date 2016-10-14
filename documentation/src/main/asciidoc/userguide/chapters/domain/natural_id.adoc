@@ -122,6 +122,7 @@ include::{sourcedir}/natural_id/MutableNaturalIdSynchronization.java[]
 
 Not only can this NaturalId-to-PK resolution be cached in the Session, but we can also have it cached in the second-level cache if second level caching is enabled.
 
+[[naturalid-caching]]
 .Natural id caching
 ====
 [source,java]

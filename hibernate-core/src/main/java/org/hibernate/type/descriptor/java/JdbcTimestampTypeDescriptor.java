@@ -23,7 +23,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  */
 public class JdbcTimestampTypeDescriptor extends AbstractTypeDescriptor<Date> {
 	public static final JdbcTimestampTypeDescriptor INSTANCE = new JdbcTimestampTypeDescriptor();
-	public static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss";
+	public static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
 
 	public static class TimestampMutabilityPlan extends MutableMutabilityPlan<Date> {
 		public static final TimestampMutabilityPlan INSTANCE = new TimestampMutabilityPlan();

@@ -24,6 +24,8 @@ import org.hibernate.type.descriptor.WrapperOptions;
 public class JdbcTimeTypeDescriptor extends AbstractTypeDescriptor<Date> {
 	public static final JdbcTimeTypeDescriptor INSTANCE = new JdbcTimeTypeDescriptor();
 	public static final String TIME_FORMAT = "HH:mm:ss";
+	public static final String LONG_FORMAT = "HH:mm:ss.SSS";
+	public static final int LONG_FORMAT_LENGTH = LONG_FORMAT.length();
 
 	public static class TimeMutabilityPlan extends MutableMutabilityPlan<Date> {
 		public static final TimeMutabilityPlan INSTANCE = new TimeMutabilityPlan();
@@ -45,7 +47,10 @@ public class JdbcTimeTypeDescriptor extends AbstractTypeDescriptor<Date> {
 	@Override
 	public java.util.Date fromString(String string) {
 		try {
-			return new Time( new SimpleDateFormat( TIME_FORMAT ).parse( string ).getTime() );
+                        if (LONG_FORMAT_LENGTH == string.length()) {
+                            return new Time( new SimpleDateFormat( LONG_FORMAT ).parse( string ).getTime() );
+                        }
+                        return new Time( new SimpleDateFormat( TIME_FORMAT ).parse( string ).getTime() );
 		}
 		catch ( ParseException pe ) {
 			throw new HibernateException( "could not parse time string" + string, pe );

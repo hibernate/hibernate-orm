@@ -1,8 +1,0 @@
-select c
-from Customer c
-where c.name = 'Acme'
-
-select c
-from Customer c
-where c.name = 'Acme''s Pretzel Logic'
-

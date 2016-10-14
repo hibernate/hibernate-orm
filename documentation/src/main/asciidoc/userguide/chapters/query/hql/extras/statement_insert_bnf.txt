@@ -1,8 +1,0 @@
-insert_statement ::=
-    insert_clause select_statement
-
-insert_clause ::=
-    INSERT INTO entity_name (attribute_list)
-
-attribute_list ::=
-    state_field[, state_field ]*

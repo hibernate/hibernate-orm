@@ -1,1 +1,0 @@
-entityManager.find( Author.class, authorId );

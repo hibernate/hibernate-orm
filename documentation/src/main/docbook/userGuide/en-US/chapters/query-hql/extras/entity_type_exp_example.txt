@@ -1,8 +1,0 @@
-select p
-from Payment p
-where type(p) = CreditCardPayment
-
-select p
-from Payment p
-where type(p) = :aType
-

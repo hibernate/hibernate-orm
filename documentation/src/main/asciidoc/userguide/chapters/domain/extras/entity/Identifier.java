@@ -1,2 +1,0 @@
-@Id
-private Integer id;

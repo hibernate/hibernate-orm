@@ -1,4 +1,0 @@
-like_expression ::=
-    string_expression
-    [NOT] LIKE pattern_value
-    [ESCAPE escape_character]

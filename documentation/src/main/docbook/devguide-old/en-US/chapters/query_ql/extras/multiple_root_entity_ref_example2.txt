@@ -1,5 +1,0 @@
-// retrieve all customers with headquarters in the same state as Acme's headquarters
-select distinct c1
-from Customer c1, Customer c2
-where c1.address.state = c2.address.state
-  and c2.name = 'Acme'

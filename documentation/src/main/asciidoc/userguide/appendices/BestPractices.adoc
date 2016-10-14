@@ -207,7 +207,7 @@ However, `LAZY` associations must be initialized prior to being accessed. Otherw
 There are good and bad ways to treat the `LazyInitializationException`.
 
 https://vladmihalcea.com/2016/09/13/the-best-way-to-handle-the-lazyinitializationexception/[The best way to deal with `LazyInitializationException`] is to fetch all the required associations prior to closing the Persistence Context.
-The `JOIN FETCH` directive is goof for `@ManyToOne` and `OneToOne` associations, and for at most one collection (e.g. `@OneToMany` or `@ManyToMany`).
+The `JOIN FETCH` directive is good for `@ManyToOne` and `OneToOne` associations, and for at most one collection (e.g. `@OneToMany` or `@ManyToMany`).
 If you need to fetch multiple collections, to avoid a Cartesian Product, you should use secondary queries which are triggered either by navigating the `LAZY` association or by calling `Hibernate#initialize(proxy)` method.
 
 [[best-practices-caching]]

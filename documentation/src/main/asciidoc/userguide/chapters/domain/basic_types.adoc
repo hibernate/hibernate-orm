@@ -409,7 +409,7 @@ include::{extrasdir}/basic/basic-custom-type-BitSetUserType-persistence-sql-exam
 Hibernate supports the mapping of Java enums as basic value types in a number of different ways.
 
 [[basic-enums-Enumerated]]
-===== @Enumerated
+===== `@Enumerated`
 
 The original JPA-compliant way to map enums was via the `@Enumerated` and `@MapKeyEnumerated` for map keys annotations which works on the principle that the enum values are stored according to one of 2 strategies indicated by `javax.persistence.EnumType`:
 
@@ -1083,7 +1083,7 @@ include::{sourcedir}/basic/JpaQuotingTest.java[tags=basic-jpa-quoting-example]
 
 Because `name` and `number` are reserved words, the `Product` entity mapping uses backtricks to quote these column names.
 
-When saving teh following `Product entity`, Hibernate generates the following SQL insert statement:
+When saving the following `Product entity`, Hibernate generates the following SQL insert statement:
 
 [[basic-quoting-persistence-example]]
 .Persisting a quoted column name
@@ -1442,7 +1442,7 @@ include::{extrasdir}/basic/mapping-filter-collection-query-example.sql[]
 
 [NOTE]
 ====
-The main advantage of `@Filter` over teh `@Where` clause is that the filtering criteria can be customized at runtime.
+The main advantage of `@Filter` over the `@Where` clause is that the filtering criteria can be customized at runtime.
 ====
 
 [WARNING]

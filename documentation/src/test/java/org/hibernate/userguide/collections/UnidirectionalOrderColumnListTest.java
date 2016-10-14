@@ -13,7 +13,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
-import javax.persistence.OrderBy;
+import javax.persistence.OrderColumn;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
@@ -56,7 +56,7 @@ public class UnidirectionalOrderColumnListTest extends BaseEntityManagerFunction
 
 		//tag::collections-unidirectional-ordered-list-order-column-example[]
 		@OneToMany(cascade = CascadeType.ALL)
-		@OrderBy("number")
+		@OrderColumn(name = "order_id")
 		private List<Phone> phones = new ArrayList<>();
 		//end::collections-unidirectional-ordered-list-order-column-example[]
 
